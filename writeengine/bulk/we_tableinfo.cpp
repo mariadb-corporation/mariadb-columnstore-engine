@@ -58,6 +58,19 @@ using namespace querytele;
 #include <arrow/io/api.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/exception.h>
+#include "arrow/csv/api.h"
+#include "arrow/csv/options.h"
+#include <arrow/api.h>
+#include <arrow/compute/api.h>
+#include <arrow/csv/api.h>
+#include <arrow/csv/writer.h>
+#include <arrow/io/api.h>
+#include <arrow/result.h>
+#include <arrow/status.h>
+#include <arrow/result.h>
+#include "arrow/util/type_fwd.h"
+#include "parquet/arrow/reader.h"
+#include "parquet/arrow/writer.h"
 namespace
 {
 const std::string BAD_FILE_SUFFIX = ".bad";  // Reject data file suffix
@@ -153,6 +166,7 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fTableLockID(0)
  , fRejectDataCnt(0)
  , fRejectErrCnt(0)
+ , tot_row_count(0)
  , fExtentStrAlloc(tableOID, logger)
  , fOamCachePtr(oam::OamCache::makeOamCache())
  , fParquetReader(nullptr)
@@ -264,10 +278,6 @@ bool TableInfo::lockForRead(const int& locker)
 }
 
 
-class CsvSniffer
-{
-
-}
 
 int TableInfo::readTableDataCsv()
 {
@@ -278,7 +288,7 @@ int TableInfo::readTableDataCsv()
   // std::cout << "here" << std::endl;
   fFileName = fLoadFileList[0];
   int rc = openTableFileCsv();
-  return NO_ERROR;
+  return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -1344,39 +1354,44 @@ int TableInfo::openTableFileParquet(int64_t& totalRowsParquet)
   return NO_ERROR;
 }
 
-bool try_parse_line(int64_t start_pos, int64_t buf_size, char* buf, uint64_t col_num)
+bool isNewLineChar(char ch)
+{
+	return ch == '\n' || ch == '\r';
+}
+
+bool try_parse_line(int64_t tStartPos, int64_t buf_size, char* buf, uint64_t col_num)
 {
   const string quote = "\"";
   const string delimiter = ",";
 
 
-	bool finished_part = false;
+	// bool finished_part = false;
 	uint64_t column = 0;
-	uint64_t offset = 0;	// used for what?
-	bool has_quotes = false;
+	// uint64_t offset = 0;	// used for what?
+	// bool has_quotes = false;
 	int64_t cur_pos = 0;
-	int64_t buffer_start = start_pos;
+	// int64_t buffer_start = tStartPos;
 	goto value_start;
 
 	value_start :
 	{
-		cout << "value start" << endl;
-		offset = 0;
+		//cout << "value start" << endl;
+		// offset = 0;
 		if (buf[cur_pos] == quote[0])
 		{
-			buffer_start = cur_pos + 1;
+			// buffer_start = cur_pos + 1;
 			goto in_quotes;
 		}
 		else
 		{
-			buffer_start = cur_pos;
+			// buffer_start = cur_pos;
 			goto normal;
 		}
-	}	
+	};
 
 	in_quotes :
 	{
-		has_quotes = true;
+		// has_quotes = true;
 		cur_pos++;
 		for (; cur_pos < buf_size; cur_pos++)
 		{
@@ -1387,7 +1402,16 @@ bool try_parse_line(int64_t start_pos, int64_t buf_size, char* buf, uint64_t col
 			// don't support escape now
 			// else if (buf[cur_pos] == escape[0])
 		}
-		goto final_state;
+		if (cur_pos >= buf_size)
+		{
+			//TODO:check whether the last buffer
+			goto final_state;
+		}
+		else
+		{
+			cur_pos--;
+			goto in_quotes;
+		}
 	}
 
 	unquote:
@@ -1395,25 +1419,25 @@ bool try_parse_line(int64_t start_pos, int64_t buf_size, char* buf, uint64_t col
 		cur_pos++;
 		if (buf[cur_pos] == delimiter[0])
 		{
-			offset = 1;
+			// offset = 1;
 			goto add_value;
 		}
 		else if (isNewLineChar(buf[cur_pos]))
 		{
-			offset = 1;
+			// offset = 1;
 			assert(column == col_num - 1);
 			goto add_row;
 		}
 		else if (cur_pos >= buf_size)
 		{
-			offset = 1;
+			// offset = 1;
 			goto final_state;
 		}
 	}
 
 	normal:
 	{
-		cout << "normal" << endl;
+		// cout << "normal" << endl;
 		for (; cur_pos < buf_size; cur_pos++)
 		{
 			if (buf[cur_pos] == delimiter[0])
@@ -1429,103 +1453,311 @@ bool try_parse_line(int64_t start_pos, int64_t buf_size, char* buf, uint64_t col
 			}
 		}
 
-		goto final_state;
+		if (cur_pos >= buf_size)
+			goto final_state;
+		else
+			goto normal;
 	}
 
 	add_row:
 	{
-		cout << "add row" << endl;
-		bool carriage_return = buf[cur_pos] == '\r';
+		// cout << "add row" << endl;
+		// bool carriage_return = buf[cur_pos] == '\r';
 
 		// addValue
 		column++;
 
 		return true;
 	}
+
+	add_value:
+	{
+		// cout << "add value" << endl;
+		cur_pos++;
+		column++;
+		// offset = 0;
+		// has_quotes = false;	
+		if (cur_pos >= buf_size)
+			goto final_state;
+		
+		goto value_start;
+	}
 	final_state:
 	{
 
 	}
-
-	add_value:
-	{
-		cout << "add value" << endl;
-		cur_pos++;
-		column++;
-		offset = 0;
-		has_quotes = false;	
-		goto value_start;
-	}
+  return true;
 }
 
 int get_newline_pos(std::shared_ptr<arrow::io::RandomAccessFile> in,
 					int64_t pos,
 					int64_t bytes_read,
-					uint64_t col_num)
+					uint64_t col_num,
+          bool isFirstPart)
 {
 	std::shared_ptr<arrow::Buffer> buffer;
 	auto res = in->ReadAt(pos, bytes_read);
 	buffer = res.ValueOrDie();
 	char* buf = const_cast<char *>(reinterpret_cast<const char*>(buffer->data()));
-	int64_t part_start_pos = 0;
-	int64_t part_end_pos = bytes_read;
-	int64_t origin_start_pos = pos;
+
+	int64_t part_startPos = 0; // relative postion
+	int64_t part_endPos = bytes_read; // relative postion
+	int64_t final_startPos = pos;
 	int64_t cur_pos = 0;
 	bool is_newline_char_find = false;
 	while (!is_newline_char_find)
 	{
-		for (; cur_pos < part_end_pos; cur_pos++)
+		for (; cur_pos < part_endPos; cur_pos++)
 		{
+      // if this is the first part, directly return
+      if (isFirstPart)
+      {
+        return part_startPos;
+      }
 			if (isNewLineChar(buf[cur_pos]))
 			{
 				cur_pos++;
-				part_start_pos = cur_pos;
+				part_startPos = cur_pos + final_startPos;
 				break;
 			}
 		}
-		if (cur_pos == bytes_read && isNewLineChar(buf[cur_pos-1]))
+    // read the end of this part
+    // might occur
+    assert(cur_pos <= part_endPos);
+		if (cur_pos == part_endPos && !isNewLineChar(buf[cur_pos-1]))
 		{
 			break;
 		}
 		is_newline_char_find = try_parse_line(cur_pos, bytes_read, buf, col_num);
-		if (is_newline_char_find)
-		{
-			break;
-		}
+
+    if (cur_pos == part_endPos)
+    {
+      break;
+    }
 	}
 	if (is_newline_char_find)
-		return part_start_pos;
+		return part_startPos;
 	return -1;
 }
 
 
 int TableInfo::openTableFileCsv()
 {
-  arrow::MemoryPool *pool = arrow::default_memory_pool();
+  // arrow::MemoryPool *pool = arrow::default_memory_pool();
   std::shared_ptr<arrow::io::RandomAccessFile> input;
-  ARROW_ASSIGN_OR_RAISE(input, arrow::io::ReadableFile::Open(fFileName));
+  auto resInput = arrow::io::ReadableFile::Open(fFileName);
+  input = resInput.ValueOrDie();
   // divide into different part
-  ARROW_ASSIGN_OR_RAISE(auto file_size, input->GetSize());
+  int64_t file_size;
+  auto res_file_size = input->GetSize();
+  file_size = res_file_size.ValueOrDie();
   // assume 2 threads
-  const int threadNum = 2;
+  const int threadNum = 5;
+  const int chunk_num = 1;
+  const int col_num = 3;
   int part_size = file_size / threadNum;
   // process each part : compute start pos
   // if each part data is loaded here, we still pay the cost(TODO:)
   std::shared_ptr<arrow::Buffer> buffer;
-  int64_t after_header = 0;
+  // int64_t after_header = 0;
   // TODO:parse header first
   // int64_t cur_pos = after_header;
   // no header now or skip header
-  int64_t cur_pos = after_header;
+  // int64_t cur_pos = after_header;
   // PARAM:
-  const int col_num = 2;
+  std::vector<int64_t> startPos(threadNum, 0), endPos(threadNum, file_size-1);
   for (int i = 0; i < threadNum; i++)
   {
+    auto tresInput = arrow::io::ReadableFile::Open(fFileName);
+    input = tresInput.ValueOrDie();
     // ARROW_ASSIGN_OR_RAISE(buffer, input->ReadAt(part_size * i, part_size));
     // auto res = input->ReadAt(part_size * i, part_size);
     // buffer = res.ValueOrDie();
-    int newlineStartPos = get_newline_pos(input, part_size * i, part_size, col_num);
+    int newlineStartPos = get_newline_pos(input, part_size * i, part_size, col_num, i == 0);
+    startPos[i] = newlineStartPos;
+    if (i > 0)
+      endPos[i-1] = newlineStartPos - 1;
+  }
+  arrow::io::IOContext io_context = arrow::io::default_io_context();
+  // int64_t row_count = 0;
+  auto start = std::chrono::high_resolution_clock::now();
+  boost::thread_group tReadThreads;
+  for (int i = 0; i < threadNum; i++)
+  {
+    int64_t sss = startPos[i];
+    int64_t eee = endPos[i];
+    tReadThreads.create_thread(boost::bind(&TableInfo::readPartCsv, this, i, chunk_num,
+                               sss, eee, fFileName));
+  }
+  tReadThreads.join_all();
+  // for (int i = 0; i < threadNum; i++)
+  // {
+  //   // std::cout << "Thread" << i << std::endl;
+  //   std::shared_ptr<arrow::io::InputStream> ins;
+  //   auto resIns = arrow::io::ReadableFile::Open(fFileName);
+  //   ins = resIns.ValueOrDie();
+  //   auto advanceRes = ins->Advance(startPos[i]);
+  //   if (!advanceRes.ok())
+  //     return NO_ERROR + 1;
+  //   auto read_options = arrow::csv::ReadOptions::Defaults();
+  //   int bsize = (endPos[i] - startPos[i] + 1) / chunk_num;
+  //   read_options.block_size = bsize;
+  //   if (i)
+  //     read_options.autogenerate_column_names = true;
+  //   else
+  //     read_options.autogenerate_column_names = false;
+  //   auto parse_options = arrow::csv::ParseOptions::Defaults();
+  //   auto convert_options = arrow::csv::ConvertOptions::Defaults();
+  //   auto maybe_reader =
+  //       arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
+  //   std::shared_ptr<arrow::csv::StreamingReader> reader = *maybe_reader;
+  //   std::shared_ptr<arrow::RecordBatch> batch;
+  //   int64_t bytesRead = 0;
+  //   int j = 0;
+  //   while (true)
+  //   {
+  //     arrow::Status status = reader->ReadNext(&batch);
+  //     if (!status.ok())
+  //     {
+  //       // Handle read error
+  //     }
+
+  //     if (batch == NULL)
+  //     {
+  //       // Handle end of file
+  //       break;
+  //     }
+  //     row_count += batch->num_rows();
+  //     // std::cout << "part" << i << " chunk" << j << std::endl;
+  //     // std::cout << batch->ToString() << std::endl;
+  //     j++;
+  //     if (reader->bytes_read() + bsize >= endPos[i] - startPos[i] + 1)
+  //     {
+  //       bytesRead = reader->bytes_read();
+  //       break;
+  //     }
+  //   }
     
+  //   // last chunk
+  //   resIns = arrow::io::ReadableFile::Open(fFileName);
+  //   ins = resIns.ValueOrDie();
+  //   advanceRes = ins->Advance(startPos[i] + bytesRead);
+  //   if (!advanceRes.ok())
+  //     return NO_ERROR + 1;
+  //   read_options.block_size = endPos[i] - startPos[i] + 1 - bytesRead;
+
+  //   maybe_reader = arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
+  //   reader = *maybe_reader;
+
+  //   arrow::Status status = reader->ReadNext(&batch);
+  //   if (!status.ok())
+  //   {
+  //     // Handle read error
+  //   }
+
+  //   if (batch == NULL)
+  //   {
+  //     // Handle end of file
+  //     break;
+  //   }
+  //   row_count += batch->num_rows();
+  //   // std::cout << "part" << i << " chunk" << j << std::endl;
+  //   // std::cout << batch->ToString() << std::endl;
+  //   // std::cout << "*****" << std::endl;
+  // }
+  auto endd = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = endd - start;
+
+  std::cout << "Duration: " << duration.count() << " seconds" << std::endl;
+  std::cout << "total row count:" << tot_row_count << std::endl;
+  return NO_ERROR;
+}
+
+void TableInfo::readPartCsv(int partId, const int chunk_num,
+                 int64_t startPos,
+                 int64_t endPos,
+                 std::string& fFileName
+                 )
+{
+  arrow::io::IOContext io_context = arrow::io::default_io_context();
+  std::shared_ptr<arrow::io::InputStream> ins;
+  auto resIns = arrow::io::ReadableFile::Open(fFileName);
+  ins = resIns.ValueOrDie();
+  auto advanceRes = ins->Advance(startPos);
+  if (!advanceRes.ok())
+    return;
+  auto read_options = arrow::csv::ReadOptions::Defaults();
+  int bsize = (endPos - startPos + 1) / chunk_num;
+  read_options.block_size = bsize;
+  if (partId)
+    read_options.autogenerate_column_names = true;
+  else
+    read_options.autogenerate_column_names = false;
+  auto parse_options = arrow::csv::ParseOptions::Defaults();
+  auto convert_options = arrow::csv::ConvertOptions::Defaults();
+  auto maybe_reader =
+      arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
+  std::shared_ptr<arrow::csv::StreamingReader> reader = *maybe_reader;
+  std::shared_ptr<arrow::RecordBatch> batch;
+  int64_t bytesRead = 0;
+  int j = 0;
+
+  while (true)
+  {
+    arrow::Status status = reader->ReadNext(&batch);
+    if (!status.ok())
+    {
+      // Handle read error
+    }
+
+    if (batch == NULL)
+    {
+      // Handle end of file
+      break;
+    }
+    {
+      boost::mutex::scoped_lock lock(fRowCount);
+      tot_row_count += batch->num_rows();
+    }
+    
+    // std::cout << "part" << i << " chunk" << j << std::endl;
+    // std::cout << batch->ToString() << std::endl;
+    j++;
+    if (reader->bytes_read() + bsize >= endPos - startPos + 1)
+    {
+      bytesRead = reader->bytes_read();
+      break;
+    }
+  }
+
+  // last chunk
+  resIns = arrow::io::ReadableFile::Open(fFileName);
+  ins = resIns.ValueOrDie();
+  advanceRes = ins->Advance(startPos + bytesRead);
+  if (!advanceRes.ok())
+    return;
+  read_options.block_size = endPos - startPos + 1 - bytesRead;
+  if (!read_options.block_size)
+    return;
+
+  maybe_reader =
+      arrow::csv::StreamingReader::Make(io_context, ins, read_options, parse_options, convert_options);
+  reader = *maybe_reader;
+
+  arrow::Status status = reader->ReadNext(&batch);
+  if (!status.ok())
+  {
+    // Handle read error
+  }
+
+  if (batch == NULL)
+  {
+    // Handle end of file
+    return;
+  }
+  {
+    boost::mutex::scoped_lock lock(fRowCount);
+    tot_row_count += batch->num_rows();
   }
 }
 

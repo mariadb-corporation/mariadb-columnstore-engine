@@ -156,7 +156,7 @@ class TableInfo : public WeUIDGID
   BRMReporter fBRMReporter;              // Object used to report BRM updates
   uint64_t fTableLockID;                 // Unique table lock ID
   std::vector<uint16_t> fOrigDbRootIds;  // List of DBRoots at start of job
-
+  boost::mutex fRowCount;
   std::string fErrorDir;               // Opt dir for *.err and *.bad files
   std::vector<std::string> fErrFiles;  // List of *.err files for this table
   std::vector<std::string> fBadFiles;  // List of *.bad files for this table
@@ -166,7 +166,7 @@ class TableInfo : public WeUIDGID
   std::string fRejectErrFileName;      // Filename for current fRejectErrFile
   unsigned int fRejectDataCnt;         // Running row count in current bad file
   unsigned int fRejectErrCnt;          // Running count in current err msg file
-
+  int64_t tot_row_count;
   ExtentStripeAlloc fExtentStrAlloc;  // Extent stripe allocator for this tbl
   querytele::QueryTeleClient fQtc;    // Query Tele client
 
@@ -192,6 +192,8 @@ class TableInfo : public WeUIDGID
       int64_t& totalRowsParquet);        // Open parquet data file and set batch reader for each buffer
   int openTableFileCsv();
   int openTableFile();                   // Open data file and set the buffer
+  void readPartCsv(int partId, const int chunk_num, int64_t startPos, int64_t endPos,
+                   std::string& fFileName);
   void reportTotals(double elapsedSec);  // Report summary totals
   void sleepMS(long int ms);             // Sleep method
   // Compare column HWM with the examplar HWM.

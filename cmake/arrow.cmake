@@ -30,6 +30,7 @@ set(ARROW_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${ARROW_PREFIX}"
         "-DARROW_DEPENDENCY_USE_SHARED=OFF"
         "-DARROW_DATASET=ON"
         "-DARROW_PARQUET=ON"
+        "-DARROW_CSV=ON"
         "-DARROW_FILESYSTEM=ON"
         "-DARROW_RUNTIME_SIMD_LEVEL=SSE4_2"
         "-DThrift_ROOT=${CMAKE_CURRENT_BINARY_DIR}/external/thrift"
@@ -65,6 +66,7 @@ set_target_properties(arrow_bundled_dependencies
 set_target_properties(parquet
         PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${ARROW_INCLUDE_DIR}
         IMPORTED_LOCATION ${PARQUET_STATIC_LIB})
+
 
 
 target_link_libraries(arrow INTERFACE arrow_bundled_dependencies)
