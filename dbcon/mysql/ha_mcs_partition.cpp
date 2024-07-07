@@ -1387,7 +1387,7 @@ extern "C"
     BRM::DBRM::refreshShm();
     DBRM dbrm;
 
-    CalpontSystemCatalog::TableName tableNameObj;
+    CalpontSystemCatalog::TableName tableName;
     string schema, table, partitionNumStr;
     set<LogicalPartition> partitionNums;
     LogicalPartition partitionNum;
@@ -1396,15 +1396,13 @@ extern "C"
 
     ostringstream output;
 
-    THD* thd = current_thd;
-
     try
     {
       schema = (char*)(args->args[0]);
       table = (char*)(args->args[1]);
       partitionNumStr = (char*)(args->args[2]);
 
-      parsePartitionString(args, 2, partitionNums, errMsg, tableNameObj);
+      parsePartitionString(args, 2, partitionNums, errMsg, tableName);
       if (!errMsg.empty())
       {
         Message::Args args;
@@ -1413,9 +1411,8 @@ extern "C"
       }
       partitionNum = *partitionNums.begin();
 
-      tableNameObj = make_table(schema, table, lower_case_table_names);
-      vector<bool> deletedBitMap =
-          getPartitionDeletedBitmap(partitionNum, tableNameObj, tid2sid(thd->thread_id));
+      tableName = make_table(schema, table, lower_case_table_names);
+      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
 
       uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
 
