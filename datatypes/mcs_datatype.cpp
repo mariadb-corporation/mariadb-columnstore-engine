@@ -66,6 +66,41 @@ int128_t TypeAttributesStd::decimal128FromString(const utils::NullString& value,
   return decimal128FromString(value.unsafeStringRef(), saturate);
 }
 
+// SQL parser checks that given `value` is in a valid format.
+// The first symbol can be `-`. The `value` can contain `.` symbol.
+void decimalPrecisionAndScale(const utils::NullString& value, int& precision, int& scale)
+{
+  if (value.isNull())
+  {
+    scale = 0;
+    precision = -1;
+    return;
+  }
+
+  const auto strValue = value.unsafeStringRef();
+  if (strValue.empty())
+  {
+    scale = 0;
+    precision = -1;
+    return;
+  }
+
+  const int len = strValue.size();
+  const auto dotIndex = strValue.find('.');
+  const int minExists = strValue.front() == '-' ? 1 : 0;
+
+  if (dotIndex == std::string::npos)
+  {
+    scale = 0;
+    precision = len - minExists;
+  }
+  else
+  {
+    scale = len - dotIndex - 1;
+    precision = len - 1 - minExists;
+  }
+}
+
 const string& TypeHandlerSInt8::name() const
 {
   static const string xname = "TINYINT";
