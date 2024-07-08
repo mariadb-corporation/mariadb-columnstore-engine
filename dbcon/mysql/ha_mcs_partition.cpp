@@ -1453,7 +1453,7 @@ extern "C"
     }
 
     ostringstream output;
-    output << std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+    output << std::format("{:<20} {:<}", "Part#", "Empty Rate");
     output << formatBloatInfo(partitionNum, deletedBitMap);
 
     initid->ptr = new char[output.str().length() + 1];
@@ -1570,7 +1570,7 @@ extern "C"
     }
 
     ostringstream output;
-    output << std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+    output << std::format("{:<20} {:<}", "Part#", "Empty Rate");
     for (const auto& partitionNum : partitionNums)
     {
       vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);

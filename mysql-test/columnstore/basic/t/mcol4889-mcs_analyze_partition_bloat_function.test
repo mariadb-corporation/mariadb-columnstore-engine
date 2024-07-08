@@ -5,11 +5,11 @@
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
-DROP DATABASE IF EXISTS mcol4889_db;
+DROP DATABASE IF EXISTS mcol4889_db1;
 --enable_warnings
 
-CREATE DATABASE IF NOT EXISTS mcol4889_db;
-USE mcol4889_db;
+CREATE DATABASE IF NOT EXISTS mcol4889_db1;
+USE mcol4889_db1;
 
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=COLUMNSTORE;
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
@@ -46,4 +46,4 @@ if (!$func_exists)
 --enable_query_log
 
 # Clean UP
-DROP DATABASE mcol4889_db;
+DROP DATABASE mcol4889_db1;
