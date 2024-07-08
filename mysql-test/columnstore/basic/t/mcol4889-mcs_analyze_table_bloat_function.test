@@ -25,18 +25,16 @@ INSERT INTO t1 SELECT * FROM t1;
 INSERT INTO t1 SELECT * FROM t1;
 SELECT COUNT(*) FROM t1;
 
-let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='mcs_analyze_partition_bloat'`;
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='mcs_analyze_table_bloat'`;
 
 --disable_query_log
 if (!$func_exists)
 {
-  CREATE FUNCTION mcs_analyze_partition_bloat RETURNS STRING SONAME "ha_columnstore.so";
+  CREATE FUNCTION mcs_analyze_table_bloat RETURNS STRING SONAME "ha_columnstore.so";
 }
 --enable_query_log
 
-SELECT mcs_analyze_partition_bloat('t1', '0.0.1');
-
-SELECT mcs_analyze_partition_bloat('t1', '1.0.1');
+SELECT mcs_analyze_table_bloat('t1');
 
 --disable_query_log
 if (!$func_exists)

@@ -542,6 +542,13 @@ std::string ha_mcs_impl_droppartitions_(execplan::CalpontSystemCatalog::TableNam
   return msg;
 }
 
+inline std::string formatBloatInfo(const LogicalPartition& lp, const vector<bool>& deletedBitMap)
+{
+  uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
+  return std::format("\n  {:<20} {:<.2f}%", std::format("{}.{}.{}", lp.dbroot, lp.pp, lp.seg),
+                     (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+}
+
 extern "C"
 {
   /**
@@ -1446,14 +1453,130 @@ extern "C"
     }
 
     ostringstream output;
-    uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
+    output << std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+    output << formatBloatInfo(partitionNum, deletedBitMap);
 
-    std::string header = std::format("{:<20} {:<} ", "Part#", "Empty Rate");
-    std::string values = std::format("  {:<20} {:<.2f}%", partitionNumStr,
-                                     (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+    initid->ptr = new char[output.str().length() + 1];
+    memcpy(initid->ptr, output.str().c_str(), output.str().length());
+    *length = output.str().length();
+    return initid->ptr;
+  }
 
-    output << header << "\n";
-    output << values;
+  /**
+   * mcs_analyze_table_bloat
+   */
+  my_bool mcs_analyze_table_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool hasErr = false;
+
+    if (args->arg_count < 1 || args->arg_count > 2)
+    {
+      hasErr = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT ||
+             (args->arg_count == 2 && args->arg_type[1] != STRING_RESULT))
+    {
+      hasErr = true;
+    }
+    else if (!args->args[0] || (args->arg_count == 2 && !args->args[1]))
+    {
+      hasErr = true;
+    }
+
+    if (hasErr)
+    {
+      strcpy(message, "usage: MCS_ANALYZE_TABLE ([schema], table)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_analyze_table_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_analyze_table_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                                      char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    std::string schema, table;
+    std::vector<LogicalPartition> partitionNums;
+    std::vector<struct EMEntry> entries;
+
+    string errMsg;
+    try
+    {
+      if (args->arg_count == 2)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
+
+        table = (char*)(args->args[0]);
+      }
+
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+
+      tableName = make_table(schema, table, lower_case_table_names);
+      CalpontSystemCatalog csc;
+      csc.identity(CalpontSystemCatalog::FE);
+      OID_t auxOID = csc.tableAUXColumnOID(tableName);
+      if (auxOID == -1)
+      {
+        Message::Args args;
+        args.add(std::format("'{}.{}'", schema, table));
+        throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+      }
+
+      CHECK(dbrm.getExtents(auxOID, entries, false, false, true));
+
+      for (const auto& entry : entries)
+      {
+        partitionNums.emplace_back(entry.dbRoot, entry.partitionNum, entry.segmentNum);
+      }
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_ANALYZE_TABLE_BLOAT");
+      return result;
+    }
+
+    ostringstream output;
+    output << std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+    for (const auto& partitionNum : partitionNums)
+    {
+      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
+      output << formatBloatInfo(partitionNum, deletedBitMap);
+    }
+
     initid->ptr = new char[output.str().length() + 1];
     memcpy(initid->ptr, output.str().c_str(), output.str().length());
     *length = output.str().length();

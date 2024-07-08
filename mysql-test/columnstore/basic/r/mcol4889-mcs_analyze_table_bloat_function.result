@@ -16,12 +16,9 @@ INSERT INTO t1 SELECT * FROM t1;
 SELECT COUNT(*) FROM t1;
 COUNT(*)
 12800128
-SELECT mcs_analyze_partition_bloat('t1', '0.0.1');
-mcs_analyze_partition_bloat('t1', '0.0.1')
+SELECT mcs_analyze_table_bloat('t1');
+mcs_analyze_table_bloat('t1')
 Part#                Empty Rate 
   1.0.0                50.00%
-SELECT mcs_analyze_partition_bloat('t1', '1.0.1');
-mcs_analyze_partition_bloat('t1', '1.0.1')
-Part#                Empty Rate 
-  1.1.0                50.00%
+  1.0.1                50.00%
 DROP DATABASE mcol4889_db;
