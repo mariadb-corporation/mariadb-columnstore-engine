@@ -1369,7 +1369,7 @@ extern "C"
 
     if (hasErr)
     {
-      strcpy(message, "usage: MCS_ANALYZE_PARTITION_BLOAT (schema, table, partition_num)");
+      strcpy(message, "usage: MCS_ANALYZE_PARTITION_BLOAT ([schema], table, partition_num)");
       return 1;
     }
 
@@ -1391,18 +1391,35 @@ extern "C"
     string schema, table, partitionNumStr;
     set<LogicalPartition> partitionNums;
     LogicalPartition partitionNum;
+    vector<bool> deletedBitMap;
 
     string errMsg;
-
-    ostringstream output;
-
     try
     {
-      schema = (char*)(args->args[0]);
-      table = (char*)(args->args[1]);
-      partitionNumStr = (char*)(args->args[2]);
+      int offset = 2;
+      if (args->arg_count == 3)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+        partitionNumStr = (char*)(args->args[2]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
 
-      parsePartitionString(args, 2, partitionNums, errMsg, tableName);
+        table = (char*)(args->args[0]);
+        partitionNumStr = (char*)(args->args[1]);
+        offset = 1;
+      }
+
+      parsePartitionString(args, offset, partitionNums, errMsg, tableName);
       if (!errMsg.empty())
       {
         Message::Args args;
@@ -1412,16 +1429,7 @@ extern "C"
       partitionNum = *partitionNums.begin();
 
       tableName = make_table(schema, table, lower_case_table_names);
-      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
-
-      uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
-
-      std::string header = std::format("{:<20} {:<} ", "Part#", "Empty Rate");
-      std::string values = std::format("  {:<20} {:<.2f}%", partitionNumStr,
-                                       (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
-
-      output << header << "\n";
-      output << values;
+      deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
     }
     catch (IDBExcept& ex)
     {
@@ -1437,6 +1445,15 @@ extern "C"
       return result;
     }
 
+    ostringstream output;
+    uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
+
+    std::string header = std::format("{:<20} {:<} ", "Part#", "Empty Rate");
+    std::string values = std::format("  {:<20} {:<.2f}%", partitionNumStr,
+                                     (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+
+    output << header << "\n";
+    output << values;
     initid->ptr = new char[output.str().length() + 1];
     memcpy(initid->ptr, output.str().c_str(), output.str().length());
     *length = output.str().length();
