@@ -1,0 +1,20 @@
+DROP DATABASE IF EXISTS `mcol_4499`;
+CREATE DATABASE `mcol_4499`;
+USE `mcol_4499`;
+DROP TABLE IF EXISTS twidevarchar;
+DROP TABLE IF EXISTS twidechar;
+CREATE TABLE twidevarchar (col VARCHAR(4)) ENGINE=ColumnStore;
+INSERT INTO twidevarchar VALUES (NULL),('a');
+SELECT col FROM twidevarchar WHERE col LIKE NULL;
+col
+SELECT col FROM twidevarchar WHERE col NOT LIKE NULL;
+col
+DROP TABLE twidevarchar;
+CREATE TABLE twidechar (col CHAR(5)) ENGINE=ColumnStore;
+INSERT INTO twidechar VALUES (NULL),('a');
+SELECT col FROM twidechar WHERE col LIKE NULL;
+col
+SELECT col FROM twidechar WHERE col NOT LIKE NULL;
+col
+DROP TABLE twidechar;
+DROP DATABASE `mcol_4499`;
