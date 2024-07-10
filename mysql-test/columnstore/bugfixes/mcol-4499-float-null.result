@@ -1,0 +1,13 @@
+DROP DATABASE IF EXISTS `doubles_and_nulls`;
+CREATE DATABASE `doubles_and_nulls`;
+USE `doubles_and_nulls`;
+DROP TABLE IF EXISTS qatablefloat;
+CREATE TABLE qatablefloat (col float) engine=columnstore;
+INSERT INTO qatablefloat VALUES (null);
+INSERT INTO qatablefloat VALUES (null);
+INSERT INTO qatablefloat VALUES (null);
+DELETE FROM qatablefloat WHERE col IS NULL;
+SELECT * FROM qatablefloat;
+col
+DROP TABLE qatablefloat;
+DROP DATABASE `doubles_and_nulls`;

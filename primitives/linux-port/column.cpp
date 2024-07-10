@@ -1759,6 +1759,14 @@ void filterColumnData(NewColRequestHeader* in, ColResultHeader* out, uint16_t* r
   if (parsedColumnFilter.get() == nullptr && filterCount > 0)
     parsedColumnFilter = _parseColumnFilter<T>(in->getFilterStringPtr(), dataType, filterCount, in->BOP);
 
+  // If the filter is always false, return an empty result
+  // TODO how can parsedColumnFilter be nullptr here?
+  if (parsedColumnFilter.get() != nullptr && parsedColumnFilter->columnFilterMode == ALWAYS_FALSE)
+  {
+    out->NVALS = 0;
+    return;
+  }
+
   // Cache parsedColumnFilter fields in local vars
   auto columnFilterMode = filterCount == 0 ? ALWAYS_TRUE : parsedColumnFilter->columnFilterMode;
   FT* filterValues = filterCount == 0 ? nullptr : parsedColumnFilter->getFilterVals<FT>();

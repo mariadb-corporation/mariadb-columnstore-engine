@@ -1,0 +1,27 @@
+#
+# MCOL-4499 NOT LIKE NULL must not return any rows
+#
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS `mcol_4499`;
+CREATE DATABASE `mcol_4499`;
+USE `mcol_4499`;
+DROP TABLE IF EXISTS twidevarchar;
+DROP TABLE IF EXISTS twidechar;
+--enable_warnings
+
+CREATE TABLE twidevarchar (col VARCHAR(4)) ENGINE=ColumnStore;
+INSERT INTO twidevarchar VALUES (NULL),('a');
+SELECT col FROM twidevarchar WHERE col LIKE NULL;
+SELECT col FROM twidevarchar WHERE col NOT LIKE NULL;
+DROP TABLE twidevarchar;
+
+CREATE TABLE twidechar (col CHAR(5)) ENGINE=ColumnStore;
+INSERT INTO twidechar VALUES (NULL),('a');
+SELECT col FROM twidechar WHERE col LIKE NULL;
+SELECT col FROM twidechar WHERE col NOT LIKE NULL;
+DROP TABLE twidechar;
+
+DROP DATABASE `mcol_4499`;
