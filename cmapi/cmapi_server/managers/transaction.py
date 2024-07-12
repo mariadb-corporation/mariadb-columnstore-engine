@@ -26,6 +26,8 @@ class TransactionManager(ContextDecorator):
     :param handle_signals: handle specific signals or not, defaults to False
     :type handle_signals: bool, optional
     """
+    handler: str = 'cmapi'  # cmapi or foundation
+
 
     def __init__(
             self, timeout: float = 300, txn_id: Optional[int] = None,
@@ -35,6 +37,15 @@ class TransactionManager(ContextDecorator):
         self.txn_id = txn_id or get_id()
         self.handle_signals = handle_signals
         self.active_transaction = False
+
+    @classmethod
+    def internal_hadler_used(cls) -> bool:
+        """Internal or foundation handler used.
+
+        :return: True if CMAPI internal handler used otherwise False
+        :rtype: bool
+        """
+        return cls.handler == 'cmapi'
 
     def _handle_exception(
             self, exc: Optional[Type[Exception]] = None,
