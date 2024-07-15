@@ -27,7 +27,7 @@
 #pragma once
 
 #include <vector>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <boost/thread.hpp>
 
@@ -37,6 +37,7 @@
 #include "brmtypes.h"
 #include "undoable.h"
 #include "mastersegmenttable.h"
+#include "vss.h"
 
 // These config parameters need to be loaded
 
@@ -194,7 +195,8 @@ class VBBM : public Undoable
   EXPORT void release(OPS op);
   EXPORT int lookup(LBID_t lbid, VER_t ver, OID_t& oid, uint32_t& fbo) const;
   EXPORT void insert(LBID_t lbid, VER_t ver, OID_t oid, uint32_t fbo, bool loading = false);
-  EXPORT void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VSS& vss, bool flushPMCache);
+  EXPORT void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VssPtrVector& vss,
+                        bool flushPMCache);
   EXPORT void removeEntry(LBID_t, VER_t ver);
 
   EXPORT int size() const;

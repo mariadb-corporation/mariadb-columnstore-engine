@@ -46,8 +46,6 @@ void usage()
 int main(int argc, char** argv)
 {
   uint32_t which_lock;  // 0-6
-  RWLock* rwlock;
-  LockState state;
 
   name = argv[0];
 
@@ -75,8 +73,8 @@ int main(int argc, char** argv)
 
   for (size_t i = minLockId; i <= maxLockId; ++i)
   {
-    rwlock = new RWLock(0x10000 * i);
-    state = rwlock->getLockState();
+    auto rwlock = new RWLock(0x10000 * i);
+    auto state = rwlock->getLockState();
 
     cout << RWLockNames[i] << " RWLock" << std::endl
          << "   readers = " << state.reading << std::endl
