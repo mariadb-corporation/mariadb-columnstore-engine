@@ -22,25 +22,22 @@
 
 #include <iostream>
 #include <sys/types.h>
+// #include <iterator>
 #include <vector>
-#ifdef __linux__
 #include <values.h>
-#endif
-#include <limits>
+// #include <limits>
 #include <sys/stat.h>
 
 #include "brmtypes.h"
-#include "rwlock.h"
+// #include "rwlock.h"
 #include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
 #include "vbbm.h"
-#include "exceptclasses.h"
+// #include "exceptclasses.h"
 #include "slavecomm.h"
-#define BLOCKRESOLUTIONMANAGER_DLLEXPORT
 #include "blockresolutionmanager.h"
-#undef BLOCKRESOLUTIONMANAGER_DLLEXPORT
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -48,16 +45,23 @@ using namespace idbdatafile;
 using namespace logging;
 using namespace std;
 
+namespace r = ranges;
+
 namespace BRM
 {
 BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
 {
+  for (auto s : MasterSegmentTable::VssShmemTypes)
+  {
+    vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
+  }
+
   if (ronly)
   {
     em.setReadOnly();
-    vss.setReadOnly();
     vbbm.setReadOnly();
     copylocks.setReadOnly();
+    r::for_each(vss_, [](auto& v) { v->setReadOnly(); });
   }
 }
 
@@ -95,17 +99,22 @@ int BlockResolutionManager::saveState(string filename) throw()
   string journalFilename = filename + "_journal";
 
   bool locked[2] = {false, false};
+  std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
+  assert(vssIsLocked.size() == vss_.size());
 
   try
   {
     vbbm.lock(VBBM::READ);
     locked[0] = true;
-    vss.lock(VSS::READ);
-    locked[1] = true;
-
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::READ);
+      vssIsLocked[i++] = true;
+    }
     saveExtentMap(emFilename);
 
-    // truncate teh file if already exists since no truncate in HDFS.
+    // truncate the file if already exists since no truncate in HDFS.
     const char* filename_p = journalFilename.c_str();
 
     IDBDataFile* journal =
@@ -113,17 +122,29 @@ int BlockResolutionManager::saveState(string filename) throw()
     delete journal;
 
     vbbm.save(vbbmFilename);
-    vss.save(vssFilename);
 
-    vss.release(VSS::READ);
-    locked[1] = false;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      // The vss image filename numeric suffix begins with 1.
+      v->save(vssFilename + std::to_string(i + 1));
+      v->release(VSS::READ);
+      vssIsLocked[i++] = false;
+    }
+
     vbbm.release(VBBM::READ);
     locked[0] = false;
   }
   catch (exception& e)
   {
-    if (locked[1])
-      vss.release(VSS::READ);
+    assert(vssIsLocked.size() == vss_.size());
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::READ);
+      }
+    }
 
     if (locked[0])
       vbbm.release(VBBM::READ);
@@ -141,27 +162,45 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
+  std::vector<bool> vssIsLocked(VssFactor, false);
+  assert(vssIsLocked.size() == vss_.size());
 
   try
   {
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
-    vss.lock(VSS::WRITE);
-    locked[1] = true;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
+      v->lock_(VSS::WRITE);
+      vssIsLocked[i++] = true;
+    }
 
     loadExtentMap(emFilename, fixFL);
     vbbm.load(vbbmFilename);
-    vss.load(vssFilename);
 
-    vss.release(VSS::WRITE);
-    locked[1] = false;
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
+      // The vss image filename numeric suffix begins with 1.
+      v->load(vssFilename + std::to_string(i + 1));
+      v->release(VSS::WRITE);
+      vssIsLocked[i++] = false;
+    }
+
     vbbm.release(VBBM::WRITE);
     locked[0] = false;
   }
   catch (exception& e)
   {
-    if (locked[1])
-      vss.release(VSS::WRITE);
+    assert(vssIsLocked.size() == vss_.size());
+    for (size_t i = 0; auto& v : vss_)
+    {
+      if (vssIsLocked[i++])
+      {
+        v->release(VSS::WRITE);
+      }
+    }
 
     if (locked[0])
       vbbm.release(VBBM::WRITE);
