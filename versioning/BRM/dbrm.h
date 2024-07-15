@@ -601,7 +601,7 @@ class DBRM
    *
    * @return 0 on success, non-0 on error (see brmtypes.h)
    */
-  EXPORT int getDBRootsForRollback(VER_t transID, std::vector<uint16_t>* dbRootList) throw();
+  // EXPORT int getDBRootsForRollback(VER_t transID, std::vector<uint16_t>* dbRootList) throw();
 
   // @bug 1509.  Added getUncommittedExtentLBIDs function.
   /** @brief Retrieves a list of uncommitted extent LBIDs.
@@ -1006,6 +1006,7 @@ class DBRM
   boost::scoped_ptr<ExtentMap> em;
   boost::scoped_ptr<VBBM> vbbm;
   boost::scoped_ptr<VSS> vss;
+  VssPtrVector vss_;
   boost::scoped_ptr<CopyLocks> copylocks;
   messageqcpp::MessageQueueClient* msgClient;
   std::string masterName;
