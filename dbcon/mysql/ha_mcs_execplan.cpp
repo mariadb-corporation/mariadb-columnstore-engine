@@ -3643,7 +3643,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
   rc = buildReturnedColumnUncached(item, gwi, nonSupport, isRefItem);
   if (rc) // XXX: additional conditions?
   {
-    cacheTransformedItem(item, gwi, rc);
+    cacheTransformedItem(item, gwi, rc->clone());
   }
   return rc;
 }
