@@ -3427,6 +3427,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
 {
   if (!gwi.implicitExplicitGroupBy)
   {
+	  idblog("no caching");
     return nullptr;
   }
   for(uint32_t i=0;i<gwi.retExprMap.size();i++)
@@ -3434,9 +3435,11 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
     if (item->eq(std::get<0>(gwi.retExprMap[i]), false) &&
         std::get<1>(gwi.retExprMap[i]) == gwi.underAggregate)
     {
+	    idblog("found");
       return std::get<2>(gwi.retExprMap[i]).get();
     }
   }
+  idblog("not found");
   return nullptr;
 }
 void cacheTransformedItem(Item* item, gp_walk_info& gwi, ReturnedColumn* rc)
