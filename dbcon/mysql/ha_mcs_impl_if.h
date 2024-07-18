@@ -217,7 +217,7 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
-   , transformedExpressions()
+   , retExprMap()
    , underAggregate(false)
   {
   }
