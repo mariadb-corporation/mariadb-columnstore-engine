@@ -3429,12 +3429,12 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
   {
     return SRCP();
   }
-  for(uint32_t i=0;i<gwi.transformedExpressions.size();i++)
+  for(uint32_t i=0;i<gwi.retExprMap.size();i++)
   {
-    if (item->eq(gwi.transformedExpressions[i].get<0>()) &&
-        gwi.transformedExpressions[i].get<1>() == gwi.underAggregate)
+    if (item->eq(gwi.retExprMap[i].get<0>()) &&
+        gwi.retExprMap[i].get<1>() == gwi.underAggregate)
     {
-      return gwi.transformedExpressions[i].get<2>().get();
+      return gwi.retExprMap[i].get<2>().get();
     }
   }
   return nullptr;
