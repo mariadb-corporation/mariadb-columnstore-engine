@@ -3431,7 +3431,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
   }
   for(uint32_t i=0;i<gwi.retExprMap.size();i++)
   {
-    if (item->eq(std::get<0>(gwi.retExprMap[i])) &&
+    if (item->eq(std::get<0>(gwi.retExprMap[i], false)) &&
         set::get<1>(gwi.retExprMap[i]) == gwi.underAggregate)
     {
       return std::get<2>(gwi.retExprMap[i]).get();
@@ -3442,7 +3442,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
 void cacheTransformedItem(Item* item, gp_walk_info& gwi, ReturnedColumn* rc)
 {
   // we can assume that we have to cache.
-  gwi.retExprMap.push_back(std::make_tuple(item, gwi.underAggregate, rc));
+  gwi.retExprMap.push_back(std::make_tuple(item, gwi.underAggregate, SRCP(rc)));
 }
 
 ReturnedColumn* buildReturnedColumnUncached(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
