@@ -3432,7 +3432,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
   for(uint32_t i=0;i<gwi.retExprMap.size();i++)
   {
     if (item->eq(std::get<0>(gwi.retExprMap[i], false)) &&
-        set::get<1>(gwi.retExprMap[i]) == gwi.underAggregate)
+        std::get<1>(gwi.retExprMap[i]) == gwi.underAggregate)
     {
       return std::get<2>(gwi.retExprMap[i]).get();
     }
