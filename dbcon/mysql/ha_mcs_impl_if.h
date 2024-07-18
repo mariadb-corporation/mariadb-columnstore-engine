@@ -191,6 +191,8 @@ struct gp_walk_info
   std::vector<std::tuple<Item*, bool, execplan::SRCP>> retExprMap;
   // processing under aggregate is different than a top level processing.
   bool underAggregate;
+  // we should warp columns into an aggregate. not all contexts need that.
+  bool wrapColumnsIntoAgg;
 
   gp_walk_info(long timeZone_)
    : sessionid(0)
@@ -219,6 +221,7 @@ struct gp_walk_info
    , inSubQueryLHSItem(nullptr)
    , retExprMap()
    , underAggregate(false)
+   , wrapColumnsIntoAgg(false)
   {
   }
 
