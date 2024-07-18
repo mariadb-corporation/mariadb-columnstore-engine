@@ -3423,10 +3423,30 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
   return rc;
 }
 
-ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi)
 {
-  ReturnedColumn* rc = NULL;
+  if (!gwi.implicitExplicitGroupBy)
+  {
+    return SRCP();
+  }
+  for(uint32_t i=0;i<gwi.transformedExpressions.size();i++)
+  {
+    if (item->eq(gwi.transformedExpressions[i].get<0>()) &&
+        gwi.transformedExpressions[i].get<1>() == gwi.underAggregate)
+    {
+      return gwi.transformedExpressions[i].get<2>().get();
+    }
+  }
+  return nullptr;
+}
+void cacheTransformedItem(Item* item, gp_walk_info& gwi, ReturnedColumn* rc)
+{
+  // we can assume that we have to cache.
+  gwi.transformedExpressions.push_back(std::make_tuple(item, gwi.underAggregate, rc));
+}
 
+ReturnedColumn* buildReturnedColumnUncached(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+{
   if (gwi.thd)
   {
     // if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command ==
@@ -3610,6 +3630,20 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
   if (rc)
     rc->charsetNumber(item->collation.collation->number);
 
+  return rc;
+}
+ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+{
+  ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
+  if (rc)
+  {
+    return rc->clone();
+  }
+  rc = buildReturnedColumnUncached(item, gwi, nonSupport, isRefItem);
+  if (rc) // XXX: additional conditions?
+  {
+    cacheTransformedItem(item, gwi, rc);
+  }
   return rc;
 }
 

@@ -25,6 +25,7 @@
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
 #include <stack>
+#include <tuple>
 #include <vector>
 
 #include "idb_mysql.h"
@@ -179,6 +180,17 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
+  // a "map" from server's expressions into our transformed expressions.
+  // This is implemented using vector to allow for eq() use and, potentially,
+  // can be problematic - we can have about 5000-10000 different expressions
+  // in the SELECT clause and search may require millions of comparisons.
+  // But, for now, it is good enough.
+  // key is pair (Item* item, bool underAggregate), value is third tuple element
+  //
+  std::vector<std::tuple<Item*, bool, SRCP>> retExprMap;
+  // processing under aggregate is different than a top level processing.
+  bool underAggregate;
+
   gp_walk_info(long timeZone_)
    : sessionid(0)
    , fatalParseError(false)
@@ -204,6 +216,8 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
+   , transformedExpressions()
+   , underAggregate(false)
   {
   }
 
