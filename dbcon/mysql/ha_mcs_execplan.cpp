@@ -3427,7 +3427,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
 {
   if (!gwi.implicitExplicitGroupBy)
   {
-    return SRCP();
+    return nullptr;
   }
   for(uint32_t i=0;i<gwi.retExprMap.size();i++)
   {
@@ -3442,11 +3442,12 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
 void cacheTransformedItem(Item* item, gp_walk_info& gwi, ReturnedColumn* rc)
 {
   // we can assume that we have to cache.
-  gwi.transformedExpressions.push_back(std::make_tuple(item, gwi.underAggregate, rc));
+  gwi.retExprMap.push_back(std::make_tuple(item, gwi.underAggregate, rc));
 }
 
 ReturnedColumn* buildReturnedColumnUncached(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
+  ReturnedColumn* rc = nullptr;
   if (gwi.thd)
   {
     // if ( ((gwi.thd->lex)->sql_command == SQLCOM_UPDATE ) || ((gwi.thd->lex)->sql_command ==
