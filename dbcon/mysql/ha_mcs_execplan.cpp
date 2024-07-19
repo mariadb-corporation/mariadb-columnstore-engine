@@ -4874,7 +4874,7 @@ ReturnedColumn* buildSimpleColumnUncached(Item_field* ifp, gp_walk_info& gwi)
 
   return sc;
 }
-ReturnedColumn* buildSimpleColumn(Item* item, gp_walk_info& gwi)
+ReturnedColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi)
 {
   ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
   if (rc)
