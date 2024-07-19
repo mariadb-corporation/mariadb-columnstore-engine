@@ -45,6 +45,9 @@ using namespace boost;
 #include "sqllogger.h"
 #include "we_messages.h"
 #include "dmlprocessor.h"
+#include "vaccumpartitiondmlpackage.h"
+#include "vaccumpartitionpackageprocessor.h"
+
 using namespace BRM;
 using namespace config;
 using namespace execplan;
@@ -1123,6 +1126,16 @@ void PackageHandler::run()
           // cout << "got command " << stmt << " for session " << commandPkg.get_SessionID() << endl;
           result = fProcessor->processPackage(commandPkg);
         }
+      }
+      break;
+
+      case dmlpackage::DML_VACCUM_PARTITION:
+      {
+        dmlpackage::VaccumPartitionDMLPackage vaccumPkg;
+        vaccumPkg.read(*(fByteStream.get()));
+        fProcessor.reset(
+            new dmlpackageprocessor::VaccumPartitionPackageProcessor(fDbrm, vaccumPkg.get_SessionID()));
+        result = fProcessor->processPackage(vaccumPkg);
       }
       break;
     }

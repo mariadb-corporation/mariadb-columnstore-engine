@@ -46,7 +46,7 @@ set(execplan_LIB_SRCS
     vendorexecutionplan.cpp
     windowfunctioncolumn.cpp
     udafcolumn.cpp
-    mock.cpp)
+    mockutils.cpp)
 
 add_library(execplan SHARED ${execplan_LIB_SRCS})
 

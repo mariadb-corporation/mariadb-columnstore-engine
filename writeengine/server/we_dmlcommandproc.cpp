@@ -3951,6 +3951,12 @@ uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::str
   return rc;
 }
 
+uint8_t WE_DMLCommandProc::processVaccumPartition(messageqcpp::ByteStream& bs, std::string& err,
+                                                  messageqcpp::ByteStream::quadbyte& PMId)
+{
+  return 1;
+}
+
 uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::string& err)
 {
   uint8_t rc = 0;

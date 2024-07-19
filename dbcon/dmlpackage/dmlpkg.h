@@ -98,7 +98,8 @@ enum DML_TYPE
   DML_UPDATE,
   DML_DELETE,
   DML_COMMAND,
-  DML_INVALID_TYPE
+  DML_INVALID_TYPE,
+  DML_VACCUM_PARTITION
 };
 
 /** @brief SqlStatement represents a toplevel

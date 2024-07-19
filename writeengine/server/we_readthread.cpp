@@ -168,6 +168,12 @@ void DmlReadThread::operator()()
           break;
         }
 
+        case WE_SVR_VACCUM_PARTITION:
+        {
+          rc = fWeDMLprocessor->processVaccumPartition(ibs, errMsg, PMId);
+          break;
+        }
+
         case WE_SVR_BATCH_INSERT_END:
         {
           rc = fWeDMLprocessor->processBatchInsertHwm(ibs, errMsg);

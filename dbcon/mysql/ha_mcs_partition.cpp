@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <format>
+#include <memory>
 // #include <unistd.h>
 #include <iomanip>
 using namespace std;
@@ -39,7 +40,7 @@ using namespace std;
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 #include "objectidmanager.h"
-#include "mock.h"
+#include "mockutils.h"
 using namespace execplan;
 
 #include "mastersegmenttable.h"
@@ -67,6 +68,9 @@ using namespace logging;
 
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost;
+
+#include "vaccumpartitiondmlpackage.h"
+#include "dmlpackageprocessor.h"
 
 namespace
 {
@@ -542,11 +546,72 @@ std::string ha_mcs_impl_droppartitions_(execplan::CalpontSystemCatalog::TableNam
   return msg;
 }
 
-inline std::string formatBloatInfo(const LogicalPartition& lp, const vector<bool>& deletedBitMap)
+std::string formatBloatInfo(const LogicalPartition& lp, const vector<bool>& deletedBitMap)
 {
   uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
   return std::format("\n  {:<20} {:<.2f}%", std::format("{}.{}.{}", lp.dbroot, lp.pp, lp.seg),
                      (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+}
+
+int processVaccumDMLPackage(dmlpackage::CalpontDMLPackage* package)
+{
+  cout << "Sending to DMLProc" << endl;
+  ByteStream bs;
+  package->write(bs);
+  MessageQueueClient mq("DMLProc");
+  ByteStream::byte b = 0;
+  int rc = 0;
+  THD* thd = current_thd;
+  string emsg;
+
+  try
+  {
+    mq.write(bs);
+    bs = mq.read();
+
+    if (bs.empty())
+    {
+      rc = 1;
+      thd->get_stmt_da()->set_overwrite_status(true);
+      thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc");
+    }
+    else
+    {
+      bs >> b;
+      bs >> emsg;
+      rc = b;
+    }
+  }
+  catch (runtime_error&)
+  {
+    rc = 1;
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc");
+  }
+  catch (...)
+  {
+    rc = 1;
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown error caught");
+  }
+
+  return rc;
+}
+
+std::string ha_mcs_impl_vaccum_partition_bloat(const execplan::CalpontSystemCatalog::TableName& tableName,
+                                               const LogicalPartition& partitionNum)
+{
+  auto dmlPackage = std::make_unique<dmlpackage::VaccumPartitionDMLPackage>(
+      tableName.schema, tableName.table, "mcs_vaccum_partition_blocat", tid2sid(current_thd->thread_id),
+      partitionNum);
+
+  std::string msg = "Partitions are vacuumed successfully";
+
+  if (auto rc = processVaccumDMLPackage(dmlPackage.get());
+      rc != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR)
+    msg = std::format("Failed to vaccum partition, ErrorCode: {}", rc);
+
+  return msg;
 }
 
 extern "C"
@@ -1436,7 +1501,7 @@ extern "C"
       partitionNum = *partitionNums.begin();
 
       tableName = make_table(schema, table, lower_case_table_names);
-      deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
+      deletedBitMap = mockutils::getPartitionDeletedBitmap(partitionNum, tableName);
     }
     catch (IDBExcept& ex)
     {
@@ -1573,7 +1638,7 @@ extern "C"
     output << std::format("{:<20} {:<}", "Part#", "Empty Rate");
     for (const auto& partitionNum : partitionNums)
     {
-      vector<bool> deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
+      vector<bool> deletedBitMap = mockutils::getPartitionDeletedBitmap(partitionNum, tableName);
       output << formatBloatInfo(partitionNum, deletedBitMap);
     }
 
@@ -1625,10 +1690,9 @@ extern "C"
     DBRM dbrm;
 
     CalpontSystemCatalog::TableName tableName;
-    string schema, table, partitionNumStr;
-    set<LogicalPartition> partitionNums;
+    std::string schema, table;
+    std::set<LogicalPartition> partitionNums;
     LogicalPartition partitionNum;
-    vector<bool> deletedBitMap;
 
     string errMsg;
     try
@@ -1638,7 +1702,6 @@ extern "C"
       {
         schema = (char*)(args->args[0]);
         table = (char*)(args->args[1]);
-        partitionNumStr = (char*)(args->args[2]);
       }
       else
       {
@@ -1652,7 +1715,6 @@ extern "C"
         }
 
         table = (char*)(args->args[0]);
-        partitionNumStr = (char*)(args->args[1]);
         offset = 1;
       }
 
@@ -1666,7 +1728,6 @@ extern "C"
       partitionNum = *partitionNums.begin();
 
       tableName = make_table(schema, table, lower_case_table_names);
-      deletedBitMap = getPartitionDeletedBitmap(partitionNum, tableName);
     }
     catch (IDBExcept& ex)
     {
@@ -1682,11 +1743,10 @@ extern "C"
       return result;
     }
 
-    ostringstream output;
+    std::string vaccumResult = ha_mcs_impl_vaccum_partition_bloat(tableName, partitionNum);
 
-    initid->ptr = new char[output.str().length() + 1];
-    memcpy(initid->ptr, output.str().c_str(), output.str().length());
-    *length = output.str().length();
+    memcpy(result, vaccumResult.c_str(), vaccumResult.length());
+    *length = vaccumResult.length();
     return initid->ptr;
   }
 

@@ -1,12 +1,12 @@
-#ifndef __MOCK_H__
-#define __MOCK_H__
+#ifndef __MOCKUTILS_H__
+#define __MOCKUTILS_H__
 
 #include <vector>
 
 #include "logicalpartition.h"
 #include "calpontsystemcatalog.h"
 
-namespace execplan
+namespace mockutils
 {
 static constexpr auto MAX_PARTITION_SIZE = 8388608;
 
@@ -18,7 +18,7 @@ static constexpr auto MAX_PARTITION_SIZE = 8388608;
  * @return deleted bitmap,`true` means deleted and `false` means not deleted
  */
 std::vector<bool> getPartitionDeletedBitmap(const BRM::LogicalPartition& partitionNum,
-                                            const CalpontSystemCatalog::TableName& tableName);
+                                            const execplan::CalpontSystemCatalog::TableName& tableName);
 
-}  // namespace execplan
-#endif  // __MOCK_H__
+}  // namespace mockutils
+#endif  // __MOCKUTILS_H__
