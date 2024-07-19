@@ -5311,7 +5311,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
           case Item::FIELD_ITEM:
           {
             Item_field* ifp = static_cast<Item_field*>(sfitemp);
-            ReturnedColumn* sc = buildSimpleColumn(ifp, gwi);
+            ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
+            SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
             if (!sc)
             {
@@ -9947,7 +9948,8 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    ReturnedColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+    ReturnedColumn* rc = buildSimpleColumn(funcFieldVec[i], gwi);
+    SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
     if (!sc || gwi.fatalParseError)
     {
