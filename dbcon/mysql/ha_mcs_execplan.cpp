@@ -4881,7 +4881,7 @@ ReturnedColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi)
   {
     return rc->clone();
   }
-  rc = buildSimpleColumnUncached(item, gwi, nonSupport, isRefItem);
+  rc = buildSimpleColumnUncached(item, gwi);
   if (rc) // XXX: additional conditions?
   {
     cacheTransformedItem(item, gwi, rc->clone());
