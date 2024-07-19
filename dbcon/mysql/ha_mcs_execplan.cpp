@@ -4779,7 +4779,7 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
-SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+ReturnedColumn* buildSimpleColumnUncached(Item_field* ifp, gp_walk_info& gwi)
 {
   if (!gwi.csc)
   {
@@ -4873,6 +4873,20 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   }
 
   return sc;
+}
+ReturnedColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+{
+  ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
+  if (rc)
+  {
+    return rc->clone();
+  }
+  rc = buildSimpleColumnUncached(item, gwi, nonSupport, isRefItem);
+  if (rc) // XXX: additional conditions?
+  {
+    cacheTransformedItem(item, gwi, rc->clone());
+  }
+  return rc;
 }
 
 ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport)
