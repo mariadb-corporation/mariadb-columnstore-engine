@@ -5866,7 +5866,7 @@ void gp_walk(const Item* item, void* arg)
       if (ifp)
       {
         ReturnedColumn* rcp = buildSimpleColumn(ifp, *gwip);
-	AggregateColumn* acp = dynamic_cast<SimpleColumn*>(rcp);
+	AggregateColumn* acp = dynamic_cast<AggregateColumn*>(rcp);
 	SimpleColumn* scp = dynamic_cast<SimpleColumn*>(acp ? acp->aggParms()[0] : rcp);
 
         if (!scp)
@@ -7617,7 +7617,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        ReturpedColumn* sc = NULL;
+        ReturnedColumn* sc = NULL;
 
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
