@@ -4548,7 +4548,7 @@ ReturnedColumn* buildFunctionColumnUncached(Item_func* ifp, gp_walk_info& gwi, b
 
   return fc;
 }
-ReturnedColumn* buildFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
   ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
   if (rc)
