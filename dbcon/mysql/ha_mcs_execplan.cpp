@@ -7615,14 +7615,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        ReturnedColumn* sc = NULL;
+        RetunedColumn* sc = NULL;
 
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
           collectAllCols(gwi, ifp);
           break;
         }
-        sc = buildSimpleColumn(ifp, gwi);
+        sc = buildSimpleColumn(ifp, gwi); // now it is an aggregate or simple column.
 
         if (sc)
         {
@@ -7641,10 +7641,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               sc->alias(itemAlias);
           }
 
-          // We need to look into GROUP BY columns to decide if we need to wrap a column.
-          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, select_lex, baseItem);
-
-          SRCP sprc(rc);
+          SRCP sprc(sc);
           gwi.returnedCols.push_back(sprc);
 
           gwi.columnMap.insert(
@@ -7654,8 +7651,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           if (ifp->cached_table)
             tmp = ifp->cached_table;
 
-          gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(),
-                                       sc->isColumnStore())] = make_pair(1, tmp);
+	  AggregateColumn* ac = dynamic_cast<AggregateColumn*>(sc);
+
+	  SimpleColumn* realsc = dynamic_cast<SimpleColumn*>(ac ? ac->aggParms()[0] : sc);
+
+	  idbassert(sc);
+
+          gwi.tableMap[make_aliastable(realsc->schemaName(), realsc->tableName(), realsc->tableAlias(),
+                                       realsc->isColumnStore())] = make_pair(1, tmp);
         }
         else
         {
@@ -8135,7 +8138,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    ReturnedColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+    ReturnedColumn* rc = buildSimpleColumn(funcFieldVec[i], gwi);
+    SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
     if (!sc || gwi.fatalParseError)
     {
