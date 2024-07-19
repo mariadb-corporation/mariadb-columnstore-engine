@@ -4874,7 +4874,7 @@ ReturnedColumn* buildSimpleColumnUncached(Item_field* ifp, gp_walk_info& gwi)
 
   return sc;
 }
-ReturnedColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+ReturnedColumn* buildSimpleColumn(Item* item, gp_walk_info& gwi)
 {
   ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
   if (rc)
@@ -5311,7 +5311,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
           case Item::FIELD_ITEM:
           {
             Item_field* ifp = static_cast<Item_field*>(sfitemp);
-            SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
+            ReturnedColumn* sc = buildSimpleColumn(ifp, gwi);
 
             if (!sc)
             {
@@ -5864,7 +5864,7 @@ void gp_walk(const Item* item, void* arg)
 
       if (ifp)
       {
-        SimpleColumn* scp = buildSimpleColumn(ifp, *gwip);
+        ReturnedColumn* scp = buildSimpleColumn(ifp, *gwip);
 
         if (!scp)
           break;
@@ -7614,7 +7614,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        SimpleColumn* sc = NULL;
+        ReturnedColumn* sc = NULL;
 
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
@@ -8134,7 +8134,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+    ReturnedColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
 
     if (!sc || gwi.fatalParseError)
     {
@@ -9482,7 +9482,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           break;
         }
 
-        sc = buildSimpleColumn(ifp, gwi);
+        sc = dynamic_cast<SimpleColumn*>(buildSimpleColumn(ifp, gwi)); // XXX: memory leak?
 
         if (sc)
         {
@@ -9947,7 +9947,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+    ReturnedColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
 
     if (!sc || gwi.fatalParseError)
     {
