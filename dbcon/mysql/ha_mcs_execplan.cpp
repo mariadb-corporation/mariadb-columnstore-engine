@@ -3943,7 +3943,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
   return ac;
 }
 
-ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
+ReturnedColumn* buildFunctionColumnUncached(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -4547,6 +4547,20 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   fc->timeZone(gwi.timeZone);
 
   return fc;
+}
+ReturnedColumn* buildFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+{
+  ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
+  if (rc)
+  {
+    return rc->clone();
+  }
+  rc = buildFunctionColumnUncached(item, gwi, nonSupport, isRefItem);
+  if (rc) // XXX: additional conditions?
+  {
+    cacheTransformedItem(item, gwi, rc->clone());
+  }
+  return rc;
 }
 
 FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
