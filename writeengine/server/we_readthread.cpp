@@ -168,9 +168,9 @@ void DmlReadThread::operator()()
           break;
         }
 
-        case WE_SVR_VACCUM_PARTITION:
+        case WE_SVR_VACUUM_PARTITION:
         {
-          rc = fWeDMLprocessor->processVaccumPartition(ibs, errMsg, PMId);
+          rc = fWeDMLprocessor->processVacuumPartition(ibs, errMsg, PMId);
           break;
         }
 

@@ -96,7 +96,7 @@ class WE_DMLCommandProc
   EXPORT uint8_t processEndTransaction(ByteStream& bs, std::string& err);
   EXPORT uint8_t processFixRows(ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId);
   EXPORT uint8_t getWrittenLbids(messageqcpp::ByteStream& bs, std::string& err, ByteStream::quadbyte& PMId);
-  EXPORT uint8_t processVaccumPartition(messageqcpp::ByteStream& bs, std::string& err,
+  EXPORT uint8_t processVacuumPartition(messageqcpp::ByteStream& bs, std::string& err,
                                         messageqcpp::ByteStream::quadbyte& PMId);
   int validateColumnHWMs(execplan::CalpontSystemCatalog::RIDList& ridList,
                          boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr,

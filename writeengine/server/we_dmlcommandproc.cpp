@@ -3951,7 +3951,7 @@ uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::str
   return rc;
 }
 
-uint8_t WE_DMLCommandProc::processVaccumPartition(messageqcpp::ByteStream& bs, std::string& err,
+uint8_t WE_DMLCommandProc::processVacuumPartition(messageqcpp::ByteStream& bs, std::string& err,
                                                   messageqcpp::ByteStream::quadbyte& PMId)
 {
   return 1;

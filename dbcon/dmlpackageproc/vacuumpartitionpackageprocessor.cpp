@@ -18,7 +18,7 @@
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
 
-#include "vaccumpartitionpackageprocessor.h"
+#include "vacuumpartitionpackageprocessor.h"
 
 #include "messagelog.h"
 #include "simplecolumn.h"
@@ -37,10 +37,10 @@
 
 namespace dmlpackageprocessor
 {
-DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageInternal(
+DMLPackageProcessor::DMLResult VacuumPartitionPackageProcessor::processPackageInternal(
     dmlpackage::CalpontDMLPackage& cpackage)
 {
-  SUMMARY_INFO("VaccumPartitionPackageProcessor::processPackageInternal");
+  SUMMARY_INFO("VacuumPartitionPackageProcessor::processPackageInternal");
 
   DMLResult result;
   result.result = NO_ERROR;
@@ -55,26 +55,26 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
     logging::Message message(9);
     args.add("Unable to execute the statement due to DBRM is read only");
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     fSessionManager.rolledback(txnID);
     return result;
   }
 
-  auto vaccumPartitionPkg = dynamic_cast<dmlpackage::VaccumPartitionDMLPackage*>(&cpackage);
-  if (!vaccumPartitionPkg)
+  auto vacuumPartitionPkg = dynamic_cast<dmlpackage::VacuumPartitionDMLPackage*>(&cpackage);
+  if (!vacuumPartitionPkg)
   {
     logging::Message::Args args;
     logging::Message message(9);
-    args.add("VaccumPartitionDMLPackage wrong cast");
+    args.add("VacuumPartitionDMLPackage wrong cast");
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     return result;
   }
 
   fSessionID = cpackage.get_SessionID();
-  VERBOSE_INFO("VaccumPartitionPackageProcessor is processing CalpontDMLPackage ...");
+  VERBOSE_INFO("VacuumPartitionPackageProcessor is processing CalpontDMLPackage ...");
 
   uint64_t uniqueId = 0;
   try
@@ -87,7 +87,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
     logging::Message message(9);
     args.add(ex.what());
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     fSessionManager.rolledback(txnID);
     return result;
@@ -98,7 +98,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
     logging::Message message(9);
     args.add("Unknown error occurred while getting unique number.");
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     fSessionManager.rolledback(txnID);
     return result;
@@ -187,9 +187,9 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
 
           if (numTries >= maxTries)
           {
-            result.result = VACCUM_ERROR;
+            result.result = VACUUM_ERROR;
             logging::Message::Args args;
-            args.add("Vaccum");
+            args.add("Vacuum");
             args.add(processName);
             args.add((uint64_t)processID);
             args.add(sessionId);
@@ -225,13 +225,13 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
         }
         catch (std::exception& ex)
         {
-          result.result = VACCUM_ERROR;
+          result.result = VACUUM_ERROR;
           throw std::runtime_error(ex.what());
         }
       }
     }
 
-    uint32_t rowsProcessed = doVaccumRows(*vaccumPartitionPkg, result, uniqueId, roPair.objnum);
+    uint32_t rowsProcessed = doVacuumRows(*vacuumPartitionPkg, result, uniqueId, roPair.objnum);
 
     if (result.result == JOB_CANCELED)
       throw std::runtime_error("Query execution was interrupted");
@@ -252,11 +252,11 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
     }
     else
     {
-      cerr << "VaccumPartitionPackageProcessor::processPackage: " << ex.what() << endl;
+      cerr << "VacuumPartitionPackageProcessor::processPackage: " << ex.what() << endl;
 
       if (result.result == 0)
       {
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
       }
 
       result.message = logging::Message(ex.what());
@@ -264,7 +264,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
   }
   catch (...)
   {
-    cerr << "VaccumPartitionPackageProcessor::processPackage: caught unknown exception!" << endl;
+    cerr << "VacuumPartitionPackageProcessor::processPackage: caught unknown exception!" << endl;
     logging::Message::Args args;
     logging::Message message(7);
     args.add("Delete Failed: ");
@@ -273,7 +273,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
     args.add("");
     message.format(args);
 
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
   }
 
@@ -286,19 +286,19 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
 
     if (rc != NO_ERROR)
     {
-      cerr << "VaccumPartitionPackageProcessor::processPackage: write data to disk failed" << endl;
+      cerr << "VacuumPartitionPackageProcessor::processPackage: write data to disk failed" << endl;
 
       if (!fRollbackPending)
       {
         logging::Message::Args args;
         logging::Message message(7);
-        args.add("vaccum Failed: ");
+        args.add("vacuum Failed: ");
         args.add("error when writing data to disk");
         args.add("");
         args.add("");
         message.format(args);
 
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
       }
 
@@ -315,7 +315,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
         args.add("");
         message.format(args);
 
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         result.rowCount = 0;
       }
@@ -349,7 +349,7 @@ DMLPackageProcessor::DMLResult VaccumPartitionPackageProcessor::processPackageIn
   return result;
 }
 
-uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartitionDMLPackage& package,
+uint64_t VacuumPartitionPackageProcessor::doVacuumRows(dmlpackage::VacuumPartitionDMLPackage& package,
                                                        DMLResult& result, const uint64_t uniqueId,
                                                        const uint32_t tableOid)
 {
@@ -399,7 +399,7 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
       args.add("Update Failed: ExeMgr Error");
       args.add((int)qb);
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
       return rowsProcessed;
     }
@@ -413,7 +413,7 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
       args.add("Update Failed: ");
       args.add("Lost connection to ExeMgr");
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
       return rowsProcessed;
     }
@@ -431,13 +431,13 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
       bs = fExeMgr->read();
       if (bs.empty())
       {
-        cerr << "VaccumPartitionPackageProcessor::processPackage::doVaccumRows" << endl;
+        cerr << "VacuumPartitionPackageProcessor::processPackage::doVacuumRows" << endl;
         logging::Message::Args args;
         logging::Message message(2);
         args.add("Update Failed: ");
         args.add("Lost connection to ExeMgr");
         message.format(args);
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         break;
       }
@@ -471,7 +471,7 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
           args.add("Update Failed: ");
           args.add(errorMsg);
           message.format(args);
-          result.result = VACCUM_ERROR;
+          result.result = VACUUM_ERROR;
           result.message = message;
           DMLResult tmpResult;
           receiveAll(tmpResult, uniqueId, pmIds, pmState, tableOid);
@@ -524,7 +524,7 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
     if (fRollbackPending)
     {
       err = true;
-      cerr << "VaccumPartitionPackageProcessor::processPackage::doVaccumRows Rollback Pending" << endl;
+      cerr << "VacuumPartitionPackageProcessor::processPackage::doVacuumRows Rollback Pending" << endl;
       result.result = JOB_CANCELED;
 
       logging::LoggingID logid(DMLLoggingId, fSessionID, package.get_TxnID());
@@ -563,13 +563,13 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
   }
   catch (runtime_error& ex)
   {
-    cerr << "VaccumPartitionPackageProcessor::processPackage::doVaccumRows" << ex.what() << endl;
+    cerr << "VacuumPartitionPackageProcessor::processPackage::doVacuumRows" << ex.what() << endl;
     logging::Message::Args args;
     logging::Message message(2);
     args.add("Update Failed: ");
     args.add(ex.what());
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     qb = 0;
     bs.restart();
@@ -579,13 +579,13 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
   }
   catch (...)
   {
-    cerr << "VaccumPartitionPackageProcessor::processPackage::doVaccumRows" << endl;
+    cerr << "VacuumPartitionPackageProcessor::processPackage::doVacuumRows" << endl;
     logging::Message::Args args;
     logging::Message message(2);
     args.add("Update Failed: ");
     args.add("Unknown error caught when communicating with ExeMgr");
     message.format(args);
-    result.result = VACCUM_ERROR;
+    result.result = VACUUM_ERROR;
     result.message = message;
     qb = 0;
     bs.restart();
@@ -597,16 +597,16 @@ uint64_t VaccumPartitionPackageProcessor::doVaccumRows(dmlpackage::VaccumPartiti
   return rowsProcessed;
 }
 
-bool VaccumPartitionPackageProcessor::processMetaRG(messageqcpp::ByteStream& bsRowGroup, DMLResult& result,
+bool VacuumPartitionPackageProcessor::processMetaRG(messageqcpp::ByteStream& bsRowGroup, DMLResult& result,
                                                     const uint64_t uniqueId,
-                                                    dmlpackage::VaccumPartitionDMLPackage& package,
+                                                    dmlpackage::VacuumPartitionDMLPackage& package,
                                                     std::map<unsigned, bool>& pmState, uint32_t dbroot)
 {
   bool err = false;
   const uint32_t pmNum = (*fDbRootPMMap)[dbroot];
 
   messageqcpp::ByteStream bsSend;
-  bsSend << (uint8_t)WriteEngine::ServerMessages::WE_SVR_VACCUM_PARTITION;
+  bsSend << (uint8_t)WriteEngine::ServerMessages::WE_SVR_VACUUM_PARTITION;
   bsSend << uniqueId;
   bsSend << pmNum;
   bsSend << (uint32_t)package.get_TxnID();
@@ -653,7 +653,7 @@ bool VaccumPartitionPackageProcessor::processMetaRG(messageqcpp::ByteStream& bsR
       args.add("Update Failed: ");
       args.add(errorMsg);
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
       break;
     }
@@ -664,16 +664,16 @@ bool VaccumPartitionPackageProcessor::processMetaRG(messageqcpp::ByteStream& bsR
   return err;
 }
 
-bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGroup, DMLResult& result,
+bool VacuumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGroup, DMLResult& result,
                                                 const uint64_t uniqueId,
-                                                dmlpackage::VaccumPartitionDMLPackage& cpackage,
+                                                dmlpackage::VacuumPartitionDMLPackage& cpackage,
                                                 std::map<unsigned, bool>& pmState, uint32_t dbroot)
 {
   bool err = false;
   const uint32_t pmNum = (*fDbRootPMMap)[dbroot];
 
   messageqcpp::ByteStream bsSend;
-  bsSend << (uint8_t)WriteEngine::ServerMessages::WE_SVR_VACCUM_PARTITION;
+  bsSend << (uint8_t)WriteEngine::ServerMessages::WE_SVR_VACUUM_PARTITION;
   bsSend << uniqueId;
   bsSend << pmNum;
   bsSend << (uint32_t)cpackage.get_TxnID();
@@ -698,7 +698,7 @@ bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGr
       args.add("Update Failed: ");
       args.add(ex.what());
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
     }
     catch (...)
@@ -709,7 +709,7 @@ bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGr
       args.add("Update Failed: ");
       args.add("Unknown error caught when communicating with WES");
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
     }
   }
@@ -774,7 +774,7 @@ bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGr
         args.add("Update Failed: ");
         args.add(ex.what());
         message.format(args);
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         break;
       }
@@ -786,7 +786,7 @@ bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGr
         args.add("Update Failed: ");
         args.add("Unknown error caught when communicating with WES");
         message.format(args);
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         break;
       }
@@ -796,7 +796,7 @@ bool VaccumPartitionPackageProcessor::processRG(messageqcpp::ByteStream& bsRowGr
   return err;
 }
 
-bool VaccumPartitionPackageProcessor::receiveAll(DMLResult& result, const uint64_t uniqueId,
+bool VacuumPartitionPackageProcessor::receiveAll(DMLResult& result, const uint64_t uniqueId,
                                                  std::vector<int>& pmIds, std::map<unsigned, bool>& pmState,
                                                  const uint32_t tableOid)
 {
@@ -834,7 +834,7 @@ bool VaccumPartitionPackageProcessor::receiveAll(DMLResult& result, const uint64
       args.add("Update Failed: ");
       args.add("One of WriteEngineServer went away.");
       message.format(args);
-      result.result = VACCUM_ERROR;
+      result.result = VACUUM_ERROR;
       result.message = message;
       return err;
     }
@@ -902,7 +902,7 @@ bool VaccumPartitionPackageProcessor::receiveAll(DMLResult& result, const uint64
         args.add("Update Failed: ");
         args.add(ex.what());
         message.format(args);
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         break;
       }
@@ -914,7 +914,7 @@ bool VaccumPartitionPackageProcessor::receiveAll(DMLResult& result, const uint64
         args.add("Update Failed: ");
         args.add("Unknown error caught when communicating with WES");
         message.format(args);
-        result.result = VACCUM_ERROR;
+        result.result = VACUUM_ERROR;
         result.message = message;
         break;
       }

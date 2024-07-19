@@ -100,7 +100,7 @@ class DMLPackageProcessor
     JOB_CANCELED,
     DBRM_READ_ONLY,
     PP_LOST_CONNECTION,
-    VACCUM_ERROR
+    VACUUM_ERROR
   };
 
   enum DebugLevel /** @brief Debug level type enumeration */

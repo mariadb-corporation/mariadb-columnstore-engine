@@ -69,7 +69,7 @@ using namespace logging;
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost;
 
-#include "vaccumpartitiondmlpackage.h"
+#include "vacuumpartitiondmlpackage.h"
 #include "dmlpackageprocessor.h"
 
 namespace
@@ -553,7 +553,7 @@ std::string formatBloatInfo(const LogicalPartition& lp, const vector<bool>& dele
                      (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
 }
 
-int processVaccumDMLPackage(dmlpackage::CalpontDMLPackage* package)
+int processVacuumDMLPackage(dmlpackage::CalpontDMLPackage* package)
 {
   cout << "Sending to DMLProc" << endl;
   ByteStream bs;
@@ -598,18 +598,17 @@ int processVaccumDMLPackage(dmlpackage::CalpontDMLPackage* package)
   return rc;
 }
 
-std::string ha_mcs_impl_vaccum_partition_bloat(const execplan::CalpontSystemCatalog::TableName& tableName,
+std::string ha_mcs_impl_vacuum_partition_bloat(const execplan::CalpontSystemCatalog::TableName& tableName,
                                                const LogicalPartition& partitionNum)
 {
-  auto dmlPackage = std::make_unique<dmlpackage::VaccumPartitionDMLPackage>(
-      tableName.schema, tableName.table, "mcs_vaccum_partition_blocat", tid2sid(current_thd->thread_id),
+  auto dmlPackage = std::make_unique<dmlpackage::VacuumPartitionDMLPackage>(
+      tableName.schema, tableName.table, "mcs_vacuum_partition_blocat", tid2sid(current_thd->thread_id),
       partitionNum);
 
   std::string msg = "Partitions are vacuumed successfully";
-
-  if (auto rc = processVaccumDMLPackage(dmlPackage.get());
-      rc != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR)
-    msg = std::format("Failed to vaccum partition, ErrorCode: {}", rc);
+  int rc = processVacuumDMLPackage(dmlPackage.get());
+  if (rc != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR)
+    msg = std::format("Failed to vacuum partition, ErrorCode: {}", rc);
 
   return msg;
 }
@@ -1649,9 +1648,9 @@ extern "C"
   }
 
   /**
-   * mcs_vaccum_partition_bloat
+   * mcs_vacuum_partition_bloat
    */
-  my_bool mcs_vaccum_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_vacuum_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     bool hasErr = false;
 
@@ -1671,19 +1670,19 @@ extern "C"
 
     if (hasErr)
     {
-      strcpy(message, "Usage: MCS_VACCUM_PARTITION_BLOAT ([schema,] table, partition_num)");
+      strcpy(message, "Usage: MCS_VACUUM_PARTITION_BLOAT ([schema,] table, partition_num)");
       return 1;
     }
 
     return 0;
   }
 
-  void mcs_vaccum_partition_bloat_deinit(UDF_INIT* initid)
+  void mcs_vacuum_partition_bloat_deinit(UDF_INIT* initid)
   {
     delete[] initid->ptr;
   }
 
-  const char* mcs_vaccum_partition_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result,
+  const char* mcs_vacuum_partition_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result,
                                          unsigned long* length, char* is_null, char* error)
   {
     BRM::DBRM::refreshShm();
@@ -1739,21 +1738,21 @@ extern "C"
     {
       current_thd->get_stmt_da()->set_overwrite_status(true);
       current_thd->raise_error_printf(ER_INTERNAL_ERROR,
-                                      "Error occurred when calling MCS_VACCUM_PARTITION_BLOAT");
+                                      "Error occurred when calling MCS_VACUUM_PARTITION_BLOAT");
       return result;
     }
 
-    std::string vaccumResult = ha_mcs_impl_vaccum_partition_bloat(tableName, partitionNum);
+    std::string vacuumResult = ha_mcs_impl_vacuum_partition_bloat(tableName, partitionNum);
 
-    memcpy(result, vaccumResult.c_str(), vaccumResult.length());
-    *length = vaccumResult.length();
+    memcpy(result, vacuumResult.c_str(), vacuumResult.length());
+    *length = vacuumResult.length();
     return initid->ptr;
   }
 
   /**
-   * mcs_vaccum_table_bloat
+   * mcs_vacuum_table_bloat
    */
-  my_bool mcs_vaccum_table_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_vacuum_table_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     bool hasErr = false;
 
@@ -1773,19 +1772,19 @@ extern "C"
 
     if (hasErr)
     {
-      strcpy(message, "Usage: MCS_VACCUM_TABLE_BLOAT ([schema,] table)");
+      strcpy(message, "Usage: MCS_VACUUM_TABLE_BLOAT ([schema,] table)");
       return 1;
     }
 
     return 0;
   }
 
-  void mcs_vaccum_table_bloat_deinit(UDF_INIT* initid)
+  void mcs_vacuum_table_bloat_deinit(UDF_INIT* initid)
   {
     delete[] initid->ptr;
   }
 
-  const char* mcs_vaccum_table_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+  const char* mcs_vacuum_table_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                      char* is_null, char* error)
   {
     BRM::DBRM::refreshShm();
@@ -1853,7 +1852,7 @@ extern "C"
     {
       current_thd->get_stmt_da()->set_overwrite_status(true);
       current_thd->raise_error_printf(ER_INTERNAL_ERROR,
-                                      "Error occurred when calling MCS_VACCUM_TABLE_BLOAT");
+                                      "Error occurred when calling MCS_VACUUM_TABLE_BLOAT");
       return result;
     }
 

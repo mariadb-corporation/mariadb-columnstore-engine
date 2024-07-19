@@ -27,14 +27,12 @@
 namespace dmlpackage
 {
 /** @brief concrete implementation of a CalpontDMLPackage
- * Specifically for representing MCS_VACCUM_PARTITION_BLOAT Statements
+ * Specifically for representing MCS_VACUUM_PARTITION_BLOAT Statements
  */
-class VaccumPartitionDMLPackage : public CalpontDMLPackage
+class VacuumPartitionDMLPackage : public CalpontDMLPackage
 {
  public:
-  /** @brief ctor
-   */
-  EXPORT VaccumPartitionDMLPackage();
+  EXPORT VacuumPartitionDMLPackage() = default;
 
   /** @brief ctor
    *
@@ -42,28 +40,28 @@ class VaccumPartitionDMLPackage : public CalpontDMLPackage
    * @param tableName the name of the table being operated on
    * @param dmlStatement the dml statement
    * @param sessionID the session ID
-   * @param partitions partititions to be vacuumed
+   * @param partition partition to be vacuumed
    */
-  EXPORT VaccumPartitionDMLPackage(std::string schemaName, std::string tableName, std::string dmlStatement,
+  EXPORT VacuumPartitionDMLPackage(std::string schemaName, std::string tableName, std::string dmlStatement,
                                    int sessionID, BRM::LogicalPartition partition);
 
   /** @brief dtor
    */
-  EXPORT virtual ~VaccumPartitionDMLPackage();
+  EXPORT virtual ~VacuumPartitionDMLPackage();
 
-  /** @brief write a VaccumPartitionDMLPackage to a ByteStream
+  /** @brief write a VacuumPartitionDMLPackage to a ByteStream
    *
    * @param bytestream the ByteStream to write to
    */
   EXPORT int write(messageqcpp::ByteStream& bytestream);
 
-  /** @brief read a VaccumPartitionDMLPackage from a ByteStream
+  /** @brief read a VacuumPartitionDMLPackage from a ByteStream
    *
    * @param bytestream the ByteStream to read from
    */
   EXPORT int read(messageqcpp::ByteStream& bytestream);
 
-  /** @brief build a VaccumPartitionDMLPackage from a string buffer
+  /** @brief build a VacuumPartitionDMLPackage from a string buffer
    *
    * @param buffer [rowId, columnName, colValue]
    * @param columns the number of columns in the buffer
@@ -71,7 +69,7 @@ class VaccumPartitionDMLPackage : public CalpontDMLPackage
    */
   EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
 
-  /** @brief build a VaccumPartitionDMLPackage from a parsed DeleteSqlStatement
+  /** @brief build a VacuumPartitionDMLPackage from a parsed DeleteSqlStatement
    *
    * @param sqlStatement the parsed DeleteSqlStatement
    */
@@ -89,7 +87,6 @@ class VaccumPartitionDMLPackage : public CalpontDMLPackage
     return fPartition;
   }
 
- protected:
  private:
   BRM::LogicalPartition fPartition;  // The partition number
 };

@@ -12,7 +12,7 @@ set(dmlpackageproc_LIB_SRCS
     commandpackageprocessor.cpp
     autoincrementdata.cpp
     tablelockdata.cpp
-    vaccumpartitionpackageprocessor.cpp)
+    vacuumpartitionpackageprocessor.cpp)
 
 add_library(dmlpackageproc SHARED ${dmlpackageproc_LIB_SRCS})
 
