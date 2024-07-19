@@ -5867,7 +5867,7 @@ void gp_walk(const Item* item, void* arg)
       {
         ReturnedColumn* rcp = buildSimpleColumn(ifp, *gwip);
 	AggregateColumn* acp = dynamic_cast<AggregateColumn*>(rcp);
-	SimpleColumn* scp = dynamic_cast<SimpleColumn*>(acp ? acp->aggParms()[0] : rcp);
+	SimpleColumn* scp = dynamic_cast<SimpleColumn*>(acp ? acp->aggParms()[0].get() : rcp);
 
         if (!scp)
           break;
@@ -7603,7 +7603,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     // @bug 5916. Need to keep checking until getting concret item in case
     // of nested view.
-    Item* baseItem = item;
     while (item->type() == Item::REF_ITEM)
     {
       Item_ref* ref = (Item_ref*)item;
@@ -7655,7 +7654,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 	  AggregateColumn* ac = dynamic_cast<AggregateColumn*>(sc);
 
-	  SimpleColumn* realsc = dynamic_cast<SimpleColumn*>(ac ? ac->aggParms()[0] : sc);
+	  SimpleColumn* realsc = dynamic_cast<SimpleColumn*>(ac ? ac->aggParms()[0].get() : sc);
 
 	  idbassert(sc);
 
