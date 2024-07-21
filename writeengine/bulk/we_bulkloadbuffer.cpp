@@ -3717,6 +3717,35 @@ int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const ch
   return NO_ERROR;
 }
 
+int BulkLoadBuffer::fillFromFileCsv(RID& totalReadRows, RID& correctTotalRows, int64_t& byteRead)
+{
+  // no need to lock here
+  boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
+  reset();
+
+  arrow::Status status = fCsvReader->ReadNext(&fCsvBatch);
+  fStartRow = correctTotalRows;
+  fStartRowForLogging = totalReadRows;
+  if (!fCsvBatch)
+  {
+    std::ostringstream oss;
+    // oss << partId << "row count:" << totalRowsPerInputFile << std::endl;
+    oss << "my start pos is" << fStartPos << std::endl;
+    fLog->logMsg(oss.str(), MSGLVL_INFO2);
+    return NO_ERROR;
+  }
+  fTotalReadRows = fCsvBatch->num_rows();
+  fTotalReadRowsForLog = fCsvBatch->num_rows();
+  totalReadRows += fTotalReadRowsForLog;
+  correctTotalRows += fTotalReadRows;
+  // byteRead = fCsvReader->bytes_read() + fCsvBlockSize;
+  if (fCsvReader->bytes_read() + fCsvBlockSize >= fEndPos - fStartPos + 1)
+  {
+    byteRead = fCsvReader->bytes_read();
+  }
+  return NO_ERROR;
+}
+
 int BulkLoadBuffer::fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows)
 {
   boost::mutex::scoped_lock lock(fSyncUpdatesBLB);

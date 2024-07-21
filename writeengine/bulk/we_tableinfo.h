@@ -157,6 +157,7 @@ class TableInfo : public WeUIDGID
   uint64_t fTableLockID;                 // Unique table lock ID
   std::vector<uint16_t> fOrigDbRootIds;  // List of DBRoots at start of job
   boost::mutex fRowCount;
+  // boost::mutex fColumnLock;
   std::string fErrorDir;               // Opt dir for *.err and *.bad files
   std::vector<std::string> fErrFiles;  // List of *.err files for this table
   std::vector<std::string> fBadFiles;  // List of *.bad files for this table
@@ -176,6 +177,7 @@ class TableInfo : public WeUIDGID
 
   std::shared_ptr<arrow::RecordBatchReader> fParquetReader;  // Batch reader to read batches of data
   std::unique_ptr<parquet::arrow::FileReader> fReader;       // Reader to read parquet file
+  std::vector<std::shared_ptr<arrow::csv::StreamingReader>> fCsvReaders;
   std::vector<std::shared_ptr<arrow::RecordBatch>> fCsvBufferBatch;  // Batch for each buffer to store data
 
   //--------------------------------------------------------------------------
@@ -190,12 +192,20 @@ class TableInfo : public WeUIDGID
   int finishBRM();                      // Finish reporting updates for BRM
   void freeProcessingBuffers();         // Free up Processing Buffers
   bool isBufferAvailable(bool report);  // Is tbl buffer available for reading
+  bool isBufferAvailableCsv(int partId);
   int openTableFileParquet(
       int64_t& totalRowsParquet);        // Open parquet data file and set batch reader for each buffer
+  int openTableCsvParallel(std::vector<int64_t>& startPos, std::vector<int64_t>& endPos, const int chunkNum);        // Open csv file with multi-thread
   int openTableFileCsv();
   int openTableFile();                   // Open data file and set the buffer
+  int64_t get_newline_pos(std::shared_ptr<arrow::io::RandomAccessFile> in,
+					int64_t pos,
+					int64_t bytes_read,
+					uint64_t col_num,
+          bool isFirstPart);
   void readPartCsv(int partId, const int chunk_num, int64_t startPos, int64_t endPos,
                    std::string& fFileName);
+  void readPartCsv1(int partId, int64_t startPos, int64_t endPos);
   void reportTotals(double elapsedSec);  // Report summary totals
   void sleepMS(long int ms);             // Sleep method
   // Compare column HWM with the examplar HWM.

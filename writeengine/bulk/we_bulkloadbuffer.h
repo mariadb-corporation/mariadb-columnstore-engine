@@ -31,6 +31,7 @@
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"
 #include <arrow/api.h>
+#include <arrow/csv/api.h>
 namespace WriteEngine
 {
 class Log;
@@ -87,6 +88,13 @@ class BulkLoadBuffer
   std::shared_ptr<arrow::RecordBatch> fParquetBatch;          // Batch of parquet file to be parsed
   std::shared_ptr<arrow::RecordBatch> fParquetBatchParser;    // for temporary use by parser
   std::shared_ptr<::arrow::RecordBatchReader> fParquetReader; // Reader for read batches of parquet data
+
+  std::shared_ptr<arrow::csv::StreamingReader> fCsvReader;
+  std::shared_ptr<arrow::RecordBatch> fCsvBatch; 
+  std::shared_ptr<arrow::RecordBatch> fCsvBatchParser; 
+  int fCsvBlockSize;
+  int64_t fStartPos;
+  int64_t fEndPos; 
   // Information about the locker and status for each column in this buffer.
   // Note that TableInfo::fSyncUpdatesTI mutex is used to synchronize
   // access to fColumnLocks and fParseComplete from both read and parse
@@ -284,6 +292,21 @@ class BulkLoadBuffer
     fParquetReader = reader;
   }
 
+  void setCsvReader(std::shared_ptr<arrow::csv::StreamingReader> reader)
+  {
+    fCsvReader = reader;
+  }
+
+  void setCsvBlockSize(int size)
+  {
+    fCsvBlockSize = size;
+  }
+
+  void setPartPos(int64_t startPos, int64_t endPos)
+  {
+    fStartPos = startPos;
+    fEndPos = endPos;
+  }
   /** @brief Try to lock a column for the buffer
    * TableInfo::fSyncUpdatesTI mutex should be locked when calling this
    * function (see fColumnLocks discussion).
@@ -297,6 +320,8 @@ class BulkLoadBuffer
   /** @brief Read the batch data into the buffer
    */
   int fillFromFileParquet(RID& totalReadRows, RID& correctTotalRows);
+
+  int fillFromFileCsv(RID& totalReadRows, RID& correctTotalRows, int64_t& byteRead);
 
   /** @brief Read the table data into the buffer
    */

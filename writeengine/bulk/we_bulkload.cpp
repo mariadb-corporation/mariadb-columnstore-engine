@@ -450,7 +450,8 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
 
 void BulkLoad::spawnWorkersCsv()
 {
-  BulkLoad::readCsv();
+  // Read
+  fTableInfo[0].readTableDataCsv();
 }
 
 //------------------------------------------------------------------------------
