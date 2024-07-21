@@ -8,15 +8,16 @@ from contextlib import contextmanager
 from cmapi_server import helpers, node_manipulation
 from mcs_node_control.models.node_config import NodeConfig
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
-from cmapi_server.test.unittest_global import create_self_signed_certificate, \
-        cert_filename, mcs_config_filename, cmapi_config_filename, \
-        tmp_mcs_config_filename, tmp_cmapi_config_filename
+from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.test.unittest_global import (
+    mcs_config_filename, cmapi_config_filename, tmp_mcs_config_filename, 
+    tmp_cmapi_config_filename,
+)
 
 
 @contextmanager
 def start_server():
-    if not os.path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
 
     app = cherrypy.tree.mount(root = None, config = cmapi_config_filename)
     app.config.update({

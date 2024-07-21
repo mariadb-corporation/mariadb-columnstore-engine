@@ -16,17 +16,16 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.dispatcher import (
     dispatcher, jsonify_error,_version
 )
+from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.unittest_global import (
-    create_self_signed_certificate, cert_filename, cmapi_config_filename,
-    tmp_cmapi_config_filename
+    cmapi_config_filename, tmp_cmapi_config_filename
 )
 from mcs_node_control.models.node_config import NodeConfig
 
 
 @contextmanager
 def run_server():
-    if not path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
     yield
