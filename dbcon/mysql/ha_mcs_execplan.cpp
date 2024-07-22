@@ -5064,7 +5064,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_
   return ac;
 }
 
-ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
+ReturnedColumn* buildAggregateColumnUncached(Item* item, gp_walk_info& gwi)
 {
   // MCOL-1201 For UDAnF multiple parameters
   vector<SRCP> selCols;
@@ -5733,6 +5733,30 @@ because it has multiple arguments.";
 
   ac->charsetNumber(item->collation.collation->number);
   return ac;
+}
+ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
+{
+  ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
+  if (rc)
+  {
+    return rc->clone();
+  }
+  bool oldUnderAggregate = gwi.underAggregate;
+  gwi.underAggregate = true;
+  try {
+    rc = buildAggregateColumnUncached(item, gwi, nonSupport, isRefItem);
+    if (rc) // XXX: additional conditions?
+    {
+      cacheTransformedItem(item, gwi, rc->clone());
+    }
+    gwi.underAggregate = oldUnderAggregate;
+    return rc;
+  }
+  catch (std::exception exc)
+  {
+    gwi.underAggregate = oldUnderAggregate;
+    throw exc;
+  }
 }
 
 void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)
