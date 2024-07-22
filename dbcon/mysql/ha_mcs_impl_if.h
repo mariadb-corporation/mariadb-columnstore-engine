@@ -193,6 +193,8 @@ struct gp_walk_info
   bool underAggregate;
   // we should warp columns into an aggregate. not all contexts need that.
   bool wrapColumnsIntoAgg;
+  // SELECT_LEX is needed to not wrap into an aggregate GROUP BY columns.
+  SELECT_LEX* select_lex;
 
   gp_walk_info(long timeZone_)
    : sessionid(0)
@@ -222,6 +224,7 @@ struct gp_walk_info
    , retExprMap()
    , underAggregate(false)
    , wrapColumnsIntoAgg(false)
+   , select_lex(nullptr)
   {
   }
 

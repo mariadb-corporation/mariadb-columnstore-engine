@@ -5029,7 +5029,7 @@ void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
 
 ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_LEX& select_lex, Item* baseItem)
 {
-  if (!gwi.implicitExplicitGroupBy)
+  if (!gwi.implicitExplicitGroupBy || gwi.underAggregate)
   {
     return rc;
   }
@@ -7534,6 +7534,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   int rc = 0;
   // rollup is currently not supported
   bool withRollup = select_lex.olap == ROLLUP_TYPE;
+  SELECT_LEX* oldSelectLex = gwi.select_lex; // remember to restore.
+  gwi.select_lex = nullptr; // disable wrapping.
 
   setExecutionParams(gwi, csep);
 
@@ -7550,16 +7552,19 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   gwi.clauseType = FROM;
   if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop, isSelectLexUnit)))
   {
+    gwi.select_lex = oldSelectLex;
     return rc;
   }
 
   gwi.clauseType = WHERE;
   if ((rc = processWhere(select_lex, gwi, csep, condStack)))
   {
+    gwi.select_lex = oldSelectLex;
     return rc;
   }
 
   gwi.clauseType = SELECT;
+  gwi.select_lex = &select_lex; // where to look for GROUP BY columns.
 #ifdef DEBUG_WALK_COND
   {
     cerr << "------------------- SELECT --------------------" << endl;
@@ -7689,6 +7694,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         {
           setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
           delete sc;
+          gwi.select_lex = oldSelectLex;
           return ER_INTERNAL_ERROR;
         }
 
@@ -7705,6 +7711,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           // e.g., non-support ref column
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
           delete ac;
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7724,6 +7731,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7732,6 +7740,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7746,6 +7755,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7817,6 +7827,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             }
 
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            gwi.select_lex = oldSelectLex;
             return ER_CHECK_NOT_IMPLEMENTED;
           }
           else if (gwi.subQuery && (isPredicateFunction(ifp, &gwi) || ifp->type() == Item::COND_ITEM))
@@ -7824,6 +7835,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             gwi.fatalParseError = true;
             gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            gwi.select_lex = oldSelectLex;
             return ER_CHECK_NOT_IMPLEMENTED;
           }
 
@@ -7833,6 +7845,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             if (after_size - before_size != 0)
             {
               gwi.parseErrorText = ifp->func_name();
+              gwi.select_lex = oldSelectLex;
               return -1;
             }
           }
@@ -7842,6 +7855,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             args.add(ifp->func_name());
             gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            gwi.select_lex = oldSelectLex;
             return ER_CHECK_NOT_IMPLEMENTED;
           }
         }
@@ -7919,6 +7933,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7946,6 +7961,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
 
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -7971,6 +7987,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
         setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        gwi.select_lex = oldSelectLex;
         return ER_CHECK_NOT_IMPLEMENTED;
       }
 
@@ -7980,6 +7997,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.fatalParseError = true;
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL);
         setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        gwi.select_lex = oldSelectLex;
         return ER_CHECK_NOT_IMPLEMENTED;
       }
 
@@ -7993,6 +8011,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
 
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -8006,6 +8025,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           gwi.parseErrorText = "subquery with VALUES";
           gwi.fatalParseError = true;
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          gwi.select_lex = oldSelectLex;
           return ER_CHECK_NOT_IMPLEMENTED;
         }
         else
@@ -8050,6 +8070,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       {
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(unionedTypeRc);
         setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        gwi.select_lex = oldSelectLex;
         return ER_CHECK_NOT_IMPLEMENTED;
       }
     }
@@ -8075,6 +8096,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (gwi.fatalParseError)
     {
       setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_INTERNAL_ERROR;
     }
 
@@ -8116,6 +8138,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (gwi.fatalParseError)
     {
       setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_INTERNAL_ERROR;
     }
 
@@ -8157,6 +8180,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     {
       string emsg("Fatal parse error in vtable mode: Unsupported Items in union or sub select unit");
       setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+      gwi.select_lex = oldSelectLex;
       return ER_CHECK_NOT_IMPLEMENTED;
     }
   }
@@ -8183,6 +8207,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       }
 
       setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_INTERNAL_ERROR;
     }
 
@@ -8245,6 +8270,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.fatalParseError = true;
       gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_WF_NOT_ALLOWED, "GROUP BY clause");
       setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_CHECK_NOT_IMPLEMENTED;
     }
 
@@ -8504,6 +8530,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
       }
       setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_CHECK_NOT_IMPLEMENTED;
     }
     if (withRollup)
@@ -8539,6 +8566,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION, args);
         gwi.parseErrorText = emsg;
         setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+        gwi.select_lex = oldSelectLex;
         return ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION;
       }
     }
@@ -8610,6 +8638,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
             gwi.parseErrorText = emsg;
             setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+            gwi.select_lex = oldSelectLex;
             return ER_CHECK_NOT_IMPLEMENTED;
           }
         }
@@ -8645,6 +8674,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     {
       setError(gwi.thd, ER_INTERNAL_ERROR, e.what(), gwi);
       CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+      gwi.select_lex = oldSelectLex;
       return ER_INTERNAL_ERROR;
     }
     catch (...)
@@ -8652,6 +8682,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
       setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
       CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+      gwi.select_lex = oldSelectLex;
       return ER_INTERNAL_ERROR;
     }
 
@@ -8691,6 +8722,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
         setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
         CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        gwi.select_lex = oldSelectLex;
         return ER_INTERNAL_ERROR;
       }
 
@@ -8757,6 +8789,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     // We don't currently support limit with correlated subquery
     if ((rc = processLimitAndOffset(select_lex, gwi, csep, unionSel, isUnion, isSelectHandlerTop)))
     {
+      gwi.select_lex = oldSelectLex;
       return rc;
     }
   }  // ORDER BY end
@@ -8803,6 +8836,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.fatalParseError = true;
       gwi.parseErrorText = "No project column found for aggregate function";
       setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+      gwi.select_lex = oldSelectLex;
       return ER_CHECK_NOT_IMPLEMENTED;
     }
 
@@ -8846,6 +8880,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
   clearStacks(gwi);
+  gwi.select_lex = oldSelectLex;
   return 0;
 }
 
