@@ -4928,7 +4928,7 @@ ReturnedColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi)
   }
   rc = buildSimpleColumnUncached(item, gwi);
 
-  rc = wrapIntoAggregate(rc, gwi, item);
+  //rc = wrapIntoAggregate(rc, gwi, item);
 
   if (rc)
   {
