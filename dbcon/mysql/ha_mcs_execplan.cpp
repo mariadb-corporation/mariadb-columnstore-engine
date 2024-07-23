@@ -4779,6 +4779,47 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
+ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
+{
+  // we wrap into an aggergte if we aee processing the SELECT clause,
+  // have a result to wrap and not under aggregate: MAX(MIN(col)) is
+  // not a valid use of aggregates, according to server, so MAX(ANY(col))
+  // will be incorrect too.
+  if (!rc || !gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
+  {
+    return rc;
+  }
+
+  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
+  {
+    return rc;
+  }
+
+  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
+
+  while (groupcol)
+  {
+    if (baseItem->eq(*groupcol->item, false))
+    {
+      return rc;
+    }
+    groupcol = groupcol->next;
+  }
+
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
+  ac->timeZone(gwi.timeZone);
+  ac->alias(rc->alias());
+  ac->aggOp(AggregateColumn::SELECT_SOME);
+  ac->asc(rc->asc());
+  ac->charsetNumber(rc->charsetNumber());
+  ac->expressionId(ci->expressionId++);
+
+  ac->aggParms().push_back(SRCP(rc));
+  return ac;
+}
+
 ReturnedColumn* buildSimpleColumnUncached(Item_field* ifp, gp_walk_info& gwi)
 {
   if (!gwi.csc)
@@ -5028,47 +5069,6 @@ void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
       analyzeForImplicitGroupBy(ifp->arguments()[i], gwi);
     }
   }
-}
-
-ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
-{
-  // we wrap into an aggergte if we aee processing the SELECT clause,
-  // have a result to wrap and not under aggregate: MAX(MIN(col)) is
-  // not a valid use of aggregates, according to server, so MAX(ANY(col))
-  // will be incorrect too.
-  if (!rc || !gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
-  {
-    return rc;
-  }
-
-  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
-  {
-    return rc;
-  }
-
-  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
-
-  while (groupcol)
-  {
-    if (baseItem->eq(*groupcol->item, false))
-    {
-      return rc;
-    }
-    groupcol = groupcol->next;
-  }
-
-  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
-  ac->timeZone(gwi.timeZone);
-  ac->alias(rc->alias());
-  ac->aggOp(AggregateColumn::SELECT_SOME);
-  ac->asc(rc->asc());
-  ac->charsetNumber(rc->charsetNumber());
-  ac->expressionId(ci->expressionId++);
-
-  ac->aggParms().push_back(SRCP(rc));
-  return ac;
 }
 
 ReturnedColumn* buildAggregateColumnUncached(Item* item, gp_walk_info& gwi)
@@ -5751,7 +5751,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
   bool oldUnderAggregate = gwi.underAggregate;
   gwi.underAggregate = true;
   try {
-    rc = buildAggregateColumnUncached(item, gwi, nonSupport, isRefItem);
+    rc = buildAggregateColumnUncached(item, gwi);
     if (rc) // XXX: additional conditions?
     {
       cacheTransformedItem(item, gwi, rc->clone());
@@ -5759,7 +5759,7 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
     gwi.underAggregate = oldUnderAggregate;
     return rc;
   }
-  catch (std::exception exc)
+  catch (std::exception& exc)
   {
     gwi.underAggregate = oldUnderAggregate;
     throw exc;
