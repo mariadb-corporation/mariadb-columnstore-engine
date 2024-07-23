@@ -3425,6 +3425,9 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
 
 ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi)
 {
+#if 1
+  return nullptr;
+#else
   if (!gwi.implicitExplicitGroupBy)
   {
 	  idblog("no caching");
@@ -3441,6 +3444,7 @@ ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi
   }
   idblog("not found");
   return nullptr;
+#endif
 }
 void cacheTransformedItem(Item* item, gp_walk_info& gwi, ReturnedColumn* rc)
 {

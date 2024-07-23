@@ -531,7 +531,7 @@ class RollupMarkColumn : public ReturnedColumn
    */
   inline virtual RollupMarkColumn* clone() const override
   {
-    return new RollupMarkColumn();
+    return new RollupMarkColumn(*this);
   }
 
   /*
