@@ -4789,7 +4789,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   // have a result to wrap and not under aggregate: MAX(MIN(col)) is
   // not a valid use of aggregates, according to server, so MAX(ANY(col))
   // will be incorrect too.
-  if (!rc || !gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
+  if (!rc || !gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex || gwi.clauseType == GROUP_BY)
   {
     return rc;
   }
