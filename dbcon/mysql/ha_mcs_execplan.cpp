@@ -4882,7 +4882,10 @@ ReturnedColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi)
     return rc->clone();
   }
   rc = buildSimpleColumnUncached(item, gwi);
-  if (rc) // XXX: additional conditions?
+
+  rc = wrapIntoAggregate(rc, gwi, *gwi.select_lex, item);
+
+  if (rc)
   {
     cacheTransformedItem(item, gwi, rc->clone());
   }
@@ -5027,9 +5030,13 @@ void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
   }
 }
 
-ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_LEX& select_lex, Item* baseItem)
+ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
 {
-  if (!gwi.implicitExplicitGroupBy || gwi.underAggregate)
+  // we wrap into an aggergte if we aee processing the SELECT clause,
+  // have a result to wrap and not under aggregate: MAX(MIN(col)) is
+  // not a valid use of aggregates, according to server, so MAX(ANY(col))
+  // will be incorrect too.
+  if (!rc || !gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
   {
     return rc;
   }
@@ -5039,7 +5046,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_
     return rc;
   }
 
-  ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
 
   while (groupcol)
   {
@@ -8618,7 +8625,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
 
-            rc = wrapIntoAggregate(rc, gwi, select_lex, ord_item);
           }
           // @bug5501 try item_ptr if item can not be fixed. For some
           // weird dml statement state, item can not be fixed but the
