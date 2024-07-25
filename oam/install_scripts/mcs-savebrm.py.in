@@ -68,7 +68,7 @@ def cmapi_available():
     :return: is CMAPI running or not
     :rtype: bool
     """
-    logging.debug('Detecting CMAPI is up and running.')
+    logging.error('Detecting CMAPI is up and running.')
     url = 'https://{}:{}/notfound'.format(LOCALHOST, API_PORT)
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
@@ -109,7 +109,7 @@ def get_ip_address_by_nic(ifname):
             )[20:24]
         )
     except Exception as exc:
-        logging.debug(
+        logging.error(
             'Exception while getting IP address of an "{}" interface'.format(
                 ifname
             ),
@@ -128,7 +128,7 @@ def is_primary_fallback(current_hostname):
     :return: is node primary
     :rtype: bool
     """
-    logging.debug(
+    logging.error(
         'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
     )
     hostnames = set()
@@ -139,7 +139,7 @@ def is_primary_fallback(current_hostname):
             hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
         except:
             pass
-    logging.debug('Found hostnames {}.'.format(hostnames))
+    logging.error('Found hostnames {}.'.format(hostnames))
     return current_hostname in LOCALHOSTS or current_hostname in hostnames
 
 
@@ -233,7 +233,7 @@ def clean_up_backup_brm_files(save_brm_dir_path):
     files_to_remove = filenames[NUMBER_OF_FILES_TO_KEEP:]
     for filename in files_to_remove:
         file_path = os.path.join(save_brm_dir_path, filename)
-        logging.debug('Clean up {}.'.format(file_path))
+        logging.error('Clean up {}.'.format(file_path))
         try:
             os.remove(file_path)
         except OSError as e:
@@ -357,7 +357,7 @@ def call_save_brm_with_local_fallback(a_mcs_config_root):
     except subprocess.CalledProcessError as exc:
         logging.error('The primary call to {} exits with {}.'.format(exc.cmd, exc.returncode))
         backup_path = get_save_brm_path_prefix(a_mcs_config_root)
-        logging.debug('Back up BRM files locally to {}.'.format(backup_path))
+        logging.error('Back up BRM files locally to {}.'.format(backup_path))
         backup_cmd = SAVEBRM + ' ' + backup_path
         try:
             subprocess.check_call(backup_cmd, shell=True)
