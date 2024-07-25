@@ -26,6 +26,7 @@
 #pragma once
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instructions.h>
+#include <limits>
 #include <string>
 #include <iosfwd>
 #include <sstream>
@@ -503,11 +504,16 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
   {
     case execplan::CalpontSystemCatalog::UBIGINT:
       return compileIntWithConditions_<execplan::CalpontSystemCatalog::UBIGINT>(
-          b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
-          rop->compile(b, data, isNull, dataConditionError, row, dataType), isNull, dataConditionError, lop,
-          rop);
+          b, lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+          rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType), isNull,
+          dataConditionError, lop, rop);
 
     case execplan::CalpontSystemCatalog::BIGINT:
+      return compileIntWithConditions_<execplan::CalpontSystemCatalog::BIGINT>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+          rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType), isNull,
+          dataConditionError, lop, rop);
+
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::SMALLINT:
@@ -516,8 +522,9 @@ inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Valu
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
-      return compileInt_(b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
-                         rop->compile(b, data, isNull, dataConditionError, row, dataType));
+      return compileInt_(b,
+                         lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+                         rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType));
 
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE:
@@ -544,6 +551,8 @@ inline llvm::Value* ArithmeticOperator::compileIntWithConditions_(llvm::IRBuilde
                                                                   llvm::Value* dataConditionError,
                                                                   ParseTree* lop, ParseTree* rop)
 {
+  std::cout << "ArithmeticOperator::compileIntWithConditions_ " << fOp << std::endl;
+
   constexpr size_t intTypeBitSize = datatypes::ColTypeToIntegral<CT>::bitWidth;
   static_assert(intTypeBitSize < sizeof(int128_t) * 8, "intTypeBitSize is too big");
   constexpr size_t intBiggerTypeBitSize = intTypeBitSize << 1;
@@ -555,34 +564,47 @@ inline llvm::Value* ArithmeticOperator::compileIntWithConditions_(llvm::IRBuilde
   bool signedLeft = lop->data()->resultType().isSignedInteger();
   bool signedRight = rop->data()->resultType().isSignedInteger();
 
-  auto* lCasted = (signedLeft) ? b.CreateSExt(l, intBigerType, "l_to_int128")
-                               : b.CreateZExt(l, intBigerType, "l_to_int128");
-  auto* rCasted = (signedRight) ? b.CreateSExt(r, intBigerType, "r_to_int128")
-                                : b.CreateZExt(r, intBigerType, "r_to_int128");
+  // Use the llvm.smul.with.overflow.i64 intrinsic
+  // auto* mulWithOverflow = b.CreateCall(
+  //     llvm::Intrinsic::getDeclaration(TheModule.get(), llvm::Intrinsic::smul_with_overflow,
+  //     {b.getInt64Ty()}), {l, r});
+
+  // // Extract the result and overflow flag
+  // auto* operReturn = b.CreateExtractValue(mulWithOverflow, 0);
+  // auto* cmpOutOfRange = b.CreateExtractValue(mulWithOverflow, 1);
+
+  auto* lCasted =
+      (signedLeft) ? b.CreateSExt(l, intBigerType, "lopSExt") : b.CreateZExt(l, intBigerType, "lopZExt");
+  auto* rCasted =
+      (signedRight) ? b.CreateSExt(r, intBigerType, "ropSExt") : b.CreateZExt(r, intBigerType, "ropZExt");
   auto* operReturn = compileInt_(b, lCasted, rCasted);
 
-  auto minValue = datatypes::ranges_limits<CT>::min();
-  auto maxValue = datatypes::ranges_limits<CT>::max();
-  auto* cmpGTMax = b.CreateICmpSGT(operReturn, llvm::ConstantInt::get(operReturn->getType(), maxValue));
-  auto* cmpLTMin = b.CreateICmpSLT(operReturn, llvm::ConstantInt::get(operReturn->getType(), minValue));
+  // auto minValue = datatypes::ranges_limits<CT>::min();
+  // auto maxValue = datatypes::ranges_limits<CT>::max();
+  auto* cmpGTMax =
+      b.CreateICmpSGT(operReturn, llvm::ConstantInt::get(intBigerType, numeric_limits<int64_t>::max()));
+  auto* cmpLTMin =
+      b.CreateICmpSLT(operReturn, llvm::ConstantInt::get(intBigerType, numeric_limits<int64_t>::min()));
   auto* cmpOutOfRange = b.CreateOr(cmpGTMax, cmpLTMin);
 
   auto* getDataConditionError = b.CreateLoad(intErrorType, dataConditionError);
   // Left shift might be faster here than multiplication but this would add up another one-time constant in
   // DataCondition.
-  auto* getErrorCode = b.CreateMul(b.CreateZExt(cmpOutOfRange, intErrorType, "castBoolToInt"),
+  auto* getErrorCode = b.CreateMul(b.CreateZExt(cmpOutOfRange, intErrorType, "boolToIntZExt"),
                                    b.getInt32(datatypes::DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE));
   auto* setOutOfRangeBitInDataCondition = b.CreateOr(getDataConditionError, getErrorCode);
   [[maybe_unused]] auto* storeIsOutOfRange =
       b.CreateStore(setOutOfRangeBitInDataCondition, dataConditionError);
 
-  auto* res = b.CreateTrunc(operReturn, intCurrentType, "truncatedToSmaller");
+  auto* res = b.CreateTrunc(operReturn, intCurrentType, "resTrunc");
 
   return res;
 }
 
 inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {
+  std::cout << "ArithmeticOperator::compileInt_ " << fOp << std::endl;
+
   switch (fOp)
   {
     case OP_ADD: return b.CreateAdd(l, r);
@@ -612,6 +634,8 @@ inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::
 template <datatypes::SystemCatalog::ColDataType CT>
 inline llvm::Value* convertArgToFP(llvm::IRBuilder<>& b, llvm::Value* arg)
 {
+  std::cout << "ArithmeticOperator::convertArgToFP\n";
+
   if (arg->getType()->isIntegerTy())
   {
     if constexpr (CT == datatypes::SystemCatalog::DOUBLE)
@@ -626,6 +650,7 @@ inline llvm::Value* convertArgToFP(llvm::IRBuilder<>& b, llvm::Value* arg)
 template <datatypes::SystemCatalog::ColDataType CT>
 inline llvm::Value* ArithmeticOperator::compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
 {
+  std::cout << "ArithmeticOperator::compileFloat_ " << fOp << std::endl;
   llvm::Value* l_ = convertArgToFP<CT>(b, l);
   llvm::Value* r_ = convertArgToFP<CT>(b, r);
 
