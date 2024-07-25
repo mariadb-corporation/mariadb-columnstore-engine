@@ -1,3 +1,6 @@
+[client]
+quick
+
 [mysqld]
 plugin-load-add=ha_columnstore.so
 collation_server = utf8_general_ci
