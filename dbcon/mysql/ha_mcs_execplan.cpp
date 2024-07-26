@@ -3642,7 +3642,7 @@ ReturnedColumn* buildReturnedColumnUncached(Item* item, gp_walk_info& gwi, bool&
 }
 ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
-  ReturnedColumn* rc = searchCachedTransformedExpressions(item, gwi);
+  ReturnedColumn* rc = nullptr; //searchCachedTransformedExpressions(item, gwi);
   if (rc)
   {
     return rc->clone();
