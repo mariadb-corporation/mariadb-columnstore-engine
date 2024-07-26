@@ -1,4 +1,4 @@
-[client]
+[mariadb-client]
 quick
 
 [mysqld]
