@@ -3425,7 +3425,7 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
 
 ReturnedColumn* searchCachedTransformedExpressions(Item* item, gp_walk_info& gwi)
 {
-#if 1
+#if 0
   return nullptr;
 #else
   if (!gwi.implicitExplicitGroupBy)
@@ -4928,7 +4928,7 @@ ReturnedColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi)
   }
   rc = buildSimpleColumnUncached(item, gwi);
 
-  //rc = wrapIntoAggregate(rc, gwi, item);
+  rc = wrapIntoAggregate(rc, gwi, item);
 
   if (rc)
   {
