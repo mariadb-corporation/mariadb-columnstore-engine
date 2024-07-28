@@ -234,6 +234,23 @@ std::string ConstantColumn::toCppCode(IncludeSet& includes) const
   return ss.str();
 }
 
+std::string ConstantColumn::toExpressionString() const
+{
+  ostringstream oss;
+  oss << "Const(" << fResultType.colDataType << " ";
+  switch (fResultType.colDataType)
+  {
+    case CalpontSystemCatalog::BIGINT: oss << fResult.intVal; break;
+    case CalpontSystemCatalog::UBIGINT: oss << fResult.uintVal; break;
+    case CalpontSystemCatalog::DOUBLE: oss << fResult.doubleVal; break;
+    case CalpontSystemCatalog::DECIMAL: oss << fResult.decimalVal.value; break;
+    case CalpontSystemCatalog::VARCHAR: oss << fResult.strVal.safeString(); break;
+    default: oss << "Unknown"; break;  // TODO add more types
+  }
+  oss << ")";
+  return oss.str();
+}
+
 const string ConstantColumn::data() const
 {
   return fData;
@@ -353,8 +370,6 @@ const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& row, bool& i
 {
   return ns;
 }
-
-
 
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {

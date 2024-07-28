@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstdint>
 namespace datatypes
 {
 /*
@@ -29,6 +30,8 @@ namespace datatypes
 class DataCondition
 {
  public:
+  using ErrorType = uint32_t;
+
   enum Code
   {
     // Code                                Value       SQLSTATE
@@ -57,8 +60,13 @@ class DataCondition
   {
     return mError;
   }
+  // WIP refactor this casting ErrorType to Code and calling a ctor on it instead.
+  static bool isOutOfRange(const ErrorType error)
+  {
+    return Code::X_NUMERIC_VALUE_OUT_OF_RANGE & error;
+  }
 
-  // Adjust a sigened integer of any size to the range [-absMaxVal , +absMaxVal]
+  // Adjust a signed integer of any size to the range [-absMaxVal , +absMaxVal]
   template <typename T>
   void adjustSIntXRange(T& val, T absMaxVal)
   {

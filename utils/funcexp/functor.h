@@ -39,6 +39,8 @@
 
 #include "nullstring.h"
 
+#include <llvm/IR/IRBuilder.h>
+
 namespace rowgroup
 {
 class Row;
@@ -89,6 +91,26 @@ class Func
         << " for operation " << funcName();
     throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
   }
+  // TODO: implement this part
+  /**
+   * Determine whether compilation is supported
+   * */
+  virtual bool isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
+  {
+    return false;
+  }
+  /**
+   * Compile the common parts of functions in IR
+   * and hand over specific blocks and instructions
+   * to the implementation function for implementation
+   *
+   * */
+  virtual llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                               llvm::Value* dataConditionError, rowgroup::Row& row, FunctionParm& fp,
+                               execplan::CalpontSystemCatalog::ColType& op_ct)
+  {
+    return nullptr;
+  }
 
   virtual bool fix(execplan::FunctionColumn& col) const
   {
@@ -116,7 +138,7 @@ class Func
   virtual std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
   utils::NullString getNullStrVal(rowgroup::Row& row, FunctionParm& fp,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     bool isNull;
     std::string val = getStrVal(row, fp, isNull, op_ct);

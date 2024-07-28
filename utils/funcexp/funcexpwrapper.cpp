@@ -31,7 +31,7 @@
 
 #include "funcexpwrapper.h"
 #include "objectreader.h"
-
+#include "expressionjit.h"
 using namespace messageqcpp;
 using namespace rowgroup;
 using namespace execplan;
@@ -117,7 +117,18 @@ bool FuncExpWrapper::evaluate(Row* r)
   for (i = 0; i < filters.size(); i++)
     if (!fe->evaluate(*r, filters[i].get()))
       return false;
-
+  if (!isCompiled)
+  {
+    try
+    {
+      mcs_jit::compileOrFindExpressions(rcs, *r);
+    }
+    catch (const std::logic_error& e)
+    {
+      std::cout << "Skip JIT, caught logic_error:" << e.what() << std::endl;
+    }
+    isCompiled = true;
+  }
   fe->evaluate(*r, rcs);
 
   return true;

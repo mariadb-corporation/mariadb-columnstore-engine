@@ -108,7 +108,7 @@
 
 2060	ERR_UNION_DECIMAL_OVERFLOW	Union operation exceeds maximum DECIMAL precision of 38.
 
-2061	ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT	%1% value is out of range in '`unk`.`unk`.`unk` %2% `unk`.`unk`.`unk`'
+2061	ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT	%1% value is out of range.
 
 2062	ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION	%1% is not in GROUP BY clause, not a column or an expression that contains function.
 

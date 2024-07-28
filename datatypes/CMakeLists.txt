@@ -2,7 +2,8 @@
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 set(datatypes_LIB_SRCS
     mcs_int128.cpp
-    mcs_decimal.cpp)
+    mcs_decimal.cpp
+    mcs_systemcatalog.cpp)
 
 add_library(datatypes SHARED ${datatypes_LIB_SRCS})
 add_dependencies(datatypes loggingcpp external_boost)

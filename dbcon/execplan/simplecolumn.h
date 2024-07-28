@@ -57,7 +57,9 @@ class SimpleColumn : public ReturnedColumn
   /**
    * Constructors
    */
-  class ForTestPurposeWithoutOID{};
+  class ForTestPurposeWithoutOID
+  {
+  };
 
   SimpleColumn();
 
@@ -378,6 +380,44 @@ class SimpleColumn : public ReturnedColumn
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();
   }
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType dataType) override;
+
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::TINYINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UTINYINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::FLOAT:
+      case CalpontSystemCatalog::UFLOAT:
+      case CalpontSystemCatalog::DOUBLE:
+      case CalpontSystemCatalog::UDOUBLE:
+      case CalpontSystemCatalog::TIMESTAMP:
+      case CalpontSystemCatalog::DATE:
+      case CalpontSystemCatalog::DATETIME:
+      case CalpontSystemCatalog::TIME: return true;
+      default: return false;
+    }
+  }
+
+ private:
+  llvm::Value* compileInt(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileUint(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileFloat(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull, rowgroup::Row& row);
+  llvm::Value* compileDouble(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                             rowgroup::Row& row);
 };
 
 typedef boost::shared_ptr<SimpleColumn> SSC;

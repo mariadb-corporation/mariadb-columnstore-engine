@@ -158,6 +158,8 @@ class ConstantColumn : public ReturnedColumn
   virtual const std::string toString() const override;
 
   virtual std::string toCppCode(IncludeSet& includes) const override;
+  virtual std::string toExpressionString() const override;
+
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
@@ -396,6 +398,67 @@ class ConstantColumn : public ReturnedColumn
   {
     return fResult.doubleVal;
   }
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType dataType) override
+  {
+    auto* isNullVal = b.CreateLoad(b.getInt1Ty(), isNull);
+    b.CreateStore(b.CreateOr(b.getInt1(fType == NULLDATA), isNullVal), isNull);
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::TINYINT:
+      {
+        return b.getInt64(fResult.intVal);
+      }
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UTINYINT:
+      {
+        return b.getInt64(fResult.uintVal);
+      }
+
+      case execplan::CalpontSystemCatalog::DOUBLE:
+      case execplan::CalpontSystemCatalog::FLOAT:
+      case execplan::CalpontSystemCatalog::UDOUBLE:
+      case execplan::CalpontSystemCatalog::UFLOAT:
+      {
+        return llvm::ConstantFP::get(b.getDoubleTy(), fResult.doubleVal);
+      }
+      default:
+      {
+        throw std::logic_error("SimpleColumn::compile: unsupported type.");
+      }
+    }
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    switch (fResultType.colDataType)
+    {
+      case CalpontSystemCatalog::BIGINT:
+      case CalpontSystemCatalog::TINYINT:
+      case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::MEDINT:
+      case CalpontSystemCatalog::INT:
+      case CalpontSystemCatalog::UBIGINT:
+      case CalpontSystemCatalog::UTINYINT:
+      case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::UMEDINT:
+      case CalpontSystemCatalog::UINT:
+      case CalpontSystemCatalog::FLOAT:
+      case CalpontSystemCatalog::UFLOAT:
+      case CalpontSystemCatalog::DOUBLE:
+      case CalpontSystemCatalog::UDOUBLE: return true;
+      default: return false;
+    }
+  }
 };
 
 class ConstantColumnNull : public ConstantColumn
@@ -471,7 +534,6 @@ std::ostream& operator<<(std::ostream& output, const ConstantColumn& rhs);
 class RollupMarkColumn : public ReturnedColumn
 {
  public:
-
   /**
    * ctor
    */

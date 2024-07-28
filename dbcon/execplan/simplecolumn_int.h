@@ -86,6 +86,21 @@ class SimpleColumn_INT : public SimpleColumn
 
  private:
   void setNullVal();
+
+ public:
+  llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                       llvm::Value* dataConditionError, rowgroup::Row& row,
+                       CalpontSystemCatalog::ColDataType dataType) override
+  {
+    auto offset = row.getOffset(fInputIndex);
+    CalpontSystemCatalog::ColDataType colType = row.getColType(fInputIndex);
+    mcs_jit::CompileHelper::compileIsNull(b, data, isNull, offset, colType);
+    return mcs_jit::CompileHelper::compileIntField<len>(b, data, offset);
+  }
+  bool isCompilable(rowgroup::Row& row) override
+  {
+    return true;
+  }
 };
 
 template <int len>
@@ -93,8 +108,8 @@ std::string SimpleColumn_INT<len>::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplecolumn_int.h");
   std::stringstream ss;
-  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " <<
-    std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
+  ss << "SimpleColumn_INT<" << len << ">(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName)
+     << ", " << std::quoted(fColumnName) << ", " << fisColumnStore << ", " << sessionID() << ")";
 
   return ss.str();
 }
@@ -146,7 +161,7 @@ void SimpleColumn_INT<len>::setNullVal()
 }
 
 template <int len>
-inline const utils::NullString & SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
+inline const utils::NullString& SimpleColumn_INT<len>::getStrVal(rowgroup::Row& row, bool& isNull)
 {
   if (row.equals<len>(fNullVal, fInputIndex))
   {

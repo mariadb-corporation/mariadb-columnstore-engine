@@ -20,7 +20,7 @@
 
 #include <algorithm>
 #include "exceptclasses.h"
-#include "mcs_datatype_basic.h"
+#include "mcs_datatypes_limits.h"
 
 namespace datatypes
 {

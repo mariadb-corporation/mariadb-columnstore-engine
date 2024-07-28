@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <llvm/IR/IRBuilder.h>
 using namespace std;
 
 #include "functor_int.h"
@@ -140,5 +141,97 @@ int64_t Func_month::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
 
   return -1;
 }
-
+bool Func_month::isCompilable(const execplan::CalpontSystemCatalog::ColType& colType)
+{
+  switch (colType.colDataType)
+  {
+    // case CalpontSystemCatalog::DATE:
+    // case CalpontSystemCatalog::DATETIME:
+    // case CalpontSystemCatalog::TIMESTAMP:
+    // case CalpontSystemCatalog::BIGINT:
+    // case CalpontSystemCatalog::MEDINT:
+    // case CalpontSystemCatalog::SMALLINT:
+    // case CalpontSystemCatalog::TINYINT:
+    // case CalpontSystemCatalog::INT:
+    // case CalpontSystemCatalog::DECIMAL:
+    // case CalpontSystemCatalog::UDECIMAL: return true;
+    // case CalpontSystemCatalog::TIME:
+    // case CalpontSystemCatalog::CHAR:
+    // case CalpontSystemCatalog::TEXT:
+    // case CalpontSystemCatalog::VARCHAR: return false;
+    default: return false;
+  }
+}
+llvm::Value* Func_month::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                 llvm::Value* dataConditionError, rowgroup::Row& row, FunctionParm& fp,
+                                 execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  llvm::Value* val;
+  llvm::Function* func;
+  switch (fp[0]->data()->resultType().colDataType)
+  {
+    case CalpontSystemCatalog::DATE:
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 12), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::DATETIME:
+      val = fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::timestampValueToInt");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::timestampValueToInt function not found");
+      }
+      val = b.CreateCall(
+          func, {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::TIMESTAMP),
+                 b.getInt64(op_ct.getTimeZone())});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::BIGINT:
+    case CalpontSystemCatalog::MEDINT:
+    case CalpontSystemCatalog::SMALLINT:
+    case CalpontSystemCatalog::TINYINT:
+    case CalpontSystemCatalog::INT:
+      func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+          "dataconvert::DataConvert::intToDatetime");
+      if (!func)
+      {
+        throw ::logic_error(
+            "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+      }
+      val = b.CreateCall(
+          func,
+          {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
+      b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                    isNull);
+      return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+    case CalpontSystemCatalog::DECIMAL:
+    case CalpontSystemCatalog::UDECIMAL:
+      if (fp[0]->data()->resultType().scale == 0)
+      {
+        func = b.GetInsertBlock()->getParent()->getParent()->getFunction(
+            "dataconvert::DataConvert::intToDatetime");
+        if (!func)
+        {
+          throw ::logic_error(
+              "Func_month::compile: dataconvert::DataConvert::intToDatetime function not found");
+        }
+        val = b.CreateCall(
+            func,
+            {fp[0]->compile(b, data, isNull, dataConditionError, row, CalpontSystemCatalog::INT), isNull});
+        b.CreateStore(b.CreateOr(b.CreateLoad(b.getInt1Ty(), isNull), b.CreateICmpEQ(val, b.getInt64(-1))),
+                      isNull);
+        return b.CreateTrunc(b.CreateAnd(b.CreateLShr(val, 44), 0xf), b.getInt32Ty());
+      }
+      else
+      {
+        b.CreateStore(b.getTrue(), isNull);
+        return b.getInt64(-1);
+      }
+    default: throw ::logic_error("Func_month::compile: unsupported type");
+  }
+}
 }  // namespace funcexp

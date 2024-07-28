@@ -65,6 +65,7 @@ class FuncExpWrapper : public messageqcpp::Serializeable
   std::vector<boost::shared_ptr<execplan::ParseTree> > filters;
   std::vector<boost::shared_ptr<execplan::ReturnedColumn> > rcs;
   FuncExp* fe;
+  bool isCompiled = false;
 };
 
 inline bool FuncExpWrapper::evaluateFilter(uint32_t num, rowgroup::Row* r)

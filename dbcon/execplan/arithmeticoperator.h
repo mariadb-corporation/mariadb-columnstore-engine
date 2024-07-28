@@ -24,11 +24,16 @@
 /** @file */
 
 #pragma once
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instructions.h>
+#include <limits>
 #include <string>
 #include <iosfwd>
-#include <cmath>
 #include <sstream>
 
+#include "mcs_data_condition.h"
+#include "mcs_datatypes_limits.h"
+#include "mcs_outofrange.h"
 #include "mcs_int128.h"
 #include "operator.h"
 #include "parsetree.h"
@@ -42,8 +47,6 @@ namespace execplan
 {
 class ArithmeticOperator : public Operator
 {
-  using cscType = execplan::CalpontSystemCatalog::ColType;
-
  public:
   ArithmeticOperator();
   ArithmeticOperator(const std::string& operatorName);
@@ -225,28 +228,29 @@ class ArithmeticOperator : public Operator
 
   long fTimeZone;
   bool fDecimalOverflowCheck;
-};
 
+ public:
+  using Operator::compile;
+  inline llvm::Value* compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                              llvm::Value* dataConditionError, rowgroup::Row& row,
+                              CalpontSystemCatalog::ColDataType dataType, ParseTree* lop,
+                              ParseTree* rop) override;
+
+  inline llvm::Value* compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  template <datatypes::SystemCatalog::ColDataType CT>
+  inline llvm::Value* compileIntWithConditions_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r,
+                                                llvm::Value* isNull, llvm::Value* dataConditionError,
+                                                ParseTree* lop, ParseTree* rop);
+  template <datatypes::SystemCatalog::ColDataType CT>
+  inline llvm::Value* compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r);
+  using Operator::isCompilable;
+  inline bool isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop) override;
+};
 // Can be easily replaced with a template over T if MDB changes the result return type.
 inline uint64_t rangesCheck(const datatypes::TSInt128 x, const OpType op, const bool isNull)
 {
   auto result = x.toUBIGINTWithDomainCheck();
-  if (!isNull && !result)
-  {
-    logging::Message::Args args;
-    static const std::string sqlType{"BIGINT UNSIGNED"};
-    args.add(sqlType);
-    switch (op)
-    {
-      case OP_ADD: args.add("\"+\""); break;
-      case OP_SUB: args.add("\"-\""); break;
-      case OP_MUL: args.add("\"*\""); break;
-      case OP_DIV: args.add("\"/\""); break;
-      default: args.add("<unknown>"); break;
-    }
-    const auto errcode = logging::ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT;
-    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-  }
+  datatypes::throwOutOfRangeExceptionIfNeeded(isNull, !result);
   return result.value();  // if isNull returns some value
 }
 
@@ -491,5 +495,185 @@ inline void ArithmeticOperator::execute(IDB_Decimal& result, IDB_Decimal op1, ID
   }
 }
 
+inline llvm::Value* ArithmeticOperator::compile(llvm::IRBuilder<>& b, llvm::Value* data, llvm::Value* isNull,
+                                                llvm::Value* dataConditionError, rowgroup::Row& row,
+                                                CalpontSystemCatalog::ColDataType dataType, ParseTree* lop,
+                                                ParseTree* rop)
+{
+  switch (fOperationType.colDataType)
+  {
+    case execplan::CalpontSystemCatalog::UBIGINT:
+      return compileIntWithConditions_<execplan::CalpontSystemCatalog::UBIGINT>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+          rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType), isNull,
+          dataConditionError, lop, rop);
+
+    case execplan::CalpontSystemCatalog::BIGINT:
+      return compileIntWithConditions_<execplan::CalpontSystemCatalog::BIGINT>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+          rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType), isNull,
+          dataConditionError, lop, rop);
+
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::UTINYINT:
+      return compileInt_(b,
+                         lop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType),
+                         rop->compile(b, data, isNull, dataConditionError, row, fOperationType.colDataType));
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+      return compileFloat_<datatypes::SystemCatalog::DOUBLE>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
+          rop->compile(b, data, isNull, dataConditionError, row, dataType));
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+      return compileFloat_<datatypes::SystemCatalog::FLOAT>(
+          b, lop->compile(b, data, isNull, dataConditionError, row, dataType),
+          rop->compile(b, data, isNull, dataConditionError, row, dataType));
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operand type: " << fOperationType.colDataType;
+      throw logging::InvalidArgumentExcept(oss.str());
+    }
+  }
+}
+
+template <datatypes::SystemCatalog::ColDataType CT>
+inline llvm::Value* ArithmeticOperator::compileIntWithConditions_(llvm::IRBuilder<>& b, llvm::Value* l,
+                                                                  llvm::Value* r, llvm::Value* isNull,
+                                                                  llvm::Value* dataConditionError,
+                                                                  ParseTree* lop, ParseTree* rop)
+{
+  std::cout << "ArithmeticOperator::compileIntWithConditions_ " << fOp << std::endl;
+
+  constexpr size_t intTypeBitSize = datatypes::ColTypeToIntegral<CT>::bitWidth;
+  static_assert(intTypeBitSize < sizeof(int128_t) * 8, "intTypeBitSize is too big");
+  constexpr size_t intBiggerTypeBitSize = intTypeBitSize << 1;
+  constexpr size_t errorTypeBitSize = sizeof(datatypes::DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE) * 8;
+  auto* intBigerType = llvm::IntegerType::get(b.getContext(), intBiggerTypeBitSize);
+  auto* intCurrentType = llvm::IntegerType::get(b.getContext(), intTypeBitSize);
+  auto* intErrorType = llvm::IntegerType::get(b.getContext(), errorTypeBitSize);
+
+  bool signedLeft = lop->data()->resultType().isSignedInteger();
+  bool signedRight = rop->data()->resultType().isSignedInteger();
+
+  // Use the llvm.smul.with.overflow.i64 intrinsic
+  // auto* mulWithOverflow = b.CreateCall(
+  //     llvm::Intrinsic::getDeclaration(TheModule.get(), llvm::Intrinsic::smul_with_overflow,
+  //     {b.getInt64Ty()}), {l, r});
+
+  // // Extract the result and overflow flag
+  // auto* operReturn = b.CreateExtractValue(mulWithOverflow, 0);
+  // auto* cmpOutOfRange = b.CreateExtractValue(mulWithOverflow, 1);
+
+  auto* lCasted =
+      (signedLeft) ? b.CreateSExt(l, intBigerType, "lopSExt") : b.CreateZExt(l, intBigerType, "lopZExt");
+  auto* rCasted =
+      (signedRight) ? b.CreateSExt(r, intBigerType, "ropSExt") : b.CreateZExt(r, intBigerType, "ropZExt");
+  auto* operReturn = compileInt_(b, lCasted, rCasted);
+
+  // auto minValue = datatypes::ranges_limits<CT>::min();
+  // auto maxValue = datatypes::ranges_limits<CT>::max();
+  auto* cmpGTMax =
+      b.CreateICmpSGT(operReturn, llvm::ConstantInt::get(intBigerType, numeric_limits<int64_t>::max()));
+  auto* cmpLTMin =
+      b.CreateICmpSLT(operReturn, llvm::ConstantInt::get(intBigerType, numeric_limits<int64_t>::min()));
+  auto* cmpOutOfRange = b.CreateOr(cmpGTMax, cmpLTMin);
+
+  auto* getDataConditionError = b.CreateLoad(intErrorType, dataConditionError);
+  // Left shift might be faster here than multiplication but this would add up another one-time constant in
+  // DataCondition.
+  auto* getErrorCode = b.CreateMul(b.CreateZExt(cmpOutOfRange, intErrorType, "boolToIntZExt"),
+                                   b.getInt32(datatypes::DataCondition::X_NUMERIC_VALUE_OUT_OF_RANGE));
+  auto* setOutOfRangeBitInDataCondition = b.CreateOr(getDataConditionError, getErrorCode);
+  [[maybe_unused]] auto* storeIsOutOfRange =
+      b.CreateStore(setOutOfRangeBitInDataCondition, dataConditionError);
+
+  auto* res = b.CreateTrunc(operReturn, intCurrentType, "resTrunc");
+
+  return res;
+}
+
+inline llvm::Value* ArithmeticOperator::compileInt_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  std::cout << "ArithmeticOperator::compileInt_ " << fOp << std::endl;
+
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateAdd(l, r);
+
+    case OP_SUB: return b.CreateSub(l, r);
+
+    case OP_MUL: return b.CreateMul(l, r);
+
+    case OP_DIV:
+      if (l->getType()->isIntegerTy())
+        throw std::logic_error("ArithmeticOperator::compile(): Div not support int");
+      else
+      {
+        // WIP check if this handles zero div case.
+        return b.CreateFDiv(l, r);
+      }
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+
+// TODO Use filtering and provide an empty template as an alternative.
+template <datatypes::SystemCatalog::ColDataType CT>
+inline llvm::Value* convertArgToFP(llvm::IRBuilder<>& b, llvm::Value* arg)
+{
+  std::cout << "ArithmeticOperator::convertArgToFP\n";
+
+  if (arg->getType()->isIntegerTy())
+  {
+    if constexpr (CT == datatypes::SystemCatalog::DOUBLE)
+      return b.CreateSIToFP(arg, b.getDoubleTy());
+    else
+      return b.CreateSIToFP(arg, b.getFloatTy());
+  }
+
+  return arg;
+}
+
+template <datatypes::SystemCatalog::ColDataType CT>
+inline llvm::Value* ArithmeticOperator::compileFloat_(llvm::IRBuilder<>& b, llvm::Value* l, llvm::Value* r)
+{
+  std::cout << "ArithmeticOperator::compileFloat_ " << fOp << std::endl;
+  llvm::Value* l_ = convertArgToFP<CT>(b, l);
+  llvm::Value* r_ = convertArgToFP<CT>(b, r);
+
+  switch (fOp)
+  {
+    case OP_ADD: return b.CreateFAdd(l_, r_);
+
+    case OP_SUB: return b.CreateFSub(l_, r_);
+
+    case OP_MUL: return b.CreateFMul(l_, r_);
+
+    case OP_DIV: return b.CreateFDiv(l_, r_);
+    default:
+    {
+      std::ostringstream oss;
+      oss << "invalid arithmetic operation: " << fOp;
+      throw logging::InvalidOperationExcept(oss.str());
+    }
+  }
+}
+inline bool ArithmeticOperator::isCompilable(rowgroup::Row& row, ParseTree* lop, ParseTree* rop)
+{
+  return lop->isCompilable(row) && rop->isCompilable(row);
+}
 std::ostream& operator<<(std::ostream& os, const ArithmeticOperator& rhs);
 }  // namespace execplan
