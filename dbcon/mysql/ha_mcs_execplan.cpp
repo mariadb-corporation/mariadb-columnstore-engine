@@ -7941,7 +7941,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (pushed)
     {
       SRCP& top = gwi.returnedCols[gwi.returnedCols.size() - 1];
-      for (uint32_t i = 0; i < processed.size() && !item->eq(processed[i], false); i++) { }
+      uint32_t i;
+      for (i = 0; i < processed.size() && !item->eq(processed[i], false); i++) { }
       if (i < processed.size())
       {
         top->expressionId(gwi.returnedCols[i]->expressionId());
