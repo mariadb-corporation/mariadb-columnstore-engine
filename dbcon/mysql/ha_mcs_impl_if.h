@@ -117,7 +117,7 @@ struct gp_walk_info
   std::vector<execplan::ReturnedColumn*> localCols;
   std::stack<execplan::ReturnedColumn*> rcWorkStack;
   std::stack<execplan::ParseTree*> ptWorkStack;
-  boost::shared_ptr<execplan::SimpleColumn> scsp;
+  boost::shared_ptr<execplan::SimpleColumn> scsp; // while defined as SSCP, it is used as SRCP, nothing specific to SimpleColumn is used in use sites.
   uint32_t sessionid;
   bool fatalParseError;
   std::string parseErrorText;
@@ -144,6 +144,7 @@ struct gp_walk_info
   // we can have explicit GROUP BY and implicit one, triggered by aggregate in pojection or ORDER BY.
   // this flag tells us whether we have either case.
   bool implicitExplicitGroupBy;
+  bool disableWrapping;
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
@@ -179,6 +180,15 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
+  // Item* associated with returnedCols.
+  std::vector<std::pair<Item*, uint32_t>> processed;
+
+  // SELECT_LEX is needed for aggergate wrapping
+  SELECT_LEX* select_lex;
+
+  // we are processing HAVING despite having (pun not intented) clauseType equal to SELECT.
+  bool havingDespiteSelect;
+
   // All SubQuery allocations are single-linked into this chain.
   // At the end of gp_walk_info processing we can free whole chain at once.
   // This is done so because the juggling of SubQuery pointers in the
@@ -198,6 +208,7 @@ struct gp_walk_info
    , subQuery(0)
    , clauseType(INIT)
    , implicitExplicitGroupBy(false)
+   , disableWrapping(false)
    , aggOnSelect(false)
    , hasWindowFunc(false)
    , hasSubSelect(false)
@@ -212,6 +223,8 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
+   , select_lex(nullptr)
+   , havingDespiteSelect(false)
    , subQueriesChain(subQueriesChain_)
   {
   }
@@ -429,7 +442,7 @@ execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, boo
                                               bool isRefItem = false);
 execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
                                               bool selectBetweenIn = false);
-execplan::ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
+execplan::ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
 execplan::ConstantColumn* buildDecimalColumn(const Item* item, const std::string& str, gp_walk_info& gwi);
 execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
 execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport);

@@ -25,7 +25,7 @@ fi
 run_suite()
 {
     ls /core >$CURRENT_DIR/mtr.$1.cores-before
-    ./mtr --force --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    ./mtr --force --extern=socket=/run/mysqld/mysqld.sock --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
     # dump analyses.
     systemctl stop mariadb
     systemctl start mariadb

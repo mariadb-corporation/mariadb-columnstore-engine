@@ -239,6 +239,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::TINYINT:
       fResult.intVal = execute(lop->getIntVal(row, isNull), rop->getIntVal(row, isNull), isNull);
+      if (isNull)
+      {
+        fResult.intVal = joblist::INTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -292,6 +296,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
       fResult.uintVal = execute(lop->getUintVal(row, isNull), rop->getUintVal(row, isNull), isNull);
+      if (isNull)
+      {
+        fResult.uintVal = joblist::UBIGINTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::DOUBLE:

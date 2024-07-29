@@ -354,7 +354,6 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     }
   }
 
-  bool aggInHaving = false;
   const vector<ReturnedColumn*>& columns = ths->columns();
 
   for (vector<ReturnedColumn*>::const_iterator i = columns.begin(); i != columns.end(); i++)
@@ -365,7 +364,6 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     if (agc)
     {
       addAggregateColumn(agc, -1, jobInfo.nonConstCols, jobInfo);
-      aggInHaving = true;
     }
     else
     {
@@ -387,26 +385,6 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     }
   }
 
-  if (aggInHaving == false)
-  {
-    // treated the same as where clause if no aggregate column in having.
-    jobInfo.havingStep.reset();
-
-    // parse the having expression
-    ParseTree* filters = csep->having();
-
-    if (filters != 0)
-    {
-      JLF_ExecPlanToJobList::walkTree(filters, jobInfo);
-    }
-
-    if (!jobInfo.stack.empty())
-    {
-      idbassert(jobInfo.stack.size() == 1);
-      jobInfo.havingStepVec = jobInfo.stack.top();
-      jobInfo.stack.pop();
-    }
-  }
 }
 
 void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs, const vector<AggregateColumn*>& aggs,
