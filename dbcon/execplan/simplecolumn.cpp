@@ -208,6 +208,13 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
 {
 }
 
+SimpleColumn::SimpleColumn(const ReturnedColumn& rhs, const uint32_t sessionID)
+ : ReturnedColumn(rhs, sessionID)
+ , fData(rhs.data())
+ , fisColumnStore(true)
+{
+}
+
 SimpleColumn::~SimpleColumn()
 {
 }
@@ -270,7 +277,9 @@ const string SimpleColumn::toString() const
          << returnAll() << delim << sequence() << delim << cardinality() << delim << joinInfo() << delim
          << colSource() << delim << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << delim
          << colPosition() << delim << cs.getCharset().cs_name.str << delim << cs.getCharset().coll_name.str
-         << delim << endl;
+         << " inputindex/outputindex: " << fInputIndex << delim << fOutputIndex
+	 << " eid " << fExpressionId
+	 << endl;
 
   return output.str();
 }
