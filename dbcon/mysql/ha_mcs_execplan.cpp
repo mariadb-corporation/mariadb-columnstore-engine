@@ -177,7 +177,7 @@ int pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
   }
   else
   {
-    gwi.processed.push_back(std::mkpair(from, rc->expressionId()));
+    gwi.processed.push_back(std::make_pair(from, rc->expressionId()));
   }
   gwi.returnedCols.push_back(rc);
 }
