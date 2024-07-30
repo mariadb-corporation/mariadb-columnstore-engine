@@ -21,9 +21,9 @@ app = typer.Typer(
 app.add_typer(cluster_app.app, name='cluster')
 app.add_typer(cmapi_app.app, name='cmapi')
 app.command()(backup_commands.backup)
-app.command('backup-dbrm')(backup_commands.dbrm_backup)
+app.command('dbrm_backup')(backup_commands.dbrm_backup)
 app.command()(restore_commands.restore)
-app.command('restore-dbrm')(restore_commands.dbrm_restore)
+app.command('dbrm_restore')(restore_commands.dbrm_restore)
 
 
 if __name__ == '__main__':

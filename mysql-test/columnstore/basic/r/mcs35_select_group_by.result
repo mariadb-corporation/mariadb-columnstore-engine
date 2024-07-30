@@ -86,7 +86,11 @@ COUNT(*)
 9
 SELECT COUNT(*) FROM t1 GROUP BY t1_blob;
 COUNT(*)
-14
+1
+1
+3
+3
+6
 SELECT COUNT(*) FROM t1 GROUP BY t1_text;
 COUNT(*)
 1
