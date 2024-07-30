@@ -8,20 +8,120 @@
 DROP DATABASE IF EXISTS `mcol_4499`;
 CREATE DATABASE `mcol_4499`;
 USE `mcol_4499`;
-DROP TABLE IF EXISTS twidevarchar;
-DROP TABLE IF EXISTS twidechar;
+
+DROP TABLE IF EXISTS t_char_2;
+DROP TABLE IF EXISTS t_char_3;
+DROP TABLE IF EXISTS t_char_4;
+DROP TABLE IF EXISTS t_char_5;
+DROP TABLE IF EXISTS t_char_6;
+DROP TABLE IF EXISTS t_char_7;
+DROP TABLE IF EXISTS t_char_8;
+DROP TABLE IF EXISTS t_char_9;
+
+DROP TABLE IF EXISTS t_varchar_2;
+DROP TABLE IF EXISTS t_varchar_3;
+DROP TABLE IF EXISTS t_varchar_4;
+DROP TABLE IF EXISTS t_varchar_5;
+DROP TABLE IF EXISTS t_varchar_6;
+DROP TABLE IF EXISTS t_varchar_7;
+DROP TABLE IF EXISTS t_varchar_8;
+DROP TABLE IF EXISTS t_varchar_9;
 --enable_warnings
 
-CREATE TABLE twidevarchar (col VARCHAR(4)) ENGINE=ColumnStore;
-INSERT INTO twidevarchar VALUES (NULL),('a');
-SELECT col FROM twidevarchar WHERE col LIKE NULL;
-SELECT col FROM twidevarchar WHERE col NOT LIKE NULL;
-DROP TABLE twidevarchar;
+CREATE TABLE t_char_2 (col CHAR(2)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_2 VALUES (NULL),('a');
+SELECT col FROM t_char_2 WHERE col LIKE NULL;
+SELECT col FROM t_char_2 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_2;
 
-CREATE TABLE twidechar (col CHAR(5)) ENGINE=ColumnStore;
-INSERT INTO twidechar VALUES (NULL),('a');
-SELECT col FROM twidechar WHERE col LIKE NULL;
-SELECT col FROM twidechar WHERE col NOT LIKE NULL;
-DROP TABLE twidechar;
+CREATE TABLE t_char_3 (col CHAR(3)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_3 VALUES (NULL),('a');
+SELECT col FROM t_char_3 WHERE col LIKE NULL;
+SELECT col FROM t_char_3 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_3;
+
+CREATE TABLE t_char_4 (col CHAR(4)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_4 VALUES (NULL),('abcd');
+SELECT col FROM t_char_4 WHERE col LIKE NULL;
+SELECT col FROM t_char_4 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_4;
+
+CREATE TABLE t_char_5 (col CHAR(5)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_5 VALUES (NULL),('abcde');
+SELECT col FROM t_char_5 WHERE col LIKE NULL;
+SELECT col FROM t_char_5 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_5;
+
+CREATE TABLE t_char_6 (col CHAR(6)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_6 VALUES (NULL),('abcdef');
+SELECT col FROM t_char_6 WHERE col LIKE NULL;
+SELECT col FROM t_char_6 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_6;
+
+CREATE TABLE t_char_7 (col CHAR(7)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_7 VALUES (NULL),('abcdefg');
+SELECT col FROM t_char_7 WHERE col LIKE NULL;
+SELECT col FROM t_char_7 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_7;
+
+CREATE TABLE t_char_8 (col CHAR(8)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_8 VALUES (NULL),('abcdefgh');
+SELECT col FROM t_char_8 WHERE col LIKE NULL;
+SELECT col FROM t_char_8 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_8;
+
+CREATE TABLE t_char_9 (col CHAR(9)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_char_9 VALUES (NULL),('abcdefghi');
+SELECT col FROM t_char_9 WHERE col LIKE NULL;
+SELECT col FROM t_char_9 WHERE col NOT LIKE NULL;
+DROP TABLE t_char_9;
+
+CREATE TABLE t_varchar_2 (col VARCHAR(2)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_2 VALUES (NULL),('a');
+SELECT col FROM t_varchar_2 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_2 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_2;
+
+CREATE TABLE t_varchar_3 (col VARCHAR(3)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_3 VALUES (NULL),('a');
+SELECT col FROM t_varchar_3 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_3 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_3;
+
+CREATE TABLE t_varchar_4 (col VARCHAR(4)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_4 VALUES (NULL),('abcd');
+SELECT col FROM t_varchar_4 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_4 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_4;
+
+CREATE TABLE t_varchar_5 (col VARCHAR(5)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_5 VALUES (NULL),('abcde');
+SELECT col FROM t_varchar_5 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_5 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_5;
+
+CREATE TABLE t_varchar_6 (col VARCHAR(6)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_6 VALUES (NULL),('abcdef');
+SELECT col FROM t_varchar_6 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_6 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_6;
+
+CREATE TABLE t_varchar_7 (col VARCHAR(7)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_7 VALUES (NULL),('abcdefg');
+SELECT col FROM t_varchar_7 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_7 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_7;
+
+CREATE TABLE t_varchar_8 (col VARCHAR(8)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_8 VALUES (NULL),('abcdefgh');
+SELECT col FROM t_varchar_8 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_8 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_8;
+
+CREATE TABLE t_varchar_9 (col VARCHAR(9)) ENGINE=ColumnStore CHARACTER SET ascii;
+INSERT INTO t_varchar_9 VALUES (NULL),('abcdefghi');
+SELECT col FROM t_varchar_9 WHERE col LIKE NULL;
+SELECT col FROM t_varchar_9 WHERE col NOT LIKE NULL;
+DROP TABLE t_varchar_9;
 
 DROP DATABASE `mcol_4499`;
