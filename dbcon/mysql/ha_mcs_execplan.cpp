@@ -161,7 +161,7 @@ void calculateNotNullTables(const std::vector<COND*>& condList, table_map& not_n
   }
 }
 
-int pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
+void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
 {
   uint32_t i;
   for ( i = 0; i < gwi.processed.size(); i++)
