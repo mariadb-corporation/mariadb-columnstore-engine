@@ -7704,7 +7704,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             continue;
           }
 
-          gwi.returnedCols.push_back(srcp);
 	  pushReturnedCol(gwi, item, srcp);
         }
         else  // This was a vtable post-process block
