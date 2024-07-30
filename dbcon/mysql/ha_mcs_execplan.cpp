@@ -2247,7 +2247,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     idbassert(ifp->argument_count() == 1);
     ParseTree* ptp = 0;
-    if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+    Item_func* argfp = dynamic_cast<Item_func*>(ifp->arguments()[0]);
+    if (argfp && argfp->functype() == Item_func::EQUAL_FUNC)
     {
       // negate it in place
       // Note that an EQUAL_FUNC ( a <=> b) was converted to
