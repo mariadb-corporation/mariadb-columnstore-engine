@@ -7701,7 +7701,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             if (ifp->name.length)
               srcp->alias(ifp->name.str);
 
-            break;
+            continue;
           }
 
           gwi.returnedCols.push_back(srcp);
@@ -7924,7 +7924,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
-        gwi.returnedCols.push_back(srcp);
 	pushReturnedCol(gwi, item, srcp);
         break;
       }
