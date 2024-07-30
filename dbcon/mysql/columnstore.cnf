@@ -1,6 +1,3 @@
-[mariadb-client]
-quick
-
 [mysqld]
 plugin-load-add=ha_columnstore.so
 
