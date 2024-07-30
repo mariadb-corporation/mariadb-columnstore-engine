@@ -161,6 +161,27 @@ void calculateNotNullTables(const std::vector<COND*>& condList, table_map& not_n
   }
 }
 
+int pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
+{
+  uint32_t i;
+  for ( i = 0; i < gwi.processed.size(); i++)
+  {
+    if (gwi.processed[i].first->eq(from, false))
+    {
+      break;
+    }
+  }
+  if (i < gwi.processed.size())
+  {
+    rc->expressionId(gwi.processed[i].second);
+  }
+  else
+  {
+    gwi.processed.push_back(std::mkpair(from, rc->expressionId()));
+  }
+  gwi.returnedCols.push_back(rc);
+}
+
 // Recursively iterate through the join_list and store all non-null
 // TABLE_LIST::on_expr items to a hash map keyed by the TABLE_LIST ptr.
 // This is then used by convertOuterJoinToInnerJoin().
@@ -7529,8 +7550,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   CalpontSelectExecutionPlan::SelectList selectSubList;
 
-  // SZ: XXX: this is hacky but good enough for time being.
-  std::vector<Item*> processed;
   while ((item = it++))
   {
     string itemAlias = (item->name.length ? item->name.str : "<NULL>");
@@ -7546,7 +7565,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     Item::Type itype = item->type();
 
-    bool pushed = true;
     switch (itype)
     {
       case Item::FIELD_ITEM:
@@ -7582,8 +7600,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, select_lex, baseItem);
 
           SRCP sprc(rc);
-	  pushed = true;
-          gwi.returnedCols.push_back(sprc);
+	  pushReturnedCol(gwi, baseItem, sprc);
 
           gwi.columnMap.insert(
               CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), sprc));
@@ -7620,8 +7637,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
         // add this agg col to returnedColumnList
         boost::shared_ptr<ReturnedColumn> spac(ac);
-	pushed = true;
-        gwi.returnedCols.push_back(spac);
+	pushReturnedCol(gwi, item, spac);
         break;
       }
 
@@ -7680,17 +7696,16 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           if (!hasNonSupportItem && ifp->const_item() && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
           {
             srcp.reset(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-            gwi.returnedCols.push_back(srcp);
+	    pushReturnedCol(gwi, item, srcp);
 
             if (ifp->name.length)
               srcp->alias(ifp->name.str);
 
-	    pushed = false;
             break;
           }
 
-	  pushed = true;
           gwi.returnedCols.push_back(srcp);
+	  pushReturnedCol(gwi, item, srcp);
         }
         else  // This was a vtable post-process block
         {
@@ -7712,8 +7727,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             if (ifp->name.length)
               cc->alias(ifp->name.str);
 
-	    pushed = true;
-            gwi.returnedCols.push_back(srcp);
+	    pushReturnedCol(gwi, ifp, srcp);
 
             // clear the error set by buildFunctionColumn
             gwi.fatalParseError = false;
@@ -7791,8 +7805,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               if (item->name.length)
                 srcp->alias(item->name.str);
 
-	      pushed = true;
-              gwi.returnedCols.push_back(srcp);
+	      pushReturnedCol(gwi, item, srcp);
             }
 
             break;
@@ -7816,8 +7829,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         else
         {
           SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-          gwi.returnedCols.push_back(srcp);
-	  pushed = true;
+	  pushReturnedCol(gwi, item, srcp);
 
           if (item->name.length)
             srcp->alias(item->name.str);
@@ -7877,7 +7889,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         if (sub->name.length)
           rc->alias(sub->name.str);
 
-	pushed = true;
         gwi.returnedCols.push_back(SRCP(rc));
 
         break;
@@ -7913,8 +7924,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
-        pushed = true;
         gwi.returnedCols.push_back(srcp);
+	pushReturnedCol(gwi, item, srcp);
         break;
       }
       case Item::TYPE_HOLDER:
@@ -7938,18 +7949,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         break;
       }
     }
-    if (pushed)
-    {
-      SRCP& top = gwi.returnedCols[gwi.returnedCols.size() - 1];
-      uint32_t i;
-      for (i = 0; i < processed.size() && !item->eq(processed[i], false); i++) { }
-      if (i < processed.size())
-      {
-        top->expressionId(gwi.returnedCols[i]->expressionId());
-      }
-      processed.push_back(item);
-    }
-    idbassert(processed.size() == gwi.returnedCols.size());
   }
 
   // @bug4388 normalize the project coltypes for union main select list

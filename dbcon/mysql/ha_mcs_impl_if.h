@@ -179,6 +179,9 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
+  // Item* associated with returnedCols.
+  std::vector<std::pair<Item*, uint32_t>> processed;
+
   gp_walk_info(long timeZone_)
    : sessionid(0)
    , fatalParseError(false)
