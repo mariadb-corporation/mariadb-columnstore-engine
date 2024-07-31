@@ -81,7 +81,7 @@ class ConstString
   }
   bool eq(const ConstString& rhs) const
   {
-    if (!mStr)
+    if (!mStr || !rhs.mStr)
     {
       return mStr == rhs.mStr;
     }

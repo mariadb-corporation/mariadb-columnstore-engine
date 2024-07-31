@@ -1,7 +1,7 @@
 #!/bin/bash
 # columnstore_review.sh
 # script by Edward Stoever for MariaDB support
-VERSION=1.4.4
+VERSION=1.4.5
 
 function prepare_for_run() {
   unset ERR
@@ -974,6 +974,7 @@ function collect_logs() {
   set_data1dir
   ls -lrt $DATA1DIR/systemFiles/dbrm > $LOGSOUTDIR/columnstore/ls_lrt_dbrm.txt
   if [ ! -z "$STORAGE_TYPE" ] && [ "$STORAGE_TYPE" == "S3" ]; then 
+    dump_log "mcs-storagemanager" $LOGSOUTDIR/columnstore/
     smls /data1/systemFiles/dbrm/ >  $LOGSOUTDIR/columnstore/s3_dbrms.txt ;
     smcat /data1/systemFiles/dbrm/BRM_saves_current 2>/dev/null > $LOGSOUTDIR/columnstore/s3_BRM_saves_current ;
   fi

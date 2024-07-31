@@ -170,7 +170,7 @@ class MCSProcessManager:
                             workernodes[name]['Port']
                         )
                     )
-                except socket.timeout:
+                except (ConnectionRefusedError, socket.timeout):
                     logging.debug(
                         f'"{name}" {workernodes[name]["IPAddr"]}:'
                         f'{workernodes[name]["Port"]} not started yet.'

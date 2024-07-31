@@ -60,8 +60,9 @@ void SqlParser::setDefaultCharset(const CHARSET_INFO* default_charset)
   x.default_table_charset = default_charset;
 }
 
-int SqlParser::Parse(const char* sqltext)
+int SqlParser::Parse(const char* sqltext, myf utf8_flag)
 {
+  x.utf8_flag = utf8_flag;
   ddllex_init_extra(&scanData, &x.scanner);
   scanner_init(sqltext, x.scanner);
   fStatus = ddlparse(&x);
@@ -129,6 +130,6 @@ int SqlFileParser::Parse(const string& sqlfile)
   // cout << "----------------------" << endl;
   // cout << sqlbuf << endl;
 
-  return SqlParser::Parse(sqlbuf);
+  return SqlParser::Parse(sqlbuf, MYF(0));
 }
 }  // namespace ddlpackage

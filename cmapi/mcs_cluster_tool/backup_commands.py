@@ -13,6 +13,8 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 
 
 logger = logging.getLogger('mcs_cli')
+# pylint: disable=unused-argument, too-many-arguments, too-many-locals
+# pylint: disable=invalid-name, line-too-long
 
 
 @handle_output
@@ -93,23 +95,18 @@ def backup(
         )
     ] = 'LocalStorage',
     i: Annotated[
-        bool,
+        str,
         typer.Option(
-            '-i/-no-i', '--incremental/--no--incremental',
-            help='Adds columnstore deltas to an existing full backup.'
-        )
-    ] = False,
-    P: Annotated[
-        int,
-        typer.Option(
-            '-P', '--parallel',
+            '-i', '--incremental',
             help=(
-                'Determines if columnstore data directories will have '
-                'multiple rsync running at the same time for different '
-                'subfolders to parallelize writes.'
-            )
+                'Adds columnstore deltas to an existing full backup. '
+                'Backup folder to apply increment could be a value or '
+                '"auto_most_recent" - the incremental backup applies to '
+                'last full backup.'   
+            ),
+            show_default=False
         )
-    ] = 4,
+    ] = '',
     ha: Annotated[
         bool,
         typer.Option(
@@ -126,9 +123,10 @@ def backup(
         str,
         typer.Option(
             '-f', '--config-file',
-            help='Path to backup configuration file to load variables from.'
+            help='Path to backup configuration file to load variables from.',
+            show_default=False
         )
-    ] = '.cs-backup-config',
+    ] = '',
     sbrm: Annotated[
         bool,
         typer.Option(
@@ -201,9 +199,22 @@ def backup(
         str,
         typer.Option(
             '-c', '--compress',
-            help='Compress backup in X format - Options: [ pigz ].'
+            help='Compress backup in X format - Options: [ pigz ].',
+            show_default=False
         )
     ] = '',
+    P: Annotated[
+        int,
+        typer.Option(
+            '-P', '--parallel',
+            help=(
+                'Determines if columnstore data directories will have '
+                'multiple rsync running at the same time for different '
+                'subfolders to parallelize writes. '
+                'Ignored if "-c/--compress" argument not set.'
+            )
+        )
+    ] = 4,
     nb: Annotated[
         str,
         typer.Option(
@@ -224,6 +235,16 @@ def backup(
             hidden=True
         )
     ] = 'direct',
+    r: Annotated[
+        int,
+        typer.Option(
+            '-r', '--retention-days',
+            help=(
+                'Retain backups created within the last X days, '
+                'default 0 == keep all backups.'
+            )
+        )
+    ] = 0,
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -248,13 +269,13 @@ def backup(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} backup {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}
 
 
 @handle_output
-def backup_dbrm(
+def dbrm_backup(
     m: Annotated[
         str,
         typer.Option(
@@ -277,8 +298,8 @@ def backup_dbrm(
         typer.Option(
             '-r', '--retention-days',
             help=(
-                'Number of days of dbrm backups to retain - script will '
-                'delete based on last update file time.'
+                'Retain dbrm backups created within the last X days, '
+                'the rest are deleted'
             )
         )
     ] = 7,
@@ -302,7 +323,14 @@ def backup_dbrm(
             '-q/-no-q', '--quiet/--no-quiet',
             help='Silence verbose copy command outputs.'
         )
-    ] = False
+    ] = False,
+    ssm: Annotated[
+        bool,
+        typer.Option(
+            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
+            help='Skip backing up storagemanager directory.'
+        )
+    ] = False,
 ):
     """Columnstore DBRM Backup."""
 
@@ -320,6 +348,6 @@ def backup_dbrm(
         if sh_arg is None:
             continue
         arguments.append(sh_arg)
-    cmd = f'{MCS_BACKUP_MANAGER_SH} {" ".join(arguments)}'
+    cmd = f'{MCS_BACKUP_MANAGER_SH} dbrm_backup {" ".join(arguments)}'
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     return {'success': success}

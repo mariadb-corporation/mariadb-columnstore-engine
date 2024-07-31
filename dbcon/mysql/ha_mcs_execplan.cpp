@@ -474,6 +474,22 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
   if (sort_item->type() == Item::SUM_FUNC_ITEM)
   {
     found = true;
+    return found;
+  }
+
+  {
+    // as we now can warp ORDER BY or SELECT expression into
+    // an aggregate, we can pass FIELD_ITEM as "found" as well.
+    Item* item = sort_item;
+    while (item->type() == Item::REF_ITEM)
+    {
+      const Item_ref* ref_item = static_cast<const Item_ref*>(item);
+      item = (Item*)*ref_item->ref;
+    }
+    if (item->type() == Item::FIELD_ITEM || item->type() == Item::CONST_ITEM || item->type() == Item::NULL_ITEM)
+    {
+      return true;
+    }
   }
 
   // A function that contains an aggregate function
@@ -2142,7 +2158,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     idbassert(ifp->argument_count() == 1);
     ParseTree* ptp = 0;
-    if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+    Item_func* argfp = dynamic_cast<Item_func*>(ifp->arguments()[0]);
+    if (argfp && argfp->functype() == Item_func::EQUAL_FUNC)
     {
       // negate it in place
       // Note that an EQUAL_FUNC ( a <=> b) was converted to
@@ -3189,7 +3206,15 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
 
         if (item->field_type() == MYSQL_TYPE_BLOB)
         {
+          // We default to BLOB, but then try to correct type,
+          // because many textual types in server have type_handler_blob
+          // (and variants) as their type.
           ct.colDataType = CalpontSystemCatalog::BLOB;
+          const Item_result_field* irf = dynamic_cast<const Item_result_field*>(item);
+	  if (irf && irf->result_field && !irf->result_field->binary())
+          {
+            ct.colDataType = CalpontSystemCatalog::TEXT;
+	  }
         }
       }
 
@@ -4364,6 +4389,13 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       ct.colWidth = 8;
       fc->resultType(ct);
     }
+    if (funcName == "last_day")
+    {
+        CalpontSystemCatalog::ColType ct;
+        ct.colDataType = CalpontSystemCatalog::DATE;
+        ct.colWidth = 4;
+        fc->resultType(ct);
+    }
 
 #if 0
 
@@ -4903,6 +4935,70 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
   }
 }
 
+void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
+{
+  if (gwi.implicitExplicitGroupBy)
+  {
+    return;
+  }
+  while (item->type() == Item::REF_ITEM)
+  {
+    Item_ref* ref = static_cast<Item_ref*>(item);
+    item = *ref->ref;
+  }
+  if (item->type() == Item::SUM_FUNC_ITEM)
+  {
+    // definitely an aggregate and thus needs an implicit group by.
+    gwi.implicitExplicitGroupBy = true;
+    return;
+  }
+  if (item->type() == Item::FUNC_ITEM)
+  {
+    Item_func* ifp = static_cast<Item_func*>(item);
+    for(uint32_t i = 0;i<ifp->argument_count() && !gwi.implicitExplicitGroupBy;i++)
+    {
+      analyzeForImplicitGroupBy(ifp->arguments()[i], gwi);
+    }
+  }
+}
+
+ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_LEX& select_lex, Item* baseItem)
+{
+  if (!gwi.implicitExplicitGroupBy)
+  {
+    return rc;
+  }
+
+  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
+  {
+    return rc;
+  }
+
+  ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+  while (groupcol)
+  {
+    if (baseItem->eq(*groupcol->item, false))
+    {
+      return rc;
+    }
+    groupcol = groupcol->next;
+  }
+
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
+  ac->timeZone(gwi.timeZone);
+  ac->alias(rc->alias());
+  ac->aggOp(AggregateColumn::SELECT_SOME);
+  ac->asc(rc->asc());
+  ac->charsetNumber(rc->charsetNumber());
+  ac->expressionId(ci->expressionId++);
+
+  ac->aggParms().push_back(SRCP(rc));
+  return ac;
+}
+
 ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 {
   // MCOL-1201 For UDAnF multiple parameters
@@ -5010,8 +5106,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         if (ord_col->type() == Item::CONST_ITEM && ord_col->cmp_type() == INT_RESULT)
         {
           Item_int* id = (Item_int*)ord_col;
+          int64_t index = id->val_int();
 
-          if (id->val_int() > (int)selCols.size())
+          if (index > (int)selCols.size() || index < 1)
           {
             gwi.fatalParseError = true;
 
@@ -5021,8 +5118,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             return NULL;
           }
 
-          rc = selCols[id->val_int() - 1]->clone();
-          rc->orderPos(id->val_int() - 1);
+          rc = selCols[index - 1]->clone();
+          rc->orderPos(index - 1);
         }
         else
         {
@@ -7386,6 +7483,32 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   }
 #endif
 
+  // analyze SELECT and ORDER BY parts - do they have implicit GROUP BY induced by aggregates?
+  {
+    if (select_lex.group_list.first)
+    {
+      // we have an explicit GROUP BY.
+      gwi.implicitExplicitGroupBy = true;
+    }
+    else
+    {
+      // do we have an implicit GROUP BY?
+      List_iterator_fast<Item> it(select_lex.item_list);
+      Item* item;
+
+      while ((item = it++))
+      {
+        analyzeForImplicitGroupBy(item, gwi);
+      }
+      SQL_I_List<ORDER> order_list = select_lex.order_list;
+      ORDER* ordercol = static_cast<ORDER*>(order_list.first);
+
+      for (; ordercol; ordercol = ordercol->next)
+      {
+        analyzeForImplicitGroupBy(*(ordercol->item), gwi);
+      }
+    }
+  }
   // populate returnedcolumnlist and columnmap
   List_iterator_fast<Item> it(select_lex.item_list);
   Item* item;
@@ -7412,6 +7535,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     // @bug 5916. Need to keep checking until getting concret item in case
     // of nested view.
+    Item* baseItem = item;
     while (item->type() == Item::REF_ITEM)
     {
       Item_ref* ref = (Item_ref*)item;
@@ -7436,8 +7560,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
         if (sc)
         {
-          boost::shared_ptr<SimpleColumn> spsc(sc);
-
           string fullname;
           String str;
           ifp->print(&str, QT_ORDINARY);
@@ -7453,10 +7575,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               sc->alias(itemAlias);
           }
 
-          gwi.returnedCols.push_back(spsc);
+          // We need to look into GROUP BY columns to decide if we need to wrap a column.
+          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, select_lex, baseItem);
+
+          SRCP sprc(rc);
+          gwi.returnedCols.push_back(sprc);
 
           gwi.columnMap.insert(
-              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), spsc));
+              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), sprc));
           TABLE_LIST* tmp = 0;
 
           if (ifp->cached_table)
@@ -8303,6 +8429,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     {
       if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
         gwi.hasWindowFunc = true;
+      // XXX: TODO: implement a proper analysis of what we support.
       // MCOL-2166 Looking for this sorting item in GROUP_BY items list.
       // Shouldn't look into this if query doesn't have GROUP BY or
       // aggregations
@@ -8314,10 +8441,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         getColNameFromItem(osr, *ordercol->item);
         Message::Args args;
         args.add(ostream.str());
-        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
+        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION, args);
         gwi.parseErrorText = emsg;
         setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-        return ERR_NOT_GROUPBY_EXPRESSION;
+        return ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION;
       }
     }
 
@@ -8367,6 +8494,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           else
           {
             rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+
+            rc = wrapIntoAggregate(rc, gwi, select_lex, ord_item);
           }
           // @bug5501 try item_ptr if item can not be fixed. For some
           // weird dml statement state, item can not be fixed but the
@@ -8398,6 +8527,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.orderByCols.push_back(SRCP(rc));
       }
     }
+
     // make sure columnmap, returnedcols and count(*) arg_list are not empty
     TableMap::iterator tb_iter = gwi.tableMap.begin();
 

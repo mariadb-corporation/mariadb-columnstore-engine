@@ -55,13 +55,15 @@ std::string Func_left::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   const char* pos = src.str();
   const char* end = pos + binLen;
 
-  size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
+  // Negative trim length values are legal, but they don't make any real sense
+  int64_t trimLength = fp[1]->data()->getIntVal(row, isNull);
   if (isNull || trimLength <= 0)
     return "";
 
+  size_t trimLengthPositive = static_cast<size_t>(trimLength);  // now we are sure it is positive
   size_t charPos;
 
-  if ((binLen <= trimLength) || (binLen <= (charPos = cs->charpos(pos, end, trimLength))))
+  if ((binLen <= trimLengthPositive) || (binLen <= (charPos = cs->charpos(pos, end, trimLengthPositive))))
   {
     return src.safeString("");
   }
