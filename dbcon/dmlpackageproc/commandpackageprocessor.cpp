@@ -53,7 +53,7 @@ namespace dmlpackageprocessor
 /*static*/ std::set<uint64_t> CommandPackageProcessor::fActiveClearTableLockCmds;
 /*static*/ boost::mutex CommandPackageProcessor::fActiveClearTableLockCmdMutex;
 
-DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
+DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackageInternal(
     dmlpackage::CalpontDMLPackage& cpackage)
 {
   SUMMARY_INFO("CommandPackageProcessor::processPackage");
@@ -485,17 +485,24 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackage(
   }
   catch (std::exception& ex)
   {
-    cerr << "CommandPackageProcessor::processPackage: " << ex.what() << endl;
+    if (checkPPLostConnection(ex))
+    {
+      result.result = PP_LOST_CONNECTION;
+    }
+    else
+    {
+      cerr << "CommandPackageProcessor::processPackage: " << ex.what() << endl;
 
-    logging::Message::Args args;
-    logging::Message message(1);
-    args.add(ex.what());
-    args.add("");
-    args.add("");
-    message.format(args);
+      logging::Message::Args args;
+      logging::Message message(1);
+      args.add(ex.what());
+      args.add("");
+      args.add("");
+      message.format(args);
 
-    result.result = COMMAND_ERROR;
-    result.message = message;
+      result.result = COMMAND_ERROR;
+      result.message = message;
+    }
   }
   catch (...)
   {

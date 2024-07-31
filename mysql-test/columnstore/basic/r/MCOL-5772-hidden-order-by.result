@@ -1,0 +1,23 @@
+DROP DATABASE IF EXISTS MCOL5772;
+CREATE DATABASE MCOL5772;
+USE MCOL5772;
+CREATE TABLE products (
+product_id INT,
+product_name VARCHAR(100),
+category VARCHAR(50),
+unit_price DECIMAL(10, 2),
+stock_quantity INT
+) ENGINE=Columnstore;
+INSERT INTO products VALUES
+(1, 'Laptop', 'Electronics', 1200.00, 50),
+(2, 'Smartphone', 'Electronics', 800.00, 100),
+(3, 'Coffee Maker', 'Appliances', 50.00, 30),
+(4, 'Backpack', 'Fashion', 40.00, 80),
+(5, 'Desk Chair', 'Furniture', 150.00, 20);
+SELECT product_name, SUM(stock_quantity) AS total_stock FROM products GROUP BY category ORDER BY stock_quantity;
+product_name	total_stock
+Desk Chair	20
+Coffee Maker	30
+Backpack	80
+Smartphone	150
+DROP DATABASE MCOL5772;

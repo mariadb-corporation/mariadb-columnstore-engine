@@ -39,14 +39,14 @@ class DropPartitionProcessor : public DDLPackageProcessor
   DropPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
+
+ protected:
+ private:
   /** @brief process a drop table statement
    *
    *  @param dropTableStmt the drop table statement
    */
-  EXPORT DDLResult processPackage(ddlpackage::DropPartitionStatement& dropPartitionStmt);
-
- protected:
- private:
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropPartitionStmt);
 };
 }  // namespace ddlpackageprocessor
 

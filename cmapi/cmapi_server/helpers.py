@@ -11,10 +11,12 @@ import logging
 import os
 import socket
 import time
+from collections import namedtuple
 from functools import partial
 from random import random
 from shutil import copyfile
 from typing import Tuple, Optional
+from urllib.parse import urlencode, urlunparse
 
 import lxml.objectify
 import requests
@@ -32,17 +34,25 @@ from cmapi_server.managers.process import MCSProcessManager
 from mcs_node_control.models.node_config import NodeConfig
 
 
-def get_id():
+def get_id() -> int:
+    """Generate pseudo random id for transaction.
+
+    :return: id for internal transaction
+    :rtype: int
+
+    ..TODO: need to change transaction id format and generation method?
+    """
     return int(random() * 1000000)
 
 
 def start_transaction(
-    config_filename=CMAPI_CONF_PATH,
-    cs_config_filename=DEFAULT_MCS_CONF_PATH,
-    extra_nodes=None,
-    remove_nodes=None,
-    optional_nodes=None,
-    id=get_id()
+    config_filename: str = CMAPI_CONF_PATH,
+    cs_config_filename: str = DEFAULT_MCS_CONF_PATH,
+    extra_nodes: Optional[list] = None,
+    remove_nodes: Optional[list] = None,
+    optional_nodes: Optional[list] = None,
+    txn_id: Optional[int] = None,
+    timeout: float = 300.0
 ):
     """Start internal CMAPI transaction.
 
@@ -53,19 +63,26 @@ def start_transaction(
 
     :param config_filename: cmapi config filepath,
                             defaults to CMAPI_CONF_PATH
-    :type config_filename: str
+    :type config_filename: str, optional
     :param cs_config_filename: columnstore xml config filepath,
                                defaults to DEFAULT_MCS_CONF_PATH
     :type cs_config_filename: str, optional
     :param extra_nodes: extra nodes, defaults to None
-    :type extra_nodes: list, optional
+    :type extra_nodes: Optional[list], optional
     :param remove_nodes: remove nodes, defaults to None
-    :type remove_nodes: list, optional
+    :type remove_nodes: Optional[list], optional
     :param optional_nodes: optional nodes, defaults to None
-    :type optional_nodes: list, optional
-    :return: (success, txnid, nodes)
-    :rtype: tuple
+    :type optional_nodes: Optional[list], optional
+    :param txn_id: id for transaction to start, defaults to None
+    :type txn_id: Optional[int], optional
+    :param timeout: time in seconds for cmapi transaction lock before it ends
+                    automatically, defaults to 300
+    :type timeout: float, optional
+    :return: (success, txn_id, nodes)
+    :rtype: tuple[bool, int, list[str]]
     """
+    if txn_id is None:
+        txn_id = get_id()
     # TODO: Somehow change that logic for eg using several input types
     #       (str\list\set) and detect which one we got.
     extra_nodes = extra_nodes or []
@@ -78,8 +95,8 @@ def start_transaction(
     version = get_version()
 
     headers = {'x-api-key': api_key}
-    body = {'id' : id}
-    final_time = datetime.datetime.now() + datetime.timedelta(seconds=300)
+    body = {'id' : txn_id}
+    final_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
 
     success = False
     while datetime.datetime.now() < final_time and not success:
@@ -180,7 +197,7 @@ def start_transaction(
                 time.sleep(1)
 
             if not node_success and node not in optional_nodes:
-                rollback_txn_attempt(api_key, version, id, successes)
+                rollback_txn_attempt(api_key, version, txn_id, successes)
                 # wait up to 5 secs and try the whole thing again
                 time.sleep(random() * 5)
                 break
@@ -192,7 +209,7 @@ def start_transaction(
         # are up (> 50%).
         success = (len(successes) == len(real_active_nodes))
 
-    return (success, id, successes)
+    return (success, txn_id, successes)
 
 def rollback_txn_attempt(key, version, txnid, nodes):
     headers = {'x-api-key': key}
@@ -273,6 +290,7 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
+    timeout: int = 10
 ) -> bool:
     """Send new config to nodes. Now in async way.
 
@@ -289,8 +307,11 @@ def broadcast_new_config(
     :type test_mode: bool, optional
     :param nodes: nodes list for config put, defaults to None
     :type nodes: Optional[list], optional
+    :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
+                    releases. Could affect all logic of broadcacting new config
+    :type timeout: int
     :return: success state
-    :rtype: _type_
+    :rtype: bool
     """
 
     cfg_parser = get_config_parser(cmapi_config_filename)
@@ -326,6 +347,11 @@ def broadcast_new_config(
 
     async def update_config(node, success_nodes, failed_nodes, headers, body):
         url = f'https://{node}:8640/cmapi/{version}/node/config'
+        # TODO: investigate about hardcoded 120 seconds timeout
+        #       Check e1242eed47b61276ebc86136f124f6d974655515 in cmapi old
+        #       repo to get more info. Patric made it because:
+        #       "Made the timeout for a CS process restart 120s, since
+        #        the container dispatcher waits up to 60s for SM to stop"
         request_put = partial(
             requests.put, url, verify=False, headers=headers, json=body,
             timeout=120
@@ -845,3 +871,44 @@ def get_dispatcher_name_and_path(
         config_parser.get('Dispatcher', 'path', fallback='')
     )
     return dispatcher_name, dispatcher_path
+
+
+def build_url(
+        base_url: str, query_params: dict, scheme: str = 'https',
+        path: str = '', params: str = '', fragment: str = '',
+        port: Optional[int] = None
+) -> str:
+    """Build url with query params.
+
+    :param base_url: base url address
+    :type base_url: str
+    :param query_params: query params
+    :type query_params: dict
+    :param scheme: url scheme, defaults to 'https'
+    :type scheme: str, optional
+    :param path: url path, defaults to ''
+    :type path: str, optional
+    :param params: params, defaults to ''
+    :type params: str, optional
+    :param fragment: fragment, defaults to ''
+    :type fragment: str, optional
+    :param port: port for base url, defaults to None
+    :type port: Optional[int], optional
+    :return: url with query params
+    :rtype: str
+    """
+    # namedtuple to match the internal signature of urlunparse
+    Components = namedtuple(
+        typename='Components',
+        field_names=['scheme', 'netloc', 'path', 'params', 'query', 'fragment']
+    )
+    return urlunparse(
+        Components(
+            scheme=scheme,
+            netloc=f'{base_url}:{port}' if port else base_url,
+            path=path,
+            params=params,
+            query=urlencode(query_params),
+            fragment=fragment
+        )
+    )
