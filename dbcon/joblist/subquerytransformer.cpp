@@ -82,7 +82,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   if (fOutJobInfo->trace)
     cout << (*csep) << endl;
 
-  // Setup job info, job list and error status relation.
+    // Setup job info, job list and error status relation.
   fSubJobInfo = new JobInfo(fOutJobInfo->rm);
   fSubJobInfo->sessionId = fOutJobInfo->sessionId;
   fSubJobInfo->txnId = fOutJobInfo->txnId;
@@ -119,6 +119,8 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   fSubJobInfo->partitionSize = fOutJobInfo->partitionSize;
   fSubJobInfo->umMemLimit = fOutJobInfo->umMemLimit;
   fSubJobInfo->isDML = fOutJobInfo->isDML;
+  fSubJobInfo->orderByThreads = csep->orderByThreads();
+
 
   // Update v-table's alias.
   fVtable.name("$sub");
