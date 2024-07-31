@@ -124,6 +124,8 @@ inline RowAggFunctionType functionIdMap(int planFuncId)
 
     case AggregateColumn::MULTI_PARM: return ROWAGG_MULTI_PARM;
 
+    case AggregateColumn::SELECT_SOME: return ROWAGG_SELECT_SOME;
+
     default: return ROWAGG_FUNCT_UNDEFINE;
   }
 }
@@ -1204,6 +1206,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     {
       case ROWAGG_MIN:
       case ROWAGG_MAX:
+      case ROWAGG_SELECT_SOME:
       {
         oidsAgg.push_back(oidsProj[colProj]);
         keysAgg.push_back(key);
@@ -1767,6 +1770,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
@@ -2177,6 +2181,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         case ROWAGG_BIT_AND:
         case ROWAGG_BIT_OR:
         case ROWAGG_BIT_XOR:
+        case ROWAGG_SELECT_SOME:
         default:
         {
           AGG_MAP::iterator it = aggFuncMap.find(
@@ -2833,7 +2838,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                     f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                     f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
                     f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT ||
-                    f->fAggFunction == ROWAGG_JSON_ARRAY))
+                    f->fAggFunction == ROWAGG_JSON_ARRAY || f->fAggFunction == ROWAGG_SELECT_SOME))
           {
             funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                               f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
@@ -3128,6 +3133,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
@@ -4045,6 +4051,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
@@ -5080,7 +5087,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
                      f->fAggFunction == ROWAGG_MIN || f->fAggFunction == ROWAGG_MAX ||
                      f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                      f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
-                     f->fAggFunction == ROWAGG_CONSTANT)
+                     f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_SELECT_SOME)
             {
               funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                                 f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
