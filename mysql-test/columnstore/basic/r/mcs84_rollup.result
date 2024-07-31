@@ -200,7 +200,6 @@ Senegal	2014	fiction	24468
 Senegal	2014	non-fiction	129960
 Senegal	2015	fiction	31294
 Senegal	2015	non-fiction	157802
-=======
 SELECT country, genre, SUM(sales) FROM (SELECT country, genre, sales FROM booksales) t1 GROUP BY country, genre WITH ROLLUP;
 country	genre	SUM(sales)
 NULL	NULL	354462
