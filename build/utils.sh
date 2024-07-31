@@ -97,6 +97,13 @@ function spinner
     echo
 }
 
+function onelinearizator
+{
+    while read data; do
+        echo -ne "\r\033[K$data"
+    done;
+    echo
+}
 
 detect_distro()
 {

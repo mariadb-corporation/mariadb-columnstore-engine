@@ -1,12 +1,18 @@
-if (CMAKE_VERSION VERSION_LESS 3.10.0)
-  MESSAGE_ONCE(CS_CMAKE "ColumnStore needs cmake >= 3.10")
+if (CMAKE_VERSION VERSION_LESS 3.13.0)
+  MESSAGE_ONCE(CS_CMAKE "ColumnStore needs cmake >= 3.13")
   RETURN()
 ENDIF()
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
 
 PROJECT(Columnstore)
 INCLUDE (CheckCXXSourceCompiles)
+
+# MariaDB server adds this flags by default for Debug builds, and this makes our external projects
+# ABI incompatible with debug STL containers
+STRING(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+STRING(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+
 
 FOREACH(p CMP0135)
   IF(POLICY ${p})

@@ -1657,6 +1657,41 @@ int ColumnInfo::closeDctnryStore(bool bAbort)
   return rc;
 }
 
+//--------------------------------------------------------------------------------------
+// Update dictionary store file with string column parquet data, and return the assigned
+// tokens (tokenbuf) to be stored in the corresponding column token file.
+//--------------------------------------------------------------------------------------
+int ColumnInfo::updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos,
+                                         const int totalRow, char* tokenBuf)
+{
+  long long truncCount = 0;
+
+#ifdef PROFILE
+  Stats::startParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+  boost::mutex::scoped_lock lock(fDictionaryMutex);
+#ifdef PROFILE
+  Stats::stopParseEvent(WE_STATS_WAIT_TO_PARSE_DCT);
+#endif
+
+  int rc = fStore->insertDctnryParquet(columnData, tokenPos, totalRow, id, tokenBuf, truncCount, column.cs, column.weType);
+
+  if (rc != NO_ERROR)
+  {
+    WErrorCodes ec;
+    std::ostringstream oss;
+    oss << "updateDctnryStore: error adding rows to store file for "
+        << "OID-" << column.dctnry.dctnryOid << "; DBRoot-" << curCol.dataFile.fDbRoot << "; part-"
+        << curCol.dataFile.fPartition << "; seg-" << curCol.dataFile.fSegment << "; " << ec.errorString(rc);
+    fLog->logMsg(oss.str(), rc, MSGLVL_CRITICAL);
+    fpTableInfo->fBRMReporter.addToErrMsgEntry(oss.str());
+    return rc;
+  }
+
+  incSaturatedCnt(truncCount);
+  return NO_ERROR;
+}
+
 //------------------------------------------------------------------------------
 // Update dictionary store file with specified strings, and return the assigned
 // tokens (tokenbuf) to be stored in the corresponding column token file.
@@ -1672,7 +1707,7 @@ int ColumnInfo::updateDctnryStore(char* buf, ColPosPair** pos, const int totalRo
   // column.
   // This only applies to default text mode.  This step is bypassed for
   // binary imports, because in that case, the data is already true binary.
-  if (((curCol.colType == WR_VARBINARY) || (curCol.colType == WR_BLOB)) &&
+  if (((curCol.colType == WR_VARBINARY) || (curCol.colType == WR_BLOB && fpTableInfo->readFromSTDIN())) &&
       (fpTableInfo->getImportDataMode() == IMPORT_DATA_TEXT))
   {
 #ifdef PROFILE

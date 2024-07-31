@@ -31,14 +31,17 @@ set(ARROW_CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${ARROW_PREFIX}"
         "-DARROW_DATASET=ON"
         "-DARROW_PARQUET=ON"
         "-DARROW_FILESYSTEM=ON"
+        "-DARROW_RUNTIME_SIMD_LEVEL=SSE4_2"
         "-DThrift_ROOT=${CMAKE_CURRENT_BINARY_DIR}/external/thrift"
+        "-DARROW_BOOST_BUILD_VERSION=1.84.0"
+        "-DARROW_BOOST_BUILD_SHA256_CHECKSUM=a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724"
         )
 set(ARROW_INCLUDE_DIR "${ARROW_PREFIX}/include")
 set(ARROW_BUILD_BYPRODUCTS "${ARROW_STATIC_LIB}" "${PARQUET_STATIC_LIB}")
 
 externalproject_add(external_arrow
-        URL https://github.com/apache/arrow/archive/refs/tags/go/v13.0.0.tar.gz
-        URL_HASH SHA256=ea4a79a4103379573ecbcf19229437a4ba547c0146a7f3c3be0a7e0b3de5de6c
+        URL https://github.com/apache/arrow/archive/refs/tags/apache-arrow-15.0.2.tar.gz
+        URL_HASH SHA256=4735b349845bff1fe95ed11abbfed204eb092cabc37523aa13a80cb830fe5b5e
         SOURCE_SUBDIR cpp
         BINARY_DIR "${ARROW_BINARY_DIR}"
         CMAKE_ARGS "${ARROW_CMAKE_ARGS}"

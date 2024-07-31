@@ -33,7 +33,8 @@ class ConstString
  public:
   ConstString(const char* str, size_t length) : mStr(str), mLength(length)
   {
-    idbassert(mStr || mLength == 0);  // nullptr mStr should have zero length.
+    if (!mStr)
+      mLength = 0;
   }
   explicit ConstString(const std::string& str) : mStr(str.data()), mLength(str.length())
   {
@@ -80,7 +81,7 @@ class ConstString
   }
   bool eq(const ConstString& rhs) const
   {
-    if (!mStr)
+    if (!mStr || !rhs.mStr)
     {
       return mStr == rhs.mStr;
     }

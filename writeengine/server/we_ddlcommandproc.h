@@ -32,8 +32,11 @@
 
 #define EXPORT
 
+
 namespace WriteEngine
 {
+struct DDLColumn;
+
 class WE_DDLCommandProc
 {
  public:
@@ -43,9 +46,9 @@ class WE_DDLCommandProc
     DROPPART_LOG,
     TRUNCATE_LOG
   };
-  EXPORT WE_DDLCommandProc();
-  EXPORT WE_DDLCommandProc(const WE_DDLCommandProc& rhs);
-  EXPORT ~WE_DDLCommandProc();
+  WE_DDLCommandProc();
+  WE_DDLCommandProc(const WE_DDLCommandProc& rhs);
+  ~WE_DDLCommandProc();
   /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
    *
    * Update SYSCOLUMN nextval column for the columnoid with nexValue.
@@ -53,35 +56,36 @@ class WE_DDLCommandProc
    * @param nextVal (in) The partition number
    * @return 0 on success, non-0 on error.
    */
-  EXPORT uint8_t updateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t writeSystable(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t writeSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t writeCreateSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t createtablefiles(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t commitVersion(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t rollbackBlocks(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t deleteSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t deleteSyscolumnRow(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t deleteSystable(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t deleteSystables(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t dropFiles(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnAuto(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnNextvalCol(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnTablename(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSystableAuto(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSystableTablename(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSystablesTablename(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnColumnposCol(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t fillNewColumn(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnRenameColumn(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t updateSyscolumnSetDefault(messageqcpp::ByteStream& bs, std::string& err);
-  //	EXPORT uint8_t updateSyscolumn(messageqcpp::ByteStream& bs, std::string & err);
-  EXPORT uint8_t writeTruncateLog(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t writeDropPartitionLog(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t writeDropTableLog(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t deleteDDLLog(messageqcpp::ByteStream& bs, std::string& err);
-  EXPORT uint8_t fetchDDLLog(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSyscolumnNextval(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t writeSystable(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t writeSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t writeCreateSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t createtablefiles(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t commitVersion(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t rollbackBlocks(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t rollbackVersion(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t deleteSyscolumn(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t deleteSyscolumnRow(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t deleteSystable(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t deleteSystables(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t dropFiles(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSyscolumnAuto(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSyscolumnNextvalCol(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSystableAuto(messageqcpp::ByteStream& bs, std::string& err);
+
+  uint8_t updateSyscolumnTablename(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSystableTablename(messageqcpp::ByteStream& bs, std::string& err);
+
+  uint8_t updateSyscolumnColumnposCol(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t fillNewColumn(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSyscolumnRenameColumn(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t updateSyscolumnSetDefault(messageqcpp::ByteStream& bs, std::string& err);
+  //	uint8_t updateSyscolumn(messageqcpp::ByteStream& bs, std::string & err);
+  uint8_t writeTruncateLog(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t writeDropPartitionLog(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t writeDropTableLog(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t deleteDDLLog(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t fetchDDLLog(messageqcpp::ByteStream& bs, std::string& err);
   void purgeFDCache();
   /** @brief drop a set of partitions
    *
@@ -90,7 +94,7 @@ class WE_DDLCommandProc
    * @param err (out) error message when error occurs
    * @return 0 on success, otherwise error.
    */
-  EXPORT uint8_t dropPartitions(messageqcpp::ByteStream& bs, std::string& err);
+  uint8_t dropPartitions(messageqcpp::ByteStream& bs, std::string& err);
   inline void convertRidToColumn(uint64_t& rid, uint16_t& dbRoot, uint32_t& partition, uint16_t& segment,
                                  const int32_t oid)
   {
@@ -110,6 +114,24 @@ class WE_DDLCommandProc
     uint64_t relRidInThisExtent = relRidInPartition - numExtentsInThisPart * extentRows;
     rid = relRidInThisExtent + numExtentsInThisSegPart * extentRows;
   }
+
+private:
+uint8_t updateSystableEntryForSysTable(int32_t sessionID,
+                                       uint32_t txnID,
+                                       const DDLColumn& column,
+                                       const std::string& value,
+                                       const std::string& oldValue,
+                                       execplan::CalpontSystemCatalog::ROPair ropair,
+                                       std::string& err);
+
+uint8_t updateSystableEntryForSysColumn(int32_t sessionID,
+                                        uint32_t txnID,
+                                        const DDLColumn& column,
+                                        const std::string& value,
+                                        const std::string& oldValue,
+                                        execplan::CalpontSystemCatalog::RIDList& roList,
+                                        std::string& err);
+
 
  private:
   WriteEngineWrapper fWEWrapper;

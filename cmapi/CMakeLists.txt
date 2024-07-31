@@ -58,6 +58,8 @@ CONFIGURE_FILE(postinst.template postinst)
 CONFIGURE_FILE(prerm.template prerm)
 CONFIGURE_FILE(conffiles.template conffiles)
 CONFIGURE_FILE(mcs.template mcs)
+CONFIGURE_FILE(mcs_aws.template mcs_aws)
+CONFIGURE_FILE(mcs_gsutil.template mcs_gsutil)
 
 INSTALL(DIRECTORY python deps mcs_node_control failover cmapi_server engine_files mcs_cluster_tool
             DESTINATION ${CMAPI_DIR}
@@ -74,6 +76,15 @@ INSTALL(FILES cmapi_server/cmapi_server.conf systemd.env
 INSTALL(FILES ${SYSTEMD_UNIT_NAME}.service
             DESTINATION ${SYSTEMD_UNIT_DIR})
 INSTALL(FILES mcs
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_aws
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_gsutil
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
+INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
 
@@ -127,8 +138,11 @@ IF(RPM)
 
     STRING(REGEX MATCH "^." OS_VERSION_MAJOR "${LSB_RELEASE_VERSION_SHORT}")
     MESSAGE(STATUS ${OS_VERSION_MAJOR})
-    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky")
+    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma")
         SET(OS_NAME_SHORT "el")
+        IF (OS_VERSION_MAJOR MATCHES "9")
+	    SET(CPACK_RPM_PACKAGE_REQUIRES "libxcrypt-compat")
+        ENDIF()
     ELSE()
         SET(OS_NAME_SHORT "unknown")
     ENDIF()

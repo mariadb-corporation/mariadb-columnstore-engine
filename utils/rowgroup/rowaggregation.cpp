@@ -675,19 +675,16 @@ void RowAggregation::initialize(bool hasGroupConcat)
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
 
@@ -768,19 +765,16 @@ void RowAggregation::aggReset()
     }
   }
 
-  config::Config* config = config::Config::makeConfig();
-  string tmpDir = config->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
-  string compStr = config->getConfig("RowAggregation", "Compression");
-  auto* compressor = compress::getCompressInterfaceByName(compStr);
+  auto* compressor = compress::getCompressInterfaceByName(fCompStr);
 
   if (fKeyOnHeap)
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, &fKeyRG, fAggMapKeyCount, fRm,
                                            fSessionMemLimit, disk_agg, allow_gen, compressor));
   }
   else
   {
-    fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
+    fRowAggStorage.reset(new RowAggStorage(fTmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
   fRowGroupOut->getRow(0, &fRow);
@@ -959,6 +953,10 @@ void RowAggregation::initMapData(const Row& rowIn)
 
         break;
       }
+      case execplan::CalpontSystemCatalog::VARBINARY:
+      case execplan::CalpontSystemCatalog::BLOB:
+        fRow.setStringField(rowIn.getConstString(colIn), colOut);
+        break;
 
       case execplan::CalpontSystemCatalog::DOUBLE:
       case execplan::CalpontSystemCatalog::UDOUBLE:
@@ -1256,6 +1254,104 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 
     default:
     {
+      break;
+    }
+  }
+}
+//------------------------------------------------------------------------------
+// Update the fields with anything that goes in.
+// rowIn(in)    - Row to be included in aggregation.
+// colIn(in)    - column in the input row group
+// colOut(in)   - column in the output row group
+//------------------------------------------------------------------------------
+void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOut)
+{
+  int colDataType = (fRowGroupIn.getColTypes())[colIn];
+
+  switch (colDataType)
+  {
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      fRow.setIntField(rowIn.getIntField(colIn), colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+      {
+        fRow.setInt128Field(rowIn.getTSInt128Field(colIn).getValue(), colOut);
+      }
+      else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+      {
+        fRow.setIntField(rowIn.getIntField(colIn), colOut);
+      }
+      else
+      {
+        idbassert(0);
+        throw std::logic_error("RowAggregation::doMinMax(): DECIMAL bad length.");
+      }
+
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CLOB:
+    case execplan::CalpontSystemCatalog::BLOB:
+    {
+      auto valIn = rowIn.getStringField(colIn);
+      fRow.setStringField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    {
+      double valIn = rowIn.getDoubleField(colIn);
+      fRow.setDoubleField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    {
+      float valIn = rowIn.getFloatField(colIn);
+      fRow.setFloatField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      uint64_t valIn = rowIn.getUintField(colIn);
+      fRow.setUintField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::LONGDOUBLE:
+    {
+      long double valIn = rowIn.getLongDoubleField(colIn);
+      fRow.setLongDoubleField(valIn, colOut);
+      break;
+    }
+
+    default:
+    {
+      idbassert_s(0, "unknown data type in doSelectSome()");
       break;
     }
   }
@@ -1729,6 +1825,11 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
         doUDAF(rowIn, colIn, colOut, colOut + 1, i, rgContextColl);
         break;
       }
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
+        break;
+      }
 
       default:
       {
@@ -1788,6 +1889,12 @@ void RowAggregation::mergeEntries(const Row& rowIn)
       case ROWAGG_GROUP_CONCAT: break;
 
       case ROWAGG_UDAF: doUDAF(rowIn, colOut, colOut, colOut + 1, i); break;
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colOut, colOut);
+        break;
+      }
 
       default:
         std::ostringstream errmsg;
@@ -2620,6 +2727,12 @@ void RowAggregationUM::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 
@@ -3708,10 +3821,13 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
           auto width = fRow.getColumnWidth(colOut);
           if (width == datatypes::MAXDECIMALWIDTH)
           {
+            int precision, scale;
+            // MCOL-5708 Calculate precision and scale based on the given value.
+            datatypes::decimalPrecisionAndScale(aggData.fConstValue, precision, scale);
             datatypes::TypeHolderStd colType;
             colType.colWidth = width;
-            colType.precision = fRow.getPrecision(i);
-            colType.scale = fRow.getScale(i);
+            colType.precision = precision;
+            colType.scale = scale;
             colType.colDataType = colDataType;
             int128_t constValue = colType.decimal128FromString(aggData.fConstValue);
             int128_t sum;
@@ -4105,6 +4221,18 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
+bool RowAggregationUM::nextOutputRowGroup()
+{
+  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
+
+  if (more)
+  {
+    fRowGroupOut->setData(fCurRGData.get());
+  }
+
+  return more;
+}
+
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
@@ -4199,6 +4327,12 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcs
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 
@@ -4564,18 +4698,28 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
+  auto* umAggregator = dynamic_cast<RowAggregationUM*>(fAggregator.get());
+  if (umAggregator)
   {
-    fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
-
-    Row rowIn;
-    fRowGroupIn.initRow(&rowIn);
-    fRowGroupIn.getRow(0, &rowIn);
-
-    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+    while (umAggregator->nextOutputRowGroup())
     {
-      aggregateRow(rowIn);
+      fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+      Row rowIn;
+      fRowGroupIn.initRow(&rowIn);
+      fRowGroupIn.getRow(0, &rowIn);
+
+      for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
+      {
+        aggregateRow(rowIn);
+      }
     }
+  }
+  else
+  {
+    std::ostringstream errmsg;
+    errmsg << "RowAggregationDistinct: incorrect fAggregator class.";
+    cerr << errmsg.str() << endl;
   }
 }
 
@@ -4681,6 +4825,12 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn, std::vector<mcsv1sdk:
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 

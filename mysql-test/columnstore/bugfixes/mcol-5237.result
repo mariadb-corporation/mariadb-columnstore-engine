@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcol_5237;
+CREATE DATABASE mcol_5237;
+USE mcol_5237;
+create table t1 (a varchar(1000), b datetime, c int) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+insert into t1 values
+('abc', null, 1),
+('xyz', str_to_date('2022-09-22 00:00:00', '%Y-%m-%d %H:%i:%s'), 1);
+create view v1 as
+select a, NVL(b, str_to_date('1970-01-01 00:00:00', '%Y-%m-%d %H:%i:%s')) as b, c from t1;
+select count(*) from v1 where YEAR(b) = 2022;
+count(*)
+1
+select count(*) from v1 where YEAR(b) = 1970;
+count(*)
+1
+DROP DATABASE mcol_5237;

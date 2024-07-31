@@ -76,7 +76,6 @@ class BPPSeeder : public threadpool::FairThreadPool::Functor
  private:
   BPPSeeder();
   void catchHandler(const std::string& s, uint32_t uniqueID, uint32_t step);
-  void sendErrorMsg(uint32_t id, uint16_t status, uint32_t step);
   void flushSyscatOIDs();
 
   messageqcpp::SBS bs;

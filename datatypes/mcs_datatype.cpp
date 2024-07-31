@@ -66,6 +66,41 @@ int128_t TypeAttributesStd::decimal128FromString(const utils::NullString& value,
   return decimal128FromString(value.unsafeStringRef(), saturate);
 }
 
+// SQL parser checks that given `value` is in a valid format.
+// The first symbol can be `-`. The `value` can contain `.` symbol.
+void decimalPrecisionAndScale(const utils::NullString& value, int& precision, int& scale)
+{
+  if (value.isNull())
+  {
+    scale = 0;
+    precision = -1;
+    return;
+  }
+
+  const auto strValue = value.unsafeStringRef();
+  if (strValue.empty())
+  {
+    scale = 0;
+    precision = -1;
+    return;
+  }
+
+  const int len = strValue.size();
+  const auto dotIndex = strValue.find('.');
+  const int minExists = strValue.front() == '-' ? 1 : 0;
+
+  if (dotIndex == std::string::npos)
+  {
+    scale = 0;
+    precision = len - minExists;
+  }
+  else
+  {
+    scale = len - dotIndex - 1;
+    precision = len - 1 - minExists;
+  }
+}
+
 const string& TypeHandlerSInt8::name() const
 {
   static const string xname = "TINYINT";
@@ -1609,11 +1644,26 @@ boost::any TypeHandlerDate::convertFromString(const TypeAttributesStd& colType,
   return dataconvert::DataConvert::StringToDate(data, pushWarning);
 }
 
+int32_t TypeHandlerDate::convertArrowColumnDate(int32_t dayVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnDate(dayVal, status);
+}
+
 boost::any TypeHandlerDatetime::convertFromString(const TypeAttributesStd& colType,
                                                   const ConvertFromStringParam& prm, const std::string& data,
                                                   bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToDatetime(data, pushWarning);
+}
+
+int64_t TypeHandlerDatetime::convertArrowColumnDatetime(int64_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnDatetime(timeVal, status);
+}
+
+int64_t TypeHandlerDatetime::convertArrowColumnDatetimeUs(int64_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnDatetimeUs(timeVal, status);
 }
 
 boost::any TypeHandlerTime::convertFromString(const TypeAttributesStd& colType,
@@ -1623,11 +1673,31 @@ boost::any TypeHandlerTime::convertFromString(const TypeAttributesStd& colType,
   return dataconvert::DataConvert::StringToTime(colType, data, pushWarning);
 }
 
+int64_t TypeHandlerTime::convertArrowColumnTime64(int64_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnTime64(timeVal, status);
+}
+
+int64_t TypeHandlerTime::convertArrowColumnTime32(int32_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnTime32(timeVal, status);
+}
+
 boost::any TypeHandlerTimestamp::convertFromString(const TypeAttributesStd& colType,
                                                    const ConvertFromStringParam& prm, const std::string& data,
                                                    bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToTimestamp(prm, data, pushWarning);
+}
+
+int64_t TypeHandlerTimestamp::convertArrowColumnTimestamp(int64_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnTimestamp(timeVal, status);
+}
+
+int64_t TypeHandlerTimestamp::convertArrowColumnTimestampUs(int64_t timeVal, int& status) const
+{
+  return dataconvert::DataConvert::convertArrowColumnTimestampUs(timeVal, status);
 }
 
 boost::any TypeHandlerChar::convertFromString(const TypeAttributesStd& colType,

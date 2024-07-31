@@ -1,0 +1,36 @@
+--disable_warnings
+drop database if exists MCOL_5643;
+--enable_warnings
+create database MCOL_5643;
+
+use MCOL_5643;
+
+create table t1
+(
+        id int,
+        someStr varchar(100)
+) ENGINE=Columnstore;
+
+create table t2
+(
+        id int,
+        fk_t1 int,
+        someStr varchar(100)
+) ENGINE=Columnstore;
+
+insert into t1 values (1, 'bla');
+insert into t2 values (1, 1, 'xyz');
+
+create view view_on_t1 as select id, someStr from t1;
+create view view_on_t2 as select id, fk_t1, someStr from t2;
+
+# ERROR !!!
+select max(view_on_t1.id), view_on_t1.someStr, view_on_t2.someStr
+from view_on_t1
+left outer join view_on_t2
+on view_on_t1.id = view_on_t2.fk_t1
+group by view_on_t1.someStr, view_on_t2.someStr;
+# ==> All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause. 0.063 sec
+
+drop database MCOL_5643;
+

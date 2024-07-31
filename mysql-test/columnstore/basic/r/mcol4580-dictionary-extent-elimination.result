@@ -1,0 +1,64 @@
+DROP DATABASE IF EXISTS MCOL4580;
+CREATE DATABASE MCOL4580;
+USE MCOL4580;
+CREATE TABLE t(d TEXT) ENGINE=COLUMNSTORE;
+INSERT INTO t(d) VALUES ('b'),('b'),('b');
+SELECT CALSETTRACE(1);
+CALSETTRACE(1)
+0
+SELECT COUNT(*) FROM t WHERE d = 'a';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
+SELECT COUNT(*) FROM t WHERE d < 'b';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-3;	PartitionBlocksEliminated-0;
+SELECT COUNT(*) FROM t WHERE d > 'b';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-3;	PartitionBlocksEliminated-0;
+SELECT COUNT(*) FROM t WHERE d <= 'a';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
+SELECT COUNT(*) FROM t WHERE d >= 'c';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
+SELECT COUNT(*) FROM t WHERE d != 'b';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
+INSERT INTO t SELECT * FROM t;
+SELECT COUNT(*) FROM t WHERE d = 'b';
+COUNT(*)
+6
+DROP TABLE t;
+CREATE TABLE t (c TEXT CHARACTER SET utf8 COLLATE utf8_czech_ci) engine=columnstore;
+INSERT INTO t(c) VALUES ('ch'), ('ch');
+SELECT COUNT(*) FROM t WHERE c < 'cz';
+COUNT(*)
+0
+SELECT REGEXP_SUBSTR(CALGETTRACE(1),'(BlocksTouched-[^;]*);') AS touched, REGEXP_SUBSTR(CALGETTRACE(1),'(PartitionBlocksEliminated-[^;]*);') AS eliminated;
+touched	eliminated
+BlocksTouched-0;	PartitionBlocksEliminated-1;
+SELECT COUNT(*) FROM t WHERE c > 'cz';
+COUNT(*)
+2
+SELECT COUNT(*) FROM t WHERE c = 'CH';
+COUNT(*)
+2
+DROP DATABASE MCOL4580;

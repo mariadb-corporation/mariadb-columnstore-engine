@@ -172,7 +172,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
       // This is a double-step step
       //			if (jobInfo.trace)
       //				cout << "doProject Emit pGetSignature for SimpleColumn " << dictOid <<
-      //endl;
+      // endl;
 
       pds = new pDictionaryStep(dictOid, tbl_oid, ct, jobInfo);
       jobInfo.keyInfo->dictOidToColOid[dictOid] = oid;
@@ -541,7 +541,9 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
         // Not an aggregate column and not an expression of aggregation.
         if (dynamic_cast<AggregateColumn*>(orderByCols[i].get()) == NULL &&
             orderByCols[i]->aggColumnList().empty())
+	{
           csep->groupByCols().push_back(orderByCols[i]);
+	}
       }
     }
   }
@@ -557,9 +559,9 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
       if (dynamic_cast<ConstantColumn*>(i->get()) != NULL)
       {
         if (csep->withRollup())
-	{
+        {
           throw runtime_error("constant GROUP BY columns are not supported when WITH ROLLUP is used");
-	}
+        }
         continue;
       }
 
@@ -604,7 +606,9 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     }
 
     if (csep->groupByCols().size() != uniqGbCols.size())
+    {
       (csep)->groupByCols(uniqGbCols);
+    }
   }
 }
 
@@ -927,7 +931,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       {
         if (jobInfo.hasRollup)
         {
-          throw runtime_error("GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is used");
+          throw runtime_error(
+              "GROUP_CONCAT and JSONARRAYAGG aggregations are not supported when WITH ROLLUP modifier is "
+              "used");
         }
         jobInfo.groupConcatCols.push_back(retCols[i]);
 
@@ -1246,6 +1252,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         const WindowFunctionColumn* wc = NULL;
         bool hasAggCols = false;
         bool hasWndCols = false;
+        bool hasFuncColsWithOneArgument = false;
 
         if ((ac = dynamic_cast<const ArithmeticColumn*>(srcp.get())) != NULL)
         {
@@ -1263,6 +1270,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             hasAggCols = true;
           if (fc->windowfunctionColumnList().size() > 0)
             hasWndCols = true;
+          // MCOL-5476 Currently support function with only one argument for group by list.
+          if (fc->simpleColumnList().size() == 1)
+            hasFuncColsWithOneArgument = true;
         }
         else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
         {
@@ -1290,6 +1300,13 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         if (hasAggCols && !hasWndCols)
         {
           jobInfo.expressionVec.push_back(tupleKey);
+        }
+
+        if (hasFuncColsWithOneArgument)
+        {
+          FunctionColumnInfo fcInfo(fcInfo.associatedColumnOid = fc->simpleColumnList().front()->oid(),
+                                    fc->functionName());
+          jobInfo.functionColumnMap.insert({tupleKey, fcInfo});
         }
       }
 
@@ -1704,7 +1721,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobS
   }
 
   // special case, select without a table, like: select 1;
-  if (jobInfo.constantCol == CONST_COL_ONLY) // XXX: WITH ROLLUP
+  if (jobInfo.constantCol == CONST_COL_ONLY)  // XXX: WITH ROLLUP
     return;
 
   // If there are no filters (select * from table;) then add one simple scan

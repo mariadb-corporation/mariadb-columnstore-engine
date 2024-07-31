@@ -1349,10 +1349,10 @@ TEST(Decimal, DecimalToStringCheckScale0)
   datatypes::Decimal dec(0, scale, precision, res);
 
   // test simple values
-  expected = "0";
+  expected = std::string("0");
   EXPECT_EQ(dec.toString(), expected);
   res = 2;
-  expected = "2";
+  expected = std::string("2");
   dec.setTSInt128Value(res);
   EXPECT_EQ(dec.toString(), expected);
   res = -2;

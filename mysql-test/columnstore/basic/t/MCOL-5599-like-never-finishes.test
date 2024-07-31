@@ -1,0 +1,11 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5599;
+--enable_warnings
+CREATE DATABASE MCOL5599;
+USE MCOL5599;
+CREATE TABLE t (t TEXT) ENGINE = COLUMNSTORE;
+# This tests logging facility to correctly process agruments
+# with "logging argument index" (like "%1%") in them. This has
+# nothing to do with regexps. This query just have to finish.
+SELECT * FROM t WHERE t LIKE '%1%';
+DROP DATABASE MCOL5599;

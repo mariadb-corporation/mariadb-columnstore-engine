@@ -24,11 +24,6 @@
 
 #pragma once
 
-#include <string>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-#include <stdexcept>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -36,10 +31,20 @@
 #include <boost/function.hpp>
 #include <atomic>
 #include "primitives/primproc/umsocketselector.h"
-#include "atomicops.h"
+
+namespace error_handling
+{
+
+messageqcpp::SBS makePrimitiveErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step);
+void sendErrorMsg(const uint16_t status, const uint32_t id, const uint32_t step,
+                  primitiveprocessor::SP_UM_IOSOCK sock);
+}  // namespace error_handling
 
 namespace threadpool
 {
+
+using TransactionIdxT = uint32_t;
+
 class PriorityThreadPool
 {
  public:
@@ -57,12 +62,25 @@ class PriorityThreadPool
     Job() : weight(1), priority(0), id(0)
     {
     }
+    Job(const uint32_t uniqueID, const uint32_t stepID, const TransactionIdxT txnIdx,
+        const boost::shared_ptr<Functor>& functor, const primitiveprocessor::SP_UM_IOSOCK& sock,
+        const uint32_t weight = 1, const uint32_t priority = 0, const uint32_t id = 0)
+     : functor(functor)
+     , weight(weight)
+     , priority(priority)
+     , id(id)
+     , stepID(stepID)
+     , uniqueID(uniqueID)
+     , sock(sock)
+    {
+    }
+
     boost::shared_ptr<Functor> functor;
     uint32_t weight;
     uint32_t priority;
     uint32_t id;
-    uint32_t uniqueID;
     uint32_t stepID;
+    uint32_t uniqueID;
     primitiveprocessor::SP_UM_IOSOCK sock;
   };
 
@@ -113,7 +131,7 @@ class PriorityThreadPool
   {
     return blockedThreads;
   }
-  
+
  protected:
  private:
   struct ThreadHelper
@@ -135,7 +153,6 @@ class PriorityThreadPool
 
   Priority pickAQueue(Priority preference);
   void threadFcn(const Priority preferredQueue) throw();
-  void sendErrorMsg(uint32_t id, uint32_t step, primitiveprocessor::SP_UM_IOSOCK sock);
 
   std::list<Job> jobQueues[3];  // higher indexes = higher priority
   uint32_t threadCounts[3];

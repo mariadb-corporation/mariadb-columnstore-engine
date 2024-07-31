@@ -474,6 +474,22 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
   if (sort_item->type() == Item::SUM_FUNC_ITEM)
   {
     found = true;
+    return found;
+  }
+
+  {
+    // as we now can warp ORDER BY or SELECT expression into
+    // an aggregate, we can pass FIELD_ITEM as "found" as well.
+    Item* item = sort_item;
+    while (item->type() == Item::REF_ITEM)
+    {
+      const Item_ref* ref_item = static_cast<const Item_ref*>(item);
+      item = (Item*)*ref_item->ref;
+    }
+    if (item->type() == Item::FIELD_ITEM || item->type() == Item::CONST_ITEM || item->type() == Item::NULL_ITEM)
+    {
+      return true;
+    }
   }
 
   // A function that contains an aggregate function
@@ -498,9 +514,18 @@ bool sortItemIsInGrouping(Item* sort_item, ORDER* groupcol)
     // is either Field or Func
     // Consider nonConstFunc() check here
     if (!found && sort_item->type() == Item::FUNC_ITEM &&
-        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM))
+        (group_item->type() == Item::FUNC_ITEM || group_item->type() == Item::FIELD_ITEM ||
+         group_item->type() == Item::REF_ITEM))
     {
-      found = sortItemIsInGroupRec(sort_item, group_item);
+      // MCOL-5236: see @bug5993 and @bug5916.
+      Item* item = group_item;
+      while (item->type() == Item::REF_ITEM)
+      {
+        Item_ref* item_ref = static_cast<Item_ref*>(item);
+        item = *item_ref->ref;
+      }
+
+      found = sortItemIsInGroupRec(sort_item, item);
     }
   }
 
@@ -2133,7 +2158,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     idbassert(ifp->argument_count() == 1);
     ParseTree* ptp = 0;
-    if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+    Item_func* argfp = dynamic_cast<Item_func*>(ifp->arguments()[0]);
+    if (argfp && argfp->functype() == Item_func::EQUAL_FUNC)
     {
       // negate it in place
       // Note that an EQUAL_FUNC ( a <=> b) was converted to
@@ -3180,7 +3206,15 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
 
         if (item->field_type() == MYSQL_TYPE_BLOB)
         {
+          // We default to BLOB, but then try to correct type,
+          // because many textual types in server have type_handler_blob
+          // (and variants) as their type.
           ct.colDataType = CalpontSystemCatalog::BLOB;
+          const Item_result_field* irf = dynamic_cast<const Item_result_field*>(item);
+	  if (irf && irf->result_field && !irf->result_field->binary())
+          {
+            ct.colDataType = CalpontSystemCatalog::TEXT;
+	  }
         }
       }
 
@@ -3883,6 +3917,25 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
+  if ( nullptr != dynamic_cast<Item_func_concat_operator_oracle*>(ifp))
+  {
+    // the condition above is the only way to recognize this particular case.
+    funcName = "concat_operator_oracle";
+  }
+  else
+  {
+    const Schema* funcSchema = ifp->schema();
+    if (funcSchema)
+    {
+      idbassert(funcSchema->name().str);
+      string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
+      if (funcSchemaName == "oracle_schema")
+      {
+        // XXX: this is a shortcut.
+        funcName = funcName + "_oracle";
+      }
+    }
+  }
   FuncExp* funcExp = FuncExp::instance();
   Func* functor;
   FunctionColumn* fc = NULL;
@@ -4336,6 +4389,13 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       ct.colWidth = 8;
       fc->resultType(ct);
     }
+    if (funcName == "last_day")
+    {
+        CalpontSystemCatalog::ColType ct;
+        ct.colDataType = CalpontSystemCatalog::DATE;
+        ct.colWidth = 4;
+        fc->resultType(ct);
+    }
 
 #if 0
 
@@ -4376,7 +4436,8 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" ||
+        funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
@@ -4693,10 +4754,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   {
     // check foreign engine
     if (ifp->cached_table && ifp->cached_table->table)
-      prm.columnStore(isMCSTable(ifp->cached_table->table));
+      prm.columnStore(ha_mcs_common::isMCSTable(ifp->cached_table->table));
     // @bug4509. ifp->cached_table could be null for myisam sometimes
     else if (ifp->field && ifp->field->table)
-      prm.columnStore(isMCSTable(ifp->field->table));
+      prm.columnStore(ha_mcs_common::isMCSTable(ifp->field->table));
 
     if (prm.columnStore())
     {
@@ -4874,6 +4935,70 @@ static void processAggregateColumnConstArg(gp_walk_info& gwi, SRCP& parm, Aggreg
   }
 }
 
+void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
+{
+  if (gwi.implicitExplicitGroupBy)
+  {
+    return;
+  }
+  while (item->type() == Item::REF_ITEM)
+  {
+    Item_ref* ref = static_cast<Item_ref*>(item);
+    item = *ref->ref;
+  }
+  if (item->type() == Item::SUM_FUNC_ITEM)
+  {
+    // definitely an aggregate and thus needs an implicit group by.
+    gwi.implicitExplicitGroupBy = true;
+    return;
+  }
+  if (item->type() == Item::FUNC_ITEM)
+  {
+    Item_func* ifp = static_cast<Item_func*>(item);
+    for(uint32_t i = 0;i<ifp->argument_count() && !gwi.implicitExplicitGroupBy;i++)
+    {
+      analyzeForImplicitGroupBy(ifp->arguments()[i], gwi);
+    }
+  }
+}
+
+ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_LEX& select_lex, Item* baseItem)
+{
+  if (!gwi.implicitExplicitGroupBy)
+  {
+    return rc;
+  }
+
+  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
+  {
+    return rc;
+  }
+
+  ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+  while (groupcol)
+  {
+    if (baseItem->eq(*groupcol->item, false))
+    {
+      return rc;
+    }
+    groupcol = groupcol->next;
+  }
+
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
+  ac->timeZone(gwi.timeZone);
+  ac->alias(rc->alias());
+  ac->aggOp(AggregateColumn::SELECT_SOME);
+  ac->asc(rc->asc());
+  ac->charsetNumber(rc->charsetNumber());
+  ac->expressionId(ci->expressionId++);
+
+  ac->aggParms().push_back(SRCP(rc));
+  return ac;
+}
+
 ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 {
   // MCOL-1201 For UDAnF multiple parameters
@@ -4981,8 +5106,9 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
         if (ord_col->type() == Item::CONST_ITEM && ord_col->cmp_type() == INT_RESULT)
         {
           Item_int* id = (Item_int*)ord_col;
+          int64_t index = id->val_int();
 
-          if (id->val_int() > (int)selCols.size())
+          if (index > (int)selCols.size() || index < 1)
           {
             gwi.fatalParseError = true;
 
@@ -4992,8 +5118,8 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
             return NULL;
           }
 
-          rc = selCols[id->val_int() - 1]->clone();
-          rc->orderPos(id->val_int() - 1);
+          rc = selCols[index - 1]->clone();
+          rc->orderPos(index - 1);
         }
         else
         {
@@ -6529,104 +6655,6 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
   }
 }
 
-bool isMCSTable(TABLE* table_ptr)
-{
-#if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-
-  if (!(table_ptr->s && (*table_ptr->s->db_plugin)->name.str))
-#else
-  if (!(table_ptr->s && (table_ptr->s->db_plugin)->name.str))
-#endif
-    return true;
-
-#if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-  string engineName = (*table_ptr->s->db_plugin)->name.str;
-#else
-  string engineName = table_ptr->s->db_plugin->name.str;
-#endif
-
-  if (engineName == "Columnstore" || engineName == "Columnstore_cache")
-    return true;
-  else
-    return false;
-}
-
-bool isForeignTableUpdate(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  Item_field* item;
-  List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
-
-  while ((item = (Item_field*)field_it++))
-  {
-    if (item->field && item->field->table && !isMCSTable(item->field->table))
-      return true;
-  }
-
-  return false;
-}
-
-bool isMCSTableUpdate(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  Item_field* item;
-  List_iterator_fast<Item> field_it(lex->first_select_lex()->item_list);
-
-  while ((item = (Item_field*)field_it++))
-  {
-    if (item->field && item->field->table && isMCSTable(item->field->table))
-      return true;
-  }
-
-  return false;
-}
-
-bool isMCSTableDelete(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isDeleteStatement(lex->sql_command))
-    return false;
-
-  TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
-
-  if (table_ptr && table_ptr->table && isMCSTable(table_ptr->table))
-    return true;
-
-  return false;
-}
-
-// This function is different from isForeignTableUpdate()
-// above as it only checks if any of the tables involved
-// in the multi-table update statement is a foreign table,
-// irrespective of whether the update is performed on the
-// foreign table or not, as in isForeignTableUpdate().
-bool isUpdateHasForeignTable(THD* thd)
-{
-  LEX* lex = thd->lex;
-
-  if (!isUpdateStatement(lex->sql_command))
-    return false;
-
-  TABLE_LIST* table_ptr = lex->first_select_lex()->get_table_list();
-
-  for (; table_ptr; table_ptr = table_ptr->next_local)
-  {
-    if (table_ptr->table && !isMCSTable(table_ptr->table))
-      return true;
-  }
-
-  return false;
-}
-
 /*@brief  set some runtime params to run the query         */
 /***********************************************************
  * DESCRIPTION:
@@ -6750,7 +6778,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       else
       {
         // check foreign engine tables
-        bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+        bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 
         // trigger system catalog cache
         if (columnStore)
@@ -6811,6 +6839,26 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
   // Existed pushdown handlers won't get in this scope
   // MDEV-25080 Union pushdown would enter this scope
   // is_unit_op() give a segv for derived_handler's SELECT_LEX
+
+  // check INTERSECT or EXCEPT, that are not implemented
+  if (select_lex.master_unit() && select_lex.master_unit()->first_select())
+  {
+    for (auto nextSelect = select_lex.master_unit()->first_select()->next_select(); nextSelect;
+         nextSelect = nextSelect->next_select())
+    {
+      if (nextSelect->get_linkage() == INTERSECT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "INTERSECT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+      else if (nextSelect->get_linkage() == EXCEPT_TYPE)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, "EXCEPT is not supported by Columnstore engine", gwi);
+        return ER_INTERNAL_ERROR;
+      }
+    }
+  }
+
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
     // MCOL-2178 isUnion member only assigned, never used
@@ -6881,7 +6929,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     else if (select_lex.where)
       icp = select_lex.where;
   }
-  else if (!join && isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+  else if (!join && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
   {
     isUpdateDelete = true;
   }
@@ -7435,6 +7483,32 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   }
 #endif
 
+  // analyze SELECT and ORDER BY parts - do they have implicit GROUP BY induced by aggregates?
+  {
+    if (select_lex.group_list.first)
+    {
+      // we have an explicit GROUP BY.
+      gwi.implicitExplicitGroupBy = true;
+    }
+    else
+    {
+      // do we have an implicit GROUP BY?
+      List_iterator_fast<Item> it(select_lex.item_list);
+      Item* item;
+
+      while ((item = it++))
+      {
+        analyzeForImplicitGroupBy(item, gwi);
+      }
+      SQL_I_List<ORDER> order_list = select_lex.order_list;
+      ORDER* ordercol = static_cast<ORDER*>(order_list.first);
+
+      for (; ordercol; ordercol = ordercol->next)
+      {
+        analyzeForImplicitGroupBy(*(ordercol->item), gwi);
+      }
+    }
+  }
   // populate returnedcolumnlist and columnmap
   List_iterator_fast<Item> it(select_lex.item_list);
   Item* item;
@@ -7461,6 +7535,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
     // @bug 5916. Need to keep checking until getting concret item in case
     // of nested view.
+    Item* baseItem = item;
     while (item->type() == Item::REF_ITEM)
     {
       Item_ref* ref = (Item_ref*)item;
@@ -7485,8 +7560,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
         if (sc)
         {
-          boost::shared_ptr<SimpleColumn> spsc(sc);
-
           string fullname;
           String str;
           ifp->print(&str, QT_ORDINARY);
@@ -7502,10 +7575,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               sc->alias(itemAlias);
           }
 
-          gwi.returnedCols.push_back(spsc);
+          // We need to look into GROUP BY columns to decide if we need to wrap a column.
+          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, select_lex, baseItem);
+
+          SRCP sprc(rc);
+          gwi.returnedCols.push_back(sprc);
 
           gwi.columnMap.insert(
-              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), spsc));
+              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), sprc));
           TABLE_LIST* tmp = 0;
 
           if (ifp->cached_table)
@@ -7657,7 +7734,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           }
 
           //@Bug 3030 Add error check for dml statement
-          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+          if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
           {
             if (after_size - before_size != 0)
             {
@@ -7691,7 +7768,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           case REAL_RESULT:
           case TIME_RESULT:
           {
-            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+            if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
             {
             }
             else
@@ -7724,7 +7801,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
       case Item::NULL_ITEM:
       {
-        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+        if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
         {
         }
         else
@@ -8173,23 +8250,31 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
         SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
-        for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
+        if (sc)
         {
-          if (sc)
+          bool found = false;
+          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (sc->sameColumn(gwi.returnedCols[j].get()))
             {
               sc->orderPos(j);
+              found = true;
               break;
             }
-            else if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
+          }
+          for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
+          {
+            if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
             {
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
             }
           }
-          else
+        }
+        else
+        {
+          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
             {
@@ -8344,6 +8429,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     {
       if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
         gwi.hasWindowFunc = true;
+      // XXX: TODO: implement a proper analysis of what we support.
       // MCOL-2166 Looking for this sorting item in GROUP_BY items list.
       // Shouldn't look into this if query doesn't have GROUP BY or
       // aggregations
@@ -8355,10 +8441,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         getColNameFromItem(osr, *ordercol->item);
         Message::Args args;
         args.add(ostream.str());
-        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
+        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION, args);
         gwi.parseErrorText = emsg;
         setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-        return ERR_NOT_GROUPBY_EXPRESSION;
+        return ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION;
       }
     }
 
@@ -8408,6 +8494,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           else
           {
             rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+
+            rc = wrapIntoAggregate(rc, gwi, select_lex, ord_item);
           }
           // @bug5501 try item_ptr if item can not be fixed. For some
           // weird dml statement state, item can not be fixed but the
@@ -8439,6 +8527,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         gwi.orderByCols.push_back(SRCP(rc));
       }
     }
+
     // make sure columnmap, returnedcols and count(*) arg_list are not empty
     TableMap::iterator tb_iter = gwi.tableMap.begin();
 
@@ -9052,7 +9141,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
       else
       {
         // check foreign engine tables
-        bool columnStore = (table_ptr->table ? isMCSTable(table_ptr->table) : true);
+        bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 
         // trigger system catalog cache
         if (columnStore)
@@ -9519,7 +9608,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           }
 
           //@Bug 3030 Add error check for dml statement
-          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+          if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
           {
             if (after_size - before_size != 0)
             {
@@ -9550,7 +9639,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
           case REAL_RESULT:
           case TIME_RESULT:
           {
-            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+            if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
             {
             }
             else
@@ -9583,7 +9672,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
       case Item::NULL_ITEM:
       {
-        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+        if (ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
         {
         }
         else

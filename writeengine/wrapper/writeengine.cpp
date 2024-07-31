@@ -23,7 +23,7 @@
  */
 
 // XXX: a definition to switch off computations for token columns.
-//#define	XXX_WRITEENGINE_TOKENS_RANGES_XXX
+#define	XXX_WRITEENGINE_TOKENS_RANGES_XXX
 
 #include <cmath>
 #include <cstdlib>
@@ -465,12 +465,12 @@ void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_
       }
       case WR_CHAR:
       {
-        fetchNewOldValues<int64_t, int64_t>(value, oldValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
+        fetchNewOldValues<uint64_t, uint64_t>(uvalue, oldUValue, valArrayVoid, oldValArrayVoid, i, totalNewRow);
         // for characters (strings, actually), we fetched then in LSB order, on x86, at the very least.
         // this means most significant byte of the string, which is first, is now in LSB of uvalue/oldValue.
         // we must perform a conversion.
-        value = uint64ToStr(uvalue);
-        oldValue = uint64ToStr(oldValue);
+        uvalue = uint64ToStr(uvalue);
+        oldUValue = uint64ToStr(oldUValue);
         break;
       }
       default: idbassert_s(0, "unknown WR type tag"); return;
@@ -1099,8 +1099,8 @@ inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow, 
     case WriteEngine::WR_VARBINARY:  // treat same as char for now
     case WriteEngine::WR_CHAR:
     case WriteEngine::WR_BLOB:
-    case WriteEngine::WR_TEXT: valArray = calloc(sizeof(char), totalRow * MAX_COLUMN_BOUNDARY); break;
-    case WriteEngine::WR_TOKEN: valArray = calloc(sizeof(Token), totalRow); break;
+    case WriteEngine::WR_TEXT: valArray = calloc(totalRow * MAX_COLUMN_BOUNDARY, sizeof(char)); break;
+    case WriteEngine::WR_TOKEN: valArray = calloc(totalRow, sizeof(Token)); break;
     default: valArray = calloc(totalRow, colWidth); break;
   }
 }
@@ -1732,6 +1732,9 @@ int WriteEngineWrapper::insertColumnRecs(
         return rc;
       }
 
+#if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
+      datatypes::Charset cset(dctnryStructList[i].fCharsetNumber);
+#endif
       for (uint32_t rows = 0; rows < (totalRow - rowsLeft); rows++)
       {
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
@@ -1754,8 +1757,7 @@ int WriteEngineWrapper::insertColumnRecs(
           dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
           dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
-          strPrefix = encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize,
-                                                    dctnryStructList[i].fCharsetNumber);
+          strPrefix = encodeStringPrefix(dctTuple.sigValue, dctTuple.sigSize, cset);
 #endif
           dctTuple.isNull = false;
           rc = tokenize(txnid, dctTuple, dctnryStructList[i].fCompressionType);
@@ -1822,8 +1824,7 @@ int WriteEngineWrapper::insertColumnRecs(
             dctTuple.sigValue = (unsigned char*)dctStr_iter->str();
             dctTuple.sigSize = dctStr_iter->length();
 #if defined(XXX_WRITEENGINE_TOKENS_RANGES_XXX)
-            strPrefix = encodeStringPrefix_check_null(dctTuple.sigValue, dctTuple.sigSize,
-                                                      dctnryStructList[i].fCharsetNumber);
+            strPrefix = encodeStringPrefix_check_null(dctTuple.sigValue, dctTuple.sigSize, cset);
 #endif
             dctTuple.isNull = false;
             rc = tokenize(txnid, dctTuple, newDctnryStructList[i].fCompressionType);

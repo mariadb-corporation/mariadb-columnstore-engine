@@ -1,0 +1,80 @@
+DROP DATABASE IF EXISTS mcol_4740;
+CREATE DATABASE mcol_4740;
+USE mcol_4740;
+CREATE TABLE mcs_1 (a INT, b INT(11), c VARCHAR(100)) engine=columnstore;
+CREATE TABLE mcs_2 (a INT, b INT(11), c VARCHAR(100)) engine=columnstore;
+INSERT INTO mcs_1 VALUES (33, 99, 1);
+INSERT INTO mcs_1 VALUES (33, 99, 2);
+INSERT INTO mcs_1 VALUES (33, 99, 3);
+INSERT INTO mcs_2 VALUES (33, 11, 1);
+INSERT INTO mcs_2 VALUES (33, 11, 2);
+INSERT INTO mcs_2 VALUES (33, 11, 3);
+SELECT * FROM mcs_1;
+a	b	c
+33	99	1
+33	99	2
+33	99	3
+UPDATE mcs_1 A, mcs_2 B SET A.b = B.b WHERE A.c = B.c LIMIT 1;
+affected rows: 1
+info: Rows matched: 1  Changed: 1  Warnings: 0
+SELECT * FROM mcs_1;
+a	b	c
+33	11	1
+33	99	2
+33	99	3
+UPDATE mcs_1 A, mcs_2 B SET A.b = A.b + 1, B.b = B.b + 1;
+ERROR 42000: The storage engine for the table doesn't support MCS-1012: This version of Columnstore supports update of only one table at a time.
+CREATE TABLE `test1` (
+`id` text NOT NULL,
+`p_date` int(11) DEFAULT NULL,
+`con_bfr` text DEFAULT NULL,
+`org_bfr` text DEFAULT NULL,
+`pat_bfr` text DEFAULT NULL,
+`data_type` text DEFAULT NULL,
+`order_no` text DEFAULT NULL,
+`tra_bfr` text DEFAULT NULL,
+`load_bfr` text DEFAULT NULL,
+`status` int(11) DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+INSERT INTO test1 values ('index_srgt_id','0','consultation_date_bfr','organization_code_bfr','patient_id_bfr','data_type','order_no','transaction_time_bfr','load_timestamp_bfr','0');
+INSERT INTO test1 values ('adt-a55-9000000001','20190610','2.01906E+13','1116508857','PTNT-0001','ADT-01','511','2.01801E+13','2.01801E+13','0');
+INSERT INTO test1 values ('adt-a55-9000000002','20190610','2.01906E+13','1116508857','PTNT-0001','ADT-01','511','2.01801E+13','2.01801E+13','0');
+INSERT INTO test1 values ('adt-a55-9000000003','20190611','2.01906E+13','1116508857','PTNT-0001','ADT-01','511','2.01801E+13','2.01801E+13','0');
+INSERT INTO test1 values ('adt-a55-9000000004','20190612','2.01906E+13','1116508857','PTNT-0001','ADT-01','511','2.01801E+13','2.01801E+13','0');
+SELECT status FROM test1;
+status
+0
+0
+0
+0
+0
+UPDATE test1 main
+INNER JOIN (SELECT id,
+con_bfr,
+order_no,
+ROW_NUMBER() OVER (PARTITION BY IFNULL(p_date,''),
+IFNULL(con_bfr,''),
+IFNULL(org_bfr,''),
+IFNULL(pat_bfr,''),
+IFNULL(data_type,'')
+ORDER BY IFNULL(tra_bfr,'') DESC,
+IFNULL(load_bfr,'') DESC,
+id DESC
+) AS row_num
+FROM test1 tmp
+) tmp
+ON main.id = tmp.id
+AND main.con_bfr = tmp.con_bfr
+AND main.order_no = tmp.order_no
+AND tmp.row_num = 1
+SET main.status = 1;
+affected rows: 4
+info: Rows matched: 4  Changed: 4  Warnings: 0
+SELECT status FROM test1;
+status
+1
+0
+1
+1
+1
+DROP DATABASE mcol_4740;

@@ -15,7 +15,7 @@ ubuntu|debian)
     cat << EOF > /etc/apt/preferences
 Package: *
 Pin: origin cspkg.s3.amazonaws.com
-Pin-Priority: 700
+Pin-Priority: 1700
 EOF
     apt update -y
     ;;

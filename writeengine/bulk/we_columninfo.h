@@ -200,6 +200,13 @@ class ColumnInfo : public WeUIDGID
    */
   void lastInputRowInExtentInc();
 
+  /** @brief Update dictionary for arrow/parquet format
+   *  Parse and store the parquet data into the store file, and
+   *  returns the assigned tokens (tokenBuf) to be stored in the
+   *  corresponding column token file.
+   */
+  int updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow, char* tokenBuf);
+
   /** @brief Update dictionary method.
    *  Parses and stores specified strings into the store file, and
    *  returns the assigned tokens (tokenBuf) to be stored in the

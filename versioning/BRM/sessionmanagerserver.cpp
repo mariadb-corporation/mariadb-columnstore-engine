@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <cerrno>
 #include <fcntl.h>
+#include <mutex>
 #include <unistd.h>
 
 #include <iostream>

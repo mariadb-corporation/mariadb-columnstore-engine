@@ -29,9 +29,9 @@
 #include <cmath>
 #include <sstream>
 
+#include "mcs_int128.h"
 #include "operator.h"
 #include "parsetree.h"
-#include "mcs_datatype.h"
 
 namespace messageqcpp
 {
@@ -222,11 +222,33 @@ class ArithmeticOperator : public Operator
   template <typename result_t>
   inline result_t execute(result_t op1, result_t op2, bool& isNull);
   inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
+
   long fTimeZone;
   bool fDecimalOverflowCheck;
 };
 
-#include "parsetree.h"
+// Can be easily replaced with a template over T if MDB changes the result return type.
+inline uint64_t rangesCheck(const datatypes::TSInt128 x, const OpType op, const bool isNull)
+{
+  auto result = x.toUBIGINTWithDomainCheck();
+  if (!isNull && !result)
+  {
+    logging::Message::Args args;
+    static const std::string sqlType{"BIGINT UNSIGNED"};
+    args.add(sqlType);
+    switch (op)
+    {
+      case OP_ADD: args.add("\"+\""); break;
+      case OP_SUB: args.add("\"-\""); break;
+      case OP_MUL: args.add("\"*\""); break;
+      case OP_DIV: args.add("\"/\""); break;
+      default: args.add("<unknown>"); break;
+    }
+    const auto errcode = logging::ERR_MATH_PRODUCES_OUT_OF_RANGE_RESULT;
+    throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+  }
+  return result.value();  // if isNull returns some value
+}
 
 inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
 {
@@ -246,45 +268,13 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       // XXX: this is bandaid solution for specific customer case (MCOL-5568).
       // Despite that I tried to implement a proper solution: to have operations
       // performed using int128_t amd then check the result.
-      int128_t x, y;
       bool signedLeft = lop->data()->resultType().isSignedInteger();
       bool signedRight = rop->data()->resultType().isSignedInteger();
-      if (signedLeft)
-      {
-        x = static_cast<int128_t>(lop->getIntVal(row, isNull));
-      }
-      else
-      {
-        x = static_cast<int128_t>(lop->getUintVal(row, isNull));
-      }
-      if (signedRight)
-      {
-        y = static_cast<int128_t>(rop->getIntVal(row, isNull));
-      }
-      else
-      {
-        y = static_cast<int128_t>(rop->getUintVal(row, isNull));
-      }
-      int128_t result = execute(x, y, isNull);
-      if (!isNull && (result > MAX_UBIGINT || result < 0))
-      {
-        logging::Message::Args args;
-        std::string func = "<unknown>";
-        switch (fOp)
-        {
-          case OP_ADD: func = "\"+\""; break;
-          case OP_SUB: func = "\"-\""; break;
-          case OP_MUL: func = "\"*\""; break;
-          case OP_DIV: func = "\"/\""; break;
-          default: break;
-        }
-        args.add(func);
-        args.add(static_cast<double>(x));
-        args.add(static_cast<double>(y));
-        unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
-      }
-      fResult.uintVal = static_cast<uint64_t>(result);
+      const datatypes::TSInt128 x((signedLeft) ? static_cast<int128_t>(lop->getIntVal(row, isNull))
+                                               : lop->getUintVal(row, isNull));
+      const datatypes::TSInt128 y((signedRight) ? static_cast<int128_t>(rop->getIntVal(row, isNull))
+                                                : rop->getUintVal(row, isNull));
+      fResult.uintVal = rangesCheck(execute(x, y, isNull), fOp, isNull);  // throws
     }
     break;
     case execplan::CalpontSystemCatalog::UINT:
@@ -320,8 +310,8 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
   }
 }
 
-template <typename result_t>
-inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& isNull)
+template <typename T>
+inline T ArithmeticOperator::execute(T op1, T op2, bool& isNull)
 {
   switch (fOp)
   {
@@ -333,11 +323,22 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
 
     case OP_DIV:
       if (op2)
+      {
         return op1 / op2;
+      }
       else
+      {
         isNull = true;
+      }
 
-      return 0;
+      if constexpr (std::is_same<T, datatypes::TSInt128>::value)
+      {
+        return datatypes::TSInt128();  // returns 0
+      }
+      else
+      {
+        return T{0};
+      }
 
     default:
     {

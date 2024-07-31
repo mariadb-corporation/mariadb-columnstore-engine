@@ -66,7 +66,7 @@ class BPPV
   }
   void abort();
   bool aborted();
-  volatile bool joinDataReceived;
+  std::atomic<bool> joinDataReceived{false};
 
  private:
   std::vector<boost::shared_ptr<BatchPrimitiveProcessor> > v;
@@ -129,6 +129,11 @@ class PrimitiveServer
     return fProcessorPool;
   }
 
+  inline std::shared_ptr<threadpool::PriorityThreadPool> getOOBProcessorThreadPool() const
+  {
+    return fOOBPool;
+  }
+
   int ReadAheadBlocks() const
   {
     return fReadAheadBlocks;
@@ -161,6 +166,7 @@ class PrimitiveServer
    * primitive commands
    */
   boost::shared_ptr<threadpool::FairThreadPool> fProcessorPool;
+  std::shared_ptr<threadpool::PriorityThreadPool> fOOBPool;
 
   int fServerThreads;
   int fServerQueueSize;
