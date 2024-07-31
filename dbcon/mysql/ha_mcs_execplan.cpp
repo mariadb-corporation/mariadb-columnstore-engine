@@ -96,6 +96,25 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 // In certain cases, gp_walk is called recursively. When done so,
 // we need to bookmark the rcWorkStack for those cases where a constant
 // expression such as 1=1 is used in an if statement or function call.
@@ -573,7 +592,7 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
   Item_field* ifip = NULL;
   Item_ref* irip;
   Item_func_or_sum* isfp;
-
+idblog("in buildAggFrmTempField");
   switch (item->type())
   {
     case Item::FIELD_ITEM: ifip = static_cast<Item_field*>(item); break;
@@ -586,6 +605,7 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
 
   if (ifip && ifip->field)
   {
+idblog("gwi.extSelAggColsItems.size() = " << gwi.extSelAggColsItems.size());
     std::vector<Item*>::iterator iter = gwi.extSelAggColsItems.begin();
     for (; iter != gwi.extSelAggColsItems.end(); iter++)
     {
@@ -603,6 +623,7 @@ ReturnedColumn* buildAggFrmTempField(Item* item, gp_walk_info& gwi)
     }
   }
 
+idblog("result " << result);
   return result;
 }
 
