@@ -117,7 +117,7 @@ struct gp_walk_info
   std::vector<execplan::ReturnedColumn*> localCols;
   std::stack<execplan::ReturnedColumn*> rcWorkStack;
   std::stack<execplan::ParseTree*> ptWorkStack;
-  boost::shared_ptr<execplan::SimpleColumn> scsp;
+  boost::shared_ptr<execplan::SimpleColumn> scsp; // while defined as SSCP, it is used as SRCP, nothing specific to SimpleColumn is used in use sites.
   uint32_t sessionid;
   bool fatalParseError;
   std::string parseErrorText;
@@ -183,6 +183,9 @@ struct gp_walk_info
   // Item* associated with returnedCols.
   std::vector<std::pair<Item*, uint32_t>> processed;
 
+  // SELECT_LEX is needed for aggergate wrapping
+  SELECT_LEX* select_lex;
+
   gp_walk_info(long timeZone_)
    : sessionid(0)
    , fatalParseError(false)
@@ -209,6 +212,7 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
+   , select_lex(nullptr)
   {
   }
 

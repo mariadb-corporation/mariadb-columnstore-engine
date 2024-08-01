@@ -3300,6 +3300,44 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
   return ct;
 }
 
+ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
+{
+  if (!gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
+  {
+    return rc;
+  }
+
+  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
+  {
+    return rc;
+  }
+
+  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
+
+  while (groupcol)
+  {
+    if (baseItem->eq(*groupcol->item, false))
+    {
+      return rc;
+    }
+    groupcol = groupcol->next;
+  }
+
+  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+
+  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
+  ac->timeZone(gwi.timeZone);
+  ac->alias(rc->alias());
+  ac->aggOp(AggregateColumn::SELECT_SOME);
+  ac->asc(rc->asc());
+  ac->charsetNumber(rc->charsetNumber());
+  ac->expressionId(ci->expressionId++);
+
+  ac->aggParms().push_back(SRCP(rc));
+  return ac;
+}
+
+
 ReturnedColumn* buildReturnedColumnNull(gp_walk_info& gwi)
 {
   if (gwi.condPush)
@@ -3493,7 +3531,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
         return buildAggFrmTempField(ifp, gwi);
       }
 
-      return buildSimpleColumn(ifp, gwi);
+      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi), gwi, ifp);
     }
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
     case Item::CONST_ITEM:
@@ -4770,7 +4808,7 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
-SimpleColumn* buildSimpleColumnUnwrapped(Item_field* ifp, gp_walk_info& gwi)
+SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 {
   if (!gwi.csc)
   {
@@ -4864,10 +4902,6 @@ SimpleColumn* buildSimpleColumnUnwrapped(Item_field* ifp, gp_walk_info& gwi)
   }
 
   return sc;
-}
-SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
-{
-  Simple
 }
 
 ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport)
@@ -5006,43 +5040,6 @@ void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
       analyzeForImplicitGroupBy(ifp->arguments()[i], gwi);
     }
   }
-}
-
-ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_LEX& select_lex, Item* baseItem)
-{
-  if (!gwi.implicitExplicitGroupBy)
-  {
-    return rc;
-  }
-
-  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
-  {
-    return rc;
-  }
-
-  ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
-
-  while (groupcol)
-  {
-    if (baseItem->eq(*groupcol->item, false))
-    {
-      return rc;
-    }
-    groupcol = groupcol->next;
-  }
-
-  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
-  ac->timeZone(gwi.timeZone);
-  ac->alias(rc->alias());
-  ac->aggOp(AggregateColumn::SELECT_SOME);
-  ac->asc(rc->asc());
-  ac->charsetNumber(rc->charsetNumber());
-  ac->expressionId(ci->expressionId++);
-
-  ac->aggParms().push_back(SRCP(rc));
-  return ac;
 }
 
 ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
@@ -5300,7 +5297,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
               break;
             }
 
-            parm.reset(sc);
+            parm.reset(wrapIntoAggregate(sc, gwi, ifp));
             gwi.columnMap.insert(
                 CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), parm));
             TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
@@ -5853,6 +5850,7 @@ void gp_walk(const Item* item, void* arg)
 
       if (ifp)
       {
+	// XXX: this looks awfuly wrong.
         SimpleColumn* scp = buildSimpleColumn(ifp, *gwip);
 
         if (!scp)
@@ -5861,7 +5859,7 @@ void gp_walk(const Item* item, void* arg)
         string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
         gwip->rcWorkStack.push(scp->clone());
-        boost::shared_ptr<SimpleColumn> scsp(scp);
+	boost::shared_ptr<SimpleColumn> scsp(scp);
         gwip->scsp = scsp;
 
         gwip->funcName.clear();
@@ -7522,6 +7520,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   }
 
   gwi.clauseType = SELECT;
+  SELECT_LEX* oldSelectLex = gwi.select_lex; // XXX: SZ: should it be restored in case of error return?
+  gwi.select_lex = &select_lex;
 #ifdef DEBUG_WALK_COND
   {
     cerr << "------------------- SELECT --------------------" << endl;
@@ -7630,7 +7630,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           }
 
           // We need to look into GROUP BY columns to decide if we need to wrap a column.
-          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, select_lex, baseItem);
+          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
 
           SRCP sprc(rc);
 	  pushReturnedCol(gwi, baseItem, sprc);
@@ -8149,7 +8149,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     funcFieldVec[i]->print(&str, QT_ORDINARY);
     sc->alias(string(str.c_ptr()));
     sc->tableAlias(sc->tableAlias());
-    SRCP srcp(sc);
+    SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]);
     uint32_t j = 0;
 
     for (; j < gwi.returnedCols.size(); j++)
@@ -8166,6 +8166,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (j == gwi.returnedCols.size())
     {
       gwi.returnedCols.push_back(srcp);
+      // XXX: SZ: deduplicate here?
       gwi.columnMap.insert(
           CalpontSelectExecutionPlan::ColumnMap::value_type(string(funcFieldVec[i]->field_name.str), srcp));
 
@@ -8549,7 +8550,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
 
-            rc = wrapIntoAggregate(rc, gwi, select_lex, ord_item);
+            rc = wrapIntoAggregate(rc, gwi, ord_item);
           }
           // @bug5501 try item_ptr if item can not be fixed. For some
           // weird dml statement state, item can not be fixed but the
@@ -8791,6 +8792,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   for (uint32_t i = 0; i < gwi.localCols.size(); i++)
     gwi.localCols[i]->sequence(i);
 
+  gwi.select_lex = oldSelectLex;
   // append additionalRetCols to returnedCols
   gwi.returnedCols.insert(gwi.returnedCols.begin(), gwi.additionalRetCols.begin(),
                           gwi.additionalRetCols.end());
