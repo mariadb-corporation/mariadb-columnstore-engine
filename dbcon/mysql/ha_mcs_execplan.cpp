@@ -5297,7 +5297,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
               break;
             }
 
-            parm.reset(wrapIntoAggregate(sc, gwi, ifp));
+            parm.reset(sc);
             gwi.columnMap.insert(
                 CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), parm));
             TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
