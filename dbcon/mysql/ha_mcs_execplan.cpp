@@ -8911,6 +8911,7 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
   gwi.thd = thd;
   gwi.isGroupByHandler = true;
   idblog("calling getGroupPlan");
+  idbassert(0);
   int status = getGroupPlan(gwi, *select_lex, csep, gi);
 
 #ifdef DEBUG_WALK_COND
