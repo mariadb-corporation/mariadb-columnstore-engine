@@ -4159,8 +4159,10 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
     if (gwi.clauseType == SELECT ||
         /*gwi.clauseType == HAVING || */ gwi.clauseType == GROUP_BY)  // select clause
     {
+	    idblog("func in select");
       for (uint32_t i = 0; i < ifp->argument_count(); i++)
       {
+	      idblog( i << "th argument");
         // group by clause try to see if the arguments are alias
         if (gwi.clauseType == GROUP_BY && ifp->arguments()[i]->name.length)
         {
@@ -4170,7 +4172,9 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           {
             if (string(ifp->arguments()[i]->name.str) == gwi.returnedCols[j]->alias())
             {
+		    idblog("cloning " << i << "th projection elem");
               ReturnedColumn* rc = gwi.returnedCols[j]->clone();
+	      idblog("cloned as " << rc->toString());
               rc->orderPos(j);
               sptp.reset(new ParseTree(rc));
               funcParms.push_back(sptp);
@@ -4178,8 +4182,10 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
             }
           }
 
+	  idblog("continue?");
           if (j != gwi.returnedCols.size())
             continue;
+	  idblog("not");
         }
 
         // special handling for function that takes a filter arguments, like if().
@@ -4232,6 +4238,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
         if (!rc && ifp->arguments()[i]->type() == Item::REF_ITEM)
         {
+		idblog("calling buildAggFrmTempField");
           gwi.fatalParseError = false;
           rc = buildAggFrmTempField(ifp->arguments()[i], gwi);
         }
@@ -7629,6 +7636,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               sc->alias(itemAlias);
           }
 
+	  idblog("wrapping " << sc->toString());
           // We need to look into GROUP BY columns to decide if we need to wrap a column.
           ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
 
@@ -7720,6 +7728,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         {
           rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
         }
+	idblog("func in select " << rc->toString());
 
         SRCP srcp(rc);
 
