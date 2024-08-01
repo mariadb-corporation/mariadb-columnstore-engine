@@ -8211,6 +8211,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     gwi.hasWindowFunc = hasWindowFunc;
     groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
+    gwi.underAggregate = true;
     for (; groupcol; groupcol = groupcol->next)
     {
       Item* groupItem = *(groupcol->item);
@@ -8432,6 +8433,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         nonSupportItem = groupItem;
       }
     }
+    gwi.underAggregate = false;
 
     // @bug 4756. Add internal groupby column for correlated join to the groupby list
     if (gwi.aggOnSelect && !gwi.subGroupByCols.empty())
