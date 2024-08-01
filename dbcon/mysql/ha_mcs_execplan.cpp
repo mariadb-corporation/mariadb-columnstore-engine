@@ -4770,7 +4770,7 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
-SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+SimpleColumn* buildSimpleColumnUnwrapped(Item_field* ifp, gp_walk_info& gwi)
 {
   if (!gwi.csc)
   {
@@ -4864,6 +4864,10 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   }
 
   return sc;
+}
+SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+{
+  Simple
 }
 
 ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport)
@@ -5041,7 +5045,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, SELECT_
   return ac;
 }
 
-ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
+ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
 {
   // MCOL-1201 For UDAnF multiple parameters
   vector<SRCP> selCols;
@@ -5709,6 +5713,14 @@ because it has multiple arguments.";
 
   ac->charsetNumber(item->collation.collation->number);
   return ac;
+}
+ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
+{
+  bool underAggregate = gwi.underAggregate;
+  gwi.underAggregate = true;
+  ReturnedColumn* rc = buildAggregateColumnBody(item, gwi);
+  gwi.underAggregate = underAggregate;
+  return rc;
 }
 
 void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, FunctionParm& functionParms)

@@ -144,6 +144,7 @@ struct gp_walk_info
   // we can have explicit GROUP BY and implicit one, triggered by aggregate in pojection or ORDER BY.
   // this flag tells us whether we have either case.
   bool implicitExplicitGroupBy;
+  bool underAggregate;
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
@@ -193,6 +194,7 @@ struct gp_walk_info
    , subQuery(0)
    , clauseType(INIT)
    , implicitExplicitGroupBy(false)
+   , underAggregate(false)
    , aggOnSelect(false)
    , hasWindowFunc(false)
    , hasSubSelect(false)
