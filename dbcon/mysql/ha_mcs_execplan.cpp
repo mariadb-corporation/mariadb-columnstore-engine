@@ -8149,7 +8149,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     funcFieldVec[i]->print(&str, QT_ORDINARY);
     sc->alias(string(str.c_ptr()));
     sc->tableAlias(sc->tableAlias());
-    SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]);
+    SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]));
     uint32_t j = 0;
 
     for (; j < gwi.returnedCols.size(); j++)
