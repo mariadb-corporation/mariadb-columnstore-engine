@@ -57,8 +57,6 @@
   ((entries * sizeof(VBBMEntry)) + (entries / 4 * sizeof(int)) + (files * sizeof(VBFileMetadata)) + \
    sizeof(VBShmsegHeader))
 
-#define EXPORT
-
 namespace idbdatafile
 {
 class IDBDataFile;
@@ -66,7 +64,13 @@ class IDBDataFile;
 
 namespace BRM
 {
-class VSS;
+
+// class VSS;
+class VSSCluster;
+struct VBBMEntry;
+using VssCleanupRoutine = void (*)(BRM::VSSCluster& vss, const VBBMEntry& storageEntry,
+                                   vector<VBRange>& freeRanges, const int num, const uint32_t firstFBO,
+                                   const uint32_t lastFBO, vector<LBID_t>& flushList);
 
 struct VBFileMetadata
 {
@@ -82,7 +86,7 @@ struct VBBMEntry
   OID_t vbOID;
   uint32_t vbFBO;
   int next;
-  EXPORT VBBMEntry();
+  VBBMEntry();
 };
 
 struct VBShmsegHeader
@@ -188,29 +192,30 @@ class VBBM : public Undoable
     WRITE
   };
 
-  EXPORT VBBM();
-  EXPORT ~VBBM();
+  VBBM();
+  ~VBBM();
 
-  EXPORT void lock(OPS op);
-  EXPORT void release(OPS op);
-  EXPORT int lookup(LBID_t lbid, VER_t ver, OID_t& oid, uint32_t& fbo) const;
-  EXPORT void insert(LBID_t lbid, VER_t ver, OID_t oid, uint32_t fbo, bool loading = false);
-  EXPORT void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VssPtrVector& vss,
-                        bool flushPMCache);
-  EXPORT void removeEntry(LBID_t, VER_t ver);
+  void lock(OPS op);
+  void release(OPS op);
+  int lookup(LBID_t lbid, VER_t ver, OID_t& oid, uint32_t& fbo) const;
+  void insert(LBID_t lbid, VER_t ver, OID_t oid, uint32_t fbo, bool loading = false);
+  void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VssCleanupRoutine vssCleanup,
+                 BRM::VSSCluster& vss, bool flushPMCache);
 
-  EXPORT int size() const;
-  EXPORT bool hashEmpty() const;
-  EXPORT int checkConsistency() const;
-  EXPORT void setReadOnly();
+  void removeEntry(LBID_t, VER_t ver);
 
-  EXPORT void clear();
-  EXPORT void load(std::string filename);
-  EXPORT void loadVersion2(idbdatafile::IDBDataFile* in);
-  EXPORT void save(std::string filename);
+  int size() const;
+  bool hashEmpty() const;
+  int checkConsistency() const;
+  void setReadOnly();
+
+  void clear();
+  void load(std::string filename);
+  void loadVersion2(idbdatafile::IDBDataFile* in);
+  void save(std::string filename);
 
 #ifdef BRM_DEBUG
-  EXPORT int getShmid() const;
+  int getShmid() const;
 #endif
 
  private:
@@ -249,5 +254,3 @@ class VBBM : public Undoable
 };
 
 }  // namespace BRM
-
-#undef EXPORT

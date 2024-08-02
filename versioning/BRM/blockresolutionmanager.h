@@ -112,8 +112,8 @@ class BlockResolutionManager
   MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;
-  VSS vss;
-  std::vector<std::unique_ptr<VSS>> vss_;
+  //   VSS vss ;
+  VssClusterPtr vss_;
   CopyLocks copylocks;
 };
 

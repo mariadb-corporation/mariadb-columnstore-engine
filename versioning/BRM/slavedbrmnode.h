@@ -58,7 +58,14 @@ namespace BRM
  * on the node it's running on.  Only nodes that use the BRM need to run a slave
  * and only one instance should run on any given node.
  *
- * The Calpont configuration file should contain entries for the Master
+ * There is an event sequence invariant when there must be no modifying
+ * events b/w writeVBEntry() and confirmChanges() calls that belongs to
+ * different transactions. B/c the confirmChanges() call triggers VSSShard
+ * cleanup so if there are multiple modifying events, e.g. writeVBEntry(),
+ * that belongs to different transactions, VSSShard can end up with an
+ * unexpected VSS state.
+ *
+ * The Columnstore configuration file should contain entries for the Master
  * and every Slave node on the system.
  *
  * Config file entries look like
@@ -463,15 +470,20 @@ class SlaveDBRMNode
   //   explicit SlaveDBRMNode(const SlaveDBRMNode& brm);
   SlaveDBRMNode& operator=(const SlaveDBRMNode& brm);
   int lookup(OID_t oid, LBIDRange_v& lbidList) throw();
+  void lockVSS(const VSSCluster::OPS op);
+  void releaseVSS(const VSSCluster::OPS op);
+  void confirmChangesIfNeededAndReleaseVSS(const VSSCluster::OPS op);
+  void undoChangesIfNeededAndReleaseVSS(const VSSCluster::OPS op);
+  void releaseVSSifNeeded(const VSSCluster::OPS op);
 
   MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;
-  VSS vss;
+  //   VSS vss;
   CopyLocks copylocks;
   std::atomic<bool> locked[3]{false, false, false};  // 0 = VBBM, 1 = VSS, 2 = CopyLocks
-  std::vector<bool> vssIsLocked_;
-  VssPtrVector vss_;
+                                                     //   std::vector<bool> vssIsLocked_;
+  BRM::VssClusterPtr vss_;
 };
 
 }  // namespace BRM

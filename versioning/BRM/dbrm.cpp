@@ -21,27 +21,23 @@
  ****************************************************************************/
 
 #include <iostream>
-// #include <iterator>
 #include <unordered_set>
 #include <sys/types.h>
 #include <vector>
-#include "hasher.h"
-#ifdef __linux__
+// #include "hasher.h"
+// #ifdef __linux__
 #include <values.h>
-#endif
+// #endif
 #include <boost/thread.hpp>
 // #define NDEBUG
 #include <cassert>
 
-// #include "dataconvert.h"
 #include "oamcache.h"
-// #include "rwlock.h"
 #include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
 #include "vbbm.h"
-// #include "socketclosed.h"
 #include "configcpp.h"
 #include "sessionmanagerserver.h"
 #include "messagequeuepool.h"
@@ -68,8 +64,6 @@ using namespace std;
 using namespace messageqcpp;
 using namespace oam;
 
-namespace r = ranges;
-
 #ifdef BRM_INFO
 #include "tracer.h"
 #endif
@@ -88,11 +82,12 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
     em->setReadOnly();
     vbbm->setReadOnly();
 
-    for (auto s : MasterSegmentTable::VssShmemTypes)
-    {
-      vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
-      vss_.back()->setReadOnly();
-    }
+    vss_ = make_unique<BRM::VSSCluster>();
+    // for (auto s : MasterSegmentTable::VssShmemTypes)
+    // {
+    //   vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
+    //   vss_.back()->setReadOnly();
+    // }
   }
 
   msgClient = NULL;
@@ -140,7 +135,7 @@ int DBRM::saveState() throw()
   return rc;
 }
 
-int DBRM::saveState(string filename) throw()
+int DBRM::saveState(string filenamePrefix) throw()
 {
 #ifdef BRM_INFO
 
@@ -152,12 +147,13 @@ int DBRM::saveState(string filename) throw()
   }
 
 #endif
-  string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
-  string vbbmFilename = filename + "_vbbm";
+  // WIP should be moved into the saving methods
+  string emFilename = filenamePrefix + "_em";
+  // string vssFilenamePrefix = filename + "_vss";
+  string vbbmFilename = filenamePrefix + "_vbbm";
   bool locked[3] = {false, false, false};
-  std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
-  assert(vssIsLocked.size() == vss_.size());
+  // std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
+  // assert(vssIsLocked.size() == vss_.size());
 
   try
   {
@@ -169,16 +165,17 @@ int DBRM::saveState(string filename) throw()
     saveExtentMap(emFilename);
     vbbm->save(vbbmFilename);
 
-    for (size_t i = 0; auto& v : vss_)
-    {
-      assert(i < MasterSegmentTable::VssShmemTypes.size());
-      v->lock_(VSS::READ);
-      vssIsLocked[i] = true;
-      v->save(vssFilename + std::to_string(i + 1));
-      v->release(VSS::READ);
-      vssIsLocked[i] = false;
-      ++i;
-    }
+    vss_->save(filenamePrefix);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   assert(i < MasterSegmentTable::VssShmemTypes.size());
+    //   v->lock_(VSS::READ);
+    //   vssIsLocked[i] = true;
+    //   v->save(vssFilenamePrefix + std::to_string(i + 1));
+    //   v->release(VSS::READ);
+    //   vssIsLocked[i] = false;
+    //   ++i;
+    // }
 
     copylocks->release(CopyLocks::READ);
     locked[2] = false;
@@ -190,14 +187,16 @@ int DBRM::saveState(string filename) throw()
     if (locked[2])
       copylocks->release(CopyLocks::READ);
 
-    assert(vssIsLocked.size() == vss_.size());
-    for (size_t i = 0; auto& v : vss_)
-    {
-      if (vssIsLocked[i++])
-      {
-        v->release(VSS::READ);
-      }
-    }
+    // assert(vssIsLocked.size() == vss_.size());
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   if (vssIsLocked[i++])
+    //   {
+    //     v->release(VSS::READ);
+    //   }
+    // }
+    vss_->releaseIfNeeded(VSSCluster::READ);
+
     if (locked[0])
       vbbm->release(VBBM::READ);
 
@@ -257,7 +256,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   bool locked[2] = {false, false};
   int ret;
   bool tooOld = false;
-  size_t bucket = VSS::partition(lbid);
+  // size_t bucket = VSS::partition(lbid);
 
   try
   {
@@ -273,10 +272,10 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
 
       if (ret < 0)
       {
-        vss_[bucket]->lock_(VSS::READ);
+        vss_->lock_(lbid, VSSCluster::READ);
         locked[1] = true;
-        tooOld = vss_[bucket]->isTooOld(lbid, verid);
-        vss_[bucket]->release(VSS::READ);
+        tooOld = vss_->isTooOld(lbid, verid);
+        vss_->release(lbid, VSSCluster::READ);
         locked[1] = false;
 
         if (tooOld)
@@ -289,7 +288,7 @@ int DBRM::lookupLocal(LBID_t lbid, VER_t verid, bool vbFlag, OID_t& oid, uint16_
   catch (exception& e)
   {
     if (locked[1])
-      vss_[bucket]->release(VSS::READ);
+      vss_->release(lbid, VSSCluster::READ);
 
     if (locked[0])
       vbbm->release(VBBM::READ);
@@ -684,28 +683,26 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   }
 
 #endif
-  auto partition = VSS::partition(lbid);
-  if (!vbOnly && vss_[partition]->isEmpty())
+  // auto partition = VSS::partition(lbid);
+  // isEmpty takes a shmem RWlock internally accessing VSS.
+  if (!vbOnly && vss_->isEmpty(lbid, true))
   {
     *outVer = 0;
     *vbFlag = false;
     return -1;
   }
 
-  bool locked = false;
-
   try
   {
-    vss_[partition]->lock_(VSS::READ);
-    locked = true;
-    int rc = vss_[partition]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
-    vss_[partition]->release(VSS::READ);
+    // WIP put lock into the lookup method
+    vss_->lock_(lbid, VSSCluster::READ);
+    int rc = vss_->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+    vss_->release(lbid, VSSCluster::READ);
     return rc;
   }
   catch (exception& e)
   {
-    if (locked)
-      vss_[partition]->release(VSS::READ);
+    vss_->releaseIfNeeded(lbid, VSSCluster::READ);
 
     cerr << e.what() << endl;
     return -1;
@@ -719,31 +716,36 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
 
   try
   {
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->lock_(VSS::READ);
-      vssIsLocked[i++] = true;
-    }
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->lock_(VSS::READ);
+    //   vssIsLocked[i++] = true;
+    // }
+    // WIP Take the lock once inside the loop
+    vss_->lock_(VSSCluster::READ);
 
     for (size_t i = 0; i < lbids.size(); ++i)
     {
       auto lbid = lbids[i];
-      auto partition = VSS::partition(lbid);
+      // auto partition = VSS::partition(lbid);
       VSSData& vd = (*out)[i];
-      if (vss_[partition]->isEmpty(false))
+      // This if-else can be re-written so that the lock is
+      if (vss_->isEmpty(lbid, false))
       {
         vd = {0, false, -1};
       }
       else
       {
-        vd.returnCode = vss_[partition]->lookup(lbid, verInfo, txnID, &vd.verID, &vd.vbFlag, false);
+        vd.returnCode = vss_->lookup(lbid, verInfo, txnID, &vd.verID, &vd.vbFlag, false);
       }
     }
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->release(VSS::READ);
-      vssIsLocked[i++] = false;
-    }
+
+    vss_->release(VSSCluster::READ);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->release(VSS::READ);
+    //   vssIsLocked[i++] = false;
+    // }
 
     return 0;
   }
@@ -756,13 +758,14 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
     cerr << "bulkVSSLookup: caught an exception" << endl;
   }
 
-  for (size_t i = 0; auto& v : vss_)
-  {
-    if (vssIsLocked[i++])
-    {
-      v->release(VSS::READ);
-    }
-  }
+  vss_->releaseIfNeeded(VSSCluster::READ);
+  // for (size_t i = 0; auto& v : vss_)
+  // {
+  //   if (vssIsLocked[i++])
+  //   {
+  //     v->release(VSS::READ);
+  //   }
+  // }
 
   out->clear();
   return -1;
@@ -770,23 +773,25 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
 
 VER_t DBRM::getCurrentVersion(LBID_t lbid, bool* isLocked) const
 {
-  bool locked = false;
+  // bool locked = false;
   VER_t ret = 0;
-  auto partition = VSS::partition(lbid);
+  // auto partition = VSS::partition(lbid);
   try
   {
-    vss_[partition]->lock_(VSS::READ);
-    locked = true;
-    ret = vss_[partition]->getCurrentVersion(lbid, isLocked);
-    vss_[partition]->release(VSS::READ);
-    locked = false;
+    // vss_[partition]->lock_(VSS::READ);
+    // // locked = true;
+    // ret = vss_[partition]->getCurrentVersion(lbid, isLocked);
+    ret = vss_->getCurrentVersion(lbid, isLocked);
+    // vss_[partition]->release(VSS::READ);
+    // locked = false;
   }
   catch (exception& e)
   {
     cerr << e.what() << endl;
 
-    if (locked)
-      vss_[partition]->release(VSS::READ);
+    // if (locked)
+    // vss_[partition]->release(VSS::READ);
+    vss_->releaseIfNeeded(VSSCluster::READ);
 
     throw;
   }
@@ -802,24 +807,27 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
   if (isLocked != nullptr)
     isLocked->reserve(lbids.size());
 
-  size_t bucket = 0;
-  utils::Hasher_r hasher;
-  bool locked = false;
+  // size_t bucket = 0;
+  // utils::Hasher_r hasher;
+  LBID_t outerLbid = 0;
+  // bool locked = false;
   try
   {
     bool lockStatus = false;
 
     assert(lbids.size());
-    locked = true;
+    // locked = true;
 
+    // WIP refactor to reduce the number of lines
     if (isLocked)
     {
       for (auto lbid : lbids)
       {
-        bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
-        vss_[bucket]->lock_(VSS::READ);
-        versions->push_back(vss_[bucket]->getCurrentVersion(lbid, &lockStatus));
-        vss_[bucket]->release(VSS::READ);
+        outerLbid = lbid;
+        // bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+        vss_->lock_(lbid, VSSCluster::READ);
+        versions->push_back(vss_->getCurrentVersion(lbid, &lockStatus));
+        vss_->release(lbid, VSSCluster::READ);
         isLocked->push_back(lockStatus);
       }
     }
@@ -827,13 +835,14 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
     {
       for (auto lbid : lbids)
       {
-        bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
-        vss_[bucket]->lock_(VSS::READ);
-        versions->push_back(vss_[bucket]->getCurrentVersion(lbid, nullptr));
-        vss_[bucket]->release(VSS::READ);
+        outerLbid = lbid;
+        // bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
+        vss_->lock_(lbid, VSSCluster::READ);
+        versions->push_back(vss_->getCurrentVersion(lbid, nullptr));
+        vss_->release(VSSCluster::READ);
       }
     }
-    locked = false;
+    // locked = false;
     return 0;
   }
   catch (exception& e)
@@ -841,8 +850,8 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
     versions->clear();
     cerr << e.what() << endl;
 
-    if (locked)
-      vss_[bucket]->release(VSS::READ);
+    // if (locked)
+    vss_->releaseIfNeeded(outerLbid, VSSCluster::READ);
 
     return -1;
   }
@@ -850,24 +859,24 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
 
 VER_t DBRM::getHighestVerInVB(LBID_t lbid, VER_t max) const
 {
-  bool locked = false;
+  // bool locked = false;
   VER_t ret = -1;
-  size_t bucket = VSS::partition(lbid);
+  // size_t bucket = VSS::partition(lbid);
 
   try
   {
-    vss_[bucket]->lock_(VSS::READ);
-    locked = true;
-    ret = vss_[bucket]->getHighestVerInVB(lbid, max);
-    vss_[bucket]->release(VSS::READ);
-    locked = false;
+    // vss_->lock_(lbid, VSSCluster::READ);
+    // locked = true;
+    ret = vss_->getHighestVerInVB(lbid, max, true);
+    // vss_[bucket]->release(VSS::READ);
+    // locked = false;
   }
   catch (exception& e)
   {
     cerr << e.what() << endl;
-
-    if (locked)
-      vss_[bucket]->release(VSS::READ);
+    // if (locked)
+    //   vss_[bucket]->release(VSS::READ);
+    vss_->releaseIfNeeded(lbid, VSSCluster::READ);
 
     throw;
   }
@@ -878,23 +887,24 @@ VER_t DBRM::getHighestVerInVB(LBID_t lbid, VER_t max) const
 bool DBRM::isVersioned(LBID_t lbid, VER_t ver) const
 {
   bool ret = false;
-  bool locked = false;
-  size_t bucket = VSS::partition(lbid);
+  // bool locked = false;
+  // size_t bucket = VSS::partition(lbid);
 
   try
   {
-    vss_[bucket]->lock_(VSS::READ);
-    locked = true;
-    ret = vss_[bucket]->isVersioned(lbid, ver);
-    vss_[bucket]->release(VSS::READ);
-    locked = false;
+    // vss_[bucket]->lock_(VSS::READ);
+    // locked = true;
+    ret = vss_->isVersioned(lbid, ver);
+    // vss_[bucket]->release(VSS::READ);
+    // locked = false;
   }
   catch (exception& e)
   {
     cerr << e.what() << endl;
 
-    if (locked)
-      vss_[bucket]->release(VSS::READ);
+    // if (locked)
+    //   vss_[bucket]->release(VSS::READ);
+    vss_->releaseIfNeeded(lbid, VSSCluster::READ);
 
     throw;
   }
@@ -2309,35 +2319,37 @@ int DBRM::getUncommittedLBIDs(VER_t transID, vector<LBID_t>& lbidList) throw()
   }
 
 #endif
-  std::vector<bool> vssIsLocked(VssFactor, false);
+  // std::vector<bool> vssIsLocked(VssFactor, false);
   // clear the list here, so that we don't have to clear it in getUncommittedLBIDs.
   lbidList.clear();
 
   try
   {
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->lock_(VSS::READ);
-      vssIsLocked[i++] = true;
-      v->getUncommittedLBIDs(transID, lbidList);
-    }
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->lock_(VSS::READ);
+    //   vssIsLocked[i++] = true;
+    //   v->getUncommittedLBIDs(transID, lbidList);
+    // }
+    vss_->getUncommittedLBIDs(transID, lbidList);
 
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->release(VSS::READ);
-      vssIsLocked[i++] = false;
-    }
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->release(VSS::READ);
+    //   vssIsLocked[i++] = false;
+    // }
     return 0;
   }
   catch (exception& e)
   {
-    for (size_t i = 0; auto& v : vss_)
-    {
-      if (vssIsLocked[i++])
-      {
-        v->release(VSS::READ);
-      }
-    }
+    vss_->releaseIfNeeded(VSSCluster::READ);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   if (vssIsLocked[i++])
+    //   {
+    //     v->release(VSS::READ);
+    //   }
+    // }
 
     return -1;
   }
@@ -2805,67 +2817,67 @@ int DBRM::clear() DBRM_THROW
   return err;
 }
 
-int DBRM::checkConsistency() throw()
-{
-#ifdef BRM_INFO
+// int DBRM::checkConsistency() throw()
+// {
+// #ifdef BRM_INFO
 
-  if (fDebug)
-    TRACER_WRITENOW("checkConsistency");
+//   if (fDebug)
+//     TRACER_WRITENOW("checkConsistency");
 
-#endif
-  bool locked[2] = {false, false};
+// #endif
+//   bool locked[2] = {false, false};
 
-  try
-  {
-    em->checkConsistency();
-  }
-  catch (exception& e)
-  {
-    cerr << e.what() << endl;
-    return -1;
-  }
+//   try
+//   {
+//     em->checkConsistency();
+//   }
+//   catch (exception& e)
+//   {
+//     cerr << e.what() << endl;
+//     return -1;
+//   }
 
-  try
-  {
-    vbbm->lock(VBBM::READ);
-    locked[0] = true;
-    // WIP!!!
-    vss->lock_(VSS::READ);
-    locked[1] = true;
-    vss->checkConsistency(*vbbm, *em);
-    vss->release(VSS::READ);
-    locked[1] = false;
-    vbbm->release(VBBM::READ);
-    locked[0] = false;
-  }
-  catch (exception& e)
-  {
-    cerr << e.what() << endl;
+//   try
+//   {
+//     vbbm->lock(VBBM::READ);
+//     locked[0] = true;
+//     // WIP!!!
+//     vss->lock_(VSS::READ);
+//     locked[1] = true;
+//     vss->checkConsistency(*vbbm, *em);
+//     vss->release(VSS::READ);
+//     locked[1] = false;
+//     vbbm->release(VBBM::READ);
+//     locked[0] = false;
+//   }
+//   catch (exception& e)
+//   {
+//     cerr << e.what() << endl;
 
-    if (locked[1])
-      vss->release(VSS::READ);
+//     if (locked[1])
+//       vss->release(VSS::READ);
 
-    if (locked[0])
-      vbbm->release(VBBM::READ);
+//     if (locked[0])
+//       vbbm->release(VBBM::READ);
 
-    return -1;
-  }
+//     return -1;
+//   }
 
-  try
-  {
-    vbbm->lock(VBBM::READ);
-    vbbm->checkConsistency();
-    vbbm->release(VBBM::READ);
-  }
-  catch (exception& e)
-  {
-    cerr << e.what() << endl;
-    vbbm->release(VBBM::READ);
-    return -1;
-  }
+//   try
+//   {
+//     vbbm->lock(VBBM::READ);
+//     vbbm->checkConsistency();
+//     vbbm->release(VBBM::READ);
+//   }
+//   catch (exception& e)
+//   {
+//     cerr << e.what() << endl;
+//     vbbm->release(VBBM::READ);
+//     return -1;
+//   }
 
-  return 0;
-}
+//   return 0;
+// }
 
 int DBRM::getCurrentTxnIDs(set<VER_t>& txnList) throw()
 {
@@ -2881,40 +2893,45 @@ int DBRM::getCurrentTxnIDs(set<VER_t>& txnList) throw()
   try
   {
     txnList.clear();
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->lock_(VSS::READ);
-      vssIsLocked[i++] = true;
-    }
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->lock_(VSS::READ);
+    //   vssIsLocked[i++] = true;
+    // }
+    vss_->lock_(VSSCluster::READ);
 
     copylocks->lock(CopyLocks::READ);
     locked[1] = true;
     copylocks->getCurrentTxnIDs(txnList);
-    for (auto& v : vss_)
-    {
-      v->getCurrentTxnIDs(txnList);
-    }
+
+    vss_->getCurrentTxnIDs(txnList);
+    // for (auto& v : vss_)
+    // {
+    //   v->getCurrentTxnIDs(txnList);
+    // }
     copylocks->release(CopyLocks::READ);
     locked[1] = false;
 
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->release(VSS::READ);
-      vssIsLocked[i++] = false;
-    }
+    vss_->release(VSSCluster::READ);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->release(VSS::READ);
+    //   vssIsLocked[i++] = false;
+    // }
   }
   catch (exception& e)
   {
     if (locked[1])
       copylocks->release(CopyLocks::READ);
 
-    for (size_t i = 0; auto& v : vss_)
-    {
-      if (vssIsLocked[i++])
-      {
-        v->release(VSS::READ);
-      }
-    }
+    vss_->releaseIfNeeded(VSSCluster::READ);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   if (vssIsLocked[i++])
+    //   {
+    //     v->release(VSS::READ);
+    //   }
+    // }
 
     cerr << e.what() << endl;
     return -1;
@@ -3183,34 +3200,39 @@ int DBRM::getUnlockedLBIDs(BlockList_t* list) DBRM_THROW
 
   try
   {
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->lock_(VSS::READ);
-      vssIsLocked[i++] = true;
-    }
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->lock_(VSS::READ);
+    //   vssIsLocked[i++] = true;
+    // }
+    vss_->lock_(VSSCluster::READ);
 
-    for (auto& v : vss_)
-    {
-      v->getUnlockedLBIDs(*list);
-    }
+    // for (auto& v : vss_)
+    // {
+    //   v->getUnlockedLBIDs(*list);
+    // }
+    vss_->getUnlockedLBIDs(*list);
 
-    for (size_t i = 0; auto& v : vss_)
-    {
-      v->release(VSS::READ);
-      vssIsLocked[i++] = false;
-    }
+    vss_->release(VSSCluster::READ);
+
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   v->release(VSS::READ);
+    //   vssIsLocked[i++] = false;
+    // }
 
     return 0;
   }
   catch (exception& e)
   {
-    for (size_t i = 0; auto& v : vss_)
-    {
-      if (vssIsLocked[i++])
-      {
-        v->release(VSS::READ);
-      }
-    }
+    vss_->releaseIfNeeded(VSSCluster::READ);
+    // for (size_t i = 0; auto& v : vss_)
+    // {
+    //   if (vssIsLocked[i++])
+    //   {
+    //     v->release(VSS::READ);
+    //   }
+    // }
     cerr << e.what() << endl;
     return -1;
   }
