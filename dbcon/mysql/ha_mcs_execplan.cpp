@@ -3306,7 +3306,7 @@ bool itemInGroupBy(Item* item, gp_walk_info& gwi)
 
   while (groupcol)
   {
-    if (baseItem->eq(*groupcol->item, false))
+    if (item->eq(*groupcol->item, false))
     {
       return true;
     }
@@ -3326,7 +3326,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
     return rc;
   }
 
-  if (itemInGroupBy(item, gwi))
+  if (itemInGroupBy(baseItem, gwi))
   {
     return rc;
   }
