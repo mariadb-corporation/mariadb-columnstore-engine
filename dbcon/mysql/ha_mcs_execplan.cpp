@@ -4617,8 +4617,8 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
 ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
 {
   bool disableWrapping = gwi.disableWrapping;
-  gwi.disableWrapping = gwi.disableWrapping || itemInGroupBy(item, gwi);
-  ReturnedColumn* rc = buildFunctionColumnBody(item, gwi, nonSupport, isRefItem);
+  gwi.disableWrapping = gwi.disableWrapping || itemInGroupBy(ifp, gwi);
+  ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
