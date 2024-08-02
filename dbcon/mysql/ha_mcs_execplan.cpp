@@ -3300,8 +3300,12 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
   return ct;
 }
 
-bool itemInGroupBy(Item* item, gp_walk_info& gwi)
+bool itemDisablesWrapping(Item* item, gp_walk_info& gwi)
 {
+  if (gwi.select_lex == nullptr)
+  {
+    return true;
+  }
   ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
 
   while (groupcol)
@@ -3326,7 +3330,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
     return rc;
   }
 
-  if (itemInGroupBy(baseItem, gwi))
+  if (itemDisablesWrapping(baseItem, gwi))
   {
     return rc;
   }
@@ -3704,7 +3708,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
 ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
   bool disableWrapping = gwi.disableWrapping;
-  gwi.disableWrapping = gwi.disableWrapping || itemInGroupBy(item, gwi);
+  gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
   ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem);
   gwi.disableWrapping = disableWrapping;
   return rc;
@@ -4617,7 +4621,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
 ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
 {
   bool disableWrapping = gwi.disableWrapping;
-  gwi.disableWrapping = gwi.disableWrapping || itemInGroupBy(ifp, gwi);
+  gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(ifp, gwi);
   ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn);
   gwi.disableWrapping = disableWrapping;
   return rc;
