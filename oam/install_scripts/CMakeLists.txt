@@ -126,5 +126,7 @@ install(FILES mariadb-columnstore.service
 
 install(FILES  module DESTINATION ${ENGINE_DATADIR}/local COMPONENT columnstore-engine)
 
-find_package (Python3 COMPONENTS Interpreter REQUIRED)
-add_test(NAME PythonUnitTests COMMAND ${Python3_EXECUTABLE} -m unittest test_mcs-savebrm.py)
+find_package (Python3 COMPONENTS Interpreter)
+if(Python3_FOUND)
+  add_test(NAME PythonUnitTests COMMAND ${Python3_EXECUTABLE} -m unittest test_mcs-savebrm.py)
+endif()
