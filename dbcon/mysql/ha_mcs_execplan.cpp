@@ -3300,9 +3300,23 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
   return ct;
 }
 
+bool itemInGroupBy(Item* item, gp_walk_info& gwi)
+{
+  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
+
+  while (groupcol)
+  {
+    if (baseItem->eq(*groupcol->item, false))
+    {
+      return true;
+    }
+    groupcol = groupcol->next;
+  }
+  return false;
+}
 ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
 {
-  if (!gwi.implicitExplicitGroupBy || gwi.underAggregate || !gwi.select_lex)
+  if (!gwi.implicitExplicitGroupBy || gwi.disableWrapping || !gwi.select_lex)
   {
     return rc;
   }
@@ -3312,15 +3326,9 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
     return rc;
   }
 
-  ORDER* groupcol = static_cast<ORDER*>(gwi.select_lex->group_list.first);
-
-  while (groupcol)
+  if (itemInGroupBy(item, gwi))
   {
-    if (baseItem->eq(*groupcol->item, false))
-    {
-      return rc;
-    }
-    groupcol = groupcol->next;
+    return rc;
   }
 
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
@@ -3504,7 +3512,7 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
   return rc;
 }
 
-ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
 {
   ReturnedColumn* rc = NULL;
 
@@ -3691,6 +3699,14 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
   if (rc)
     rc->charsetNumber(item->collation.collation->number);
 
+  return rc;
+}
+ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+{
+  bool disableWrapping = gwi.disableWrapping;
+  gwi.disableWrapping = gwi.disableWrapping || itemInGroupBy(item, gwi);
+  ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem);
+  gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
@@ -5720,10 +5736,10 @@ because it has multiple arguments.";
 }
 ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
 {
-  bool underAggregate = gwi.underAggregate;
-  gwi.underAggregate = true;
+  bool disableWrapping = gwi.disableWrapping;
+  gwi.disableWrapping = true;
   ReturnedColumn* rc = buildAggregateColumnBody(item, gwi);
-  gwi.underAggregate = underAggregate;
+  gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
@@ -8220,7 +8236,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     gwi.hasWindowFunc = hasWindowFunc;
     groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
-    gwi.underAggregate = true;
+    gwi.disableWrapping = true;
     for (; groupcol; groupcol = groupcol->next)
     {
       Item* groupItem = *(groupcol->item);
@@ -8442,7 +8458,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         nonSupportItem = groupItem;
       }
     }
-    gwi.underAggregate = false;
+    gwi.disableWrapping = false;
 
     // @bug 4756. Add internal groupby column for correlated join to the groupby list
     if (gwi.aggOnSelect && !gwi.subGroupByCols.empty())
