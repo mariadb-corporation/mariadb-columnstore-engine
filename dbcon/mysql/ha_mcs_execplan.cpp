@@ -3538,11 +3538,6 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
     {
       Item_field* ifp = (Item_field*)item;
 
-      if (isRefItem && gwi.isGroupByHandler && !gwi.extSelAggColsItems.empty())
-      {
-        return buildAggFrmTempField(ifp, gwi);
-      }
-
       return wrapIntoAggregate(buildSimpleColumn(ifp, gwi), gwi, ifp);
     }
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
@@ -6666,15 +6661,15 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
           // MCOL-1510. This could be a non-supported function
           // argument in form of a temp_table_field, so check
           // and set hasNonSupportItem if it is so.
-          ReturnedColumn* rc = NULL;
-          if (gwi)
-            rc = buildAggFrmTempField(ref, *gwi);
+          //ReturnedColumn* rc = NULL;
+          //if (gwi)
+          //  rc = buildAggFrmTempField(ref, *gwi);
 
-          if (!rc)
-          {
+          //if (!rc)
+          //{
             Item_field* ifp = static_cast<Item_field*>(*(ref->ref));
             field_vec.push_back(ifp);
-          }
+          //}
           break;
         }
         else if ((*(ref->ref))->type() == Item::FUNC_ITEM)
