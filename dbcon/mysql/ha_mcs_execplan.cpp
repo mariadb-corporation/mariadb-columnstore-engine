@@ -2384,7 +2384,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     idblog("rhs: " << rhs->toString());
     gwip->rcWorkStack.pop();
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
-    idblog("rhs: " << lhs->toString());
+    idblog("lhs: " << lhs->toString());
     gwip->rcWorkStack.pop();
 
     // @bug3038. rowcolumn filter
@@ -4695,6 +4695,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
   funcParms.reserve(item->argument_count());
   // so buildXXXcolumn function will not pop stack.
   ClauseType realClauseType = gwi.clauseType;
+  idblog("set to SELECT (" << int(SELECT) << ")");
   gwi.clauseType = SELECT;
 
   // We ought to be able to just build from the stack, and would
@@ -6372,6 +6373,7 @@ void gp_walk(const Item* item, void* arg)
       ReturnedColumn* rc = NULL;
       // ref item is not pre-walked. force clause type to SELECT
       ClauseType clauseType = gwip->clauseType;
+      idblog("clause type " << int(clauseType) << ", set to SELECT");
       gwip->clauseType = SELECT;
 
       if (col->type() != Item::COND_ITEM)
@@ -7605,6 +7607,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     return rc;
   }
 
+  idblog("getSelectPlan set to SELECT");
   gwi.clauseType = SELECT;
   SELECT_LEX* oldSelectLex = gwi.select_lex; // XXX: SZ: should it be restored in case of error return?
   gwi.select_lex = &select_lex;
