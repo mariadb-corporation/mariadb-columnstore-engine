@@ -2363,6 +2363,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
   }
   else  // std rel ops (incl "like")
   {
+	  idblog("actual predicate");
     if (gwip->rcWorkStack.size() < 2)
     {
       idbassert(ifp->argument_count() == 2);
@@ -2378,8 +2379,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
 
     ReturnedColumn* rhs = gwip->rcWorkStack.top();
+    idblog("rhs: " << rhs->toString());
     gwip->rcWorkStack.pop();
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
+    idblog("rhs: " << lhs->toString());
     gwip->rcWorkStack.pop();
 
     // @bug3038. rowcolumn filter
@@ -2387,13 +2390,17 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     RowColumn* rlhs = dynamic_cast<RowColumn*>(lhs);
 
     if (rrhs && rlhs)
+    {
+	    idblog("on to buildRowColumnFilter");
       return buildRowColumnFilter(gwip, rrhs, rlhs, ifp);
+    }
 
     vector<Item*> itemList;
 
     for (uint32_t i = 0; i < ifp->argument_count(); i++)
       itemList.push_back(ifp->arguments()[i]);
 
+    idblog("in to buildEqualityPredicate");
     return buildEqualityPredicate(lhs, rhs, gwip, sop, ifp->functype(), itemList);
   }
 
@@ -3579,7 +3586,10 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/")
         return buildArithmeticColumn(ifp, gwi, nonSupport);
       else
+      {
+	      idblog("next to arith operator");
         return buildFunctionColumn(ifp, gwi, nonSupport);
+      }
     }
 
     case Item::SUM_FUNC_ITEM:
@@ -3587,6 +3597,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       return buildAggregateColumn(item, gwi);
     }
 
+    idblog("in build return column");
     case Item::REF_ITEM:
     {
       Item_ref* ref = (Item_ref*)item;
@@ -4022,6 +4033,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
 
   string funcName = ifp->func_name();
+  idblog("build func on '" << funcName << "'");
   if ( nullptr != dynamic_cast<Item_func_concat_operator_oracle*>(ifp))
   {
     // the condition above is the only way to recognize this particular case.
@@ -5378,6 +5390,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
             else if (!gwi.fatalParseError && !(parseInfo & AGG_BIT) && !(parseInfo & AF_BIT) &&
                      tmpVec.size() == 0)
             {
+		    idblog("call build func col in ");
               rc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
               FunctionColumn* fc = dynamic_cast<FunctionColumn*>(rc);
 
@@ -5389,6 +5402,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
                 {
                   //@bug5229. handle constant function on aggregate argument
                   ac->constCol(SRCP(rc));
+		  // XXX: this skips restoration of clauseType.
                   break;
                 }
               }
