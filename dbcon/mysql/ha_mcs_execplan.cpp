@@ -199,7 +199,7 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
     gwi.processed.push_back(std::make_pair(from, rc->expressionId()));
   }
   gwi.returnedCols.push_back(rc);
-  idblog("pushed to return cols: " << rc->toString());
+  idblog("pushed to return cols (eid " << rc->expressionId() << "): " << rc->toString());
 }
 
 // Recursively iterate through the join_list and store all non-null
@@ -7694,7 +7694,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
               sc->alias(itemAlias);
           }
 
-	  idblog("wrapping " << sc->toString());
+	  idblog("wrapping (eid " << sc->expressionId() << "): " << sc->toString());
           // We need to look into GROUP BY columns to decide if we need to wrap a column.
           ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
 
