@@ -5104,6 +5104,7 @@ void analyzeForImplicitGroupBy(Item* item, gp_walk_info& gwi)
 
 ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
 {
+	idblog("build aggregate column body");
   // MCOL-1201 For UDAnF multiple parameters
   vector<SRCP> selCols;
   vector<SRCP> orderCols;
@@ -5152,6 +5153,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
   }
   else
   {
+	  idblog("create AggCol");
     ac = new AggregateColumn(gwi.sessionid);
   }
 
