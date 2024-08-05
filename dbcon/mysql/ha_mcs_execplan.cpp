@@ -4575,6 +4575,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
            ifp->functype() == Item_func::ISNULL_FUNC || ifp->functype() == Item_func::ISNOTNULL_FUNC ||
            ifp->functype() == Item_func::NOT_FUNC || ifp->functype() == Item_func::EQUAL_FUNC)
   {
+	  idblog("returning NULL");
     return NULL;
   }
   else
@@ -5400,6 +5401,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
 
             if (gwi.clauseType == WHERE)
               gwi.clauseType = HAVING;
+	    idblog("clause type now " << int(gwi.clauseType) << ", HAVING is " << int(HAVING));
 
             // @bug 3603. for cases like max(rand()). try to build function first.
             if (!rc)
@@ -6183,6 +6185,7 @@ void gp_walk(const Item* item, void* arg)
       }
       else
       {
+	      idblog("building predicate");
         // push to pt or rc stack is handled inside the function
         buildPredicateItem(ifp, gwip);
       }
