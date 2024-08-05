@@ -1613,6 +1613,7 @@ ParseTree* buildRowPredicate(gp_walk_info* gwip, RowColumn* lhs, RowColumn* rhs,
 
 bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, Item_func* ifp)
 {
+	idblog("buildRowColumnFilter");
   if (ifp->functype() == Item_func::EQ_FUNC || ifp->functype() == Item_func::NE_FUNC)
   {
     // (c1,c2,..) = (v1,v2,...) transform to: c1=v1 and c2=v2 and ...
@@ -5916,6 +5917,7 @@ void gp_walk(const Item* item, void* arg)
       if (ifp)
       {
 	// XXX: this looks awfuly wrong.
+        idblog("awfully wrong");
         SimpleColumn* scp = buildSimpleColumn(ifp, *gwip);
 
         if (!scp)
@@ -6173,6 +6175,7 @@ void gp_walk(const Item* item, void* arg)
       ReturnedColumn* rc = NULL;
 
       // @bug4488. Process function for table mode also, not just vtable mode.
+      idblog("calling buildFunctionColumn");
       rc = buildFunctionColumn(ifp, *gwip, gwip->fatalParseError);
 
       if (gwip->fatalParseError)
@@ -6213,6 +6216,7 @@ void gp_walk(const Item* item, void* arg)
     case Item::SUM_FUNC_ITEM:
     {
       Item_sum* isp = (Item_sum*)item;
+      idblog("calling buildAggregateColumn");
       ReturnedColumn* rc = buildAggregateColumn(isp, *gwip);
 
       if (rc)
@@ -6450,6 +6454,7 @@ void gp_walk(const Item* item, void* arg)
           }
         }
 
+	idblog("cando " << int(cando));
         if (cando)
           buildPredicateItem(ifp, gwip);
       }
@@ -6460,6 +6465,7 @@ void gp_walk(const Item* item, void* arg)
       else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
       {
         //ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
+	idblog("HAVING FIELD_ITEM");
         ReturnedColumn* rc = buildReturnedColumn(const_cast<Item*>(item), *gwip, gwip->fatalParseError);
         if (rc)
           gwip->rcWorkStack.push(rc);
@@ -6525,7 +6531,7 @@ void gp_walk(const Item* item, void* arg)
       vector<SRCP> cols;
       // temp change clause type because the elements of row column are not walked yet
       gwip->clauseType = SELECT;
-
+idblog("changed to SELECT");
       for (uint32_t i = 0; i < row->cols(); i++)
         cols.push_back(SRCP(buildReturnedColumn(row->element_index(i), *gwip, gwip->fatalParseError)));
 
