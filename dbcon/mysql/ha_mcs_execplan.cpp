@@ -3354,9 +3354,11 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   ac->asc(rc->asc());
   ac->charsetNumber(rc->charsetNumber());
   uint32_t i;
-  for(i=0;i<gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
+  idblog("seaching");
+  for(i=0; i < gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
   { }
-  if (i>= gwi.processed.size())
+  idblog("i " << i << ", gwi.processed.size() " << gwi.processed.size());
+  if (i >= gwi.processed.size())
   {
     ac->expressionId(gwi.processed[i].second);
   }
