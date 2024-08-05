@@ -4258,7 +4258,10 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
         if (mayHasBoolArg && isBoolType)
           rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
         else
+	{
+		idblog("return column");
           rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+	}
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
         if (!rc && ifp->arguments()[i]->type() == Item::REF_ITEM)
@@ -4280,18 +4283,21 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
     }
     else  // where clause
     {
+	    idblog("WHERE clause");
       stack<SPTP> tmpPtStack;
 
       for (int32_t i = ifp->argument_count() - 1; i >= 0; i--)
       {
         if (isPredicateFunction((ifp->arguments()[i]), &gwi) && !gwi.ptWorkStack.empty())
         {
+		idblog("a predicate function");
           sptp.reset(gwi.ptWorkStack.top());
           tmpPtStack.push(sptp);
           gwi.ptWorkStack.pop();
         }
         else if (!isPredicateFunction((ifp->arguments()[i]), &gwi) && !gwi.rcWorkStack.empty())
         {
+		idblog("a predicate function and rc stack is not empty");
           sptp.reset(new ParseTree(gwi.rcWorkStack.top()));
           tmpPtStack.push(sptp);
           gwi.rcWorkStack.pop();
