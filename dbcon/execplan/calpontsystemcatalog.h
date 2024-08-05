@@ -223,7 +223,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     bool autoincrement = 0;  // set to true if  SYSCOLUMN autoincrement is �y�
     uint64_t nextvalue = 0;  // next autoincrement value
     uint32_t charsetNumber = default_charset_info->number;
-    const CHARSET_INFO* cs = nullptr;
+    const mutable CHARSET_INFO* cs = nullptr;
 
    private:
     long timeZone;
@@ -236,7 +236,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
             const ColDataType& colDataType_);
     ColType& operator=(const ColType& rhs);
 
-    CHARSET_INFO* getCharset();
+    CHARSET_INFO* getCharset() const;
 
     long getTimeZone() const
     {

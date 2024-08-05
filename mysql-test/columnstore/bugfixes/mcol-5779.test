@@ -1,0 +1,48 @@
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5779;
+--enable_warnings
+
+CREATE DATABASE mcol5779;
+USE mcol5779;
+
+
+CREATE TABLE `t1` (
+  `id` int(11) DEFAULT NULL,
+  `name1` char(10) DEFAULT NULL COMMENT 'test name',
+  `name2` varchar(100) DEFAULT NULL COMMENT 'test name',
+  `name3` text DEFAULT NULL COMMENT 'test name'
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+ALTER TABLE t1 CHANGE COLUMN id id1 INT;
+ALTER TABLE t1 CHANGE COLUMN id1 id INT COMMENT 'new comment';
+
+ALTER TABLE t1 CHANGE COLUMN name1 firstname char(10);
+ALTER TABLE t1 CHANGE COLUMN firstname firstname char(10) COMMENT 'new comment';
+
+ALTER TABLE t1 CHANGE COLUMN name2 lastname varchar(100);
+ALTER TABLE t1 CHANGE COLUMN lastname lastname varchar(100) COMMENT 'new comment';
+
+ALTER TABLE t1 CHANGE COLUMN name3 surname text;
+ALTER TABLE t1 CHANGE COLUMN surname surname text COMMENT 'new comment';
+
+
+CREATE TABLE `t2` (
+   `name4` varchar(2666) DEFAULT NULL COMMENT 'test name'
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+
+ALTER TABLE t2 CHANGE COLUMN name4 pseudoname varchar(2666);
+ALTER TABLE t2 CHANGE COLUMN pseudoname pseudoname varchar(2666) COMMENT 'new comment';
+
+CREATE TABLE `t3` (
+   `name4` varchar(8000) DEFAULT NULL COMMENT 'test name'
+) ENGINE=Columnstore DEFAULT CHARSET=latin1;
+
+
+ALTER TABLE t3 CHANGE COLUMN name4 pseudoname varchar(8000);
+ALTER TABLE t3 CHANGE COLUMN pseudoname pseudoname varchar(8000) COMMENT 'new comment';
+
+DROP DATABASE mcol5779;
+
