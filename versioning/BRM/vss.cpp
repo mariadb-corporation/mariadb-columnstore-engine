@@ -222,12 +222,10 @@ void VSSCluster::load(const string& filenamePrefix)
   for (size_t i = 1; auto& vssShard : vssShards_)
   {
     assert(i >= 1);
-    vssShard->lock_(VSSCluster::WRITE, vssMutexes_[i - 1]);
     vssShard->lockShard(VSSCluster::WRITE);
 
     vssShard->load(vssFilenamePrefix + std::to_string(i));
 
-    vssShard->release(VSSCluster::WRITE);
     vssShard->releaseShard(VSSCluster::WRITE);
   }
 }

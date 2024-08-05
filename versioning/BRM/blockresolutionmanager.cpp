@@ -171,7 +171,7 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
-  std::vector<bool> vssIsLocked(VssFactor, false);
+  // std::vector<bool> vssIsLocked(VssFactor, false);
   // assert(vssIsLocked.size() == vss_.size());
 
   try
@@ -180,7 +180,6 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     locked[0] = true;
 
     vss_->lock_(VSSCluster::WRITE);
-    locked[1] = true;
 
     // for (size_t i = 0; auto& v : vss_)
     // {
@@ -202,8 +201,8 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     // }
 
     vss_->load(filename);
+
     vss_->release(VSSCluster::WRITE);
-    locked[1] = false;
 
     vbbm.release(VBBM::WRITE);
     locked[0] = false;
@@ -218,10 +217,8 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     //     v->release(VSS::WRITE);
     //   }
     // }
-    if (locked[1])
-    {
-      vss_->release(VSSCluster::WRITE);
-    }
+
+    vss_->releaseIfNeeded(VSSCluster::WRITE);
 
     if (locked[0])
       vbbm.release(VBBM::WRITE);

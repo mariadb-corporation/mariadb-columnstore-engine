@@ -1215,10 +1215,14 @@ int SlaveDBRMNode::loadState(string filenamePrefix) throw()
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
 
+    vss_->lock_(VSSCluster::WRITE);
+
     loadExtentMap(emFilename);
     vbbm.load(vbbmFilename);
 
     vss_->load(filenamePrefix);
+
+    vss_->release(VSSCluster::WRITE);
     // for (size_t i = 0; auto& v : vss_)
     // {
     //   assert(i < MasterSegmentTable::VssShmemTypes.size());
