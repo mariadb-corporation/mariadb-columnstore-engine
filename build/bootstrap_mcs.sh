@@ -376,7 +376,7 @@ run_unit_tests()
     else
         message "Running unittests"
         cd $MARIA_BUILD_PATH
-        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress
+        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
         cd - > /dev/null
     fi
 }
