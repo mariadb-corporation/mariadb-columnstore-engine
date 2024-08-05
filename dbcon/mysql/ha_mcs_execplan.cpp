@@ -3743,7 +3743,7 @@ ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& 
   return cc;
 }
 
-ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -3786,7 +3786,8 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
         // Could have it set if there are aggregation funcs as this function arguments.
         gwi.fatalParseError = false;
 
-        ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
+        //ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi);
         if (rc)
           lhs = new ParseTree(rc);
       }
@@ -3805,12 +3806,13 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
         // Could have it set if there are aggregation funcs as this function arguments.
         gwi.fatalParseError = false;
 
-        ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
+        //ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi);
         if (rc)
           rhs = new ParseTree(rc);
       }
     }
-    else  // where clause
+    else  // where clause SZ: XXX: is it also HAVING clause??? it appears so judging from condition above.
     {
       if (isPredicateFunction(sfitempp[1], &gwi))
       {
@@ -4004,6 +4006,14 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
   }
 
   return ac;
+}
+ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+{
+  bool disableWrapping = gwi.disableWrapping;
+  gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
+  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
+  gwi.disableWrapping = disableWrapping;
+  return rc;
 }
 
 ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
