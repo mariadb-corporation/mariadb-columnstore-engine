@@ -3345,6 +3345,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   }
 
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+  idblog("new agg warp");
 
   AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
   ac->timeZone(gwi.timeZone);
@@ -3352,7 +3353,17 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   ac->aggOp(AggregateColumn::SELECT_SOME);
   ac->asc(rc->asc());
   ac->charsetNumber(rc->charsetNumber());
-  ac->expressionId(ci->expressionId++);
+  int32_t i;
+  for(i=0;i<gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
+  { }
+  if (i>= gwi.processed.size())
+  {
+    ac->expressionId(gwi.processed[i].second);
+  }
+  else
+  {
+    ac->expressionId(ci->expressionId++);
+  }
 
   ac->aggParms().push_back(SRCP(rc));
   return ac;
