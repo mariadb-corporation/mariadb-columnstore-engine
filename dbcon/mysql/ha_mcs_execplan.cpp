@@ -3597,9 +3597,9 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       return buildAggregateColumn(item, gwi);
     }
 
-    idblog("in build return column");
     case Item::REF_ITEM:
     {
+    idblog("in build return column");
       Item_ref* ref = (Item_ref*)item;
 
       switch ((*(ref->ref))->type())
