@@ -3787,7 +3787,7 @@ ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, 
         gwi.fatalParseError = false;
 
         //ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi, nonSupport);
         if (rc)
           lhs = new ParseTree(rc);
       }
@@ -3807,7 +3807,7 @@ ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, 
         gwi.fatalParseError = false;
 
         //ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi, nonSupport);
         if (rc)
           rhs = new ParseTree(rc);
       }
@@ -4011,7 +4011,7 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
-  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
+  ArithmeticColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
