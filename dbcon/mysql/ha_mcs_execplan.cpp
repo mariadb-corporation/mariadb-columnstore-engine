@@ -6438,7 +6438,8 @@ void gp_walk(const Item* item, void* arg)
       }
       else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
       {
-        ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
+        //ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
+        ReturnedColumn* rc = buildReturnedColumn(const_cast<Item*>(item), *gwip, gwip->fatalParseError);
         if (rc)
           gwip->rcWorkStack.push(rc);
 
