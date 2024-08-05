@@ -3358,7 +3358,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   for(i=0; i < gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
   { }
   idblog("i " << i << ", gwi.processed.size() " << gwi.processed.size());
-  if (i >= gwi.processed.size())
+  if (i < gwi.processed.size())
   {
     ac->expressionId(gwi.processed[i].second);
   }
