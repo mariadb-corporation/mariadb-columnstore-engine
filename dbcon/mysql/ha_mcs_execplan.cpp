@@ -3353,7 +3353,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   ac->aggOp(AggregateColumn::SELECT_SOME);
   ac->asc(rc->asc());
   ac->charsetNumber(rc->charsetNumber());
-  int32_t i;
+  uint32_t i;
   for(i=0;i<gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
   { }
   if (i>= gwi.processed.size())
