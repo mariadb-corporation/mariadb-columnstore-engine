@@ -3345,7 +3345,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   }
 
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-  idblog("new agg warp, clause type " << int(gwi.clauseType));
+  idblog("new agg wrap, clause type " << int(gwi.clauseType) << ", wrapping: " << cr->toString());
 
   AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
   ac->timeZone(gwi.timeZone);
@@ -3353,6 +3353,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   ac->aggOp(AggregateColumn::SELECT_SOME);
   ac->asc(rc->asc());
   ac->charsetNumber(rc->charsetNumber());
+  ac->orderPos(rc->orderPos());
   uint32_t i;
   idblog("seaching");
   for(i=0; i < gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false);i++)
