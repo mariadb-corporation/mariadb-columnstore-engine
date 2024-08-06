@@ -3345,7 +3345,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   }
 
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-  idblog("new agg wrap, clause type " << int(gwi.clauseType) << ", wrapping: " << cr->toString());
+  idblog("new agg wrap, clause type " << int(gwi.clauseType) << ", wrapping: " << rc->toString());
 
   AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
   ac->timeZone(gwi.timeZone);
