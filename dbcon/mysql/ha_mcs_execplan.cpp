@@ -8114,6 +8114,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   gwi.fatalParseError = false;
   gwi.parseErrorText = "";
 
+  gwi.disableWrapping = true;
   if (select_lex.having != 0)
   {
 #ifdef DEBUG_WALK_COND
@@ -8155,6 +8156,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.ptWorkStack.push(ptp);
     }
   }
+  gwi.disableWrapping = false;
 
   // MCOL-4617 If this is an IN subquery, then create the in-to-exists
   // predicate and inject it into the csep
