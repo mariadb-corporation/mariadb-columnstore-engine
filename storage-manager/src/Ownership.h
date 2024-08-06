@@ -22,6 +22,7 @@
 #include <boost/thread.hpp>
 #include <map>
 #include "SMLogging.h"
+#include "fdbcs.hpp"
 
 /* This class tracks the ownership of each prefix and manages ownership transfer.
    Could we come up with a better name btw? */
