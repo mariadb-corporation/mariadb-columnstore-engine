@@ -3,7 +3,7 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
 
 
 SET default_storage_engine=Columnstore;

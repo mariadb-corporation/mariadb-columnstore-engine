@@ -1,26 +1,23 @@
-#
-# Test Session functions
-# Author: Bharath, bharath.bokka@mariadb.com
-#
--- source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
-
-
 SET default_storage_engine=Columnstore;
-
---disable_warnings
 DROP DATABASE IF EXISTS mcs170_db;
---enable_warnings
-
 CREATE DATABASE mcs170_db;
 USE mcs170_db;
-
 SELECT CONNECTION_ID() > 0;
+CONNECTION_ID() > 0
+1
 SELECT CURRENT_USER();
+CURRENT_USER()
+testUser@max
 SELECT USER();
+USER()
+testUser@%
 SELECT SESSION_USER();
+SESSION_USER()
+testUser@max
 SELECT SYSTEM_USER();
+SYSTEM_USER()
+testUser@max
 SELECT DATABASE();
-
-# Clean UP
+DATABASE()
+mcs170_db
 DROP DATABASE mcs170_db;

@@ -3,6 +3,8 @@
 #
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
+-- source ../include/check_maxscale.inc
+
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs14_db1;
@@ -68,8 +70,18 @@ CREATE TABLE t2 LIKE t1;
 INSERT INTO t2 SELECT * FROM t1;
 
 # Test from parallel connections
-connect (addconroot1, localhost, root,,);
-connect (addconroot2, localhost, root,,);
+--disable_query_log
+if ($maxscale == 1)
+{
+  connect(addconroot1, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
+  connect(addconroot2, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
+}
+if ($maxscale == 0)
+{
+  connect (addconroot1, localhost, root,,);
+  connect (addconroot2, localhost, root,,);
+}
+--enable_query_log
 connection addconroot1;
 TRUNCATE mcs14_db1.t1;
 connection addconroot2;
