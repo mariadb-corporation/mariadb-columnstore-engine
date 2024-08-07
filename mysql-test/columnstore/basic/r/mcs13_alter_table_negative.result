@@ -38,8 +38,6 @@ ALTER TABLE t1 ADD PRIMARY KEY pk(c1);
 ERROR 42000: Too many keys specified; max 0 keys allowed
 ALTER TABLE t1 DROP KEY k1;
 ERROR 42000: Can't DROP INDEX `k1`; check that it exists
-connect  addconroot1, localhost, root,,;
-connect  addconroot2, localhost, root,,;
 connection addconroot1;
 ALTER TABLE mcs13_db1.t1 CHANGE c1 c2 INVALIDDATATYPE;
 ERROR HY000: Unknown data type: 'INVALIDDATATYPE'
