@@ -53,6 +53,24 @@ using namespace rowgroup;
 
 #include "expressionstep.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace joblist
 {
 ExpressionStep::ExpressionStep()
@@ -493,6 +511,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
   for (vector<ReturnedColumn*>::iterator it = fColumns.begin(); it != fColumns.end(); ++it)
   {
     SimpleColumn* sc = dynamic_cast<SimpleColumn*>(*it);
+    idblog("on " << (*it)->toString());
 
     if (sc != NULL)
     {
