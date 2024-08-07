@@ -200,34 +200,136 @@ bool VSSCluster::isTooOld(const LBID_t lbid, const VER_t verID)
 
 void VSSCluster::save(const string& filenamePrefix)
 {
-  string vssFilenamePrefix = filenamePrefix + "_vss";
+  const string vssFilenamePrefix = filenamePrefix + "_vss";
 
-  for (size_t i = 1; auto& vssShard : vssShards_)
+  // lock_(VSSCluster::READ);
+
+  std::unique_ptr<IDBDataFile> file(
+      IDBDataFile::open(IDBPolicy::getType(vssFilenamePrefix.c_str(), IDBPolicy::WRITEENG),
+                        vssFilenamePrefix.c_str(), "wb", IDBDataFile::USE_VBUF));
+
+  // WIP
+
+  if (file->seek(sizeof(VSSCluster::Header), SEEK_SET))
   {
-    assert(i >= 1);
-    vssShard->lock_(VSSCluster::READ, vssMutexes_[i - 1]);
-    vssShard->lockShard(VSSCluster::READ);
-
-    vssShard->save(vssFilenamePrefix + std::to_string(i));
-
-    vssShard->release(VSSCluster::READ);
-    vssShard->releaseShard(VSSCluster::READ);
+    log_errno("VSSCluster::save()");
+    throw runtime_error("VSSCluster::save(): Failed to skip header in the file");
   }
+
+  size_t totalEntriesNum = 0;
+
+  for (auto& vssShard : vssShards_)
+  {
+    totalEntriesNum += vssShard->save(*file);
+  }
+
+  if (file->seek(0, SEEK_SET))
+  {
+    log_errno("VSSCluster::save()");
+    throw runtime_error("VSSCluster::save(): Failed to seek to write header in the file");
+  }
+
+  // WIP make this max a const
+  if (totalEntriesNum > std::numeric_limits<int32_t>::max())
+  {
+    log_errno("VSSCluster::save()");
+    std::ostringstream oss;
+    oss << "VSSCluster::save(): Too many entries to save: " << totalEntriesNum;
+    throw runtime_error(oss.str());
+  }
+
+  struct Header header
+  {
+    .magic = VSS_MAGIC_V1, .entries = static_cast<uint32_t>(totalEntriesNum)
+  };
+
+  if (file->write((char*)&header, sizeof(header)) != sizeof(header))
+  {
+    log_errno("VSSCluster::save()");
+    throw runtime_error("VSSCluster::save(): Failed to write header to the file");
+  }
+
+  // release(VSSCluster::READ);
 }
 
 void VSSCluster::load(const string& filenamePrefix)
 {
   string vssFilenamePrefix = filenamePrefix + "_vss";
 
-  for (size_t i = 1; auto& vssShard : vssShards_)
+  // lock_(VSSCluster::WRITE);
+
+  unique_ptr<IDBDataFile> in(
+      IDBDataFile::open(IDBPolicy::getType(vssFilenamePrefix.c_str(), IDBPolicy::WRITEENG),
+                        vssFilenamePrefix.c_str(), "rb", 0));
+
+  if (!in)
   {
-    assert(i >= 1);
-    vssShard->lockShard(VSSCluster::WRITE);
-
-    vssShard->load(vssFilenamePrefix + std::to_string(i));
-
-    vssShard->releaseShard(VSSCluster::WRITE);
+    log_errno("VSSCluster::load()");
+    throw runtime_error("VSSCluster::load(): Failed to open the file");
   }
+
+  struct Header header;
+  if (in->read((char*)&header, sizeof(header)) != sizeof(header))
+  {
+    log_errno("VSSCluster::load()");
+    throw runtime_error("VSSCluster::load(): Failed to read header");
+  }
+
+  if (header.magic != VSS_MAGIC_V1)
+  {
+    log("VSSCluster::load(): Bad magic.  Not a VSS file?");
+    throw runtime_error("VSSCluster::load(): Bad magic.  Not a VSS file?");
+  }
+
+  // WIP make this max a const
+  if (header.entries >= std::numeric_limits<int32_t>::max())
+  {
+    log("VSSCluster::load(): Bad size.  Not a VSS file?");
+    throw runtime_error("VSSCluster::load(): Bad size.  Not a VSS file?");
+  }
+
+  size_t readSize = header.entries * sizeof(VSSEntry);
+  auto readBuf = std::make_unique<char[]>(readSize);
+  size_t progress = 0;
+  int err;
+  while (progress < readSize)
+  {
+    err = in->read(readBuf.get() + progress, readSize - progress);
+    if (err < 0)
+    {
+      log_errno("VSS::load()");
+      throw runtime_error("VSS::load(): Failed to load, check the critical log file");
+    }
+    else if (err == 0)
+    {
+      log("VSS::load(): Got early EOF");
+      throw runtime_error("VSS::load(): Got early EOF");
+    }
+    progress += err;
+  }
+
+  const char* readBufPtr = readBuf.get();
+  for (auto& vssShard : vssShards_)
+  {
+    vssShard->growForLoad_(header.entries);
+  }
+
+  const VSSEntry* loadedEntries = reinterpret_cast<const VSSEntry*>(readBufPtr);
+  for (uint32_t i = 0; i < header.entries; ++i)
+  {
+    // NB can be future optimized b/c all entries belong to the same partition
+    // locate sequentially in the
+    auto p = VSSCluster::partition(loadedEntries[i].lbid);
+    vssShards_[p]->insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag,
+                           loadedEntries[i].locked, true);
+  }
+
+  // for (auto& vssShard : vssShards_)
+  // {
+  //   vssShard->load(readBufPtr, header.entries);
+  // }
+
+  // release(VSSCluster::WRITE);
 }
 
 // WIP
@@ -254,15 +356,15 @@ int VSSCluster::lookup(LBID_t lbid, const QueryContext_vss& verInfo, VER_t txnID
 {
   auto p = partition(lbid);
 
-  vssShards_[p]->lock_(VSSCluster::READ, vssMutexes_[p]);
-  vssShards_[p]->lockShard(VSSCluster::READ);
+  // vssShards_[p]->lock_(VSSCluster::READ, vssMutexes_[p]);
+  // vssShards_[p]->lockShard(VSSCluster::READ);
 
-  auto rc = vssShards_[p]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+  return vssShards_[p]->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
 
-  vssShards_[p]->release(VSSCluster::READ);
-  vssShards_[p]->releaseShard(VSSCluster::READ);
+  // vssShards_[p]->release(VSSCluster::READ);
+  // vssShards_[p]->releaseShard(VSSCluster::READ);
 
-  return rc;
+  // return rc;
 }
 
 VER_t VSSCluster::getCurrentVersion(LBID_t lbid, bool* isLocked) const
@@ -364,23 +466,23 @@ LbidVersionVec VSSCluster::removeEntryFromDB(const LBID_t& lbid)
 
 // To be used in SlaveDBRMNode::deleteOID
 // This method needs an explicit external lock on a VSS cluster
-LbidVersionVec VSSCluster::removeEntriesFromDB(const LBIDRange_v& lbidRanges)
-{
-  LbidVersionVec res;
+// LbidVersionVec VSSCluster::removeEntriesFromDB(const LBIDRange_v& lbidRanges)
+// {
+//   LbidVersionVec res;
 
-  // WIP resize res in front
-  for (auto lbidRange : lbidRanges)
-  {
-    for (auto lbid = lbidRange.start; lbid < lbidRange.start + lbidRange.size; ++lbid)
-    {
-      auto p = partition(lbid);
-      auto lbidVersions = vssShards_[p]->removeEntryFromDB(lbid);
-      res.insert(res.end(), lbidVersions.begin(), lbidVersions.end());
-    }
-  }
+//   // WIP resize res in front
+//   for (auto lbidRange : lbidRanges)
+//   {
+//     for (auto lbid = lbidRange.start; lbid < lbidRange.start + lbidRange.size; ++lbid)
+//     {
+//       auto p = partition(lbid);
+//       auto lbidVersions = vssShards_[p]->removeEntryFromDB(lbid);
+//       res.insert(res.end(), lbidVersions.begin(), lbidVersions.end());
+//     }
+//   }
 
-  return res;
-}
+//   return res;
+// }
 
 // This method needs an explicit external lock on a VSS shard
 void VSSCluster::setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag)
@@ -649,17 +751,89 @@ void VSSShard::release(const VSSCluster::OPS op)
     mst.releaseTable_write(vssShmType_);
 }
 
-void VSSShard::save(string filename)
-{
-  const char* filename_p = filename.c_str();
-  scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                                filename_p, "wb", IDBDataFile::USE_VBUF));
+// void VSSShard::save(string filename)
+// {
+//   const char* filename_p = filename.c_str();
+//   scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+//                                                 filename_p, "wb", IDBDataFile::USE_VBUF));
 
-  if (!out)
-  {
-    log_errno("VSSShard::save()");
-    throw runtime_error("VSSShard::save(): Failed to open the file");
-  }
+//   if (!out)
+//   {
+//     log_errno("VSSShard::save()");
+//     throw runtime_error("VSSShard::save(): Failed to open the file");
+//   }
+
+//   if (vss->currentSize < 0)
+//   {
+//     log_errno("VSSShard::save()");
+//     throw runtime_error("VSSShard::save(): VSS::currentSize is negative");
+//   }
+
+//   struct VSSShard::Header header
+//   {
+//     .magic = VSS_MAGIC_V1, .entries = static_cast<uint32_t>(vss->currentSize)
+//   };
+
+//   if (out->write((char*)&header, sizeof(header)) != sizeof(header))
+//   {
+//     log_errno("VSSShard::save()");
+//     throw runtime_error("VSSShard::save(): Failed to write header to the file");
+//   }
+
+//   int first = -1, last = -1, err;
+//   size_t progress, writeSize;
+//   for (int i = 0; i < vss->capacity; i++)
+//   {
+//     if (storage[i].lbid != -1 && first == -1)
+//       first = i;
+//     else if (storage[i].lbid == -1 && first != -1)
+//     {
+//       last = i;
+//       writeSize = (last - first) * sizeof(VSSEntry);
+//       progress = 0;
+//       char* writePos = (char*)&storage[first];
+//       while (progress < writeSize)
+//       {
+//         err = out->write(writePos + progress, writeSize - progress);
+//         if (err < 0)
+//         {
+//           log_errno("VSSShard::save()");
+//           throw runtime_error("VSSShard::save(): Failed to write the file");
+//         }
+//         progress += err;
+//       }
+//       first = -1;
+//     }
+//   }
+//   if (first != -1)
+//   {
+//     writeSize = (vss->capacity - first) * sizeof(VSSEntry);
+//     progress = 0;
+//     char* writePos = (char*)&storage[first];
+//     while (progress < writeSize)
+//     {
+//       err = out->write(writePos + progress, writeSize - progress);
+//       if (err < 0)
+//       {
+//         log_errno("VSSShard::save()");
+//         throw runtime_error("VSSShard::save(): Failed to write the file");
+//       }
+//       progress += err;
+//     }
+//   }
+// }
+
+uint32_t VSSShard::save(idbdatafile::IDBDataFile& file)
+{
+  // const char* filename_p = filename.c_str();
+  // scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+  //                                               filename_p, "wb", IDBDataFile::USE_VBUF));
+
+  // if (!out)
+  // {
+  //   log_errno("VSSShard::save()");
+  //   throw runtime_error("VSSShard::save(): Failed to open the file");
+  // }
 
   if (vss->currentSize < 0)
   {
@@ -667,16 +841,16 @@ void VSSShard::save(string filename)
     throw runtime_error("VSSShard::save(): VSS::currentSize is negative");
   }
 
-  struct VSSShard::Header header
-  {
-    .magic = VSS_MAGIC_V1, .entries = static_cast<uint32_t>(vss->currentSize)
-  };
+  // struct VSSShard::Header header
+  // {
+  //   .magic = VSS_MAGIC_V1, .entries = static_cast<uint32_t>(vss->currentSize)
+  // };
 
-  if (out->write((char*)&header, sizeof(header)) != sizeof(header))
-  {
-    log_errno("VSSShard::save()");
-    throw runtime_error("VSSShard::save(): Failed to write header to the file");
-  }
+  // if (out->write((char*)&header, sizeof(header)) != sizeof(header))
+  // {
+  //   log_errno("VSSShard::save()");
+  //   throw runtime_error("VSSShard::save(): Failed to write header to the file");
+  // }
 
   int first = -1, last = -1, err;
   size_t progress, writeSize;
@@ -692,7 +866,7 @@ void VSSShard::save(string filename)
       char* writePos = (char*)&storage[first];
       while (progress < writeSize)
       {
-        err = out->write(writePos + progress, writeSize - progress);
+        err = file.write(writePos + progress, writeSize - progress);
         if (err < 0)
         {
           log_errno("VSSShard::save()");
@@ -710,7 +884,7 @@ void VSSShard::save(string filename)
     char* writePos = (char*)&storage[first];
     while (progress < writeSize)
     {
-      err = out->write(writePos + progress, writeSize - progress);
+      err = file.write(writePos + progress, writeSize - progress);
       if (err < 0)
       {
         log_errno("VSSShard::save()");
@@ -719,6 +893,10 @@ void VSSShard::save(string filename)
       progress += err;
     }
   }
+
+  // This invariant is checked in the begining.
+  assert(vss->currentSize >= 0);
+  return static_cast<uint32_t>(vss->currentSize);
 }
 
 bool VSSShard::isTooOld(const LBID_t lbid, const VER_t verID) const
@@ -1287,66 +1465,134 @@ void VSSShard::clear_()
       reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
 }
 
-void VSSShard::load(string filename)
-{
-  struct Header header;
-  struct VSSEntry entry;
+// void VSSShard::load(const char* readBufPtr, const uint32_t entries)
+// {
+//   // struct Header header;
+//   struct VSSEntry entry;
 
-  const char* filename_p = filename.c_str();
-  scoped_ptr<IDBDataFile> in(
-      IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "rb", 0));
+//   // const char* filename_p = filename.c_str();
+//   // scoped_ptr<IDBDataFile> in(
+//   //     IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "rb", 0));
 
-  if (!in)
-  {
-    log_errno("VSS::load()");
-    throw runtime_error("VSS::load(): Failed to open the file");
-  }
+//   // if (!in)
+//   // {
+//   //   log_errno("VSS::load()");
+//   //   throw runtime_error("VSS::load(): Failed to open the file");
+//   // }
 
-  if (in->read((char*)&header, sizeof(header)) != sizeof(header))
-  {
-    log_errno("VSS::load()");
-    throw runtime_error("VSS::load(): Failed to read header");
-  }
+//   // if (in->read((char*)&header, sizeof(header)) != sizeof(header))
+//   // {
+//   //   log_errno("VSS::load()");
+//   //   throw runtime_error("VSS::load(): Failed to read header");
+//   // }
 
-  if (header.magic != VSS_MAGIC_V1)
-  {
-    log("VSS::load(): Bad magic.  Not a VSS file?");
-    throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
-  }
+//   // if (header.magic != VSS_MAGIC_V1)
+//   // {
+//   //   log("VSS::load(): Bad magic.  Not a VSS file?");
+//   //   throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
+//   // }
 
-  if (header.entries >= std::numeric_limits<int>::max())
-  {
-    log("VSS::load(): Bad size.  Not a VSS file?");
-    throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
-  }
+//   // if (header.entries >= std::numeric_limits<int>::max())
+//   // {
+//   //   log("VSS::load(): Bad size.  Not a VSS file?");
+//   //   throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
+//   // }
 
-  growForLoad_(header.entries);
+//   growForLoad_(entries);
 
-  size_t readSize = header.entries * sizeof(entry);
-  char* readBuf = new char[readSize];
-  size_t progress = 0;
-  int err;
-  while (progress < readSize)
-  {
-    err = in->read(readBuf + progress, readSize - progress);
-    if (err < 0)
-    {
-      log_errno("VSS::load()");
-      throw runtime_error("VSS::load(): Failed to load, check the critical log file");
-    }
-    else if (err == 0)
-    {
-      log("VSS::load(): Got early EOF");
-      throw runtime_error("VSS::load(): Got early EOF");
-    }
-    progress += err;
-  }
+//   // size_t readSize = header.entries * sizeof(entry);
+//   // char* readBuf = new char[readSize];
+//   // size_t progress = 0;
+//   // int err;
+//   // while (progress < readSize)
+//   // {
+//   //   err = in->read(readBuf + progress, readSize - progress);
+//   //   if (err < 0)
+//   //   {
+//   //     log_errno("VSS::load()");
+//   //     throw runtime_error("VSS::load(): Failed to load, check the critical log file");
+//   //   }
+//   //   else if (err == 0)
+//   //   {
+//   //     log("VSS::load(): Got early EOF");
+//   //     throw runtime_error("VSS::load(): Got early EOF");
+//   //   }
+//   //   progress += err;
+//   // }
 
-  VSSEntry* loadedEntries = (VSSEntry*)readBuf;
-  for (uint32_t i = 0; i < header.entries; i++)
-    insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, loadedEntries[i].locked,
-            true);
-}
+//   const VSSEntry* loadedEntries = reinterpret_cast<const VSSEntry*>(readBufPtr);
+//   for (uint32_t i = 0; i < entries; i++)
+//   {
+//     auto p = VSSCluster::partition(loadedEntries[i].lbid);
+//     if (p != vssShmType_)
+//       continue;
+//     insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag,
+//     loadedEntries[i].locked,
+//             true);
+//   }
+// }
+
+// void VSSShard::load(string filename)
+// {
+//   struct Header header;
+//   struct VSSEntry entry;
+
+//   const char* filename_p = filename.c_str();
+//   scoped_ptr<IDBDataFile> in(
+//       IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "rb", 0));
+
+//   if (!in)
+//   {
+//     log_errno("VSS::load()");
+//     throw runtime_error("VSS::load(): Failed to open the file");
+//   }
+
+//   if (in->read((char*)&header, sizeof(header)) != sizeof(header))
+//   {
+//     log_errno("VSS::load()");
+//     throw runtime_error("VSS::load(): Failed to read header");
+//   }
+
+//   if (header.magic != VSS_MAGIC_V1)
+//   {
+//     log("VSS::load(): Bad magic.  Not a VSS file?");
+//     throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
+//   }
+
+//   if (header.entries >= std::numeric_limits<int>::max())
+//   {
+//     log("VSS::load(): Bad size.  Not a VSS file?");
+//     throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
+//   }
+
+//   growForLoad_(header.entries);
+
+//   size_t readSize = header.entries * sizeof(entry);
+//   char* readBuf = new char[readSize];
+//   size_t progress = 0;
+//   int err;
+//   while (progress < readSize)
+//   {
+//     err = in->read(readBuf + progress, readSize - progress);
+//     if (err < 0)
+//     {
+//       log_errno("VSS::load()");
+//       throw runtime_error("VSS::load(): Failed to load, check the critical log file");
+//     }
+//     else if (err == 0)
+//     {
+//       log("VSS::load(): Got early EOF");
+//       throw runtime_error("VSS::load(): Got early EOF");
+//     }
+//     progress += err;
+//   }
+
+//   VSSEntry* loadedEntries = (VSSEntry*)readBuf;
+//   for (uint32_t i = 0; i < header.entries; i++)
+//     insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag,
+//     loadedEntries[i].locked,
+//             true);
+// }
 
 // read lock
 int VSSShard::getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const

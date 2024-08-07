@@ -159,6 +159,9 @@ int DBRM::saveState(string filenamePrefix) throw()
   {
     vbbm->lock(VBBM::READ);
     locked[0] = true;
+
+    vss_->lock_(VSSCluster::READ);
+
     copylocks->lock(CopyLocks::READ);
     locked[2] = true;
 
@@ -179,6 +182,9 @@ int DBRM::saveState(string filenamePrefix) throw()
 
     copylocks->release(CopyLocks::READ);
     locked[2] = false;
+
+    vss_->release(VSSCluster::READ);
+
     vbbm->release(VBBM::READ);
     locked[0] = false;
   }
@@ -696,7 +702,9 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
   {
     // WIP put lock into the lookup method
     vss_->lock_(lbid, VSSCluster::READ);
+
     int rc = vss_->lookup(lbid, verInfo, txnID, outVer, vbFlag, vbOnly);
+
     vss_->release(lbid, VSSCluster::READ);
     return rc;
   }
@@ -825,9 +833,9 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
       {
         outerLbid = lbid;
         // bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
-        vss_->lock_(lbid, VSSCluster::READ);
+        // vss_->lock_(lbid, VSSCluster::READ);
         versions->push_back(vss_->getCurrentVersion(lbid, &lockStatus));
-        vss_->release(lbid, VSSCluster::READ);
+        // vss_->release(lbid, VSSCluster::READ);
         isLocked->push_back(lockStatus);
       }
     }
@@ -837,9 +845,9 @@ int DBRM::bulkGetCurrentVersion(const vector<LBID_t>& lbids, vector<VER_t>* vers
       {
         outerLbid = lbid;
         // bucket = hasher(&lbid, sizeof(lbid)) % VssFactor;
-        vss_->lock_(lbid, VSSCluster::READ);
+        // vss_->lock_(lbid, VSSCluster::READ);
         versions->push_back(vss_->getCurrentVersion(lbid, nullptr));
-        vss_->release(VSSCluster::READ);
+        // vss_->release(VSSCluster::READ);
       }
     }
     // locked = false;

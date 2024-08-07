@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include <stdexcept>
+// #include <stdexcept>
 #include <sys/types.h>
 #include <boost/thread.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>

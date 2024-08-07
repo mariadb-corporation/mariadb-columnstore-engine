@@ -362,6 +362,12 @@ class VSSCluster
     WRITE
   };
 
+  struct Header
+  {
+    int magic;
+    uint32_t entries;
+  };
+
   VSSCluster();
 
   ~VSSCluster() = default;
@@ -460,12 +466,6 @@ class VSSCluster
 class VSSShard : public Undoable
 {
  public:
-  struct Header
-  {
-    int magic;
-    uint32_t entries;
-  };
-
   VSSShard(const MasterSegmentTable::ShmemType vssId = MasterSegmentTable::VSSSegment_);
   ~VSSShard() = default;
 
@@ -475,7 +475,7 @@ class VSSShard : public Undoable
   // Note, the use_vbbm switch should be used for unit testing the VSS only
   // void removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm = true);
   LbidVersionVec removeEntryFromDB(const LBID_t& lbid);
-  LbidVersionVec removeEntriesFromDB(const LBIDRange_v& lbidRanges);
+  // LbidVersionVec removeEntriesFromDB(const LBIDRange_v& lbidRanges);
 
   int lookup(LBID_t lbid, const QueryContext_vss&, VER_t txnID, VER_t* outVer, bool* vbFlag,
              bool vbOnly = false) const;
@@ -505,8 +505,8 @@ class VSSShard : public Undoable
   void getCurrentTxnIDs(std::set<VER_t>& txnList);
 
   void clear_();
-  void load(std::string filename);
-  void save(std::string filename);
+  // void load(const char* readBufPtr, const uint32_t entries);
+  uint32_t save(idbdatafile::IDBDataFile& file);
 
   static size_t partition(const LBID_t v)
   {
@@ -540,6 +540,8 @@ class VSSShard : public Undoable
     currentOpType_ = VSSCluster::NONE;
   }
 
+  void growForLoad_(uint32_t elementCount);
+
  private:
   VSSShard(const VSSShard&) = delete;
   VSSShard& operator=(const VSSShard&);
@@ -551,7 +553,7 @@ class VSSShard : public Undoable
   static boost::mutex mutex;  // @bug5355 - made mutex static
 
   key_t currentVSSShmkey = -1;
-  int vssShmid = 0;
+  // int vssShmid = 0;
   MSTEntry* vssShminfo = nullptr;
   MasterSegmentTable mst;
 
@@ -576,7 +578,6 @@ class VSSShard : public Undoable
 
   uint32_t chooseShmkey_(const MasterSegmentTable::ShmemType shmemType) const;
   void growVSS_();
-  void growForLoad_(uint32_t elementCount);
   void initShmseg();
   void copyVSS(VSSShmsegHeader* dest);
 
