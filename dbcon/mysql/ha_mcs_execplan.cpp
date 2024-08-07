@@ -3369,6 +3369,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   }
 
   ac->aggParms().push_back(SRCP(rc));
+  ac->resultType(rc->resultType());
   return ac;
 }
 
