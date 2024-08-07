@@ -8,6 +8,7 @@ if (!$MYSQL_TEST_ROOT){
 }
 
 -- source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs68_db;

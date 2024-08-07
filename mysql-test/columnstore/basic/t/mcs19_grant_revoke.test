@@ -4,6 +4,8 @@
 #
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
+-- source ../include/check_maxscale.inc
+
 
 SET default_storage_engine=InnoDB;
 
@@ -29,10 +31,17 @@ GRANT CREATE, SELECT, INSERT ON mcs19_db.* TO 'user1'@'localhost';
 
 --disable_query_log
 GRANT ALL ON test.* TO 'user1'@'localhost';
+if ($maxscale == 1)
+{
+  connect(conn1, 127.0.0.1, user1, Vagrant1|0000001,,4006);
+  connect(conn2, 127.0.0.1, user1, Vagrant1|0000001,,4006);
+}
+if ($maxscale == 0)
+{
+  connect(conn1, localhost, user1, Vagrant1|0000001,);
+  connect(conn2, localhost, user1, Vagrant1|0000001,);
+}
 --enable_query_log
-connect(conn1, localhost, user1, Vagrant1|0000001,);
-connect(conn2, localhost, user1, Vagrant1|0000001,);
-
 connection conn1;
 SELECT USER();
 SHOW GRANTS FOR 'user1'@'localhost';
