@@ -144,11 +144,13 @@ void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo
   idblog("fColumns size after ExpressionStep::expressionFilter " << fColumns.size());
 
   // extract simple columns from parse tree
+#if 0
   vector<AggregateColumn*> acv;
   fExpressionFilter->walk(getAggCols, &acv);
   fColumns.insert(fColumns.end(), acv.begin(), acv.end());
   idblog("fColumns size after walk " << fColumns.size());
   idblog("this: " << toString());
+#endif
 }
 
 void TupleHavingStep::run()
