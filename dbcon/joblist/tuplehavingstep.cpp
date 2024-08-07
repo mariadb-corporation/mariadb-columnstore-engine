@@ -53,6 +53,24 @@ using namespace querytele;
 #include "jlf_common.h"
 #include "tuplehavingstep.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace joblist
 {
 TupleHavingStep::TupleHavingStep(const JobInfo& jobInfo)
@@ -123,11 +141,13 @@ void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo
 {
   // let base class handle the simple columns
   ExpressionStep::expressionFilter(filter, jobInfo);
+  idblog("fColumns size after ExpressionStep::expressionFilter " << fColumns.size());
 
   // extract simple columns from parse tree
   vector<AggregateColumn*> acv;
   fExpressionFilter->walk(getAggCols, &acv);
   fColumns.insert(fColumns.end(), acv.begin(), acv.end());
+  idblog("fColumns size after walk " << fColumns.size());
 }
 
 void TupleHavingStep::run()
