@@ -3,6 +3,8 @@
 #
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
+-- source ../include/check_maxscale.inc
+
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs10_db1;
@@ -68,8 +70,18 @@ DROP TABLE IF EXISTS mcs10_db2.t_columnstore1;
 USE mcs10_db1;
 CREATE TABLE t_columnstore1 (id int) engine=columnstore;
 CREATE TABLE t_columnstore2 (id int) engine=columnstore;
-connect (addconroot1, localhost, root,,);
-connect (addconroot2, localhost, root,,);
+--disable_query_log
+if ($maxscale == 1)
+{
+  connect(addconroot1, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
+  connect(addconroot2, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
+}
+if ($maxscale == 0)
+{
+  connect (addconroot1, localhost, root,,);
+  connect (addconroot2, localhost, root,,);
+}
+--enable_query_log
 connection addconroot1;
 DROP TABLE mcs10_db1.t_columnstore1;
 connection addconroot2;

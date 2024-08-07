@@ -114,8 +114,6 @@ new_i	c	i2
 2	b	22
 DROP TABLE t1;
 CREATE TABLE t1 (i INTEGER) ENGINE=Columnstore;
-connect  addconroot1, localhost, root,,;
-connect  addconroot2, localhost, root,,;
 connection addconroot1;
 SHOW CREATE TABLE mcs12_db1.t1;
 Table	Create Table
