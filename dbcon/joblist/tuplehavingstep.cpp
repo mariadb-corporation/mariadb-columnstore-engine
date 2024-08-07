@@ -105,7 +105,10 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 
   for (uint64_t i = 0; i < fRowGroupIn.getKeys().size(); ++i)
     if (keyToIndexMap.find(fRowGroupIn.getKeys()[i]) == keyToIndexMap.end())
+    {
+	    idblog("mapping " << fRowGroupIn.getKeys()[i] << " to " << i);
       keyToIndexMap.insert(make_pair(fRowGroupIn.getKeys()[i], i));
+    }
 
   updateInputIndex(keyToIndexMap, jobInfo);
 
