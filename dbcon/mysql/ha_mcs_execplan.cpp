@@ -8115,7 +8115,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   gwi.fatalParseError = false;
   gwi.parseErrorText = "";
 
-  gwi.disableWrapping = true;
+  gwi.disableWrapping = false;
   if (select_lex.having != 0)
   {
 #ifdef DEBUG_WALK_COND
