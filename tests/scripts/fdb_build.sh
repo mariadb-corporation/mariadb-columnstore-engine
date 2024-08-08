@@ -54,7 +54,7 @@ elif [[ ${ID} == "rocky" ]]; then
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
     dnf -y update
-    dnf install -y --allowerasing automake cmake curl git jq python3-devel unzip gcc jemalloc-devel
+    dnf install -y --allowerasing automake cmake curl git jq python3-devel unzip gcc
 
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
@@ -65,6 +65,7 @@ elif [[ ${ID} == "rocky" ]]; then
 
         dnf install -y --allowerasing  \
             mono-devel \
+            jemalloc-devel \
             gcc-c++
     else
         message "Preparing dev requirements for Rockylinux 8"
@@ -73,7 +74,7 @@ elif [[ ${ID} == "rocky" ]]; then
         . /opt/rh/gcc-toolset-${GCC_VERSION}/enable
         rpmkeys --import "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
-        dnf install -y mono-devel
+        dnf install -y mono-devel jemalloc-deve
     fi
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
