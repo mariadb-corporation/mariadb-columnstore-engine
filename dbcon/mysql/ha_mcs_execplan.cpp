@@ -202,7 +202,7 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
     gwi.processed.push_back(std::make_pair(from, rc->expressionId()));
   }
   gwi.returnedCols.push_back(rc);
-  idblog(rc ? ("pushed to return cols (eid " << rc->expressionId() << "): " << rc->toString()) : "rc is NULL");
+  idblog("pushed to return cols (eid " << rc->expressionId() << "): " << rc->toString());
 }
 
 // Recursively iterate through the join_list and store all non-null
