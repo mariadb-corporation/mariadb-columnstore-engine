@@ -96,6 +96,7 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -113,7 +114,9 @@ const uint64_t CORRELATED = 0x08;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
-
+#else
+#define idblog(_)
+#endif
 
 // In certain cases, gp_walk is called recursively. When done so,
 // we need to bookmark the rcWorkStack for those cases where a constant
