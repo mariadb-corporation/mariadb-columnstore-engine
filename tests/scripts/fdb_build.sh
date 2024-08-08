@@ -7,19 +7,10 @@ GCC_VERSION='11'
 . /etc/os-release
 
 
-
-
-
 message()
 {
-    export $TERM='xterm-256color'
-    color_normal=$(tput sgr0)
-    color_bold=$(tput bold)
-    color_darkcyan=$(tput setaf 6)
-    color_cyan="$color_bold$color_darkcyan"
-    if [[ $(tput colors) == '256' ]]; then
-        color_cyan=$(tput setaf 87)
-    fi
+    color_normal=$(tput sgr0 -T xterm-256color )
+    color_cyan=$(tput setaf 87 -T xterm-256color)
 
     echo "${color_cyan}・・・・・・・・・・・${color_normal} $@"
 }
