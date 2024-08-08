@@ -37,7 +37,7 @@ make_openssl()
     ./config CFLAGS="-fPIC -O3" --prefix=/usr/local && \
     make -j`nproc` && \
     make -j1 install && \
-    ln -sv /usr/local/lib64/lib*.so.1.1 /usr/lib64/ && \
+    ln -sfv /usr/local/lib64/lib*.so.1.1 /usr/lib64/ && \
     cd ../ && \
     rm -rf /tmp/*
 }
