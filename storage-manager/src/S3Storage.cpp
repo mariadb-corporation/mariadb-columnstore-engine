@@ -214,7 +214,7 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   ms3_library_init();
   if (libs3_debug == "enabled")
   {
-    ms3_debug();
+    ms3_debug(1);
   }
   testConnectivityAndPerms();
 }
