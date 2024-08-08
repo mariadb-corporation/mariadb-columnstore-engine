@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 FDB_VERSION=7.1.63
 GCC_VERSION='11'
 
@@ -48,7 +48,7 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     PACKAGES_SUFFIX="-DDEB=${VERSION_CODENAME}"
     print_env
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
-    DEBIAN_FRONTEND=noninteractive apt install -y automake cmake curl g++ gcc git jq libjemalloc-dev mono-devel python3-dev unzip
+    DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl g++ gcc git jq libjemalloc-dev mono-devel python3-dev unzip
 
 elif [[ ${ID} == "rocky" ]]; then
     PKG_MANAGER='yum'
@@ -56,25 +56,25 @@ elif [[ ${ID} == "rocky" ]]; then
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
     dnf -y update
-    dnf install -y ncurses
+    dnf install -y -q ncurses
 
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
-        dnf install -y \
+        dnf install -y -q \
             epel-release \
             scl-utils \
             yum-utils
-        dnf install -y --allowerasing gcc-c++
+        dnf install -y -q --allowerasing gcc-c++
     else
         message "Preparing dev requirements for Rockylinux 8"
-        dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools
-        dnf install -y epel-release gcc-toolset-${GCC_VERSION}
+        dnf install -y -q 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools
+        dnf install -y -q epel-release gcc-toolset-${GCC_VERSION}
         . /opt/rh/gcc-toolset-${GCC_VERSION}/enable
         rpmkeys --import "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
     fi
 
-    dnf install -y --allowerasing -y automake cmake curl dnf gcc git jemalloc-devel jq mono-devel python3-devel unzip
+    dnf install -y -q --allowerasing  automake cmake curl dnf gcc git jemalloc-devel jq mono-devel python3-devel unzip
 
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
