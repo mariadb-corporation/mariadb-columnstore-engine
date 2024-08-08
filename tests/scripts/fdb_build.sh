@@ -12,6 +12,7 @@ GCC_VERSION='11'
 
 message()
 {
+    export $TERM='xterm-256color'
     color_normal=$(tput sgr0)
     color_bold=$(tput bold)
     color_darkcyan=$(tput setaf 6)
