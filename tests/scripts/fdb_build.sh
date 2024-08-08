@@ -71,7 +71,7 @@ elif [[ ${ID} == "rocky" ]]; then
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
     fi
 
-    dnf install -y --allowerasing -y automake cmake curl dnf gcc git install jemalloc-devel jq mono-devel python3-devel unzip
+    dnf install -y --allowerasing -y automake cmake curl dnf gcc git jemalloc-devel jq mono-devel python3-devel unzip
 
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
