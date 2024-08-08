@@ -60,7 +60,7 @@ elif [[ ${ID} == "rocky" ]]; then
 
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
-        dnf install -y
+        dnf install -y \
             epel-release \
             scl-utils \
             yum-utils
