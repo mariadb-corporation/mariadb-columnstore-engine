@@ -93,7 +93,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
         [
            {
              name: 'publish pkg url',
-             depends_on: ['publish pkg'],
+             depends_on: ['publish build_fdb'],
              image: 'alpine/git',
              commands: [
                "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
