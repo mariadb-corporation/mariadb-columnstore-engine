@@ -89,7 +89,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
         ] +
-        [pipeline.publish('fdb_packages')]
+        [pipeline.publish('build_fdb')]
         ,
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
