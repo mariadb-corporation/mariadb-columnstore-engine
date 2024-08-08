@@ -21,6 +21,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 #include "CloudStorage.h"
 #include "libmarias3/marias3.h"
 #include "Config.h"
@@ -67,6 +68,8 @@ class S3Storage : public CloudStorage
   bool useHTTP;
   bool sslVerify;
   int portNumber;
+  std::optional<float> connectTimeout;
+  std::optional<float> operationTimeout;
 
   struct Connection
   {

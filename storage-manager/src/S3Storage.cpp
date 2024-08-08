@@ -131,6 +131,8 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   string ssl_verify = tolower(config->getValue("S3", "ssl_verify"));
   string port_number = config->getValue("S3", "port_number");
   string libs3_debug = config->getValue("S3", "libs3_debug");
+  string connect_timeout = config->getValue("S3", "connect_timeout");
+  string timeout = config->getValue("S3", "timeout");
 
   bool keyMissing = false;
   isEC2Instance = false;
@@ -210,6 +212,14 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   }
 
   endpoint = config->getValue("S3", "endpoint");
+  if (!connect_timeout.empty())
+  {
+      connectTimeout = stof(connect_timeout);
+  }
+  if (!timeout.empty())
+  {
+      operationTimeout = stof(timeout);
+  }
 
   ms3_library_init();
   if (libs3_debug == "enabled")
@@ -768,6 +778,16 @@ ms3_st* S3Storage::getConnection()
     if (portNumber != 0)
     {
       ms3_set_option(ret, MS3_OPT_PORT_NUMBER, &portNumber);
+    }
+
+    // timeouts
+    if (connectTimeout.has_value())
+    {
+        ms3_set_option(ret, MS3_OPT_CONNECT_TIMEOUT, &connectTimeout.value());
+    }
+    if (operationTimeout.has_value())
+    {
+        ms3_set_option(ret, MS3_OPT_TIMEOUT, &operationTimeout.value());
     }
     // IAM role setup for keys
     if (!IAMrole.empty())
