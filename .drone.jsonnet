@@ -81,7 +81,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              image: img,
              volumes: [pipeline._volumes.mdb],
              commands: [
-               if (pkg_format == 'rpm') then 'yum install -y wget' else 'apt update --yes && apt install -y wget',
+               if (pkg_format == 'rpm') then 'yum install -y -q wget' else 'apt update --yes && apt install -q -y wget',
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
                if (pkg_format == 'rpm') then 'cp /fdb_build/packages/*.rpm /drone/src/' + result else 'cp /fdb_build/packages/*.rpm /drone/src/' + result,
@@ -89,7 +89,20 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
         ] +
-        [pipeline.publish('build_fdb')]
+        [pipeline.publish('build_fdb')] +
+        [
+           {
+             name: 'publish pkg url',
+             depends_on: ['publish pkg'],
+             image: 'alpine/git',
+             commands: [
+               "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
+               "echo 'for installation run:'",
+               "echo 'export OS="+result+"'",
+               "echo 'export PACKAGES_URL="+packages_url+"'",
+             ],
+           },
+         ]
         ,
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],

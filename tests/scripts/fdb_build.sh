@@ -79,7 +79,7 @@ fi
 
 message "Downloading sources"
 wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
-unzip ${FDB_VERSION}.zip
+unzip -q ${FDB_VERSION}.zip
 
 message "Patching sources"
 sed -i "s/O_WRONLY | O_CREAT | O_TRUNC/O_WRONLY | O_CREAT | O_TRUNC, 0666/g" foundationdb-${FDB_VERSION}/fdbbackup/FileDecoder.actor.cpp
