@@ -37,7 +37,6 @@ make_openssl()
     ./config CFLAGS="-fPIC -O3" --prefix=/usr/local && \
     make -j`nproc` && \
     make -j1 install && \
-    ln -sfv /usr/local/lib64/lib*.so.1.1 /usr/lib64/ && \
     cd ../ && \
     rm -rf /tmp/*
 }
@@ -93,6 +92,8 @@ elif [[ ${ID} == "rocky" ]]; then
     dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel unzip
     make_openssl
 
+    OPENSSL_FLAGS=' -DOPENSSL_ROOT_DIR=/usr/local/openssl/ '
+
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
 fi
@@ -124,6 +125,7 @@ cmake  -DWITH_PYTHON=ON \
        -DWITH_ROCKSDB_EXPERIMENTAL=OFF \
        -DWITH_AWS_BACKUP=ON \
        ${PACKAGES_SUFFIX} \
+       ${OPENSSL_FLAGS} \
             ../foundationdb-${FDB_VERSION}
 
 message "Compiling sources"
