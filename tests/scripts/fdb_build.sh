@@ -79,7 +79,7 @@ elif [[ ${ID} == "rocky" ]]; then
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
         dnf install -y -q epel-release scl-utils yum-utils
-        dnf install -y -q --allowerasing gcc-c++
+        dnf install -y -q gcc-c++
     else
         message "Preparing dev requirements for Rockylinux 8"
         dnf install -y -q 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools
