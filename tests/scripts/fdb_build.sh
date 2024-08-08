@@ -6,11 +6,21 @@ GCC_VERSION='11'
 
 . /etc/os-release
 
+
+
+
+
 message()
 {
-    COLOR_LIGHT_CYAN='\e[1;36m'
-    COLOR_NC='\e[0m'
-    echo "${COLOR_LIGHT_CYAN}・・・・・・・・・・・${COLOR_NC} $@"
+    color_normal=$(tput sgr0)
+    color_bold=$(tput bold)
+    color_darkcyan=$(tput setaf 6)
+    color_cyan="$color_bold$color_darkcyan"
+    if [[ $(tput colors) == '256' ]]; then
+        color_cyan=$(tput setaf 87)
+    fi
+
+    echo "${color_cyan}・・・・・・・・・・・${color_normal} $@"
 }
 
 print_env()
@@ -54,10 +64,11 @@ elif [[ ${ID} == "rocky" ]]; then
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
     dnf -y update
+    dnf install -y ncurses
 
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
-        dnf install -y \
+         \
             epel-release \
             scl-utils \
             yum-utils
@@ -80,13 +91,17 @@ fi
 message "Downloading sources"
 wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
 unzip ${FDB_VERSION}.zip
+
 message "Patching sources"
 sed -i "s/O_WRONLY | O_CREAT | O_TRUNC/O_WRONLY | O_CREAT | O_TRUNC, 0666/g" foundationdb-${FDB_VERSION}/fdbbackup/FileDecoder.actor.cpp
+
 message "Configuring cmake"
 mkdir -p fdb_build
 cd fdb_build
 
 make_lz4
+
+export CLICOLOR_FORCE=1
 
 cmake  -DWITH_PYTHON=ON \
        -DWITH_C_BINDING=ON \
