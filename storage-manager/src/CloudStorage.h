@@ -39,6 +39,14 @@ class CloudStorage
 
   virtual void printKPIs() const;
 
+  struct IOTaskData
+  {
+    uint64_t id;
+    double runningTime;
+  };
+  virtual std::vector<IOTaskData> taskList() const;
+  virtual bool killTask(uint64_t task_id);
+
   // this will return a CloudStorage instance of the type specified in StorageManager.cnf
   static CloudStorage* get();
 
