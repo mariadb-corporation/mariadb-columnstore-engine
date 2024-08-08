@@ -25,6 +25,23 @@ print_env()
     message "PACKAGES_SUFFIX=${PACKAGES_SUFFIX}"
 }
 
+make_openssl()
+{
+    message "Compiling static openssl"
+    curl -Ls https://www.openssl.org/source/openssl-1.1.1m.tar.gz -o openssl.tar.gz && \
+    echo "f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96  openssl.tar.gz" > openssl-sha.txt && \
+    sha256sum --quiet -c openssl-sha.txt && \
+    mkdir openssl && \
+    tar --strip-components 1 --no-same-owner --directory openssl -xf openssl.tar.gz && \
+    cd openssl && \
+    ./config CFLAGS="-fPIC -O3" --prefix=/usr/local && \
+    make -j`nproc` && \
+    make -j1 install && \
+    ln -sv /usr/local/lib64/lib*.so.1.1 /usr/lib64/ && \
+    cd ../ && \
+    rm -rf /tmp/*
+}
+
 make_lz4()
 {
     message "Compiling static lz4"
@@ -55,6 +72,8 @@ elif [[ ${ID} == "rocky" ]]; then
     OS_SHORTCUT=$(echo $PLATFORM_ID | cut -f2 -d ':')
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
+    GENERATOR='RPM'
+
     dnf -y update
     dnf install -y -q ncurses
 
@@ -71,7 +90,8 @@ elif [[ ${ID} == "rocky" ]]; then
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
     fi
 
-    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel openssl-devel patch python3-devel unzip
+    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel openssl-devel patch perl python3-devel unzip
+    make_openssl
 
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
@@ -98,16 +118,15 @@ cmake  -DWITH_PYTHON=ON \
        -DWITH_JAVA_BINDING=OFF \
        -DWITH_GO_BINDING=OFF \
        -DWITH_RUBY_BINDING=IFF \
-       -DWITH_TLS=OFF \
+       -DWITH_TLS=ON \
+       -DDISABLE_TLS=OFF \
        -DWITH_DOCUMENTATION=OFF \
        -DWITH_ROCKSDB_EXPERIMENTAL=OFF \
-       -DWITH_AWS_BACKUP=OFF \
+       -DWITH_AWS_BACKUP=ON \
        ${PACKAGES_SUFFIX} \
             ../foundationdb-${FDB_VERSION}
 
 message "Compiling sources"
-
-
 
 message "Compiling fdbserver"
 cd fdbserver
@@ -130,4 +149,3 @@ message "Installing packages"
 ${PKG_MANAGER} packages/*.${PACKAGES_TYPE}
 message "Checking statuses"
 fdbcli --exec 'status json'  | jq .client
-service foundationdb status

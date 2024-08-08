@@ -24,17 +24,22 @@ local builddir = 'verylongdirnameforverystrangecpackbehavior';
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local branchp = if (branch == '**') then '' else branch + '/',
-  local brancht = if (branch == '**') then '' else branch + '-',
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
+  local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
-  local repo_pkg_url_no_res = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/",
-  local container_tags = if (event == 'cron') then [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}', brancht] else [brancht + std.strReplace(event, '_', '-') + '${DRONE_BUILD_NUMBER}'],
-  local container_version = branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch,
-
-  local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
+  local smoke_docker_name = 'fdb_smoke_$${DRONE_BUILD_NUMBER}',
   local pipeline = self,
+
+  local execInnerDocker(command, dockerImage, flags = '') =
+    'docker exec ' + flags + ' -t ' + dockerImage + ' ' + command,
+
+  local installRpmDeb(pkg_format, rpmpackages, debpackages) =
+    if (pkg_format == 'rpm')
+      then ' bash -c "yum install -y ' + rpmpackages + '"'
+      else ' bash -c "apt update --yes && apt install -y ' + debpackages + '"',
+
 
   publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
     name: 'publish ' + step_prefix,
@@ -84,6 +89,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                if (pkg_format == 'rpm') then 'yum install -y -q wget' else 'apt update --yes && apt install -q -y wget',
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
+               'mkdir -p  /drone/src/' + result,
                if (pkg_format == 'rpm') then 'cp /fdb_build/packages/*.rpm /drone/src/' + result else 'cp /fdb_build/packages/*.rpm /drone/src/' + result,
 
              ],
@@ -100,6 +106,26 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                "echo 'for installation run:'",
                "echo 'export OS="+result+"'",
                "echo 'export PACKAGES_URL="+packages_url+"'",
+             ],
+           },
+         ] +
+         [
+           {
+             name: 'smoke check installation',
+             depends_on: ['publish build_fdb'],
+             image: 'docker',
+             volumes: [pipeline._volumes.docker],
+             commands: [
+                'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --name ' + smoke_docker_name + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/setup-repo.sh',
+                'docker cp setup-repo.sh ' + smoke_docker_name  +  ':/',
+                execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
+                execInnerDocker('sysctl -w kernel.core_pattern="/core/%E_' + result + '_core_dump.%p"', smoke_docker_name),
+                execInnerDocker(installRpmDeb(pkg_format, 'foundationdb*', 'foundationdb*'), smoke_docker_name),
+                execInnerDocker(installRpmDeb(pkg_format, 'jq', 'jq'), smoke_docker_name),
+                execInnerDocker('service foundationdb status', smoke_docker_name),
+                execInnerDocker("fdbcli --exec 'status json'  | jq .client", smoke_docker_name),
+                execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo", smoke_docker_name)
              ],
            },
          ]
