@@ -415,7 +415,6 @@ class VSSCluster
   // void setReadOnly();
 
   int checkConsistency(const VBBM& vbbm, ExtentMap& em) const;
-  int size() const;
   bool hashEmpty() const;
   void getCurrentTxnIDs(std::set<VER_t>& txnList);
 
@@ -450,6 +449,7 @@ class VSSCluster
   //   assert(vss);
   //   return vss->currentSize;
   // }
+  std::vector<std::unique_ptr<VSSShard>> vssShards_;
 
  private:
   VSSCluster(const VSSCluster&) = delete;
@@ -460,7 +460,6 @@ class VSSCluster
   utils::Hasher hasher;
   static std::vector<std::mutex> vssMutexes_;
   VSSImplScaled* vssImpl_;  // TBD WIP
-  std::vector<std::unique_ptr<VSSShard>> vssShards_;
 };
 
 class VSSShard : public Undoable

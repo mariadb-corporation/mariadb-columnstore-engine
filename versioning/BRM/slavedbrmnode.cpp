@@ -58,12 +58,10 @@ SlaveDBRMNode::SlaveDBRMNode()
   locked[1] = false;
   locked[2] = false;
   vss_ = make_unique<VSSCluster>();
-
-  // for (auto s : MasterSegmentTable::VssShmemTypes)
-  // {
-  //   vss_.emplace_back(std::unique_ptr<VSS>(new VSS(s)));
-  //   vssIsLocked_.push_back(false);
-  // }
+  for ([[maybe_unused]] auto s_ : MasterSegmentTable::VssShmemTypes)
+  {
+    vssIsLocked_.push_back(false);
+  }
 }
 
 SlaveDBRMNode::~SlaveDBRMNode() throw()
@@ -78,31 +76,31 @@ SlaveDBRMNode& SlaveDBRMNode::operator=(const SlaveDBRMNode& brm)
 void SlaveDBRMNode::lockVSS(const VSSCluster::OPS op)
 {
   vss_->lock_(op);
-  locked[1] = true;
+  locked[1] = true;  // WIP
 }
 
 void SlaveDBRMNode::releaseVSS(const VSSCluster::OPS op)
 {
   vss_->release(op);
-  locked[1] = false;
+  locked[1] = false;  // WIP
 }
 
 void SlaveDBRMNode::releaseVSSifNeeded(const VSSCluster::OPS op)
 {
   vss_->releaseIfNeeded(op);
-  locked[1] = false;
+  locked[1] = false;  // WIP
 }
 
 void SlaveDBRMNode::confirmChangesIfNeededAndReleaseVSS(const VSSCluster::OPS op)
 {
   vss_->confirmChangesIfNeededAndRelease(op);
-  locked[1] = false;
+  locked[1] = false;  // WIP
 }
 
 void SlaveDBRMNode::undoChangesIfNeededAndReleaseVSS(const VSSCluster::OPS op)
 {
   vss_->undoChangesIfNeededAndRelease(op);
-  locked[1] = false;
+  locked[1] = false;  // WIP
 }
 
 int SlaveDBRMNode::lookup(OID_t oid, LBIDRange_v& lbidList) throw()
@@ -293,11 +291,10 @@ int SlaveDBRMNode::deleteOID(OID_t oid, const bool vbbmIsLocked, const bool vssI
     {
       lockVSS(VSSCluster::WRITE);
 
-      // for (size_t i = 0; auto& v : vss_)
-      // {
-      //   v->lock_(VSS::WRITE);
-      //   vssIsLocked_[i++] = true;
-      // }
+      for (size_t i = 0; i < vss_->shardCount(); ++i)
+      {
+        vssIsLocked_[i] = true;
+      }
     }
 
     LBIDRange_v lbids;
@@ -346,11 +343,10 @@ int SlaveDBRMNode::deleteOIDs(const OidsMap_t& oids) throw()
 
     lockVSS(VSSCluster::WRITE);
 
-    // for (size_t i = 0; auto& v : vss_)
-    // {
-    //   v->lock_(VSS::WRITE);
-    //   vssIsLocked_[i++] = true;
-    // }
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
 
     const bool cleanUpEM = false;
     const bool vssIsLocked = true;
@@ -532,7 +528,7 @@ int SlaveDBRMNode::writeVBEntry(VER_t transID, LBID_t lbid, OID_t vbOID, uint32_
       vss_->lock_(lbid, VSSCluster::WRITE);
       // lockVSS(VSSCluster::WRITE);
       // vss_[partition]->lock_(VSS::WRITE);
-      // vssIsLocked_[partition] = true;
+      vssIsLocked_[vss_->partition(lbid)] = true;
     }
 
     VER_t oldVerID = vss_->getCurrentVersionWExtLock(lbid, isLocked);
@@ -585,11 +581,10 @@ int SlaveDBRMNode::bulkWriteVBEntry(VER_t transID, const std::vector<BRM::LBID_t
     // TODO take only specific locks preprocessing lbids first.
     lockVSS(VSSCluster::WRITE);
 
-    // for (size_t i = 0; auto& v : vss_)
-    // {
-    //   v->lock_(VSS::WRITE);
-    //   vssIsLocked_[i++] = true;
-    // }
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
 
     assert(lbids.size() == vbFBOs.size());
     bool vbbmIsLocked = true;
@@ -638,6 +633,10 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
     locked[0] = true;
 
     lockVSS(VSSCluster::WRITE);
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
     // for (size_t i = 0; auto& v : vss_)
     // {
     //   v->lock_(VSS::WRITE);
@@ -697,6 +696,10 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
         locked[2] = false;
 
         releaseVSS(VSSCluster::WRITE);
+        for (size_t i = 0; i < vss_->shardCount(); ++i)
+        {
+          vssIsLocked_[i] = false;
+        }
         // for (size_t i = 0; auto& v : vss_)
         // {
         //   v->release(VSS::WRITE);
@@ -713,6 +716,10 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
         locked[0] = true;
 
         lockVSS(VSSCluster::WRITE);
+        for (size_t i = 0; i < vss_->shardCount(); ++i)
+        {
+          vssIsLocked_[i] = true;
+        }
         // for (size_t i = 0; auto& v : vss_)
         // {
         //   v->lock_(VSS::WRITE);
@@ -737,27 +744,30 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
       }
     }
 
-    auto cleanVSS = [](BRM::VSSCluster& vss, const VBBMEntry& storageEntry, vector<VBRange>& freeRanges,
-                       const int num, const uint32_t firstFBO, const uint32_t lastFBO,
-                       vector<LBID_t>& flushList)
-    {
-      if (vss.isEntryLocked(storageEntry.lbid, storageEntry.verID))
-      {
-        ostringstream msg;
-        msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
-               "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
-            << num << ":" << storageEntry.vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
-            << storageEntry.lbid << endl;
-        log(msg.str(), logging::LOG_TYPE_CRITICAL);
-        freeRanges.clear();
-        throw logging::VBBMBufferOverFlowExcept(msg.str());
-      }
+    // auto cleanVSS = [](BRM::VSSCluster& vss, const VBBMEntry& storageEntry, vector<VBRange>& freeRanges,
+    //                    const int num, const uint32_t firstFBO, const uint32_t lastFBO,
+    //                    vector<LBID_t>& flushList)
+    // {
+    //   if (vss.isEntryLocked(storageEntry.lbid, storageEntry.verID))
+    //   {
+    //     ostringstream msg;
+    //     msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
+    //            "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
+    //         << num << ":" << storageEntry.vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
+    //         << storageEntry.lbid << endl;
+    //     log(msg.str(), logging::LOG_TYPE_CRITICAL);
+    //     freeRanges.clear();
+    //     throw logging::VBBMBufferOverFlowExcept(msg.str());
+    //   }
 
-      vss.removeEntry(storageEntry.lbid, storageEntry.verID, &flushList);
-    };
+    //   vss.removeEntry(storageEntry.lbid, storageEntry.verID, &flushList);
+    // };
 
     // This function changes vss state using the above lambda.
-    vbbm.getBlocks(sum, vbOID, freeList, cleanVSS, *vss_, flushPMCache);
+    // vbbm.getBlocks(sum, vbOID, freeList, cleanVSS, *vss_, flushPMCache);
+
+    vbbm.getBlocks(sum, vbOID, freeList, *vss_, flushPMCache);
+
     return 0;
   }
   catch (const logging::VBBMBufferOverFlowExcept& e)
@@ -809,13 +819,12 @@ int SlaveDBRMNode::vbCommit(VER_t transID) throw()
   {
     // WIP should lock/commit locked-only VSS instances
     lockVSS(VSSCluster::WRITE);
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
+
     vss_->commit(transID);
-    // for (size_t i = 0; auto& v : vss_)
-    // {
-    //   v->lock_(VSS::WRITE);
-    //   vssIsLocked_[i++] = true;
-    //   v->commit(transID);
-    // }
 
     return 0;
   }
@@ -848,11 +857,11 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const LBIDRange_v& lbidList, bool f
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
     lockVSS(VSSCluster::WRITE);
-    // for (size_t i = 0; auto& v : vss_)
-    // {
-    //   v->lock_(VSS::WRITE);
-    //   vssIsLocked_[i++] = true;
-    // }
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
+
     copylocks.lock(CopyLocks::WRITE);
     locked[2] = true;
 
@@ -910,6 +919,10 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const vector<LBID_t>& lbidList, boo
     vbbm.lock(VBBM::WRITE);
     locked[0] = true;
     lockVSS(VSSCluster::WRITE);
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
     // for (size_t i = 0; auto& v : vss_)
     // {
     //   v->lock_(VSS::WRITE);
@@ -960,9 +973,18 @@ void SlaveDBRMNode::confirmChanges() throw()
     }
 
     // {
-    if (locked[1])
+    // if (locked[1])
     {
-      confirmChangesIfNeededAndReleaseVSS(VSSCluster::WRITE);
+      for (size_t i = 0; i < vss_->shardCount(); ++i)
+      {
+        if (vssIsLocked_[i])
+        {
+          vss_->vssShards_[i]->confirmChanges();
+          vss_->vssShards_[i]->release(VSSCluster::WRITE);
+          vssIsLocked_[i] = false;
+        }
+      }
+      // confirmChangesIfNeededAndReleaseVSS(VSSCluster::WRITE);
       // releaseVSS(VSSCluster::WRITE);
       // locked[1] = false;
     }
@@ -1005,7 +1027,17 @@ void SlaveDBRMNode::undoChanges() throw()
       locked[0] = false;
     }
 
-    undoChangesIfNeededAndReleaseVSS(VSSCluster::WRITE);
+    // undoChangesIfNeededAndReleaseVSS(VSSCluster::WRITE);
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      if (vssIsLocked_[i])
+      {
+        vss_->vssShards_[i]->undoChanges();
+        vss_->vssShards_[i]->release(VSSCluster::WRITE);
+        vssIsLocked_[i] = false;
+      }
+    }
+
     // {
     //   for (size_t i = 0; auto& v : vss_)
     //   {
@@ -1042,6 +1074,12 @@ int SlaveDBRMNode::clear() throw()
     vbbm.lock(VBBM::WRITE);
     llocked[0] = true;
     lockVSS(VSSCluster::WRITE);
+
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = true;
+    }
+
     // for (size_t i = 0; auto& v : vss_)
     // {
     //   v->lock_(VSS::WRITE);
@@ -1052,6 +1090,11 @@ int SlaveDBRMNode::clear() throw()
 
     vss_->clear_();
     releaseVSS(VSSCluster::WRITE);
+
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      vssIsLocked_[i] = false;
+    }
     // for (size_t i = 0; auto& v : vss_)
     // {
     //   v->clear_();
@@ -1067,7 +1110,14 @@ int SlaveDBRMNode::clear() throw()
     cerr << e.what() << endl;
 
     releaseVSSifNeeded(VSSCluster::WRITE);
-    // for (size_t i = 0; auto& v : vss_)
+    for (size_t i = 0; i < vss_->shardCount(); ++i)
+    {
+      if (vssIsLocked[i])
+      {
+        vss_->release(VSSCluster::WRITE);
+        vssIsLocked[i] = false;
+      }
+    }
     // {
     //   if (vssIsLocked[i++])
     //     v->release(VSS::WRITE);

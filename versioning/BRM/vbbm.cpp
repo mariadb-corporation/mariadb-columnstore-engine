@@ -566,8 +566,10 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
 }
 
 // assumes write lock
-void VBBM::getBlocks(int num, OID_t vbOID, std::vector<VBRange>& freeRanges, VssCleanupRoutine vssCleanup,
-                     BRM::VSSCluster& vss, bool flushPMCache)
+void VBBM::getBlocks(int num, OID_t vbOID, std::vector<VBRange>& freeRanges, VSSCluster& vss,
+                     bool flushPMCache)
+// void VBBM::getBlocks(int num, OID_t vbOID, std::vector<VBRange>& freeRanges, VssCleanupRoutine vssCleanup,
+//                      BRM::VSSCluster& vss, bool flushPMCache)
 {
   int blocksLeftInFile, blocksGathered = 0, i;
   uint32_t fileIndex;
@@ -653,28 +655,51 @@ void VBBM::getBlocks(int num, OID_t vbOID, std::vector<VBRange>& freeRanges, Vss
       if (storage[i].lbid != -1 && storage[i].vbOID == vbOID && storage[i].vbFBO >= firstFBO &&
           storage[i].vbFBO <= lastFBO)
       {
-        vssCleanup(vss, storage[i], freeRanges, num, firstFBO, lastFBO, flushList);
-        // VssCleanupRoutine(storage[i], )
-        // {
-        //   auto partition = VSS::partition(storage[i].lbid);
-        //   if (vss[partition]->isEntryLocked(storage[i].lbid, storage[i].verID))
-        //   {
-        //     ostringstream msg;
-        //     msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize.
-        //     Overflow "
-        //            "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
-        //         << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
-        //         << storage[i].lbid << endl;
-        //     log(msg.str(), logging::LOG_TYPE_CRITICAL);
-        //     freeRanges.clear();
-        //     throw logging::VBBMBufferOverFlowExcept(msg.str());
-        //   }
+        {
+          if (vss.isEntryLocked(storage[i].lbid, storage[i].verID))
+          {
+            ostringstream msg;
+            msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize. Overflow "
+                   "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
+                << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
+                << storage[i].lbid << endl;
+            log(msg.str(), logging::LOG_TYPE_CRITICAL);
+            freeRanges.clear();
+            throw logging::VBBMBufferOverFlowExcept(msg.str());
+          }
 
-        //   vss[partition]->removeEntry(storage[i].lbid, storage[i].verID, &flushList);
-        // }
+          vss.removeEntry(storage[i].lbid, storage[i].verID, &flushList);
+        }
         removeEntry(storage[i].lbid, storage[i].verID);
       }
   }
+
+  //   for (i = 0; i < vbbm->vbCapacity; i++)
+  //     if (storage[i].lbid != -1 && storage[i].vbOID == vbOID && storage[i].vbFBO >= firstFBO &&
+  //         storage[i].vbFBO <= lastFBO)
+  //     {
+  //       vssCleanup(vss, storage[i], freeRanges, num, firstFBO, lastFBO, flushList);
+  //       // VssCleanupRoutine(storage[i], )
+  //       // {
+  //       //   auto partition = VSS::partition(storage[i].lbid);
+  //       //   if (vss[partition]->isEntryLocked(storage[i].lbid, storage[i].verID))
+  //       //   {
+  //       //     ostringstream msg;
+  //       //     msg << "VBBM::getBlocks(): version buffer overflow. Increase VersionBufferFileSize.
+  //       //     Overflow "
+  //       //            "occured in aged blocks. Requested NumBlocks:VbOid:vbFBO:lastFBO = "
+  //       //         << num << ":" << vbOID << ":" << firstFBO << ":" << lastFBO << " lbid locked is "
+  //       //         << storage[i].lbid << endl;
+  //       //     log(msg.str(), logging::LOG_TYPE_CRITICAL);
+  //       //     freeRanges.clear();
+  //       //     throw logging::VBBMBufferOverFlowExcept(msg.str());
+  //       //   }
+
+  //       //   vss[partition]->removeEntry(storage[i].lbid, storage[i].verID, &flushList);
+  //       // }
+  //       removeEntry(storage[i].lbid, storage[i].verID);
+  //     }
+  // }
 
   if (flushPMCache && !flushList.empty())
     cacheutils::flushPrimProcAllverBlocks(flushList);

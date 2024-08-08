@@ -479,10 +479,10 @@ class SlaveDBRMNode
   MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;
-  //   VSS vss;
   CopyLocks copylocks;
   std::atomic<bool> locked[3]{false, false, false};  // 0 = VBBM, 1 = VSS, 2 = CopyLocks
-                                                     //   std::vector<bool> vssIsLocked_;
+  std::vector<bool> vssIsLocked_;
+  ;
   BRM::VssClusterPtr vss_;
 };
 

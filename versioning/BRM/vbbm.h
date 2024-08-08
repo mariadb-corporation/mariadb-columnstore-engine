@@ -202,6 +202,8 @@ class VBBM : public Undoable
   void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VssCleanupRoutine vssCleanup,
                  BRM::VSSCluster& vss, bool flushPMCache);
 
+  void getBlocks(int num, OID_t vbOID, std::vector<VBRange>& vbRanges, VSSCluster& vss, bool flushPMCache);
+
   void removeEntry(LBID_t, VER_t ver);
 
   int size() const;
