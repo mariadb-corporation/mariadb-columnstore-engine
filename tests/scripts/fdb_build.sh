@@ -8,7 +8,9 @@ GCC_VERSION='11'
 
 message()
 {
-    echo "・・・・・・・・・・・ $@"
+    COLOR_LIGHT_CYAN='\e[1;36m'
+    COLOR_NC='\e[0m'
+    echo "${COLOR_LIGHT_CYAN}・・・・・・・・・・・${COLOR_NC} $@"
 }
 
 print_env()
@@ -43,7 +45,8 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     PKG_MANAGER='dpkg'
     PACKAGES_SUFFIX="-DDEB=${VERSION_CODENAME}"
     print_env
-    apt install -y mono-devel g++ liburing-dev automake cmake curl git jq python3-dev unzip
+    ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+    DEBIAN_FRONTEND=noninteractive apt install -y mono-devel g++ liburing-dev automake cmake curl git jq python3-dev unzip gcc
 
 elif [[ ${ID} == "rocky" ]]; then
     PKG_MANAGER='yum'
@@ -51,7 +54,7 @@ elif [[ ${ID} == "rocky" ]]; then
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
     dnf -y update
-    dnf install -y --allowerasing automake cmake curl git jq python3-devel unzip
+    dnf install -y --allowerasing automake cmake curl git jq python3-devel unzip gcc
 
     if [[ ${VERSION_ID} == "9.3" ]]; then
         message "Preparing dev requirements for Rockylinux 9"
@@ -63,7 +66,7 @@ elif [[ ${ID} == "rocky" ]]; then
         dnf install -y --allowerasing  \
             mono-devel \
             gcc-c++ \
-            liburing-devel \
+            liburing-devel
     else
         message "Preparing dev requirements for Rockylinux 8"
         dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools
@@ -102,7 +105,21 @@ cmake  -DWITH_PYTHON=ON \
             ../foundationdb-${FDB_VERSION}
 
 message "Compiling sources"
+message "Compiling fdbserver"
+cd fdbserver
 make -j 4
+cd -
+message "Compiling fdbcli"
+cd fdbcli
+make -j 4
+cd -
+message "Compiling fdbclient"
+cd fdbclient
+make -j4
+cd -
+message "Compiling rest"
+make -j4
+
 message "Generating packages"
 cpack -G ${GENERATOR}
 message "Installing packages"
