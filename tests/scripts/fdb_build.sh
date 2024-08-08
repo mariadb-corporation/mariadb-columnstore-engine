@@ -48,7 +48,7 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     PACKAGES_SUFFIX="-DDEB=${VERSION_CODENAME}"
     print_env
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
-    DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl g++ gcc git jq libjemalloc-dev mono-devel patch python3-dev unzip
+    DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev unzip
 
 elif [[ ${ID} == "rocky" ]]; then
     PKG_MANAGER='yum'
@@ -71,7 +71,7 @@ elif [[ ${ID} == "rocky" ]]; then
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
     fi
 
-    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch python3-devel unzip
+    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel openssl-devel patch python3-devel unzip
 
 else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
