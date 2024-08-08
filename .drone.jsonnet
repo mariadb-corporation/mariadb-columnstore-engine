@@ -35,6 +35,30 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
   local pipeline = self,
+
+  publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
+    name: 'publish ' + step_prefix,
+    depends_on: [std.strReplace(step_prefix, ' latest', '')],
+    image: 'plugins/s3-sync',
+    when: {
+      status: ['success', 'failure'],
+    },
+    settings: {
+      bucket: 'cspkg',
+      access_key: {
+        from_secret: 'aws_access_key_id',
+      },
+      secret_key: {
+        from_secret: 'aws_secret_access_key',
+      },
+      source: result,
+      // branchp has slash if not empty
+      target: branchp + eventp + '/' + server + '/' + arch + '/' + result,
+      delete: 'true',
+    },
+  },
+
+
   _volumes:: {
     mdb: {
       name: 'mdb',
@@ -59,11 +83,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                if (pkg_format == 'rpm') then 'yum install -y wget' else 'apt update --yes && apt install -y wget',
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
-               'ls -al',
-               'bash fdb_build.sh'
+               'bash fdb_build.sh',
+               if (pkg_format == 'rpm') then 'cp /fdb_build/packages/*.rpm /drone/src/' + result else 'cp /fdb_build/packages/*.rpm /drone/src/' + result,
+
              ],
            },
-        ],
+        ] +
+        [pipeline.publish('fdb_packages')]
+        ,
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {

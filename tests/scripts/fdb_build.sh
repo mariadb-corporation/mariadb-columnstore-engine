@@ -3,7 +3,7 @@
 set -e
 FDB_VERSION=7.1.63
 GCC_VERSION='11'
-
+BUILD_COMMAND='make -j2'
 . /etc/os-release
 
 
@@ -44,14 +44,14 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     message "Preparing dev requirements for ubuntu|debian"
     GENERATOR='DEB'
     PACKAGES_TYPE='deb'
-    PKG_MANAGER='dpkg'
+    PKG_MANAGER='dpkg -i'
     PACKAGES_SUFFIX="-DDEB=${VERSION_CODENAME}"
     print_env
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev unzip
 
 elif [[ ${ID} == "rocky" ]]; then
-    PKG_MANAGER='yum'
+    PKG_MANAGER='yum install -y'
     OS_SHORTCUT=$(echo $PLATFORM_ID | cut -f2 -d ':')
     PACKAGES_SUFFIX="-DRPM=${OS_SHORTCUT}"
     PACKAGES_TYPE='rpm'
@@ -106,25 +106,28 @@ cmake  -DWITH_PYTHON=ON \
             ../foundationdb-${FDB_VERSION}
 
 message "Compiling sources"
+
+
+
 message "Compiling fdbserver"
 cd fdbserver
-make -j 4
+${BUILD_COMMAND}
 cd -
 message "Compiling fdbcli"
 cd fdbcli
-make -j 4
+${BUILD_COMMAND}
 cd -
 message "Compiling fdbclient"
 cd fdbclient
-make -j4
+${BUILD_COMMAND}
 cd -
 message "Compiling rest"
-make -j4
+${BUILD_COMMAND}
 
 message "Generating packages"
 cpack -G ${GENERATOR}
 message "Installing packages"
-${PKG_MANAGER} install -y packages/*.${PACKAGES_TYPE}
+${PKG_MANAGER} packages/*.${PACKAGES_TYPE}
 message "Checking statuses"
 fdbcli --exec 'status json'  | jq .client
 service foundationdb status
