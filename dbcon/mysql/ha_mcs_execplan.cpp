@@ -96,7 +96,7 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
-#if 0
+#if 01
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -202,7 +202,7 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
     gwi.processed.push_back(std::make_pair(from, rc->expressionId()));
   }
   gwi.returnedCols.push_back(rc);
-  idblog("pushed to return cols (eid " << rc->expressionId() << "): " << rc->toString());
+  idblog(rc ? ("pushed to return cols (eid " << rc->expressionId() << "): " << rc->toString()) : "rc is NULL");
 }
 
 // Recursively iterate through the join_list and store all non-null
@@ -3348,7 +3348,7 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
   }
 
   cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-  idblog("new agg wrap, clause type " << int(gwi.clauseType) << ", wrapping: " << rc->toString());
+  idblog("new agg wrap, clause type " << int(gwi.clauseType) << ", wrapping: " << rc ? rc->toString() : "NULL");
 
   AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
   ac->timeZone(gwi.timeZone);
@@ -4231,7 +4231,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
             {
 		    idblog("cloning " << i << "th projection elem");
               ReturnedColumn* rc = gwi.returnedCols[j]->clone();
-	      idblog("cloned as " << rc->toString());
+	      idblog("cloned as " << rc ? rc->toString() : "NULL");
               rc->orderPos(j);
               sptp.reset(new ParseTree(rc));
               funcParms.push_back(sptp);
@@ -7815,7 +7815,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         {
           rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
         }
-	idblog("func in select " << rc->toString());
+	idblog("func in select " << rc ? rc->toString() : "NULL");
 
         SRCP srcp(rc);
 
