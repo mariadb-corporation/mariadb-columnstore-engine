@@ -115,7 +115,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
            {
              name: 'make_repo',
              depends_on: [],
-             image: 'docker',
+             image: img,
              volumes: [pipeline._volumes.docker],
              commands: [
                 'apk add --no-cache bash',
