@@ -188,7 +188,24 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
   uint32_t i;
   for ( i = 0; i < gwi.processed.size(); i++)
   {
-    if (gwi.processed[i].first->eq(from, true))
+    Item* ith = gwi.processed[i].first;
+
+    bool same = ith->eq(from, false);
+
+    if (same && ith->type() == Item::FUNC_ITEM)
+    {
+      // an exception for cast(column as decimal(X,Y)) - they are equal (in the eq() call sense)
+      // even if Xs and Ys are different.
+      string funcName = ((Item_func*)ith)->func_name();
+
+      if (funcName == "decimal_typecast")
+      {
+        Item_decimal_typecast* ithdtc = (Item_decimal_typecast*)ith;
+        Item_decimal_typecast* fromdtc = (Item_decimal_typecast*)from;
+        same = ithdtc->decimals == fromdtc->decimals && ithdtc->max_length == fromdtc->max_length;
+      }
+    }
+    if (same)
     {
       break;
     }
