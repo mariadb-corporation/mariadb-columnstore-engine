@@ -86,11 +86,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              image: img,
              volumes: [pipeline._volumes.mdb],
              commands: [
-               if (pkg_format == 'rpm') then 'yum install -y -q wget' else 'apt update --yes && apt install -q -y wget',
+               installRpmDeb(pkg_format, 'wget createrepo', 'wget dpkg-dev'),
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
                'mkdir -p  /drone/src/' + result,
-               if (pkg_format == 'rpm') then 'cp /drone/src/fdb_build/packages/*.rpm /drone/src/' + result else 'cp /drone/src/fdb_build/packages/*.deb /drone/src/' + result,
+               'cp /drone/src/fdb_build/packages/*.' + pkg_format +  ' /drone/src/' + result,
+               if(pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
              ],
            },
         ] +
@@ -116,13 +117,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              volumes: [pipeline._volumes.docker],
              commands: [
                 'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --name ' + smoke_docker_name + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/setup-repo.sh',
+                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/setup-repo.sh -O setup-repo.sh',
                 'docker cp setup-repo.sh ' + smoke_docker_name  +  ':/',
                 execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
                 execInnerDocker('sysctl -w kernel.core_pattern="/core/%E_' + result + '_core_dump.%p"', smoke_docker_name),
-                execInnerDocker(installRpmDeb(pkg_format, 'foundationdb*', 'foundationdb*'), smoke_docker_name),
+                execInnerDocker(installRpmDeb(pkg_format, 'foundationdb*prerelease*', 'foundationdb*prerelease*'), smoke_docker_name),
                 execInnerDocker(installRpmDeb(pkg_format, 'jq', 'jq'), smoke_docker_name),
-                execInnerDocker('service foundationdb status', smoke_docker_name),
                 execInnerDocker("fdbcli --exec 'status json'  | jq .client", smoke_docker_name),
                 execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo", smoke_docker_name)
              ],
