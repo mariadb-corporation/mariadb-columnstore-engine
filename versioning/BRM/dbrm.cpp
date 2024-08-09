@@ -68,8 +68,6 @@ using namespace std;
 using namespace messageqcpp;
 using namespace oam;
 
-namespace r = ranges;
-
 #ifdef BRM_INFO
 #include "tracer.h"
 #endif

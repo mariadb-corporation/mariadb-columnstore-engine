@@ -45,8 +45,6 @@ using namespace idbdatafile;
 using namespace logging;
 using namespace std;
 
-namespace r = ranges;
-
 namespace BRM
 {
 BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
@@ -61,7 +59,7 @@ BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
     em.setReadOnly();
     vbbm.setReadOnly();
     copylocks.setReadOnly();
-    r::for_each(vss_, [](auto& v) { v->setReadOnly(); });
+    std::for_each(vss_.begin(), vss_.end(), [](auto& v) { v->setReadOnly(); });
   }
 }
 
