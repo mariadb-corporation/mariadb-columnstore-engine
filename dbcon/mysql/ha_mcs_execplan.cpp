@@ -188,7 +188,7 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
   uint32_t i;
   for ( i = 0; i < gwi.processed.size(); i++)
   {
-    if (gwi.processed[i].first->eq(from, false))
+    if (gwi.processed[i].first->eq(from, true))
     {
       break;
     }
