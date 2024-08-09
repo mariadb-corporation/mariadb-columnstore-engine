@@ -90,8 +90,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
                'mkdir -p  /drone/src/' + result,
-               if (pkg_format == 'rpm') then 'cp /fdb_build/packages/*.rpm /drone/src/' + result else 'cp /fdb_build/packages/*.rpm /drone/src/' + result,
-
+               if (pkg_format == 'rpm') then 'cp /fdb_build/packages/*.rpm /drone/src/' + result else 'cp /fdb_build/packages/*.deb /drone/src/' + result,
              ],
            },
         ] +
