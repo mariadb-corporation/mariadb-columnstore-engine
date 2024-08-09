@@ -27,9 +27,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
+  local ready_packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/10954' + server,
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
-  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
-  local smoke_docker_name = 'fdb_smoke_$${DRONE_BUILD_NUMBER}',
+
+  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/10954/" + server + "/" + arch + "/" + result + "/",
+  local smoke_docker_name = 'fdb_smoke_$${10954}',
   local pipeline = self,
 
   local execInnerDocker(command, dockerImage, flags = '') =
@@ -41,7 +43,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       else ' bash -c "apt update --yes && apt install -y ' + debpackages + '"',
 
 
-  publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
+  publish(step_prefix='pkg',  eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
     name: 'publish ' + step_prefix,
     depends_on: [std.strReplace(step_prefix, ' latest', '')],
     image: 'plugins/s3-sync',
@@ -80,38 +82,60 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
-  steps: [
+  // steps: [
+  //          {
+  //            name: 'build_fdb',
+  //            image: img,
+  //            volumes: [pipeline._volumes.mdb],
+  //            commands: [
+  //              if (pkg_format == 'rpm') then 'yum install -y -q wget' else 'apt update --yes && apt install -q -y wget',
+  //              'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
+  //              'bash fdb_build.sh',
+  //              'mkdir -p  /drone/src/' + result,
+  //              if (pkg_format == 'rpm') then 'cp /drone/src/fdb_build/packages/*.rpm /drone/src/' + result else 'cp /drone/src/fdb_build/packages/*.deb /drone/src/' + result,
+  //            ],
+  //          },
+  //       ] +
+  //       [pipeline.publish('build_fdb')] +
+  //       [
+  //          {
+  //            name: 'publish pkg url',
+  //            depends_on: ['publish build_fdb'],
+  //            image: 'alpine/git',
+  //            commands: [
+  //              "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
+  //              "echo 'for installation run:'",
+  //              "echo 'export OS="+result+"'",
+  //              "echo 'export PACKAGES_URL="+packages_url+"'",
+  //            ],
+  //          },
+  //        ] +
+
+         steps: [
            {
-             name: 'build_fdb',
-             image: img,
-             volumes: [pipeline._volumes.mdb],
+             name: 'make_repo',
+             depends_on: [],
+             image: 'docker',
+             volumes: [pipeline._volumes.docker],
              commands: [
-               if (pkg_format == 'rpm') then 'yum install -y -q wget' else 'apt update --yes && apt install -q -y wget',
-               'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
-               'bash fdb_build.sh',
-               'mkdir -p  /drone/src/' + result,
-               if (pkg_format == 'rpm') then 'cp /drone/src/fdb_build/packages/*.rpm /drone/src/' + result else 'cp /drone/src/fdb_build/packages/*.deb /drone/src/' + result,
-             ],
-           },
-        ] +
-        [pipeline.publish('build_fdb')] +
-        [
-           {
-             name: 'publish pkg url',
-             depends_on: ['publish build_fdb'],
-             image: 'alpine/git',
-             commands: [
-               "echo -e '\\e]8;;" + publish_pkg_url + '\\e\\\\' + publish_pkg_url + "\\e]8;;\\e\\\\'",
-               "echo 'for installation run:'",
-               "echo 'export OS="+result+"'",
-               "echo 'export PACKAGES_URL="+packages_url+"'",
+                installRpmDeb(pkg_format, "wget createrepo", 'wget dpkg-dev'),
+                'mkdir -p  /drone/src/' + result,
+                'cd /drone/src/' + result,
+                "wget " + ready_packages_url + '/foundationdb-clients_7.1.63-0.52e7532bd.SNAPSHOT_' + arch + '.' + pkg_format,
+                "wget " + ready_packages_url + '/foundationdb-server_7.1.63-0.52e7532bd.SNAPSHOT_' + arch + '.' + pkg_format,
+                "wget " + ready_packages_url + '/foundationdb7.1.63.20240809084950prerelease-clients.52e7532bd.versioned_' + arch + '.' + pkg_format,
+                "wget " + ready_packages_url + '/foundationdb7.1.63.20240809084950prerelease-server.52e7532bd.versioned_' + arch + '.' + pkg_format,
+                if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
+                "",
              ],
            },
          ] +
-         [
+        [pipeline.publish('make_repo')] +
+
+          [
            {
              name: 'smoke check installation',
-             depends_on: ['publish build_fdb'],
+             depends_on: [],
              image: 'docker',
              volumes: [pipeline._volumes.docker],
              commands: [
