@@ -153,7 +153,7 @@ int DBRM::saveState(string filename) throw()
 
 #endif
   string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
+  // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[3] = {false, false, false};
   std::vector<bool> vssIsLocked(MasterSegmentTable::VssShmemTypes.size(), false);
@@ -174,7 +174,14 @@ int DBRM::saveState(string filename) throw()
       assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::READ);
       vssIsLocked[i] = true;
-      v->save(vssFilename + std::to_string(i + 1));
+      ++i;
+    }
+
+    VSS::save(filename, vss_);
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->release(VSS::READ);
       vssIsLocked[i] = false;
       ++i;
