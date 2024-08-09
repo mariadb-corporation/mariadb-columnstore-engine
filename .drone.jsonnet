@@ -118,7 +118,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              image: img,
              volumes: [pipeline._volumes.docker],
              commands: [
-                'apk add --no-cache bash',
                 installRpmDeb(pkg_format, "wget createrepo", 'wget dpkg-dev'),
                 'mkdir -p  /drone/src/' + result,
                 'cd /drone/src/' + result,
