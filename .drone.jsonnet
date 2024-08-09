@@ -120,11 +120,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/setup-repo.sh -O setup-repo.sh',
                 'docker cp setup-repo.sh ' + smoke_docker_name  +  ':/',
                 execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
-                execInnerDocker('sysctl -w kernel.core_pattern="/core/%E_' + result + '_core_dump.%p"', smoke_docker_name),
-                execInnerDocker(installRpmDeb(pkg_format, 'foundationdb*prerelease*', 'foundationdb*prerelease*'), smoke_docker_name),
-                execInnerDocker(installRpmDeb(pkg_format, 'jq', 'jq'), smoke_docker_name),
-                execInnerDocker("fdbcli --exec 'status json'  | jq .client", smoke_docker_name),
-                execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo", smoke_docker_name)
+                execInnerDocker(installRpmDeb(pkg_format, 'foundationdb-clients foundationdb-server', 'foundationdb-clients foundationdb-server'), smoke_docker_name),
+                execInnerDocker("fdbcli --exec 'status json'", smoke_docker_name),
+                execInnerDocker("service foundationdb status || true", smoke_docker_name),
+                execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo", smoke_docker_name),
              ],
            },
          ]

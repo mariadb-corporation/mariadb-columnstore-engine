@@ -125,6 +125,7 @@ cmake  -DWITH_PYTHON=ON \
        -DWITH_DOCUMENTATION=OFF \
        -DWITH_ROCKSDB_EXPERIMENTAL=OFF \
        -DWITH_AWS_BACKUP=ON \
+       -DFDB_RELEASE=ON \
        ${PACKAGES_SUFFIX} \
        ${OPENSSL_FLAGS} \
             ../foundationdb-${FDB_VERSION}
