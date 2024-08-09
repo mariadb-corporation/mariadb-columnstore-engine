@@ -1141,7 +1141,7 @@ int SlaveDBRMNode::checkConsistency() throw()
 int SlaveDBRMNode::saveState(string filename) throw()
 {
   string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
+  // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
   std::vector<bool> vssIsLocked(VssFactor, false);
@@ -1160,7 +1160,18 @@ int SlaveDBRMNode::saveState(string filename) throw()
       assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::READ);
       vssIsLocked[i] = true;
-      v->save(vssFilename + std::to_string(i + 1));
+
+      // v->save(vssFilename + std::to_string(i + 1));
+
+      v->release(VSS::READ);
+      vssIsLocked[i] = false;
+      ++i;
+    }
+
+    VSS::save(filename, vss_);
+
+    for (size_t i = 0; auto& v : vss_)
+    {
       v->release(VSS::READ);
       vssIsLocked[i] = false;
       ++i;
@@ -1190,7 +1201,7 @@ int SlaveDBRMNode::saveState(string filename) throw()
 int SlaveDBRMNode::loadState(string filename) throw()
 {
   string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
+  // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
   std::vector<bool> vssIsLocked(VssFactor, false);
@@ -1209,8 +1220,14 @@ int SlaveDBRMNode::loadState(string filename) throw()
       assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->lock_(VSS::WRITE);
       vssIsLocked[i] = true;
-      // The vss image filename numeric suffix begins with 1.
-      v->load(vssFilename + std::to_string(i + 1));
+      ++i;
+    }
+
+    VSS::load(filename, vss_);
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i < MasterSegmentTable::VssShmemTypes.size());
       v->release(VSS::WRITE);
       vssIsLocked[i] = false;
       ++i;

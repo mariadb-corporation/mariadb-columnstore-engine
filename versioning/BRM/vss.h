@@ -252,6 +252,9 @@ class ExtentMap;
 
 using VecLbidVersion = std::vector<std::pair<LBID_t, VER_t>>;
 
+class VSS;
+using VssPtrVector = std::vector<std::unique_ptr<VSS>>;
+
 class VSS : public Undoable
 {
  public:
@@ -299,8 +302,11 @@ class VSS : public Undoable
   void getCurrentTxnIDs(std::set<VER_t>& txnList) const;
 
   void clear_();
-  void load(std::string filename);
-  void save(std::string filename);
+  // void load(std::string filename);
+  // void save(std::string filename);
+  uint32_t save(idbdatafile::IDBDataFile& file);
+  static void save(const std::string& filename, VssPtrVector& vssShards_);
+  static void load(const std::string& filename, VssPtrVector& vssShards_);
 
   static size_t partition(const LBID_t v)
   {
@@ -380,5 +386,4 @@ class VSS : public Undoable
   VSSImplScaled* vssImpl_;
 };
 
-using VssPtrVector = std::vector<std::unique_ptr<VSS>>;
 }  // namespace BRM
