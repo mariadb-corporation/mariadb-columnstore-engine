@@ -90,6 +90,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
                'mkdir -p  /drone/src/' + result,
+               'ls -al /drone/src/fdb_build/packages',
                'cp /drone/src/fdb_build/packages/*.' + pkg_format +  ' /drone/src/' + result,
                if(pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
              ],
