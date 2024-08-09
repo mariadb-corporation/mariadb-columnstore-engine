@@ -83,7 +83,7 @@ elif [[ ${ID} == "rocky" ]]; then
     else
         message "Preparing dev requirements for Rockylinux 8"
         dnf install -y -q 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools
-        dnf install -y -q epel-release gcc-toolset-${GCC_VERSION}
+        dnf install -y -q epel-release gcc-toolset-${GCC_VERSION} libstdc++-static
         . /opt/rh/gcc-toolset-${GCC_VERSION}/enable
         rpmkeys --import "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
