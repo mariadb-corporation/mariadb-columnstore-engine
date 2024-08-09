@@ -1221,28 +1221,12 @@ struct Header
   uint32_t entries;
 };
 
-// read lock
-void VSS::save(string filename)
+uint32_t VSS::save(idbdatafile::IDBDataFile& file)
 {
-  struct Header header;
-
-  const char* filename_p = filename.c_str();
-  scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
-                                                filename_p, "wb", IDBDataFile::USE_VBUF));
-
-  if (!out)
+  if (vss->currentSize < 0)
   {
-    log_errno("VSS::save()");
-    throw runtime_error("VSS::save(): Failed to open the file");
-  }
-
-  header.magic = VSS_MAGIC_V1;
-  header.entries = vss->currentSize;
-
-  if (out->write((char*)&header, sizeof(header)) != sizeof(header))
-  {
-    log_errno("VSS::save()");
-    throw runtime_error("VSS::save(): Failed to write header to the file");
+    log_errno("VSSShard::save()");
+    throw runtime_error("VSSShard::save(): VSS::currentSize is negative");
   }
 
   int first = -1, last = -1, err;
@@ -1259,11 +1243,11 @@ void VSS::save(string filename)
       char* writePos = (char*)&storage[first];
       while (progress < writeSize)
       {
-        err = out->write(writePos + progress, writeSize - progress);
+        err = file.write(writePos + progress, writeSize - progress);
         if (err < 0)
         {
-          log_errno("VSS::save()");
-          throw runtime_error("VSS::save(): Failed to write the file");
+          log_errno("VSSShard::save()");
+          throw runtime_error("VSSShard::save(): Failed to write the file");
         }
         progress += err;
       }
@@ -1277,14 +1261,204 @@ void VSS::save(string filename)
     char* writePos = (char*)&storage[first];
     while (progress < writeSize)
     {
-      err = out->write(writePos + progress, writeSize - progress);
+      err = file.write(writePos + progress, writeSize - progress);
       if (err < 0)
       {
-        log_errno("VSS::save()");
-        throw runtime_error("VSS::save(): Failed to write the file");
+        log_errno("VSSShard::save()");
+        throw runtime_error("VSSShard::save(): Failed to write the file");
       }
       progress += err;
     }
+  }
+
+  // This invariant is checked in the begining.
+  assert(vss->currentSize >= 0);
+  return static_cast<uint32_t>(vss->currentSize);
+}
+
+// read lock
+// void VSS::save(string filename)
+// {
+//   struct Header header;
+
+//   const char* filename_p = filename.c_str();
+//   scoped_ptr<IDBDataFile> out(IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG),
+//                                                 filename_p, "wb", IDBDataFile::USE_VBUF));
+
+//   if (!out)
+//   {
+//     log_errno("VSS::save()");
+//     throw runtime_error("VSS::save(): Failed to open the file");
+//   }
+
+//   header.magic = VSS_MAGIC_V1;
+//   header.entries = vss->currentSize;
+
+//   if (out->write((char*)&header, sizeof(header)) != sizeof(header))
+//   {
+//     log_errno("VSS::save()");
+//     throw runtime_error("VSS::save(): Failed to write header to the file");
+//   }
+
+//   int first = -1, last = -1, err;
+//   size_t progress, writeSize;
+//   for (int i = 0; i < vss->capacity; i++)
+//   {
+//     if (storage[i].lbid != -1 && first == -1)
+//       first = i;
+//     else if (storage[i].lbid == -1 && first != -1)
+//     {
+//       last = i;
+//       writeSize = (last - first) * sizeof(VSSEntry);
+//       progress = 0;
+//       char* writePos = (char*)&storage[first];
+//       while (progress < writeSize)
+//       {
+//         err = out->write(writePos + progress, writeSize - progress);
+//         if (err < 0)
+//         {
+//           log_errno("VSS::save()");
+//           throw runtime_error("VSS::save(): Failed to write the file");
+//         }
+//         progress += err;
+//       }
+//       first = -1;
+//     }
+//   }
+//   if (first != -1)
+//   {
+//     writeSize = (vss->capacity - first) * sizeof(VSSEntry);
+//     progress = 0;
+//     char* writePos = (char*)&storage[first];
+//     while (progress < writeSize)
+//     {
+//       err = out->write(writePos + progress, writeSize - progress);
+//       if (err < 0)
+//       {
+//         log_errno("VSS::save()");
+//         throw runtime_error("VSS::save(): Failed to write the file");
+//       }
+//       progress += err;
+//     }
+//   }
+// }
+
+void VSS::save(const string& filenamePrefix, VssPtrVector& vssShards_)
+{
+  const string vssFilenamePrefix = filenamePrefix + "_vss";
+
+  std::unique_ptr<IDBDataFile> file(
+      IDBDataFile::open(IDBPolicy::getType(vssFilenamePrefix.c_str(), IDBPolicy::WRITEENG),
+                        vssFilenamePrefix.c_str(), "wb", IDBDataFile::USE_VBUF));
+
+  if (file->seek(sizeof(Header), SEEK_SET))
+  {
+    log_errno("VSS::save()");
+    throw runtime_error("VSS::save(): Failed to skip header in the file");
+  }
+
+  size_t totalEntriesNum = 0;
+
+  for (auto& vssShard : vssShards_)
+  {
+    totalEntriesNum += vssShard->save(*file);
+  }
+
+  if (file->seek(0, SEEK_SET))
+  {
+    log_errno("VSS::save()");
+    throw runtime_error("VSS::save(): Failed to seek to write header in the file");
+  }
+
+  // WIP make this max a const
+  if (totalEntriesNum > std::numeric_limits<int32_t>::max())
+  {
+    log_errno("VSS::save()");
+    std::ostringstream oss;
+    oss << "VSS::save(): Too many entries to save: " << totalEntriesNum;
+    throw runtime_error(oss.str());
+  }
+
+  struct Header header
+  {
+    .magic = VSS_MAGIC_V1, .entries = static_cast<uint32_t>(totalEntriesNum)
+  };
+
+  if (file->write((char*)&header, sizeof(header)) != sizeof(header))
+  {
+    log_errno("VSS::save()");
+    throw runtime_error("VSS::save(): Failed to write header to the file");
+  }
+}
+
+void VSS::load(const string& filenamePrefix, VssPtrVector& vssShards_)
+{
+  string vssFilenamePrefix = filenamePrefix + "_vss";
+
+  unique_ptr<IDBDataFile> in(
+      IDBDataFile::open(IDBPolicy::getType(vssFilenamePrefix.c_str(), IDBPolicy::WRITEENG),
+                        vssFilenamePrefix.c_str(), "rb", 0));
+
+  if (!in)
+  {
+    log_errno("VSS::load()");
+    throw runtime_error("VSS::load(): Failed to open the file");
+  }
+
+  struct Header header;
+  if (in->read((char*)&header, sizeof(header)) != sizeof(header))
+  {
+    log_errno("VSS::load()");
+    throw runtime_error("VSS::load(): Failed to read header");
+  }
+
+  if (header.magic != VSS_MAGIC_V1)
+  {
+    log("VSS::load(): Bad magic.  Not a VSS file?");
+    throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
+  }
+
+  // WIP make this max a const
+  if (header.entries >= std::numeric_limits<int32_t>::max())
+  {
+    log("VSS::load(): Bad size.  Not a VSS file?");
+    throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
+  }
+
+  size_t readSize = header.entries * sizeof(VSSEntry);
+  auto readBuf = std::make_unique<char[]>(readSize);
+  size_t progress = 0;
+  int err;
+  while (progress < readSize)
+  {
+    err = in->read(readBuf.get() + progress, readSize - progress);
+    if (err < 0)
+    {
+      log_errno("VSS::load()");
+      throw runtime_error("VSS::load(): Failed to load, check the critical log file");
+    }
+    else if (err == 0)
+    {
+      log("VSS::load(): Got early EOF");
+      throw runtime_error("VSS::load(): Got early EOF");
+    }
+    progress += err;
+  }
+
+  const char* readBufPtr = readBuf.get();
+  for (auto& vssShard : vssShards_)
+  {
+    vssShard->growForLoad_(header.entries);
+  }
+
+  const VSSEntry* loadedEntries = reinterpret_cast<const VSSEntry*>(readBufPtr);
+  for (uint32_t i = 0; i < header.entries; ++i)
+  {
+    // NB can be future optimized b/c all entries belong to the same partition
+    // locate sequentially in the
+    auto p = VSS::partition(loadedEntries[i].lbid);
+    vssShards_[p]->insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag,
+                           loadedEntries[i].locked, true);
   }
 }
 
@@ -1305,66 +1479,67 @@ bool VSS::isEmpty(bool useLock)
   return rc;
 }
 
-void VSS::load(string filename)
-{
-  struct Header header;
-  struct VSSEntry entry;
+// void VSS::load(string filename)
+// {
+//   struct Header header;
+//   struct VSSEntry entry;
 
-  const char* filename_p = filename.c_str();
-  scoped_ptr<IDBDataFile> in(
-      IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "rb", 0));
+//   const char* filename_p = filename.c_str();
+//   scoped_ptr<IDBDataFile> in(
+//       IDBDataFile::open(IDBPolicy::getType(filename_p, IDBPolicy::WRITEENG), filename_p, "rb", 0));
 
-  if (!in)
-  {
-    log_errno("VSS::load()");
-    throw runtime_error("VSS::load(): Failed to open the file");
-  }
+//   if (!in)
+//   {
+//     log_errno("VSS::load()");
+//     throw runtime_error("VSS::load(): Failed to open the file");
+//   }
 
-  if (in->read((char*)&header, sizeof(header)) != sizeof(header))
-  {
-    log_errno("VSS::load()");
-    throw runtime_error("VSS::load(): Failed to read header");
-  }
+//   if (in->read((char*)&header, sizeof(header)) != sizeof(header))
+//   {
+//     log_errno("VSS::load()");
+//     throw runtime_error("VSS::load(): Failed to read header");
+//   }
 
-  if (header.magic != VSS_MAGIC_V1)
-  {
-    log("VSS::load(): Bad magic.  Not a VSS file?");
-    throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
-  }
+//   if (header.magic != VSS_MAGIC_V1)
+//   {
+//     log("VSS::load(): Bad magic.  Not a VSS file?");
+//     throw runtime_error("VSS::load(): Bad magic.  Not a VSS file?");
+//   }
 
-  if (header.entries >= std::numeric_limits<int>::max())
-  {
-    log("VSS::load(): Bad size.  Not a VSS file?");
-    throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
-  }
+//   if (header.entries >= std::numeric_limits<int>::max())
+//   {
+//     log("VSS::load(): Bad size.  Not a VSS file?");
+//     throw runtime_error("VSS::load(): Bad size.  Not a VSS file?");
+//   }
 
-  growForLoad_(header.entries);
+//   growForLoad_(header.entries);
 
-  size_t readSize = header.entries * sizeof(entry);
-  char* readBuf = new char[readSize];
-  size_t progress = 0;
-  int err;
-  while (progress < readSize)
-  {
-    err = in->read(readBuf + progress, readSize - progress);
-    if (err < 0)
-    {
-      log_errno("VBBM::load()");
-      throw runtime_error("VBBM::load(): Failed to load, check the critical log file");
-    }
-    else if (err == 0)
-    {
-      log("VBBM::load(): Got early EOF");
-      throw runtime_error("VBBM::load(): Got early EOF");
-    }
-    progress += err;
-  }
+//   size_t readSize = header.entries * sizeof(entry);
+//   char* readBuf = new char[readSize];
+//   size_t progress = 0;
+//   int err;
+//   while (progress < readSize)
+//   {
+//     err = in->read(readBuf + progress, readSize - progress);
+//     if (err < 0)
+//     {
+//       log_errno("VBBM::load()");
+//       throw runtime_error("VBBM::load(): Failed to load, check the critical log file");
+//     }
+//     else if (err == 0)
+//     {
+//       log("VBBM::load(): Got early EOF");
+//       throw runtime_error("VBBM::load(): Got early EOF");
+//     }
+//     progress += err;
+//   }
 
-  VSSEntry* loadedEntries = (VSSEntry*)readBuf;
-  for (uint32_t i = 0; i < header.entries; i++)
-    insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, loadedEntries[i].locked,
-            true);
-}
+//   VSSEntry* loadedEntries = (VSSEntry*)readBuf;
+//   for (uint32_t i = 0; i < header.entries; i++)
+//     insert_(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag,
+//     loadedEntries[i].locked,
+//             true);
+// }
 
 QueryContext_vss::QueryContext_vss(const QueryContext& qc) : currentScn(qc.currentScn)
 {
