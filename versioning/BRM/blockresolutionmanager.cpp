@@ -94,7 +94,7 @@ int BlockResolutionManager::saveExtentMap(const string& filename)
 int BlockResolutionManager::saveState(string filename) throw()
 {
   string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
+  // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   string journalFilename = filename + "_journal";
 
@@ -127,9 +127,18 @@ int BlockResolutionManager::saveState(string filename) throw()
     {
       assert(i <= MasterSegmentTable::VssShmemTypes.size());
       // The vss image filename numeric suffix begins with 1.
-      v->save(vssFilename + std::to_string(i + 1));
       v->release(VSS::READ);
       vssIsLocked[i++] = false;
+    }
+
+    VSS::save(filename, vss_);
+
+    for (size_t i = 0; auto& v : vss_)
+    {
+      assert(i <= MasterSegmentTable::VssShmemTypes.size());
+      v->release(VSS::READ);
+      vssIsLocked[i] = false;
+      ++i;
     }
 
     vbbm.release(VBBM::READ);
@@ -159,7 +168,7 @@ int BlockResolutionManager::saveState(string filename) throw()
 int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
 {
   string emFilename = filename + "_em";
-  string vssFilename = filename + "_vss";
+  // string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
   bool locked[2] = {false, false};
   std::vector<bool> vssIsLocked(VssFactor, false);
@@ -179,13 +188,15 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     loadExtentMap(emFilename, fixFL);
     vbbm.load(vbbmFilename);
 
+    VSS::load(filename, vss_);
+
     for (size_t i = 0; auto& v : vss_)
     {
       assert(i < MasterSegmentTable::VssShmemTypes.size());
       // The vss image filename numeric suffix begins with 1.
-      v->load(vssFilename + std::to_string(i + 1));
       v->release(VSS::WRITE);
-      vssIsLocked[i++] = false;
+      vssIsLocked[i] = false;
+      ++i;
     }
 
     vbbm.release(VBBM::WRITE);
