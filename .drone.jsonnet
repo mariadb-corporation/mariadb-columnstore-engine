@@ -87,7 +87,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              volumes: [pipeline._volumes.mdb],
              commands: [
                installRpmDeb(pkg_format, 'wget createrepo', 'wget dpkg-dev'),
-               'mkdir -p' + builddir,
+               'mkdir -p ' + builddir,
                'cd ' + builddir,
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
                'bash fdb_build.sh',
