@@ -32,9 +32,9 @@ namespace storagemanager
 class S3Storage : public CloudStorage
 {
  public:
-  S3Storage(bool skipRetry = false);
+  explicit S3Storage(bool skipRetry = false);
 
-  virtual ~S3Storage();
+  ~S3Storage() override;
 
   int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL) override;
   int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size = NULL) override;

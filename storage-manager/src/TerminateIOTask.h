@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 MariaDB Corporation
+/* Copyright (C) 2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -18,20 +18,18 @@
 #pragma once
 
 #include "PosixTask.h"
-#include <string>
 
 namespace storagemanager
 {
+
 class TerminateIOTask : public PosixTask
 {
  public:
+  TerminateIOTask() = delete;
   TerminateIOTask(int sock, uint length);
-  virtual ~TerminateIOTask();
+  ~TerminateIOTask() override = default;
 
-  bool run();
-
- private:
-  TerminateIOTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

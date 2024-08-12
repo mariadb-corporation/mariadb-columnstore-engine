@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 MariaDB Corporation
+/* Copyright (C) 2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -16,31 +16,16 @@
    MA 02110-1301, USA. */
 
 #include "TerminateIOTask.h"
-#include "SMLogging.h"
 #include "messageFormat.h"
 #include "src/CloudStorage.h"
 #include <errno.h>
-#include <string.h>
-#include <iostream>
-
-using namespace std;
 
 namespace storagemanager
 {
+
 TerminateIOTask::TerminateIOTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
-
-TerminateIOTask::~TerminateIOTask()
-{
-}
-
-#define check_error(msg, ret) \
-  if (!success)               \
-  {                           \
-    handleError(msg, errno);  \
-    return ret;               \
-  }
 
 bool TerminateIOTask::run()
 {
@@ -61,7 +46,7 @@ bool TerminateIOTask::run()
     return false;
   }
 
-  terminate_iotask_cmd* cmd = reinterpret_cast<terminate_iotask_cmd*>(buf);
+  auto* cmd = reinterpret_cast<terminate_iotask_cmd*>(buf);
 
   auto* cs = CloudStorage::get();
   success = cs->killTask(cmd->id);
@@ -71,7 +56,11 @@ bool TerminateIOTask::run()
     sm_response resp;
     resp.returnCode = 0;
     success = write(resp, 0);
-    check_error("TerminateIOTask write", false);
+    if (!success)
+    {
+      handleError("TerminateIOTask write", errno);
+      return false;
+    }
   }
   else
   {

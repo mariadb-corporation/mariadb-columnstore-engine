@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 MariaDB Corporation
+/* Copyright (C) 2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -21,26 +21,13 @@
 #include "src/CloudStorage.h"
 #include <errno.h>
 #include <string.h>
-#include <iostream>
-
-using namespace std;
 
 namespace storagemanager
 {
+
 ListIOTask::ListIOTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
-
-ListIOTask::~ListIOTask()
-{
-}
-
-#define check_error(msg, ret) \
-  if (!success)               \
-  {                           \
-    handleError(msg, errno);  \
-    return ret;               \
-  }
 
 bool ListIOTask::run()
 {
@@ -63,26 +50,30 @@ bool ListIOTask::run()
   }
 
   auto* cs = CloudStorage::get();
-  auto task_list = cs->taskList();
-  size_t payload_len = sizeof(list_iotask_resp) + sizeof(list_iotask_resp_entry) * task_list.size();
-  size_t header_len = sizeof(sm_response);
-  vector<uint8_t> payload_buf(payload_len + header_len);
+  auto taskList = cs->taskList();
+  size_t payloadLen = sizeof(list_iotask_resp) + sizeof(list_iotask_resp_entry) * taskList.size();
+  size_t headerLen = sizeof(sm_response);
+  std::vector<uint8_t> payloadBuf(payloadLen + headerLen);
 
-  sm_response* resp = reinterpret_cast<sm_response*>(payload_buf.data());
+  auto* resp = reinterpret_cast<sm_response*>(payloadBuf.data());
   resp->header.type = SM_MSG_START;
-  resp->header.payloadLen = payload_len + header_len - sizeof(sm_msg_header);
+  resp->header.payloadLen = payloadLen + headerLen - sizeof(sm_msg_header);
   resp->header.flags = 0;
   resp->returnCode = 0;
-  list_iotask_resp* r = reinterpret_cast<list_iotask_resp*>(resp->payload);
-  r->elements = task_list.size();
+  auto* r = reinterpret_cast<list_iotask_resp*>(resp->payload);
+  r->elements = taskList.size();
 
-  for (size_t i = 0; i < task_list.size(); ++i)
+  for (size_t i = 0; i < taskList.size(); ++i)
   {
-    r->entries[i].id = task_list[i].id;
-    r->entries[i].runningTime = task_list[i].runningTime;
+    r->entries[i].id = taskList[i].id;
+    r->entries[i].runningTime = taskList[i].runningTime;
   }
-  success = write(payload_buf.data(), payload_buf.size());
-  check_error("ListIOTask write", false);
+  success = write(payloadBuf.data(), payloadBuf.size());
+  if (!success)
+  {
+    handleError("ListIOTask read", errno);
+    return false;
+  }
   return true;
 }
 
