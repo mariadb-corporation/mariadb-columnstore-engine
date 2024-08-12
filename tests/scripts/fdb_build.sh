@@ -108,7 +108,6 @@ cd foundationdb-${FDB_VERSION}
 patch -p1 -i ../mariadb_foundationdb-7.1.63_gcc.patch
 cd -
 
-
 message "Configuring cmake"
 mkdir -p fdb_build
 cd fdb_build
