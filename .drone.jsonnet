@@ -147,7 +147,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 execInnerDocker("fdbcli --exec 'status json'  | /usr/bin/jq .client", smoke_docker_name),
                 execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo'", smoke_docker_name),
                 execInnerDocker('service foundationdb status', smoke_docker_name),
-ll             ],
+             ],
            },
          ]
         ,
