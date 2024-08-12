@@ -104,7 +104,10 @@ wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
 unzip -q ${FDB_VERSION}.zip
 
 message "Patching sources"
-sed -i "s/O_WRONLY | O_CREAT | O_TRUNC/O_WRONLY | O_CREAT | O_TRUNC, 0666/g" foundationdb-${FDB_VERSION}/fdbbackup/FileDecoder.actor.cpp
+cd foundationdb-${FDB_VERSION}
+patch -p1 -i mariadb_foundationdb-7.1.63_gcc.patch
+cd -
+
 
 message "Configuring cmake"
 mkdir -p fdb_build

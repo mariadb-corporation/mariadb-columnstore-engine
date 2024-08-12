@@ -1,0 +1,54 @@
+--- a/fdbbackup/FileDecoder.actor.cpp	2024-07-30 10:36:30.000000000 +0000
++++ b/fdbbackup/FileDecoder.actor.cpp	2024-08-07 16:33:00.486048698 +0000
+@@ -643,7 +643,7 @@
+ 					platform::createDirectory(path);
+ 				}
+ 			}
+-			self->lfd = open(self->file.fileName.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
++			self->lfd = open(self->file.fileName.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ 			if (self->lfd == -1) {
+ 				TraceEvent(SevError, "OpenLocalFileFailed").detail("File", self->file.fileName);
+ 				throw platform_error();
+@@ -740,7 +740,7 @@
+ 				}
+ 			}
+ 
+-			self->lfd = open(self->file.fileName.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
++			self->lfd = open(self->file.fileName.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+ 			if (self->lfd == -1) {
+ 				TraceEvent(SevError, "OpenLocalFileFailed").detail("File", self->file.fileName);
+ 				throw platform_error();
+--- a/fdbbackup/backup.actor.cpp	2024-07-30 10:36:30.000000000 +0000
++++ b/fdbbackup/backup.actor.cpp	2024-08-12 17:09:30.349465435 +0000
+@@ -4103,10 +4103,12 @@
+ 				// where the fdbbackup command hangs infinitely. 60 seconds should be more than
+ 				// enough for all cases to finish and 5 retries should also be good enough for
+ 				// most cases.
++				static const unsigned int transactionTimeout = 60000;
++				static const unsigned int transactionRetryTimeout = 5;
+ 				db->setOption(FDBDatabaseOptions::TRANSACTION_TIMEOUT,
+-				              Optional<StringRef>(StringRef((const uint8_t*)60000, 8)));
++				              Optional<StringRef>(StringRef((uint8_t*)&transactionTimeout, 8)));
+ 				db->setOption(FDBDatabaseOptions::TRANSACTION_RETRY_LIMIT,
+-				              Optional<StringRef>(StringRef((const uint8_t*)5, 8)));
++				              Optional<StringRef>(StringRef((uint8_t*)&transactionRetryTimeout, 8)));
+ 			}
+ 
+ 			return result.present();
+@@ -4127,10 +4129,12 @@
+ 				// where the fdbbackup command hangs infinitely. 60 seconds should be more than
+ 				// enough for all cases to finish and 5 retries should also be good enough for
+ 				// most cases.
+-				sourceDb->setOption(FDBDatabaseOptions::TRANSACTION_TIMEOUT,
+-				                    Optional<StringRef>(StringRef((const uint8_t*)60000, 8)));
+-				sourceDb->setOption(FDBDatabaseOptions::TRANSACTION_RETRY_LIMIT,
+-				                    Optional<StringRef>(StringRef((const uint8_t*)5, 8)));
++				static const unsigned int transactionTimeout = 60000;
++				static const unsigned int transactionRetryTimeout = 5;
++				db->setOption(FDBDatabaseOptions::TRANSACTION_TIMEOUT,
++				              Optional<StringRef>(StringRef((uint8_t*)&transactionTimeout, 8)));
++				db->setOption(FDBDatabaseOptions::TRANSACTION_RETRY_LIMIT,
++				              Optional<StringRef>(StringRef((uint8_t*)&transactionRetryTimeout, 8)));
+ 			}
+ 
+ 			return result.present();
