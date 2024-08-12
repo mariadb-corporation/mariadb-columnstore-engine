@@ -31,11 +31,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
 
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/10982/" + server + "/" + arch + "/" + result + "/",
-  local smoke_docker_name = 'fdb_smoke_1333333_' + result,
+  local smoke_docker_name = 'fdb_smoke_13322223_' + result,
   local pipeline = self,
 
   local execInnerDocker(command, dockerImage, flags = '') =
-    'docker exec ' + flags + ' -t ' + dockerImage + ' ' + command,
+    'docker exec ' + flags + ' -t ' + dockerImage + ' "' + command + '"',
 
   local installRpmDeb(pkg_format, rpmpackages, debpackages) =
     if (pkg_format == 'rpm')
