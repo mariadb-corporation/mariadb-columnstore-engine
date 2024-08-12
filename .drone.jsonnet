@@ -27,7 +27,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
-  local ready_packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/10954' + server,
+  local ready_packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/10982' + server,
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
 
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/10982/" + server + "/" + arch + "/" + result + "/",
@@ -118,7 +118,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              image: 'docker',
              volumes: [pipeline._volumes.docker],
              commands: [
-                'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --name ' + smoke_docker_name + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+                'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + ready_packages_url + ' --env DEBIAN_FRONTEND=noninteractive --name ' + smoke_docker_name + ' --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
                 'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/setup-repo.sh -O setup-repo.sh',
                 'docker cp setup-repo.sh ' + smoke_docker_name  +  ':/',
                 execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
