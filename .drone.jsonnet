@@ -27,11 +27,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
-  local ready_packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/10982' + server,
+  local ready_packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/10982/' + server,
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
 
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/10982/" + server + "/" + arch + "/" + result + "/",
-  local smoke_docker_name = 'fdb_smoke_1111111111_' + result,
+  local smoke_docker_name = 'fdb_smoke_1333333_' + result,
   local pipeline = self,
 
   local execInnerDocker(command, dockerImage, flags = '') =
