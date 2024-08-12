@@ -112,28 +112,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   //        ] +
 
          steps: [
-           {
-             name: 'make_repo',
-             depends_on: [],
-             image: img,
-             volumes: [pipeline._volumes.docker],
-             commands: [
-                installRpmDeb(pkg_format, "wget createrepo libxml2", 'wget dpkg-dev libxml2-utils'),
-                'mkdir -p  /drone/src/' + result,
-                'cd /drone/src/' + result,
-                "wget " + ready_packages_url + '/foundationdb-clients_7.1.63-0.52e7532bd.SNAPSHOT_' + arch + '.' + pkg_format,
-                "wget " + ready_packages_url + '/foundationdb-server_7.1.63-0.52e7532bd.SNAPSHOT_' + arch + '.' + pkg_format,
-                "wget " + ready_packages_url + '/foundationdb7.1.63.20240809084950prerelease-clients.52e7532bd.versioned_' + arch + '.' + pkg_format,
-                "wget " + ready_packages_url + '/foundationdb7.1.63.20240809084950prerelease-server.52e7532bd.versioned_' + arch + '.' + pkg_format,
-                if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-                "",
-             ],
-           },
-         ] +
-        [pipeline.publish('make_repo')] +
-
-          [
-           {
+          {
              name: 'smoke check installation',
              depends_on: [],
              image: 'docker',
