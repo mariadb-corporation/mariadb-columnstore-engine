@@ -33,7 +33,6 @@
 
 using namespace std;
 namespace bi = boost::interprocess;
-namespace r = ranges;
 using namespace boost;
 
 using namespace BRM;
@@ -161,7 +160,7 @@ int main(int argc, char** argv)
   threadGroup.emplace_back(
       std::thread([&BrmKeys]() { shmDoitRange(BrmKeys.KEYRANGE_VSS_BASE8, "VSS8       "); }));
 
-  r::for_each(threadGroup, [](auto& t) { t.join(); });
+  std::for_each(threadGroup.begin(), threadGroup.end(), [](auto& t) { t.join(); });
 
   shmDoit(BrmKeys.MST_SYSVKEY, "MST        ");
 
