@@ -19,7 +19,7 @@ local any_branch = '**';
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
 
-local builddir = 'verylongdirnameforverystrangecpackbehavior';
+local builddir = 'verylongdirnameforverystrangecpackbehaviorthatwasneverexposedbyanyreasonableargumentationbutstillexists';
 
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
