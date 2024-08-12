@@ -105,7 +105,7 @@ unzip -q ${FDB_VERSION}.zip
 
 message "Patching sources"
 cd foundationdb-${FDB_VERSION}
-patch -p1 -i mariadb_foundationdb-7.1.63_gcc.patch
+patch -p1 -i ../mariadb_foundationdb-7.1.63_gcc.patch
 cd -
 
 
