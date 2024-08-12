@@ -64,7 +64,7 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     PACKAGES_SUFFIX="-DDEB=${VERSION_CODENAME}"
     print_env
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
-    DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev unzip
+    DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl file g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev unzip
 
 elif [[ ${ID} == "rocky" ]]; then
     PKG_MANAGER='yum install -y'

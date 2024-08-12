@@ -94,7 +94,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'mkdir -p  /drone/src/' + result,
                'ls -al fdb_build/packages',
                'cp fdb_build/packages/*.' + pkg_format +  ' /drone/src/' + result,
-               if(pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
+               if(pkg_format == 'rpm') then 'createrepo /drone/src/' + result else 'dpkg-scanpackages /drone/src/%s | gzip > /drone/src/%s/Packages.gz' % [result, result],
              ],
            },
         ] +
