@@ -37,7 +37,6 @@
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/tokenizer.hpp>
 using namespace boost;
 
@@ -1014,8 +1013,13 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
             if (autoIncre)
             {
               // Check whether there is a column with autoincrement already
-              if ((isAnyAutoincreCol) &&
-                  !(boost::iequals(autoiColName, createTable->fTableDef->fColumns[i]->fName)))
+              bool isAutoIncrementColumn =
+                  default_table_charset ? datatypes::CollationAwareComparator(default_table_charset)(
+                                              autoiColName, createTable->fTableDef->fColumns[i]->fName)
+                                        : datatypes::ASCIIStringCaseInsensetiveEquals(
+                                              autoiColName, createTable->fTableDef->fColumns[i]->fName);
+
+              if (isAnyAutoincreCol && !isAutoIncrementColumn)
               {
                 rc = 1;
                 thd->get_stmt_da()->set_overwrite_status(true);
@@ -1060,8 +1064,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& tabl
           }
         }
 
-        if (!autoIncre && isAnyAutoincreCol &&
-            (boost::iequals(autoiColName, createTable->fTableDef->fColumns[i]->fName)))
+
+         bool isAutoIncrementColumn =
+                  default_table_charset ? datatypes::CollationAwareComparator(default_table_charset)(
+                                              autoiColName, createTable->fTableDef->fColumns[i]->fName)
+                                        : datatypes::ASCIIStringCaseInsensetiveEquals(
+                                              autoiColName, createTable->fTableDef->fColumns[i]->fName);
+
+        if (!autoIncre && isAnyAutoincreCol && isAutoIncrementColumn)
         {
           autoIncre = true;
           matchedCol = true;
