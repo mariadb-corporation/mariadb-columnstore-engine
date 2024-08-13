@@ -35,7 +35,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local pipeline = self,
 
   local execInnerDocker(command, dockerImage, flags = '') =
-    'docker exec %s -t %s "bash -c \'%s\'" ' %[flags, dockerImage, command],
+    'docker exec %s -t %s  %s' %[flags, dockerImage, command],
 
   local installRpmDeb(pkg_format, rpmpackages, debpackages) =
     if (pkg_format == 'rpm')
@@ -123,8 +123,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 'docker cp setup-repo.sh ' + smoke_docker_name  +  ':/',
                 execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
                 execInnerDocker(installRpmDeb(pkg_format, 'foundationdb-server', 'foundationdb-clients jq'), smoke_docker_name),
-                execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo'", smoke_docker_name),
+                execInnerDocker("fdbcli --exec \'writemode on; set foo bar; get foo\'", smoke_docker_name),
                 execInnerDocker('service foundationdb status', smoke_docker_name),
+                execInnerDocker("fdbcli --exec 'status json' | jq .client", smoke_docker_name),
              ],
            },
          ]
