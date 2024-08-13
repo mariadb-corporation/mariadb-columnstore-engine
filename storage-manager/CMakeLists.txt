@@ -144,7 +144,7 @@ install(TARGETS storagemanager
     COMPONENT columnstore-engine
 )
 
-install(TARGETS StorageManager smcat smput smls smrm testS3Connection
+install(TARGETS StorageManager smcat smkill smps smput smls smrm testS3Connection
     RUNTIME DESTINATION ${ENGINE_BINDIR}
     COMPONENT columnstore-engine
 )
