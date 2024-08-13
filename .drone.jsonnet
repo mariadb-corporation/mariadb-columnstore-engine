@@ -127,8 +127,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 execInnerDocker('bash /setup-repo.sh', smoke_docker_name),
                 execInnerDocker(installRpmDeb(pkg_format, 'foundationdb-clients foundationdb-server jq', 'foundationdb-clients foundationdb-server jq'), smoke_docker_name),
                 execInnerDocker("fdbcli --exec 'status json'", smoke_docker_name),
-                execInnerDocker("fdbcli --exec 'status json' | jq .client", smoke_docker_name),
-                execInnerDocker("service foundationdb status || true", smoke_docker_name),
                 execInnerDocker("fdbcli --exec 'writemode on; set foo bar; get foo", smoke_docker_name),
              ],
            },
