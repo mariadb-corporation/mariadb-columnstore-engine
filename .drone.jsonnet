@@ -35,7 +35,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local pipeline = self,
 
   local execInnerDocker(command, dockerImage, flags = '') =
-    'docker exec ' + flags + ' -t ' + dockerImage + ' ' + command,
+    'docker exec %s -t %s "bash -c \'%s\'" ' %[flags, dockerImage, command],
 
   local installRpmDeb(pkg_format, rpmpackages, debpackages) =
     if (pkg_format == 'rpm')
