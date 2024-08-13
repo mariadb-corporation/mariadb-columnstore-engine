@@ -61,7 +61,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <pthread.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 using namespace std;
@@ -415,7 +415,7 @@ void* thr_popper(ioManager* arg)
   double rqst3;
   bool locked = false;
   SPFdEntry_t fe;
-  vector<CacheInsert_t> cacheInsertOps;
+  CacheInsertVec cacheInsertOps;
   bool copyLocked = false;
 
   if (iom->IOTrace())
@@ -651,6 +651,7 @@ void* thr_popper(ioManager* arg)
       }    // if (oid > 3000)
 
       int opts = primitiveprocessor::directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
+
       fp = NULL;
       uint32_t openRetries = 0;
       int saveErrno = 0;
@@ -1078,43 +1079,6 @@ void* thr_popper(ioManager* arg)
         {
           if (!isLocked[i])
           {
-#ifdef IDB_COMP_POC_DEBUG
-            {
-              if (debugWrite)
-              {
-                boost::mutex::scoped_lock lk(primitiveprocessor::compDebugMutex);
-                cout << boldStart << "i = " << i << ", ptr = 0x" << hex << (ptrdiff_t)&ptr[i * BLOCK_SIZE]
-                     << dec << boldStop << endl;
-                cout << boldStart;
-#if 0
-                                int32_t* i32p;
-                                i32p = (int32_t*)&ptr[i * BLOCK_SIZE];
-
-                                for (int iy = 0; iy < 2; iy++)
-                                {
-                                    for (int ix = 0; ix < 8; ix++, i32p++)
-                                        cout << *i32p << ' ';
-
-                                    cout << endl;
-                                }
-
-#else
-                int64_t* i64p;
-                i64p = (int64_t*)&ptr[i * BLOCK_SIZE];
-
-                for (int iy = 0; iy < 2; iy++)
-                {
-                  for (int ix = 0; ix < 8; ix++, i64p++)
-                    cout << *i64p << ' ';
-
-                  cout << endl;
-                }
-
-#endif
-                cout << boldStop << endl;
-              }
-            }
-#endif
             cacheInsertOps.push_back(
                 CacheInsert_t(lbids[i], versions[i], (uint8_t*)&alignedbuff[i * BLOCK_SIZE]));
           }
