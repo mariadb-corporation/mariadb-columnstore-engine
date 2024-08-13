@@ -453,11 +453,11 @@ class SlaveDBRMNode
   int loadState(std::string filename) throw();
   int saveState(std::string filename) throw();
 
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
-  EXPORT const bool* getVBBMLockStatus();
-  EXPORT const bool* getVSSLockStatus();
+  const bool* getEMFLLockStatus();
+  const bool* getEMLockStatus();
+  const bool* getEMIndexLockStatus();
+  const bool* getVBBMLockStatus();
+  const bool* getVSSLockStatus();
 
  private:
   //   explicit SlaveDBRMNode(const SlaveDBRMNode& brm);
