@@ -28,7 +28,6 @@
 using namespace std;
 
 #include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 using namespace boost;
 
 #include "bytestream.h"
@@ -360,23 +359,23 @@ void WindowFunctionColumn::adjustResultType()
 {
   if ((fResultType.colDataType == CalpontSystemCatalog::DECIMAL ||
        fResultType.colDataType == CalpontSystemCatalog::UDECIMAL) &&
-      !boost::iequals(fFunctionName, "COUNT") && !boost::iequals(fFunctionName, "COUNT(*)") &&
-      !boost::iequals(fFunctionName, "ROW_NUMBER") && !boost::iequals(fFunctionName, "RANK") &&
-      !boost::iequals(fFunctionName, "PERCENT_RANK") && !boost::iequals(fFunctionName, "DENSE_RANK") &&
-      !boost::iequals(fFunctionName, "CUME_DIST") && !boost::iequals(fFunctionName, "NTILE") &&
-      !boost::iequals(fFunctionName, "PERCENTILE") && !fFunctionParms.empty() &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT(*)") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "ROW_NUMBER") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "RANK") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENT_RANK") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "DENSE_RANK") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "CUME_DIST") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "NTILE") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENTILE") && !fFunctionParms.empty() &&
       fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DOUBLE)
     fResultType = fFunctionParms[0]->resultType();
 
-  if ((boost::iequals(fFunctionName, "LEAD") || boost::iequals(fFunctionName, "LAG") ||
-       boost::iequals(fFunctionName, "MIN") || boost::iequals(fFunctionName, "MAX") ||
-       boost::iequals(fFunctionName, "FIRST_VALUE") || boost::iequals(fFunctionName, "LAST_VALUE") ||
-       boost::iequals(fFunctionName, "NTH_VALUE")) &&
+  if ((datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LEAD") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAG") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MIN") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MAX") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "FIRST_VALUE") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAST_VALUE") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "NTH_VALUE")) &&
       !fFunctionParms.empty())
     fResultType = fFunctionParms[0]->resultType();
 
-  if (boost::iequals(fFunctionName, "SUM") || boost::iequals(fFunctionName, "AVG") ||
-      boost::iequals(fFunctionName, "AVG_DISTINCT") || boost::iequals(fFunctionName, "PERCENTILE"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "SUM") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG") ||
+      datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG_DISTINCT") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENTILE"))
   {
     if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
         fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)

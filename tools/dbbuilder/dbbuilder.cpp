@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
         config::Config* sysConfig = config::Config::makeConfig(calpontConfigFile.c_str());
         string tmp = sysConfig->getConfig("Installation", "DBRootStorageType");
 
-        if (boost::iequals(tmp, "hdfs"))
+        if (datatypes::ASCIIStringCaseInsensetiveEquals(tmp, "hdfs"))
         {
           // HDFS is configured
           if (!IDBPolicy::useHdfs())  // error install plugin
