@@ -406,7 +406,7 @@ extern "C"
       localModule = boost::get<0>(st);
       PrimaryUMModuleName = config::Config::makeConfig()->getConfig("SystemConfig", "PrimaryUMModuleName");
 
-      if (boost::iequals(localModule, PrimaryUMModuleName))
+      if (datatypes::ASCIIStringCaseInsensetiveEquals(localModule, PrimaryUMModuleName))
         rtn = 1;
       if (PrimaryUMModuleName == "unassigned")
         rtn = 1;
