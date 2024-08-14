@@ -25,7 +25,7 @@
 #pragma once
 
 #include <unordered_set>
-#include <concepts>
+// #include <concepts>
 #include <deque>
 #include <fstream>
 #include <iomanip>
@@ -189,7 +189,7 @@ class FileBufferMgr
   template <typename OIDsContainer>
   EMEntriesVec getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const;
   template <typename Invokable>
-    requires std::invocable<Invokable, BRM::EMEntry&>
+  // requires std::invocable<Invokable, BRM::EMEntry&>
   void flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions);
   // void flushExtents(const vector<BRM::EMEntry>& extents);
 
@@ -275,7 +275,7 @@ class FileBufferMgr
 };
 
 template <typename Invokable>
-  requires std::invocable<Invokable, BRM::EMEntry&>
+// requires std::invocable<Invokable, BRM::EMEntry&>
 void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
 {
   using byLBID_t = std::unordered_multimap<BRM::LBID_t, FilebufferUset::iterator>;
