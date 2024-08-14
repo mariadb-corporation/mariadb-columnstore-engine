@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <boost/unordered/unordered_flat_set.hpp>
+#include <unordered_set>
 #include <concepts>
 #include <deque>
 #include <fstream>
@@ -124,7 +124,7 @@ class FileBufferMgr
  public:
   static constexpr const size_t PartitionsNumber = 8;
 
-  using filebuffer_uset_t = boost::unordered_flat_set<HashObject_t, bcHasher, bcEqual>;
+  using FilebufferUset = std::unordered_set<HashObject_t, bcHasher, bcEqual>;
   typedef std::deque<uint32_t> emptylist_t;
 
   /**
@@ -229,8 +229,8 @@ class FileBufferMgr
   std::mutex fBufferWLock;
   std::array<std::mutex, PartitionsNumber> fWLocks;
 
-  // mutable filebuffer_uset_t fbSet;
-  std::array<filebuffer_uset_t, PartitionsNumber> fbSets;
+  // mutable FilebufferUset fbSet;
+  std::array<FilebufferUset, PartitionsNumber> fbSets;
 
   // mutable filebuffer_list_t fbList;        // rename this
   std::array<filebuffer_list_t, PartitionsNumber> fbLists;  // rename this
@@ -278,7 +278,7 @@ template <typename Invokable>
   requires std::invocable<Invokable, BRM::EMEntry&>
 void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
 {
-  using byLBID_t = std::unordered_multimap<BRM::LBID_t, filebuffer_uset_t::iterator>;
+  using byLBID_t = std::unordered_multimap<BRM::LBID_t, FilebufferUset::iterator>;
   // Take multiple mutexes in a safe way w/o a loop.
   std::scoped_lock overalLock(fWLocks[0], fWLocks[1], fWLocks[2], fWLocks[3], fWLocks[4], fWLocks[5],
                               fWLocks[6], fWLocks[7]);

@@ -25,7 +25,6 @@
  ***************************************************************************/
 
 // #define NDEBUG
-#include <boost/unordered/unordered_flat_set.hpp>
 #include <cassert>
 #include <limits>
 #include <mutex>
@@ -47,7 +46,7 @@ using namespace BRM;
 
 namespace dbbc
 {
-const uint32_t gReportingFrequencyMin(32768);
+// const uint32_t gReportingFrequencyMin(32768);
 
 FileBufferMgr::FileBufferMgr(const uint32_t numBlcks, const uint32_t blkSz, const uint32_t deleteBlocks)
  : fMaxNumBlocks(numBlcks / PartitionsNumber)
@@ -114,7 +113,7 @@ void FileBufferMgr::flushCache()
   assert(fbLists.size() == fbSets.size() && fbSets.size() == fEmptyPoolsSlots.size());
   for (size_t i = 0; i < fbLists.size(); ++i)
   {
-    filebuffer_uset_t sEmpty;
+    FilebufferUset sEmpty;
     filebuffer_list_t lEmpty;
     emptylist_t vEmpty;
 
@@ -214,7 +213,7 @@ void FileBufferMgr::flushManyAllversion(const LBID_t* laVptr, uint32_t cnt)
   if (cnt == 0)
     return;
 
-  boost::unordered_flat_set<LBID_t> uniquer;
+  std::unordered_set<LBID_t> uniquer;
   for (uint32_t i = 0; i < cnt; i++)
     uniquer.insert(laVptr[i]);
 
