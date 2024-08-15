@@ -361,6 +361,7 @@ bool AggregateColumn::hasAggregate()
 void AggregateColumn::evaluate(Row& row, bool& isNull)
 {
   idblog("evaluating: " << toString());
+  idblog("input index " << fInputIndex);
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::DATE:
