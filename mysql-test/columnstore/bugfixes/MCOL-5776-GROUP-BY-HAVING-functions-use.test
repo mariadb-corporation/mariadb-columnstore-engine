@@ -45,4 +45,42 @@ SELECT col2, col1 FROM t1 GROUP BY col1 HAVING 'ooo' < col2 AND col1 > 1 ORDER B
 SELECT col1, col2, SUM(LENGTH(col2)) FROM t1 GROUP BY col1 HAVING SUM(LENGTH(col2)) > 10 ORDER BY col1;
 SELECT col1, col2, SUM(LENGTH(col2)) a FROM t1 GROUP BY col1 HAVING a > 1 AND col2 LIKE '%o%' ORDER BY col1;
 DROP TABLE t1;
+
+CREATE TABLE empsalary (
+    depname VARCHAR(100),
+    empno BIGINT,
+    salary INT,
+    enroll_date DATE
+) ENGINE=columnstore;
+
+INSERT INTO empsalary VALUES ('develop'  , 10, 5200, '2007-08-01');
+INSERT INTO empsalary VALUES ('sales'    ,  1, 5000, '2006-10-01');
+INSERT INTO empsalary VALUES ('personnel',  5, 3500, '2007-12-10');
+INSERT INTO empsalary VALUES ('sales'    ,  4, 4800, '2007-08-08');
+INSERT INTO empsalary VALUES ('personnel',  2, 3900, '2006-12-23');
+INSERT INTO empsalary VALUES ('develop'  ,  7, 4200, '2008-01-01');
+INSERT INTO empsalary VALUES ('develop'  ,  9, 4500, '2008-01-01');
+INSERT INTO empsalary VALUES ('sales'    ,  3, 4800, '2007-08-01');
+INSERT INTO empsalary VALUES ('develop'  ,  8, 6000, '2006-10-01');
+INSERT INTO empsalary VALUES ('develop'  , 11, 5200, '2007-08-15');
+INSERT INTO empsalary VALUES ('develop'  , 12, null, '2008-08-09');
+
+SELECT AVG(salary),depname, MODA(salary) OVER(PARTITION BY depname ORDER BY enroll_date) FROM empsalary GROUP BY depname ORDER BY depname, AVG(salary);
+DROP TABLE empsalary;
+
+CREATE TABLE orders(o_custkey INT) ENGINE=COLUMNSTORE;
+
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) <  20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) <= 20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) >  20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) >= 20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) =  20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) <> 20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) IN (15, 20) ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) NOT IN (15, 20) ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) BETWEEN 15 AND 20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) NOT BETWEEN 15 and 20 ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) IS NULL ORDER BY 1;
+SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) IS NOT NULL ORDER BY 1;
+
 DROP DATABASE MCOL5776;

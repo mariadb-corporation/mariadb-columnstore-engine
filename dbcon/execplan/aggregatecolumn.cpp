@@ -46,6 +46,28 @@ using namespace joblist;
 
 namespace execplan
 {
+#if 01
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
+
 void getAggCols(execplan::ParseTree* n, void* obj)
 {
   vector<AggregateColumn*>* list = reinterpret_cast<vector<AggregateColumn*>*>(obj);
@@ -338,6 +360,7 @@ bool AggregateColumn::hasAggregate()
 
 void AggregateColumn::evaluate(Row& row, bool& isNull)
 {
+  idblog("evaluating: " << toString());
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::DATE:
