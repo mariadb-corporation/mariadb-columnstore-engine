@@ -560,6 +560,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
       {
         case 16:
         {
+		idblog("getting TSInt128, input index " << fInputIndex);
           datatypes::TSInt128 val = row.getTSInt128Field(fInputIndex);
 
           if (val.isNull())
@@ -589,6 +590,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           break;
 
         case 4:
+		idblog("getting decimal from int4, input index " << fInputIndex);
           if (row.equals<4>(INTNULL, fInputIndex))
             isNull = true;
           else
@@ -598,6 +600,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           break;
 
         default:
+		idblog("getting decimal from bigint, input index " << fInputIndex << " siize " << int(fResultType.colWidth));
           if (row.equals<8>(BIGINTNULL, fInputIndex))
             isNull = true;
           else
