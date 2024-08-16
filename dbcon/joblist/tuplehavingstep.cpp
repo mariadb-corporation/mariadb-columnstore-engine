@@ -138,7 +138,7 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
   fRowGroupOut =
       RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
   fRowGroupOut.initRow(&fRowOut);
-  if (fExpressionFilter) { idblog("init expr filter: " << fExpressionFilter->toString());
+  if (fExpressionFilter) { idblog("init expr filter: " << fExpressionFilter->toString()); }
 }
 
 void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo)
