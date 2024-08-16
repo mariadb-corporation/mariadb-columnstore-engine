@@ -106,7 +106,7 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
   for (uint64_t i = 0; i < fRowGroupIn.getKeys().size(); ++i)
     if (keyToIndexMap.find(fRowGroupIn.getKeys()[i]) == keyToIndexMap.end())
     {
-	    idblog("mapping " << fRowGroupIn.getKeys()[i] << " to " << i);
+	    idblog("mapping " << fRowGroupIn.getKeys()[i] << " to " << i << ", key " << fRowGroupIn.getKeys()[i]);
       keyToIndexMap.insert(make_pair(fRowGroupIn.getKeys()[i], i));
     }
 
@@ -138,6 +138,7 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
   fRowGroupOut =
       RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
   fRowGroupOut.initRow(&fRowOut);
+  if (fExpressionFilter) { idblog("init expr filter: " << fExpressionFilter->toString());
 }
 
 void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo)
