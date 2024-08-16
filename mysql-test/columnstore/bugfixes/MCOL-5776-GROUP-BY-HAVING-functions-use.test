@@ -83,4 +83,10 @@ SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey 
 SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) IS NULL ORDER BY 1;
 SELECT o_custkey, COUNT(*) FROM orders WHERE o_custkey < 100 GROUP BY o_custkey HAVING COUNT(*) IS NOT NULL ORDER BY 1;
 
+DROP TABLE orders;
+
+CREATE TABLE t(key INT) ENGINE = COLUMNSTORE;
+INSERT INTO t(key) VALUES (1), (2), (2), (3), (3), (4), (4),(4),(4),(4),(995), (NULL);
+SELECT key + key a FROM t GROUP BY a HAVING a >= 8;
+
 DROP DATABASE MCOL5776;
