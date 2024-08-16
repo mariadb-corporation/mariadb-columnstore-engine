@@ -501,6 +501,7 @@ void ExpressionStep::populateColumnInfo(AggregateColumn* ac, JobInfo& jobInfo)
 
 void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const JobInfo& jobInfo)
 {
+	idblog("fColumns size " << fColumns.size());
   // expression is handled as function join already
   if (fDoJoin)
     return;
