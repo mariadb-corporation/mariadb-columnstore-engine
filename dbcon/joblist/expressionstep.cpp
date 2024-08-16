@@ -548,6 +548,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
           key = jobInfo.keyInfo->dictKeyMap[key];
       }
 
+	    idblog("sc: setting input index " << indexMap[key]);
       sc->inputIndex(indexMap[key]);
 
       if (jobInfo.trace)

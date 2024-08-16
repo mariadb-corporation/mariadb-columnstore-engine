@@ -144,6 +144,7 @@ void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo
 {
   // let base class handle the simple columns
   ExpressionStep::expressionFilter(filter, jobInfo);
+  idblog("filter: " << filter->toString());
   idblog("fColumns size after ExpressionStep::expressionFilter " << fColumns.size());
 
   // extract simple columns from parse tree
@@ -154,6 +155,9 @@ void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo
   idblog("fColumns size after walk " << fColumns.size());
   idblog("this: " << toString());
 #endif
+  for(uint32_t i = 0; i < fColumns.size(); i++) {
+	  idblog("final column " << i << ": " << fColumns[i]->toString());
+  }
 }
 
 void TupleHavingStep::run()
