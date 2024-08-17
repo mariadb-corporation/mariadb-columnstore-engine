@@ -325,7 +325,7 @@ struct cal_connection_info
     configVal = cf->getConfig("SystemConfig", "PrimaryUMModuleName");
     std::string module = execplan::ClientRotator::getModule();
 
-    if (boost::iequals(configVal, module))
+    if (datatypes::ASCIIStringCaseInsensetiveEquals(configVal, module))
       return false;
 
     return true;

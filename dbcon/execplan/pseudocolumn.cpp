@@ -26,9 +26,10 @@
 #include <sstream>
 using namespace std;
 
-#include <boost/algorithm/string.hpp>
 
 #include "bytestream.h"
+#include "collation.h"
+
 using namespace messageqcpp;
 
 #include "objectreader.h"
@@ -187,37 +188,37 @@ bool PseudoColumn::operator!=(const TreeNode* t) const
 
 uint32_t PseudoColumn::pseudoNameToType(string& name)
 {
-  if (boost::iequals(name, "idbpm"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbpm"))
     return PSEUDO_PM;
 
-  if (boost::iequals(name, "idbdbroot"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbdbroot"))
     return PSEUDO_DBROOT;
 
-  if (boost::iequals(name, "idbextentrelativerid"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbextentrelativerid"))
     return PSEUDO_EXTENTRELATIVERID;
 
-  if (boost::iequals(name, "idbsegment"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbsegment"))
     return PSEUDO_SEGMENT;
 
-  if (boost::iequals(name, "idbsegmentdir"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbsegmentdir"))
     return PSEUDO_SEGMENTDIR;
 
-  if (boost::iequals(name, "idbextentmin"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbextentmin"))
     return PSEUDO_EXTENTMIN;
 
-  if (boost::iequals(name, "idbextentmax"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbextentmax"))
     return PSEUDO_EXTENTMAX;
 
-  if (boost::iequals(name, "idbblockid"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbblockid"))
     return PSEUDO_BLOCKID;
 
-  if (boost::iequals(name, "idbextentid"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbextentid"))
     return PSEUDO_EXTENTID;
 
-  if (boost::iequals(name, "idbpartition"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idbpartition"))
     return PSEUDO_PARTITION;
 
-  if (boost::iequals(name, "idblocalpm"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(name, "idblocalpm"))
     return PSEUDO_LOCALPM;
 
   return PSEUDO_UNKNOWN;
