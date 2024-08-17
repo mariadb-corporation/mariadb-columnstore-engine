@@ -149,18 +149,18 @@ class Charset
 
   bool operator==(const Charset& rhs)
   {
-     return rhs.getCharset().cs_name.str == getCharset().cs_name.str;
+    return rhs.getCharset().cs_name.str == getCharset().cs_name.str;
   }
 
   std::string convert(const std::string& from, const datatypes::Charset& fromCs) const
   {
-     std::string result;
-     uint dummy_errors;
-     result.resize(from.size() * getCharset().mbmaxlen);
-     size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), &getCharset(), from.c_str(),
-                                       from.size(), &fromCs.getCharset(), &dummy_errors);
-     result.resize(resultingSize);
-     return result;
+    std::string result;
+    uint dummy_errors;
+    result.resize(from.size() * getCharset().mbmaxlen);
+    size_t resultingSize = my_convert(const_cast<char*>(result.c_str()), result.size(), &getCharset(),
+                                      from.c_str(), from.size(), &fromCs.getCharset(), &dummy_errors);
+    result.resize(resultingSize);
+    return result;
   }
 
   Charset(uint32_t charsetNumber);
@@ -187,7 +187,7 @@ class Charset
     // please note that ConstString has an assertion so that nullptr data has zero length.
     const char* s1 = str1.str();
     const char* s2 = str2.str();
-    return mCharset->strnncollsp(s1 ? s1 : "", str1.length(), s2 ? s2 : "" , str2.length());
+    return mCharset->strnncollsp(s1 ? s1 : "", str1.length(), s2 ? s2 : "", str2.length());
   }
   int strnncollsp(const char* str1, size_t length1, const char* str2, size_t length2) const
   {
@@ -272,10 +272,10 @@ class CollationAwareComparator : public Charset
 
 inline bool ASCIIStringCaseInsensetiveEquals(const std::string& left, const std::string& right)
 {
-  auto asciiLower = [](char c) { return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c; };
+  auto asciiHigher = [](char c) { return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c; };
   return left.size() == right.size() &&
          std::equal(left.begin(), left.end(), right.begin(),
-                    [&asciiLower](char l, char r) { return asciiLower(l) == asciiLower(r); });
+                    [&asciiHigher](char l, char r) { return asciiHigher(l) == asciiHigher(r); });
 }
 
 }  // end of namespace datatypes
