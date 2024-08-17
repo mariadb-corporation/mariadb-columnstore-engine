@@ -88,7 +88,8 @@ add_executable(test_fdb_api fdb_wrapper_cpp/test/test_fdb_api.cpp)
 add_dependencies(test_fdb_api fdbcs)
 target_link_libraries(test_fdb_api fdbcs fdb_c)
 
-add_test(NAME columnstore:test_fdb_api COMMAND test_fdb_api)
+# tests hangs on Rocky8 and Rocky9 started without systemd
+#add_test(NAME columnstore:test_fdb_api COMMAND test_fdb_api)
 
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
