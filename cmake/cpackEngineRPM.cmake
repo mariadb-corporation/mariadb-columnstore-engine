@@ -61,7 +61,7 @@ MACRO(SETA var)
   ENDFOREACH()
 ENDMACRO(SETA)
 
-SETA(CPACK_RPM_columnstore--engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
+SETA(CPACK_RPM_columnstore-engine_PACKAGE_PROVIDES "MariaDB-columnstore-engine")
 
 #boost is a source build in CentOS 6 so don't require it as a package
 SET(REDHAT_VERSION_NUMBER OFF)
