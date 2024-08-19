@@ -1,0 +1,7 @@
+# Test fdb API
+-- source ../include/have_columnstore.inc
+#
+
+exec test_fdb_api;
+# Have to print any output for MTR tests.
+exec echo "ok";

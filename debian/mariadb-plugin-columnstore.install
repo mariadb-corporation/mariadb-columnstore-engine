@@ -52,6 +52,7 @@ usr/bin/smps
 usr/bin/smput
 usr/bin/smrm
 usr/bin/testS3Connection
+usr/bin/test_fdb_api
 usr/bin/viewtablelock
 usr/bin/workernode
 usr/lib/*/libbatchloader.so
@@ -89,6 +90,7 @@ usr/lib/*/libwriteengine.so
 usr/lib/*/libwriteengineclient.so
 usr/lib/*/libwriteengineredistribute.so
 usr/lib/*/libdatatypes.so
+usr/lib/*/libfdbcs.so
 usr/lib/mysql/plugin/ha_columnstore.so
 usr/lib/mysql/plugin/libregr_mysql.so
 usr/lib/mysql/plugin/libudf_mysql.so

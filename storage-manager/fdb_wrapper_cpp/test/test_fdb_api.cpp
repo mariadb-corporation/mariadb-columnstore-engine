@@ -17,46 +17,55 @@
 
 #include "../fdb_wrapper_cpp/include/fdbcs.hpp"
 
-// FIXME: Use GOOGLE test.
-#include <cassert>
 using namespace std;
 using namespace FDBCS;
 
-int main() {
+template <typename T>
+void assert_internal(const T& value)
+{
+  if (!value)
+    abort();
+}
+
+int main()
+{
   std::string path = "/etc/foundationdb/fdb.cluster";
-  setAPIVersion();
+  assert_internal(setAPIVersion());
   FDBNetwork netWork;
   // Create and run network.
-  assert(netWork.setUpAndRunNetwork() == true);
+  assert_internal(netWork.setUpAndRunNetwork());
 
   // Create database.
   std::unique_ptr<FDBDataBase> db = DataBaseCreator::createDataBase(path);
+  assert_internal(db);
+  assert_internal(db->isDataBaseReady());
+
   std::string key1 = "fajsdlkfjaskljfewiower39423fds";
   std::string value1 = "gfdgjksdflfdsjkslkdrewuior39243";
   // Set a key/value.
   {
     auto tnx = db->createTransaction();
     tnx->set(key1, value1);
-    assert(tnx->commit() == true);
+    assert_internal(tnx->commit());
   }
   // Get a value by a key.
   {
     auto tnx = db->createTransaction();
     auto p = tnx->get(key1);
-    assert(p.first == true);
-    assert(p.second == value1);
+    assert_internal(p.first);
+    assert_internal(p.second == value1);
   }
   // Remove a key.
   {
     auto tnx = db->createTransaction();
     tnx->remove(key1);
-    assert(tnx->commit() == true);
+    assert_internal(tnx->commit());
   }
   // Check that key is not presetnt anymore.
   {
     auto tnx = db->createTransaction();
     auto p = tnx->get(key1);
-    assert(p.first == false);
+    assert_internal(!p.first);
   }
 
   return 0;
