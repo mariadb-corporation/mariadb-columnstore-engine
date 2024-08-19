@@ -6,8 +6,8 @@ local servers = {
 };
 
 local platforms = {
-  develop: ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
-  'develop-23.02': ['centos:7', 'rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  develop: ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
+  'develop-23.02': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'ubuntu:20.04', 'ubuntu:22.04'],
 };
 
 local platforms_arm = {
@@ -42,10 +42,6 @@ local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel opens
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
                        'expect createrepo ';
 
-local centos7_build_deps = 'yum install -y epel-release centos-release-scl ' +
-                           '&& yum install -y pcre2-devel devtoolset-' + gcc_version + ' devtoolset-' + gcc_version + '-gcc cmake3 lz4-devel ' +
-                           '&& ln -s /usr/bin/cmake3 /usr/bin/cmake && . /opt/rh/devtoolset-' + gcc_version + '/enable ';
-
 local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
                                '&& dnf config-manager --set-enabled powertools ' +
                                '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
@@ -68,7 +64,6 @@ local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,
 
 local platformMap(platform, arch) =
   local platform_map = {
-    'centos:7': centos7_build_deps + ' && yum ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=centos7 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
     'debian:11': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
@@ -81,7 +76,6 @@ local platformMap(platform, arch) =
 
 local testRun(platform) =
   local platform_map = {
-    'centos:7': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'rockylinux:9': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
     'debian:11': 'cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure',
@@ -93,7 +87,6 @@ local testRun(platform) =
 
 local testPreparation(platform) =
   local platform_map = {
-    'centos:7': 'yum -y install epel-release && yum install -y git cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel',
     'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake',
@@ -104,14 +97,14 @@ local testPreparation(platform) =
 
 
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
-  local pkg_format = if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
+  local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
   local cmapi_path = '/usr/share/columnstore/cmapi',
   local etc_path = '/etc/columnstore',
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
-  local img = if (platform == 'centos:7' || platform == 'rockylinux:8') then platform else 'romcheck/' + std.strReplace(platform, '/', '-'),
+  local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
   local regression_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
@@ -258,14 +251,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
-      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
+      if (std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} mkdir core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} chmod 777 core',
       'docker exec -t mtr$${DRONE_BUILD_NUMBER} sysctl -w kernel.core_pattern="/core/%E_mtr_core_dump.%p"',
       'docker cp core_dumps/. mtr$${DRONE_BUILD_NUMBER}:/',
-      if (std.split(platform, ':')[0] == 'centos' || std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng"' else '',
+      if (std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb epel-release diffutils which rsyslog hostname patch perl cracklib-dicts procps-ng"' else '',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget gawk gdb rsyslog hostname patch"' else '',
       'docker cp setup-repo.sh mtr$${DRONE_BUILD_NUMBER}:/',
@@ -531,7 +524,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     commands: [
       'cd cmapi',
       if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev',
-      if (platform == 'centos:7') then 'yum install -y epel-release && yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake',
       './cleanup.sh',
       'cmake -D' + std.asciiUpper(pkg_format) + '=1 . && make package',
       'mkdir ./' + result,
