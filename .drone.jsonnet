@@ -237,6 +237,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       else ' bash -c "apt update --yes && apt install -y ' + debpackages + '"',
 
 
+  local addFoundationDBForBuild(pkg_format, result) =
+    "PACKAGES_URL=https://cspkg.s3.amazonaws.com/FoundationDB OS=%s storage/columnstore/columnstore/setup-repo.sh mariadb-columnstore-foundationdb &&" % result +
+     installRpmDeb(pkg_format, "foundationdb-clients foundationdb-server", "foundationdb-clients foundationdb-server"),
+
   local dockerImage(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
   local installEngine(dockerImage, pkg_format) =
     if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
@@ -268,6 +272,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'docker cp core_dumps/. ' + dockerImage  +  ':/',
     'docker cp build/utils.sh ' + dockerImage  +  ':/',
     'docker cp setup-repo.sh ' + dockerImage  +  ':/',
+
+    execInnerDocker('/setup-repo.sh mariadb-columnstore-foundationdb https://cspkg.s3.amazonaws.com/FoundationDB', dockerImage),
+    execInnerDocker(installRpmDeb(pkg_format, "foundationdb-clients foundationdb-server", "foundationdb-clients foundationdb-server"), dockerImage),
+
     if (do_setup) then execInnerDocker('/setup-repo.sh', dockerImage),
     execInnerDocker(installRpmDeb(pkg_format,
       "cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which",
@@ -787,6 +795,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                testPreparation(platform),
                // disable LTO for 22.04 for now
                if (platform == 'ubuntu:22.04' || platform == 'ubuntu:24.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
+               addFoundationDBForBuild(pkg_format, result),
                platformMap(platform, arch),
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
@@ -807,6 +816,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                'cd /mdb/' + builddir,
                testPreparation(platform),
+               addFoundationDBForBuild(pkg_format, result),
                testRun(platform),
              ],
            },

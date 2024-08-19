@@ -75,6 +75,22 @@ set_property(TARGET StorageManager PROPERTY CXX_STANDARD 20)
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+find_library(FDB_LIB fdb_c)
+if (NOT FDB_LIB)
+    MESSAGE_ONCE(FATAL_ERROR "FoundationDB not installed properly, please install packages foundationdb-cliends and foundationdb-server")
+    return()
+endif()
+
+add_library(fdbcs SHARED fdb_wrapper_cpp/src/fdbcs.cpp)
+target_link_libraries(fdbcs fdb_c)
+
+add_executable(test_fdb_api fdb_wrapper_cpp/test/test_fdb_api.cpp)
+add_dependencies(test_fdb_api fdbcs)
+target_link_libraries(test_fdb_api fdbcs fdb_c)
+
+# tests hangs on Rocky8 and Rocky9 started without systemd
+#add_test(NAME columnstore:test_fdb_api COMMAND test_fdb_api)
+
 add_executable(unit_tests src/unit_tests.cpp)
 target_compile_definitions(unit_tests PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 target_link_libraries(unit_tests storagemanager)
@@ -144,4 +160,9 @@ install(FILES storagemanager.cnf
     RENAME storagemanager.cnf.example
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
     COMPONENT columnstore-engine
+)
+
+install(TARGETS fdbcs
+  LIBRARY DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
 )
