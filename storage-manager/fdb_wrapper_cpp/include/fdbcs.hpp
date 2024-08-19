@@ -79,9 +79,11 @@ class FDBDataBase
   ~FDBDataBase();
 
   std::unique_ptr<Transaction> createTransaction() const;
+  bool isDataBaseReady() const;
 
  private:
   FDBDatabase* database_;
+  const uint32_t secondsToWait_ = 3;
 };
 
 class DataBaseCreator

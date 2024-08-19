@@ -166,3 +166,8 @@ install(TARGETS fdbcs
   LIBRARY DESTINATION ${ENGINE_LIBDIR}
   COMPONENT columnstore-engine
 )
+
+install(TARGETS test_fdb_api
+    RUNTIME DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

@@ -15,10 +15,10 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-
 #include <string>
 #include <iostream>
 #include <thread>
+#include <chrono>
 #include "../include/fdbcs.hpp"
 
 namespace FDBCS
@@ -159,6 +159,30 @@ std::unique_ptr<Transaction> FDBDataBase::createTransaction() const
     return nullptr;
   }
   return std::make_unique<Transaction>(tnx);
+}
+
+bool FDBDataBase::isDataBaseReady() const
+{
+  FDBTransaction* tnx;
+  auto err = fdb_database_create_transaction(database_, &tnx);
+  if (err)
+  {
+    std::cerr << "fdb_database_create_transaction error, code: " << (int)err << std::endl;
+    return false;
+  }
+  ByteArray emptyKey{""};
+  FDBFuture* future = fdb_transaction_get(tnx, (uint8_t*)emptyKey.c_str(), emptyKey.length(), 0);
+
+  uint32_t count = 0;
+  while (!fdb_future_is_ready(future) && count < secondsToWait_)
+  {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    ++count;
+  }
+  bool ready = fdb_future_is_ready(future);
+  fdb_future_destroy(future);
+  fdb_transaction_destroy(tnx);
+  return ready;
 }
 
 std::unique_ptr<FDBDataBase> DataBaseCreator::createDataBase(const std::string clusterFilePath)
