@@ -102,7 +102,8 @@ const char* s3err_msgs[] = {"All is well",
                             "Authentication failed, token has expired",
                             "Configured bucket does not match endpoint location"};
 
-S3Storage::ScopedConnection::ScopedConnection(S3Storage* s, shared_ptr<S3Storage::Connection> m) : s3(s), conn(m)
+S3Storage::ScopedConnection::ScopedConnection(S3Storage* s, shared_ptr<S3Storage::Connection> m)
+ : s3(s), conn(m)
 {
   assert(conn);
 }
@@ -217,11 +218,11 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   endpoint = config->getValue("S3", "endpoint");
   if (!connect_timeout.empty())
   {
-      connectTimeout = stof(connect_timeout);
+    connectTimeout = stof(connect_timeout);
   }
   if (!timeout.empty())
   {
-      operationTimeout = stof(timeout);
+    operationTimeout = stof(timeout);
   }
 
   ms3_library_init();
@@ -562,7 +563,8 @@ int S3Storage::deleteObject(const string& _key)
   do
   {
     s3err = ms3_delete(conn->conn, bucket.c_str(), deleteKey.c_str());
-    if (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) && !conn->terminate)
+    if (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) &&
+        !conn->terminate)
     {
       if (ms3_server_error(conn->conn))
         logger->log(LOG_WARNING,
@@ -586,7 +588,8 @@ int S3Storage::deleteObject(const string& _key)
       }
       sleep(5);
     }
-  } while (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) && !conn->terminate);
+  } while (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) &&
+           !conn->terminate);
 
   if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
   {
@@ -694,7 +697,8 @@ int S3Storage::exists(const string& _key, bool* out)
   do
   {
     s3err = ms3_status(creds->conn, bucket.c_str(), existsKey.c_str(), &status);
-    if (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) && !creds->terminate)
+    if (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) &&
+        !creds->terminate)
     {
       if (ms3_server_error(creds->conn))
         logger->log(LOG_WARNING,
@@ -717,7 +721,8 @@ int S3Storage::exists(const string& _key, bool* out)
       }
       sleep(5);
     }
-  } while (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) && !creds->terminate);
+  } while (s3err && s3err != MS3_ERR_NOT_FOUND && (!skipRetryableErrors && retryable_error(s3err)) &&
+           !creds->terminate);
 
   if (s3err != 0 && s3err != MS3_ERR_NOT_FOUND)
   {
@@ -761,7 +766,8 @@ shared_ptr<S3Storage::Connection> S3Storage::getConnection()
   if (freeConns.empty())
   {
     auto ret = make_shared<S3Storage::Connection>(nextConnId++);
-    ret->conn = ms3_init(key.c_str(), secret.c_str(), region.c_str(), (endpoint.empty() ? nullptr : endpoint.c_str()));
+    ret->conn = ms3_init(key.c_str(), secret.c_str(), region.c_str(),
+                         (endpoint.empty() ? nullptr : endpoint.c_str()));
     // Something went wrong with libmarias3 init
     if (ret->conn == nullptr)
     {
@@ -787,11 +793,11 @@ shared_ptr<S3Storage::Connection> S3Storage::getConnection()
     // timeouts
     if (connectTimeout.has_value())
     {
-        ms3_set_option(ret->conn, MS3_OPT_CONNECT_TIMEOUT, &connectTimeout.value());
+      ms3_set_option(ret->conn, MS3_OPT_CONNECT_TIMEOUT, &connectTimeout.value());
     }
     if (operationTimeout.has_value())
     {
-        ms3_set_option(ret->conn, MS3_OPT_TIMEOUT, &operationTimeout.value());
+      ms3_set_option(ret->conn, MS3_OPT_TIMEOUT, &operationTimeout.value());
     }
     // IAM role setup for keys
     if (!IAMrole.empty())
@@ -861,9 +867,12 @@ vector<S3Storage::IOTaskData> S3Storage::taskList() const
   ret.reserve(usedConns.size());
   timespec now;
   clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-  for (const auto& [id, conn]: usedConns) {
-      double elapsed = (double)(now.tv_sec - conn->touchedAt.tv_sec) + 1.e-9 * (now.tv_nsec - conn->touchedAt.tv_nsec);;
-      ret.emplace_back(id, elapsed);
+  for (const auto& [id, conn] : usedConns)
+  {
+    double elapsed =
+        (double)(now.tv_sec - conn->touchedAt.tv_sec) + 1.e-9 * (now.tv_nsec - conn->touchedAt.tv_nsec);
+    ;
+    ret.emplace_back(IOTaskData{id, elapsed});
   }
   s.unlock();
   return ret;
@@ -871,13 +880,13 @@ vector<S3Storage::IOTaskData> S3Storage::taskList() const
 
 bool S3Storage::killTask(uint64_t id)
 {
-    boost::unique_lock<boost::mutex> s(connMutex);
-    if (auto it = usedConns.find(id); it != usedConns.end())
-    {
-        it->second->terminate = true;
-        return true;
-    }
-    return false;
+  boost::unique_lock<boost::mutex> s(connMutex);
+  if (auto it = usedConns.find(id); it != usedConns.end())
+  {
+    it->second->terminate = true;
+    return true;
+  }
+  return false;
 }
 
 }  // namespace storagemanager
