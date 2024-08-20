@@ -74,7 +74,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void tableOid1(execplan::CalpontSystemCatalog::OID tableOid1)
   {
     fTableOID1 = tableOid1;
-    if (fTableOID1 < 3000)
+    if (fTableOID1 >= 1000 && fTableOID1 < 3000)
       numCores = 1;  // syscat query, no need for more than 1 thread
   }
   void tableOid2(execplan::CalpontSystemCatalog::OID tableOid2)
