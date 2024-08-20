@@ -4054,7 +4054,9 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
+  idblog("building arith col");
   ArithmeticColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
+  idblog("built arith col: " << (rc ? rc->toString() : "NULL"));
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
