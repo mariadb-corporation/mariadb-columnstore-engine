@@ -406,13 +406,15 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
         return false;
 
       int64_t val1 = lop->getIntVal(row, isNull);
+      poidblog("val1 " << val1 << ", isNull " << int(isNull));
 
       if (isNull)
         return false;
 
       int64_t val2 = rop->getIntVal(row, isNull);
+      poidblog("val2 " << val2 << ", isNull " << int(isNull));
 
-      return numericCompare(val1, val2) && !isNull;
+      return !isNull && numericCompare(val1, val2);
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:
