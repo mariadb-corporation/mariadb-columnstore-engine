@@ -281,7 +281,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       aoidblog("result " << fResult.intVal << ", isNull " << int(isNull));
       if (isNull)
       {
-        fResult.intVal = joblist::BIGINTNULL;
+        fResult.intVal = joblist::INTNULL;
       }
       break;
 
