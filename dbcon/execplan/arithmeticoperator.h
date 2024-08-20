@@ -281,7 +281,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       aoidblog("result " << fResult.intVal << ", isNull " << int(isNull));
       if (isNull)
       {
-        fResult.intVal = BIGINTNULL;
+        fResult.intVal = joblist::BIGINTNULL;
       }
       break;
 
@@ -306,7 +306,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       fResult.uintVal = execute(lop->getUintVal(row, isNull), rop->getUintVal(row, isNull), isNull);
       if (isNull)
       {
-        fResult.uintVal = UBIGINTNULL;
+        fResult.uintVal = joblist::UBIGINTNULL;
       }
       break;
 
