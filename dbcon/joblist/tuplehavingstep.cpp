@@ -351,6 +351,7 @@ void TupleHavingStep::doHavingFilters()
   fRowGroupOut.getRow(0, &fRowOut);
   fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
 
+  idblog("evaluating " << fExpressionFilter->toString());
   for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
   {
     if (fFeInstance->evaluate(fRowIn, fExpressionFilter))
