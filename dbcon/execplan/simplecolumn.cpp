@@ -53,6 +53,23 @@ using namespace joblist;
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
 namespace execplan
 {
 void getSimpleCols(execplan::ParseTree* n, void* obj)
@@ -512,6 +529,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     isNull = true;
     return;
   }
+  idblog("eval at simple col");
 
   switch (fResultType.colDataType)
   {
@@ -591,6 +609,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     case CalpontSystemCatalog::BIGINT:
     {
       fResult.intVal = row.getIntField<8>(fInputIndex);
+      idblog("got big int val " << fResult.intVal);
       break;
     }
 
@@ -598,6 +617,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     case CalpontSystemCatalog::MEDINT:
     {
       fResult.intVal = row.getIntField<4>(fInputIndex);
+      idblog("got med int val " << fResult.intVal);
       break;
     }
 

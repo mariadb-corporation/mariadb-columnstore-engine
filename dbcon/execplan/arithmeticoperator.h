@@ -310,9 +310,27 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
   }
 }
 
+#define aoidblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
 template <typename T>
 inline T ArithmeticOperator::execute(T op1, T op2, bool& isNull)
 {
+	aoidblog("executing fOp " << int(fOp) << ", op1 " << op1 << ", op2 " << op2);
   switch (fOp)
   {
     case OP_ADD: return op1 + op2;
