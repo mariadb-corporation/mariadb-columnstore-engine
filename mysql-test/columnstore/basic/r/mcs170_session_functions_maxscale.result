@@ -7,10 +7,10 @@ CONNECTION_ID() > 0
 1
 SELECT CURRENT_USER();
 CURRENT_USER()
-testUser@max
+testUser@%
 SELECT USER();
 USER()
-testUser@%
+testUser@max
 SELECT SESSION_USER();
 SESSION_USER()
 testUser@max
