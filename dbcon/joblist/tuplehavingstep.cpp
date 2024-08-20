@@ -356,7 +356,7 @@ void TupleHavingStep::doHavingFilters()
   {
     if (fFeInstance->evaluate(fRowIn, fExpressionFilter))
     {
-	    idblog("copying row");
+	    idblog("copying row " << i);
       copyRow(fRowIn, &fRowOut);
       fRowGroupOut.incRowCount();
       fRowOut.nextRow();
