@@ -352,8 +352,10 @@ void TupleHavingStep::doHavingFilters()
   fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
 
   idblog("evaluating " << fExpressionFilter->toString());
+  idblog("inputRG row count " << fRowGroupIn.getRowCount());
   for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
   {
+	  idblog("actual eval");
     if (fFeInstance->evaluate(fRowIn, fExpressionFilter))
     {
 	    idblog("copying row " << i);
@@ -363,9 +365,11 @@ void TupleHavingStep::doHavingFilters()
     }
 
     fRowIn.nextRow();
+    idblog("fRowIn advanced");
   }
 
   fRowsReturned += fRowGroupOut.getRowCount();
+  idblog("outRG rows count " << fRowGroupOut.getRowCount());
 }
 
 const RowGroup& TupleHavingStep::getOutputRowGroup() const
