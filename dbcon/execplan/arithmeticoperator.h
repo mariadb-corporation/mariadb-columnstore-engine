@@ -261,6 +261,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::TINYINT:
       fResult.intVal = execute(lop->getIntVal(row, isNull), rop->getIntVal(row, isNull), isNull);
+      aoidblog("result " << fResult.intVal);
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
