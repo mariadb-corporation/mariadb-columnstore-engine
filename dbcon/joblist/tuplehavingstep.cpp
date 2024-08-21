@@ -359,6 +359,14 @@ void TupleHavingStep::doHavingFilters()
     if (fFeInstance->evaluate(fRowIn, fExpressionFilter))
     {
 	    idblog("copying row " << i << " in col count " << fRowIn.getColumnCount() << ", out col count " << fRowOut.getColumnCount());
+	    for(uint32_t j=0;j<fRowIn.getColumnCount();j++) {
+		    idblog(" in [" << j << "] type " << int(fRowIn.getColTypes()[i].colDataType) << ", width " << fRowIn.getColTypes()[j].colWidth);
+
+	    }
+	    for(uint32_t j=0;j<fRowOut.getColumnCount();j++) {
+		    idblog(" out [" << j << "] type " << int(fRowOut.getColTypes()[i].colDataType) << ", width " << fRowOut.getColTypes()[j].colWidth);
+
+	    }
       copyRow(fRowIn, &fRowOut);
       fRowGroupOut.incRowCount();
       fRowOut.nextRow();
