@@ -23,6 +23,11 @@
 #include "bytestream.h"
 #include "bytestreampool.h"
 
+namespace storagemanager
+{
+  struct list_iotask_resp_entry;
+}
+
 namespace idbdatafile
 {
 class SMComm : public boost::noncopyable
@@ -60,6 +65,9 @@ class SMComm : public boost::noncopyable
   int sync();
 
   int copyFile(const std::string& file1, const std::string& file2);
+
+  int listIOTasks(std::vector<storagemanager::list_iotask_resp_entry>* entries);
+  int killIOTask(uint64_t id);
 
   virtual ~SMComm();
 
