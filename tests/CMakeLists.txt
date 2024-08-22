@@ -73,6 +73,11 @@ if (WITH_UNITTESTS)
     target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET fair_threadpool_test TEST_PREFIX columnstore:)
 
+    add_executable(block_cache_test block_cache_test.cpp)
+    add_dependencies(block_cache_test googletest)
+    target_link_libraries(block_cache_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} dbbc)
+    gtest_add_tests(TARGET block_cache_test TEST_PREFIX columnstore:)
+
     add_executable(comparators_tests comparators-tests.cpp)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
@@ -82,6 +87,12 @@ if (WITH_UNITTESTS)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+
+    # standalone Block cache routines test
+    add_executable(block_cache_standalone block-cache-standalone.cpp)
+    target_link_libraries(block_cache_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} dbbc)
+    add_test(NAME columnstore:block_cache_standalone COMMAND block_cache_standalone)
+    set_tests_properties(columnstore:block_cache_standalone PROPERTIES DISABLED True)
 endif()
 
 if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))

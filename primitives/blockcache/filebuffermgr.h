@@ -24,8 +24,10 @@
 
 #pragma once
 
+#include <cstdint>
+#include <numeric>
 #include <unordered_set>
-// #include <concepts>
+#include <concepts>
 #include <deque>
 #include <fstream>
 #include <iomanip>
@@ -54,9 +56,9 @@
 namespace dbbc
 {
 
-class FileBufferMgrTest;  // WIP remove
-class FileBufferMgrTest_bulkInsert_Test;
-class FileBufferMgrTest_flushOIDs_Test;
+// class FileBufferMgrTest;  // WIP remove
+// class FileBufferMgrTest_bulkInsert_Test;
+// class FileBufferMgrTest_flushOIDs_Test;
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
@@ -189,7 +191,7 @@ class FileBufferMgr
   template <typename OIDsContainer>
   EMEntriesVec getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const;
   template <typename Invokable>
-  // requires std::invocable<Invokable, BRM::EMEntry&>
+    requires std::invocable<Invokable, BRM::EMEntry&>
   void flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions);
   // void flushExtents(const vector<BRM::EMEntry>& extents);
 
@@ -212,6 +214,11 @@ class FileBufferMgr
   uint32_t maxCacheSize() const
   {
     return fMaxNumBlocks;
+  }
+
+  uint32_t cacheSize() const
+  {
+    return std::accumulate(fCacheSizes.begin(), fCacheSizes.end(), 0);
   }
 
   void setReportingFrequency(const uint32_t d);
@@ -269,13 +276,13 @@ class FileBufferMgr
     return hasher(&lbid, sizeof(BRM::LBID_t)) % PartitionsNumber;
   }
 
-  friend FileBufferMgrTest;
+  // friend FileBufferMgrTest;
   // friend FileBufferMgrTest_bulkInsert_Test;
   // friend FileBufferMgrTest_flushOIDs_Test;
 };
 
 template <typename Invokable>
-// requires std::invocable<Invokable, BRM::EMEntry&>
+  requires std::invocable<Invokable, BRM::EMEntry&>
 void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
 {
   using byLBID_t = std::unordered_multimap<BRM::LBID_t, FilebufferUset::iterator>;
