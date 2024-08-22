@@ -137,7 +137,6 @@ INCLUDE(columnstore_version)
 INCLUDE(misc)
 INCLUDE(boost)
 INCLUDE(thrift)
-INCLUDE(mpark_patterns)
 
 FIND_PACKAGE(BISON)
 IF (NOT BISON_FOUND)
