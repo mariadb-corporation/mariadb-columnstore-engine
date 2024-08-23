@@ -119,7 +119,8 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
     return result;
   }
 
-  string stmt = dropPartitionStmt->fSql + "|" + dropPartitionStmt->fTableName->fSchema + "|";
+  auto stmt = formatStatementString(dropPartitionStmt->fSql, dropPartitionStmt->fTableName->fSchema,
+                                    dropPartitionStmt->fTableName->fName, dropPartitionStmt->fPartitions);
   SQLLogger logger(stmt, fDDLLoggingId, sessionID, txnID.id);
 
   try
