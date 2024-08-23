@@ -81,7 +81,8 @@ MarkPartitionProcessor::DDLResult MarkPartitionProcessor::processPackageInternal
   CalpontSystemCatalog::DictOIDList dictOIDList;
   std::string processName("DDLProc");
 
-  string stmt = markPartitionStmt->fSql + "|" + markPartitionStmt->fTableName->fSchema + "|";
+  auto stmt = formatStatementString(markPartitionStmt->fSql, markPartitionStmt->fTableName->fSchema,
+                                    markPartitionStmt->fTableName->fName, markPartitionStmt->fPartitions);
   SQLLogger logger(stmt, fDDLLoggingId, markPartitionStmt->fSessionID, txnID.id);
 
   uint32_t processID = 0;
