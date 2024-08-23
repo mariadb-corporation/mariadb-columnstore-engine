@@ -4032,6 +4032,7 @@ ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, 
           strcasecmp(ac->alias().c_str(), gwi.returnedCols[i]->alias().c_str()) == 0)
       {
 	      idblog("associated");
+	      idblog("clause type " << int(gwi.clauseType) << ", HAVING is " << int(HAVING));
         ac->expressionId(gwi.returnedCols[i]->expressionId());
         break;
       }
