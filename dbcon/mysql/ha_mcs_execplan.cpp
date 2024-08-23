@@ -8145,6 +8145,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   gwi.disableWrapping = false;
   if (select_lex.having != 0)
   {
+	  idblog("processing HAVING");
 #ifdef DEBUG_WALK_COND
     cerr << "------------------- HAVING ---------------------" << endl;
     select_lex.having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
