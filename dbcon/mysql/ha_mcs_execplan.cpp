@@ -6503,6 +6503,7 @@ void gp_walk(const Item* item, void* arg)
       }
       else if (col->type() == Item::COND_ITEM)
       {
+	      idblog("cond item");
         gwip->ptWorkStack.push(buildParseTree(col, *gwip, gwip->fatalParseError));
       }
       else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
