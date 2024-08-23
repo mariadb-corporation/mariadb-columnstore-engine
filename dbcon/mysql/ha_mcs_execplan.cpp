@@ -4024,11 +4024,14 @@ ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, 
   // @3391. optimization. try to associate expression ID to the expression on the select list
   if (gwi.clauseType != SELECT)
   {
+	  idblog("ac: " << ac->toString());
     for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
     {
+	      idblog("in select list [" << i << "]: " << gwi.returnedCols[i]->toString());
       if ((!ac->alias().empty()) &&
           strcasecmp(ac->alias().c_str(), gwi.returnedCols[i]->alias().c_str()) == 0)
       {
+	      idblog("associated");
         ac->expressionId(gwi.returnedCols[i]->expressionId());
         break;
       }
