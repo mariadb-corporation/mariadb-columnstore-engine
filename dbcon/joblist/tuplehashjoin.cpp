@@ -417,6 +417,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
   smallRG.initRow(&r);
   try
   {
+    // Very unfortunate choice for the type b/c of RM::getMemory type.
     ssize_t rgSize;
     bool gotMem;
     goto next;
