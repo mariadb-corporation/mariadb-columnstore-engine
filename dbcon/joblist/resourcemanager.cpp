@@ -368,6 +368,7 @@ bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t>& sess
   return (ret1 && ret2);
 }
 // Don't care about session memory
+// The amount type is unsafe if amount close to max<int64_t> that is unrealistic in 2024.
 bool ResourceManager::getMemory(int64_t amount, bool patience)
 {
   bool ret1 = (atomicops::atomicSub(&totalUmMemLimit, amount) >= 0);
