@@ -72,7 +72,6 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
  , LBIDTrace(false)
  , tupleLength(0)
  , status(0)
- , sendRowGroups(false)
  , valueColumn(0)
  , sendTupleJoinRowGroupData(false)
  , bop(BOP_AND)
@@ -147,7 +146,7 @@ void BatchPrimitiveProcessorJL::addFilterStep(const pDictionaryStep& step)
 
   tableOID = step.tableOid();
 
-  if (filterCount == 0 && !sendRowGroups)
+  if (filterCount == 0)
   {
     sendAbsRids = true;
     sendValues = true;
@@ -244,7 +243,7 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PassThruStep& step)
   if (utils::isWide(cc->getWidth()))
     wideColumnsWidths |= cc->getWidth();
 
-  if (filterCount == 0 && !sendRowGroups)
+  if (filterCount == 0)
     sendValues = true;
 
   idbassert(sessionID == step.sessionId());
@@ -283,7 +282,7 @@ void BatchPrimitiveProcessorJL::addProjectStep(const PassThruStep& p, const pDic
   projectCount++;
   needStrValues = true;
 
-  if (filterCount == 0 && !sendRowGroups)
+  if (filterCount == 0)
   {
     sendValues = true;
     sendAbsRids = true;
@@ -1054,9 +1053,6 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
   if (tJoiners.size() > 0)
     flags |= HAS_JOINER;
 
-  if (sendRowGroups)
-    flags |= HAS_ROWGROUP;
-
   if (sendTupleJoinRowGroupData)
     flags |= JOIN_ROWGROUP_DATA;
 
@@ -1070,12 +1066,6 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
 
   bs << bop;
   bs << (uint8_t)(forHJ ? 1 : 0);
-
-  if (sendRowGroups)
-  {
-    bs << valueColumn;
-    bs << inputRG;
-  }
 
   if (ot == ROW_GROUP)
   {
@@ -1248,6 +1238,7 @@ void BatchPrimitiveProcessorJL::createBPP(ByteStream& bs) const
  * (projection count)x run msgs for projection Commands
  */
 
+// The deser counterpart function is BPP::resetBPP
 void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum, bool isExeMgrDEC)
 {
   ISMPacketHeader ism;
@@ -1289,34 +1280,27 @@ void BatchPrimitiveProcessorJL::runBPP(ByteStream& bs, uint32_t pmNum, bool isEx
   bs << sentByEM;
 
   if (_hasScan)
+  {
     idbassert(ridCount == 0);
-  else if (!sendRowGroups)
+  }
+  else
+  {
     idbassert(ridCount > 0 && (ridMap != 0 || sendAbsRids));
-  else
-    idbassert(inputRG.getRowCount() > 0);
-
-  if (sendRowGroups)
-  {
-    uint32_t rgSize = inputRG.getDataSize();
-    bs << rgSize;
-    bs.append(inputRG.getData(), rgSize);
   }
+
+  bs << ridCount;
+
+  if (sendAbsRids)
+    bs.append((uint8_t*)absRids.get(), ridCount << 3);
   else
   {
-    bs << ridCount;
-
-    if (sendAbsRids)
-      bs.append((uint8_t*)absRids.get(), ridCount << 3);
-    else
-    {
-      bs << ridMap;
-      bs << baseRid;
-      bs.append((uint8_t*)relRids, ridCount << 1);
-    }
-
-    if (sendValues)
-      bs.append((uint8_t*)values, ridCount << 3);
+    bs << ridMap;
+    bs << baseRid;
+    bs.append((uint8_t*)relRids, ridCount << 1);
   }
+
+  if (sendValues)
+    bs.append((uint8_t*)values, ridCount << 3);
 
   for (i = 0; i < filterCount; i++)
     filterSteps[i]->runCommand(bs);
@@ -1667,7 +1651,6 @@ void BatchPrimitiveProcessorJL::setJoinedRowGroup(const rowgroup::RowGroup& rg)
 
 void BatchPrimitiveProcessorJL::setInputRowGroup(const rowgroup::RowGroup& rg)
 {
-  sendRowGroups = true;
   sendAbsRids = false;
   sendValues = false;
   inputRG = rg;
