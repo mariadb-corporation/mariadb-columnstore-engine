@@ -19,18 +19,24 @@
  * MetadataFile.cpp
  */
 #include "MetadataFile.h"
+#include "KVStorageInitializer.h"
 #include <set>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/lexical_cast.hpp>
+#include <filesystem>
 #define BOOST_SPIRIT_THREADSAFE
 #ifndef __clang__
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 #include <boost/property_tree/ptree.hpp>
 
 #ifndef __clang__
-  #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
@@ -38,6 +44,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <unistd.h>
+#include "fdbcs.hpp"
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
@@ -98,6 +105,7 @@ MetadataFile::MetadataConfig::MetadataConfig()
 
   try
   {
+    cout << "create dir for meta " << msMetadataPath.string() << endl;
     boost::filesystem::create_directories(msMetadataPath);
   }
   catch (exception& e)
@@ -128,10 +136,15 @@ MetadataFile::MetadataFile(const boost::filesystem::path& filename)
   jsontree = jsonCache.get(mFilename);
   if (!jsontree)
   {
-    if (boost::filesystem::exists(mFilename))
+    auto kvStorage = KVStorageInitializer::getStorageInstance();
+    auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+    FDBCS::BlobHandler blobReader(keyGen);
+    auto rPair = blobReader.readBlob(kvStorage, mFilename.string());
+    if (rPair.first)
     {
       jsontree.reset(new bpt::ptree());
-      boost::property_tree::read_json(mFilename.string(), *jsontree);
+      stringstream stream(rPair.second);
+      boost::property_tree::read_json(stream, *jsontree);
       jsonCache.put(mFilename, jsontree);
       s.unlock();
       mVersion = 1;
@@ -169,11 +182,16 @@ MetadataFile::MetadataFile(const boost::filesystem::path& filename, no_create_t,
   jsontree = jsonCache.get(mFilename);
   if (!jsontree)
   {
-    if (boost::filesystem::exists(mFilename))
+    auto kvStorage = KVStorageInitializer::getStorageInstance();
+    auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+    FDBCS::BlobHandler blobReader(keyGen);
+    auto rPair = blobReader.readBlob(kvStorage, mFilename.string());
+    if (rPair.first)
     {
       _exists = true;
       jsontree.reset(new bpt::ptree());
-      boost::property_tree::read_json(mFilename.string(), *jsontree);
+      stringstream stream(rPair.second);
+      boost::property_tree::read_json(stream, *jsontree);
       jsonCache.put(mFilename, jsontree);
       s.unlock();
       mVersion = 1;
@@ -215,14 +233,50 @@ void MetadataFile::printKPIs()
   cout << "Metadata files accessed = " << metadataFilesAccessed << endl;
 }
 
-int MetadataFile::stat(struct stat* out) const
+int MetadataFile::generateStatStructInfo(struct stat* out)
 {
-  int err = ::stat(mFilename.c_str(), out);
-  if (err)
-    return err;
+  try
+  {
+    const std::string fName =
+        mFilename.string() + boost::to_string(boost::uuids::random_generator()());
+    std::ofstream fStream(fName);
+    fStream.close();
 
-  out->st_size = getLength();
+    int err = ::stat(fName.c_str(), out);
+    if (err)
+      return -1;
+
+    statCache.resize(sizeof(struct stat));
+    std::memcpy(&statCache[0], &out, sizeof(struct stat));
+    statCached = true;
+    std::filesystem::remove(fName);
+    out->st_size = getLength();
+  }
+  catch (const std::exception& ex)
+  {
+    SMLogging::get()->log(LOG_CRIT, "Metadatafile::stat() failed with error: %s", ex.what());
+    return -1;
+  }
+
   return 0;
+}
+
+int MetadataFile::stat(struct stat* out)
+{
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto tnx = kvStorage->createTransaction();
+  auto rPair = tnx->get(mFilename.string());
+  if (rPair.first)
+  {
+    if (statCached)
+    {
+      std::memcpy(out, (uint8_t*)&statCache[0], sizeof(struct stat));
+      out->st_size = getLength();
+      return 0;
+    }
+    return generateStatStructInfo(out);
+  }
+  return -1;
 }
 
 size_t MetadataFile::getLength() const
@@ -320,9 +374,22 @@ metadataObject MetadataFile::addMetadataObject(const boost::filesystem::path& fi
 int MetadataFile::writeMetadata()
 {
   if (!boost::filesystem::exists(mFilename.parent_path()))
+  {
     boost::filesystem::create_directories(mFilename.parent_path());
+  }
+  {
+    auto kvStorage = KVStorageInitializer::getStorageInstance();
+    auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+    FDBCS::BlobHandler blobWriter(keyGen);
+    stringstream stream;
+    write_json(stream, *jsontree);
+    if (!blobWriter.writeBlob(kvStorage, mFilename.string(), stream.str()))
+    {
+      SMLogging::get()->log(LOG_CRIT, "Metadatafile: cannot commit tnx set().");
+      throw runtime_error("Metadatafile: cannot commit tnx set().");
+    }
+  }
 
-  write_json(mFilename.string(), *jsontree);
   _exists = true;
 
   boost::unique_lock<boost::mutex> s(jsonCache.getMutex());

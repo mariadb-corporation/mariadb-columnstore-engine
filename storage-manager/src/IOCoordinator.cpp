@@ -1021,17 +1021,6 @@ int IOCoordinator::copyFile(const char* _filename1, const char* _filename2)
   int err;
   char errbuf[80];
 
-  if (!bf::exists(metaFile1))
-  {
-    errno = ENOENT;
-    return -1;
-  }
-  if (bf::exists(metaFile2))
-  {
-    deleteMetaFile(metaFile2);
-    ++filesDeleted;
-  }
-
   // since we don't implement mkdir(), assume the caller did that and
   // create any necessary parent dirs for filename2
   try
@@ -1046,12 +1035,18 @@ int IOCoordinator::copyFile(const char* _filename1, const char* _filename2)
     return -1;
   }
 
-  vector<pair<string, size_t> > newJournalEntries;
+  vector<pair<string, size_t>> newJournalEntries;
   ScopedReadLock lock(this, filename1);
   ScopedWriteLock lock2(this, filename2);
   MetadataFile meta1(metaFile1, MetadataFile::no_create_t(), false);
   MetadataFile meta2(metaFile2, MetadataFile::no_create_t(), false);
   vector<metadataObject> objects = meta1.metadataRead(0, meta1.getLength());
+
+  if (!meta1.exists())
+  {
+    errno = ENOENT;
+    return -1;
+  }
   bytesCopied += meta1.getLength();
 
   if (meta2.exists())
@@ -1197,9 +1192,8 @@ int IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t* buf, off_t of
   throw runtime_error("IOCoordinator::mergeJournal(int, int, etc) is not implemented yet.");
 }
 
-std::shared_ptr<uint8_t[]> IOCoordinator::mergeJournal(const char* object, const char* journal,
-                                                         off_t offset, size_t len,
-                                                         size_t* _bytesReadOut) const
+std::shared_ptr<uint8_t[]> IOCoordinator::mergeJournal(const char* object, const char* journal, off_t offset,
+                                                       size_t len, size_t* _bytesReadOut) const
 {
   int objFD, journalFD;
   std::shared_ptr<uint8_t[]> ret;
@@ -1335,8 +1329,8 @@ out:
 
 // MergeJournalInMem is a specialized version of mergeJournal().  This is currently only used by Synchronizer
 // and mergeJournal(), and only for merging the whole object with the whole journal.
-int IOCoordinator::mergeJournalInMem(std::shared_ptr<uint8_t[]>& objData, size_t len,
-                                     const char* journalPath, size_t* _bytesReadOut) const
+int IOCoordinator::mergeJournalInMem(std::shared_ptr<uint8_t[]>& objData, size_t len, const char* journalPath,
+                                     size_t* _bytesReadOut) const
 {
   // if the journal is over some size threshold (100MB for now why not),
   // use the original low-mem-usage version
