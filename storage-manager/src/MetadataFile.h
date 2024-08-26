@@ -63,7 +63,7 @@ class MetadataFile
 
   bool exists() const;
   void printObjects() const;
-  int stat(struct stat*) const;
+  int stat(struct stat*);
   size_t getLength() const;
   // returns the objects needed to update
   std::vector<metadataObject> metadataRead(off_t offset, size_t length) const;
@@ -118,10 +118,14 @@ class MetadataFile
   int mVersion;
   int mRevision;
   boost::filesystem::path mFilename;
+  std::string metaKVName_;
   Jsontree_t jsontree;
   // std::set<metadataObject> mObjects;
   bool _exists;
   void makeEmptyJsonTree();
+  int generateStatStructInfo(struct stat *);
+  std::vector<uint8_t> statCache;
+  bool statCached{false};
 
   class MetadataCache
   {

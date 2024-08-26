@@ -242,10 +242,6 @@ void Ownership::_takeOwnership(const bf::path& p)
 
 void Ownership::takeOwnership(const bf::path& p)
 {
-  // If the prefix doesn't exist, ownership isn't possible yet.
-  if (!bf::is_directory(metadataPrefix / p))
-    return;
-
   boost::unique_lock<boost::mutex> s(mutex);
 
   auto it = ownedPrefixes.find(p);
