@@ -19,13 +19,14 @@
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <memory>
+
 using namespace std;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/scoped_array.hpp>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -538,6 +539,17 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
     bap1 = 0;
   }
 
+  std::string getString()
+  {
+    static const std::string s(
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore "
+        "et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut "
+        "aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+        "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in "
+        "culpa qui officia deserunt mollit anim id est laborum.");
+    return s;
+  }
+
   void bs_8()
   {
     bs.reset();
@@ -549,18 +561,8 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
     CPPUNIT_ASSERT(s == s1);
     CPPUNIT_ASSERT(bs.length() == 0);
 
-    ifstream ifs;
-    ifs.open("../CMakeLists.txt");
-    int ifs_len;
-    ifs.seekg(0, ios::end);
-    ifs_len = ifs.tellg();
-    ifs.seekg(0, ios::beg);
-    boost::scoped_array<char> buf(new char[ifs_len + 1]);
-    ifs.read(buf.get(), ifs_len);
-    buf[ifs_len] = 0;
-    ifs.close();
     bs.reset();
-    s = buf.get();
+    s = getString();
     bs << s;
     bs >> s1;
     CPPUNIT_ASSERT(s == s1);
@@ -766,31 +768,21 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
 
   void bs_13()
   {
-    string s;
-    ifstream ifs;
-    ifs.open("../CMakeLists.txt");
-    int ifs_len;
-    ifs.seekg(0, ios::end);
-    ifs_len = ifs.tellg();
-    ifs.seekg(0, ios::beg);
-    boost::scoped_array<char> buf(new char[ifs_len + 1]);
-    ifs.read(buf.get(), ifs_len);
-    buf[ifs_len] = 0;
-    ifs.close();
     bs.reset();
-    s = buf.get();
+    std::string s = getString();
     bs << s;
     ofstream of("bs_13.dat");
     of << bs;
     of.close();
+
+    ifstream ifs;
     ifs.open("./bs_13.dat");
     ifs.seekg(0, ios::end);
-    int ifs_len1;
-    ifs_len1 = ifs.tellg();
+    size_t ifs_len1 = ifs.tellg();
     // will be longer than orig file because string length is encoded into stream
-    CPPUNIT_ASSERT((ifs_len + (int)sizeof(ByteStream::quadbyte)) == ifs_len1);
+    CPPUNIT_ASSERT((s.size() + sizeof(ByteStream::quadbyte)) == ifs_len1);
     ifs.seekg(0, ios::beg);
-    boost::scoped_array<char> buf1(new char[ifs_len1]);
+    std::unique_ptr<char[]> buf1(new char[ifs_len1]);
     bs1.reset();
     ifs >> bs1;
     ifs.close();
@@ -878,9 +870,9 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
       bs << (ByteStream::quadbyte)rand();
     }
 
-    boost::scoped_array<ByteStream::byte> bp(new ByteStream::byte[bs.length()]);
+    std::unique_ptr<ByteStream::byte[]> bp(new ByteStream::byte[bs.length()]);
     ByteStream::byte* bpp = bp.get();
-    boost::scoped_array<ByteStream::byte> bp1(new ByteStream::byte[bs.length()]);
+    std::unique_ptr<ByteStream::byte[]> bp1(new ByteStream::byte[bs.length()]);
     ByteStream::byte* bpp1 = bp1.get();
 
     len = bs.length();
@@ -896,13 +888,6 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
     bs.reset();
   }
 };
-
-static string normServ;
-static string brokeServ;
-static string writeServ;
-volatile static bool keepRunning;
-volatile static bool isRunning;
-volatile static bool leakCheck;
 
 #define TS_NS(x) (x)
 #define TS_US(x) ((x) * 1000)
@@ -928,11 +913,6 @@ void setupSignalHandlers()
 int main(int argc, char** argv)
 {
   setupSignalHandlers();
-
-  leakCheck = false;
-
-  if (argc > 1 && strcmp(argv[1], "--leakcheck") == 0)
-    leakCheck = true;
 
   CppUnit::TextUi::TestRunner runner;
   CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
