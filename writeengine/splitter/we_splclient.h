@@ -29,7 +29,6 @@
 
 #pragma once
 
-#include "threadsafequeue.h"
 #include "resourcemanager.h"
 
 #include "we_messages.h"
@@ -122,11 +121,11 @@ class WESplClient
   {
     return fRowTx;
   }
-  uint32_t getBytesRcv() const
+  messageqcpp::BSSizeType getBytesRcv() const
   {
     return fBytesRcv;
   }
-  uint32_t getBytesTx()
+  messageqcpp::BSSizeType getBytesTx()
   {
     boost::mutex::scoped_lock aLock(fTxMutex);
     return fBytesTx;
@@ -214,17 +213,17 @@ class WESplClient
   {
     return fIpAddress;
   }
-  void setBytesRcv(uint32_t BytesRcv)
+  void setBytesRcv(messageqcpp::BSSizeType BytesRcv)
   {
     fBytesRcv = BytesRcv;
   }
-  void setBytesTx(uint32_t BytesTx)
+  void setBytesTx(messageqcpp::BSSizeType BytesTx)
   {
     boost::mutex::scoped_lock aLock(fTxMutex);
     fBytesTx = BytesTx;
     aLock.unlock();
   }
-  void updateBytesTx(uint32_t fBytes)
+  void updateBytesTx(messageqcpp::BSSizeType fBytes)
   {
     boost::mutex::scoped_lock aLock(fTxMutex);
     fBytesTx += fBytes;
@@ -358,8 +357,8 @@ class WESplClient
   int fDataRqstCnt;      // Data request count
   long fRdSecTo;         // read timeout sec
   unsigned int fRowTx;   // No. Of Rows Transmitted
-  uint32_t fBytesTx;
-  uint32_t fBytesRcv;
+  messageqcpp::BSSizeType fBytesTx;
+  messageqcpp::BSSizeType fBytesRcv;
   time_t fLastInTime;
   time_t fStartTime;
   bool fSend;
