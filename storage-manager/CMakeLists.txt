@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(storagemanager)
 
-include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_DEFAULT_INCLUDE} ${S3API_DIR})
+include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_DEFAULT_INCLUDES} ${S3API_DIR})
 
 set(storagemanager_SRCS
     src/AppendTask.cpp
