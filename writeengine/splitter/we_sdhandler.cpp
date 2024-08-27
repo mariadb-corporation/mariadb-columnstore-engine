@@ -2289,7 +2289,7 @@ int WESDHandler::getNextDbrPm2Send()
 
 int WESDHandler::leastDataSendPm()
 {
-  unsigned int aTx = 0;
+  messageqcpp::BSSizeType aTx = 0;
   int aPmId = 0;
 
   for (int aCnt = 1; aCnt <= fPmCount; aCnt++)

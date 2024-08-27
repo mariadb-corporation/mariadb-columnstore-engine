@@ -19,6 +19,7 @@
  * $Id: rowestimator.cpp 5642 2009-08-10 21:04:59Z wweeks $
  *
  ******************************************************************************/
+#include <cassert>
 #include <iostream>
 #include "primitivemsg.h"
 #include "blocksize.h"
@@ -292,7 +293,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry, const m
   // For example, there are two operations for "col1 > 5 and col1 < 10":
   // 1) col1 > 5
   // 2) col2 < 10
-  int length = bs->length(), pos = 0;
+  messageqcpp::BSSizeType length = bs->length(), pos = 0;
   const char* msgDataPtr = (const char*)bs->buf();
   int64_t value = 0;
   int128_t bigValue = 0;
@@ -301,6 +302,7 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry, const m
 
   for (int i = 0; i < comparisonLimit; i++)
   {
+    assert(ct.colWidth >= 0);
     pos += ct.colWidth + 2;  // predicate + op + lcf
 
     // TODO:  Stole this condition from lbidlist.
