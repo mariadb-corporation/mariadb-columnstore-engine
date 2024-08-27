@@ -4291,7 +4291,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       if (from_tzinfo)
       {
         serializeTimezoneInfo(bs, from_tzinfo);
-        uint32_t length = bs.length();
+        messageqcpp::BSSizeType length = bs.length();
         uint8_t* buf = new uint8_t[length];
         bs >> buf;
         tzinfo = string((char*)buf, length);
@@ -4303,7 +4303,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
       if (to_tzinfo)
       {
         serializeTimezoneInfo(bs, to_tzinfo);
-        uint32_t length = bs.length();
+        messageqcpp::BSSizeType length = bs.length();
         uint8_t* buf = new uint8_t[length];
         bs >> buf;
         tzinfo = string((char*)buf, length);
