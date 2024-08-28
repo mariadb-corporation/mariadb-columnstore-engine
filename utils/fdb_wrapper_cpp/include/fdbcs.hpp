@@ -20,6 +20,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <memory>
 
 // https://apple.github.io/foundationdb/api-c.html
 // We have to define `FDB_API_VERSION` before include `fdb_c.h` header.
@@ -31,6 +32,7 @@ namespace FDBCS
 // TODO: How about uint8_t.
 using ByteArray = std::string;
 
+// Represensts a `transaction`.
 class Transaction
 {
  public:
@@ -42,15 +44,22 @@ class Transaction
   explicit Transaction(FDBTransaction* tnx);
   ~Transaction();
 
+  // Sets a given `key` and given `value`.
   void set(const ByteArray& key, const ByteArray& value) const;
+  // Gets a `value` by the given `key`.
   std::pair<bool, ByteArray> get(const ByteArray& key) const;
+  // Removes a given `key` from database.
   void remove(const ByteArray& key) const;
+  // Removes all keys in the given range, starting from `beginKey` until `endKey`, but not including `endKey`.
+  void removeRange(const ByteArray& beginKey, const ByteArray& endKey) const;
+  // Commits transaction.
   bool commit() const;
 
  private:
   FDBTransaction* tnx_{nullptr};
 };
 
+// Represents network class.
 class FDBNetwork
 {
  public:
@@ -67,6 +76,7 @@ class FDBNetwork
   std::thread netThread;
 };
 
+// Represents database class.
 class FDBDataBase
 {
  public:
@@ -86,10 +96,12 @@ class FDBDataBase
   const uint32_t secondsToWait_ = 3;
 };
 
+// Represents a creator class for the `FDBDatabase`.
 class DataBaseCreator
 {
  public:
-  static std::unique_ptr<FDBDataBase> createDataBase(const std::string clusterFilePath);
+  // Creates a `FDBDataBase` from the given `clusterFilePath` (path to the cluster file).
+  static std::shared_ptr<FDBDataBase> createDataBase(const std::string clusterFilePath);
 };
 
 bool setAPIVersion();
