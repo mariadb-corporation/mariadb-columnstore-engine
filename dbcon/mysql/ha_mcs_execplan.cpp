@@ -3786,7 +3786,7 @@ ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& 
   return cc;
 }
 
-ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -4054,7 +4054,7 @@ ArithmeticColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, 
 
   return ac;
 }
-ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
