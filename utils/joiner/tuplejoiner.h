@@ -24,7 +24,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <boost/scoped_array.hpp>
-#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "rowgroup.h"
 #include "joiner.h"
@@ -464,19 +464,18 @@ class TupleJoiner
   void setConvertToDiskJoin();
 
  private:
-  typedef std::tr1::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
-                                       utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*> > >
+  typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
+                                  utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*> > >
       hash_t;
-  typedef std::tr1::unordered_multimap<
-      int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-      utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
+  typedef std::unordered_multimap<int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
+                                  utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
       sthash_t;
-  typedef std::tr1::unordered_multimap<
+  typedef std::unordered_multimap<
       TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
       utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > >
       typelesshash_t;
   // MCOL-1822 Add support for Long Double AVG/SUM small side
-  typedef std::tr1::unordered_multimap<
+  typedef std::unordered_multimap<
       long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
       utils::STLPoolAllocator<std::pair<const long double, rowgroup::Row::Pointer> > >
       ldhash_t;
