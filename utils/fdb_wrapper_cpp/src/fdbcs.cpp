@@ -90,6 +90,15 @@ void Transaction::remove(const ByteArray& key) const
   }
 }
 
+void Transaction::removeRange(const ByteArray& beginKey, const ByteArray& endKey) const
+{
+  if (tnx_)
+  {
+    fdb_transaction_clear_range(tnx_, (uint8_t*)beginKey.c_str(), beginKey.length(), (uint8_t*)endKey.c_str(),
+                                endKey.length());
+  }
+}
+
 bool Transaction::commit() const
 {
   if (tnx_)
@@ -185,7 +194,7 @@ bool FDBDataBase::isDataBaseReady() const
   return ready;
 }
 
-std::unique_ptr<FDBDataBase> DataBaseCreator::createDataBase(const std::string clusterFilePath)
+std::shared_ptr<FDBDataBase> DataBaseCreator::createDataBase(const std::string clusterFilePath)
 {
   FDBDatabase* database;
   auto err = fdb_create_database(clusterFilePath.c_str(), &database);
@@ -194,7 +203,7 @@ std::unique_ptr<FDBDataBase> DataBaseCreator::createDataBase(const std::string c
     std::cerr << "fdb_create_database error, code: " << (int)err << std::endl;
     return nullptr;
   }
-  return std::make_unique<FDBDataBase>(database);
+  return std::make_shared<FDBDataBase>(database);
 }
 
 bool setAPIVersion()
