@@ -141,6 +141,16 @@ bucket = some_bucket
 # Default is libs3_debug = disabled
 # libs3_debug = disabled
 
+# Sets the maximum time in seconds for the connection phase to take. This
+# timeout only limits the connection phase, it has no impact once the connection
+# is established. The default value indicating that the default libcurl
+# timeout (300 seconds?) will be used.
+# connect_timeout = 5.5
+
+# Sets the maximum time in seconds for the entire transfer operation to take.
+# Default (no value) - no timeout at all.
+# timeout = 7.5
+
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.
 [LocalStorage]

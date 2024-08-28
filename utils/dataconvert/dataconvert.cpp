@@ -124,12 +124,12 @@ void number_int_value(const string& data, cscDataType typeCode, const datatypes:
   if (y != string::npos)
     throw QueryDataExcept("')' is not matched.", formatErr);
 
-  if (boost::iequals(valStr, "true"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(valStr, "true"))
   {
     intVal = 1;
     return;
   }
-  if (boost::iequals(valStr, "false"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(valStr, "false"))
   {
     intVal = 0;
     return;
@@ -2004,7 +2004,7 @@ int64_t DataConvert::convertArrowColumnTimestampUs(int64_t timeVal, int& status)
   int inMinute;
   int inSecond;
   int inMicrosecond;
-  
+
   std::chrono::microseconds duration(timeVal);
   std::chrono::system_clock::time_point timePoint(duration);
 
