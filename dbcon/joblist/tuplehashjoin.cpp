@@ -29,7 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <algorithm>
 using namespace std;
@@ -117,12 +117,9 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
     allowDJS = false;
 
   numCores = resourceManager->numCores();
+
   if (numCores <= 0)
     numCores = 8;
-  /* Debugging, rand() is used to simulate failures
-  time_t t = time(NULL);
-  srand(t);
-  */
 }
 
 TupleHashJoinStep::~TupleHashJoinStep()
@@ -137,8 +134,8 @@ TupleHashJoinStep::~TupleHashJoinStep()
     for (uint i = 0; i < smallDLs.size(); i++)
     {
       if (memUsedByEachJoin[i])
-      resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
-  }
+        resourceManager->returnMemory(memUsedByEachJoin[i], sessionMemLimit);
+    }
   }
   returnMemory();
   // cout << "deallocated THJS, UM memory available: " << resourceManager.availableMemory() << endl;
@@ -205,7 +202,6 @@ void TupleHashJoinStep::join()
 
     jobstepThreadPool.join(djsReader);
     jobstepThreadPool.join(djsRelay);
-    // cout << "THJS: joined all DJS threads, shared usage = " << *djsSmallUsage << endl;
   }
 }
 
@@ -226,7 +222,7 @@ void TupleHashJoinStep::trackMem(uint index)
     {
       gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
       if (gotMem)
-      atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
+        atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
       else
         return;
 
@@ -243,7 +239,7 @@ void TupleHashJoinStep::trackMem(uint index)
   gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
   if (gotMem)
   {
-  atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
+    atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
   }
   else
   {
@@ -299,28 +295,32 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       handle abort, out of memory, etc
   */
 
-  /* To measure wall-time spent constructing the small-side tables...
-  boost::posix_time::ptime end_time, start_time =
-      boost::posix_time::microsec_clock::universal_time();
-  */
-
   stopMemTracking = false;
   utils::VLArray<uint64_t> jobs(numCores);
   uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
   // starting 1 thread when in PM mode, since it's only inserting into a
   // vector of rows.  The rest will be started when converted to UM mode.
   if (joiner->inUM())
+  {
     for (int i = 0; i < numCores; i++)
+    {
       jobs[i] = jobstepThreadPool.invoke([this, i, index, &jobs] { this->smallRunnerFcn(index, i, jobs); });
+    }
+  }
   else
+  {
     jobs[0] = jobstepThreadPool.invoke([this, index, &jobs] { this->smallRunnerFcn(index, 0, jobs); });
+  }
 
   // wait for the first thread to join, then decide whether the others exist and need joining
   jobstepThreadPool.join(jobs[0]);
   if (joiner->inUM())
+  {
     for (int i = 1; i < numCores; i++)
+    {
       jobstepThreadPool.join(jobs[i]);
-
+    }
+  }
   // stop the monitor thread
   memTrackMutex.lock();
   stopMemTracking = true;
@@ -418,7 +418,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
       gotMem = resourceManager->getMemory(rgSize, sessionMemLimit, true);
       if (gotMem)
       {
-      atomicops::atomicAdd(&memUsedByEachJoin[index], rgSize);
+        atomicops::atomicAdd(&memUsedByEachJoin[index], rgSize);
       }
       else
       {
@@ -451,9 +451,12 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
       if (!joiner->inUM() && (memUsedByEachJoin[index] > pmMemLimit))
       {
         joiner->setInUM(rgData[index]);
+
         for (int i = 1; i < numCores; i++)
+        {
           jobs[i] =
               jobstepThreadPool.invoke([this, i, index, jobs] { this->smallRunnerFcn(index, i, jobs); });
+        }
       }
     next:
       dlMutex.lock();
@@ -1709,8 +1712,8 @@ void TupleHashJoinStep::joinOneRG(
     std::shared_ptr<Row[]>& smallRowTemplates, RowGroupDL* outputDL,
     // disk-join support vars.  This param list is insane; refactor attempt would be nice at some point.
     vector<std::shared_ptr<joiner::TupleJoiner> >* tjoiners,
-    std::shared_ptr<std::shared_ptr<int[]>[] >* rgMappings,
-    std::shared_ptr<std::shared_ptr<int[]>[] >* feMappings,
+    std::shared_ptr<std::shared_ptr<int[]>[]>* rgMappings,
+    std::shared_ptr<std::shared_ptr<int[]>[]>* feMappings,
     boost::scoped_array<boost::scoped_array<uint8_t> >* smallNullMem)
 {
   /* Disk-join support.
@@ -1747,15 +1750,7 @@ void TupleHashJoinStep::joinOneRG(
     for (j = 0; j < smallSideCount; j++)
     {
       (*tjoiners)[j]->match(largeSideRow, k, threadID, &joinMatches[j]);
-      /* Debugging code to print the matches
-         Row r;
-         smallRGs[j].initRow(&r);
-         cout << joinMatches[j].size() << " matches: \n";
-         for (uint32_t z = 0; z < joinMatches[j].size(); z++) {
-             r.setData(joinMatches[j][z]);
-             cout << "  " << r.toString() << endl;
-         }
-      */
+
       matchCount = joinMatches[j].size();
 
       if ((*tjoiners)[j]->hasFEFilter() && matchCount > 0)
@@ -1841,10 +1836,11 @@ void TupleHashJoinStep::joinOneRG(
 }
 
 void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput, Row& baseRow,
-                                              const std::shared_ptr<std::shared_ptr<int[]>[] >& mappings,
+                                              const std::shared_ptr<std::shared_ptr<int[]>[]>& mappings,
                                               const uint32_t depth, RowGroup& l_outputRG, RGData& rgData,
-                                              vector<RGData>& outputData, const std::shared_ptr<Row[]>& smallRows,
-                                              Row& joinedRow, RowGroupDL* dlp)
+                                              vector<RGData>& outputData,
+                                              const std::shared_ptr<Row[]>& smallRows, Row& joinedRow,
+                                              RowGroupDL* dlp)
 {
   uint32_t i;
   Row& smallRow = smallRows[depth];
