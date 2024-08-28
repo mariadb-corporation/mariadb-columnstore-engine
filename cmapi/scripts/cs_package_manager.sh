@@ -1,10 +1,11 @@
 #!/bin/bash
 # Documentation:   bash cs_package_manager.sh help
 
+
 # Variables
 enterprise_token=""
-dev_drone_key=""
-cs_pkg_manager_version="3.3"
+dev_drone_key="" 
+cs_pkg_manager_version="3.4"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -12,21 +13,38 @@ action=$1
 print_help_text() {
     echo "Version $cs_pkg_manager_version
 
-Example Remove:
-    bash $0 remove
-    bash $0 remove all
-
-Example Install:
-    bash $0 install [enterprise|community|dev] [version|branch] [build num] --token xxxxxxx
-    bash $0 install enterprise 10.6.12-8 --token xxxxxx
-    bash $0 install community 11.1
-    bash $0 install dev develop cron/8629
-    bash $0 install dev develop-23.02 pull_request/7256
-
 Example Check:
     bash $0 check community
     bash $0 check enterprise
-"
+
+Example Remove: 
+    bash $0 remove
+    bash $0 remove all --force
+
+Example Single Node Install: 
+    bash $0 install [enterprise|community] [version] --token [token]
+    bash $0 install enterprise 10.6.12-8 --token [token]
+    bash $0 install community 11.1.1
+
+Example Cluster Install: 
+    bash $0 install enterprise help
+    bash $0 install enterprise [version] --token [token] --nodes [Ip1,Ip2,Ip3] [flags]
+
+Example Single Node Upgrade: 
+    bash $0 upgrade [enterprise|community] [version] --token [token]
+    bash $0 upgrade enterprise 10.6.18-14 --token [token]
+    bash $0 upgrade community 11.1.4
+
+"   
+
+    if [  -n "$dev_drone_key" ]; then
+        echo "Example Install Dev: 
+bash $0 install [enterprise|community|dev] [version|cron|latest|pull_request] [build num] --token xxxxxxx
+bash $0 install dev develop cron/8629
+bash $0 install dev develop-23.02 pull_request/7256
+bash $0 install dev stable-23.10 pull_request/10820
+    "
+    fi
 }
 
 wait_cs_down() {
@@ -35,20 +53,20 @@ wait_cs_down() {
 
     if ! command -v pgrep &> /dev/null; then
         printf "\n[!] pgrep not found. Please install pgrep\n\n"
-        exit 1;
-    fi
+        exit 1; 
+    fi   
 
     # Loop until the maximum number of retries is reached
     # printf " - Checking Columnstore Offline ...";
     while [ $retries -lt $max_number_of_retries ]; do
         # If columnstore is offline, return
         cs_processlist=$(pgrep -f "PrimProc|ExeMgr|DMLProc|DDLProc|WriteEngineServer|StorageManager|controllernode|workernode|save_brm|mcs-loadbrm.py")
-        if [ -z "$cs_processlist" ]; then
+        if [ -z "$cs_processlist" ]; then 
             # printf " Done \n";
             mcs_offine=true
             return 0
-        else
-            printf "\n[!] Columnstore is ONLINE - waiting 5s to retry, attempt: $retries...\n";
+        else 
+            printf "\n[!] Columnstore is ONLINE - waiting 5s to retry, attempt: $retries...\n"; 
             if (( retries % 5 == 0 )); then
                 echo "PID List: $cs_processlist"
                 echo "$(ps aux | grep -E "PrimProc|ExeMgr|DMLProc|DDLProc|WriteEngineServer|StorageManager|controllernode|workernode|save_brm|mcs-loadbrm.py" | grep -v grep) "
@@ -79,11 +97,11 @@ print_and_delete() {
 init_cs_down() {
     mcs_offine=false
     if [ "$pm_number" == "1" ];  then
-        if [ -z $(pidof PrimProc) ]; then
+        if [ -z $(pidof "PrimProc") ]; then 
             # printf "\n[+] Columnstore offline already";
             mcs_offine=true
         else
-
+            
             if is_cmapi_installed ; then
                 confirm_cmapi_online_and_configured
 
@@ -94,13 +112,13 @@ init_cs_down() {
                         echo "[!] Failed stopping via mcs ... trying cmapi curl"
                         stop_cs_cmapi_via_curl
                     fi
-                    printf "Done - $(date)\n"
+                    printf "Done - $(date)\n" 
 
                     # Handle Errors with exit 0 code
                     if [ ! -z "$(echo $mcs_output | grep "Internal Server Error")" ];then
                         stop_cs_via_systemctl_override
                     fi
-                else
+                else 
                     stop_cs_cmapi_via_curl
                 fi
             else
@@ -110,17 +128,17 @@ init_cs_down() {
     fi
 }
 
-init_cs_up(){
+init_cs_up(){ 
 
     if [ "$pm_number" == "1" ];  then
-        if [ -n "$(pidof PrimProc)" ]; then
+        if [ -n "$(pidof PrimProc)" ]; then 
 
             num_cs_processlist=$(pgrep -f "PrimProc|ExeMgr|DMLProc|DDLProc|WriteEngineServer|StorageManager|controllernode|workernode|save_brm|mcs-loadbrm.py" | wc -l)
-            if [ $num_cs_processlist -gt "0" ]; then
+            if [ $num_cs_processlist -gt "0" ]; then 
                 printf "%-35s ... $num_cs_processlist processes \n" " - Columnstore Engine Online"
             fi
 
-        else
+        else 
 
             # Check cmapi installed
             if is_cmapi_installed ; then
@@ -133,9 +151,9 @@ init_cs_up(){
                         echo "[!] Failed starting via mcs ... trying cmapi curl"
                         start_cs_cmapi_via_curl
                     fi
-                    printf " Done - $(date)\n"
+                    printf " Done - $(date)\n" 
 
-                else
+                else 
                     start_cs_cmapi_via_curl
                 fi
             else
@@ -160,7 +178,7 @@ is_cmapi_installed() {
 
     cmapi_installed_command=""
     case $package_manager in
-        yum )
+        yum ) 
             cmapi_installed_command="yum list installed MariaDB-columnstore-cmapi &> /dev/null;";
             ;;
         apt )
@@ -173,13 +191,13 @@ is_cmapi_installed() {
 
     if eval $cmapi_installed_command ; then
         return 0
-    else
+    else 
         return 1
     fi
 }
 
 start_cmapi() {
-
+    
     if ! command -v systemctl &> /dev/null ; then
         printf "[!!] shutdown_mariadb_and_cmapi: Cant access systemctl\n\n"
         exit 1;
@@ -197,7 +215,7 @@ start_cmapi() {
 }
 
 stop_cmapi() {
-
+    
     if ! command -v systemctl &> /dev/null ; then
         printf "[!!] shutdown_mariadb_and_cmapi: Cant access systemctl\n\n"
         exit 1;
@@ -219,7 +237,7 @@ stop_cmapi() {
 # $2 = version desired to install
 # Returns 0 if $2 is greater, else exit
 compare_versions() {
-    local version1="$1"
+    local version1="$1" 
     local version2="$2"
     local exit_message="\n[!] The desired upgrade version: $2 \nis NOT greater than the current installed version of $1\n\n"
 
@@ -229,22 +247,21 @@ compare_versions() {
 
     # Compare each segment of the version numbers
     for (( i = 0; i < ${#v1_nums[@]}; i++ )); do
-
-        v1=${v1_nums[i]}
+        
+        v1=${v1_nums[i]}  
         v2=${v2_nums[i]}
-        #echo "Comparing $v1 & $v2"
+        
         if (( v1 > v2 )); then
-            #echo "Installed version is newer: $version1"
+            # The existing version is newer than the desired version: Exit
             echo -e $exit_message
             exit 1
         elif (( v1 < v2 )); then
-            #echo "Desired version is newer: $version2"
+            # The desired version is newer than the existing version: Continue
             return 0
         fi
     done
 
-    # If all segments are equal, versions are the same
-    #echo "Both versions are the same: $version1"
+    # Both versions are the same: Exit
     echo -e $exit_message
     exit 1
 }
@@ -259,7 +276,7 @@ is_mariadb_installed() {
 
     mariadb_installed_command=""
     case $package_manager in
-        yum )
+        yum ) 
             mariadb_installed_command="yum list installed MariaDB-server &>/dev/null"
             ;;
         apt )
@@ -272,7 +289,7 @@ is_mariadb_installed() {
 
     if eval $mariadb_installed_command ; then
         return 0
-    else
+    else 
         return 1
     fi
 
@@ -283,7 +300,7 @@ start_mariadb() {
         printf "[!!] start_mariadb: Cant access systemctl\n\n"
         exit 1;
     fi
-
+    
     # Start MariaDB
     if is_mariadb_installed ; then
         printf "%-35s ..." " - Starting MariaDB Server"
@@ -314,11 +331,51 @@ stop_mariadb() {
     fi
 }
 
+parse_remove_additional_args() {
+    # Skip the first parameter
+    shift 
+
+    # Defaults
+    FORCE=false
+
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+
+        case $key in
+            all)
+                shift # past argument
+                ;;
+            -f | --force)
+                FORCE=true
+                shift # past argument
+                ;;
+            -h|--help|help)
+                print_help_text
+                exit 1;
+                ;;
+            *)    # unknown option
+                print_help_text
+                echo "unknown flag: $1"
+                exit 1
+                ;;
+        esac
+    done
+}
+
 do_yum_remove() {
 
     if ! command -v yum &> /dev/null ; then
         printf "[!!] Cant access yum\n"
         exit 1;
+    fi
+
+    parse_remove_additional_args "$@"
+
+    if [ "$FORCE" == "true" ]; then
+        printf "Forcing Stop\n"
+        kill_cs_processes 2>/dev/null
+        stop_cs_via_systemctl_override
+        kill_cs_processes 2>/dev/null
     fi
 
     printf "Prechecks\n"
@@ -343,6 +400,10 @@ do_yum_remove() {
         yum remove MariaDB-* -y
     fi
 
+    if yum list installed galera-* &>/dev/null; then
+        yum remove galera-* -y
+    fi
+
     # remove offical & custom yum repos
     printf "\nRemoving\n"
     print_and_delete "/etc/yum.repos.d/mariadb.repo"
@@ -361,6 +422,15 @@ do_apt_remove() {
     if ! command -v apt &> /dev/null ; then
         printf "[!!] Cant access apt\n"
         exit 1;
+    fi
+
+    parse_remove_additional_args "$@"
+
+    if [ "$FORCE" == "true" ]; then
+        printf "Forcing Stop\n"
+        kill_cs_processes 2>/dev/null
+        stop_cs_via_systemctl_override
+        kill_cs_processes 2>/dev/null
     fi
 
     if ! command -v dpkg-query &> /dev/null ; then
@@ -384,13 +454,10 @@ do_apt_remove() {
         print_and_delete "mariadb*.deb"
     fi
 
-    # Delete columnstores post uninstall script for debian/ubuntu as it doesnt work
-    print_and_delete "/var/lib/dpkg/info/mariadb-plugin-columnstore.postrm"
-
     # remove all current MDB packages
     if [ "$(apt list --installed mariadb-* 2>/dev/null | wc -l)" -gt 1 ];  then
         if [ "$2" == "all" ]; then
-            DEBIAN_FRONTEND=noninteractive apt mariadb-plugin-columnstore mariadb-columnstore-cmapi --purge -y
+            DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-plugin-columnstore mariadb-columnstore-cmapi 
             DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-*
         else
             if ! apt remove mariadb-columnstore-cmapi --purge -y; then
@@ -429,7 +496,7 @@ do_remove() {
 
     check_operating_system
     check_package_managers
-
+    
     case $distro_info in
         centos | rhel | rocky )
             do_yum_remove "$@"
@@ -446,8 +513,227 @@ do_remove() {
     printf "\nUninstall Complete\n\n"
 }
 
-check_package_managers() {
+print_enterprise_install_help_text() {
+    echo "
+    MariaDB Columnstore Package Manager - Enterprise Quick Cluster Install
 
+    Usage: bash $0 install enterprise [version] --token [token] [flags]
+
+    Flags:
+        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+        -ru | --replication-user    Replication user        Default: repl
+        -rp | --replication-pwd     Replication password    Default: Mariadb123%
+        -mu | --maxscale-user       Maxscale user           Default: mxs
+        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+        -t  | --token               Enterprise token        Required
+        -h  | --help                Help
+
+    Example:
+        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
+        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49 --replication-pwd \"My_custom_password123%\"
+    
+    Note: When deploying a cluster, run the same command on all nodes at the same time.
+            "
+}
+
+print_community_install_help_text() {
+    echo "
+    MariaDB Columnstore Package Manager - Community Quick Cluster Install
+
+    Usage: bash $0 install community [version] [flags]
+
+    Flags:
+        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+        -ru | --replication-user    Replication user        Default: repl
+        -rp | --replication-pwd     Replication password    Default: Mariadb123%
+        -mu | --maxscale-user       Maxscale user           Default: mxs
+        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+        -h  | --help                Help
+
+    Example:
+        bash cs_package_manager.sh install community 11.1.5 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
+    
+    Note: When deploying a cluster, run the same command on all nodes at the same time.
+            "
+}
+
+print_dev_install_help_text() {
+    echo "
+    MariaDB Columnstore Package Manager - Dev Quick Cluster Install
+
+    Usage: bash $0 install dev
+
+    Flags:
+        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+        -ru | --replication-user    Replication user        Default: repl
+        -rp | --replication-pwd     Replication password    Default: Mariadb123%
+        -mu | --maxscale-user       Maxscale user           Default: mxs
+        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+        -h  | --help                Help Text
+
+    Example:
+        bash $0 install dev develop cron/8629
+        bash $0 install dev develop-23.02 pull_request/7256
+        bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+    
+    Note: When deploying a cluster, run the same command on all nodes at the same time.
+            "
+}
+
+print_install_top_level_help_text() {
+    echo "
+    MariaDB Columnstore Package Manager - Install
+
+    Usage: bash $0 install [enterprise|community] [version] [flags]
+
+    Flags:
+        -h  | --help | help               Help Text
+
+    Examples:
+        bash $0 install community help
+        bash $0 install enterprise help
+        "
+
+    if [  -n "$dev_drone_key" ]; then
+        echo "Example Install Dev: 
+    bash $0 install [enterprise|community|dev] [version|cron|latest|pull_request] [build num] --token xxxxxxx
+    bash $0 install dev develop cron/8629
+    bash $0 install dev develop-23.02 pull_request/7256
+    bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+    "
+    fi
+}
+
+print_install_help_text() {
+    
+    case $repo in
+        enterprise | enterprise_staging )
+            print_enterprise_install_help_text
+            ;;
+        community )
+            print_community_install_help_text
+            ;;
+        dev )
+            print_dev_install_help_text
+            ;;
+        -h|--help|help)
+            print_install_top_level_help_text
+            exit 1;
+            ;;
+        *)  # unknown option
+            echo "print_install_help_text: Unknown repo: $repo\n"
+            exit 2;
+    esac
+
+}
+
+set_default_cluster_variables() {
+    nodes=""
+    replication_user="replication_user"
+    replication_pwd="Mariadb123%"
+    maxscale_user="maxscale_user"
+    maxscale_pwd="Mariadb123%"
+    cross_engine_user="cross_engine_user"
+    cross_engine_pwd="Mariadb123%"
+    CONFIGURE_CMAPI=true
+}
+
+parse_install_cluster_additional_args() {
+    # Skip the first three parameters
+    # $1 = action
+    # $2 = community|enterprise
+    # $3 = version
+    
+    if [ $repo == "dev" ]; then
+        # $4 = branch/build number
+        shift 4
+    else
+        shift 3
+    fi
+
+    # Dynamic Arguments
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+
+        case $key in
+            -t | --token)
+                enterprise_token="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -n | --nodes)
+                nodes="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -ru | --replication-user)
+                replication_user="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -rp | --replication-pwd)
+                replication_pwd="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -mu | --maxscale-user)
+                maxscale_user="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -mp | --maxscale-pwd)
+                maxscale_pwd="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -cu | --cross-engine-user)
+                cross_engine_user="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -cp | --cross-engine-pwd)
+                cross_engine_pwd="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -scmapi | --skip-cmapi)
+                CONFIGURE_CMAPI=false
+                shift # past argument
+                ;;
+            -h|--help|help)
+                print_install_help_text
+                exit 1;
+                ;;
+            *)    # unknown option
+                print_install_help_text
+                echo "parse_install_cluster_additional_args: unknown flag: $1"
+                exit 1
+                ;;
+        esac
+    done
+
+    # Enterprise checks
+    if [ $repo == "enterprise" ] || [ $repo == "enterprise_staging" ] ; then
+
+        if [ -z "$enterprise_token" ]; then 
+            printf "\n[!] Enterprise token empty: $enterprise_token\n"
+            printf "1) edit $0 enterprise_token='xxxxxx' \n"
+            printf "2) add flag --token xxxxxxxxx \n"
+            printf "Find your token @ https://customers.mariadb.com/downloads/token/ \n\n"
+
+            exit 1;
+        fi;
+    fi
+}
+
+check_package_managers() {
+    
     package_manager='';
     if command -v apt &> /dev/null ; then
         if ! command -v dpkg-query &> /dev/null ; then
@@ -459,9 +745,9 @@ check_package_managers() {
 
     if command -v yum &> /dev/null ; then
         package_manager="yum";
-    fi
+    fi    
 
-    if [ $package_manager == '' ]; then
+    if [ $package_manager == '' ]; then 
         echo "[!!] No package manager found: yum or apt must be installed"
         exit 1;
     fi;
@@ -469,15 +755,15 @@ check_package_managers() {
 
 
 # Confirms mac have critical binaries to run this script
-# As of 3/2024 supports cs_package_manager.sh check
+# As of 3/2024 supports cs_package_manager.sh check 
 check_mac_dependencies() {
-
+    
     # Install ggrep if not exists
     if ! which ggrep >/dev/null 2>&1; then
         echo "Attempting Auto install of ggrep"
 
         if ! which brew >/dev/null 2>&1; then
-            echo "Attempting Auto install of brew"
+            echo "Attempting Auto install of brew" 
             bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
         brew install grep
@@ -532,7 +818,7 @@ check_operating_system() {
         *)  # unknown option
             printf "\ncheck_operating_system: unknown os & version: $distro_info\n"
             exit 2;
-    esac
+    esac   
     distro_short="${distro_info:0:3}${version_id}"
 }
 
@@ -551,14 +837,14 @@ check_cpu_architecture() {
             ;;
         *)  # unknown option
             echo "Error: Unsupported architecture ($architecture)"
-    esac
+    esac    
 }
 
 check_mdb_installed() {
     packages=""
     current_mariadb_version=""
     case $package_manager in
-        yum )
+        yum ) 
             packages=$(yum list installed | grep -i mariadb)
             current_mariadb_version=$(rpm -q --queryformat '%{VERSION}\n' MariaDB-server 2>/dev/null)
             ;;
@@ -581,7 +867,7 @@ check_mdb_installed() {
         exit 2;
     fi;
 
-
+    
 }
 
 check_no_mdb_installed() {
@@ -600,9 +886,9 @@ check_no_mdb_installed() {
     esac
 
     if [ -n "$packages" ]; then
-        printf "\nMariaDB packages are installed. Please uninstall them before continuing.\n"
-        echo $packages;
-        printf "Example: bash $0 remove\n\n"
+        printf "\nSome MariaDB packages are installed\nPlease uninstall the following before continuing:\n"
+        printf "$packages";
+        printf "\n\nExample: bash $0 remove\n\n"
         exit 2;
     fi;
 }
@@ -623,7 +909,7 @@ check_aws_cli_installed() {
                 ;;
             *)  # unknown option
                 echo "Error: Unsupported architecture ($architecture)"
-        esac
+        esac    
 
         case $distro_info in
             centos | rhel | rocky )
@@ -633,7 +919,7 @@ check_aws_cli_installed() {
                 unzip -q awscliv2.zip;
                 sudo ./aws/install;
                 mv /usr/local/bin/aws /usr/bin/aws;
-                aws configure set default.s3.max_concurrent_requests 70
+                aws configure set default.s3.max_concurrent_requests 70       
                 ;;
             ubuntu | debian )
                 rm -rf aws awscliv2.zip
@@ -646,23 +932,295 @@ check_aws_cli_installed() {
                 unzip -q awscliv2.zip;
                 sudo ./aws/install;
                 mv /usr/local/bin/aws /usr/bin/aws;
-                aws configure set default.s3.max_concurrent_requests 70
+                aws configure set default.s3.max_concurrent_requests 70      
                 ;;
             *)  # unknown option
                 printf "\nos & version not implemented: $distro_info\n"
                 exit 2;
         esac
-
-
+        
+       
     fi
+}
+
+check_cluster_dependancies() {
+
+    if ! command -v telnet &> /dev/null; then
+        printf "\n[!] telnet not found. Attempting Auto-install\n\n"
+
+        case $package_manager in
+            yum ) 
+                if ! yum install telnet -y; then
+                    printf "\n[!!] Failed to install telnet. Please manually install \n\n"
+                    exit 1;
+                fi
+                ;;
+            apt )
+                if ! apt install telnet -y --quiet; then
+                    printf "\n[!!] Failed to install telnet. Please manually install \n\n"
+                    exit 1;
+                fi
+                ;;
+            *)  # unknown option
+                printf "\ncheck_cluster_dependancies: package manager not implemented - $package_manager\n"
+                exit 2;
+        esac
+    fi  
+}
+
+# main goal is to enable binlog with unique server_id for replication
+configure_default_mariadb_server_config() {
+    
+    case $distro_info in
+        centos | rhel | rocky )
+            server_cnf_dir="/etc/my.cnf.d"
+            server_cnf_location="/etc/my.cnf.d/server.cnf"
+            ;;
+        ubuntu | debian )
+            server_cnf_dir="/etc/mysql/mariadb.conf.d"
+            server_cnf_location="/etc/mysql/mariadb.conf.d/server.cnf"
+            ;;
+        *)  # unknown option
+            printf "\ncheck_no_mdb_installed: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
+    
+    if [ ! -d $server_cnf_dir ]; then
+        echo " - Creating $server_cnf_dir"
+        mkdir -p $server_cnf_dir
+        chown mysql:mysql $server_cnf_dir
+    fi
+
+    echo "[mariadb]
+bind_address                           = 0.0.0.0
+log_error                              = mariadbd.err
+character_set_server                   = utf8
+collation_server                       = utf8_general_ci
+log_bin                                = mariadb-bin
+log_bin_index                          = mariadb-bin.index
+relay_log                              = mariadb-relay
+relay_log_index                        = mariadb-relay.index
+log_slave_updates                      = ON
+gtid_strict_mode                       = ON
+columnstore_use_import_for_batchinsert = ALWAYS
+lower_case_table_names=1
+#expire_logs_days= 2
+
+# This must be unique on each MariaDB Enterprise Node
+server_id                              = $dbroot" > $server_cnf_location
+    
+    chown mysql:mysql $server_cnf_location
+    stop_mariadb
+    start_mariadb
+
+}
+
+create_mariadb_users() {
+
+    if [ -n "$cross_engine_user" ] && [ -n "$cross_engine_pwd" ]; then
+        if mariadb -e "CREATE USER '$cross_engine_user'@'127.0.0.1' IDENTIFIED BY '$cross_engine_pwd'; GRANT SELECT,PROCESS ON *.* TO '$cross_engine_user'@'127.0.0.1'" ; then
+            echo " - Created User: $cross_engine_user "
+        else
+            echo "[!] FAILED to create user: $cross_engine_user "
+            exit 1
+        fi
+    fi
+    
+    if [ -n "$replication_user" ]; then
+        if mariadb -e "CREATE USER '$replication_user'@'%' IDENTIFIED BY '$replication_pwd'; GRANT REPLICA MONITOR, REPLICATION REPLICA, REPLICATION REPLICA ADMIN, REPLICATION MASTER ADMIN ON *.* TO '$replication_user'@'%';"; then
+            echo " - Created User: $replication_user "
+        else
+            echo "[!] FAILED to create user: $replication_user "
+            exit 1
+        fi
+    fi
+
+    if [ -n "$maxscale_user" ]; then
+        if mariadb -e "CREATE USER $maxscale_user@'%' IDENTIFIED BY '$maxscale_pwd';
+        GRANT SUPER, RELOAD, REPLICATION CLIENT, REPLICATION SLAVE, SHOW DATABASES ON *.* TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.db TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.user TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.roles_mapping TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.tables_priv TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.columns_priv TO $maxscale_user@'%';
+        GRANT SELECT ON mysql.proxies_priv TO $maxscale_user@'%';"; then
+            echo " - Created User: $maxscale_user "
+        else
+            echo "[!] FAILED to create user: $maxscale_user "
+            exit 1
+        fi
+    fi
+}
+
+configure_columnstore_cross_engine_user() {
+    
+    if [ -n "$cross_engine_user" ] && [ -n "$cross_engine_pwd" ]; then
+        if command -v mcsSetConfig &> /dev/null ; then
+            mcsSetConfig CrossEngineSupport User "$cross_engine_user"
+            mcsSetConfig CrossEngineSupport Password "$cross_engine_pwd"
+        else
+            echo "mcsSetConfig doesnt exist: Cant configure cross engine joins"
+        fi
+    fi
+}
+
+poll_for_cmapi_online() {
+
+    local sleep_timer=3
+
+    # Use telnet to check port 8640 on replica nodes
+    for node in $(echo $nodes | tr "," "\n"); do
+        counter=0
+        printf "%-35s ..." " - Checking cmapi port 8640 on $node "
+        while true; do
+        
+            if telnet $node 8640 < /dev/null 2>&1 | grep -q 'Connected'; then
+                printf " Success\n"
+                break;
+            else
+                printf "."
+            fi
+
+            # Max wait 3000 seconds
+            if [ $counter -gt 1000 ]; then
+                echo "Failed to find open cmapi port after 1000 checks"
+                exit;
+            fi
+            sleep $sleep_timer
+            ((counter++))
+        done
+    done
+}
+
+configure_cluster_via_cmapi() {
+    
+    if [ -z $api_key  ]; then get_set_cmapi_key; fi;
+
+    local dbroot=1
+    for node in $(echo $nodes | tr "," "\n"); do
+        
+        if command -v mcs &> /dev/null ; then
+            printf "%-35s ..." " - Adding Node $dbroot: $node "
+            if mcs_output=$( timeout 120s mcs cluster node add --node $node ); then 
+                printf " Done - $( echo $cmapi_output | jq -r tostring )  \n"
+            else 
+                echo "[!] Failed ... trying cmapi curl"
+                echo "$mcs_output"
+                add_node_cmapi_via_curl $node
+            fi
+        else
+            echo "mcs - binary could not be found ..."
+            add_node_cmapi_via_curl $node
+        fi;
+        ((dbroot++))
+    done
+}
+
+poll_for_primary_mariadb_connectivity() {
+    
+    if [ -z "$primary_ip" ]; then
+        echo "Primary IP not defined"
+        exit 1;
+    fi
+
+    local port=3306
+    local sleep_timer=3
+    local counter=0
+
+    # Use telnet to check port 3306 on primary node 
+    printf "%-35s ..." " - Checking mariadb port $port on $primary_ip..."
+    while true; do
+        if telnet $primary_ip $port < /dev/null 2>&1 | grep -q 'Connected'; then
+            printf " Success\n"
+            break;
+        else
+            printf "."
+        fi
+
+        # Max wait 3000 seconds
+        if [ $counter -gt 1000 ]; then
+            echo "Failed to find open mariadb port $port after 1000 checks"
+            exit;
+        fi
+        sleep $sleep_timer
+        ((counter++))
+    done
+    
+    local counter=0
+    printf "%-35s ..." " - Checking replication credentials"
+    while true; do
+        
+        if mariadb -h $primary_ip -u $replication_user -p"$replication_pwd" -e "SELECT 1;" &> /dev/null; then
+            printf " Success\n"
+            break;
+        else
+            printf "."
+        fi
+
+        # Max wait 3000 seconds
+        if [ $counter -gt 1000 ]; then
+            echo "Failed to find open mariadb port $port after 1000 checks"
+            exit;
+        fi
+        sleep $sleep_timer
+        ((counter++))
+    done
+
+}
+
+configure_mariadb_replication() {
+
+    if [ -z "$primary_ip" ]; then
+        echo "Primary IP not defined"
+        exit 1;
+    fi
+
+    mariadb -e "stop slave;CHANGE MASTER TO MASTER_HOST='$primary_ip' , MASTER_USER='$replication_user' , MASTER_PASSWORD='$replication_pwd' , MASTER_USE_GTID = slave_pos;start slave;"
+    sleep 2;
+    mariadb -e  "show slave status\G" | grep  -E "Slave_IO_Running|Slave_SQL|Last_IO_Error|Gtid_IO_Pos"
 }
 
 check_dev_build_exists() {
 
-    if ! aws s3 ls $s3_path --no-sign-request &> /dev/null; then
+    if ! aws s3 ls $s3_path --no-sign-request &> /dev/null; then 
         printf "[!] Defined dev build doesnt exist in aws\n\n"
         exit 2;
     fi;
+}
+
+
+post_cmapi_install_configuration() {
+    
+    systemctl daemon-reload
+    systemctl enable mariadb-columnstore-cmapi
+    systemctl start mariadb-columnstore-cmapi
+    mariadb -e "show status like '%Columnstore%';"
+    sleep 1;
+    
+    
+    if [ -n "$nodes" ] && [ $dbroot == 1  ] ; then
+        
+        # Handle Cluster Configuration - Primary Node
+        configure_default_mariadb_server_config
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
+        poll_for_cmapi_online
+        configure_cluster_via_cmapi
+        
+    elif [ -n "$nodes" ] && [ $dbroot -gt 1  ]; then
+        
+        # Handle Cluster Configuration - Replica Nodes
+        configure_default_mariadb_server_config
+        poll_for_primary_mariadb_connectivity
+        configure_mariadb_replication
+        
+    else
+        # Handle Single node
+        confirm_cmapi_online_and_configured
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
+        init_cs_up
+    fi
 }
 
 do_enterprise_apt_install() {
@@ -679,28 +1237,22 @@ do_enterprise_apt_install() {
     systemctl start mariadb
 
     # Install Columnstore
-    if ! apt install mariadb-plugin-columnstore -y --quiet; then
+    if ! apt install mariadb-plugin-columnstore -y --quiet; then 
         printf "\n[!] Failed to install columnstore \n\n"
         exit 1;
     fi
 
-    # Somes cmapi is installed with columnstore - double check
-    if ! is_cmapi_installed ; then
-        if ! apt install mariadb-columnstore-cmapi jq -y --quiet; then
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! apt install mariadb-columnstore-cmapi jq -y --quiet; then 
             printf "\n[!] Failed to install cmapi\n\n"
             mariadb -e "show status like '%Columnstore%';"
-        fi;
-    fi
-
-    if is_cmapi_installed ; then
-        systemctl daemon-reload
-        systemctl enable mariadb-columnstore-cmapi
-        systemctl start mariadb-columnstore-cmapi
-        mariadb -e "show status like '%Columnstore%';"
-        sleep 2
-
-        confirm_cmapi_online_and_configured
-        init_cs_up
+        else
+           post_cmapi_install_configuration
+        fi
+    else
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 
 }
@@ -720,45 +1272,116 @@ do_enterprise_yum_install() {
         exit 1;
     fi
 
-    # Install Cmapi
-    if ! yum install MariaDB-columnstore-cmapi jq -y; then
-        printf "\n[!] Failed to install cmapi\n\n"
-
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        
+        if ! yum install MariaDB-columnstore-cmapi jq -y; then
+            printf "\n[!] Failed to install cmapi\n\n"
+            mariadb -e "show status like '%Columnstore%';"
+        else 
+            post_cmapi_install_configuration
+        fi
     else
-        systemctl enable mariadb-columnstore-cmapi
-        systemctl start mariadb-columnstore-cmapi
-        mariadb -e "show status like '%Columnstore%';"
-        sleep 1;
-
-        confirm_cmapi_online_and_configured
-        init_cs_up
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 
 }
 
-enterprise_install() {
+process_cluster_variables() {
+    # check what IP addresses in nodes match the current IP
+    if [ -n "$nodes" ]; then
+        check_cluster_dependancies
 
-    version=$3
-    check_set_es_token "$@"
+        this_ip=$(hostname -I | awk '{print $1}')
+        if ! echo "$nodes" | grep -q "$this_ip"; then
+            printf "\n[!] Current IP address: $this_ip\nNOT in nodes list: $nodes\n\n"
+            exit 1;
+        fi
+        dbroot=1
+        primary_ip=""
+        for node in $(echo $nodes | tr "," "\n"); do
+            # The first in the list is the primary
+            if [ $dbroot -eq 1 ]; then
+                primary_ip=$node
+            fi
+            if [ "$node" == "$this_ip" ]; then
+                break;
+            fi
+            if [ $dbroot -gt 10000 ]; then
+               echo "Failed to find $this_ip index in nodes list"
+               exit 1;
+            fi
+            ((dbroot++))
+        done
 
-    if [ -z $version ]; then
+        if [ -z "$primary_ip" ]; then
+            echo "Primary IP not found in nodes list"
+            exit 1;
+        fi
+
+        echo "IP: $this_ip"
+        echo "Server ID: $dbroot"
+        echo "Nodes: $nodes"
+        echo "Primary IP: $primary_ip"
+        echo "Replication User: $replication_user"
+        echo "Replication Password: $replication_pwd"
+        echo "Maxscale User: $maxscale_user"
+        echo "Maxscale Password: $maxscale_pwd"
+        echo "Cross Engine User: $cross_engine_user"
+        echo "Cross Engine Password: $cross_engine_pwd"
+    fi
+}
+
+quick_version_check() {
+    if [ -z $version ]; then 
         printf "\n[!] Version empty: $version\n\n"
         exit 1;
     fi;
 
+    case $version in
+        -h | --help | help )
+            print_install_help_text
+            exit 0;
+            ;;
+        -* )
+            # Confirm doesnt start with "-"", like a flag
+            printf "\n[!] Version cannot begin with '-': $version\n\n"
+            exit 1
+            ;;
+        *)
+            continue
+            ;;
+    esac
+
+    # Check if version contains at least one number
+    if ! [[ "$version" =~ [0-9] ]]; then
+        printf "\n[!] Version must contain at least one numeric character: $version\n\n"
+        exit 1
+    fi
+}
+
+enterprise_install() {
+    
+    version=$3 
+    quick_version_check
+
+    parse_install_cluster_additional_args "$@"
+
     echo "Token: $enterprise_token"
     echo "MariaDB Version: $version"
+    process_cluster_variables
     echo "-----------------------------------------------"
 
     url="https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup"
-    if $enterprise_staging; then
+    if $enterprise_staging; then 
         url="https://dlm.mariadb.com/$enterprise_token/enterprise-release-helpers-staging/mariadb_es_repo_setup"
     fi
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
     curl -LO "$url" -o mariadb_es_repo_setup;
-    chmod +x mariadb_es_repo_setup;
+    chmod +x mariadb_es_repo_setup;  
     if ! bash mariadb_es_repo_setup --token="$enterprise_token" --apply --mariadb-server-version="$version"; then
         printf "\n[!] Failed to apply mariadb_es_repo_setup...\n\n"
         exit 2;
@@ -769,25 +1392,25 @@ enterprise_install() {
 
             if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
-            if $enterprise_staging; then
+            if $enterprise_staging; then 
                 sed -i 's/mariadb-es-main/mariadb-es-staging/g' /etc/yum.repos.d/mariadb.repo
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/yum.repos.d/mariadb.repo
                 printf "\n\n[+] Adjusted mariadb.repo to: mariadb-enterprise-staging\n\n"
             fi;
 
-            do_enterprise_yum_install "$@"
+            do_enterprise_yum_install "$@" 
             ;;
         ubuntu | debian )
 
             if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; exit 1; fi;
 
-            if $enterprise_staging; then
+            if $enterprise_staging; then 
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/apt/sources.list.d/mariadb.list
                 apt update
                 printf "\n\n[+] Adjusted mariadb.list to: mariadb-enterprise-staging\n\n"
             fi;
 
-            do_enterprise_apt_install "$@"
+            do_enterprise_apt_install "$@" 
             ;;
         *)  # unknown option
             printf "\nenterprise_install: os & version not implemented: $distro_info\n"
@@ -796,20 +1419,19 @@ enterprise_install() {
 }
 
 community_install() {
-
-    version=$3
-    if [ -z $version ]; then
-        printf "Version empty: $version\n"
-
-        exit 1;
-    fi;
+    
+    version=$3 
+    quick_version_check
+    
+    parse_install_cluster_additional_args "$@"
 
     echo "MariaDB Community Version: $version"
+    process_cluster_variables
     echo "-----------------------------------------------"
 
     # Download Repo setup
     rm -rf mariadb_repo_setup
-
+   
     if !  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup |  bash -s -- --mariadb-server-version=mariadb-$version ; then
         echo "version bad or mariadb_repo_setup unavailable. exiting ..."
         exit 2;
@@ -817,10 +1439,10 @@ community_install() {
 
     case $distro_info in
         centos | rhel | rocky )
-            do_community_yum_install "$@"
+            do_community_yum_install "$@" 
             ;;
         ubuntu | debian )
-            do_community_apt_install "$@"
+            do_community_apt_install "$@" 
             ;;
         *)  # unknown option
             printf "\ncommunity_install: os & version not implemented: $distro_info\n"
@@ -847,22 +1469,20 @@ do_community_yum_install() {
         exit 1;
     fi
 
-    cmapi_installable=$(yum list | grep MariaDB-columnstore-cmapi)
-    if [ -n "$cmapi_installable" ]; then
-        # Install Cmapi
-        if ! yum install MariaDB-columnstore-cmapi jq -y; then
-            printf "\n[!] Failed to install cmapi\n\n"
-            exit 1;
-        else
-            systemctl enable mariadb-columnstore-cmapi
-            systemctl start mariadb-columnstore-cmapi
-            mariadb -e "show status like '%Columnstore%';"
-            sleep 2
-
-            printf "\nPost Install\n"
-            confirm_cmapi_online_and_configured
-            init_cs_up
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        cmapi_installable=$(yum list | grep MariaDB-columnstore-cmapi) 
+        if [ -n "$cmapi_installable" ]; then 
+            if ! yum install MariaDB-columnstore-cmapi jq -y; then
+                printf "\n[!] Failed to install cmapi\n\n"
+                exit 1;
+            else
+                post_cmapi_install_configuration
+            fi
         fi
+    else
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 }
 
@@ -885,18 +1505,17 @@ do_community_apt_install() {
         exit 1;
     fi;
 
-    if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then
-        printf "\n[!] Failed to install cmapi \n\n"
-        mariadb -e "show status like '%Columnstore%';"
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
+            printf "\n[!] Failed to install cmapi \n\n"
+            mariadb -e "show status like '%Columnstore%';"
+        else 
+            post_cmapi_install_configuration
+        fi
     else
-        systemctl daemon-reload
-        systemctl enable mariadb-columnstore-cmapi
-        systemctl start mariadb-columnstore-cmapi
-        mariadb -e "show status like '%Columnstore%';"
-        sleep 2
-
-        confirm_cmapi_online_and_configured
-        init_cs_up
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 }
 
@@ -904,20 +1523,20 @@ get_set_cmapi_key() {
 
     CMAPI_CNF="/etc/columnstore/cmapi_server.conf"
 
-    if [ ! -f $CMAPI_CNF ]; then
+    if [ ! -f $CMAPI_CNF ]; then 
         echo "[!!] No cmapi config file found"
         exit  1;
     fi;
 
     # Add API Key if missing
     if [ -z "$(grep ^x-api-key $CMAPI_CNF)" ]; then
-
+       
         if ! command -v openssl &> /dev/null ; then
             api_key="19bb89d77cb8edfe0864e05228318e3dfa58e8f45435fbd9bd12c462a522a1e9"
-        else
+        else 
             api_key=$(openssl rand -hex 32)
         fi
-
+        
         printf "%-35s ..." " - Setting API Key:"
         if cmapi_output=$( curl -s https://127.0.0.1:8640/cmapi/0.4.0/cluster/status \
         --header 'Content-Type:application/json' \
@@ -928,7 +1547,7 @@ get_set_cmapi_key() {
             printf  " Failed to set API key\n\n"
             exit 1;
         fi
-    else
+    else 
         api_key=$(grep ^x-api-key $CMAPI_CNF | cut -d "=" -f 2 | tr -d " ")
     fi
 }
@@ -939,14 +1558,14 @@ add_node_cmapi_via_curl() {
     if [ -z $api_key  ]; then get_set_cmapi_key; fi;
 
     # Add Node
-    printf "%-35s ..." " - Adding primary node via curl"
+    printf "%-35s ..." " - Adding node ($node_ip) via curl"
     if cmapi_output=$( curl -k -s -X PUT https://127.0.0.1:8640/cmapi/0.4.0/cluster/node \
     --header 'Content-Type:application/json' \
     --header "x-api-key:$api_key" \
     --data "{\"timeout\": 120, \"node\": \"$node_ip\"}" ); then
         printf " Done - $(echo $cmapi_output | jq -r tostring )\n"
     else
-        echo "Failed adding node"
+        echo "Failed adding node: $node_ip"
         exit 1;
     fi
 
@@ -970,23 +1589,38 @@ start_cs_cmapi_via_curl() {
     --header "x-api-key:$api_key" \
     --data '{"timeout":20}'; then
         echo " - Started Columnstore"
-    else
+    else 
         echo " - [!] Failed to start columnstore via cmapi curl"
         echo " - Trying via systemctl ..."
         start_cs_via_systemctl
     fi;
 }
 
+stop_service_if_exists() {
+    local timeout="30s"
+    local service_name="$1"
+    if systemctl list-units --full -all | grep -Fq "$service_name"; then
+        if ! timeout $timeout systemctl stop "$service_name" 2>/dev/null ; then
+            echo "Failed to stop $service_name"
+        fi
+    fi
+}
+    
 stop_cs_via_systemctl_override() {
-    systemctl stop mariadb-columnstore-cmapi;
-    systemctl stop mcs-ddlproc;
-    systemctl stop mcs-dmlproc;
-    systemctl stop mcs-workernode@1;
-    systemctl stop mcs-workernode@2;
-    systemctl stop mcs-controllernode;
-    systemctl stop mcs-storagemanager;
-    systemctl stop mcs-primproc;
-    systemctl stop mcs-writeengineserver;
+
+    stop_service_if_exists "mcs-ddlproc"
+    stop_service_if_exists "mcs-dmlproc"
+    stop_service_if_exists "mcs-workernode@1"
+    stop_service_if_exists "mcs-workernode@2"
+    stop_service_if_exists "mcs-controllernode"
+    stop_service_if_exists "mcs-storagemanager"
+    stop_service_if_exists "mcs-primproc"
+    stop_service_if_exists "mcs-writeengineserver"
+    stop_service_if_exists "mariadb-columnstore-cmapi"
+}
+
+kill_cs_processes() {
+   ps -ef | grep -E '(PrimProc|ExeMgr|DMLProc|DDLProc|WriteEngineServer|StorageManager|controllernode|workernode|load_brm|save_brm)' | grep -v "grep" | awk '{print $2}' | xargs kill -9
 }
 
 stop_cs_via_systemctl() {
@@ -1008,7 +1642,7 @@ stop_cs_cmapi_via_curl() {
     --header "x-api-key:$api_key" \
     --data '{"timeout":20}'; then
         echo " - Stopped Columnstore via curl"
-    else
+    else 
         printf "\n[!] Failed to stop columnstore via cmapi\n"
         stop_cs_via_systemctl
     fi;
@@ -1018,21 +1652,21 @@ add_primary_node_cmapi() {
 
     primary_ip="127.0.0.1"
     if [ -z $api_key  ]; then get_set_cmapi_key; fi;
-
+    
     if command -v mcs &> /dev/null ; then
         # Only add 127.0.0.1 if no nodes are configured in cmapi
         if [ "$(mcs cluster status | jq -r '.num_nodes')" == "0" ]; then
             printf "%-35s ..." " - Adding primary node"
-            if mcs_output=$( timeout 30s mcs cluster node add --node $primary_ip ); then
+            if mcs_output=$( timeout 30s mcs cluster node add --node $primary_ip ); then 
                 echo " Done - $( echo $mcs_output | jq -r tostring )"
-            else
+            else 
                 echo "[!] Failed ... trying cmapi curl"
                 echo "$mcs_output"
                 add_node_cmapi_via_curl $primary_ip
             fi;
         fi;
-
-    else
+        
+    else 
         echo "mcs - binary could not be found"
         add_node_cmapi_via_curl $primary_ip
         printf "%-35s ..." " - Starting Columnstore Engine"
@@ -1042,7 +1676,7 @@ add_primary_node_cmapi() {
 
 
 dev_install() {
-
+    
     if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
     check_aws_cli_installed
 
@@ -1054,6 +1688,7 @@ dev_install() {
     product="10.6-enterprise"
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
+    parse_install_cluster_additional_args "$@"
 
     # Construct URLs
     s3_path="$dronePath/$branch/$build/$product/$arch"
@@ -1061,27 +1696,24 @@ dev_install() {
     echo "Locations:"
     echo "Bucket: $s3_path"
     echo "Drone: $drone_http"
+    process_cluster_variables
     echo "###################################"
-
+    
     check_dev_build_exists
 
     case $distro_info in
         centos | rhel | rocky )
             s3_path="${s3_path}/$distro"
             drone_http="${drone_http}/$distro"
-            do_dev_yum_install "$@"
+            do_dev_yum_install "$@" 
             ;;
         ubuntu | debian )
-            do_dev_apt_install "$@"
+            do_dev_apt_install "$@" 
             ;;
         *)  # unknown option
             printf "\ndev_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
-
-
-    confirm_cmapi_online_and_configured
-    init_cs_up
 }
 
 do_dev_yum_install() {
@@ -1111,25 +1743,27 @@ enabled=1
         exit 1;
     fi
 
+    systemctl daemon-reload
+    systemctl enable mariadb
+    systemctl start mariadb
+
     # Install Columnstore
     if ! yum install MariaDB-columnstore-engine -y; then
         printf "\n[!] Failed to install columnstore \n\n"
         exit 1;
     fi
 
-     # Install Cmapi
-    if ! yum install MariaDB-columnstore-cmapi jq -y; then
-        printf "\n[!] Failed to install cmapi\n\n"
-        exit 1;
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! yum install MariaDB-columnstore-cmapi jq -y; then
+            printf "\n[!] Failed to install cmapi\n\n"
+            exit 1;
+        else
+            post_cmapi_install_configuration
+        fi
     else
-        systemctl start mariadb
-        systemctl enable mariadb-columnstore-cmapi
-        systemctl start mariadb-columnstore-cmapi
-        mariadb -e "show status like '%Columnstore%';"
-        sleep 2
-
-        confirm_cmapi_online_and_configured
-        init_cs_up
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 }
 
@@ -1142,9 +1776,9 @@ Pin: origin cspkg.s3.amazonaws.com
 Pin-Priority: 1700
 EOF
 
-    # Install MariaDB
+    # Install MariaDB Server
     apt-get clean
-    apt-get update
+    apt-get update 
     if ! apt install mariadb-server -y --quiet; then
         printf "\n[!] Failed to install mariadb-server \n\n"
         exit 1;
@@ -1160,18 +1794,17 @@ EOF
         exit 1;
     fi;
 
-    if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then
-        printf "\n[!] Failed to install cmapi \n\n"
-        mariadb -e "show status like '%Columnstore%';"
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! apt install mariadb-columnstore-cmapi jq -y --quiet ; then 
+            printf "\n[!] Failed to install cmapi \n\n"
+            mariadb -e "show status like '%Columnstore%';"
+        else 
+            post_cmapi_install_configuration
+        fi
     else
-        systemctl daemon-reload
-        systemctl enable mariadb-columnstore-cmapi
-        systemctl start mariadb-columnstore-cmapi
-        mariadb -e "show status like '%Columnstore%';"
-        sleep 2
-
-        confirm_cmapi_online_and_configured
-        init_cs_up
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
     fi
 
 }
@@ -1182,6 +1815,7 @@ do_install() {
     check_cpu_architecture
     check_no_mdb_installed
     check_package_managers
+    set_default_cluster_variables
 
     repo=$2
     enterprise_staging=false
@@ -1203,7 +1837,12 @@ do_install() {
             # pull from dev repo - requires dev_drone_key
             dev_install "$@" ;
             ;;
+        -h | --help | help )
+            print_install_help_text
+            exit 0;
+            ;;
         *)  # unknown option
+            print_install_help_text
             echo "Unknown repo: $repo\n"
             exit 2;
     esac
@@ -1246,7 +1885,7 @@ confirm_cmapi_online_and_configured() {
                 if systemctl start mariadb-columnstore-cmapi; then
                     cmapi_check_ready
                     printf " Pass\n"
-                else
+                else 
                     echo "[!!] Failed to start CMAPI"
                     exit 1;
                 fi
@@ -1254,7 +1893,7 @@ confirm_cmapi_online_and_configured() {
                 printf "systemd is not running - cant start cmapi\n\n"
                 exit 1;
             fi
-        else
+        else 
 
             # Check if the JSON string is in the expected format
             if ! echo "$cmapi_current_status" | jq -e '.started | type == "boolean"' >/dev/null; then
@@ -1274,8 +1913,7 @@ confirm_cmapi_online_and_configured() {
         cmapi_check_ready
         printf " Done\n"
     fi;
-
-
+    
     confirm_nodes_configured
 }
 
@@ -1291,12 +1929,12 @@ confirm_nodes_configured() {
             sleep 1;
         fi
     else
-
+        
         if [ "$(curl -k -s https://127.0.0.1:8640/cmapi/0.4.0/cluster/status  \
         --header 'Content-Type:application/json' \
         --header "x-api-key:$api_key" | jq -r '.num_nodes')" == "0" ] ; then
             echo " - Stopped Columnstore via curl"
-        else
+        else 
             add_primary_node_cmapi
             sleep 1;
         fi;
@@ -1305,12 +1943,77 @@ confirm_nodes_configured() {
 
 # For future release
 do_dev_upgrade() {
-    echo "fsadfa"
+
+    case $package_manager in
+        yum ) 
+            s3_path="${s3_path}/$distro"
+            drone_http="${drone_http}/$distro"
+            
+             echo "[drone]
+name=Drone Repository
+baseurl="$drone_http"
+gpgcheck=0
+enabled=1
+    " > /etc/yum.repos.d/drone.repo
+            yum clean all
+
+            aws s3 cp $s3_path/ . --recursive --exclude "*" --include "MariaDB-server*" --exclude "*debug*" --no-sign-request
+
+            # Confirm Downloaded server rpm
+            mariadb_rpm=$(ls -1 MariaDB-server-*.rpm | head -n 1)
+            if [ ! -f "$mariadb_rpm" ]; then
+                echo "Error: No MariaDB-server RPMs were found."
+                exit 1
+            fi
+            
+            # Run the YUM update
+            printf "\nBeginning Update\n"
+            if yum update "$mariadb_rpm" "MariaDB-*" "MariaDB-columnstore-engine" "MariaDB-columnstore-cmapi"; then
+                echo " - Success Update"
+            else
+                echo "[!!] Failed to update "
+                exit 1;
+            fi
+            ;;
+        apt )
+            echo "deb [trusted=yes] ${drone_http} ${distro}/" >  /etc/apt/sources.list.d/repo.list
+    cat << EOF > /etc/apt/preferences
+Package: *
+Pin: origin cspkg.s3.amazonaws.com
+Pin-Priority: 1700
+EOF
+
+            # Install MariaDB Server
+            apt-get clean
+            apt-get update 
+
+            # Run the APT update
+            printf "\nBeginning Update\n"
+            apt-get clean
+            if apt update; then
+                echo " - Success Update"
+            else
+                echo "[!!] Failed to update "
+                exit 1;
+            fi
+
+            if apt install --only-upgrade '?upgradable ?name(mariadb.*)'; then
+                echo " - Success Update mariadb.*"
+            else
+                echo "[!!] Failed to update "
+                exit 1;
+            fi
+            systemctl daemon-reload
+            ;;
+        *)  # unknown option
+            printf "\nenterprise_upgrade: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
 }
 
 # For future release
 dev_upgrade() {
-
+    
     # Variables
     if [ -z $dev_drone_key ]; then printf "[!] Missing dev_drone_key \nvi $0\n"; exit; fi;
     check_aws_cli_installed
@@ -1330,6 +2033,10 @@ dev_upgrade() {
     echo "Bucket: $s3_path"
     echo "Drone: $drone_http"
     echo "-----------------------------------------------"
+    if pgrep -x "mariadbd" > /dev/null; then
+        mariadb -e "show status like '%Columnstore%';"
+    fi
+
 
     # Prechecks
     printf "\nPrechecks\n"
@@ -1338,7 +2045,7 @@ dev_upgrade() {
 
     # Stop All
     init_cs_down
-    wait_cs_down
+    wait_cs_down 
     stop_mariadb
     stop_cmapi
 
@@ -1371,7 +2078,7 @@ do_community_upgrade () {
     fi;
 
     case $package_manager in
-        yum )
+        yum ) 
             if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] enterprise_upgrade: Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
             # Run the YUM update
@@ -1412,21 +2119,21 @@ do_community_upgrade () {
 }
 
 community_upgrade() {
-
+    
     version=$3
-    if [ -z $version ]; then
-        printf "\n[!] Version empty: $version\n\n"
-        exit 1;
-    fi;
-
+    quick_version_check
+    
     echo "Current MariaDB Verison:    $current_mariadb_version"
     echo "Upgrade To MariaDB Version: $version"
     echo "-----------------------------------------------"
+    if pgrep -x "mariadbd" > /dev/null; then
+        mariadb -e "show status like '%Columnstore%';"
+    fi
 
     # Prechecks
     printf "\nPrechecks\n"
     check_gtid_strict_mode
-    check_mariadb_versions
+    check_mariadb_versions 
 
     # Stop All
     init_cs_down
@@ -1438,7 +2145,7 @@ community_upgrade() {
     pre_upgrade_dbrm_backup
     pre_upgrade_configuration_backup
 
-    # Upgrade
+    # Upgrade 
     do_community_upgrade
 
     # Start All
@@ -1464,7 +2171,7 @@ confirm_dbrmctl_ok() {
         printf "."
         current_status=$(dbrmctl -v status);
         if [ $? -ne 0 ]; then
-            printf "\n[!] Failed to get dbrmctl -v status\n\n"
+            printf "\n[!] Failed to get dbrmctl -v status\n\n" 
             exit 1
         fi
         if [ $retry_counter -ge $retry_limit ]; then
@@ -1479,36 +2186,56 @@ confirm_dbrmctl_ok() {
 
 pre_upgrade_dbrm_backup() {
 
-    if [ ! -f "mcs_backup_manager.sh" ]; then
-        wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/cmapi/scripts/mcs_backup_manager.sh; chmod +x mcs_backup_manager.sh;
-    fi;
-    if ! source mcs_backup_manager.sh source ;then
-        printf "\n[!!] Failed to source mcs_backup_manager.sh\n\n"
+    local mcs_backup_manager_file="mcs_backup_manager.sh"
+    local url="https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/develop/cmapi/scripts/$mcs_backup_manager_file";
+    if [ ! -f "$mcs_backup_manager_file" ]; then
+        curl -O $url
+        chmod +x "$mcs_backup_manager_file"
+    fi; 
+
+    # Check if the download was successful
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to download file"
+        echo "$url"
+        exit 1
+    fi
+
+    # Check if the file contains "404: Not Found"
+    if grep -q "404: Not Found" "$mcs_backup_manager_file"; then
+        echo "Error: File not found at the URL"
+        printf "$url \n\n"
+        rm -f "$mcs_backup_manager_file" 
+        exit 1
+    fi
+
+    # Source the file
+    if ! source "$mcs_backup_manager_file" source ;then 
+        printf "\n[!!] Failed to source $mcs_backup_manager_file\n\n"
         exit 1;
     else
-        echo " - Sourced mcs_backup_manager.sh"
+        echo " - Sourced $mcs_backup_manager_file"
     fi
+
     # Confirm the function exists and the source of mcs_backup_manager.sh worked
     if command -v process_dbrm_backup &> /dev/null; then
         # Take an automated backup
-        if ! process_dbrm_backup -r 9999 -nb preupgrade_dbrm_backup --quiet ; then
+        if ! process_dbrm_backup -r 9999 -nb preupgrade_dbrm_backup --quiet ; then 
             echo "[!!] Failed to take a DBRM backup before restoring"
             echo "exiting ..."
             exit 1;
         fi;
     else
-        echo "Error: 'process_dbrm_backup' function not found via mcs_backup_manager.sh";
+        echo "Error: 'process_dbrm_backup' function not found via $mcs_backup_manager_file";
         exit 1;
     fi
-
-
+   
 }
 
 pre_upgrade_configuration_backup() {
     pre_upgrade_config_directory="/tmp/preupgrade-configurations-$(date +%m-%d-%Y-%H%M)"
     case $distro_info in
         centos | rhel | rocky )
-            printf "[+] Created: $pre_upgrade_config_directory \n"
+            printf "Created: $pre_upgrade_config_directory \n"
             mkdir -p $pre_upgrade_config_directory
             print_and_copy "/etc/columnstore/Columnstore.xml" "$pre_upgrade_config_directory"
             print_and_copy "/etc/columnstore/storagemanager.cnf" "$pre_upgrade_config_directory"
@@ -1517,7 +2244,7 @@ pre_upgrade_configuration_backup() {
             # convert server.cnf to a find incase mysql dir not standard
             ;;
         ubuntu | debian )
-            printf "[+] Created: $pre_upgrade_config_directory \n"
+            printf "Created: $pre_upgrade_config_directory \n"
             mkdir -p $pre_upgrade_config_directory
             print_and_copy "/etc/columnstore/Columnstore.xml" "$pre_upgrade_config_directory"
             print_and_copy "/etc/columnstore/storagemanager.cnf" "$pre_upgrade_config_directory"
@@ -1536,12 +2263,12 @@ check_mariadb_versions() {
     if [ -z "$current_mariadb_version" ]; then
         printf "[!] No current current_mariadb_version detected"
         exit 2;
-    fi
+    fi 
 
     if [ -z "$version" ]; then
         printf "[!] No current upgrade version detected"
         exit 2;
-    fi
+    fi 
 
     printf "%-35s ..." " - Checking MariaDB Version Newer"
     compare_versions "$current_mariadb_version" "$version"
@@ -1551,30 +2278,30 @@ check_mariadb_versions() {
 check_gtid_strict_mode() {
     if ! command -v my_print_defaults &> /dev/null; then
         printf "\n[!] my_print_defaults not found. Ensure gtid_strict_mode=0 \n"
-    else
+    else  
         printf "%-35s ..." " - Checking gtid_strict_mode"
         strict_mode=$(my_print_defaults --mysqld 2>/dev/null | grep "gtid[-_]strict[-_]mode")
         if [ -n "$strict_mode" ] && [ $strict_mode == "--gtid_strict_mode=1" ]; then
             echo "my_print_defaults --mysqld | grep gtid[-_]strict[-_]mode     Result: $strict_mode"
             printf "Disable gtid_strict_mode before trying again\n\n"
             exit 1;
-        else
+        else 
             printf " Done\n"
         fi
-    fi
+    fi  
 }
 
 run_mariadb_upgrade() {
     if ! command -v mariadb-upgrade &> /dev/null; then
         printf "\n[!] mariadb-upgrade not found. Please install mariadb-upgrade\n\n"
-        exit 1;
-    fi
+        exit 1; 
+    fi   
 
     if [ "$pm_number" == "1" ];  then
         printf "\nMariaDB Upgrade\n"
         if ! mariadb-upgrade --write-binlog ; then
             printf "[!!] Failed to complete mariadb-upgrade \n"
-            exit 1;
+            exit 1; 
         fi
     fi
 }
@@ -1585,21 +2312,21 @@ do_enterprise_upgrade() {
     printf "\nDownloading Repo Setup\n"
     rm -rf mariadb_es_repo_setup
     url="https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup"
-    if $enterprise_staging; then
+    if $enterprise_staging; then 
         url="https://dlm.mariadb.com/$enterprise_token/enterprise-release-helpers-staging/mariadb_es_repo_setup"
     fi
     curl -LO "$url" -o mariadb_es_repo_setup;
-    chmod +x mariadb_es_repo_setup;
+    chmod +x mariadb_es_repo_setup;  
     if ! bash mariadb_es_repo_setup --token="$enterprise_token" --apply --mariadb-server-version="$version"; then
         printf "\n[!] Failed to apply mariadb_es_repo_setup...\n\n"
         exit 2;
     fi;
 
     case $package_manager in
-        yum )
+        yum ) 
             if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] enterprise_upgrade: Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
-            if $enterprise_staging; then
+            if $enterprise_staging; then 
                 sed -i 's/mariadb-es-main/mariadb-es-staging/g' /etc/yum.repos.d/mariadb.repo
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/yum.repos.d/mariadb.repo
                 printf "\n\n[+] Adjusted mariadb.repo to: mariadb-enterprise-staging\n\n"
@@ -1617,7 +2344,7 @@ do_enterprise_upgrade() {
         apt )
             if [ ! -f "/etc/apt/sources.list.d/mariadb.list" ]; then printf "\n[!] enterprise_upgrade: Expected to find mariadb.list in /etc/apt/sources.list.d \n\n"; exit 1; fi;
 
-            if $enterprise_staging; then
+            if $enterprise_staging; then 
                 sed -i 's/mariadb-enterprise-server/mariadb-enterprise-staging/g' /etc/apt/sources.list.d/mariadb.list
                 apt update
                 printf "\n\n[+] Adjusted mariadb.list to: mariadb-enterprise-staging\n\n"
@@ -1648,19 +2375,24 @@ do_enterprise_upgrade() {
 }
 
 enterprise_upgrade() {
-
+    
     # Variables
-    check_set_es_token "$@"
+    check_set_es_token "$@" 
     version=$3
-    if [ -z $version ]; then
-        printf "\n[!] Version empty: $version\n\n"
-        exit 1;
-    fi;
+    if [ -z "$version" ]; then
+        printf "[!] Version not defined\n"
+        printf "Usage: $0 upgrade enterprise $repo <version>\n"
+        exit 2;
+    fi
+
     echo "Token: $enterprise_token"
     echo "Current MariaDB Verison:    $current_mariadb_version"
     echo "Upgrade To MariaDB Version: $version"
     echo "-----------------------------------------------"
-
+    if pgrep -x "mariadbd" > /dev/null; then
+        mariadb -e "show status like '%Columnstore%';"
+    fi
+    
     # Prechecks
     printf "\nPrechecks\n"
     check_gtid_strict_mode
@@ -1668,7 +2400,7 @@ enterprise_upgrade() {
 
     # Stop All
     init_cs_down
-    wait_cs_down
+    wait_cs_down 
     stop_mariadb
     stop_cmapi
 
@@ -1688,10 +2420,11 @@ enterprise_upgrade() {
     # Post Upgrade
     confirm_dbrmctl_ok
     run_mariadb_upgrade
+    
 }
 
 do_upgrade() {
-
+    
     check_operating_system
     check_cpu_architecture
     check_package_managers
@@ -1712,19 +2445,19 @@ do_upgrade() {
             community_upgrade "$@" ;
             ;;
         dev )
-            # For future release
-            # dev_upgrade "$@" ;
+            dev_upgrade "$@" ;
             ;;
         *)  # unknown option
             echo "do_upgrade - Unknown repo: $repo\n"
             exit 2;
     esac
 
+    mariadb -e "show status like '%Columnstore%';"
     printf "\nUpgrade Complete\n\n"
 
 }
 
-# A quick way when a mac user runs "cs_package_manager.sh check"
+# A quick way when a mac user runs "cs_package_manager.sh check" 
 # since theres no /etc/os-release to auto detect what OS & version to search the mariadb repos on mac
 prompt_user_for_os() {
 
@@ -1744,8 +2477,8 @@ prompt_user_for_os() {
                                 distro_short="${distro_info:0:3}${version_id}"
                                 break
                                 ;;
-
-                            *)
+                
+                            *) 
                                 echo "Invalid option, please try again."
                                 ;;
                         esac
@@ -1764,8 +2497,8 @@ prompt_user_for_os() {
                                 distro_short="${distro_info:0:3}${version_id}"
                                 break
                                 ;;
-
-                            *)
+                
+                            *) 
                                 echo "Invalid option, please try again."
                                 ;;
                         esac
@@ -1773,7 +2506,7 @@ prompt_user_for_os() {
                 break
                 ;;
 
-            *)
+            *) 
                 echo "Invalid option, please try again."
                 ;;
         esac
@@ -1781,78 +2514,18 @@ prompt_user_for_os() {
 
     echo "Distro: $distro_info"
     echo "Version: $version_id"
-
-}
-
-# A quick way for mac users to select an OS when running "cs_package_manager.sh check"
-# since theres no /etc/os-release to auto detect what OS & version to search the mariadb repos on mac
-prompt_user_for_os() {
-
-    # Prompt the user to select an operating system
-    echo "Please select an operating system to search for:"
-    os_options=("centos" "rhel" "rocky" "ubuntu" "debian")
-    select opt in "${os_options[@]}"; do
-        case $opt in
-            "centos" |  "rhel" | "rocky" )
-                distro_info=$opt
-                echo "What major version of $distro_info:"
-                short_options=("7" "8" "9")
-                select short in "${short_options[@]}"; do
-                         case $short in
-                            "7" | "8" | "9")
-                                version_id=$short
-                                distro_short="${distro_info:0:3}${version_id}"
-                                break
-                                ;;
-
-                            *)
-                                echo "Invalid option, please try again."
-                                ;;
-                        esac
-                done
-                break
-                ;;
-            "ubuntu")
-                distro_info=$opt
-                echo "What major version of $distro_info:"
-                short_options=("20.04" "22.04" "23.04" "23.10")
-                select short in "${short_options[@]}"; do
-                         case $short in
-                            "20.04" | "22.04" | "23.04" | "23.10")
-                                version_id=${short//./}
-                                #version_id=$short
-                                distro_short="${distro_info:0:3}${version_id}"
-                                break
-                                ;;
-
-                            *)
-                                echo "Invalid option, please try again."
-                                ;;
-                        esac
-                done
-                break
-                ;;
-
-            *)
-                echo "Invalid option, please try again."
-                ;;
-        esac
-    done
-
-    echo "Distro: $distro_info"
-    echo "Version: $version_id"
-
+    
 }
 
 do_check() {
-
+    
     check_operating_system
-    check_cpu_architecture
+    check_cpu_architecture   
 
     repo=$2
     dbm_tmp_file="mdb-tmp.html"
     grep=$(which grep)
-    if [ $distro_info == "mac" ]; then
+    if [ $distro_info == "mac" ]; then 
         grep=$(which ggrep)
 
         prompt_user_for_os
@@ -1861,17 +2534,16 @@ do_check() {
     echo "Repository: $repo"
     case $repo in
         enterprise )
-            check_set_es_token "$@"
+            check_set_es_token "$@" 
 
             url_base="https://dlm.mariadb.com"
             url_page="/browse/$enterprise_token/mariadb_enterprise_server/"
-            # aaaa
             ignore="/login"
             at_least_one=false
             curl -s "$url_base$url_page" > $dbm_tmp_file
             if [ $? -ne 0 ]; then
                 printf "\n[!] Failed to access $url_base$url_page\n\n"
-                exit 1
+                exit 1  
             fi
             if grep -q "404 - Page Not Found" $dbm_tmp_file; then
                 printf "\n[!] 404 - Failed to access $url_base$url_page\n"
@@ -1879,6 +2551,7 @@ do_check() {
                 printf "See: https://customers.mariadb.com/downloads/token/ \n\n"
                 exit 1
             fi
+       
             major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
             #echo $major_version_links
             for major_link in ${major_version_links[@]}
@@ -1910,7 +2583,7 @@ do_check() {
                             fi;
                             ;;
                         ubuntu | debian )
-
+                            
                             path="deb/pool/main/m/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
 
@@ -1934,7 +2607,7 @@ do_check() {
                                     printf "%-8s  %-12s %-12s %-12s\n" "MariaDB:" "$mariadb_version" "Columnstore:" "$columnstore_version";
                                 fi;
                             done
-
+                     
                             ;;
                         *)  # unknown option
                             printf "\ndo_check: Not implemented for: $distro_info\n\n"
@@ -2007,7 +2680,7 @@ do_check() {
                     fi
                 done
             done
-
+            
             if ! $at_least_one; then
                 printf "\n[!] No columnstore packages found for: $distro_short $arch \n\n"
             fi
@@ -2025,8 +2698,8 @@ do_check() {
 global_dependencies() {
     if ! command -v curl &> /dev/null; then
         printf "\n[!] curl not found. Please install curl\n\n"
-        exit 1;
-    fi
+        exit 1; 
+    fi   
 }
 
 check_set_es_token() {
@@ -2045,7 +2718,7 @@ check_set_es_token() {
         esac
     done
 
-    if [ -z $enterprise_token ]; then
+    if [ -z $enterprise_token ]; then 
         printf "\n[!] Enterprise token empty: $enterprise_token\n"
         printf "1) edit $0 enterprise_token='xxxxxx' \n"
         printf "2) add flag --token xxxxxxxxx \n"
