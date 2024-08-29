@@ -4345,7 +4345,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
     }
     else  // where clause
     {
-	    idblog("WHERE clause");
+	    idblog("WHERE clause, clause type " << int(gwi.clauseType));
       stack<SPTP> tmpPtStack;
 
       for (int32_t i = ifp->argument_count() - 1; i >= 0; i--)
@@ -6070,7 +6070,7 @@ void gp_walk(const Item* item, void* arg)
           }
 
           ostringstream oss;
-          oss << "Unhandled Item type: " << item->type();
+          oss << "Unhandled Item type (1): " << item->type();
           gwip->parseErrorText = oss.str();
           gwip->fatalParseError = true;
           break;
@@ -6644,7 +6644,7 @@ idblog("changed to SELECT");
       }
 
       ostringstream oss;
-      oss << "Unhandled Item type: " << item->type();
+      oss << "Unhandled Item type (2): " << item->type();
       gwip->parseErrorText = oss.str();
       gwip->fatalParseError = true;
       break;
