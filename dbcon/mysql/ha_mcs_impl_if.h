@@ -186,6 +186,9 @@ struct gp_walk_info
   // SELECT_LEX is needed for aggergate wrapping
   SELECT_LEX* select_lex;
 
+  // we are processing HAVING despite having (pun not intented) clauseType equal to SELECT.
+  bool havingDespiteSelect;
+
   gp_walk_info(long timeZone_)
    : sessionid(0)
    , fatalParseError(false)
@@ -213,6 +216,7 @@ struct gp_walk_info
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
    , select_lex(nullptr)
+   , havingDespiteSelect(false)
   {
   }
 
