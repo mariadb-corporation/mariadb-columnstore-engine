@@ -23,6 +23,7 @@
 #include <boost/thread/condition_variable.hpp>
 
 #include "bytestream.h"
+#include <deque>
 
 namespace idbdatafile
 {
