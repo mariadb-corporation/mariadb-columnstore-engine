@@ -4056,7 +4056,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
 
   if (isOnSelectList)
   {
-    SimpleColumn* sc = new SimpleColumn(ac);
+    SimpleColumn* sc = new SimpleColumn(*ac);
     delete ac;
     return sc;
   }
