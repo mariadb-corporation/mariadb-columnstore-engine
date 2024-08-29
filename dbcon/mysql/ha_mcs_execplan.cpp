@@ -6414,9 +6414,12 @@ void gp_walk(const Item* item, void* arg)
         gwip->clauseType = SELECT;
       }
 
+      idblog("col->type() " << int(col->type));
       if (col->type() != Item::COND_ITEM)
       {
+	      idblog("building ret col");
         rc = buildReturnedColumn(col, *gwip, gwip->fatalParseError, true);
+	idblog("rc: " << rc);
 
         if (col->type() == Item::FIELD_ITEM)
           gwip->fatalParseError = false;
@@ -6474,6 +6477,7 @@ void gp_walk(const Item* item, void* arg)
         // which are always predicate operator, the function (gp_key>3) comes in as
         // one item.
         Item_func* ifp = (Item_func*)col;
+	idblog("funk item");
 
         for (uint32_t i = 0; i < ifp->argument_count(); i++)
         {
@@ -6527,7 +6531,10 @@ void gp_walk(const Item* item, void* arg)
         break;
       }
       else
+      {
+	      idblog("can't do");
         cando = false;
+      }
 
       idblog("rc: " << rc);
       if (rc) { idblog("  rc is " << rc->toString()); }
