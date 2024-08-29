@@ -95,8 +95,8 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+// server points to the commit in bb-10.6.14-9-cs-23.02.10-1 of ES
+local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae764b152045bf5bdb234d7edf') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -616,7 +616,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              environment: {
                SERVER_REF: '${SERVER_REF:-' + server + '}',
                SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
-               SERVER_SHA: '${SERVER_SHA:-' + server + '}',
+               // server points to the commit in bb-10.6.14-9-cs-23.02.10-1 of ES
+               SERVER_SHA: '${SERVER_SHA:-' + '0c6b89c694a88aae764b152045bf5bdb234d7edf' + '}',
              },
              commands: [
                'echo $$SERVER_REF',
