@@ -6070,7 +6070,7 @@ void gp_walk(const Item* item, void* arg)
           }
 
           ostringstream oss;
-          oss << "Unhandled Item type (1): " << item->type();
+          oss << "Unhandled Item type(): " << item->type();
           gwip->parseErrorText = oss.str();
           gwip->fatalParseError = true;
           break;
@@ -6532,7 +6532,7 @@ void gp_walk(const Item* item, void* arg)
       if (!cando)
       {
         ostringstream oss;
-        oss << "Unhandled Item type: " << item->type();
+        oss << "Unhandled Item cmp_type(): " << item->type();
         gwip->parseErrorText = oss.str();
         gwip->fatalParseError = true;
       }
