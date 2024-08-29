@@ -6529,7 +6529,7 @@ void gp_walk(const Item* item, void* arg)
       else
         cando = false;
 
-      if (!cando)
+      if (!rc && !cando)
       {
         ostringstream oss;
         oss << "Unhandled Item type(): " << item->type();
