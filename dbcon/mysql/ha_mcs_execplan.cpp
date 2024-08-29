@@ -4054,7 +4054,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
     }
   }
 
-  if (isOnSelectList)
+  if (isOnSelectList && gwi.clauseType == HAVING)
   {
     SimpleColumn* sc = new SimpleColumn(*ac);
     delete ac;
