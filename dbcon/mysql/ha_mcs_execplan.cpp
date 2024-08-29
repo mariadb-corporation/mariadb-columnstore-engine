@@ -6414,7 +6414,7 @@ void gp_walk(const Item* item, void* arg)
         gwip->clauseType = SELECT;
       }
 
-      idblog("col->type() " << int(col->type));
+      idblog("col->type() " << int(col->type()));
       if (col->type() != Item::COND_ITEM)
       {
 	      idblog("building ret col");
