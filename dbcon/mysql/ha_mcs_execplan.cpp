@@ -6422,7 +6422,7 @@ void gp_walk(const Item* item, void* arg)
           gwip->fatalParseError = false;
       }
 
-      SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
+      SimpleColumn* sc = clauseType == HAVING ? nullptr : dynamic_cast<SimpleColumn*>(rc);
 
       if (sc)
       {
@@ -6532,7 +6532,7 @@ void gp_walk(const Item* item, void* arg)
       if (!cando)
       {
         ostringstream oss;
-        oss << "Unhandled Item cmp_type(): " << item->type();
+        oss << "Unhandled Item type(): " << item->type();
         gwip->parseErrorText = oss.str();
         gwip->fatalParseError = true;
       }
