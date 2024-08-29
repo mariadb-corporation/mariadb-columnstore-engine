@@ -225,6 +225,21 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
 {
 }
 
+SimpleColumn::SimpleColumn(const ReturnedColumn& rhs, const uint32_t sessionID)
+ : ReturnedColumn(rhs, sessionID)
+ , fSchemaName(rhs.schemaName())
+ , fTableName(rhs.tableName())
+ , fColumnName(rhs.columnName())
+ , fOid(rhs.oid())
+ , fTableAlias(rhs.tableAlias())
+ , fData(rhs.data())
+ , fIndexName(rhs.indexName())
+ , fViewName(rhs.viewName())
+ , fTimeZone(rhs.timeZone())
+ , fisColumnStore(rhs.isColumnStore())
+{
+}
+
 SimpleColumn::~SimpleColumn()
 {
 }

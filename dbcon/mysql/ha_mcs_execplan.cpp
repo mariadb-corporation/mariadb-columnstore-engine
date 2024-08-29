@@ -4022,6 +4022,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
   ac->expressionId(ci->expressionId++);
 
   // @3391. optimization. try to associate expression ID to the expression on the select list
+  bool isOnSelectList = false;
   if (gwi.clauseType != SELECT)
   {
 	  idblog("ac: " << ac->toString());
@@ -4034,6 +4035,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
 	      idblog("associated");
 	      idblog("clause type " << int(gwi.clauseType) << ", HAVING is " << int(HAVING));
         ac->expressionId(gwi.returnedCols[i]->expressionId());
+	isOnSelectList = true;
         break;
       }
     }
@@ -4052,6 +4054,12 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
     }
   }
 
+  if (isOnSelectList)
+  {
+    SimpleColumn* sc = new SimpleColumn(ac);
+    delete ac;
+    return sc;
+  }
   return ac;
 }
 ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
