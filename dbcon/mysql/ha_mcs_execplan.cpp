@@ -6409,7 +6409,7 @@ void gp_walk(const Item* item, void* arg)
       // ref item is not pre-walked. force clause type to SELECT
       ClauseType clauseType = gwip->clauseType;
       idblog("clause type " << int(clauseType) << ", set to SELECT");
-      gwip->clauseType = SELECT;
+      //gwip->clauseType = SELECT;
 
       if (col->type() != Item::COND_ITEM)
       {
