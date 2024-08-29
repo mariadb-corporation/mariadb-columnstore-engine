@@ -6529,6 +6529,8 @@ void gp_walk(const Item* item, void* arg)
       else
         cando = false;
 
+      idblog("rc: " << rc);
+      if (rc) { idblog("  rc is " << rc->toString()); }
       if (!rc && !cando)
       {
         ostringstream oss;
