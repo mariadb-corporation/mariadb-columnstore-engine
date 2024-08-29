@@ -4067,7 +4067,7 @@ ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& 
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
   idblog("building arith col");
-  ArithmeticColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
+  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
   idblog("built arith col: " << (rc ? rc->toString() : "NULL"));
   gwi.disableWrapping = disableWrapping;
   return rc;
@@ -4137,8 +4137,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   // Arithmetic exp
   if (funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/")
   {
-    ArithmeticColumn* ac = buildArithmeticColumn(ifp, gwi, nonSupport);
-    return ac;
+    return buildArithmeticColumn(ifp, gwi, nonSupport);
   }
 
   else if (funcName == "case")
