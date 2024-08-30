@@ -8153,7 +8153,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  gwi.havingDespiteSelect = true;
   clearStacks(gwi);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
@@ -8323,6 +8322,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
+  idblog("GROUP BY");
   // Group by list. not valid for union main query
   if (!unionSel)
   {
@@ -8615,6 +8615,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }
+  idlog("GROUP BY done");
 
   // ORDER BY processing
   {
