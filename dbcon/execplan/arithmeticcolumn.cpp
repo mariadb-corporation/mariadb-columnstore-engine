@@ -43,6 +43,7 @@ using namespace messageqcpp;
 
 namespace
 {
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -60,6 +61,9 @@ namespace
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(x)
+#endif
 /** print the tree
  *
  * this function is mostly for debug purpose

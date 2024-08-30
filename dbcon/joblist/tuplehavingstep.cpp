@@ -53,6 +53,7 @@ using namespace querytele;
 #include "jlf_common.h"
 #include "tuplehavingstep.h"
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -70,6 +71,9 @@ using namespace querytele;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(x)
+#endif
 
 namespace joblist
 {

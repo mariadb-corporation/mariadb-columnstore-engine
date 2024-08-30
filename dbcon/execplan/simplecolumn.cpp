@@ -53,6 +53,7 @@ using namespace joblist;
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -70,6 +71,9 @@ using namespace joblist;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(_)
+#endif
 namespace execplan
 {
 void getSimpleCols(execplan::ParseTree* n, void* obj)

@@ -41,6 +41,7 @@
 
 #include "collation.h"  // CHARSET_INFO
 
+#if 0
 #define poidblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -58,6 +59,9 @@
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define poidblog(_)
+#endif
 namespace messageqcpp
 {
 class ByteStream;

@@ -33,6 +33,7 @@
 #include "operator.h"
 #include "parsetree.h"
 
+#if 0
 #define aoidblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -50,6 +51,9 @@
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define aoidblog(_)
+#endif
 namespace messageqcpp
 {
 class ByteStream;

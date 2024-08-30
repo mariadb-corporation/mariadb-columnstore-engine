@@ -53,6 +53,7 @@ using namespace rowgroup;
 
 #include "expressionstep.h"
 
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -70,6 +71,9 @@ using namespace rowgroup;
       logger.logErrorMessage(message);                                                     \
     }                                                                                      \
   } while (0)
+#else
+#define idblog(_)
+#endif
 
 namespace joblist
 {
