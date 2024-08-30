@@ -560,9 +560,9 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
     }
     else
     {
-	    auto etk = getExpTupleKey(jobInfo, (*it)->expressionId());
-	    auto eid = (*it)->expressionId();
-	    idblog("setting inputu index " << indexMap[getExpTupleKey(jobInfo, (*it)->expressionId())] << ", etk " << etk << ", eid " << eid);
+	    //auto etk = getExpTupleKey(jobInfo, (*it)->expressionId());
+	    //auto eid = (*it)->expressionId();
+	    //idblog("setting inputu index " << indexMap[getExpTupleKey(jobInfo, (*it)->expressionId())] << ", etk " << etk << ", eid " << eid);
       (*it)->inputIndex(indexMap[getExpTupleKey(jobInfo, (*it)->expressionId())]);
 
       if (jobInfo.trace)
