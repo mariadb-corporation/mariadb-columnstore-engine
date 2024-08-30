@@ -8615,7 +8615,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
     }
   }
-  idlog("GROUP BY done");
+  idblog("GROUP BY done");
 
   // ORDER BY processing
   {
