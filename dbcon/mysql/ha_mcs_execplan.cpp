@@ -4054,7 +4054,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
     }
   }
 
-  if (isOnSelectList && gwi.clauseType == HAVING)
+  if (isOnSelectList && gwi.havingDespiteSelect)
   {
     SimpleColumn* sc = new SimpleColumn(*ac);
     delete ac;
@@ -6409,10 +6409,7 @@ void gp_walk(const Item* item, void* arg)
       // ref item is not pre-walked. force clause type to SELECT
       ClauseType clauseType = gwip->clauseType;
       idblog("clause type " << int(clauseType) << ", set to SELECT");
-      if (clauseType != HAVING)
-      {
-        gwip->clauseType = SELECT;
-      }
+      gwip->clauseType = SELECT;
 
       idblog("col->type() " << int(col->type()));
       if (col->type() != Item::COND_ITEM)
@@ -8156,6 +8153,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   // Having clause handling
   gwi.clauseType = HAVING;
+  gwi.havingDespiteSelect = true;
   clearStacks(gwi);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
@@ -8205,6 +8203,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       gwi.ptWorkStack.push(ptp);
     }
   }
+  gwi.havingDespiteSelect = false;
   gwi.disableWrapping = false;
 
   // MCOL-4617 If this is an IN subquery, then create the in-to-exists
