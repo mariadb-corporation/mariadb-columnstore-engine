@@ -141,7 +141,7 @@ IF(RPM)
 
     STRING(REGEX MATCH "^." OS_VERSION_MAJOR "${LSB_RELEASE_VERSION_SHORT}")
     MESSAGE(STATUS ${OS_VERSION_MAJOR})
-    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma")
+    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma|RedHatEnterprise")
         SET(OS_NAME_SHORT "el")
         IF (OS_VERSION_MAJOR MATCHES "9")
 	    SET(CPACK_RPM_PACKAGE_REQUIRES "libxcrypt-compat")
