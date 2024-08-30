@@ -4023,7 +4023,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
 
   // @3391. optimization. try to associate expression ID to the expression on the select list
   bool isOnSelectList = false;
-  if (gwi.clauseType != SELECT)
+  if (gwi.clauseType != SELECT || gwi.havingDespiteSelect)
   {
 	  idblog("ac: " << ac->toString());
     for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
@@ -8160,6 +8160,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   gwi.parseErrorText = "";
 
   gwi.disableWrapping = false;
+  gwi.havingDespiteSelect = true;
   if (select_lex.having != 0)
   {
 	  idblog("processing HAVING");
