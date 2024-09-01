@@ -33,6 +33,12 @@
 
 #define CACHE_PREFIX "#cache#"
 
+#ifdef HLINDEX_TEMPLATE /* it happens to be defined in the vector branch */
+#define HT(X) /* nothing */
+#else
+#define HT(X) X,
+#endif
+
 handlerton* mcs_hton = NULL;
 // This is the maria handlerton that we need for the cache
 static handlerton* mcs_maria_hton = NULL;
@@ -116,12 +122,12 @@ int mcs_discover_existence(handlerton* hton, const char* db, const char* table_n
   return ha_mcs_impl_discover_existence(db, table_name);
 }
 
-static int mcs_commit(handlerton* hton, THD* thd, bool all)
+static int mcs_commit(HT(handlerton*) THD* thd, bool all)
 {
   int rc;
   try
   {
-    rc = ha_mcs_impl_commit(hton, thd, all);
+    rc = ha_mcs_impl_commit(mcs_hton, thd, all);
   }
   catch (std::runtime_error& e)
   {
@@ -131,12 +137,12 @@ static int mcs_commit(handlerton* hton, THD* thd, bool all)
   return rc;
 }
 
-static int mcs_rollback(handlerton* hton, THD* thd, bool all)
+static int mcs_rollback(HT(handlerton*) THD* thd, bool all)
 {
   int rc;
   try
   {
-    rc = ha_mcs_impl_rollback(hton, thd, all);
+    rc = ha_mcs_impl_rollback(mcs_hton, thd, all);
   }
   catch (std::runtime_error& e)
   {
@@ -146,12 +152,12 @@ static int mcs_rollback(handlerton* hton, THD* thd, bool all)
   return rc;
 }
 
-static int mcs_close_connection(handlerton* hton, THD* thd)
+static int mcs_close_connection(HT(handlerton*) THD* thd)
 {
   int rc;
   try
   {
-    rc = ha_mcs_impl_close_connection(hton, thd);
+    rc = ha_mcs_impl_close_connection(mcs_hton, thd);
   }
   catch (std::runtime_error& e)
   {
@@ -1972,13 +1978,13 @@ end:
   if (!error)
   {
     if (parent::ht->commit)
-      error = parent::ht->commit(parent::ht, table->in_use, 1);
+      error = parent::ht->commit(HT(parent::ht) table->in_use, 1);
   }
   else
   {
     /* We can ignore the rollback error as we already have some other errors */
     if (parent::ht->rollback)
-      parent::ht->rollback(parent::ht, table->in_use, 1);
+      parent::ht->rollback(HT(parent::ht) table->in_use, 1);
   }
 
   DBUG_ASSERT(error == 0);
