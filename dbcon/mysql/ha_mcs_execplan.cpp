@@ -2067,15 +2067,16 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
 
     sop.reset(new PredicateOperator(eqop));
-    sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
+    //sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
+    sop->setOpType(lhs->resultType(), rhs->resultType());
     ConstantFilter* cf = 0;
 
-    cf = new ConstantFilter(sop, gwip->scsp->clone(), rhs);
+    cf = new ConstantFilter(sop, lhs->clone(), rhs);
     sop.reset(new LogicOperator(cmbop));
     cf->op(sop);
     sop.reset(new PredicateOperator(eqop));
-    sop->setOpType(gwip->scsp->resultType(), lhs->resultType());
-    cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->timeZone));
+    sop->setOpType(lhs->resultType(), lhs->resultType());
+    cf->pushFilter(new SimpleFilter(sop, lhs->clone(), lhs, gwip->timeZone));
 
     while (!gwip->rcWorkStack.empty())
     {
