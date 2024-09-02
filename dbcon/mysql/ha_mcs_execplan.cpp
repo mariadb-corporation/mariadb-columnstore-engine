@@ -2088,7 +2088,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
       gwip->rcWorkStack.pop();
       sop.reset(new PredicateOperator(eqop));
       sop->setOpType(lhs->resultType(), lhs->resultType());
-      cf->pushFilter(new SimpleFilter(sop, gwip->scsp->clone(), lhs, gwip->timeZone));
+      cf->pushFilter(new SimpleFilter(sop, lhs->clone(), lhs, gwip->timeZone));
     }
 
     if (!gwip->rcWorkStack.empty())
