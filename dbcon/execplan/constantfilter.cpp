@@ -62,16 +62,14 @@ ConstantFilter::ConstantFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColum
 {
   SSFP ssfp(new SimpleFilter(op, lhs, rhs));
   fFilterList.push_back(ssfp);
-  SimpleColumn* sc = dynamic_cast<SimpleColumn*>(lhs);
-  fCol.reset(sc->clone());
+  fCol.reset(lhs->clone());
 }
 
 ConstantFilter::ConstantFilter(SimpleFilter* sf)
 {
   SSFP ssfp(sf);
   fFilterList.push_back(ssfp);
-  const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(sf->lhs());
-  fCol.reset(sc->clone());
+  fCol.reset(sf->lhs()->clone());
 }
 
 ConstantFilter::ConstantFilter(const ConstantFilter& rhs) : Filter(rhs), fOp(rhs.fOp), fCol(rhs.fCol)
