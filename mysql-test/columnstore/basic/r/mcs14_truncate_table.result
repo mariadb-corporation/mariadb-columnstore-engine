@@ -65,8 +65,6 @@ CREATE TABLE t1 (id INT) ENGINE=Columnstore;
 INSERT INTO t1 (id) VALUES (1), (2), (3), (4), (5);
 CREATE TABLE t2 LIKE t1;
 INSERT INTO t2 SELECT * FROM t1;
-connect  addconroot1, localhost, root,,;
-connect  addconroot2, localhost, root,,;
 connection addconroot1;
 TRUNCATE mcs14_db1.t1;
 connection addconroot2;

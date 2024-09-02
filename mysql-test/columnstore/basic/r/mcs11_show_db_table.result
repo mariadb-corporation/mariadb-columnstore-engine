@@ -40,8 +40,6 @@ SHOW TABLES IN mcs11_db2;
 Tables_in_mcs11_db2
 t1
 t2
-connect  addconroot1, localhost, root,,;
-connect  addconroot2, localhost, root,,;
 connection addconroot1;
 SHOW DATABASES LIKE 'mcs11%';
 Database (mcs11%)
