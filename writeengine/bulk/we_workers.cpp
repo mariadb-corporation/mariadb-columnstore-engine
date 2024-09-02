@@ -51,6 +51,15 @@ void BulkLoad::sleepMS(long ms)
 
 }
 
+void BulkLoad::readCsv()
+{
+  // the first table(assume only 1 file)
+  // int id = 0;
+  // int tableId = -1;
+  // tableId = lockTableForRead(id);
+  fTableInfo[0].readTableDataCsv();
+}
+
 //------------------------------------------------------------------------------
 // This is the main entry point method for each Read thread.
 // id is the one-up number (starting at 0) associated with each Read thread.

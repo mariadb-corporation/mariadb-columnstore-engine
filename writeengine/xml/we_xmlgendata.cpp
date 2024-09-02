@@ -67,6 +67,7 @@ XMLGenData::XMLGenData()
 
   fParms.insert(ParmList::value_type(RPT_DEBUG, std::string("0")));
   fParms.insert(ParmList::value_type(USER, std::string()));
+  // set read buffer number
   fParms.insert(ParmList::value_type(NO_OF_READ_BUFFER, std::string("5")));
   fParms.insert(ParmList::value_type(READ_BUFFER_CAPACITY, std::string("1048576")));
   fParms.insert(ParmList::value_type(WRITE_BUFFER_SIZE, std::string("10485760")));
