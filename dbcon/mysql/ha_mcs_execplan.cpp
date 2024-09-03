@@ -2031,7 +2031,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     gwip->rcWorkStack.pop();
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
     gwip->rcWorkStack.pop();
-    idblog("scsp: " << gwip->scsp ? gwip->scsp->toString() : "nullptr");
+    idblog("scsp: " << (gwip->scsp ? gwip->scsp->toString() : "nullptr"));
     idblog("IN lhs " << lhs->toString());
     idblog("IN rhs " << rhs->toString());
 
