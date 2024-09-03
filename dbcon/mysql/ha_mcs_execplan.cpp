@@ -4185,6 +4185,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
       // @todo need more checks here
       if (ifp->arguments()[0]->type() == Item::ROW_ITEM)
       {
+	      idblog("ret null in buildFunctionColumnBody");
         return NULL;
       }
       if (ifp->argument_count() > std::numeric_limits<uint16_t>::max())
