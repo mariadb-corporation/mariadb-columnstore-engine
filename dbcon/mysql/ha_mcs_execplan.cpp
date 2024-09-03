@@ -2031,6 +2031,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     gwip->rcWorkStack.pop();
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
     gwip->rcWorkStack.pop();
+    idblog("IN lhs " << lhs->toString());
+    idblog("IN rhs " << rhs->toString());
 
     // @bug3038
     RowColumn* rrhs = dynamic_cast<RowColumn*>(rhs);
@@ -5977,6 +5979,7 @@ void gp_walk(const Item* item, void* arg)
 
         if (!scp)
           break;
+	idblog("scp: " << scp->toString());
 
         string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
