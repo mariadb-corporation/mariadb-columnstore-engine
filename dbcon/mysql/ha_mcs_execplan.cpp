@@ -5973,6 +5973,7 @@ void gp_walk(const Item* item, void* arg)
 	// XXX: this looks awfuly wrong.
         idblog("awfully wrong");
         SimpleColumn* scp = buildSimpleColumn(ifp, *gwip);
+	idblog("scp " << scp);
 
         if (!scp)
           break;
