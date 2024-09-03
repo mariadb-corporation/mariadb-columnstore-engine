@@ -105,7 +105,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (branch == any_branch) then 'develop' else branch,
+  local branch_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == '**') then '' else branch + '/',
@@ -322,7 +322,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
-      REGRESSION_REF_AUX: regression_ref,
+      REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
       // compute branch.
@@ -459,8 +459,22 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
     depends_on: ['publish pkg', 'publish cmapi build'],
     //failure: 'ignore',
     image: 'alpine/git',
+    environment: {
+      DOCKER_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
+      DOCKER_REF_AUX: branch_ref,
+    },
     commands: [
-      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
+      // compute branch.
+      'echo "$$DOCKER_REF"',
+      'echo "$$DOCKER_BRANCH_REF"',
+      // if DOCKER_REF is empty, try to see whether docker repository has a branch named as one we PR.
+      'export DOCKER_REF=$${DOCKER_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/$$DOCKER_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'echo "$$DOCKER_REF"',
+      // DOCKER_REF can be empty if there is no appropriate branch in docker repository.
+      // assign what is appropriate by default.
+      'export DOCKER_REF=$${DOCKER_REF:-$$DOCKER_REF_AUX}',
+      'echo "$$DOCKER_REF"',
+      'git clone --branch $$DOCKER_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
       'touch docker/.secrets',
     ],
   },
