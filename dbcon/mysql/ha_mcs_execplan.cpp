@@ -96,7 +96,7 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
-#if 0
+#if 01
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
@@ -2076,6 +2076,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     cf->op(sop);
     sop.reset(new PredicateOperator(eqop));
     sop->setOpType(lhs->resultType(), rhs->resultType());
+    idblog("cf lhs: " << lhs->toString());
+    idblog("cf rhs: " << rhs->toString());
     cf->pushFilter(new SimpleFilter(sop, lhs->clone(), rhs->clone(), gwip->timeZone));
 
     while (!gwip->rcWorkStack.empty())
@@ -2086,6 +2088,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
         break;
 
       gwip->rcWorkStack.pop();
+      idblog("  cf lhs: " << lhs->toString());
       sop.reset(new PredicateOperator(eqop));
       sop->setOpType(lhs->resultType(), rhs->resultType());
       cf->pushFilter(new SimpleFilter(sop, lhs->clone(), rhs->clone(), gwip->timeZone));
