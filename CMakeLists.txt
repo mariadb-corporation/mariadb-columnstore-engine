@@ -569,6 +569,8 @@ INSTALL (
 )
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 
+OPTION (COLUMNSTORE_ALL_STATIC "Build every binari without internal shared libraries" OFF)
+
 SET (
   COLUMSTORE_INSTALL_INTERNAL_SO_LIST
   "usr/lib/*/libbatchloader.so
@@ -613,9 +615,10 @@ IF (COLUMNSTORE_ALL_STATIC)
   SET (COLUMSTORE_INSTALL_INTERNAL_SO_LIST "")
 ENDIF ()
 
+
 CONFIGURE_FILE (
   ${CMAKE_CURRENT_SOURCE_DIR}/debian/mariadb-plugin-columnstore.install.in
-  ${CMAKE_CURRENT_BINARY_DIR}/debian/mariadb-plugin-columnstore.install
+  ${CMAKE_CURRENT_SOURCE_DIR}/debian/mariadb-plugin-columnstore.install
 )
 
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)

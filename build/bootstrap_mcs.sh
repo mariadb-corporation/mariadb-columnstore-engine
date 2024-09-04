@@ -284,7 +284,7 @@ build()
 
     if [[ $STATIC_BUILD = true ]] ; then
         warn "Building all with static linkage"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCOLUMNSTORE_ALL_STATIC"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCOLUMNSTORE_ALL_STATIC:BOOL=ON"
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then
