@@ -1,0 +1,8 @@
+Install MDBCI: see https://github.com/mariadb-corporation/mdbci/blob/integration/docs/src/README.md
+
+Install library:
+download latest lib from https://mdbe-ci-repo.mariadb.net/packages/mdb_buildbot_scripts/
+
+pip3 install mdb-buildbot-scripts-<version>.tar.gz
+
+Run tests: see multinode_example.sh and multinode_maxscale_example.sh
