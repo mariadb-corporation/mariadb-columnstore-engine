@@ -96,7 +96,7 @@ const uint64_t SUB_BIT = 0x02;
 const uint64_t AF_BIT = 0x04;
 const uint64_t CORRELATED = 0x08;
 
-#if 01
+#if 0
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
