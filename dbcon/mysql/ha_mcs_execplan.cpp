@@ -2070,18 +2070,20 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
 
     sop.reset(new PredicateOperator(eqop));
+    SRCP scsp = gwip->scsp;
+    idbassert(scsp.get() != nullptr);
     //sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
-    sop->setOpType(lhs->resultType(), rhs->resultType());
+    sop->setOpType(scsp->resultType(), rhs->resultType());
     ConstantFilter* cf = 0;
 
-    cf = new ConstantFilter(sop, lhs->clone(), rhs);
+    cf = new ConstantFilter(sop, scsp->clone(), rhs);
     sop.reset(new LogicOperator(cmbop));
     cf->op(sop);
     sop.reset(new PredicateOperator(eqop));
-    sop->setOpType(lhs->resultType(), rhs->resultType());
+    sop->setOpType(scsp->resultType(), rhs->resultType());
     idblog("cf lhs: " << lhs->toString());
     idblog("cf rhs: " << rhs->toString());
-    cf->pushFilter(new SimpleFilter(sop, lhs->clone(), rhs->clone(), gwip->timeZone));
+    cf->pushFilter(new SimpleFilter(sop, scsp->clone(), rhs->clone(), gwip->timeZone));
 
     while (!gwip->rcWorkStack.empty())
     {
@@ -2093,8 +2095,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
       gwip->rcWorkStack.pop();
       idblog("  cf lhs: " << lhs->toString());
       sop.reset(new PredicateOperator(eqop));
-      sop->setOpType(lhs->resultType(), rhs->resultType());
-      cf->pushFilter(new SimpleFilter(sop, lhs->clone(), rhs->clone(), gwip->timeZone));
+      sop->setOpType(scsp->resultType(), lhs->resultType());
+      cf->pushFilter(new SimpleFilter(sop, scsp->clone(), lhs->clone(), gwip->timeZone));
     }
 
     if (!gwip->rcWorkStack.empty())
