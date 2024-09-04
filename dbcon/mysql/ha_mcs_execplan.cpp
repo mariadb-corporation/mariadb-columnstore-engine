@@ -6547,11 +6547,11 @@ void gp_walk(const Item* item, void* arg)
 
       idblog("rc: " << rc);
       if (rc) { idblog("  rc is " << rc->toString()); }
-      SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-      if (sc)
+      SimpleColumn* thisSC = dynamic_cast<SimpleColumn*>(rc);
+      if (thisSC)
       {
         idblog("setting scsp");
-	gwip->scsp.reset(sc->clone());
+	gwip->scsp.reset(thisSC->clone());
       }
       if (!rc && !cando)
       {
