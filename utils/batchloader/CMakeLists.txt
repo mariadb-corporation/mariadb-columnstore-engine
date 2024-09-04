@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (batchloader_LIB_SRCS batchloader.cpp)
 
-ADD_LIBRARY (batchloader SHARED ${batchloader_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (batchloader STATIC ${batchloader_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (batchloader SHARED ${batchloader_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (batchloader loggingcpp)
 

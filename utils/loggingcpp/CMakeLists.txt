@@ -17,8 +17,8 @@ ADD_CUSTOM_COMMAND (
 SET_SOURCE_FILES_PROPERTIES (${CMAKE_CURRENT_BINARY_DIR}/messageids.h PROPERTIES GENERATED TRUE)
 SET_SOURCE_FILES_PROPERTIES (${CMAKE_CURRENT_BINARY_DIR}/errorids.h PROPERTIES GENERATED TRUE)
 
-ADD_LIBRARY (
-  loggingcpp SHARED
+SET (
+  loggingcpp_sources
   message.cpp
   messagelog.cpp
   logger.cpp
@@ -29,6 +29,13 @@ ADD_LIBRARY (
   ${CMAKE_CURRENT_BINARY_DIR}/messageids.h
   ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
 )
+
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (loggingcpp STATIC ${loggingcpp_sources})
+ELSE ()
+  ADD_LIBRARY (loggingcpp SHARED ${loggingcpp_sources})
+ENDIF ()
+
 ADD_DEPENDENCIES (loggingcpp external_boost)
 
 INSTALL (

@@ -47,7 +47,11 @@ SET (
   udafcolumn.cpp
 )
 
-ADD_LIBRARY (execplan SHARED ${execplan_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (execplan STATIC ${execplan_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (execplan SHARED ${execplan_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (execplan loggingcpp)
 

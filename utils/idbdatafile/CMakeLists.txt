@@ -14,7 +14,11 @@ SET (
   UnbufferedFile.cpp
 )
 
-ADD_LIBRARY (idbdatafile SHARED ${idbdatafile_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (idbdatafile STATIC ${idbdatafile_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (idbdatafile SHARED ${idbdatafile_LIB_SRCS})
+ENDIF ()
 
 TARGET_LINK_LIBRARIES (idbdatafile ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS} boost_filesystem boost_system)
 

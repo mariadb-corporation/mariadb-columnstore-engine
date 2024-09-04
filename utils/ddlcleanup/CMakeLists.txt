@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (ddlcleanuputil_LIB_SRCS ddlcleanuputil.cpp)
 
-ADD_LIBRARY (ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (ddlcleanuputil STATIC ${ddlcleanuputil_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (ddlcleanuputil loggingcpp)
 

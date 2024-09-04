@@ -11,7 +11,11 @@ SET (
   ../../datatypes/mcs_datatype.cpp
 )
 
-ADD_LIBRARY (cloudio SHARED ${cloudio_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (cloudio STATIC ${cloudio_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (cloudio SHARED ${cloudio_LIB_SRCS})
+ENDIF ()
 
 # IDBDataFile currently depends on cloudio, which is backward. Once cloudio has been turned into a proper plugin for
 # idbdatafile, we should be able to reverse the dependency like so:

@@ -13,7 +13,11 @@ SET (
   droppartitionprocessor.cpp
 )
 
-ADD_LIBRARY (ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (ddlpackageproc STATIC ${ddlpackageproc_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (ddlpackageproc SHARED ${ddlpackageproc_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (ddlpackageproc loggingcpp)
 

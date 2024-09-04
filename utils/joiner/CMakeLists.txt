@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (joiner_LIB_SRCS tuplejoiner.cpp joinpartition.cpp)
 
-ADD_LIBRARY (joiner SHARED ${joiner_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (joiner STATIC ${joiner_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (joiner SHARED ${joiner_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (joiner loggingcpp)
 

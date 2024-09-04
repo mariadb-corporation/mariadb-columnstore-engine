@@ -7,7 +7,12 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (libmysql_client_LIB_SRCS libmysql_client.cpp)
 
-ADD_LIBRARY (libmysql_client SHARED ${libmysql_client_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (libmysql_client STATIC ${libmysql_client_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (libmysql_client SHARED ${libmysql_client_LIB_SRCS})
+ENDIF ()
+
 TARGET_LINK_LIBRARIES (libmysql_client ${MARIADB_CLIENT_LIBS})
 
 ADD_DEPENDENCIES (libmysql_client loggingcpp)

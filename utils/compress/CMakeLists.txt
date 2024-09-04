@@ -13,7 +13,12 @@ SET (compress_LIB_SRCS idbcompress.cpp)
 
 ADD_DEFINITIONS (-DNDEBUG)
 
-ADD_LIBRARY (compress SHARED ${compress_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (compress STATIC ${compress_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (compress SHARED ${compress_LIB_SRCS})
+ENDIF ()
+
 ADD_DEPENDENCIES (compress loggingcpp external_boost)
 
 TARGET_LINK_LIBRARIES (compress ${SNAPPY_LIBRARIES})

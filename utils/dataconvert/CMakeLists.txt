@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (dataconvert_LIB_SRCS dataconvert.cpp)
 
-ADD_LIBRARY (dataconvert SHARED ${dataconvert_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (dataconvert STATIC ${dataconvert_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (dataconvert SHARED ${dataconvert_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (dataconvert loggingcpp)
 

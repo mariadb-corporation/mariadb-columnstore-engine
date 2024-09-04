@@ -34,7 +34,11 @@ SET (
   ../../datatypes/mcs_datatype.cpp
 )
 
-ADD_LIBRARY (brm SHARED ${brm_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (brm STATIC ${brm_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (brm SHARED ${brm_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (brm loggingcpp)
 

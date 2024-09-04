@@ -15,7 +15,11 @@ SET (
   string_prefixes.cpp
 )
 
-ADD_LIBRARY (common SHARED ${common_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (common STATIC ${common_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (common SHARED ${common_LIB_SRCS})
+ENDIF ()
 
 TARGET_LINK_LIBRARIES (common boost_filesystem)
 

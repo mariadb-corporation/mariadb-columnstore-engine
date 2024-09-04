@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
-ADD_LIBRARY (oamcpp SHARED ${oamcpp_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (oamcpp STATIC ${oamcpp_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (oamcpp SHARED ${oamcpp_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (oamcpp loggingcpp)
 

@@ -4,7 +4,12 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (rwlock_LIB_SRCS rwlock.cpp rwlock_local.cpp)
 
-ADD_LIBRARY (rwlock SHARED ${rwlock_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (rwlock STATIC ${rwlock_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (rwlock SHARED ${rwlock_LIB_SRCS})
+ENDIF ()
+
 ADD_DEPENDENCIES (rwlock external_boost)
 
 INSTALL (

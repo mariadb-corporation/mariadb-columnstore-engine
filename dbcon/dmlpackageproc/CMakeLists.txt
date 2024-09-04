@@ -13,7 +13,11 @@ SET (
   tablelockdata.cpp
 )
 
-ADD_LIBRARY (dmlpackageproc SHARED ${dmlpackageproc_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (dmlpackageproc STATIC ${dmlpackageproc_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (dmlpackageproc SHARED ${dmlpackageproc_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (dmlpackageproc loggingcpp)
 

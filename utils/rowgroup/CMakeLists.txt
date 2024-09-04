@@ -6,7 +6,11 @@ SET (rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp rowstorage.cpp)
 
 # librowgroup_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
-ADD_LIBRARY (rowgroup SHARED ${rowgroup_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (rowgroup STATIC ${rowgroup_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (rowgroup SHARED ${rowgroup_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (rowgroup loggingcpp)
 

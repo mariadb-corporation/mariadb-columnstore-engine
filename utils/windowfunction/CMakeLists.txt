@@ -24,7 +24,11 @@ SET (
   wf_udaf.cpp
 )
 
-ADD_LIBRARY (windowfunction SHARED ${windowfunction_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (windowfunction STATIC ${windowfunction_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (windowfunction SHARED ${windowfunction_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (windowfunction loggingcpp)
 

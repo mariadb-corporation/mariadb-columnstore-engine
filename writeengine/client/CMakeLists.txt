@@ -4,7 +4,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (writeengineclient_LIB_SRCS we_clients.cpp we_ddlcommandclient.cpp we_dmlcommandclient.cpp)
 
-ADD_LIBRARY (writeengineclient SHARED ${writeengineclient_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (writeengineclient STATIC ${writeengineclient_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (writeengineclient SHARED ${writeengineclient_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (writeengineclient loggingcpp)
 

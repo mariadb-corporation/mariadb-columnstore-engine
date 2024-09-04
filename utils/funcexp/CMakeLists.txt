@@ -146,7 +146,11 @@ SET (
   sql_crypt.cpp
 )
 
-ADD_LIBRARY (funcexp SHARED ${funcexp_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (funcexp STATIC ${funcexp_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (funcexp SHARED ${funcexp_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (funcexp loggingcpp)
 

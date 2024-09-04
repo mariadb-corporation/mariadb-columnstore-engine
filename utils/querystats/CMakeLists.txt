@@ -7,7 +7,11 @@ INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
 SET (querystats_LIB_SRCS querystats.cpp)
 
-ADD_LIBRARY (querystats SHARED ${querystats_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (querystats STATIC ${querystats_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (querystats SHARED ${querystats_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (querystats loggingcpp)
 

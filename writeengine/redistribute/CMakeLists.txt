@@ -6,7 +6,11 @@ SET (writeengineredistribute_LIB_SRCS we_redistribute.cpp we_redistributecontrol
                                       we_redistributeworkerthread.cpp
 )
 
-ADD_LIBRARY (writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (writeengineredistribute STATIC ${writeengineredistribute_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (writeengineredistribute loggingcpp)
 

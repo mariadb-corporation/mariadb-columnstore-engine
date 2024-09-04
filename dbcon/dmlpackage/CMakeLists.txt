@@ -18,8 +18,9 @@ SET_SOURCE_FILES_PROPERTIES (dml-gram.cpp PROPERTIES COMPILE_FLAGS "-Wno-unused-
 # ########## next target ###############
 
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR}) # to pick up flex/bison output
-ADD_LIBRARY (
-  dmlpackage SHARED
+
+SET (
+  dml_package_sources
   dml-scan.cpp
   dml-gram.cpp
   calpontdmlfactory.cpp
@@ -40,6 +41,12 @@ ADD_LIBRARY (
   ${BISON_dml_gram_OUTPUTS}
   ${FLEX_dml_scan_OUTPUTS}
 )
+
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (dmlpackage STATIC ${dml_package_sources})
+ELSE ()
+  ADD_LIBRARY (dmlpackage SHARED ${dml_package_sources})
+ENDIF ()
 
 ADD_DEPENDENCIES (dmlpackage loggingcpp)
 

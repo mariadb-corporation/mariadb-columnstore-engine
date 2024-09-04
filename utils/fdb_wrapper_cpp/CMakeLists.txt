@@ -9,7 +9,12 @@ IF (NOT FDB_LIB)
   RETURN ()
 ENDIF ()
 
-ADD_LIBRARY (fdbcs SHARED src/fdbcs.cpp)
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (fdbcs STATIC src/fdbcs.cpp)
+ELSE ()
+  ADD_LIBRARY (fdbcs SHARED src/fdbcs.cpp)
+ENDIF ()
+
 TARGET_LINK_LIBRARIES (fdbcs fdb_c)
 
 ADD_EXECUTABLE (test_fdb_api test/test_fdb_api.cpp)

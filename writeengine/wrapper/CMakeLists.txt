@@ -37,7 +37,11 @@ SET (
 
 ADD_DEFINITIONS (-D_FILE_OFFSET_BITS=64)
 
-ADD_LIBRARY (writeengine SHARED ${writeengine_LIB_SRCS})
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (writeengine STATIC ${writeengine_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (writeengine SHARED ${writeengine_LIB_SRCS})
+ENDIF ()
 
 ADD_DEPENDENCIES (writeengine loggingcpp)
 
