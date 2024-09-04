@@ -2076,7 +2076,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     sop->setOpType(scsp->resultType(), rhs->resultType());
     ConstantFilter* cf = 0;
 
-    cf = new ConstantFilter(sop, scsp->clone(), rhs);
+    cf = new ConstantFilter(sop, scsp->clone(), lhs);
     sop.reset(new LogicOperator(cmbop));
     cf->op(sop);
     sop.reset(new PredicateOperator(eqop));
