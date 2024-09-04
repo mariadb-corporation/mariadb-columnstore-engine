@@ -1,56 +1,41 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+ADD_SUBDIRECTORY (shared)
+ADD_SUBDIRECTORY (dictionary)
+ADD_SUBDIRECTORY (xml)
+ADD_SUBDIRECTORY (wrapper)
+ADD_SUBDIRECTORY (bulk)
+ADD_SUBDIRECTORY (client)
+ADD_SUBDIRECTORY (redistribute)
+ADD_SUBDIRECTORY (splitter)
+ADD_SUBDIRECTORY (server)
 
-add_subdirectory(shared)
-add_subdirectory(dictionary)
-add_subdirectory(xml)
-add_subdirectory(wrapper)
-add_subdirectory(bulk)
-add_subdirectory(client)
-add_subdirectory(redistribute)
-add_subdirectory(splitter)
-add_subdirectory(server)
+# ########## install files ###############
 
+# original Makefile.am contents follow:
 
-########### install files ###############
-
-
-
-
-#original Makefile.am contents follow:
-
-## Copyright (C) 2014 InfiniDB, Inc.
-##
-## This program is free software; you can redistribute it and/or
-## modify it under the terms of the GNU General Public License
-## as published by the Free Software Foundation; version 2 of
-## the License.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
-##
-## You should have received a copy of the GNU General Public License
-## along with this program; if not, write to the Free Software
-## Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-## MA 02110-1301, USA.
+# Copyright (C) 2014 InfiniDB, Inc.
 #
-## $Id: Makefile.am 878 2009-04-03 20:34:32Z rdempsey $
+# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation; version 2 of the License.
 #
-#SUBDIRS = shared dictionary xml wrapper bulk client redistribute splitter \
-#	server
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 #
-#test:
+# You should have received a copy of the GNU General Public License along with this program; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
-#coverage:
+# $Id: Makefile.am 878 2009-04-03 20:34:32Z rdempsey $
 #
-#leakcheck:
+# SUBDIRS = shared dictionary xml wrapper bulk client redistribute splitter \ server
 #
-#docs:
+# test:
 #
-#bootstrap:
-#	for subdir in $(SUBDIRS); \
-#		do $(MAKE) -C $$subdir bootstrap || exit $$?; \
-#	done
+# coverage:
+#
+# leakcheck:
+#
+# docs:
+#
+# bootstrap: for subdir in $(SUBDIRS); \ do $(MAKE) -C $$subdir bootstrap || exit $$?; \ done
 #

@@ -1,58 +1,77 @@
+INCLUDE_DIRECTORIES (${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES})
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+# ########## next target ###############
 
+SET (cfread_SRCS cfread.cpp)
 
-########### next target ###############
+KDE4_ADD_EXECUTABLE (cfread ${cfread_SRCS})
 
-set(cfread_SRCS cfread.cpp)
+TARGET_LINK_LIBRARIES (
+  cfread
+  ${KDE4_KDECORE_LIBS}
+  pthread
+  writeengine
+  brm
+  rwlock
+  messageqcpp
+  dl
+  configcpp
+  xml2
+  loggingcpp
+  cacheutils
+  boost_idb
+  pthread
+  rt
+)
 
-kde4_add_executable(cfread ${cfread_SRCS})
+INSTALL (TARGETS cfread ${INSTALL_TARGETS_DEFAULT_ARGS})
 
-target_link_libraries(cfread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
+# ########## next target ###############
 
-install(TARGETS cfread ${INSTALL_TARGETS_DEFAULT_ARGS})
+SET (mtread_SRCS mtread.cpp)
 
+KDE4_ADD_EXECUTABLE (mtread ${mtread_SRCS})
 
-########### next target ###############
+TARGET_LINK_LIBRARIES (
+  mtread
+  ${KDE4_KDECORE_LIBS}
+  pthread
+  writeengine
+  brm
+  rwlock
+  messageqcpp
+  dl
+  configcpp
+  xml2
+  loggingcpp
+  cacheutils
+  boost_idb
+  pthread
+  rt
+)
 
-set(mtread_SRCS mtread.cpp)
+INSTALL (TARGETS mtread ${INSTALL_TARGETS_DEFAULT_ARGS})
 
-kde4_add_executable(mtread ${mtread_SRCS})
+# ########## install files ###############
 
-target_link_libraries(mtread ${KDE4_KDECORE_LIBS} pthread writeengine brm rwlock messageqcpp dl configcpp xml2 loggingcpp cacheutils boost_idb pthread rt)
+# original Makefile.am contents follow:
 
-install(TARGETS mtread ${INSTALL_TARGETS_DEFAULT_ARGS})
-
-
-########### install files ###############
-
-
-
-
-#original Makefile.am contents follow:
-
-## $Id: Makefile.am 333 2009-04-03 20:35:04Z rdempsey $
-### Process this file with automake to produce Makefile.in
+# $Id: Makefile.am 333 2009-04-03 20:35:04Z rdempsey $ Process this file with automake to produce Makefile.in
 #
-#AM_CPPFLAGS = $(idb_cppflags)
-#AM_CFLAGS = $(idb_cflags)
-#AM_CXXFLAGS = $(idb_cxxflags)
-#AM_LDFLAGS = $(idb_ldflags)
-#bin_PROGRAMS = cfread mtread
-#cfread_SOURCES = cfread.cpp
-#cfread_CPPFLAGS = @idb_common_includes@ $(AM_CPPFLAGS)
-#cfread_LDFLAGS = @idb_common_ldflags@ -lpthread -lwriteengine -lbrm -lrwlock -lmessageqcpp -ldl -lconfigcpp -lxml2 -lloggingcpp -lcacheutils -lboost_idb -lpthread -lrt $(AM_LDFLAGS)
-#mtread_SOURCES = mtread.cpp
-#mtread_CPPFLAGS = @idb_common_includes@ $(AM_CPPFLAGS)
-#mtread_LDFLAGS = @idb_common_ldflags@ -lpthread -lwriteengine -lbrm -lrwlock -lmessageqcpp -ldl -lconfigcpp -lxml2 -lloggingcpp -lcacheutils -lboost_idb -lpthread -lrt $(AM_LDFLAGS)
+# AM_CPPFLAGS = $(idb_cppflags) AM_CFLAGS = $(idb_cflags) AM_CXXFLAGS = $(idb_cxxflags) AM_LDFLAGS = $(idb_ldflags)
+# bin_PROGRAMS = cfread mtread cfread_SOURCES = cfread.cpp cfread_CPPFLAGS = @idb_common_includes@ $(AM_CPPFLAGS)
+# cfread_LDFLAGS = @idb_common_ldflags@ -lpthread -lwriteengine -lbrm -lrwlock -lmessageqcpp -ldl -lconfigcpp -lxml2
+# -lloggingcpp -lcacheutils -lboost_idb -lpthread -lrt $(AM_LDFLAGS) mtread_SOURCES = mtread.cpp mtread_CPPFLAGS =
+# @idb_common_includes@ $(AM_CPPFLAGS) mtread_LDFLAGS = @idb_common_ldflags@ -lpthread -lwriteengine -lbrm -lrwlock
+# -lmessageqcpp -ldl -lconfigcpp -lxml2 -lloggingcpp -lcacheutils -lboost_idb -lpthread -lrt $(AM_LDFLAGS)
 #
-#test:
+# test:
 #
-#coverage:
+# coverage:
 #
-#leakcheck:
+# leakcheck:
 #
-#docs:
+# docs:
 #
-#bootstrap: install-data-am
+# bootstrap: install-data-am
 #

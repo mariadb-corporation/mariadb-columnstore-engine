@@ -1,18 +1,19 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
-########### next target ###############
+ADD_LIBRARY (oamcpp SHARED ${oamcpp_LIB_SRCS})
 
-set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
+ADD_DEPENDENCIES (oamcpp loggingcpp)
 
-add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
+TARGET_LINK_LIBRARIES (oamcpp)
 
-add_dependencies(oamcpp loggingcpp)
+TARGET_COMPILE_OPTIONS (oamcpp PRIVATE -Wno-unused-result)
 
-target_link_libraries(oamcpp )
-
-target_compile_options(oamcpp PRIVATE -Wno-unused-result)
-
-install(TARGETS oamcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS oamcpp
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

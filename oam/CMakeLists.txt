@@ -1,4 +1,2 @@
-
-add_subdirectory(etc)
-add_subdirectory(install_scripts)
-
+ADD_SUBDIRECTORY (etc)
+ADD_SUBDIRECTORY (install_scripts)

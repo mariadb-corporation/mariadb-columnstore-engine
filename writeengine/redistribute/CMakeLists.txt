@@ -1,22 +1,21 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
+SET (writeengineredistribute_LIB_SRCS we_redistribute.cpp we_redistributecontrol.cpp we_redistributecontrolthread.cpp
+                                      we_redistributeworkerthread.cpp
+)
 
-set(writeengineredistribute_LIB_SRCS
-    we_redistribute.cpp
-    we_redistributecontrol.cpp
-    we_redistributecontrolthread.cpp
-    we_redistributeworkerthread.cpp)
+ADD_LIBRARY (writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
 
-add_library(writeengineredistribute SHARED ${writeengineredistribute_LIB_SRCS})
+ADD_DEPENDENCIES (writeengineredistribute loggingcpp)
 
-add_dependencies(writeengineredistribute loggingcpp)
+TARGET_LINK_LIBRARIES (writeengineredistribute ${NETSNMP_LIBRARIES})
 
-target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
+TARGET_COMPILE_DEFINITIONS (writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
-target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-
-
-install(TARGETS writeengineredistribute DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS writeengineredistribute
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

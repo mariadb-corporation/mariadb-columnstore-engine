@@ -1,24 +1,18 @@
-
 #
 # Not used
 #
-#
 
+# original Makefile.am contents follow:
 
-
-#original Makefile.am contents follow:
-
-#AM_CFLAGS = $(idb_cflags)
-#noinst_LIBRARIES = libmd5.a
-#libmd5_a_SOURCES = md5_dgst.c md5_one.c mem_clr.c
+# AM_CFLAGS = $(idb_cflags) noinst_LIBRARIES = libmd5.a libmd5_a_SOURCES = md5_dgst.c md5_one.c mem_clr.c
 #
-#test:
+# test:
 #
-#coverage:
+# coverage:
 #
-#leakcheck:
+# leakcheck:
 #
-#docs:
+# docs:
 #
-#bootstrap:
+# bootstrap:
 #

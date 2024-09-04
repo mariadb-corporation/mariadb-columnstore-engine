@@ -1,17 +1,17 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (writeengineclient_LIB_SRCS we_clients.cpp we_ddlcommandclient.cpp we_dmlcommandclient.cpp)
 
-########### next target ###############
+ADD_LIBRARY (writeengineclient SHARED ${writeengineclient_LIB_SRCS})
 
-set(writeengineclient_LIB_SRCS we_clients.cpp we_ddlcommandclient.cpp we_dmlcommandclient.cpp)
+ADD_DEPENDENCIES (writeengineclient loggingcpp)
 
-add_library(writeengineclient SHARED ${writeengineclient_LIB_SRCS})
+TARGET_LINK_LIBRARIES (writeengineclient ${NETSNMP_LIBRARIES})
 
-add_dependencies(writeengineclient loggingcpp)
-
-target_link_libraries(writeengineclient ${NETSNMP_LIBRARIES})
-
-install(TARGETS writeengineclient DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
-
+INSTALL (
+  TARGETS writeengineclient
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

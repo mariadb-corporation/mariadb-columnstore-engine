@@ -1,23 +1,22 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
-
-set(messageqcpp_LIB_SRCS
-    messagequeue.cpp
-    messagequeuepool.cpp
-    bytestream.cpp
-    socketparms.cpp
-    inetstreamsocket.cpp
-    samenodepseudosocket.cpp
-    iosocket.cpp
-    compressed_iss.cpp
-    bytestreampool.cpp
+SET (
+  messageqcpp_LIB_SRCS
+  messagequeue.cpp
+  messagequeuepool.cpp
+  bytestream.cpp
+  socketparms.cpp
+  inetstreamsocket.cpp
+  samenodepseudosocket.cpp
+  iosocket.cpp
+  compressed_iss.cpp
+  bytestreampool.cpp
 )
 
-add_library(messageqcpp STATIC ${messageqcpp_LIB_SRCS})
+ADD_LIBRARY (messageqcpp STATIC ${messageqcpp_LIB_SRCS})
 
-add_dependencies(messageqcpp loggingcpp)
+ADD_DEPENDENCIES (messageqcpp loggingcpp)
 
-#We don't isntall static library
-#install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+# We don't isntall static library install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

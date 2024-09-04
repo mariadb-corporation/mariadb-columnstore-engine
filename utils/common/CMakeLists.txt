@@ -1,24 +1,28 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
+SET (
+  common_LIB_SRCS
+  fixedallocator.cpp
+  poolallocator.cpp
+  cgroupconfigurator.cpp
+  MonitorProcMem.cpp
+  nullvaluemanip.cpp
+  threadnaming.cpp
+  utils_utf8.cpp
+  statistics.cpp
+  string_prefixes.cpp
+)
 
-set(common_LIB_SRCS
-    fixedallocator.cpp
-    poolallocator.cpp
-    cgroupconfigurator.cpp
-    MonitorProcMem.cpp
-    nullvaluemanip.cpp
-    threadnaming.cpp
-    utils_utf8.cpp
-    statistics.cpp
-    string_prefixes.cpp)
+ADD_LIBRARY (common SHARED ${common_LIB_SRCS})
 
-add_library(common SHARED ${common_LIB_SRCS})
+TARGET_LINK_LIBRARIES (common boost_filesystem)
 
-target_link_libraries(common boost_filesystem)
+ADD_DEPENDENCIES (common loggingcpp)
 
-add_dependencies(common loggingcpp)
-
-install(TARGETS common DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS common
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

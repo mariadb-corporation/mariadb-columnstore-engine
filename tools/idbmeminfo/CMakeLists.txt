@@ -1,14 +1,15 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (idbmeminfo_SRCS idbmeminfo.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (idbmeminfo ${idbmeminfo_SRCS})
 
-set(idbmeminfo_SRCS idbmeminfo.cpp)
+TARGET_LINK_LIBRARIES (idbmeminfo ${ENGINE_LDFLAGS})
 
-add_executable(idbmeminfo ${idbmeminfo_SRCS})
-
-target_link_libraries(idbmeminfo ${ENGINE_LDFLAGS})
-
-install(TARGETS idbmeminfo DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS idbmeminfo
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

@@ -1,14 +1,15 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (clearShm_SRCS main.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (clearShm ${clearShm_SRCS})
 
-set(clearShm_SRCS main.cpp)
+TARGET_LINK_LIBRARIES (clearShm ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
-add_executable(clearShm ${clearShm_SRCS})
-
-target_link_libraries(clearShm ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS clearShm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS clearShm
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

@@ -1,16 +1,17 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (ddlcleanuputil_LIB_SRCS ddlcleanuputil.cpp)
 
-########### next target ###############
+ADD_LIBRARY (ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
 
-set(ddlcleanuputil_LIB_SRCS ddlcleanuputil.cpp)
+ADD_DEPENDENCIES (ddlcleanuputil loggingcpp)
 
-add_library(ddlcleanuputil SHARED ${ddlcleanuputil_LIB_SRCS})
+TARGET_LINK_LIBRARIES (ddlcleanuputil ${NETSNMP_LIBRARIES})
 
-add_dependencies(ddlcleanuputil loggingcpp)
-
-target_link_libraries(ddlcleanuputil ${NETSNMP_LIBRARIES})
-
-install(TARGETS ddlcleanuputil DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS ddlcleanuputil
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

@@ -1,17 +1,19 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp rowstorage.cpp)
 
-########### next target ###############
+# librowgroup_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
-set(rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp rowstorage.cpp)
+ADD_LIBRARY (rowgroup SHARED ${rowgroup_LIB_SRCS})
 
-#librowgroup_la_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
+ADD_DEPENDENCIES (rowgroup loggingcpp)
 
-add_library(rowgroup SHARED ${rowgroup_LIB_SRCS})
+TARGET_LINK_LIBRARIES (rowgroup ${NETSNMP_LIBRARIES} funcexp)
 
-add_dependencies(rowgroup loggingcpp)
-
-target_link_libraries(rowgroup ${NETSNMP_LIBRARIES} funcexp)
-
-install(TARGETS rowgroup DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL (
+  TARGETS rowgroup
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

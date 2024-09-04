@@ -1,27 +1,45 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES} ../../dbcon/mysql)
 
-include_directories( ${ENGINE_COMMON_INCLUDES}
-                     ../../dbcon/mysql )
-                     
-########### next target ###############
+# ########## next target ###############
 
-set(regr_LIB_SRCS regr_avgx.cpp regr_avgy.cpp regr_count.cpp regr_slope.cpp regr_intercept.cpp regr_r2.cpp corr.cpp regr_sxx.cpp regr_syy.cpp regr_sxy.cpp covar_pop.cpp covar_samp.cpp moda.cpp)
+SET (
+  regr_LIB_SRCS
+  regr_avgx.cpp
+  regr_avgy.cpp
+  regr_count.cpp
+  regr_slope.cpp
+  regr_intercept.cpp
+  regr_r2.cpp
+  corr.cpp
+  regr_sxx.cpp
+  regr_syy.cpp
+  regr_sxy.cpp
+  covar_pop.cpp
+  covar_samp.cpp
+  moda.cpp
+)
 
-add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
+ADD_DEFINITIONS (-DMYSQL_DYNAMIC_PLUGIN)
 
-add_library(regr SHARED ${regr_LIB_SRCS} )
+ADD_LIBRARY (regr SHARED ${regr_LIB_SRCS})
 
-add_dependencies(regr loggingcpp)
+ADD_DEPENDENCIES (regr loggingcpp)
 
-install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL (
+  TARGETS regr
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)
 
+SET (regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
+ADD_LIBRARY (regr_mysql SHARED ${regr_mysql_LIB_SRCS})
+ADD_DEPENDENCIES (regr_mysql external_boost)
 
-set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
+INSTALL (
+  TARGETS regr_mysql
+  DESTINATION ${MARIADB_PLUGINDIR}
+  COMPONENT columnstore-engine
+)
 
-add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
-add_dependencies(regr_mysql external_boost)
-
-install(TARGETS regr_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
-
-set_target_properties(regr_mysql PROPERTIES
-                      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
+SET_TARGET_PROPERTIES (regr_mysql PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
