@@ -568,6 +568,56 @@ INSTALL (
   COMPONENT columnstore-engine
 )
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
+
+SET (
+  COLUMSTORE_INSTALL_INTERNAL_SO_LIST
+  "usr/lib/*/libbatchloader.so
+usr/lib/*/libbrm.so
+usr/lib/*/libcacheutils.so
+usr/lib/*/libcloudio.so
+usr/lib/*/libcommon.so
+usr/lib/*/libcompress.so
+usr/lib/*/libconfigcpp.so
+usr/lib/*/libdataconvert.so
+usr/lib/*/libddlcleanuputil.so
+usr/lib/*/libddlpackage.so
+usr/lib/*/libddlpackageproc.so
+usr/lib/*/libdmlpackage.so
+usr/lib/*/libdmlpackageproc.so
+usr/lib/*/libexecplan.so
+usr/lib/*/libfuncexp.so
+usr/lib/*/libidbdatafile.so
+usr/lib/*/libjoblist.so
+usr/lib/*/libjoiner.so
+usr/lib/*/liblibmysql_client.so
+usr/lib/*/libloggingcpp.so
+usr/lib/*/libmarias3.so
+usr/lib/*/liboamcpp.so
+usr/lib/*/libquerystats.so
+usr/lib/*/libquerytele.so
+usr/lib/*/libregr.so
+usr/lib/*/librowgroup.so
+usr/lib/*/librwlock.so
+usr/lib/*/libstoragemanager.so
+usr/lib/*/libthreadpool.so
+usr/lib/*/libudfsdk.so
+usr/lib/*/libwindowfunction.so
+usr/lib/*/libwriteengine.so
+usr/lib/*/libwriteengineclient.so
+usr/lib/*/libwriteengineredistribute.so
+usr/lib/*/libdatatypes.so
+usr/lib/*/libfdbcs.so"
+)
+
+IF (COLUMNSTORE_ALL_STATIC)
+  SET (COLUMSTORE_INSTALL_INTERNAL_SO_LIST "")
+ENDIF ()
+
+CONFIGURE_FILE (
+  ${CMAKE_CURRENT_SOURCE_DIR}/debian/mariadb-plugin-columnstore.install.in
+  ${CMAKE_CURRENT_BINARY_DIR}/debian/mariadb-plugin-columnstore.install
+)
+
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
 
 CONFIGURE_FILE (${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
