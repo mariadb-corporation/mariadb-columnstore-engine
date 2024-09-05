@@ -3112,7 +3112,11 @@ void DBRM::rolledback(TxnID& txnid)
   if (tmp != ERR_OK)
   {
     if (getSystemReady() != 0)
-      log("DBRM: error: SessionManager::rolledback() failed (valid error code)", logging::LOG_TYPE_ERROR);
+    {
+      std::stringstream errorStream;
+      errorStream << "DBRM: error: SessionManager::rolledback() failed (error code " << tmp << ")";
+      log(errorStream.str(), logging::LOG_TYPE_ERROR);
+    }
   }
 }
 
