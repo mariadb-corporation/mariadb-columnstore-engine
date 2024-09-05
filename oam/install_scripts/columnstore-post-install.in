@@ -372,7 +372,6 @@ fi
 if [ $(running_systemd) -eq 0 ]; then
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_LOGDIR@
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /etc/columnstore
-    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ $tmpDir
     chmod 777 /dev/shm
 fi
