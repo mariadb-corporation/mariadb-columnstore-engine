@@ -224,7 +224,25 @@ d	17	17
 b	18	18
 a	19	19
 SELECT a, b, SUM(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) sum FROM t1;
-ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+a	b	sum
+NULL	NULL	NULL
+a	12	12
+a	13	13
+b	14	14
+c	15	15
+d	16	16
+d	17	17
+b	18	18
+a	19	19
 SELECT a, b, SUM(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) sum FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+a	b	sum
+NULL	NULL	NULL
+a	19	44
+a	13	44
+a	12	44
+b	18	76
+b	14	76
+c	15	91
+d	16	124
+d	17	124
 DROP DATABASE mcs165_db;
