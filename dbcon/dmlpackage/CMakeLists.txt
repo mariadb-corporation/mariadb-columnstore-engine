@@ -33,6 +33,7 @@ ADD_LIBRARY(dmlpackage SHARED
     commanddmlpackage.cpp
     dmlpkg.cpp
     dmlparser.cpp
+    vacuumpartitiondmlpackage.cpp
     ${BISON_dml_gram_OUTPUTS}
     ${FLEX_dml_scan_OUTPUTS}
 )

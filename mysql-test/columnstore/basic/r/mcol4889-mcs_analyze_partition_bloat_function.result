@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS mcol4889_db1;
+CREATE DATABASE IF NOT EXISTS mcol4889_db1;
+USE mcol4889_db1;
+CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=COLUMNSTORE;
+LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+100001
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+INSERT INTO t1 SELECT * FROM t1;
+SELECT COUNT(*) FROM t1;
+COUNT(*)
+12800128
+SELECT mcs_analyze_partition_bloat('t1', '0.0.1');
+mcs_analyze_partition_bloat('t1', '0.0.1')
+Part#                Empty Rate
+  1.0.0                50.00%
+SELECT mcs_analyze_partition_bloat('t1', '1.0.1');
+mcs_analyze_partition_bloat('t1', '1.0.1')
+Part#                Empty Rate
+  1.1.0                50.00%
+DROP DATABASE mcol4889_db1;

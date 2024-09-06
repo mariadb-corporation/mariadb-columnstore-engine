@@ -27,6 +27,8 @@
 #include <cassert>
 #include <stdexcept>
 #include <sstream>
+#include <format>
+#include <memory>
 // #include <unistd.h>
 #include <iomanip>
 using namespace std;
@@ -38,6 +40,7 @@ using namespace std;
 #include "blocksize.h"
 #include "calpontsystemcatalog.h"
 #include "objectidmanager.h"
+#include "mockutils.h"
 using namespace execplan;
 
 #include "mastersegmenttable.h"
@@ -65,6 +68,9 @@ using namespace logging;
 
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost;
+
+#include "vacuumpartitiondmlpackage.h"
+#include "dmlpackageprocessor.h"
 
 namespace
 {
@@ -537,6 +543,73 @@ std::string ha_mcs_impl_droppartitions_(execplan::CalpontSystemCatalog::TableNam
     msg = "No partitions are dropped";
 
   delete stmt;
+  return msg;
+}
+
+std::string formatBloatInfo(const LogicalPartition& lp, const vector<bool>& deletedBitMap)
+{
+  uint32_t emptyValueCount = std::ranges::count(deletedBitMap, true /* target value */);
+  return std::format("\n  {:<20} {:<.2f}%", std::format("{}.{}.{}", lp.dbroot, lp.pp, lp.seg),
+                     (static_cast<double>(emptyValueCount) * 100.0 / deletedBitMap.size()));
+}
+
+int processVacuumDMLPackage(dmlpackage::CalpontDMLPackage* package)
+{
+  cout << "Sending to DMLProc" << endl;
+  ByteStream bs;
+  package->write(bs);
+  MessageQueueClient mq("DMLProc");
+  ByteStream::byte b = 0;
+  int rc = 0;
+  THD* thd = current_thd;
+  string emsg;
+
+  try
+  {
+    mq.write(bs);
+    bs = mq.read();
+
+    if (bs.empty())
+    {
+      rc = 1;
+      thd->get_stmt_da()->set_overwrite_status(true);
+      thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc");
+    }
+    else
+    {
+      bs >> b;
+      bs >> emsg;
+      rc = b;
+    }
+  }
+  catch (runtime_error&)
+  {
+    rc = 1;
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc");
+  }
+  catch (...)
+  {
+    rc = 1;
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown error caught");
+  }
+
+  return rc;
+}
+
+std::string ha_mcs_impl_vacuum_partition_bloat(const execplan::CalpontSystemCatalog::TableName& tableName,
+                                               const LogicalPartition& partitionNum)
+{
+  auto dmlPackage = std::make_unique<dmlpackage::VacuumPartitionDMLPackage>(
+      tableName.schema, tableName.table, "mcs_vacuum_partition_blocat", tid2sid(current_thd->thread_id),
+      partitionNum);
+
+  std::string msg = "Partitions are vacuumed successfully";
+  int rc = processVacuumDMLPackage(dmlPackage.get());
+  if (rc != dmlpackageprocessor::DMLPackageProcessor::NO_ERROR)
+    msg = std::format("Failed to vacuum partition, ErrorCode: {}", rc);
+
   return msg;
 }
 
@@ -1338,6 +1411,453 @@ extern "C"
     }
 
     // use our own buffer to make sure it fits.
+    initid->ptr = new char[output.str().length() + 1];
+    memcpy(initid->ptr, output.str().c_str(), output.str().length());
+    *length = output.str().length();
+    return initid->ptr;
+  }
+
+  /**
+   * mcs_analyze_partition_bloat
+   */
+  my_bool mcs_analyze_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool hasErr = false;
+
+    if (args->arg_count < 2 || args->arg_count > 3)
+    {
+      hasErr = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT ||
+             (args->arg_count == 3 && args->arg_type[2] != STRING_RESULT))
+    {
+      hasErr = true;
+    }
+    else if (!args->args[0] || !args->args[1] || (args->arg_count == 3 && !args->args[2]))
+    {
+      hasErr = true;
+    }
+
+    if (hasErr)
+    {
+      strcpy(message, "Usage: MCS_ANALYZE_PARTITION_BLOAT ([schema], table, partition_num)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_analyze_partition_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_analyze_partition_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result,
+                                          unsigned long* length, char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    string schema, table, partitionNumStr;
+    set<LogicalPartition> partitionNums;
+    LogicalPartition partitionNum;
+    vector<bool> deletedBitMap;
+
+    string errMsg;
+    try
+    {
+      int offset = 2;
+      if (args->arg_count == 3)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+        partitionNumStr = (char*)(args->args[2]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
+
+        table = (char*)(args->args[0]);
+        partitionNumStr = (char*)(args->args[1]);
+        offset = 1;
+      }
+
+      parsePartitionString(args, offset, partitionNums, errMsg, tableName);
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+      partitionNum = *partitionNums.begin();
+
+      tableName = make_table(schema, table, lower_case_table_names);
+      deletedBitMap = mockutils::getPartitionDeletedBitmap(partitionNum, tableName);
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_ANALYZE_PARTITION_BLOAT");
+      return result;
+    }
+
+    ostringstream output;
+    output << std::format("{:<20} {:<}", "Part#", "Empty Rate");
+    output << formatBloatInfo(partitionNum, deletedBitMap);
+
+    initid->ptr = new char[output.str().length() + 1];
+    memcpy(initid->ptr, output.str().c_str(), output.str().length());
+    *length = output.str().length();
+    return initid->ptr;
+  }
+
+  /**
+   * mcs_analyze_table_bloat
+   */
+  my_bool mcs_analyze_table_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool hasErr = false;
+
+    if (args->arg_count < 1 || args->arg_count > 2)
+    {
+      hasErr = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT ||
+             (args->arg_count == 2 && args->arg_type[1] != STRING_RESULT))
+    {
+      hasErr = true;
+    }
+    else if (!args->args[0] || (args->arg_count == 2 && !args->args[1]))
+    {
+      hasErr = true;
+    }
+
+    if (hasErr)
+    {
+      strcpy(message, "Usage: MCS_ANALYZE_TABLE_BLOAT ([schema,] table)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_analyze_table_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_analyze_table_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                                      char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    std::string schema, table;
+    std::vector<LogicalPartition> partitionNums;
+    std::vector<struct EMEntry> entries;
+
+    string errMsg;
+    try
+    {
+      if (args->arg_count == 2)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
+
+        table = (char*)(args->args[0]);
+      }
+
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+
+      tableName = make_table(schema, table, lower_case_table_names);
+      CalpontSystemCatalog csc;
+      csc.identity(CalpontSystemCatalog::FE);
+      OID_t auxOID = csc.tableAUXColumnOID(tableName);
+      if (auxOID == -1)
+      {
+        Message::Args args;
+        args.add(std::format("'{}.{}'", schema, table));
+        throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+      }
+
+      CHECK(dbrm.getExtents(auxOID, entries, false, false, true));
+
+      for (const auto& entry : entries)
+      {
+        partitionNums.emplace_back(entry.dbRoot, entry.partitionNum, entry.segmentNum);
+      }
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_ANALYZE_TABLE_BLOAT");
+      return result;
+    }
+
+    ostringstream output;
+    output << std::format("{:<20} {:<}", "Part#", "Empty Rate");
+    for (const auto& partitionNum : partitionNums)
+    {
+      vector<bool> deletedBitMap = mockutils::getPartitionDeletedBitmap(partitionNum, tableName);
+      output << formatBloatInfo(partitionNum, deletedBitMap);
+    }
+
+    initid->ptr = new char[output.str().length() + 1];
+    memcpy(initid->ptr, output.str().c_str(), output.str().length());
+    *length = output.str().length();
+    return initid->ptr;
+  }
+
+  /**
+   * mcs_vacuum_partition_bloat
+   */
+  my_bool mcs_vacuum_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool hasErr = false;
+
+    if (args->arg_count < 2 || args->arg_count > 3)
+    {
+      hasErr = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT ||
+             (args->arg_count == 3 && args->arg_type[2] != STRING_RESULT))
+    {
+      hasErr = true;
+    }
+    else if (!args->args[0] || !args->args[1] || (args->arg_count == 3 && !args->args[2]))
+    {
+      hasErr = true;
+    }
+
+    if (hasErr)
+    {
+      strcpy(message, "Usage: MCS_VACUUM_PARTITION_BLOAT ([schema,] table, partition_num)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_vacuum_partition_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_vacuum_partition_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result,
+                                         unsigned long* length, char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    std::string schema, table;
+    std::set<LogicalPartition> partitionNums;
+    LogicalPartition partitionNum;
+
+    string errMsg;
+    try
+    {
+      int offset = 2;
+      if (args->arg_count == 3)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
+
+        table = (char*)(args->args[0]);
+        offset = 1;
+      }
+
+      parsePartitionString(args, offset, partitionNums, errMsg, tableName);
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+      partitionNum = *partitionNums.begin();
+
+      tableName = make_table(schema, table, lower_case_table_names);
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_VACUUM_PARTITION_BLOAT");
+      return result;
+    }
+
+    std::string vacuumResult = ha_mcs_impl_vacuum_partition_bloat(tableName, partitionNum);
+
+    memcpy(result, vacuumResult.c_str(), vacuumResult.length());
+    *length = vacuumResult.length();
+    return initid->ptr;
+  }
+
+  /**
+   * mcs_vacuum_table_bloat
+   */
+  my_bool mcs_vacuum_table_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    bool hasErr = false;
+
+    if (args->arg_count < 1 || args->arg_count > 2)
+    {
+      hasErr = true;
+    }
+    else if (args->arg_type[0] != STRING_RESULT ||
+             (args->arg_count == 2 && args->arg_type[1] != STRING_RESULT))
+    {
+      hasErr = true;
+    }
+    else if (!args->args[0] || (args->arg_count == 2 && !args->args[1]))
+    {
+      hasErr = true;
+    }
+
+    if (hasErr)
+    {
+      strcpy(message, "Usage: MCS_VACUUM_TABLE_BLOAT ([schema,] table)");
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_vacuum_table_bloat_deinit(UDF_INIT* initid)
+  {
+    delete[] initid->ptr;
+  }
+
+  const char* mcs_vacuum_table_bloat(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
+                                     char* is_null, char* error)
+  {
+    BRM::DBRM::refreshShm();
+    DBRM dbrm;
+
+    CalpontSystemCatalog::TableName tableName;
+    std::string schema, table;
+    std::vector<LogicalPartition> partitionNums;
+    std::vector<struct EMEntry> entries;
+
+    string errMsg;
+    try
+    {
+      if (args->arg_count == 2)
+      {
+        schema = (char*)(args->args[0]);
+        table = (char*)(args->args[1]);
+      }
+      else
+      {
+        if (current_thd->db.length)
+        {
+          schema = current_thd->db.str;
+        }
+        else
+        {
+          throw IDBExcept(ERR_PARTITION_NO_SCHEMA);
+        }
+
+        table = (char*)(args->args[0]);
+      }
+
+      if (!errMsg.empty())
+      {
+        Message::Args args;
+        args.add(errMsg);
+        throw IDBExcept(ERR_INVALID_FUNC_ARGUMENT, args);
+      }
+
+      tableName = make_table(schema, table, lower_case_table_names);
+      CalpontSystemCatalog csc;
+      csc.identity(CalpontSystemCatalog::FE);
+      OID_t auxOID = csc.tableAUXColumnOID(tableName);
+      if (auxOID == -1)
+      {
+        Message::Args args;
+        args.add(std::format("'{}.{}'", schema, table));
+        throw IDBExcept(ERR_TABLE_NOT_IN_CATALOG, args);
+      }
+
+      CHECK(dbrm.getExtents(auxOID, entries, false, false, true));
+
+      for (const auto& entry : entries)
+      {
+        partitionNums.emplace_back(entry.dbRoot, entry.partitionNum, entry.segmentNum);
+      }
+    }
+    catch (IDBExcept& ex)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR, ex.what());
+      return result;
+    }
+    catch (...)
+    {
+      current_thd->get_stmt_da()->set_overwrite_status(true);
+      current_thd->raise_error_printf(ER_INTERNAL_ERROR,
+                                      "Error occurred when calling MCS_VACUUM_TABLE_BLOAT");
+      return result;
+    }
+
+    ostringstream output;
+
     initid->ptr = new char[output.str().length() + 1];
     memcpy(initid->ptr, output.str().c_str(), output.str().length());
     *length = output.str().length();

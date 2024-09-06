@@ -45,7 +45,8 @@ set(execplan_LIB_SRCS
     treenodeimpl.cpp
     vendorexecutionplan.cpp
     windowfunctioncolumn.cpp
-    udafcolumn.cpp)
+    udafcolumn.cpp
+    mockutils.cpp)
 
 add_library(execplan SHARED ${execplan_LIB_SRCS})
 
