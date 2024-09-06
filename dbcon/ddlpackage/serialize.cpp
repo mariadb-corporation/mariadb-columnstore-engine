@@ -429,6 +429,21 @@ int DropTableStatement::serialize(ByteStream& bytestream)
   return ret;
 }
 
+/** @brief Construct from Bytestream */
+int DebugDDLStatement::unserialize(ByteStream& bytestream)
+{
+  bytestream >> fDebugLevel;
+  return 1;
+}
+
+/** @brief Serialize to ByteStream */
+int DebugDDLStatement::serialize(ByteStream& bytestream)
+{
+  bytestream << (quadbyte)DDL_DEBUG_STATEMENT;
+  bytestream << fDebugLevel;
+  return 1;
+}
+
 ///////////////////////////////////////
 /// TruncTableStatement Serialization
 ///////////////////////////////////////
