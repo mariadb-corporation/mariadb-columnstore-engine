@@ -36,7 +36,6 @@ local gcc_version = '11';
 
 local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
 
-
 local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
                        'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
                        'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
@@ -181,6 +180,17 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
 
   local indexes(arr) = std.range(0, std.length(arr) - 1),
 
+  local tuneupApt='
+    cat << EOF > /etc/apt/apt.conf.d/99custom
+Acquire::Retries "100";
+Acquire::https::Timeout "240";
+Acquire::http::Timeout "240";
+APT::Get::Assume-Yes "true";
+APT::Install-Recommends "false";
+APT::Install-Suggests "false";
+Debug::Acquire::https "true";
+EOF',
+
   regression(name, depends_on):: {
     name: name,
     depends_on: depends_on,
@@ -219,6 +229,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
     volumes: [pipeline._volumes.docker],
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "sleep 24800",
+      if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c \'%s\'' % tuneupApt,
       if (pkg_format == 'rpm') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gdb gawk epel-release which rsyslog hostname procps-ng"' else 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y gdb gawk rsyslog hostname procps wget"',
       if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t smoke$${DRONE_BUILD_NUMBER} mkdir core',
@@ -251,6 +263,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
     },
     commands: [
       'docker run --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --shm-size=500m --env MYSQL_TEST_DIR=' + mtr_path + ' --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name mtr$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      if (pkg_format == 'deb') then 'docker exec -t smoke$${DRONE_BUILD_NUMBER} bash -c \'%s\'' % tuneupApt,
       if (std.split(platform, ':')[0] == 'rockylinux') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget tar lz4 procps-ng"',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       if (pkg_format == 'deb') then 'docker exec -t mtr$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y procps wget tar liblz4-tool"',
@@ -342,6 +355,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='0c6b89c694a88aae76
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
       'docker run --shm-size=500m --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target',
+      if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c \'%s\'' % tuneupApt,
       if (pkg_format == 'rpm') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "yum install -y wget gawk gdb gcc-c++ epel-release diffutils tar findutils lz4 wget which rsyslog hostname procps-ng elfutils"' else 'docker exec -t regression$${DRONE_BUILD_NUMBER} bash -c "apt update --yes && apt install -y wget tar liblz4-tool procps wget findutils gawk gdb rsyslog hostname g++"',
       if (pkg_format == 'deb') then 'docker exec -t regression$${DRONE_BUILD_NUMBER} sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d',
       'docker exec -t regression$${DRONE_BUILD_NUMBER} mkdir core',
