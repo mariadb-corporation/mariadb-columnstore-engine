@@ -122,6 +122,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
   auto stmt = formatStatementString(dropPartitionStmt->fSql, dropPartitionStmt->fTableName->fSchema,
                                     dropPartitionStmt->fTableName->fName, dropPartitionStmt->fPartitions);
   SQLLogger logger(stmt, fDDLLoggingId, sessionID, txnID.id);
+  ostringstream debugLog;
 
   try
   {
@@ -226,6 +227,8 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
         return result;
       }
     }
+    debugLog << "DropPartitionProcessor: got table lock (id) " << uniqueID << " for table (OID)"
+             << roPair.objnum << endl;
 
     // 1. Get the OIDs for the columns
     // 2. Get the OIDs for the dictionaries
@@ -241,8 +244,17 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
 
     tableColRidList = systemCatalogPtr->columnRIDs(userTableName);
     tableAuxColOid = systemCatalogPtr->tableAUXColumnOID(userTableName);
-
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
+
+    debugLog << "DropPartitionProcessor:" << endl;
+    debugLog << "column RIDS: ";
+    for (const auto& rid : tableColRidList)
+      debugLog << rid.objnum << " ";
+    debugLog << endl;
+    debugLog << "dict OIDS: ";
+    for (const auto& dictOid : dictOIDList)
+      debugLog << dictOid.dictOID << " ";
+    debugLog << endl;
 
     // Save qualified tablename, all column, dictionary OIDs, and transaction ID into a file in ASCII format
     for (unsigned i = 0; i < tableColRidList.size(); i++)
@@ -271,6 +283,12 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
     {
       throw std::runtime_error(emsg);
     }
+    debugLog << "DropPartitionProcessor: marked partitions for deletion:" << endl;
+    for (const auto& partition : dropPartitionStmt->fPartitions)
+      debugLog << "dbroot: " << partition.dbroot << " physical parition: " << partition.pp
+               << " segment: " << partition.seg << endl;
+    VERBOSE_INFO(debugLog.str());
+    debugLog.clear();
 
     set<BRM::LogicalPartition> markedPartitions;
     set<BRM::LogicalPartition> outOfServicePartitions;
@@ -298,14 +316,16 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
     // Save the oids to a file
     createWritePartitionLogFile(roPair.objnum, markedPartitions, oidList, uniqueId);
 
-    VERBOSE_INFO("Removing files");
+    VERBOSE_INFO("Removing parition files");
     removePartitionFiles(oidList, markedPartitions, uniqueId);
     // Flush PrimProc cache for those lbids
+    VERBOSE_INFO("Flushing paritions");
     rc = cacheutils::flushPartition(oidList, markedPartitions);
 
     // Remove the partition from extent map
     emsg.clear();
     rc = fDbrm->deletePartition(oidList, dropPartitionStmt->fPartitions, emsg);
+    VERBOSE_INFO("DropPartitionProcessor: partitions removed");
 
     if (rc != 0)
       throw std::runtime_error(emsg);
@@ -390,6 +410,7 @@ DropPartitionProcessor::DDLResult DropPartitionProcessor::processPackageInternal
   }
 
   fSessionManager.committed(txnID);
+  VERBOSE_INFO("DropPartitionProcessor:: commited");
   return result;
 }
 

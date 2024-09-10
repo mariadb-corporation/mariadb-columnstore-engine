@@ -32,6 +32,7 @@ ADD_LIBRARY(ddlpackage SHARED
     markpartition.cpp
     restorepartition.cpp
     droppartition.cpp
+    debugstatement.cpp
     ${BISON_ddl_gram_OUTPUTS}
     ${FLEX_ddl_scan_OUTPUTS}
 )

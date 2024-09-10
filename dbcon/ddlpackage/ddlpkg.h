@@ -332,7 +332,8 @@ enum DDL_SERIAL_TYPE
   DDL_TRUNC_TABLE_STATEMENT,
   DDL_MARK_PARTITION_STATEMENT,
   DDL_RESTORE_PARTITION_STATEMENT,
-  DDL_DROP_PARTITION_STATEMENT
+  DDL_DROP_PARTITION_STATEMENT,
+  DDL_DEBUG_STATEMENT
 };
 
 /** @brief An abstract base for TableDef, ColumnDef, ...
@@ -1319,8 +1320,10 @@ struct AlterTableStatement : public SqlStatement
 
   QualifiedName* fTableName;
   AlterTableActionList fActions;
+
  private:
   long fTimeZone;
+
  public:
 };
 
@@ -1439,6 +1442,30 @@ struct DropTableStatement : public SqlStatement
 
   QualifiedName* fTableName;
   bool fCascade;
+};
+
+/** @brief DebugStatement
+ */
+struct DebugDDLStatement : public SqlStatement
+{
+  /** @brief Deserialize from ByteStream */
+  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+
+  /** @brief Serialize to ByteStream */
+  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+
+  DebugDDLStatement(uint32_t debugLevel);
+
+  EXPORT DebugDDLStatement();
+
+  /** @brief Dump to stdout. */
+  EXPORT std::ostream& put(std::ostream& os) const;
+
+  virtual ~DebugDDLStatement()
+  {
+  }
+
+  uint32_t fDebugLevel;
 };
 
 /** @brief TruncTableStatement represents the drop table operation
