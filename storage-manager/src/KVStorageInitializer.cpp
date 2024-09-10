@@ -29,12 +29,12 @@ std::shared_ptr<FDBCS::FDBDataBase> KVStorageInitializer::getStorageInstance()
   if (fdbDataBaseInstance)
     return fdbDataBaseInstance;
 
+  auto* config = Config::get();
+  auto* logger = SMLogging::get();
+
   std::unique_lock<std::mutex> lock(kvStorageLock);
   if (fdbDataBaseInstance)
     return fdbDataBaseInstance;
-
-  auto* config = Config::get();
-  auto* logger = SMLogging::get();
 
   if (!FDBCS::setAPIVersion())
   {
