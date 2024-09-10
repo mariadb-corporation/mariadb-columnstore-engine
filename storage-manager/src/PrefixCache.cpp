@@ -137,15 +137,24 @@ void PrefixCache::populate()
     const bf::path& p = dir->path();
     if (bf::is_regular_file(p))
     {
-      lru.push_back(p.filename().string());
+      auto fileName = p.filename().string();
+      if (m_lru.find(fileName) != m_lru.end())
+      {
+        logger->log(LOG_WARNING, "Cache: found a duplicate in the cache '%s'", p.string().c_str());
+        ++dir;
+        continue;
+      }
+      lru.push_back(fileName);
       auto last = lru.end();
       m_lru.insert(--last);
       currentCacheSize += bf::file_size(*dir);
       newObjects.push_back(p.filename().string());
     }
     else if (p != cachePrefix / downloader->getTmpPath())
+    {
       logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'",
                   p.string().c_str());
+    }
     ++dir;
   }
   sync->newObjects(firstDir, newObjects);
@@ -471,7 +480,6 @@ void PrefixCache::_makeSpace(size_t size)
     if (!bf::exists(cachePrefix / *it))
       logger->log(LOG_WARNING, "PrefixCache::makeSpace(): doesn't exist, %s/%s", cachePrefix.string().c_str(),
                   ((string)(*it)).c_str());
-    assert(bf::exists(cachePrefix / *it));
     /*
         tell Synchronizer that this key will be evicted
         delete the file
