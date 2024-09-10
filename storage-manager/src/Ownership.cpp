@@ -43,6 +43,12 @@ enum class OwnershipStateId
 // FDB recommends keep the key size up to 32 bytes.
 const char* ownerShipStates[3] = {/*OWNED*/ "_O", /*FLUSHING*/ "_F", /*REQUEST_TRANSFER*/ "_RT"};
 
+inline std::string getKeyName(const std::string& fileName, OwnershipStateId state)
+{
+  return KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + fileName +
+         ownerShipStates[static_cast<uint32_t>(state)];
+}
+
 Ownership::Ownership()
 {
   Config* config = Config::get();
@@ -145,9 +151,7 @@ void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushin
     {
       auto kvStorage = KVStorageInitializer::getStorageInstance();
       auto tnx = kvStorage->createTransaction();
-      const std::string flushingKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] +
-                                      prefix.string() +
-                                      ownerShipStates[static_cast<uint32_t>(OwnershipStateId::FLUSHING)];
+      const std::string flushingKey = getKeyName(prefix.string(), OwnershipStateId::FLUSHING);
       tnx->set(flushingKey, "");
       if (!tnx->commit())
       {
@@ -184,11 +188,8 @@ void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
     {
       auto kvStorage = KVStorageInitializer::getStorageInstance();
       auto tnx = kvStorage->createTransaction();
-      const std::string ownedKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                   ownerShipStates[static_cast<uint32_t>(OwnershipStateId::OWNED)];
-      const std::string flushingKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] +
-                                      p.string() +
-                                      ownerShipStates[static_cast<uint32_t>(OwnershipStateId::FLUSHING)];
+      const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
+      const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
       tnx->remove(ownedKey);
       tnx->remove(flushingKey);
       if (!tnx->commit())
@@ -217,10 +218,8 @@ void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
   {
     auto kvStorage = KVStorageInitializer::getStorageInstance();
     auto tnx = kvStorage->createTransaction();
-    const std::string ownedKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                 ownerShipStates[static_cast<uint32_t>(OwnershipStateId::OWNED)];
-    const std::string flushingKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                    ownerShipStates[static_cast<uint32_t>(OwnershipStateId::FLUSHING)];
+    const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
+    const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
     tnx->remove(ownedKey);
     tnx->remove(flushingKey);
     if (!tnx->commit())
@@ -238,14 +237,9 @@ void Ownership::_takeOwnership(const bf::path& p)
   {
     auto kvStorage = KVStorageInitializer::getStorageInstance();
     auto tnx = kvStorage->createTransaction();
-    const std::string ownedKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                 ownerShipStates[static_cast<uint32_t>(OwnershipStateId::OWNED)];
-    const std::string flushingKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                    ownerShipStates[static_cast<uint32_t>(OwnershipStateId::FLUSHING)];
-    const std::string requestTransferKey =
-        KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-        ownerShipStates[static_cast<uint32_t>(OwnershipStateId::REQUEST_TRANSFER)];
-
+    const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
+    const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
+    const std::string requestTransferKey = getKeyName(p.string(), OwnershipStateId::REQUEST_TRANSFER);
     tnx->remove(flushingKey);
     tnx->remove(requestTransferKey);
     tnx->set(ownedKey, "");
@@ -281,8 +275,7 @@ void Ownership::takeOwnership(const bf::path& p)
   {
     auto kvStorage = KVStorageInitializer::getStorageInstance();
     auto tnx = kvStorage->createTransaction();
-    const std::string ownedKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                 ownerShipStates[static_cast<uint32_t>(OwnershipStateId::OWNED)];
+    const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
     ownedKeyExists = tnx->get(ownedKey).first;
   }
 
@@ -296,12 +289,14 @@ void Ownership::takeOwnership(const bf::path& p)
   {
     auto kvStorage = KVStorageInitializer::getStorageInstance();
     auto tnx = kvStorage->createTransaction();
-    const std::string requestTransferKey =
-        KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-        ownerShipStates[static_cast<uint32_t>(OwnershipStateId::REQUEST_TRANSFER)];
-
+    const std::string requestTransferKey = getKeyName(p.string(), OwnershipStateId::REQUEST_TRANSFER);
     tnx->set(requestTransferKey, "");
-    tnx->commit();
+    if (!tnx->commit())
+    {
+      const char* msg = "Ownership: commit `requestTransfer` failed ";
+      logger->log(LOG_CRIT, msg);
+      throw runtime_error(msg);
+    }
   }
 
   bool okToTransfer = false;
@@ -314,8 +309,7 @@ void Ownership::takeOwnership(const bf::path& p)
     {
       auto kvStorage = KVStorageInitializer::getStorageInstance();
       auto tnx = kvStorage->createTransaction();
-      const std::string ownedKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + p.string() +
-                                   ownerShipStates[static_cast<uint32_t>(OwnershipStateId::OWNED)];
+      const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
       ownedKeyExists = tnx->get(ownedKey).first;
     }
     if (!ownedKeyExists)
@@ -325,9 +319,7 @@ void Ownership::takeOwnership(const bf::path& p)
     {
       auto kvStorage = KVStorageInitializer::getStorageInstance();
       auto tnx = kvStorage->createTransaction();
-      const std::string flushingKey = KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] +
-                                      p.string() +
-                                      ownerShipStates[static_cast<uint32_t>(OwnershipStateId::FLUSHING)];
+      const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
       flushingKeyExists = tnx->get(flushingKey).first;
     }
     if (flushingKeyExists)
@@ -376,8 +368,7 @@ void Ownership::Monitor::watchForInterlopers()
         auto kvStorage = KVStorageInitializer::getStorageInstance();
         auto tnx = kvStorage->createTransaction();
         const std::string requestTransferKey =
-            KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + prefix.first.string() +
-            ownerShipStates[static_cast<uint32_t>(OwnershipStateId::REQUEST_TRANSFER)];
+            getKeyName(prefix.first.string(), OwnershipStateId::REQUEST_TRANSFER);
 
         requestKeyExists = tnx->get(requestTransferKey).first;
       }
