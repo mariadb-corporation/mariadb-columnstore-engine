@@ -5958,6 +5958,7 @@ void gp_walk(const Item* item, void* arg)
   if (itype == Item::FUNC_ITEM && ((Item_func*)item)->functype() == Item_func::XOR_FUNC)
     itype = Item::COND_ITEM;
 
+  idblog("itype " << int(itype));
   switch (itype)
   {
     case Item::CACHE_ITEM:
