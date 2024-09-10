@@ -1,118 +1,147 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+CONFIGURE_FILE ("${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp" @ONLY)
+CONFIGURE_FILE ("${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h" @ONLY)
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp" @ONLY)
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h" @ONLY)
+# ########## next target ###############
 
+SET (
+  brm_LIB_SRCS
+  autoincrementmanager.cpp
+  blockresolutionmanager.cpp
+  brmshmimpl.cpp
+  brmtypes.cpp
+  copylocks.cpp
+  dbrm.cpp
+  extentmap.cpp
+  lbidresourcegraph.cpp
+  logicalpartition.cpp
+  mastersegmenttable.cpp
+  oidserver.cpp
+  resourcenode.cpp
+  rgnode.cpp
+  rwlockmonitor.cpp
+  sessionmanagerserver.cpp
+  shmkeys.cpp
+  slavedbrmnode.cpp
+  slavecomm.cpp
+  tablelockserver.cpp
+  tracer.cpp
+  transactionnode.cpp
+  undoable.cpp
+  vbbm.cpp
+  vss.cpp
+  ../../datatypes/mcs_datatype.cpp
+)
 
-########### next target ###############
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (brm STATIC ${brm_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (brm SHARED ${brm_LIB_SRCS})
+ENDIF ()
 
-set(brm_LIB_SRCS
-    autoincrementmanager.cpp
-    blockresolutionmanager.cpp
-    brmshmimpl.cpp
-    brmtypes.cpp
-    copylocks.cpp
-    dbrm.cpp
-    extentmap.cpp
-    lbidresourcegraph.cpp
-    logicalpartition.cpp
-    mastersegmenttable.cpp
-    oidserver.cpp
-    resourcenode.cpp
-    rgnode.cpp
-    rwlockmonitor.cpp
-    sessionmanagerserver.cpp
-    shmkeys.cpp
-    slavedbrmnode.cpp
-    slavecomm.cpp
-    tablelockserver.cpp
-    tracer.cpp
-    transactionnode.cpp
-    undoable.cpp
-    vbbm.cpp
-    vss.cpp
-    ../../datatypes/mcs_datatype.cpp)
+ADD_DEPENDENCIES (brm loggingcpp)
 
-add_library(brm SHARED ${brm_LIB_SRCS})
+INSTALL (
+  TARGETS brm
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)
 
-add_dependencies(brm loggingcpp)
+# ########## next target ###############
 
-install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+SET (controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
 
+ADD_EXECUTABLE (controllernode ${controllernode_SRCS})
 
-########### next target ###############
+TARGET_LINK_LIBRARIES (controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
-set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
+INSTALL (
+  TARGETS controllernode
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
-add_executable(controllernode ${controllernode_SRCS})
+# ########## next target ###############
 
-target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} )
+SET (workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
 
-install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+ADD_EXECUTABLE (workernode ${workernode_SRCS})
 
+TARGET_LINK_LIBRARIES (workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
-########### next target ###############
+INSTALL (
+  TARGETS workernode
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
-set(workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
+# ########## next target ###############
 
-add_executable(workernode ${workernode_SRCS})
+SET (dbrmctl_SRCS dbrmctl.cpp)
 
-target_link_libraries(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+ADD_EXECUTABLE (dbrmctl ${dbrmctl_SRCS})
 
-install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+TARGET_LINK_LIBRARIES (dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
+INSTALL (
+  TARGETS dbrmctl
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
-########### next target ###############
+# ########## next target ###############
 
-set(dbrmctl_SRCS dbrmctl.cpp)
+SET (reset_locks_SRCS reset_locks.cpp)
 
-add_executable(dbrmctl ${dbrmctl_SRCS})
+ADD_EXECUTABLE (reset_locks ${reset_locks_SRCS})
 
-target_link_libraries(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+TARGET_LINK_LIBRARIES (reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+INSTALL (
+  TARGETS reset_locks
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
+# ########## next target ###############
 
-########### next target ###############
+SET (rollback_SRCS rollback.cpp)
 
-set(reset_locks_SRCS reset_locks.cpp)
+ADD_EXECUTABLE (rollback ${rollback_SRCS})
 
-add_executable(reset_locks ${reset_locks_SRCS})
+TARGET_LINK_LIBRARIES (rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-target_link_libraries(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+INSTALL (
+  TARGETS rollback
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+# ########## next target ###############
 
+SET (save_brm_SRCS save_brm.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (save_brm ${save_brm_SRCS})
 
-set(rollback_SRCS rollback.cpp)
+TARGET_LINK_LIBRARIES (save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-add_executable(rollback ${rollback_SRCS})
+INSTALL (
+  TARGETS save_brm
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
 
-target_link_libraries(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+# ########## next target ###############
 
-install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+SET (load_brm_SRCS load_brm.cpp)
 
+ADD_EXECUTABLE (load_brm ${load_brm_SRCS})
 
-########### next target ###############
+TARGET_LINK_LIBRARIES (load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-set(save_brm_SRCS save_brm.cpp)
-
-add_executable(save_brm ${save_brm_SRCS})
-
-target_link_libraries(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
-
-set(load_brm_SRCS load_brm.cpp)
-
-add_executable(load_brm ${load_brm_SRCS})
-
-target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+INSTALL (
+  TARGETS load_brm
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

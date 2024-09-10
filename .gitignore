@@ -128,6 +128,7 @@ oam/install_scripts/pre-uninstall
 oam/install_scripts/syslogSetup.sh
 tools/setConfig/configxml.sh
 dbcon/mysql/install_mcs_mysql.sh
+debian/mariadb-plugin-columnstore.install
 oam/cloud/MCSInstanceCmds.sh
 oam/cloud/MCSVolumeCmds.sh
 oam/etc/ProcessConfig.xml

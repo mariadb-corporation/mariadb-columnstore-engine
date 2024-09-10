@@ -1,14 +1,15 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (editem_SRCS editem.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (editem ${editem_SRCS})
 
-set(editem_SRCS editem.cpp)
+TARGET_LINK_LIBRARIES (editem ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-add_executable(editem ${editem_SRCS})
-
-target_link_libraries(editem ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS editem DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS editem
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

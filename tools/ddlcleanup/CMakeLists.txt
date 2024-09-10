@@ -1,14 +1,15 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (ddlcleanup_SRCS ddlcleanup.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (ddlcleanup ${ddlcleanup_SRCS})
 
-set(ddlcleanup_SRCS ddlcleanup.cpp)
+TARGET_LINK_LIBRARIES (ddlcleanup ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ddlcleanuputil)
 
-add_executable(ddlcleanup ${ddlcleanup_SRCS})
-
-target_link_libraries(ddlcleanup ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ddlcleanuputil)
-
-install(TARGETS ddlcleanup DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS ddlcleanup
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

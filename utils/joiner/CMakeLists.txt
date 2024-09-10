@@ -1,15 +1,19 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (joiner_LIB_SRCS tuplejoiner.cpp joinpartition.cpp)
 
-########### next target ###############
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (joiner STATIC ${joiner_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (joiner SHARED ${joiner_LIB_SRCS})
+ENDIF ()
 
-set(joiner_LIB_SRCS tuplejoiner.cpp joinpartition.cpp)
+ADD_DEPENDENCIES (joiner loggingcpp)
 
-add_library(joiner SHARED ${joiner_LIB_SRCS})
-
-add_dependencies(joiner loggingcpp)
-
-install(TARGETS joiner DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
-
+INSTALL (
+  TARGETS joiner
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

@@ -1,17 +1,21 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (batchloader_LIB_SRCS batchloader.cpp)
 
-########### next target ###############
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (batchloader STATIC ${batchloader_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (batchloader SHARED ${batchloader_LIB_SRCS})
+ENDIF ()
 
-set(batchloader_LIB_SRCS batchloader.cpp)
+ADD_DEPENDENCIES (batchloader loggingcpp)
 
-add_library(batchloader SHARED ${batchloader_LIB_SRCS})
+TARGET_LINK_LIBRARIES (batchloader ${NETSNMP_LIBRARIES})
 
-add_dependencies(batchloader loggingcpp)
-
-target_link_libraries(batchloader ${NETSNMP_LIBRARIES})
-
-install(TARGETS batchloader DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
-
+INSTALL (
+  TARGETS batchloader
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

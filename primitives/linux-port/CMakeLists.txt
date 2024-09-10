@@ -1,15 +1,13 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES} ../blockcache ../primproc)
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ../blockcache ../primproc)
+# ########## next target ###############
 
+SET (processor_STAT_SRCS primitiveprocessor.cpp dictionary.cpp column.cpp)
 
-########### next target ###############
+ADD_LIBRARY (processor STATIC ${processor_STAT_SRCS})
 
-set(processor_STAT_SRCS primitiveprocessor.cpp dictionary.cpp column.cpp)
+ADD_DEPENDENCIES (processor loggingcpp)
 
-add_library(processor STATIC ${processor_STAT_SRCS})
-
-add_dependencies(processor loggingcpp)
-
-target_link_libraries(processor ${NETSNMP_LIBRARIES})
+TARGET_LINK_LIBRARIES (processor ${NETSNMP_LIBRARIES})
 
 INSTALL (TARGETS processor DESTINATION ${ENGINE_LIBDIR})

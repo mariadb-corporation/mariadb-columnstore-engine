@@ -1,44 +1,32 @@
+INCLUDE_DIRECTORIES (${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES})
 
-include_directories(${KDE4_INCLUDES} ${KDE4_INCLUDE_DIR} ${QT_INCLUDES} )
+# ########## next target ###############
 
+SET (sendPlan_SRCS sendplan.cpp)
 
-########### next target ###############
+KDE4_ADD_EXECUTABLE (sendPlan ${sendPlan_SRCS})
 
-set(sendPlan_SRCS sendplan.cpp)
+TARGET_LINK_LIBRARIES (sendPlan ${KDE4_KDECORE_LIBS})
 
-kde4_add_executable(sendPlan ${sendPlan_SRCS})
+INSTALL (TARGETS sendPlan ${INSTALL_TARGETS_DEFAULT_ARGS})
 
-target_link_libraries(sendPlan ${KDE4_KDECORE_LIBS})
+# ########## install files ###############
 
-install(TARGETS sendPlan ${INSTALL_TARGETS_DEFAULT_ARGS})
+# original Makefile.am contents follow:
 
-
-########### install files ###############
-
-
-
-
-#original Makefile.am contents follow:
-
-## $Id: Makefile.am 333 2009-04-03 20:35:04Z rdempsey $
-### Process this file with automake to produce Makefile.in
+# $Id: Makefile.am 333 2009-04-03 20:35:04Z rdempsey $ Process this file with automake to produce Makefile.in
 #
-#AM_CPPFLAGS = $(idb_cppflags)
-#AM_CFLAGS = $(idb_cflags)
-#AM_CXXFLAGS = $(idb_cxxflags)
-#AM_LDFLAGS = $(idb_ldflags)
-#bin_PROGRAMS = sendPlan
-#sendPlan_SOURCES = sendplan.cpp
-#sendPlan_CPPFLAGS = @idb_common_includes@ $(AM_CPPFLAGS)
-#sendPlan_LDFLAGS = @idb_common_ldflags@ @idb_exec_libs@ $(AM_LDFLAGS)
+# AM_CPPFLAGS = $(idb_cppflags) AM_CFLAGS = $(idb_cflags) AM_CXXFLAGS = $(idb_cxxflags) AM_LDFLAGS = $(idb_ldflags)
+# bin_PROGRAMS = sendPlan sendPlan_SOURCES = sendplan.cpp sendPlan_CPPFLAGS = @idb_common_includes@ $(AM_CPPFLAGS)
+# sendPlan_LDFLAGS = @idb_common_ldflags@ @idb_exec_libs@ $(AM_LDFLAGS)
 #
-#test:
+# test:
 #
-#coverage:
+# coverage:
 #
-#leakcheck:
+# leakcheck:
 #
-#docs:
+# docs:
 #
-#bootstrap: install-data-am
+# bootstrap: install-data-am
 #

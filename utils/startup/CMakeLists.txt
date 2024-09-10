@@ -1,11 +1,8 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+ADD_DEFINITIONS (-fPIC -DPIC)
 
-ADD_DEFINITIONS(-fPIC -DPIC)
+ADD_LIBRARY (idbboot STATIC installdir.cpp)
+ADD_DEPENDENCIES (idbboot external_boost)
 
-add_library(idbboot STATIC installdir.cpp)
-add_dependencies(idbboot external_boost)
-
-INSTALL(TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})
-
-
+INSTALL (TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})

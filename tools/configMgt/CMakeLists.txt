@@ -1,13 +1,11 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (autoConfigure_SRCS autoConfigure.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (autoConfigure ${autoConfigure_SRCS})
 
-set(autoConfigure_SRCS autoConfigure.cpp)
+TARGET_LINK_LIBRARIES (autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-add_executable(autoConfigure ${autoConfigure_SRCS})
-
-target_link_libraries(autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
-
-#install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+# install(TARGETS autoConfigure DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)

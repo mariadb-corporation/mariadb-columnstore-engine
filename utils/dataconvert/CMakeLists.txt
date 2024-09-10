@@ -1,13 +1,19 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (dataconvert_LIB_SRCS dataconvert.cpp)
 
-########### next target ###############
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (dataconvert STATIC ${dataconvert_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (dataconvert SHARED ${dataconvert_LIB_SRCS})
+ENDIF ()
 
-set(dataconvert_LIB_SRCS dataconvert.cpp)
+ADD_DEPENDENCIES (dataconvert loggingcpp)
 
-add_library(dataconvert SHARED ${dataconvert_LIB_SRCS})
-
-add_dependencies(dataconvert loggingcpp)
-
-install(TARGETS dataconvert DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+INSTALL (
+  TARGETS dataconvert
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

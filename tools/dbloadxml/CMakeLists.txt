@@ -1,21 +1,23 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
+SET (dbload_STAT_SRCS inputmgr.cpp)
 
-set(dbload_STAT_SRCS inputmgr.cpp)
+ADD_LIBRARY (dbload STATIC ${dbload_STAT_SRCS})
 
-add_library(dbload STATIC ${dbload_STAT_SRCS})
+ADD_DEPENDENCIES (dbload loggingcpp)
 
-add_dependencies(dbload loggingcpp)
+# ########## next target ###############
 
-########### next target ###############
+SET (colxml_SRCS colxml.cpp)
 
-set(colxml_SRCS colxml.cpp)
+ADD_EXECUTABLE (colxml ${colxml_SRCS})
 
-add_executable(colxml ${colxml_SRCS})
+TARGET_LINK_LIBRARIES (colxml ${ENGINE_LDFLAGS} dbload ${ENGINE_WRITE_LIBS})
 
-target_link_libraries(colxml ${ENGINE_LDFLAGS} dbload ${ENGINE_WRITE_LIBS})
-
-install(TARGETS colxml DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS colxml
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

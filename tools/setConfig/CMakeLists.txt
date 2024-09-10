@@ -1,13 +1,15 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
+SET (setConfig_SRCS main.cpp)
 
-set(setConfig_SRCS main.cpp)
+ADD_EXECUTABLE (mcsSetConfig ${setConfig_SRCS})
 
-add_executable(mcsSetConfig ${setConfig_SRCS})
+TARGET_LINK_LIBRARIES (mcsSetConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-target_link_libraries(mcsSetConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS mcsSetConfig DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS mcsSetConfig
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

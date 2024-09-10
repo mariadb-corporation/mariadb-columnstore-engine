@@ -1,25 +1,26 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES} ../primproc)
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ../primproc)
+# ########## next target ###############
 
-########### next target ###############
+SET (
+  dbbc_STAT_SRCS
+  blockcacheclient.cpp
+  blockrequestprocessor.cpp
+  fileblockrequestqueue.cpp
+  filebuffer.cpp
+  filebuffermgr.cpp
+  filerequest.cpp
+  iomanager.cpp
+  stats.cpp
+  fsutils.cpp
+)
 
-set(dbbc_STAT_SRCS
-    blockcacheclient.cpp
-    blockrequestprocessor.cpp
-    fileblockrequestqueue.cpp
-    filebuffer.cpp
-    filebuffermgr.cpp
-    filerequest.cpp
-    iomanager.cpp
-    stats.cpp
-    fsutils.cpp)
+# libdbbc_a_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
 
-#libdbbc_a_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
+ADD_LIBRARY (dbbc STATIC ${dbbc_STAT_SRCS})
 
-add_library(dbbc STATIC ${dbbc_STAT_SRCS})
+ADD_DEPENDENCIES (dbbc loggingcpp)
 
-add_dependencies(dbbc loggingcpp)
-
-target_link_libraries(dbbc ${NETSNMP_LIBRARIES})
+TARGET_LINK_LIBRARIES (dbbc ${NETSNMP_LIBRARIES})
 
 INSTALL (TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})

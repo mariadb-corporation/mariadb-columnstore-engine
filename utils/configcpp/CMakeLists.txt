@@ -1,14 +1,21 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-########### next target ###############
+SET (configcpp_LIB_SRCS configcpp.cpp xmlparser.cpp configstream.cpp)
 
-set(configcpp_LIB_SRCS configcpp.cpp xmlparser.cpp configstream.cpp)
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (configcpp STATIC ${configcpp_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (configcpp SHARED ${configcpp_LIB_SRCS})
+ENDIF ()
 
-add_library(configcpp SHARED ${configcpp_LIB_SRCS})
-add_dependencies(configcpp loggingcpp)
+ADD_DEPENDENCIES (configcpp loggingcpp)
 
-target_compile_definitions(configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
+TARGET_COMPILE_DEFINITIONS (configcpp PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
-install(TARGETS configcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS configcpp
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

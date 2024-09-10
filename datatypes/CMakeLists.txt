@@ -1,11 +1,16 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
+SET (datatypes_LIB_SRCS mcs_int128.cpp mcs_decimal.cpp)
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-set(datatypes_LIB_SRCS
-    mcs_int128.cpp
-    mcs_decimal.cpp)
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (datatypes STATIC ${datatypes_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (datatypes SHARED ${datatypes_LIB_SRCS})
+ENDIF ()
 
-add_library(datatypes SHARED ${datatypes_LIB_SRCS})
-add_dependencies(datatypes loggingcpp external_boost)
+ADD_DEPENDENCIES (datatypes loggingcpp external_boost)
 
-install(TARGETS datatypes DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS datatypes
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

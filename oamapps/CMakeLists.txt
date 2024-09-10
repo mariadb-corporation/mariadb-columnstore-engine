@@ -1,3 +1,2 @@
-
-add_subdirectory(columnstoreDB)
-add_subdirectory(postConfigure)
+ADD_SUBDIRECTORY (columnstoreDB)
+ADD_SUBDIRECTORY (postConfigure)

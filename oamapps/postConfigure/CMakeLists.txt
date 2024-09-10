@@ -1,16 +1,17 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (mycnfUpgrade_SRCS mycnfUpgrade.cpp)
 
-########### next target ###############
+ADD_EXECUTABLE (mycnfUpgrade ${mycnfUpgrade_SRCS})
 
-set(mycnfUpgrade_SRCS mycnfUpgrade.cpp)
+TARGET_COMPILE_OPTIONS (mycnfUpgrade PRIVATE -Wno-unused-result)
 
-add_executable(mycnfUpgrade ${mycnfUpgrade_SRCS})
+TARGET_LINK_LIBRARIES (mycnfUpgrade ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIBRARY} ncurses ${ENGINE_EXEC_LIBS})
 
-target_compile_options(mycnfUpgrade PRIVATE -Wno-unused-result)
-
-target_link_libraries(mycnfUpgrade ${ENGINE_LDFLAGS} ${ENGINE_READLINE_LIBRARY} ncurses ${ENGINE_EXEC_LIBS})
-
-install(TARGETS mycnfUpgrade DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-       
+INSTALL (
+  TARGETS mycnfUpgrade
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

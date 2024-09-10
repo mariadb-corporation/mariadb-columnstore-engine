@@ -1,18 +1,24 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_COMMON_INCLUDE})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_COMMON_INCLUDE} )
+# ########## next target ###############
+SET (cspasswd_SRCS cspasswd.cpp secrets.cpp)
+SET (cskeys_SRCS cskeys.cpp secrets.cpp)
 
-########### next target ###############
-set(cspasswd_SRCS cspasswd.cpp secrets.cpp)
-set(cskeys_SRCS cskeys.cpp secrets.cpp)
+ADD_EXECUTABLE (cspasswd ${cspasswd_SRCS})
+ADD_EXECUTABLE (cskeys ${cskeys_SRCS})
 
-add_executable(cspasswd ${cspasswd_SRCS})
-add_executable(cskeys ${cskeys_SRCS})
+TARGET_INCLUDE_DIRECTORIES (cspasswd BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
+TARGET_INCLUDE_DIRECTORIES (cskeys BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
+TARGET_LINK_LIBRARIES (cspasswd ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${SSL_LIBRARIES})
+TARGET_LINK_LIBRARIES (cskeys ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${SSL_LIBRARIES})
 
-target_include_directories(cspasswd BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_include_directories(cskeys BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
-target_link_libraries(cspasswd ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${SSL_LIBRARIES})
-target_link_libraries(cskeys ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} ${SSL_LIBRARIES})
-
-install(TARGETS cspasswd DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-install(TARGETS cskeys DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS cspasswd
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)
+INSTALL (
+  TARGETS cskeys
+  DESTINATION ${ENGINE_BINDIR}
+  COMPONENT columnstore-engine
+)

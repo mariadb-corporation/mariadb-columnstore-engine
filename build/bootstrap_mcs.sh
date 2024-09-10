@@ -47,6 +47,7 @@ optparse.define short=n long=no-clean-install desc="Do not perform a clean insta
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
 optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=O long=static desc="Build all with static libraries" variable=STATIC_BUILD default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
 
@@ -279,6 +280,11 @@ build()
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
         warn Building with CoreDumps: /proc/sys/kernel/core_pattern changed to ${REPORT_PATH}/core_%e.%p
         echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
+    fi
+
+    if [[ $STATIC_BUILD = true ]] ; then
+        warn "Building all with static linkage"
+        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCOLUMNSTORE_ALL_STATIC:BOOL=ON"
     fi
 
     if [[ $MAKEFILE_VERBOSE = true ]] ; then

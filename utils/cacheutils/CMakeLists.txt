@@ -1,14 +1,19 @@
+INCLUDE_DIRECTORIES (${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
+SET (cacheutils_LIB_SRCS cacheutils.cpp)
 
-########### next target ###############
+IF (COLUMNSTORE_ALL_STATIC)
+  ADD_LIBRARY (cacheutils STATIC ${cacheutils_LIB_SRCS})
+ELSE ()
+  ADD_LIBRARY (cacheutils SHARED ${cacheutils_LIB_SRCS})
+ENDIF ()
 
-set(cacheutils_LIB_SRCS cacheutils.cpp)
+ADD_DEPENDENCIES (cacheutils loggingcpp)
 
-add_library(cacheutils SHARED ${cacheutils_LIB_SRCS})
-
-add_dependencies(cacheutils loggingcpp)
-
-install(TARGETS cacheutils DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+INSTALL (
+  TARGETS cacheutils
+  DESTINATION ${ENGINE_LIBDIR}
+  COMPONENT columnstore-engine
+)

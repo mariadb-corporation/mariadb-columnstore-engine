@@ -1,5 +1,3 @@
-
-add_subdirectory(blockcache)
-add_subdirectory(linux-port)
-add_subdirectory(primproc)
-
+ADD_SUBDIRECTORY (blockcache)
+ADD_SUBDIRECTORY (linux-port)
+ADD_SUBDIRECTORY (primproc)
