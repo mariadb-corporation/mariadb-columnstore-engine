@@ -1633,8 +1633,12 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
 #endif
     sm.rolledback(txnid);
   }
-  catch (exception&)
+  catch (exception& ex)
   {
+    ostringstream errStream;
+    errStream << "doRolledBack() failed: " << ex.what();
+    log(errStream.str());
+
     reply << (uint8_t)ERR_FAILURE;
 
     try
