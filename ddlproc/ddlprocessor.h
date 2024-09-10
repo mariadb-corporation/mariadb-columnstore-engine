@@ -93,6 +93,7 @@ class DDLProcessor
   WriteEngine::WEClients* fWEClient;
   uint32_t fPMCount;
   querytele::QueryTeleClient fQtc;
+  uint32_t debugLevel{0};
 };
 
 }  // namespace ddlprocessor
