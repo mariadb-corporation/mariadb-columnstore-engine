@@ -927,6 +927,10 @@ THR_LOCK_DATA** ha_mcs::store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_t
 #ifdef INFINIDB_DEBUG
   puts("store_lock");
 #endif
+  if (thd_sql_command(thd) == SQLCOM_ALTER_TABLE
+      && thd_tx_isolation(thd) == ISO_REPEATABLE_READ 
+      && lock_type == TL_READ)
+    table->reginfo.lock_type= TL_READ_NO_INSERT;
   return to;
 }
 
