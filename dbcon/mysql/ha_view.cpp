@@ -44,6 +44,7 @@ using namespace execplan;
 #include "ha_view.h"
 #include "ha_mcs_common.h"
 
+#if 1
 #define idblog(x)                                                                       \
   do                                                                                       \
   {                                                                                        \
