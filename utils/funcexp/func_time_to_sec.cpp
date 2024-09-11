@@ -46,7 +46,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
                                     CalpontSystemCatalog::ColType& op_ct)
 {
   // assume 256 is enough. assume not allowing incomplete date
-  int32_t hour = 0, min = 0, sec = 0;
+  int32_t hour = 0, min = 0, sec = 0, msec = 0;
   bool bIsNegative = false;  // Only set to true if CHAR or VARCHAR with a '-'
 
   int64_t val = 0;
@@ -62,6 +62,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
       hour = (int32_t)((val >> 32) & 0x3f);
       min = (int32_t)((val >> 26) & 0x3f);
       sec = (int32_t)((val >> 20) & 0x3f);
+      msec = (int32_t)(val & 0xfffff);
       break;
 
     case CalpontSystemCatalog::TIMESTAMP:
@@ -94,6 +95,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
 
       min = (int32_t)((val >> 32) & 0xff);
       sec = (int32_t)((val >> 24) & 0xff);
+      msec = (int32_t)(val & 0xffffff);
       break;
 
     case CalpontSystemCatalog::CHAR:
@@ -142,6 +144,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
         hour = (int32_t)((val >> 32) & 0x3f);
         min = (int32_t)((val >> 26) & 0x3f);
         sec = (int32_t)((val >> 20) & 0x3f);
+        msec = (int32_t)(val & 0xfffff);
       }
 
       break;
@@ -162,6 +165,7 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
           hour = (int32_t)((val >> 32) & 0x3f);
           min = (int32_t)((val >> 26) & 0x3f);
           sec = (int32_t)((val >> 20) & 0x3f);
+          msec = (int32_t)(val & 0xfffff);
         }
       }
       else
@@ -186,12 +190,68 @@ int64_t Func_time_to_sec::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
     rtn = (int64_t)(hour * 60 * 60) + (min * 60) + sec;
   }
 
+  if (op_ct.scale > 0)
+  {
+    if (hour < 0)
+    {
+      rtn = rtn * IDB_pow[6] - msec;
+    }
+    else
+    {
+      rtn = rtn * IDB_pow[6] + msec;
+    }
+  }
+
   if (bIsNegative)
   {
     rtn *= -1;
   }
 
   return rtn;
+}
+
+IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                            CalpontSystemCatalog::ColType& op_ct)
+{
+  int64_t value = getIntVal(row, parm, isNull, op_ct);
+  IDB_Decimal decimal;
+  int32_t scaleDiff = 6 - op_ct.scale;
+
+  if (!op_ct.isWideDecimalType())
+  {
+    if (scaleDiff > 0)
+    {
+      value =
+          (int64_t)round(static_cast<double>(value) / static_cast<double>(datatypes::mcs_pow_10[scaleDiff]));
+    }
+    else if (scaleDiff < 0)
+    {
+      value = value * static_cast<int64_t>(datatypes::mcs_pow_10[-scaleDiff]);
+    }
+    decimal.value = value;
+  }
+  else
+  {
+    int128_t s128Value = value;
+    if (scaleDiff > 0)
+    {
+      s128Value = scaleDiff > 19
+                      ? (int128_t)round(static_cast<long double>(s128Value) /
+                                        static_cast<long double>(datatypes::mcs_pow_10_128[scaleDiff - 19]))
+                      : (int128_t)round(static_cast<long double>(s128Value) /
+                                        static_cast<long double>(datatypes::mcs_pow_10[scaleDiff]));
+    }
+    else if (scaleDiff < 0)
+    {
+      s128Value = scaleDiff < -19 ? s128Value * datatypes::mcs_pow_10_128[-scaleDiff - 19]
+                                  : s128Value * datatypes::mcs_pow_10[-scaleDiff];
+    }
+    decimal.s128Value = s128Value;
+  }
+
+  decimal.setScale(op_ct.scale);
+  decimal.precision = op_ct.precision;
+  return decimal;
 }
 
 }  // namespace funcexp
