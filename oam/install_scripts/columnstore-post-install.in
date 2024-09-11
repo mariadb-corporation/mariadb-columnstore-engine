@@ -375,7 +375,17 @@ fi
 if [ $(running_systemd) -eq 0 ]; then
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_LOGDIR@
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /etc/columnstore
-    chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
+    findcmd=`which find 2>/dev/null`
+    if [ -n "$findcmd" ]; then
+        if [[ $($findcmd @ENGINE_DATADIR@ -maxdepth 3 ! -user @DEFAULT_USER@ -exec echo {} \; -quit 2>/dev/null) ]]; then
+            echo "At least one file is not owned by @DEFAULT_USER@ in @ENGINE_DATADIR@. Running chown..."
+            chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
+        else
+            echo "Confirmed top @ENGINE_DATADIR@ folders owned by @DEFAULT_USER@"
+        fi  
+    else
+        chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
+    fi
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ $tmpDir
     chmod 777 /dev/shm
 fi
