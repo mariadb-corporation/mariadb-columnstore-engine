@@ -3348,7 +3348,13 @@ bool itemDisablesWrapping(Item* item, gp_walk_info& gwi)
 
   while (groupcol)
   {
-    if (item->eq(*groupcol->item, false))
+    Item* gci = *groupcol->item;
+    while (gci->type() == Item::REF_ITEM)
+    {
+      Item_ref* ref = (Item_ref*)gci;
+      gci = *(ref->ref);
+    }
+    if (item->eq(gci, false))
     {
       return true;
     }
