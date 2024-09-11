@@ -33,13 +33,6 @@ namespace bf = boost::filesystem;
 
 namespace storagemanager
 {
-enum class OwnershipStateId
-{
-  OWNED = 0,
-  FLUSHING,
-  REQUEST_TRANSFER
-};
-
 // FDB recommends keep the key size up to 32 bytes.
 const char* ownerShipStates[3] = {/*OWNED*/ "_O", /*FLUSHING*/ "_F", /*REQUEST_TRANSFER*/ "_RT"};
 
@@ -47,6 +40,22 @@ inline std::string getKeyName(const std::string& fileName, OwnershipStateId stat
 {
   return KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_OWNERSHIP)] + fileName +
          ownerShipStates[static_cast<uint32_t>(state)];
+}
+
+inline void Ownership::removeKeys(const std::string& fileName, const std::vector<OwnershipStateId>& states)
+{
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto tnx = kvStorage->createTransaction();
+
+  for (const auto state : states)
+    tnx->remove(getKeyName(fileName, state));
+
+  if (!tnx->commit())
+  {
+    const char* msg = "Ownership: commit `removeKeys` failed ";
+    logger->log(LOG_CRIT, msg);
+    throw runtime_error(msg);
+  }
 }
 
 Ownership::Ownership()
@@ -185,20 +194,7 @@ void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
 
   if (isDtor)
   {
-    {
-      auto kvStorage = KVStorageInitializer::getStorageInstance();
-      auto tnx = kvStorage->createTransaction();
-      const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
-      const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
-      tnx->remove(ownedKey);
-      tnx->remove(flushingKey);
-      if (!tnx->commit())
-      {
-        const char* msg = "Ownership: commit `releaseOwnership` failed ";
-        logger->log(LOG_CRIT, msg);
-        throw runtime_error(msg);
-      }
-    }
+    removeKeys(p.string(), {OwnershipStateId::OWNED, OwnershipStateId::FLUSHING});
     return;
   }
   else
@@ -215,20 +211,7 @@ void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
   done = true;
   xfer.interrupt();
   xfer.join();
-  {
-    auto kvStorage = KVStorageInitializer::getStorageInstance();
-    auto tnx = kvStorage->createTransaction();
-    const std::string ownedKey = getKeyName(p.string(), OwnershipStateId::OWNED);
-    const std::string flushingKey = getKeyName(p.string(), OwnershipStateId::FLUSHING);
-    tnx->remove(ownedKey);
-    tnx->remove(flushingKey);
-    if (!tnx->commit())
-    {
-      const char* msg = "Ownership: commit `releaseOwnership` transaction failed";
-      logger->log(LOG_CRIT, msg);
-      throw runtime_error(msg);
-    }
-  }
+  removeKeys(p.string(), {OwnershipStateId::OWNED, OwnershipStateId::FLUSHING});
 }
 
 void Ownership::_takeOwnership(const bf::path& p)
