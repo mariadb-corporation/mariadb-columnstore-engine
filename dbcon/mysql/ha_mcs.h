@@ -58,9 +58,7 @@ class ha_mcs : public handler
 
  public:
   ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
-  virtual ~ha_mcs()
-  {
-  }
+  virtual ~ha_mcs() = default;
 
   /** @brief
     The name that will be used for display purposes.
@@ -121,22 +119,22 @@ class ha_mcs : public handler
   /** @brief
     Called in test_quick_select to determine if indexes should be used.
   */
-   virtual IO_AND_CPU_COST scan_time() override
-   {
-     IO_AND_CPU_COST cost;
-     cost.io= 0.0;
-     /*
-       For now, assume all cost is CPU cost.
-       The numbers are also very inadequate for the new cost model.
-     */
-     cost.cpu= (double)(stats.records + stats.deleted) / 20.0 + 10;
-     return cost;
-   }
+  virtual IO_AND_CPU_COST scan_time() override
+  {
+    IO_AND_CPU_COST cost;
+    cost.io = 0.0;
+    /*
+      For now, assume all cost is CPU cost.
+      The numbers are also very inadequate for the new cost model.
+    */
+    cost.cpu = (double)(stats.records + stats.deleted) / 20.0 + 10;
+    return cost;
+  }
 #else
   /** @brief
     Called in test_quick_select to determine if indexes should be used.
   */
-  virtual double scan_time() override
+  double scan_time() override
   {
     return (double)(stats.records + stats.deleted) / 20.0 + 10;
   }
@@ -324,7 +322,7 @@ class ha_mcs_cache : public ha_mcs
   ha_mcs_cache_share* share;
 
   ha_mcs_cache(handlerton* hton, TABLE_SHARE* table_arg, MEM_ROOT* mem_root);
-  ~ha_mcs_cache();
+  ~ha_mcs_cache() override;
 
   /*
     The following functions duplicates calls to derived handler and

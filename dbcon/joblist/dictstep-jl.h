@@ -40,26 +40,27 @@ class DictStepJL : public CommandJL
 {
  public:
   DictStepJL();
-  DictStepJL(const pDictionaryStep&);
-  virtual ~DictStepJL();
+  explicit DictStepJL(const pDictionaryStep&);
+  ~DictStepJL() override;
 
-  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
-                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
-  uint8_t getTableColumnType();
-  std::string toString();
+  void setLBID(uint64_t data,
+               uint32_t dbroot) override;  // converts a rid or dictionary token to an LBID.  For
+                                           // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType() override;
+  std::string toString() override;
 
   /*  XXXPAT: The width is only valid for projection steps and the output
       type is TUPLE at the moment. */
   void setWidth(uint16_t);
-  uint16_t getWidth();
+  uint16_t getWidth() override;
 
-  CommandType getCommandType()
+  CommandType getCommandType() override
   {
     return DICT_STEP;
   }
 
-  void createCommand(messageqcpp::ByteStream&) const;
-  void runCommand(messageqcpp::ByteStream&) const;
+  void createCommand(messageqcpp::ByteStream&) const override;
+  void runCommand(messageqcpp::ByteStream&) const override;
 
   messageqcpp::ByteStream getFilterString() const
   {

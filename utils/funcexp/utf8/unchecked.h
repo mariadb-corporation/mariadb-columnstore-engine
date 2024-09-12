@@ -28,9 +28,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "core.h"
 
-namespace utf8
-{
-namespace unchecked
+namespace utf8::unchecked
 {
 template <typename octet_iterator>
 octet_iterator append(uint32_t cp, octet_iterator result)
@@ -201,9 +199,7 @@ class iterator : public std::iterator<std::bidirectional_iterator_tag, uint32_t>
   octet_iterator it;
 
  public:
-  iterator()
-  {
-  }
+  iterator() = default;
   explicit iterator(const octet_iterator& octet_it) : it(octet_it)
   {
   }
@@ -249,5 +245,4 @@ class iterator : public std::iterator<std::bidirectional_iterator_tag, uint32_t>
   }
 };  // class iterator
 
-}  // namespace unchecked
-}  // namespace utf8
+}  // namespace utf8::unchecked

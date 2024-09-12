@@ -24,13 +24,11 @@ namespace storagemanager
 class WriteTask : public PosixTask
 {
  public:
+  WriteTask() = delete;
   WriteTask(int sock, uint length);
-  virtual ~WriteTask();
+  ~WriteTask() override;
 
-  bool run();
-
- private:
-  WriteTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

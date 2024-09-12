@@ -29,7 +29,7 @@
 #include <sys/types.h>
 #include <climits>
 #include <string>
-#include <time.h>
+#include <ctime>
 #include "mcs_basic_types.h"
 #include "logicalpartition.h"
 
@@ -248,10 +248,10 @@ struct TableLockInfo : public messageqcpp::Serializeable
   std::vector<uint32_t> dbrootList;
 
   bool overlaps(const TableLockInfo&, const std::set<uint32_t>& sPMList) const;
-  EXPORT void serialize(messageqcpp::ByteStream& bs) const;
+  EXPORT void serialize(messageqcpp::ByteStream& bs) const override;
   EXPORT void serialize(std::ostream&) const;
   EXPORT void deserialize(std::istream&);
-  EXPORT void deserialize(messageqcpp::ByteStream& bs);
+  EXPORT void deserialize(messageqcpp::ByteStream& bs) override;
   EXPORT void serialize(idbdatafile::IDBDataFile*) const;
   EXPORT void deserialize(idbdatafile::IDBDataFile*);
   EXPORT void serialize(char* buffer, uint32_t& offset);
@@ -259,7 +259,7 @@ struct TableLockInfo : public messageqcpp::Serializeable
   bool operator<(const TableLockInfo&) const;
 
  private:
-  void serializeElement(char* buffer, const char* src, const uint32_t size, uint32_t& offset);
+  void serializeElement(char* buffer, const char* src, uint32_t size, uint32_t& offset);
 };
 
 /// A Serializeable version of InlineLBIDRange
@@ -274,15 +274,15 @@ class LBIDRange : public messageqcpp::Serializeable
   {
   }
   EXPORT LBIDRange(const LBIDRange& l);
-  EXPORT LBIDRange(const InlineLBIDRange& l);
+  EXPORT explicit LBIDRange(const InlineLBIDRange& l);
   EXPORT LBIDRange& operator=(const LBIDRange& l);
   EXPORT LBIDRange& operator=(const InlineLBIDRange& l);
-  EXPORT virtual ~LBIDRange();
+  EXPORT ~LBIDRange() override;
 
   /** The Serializeable interface.  Exports the instance to the bytestream */
-  EXPORT virtual void serialize(messageqcpp::ByteStream& bs) const;
+  EXPORT void serialize(messageqcpp::ByteStream& bs) const override;
   /** The Serializeable interface.  Initializes itself from the bytestrem. */
-  EXPORT virtual void deserialize(messageqcpp::ByteStream& bs);
+  EXPORT void deserialize(messageqcpp::ByteStream& bs) override;
 };
 
 /* To support bulkVSSLookup() */
@@ -312,7 +312,7 @@ struct BulkUpdateDBRootArg
   {
     return startLBID < b.startLBID;
   }
-  BulkUpdateDBRootArg(LBID_t l = 0, uint16_t d = 0) : startLBID(l), dbRoot(d)
+  explicit BulkUpdateDBRootArg(LBID_t l = 0, uint16_t d = 0) : startLBID(l), dbRoot(d)
   {
   }
 };
@@ -347,9 +347,9 @@ class VBRange : public messageqcpp::Serializeable
   EXPORT VBRange();
   EXPORT VBRange(const VBRange& v);
   EXPORT VBRange& operator=(const VBRange& v);
-  EXPORT virtual ~VBRange();
-  EXPORT virtual void serialize(messageqcpp::ByteStream& bs) const;
-  EXPORT virtual void deserialize(messageqcpp::ByteStream& bs);
+  EXPORT ~VBRange() override;
+  EXPORT void serialize(messageqcpp::ByteStream& bs) const override;
+  EXPORT void deserialize(messageqcpp::ByteStream& bs) override;
 };
 
 // Structure used to return HWM information for each DbRoot in a PM
@@ -371,7 +371,7 @@ struct EmDbRootHWMInfo
   {
     init(0);
   }
-  EmDbRootHWMInfo(uint16_t root)
+  explicit EmDbRootHWMInfo(uint16_t root)
   {
     init(root);
   }
@@ -614,13 +614,13 @@ class QueryContext : public messageqcpp::Serializeable
     currentTxns.reset(new std::vector<VER_t>());
   }
 
-  void serialize(messageqcpp::ByteStream& bs) const
+  void serialize(messageqcpp::ByteStream& bs) const override
   {
     bs << currentScn;
     serializeInlineVector(bs, *currentTxns);
   }
 
-  void deserialize(messageqcpp::ByteStream& bs)
+  void deserialize(messageqcpp::ByteStream& bs) override
   {
     bs >> currentScn;
     deserializeInlineVector(bs, *currentTxns);

@@ -300,9 +300,9 @@ struct lldiv_t_128
 inline lldiv_t_128 lldiv128(const int128_t& dividend, const int128_t& divisor)
 {
   if (UNLIKELY(divisor == 0) || UNLIKELY(dividend == 0))
-    return lldiv_t_128();
+    return {};
 
-  return lldiv_t_128(dividend / divisor, dividend % divisor);
+  return {dividend / divisor, dividend % divisor};
 }
 
 // TODO: derive it from TSInt64 eventually
@@ -381,9 +381,8 @@ class TDecimal128 : public TSInt128
   }
 
  public:
-  TDecimal128()
-  {
-  }
+  TDecimal128() = default;
+
   explicit TDecimal128(const int128_t val) : TSInt128(val)
   {
   }
@@ -541,11 +540,6 @@ class Decimal : public TDecimal128, public TDecimal64
     return TSInt128(s128Value);
   }
 
-  inline TFloat128 toTFloat128() const
-  {
-    return TFloat128(s128Value);
-  }
-
   inline double toDouble() const
   {
     int128_t scaleDivisor;
@@ -554,7 +548,7 @@ class Decimal : public TDecimal128, public TDecimal64
     return static_cast<double>(tmpval);
   }
 
-  inline operator double() const
+  inline explicit operator double() const
   {
     return toDouble();
   }
@@ -567,7 +561,7 @@ class Decimal : public TDecimal128, public TDecimal64
     return static_cast<float>(tmpval);
   }
 
-  inline operator float() const
+  inline explicit operator float() const
   {
     return toFloat();
   }
@@ -580,7 +574,7 @@ class Decimal : public TDecimal128, public TDecimal64
     return static_cast<long double>(tmpval);
   }
 
-  inline operator long double() const
+  inline explicit operator long double() const
   {
     return toLongDouble();
   }
@@ -1016,7 +1010,6 @@ struct NoOverflowCheck
 {
   void operator()(const int128_t& x, const int128_t& y)
   {
-    return;
   }
 };
 

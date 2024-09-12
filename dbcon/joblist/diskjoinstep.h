@@ -33,11 +33,11 @@ class DiskJoinStep : public JobStep
  public:
   DiskJoinStep();
   DiskJoinStep(TupleHashJoinStep*, int djsIndex, int joinerIndex, bool lastOne);
-  virtual ~DiskJoinStep();
+  ~DiskJoinStep() override;
 
-  void run();
-  void join();
-  const std::string toString() const;
+  void run() override;
+  void join() override;
+  const std::string toString() const override;
 
   void loadExistingData(std::vector<rowgroup::RGData>& data);
   uint32_t getIterationCount()
@@ -73,7 +73,7 @@ class DiskJoinStep : public JobStep
   void mainRunner();
   struct Runner
   {
-    Runner(DiskJoinStep* d) : djs(d)
+    explicit Runner(DiskJoinStep* d) : djs(d)
     {
     }
     void operator()()

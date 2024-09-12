@@ -19,9 +19,10 @@
 #include "Config.h"
 #include "SMLogging.h"
 #include <string>
-#include <errno.h>
+#include <cerrno>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <utility>
 
 using namespace std;
 namespace bf = boost::filesystem;
@@ -135,14 +136,20 @@ const bf::path& Downloader::getTmpPath() const
   return tmpPath;
 }
 /* The helper fcns */
-Downloader::Download::Download(const string& source, const bf::path& _dlPath, boost::mutex* _lock,
-                               Downloader* _dl)
- : dlPath(_dlPath), key(source), dl_errno(0), size(0), lock(_lock), finished(false), itRan(false), dl(_dl)
+Downloader::Download::Download(string source, bf::path _dlPath, boost::mutex* _lock, Downloader* _dl)
+ : dlPath(std::move(_dlPath))
+ , key(std::move(source))
+ , dl_errno(0)
+ , size(0)
+ , lock(_lock)
+ , finished(false)
+ , itRan(false)
+ , dl(_dl)
 {
 }
 
-Downloader::Download::Download(const string& source)
- : key(source), dl_errno(0), size(0), lock(NULL), finished(false), itRan(false), dl(NULL)
+Downloader::Download::Download(string source)
+ : key(std::move(source)), dl_errno(0), size(0), lock(nullptr), finished(false), itRan(false), dl(nullptr)
 {
 }
 
@@ -154,12 +161,12 @@ Downloader::Download::~Download()
 void Downloader::Download::operator()()
 {
   itRan = true;
-  CloudStorage* storage = CloudStorage::get();
+  CloudStorage* stor = CloudStorage::get();
   // download to a tmp path
   if (!bf::exists(dlPath / dl->getTmpPath()))
     bf::create_directories(dlPath / dl->getTmpPath());
   bf::path tmpFile = dlPath / dl->getTmpPath() / key;
-  int err = storage->getObject(key, tmpFile.string(), &size);
+  int err = stor->getObject(key, tmpFile.string(), &size);
   if (err != 0)
   {
     dl_errno = errno;
@@ -179,8 +186,10 @@ void Downloader::Download::operator()()
 
   lock->lock();
   finished = true;
-  for (uint i = 0; i < listeners.size(); i++)
-    listeners[i]->downloadFinished();
+  for (auto* listener : listeners)
+  {
+    listener->downloadFinished();
+  }
   lock->unlock();
 }
 
@@ -217,7 +226,7 @@ void Downloader::configListener()
   {
     maxDownloads = 20;
     workers.setMaxThreads(maxDownloads);
-    logger->log(LOG_INFO, "max_concurrent_downloads = %u",maxDownloads);
+    logger->log(LOG_INFO, "max_concurrent_downloads = %u", maxDownloads);
   }
   if (stmp.empty())
   {

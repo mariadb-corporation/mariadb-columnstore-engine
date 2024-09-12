@@ -31,7 +31,7 @@
 #include "fileblockrequestqueue.h"
 #include "filebuffermgr.h"
 #include "iomanager.h"
-#include <stdint.h>
+#include <cstdint>
 
 /**
         @author Jason Rodriguez <jrodriguez@calpont.com>

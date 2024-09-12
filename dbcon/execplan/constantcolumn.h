@@ -67,22 +67,23 @@ class ConstantColumn : public ReturnedColumn
   /**
    * ctor
    */
-  ConstantColumn(const std::string& sql, TYPE type = LITERAL);
+  explicit ConstantColumn(const std::string& sql, TYPE type = LITERAL);
   /**
    * ctor
    */
-  ConstantColumn(const int64_t val, TYPE type = NUM);  // deprecate
+  explicit ConstantColumn(const int64_t val, TYPE type = NUM);  // deprecate
   /**
    * ctor
    */
-  ConstantColumn(const uint64_t val, TYPE type = NUM, int8_t scale = 0, uint8_t precision = 0);  // deprecate
+  explicit ConstantColumn(const uint64_t val, TYPE type = NUM, int8_t scale = 0,
+                          uint8_t precision = 0);  // deprecate
 
   // There are more ctors below...
 
   /**
    * dtor
    */
-  virtual ~ConstantColumn();
+  ~ConstantColumn() override;
 
   /*
    * Accessor Methods
@@ -144,25 +145,25 @@ class ConstantColumn : public ReturnedColumn
   /**
    * accessor
    */
-  virtual const std::string data() const override;
+  const std::string data() const override;
   /**
    * accessor
    */
-  virtual void data(const std::string data) override
+  void data(const std::string data) override
   {
     fData = data;
   }
   /**
    * accessor
    */
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual ConstantColumn* clone() const override
+  inline ConstantColumn* clone() const override
   {
     return new ConstantColumn(*this);
   }
@@ -173,18 +174,18 @@ class ConstantColumn : public ReturnedColumn
   /**
    * serialize
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
+  void serialize(messageqcpp::ByteStream&) const override;
   /**
    * unserialize
    */
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -198,7 +199,7 @@ class ConstantColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -207,13 +208,13 @@ class ConstantColumn : public ReturnedColumn
    */
   bool operator!=(const ConstantColumn& t) const;
 
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
 
   /** Constant column on the filte can always be moved into derived table */
-  virtual void setDerivedTable() override
+  void setDerivedTable() override
   {
     fDerivedTable = std::string("*");
   }
@@ -267,7 +268,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
+  bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return TreeNode::getBoolVal();
@@ -275,7 +276,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.strVal;
@@ -283,7 +284,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.intVal;
@@ -291,7 +292,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.uintVal;
@@ -299,7 +300,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.floatVal;
@@ -307,7 +308,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.doubleVal;
@@ -315,7 +316,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
     return fResult.decimalVal;
@@ -323,7 +324,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
+  int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -338,7 +339,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -354,7 +355,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -370,7 +371,7 @@ class ConstantColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = isNull || (fType == NULLDATA);
 
@@ -409,7 +410,7 @@ class ConstantColumnNull : public ConstantColumn
 class ConstantColumnString : public ConstantColumn
 {
  public:
-  ConstantColumnString(const std::string& str) : ConstantColumn(str, ConstantColumn::LITERAL)
+  explicit ConstantColumnString(const std::string& str) : ConstantColumn(str, ConstantColumn::LITERAL)
   {
   }
 };
@@ -471,7 +472,6 @@ std::ostream& operator<<(std::ostream& output, const ConstantColumn& rhs);
 class RollupMarkColumn : public ReturnedColumn
 {
  public:
-
   /**
    * ctor
    */
@@ -483,7 +483,7 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * dtor
    */
-  virtual ~RollupMarkColumn();
+  ~RollupMarkColumn() override;
 
   /**
    * accessor
@@ -502,26 +502,26 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * accessor
    */
-  virtual const std::string data() const override
+  const std::string data() const override
   {
     return "";
   }
   /**
    * accessor
    */
-  virtual void data(const std::string data) override
+  void data(const std::string data) override
   {
     idbassert(0);
   }
   /**
    * accessor
    */
-  virtual const std::string toString() const override
+  const std::string toString() const override
   {
     return "RollupMarkColumn";
   }
 
-  virtual std::string toCppCode(IncludeSet& includes) const override
+  std::string toCppCode(IncludeSet& includes) const override
   {
     idbassert(0);
   }
@@ -529,7 +529,7 @@ class RollupMarkColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual RollupMarkColumn* clone() const override
+  inline RollupMarkColumn* clone() const override
   {
     return new RollupMarkColumn();
   }
@@ -540,18 +540,18 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * serialize
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
+  void serialize(messageqcpp::ByteStream&) const override;
   /**
    * unserialize
    */
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override
+  bool operator==(const TreeNode* t) const override
   {
     return false;
   }
@@ -571,7 +571,7 @@ class RollupMarkColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override
+  bool operator!=(const TreeNode* t) const override
   {
     return true;
   }
@@ -586,13 +586,13 @@ class RollupMarkColumn : public ReturnedColumn
     return false;
   }
 
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
 
   /** Constant column on the filte can always be moved into derived table */
-  virtual void setDerivedTable() override
+  void setDerivedTable() override
   {
     fDerivedTable = std::string("*");
   }
@@ -617,18 +617,18 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
+  bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     return true;
   }
   /**
    * F&E
    */
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
   /**
    * F&E
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
     return 0x12340000UL;
@@ -636,28 +636,28 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     return getIntVal(row, isNull);
   }
   /**
    * F&E
    */
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     return getIntVal(row, isNull);
   }
   /**
    * F&E
    */
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     return getIntVal(row, isNull);
   }
   /**
    * F&E
    */
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
     return fResult.decimalVal;
@@ -665,7 +665,7 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
+  int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
 
@@ -680,7 +680,7 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
 
@@ -696,7 +696,7 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
 
@@ -712,7 +712,7 @@ class RollupMarkColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     isNull = false;
 

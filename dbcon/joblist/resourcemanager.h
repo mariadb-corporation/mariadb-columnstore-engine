@@ -100,9 +100,9 @@ const uint64_t defaultRowsPerBatch = 10000;
 /* HJ CP feedback, see bug #1465 */
 const uint32_t defaultHjCPUniqueLimit = 100;
 
-const constexpr uint64_t defaultFlowControlEnableBytesThresh = 50000000;     // ~50Mb
+const constexpr uint64_t defaultFlowControlEnableBytesThresh = 50000000;   // ~50Mb
 const constexpr uint64_t defaultFlowControlDisableBytesThresh = 10000000;  // ~10 MB
-const constexpr uint64_t defaultBPPSendThreadBytesThresh = 250000000;       // ~250 MB
+const constexpr uint64_t defaultBPPSendThreadBytesThresh = 250000000;      // ~250 MB
 const constexpr uint64_t BPPSendThreadMsgThresh = 100;
 
 const bool defaultAllowDiskAggregation = false;
@@ -117,7 +117,7 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  ResourceManager(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  explicit ResourceManager(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
   static ResourceManager* instance(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
   config::Config* getConfig()
   {
@@ -126,9 +126,7 @@ class ResourceManager
 
   /** @brief dtor
    */
-  virtual ~ResourceManager()
-  {
-  }
+  virtual ~ResourceManager() = default;
 
   typedef std::map<uint32_t, uint64_t> MemMap;
 
@@ -286,12 +284,14 @@ class ResourceManager
 
   uint64_t getDECEnableBytesThresh() const
   {
-    return getUintVal(FlowControlStr, "DECFlowControlEnableBytesThresh(", defaultFlowControlEnableBytesThresh);
+    return getUintVal(FlowControlStr, "DECFlowControlEnableBytesThresh(",
+                      defaultFlowControlEnableBytesThresh);
   }
 
   uint32_t getDECDisableBytesThresh() const
   {
-    return getUintVal(FlowControlStr, "DECFlowControlDisableBytesThresh", defaultFlowControlDisableBytesThresh);
+    return getUintVal(FlowControlStr, "DECFlowControlDisableBytesThresh",
+                      defaultFlowControlDisableBytesThresh);
   }
 
   uint32_t getBPPSendThreadBytesThresh() const

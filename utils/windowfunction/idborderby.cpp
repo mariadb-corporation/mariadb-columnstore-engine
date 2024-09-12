@@ -19,7 +19,6 @@
 //  $Id: idborderby.cpp 3932 2013-06-25 16:08:10Z xlou $
 
 #include <iostream>
-#include <cassert>
 #include <string>
 #include <stack>
 using namespace std;
@@ -27,7 +26,6 @@ using namespace std;
 #include "objectreader.h"
 #include "calpontselectexecutionplan.h"
 #include "rowgroup.h"
-
 
 using namespace boost;
 
@@ -41,7 +39,6 @@ using namespace execplan;
 #include "resourcemanager.h"
 using namespace joblist;
 
-#include "rowgroup.h"
 using namespace rowgroup;
 
 #include "idborderby.h"
@@ -531,9 +528,9 @@ int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
 
 bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
 {
-  for (vector<Compare*>::iterator i = fCompares.begin(); i != fCompares.end(); i++)
+  for (auto& compare : fCompares)
   {
-    int c = ((*(*i))(fIdbCompare, r1, r2));
+    int c = ((*compare)(fIdbCompare, r1, r2));
 
     if (c < 0)
       return true;
@@ -546,7 +543,7 @@ bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
 
 void CompareRule::revertRules()
 {
-  std::vector<Compare*>::iterator fCompareIter = fCompares.begin();
+  auto fCompareIter = fCompares.begin();
   for (; fCompareIter != fCompares.end(); fCompareIter++)
   {
     (*fCompareIter)->revertSortSpec();
@@ -558,32 +555,32 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
   const vector<CalpontSystemCatalog::ColDataType>& types = rg.getColTypes();
   const auto& offsets = rg.getOffsets();
 
-  for (vector<IdbSortSpec>::const_iterator i = spec.begin(); i != spec.end(); i++)
+  for (auto spec_el : spec)
   {
-    switch (types[i->fIndex])
+    switch (types[spec_el.fIndex])
     {
       case CalpontSystemCatalog::TINYINT:
       {
-        Compare* c = new TinyIntCompare(*i);
+        Compare* c = new TinyIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::SMALLINT:
       {
-        Compare* c = new SmallIntCompare(*i);
+        Compare* c = new SmallIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::MEDINT:
       case CalpontSystemCatalog::INT:
       {
-        Compare* c = new IntCompare(*i);
+        Compare* c = new IntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::BIGINT:
       {
-        Compare* c = new BigIntCompare(*i);
+        Compare* c = new BigIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
@@ -591,14 +588,16 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
       case CalpontSystemCatalog::UDECIMAL:
       {
         Compare* c;
-        uint32_t len = rg.getColumnWidth(i->fIndex);
+        uint32_t len = rg.getColumnWidth(spec_el.fIndex);
         switch (len)
         {
-          case datatypes::MAXDECIMALWIDTH: c = new WideDecimalCompare(*i, offsets[i->fIndex]); break;
-          case datatypes::MAXLEGACYWIDTH: c = new BigIntCompare(*i); break;
-          case 1: c = new TinyIntCompare(*i); break;
-          case 2: c = new SmallIntCompare(*i); break;
-          case 4: c = new IntCompare(*i); break;
+          case datatypes::MAXDECIMALWIDTH:
+            c = new WideDecimalCompare(spec_el, offsets[spec_el.fIndex]);
+            break;
+          case datatypes::MAXLEGACYWIDTH: c = new BigIntCompare(spec_el); break;
+          case 1: c = new TinyIntCompare(spec_el); break;
+          case 2: c = new SmallIntCompare(spec_el); break;
+          case 4: c = new IntCompare(spec_el); break;
         }
 
         fCompares.push_back(c);
@@ -607,26 +606,26 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
 
       case CalpontSystemCatalog::UTINYINT:
       {
-        Compare* c = new UTinyIntCompare(*i);
+        Compare* c = new UTinyIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::USMALLINT:
       {
-        Compare* c = new USmallIntCompare(*i);
+        Compare* c = new USmallIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::UMEDINT:
       case CalpontSystemCatalog::UINT:
       {
-        Compare* c = new UIntCompare(*i);
+        Compare* c = new UIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::UBIGINT:
       {
-        Compare* c = new UBigIntCompare(*i);
+        Compare* c = new UBigIntCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
@@ -635,7 +634,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::TEXT:
       {
-        Compare* c = new StringCompare(*i);
+        Compare* c = new StringCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
@@ -643,7 +642,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
       case CalpontSystemCatalog::DOUBLE:
       case CalpontSystemCatalog::UDOUBLE:
       {
-        Compare* c = new DoubleCompare(*i);
+        Compare* c = new DoubleCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
@@ -651,34 +650,34 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT:
       {
-        Compare* c = new FloatCompare(*i);
+        Compare* c = new FloatCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
 
       case CalpontSystemCatalog::LONGDOUBLE:
       {
-        Compare* c = new LongDoubleCompare(*i);
+        Compare* c = new LongDoubleCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
 
       case CalpontSystemCatalog::DATE:
       {
-        Compare* c = new DateCompare(*i);
+        Compare* c = new DateCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::DATETIME:
       case CalpontSystemCatalog::TIMESTAMP:
       {
-        Compare* c = new DatetimeCompare(*i);
+        Compare* c = new DatetimeCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
       case CalpontSystemCatalog::TIME:
       {
-        Compare* c = new TimeCompare(*i);
+        Compare* c = new TimeCompare(spec_el);
         fCompares.push_back(c);
         break;
       }
@@ -717,7 +716,7 @@ OrderByData::OrderByData(const std::vector<IdbSortSpec>& spec, const rowgroup::R
 OrderByData::~OrderByData()
 {
   // delete compare objects
-  vector<Compare*>::iterator i = fRule.fCompares.begin();
+  auto i = fRule.fCompares.begin();
 
   while (i != fRule.fCompares.end())
   {
@@ -732,7 +731,7 @@ OrderByData::~OrderByData()
 
 // IdbOrderBy class implementation
 IdbOrderBy::IdbOrderBy()
- : fDistinct(false), fMemSize(0), fRowsPerRG(rowgroup::rgCommonSize), fErrorCode(0), fRm(NULL)
+ : fDistinct(false), fMemSize(0), fRowsPerRG(rowgroup::rgCommonSize), fErrorCode(0), fRm(nullptr)
 {
 }
 

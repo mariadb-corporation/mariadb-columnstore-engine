@@ -52,27 +52,27 @@ class DMLColumn : public DMLObject
                    uint32_t funcScale = 0, bool isNULL = false);
 
   /** @brief new ctor
-   * 
+   *
    */
 
-  EXPORT DMLColumn(std::string name, utils::NullString& value, bool isFromCol = false,
-                   uint32_t funcScale = 0, bool isNULL = false);
+  EXPORT DMLColumn(std::string name, utils::NullString& value, bool isFromCol = false, uint32_t funcScale = 0,
+                   bool isNULL = false);
 
   /** @brief dtor
    */
-  EXPORT ~DMLColumn();
+  EXPORT ~DMLColumn() override;
 
   /** @brief read a DMLColumn from a ByteStream
    *
    * @param bytestream the ByteStream to read from
    */
-  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  EXPORT int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief write a DML column to a ByteStream
    *
    * @param bytestream the ByteStream to write to
    */
-  EXPORT int write(messageqcpp::ByteStream& bytestream);
+  EXPORT int write(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief get the data for the column
    */

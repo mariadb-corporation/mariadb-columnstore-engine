@@ -83,20 +83,20 @@ class ReturnedColumn : public TreeNode
    * Constructors
    */
   ReturnedColumn();
-  ReturnedColumn(const std::string& sql);
-  ReturnedColumn(const uint32_t sessionID, const bool returnAll = false);
+  explicit ReturnedColumn(const std::string& sql);
+  explicit ReturnedColumn(const uint32_t sessionID, const bool returnAll = false);
   ReturnedColumn(const ReturnedColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  virtual ~ReturnedColumn();
+  ~ReturnedColumn() override;
 
   /**
    * Accessor Methods
    */
-  virtual const std::string data() const override;
-  virtual void data(const std::string data) override
+  const std::string data() const override;
+  void data(const std::string data) override
   {
     fData = data;
   }
@@ -231,22 +231,22 @@ class ReturnedColumn : public TreeNode
   /**
    * Operations
    */
-  virtual ReturnedColumn* clone() const override = 0;
+  ReturnedColumn* clone() const override = 0;
 
   /**
    * The serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
-  virtual const std::string toString() const override;
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  const std::string toString() const override;
+  std::string toCppCode(IncludeSet& includes) const override;
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -261,7 +261,7 @@ class ReturnedColumn : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *

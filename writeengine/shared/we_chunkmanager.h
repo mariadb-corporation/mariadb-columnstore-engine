@@ -35,7 +35,7 @@
 
 #define EXPORT
 
-//#define IDB_COMP_DEBUG
+// #define IDB_COMP_DEBUG
 #ifdef IDB_COMP_DEBUG
 #define WE_COMP_DBG(x) \
   {                    \
@@ -136,7 +136,7 @@ class CompFileData
    , fColDataType(colDataType)
    , fColWidth(colWidth)
    , fDctnryCol(false)
-   , fFilePtr(NULL)
+   , fFilePtr(nullptr)
    , fCompressionType(1)
    , fReadOnly(readOnly)
   {

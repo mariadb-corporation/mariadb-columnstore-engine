@@ -142,7 +142,7 @@ class IDBFileSystem
   }
 
  protected:
-  IDBFileSystem(Types type);
+  explicit IDBFileSystem(Types type);
 
  private:
   Types m_type;

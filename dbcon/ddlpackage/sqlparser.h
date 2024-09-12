@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include "collation.h"  // CHARSET_INFO
 #include "ddlpkg.h"
-#include "mariadb_my_sys.h" // myf, MYF()
+#include "mariadb_my_sys.h"  // myf, MYF()
 
 #define EXPORT
 
@@ -86,12 +86,8 @@ struct pass_to_bison
   const CHARSET_INFO* default_table_charset;
   myf utf8_flag;
 
-  pass_to_bison(ParseTree* pt) :
-      fParseTree(pt)
-    , scanner(NULL)
-    , default_table_charset(NULL)
-    , utf8_flag(MYF(0))
-  {};
+  pass_to_bison(ParseTree* pt)
+   : fParseTree(pt), scanner(nullptr), default_table_charset(nullptr), utf8_flag(MYF(0)){};
 };
 
 class SqlParser

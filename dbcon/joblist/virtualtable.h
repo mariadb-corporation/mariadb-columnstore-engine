@@ -31,9 +31,7 @@ class VirtualTable
 {
  public:
   VirtualTable();
-  virtual ~VirtualTable()
-  {
-  }
+  virtual ~VirtualTable() = default;
 
   virtual void initialize();
   void addColumn(const execplan::SRCP& column);

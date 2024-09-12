@@ -18,14 +18,14 @@
 #pragma once
 
 #ifndef __clang__
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 #include <boost/property_tree/ptree.hpp>
 
 #ifndef __clang__
-  #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
 #include <boost/thread.hpp>
@@ -41,7 +41,7 @@ namespace storagemanager
 class ConfigListener
 {
  public:
-  virtual ~ConfigListener(){};
+  virtual ~ConfigListener() = default;
   virtual void configListener() = 0;
 };
 
@@ -61,7 +61,7 @@ class Config : public boost::noncopyable
 
  private:
   Config();
-  Config(const std::string&);
+  explicit Config(const std::string&);
 
   bool reload();
   void reloadThreadFcn();

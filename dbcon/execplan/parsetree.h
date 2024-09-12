@@ -59,7 +59,7 @@ class ParseTree
    * Constructor / Destructor
    */
   inline ParseTree();
-  inline ParseTree(TreeNode* data);
+  inline explicit ParseTree(TreeNode* data);
   inline ParseTree(TreeNode* data, ParseTree* left, ParseTree* right);
   inline ParseTree(const ParseTree& rhs);
   inline virtual ~ParseTree();
@@ -210,9 +210,9 @@ class ParseTree
   inline static void deleter(ParseTree*& n)
   {
     delete n->fData;
-    n->fData = 0;
+    n->fData = nullptr;
     delete n;
-    n = 0;
+    n = nullptr;
   }
 
   inline void derivedTable(const std::string& derivedTable)
@@ -238,7 +238,7 @@ class ParseTree
   {
     ParseTree* node;
     GoTo direction;
-    StackFrame(ParseTree* node_, GoTo direction_ = GoTo::Left) : node(node_), direction(direction_)
+    explicit StackFrame(ParseTree* node_, GoTo direction_ = GoTo::Left) : node(node_), direction(direction_)
     {
     }
   };
@@ -370,11 +370,11 @@ namespace execplan
 /**
  * Class Definition
  */
-inline ParseTree::ParseTree() : fData(0), fLeft(0), fRight(0), fDerivedTable("")
+inline ParseTree::ParseTree() : fData(nullptr), fLeft(nullptr), fRight(nullptr), fDerivedTable("")
 {
 }
 
-inline ParseTree::ParseTree(TreeNode* data) : fData(data), fLeft(0), fRight(0)
+inline ParseTree::ParseTree(TreeNode* data) : fData(data), fLeft(nullptr), fRight(nullptr)
 {
   // bug5984. Need to validate data to be not null
   if (data)
@@ -389,7 +389,7 @@ inline ParseTree::ParseTree(TreeNode* data, ParseTree* left, ParseTree* right)
 }
 
 inline ParseTree::ParseTree(const ParseTree& rhs)
- : fData(0), fLeft(0), fRight(0), fDerivedTable(rhs.fDerivedTable)
+ : fData(nullptr), fLeft(nullptr), fRight(nullptr), fDerivedTable(rhs.fDerivedTable)
 {
   copyTree(rhs);
 }
@@ -613,22 +613,22 @@ inline ParseTree& ParseTree::operator=(const ParseTree& rhs)
 
 inline void ParseTree::copyTree(const ParseTree& src)
 {
-  if (fLeft != NULL)
+  if (fLeft != nullptr)
     delete fLeft;
 
-  if (fRight != NULL)
+  if (fRight != nullptr)
     delete fRight;
 
-  fLeft = NULL;
-  fRight = NULL;
+  fLeft = nullptr;
+  fRight = nullptr;
 
-  if (src.left() != NULL)
+  if (src.left() != nullptr)
   {
     fLeft = new ParseTree();
     fLeft->copyTree(*(src.left()));
   }
 
-  if (src.right() != NULL)
+  if (src.right() != nullptr)
   {
     fRight = new ParseTree();
     fRight->copyTree(*(src.right()));
@@ -636,29 +636,29 @@ inline void ParseTree::copyTree(const ParseTree& src)
 
   delete fData;
 
-  if (src.data() == NULL)
-    fData = NULL;
+  if (src.data() == nullptr)
+    fData = nullptr;
   else
     fData = src.data()->clone();
 }
 
 inline void ParseTree::destroyTree(ParseTree* root)
 {
-  if (root == NULL)
+  if (root == nullptr)
     return;
 
-  if (root->left() != NULL)
+  if (root->left() != nullptr)
   {
     destroyTree(root->fLeft);
   }
 
-  if (root->right() != NULL)
+  if (root->right() != nullptr)
   {
     destroyTree(root->fRight);
   }
 
   delete root;
-  root = 0;
+  root = nullptr;
 }
 
 inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
@@ -668,13 +668,11 @@ inline void ParseTree::draw(const ParseTree* n, std::ostream& dotFile)
   l = n->left();
   r = n->right();
 
-  if (l != 0)
-    dotFile << "n" << (void*)n << " -> "
-            << "n" << (void*)l << std::endl;
+  if (l != nullptr)
+    dotFile << "n" << (void*)n << " -> " << "n" << (void*)l << std::endl;
 
-  if (r != 0)
-    dotFile << "n" << (void*)n << " -> "
-            << "n" << (void*)r << std::endl;
+  if (r != nullptr)
+    dotFile << "n" << (void*)n << " -> " << "n" << (void*)r << std::endl;
 
   auto& node = *(n->data());
   dotFile << "n" << (void*)n << " [label=\"" << n->data()->data() << " (" << n << ") "

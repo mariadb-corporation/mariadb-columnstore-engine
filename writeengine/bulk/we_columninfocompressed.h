@@ -50,14 +50,14 @@ class ColumnInfoCompressed : public ColumnInfo
 
   /** @brief Destructor
    */
-  virtual ~ColumnInfoCompressed();
+  ~ColumnInfoCompressed() override;
 
   /** @brief Close the current Column file.
    *  @param bCompletedExtent are we completing an extent
    *  @param bAbort indicates if job is aborting and file should be
    *  closed without doing extra work: flushing buffer, etc.
    */
-  virtual int closeColumnFile(bool bCompletingExtent, bool bAbort);
+  int closeColumnFile(bool bCompletingExtent, bool bAbort) override;
 
   /** @brief Truncate specified dictionary file.  Only applies if compressed.
    * @param dctnryOid Dictionary store OID
@@ -65,21 +65,21 @@ class ColumnInfoCompressed : public ColumnInfo
    * @param pNum Partition number of relevant dictionary store segment file.
    * @param sNum Segment number of relevant dictionary store segment file.
    */
-  virtual int truncateDctnryStore(OID dctnryOid, uint16_t root, uint32_t pNum, uint16_t sNum) const;
+  int truncateDctnryStore(OID dctnryOid, uint16_t root, uint32_t pNum, uint16_t sNum) const override;
 
  private:
-  virtual int resetFileOffsetsNewExtent(const char* hdr);
+  int resetFileOffsetsNewExtent(const char* hdr) override;
 
   // Prepare initial compressed column seg file for importing of data.
   // oldHWM - Current HWM prior to initial block skipping.  This is only
   //     used for abbreviated extents, to detect when block skipping has
   //     caused us to require a full expanded extent.
   // newHWM - Starting point for adding data after initial blockskipping
-  virtual int setupInitialColumnFile(HWM oldHWM, HWM newHWM);
+  int setupInitialColumnFile(HWM oldHWM, HWM newHWM) override;
 
-  virtual int saveDctnryStoreHWMChunk(bool& needBackup);
-  virtual int extendColumnOldExtent(uint16_t dbRootNext, uint32_t partitionNext, uint16_t segmentNext,
-                                    HWM hwmNext);
+  int saveDctnryStoreHWMChunk(bool& needBackup) override;
+  int extendColumnOldExtent(uint16_t dbRootNext, uint32_t partitionNext, uint16_t segmentNext,
+                            HWM hwmNext) override;
 
   RBMetaWriter* fRBMetaWriter;
   FileOp fTruncateDctnryFileOp;  // Used to truncate dctnry store file

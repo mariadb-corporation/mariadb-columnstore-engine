@@ -53,7 +53,7 @@ class BulkRollbackFileCompressed : public BulkRollbackFile
 
   /** @brief BulkRollbackFile destructor
    */
-  virtual ~BulkRollbackFileCompressed();
+  ~BulkRollbackFileCompressed() override;
 
   /** @brief Do we reinit trailing blocks in the HWM extent for the specified
    * segment file
@@ -63,7 +63,7 @@ class BulkRollbackFileCompressed : public BulkRollbackFile
    * @param partNum Partition number for the segment file in question
    * @param segNum Segment number for the segment file in question
    */
-  virtual bool doWeReInitExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum) const;
+  bool doWeReInitExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum) const override;
 
   /** @brief Reinitialize the specified column segment file starting at
    * startOffsetBlk, and truncate trailing extents.
@@ -78,10 +78,10 @@ class BulkRollbackFileCompressed : public BulkRollbackFile
    * @param colWidth Width in bytes of column.
    * @param restoreHwmChk Restore HWM chunk
    */
-  virtual void reInitTruncColumnExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
-                                       long long startOffsetBlk, int nBlocks,
-                                       execplan::CalpontSystemCatalog::ColDataType colType, uint32_t colWidth,
-                                       bool restoreHwmChk);
+  void reInitTruncColumnExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
+                               long long startOffsetBlk, int nBlocks,
+                               execplan::CalpontSystemCatalog::ColDataType colType, uint32_t colWidth,
+                               bool restoreHwmChk) override;
 
   /** @brief Reinitialize the specified dictionary store segment file starting
    * at startOffsetBlk, and truncate trailing extents.
@@ -93,8 +93,8 @@ class BulkRollbackFileCompressed : public BulkRollbackFile
    *        reinitialized
    * @param nBlocks Number of blocks to be reinitialized
    */
-  virtual void reInitTruncDctnryExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
-                                       long long startOffsetBlk, int nBlocks);
+  void reInitTruncDctnryExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
+                               long long startOffsetBlk, int nBlocks) override;
 
   /** @brief Truncate the specified segment file to a specified num of bytes
    * @param columnOID OID of the relevant segment file
@@ -103,8 +103,8 @@ class BulkRollbackFileCompressed : public BulkRollbackFile
    * @param segNum Segment number of the relevant segment file
    * @param fileSizeBlocks Number of blocks to retain in the file
    */
-  virtual void truncateSegmentFile(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
-                                   long long filesSizeBlocks);
+  void truncateSegmentFile(OID columnOID, uint32_t dbRoot, uint32_t partNum, uint32_t segNum,
+                           long long filesSizeBlocks) override;
 
  private:
   // Disable unnecessary copy constructor and assignment operator

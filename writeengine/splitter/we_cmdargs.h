@@ -34,9 +34,7 @@ class WECmdArgs
 {
  public:
   WECmdArgs(int argc, char** argv);
-  virtual ~WECmdArgs()
-  {
-  }
+  virtual ~WECmdArgs() = default;
 
   typedef std::vector<unsigned int> VecInts;
   typedef std::vector<std::string> VecArgs;

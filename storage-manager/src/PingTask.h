@@ -24,13 +24,11 @@ namespace storagemanager
 class PingTask : public PosixTask
 {
  public:
+  PingTask() = delete;
   PingTask(int sock, uint length);
-  virtual ~PingTask();
+  ~PingTask() override;
 
-  bool run();
-
- private:
-  PingTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

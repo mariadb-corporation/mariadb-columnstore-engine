@@ -23,7 +23,7 @@
 
 #pragma once
 
-//#define NDEBUG
+// #define NDEBUG
 #include "jobstep.h"
 #include "filter.h"
 
@@ -48,35 +48,35 @@ class ExpressionStep : public JobStep
  public:
   // constructors
   ExpressionStep();
-  ExpressionStep(const JobInfo&);
+  explicit ExpressionStep(const JobInfo&);
   // destructor constructors
-  virtual ~ExpressionStep();
+  ~ExpressionStep() override;
 
   // inherited methods
-  void run();
-  void join();
-  const std::string toString() const;
+  void run() override;
+  void join() override;
+  const std::string toString() const override;
 
-  execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return 0;
   }
-  execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOids.empty() ? 0 : fTableOids.front();
   }
   using JobStep::alias;
-  std::string alias() const
+  std::string alias() const override
   {
     return fAliases.empty() ? "" : fAliases.front();
   }
   using JobStep::view;
-  std::string view() const
+  std::string view() const override
   {
     return fViews.empty() ? "" : fViews.front();
   }
   using JobStep::schema;
-  std::string schema() const
+  std::string schema() const override
   {
     return fSchemas.empty() ? "" : fSchemas.front();
   }

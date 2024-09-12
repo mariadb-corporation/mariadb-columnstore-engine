@@ -29,6 +29,7 @@
 #include <queue>
 #include <set>
 #include <condition_variable>
+#include <utility>
 #include "threadnaming.h"
 #include "fair_threadpool.h"
 
@@ -49,19 +50,10 @@ class BPPSendThread
     Msg_t() : sockIndex(0)
     {
     }
-    Msg_t(const Msg_t& m) : msg(m.msg), sock(m.sock), sockLock(m.sockLock), sockIndex(m.sockIndex)
-    {
-    }
-    Msg_t& operator=(const Msg_t& m)
-    {
-      msg = m.msg;
-      sock = m.sock;
-      sockLock = m.sockLock;
-      sockIndex = m.sockIndex;
-      return *this;
-    }
-    Msg_t(const messageqcpp::SBS& m, const SP_UM_IOSOCK& so, const SP_UM_MUTEX& sl, int si)
-     : msg(m), sock(so), sockLock(sl), sockIndex(si)
+    Msg_t(const Msg_t& m) = default;
+    Msg_t& operator=(const Msg_t& m) = default;
+    Msg_t(messageqcpp::SBS m, SP_UM_IOSOCK so, SP_UM_MUTEX sl, int si)
+     : msg(std::move(m)), sock(std::move(so)), sockLock(std::move(sl)), sockIndex(si)
     {
     }
   };
@@ -87,7 +79,7 @@ class BPPSendThread
   }
   void setProcessorPool(boost::shared_ptr<threadpool::FairThreadPool> processorPool)
   {
-    fProcessorPool = processorPool;
+    fProcessorPool = std::move(processorPool);
   }
 
  private:
@@ -127,7 +119,7 @@ class BPPSendThread
   /* Load balancing structures */
   struct Connection_t
   {
-    Connection_t(const SP_UM_MUTEX& lock, const SP_UM_IOSOCK& so) : sockLock(lock), sock(so)
+    Connection_t(SP_UM_MUTEX lock, SP_UM_IOSOCK so) : sockLock(std::move(lock)), sock(std::move(so))
     {
     }
     SP_UM_MUTEX sockLock;

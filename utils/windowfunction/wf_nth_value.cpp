@@ -18,7 +18,7 @@
 
 //  $Id: wf_nth_value.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <sstream>
@@ -149,7 +149,7 @@ void WF_nth_value<T>::parseParms(const std::vector<execplan::SRCP>& parms)
   // parms[1]: nth value
   ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[1].get());
 
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     fNthNull = false;
     fNth = cc->getIntVal(fRow, fNthNull);  // row not used, no need to setData.
@@ -166,12 +166,12 @@ void WF_nth_value<T>::parseParms(const std::vector<execplan::SRCP>& parms)
   // parms[2]: from first | from last
   bool isNull = false;
   cc = dynamic_cast<ConstantColumn*>(parms[2].get());
-  idbassert(cc != NULL);
+  idbassert(cc != nullptr);
   fFromFirst = (cc->getIntVal(fRow, isNull) > 0);
 
   // parms[3]: respect null | ignore null
   cc = dynamic_cast<ConstantColumn*>(parms[3].get());
-  idbassert(cc != NULL);
+  idbassert(cc != nullptr);
   fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);
 }
 

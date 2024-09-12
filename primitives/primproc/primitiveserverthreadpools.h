@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+#include <utility>
 #include "fair_threadpool.h"
 
 class PrimitiveServerThreadPools
@@ -25,7 +26,7 @@ class PrimitiveServerThreadPools
  public:
   PrimitiveServerThreadPools() = default;
   PrimitiveServerThreadPools(boost::shared_ptr<threadpool::FairThreadPool> primServerThreadPool)
-   : fPrimServerThreadPool(primServerThreadPool)
+   : fPrimServerThreadPool(std::move(primServerThreadPool))
   {
   }
 

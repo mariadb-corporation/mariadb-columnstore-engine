@@ -28,7 +28,7 @@
 
 #include <exception>
 #include <string>
-#include <stdint.h>
+#include <cstdint>
 
 namespace messageqcpp
 {
@@ -53,9 +53,9 @@ class ObjectReader
   class UnserializeException : public std::exception
   {
    public:
-    UnserializeException(std::string) throw();
-    virtual ~UnserializeException() throw();
-    virtual const char* what() const throw();
+    explicit UnserializeException(std::string) noexcept;
+    ~UnserializeException() noexcept override;
+    const char* what() const noexcept override;
 
    private:
     std::string fWhat;

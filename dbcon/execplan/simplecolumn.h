@@ -57,13 +57,15 @@ class SimpleColumn : public ReturnedColumn
   /**
    * Constructors
    */
-  class ForTestPurposeWithoutOID{};
+  class ForTestPurposeWithoutOID
+  {
+  };
 
   SimpleColumn();
 
   SimpleColumn(const std::string& token, ForTestPurposeWithoutOID);
 
-  SimpleColumn(const std::string& token, const uint32_t sessionID = 0);
+  explicit SimpleColumn(const std::string& token, const uint32_t sessionID = 0);
 
   SimpleColumn(const std::string& schema, const std::string& table, const std::string& col,
                const uint32_t sessionID = 0, const int lower_case_table_names = 0);
@@ -74,7 +76,7 @@ class SimpleColumn : public ReturnedColumn
   /**
    * Destructor
    */
-  virtual ~SimpleColumn();
+  ~SimpleColumn() override;
 
   /**
    * Accessor Methods
@@ -123,8 +125,8 @@ class SimpleColumn : public ReturnedColumn
     fOid = oid;
   }
 
-  virtual const std::string data() const override;
-  virtual void data(const std::string data) override
+  const std::string data() const override;
+  void data(const std::string data) override
   {
     fData = data;
   }
@@ -178,7 +180,7 @@ class SimpleColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual SimpleColumn* clone() const override
+  inline SimpleColumn* clone() const override
   {
     return new SimpleColumn(*this);
   }
@@ -190,17 +192,17 @@ class SimpleColumn : public ReturnedColumn
   /**
    * The serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
-  virtual const std::string toString() const override;
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  const std::string toString() const override;
+  std::string toCppCode(IncludeSet& includes) const override;
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -216,7 +218,7 @@ class SimpleColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -226,7 +228,7 @@ class SimpleColumn : public ReturnedColumn
   bool operator!=(const SimpleColumn& t) const;
 
   /** @brief check if this column is the same as the argument */
-  virtual bool sameColumn(const ReturnedColumn* rc) const override;
+  bool sameColumn(const ReturnedColumn* rc) const override;
 
   /** @brief return column type of this column (could be of any engine type) */
   const CalpontSystemCatalog::ColType& colType() const
@@ -237,7 +239,7 @@ class SimpleColumn : public ReturnedColumn
   /** @brief set the column's OID from the syscat */
   void setOID();
 
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
@@ -251,7 +253,7 @@ class SimpleColumn : public ReturnedColumn
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+  bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
 
  protected:
   /**
@@ -281,13 +283,13 @@ class SimpleColumn : public ReturnedColumn
    *                  F&E framework                          *
    ***********************************************************/
  public:
-  virtual void evaluate(rowgroup::Row& row, bool& isNull) override;
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override
+  void evaluate(rowgroup::Row& row, bool& isNull) override;
+  bool getBoolVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getBoolVal();
   }
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull);
@@ -300,37 +302,37 @@ class SimpleColumn : public ReturnedColumn
     return TreeNode::getStrVal(fTimeZone);
   }
 
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getIntVal();
   }
 
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getUintVal();
   }
 
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getFloatVal();
   }
 
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDoubleVal();
   }
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
+  long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getLongDoubleVal();
   }
 
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
 

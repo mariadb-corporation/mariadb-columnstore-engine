@@ -76,7 +76,7 @@ class MessageQueueServer
    *
    * construct a server queue for thisEnd. Optionally specify a Config object to use.
    */
-  EXPORT explicit MessageQueueServer(const std::string& thisEnd, config::Config* config = 0,
+  EXPORT explicit MessageQueueServer(const std::string& thisEnd, config::Config* config = nullptr,
                                      size_t blocksize = ByteStream::BlockSize, int backlog = 5,
                                      bool syncProto = true);
 
@@ -101,7 +101,7 @@ class MessageQueueServer
    * is then free to wait again for another connection. The IOSocket is already open and ready for
    * read() and/or write(). The caller is responsible for calling close() when it is done.
    */
-  EXPORT const IOSocket accept(const struct timespec* timeout = 0) const;
+  EXPORT const IOSocket accept(const struct timespec* timeout = nullptr) const;
 
   /**
    * @brief get a mutable pointer to the client IOSocket
@@ -165,7 +165,7 @@ class MessageQueueClient
    *
    * construct a queue from this process to otherEnd. Optionally specify a Config object to use.
    */
-  EXPORT explicit MessageQueueClient(const std::string& otherEnd, config::Config* config = 0,
+  EXPORT explicit MessageQueueClient(const std::string& otherEnd, config::Config* config = nullptr,
                                      bool syncProto = true);
 
   /**
@@ -196,8 +196,8 @@ class MessageQueueClient
    * wait for and return a message from otherEnd. The deafult timeout waits forever. Note that
    * eventhough struct timespec has nanosecond resolution, this method only has milisecond resolution.
    */
-  EXPORT const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
-                        Stats* stats = NULL) const;
+  EXPORT const SBS read(const struct timespec* timeout = nullptr, bool* isTimeOut = nullptr,
+                        Stats* stats = nullptr) const;
 
   /**
    * @brief write a message to the queue
@@ -205,7 +205,8 @@ class MessageQueueClient
    * write a message to otherEnd. If the socket is not open, the timeout parm (in ms) will be used
    *  to establish a sync connection w/ the server
    */
-  EXPORT void write(const ByteStream& msg, const struct timespec* timeout = 0, Stats* stats = NULL) const;
+  EXPORT void write(const ByteStream& msg, const struct timespec* timeout = nullptr,
+                    Stats* stats = nullptr) const;
 
   /**
    * @brief shutdown the connection to the server

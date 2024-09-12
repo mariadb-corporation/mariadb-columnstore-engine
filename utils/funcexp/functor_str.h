@@ -35,32 +35,28 @@ namespace funcexp
 class Func_Str : public Func
 {
  public:
-  Func_Str()
+  Func_Str() = default;
+  explicit Func_Str(const std::string& funcName) : Func(funcName)
   {
   }
-  Func_Str(const std::string& funcName) : Func(funcName)
-  {
-  }
-  virtual ~Func_Str()
-  {
-  }
+  ~Func_Str() override = default;
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct)
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return atoll(getStrVal(row, fp, isNull, op_ct).c_str());
   }
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
-    return strtod(getStrVal(row, fp, isNull, op_ct).c_str(), NULL);
+    return strtod(getStrVal(row, fp, isNull, op_ct).c_str(), nullptr);
   }
 
   long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
-    return strtold(getStrVal(row, fp, isNull, op_ct).c_str(), NULL);
+    return strtold(getStrVal(row, fp, isNull, op_ct).c_str(), nullptr);
   }
 
 #if 0
@@ -71,34 +67,34 @@ class Func_Str : public Func
 #endif
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return execplan::IDB_Decimal(atoll(getStrVal(row, fp, isNull, op_ct).c_str()), 0, 0);
   }
 
   int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
-    return (isNull ? 0 : stringToDate(str));
+    return isNull ? 0 : stringToDate(str);
   }
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct)
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
-    return (isNull ? 0 : stringToDatetime(str));
+    return isNull ? 0 : stringToDatetime(str);
   }
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct)
+                             execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
     return (isNull ? 0 : stringToTimestamp(str, op_ct.getTimeZone()));
   }
 
   int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     auto str = getStrVal(row, fp, isNull, op_ct);
     return (isNull ? 0 : stringToTime(str));
@@ -124,10 +120,7 @@ class Func_Str : public Func
 
       case execplan::CalpontSystemCatalog::FLOAT: floatVal = fp->data()->getFloatVal(row, isNull); break;
 
-      default:
-        fFloatStr = fp->data()->getStrVal(row, isNull).safeString("");
-        return;
-        break;
+      default: fFloatStr = fp->data()->getStrVal(row, isNull).safeString(""); return;
     }
 
     if (isNull)
@@ -140,14 +133,14 @@ class Func_Str : public Func
 
     if (std::isnan(exponent) || std::isnan(base))
     {
-      snprintf(buf, 20, "%Lf", floatVal);
-      fFloatStr = execplan::removeTrailing0(buf, 20);
+      snprintf(buf, sizeof(buf), "%Lf", floatVal);
+      fFloatStr = execplan::removeTrailing0(buf, sizeof(buf));
     }
     else
     {
-      snprintf(buf, 20, "%.5Lf", base);
-      fFloatStr = execplan::removeTrailing0(buf, 20);
-      snprintf(buf, 20, "e%02d", exponent);
+      snprintf(buf, sizeof(buf), "%.5Lf", base);
+      fFloatStr = execplan::removeTrailing0(buf, sizeof(buf));
+      snprintf(buf, sizeof(buf), "e%02d", exponent);
       fFloatStr += buf;
     }
   }
@@ -161,15 +154,13 @@ class Func_concat : public Func_Str
   Func_concat() : Func_Str("concat")
   {
   }
-  virtual ~Func_concat()
-  {
-  }
+  ~Func_concat() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_concat_oracle class
@@ -180,15 +171,13 @@ class Func_concat_oracle : public Func_Str
   Func_concat_oracle() : Func_Str("concat_operator_oracle")
   {
   }
-  virtual ~Func_concat_oracle()
-  {
-  }
+  ~Func_concat_oracle() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_substr class
@@ -199,15 +188,13 @@ class Func_substr : public Func_Str
   Func_substr() : Func_Str("substr")
   {
   }
-  virtual ~Func_substr()
-  {
-  }
+  ~Func_substr() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_date_format class
@@ -218,24 +205,22 @@ class Func_date_format : public Func_Str
   Func_date_format() : Func_Str("date_format")
   {
   }
-  virtual ~Func_date_format()
-  {
-  }
+  ~Func_date_format() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct);
+                             execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_lcase class
@@ -246,15 +231,13 @@ class Func_lcase : public Func_Str
   Func_lcase() : Func_Str("lcase")
   {
   }
-  virtual ~Func_lcase()
-  {
-  }
+  ~Func_lcase() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_ucase class
@@ -265,15 +248,13 @@ class Func_ucase : public Func_Str
   Func_ucase() : Func_Str("ucase")
   {
   }
-  virtual ~Func_ucase()
-  {
-  }
+  ~Func_ucase() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_left class
@@ -284,15 +265,13 @@ class Func_left : public Func_Str
   Func_left() : Func_Str("left")
   {
   }
-  virtual ~Func_left()
-  {
-  }
+  ~Func_left() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_ltrim class
@@ -303,15 +282,13 @@ class Func_ltrim : public Func_Str
   Func_ltrim() : Func_Str("ltrim")
   {
   }
-  virtual ~Func_ltrim()
-  {
-  }
+  ~Func_ltrim() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_rtrim class
@@ -322,15 +299,13 @@ class Func_rtrim : public Func_Str
   Func_rtrim() : Func_Str("rtrim")
   {
   }
-  virtual ~Func_rtrim()
-  {
-  }
+  ~Func_rtrim() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_trim class
@@ -341,15 +316,13 @@ class Func_trim : public Func_Str
   Func_trim() : Func_Str("trim")
   {
   }
-  virtual ~Func_trim()
-  {
-  }
+  ~Func_trim() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_ltrim class
@@ -360,15 +333,13 @@ class Func_ltrim_oracle : public Func_Str
   Func_ltrim_oracle() : Func_Str("ltrim_oracle")
   {
   }
-  virtual ~Func_ltrim_oracle()
-  {
-  }
+  ~Func_ltrim_oracle() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_rtrim class
@@ -379,15 +350,13 @@ class Func_rtrim_oracle : public Func_Str
   Func_rtrim_oracle() : Func_Str("rtrim_oracle")
   {
   }
-  virtual ~Func_rtrim_oracle()
-  {
-  }
+  ~Func_rtrim_oracle() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_trim class
@@ -398,15 +367,13 @@ class Func_trim_oracle : public Func_Str
   Func_trim_oracle() : Func_Str("trim_oracle")
   {
   }
-  virtual ~Func_trim_oracle()
-  {
-  }
+  ~Func_trim_oracle() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_lpad class
@@ -419,15 +386,13 @@ class Func_lpad : public Func_Str
   Func_lpad() : Func_Str("lpad")
   {
   }
-  virtual ~Func_lpad()
-  {
-  }
+  ~Func_lpad() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_rpad class
@@ -440,15 +405,13 @@ class Func_rpad : public Func_Str
   Func_rpad() : Func_Str("rpad")
   {
   }
-  virtual ~Func_rpad()
-  {
-  }
+  ~Func_rpad() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_replace class
@@ -459,15 +422,13 @@ class Func_replace : public Func_Str
   Func_replace() : Func_Str("replace")
   {
   }
-  virtual ~Func_replace()
-  {
-  }
+  ~Func_replace() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 class Func_regexp_replace : public Func_Str
@@ -476,17 +437,14 @@ class Func_regexp_replace : public Func_Str
   Func_regexp_replace() : Func_Str("regexp_replace")
   {
   }
-  virtual ~Func_regexp_replace()
-  {
-  }
+  ~Func_regexp_replace() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
-
 
 class Func_regexp_instr : public Func_Str
 {
@@ -494,17 +452,14 @@ class Func_regexp_instr : public Func_Str
   Func_regexp_instr() : Func_Str("regexp_instr")
   {
   }
-  virtual ~Func_regexp_instr()
-  {
-  }
+  ~Func_regexp_instr() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
-
 
 class Func_regexp_substr : public Func_Str
 {
@@ -512,18 +467,14 @@ class Func_regexp_substr : public Func_Str
   Func_regexp_substr() : Func_Str("regexp_substr")
   {
   }
-  virtual ~Func_regexp_substr()
-  {
-  }
+  ~Func_regexp_substr() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
-
-
 
 class Func_replace_oracle : public Func_Str
 {
@@ -531,15 +482,13 @@ class Func_replace_oracle : public Func_Str
   Func_replace_oracle() : Func_Str("replace_oracle")
   {
   }
-  virtual ~Func_replace_oracle()
-  {
-  }
+  ~Func_replace_oracle() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_right class
@@ -550,15 +499,13 @@ class Func_right : public Func_Str
   Func_right() : Func_Str("right")
   {
   }
-  virtual ~Func_right()
-  {
-  }
+  ~Func_right() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_char class
@@ -569,15 +516,13 @@ class Func_char : public Func_Str
   Func_char() : Func_Str("char")
   {
   }
-  virtual ~Func_char()
-  {
-  }
+  ~Func_char() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_cast_char class
@@ -588,15 +533,13 @@ class Func_cast_char : public Func_Str
   Func_cast_char() : Func_Str("char")
   {
   }
-  virtual ~Func_cast_char()
-  {
-  }
+  ~Func_cast_char() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_format class
@@ -607,15 +550,13 @@ class Func_format : public Func_Str
   Func_format() : Func_Str("format")
   {
   }
-  virtual ~Func_format()
-  {
-  }
+  ~Func_format() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_conv class
@@ -626,15 +567,13 @@ class Func_conv : public Func_Str
   Func_conv() : Func_Str("conv")
   {
   }
-  virtual ~Func_conv()
-  {
-  }
+  ~Func_conv() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_md5 class
@@ -645,15 +584,13 @@ class Func_md5 : public Func_Str
   Func_md5() : Func_Str("md5")
   {
   }
-  virtual ~Func_md5()
-  {
-  }
+  ~Func_md5() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_unhex class
@@ -664,15 +601,13 @@ class Func_unhex : public Func_Str
   Func_unhex() : Func_Str("unhex")
   {
   }
-  virtual ~Func_unhex()
-  {
-  }
+  ~Func_unhex() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_concat_ws class
@@ -683,15 +618,13 @@ class Func_concat_ws : public Func_Str
   Func_concat_ws() : Func_Str("concat_ws")
   {
   }
-  virtual ~Func_concat_ws()
-  {
-  }
+  ~Func_concat_ws() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_monthname class
@@ -702,35 +635,33 @@ class Func_monthname : public Func_Str
   Func_monthname() : Func_Str("monthname")
   {
   }
-  virtual ~Func_monthname()
-  {
-  }
+  ~Func_monthname() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct);
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
   int64_t getIntValInternal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                             execplan::CalpontSystemCatalog::ColType& op_ct);
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct);
+                             execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_time_format class
@@ -741,15 +672,13 @@ class Func_time_format : public Func_Str
   Func_time_format() : Func_Str("time_format")
   {
   }
-  virtual ~Func_time_format()
-  {
-  }
+  ~Func_time_format() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_sec_to_time class
@@ -760,24 +689,22 @@ class Func_sec_to_time : public Func_Str
   Func_sec_to_time() : Func_Str("sec_to_time")
   {
   }
-  virtual ~Func_sec_to_time()
-  {
-  }
+  ~Func_sec_to_time() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct);
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_substring_index class
@@ -788,15 +715,13 @@ class Func_substring_index : public Func_Str
   Func_substring_index() : Func_Str("substring_index")
   {
   }
-  virtual ~Func_substring_index()
-  {
-  }
+  ~Func_substring_index() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_hex class
@@ -807,15 +732,13 @@ class Func_hex : public Func_Str
   Func_hex() : Func_Str("hex")
   {
   }
-  virtual ~Func_hex()
-  {
-  }
+  ~Func_hex() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_repeat class
@@ -826,15 +749,13 @@ class Func_repeat : public Func_Str
   Func_repeat() : Func_Str("repeat")
   {
   }
-  virtual ~Func_repeat()
-  {
-  }
+  ~Func_repeat() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_inet_ntoa class to convert big-indian (network ordered) int to
@@ -846,39 +767,37 @@ class Func_inet_ntoa : public Func_Str
   Func_inet_ntoa() : Func_Str("inet_ntoa")
   {
   }
-  virtual ~Func_inet_ntoa()
-  {
-  }
+  ~Func_inet_ntoa() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct);
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct);
+                             execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
  private:
   void convertNtoa(int64_t ipNum, std::string& ipString);
@@ -892,15 +811,13 @@ class Func_reverse : public Func_Str
   Func_reverse() : Func_Str("reverse")
   {
   }
-  virtual ~Func_reverse()
-  {
-  }
+  ~Func_reverse() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_insert class
@@ -911,15 +828,13 @@ class Func_insert : public Func_Str
   Func_insert() : Func_Str("insert")
   {
   }
-  virtual ~Func_insert()
-  {
-  }
+  ~Func_insert() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_maketime class
@@ -930,15 +845,13 @@ class Func_maketime : public Func_Str
   Func_maketime() : Func_Str("maketime")
   {
   }
-  virtual ~Func_maketime()
-  {
-  }
+  ~Func_maketime() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_get_format class
@@ -949,15 +862,13 @@ class Func_get_format : public Func_Str
   Func_get_format() : Func_Str("get_format")
   {
   }
-  virtual ~Func_get_format()
-  {
-  }
+  ~Func_get_format() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_elt class
@@ -968,15 +879,13 @@ class Func_elt : public Func_Str
   Func_elt() : Func_Str("elt")
   {
   }
-  virtual ~Func_elt()
-  {
-  }
+  ~Func_elt() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_sha class
@@ -987,15 +896,13 @@ class Func_sha : public Func_Str
   Func_sha() : Func_Str("sha")
   {
   }
-  virtual ~Func_sha()
-  {
-  }
+  ~Func_sha() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_idbpartition class
@@ -1006,15 +913,13 @@ class Func_idbpartition : public Func_Str
   Func_idbpartition() : Func_Str("idbpartition")
   {
   }
-  virtual ~Func_idbpartition()
-  {
-  }
+  ~Func_idbpartition() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_space class
@@ -1025,15 +930,13 @@ class Func_space : public Func_Str
   Func_space() : Func_Str("space")
   {
   }
-  virtual ~Func_space()
-  {
-  }
+  ~Func_space() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_quote class
@@ -1044,15 +947,13 @@ class Func_quote : public Func_Str
   Func_quote() : Func_Str("quote")
   {
   }
-  virtual ~Func_quote()
-  {
-  }
+  ~Func_quote() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_encode class
@@ -1064,15 +965,13 @@ class Func_encode : public Func_Str
   Func_encode() : Func_Str("encode"), fSeeded(false), fSeeds{0, 0}
   {
   }
-  virtual ~Func_encode()
-  {
-  }
+  ~Func_encode() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   void resetSeed()
   {
@@ -1097,15 +996,13 @@ class Func_decode : public Func_Str
   Func_decode() : Func_Str("decode"), fSeeded(false), fSeeds{0, 0}
   {
   }
-  virtual ~Func_decode()
-  {
-  }
+  ~Func_decode() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct);
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   void resetSeed()
   {

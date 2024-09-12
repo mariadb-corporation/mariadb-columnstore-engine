@@ -156,8 +156,8 @@ struct EMCasualPartition_struct
     int64_t hiVal;
   };
   EXPORT EMCasualPartition_struct();
-  EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
-  EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, const int32_t seqNum);
+  EXPORT EMCasualPartition_struct(int64_t lo, int64_t hi, int32_t seqNum);
+  EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, int32_t seqNum);
   EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
   EXPORT EMCasualPartition_struct& operator=(const EMCasualPartition_struct& em);
 };
@@ -260,7 +260,7 @@ class ExtentMapRBTreeImpl
     if (fInstance)
     {
       delete fInstance;
-      fInstance = NULL;
+      fInstance = nullptr;
     }
   }
 
@@ -304,7 +304,7 @@ class ExtentMapRBTreeImpl
 class FreeListImpl
 {
  public:
-  ~FreeListImpl(){};
+  ~FreeListImpl() = default;
 
   static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
   static void refreshShm()
@@ -312,7 +312,7 @@ class FreeListImpl
     if (fInstance)
     {
       delete fInstance;
-      fInstance = NULL;
+      fInstance = nullptr;
     }
   }
 
@@ -364,7 +364,7 @@ class FreeListImpl
 class ExtentMapIndexImpl
 {
  public:
-  ~ExtentMapIndexImpl(){};
+  ~ExtentMapIndexImpl() = default;
 
   static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
   static void refreshShm()
@@ -482,7 +482,7 @@ class ExtentMap : public Undoable
 {
  public:
   EXPORT ExtentMap();
-  EXPORT ~ExtentMap();
+  EXPORT ~ExtentMap() override;
 
   /** @brief Loads the ExtentMap entries from a file
    *
@@ -987,9 +987,9 @@ class ExtentMap : public Undoable
 
   EXPORT void setReadOnly();
 
-  EXPORT virtual void undoChanges();
+  EXPORT void undoChanges() override;
 
-  EXPORT virtual void confirmChanges();
+  EXPORT void confirmChanges() override;
 
   EXPORT int markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
   EXPORT int markInvalid(const std::vector<LBID_t>& lbids,

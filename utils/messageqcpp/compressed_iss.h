@@ -39,16 +39,16 @@ class CompressedInetStreamSocket : public InetStreamSocket
  public:
   CompressedInetStreamSocket();
   CompressedInetStreamSocket(const CompressedInetStreamSocket&) = default;
-  virtual ~CompressedInetStreamSocket(){};
+  ~CompressedInetStreamSocket() override = default;
 
   using InetStreamSocket::operator=;
-  virtual Socket* clone() const;
-  virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
-                         Stats* stats = NULL) const;
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
-  virtual void write(SBS msg, Stats* stats = NULL);
-  virtual const IOSocket accept(const struct timespec* timeout);
-  virtual void connect(const sockaddr* addr);
+  Socket* clone() const override;
+  const SBS read(const struct timespec* timeout = nullptr, bool* isTimeOut = nullptr,
+                 Stats* stats = nullptr) const override;
+  void write(const ByteStream& msg, Stats* stats = nullptr) override;
+  void write(SBS msg, Stats* stats = nullptr) override;
+  const IOSocket accept(const struct timespec* timeout) override;
+  void connect(const sockaddr* addr) override;
 
  private:
   std::shared_ptr<compress::CompressInterface> alg;

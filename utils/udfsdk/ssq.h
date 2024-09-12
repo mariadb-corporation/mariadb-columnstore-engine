@@ -81,7 +81,7 @@ class ssq : public mcsv1_UDAF
  public:
   // Defaults OK
   ssq() : mcsv1_UDAF(){};
-  virtual ~ssq(){};
+  ~ssq() override = default;
 
   /**
    * init()
@@ -101,7 +101,7 @@ class ssq : public mcsv1_UDAF
    * colTypes or wrong number of arguments. Else return
    * mcsv1_UDAF::SUCCESS.
    */
-  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
   /**
    * reset()
@@ -114,7 +114,7 @@ class ssq : public mcsv1_UDAF
    * the next aggregation. May be called multiple times on
    * different modules.
    */
-  virtual ReturnCode reset(mcsv1Context* context);
+  ReturnCode reset(mcsv1Context* context) override;
 
   /**
    * nextValue()
@@ -134,7 +134,7 @@ class ssq : public mcsv1_UDAF
    *
    * valsIn (in) - a vector of the parameters from the row.
    */
-  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
 
   /**
    * subEvaluate()
@@ -161,7 +161,7 @@ class ssq : public mcsv1_UDAF
    * as seen in the last call to NextValue for a given PM.
    *
    */
-  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn);
+  ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) override;
 
   /**
    * evaluate()
@@ -182,7 +182,7 @@ class ssq : public mcsv1_UDAF
    *
    * To return a NULL value, don't assign to valOut.
    */
-  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
 
   /**
    * dropValue()
@@ -210,7 +210,7 @@ class ssq : public mcsv1_UDAF
    * dropValue() will not be called for unbounded/current row type
    * frames, as those are already optimized.
    */
-  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
  protected:
 };

@@ -46,7 +46,7 @@ class DropPartitionProcessor : public DDLPackageProcessor, FormatStatementString
    *
    *  @param dropTableStmt the drop table statement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropPartitionStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropPartitionStmt) override;
 };
 }  // namespace ddlpackageprocessor
 

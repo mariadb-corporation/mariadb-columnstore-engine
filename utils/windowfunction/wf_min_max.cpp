@@ -18,11 +18,8 @@
 
 //  $Id: wf_min_max.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
-#include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -30,13 +27,8 @@ using namespace boost;
 
 #include "loggingid.h"
 #include "errorcodes.h"
-#include "idberrorinfo.h"
 using namespace logging;
 
-#include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
 #include "calpontsystemcatalog.h"
 using namespace execplan;
 

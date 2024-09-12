@@ -49,12 +49,8 @@ class UniqueNumberGenerator
   uint64_t getUnique64();                    // generate unique 64-bit int
 
  private:
-  UniqueNumberGenerator()
-  {
-  }
-  ~UniqueNumberGenerator()
-  {
-  }
+  UniqueNumberGenerator() = default;
+  ~UniqueNumberGenerator() = default;
 
   static UniqueNumberGenerator* fUnique32Generator;
   static boost::mutex fLock;

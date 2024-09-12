@@ -44,17 +44,17 @@ template <typename container_t, typename element_t>
 class DataListImpl : public DataList<element_t>
 {
  public:
-  DataListImpl(uint32_t numConsumers);
+  explicit DataListImpl(uint32_t numConsumers);
   DataListImpl(const DataListImpl& dl);
-  virtual ~DataListImpl();
+  ~DataListImpl() override;
 
   DataListImpl& operator=(const DataListImpl& dl);
 
   // derived classes need to lock around these fcns
-  virtual void insert(const element_t& e);
-  virtual void insert(const std::vector<element_t>& v);
-  virtual uint64_t getIterator();
-  virtual bool next(uint64_t it, element_t* e);
+  void insert(const element_t& e) override;
+  void insert(const std::vector<element_t>& v) override;
+  uint64_t getIterator() override;
+  bool next(uint64_t it, element_t* e) override;
 
   virtual void setNumConsumers(uint32_t);
   virtual uint32_t getNumConsumers() const;
@@ -141,20 +141,24 @@ DataListImpl<container_t, element_t>::DataListImpl(const DataListImpl<container_
 
   for (i = 0; i < numConsumers; i++)
     cIterators[i] = dl.cIterators[i];
-};
+}
 
 template <typename container_t, typename element_t>
 DataListImpl<container_t, element_t>::~DataListImpl()
 {
   delete c;
   delete[] cIterators;
-};
+}
 
 // lock at a higher level
 template <typename container_t, typename element_t>
 DataListImpl<container_t, element_t>& DataListImpl<container_t, element_t>::operator=(
     const DataListImpl<container_t, element_t>& dl)
 {
+  if (&dl == this)
+  {
+    return *this;
+  }
   uint64_t i;
 
   static_cast<DataList<element_t> >(*this) = static_cast<DataList<element_t> >(dl);
@@ -170,7 +174,7 @@ DataListImpl<container_t, element_t>& DataListImpl<container_t, element_t>::oper
     cIterators[i] = dl.cIterators[i];
 
   return *this;
-};
+}
 
 template <typename container_t, typename element_t>
 uint64_t DataListImpl<container_t, element_t>::getIterator()
@@ -178,8 +182,8 @@ uint64_t DataListImpl<container_t, element_t>::getIterator()
   if (itIndex >= numConsumers)
   {
     std::ostringstream oss;
-    oss << "DataListImpl::getIterator(): caller attempted to grab too many iterators: "
-        << "have " << numConsumers << " asked for " << (itIndex + 1);
+    oss << "DataListImpl::getIterator(): caller attempted to grab too many iterators: " << "have "
+        << numConsumers << " asked for " << (itIndex + 1);
     throw std::logic_error(oss.str().c_str());
   }
 
@@ -198,7 +202,7 @@ inline void DataListImpl<container_t, element_t>::insert(const std::vector<eleme
 {
   if (typeid(container_t) == typeid(std::vector<element_t>))
   {
-    std::vector<element_t>* vc = (std::vector<element_t>*)c;
+    auto* vc = (std::vector<element_t>*)c;
     vc->insert(vc->end(), v.begin(), v.end());
   }
   else
@@ -245,7 +249,7 @@ void DataListImpl<container_t, element_t>::eraseUpTo(uint64_t id)
 #endif
 
   c->erase(c->begin(), cIterators[id]);
-};
+}
 
 template <typename container_t, typename element_t>
 void DataListImpl<container_t, element_t>::reset()

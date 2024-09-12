@@ -22,7 +22,7 @@
  ***********************************************************************/
 /** @file */
 
-#ifndef DDLINDEXPOPULATOR_H
+#pragma once
 
 #include <string>
 #include <stdexcept>
@@ -303,4 +303,3 @@ class DDLIndexPopulator
 };
 
 }  // namespace ddlpackageprocessor
-#endif  // DDLPINDEXPOPULATOR_H

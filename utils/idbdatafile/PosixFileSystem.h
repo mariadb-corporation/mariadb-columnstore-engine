@@ -25,7 +25,7 @@ class PosixFileSystem : public IDBFileSystem
 {
  public:
   PosixFileSystem();
-  ~PosixFileSystem();
+  ~PosixFileSystem() override;
 
   int mkdir(const char* pathname) override;
   off64_t size(const char* path) const override;

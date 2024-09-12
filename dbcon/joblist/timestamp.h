@@ -33,27 +33,27 @@ class JSTimeStamp
 {
  public:
   JSTimeStamp();
-  ~JSTimeStamp(){};
+  ~JSTimeStamp() = default;
 
   inline void setFirstInsertTime()
   {
-    gettimeofday(&fFirstInsertTime, 0);
+    gettimeofday(&fFirstInsertTime, nullptr);
   }
   inline void setLastInsertTime()
   {
-    gettimeofday(&fLastInsertTime, 0);
+    gettimeofday(&fLastInsertTime, nullptr);
   }
   inline void setEndOfInputTime()
   {
-    gettimeofday(&fEndofInputTime, 0);
+    gettimeofday(&fEndofInputTime, nullptr);
   }
   inline void setFirstReadTime()
   {
-    gettimeofday(&fFirstReadTime, 0);
+    gettimeofday(&fFirstReadTime, nullptr);
   }
   inline void setLastReadTime()
   {
-    gettimeofday(&fLastReadTime, 0);
+    gettimeofday(&fLastReadTime, nullptr);
   }
 
   inline void setFirstInsertTime(const struct timeval& t)

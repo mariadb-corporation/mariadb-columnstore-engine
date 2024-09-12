@@ -18,7 +18,7 @@
 
 //  $Id: wf_lead_lag.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <sstream>
@@ -159,7 +159,7 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
   // parms[1]: offset
   ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[1].get());
 
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     fOffsetNull = false;
     fOffset = cc->getIntVal(fRow, fOffsetNull) * fLead;  // row not used, no need to setData.
@@ -168,7 +168,7 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
   // parms[2]: default value
   cc = dynamic_cast<ConstantColumn*>(parms[2].get());
 
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     fDefNull = false;
     getConstValue(cc, fDefault, fDefNull);
@@ -176,7 +176,7 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 
   // parms[3]: respect null | ignore null
   cc = dynamic_cast<ConstantColumn*>(parms[3].get());
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     bool isNull = false;  // dummy. Return not used
     fRespectNulls = (cc->getIntVal(fRow, isNull) > 0);

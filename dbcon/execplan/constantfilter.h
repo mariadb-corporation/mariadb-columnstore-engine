@@ -64,7 +64,7 @@ class ConstantFilter : public Filter
    */
   ConstantFilter();
   ConstantFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs);
-  ConstantFilter(SimpleFilter* sf);
+  explicit ConstantFilter(SimpleFilter* sf);
   // for code generation purposes only
   ConstantFilter(const SOP& op, const FilterList& filterList, const SRCP& col,
                  const std::string& functionName, const std::string& data);
@@ -75,7 +75,7 @@ class ConstantFilter : public Filter
   /**
    * Destructors
    */
-  virtual ~ConstantFilter();
+  ~ConstantFilter() override;
 
   /**
    * Accessor Methods
@@ -114,20 +114,20 @@ class ConstantFilter : public Filter
   }
 
   // virtual const std::string data() const;
-  virtual const std::string toString() const override;
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  const std::string toString() const override;
+  std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -141,7 +141,7 @@ class ConstantFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -188,17 +188,17 @@ class ConstantFilter : public Filter
   FilterList fFilterList;     /// vector of simple filters
   SRCP fCol;                  /// the common column
   std::string fFunctionName;  /// function name
-  /***********************************************************
-   *                  F&E framework                          *
-   ***********************************************************/
+                              /***********************************************************
+                               *                  F&E framework                          *
+                               ***********************************************************/
  public:
   ConstantFilter(const ConstantFilter& rhs);
-  inline virtual ConstantFilter* clone() const override
+  inline ConstantFilter* clone() const override
   {
     return new ConstantFilter(*this);
   }
 
-  inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override;
+  inline bool getBoolVal(rowgroup::Row& row, bool& isNull) override;
 
   // get all simple columns involved in this column
   const std::vector<SimpleColumn*>& simpleColumnList();

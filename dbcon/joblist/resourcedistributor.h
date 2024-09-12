@@ -58,7 +58,7 @@ extern const unsigned maxSessionsDefault;
 class LockedSessionMap
 {
  public:
-  LockedSessionMap(uint64_t resource, unsigned maxSessions = maxSessionsDefault)
+  explicit LockedSessionMap(uint64_t resource, unsigned maxSessions = maxSessionsDefault)
    : fResourceBlock(resource), fMaxSessions(maxSessions)
   {
   }
@@ -93,9 +93,7 @@ class ResourceDistributor
   {
   }
 
-  virtual ~ResourceDistributor()
-  {
-  }
+  virtual ~ResourceDistributor() = default;
 
   typedef std::map<uint32_t, uint64_t> SessionMap;
 

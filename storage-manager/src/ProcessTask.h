@@ -24,14 +24,13 @@ namespace storagemanager
 class ProcessTask : public ThreadPool::Job
 {
  public:
+  ProcessTask() = delete;
   ProcessTask(int sock, uint length);  // _sock is the socket to read from
-  virtual ~ProcessTask();
+  ~ProcessTask() override;
 
-  void operator()();
+  void operator()() override;
 
  private:
-  ProcessTask();
-
   void handleError(int errCode);
   int sock;
   uint length;

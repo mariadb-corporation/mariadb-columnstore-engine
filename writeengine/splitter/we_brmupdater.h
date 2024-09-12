@@ -36,12 +36,10 @@ class WESDHandler;  // forward deceleration
 class WEBrmUpdater
 {
  public:
-  WEBrmUpdater(WESDHandler& Ref) : fRef(Ref), fpBrm(0)
+  WEBrmUpdater(WESDHandler& Ref) : fRef(Ref), fpBrm(nullptr)
   {
   }
-  virtual ~WEBrmUpdater()
-  {
-  }
+  virtual ~WEBrmUpdater() = default;
 
  public:
   bool updateCasualPartitionAndHighWaterMarkInBRM();
@@ -59,7 +57,7 @@ class WEBrmUpdater
   void releaseBrmConnection()
   {
     delete fpBrm;
-    fpBrm = 0;
+    fpBrm = nullptr;
   }
 
  public:

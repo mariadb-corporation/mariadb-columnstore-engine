@@ -103,21 +103,21 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
 
   /** @brief TupleAggregateStep destructor
    */
-  ~TupleAggregateStep();
+  ~TupleAggregateStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
-  void join();
+  void run() override;
+  void join() override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
-  void setOutputRowGroup(const rowgroup::RowGroup&);
-  const rowgroup::RowGroup& getOutputRowGroup() const;
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
   uint32_t nextBand_singleThread(messageqcpp::ByteStream& bs);
   bool setPmHJAggregation(JobStep* step);
   void savePmHJData(rowgroup::SP_ROWAGG_t&, rowgroup::SP_ROWAGG_t&, rowgroup::RowGroup&);
@@ -167,9 +167,10 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   template <class GroupByMap>
   static bool tryToFindEqualFunctionColumnByTupleKey(JobInfo& jobInfo, GroupByMap& groupByMap,
                                                      const uint32_t tupleKey, uint32_t& foundTypleKey);
-  // This functions are workaround for the function above. For some reason different parts of the code with same
-  // semantics use different containers.
-  static uint32_t getTupleKeyFromTuple(const boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*>& tuple);
+  // This functions are workaround for the function above. For some reason different parts of the code with
+  // same semantics use different containers.
+  static uint32_t getTupleKeyFromTuple(
+      const boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*>& tuple);
   static uint32_t getTupleKeyFromTuple(uint32_t key);
 
   boost::shared_ptr<execplan::CalpontSystemCatalog> fCatalog;
@@ -198,7 +199,7 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   class Aggregator
   {
    public:
-    Aggregator(TupleAggregateStep* step) : fStep(step)
+    explicit Aggregator(TupleAggregateStep* step) : fStep(step)
     {
     }
     void operator()()

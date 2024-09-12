@@ -50,7 +50,7 @@ class WindowFrame
 
   /** @brief WindowFrame destructor
    */
-  virtual ~WindowFrame(){};
+  virtual ~WindowFrame() = default;
 
   /** @brief clone
    */
@@ -118,4 +118,3 @@ class WindowFrame
 };
 
 }  // namespace windowfunction
-

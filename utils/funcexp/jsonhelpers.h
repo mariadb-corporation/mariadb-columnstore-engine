@@ -8,7 +8,7 @@
 #include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
-//#include <json_lib.h>
+// #include <json_lib.h>
 
 #include "collation.h"
 #include "functor_json.h"
@@ -21,9 +21,7 @@
 
 #include "json_lib.h"
 
-namespace funcexp
-{
-namespace helpers
+namespace funcexp::helpers
 {
 
 static const int NO_WILDCARD_ALLOWED = 1;
@@ -35,7 +33,8 @@ static const int NO_WILDCARD_ALLOWED = 1;
 int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const string_view& str, bool wildcards);
 
 // Return true if err occur, let the outer function handle the exception
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS);
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js,
+                     const CHARSET_INFO* jsCS);
 bool appendJSKeyName(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 bool appendJSValue(string& ret, const CHARSET_INFO* retCS, rowgroup::Row& row, execplan::SPTP& parm);
 
@@ -97,12 +96,11 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
 
 inline void initJSPaths(vector<JSONPath>& paths, FunctionParm& fp, const int start, const int step)
 {
-  if (paths.size() == 0)
+  if (paths.empty())
     for (size_t i = start; i < fp.size(); i += step)
-      paths.push_back(JSONPath{});
+      paths.emplace_back();
 }
 
 bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
                  const int* arrayCounter = nullptr, bool exact = true);
-}  // namespace helpers
-}  // namespace funcexp
+}  // namespace funcexp::helpers

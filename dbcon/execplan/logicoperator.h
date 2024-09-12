@@ -27,7 +27,7 @@
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
 
-//#include "expressionparser.h"
+// #include "expressionparser.h"
 #include "operator.h"
 #include "parsetree.h"
 
@@ -64,13 +64,13 @@ class LogicOperator : public Operator
    * Constructors
    */
   LogicOperator();
-  LogicOperator(const std::string& operatorName);
+  explicit LogicOperator(const std::string& operatorName);
   LogicOperator(const LogicOperator& rhs);
 
   /**
    * Destructors
    */
-  virtual ~LogicOperator();
+  ~LogicOperator() override;
 
   /**
    * Accessor Methods
@@ -80,7 +80,7 @@ class LogicOperator : public Operator
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual LogicOperator* clone() const override
+  inline LogicOperator* clone() const override
   {
     return new LogicOperator(*this);
   }
@@ -88,15 +88,15 @@ class LogicOperator : public Operator
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -110,7 +110,7 @@ class LogicOperator : public Operator
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -123,7 +123,7 @@ class LogicOperator : public Operator
 
   // F&E framework
   using Operator::getBoolVal;
-  inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  inline bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     switch (fOp)
     {
@@ -165,12 +165,12 @@ class LogicOperator : public Operator
   }
 
   using TreeNode::evaluate;
-  inline virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
+  inline void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop) override
   {
     fResult.boolVal = getBoolVal(row, isNull, lop, rop);
   }
 
-  inline virtual std::string toCppCode(IncludeSet& includes) const override
+  inline std::string toCppCode(IncludeSet& includes) const override
   {
     includes.insert("logicoperator.h");
     std::stringstream ss;

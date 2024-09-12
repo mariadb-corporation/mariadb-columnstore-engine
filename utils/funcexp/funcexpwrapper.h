@@ -47,12 +47,12 @@ class FuncExpWrapper : public messageqcpp::Serializeable
  public:
   FuncExpWrapper();
   FuncExpWrapper(const FuncExpWrapper&);
-  virtual ~FuncExpWrapper();
+  ~FuncExpWrapper() override;
 
-  void operator=(const FuncExpWrapper&);
+  FuncExpWrapper& operator=(const FuncExpWrapper&);
 
-  void serialize(messageqcpp::ByteStream&) const;
-  void deserialize(messageqcpp::ByteStream&);
+  void serialize(messageqcpp::ByteStream&) const override;
+  void deserialize(messageqcpp::ByteStream&) override;
 
   bool evaluate(rowgroup::Row*);
   inline bool evaluateFilter(uint32_t num, rowgroup::Row* r);

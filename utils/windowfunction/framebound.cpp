@@ -17,17 +17,10 @@
 
 //  $Id: framebound.cpp 3828 2013-05-22 17:58:14Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
 #include <sstream>
-#include <iomanip>
 using namespace std;
-
-#include "idberrorinfo.h"
-#include "errorids.h"
-#include "exceptclasses.h"
-using namespace logging;
 
 #include "idborderby.h"
 using namespace ordering;

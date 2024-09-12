@@ -18,7 +18,7 @@
 #pragma once
 
 #include <sys/types.h>
-#include <stdint.h>
+#include <cstdint>
 #include <sys/stat.h>
 #include <vector>
 #include <string>
@@ -58,7 +58,7 @@ class IOCoordinator : public boost::noncopyable
   // The shared logic for merging a journal file with its base file.
   // len should be set to the length of the data requested
   std::shared_ptr<uint8_t[]> mergeJournal(const char* objectPath, const char* journalPath, off_t offset,
-                                            size_t len, size_t* sizeRead) const;
+                                          size_t len, size_t* sizeRead) const;
 
   // this version modifies object data in memory, given the journal filename.  Processes the whole object
   // and whole journal file.

@@ -24,13 +24,11 @@ namespace storagemanager
 class AppendTask : public PosixTask
 {
  public:
+  AppendTask() = delete;
   AppendTask(int sock, uint length);
-  virtual ~AppendTask();
+  ~AppendTask() override;
 
-  bool run();
-
- private:
-  AppendTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

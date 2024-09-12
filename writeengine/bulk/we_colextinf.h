@@ -136,12 +136,8 @@ struct uint64Hasher
 class ColExtInfBase
 {
  public:
-  ColExtInfBase()
-  {
-  }
-  virtual ~ColExtInfBase()
-  {
-  }
+  ColExtInfBase() = default;
+  virtual ~ColExtInfBase() = default;
 
   virtual void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent)
   {
@@ -192,9 +188,7 @@ class ColExtInf : public ColExtInfBase
   ColExtInf(OID oid, Log* logger) : fColOid(oid), fLog(logger)
   {
   }
-  virtual ~ColExtInf()
-  {
-  }
+  ~ColExtInf() override = default;
 
   /** @brief Add an entry for first extent, for the specified Row and LBID.
    *  @param lastInputRow Last input Row for old extent we are adding data to
@@ -202,7 +196,7 @@ class ColExtInf : public ColExtInfBase
    *  @param bIsNewExtent Treat as new or existing extent when CP min/max is
    *                      sent to BRM
    */
-  virtual void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent);
+  void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent) override;
 
   /** @brief Add or update an entry for the specified Row and its min/max val.
    *         If new extent, LBID will be added later when extent is allocated.
@@ -213,31 +207,31 @@ class ColExtInf : public ColExtInfBase
   template <typename T>
   void addOrUpdateEntryTemplate(RID lastInputRow, T minVal, T maxVal, ColDataType colDataType, int width);
 
-  virtual void addOrUpdateEntry(RID lastInputRow, int64_t minVal, int64_t maxVal, ColDataType colDataType,
-                                int width)
+  void addOrUpdateEntry(RID lastInputRow, int64_t minVal, int64_t maxVal, ColDataType colDataType,
+                        int width) override
   {
     addOrUpdateEntryTemplate(lastInputRow, minVal, maxVal, colDataType, width);
   }
 
-  virtual void addOrUpdateEntry(RID lastInputRow, int128_t minVal, int128_t maxVal, ColDataType colDataType,
-                                int width)
+  void addOrUpdateEntry(RID lastInputRow, int128_t minVal, int128_t maxVal, ColDataType colDataType,
+                        int width) override
   {
     addOrUpdateEntryTemplate(lastInputRow, minVal, maxVal, colDataType, width);
   }
 
   /** @brief Send updated Casual Partition (CP) info to BRM.
    */
-  virtual void getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter);
+  void getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter) override;
 
   /** @brief Debug print function.
    */
-  virtual void print(const JobColumn& column);
+  void print(const JobColumn& column) override;
 
   /** @brief Add extent's LBID to the oldest entry that is awaiting an LBID
    *  @param startLbid Starting LBID for a pending extent.
    *  @return NO_ERROR upon success; else error if extent entry not found
    */
-  virtual int updateEntryLbid(BRM::LBID_t startLbid);
+  int updateEntryLbid(BRM::LBID_t startLbid) override;
 
  private:
   OID fColOid;                       // Column OID for the relevant extents

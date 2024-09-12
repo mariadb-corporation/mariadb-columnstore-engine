@@ -25,9 +25,7 @@ class QueryTeleProtoImpl
 {
  public:
   explicit QueryTeleProtoImpl(const QueryTeleServerParms&);
-  ~QueryTeleProtoImpl()
-  {
-  }
+  ~QueryTeleProtoImpl() = default;
 
   int enqStepTele(const StepTele&);
   int enqImportTele(const ImportTele&);

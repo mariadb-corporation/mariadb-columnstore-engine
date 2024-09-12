@@ -24,13 +24,11 @@ namespace storagemanager
 class TruncateTask : public PosixTask
 {
  public:
+  TruncateTask() = delete;
   TruncateTask(int sock, uint length);
-  virtual ~TruncateTask();
+  ~TruncateTask() override;
 
-  bool run();
-
- private:
-  TruncateTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

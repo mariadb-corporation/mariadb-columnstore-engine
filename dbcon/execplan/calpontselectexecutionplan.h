@@ -146,19 +146,18 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * Constructors
    */
-  CalpontSelectExecutionPlan(const int location = MAIN);
+  explicit CalpontSelectExecutionPlan(int location = MAIN);
 
-  CalpontSelectExecutionPlan(const ReturnedColumnList& returnedCols, ParseTree* filters,
-                             const SelectList& subSelects, const GroupByColumnList& groupByCols,
-                             ParseTree* having, const OrderByColumnList& orderByCols, const std::string alias,
-                             const int location, const bool dependent, const bool withRollup);
+  CalpontSelectExecutionPlan(ReturnedColumnList returnedCols, ParseTree* filters, SelectList subSelects,
+                             GroupByColumnList groupByCols, ParseTree* having, OrderByColumnList orderByCols,
+                             std::string alias, int location, bool dependent, bool withRollup);
 
-  CalpontSelectExecutionPlan(const std::string data);
+  explicit CalpontSelectExecutionPlan(std::string data);
 
   /**
    * Destructors
    */
-  virtual ~CalpontSelectExecutionPlan();
+  ~CalpontSelectExecutionPlan() override;
 
   /**
    * Access and mutator methods
@@ -366,13 +365,13 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /** sql representation of this select query
    *
    */
-  const std::string data() const
+  const std::string& data() const
   {
     return fData;
   }
-  void data(const std::string data)
+  void data(std::string data)
   {
-    fData = data;
+    fData = std::move(data);
   }
 
   /** session id
@@ -679,7 +678,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fDJSSmallSideLimit = l;
   }
-  uint64_t djsSmallSideLimit()
+  uint64_t djsSmallSideLimit() const
   {
     return fDJSSmallSideLimit;
   }
@@ -688,7 +687,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fDJSLargeSideLimit = l;
   }
-  uint64_t djsLargeSideLimit()
+  uint64_t djsLargeSideLimit() const
   {
     return fDJSLargeSideLimit;
   }
@@ -697,7 +696,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fDJSPartitionSize = l;
   }
-  uint64_t djsPartitionSize()
+  uint64_t djsPartitionSize() const
   {
     return fDJSPartitionSize;
   }
@@ -715,7 +714,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fDJSForceRun = b;
   }
-  bool djsForceRun()
+  bool djsForceRun() const
   {
     return fDJSForceRun;
   }
@@ -724,7 +723,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fMaxPmJoinResultCount = value;
   }
-  uint32_t maxPmJoinResultCount()
+  uint32_t maxPmJoinResultCount() const
   {
     return fMaxPmJoinResultCount;
   }
@@ -733,7 +732,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fUMMemLimit = l;
   }
-  int64_t umMemLimit()
+  int64_t umMemLimit() const
   {
     return fUMMemLimit;
   }
@@ -742,7 +741,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fIsDML = b;
   }
-  bool isDML()
+  bool isDML() const
   {
     return fIsDML;
   }
@@ -762,15 +761,15 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * @note Serialize() assumes that none of the vectors contain NULL pointers.
    */
-  virtual void serialize(messageqcpp::ByteStream&) const;
-  virtual void unserialize(messageqcpp::ByteStream&);
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const CalpontExecutionPlan* t) const;
+  bool operator==(const CalpontExecutionPlan* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -784,7 +783,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const CalpontExecutionPlan* t) const;
+  bool operator!=(const CalpontExecutionPlan* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -863,7 +862,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * A tree of Filter objects
    */
-  ParseTree* fFilters = nullptr;
+  ParseTree* fFilters{nullptr};
   /**
    * A list of CalpontExecutionPlan objects
    */
@@ -875,7 +874,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   /**
    * A tree of having clause condition associated with group by clause
    */
-  ParseTree* fHaving;
+  ParseTree* fHaving{nullptr};
   /**
    * A list of order by columns
    */
@@ -955,7 +954,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   // Derived table involved in the query. For derived table optimization
   std::vector<SCSEP> fSubSelectList;
 
-  boost::uuids::uuid fUuid;
+  boost::uuids::uuid fUuid{};
 
   /* Disk-based join vars */
   uint64_t fDJSSmallSideLimit = 0;

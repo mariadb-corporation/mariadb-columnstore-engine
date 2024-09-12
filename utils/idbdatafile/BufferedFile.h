@@ -22,7 +22,6 @@
 #include "IDBDataFile.h"
 #include <unistd.h>
 
-
 namespace idbdatafile
 {
 /**
@@ -34,22 +33,22 @@ class BufferedFile : public IDBDataFile, boost::noncopyable
 {
  public:
   BufferedFile(const char* fname, const char* mode, unsigned opts);
-  /* virtual */ ~BufferedFile();
+  /* virtual */ ~BufferedFile() override;
 
-  /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count);
-  /* virtual */ ssize_t read(void* ptr, size_t count);
-  /* virtual */ ssize_t write(const void* ptr, size_t count);
-  /* virtual */ int seek(off64_t offset, int whence);
-  /* virtual */ int truncate(off64_t length);
-  /* virtual */ off64_t size();
-  /* virtual */ off64_t tell();
-  /* virtual */ int flush();
-  /* virtual */ time_t mtime();
-  /* virtual */ int fallocate(int mode, off64_t offset, off64_t length);
+  /* virtual */ ssize_t pread(void* ptr, off64_t offset, size_t count) override;
+  /* virtual */ ssize_t read(void* ptr, size_t count) override;
+  /* virtual */ ssize_t write(const void* ptr, size_t count) override;
+  /* virtual */ int seek(off64_t offset, int whence) override;
+  /* virtual */ int truncate(off64_t length) override;
+  /* virtual */ off64_t size() override;
+  /* virtual */ off64_t tell() override;
+  /* virtual */ int flush() override;
+  /* virtual */ time_t mtime() override;
+  /* virtual */ int fallocate(int mode, off64_t offset, off64_t length) override;
 
  protected:
   /* virtual */
-  int close();
+  int close() override;
 
  private:
   void applyOptions(unsigned opts);

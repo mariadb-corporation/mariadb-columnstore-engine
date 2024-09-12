@@ -37,37 +37,38 @@
 
 namespace joblist
 {
-using normalizeFunctionsT = std::vector<std::function<void(const rowgroup::Row& in, rowgroup::Row* out, uint32_t col)>>;
+using normalizeFunctionsT =
+    std::vector<std::function<void(const rowgroup::Row& in, rowgroup::Row* out, uint32_t col)>>;
 
 class TupleUnion : public JobStep, public TupleDeliveryStep
 {
  public:
   TupleUnion(execplan::CalpontSystemCatalog::OID tableOID, const JobInfo& jobInfo);
-  ~TupleUnion();
+  ~TupleUnion() override;
 
-  void run();
-  void join();
+  void run() override;
+  void join() override;
 
-  const std::string toString() const;
-  execplan::CalpontSystemCatalog::OID tableOid() const;
+  const std::string toString() const override;
+  execplan::CalpontSystemCatalog::OID tableOid() const override;
 
   void setInputRowGroups(const std::vector<rowgroup::RowGroup>&);
-  void setOutputRowGroup(const rowgroup::RowGroup&);
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
   void setDistinctFlags(const std::vector<bool>&);
 
-  const rowgroup::RowGroup& getOutputRowGroup() const
+  const rowgroup::RowGroup& getOutputRowGroup() const override
   {
     return outputRG;
   }
-  const rowgroup::RowGroup& getDeliveredRowGroup() const
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override
   {
     return outputRG;
   }
-  void deliverStringTableRowGroup(bool b)
+  void deliverStringTableRowGroup(bool b) override
   {
     outputRG.setUseStringTable(b);
   }
-  bool deliverStringTableRowGroup() const
+  bool deliverStringTableRowGroup() const override
   {
     return outputRG.usesStringTable();
   }
@@ -107,7 +108,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
     fView2 = vw;
   }
 
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
  private:
   struct RowPosition
@@ -115,12 +116,13 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
     uint64_t group : 48;
     uint64_t row : 16;
 
-    inline RowPosition(uint64_t i = 0, uint64_t j = 0) : group(i), row(j){};
+    inline explicit RowPosition(uint64_t i = 0, uint64_t j = 0) : group(i), row(j){};
     static const uint64_t normalizedFlag = 0x800000000000ULL;  // 48th bit is set
   };
 
   void getOutput(rowgroup::RowGroup* rg, rowgroup::Row* row, rowgroup::RGData* data);
-  void addToOutput(rowgroup::Row* r, rowgroup::RowGroup* rg, bool keepit, rowgroup::RGData& data, uint32_t& tmpOutputRowCount);
+  void addToOutput(rowgroup::Row* r, rowgroup::RowGroup* rg, bool keepit, rowgroup::RGData& data,
+                   uint32_t& tmpOutputRowCount);
   void normalize(const rowgroup::Row& in, rowgroup::Row* out, const normalizeFunctionsT& normalizeFunctions);
   void writeNull(rowgroup::Row* out, uint32_t col);
   void readInput(uint32_t);
@@ -159,7 +161,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
   {
     TupleUnion* ts;
     utils::Hasher_r h;
-    Hasher(TupleUnion* t) : ts(t)
+    explicit Hasher(TupleUnion* t) : ts(t)
     {
     }
     uint64_t operator()(const RowPosition&) const;
@@ -167,13 +169,13 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
   struct Eq
   {
     TupleUnion* ts;
-    Eq(TupleUnion* t) : ts(t)
+    explicit Eq(TupleUnion* t) : ts(t)
     {
     }
     bool operator()(const RowPosition&, const RowPosition&) const;
   };
 
-  typedef std::tr1::unordered_set<RowPosition, Hasher, Eq, utils::STLPoolAllocator<RowPosition> > Uniquer_t;
+  typedef std::tr1::unordered_set<RowPosition, Hasher, Eq, utils::STLPoolAllocator<RowPosition>> Uniquer_t;
 
   boost::scoped_ptr<Uniquer_t> uniquer;
   std::vector<rowgroup::RGData> rowMemory;
