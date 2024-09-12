@@ -3100,37 +3100,37 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
   set<uint32_t>& tableSet = tableInfoMap[large].fJoinedTables;
   vector<uint32_t>& adjList = tableInfoMap[large].fAdjacentList;
   uint32_t prevLarge = (uint32_t)getPrevLarge(large, tableInfoMap);
-  bool root = (prevLarge == (uint32_t)-1) ? true : false;
+  bool root = (prevLarge == (uint32_t)-1);
   uint32_t link = large;
   uint32_t cId = -1;
 
   // Get small sides ready.
-  for (vector<uint32_t>::iterator i = adjList.begin(); i != adjList.end(); i++)
+  for (unsigned int& adj : adjList)
   {
-    if (tableInfoMap[*i].fVisited == false)
+    if (!tableInfoMap[adj].fVisited)
     {
-      cId = *i;
-      smallSides.push_back(joinToLargeTable(*i, tableInfoMap, jobInfo, joinOrder, joinEdgesToRestore));
+      cId = adj;
+      smallSides.push_back(joinToLargeTable(adj, tableInfoMap, jobInfo, joinOrder, joinEdgesToRestore));
 
-      tableSet.insert(tableInfoMap[*i].fJoinedTables.begin(), tableInfoMap[*i].fJoinedTables.end());
+      tableSet.insert(tableInfoMap[adj].fJoinedTables.begin(), tableInfoMap[adj].fJoinedTables.end());
     }
   }
 
   // Join with its small sides, if not a leaf node.
-  if (smallSides.size() > 0)
+  if (!smallSides.empty())
   {
     // non-leaf node, need a join
     SJSTEP spjs = tableInfoMap[large].fQuerySteps.back();
-    BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(spjs.get());
-    SubAdapterStep* tsas = dynamic_cast<SubAdapterStep*>(spjs.get());
-    TupleHashJoinStep* thjs = dynamic_cast<TupleHashJoinStep*>(spjs.get());
+    auto* bps = dynamic_cast<BatchPrimitive*>(spjs.get());
+    auto* tsas = dynamic_cast<SubAdapterStep*>(spjs.get());
+    auto* thjs = dynamic_cast<TupleHashJoinStep*>(spjs.get());
 
     // @bug6158, try to put BPS on large side if possible
     if (tsas && smallSides.size() == 1)
     {
       SJSTEP sspjs = tableInfoMap[cId].fQuerySteps.back();
-      BatchPrimitive* sbps = dynamic_cast<BatchPrimitive*>(sspjs.get());
-      TupleHashJoinStep* sthjs = dynamic_cast<TupleHashJoinStep*>(sspjs.get());
+      auto* sbps = dynamic_cast<BatchPrimitive*>(sspjs.get());
+      auto* sthjs = dynamic_cast<TupleHashJoinStep*>(sspjs.get());
 
       if (sbps || (sthjs && sthjs->tokenJoin() == cId))
       {
@@ -3143,7 +3143,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
         largeJoinInfo->fDl = tableInfoMap[large].fDl;
         largeJoinInfo->fRowGroup = tableInfoMap[large].fRowGroup;
 
-        TableJoinMap::iterator mit = jobInfo.tableJoinMap.find(make_pair(large, cId));
+        auto mit = jobInfo.tableJoinMap.find(make_pair(large, cId));
 
         if (mit == jobInfo.tableJoinMap.end())
           throw runtime_error("Join step not found.");
@@ -3158,7 +3158,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
 
         bps = sbps;
         thjs = sthjs;
-        tsas = NULL;
+        tsas = nullptr;
       }
     }
 
@@ -3173,7 +3173,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
     size_t dcf = 0;  // for dictionary column filters, 0 if thjs is null.
     RowGroup largeSideRG = tableInfoMap[large].fRowGroup;
 
-    if (thjs && thjs->tokenJoin() == large)
+    if (thjs && thjs->tokenJoin() == large && thjs->tupleId1() != thjs->tupleId2())
     {
       dcf = thjs->getLargeKeys().size();
       largeSideRG = thjs->getLargeRowGroup();
@@ -3195,9 +3195,9 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
     vector<vector<uint32_t>> smallKeyIndices;
     vector<vector<uint32_t>> largeKeyIndices;
 
-    for (vector<SP_JoinInfo>::iterator i = smallSides.begin(); i != smallSides.end(); i++)
+    for (auto& smallSide : smallSides)
     {
-      JoinInfo* info = i->get();
+      JoinInfo* info = smallSide.get();
       smallSideDLs.push_back(info->fDl);
       smallSideRGs.push_back(info->fRowGroup);
       jointypes.push_back(info->fJoinData.fTypes[0]);
@@ -3207,8 +3207,8 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
       vector<uint32_t> largeIndices;
       const vector<uint32_t>& keys1 = info->fJoinData.fLeftKeys;
       const vector<uint32_t>& keys2 = info->fJoinData.fRightKeys;
-      vector<uint32_t>::const_iterator k1 = keys1.begin();
-      vector<uint32_t>::const_iterator k2 = keys2.begin();
+      auto k1 = keys1.begin();
+      auto k2 = keys2.begin();
       uint32_t stid = getTableKey(jobInfo, *k1);
       tableNames.push_back(jobInfo.keyInfo->tupleKeyVec[stid].fTable);
 
@@ -3267,7 +3267,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
       traces.push_back(oss.str());
     }
 
-    if (bps || tsas)
+    if (bps || tsas || (thjs && thjs->tupleId1() == thjs->tupleId2()))
     {
       thjs = new TupleHashJoinStep(jobInfo);
       thjs->tableOid1(smallSides[0]->fTableOid);
@@ -4379,10 +4379,14 @@ inline void joinTables(JobStepVector& joinSteps, TableInfoMap& tableInfoMap, Job
 {
   uint32_t largestTable = getLargestTable(jobInfo, tableInfoMap, overrideLargeSideEstimate);
 
-  if (jobInfo.outerOnTable.size() == 0)
+  if (jobInfo.outerOnTable.empty())
+  {
     joinToLargeTable(largestTable, tableInfoMap, jobInfo, joinOrder, jobInfo.joinEdgesToRestore);
+  }
   else
+  {
     joinTablesInOrder(largestTable, joinSteps, tableInfoMap, jobInfo, joinOrder);
+  }
 }
 
 void makeNoTableJobStep(JobStepVector& querySteps, JobStepVector& projectSteps,
