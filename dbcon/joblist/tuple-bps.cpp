@@ -19,7 +19,7 @@
 //  $Id: tuple-bps.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -77,7 +77,7 @@ using namespace querytele;
 
 #include "columnwidth.h"
 #include "pseudocolumn.h"
-//#define DEBUG 1
+// #define DEBUG 1
 
 extern boost::mutex fileLock_g;
 
@@ -556,14 +556,14 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       throw runtime_error(oss.str());
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       oss << " due to:  " << ex.what();
       throw runtime_error(oss.str());
     }
-    catch(...)
+    catch (...)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
@@ -1674,17 +1674,19 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
   boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
-
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
     fDec->write(uniqueID, jobs[i].msg);
     tplLock.lock();
+    // A single msg here is a message for a processed block.
     msgsSent += jobs[i].expectedResponses;
 
     if (recvWaiting)
       condvar.notify_all();
 
-    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << LOGICAL_EXTENT_CONVERTER) && !fDie)
+    // min(BlocksPerJob) = 16
+    // Send not more than fMaxOutstandingRequests jobs out.
+    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie)
     {
       sendWaiting = true;
       condvarWakeupProducer.wait(tplLock);
@@ -2007,7 +2009,6 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   uint32_t i;
   uint32_t lbidsToScan;
   uint32_t blocksToScan;
-  uint32_t blocksPerJob;
   LBID_t startingLBID;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
   boost::shared_ptr<map<int, int>> dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
@@ -2777,8 +2778,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
              << totalBlockedReadCount << "/" << totalBlockedWriteCount << "; output size-" << ridsReturned
              << endl
              << "\tPartitionBlocksEliminated-" << fNumBlksSkipped << "; MsgBytesIn-" << msgBytesInKB << "KB"
-             << "; MsgBytesOut-" << msgBytesOutKB << "KB"
-             << "; TotalMsgs-" << totalMsgs << endl
+             << "; MsgBytesOut-" << msgBytesOutKB << "KB" << "; TotalMsgs-" << totalMsgs << endl
              << "\t1st read " << dlTimes.FirstReadTimeString() << "; EOI " << dlTimes.EndOfInputTimeString()
              << "; runtime-" << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
              << "s\n\tUUID " << uuids::to_string(fStepUuid) << "\n\tQuery UUID "
@@ -3175,9 +3175,8 @@ bool TupleBPS::deliverStringTableRowGroup() const
 void TupleBPS::formatMiniStats()
 {
   ostringstream oss;
-  oss << "BPS "
-      << "PM " << alias() << " " << fTableOid << " " << fBPP->toMiniString() << " " << fPhysicalIO << " "
-      << fCacheIO << " " << fNumBlksSkipped << " "
+  oss << "BPS " << "PM " << alias() << " " << fTableOid << " " << fBPP->toMiniString() << " " << fPhysicalIO
+      << " " << fCacheIO << " " << fNumBlksSkipped << " "
       << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << ridsReturned
       << " ";
 

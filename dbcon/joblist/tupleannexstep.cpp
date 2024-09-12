@@ -18,7 +18,7 @@
 
 //  $Id: tupleannexstep.cpp 9661 2013-07-01 20:33:05Z pleblanc $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -250,10 +250,6 @@ void TupleAnnexStep::run()
     // Indexing begins with 1
     fRunnersList.resize(fMaxThreads);
     fInputIteratorsList.resize(fMaxThreads + 1);
-
-    // Activate stats collecting before CS spawns threads.
-    if (traceOn())
-      dlTimes.setFirstReadTime();
 
     // *DRRTUY Make this block conditional
     StepTeleStats sts;
@@ -858,7 +854,7 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
         break;
       }
     }  // end of limit bound while loop
-  }    // end of if-else
+  }  // end of if-else
 
   if (fRowGroupOut.getRowCount() > 0)
   {
@@ -1045,7 +1041,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
         break;
       }
     }  // end of limit bound while loop
-  }    // end of if-else
+  }  // end of if-else
 
   if (fRowGroupOut.getRowCount() > 0)
   {
@@ -1065,9 +1061,6 @@ void TupleAnnexStep::finalizeParallelOrderBy()
 
   if (traceOn())
   {
-    if (dlTimes.FirstReadTime().tv_sec == 0)
-      dlTimes.setFirstReadTime();
-
     dlTimes.setLastReadTime();
     dlTimes.setEndOfInputTime();
     printCalTrace();
@@ -1102,6 +1095,13 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
   try
   {
     more = fInputDL->next(fInputIteratorsList[id], &rgDataIn);
+
+    // Stats collecting.
+    if (more && (id == 1) && traceOn())
+    {
+      dlTimes.setFirstReadTime();
+    }
+
     if (more)
       dlOffset++;
 
@@ -1241,14 +1241,9 @@ void TupleAnnexStep::formatMiniStats()
 {
   ostringstream oss;
   oss << "TNS ";
-  oss << "UM "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- " << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-      << fRowsReturned << " ";
+  oss << "UM " << "- " << "- " << "- " << "- " << "- " << "- "
+      << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << fRowsReturned
+      << " ";
   fMiniInfo += oss.str();
 }
 
