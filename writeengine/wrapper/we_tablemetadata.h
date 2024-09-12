@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include "we_type.h"
 #include "brmtypes.h"
 #include <map>
@@ -82,7 +82,7 @@ class TableMetaData
  private:
   /** Constuctors */
   explicit TableMetaData();
-  explicit TableMetaData(const TableMetaData& rhs);
+  TableMetaData(const TableMetaData& rhs);
   ~TableMetaData();
   static boost::mutex map_mutex;
   static TableMetaDataMap fTableMetaDataMap;
@@ -93,4 +93,3 @@ class TableMetaData
 }  // namespace WriteEngine
 
 #undef EXPORT
-

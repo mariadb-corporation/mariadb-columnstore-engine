@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "my_global.h"
+// #include "my_global.h"
 /* Macros to make switching between C and C++ mode easier */
 #ifdef __cplusplus
 #define C_MODE_START \
@@ -22,16 +22,12 @@ class SQL_CRYPT
   uint shift;
 
  public:
-  SQL_CRYPT()
-  {
-  }
-  SQL_CRYPT(ulong* seed)
+  SQL_CRYPT() = default;
+  explicit SQL_CRYPT(ulong* seed)
   {
     init(seed);
   }
-  ~SQL_CRYPT()
-  {
-  }
+  ~SQL_CRYPT() = default;
   void init(ulong* seed);
   void reinit()
   {

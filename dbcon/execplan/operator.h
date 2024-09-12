@@ -70,23 +70,23 @@ class Operator : public TreeNode
 {
  public:
   Operator();
-  Operator(const std::string& operatorName);
+  explicit Operator(const std::string& operatorName);
   Operator(const Operator& rhs);
 
-  virtual ~Operator();
+  ~Operator() override;
 
-  virtual const std::string toString() const override;
-  virtual const std::string data() const override
+  const std::string toString() const override;
+  const std::string data() const override
   {
     return fData;
   }
-  virtual void data(const std::string data) override;
+  void data(const std::string data) override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual Operator* clone() const override
+  inline Operator* clone() const override
   {
     return new Operator(*this);
   }
@@ -101,15 +101,15 @@ class Operator : public TreeNode
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -123,7 +123,7 @@ class Operator : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -139,7 +139,7 @@ class Operator : public TreeNode
    */
   virtual void reverseOp();
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  protected:
   std::string fData;
@@ -231,11 +231,11 @@ class Operator : public TreeNode
   virtual void setOpType(Type& l, Type& r)
   {
   }
-  virtual void operationType(const Type& ot) override
+  void operationType(const Type& ot) override
   {
     fOperationType = ot;
   }
-  virtual const Type& operationType() const override
+  const Type& operationType() const override
   {
     return fOperationType;
   }

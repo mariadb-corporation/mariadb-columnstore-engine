@@ -38,7 +38,7 @@ struct ErrorInfo
   uint32_t errCode;
   std::string errMsg;
   // for backward compat
-  ErrorInfo(uint16_t v) : errCode(v)
+  explicit ErrorInfo(uint16_t v) : errCode(v)
   {
   }
   ErrorInfo& operator=(uint16_t v)
@@ -51,4 +51,3 @@ struct ErrorInfo
 typedef boost::shared_ptr<ErrorInfo> SErrorInfo;
 
 }  // namespace joblist
-

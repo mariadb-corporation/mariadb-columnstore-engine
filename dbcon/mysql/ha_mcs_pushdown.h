@@ -38,10 +38,10 @@ enum mcs_handler_types_t
 
 struct mcs_handler_info
 {
-  mcs_handler_info() : hndl_ptr(NULL), hndl_type(LEGACY){};
-  mcs_handler_info(mcs_handler_types_t type) : hndl_ptr(NULL), hndl_type(type){};
+  mcs_handler_info() : hndl_ptr(nullptr), hndl_type(LEGACY){};
+  mcs_handler_info(mcs_handler_types_t type) : hndl_ptr(nullptr), hndl_type(type){};
   mcs_handler_info(void* ptr, mcs_handler_types_t type) : hndl_ptr(ptr), hndl_type(type){};
-  ~mcs_handler_info(){};
+  ~mcs_handler_info() = default;
   void* hndl_ptr;
   mcs_handler_types_t hndl_type;
 };

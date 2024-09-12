@@ -40,23 +40,23 @@ class RTSCommand : public Command
 {
  public:
   RTSCommand();
-  virtual ~RTSCommand();
+  ~RTSCommand() override;
 
-  void execute();
-  void project();
-  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
-  uint64_t getLBID();
-  void nextLBID();
-  void createCommand(messageqcpp::ByteStream&);
-  void resetCommand(messageqcpp::ByteStream&);
-  SCommand duplicate();
+  void execute() override;
+  void project() override;
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col) override;
+  uint64_t getLBID() override;
+  void nextLBID() override;
+  void createCommand(messageqcpp::ByteStream&) override;
+  void resetCommand(messageqcpp::ByteStream&) override;
+  SCommand duplicate() override;
   bool operator==(const RTSCommand&) const;
   bool operator!=(const RTSCommand&) const;
 
-  void setBatchPrimitiveProcessor(BatchPrimitiveProcessor*);
+  void setBatchPrimitiveProcessor(BatchPrimitiveProcessor*) override;
 
   /* Put bootstrap code here (ie, build the template primitive msg) */
-  void prep(int8_t outputType, bool makeAbsRids);
+  void prep(int8_t outputType, bool makeAbsRids) override;
   uint8_t isPassThru()
   {
     return passThru;
@@ -65,10 +65,10 @@ class RTSCommand : public Command
   {
     absNull = a;
   }
-  void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids);
+  void getLBIDList(uint32_t loopCount, std::vector<int64_t>* lbids) override;
 
   // TODO: do we need to reference either col or dict?
-  int getCompType() const
+  int getCompType() const override
   {
     return dict.getCompType();
   }

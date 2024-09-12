@@ -161,9 +161,10 @@ DataList<element_t>::DataList()
  , consumersFinished(0)
  , fElemDiskFirstSize(sizeof(uint64_t))
  , fElemDiskSecondSize(sizeof(uint64_t))
- , fOID(0){
-       // pthread_mutex_init(&mutex, NULL);
-   };
+ , fOID(0)
+{
+  // pthread_mutex_init(&mutex, NULL);
+}
 
 template <typename element_t>
 DataList<element_t>::DataList(const DataList<element_t>& dl)
@@ -174,12 +175,13 @@ DataList<element_t>::DataList(const DataList<element_t>& dl)
   consumersFinished = dl.consumersFinished;
   fElemDiskFirstSize = dl.fElemDiskFirstSize;
   fElemDiskSecondSize = dl.fElemDiskSecondSize;
-};
+}
 
 template <typename element_t>
-DataList<element_t>::~DataList(){
-    // pthread_mutex_destroy(&mutex);
-};
+DataList<element_t>::~DataList()
+{
+  // pthread_mutex_destroy(&mutex);
+}
 
 template <typename element_t>
 DataList<element_t>& DataList<element_t>::operator=(const DataList<element_t>& dl)
@@ -189,25 +191,25 @@ DataList<element_t>& DataList<element_t>::operator=(const DataList<element_t>& d
   consumersFinished = dl.consumersFinished;
   fElemDiskFirstSize = dl.fElemDiskFirstSize;
   fElemDiskSecondSize = dl.fElemDiskSecondSize;
-};
+}
 
 template <typename element_t>
 void DataList<element_t>::endOfInput()
 {
   noMoreInput = true;
-};
+}
 
 template <typename element_t>
 void DataList<element_t>::lock()
 {
   mutex.lock();  // pthread_mutex_lock(&mutex);
-};
+}
 
 template <typename element_t>
 void DataList<element_t>::unlock()
 {
   mutex.unlock();  // pthread_mutex_unlock(&mutex);
-};
+}
 
 template <typename element_t>
 void DataList<element_t>::setDiskElemSize(uint32_t size1st, uint32_t size2nd)

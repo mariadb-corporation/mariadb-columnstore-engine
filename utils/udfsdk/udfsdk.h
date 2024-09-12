@@ -108,9 +108,7 @@ class MCS_add : public funcexp::Func
   /*
    * Destructor. MCS_add does not need to do anything here to clean up.
    */
-  virtual ~MCS_add()
-  {
-  }
+  ~MCS_add() override = default;
 
   /**
    * Decide on the function's operation type
@@ -135,8 +133,8 @@ class MCS_add : public funcexp::Func
    * This function is called only one from the connector. Once it's determined, it
    * will be passed to the getXXXval() APIs during function evaluation.
    */
-  execplan::CalpontSystemCatalog::ColType operationType(funcexp::FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      funcexp::FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   /**
    * Returns an integer result of this function.
@@ -154,47 +152,47 @@ class MCS_add : public funcexp::Func
    * @parm op_ct the operation type that is determined in operationType().
    *
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+  int64_t getIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a double result of this function.
    */
 
-  virtual double getDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                              execplan::CalpontSystemCatalog::ColType& op_ct);
+  double getDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a long double result of this function.
    */
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct);
+  long double getLongDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override;
   /**
    * Returns a float result of this function.
    */
-  virtual float getFloatVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+  float getFloatVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a string result of this function.
    */
-  virtual std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct);
+  std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a bool result of this function.
    */
-  virtual bool getBoolVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                          execplan::CalpontSystemCatalog::ColType& op_ct);
+  bool getBoolVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a decimal result of this function.
    *
    * IDB_Decimal is defined in ~/execplan/treenode.h
    */
-  virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                              execplan::CalpontSystemCatalog::ColType& op_ct);
+  execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns an integer representation of a date result of the function.
@@ -202,8 +200,8 @@ class MCS_add : public funcexp::Func
    * Check the date/time functions in ~/utils/funcexp for implementation
    * example of this API.
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct);
+  int32_t getDateIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns an integer representation of a datetime result of the function.
@@ -211,8 +209,8 @@ class MCS_add : public funcexp::Func
    * Check the date/time functions in ~/utils/funcexp for implementation
    * example of this API.
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                    execplan::CalpontSystemCatalog::ColType& op_ct);
+  int64_t getDatetimeIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /**
@@ -233,59 +231,57 @@ class MCS_isnull : public funcexp::Func
   /*
    * Destructor. MCS_add does not need to do anything here to clean up.
    */
-  virtual ~MCS_isnull()
-  {
-  }
+  ~MCS_isnull() override = default;
 
   /**
    * Decide on the function's operation type
    */
-  execplan::CalpontSystemCatalog::ColType operationType(funcexp::FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      funcexp::FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   /**
    * Returns an integer result of this function.
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+  int64_t getIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a double result of this function.
    */
-  virtual double getDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                              execplan::CalpontSystemCatalog::ColType& op_ct);
+  double getDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a double result of this function.
    */
-  virtual long double getLongDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct);
+  long double getLongDoubleVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a float result of this function.
    */
-  virtual float getFloatVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct);
+  float getFloatVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a string result of this function.
    */
-  virtual std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct);
+  std::string getStrVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a bool result of this function.
    */
-  virtual bool getBoolVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                          execplan::CalpontSystemCatalog::ColType& op_ct);
+  bool getBoolVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns a decimal result of this function.
    *
    * IDB_Decimal is defined in ~/execplan/treenode.h
    */
-  virtual execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                              execplan::CalpontSystemCatalog::ColType& op_ct);
+  execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns an integer representation of a date result of the function.
@@ -293,8 +289,8 @@ class MCS_isnull : public funcexp::Func
    * Check the date/time functions in ~/utils/funcexp for implementation
    * example of this API.
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct);
+  int32_t getDateIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   /**
    * Returns an integer representation of a datetime result of the function.
@@ -302,11 +298,10 @@ class MCS_isnull : public funcexp::Func
    * Check the date/time functions in ~/utils/funcexp for implementation
    * example of this API.
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
-                                    execplan::CalpontSystemCatalog::ColType& op_ct);
+  int64_t getDatetimeIntVal(rowgroup::Row& row, funcexp::FunctionParm& fp, bool& isNull,
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 }  // namespace udfsdk
 
 #undef EXPORT
-

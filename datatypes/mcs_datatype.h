@@ -564,7 +564,7 @@ class SessionParam
   long m_timeZone;
 
  public:
-  SessionParam(long timeZone) : m_timeZone(timeZone)
+  explicit SessionParam(long timeZone) : m_timeZone(timeZone)
   {
   }
   long timeZone() const
@@ -633,7 +633,7 @@ class SimpleValue
 class SimpleValueSInt64 : public SimpleValue
 {
  public:
-  SimpleValueSInt64(int64_t value) : SimpleValue(value, 0, 0)
+  explicit SimpleValueSInt64(int64_t value) : SimpleValue(value, 0, 0)
   {
   }
 };
@@ -641,7 +641,7 @@ class SimpleValueSInt64 : public SimpleValue
 class SimpleValueUInt64 : public SimpleValue
 {
  public:
-  SimpleValueUInt64(uint64_t value) : SimpleValue(static_cast<int64_t>(value), 0, 0)
+  explicit SimpleValueUInt64(uint64_t value) : SimpleValue(static_cast<int64_t>(value), 0, 0)
   {
   }
 };
@@ -649,7 +649,7 @@ class SimpleValueUInt64 : public SimpleValue
 class SimpleValueSInt128 : public SimpleValue
 {
  public:
-  SimpleValueSInt128(int128_t value) : SimpleValue(0, value, 0)
+  explicit SimpleValueSInt128(int128_t value) : SimpleValue(0, value, 0)
   {
   }
 };
@@ -797,7 +797,7 @@ class MinMaxPartitionInfo : public MinMaxInfo
 
  public:
   MinMaxPartitionInfo() : m_status(0){};
-  MinMaxPartitionInfo(const BRM::EMEntry& entry);
+  explicit MinMaxPartitionInfo(const BRM::EMEntry& entry);
   void set_invalid()
   {
     m_status |= CPINVALID;
@@ -916,8 +916,8 @@ class DatabaseQualifiedColumnName
   std::string m_column;
 
  public:
-  DatabaseQualifiedColumnName(const std::string& db, const std::string& table, const std::string& column)
-   : m_db(db), m_table(table), m_column(column)
+  DatabaseQualifiedColumnName(std::string db, std::string table, std::string column)
+   : m_db(std::move(db)), m_table(std::move(table)), m_column(std::move(column))
   {
   }
   const std::string& db() const
@@ -937,9 +937,8 @@ class DatabaseQualifiedColumnName
 class StoreField
 {
  public:
-  virtual ~StoreField()
-  {
-  }
+  virtual ~StoreField() = default;
+
   virtual int32_t colWidth() const = 0;
   virtual int32_t precision() const = 0;
   virtual int32_t scale() const = 0;
@@ -967,9 +966,8 @@ class StoreField
 class WriteBatchField
 {
  public:
-  virtual ~WriteBatchField()
-  {
-  }
+  virtual ~WriteBatchField() = default;
+
   virtual size_t ColWriteBatchDate(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchDatetime(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
   virtual size_t ColWriteBatchTime(const unsigned char* buf, bool nullVal, ColBatchWriter& ci) = 0;
@@ -1019,9 +1017,8 @@ class TypeHandler
   static const TypeHandler* find(SystemCatalog::ColDataType typeCode,
                                  const SystemCatalog::TypeAttributesStd& attr);
   static const TypeHandler* find_by_ddltype(const ddlpackage::ColumnType& ct);
-  virtual ~TypeHandler()
-  {
-  }
+  virtual ~TypeHandler() = default;
+
   virtual const string& name() const = 0;
   virtual const string print(const SystemCatalog::TypeAttributesStd& attr) const
   {
@@ -1049,11 +1046,11 @@ class TypeHandler
                                                   const SimpleColumnParam& prm) const = 0;
   virtual SimpleValue getMinValueSimple() const
   {
-    return SimpleValue(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::min(), 0);
+    return {std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::min(), 0};
   }
   virtual SimpleValue getMaxValueSimple() const
   {
-    return SimpleValue(std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::max(), 0);
+    return {std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::max(), 0};
   }
   virtual SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                                     const char* str, round_style_t& rf) const = 0;
@@ -1121,18 +1118,18 @@ class TypeHandlerBit : public TypeHandler
                                           const SimpleColumnParam& prm) const override
   {
     idbassert(0);
-    return NULL;
+    return nullptr;
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override
   {
     idbassert(0);
-    return SimpleValue();
+    return {};
   }
   boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
   {
     // TODO: How to communicate with write engine?
-    return boost::any();
+    return {};
   }
   boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
                                const ConvertFromStringParam& prm, const std::string& str,
@@ -1921,11 +1918,11 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   }
   SimpleValue getMinValueSimple() const override
   {
-    return SimpleValue(std::numeric_limits<int64_t>::min(), datatypes::minInt128, 0);
+    return {std::numeric_limits<int64_t>::min(), datatypes::minInt128, 0};
   }
   SimpleValue getMaxValueSimple() const override
   {
-    return SimpleValue(std::numeric_limits<int64_t>::max(), datatypes::maxInt128, 0);
+    return {std::numeric_limits<int64_t>::max(), datatypes::maxInt128, 0};
   }
   MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
@@ -2033,7 +2030,7 @@ class TypeHandlerReal : public TypeHandler
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override
   {
-    return SimpleValue();  // QQ: real types were not handled in IDB_format()
+    return {};  // QQ: real types were not handled in IDB_format()
   }
   std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
   {
@@ -2175,14 +2172,14 @@ class TypeHandlerSLongDouble : public TypeHandlerReal
   boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
   {
     // QQ: DDLPackageProcessor::getNullValueForType() did not handle LONGDOUBLE
-    return boost::any();
+    return {};
   }
   boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
                                const ConvertFromStringParam& prm, const std::string& str,
                                bool& pushWarning) const override
   {
     throw logging::QueryDataExcept("convertColumnData: unknown column data type.", logging::dataTypeErr);
-    return boost::any();
+    return {};
   }
   const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
   {
@@ -2394,7 +2391,7 @@ class TypeHandlerClob : public TypeHandlerStr
   }
   boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
   {
-    return boost::any();  // QQ
+    return {};  // QQ
   }
   boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
                                const ConvertFromStringParam& prm, const std::string& str,

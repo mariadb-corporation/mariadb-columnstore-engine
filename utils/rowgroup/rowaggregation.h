@@ -357,11 +357,11 @@ class GroupConcatAg
   explicit GroupConcatAg(SP_GroupConcat&);
   virtual ~GroupConcatAg();
 
-  virtual void initialize(){};
-  virtual void processRow(const rowgroup::Row&){};
-  virtual void merge(const rowgroup::Row&, uint64_t){};
+  virtual void initialize() {};
+  virtual void processRow(const rowgroup::Row&) {};
+  virtual void merge(const rowgroup::Row&, uint64_t) {};
 
-  uint8_t* getResult()
+  virtual uint8_t* getResult()
   {
     return nullptr;
   }
@@ -392,7 +392,8 @@ class RowAggregation : public messageqcpp::Serializeable
   RowAggregation();
   RowAggregation(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                  const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {}, bool withRollup = false);
+                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessMemLimit = {},
+                 bool withRollup = false);
   RowAggregation(const RowAggregation& rhs);
 
   /** @brief RowAggregation default destructor
@@ -426,7 +427,15 @@ class RowAggregation : public messageqcpp::Serializeable
     initialize();
   }
 
-  void clearRollup() { fRollupFlag = false; }
+  void clearRollup()
+  {
+    fRollupFlag = false;
+  }
+
+  bool hasRollup() const
+  {
+    return fRollupFlag;
+  }
 
   /** @brief Define content of data to be joined
    *
@@ -638,9 +647,9 @@ class RowAggregation : public messageqcpp::Serializeable
   std::unique_ptr<RGData> fCurRGData;
   bool fRollupFlag = false;
 
-  std::string fTmpDir = config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+  std::string fTmpDir =
+      config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
   std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
-
 };
 
 //------------------------------------------------------------------------------
@@ -653,9 +662,7 @@ class RowAggregationUM : public RowAggregation
  public:
   /** @brief RowAggregationUM constructor
    */
-  RowAggregationUM()
-  {
-  }
+  RowAggregationUM() = default;
   RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                    boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
@@ -829,9 +836,7 @@ class RowAggregationUMP2 : public RowAggregationUM
  public:
   /** @brief RowAggregationUM constructor
    */
-  RowAggregationUMP2()
-  {
-  }
+  RowAggregationUMP2() = default;
   RowAggregationUMP2(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                      const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                      boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
@@ -871,9 +876,7 @@ class RowAggregationDistinct : public RowAggregationUMP2
  public:
   /** @brief RowAggregationDistinct constructor
    */
-  RowAggregationDistinct()
-  {
-  }
+  RowAggregationDistinct() = default;
   RowAggregationDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                          const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                          boost::shared_ptr<int64_t> sessionMemLimit);
@@ -938,9 +941,7 @@ class RowAggregationSubDistinct : public RowAggregationUM
  public:
   /** @brief RowAggregationSubDistinct constructor
    */
-  RowAggregationSubDistinct()
-  {
-  }
+  RowAggregationSubDistinct() = default;
   RowAggregationSubDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                             const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                             joblist::ResourceManager*, boost::shared_ptr<int64_t> sessionMemLimit);
@@ -979,9 +980,7 @@ class RowAggregationMultiDistinct : public RowAggregationDistinct
  public:
   /** @brief RowAggregationMultiDistinct constructor
    */
-  RowAggregationMultiDistinct()
-  {
-  }
+  RowAggregationMultiDistinct() = default;
   RowAggregationMultiDistinct(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                               const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
                               joblist::ResourceManager*, boost::shared_ptr<int64_t> sessionMemLimit);

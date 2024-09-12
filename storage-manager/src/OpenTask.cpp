@@ -19,8 +19,7 @@
 #include "messageFormat.h"
 #include "SMLogging.h"
 #include <sys/stat.h>
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
 
 using namespace std;
 
@@ -30,9 +29,7 @@ OpenTask::OpenTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
 
-OpenTask::~OpenTask()
-{
-}
+OpenTask::~OpenTask() = default;
 
 bool OpenTask::run()
 {
@@ -58,12 +55,12 @@ bool OpenTask::run()
     return false;
   }
 
-  open_cmd* cmd = (open_cmd*)buf;
+  auto* cmd = (open_cmd*)buf;
 
 #ifdef SM_TRACE
   logger->log(LOG_DEBUG, "open filename %s mode %o.", cmd->filename, cmd->openmode);
 #endif
-  sm_response* resp = (sm_response*)buf;
+  auto* resp = (sm_response*)buf;
   int err;
 
   try

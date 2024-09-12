@@ -24,12 +24,12 @@ namespace joblist
 class PseudoCCJL : public ColumnCommandJL
 {
  public:
-  PseudoCCJL(const PseudoColStep&);
-  virtual ~PseudoCCJL();
+  explicit PseudoCCJL(const PseudoColStep&);
+  ~PseudoCCJL() override;
 
-  virtual void createCommand(messageqcpp::ByteStream&) const;
-  virtual void runCommand(messageqcpp::ByteStream&) const;
-  virtual std::string toString();
+  void createCommand(messageqcpp::ByteStream&) const override;
+  void runCommand(messageqcpp::ByteStream&) const override;
+  std::string toString() override;
   uint32_t getFunction() const
   {
     return function;

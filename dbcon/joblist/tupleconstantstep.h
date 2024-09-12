@@ -32,34 +32,34 @@ class TupleConstantStep : public JobStep, public TupleDeliveryStep
  public:
   /** @brief TupleConstantStep constructor
    */
-  TupleConstantStep(const JobInfo& jobInfo);
+  explicit TupleConstantStep(const JobInfo& jobInfo);
 
   /** @brief TupleConstantStep destructor
    */
-  ~TupleConstantStep();
+  ~TupleConstantStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void join method
    */
-  void join();
+  void join() override;
 
   /** @brief virtual string toString method
    */
-  const std::string toString() const;
+  const std::string toString() const override;
 
-  void setOutputRowGroup(const rowgroup::RowGroup&);
-  const rowgroup::RowGroup& getOutputRowGroup() const;
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
   virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
   virtual void fillInConstants(const rowgroup::Row& rowIn, rowgroup::Row& rowOut);
-  static SJSTEP addConstantStep(const JobInfo& jobInfo, const rowgroup::RowGroup* rg = NULL);
+  static SJSTEP addConstantStep(const JobInfo& jobInfo, const rowgroup::RowGroup* rg = nullptr);
 
  protected:
   virtual void execute();
@@ -93,7 +93,7 @@ class TupleConstantStep : public JobStep, public TupleDeliveryStep
   class Runner
   {
    public:
-    Runner(TupleConstantStep* step) : fStep(step)
+    explicit Runner(TupleConstantStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -114,26 +114,26 @@ class TupleConstantOnlyStep : public TupleConstantStep
  public:
   /** @brief TupleConstantOnlyStep constructor
    */
-  TupleConstantOnlyStep(const JobInfo& jobInfo);
+  explicit TupleConstantOnlyStep(const JobInfo& jobInfo);
 
   /** @brief TupleConstantOnlyStep destructor
    */
-  ~TupleConstantOnlyStep();
+  ~TupleConstantOnlyStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void initialize method
    */
-  virtual void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn);
+  void initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn) override;
 
-  const std::string toString() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  const std::string toString() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
  protected:
   using TupleConstantStep::fillInConstants;
-  void fillInConstants();
+  void fillInConstants() override;
 };
 
 class TupleConstantBooleanStep : public TupleConstantStep
@@ -145,11 +145,11 @@ class TupleConstantBooleanStep : public TupleConstantStep
 
   /** @brief TupleConstantBooleanStep destructor
    */
-  ~TupleConstantBooleanStep();
+  ~TupleConstantBooleanStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void initialize method
       For some reason, this doesn't match the base class's virtual signature.
@@ -159,8 +159,8 @@ class TupleConstantBooleanStep : public TupleConstantStep
   using TupleConstantStep::initialize;
   void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
 
-  const std::string toString() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  const std::string toString() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
   virtual void boolValue(bool b)
   {
@@ -172,14 +172,14 @@ class TupleConstantBooleanStep : public TupleConstantStep
   }
 
  protected:
-  void execute()
+  void execute() override
   {
   }
   using TupleConstantStep::fillInConstants;
-  void fillInConstants()
+  void fillInConstants() override
   {
   }
-  void constructContanstRow(const JobInfo& jobInfo)
+  void constructContanstRow(const JobInfo& jobInfo) override
   {
   }
 
@@ -188,4 +188,3 @@ class TupleConstantBooleanStep : public TupleConstantStep
 };
 
 }  // namespace joblist
-

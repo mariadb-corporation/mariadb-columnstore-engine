@@ -38,7 +38,7 @@ class Downloader : public ConfigListener
 {
  public:
   Downloader();
-  virtual ~Downloader();
+  ~Downloader() override;
 
   // caller owns the memory for the strings.
   // errors are reported through errnos
@@ -49,7 +49,7 @@ class Downloader : public ConfigListener
 
   void printKPIs() const;
 
-  virtual void configListener() override;
+  void configListener() override;
 
  private:
   uint maxDownloads;
@@ -73,10 +73,10 @@ class Downloader : public ConfigListener
   */
   struct Download : public ThreadPool::Job
   {
-    Download(const std::string& source, const boost::filesystem::path& _dlPath, boost::mutex*, Downloader*);
-    Download(const std::string& source);
-    virtual ~Download();
-    void operator()();
+    Download(std::string source, boost::filesystem::path _dlPath, boost::mutex*, Downloader*);
+    explicit Download(std::string source);
+    ~Download() override;
+    void operator()() override;
     boost::filesystem::path dlPath;
     const std::string key;
     int dl_errno;  // to propagate errors from the download job to the caller

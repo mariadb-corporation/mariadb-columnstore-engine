@@ -18,11 +18,9 @@
 
 //  $Id: frameboundrange.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
 #include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include "idberrorinfo.h"

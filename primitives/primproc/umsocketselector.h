@@ -34,6 +34,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
@@ -80,7 +81,7 @@ class UmSocketSelector
   /** @brief UmSocketSelector destructor
    *
    */
-  ~UmSocketSelector(){};
+  ~UmSocketSelector() = default;
 
   /** @brief Accessor to total number of UM IP's in Columnstore.xml.
    *
@@ -152,15 +153,15 @@ class UmModuleIPs
    *
    * @param moduleName (in) UM module name for this UmModuleIPs object.
    */
-  explicit UmModuleIPs(const std::string& moduleName)
-   : fUmModuleName(moduleName), fNextUmIPSocketIdx(NEXT_IP_SOCKET_UNASSIGNED)
+  explicit UmModuleIPs(std::string moduleName)
+   : fUmModuleName(std::move(moduleName)), fNextUmIPSocketIdx(NEXT_IP_SOCKET_UNASSIGNED)
   {
   }
 
   /** @brief UmModuleIPs destructor.
    *
    */
-  ~UmModuleIPs(){};
+  ~UmModuleIPs() = default;
 
   /** @brief Accessor to number of IP's from Columnstore.xml for this UM.
    *
@@ -258,15 +259,13 @@ class UmIPSocketConns
   /** @brief UmIPSocketConns destructor.
    *
    */
-  ~UmIPSocketConns()
-  {
-  }
+  ~UmIPSocketConns() = default;
 
   /** @brief Accessor to the IP address for this UmIPSocketConns object.
    *
    * @return IP address (in network byte order).
    */
-  in_addr_t ipAddress()
+  in_addr_t ipAddress() const
   {
     return fIpAddress;
   }

@@ -26,11 +26,12 @@ namespace storagemanager
 class CloudStorage
 {
  public:
-  virtual ~CloudStorage(){};
+  virtual ~CloudStorage() = default;
   /* These behave like syscalls.  return code -1 means an error, and errno is set */
-  virtual int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL) = 0;
+  virtual int getObject(const std::string& sourceKey, const std::string& destFile,
+                        size_t* size = nullptr) = 0;
   virtual int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data,
-                        size_t* size = NULL) = 0;
+                        size_t* size = nullptr) = 0;
   virtual int putObject(const std::string& sourceFile, const std::string& destKey) = 0;
   virtual int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey) = 0;
   virtual int deleteObject(const std::string& key) = 0;

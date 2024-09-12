@@ -68,10 +68,8 @@ class Func
 {
  public:
   Func();
-  Func(const std::string& funcName);
-  virtual ~Func()
-  {
-  }
+  explicit Func(const std::string& funcName);
+  virtual ~Func() = default;
 
   const std::string funcName() const
   {
@@ -116,7 +114,7 @@ class Func
   virtual std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                 execplan::CalpontSystemCatalog::ColType& op_ct) = 0;
   utils::NullString getNullStrVal(rowgroup::Row& row, FunctionParm& fp,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& op_ct)
   {
     bool isNull;
     std::string val = getStrVal(row, fp, isNull, op_ct);
@@ -220,10 +218,8 @@ class Func
 class ParmTSInt64 : public datatypes::TSInt64Null
 {
  public:
-  ParmTSInt64()
-  {
-  }
-  ParmTSInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc, long timeZone)
+  ParmTSInt64() = default;
+  ParmTSInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func&, long)
    : TSInt64Null(parm->data()->toTSInt64Null(row))
   {
   }
@@ -232,10 +228,8 @@ class ParmTSInt64 : public datatypes::TSInt64Null
 class ParmTUInt64 : public datatypes::TUInt64Null
 {
  public:
-  ParmTUInt64()
-  {
-  }
-  ParmTUInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func& thisFunc, long timeZone)
+  ParmTUInt64() = default;
+  ParmTUInt64(rowgroup::Row& row, const execplan::SPTP& parm, const funcexp::Func&, long)
    : TUInt64Null(parm->data()->toTUInt64Null(row))
   {
   }

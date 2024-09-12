@@ -53,7 +53,7 @@ class Ownership : public boost::noncopyable
 
   struct Monitor
   {
-    Monitor(Ownership*);
+    explicit Monitor(Ownership*);
     ~Monitor();
     boost::thread thread;
     Ownership* owner;

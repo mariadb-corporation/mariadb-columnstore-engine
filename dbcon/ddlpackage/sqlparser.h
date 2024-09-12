@@ -84,7 +84,7 @@ struct pass_to_bison
   void* scanner;
   const CHARSET_INFO* default_table_charset;
 
-  pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(NULL), default_table_charset(NULL){};
+  pass_to_bison(ParseTree* pt) : fParseTree(pt), scanner(nullptr), default_table_charset(nullptr){};
 };
 
 class SqlParser

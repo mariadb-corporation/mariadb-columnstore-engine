@@ -184,7 +184,7 @@ class ColumnInfo : public WeUIDGID
 
   /** @brief Destructor
    */
-  virtual ~ColumnInfo();
+  ~ColumnInfo() override;
 
   /** @brief Returns last input Row num in current "logical" extent; used
    *  to track min/max value per extent, as the data is parsed.   0-based

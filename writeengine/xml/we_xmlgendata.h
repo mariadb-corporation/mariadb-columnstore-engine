@@ -48,13 +48,13 @@ class XMLGenData
   // Valid parms that can be stored and retrieved from XMLGenData
   EXPORT const static std::string DELIMITER;
   EXPORT const static std::string DESCRIPTION;
-      EXPORT const static std::string ENCLOSED_BY_CHAR;
-      EXPORT const static std::string ESCAPE_CHAR;
-      EXPORT const static std::string JOBID;
+  EXPORT const static std::string ENCLOSED_BY_CHAR;
+  EXPORT const static std::string ESCAPE_CHAR;
+  EXPORT const static std::string JOBID;
   EXPORT const static std::string MAXERROR;
   EXPORT const static std::string NAME;
   EXPORT const static std::string PATH;
-      EXPORT const static std::string RPT_DEBUG;
+  EXPORT const static std::string RPT_DEBUG;
   EXPORT const static std::string USER;
   EXPORT const static std::string NO_OF_READ_BUFFER;
   EXPORT const static std::string READ_BUFFER_CAPACITY;

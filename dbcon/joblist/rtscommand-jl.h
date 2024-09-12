@@ -42,24 +42,25 @@ class RTSCommandJL : public CommandJL
  public:
   RTSCommandJL(const pColStep&, const pDictionaryStep&);
   RTSCommandJL(const PassThruStep&, const pDictionaryStep&);
-  virtual ~RTSCommandJL();
+  ~RTSCommandJL() override;
 
-  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
-                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
-  uint8_t getTableColumnType();
-  std::string toString();
+  void setLBID(uint64_t data,
+               uint32_t dbroot) override;  // converts a rid or dictionary token to an LBID.  For
+                                           // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType() override;
+  std::string toString() override;
   bool isPassThru()
   {
     return (passThru != 0);
   }
-  uint16_t getWidth();
-  CommandType getCommandType()
+  uint16_t getWidth() override;
+  CommandType getCommandType() override
   {
     return RID_TO_STRING;
   }
 
-  void createCommand(messageqcpp::ByteStream&) const;
-  void runCommand(messageqcpp::ByteStream&) const;
+  void createCommand(messageqcpp::ByteStream&) const override;
+  void runCommand(messageqcpp::ByteStream&) const override;
 
  private:
   RTSCommandJL();

@@ -17,23 +17,17 @@
 
 //  $Id: wf_ntile.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
 #include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
 using namespace boost;
 
 #include "loggingid.h"
-#include "errorcodes.h"
 #include "idberrorinfo.h"
 using namespace logging;
-
-#include "rowgroup.h"
-using namespace rowgroup;
 
 #include "idborderby.h"
 using namespace ordering;
@@ -50,8 +44,8 @@ using namespace joblist;
 
 namespace windowfunction
 {
-boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int ct,
-                                                             WindowFunctionColumn* wc)
+boost::shared_ptr<WindowFunctionType> WF_ntile::makeFunction(int id, const string& name, int,
+                                                             WindowFunctionColumn*)
 {
   boost::shared_ptr<WindowFunctionType> func(new WF_ntile(id, name));
   return func;
@@ -70,9 +64,9 @@ void WF_ntile::resetData()
 void WF_ntile::parseParms(const std::vector<execplan::SRCP>& parms)
 {
   // parms[0]: nt
-  ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[0].get());
+  auto* cc = dynamic_cast<ConstantColumn*>(parms[0].get());
 
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     fNtileNull = false;
     fNtile = cc->getIntVal(fRow, fNtileNull);  // row not used, no need to setData.

@@ -205,14 +205,14 @@ struct gp_walk_info
    , internalDecimalScale(4)
    , thd(0)
    , subSelectType(uint64_t(-1))
-   , subQuery(0)
+   , subQuery(nullptr)
    , clauseType(INIT)
    , implicitExplicitGroupBy(false)
    , disableWrapping(false)
    , aggOnSelect(false)
    , hasWindowFunc(false)
    , hasSubSelect(false)
-   , lastSub(0)
+   , lastSub(nullptr)
    , derivedTbCnt(0)
    , recursionLevel(-1)
    , recursionHWM(0)
@@ -277,9 +277,7 @@ struct cal_group_info
    , groupByDistinct(false)
   {
   }
-  ~cal_group_info()
-  {
-  }
+  ~cal_group_info() = default;
 
   List<Item>* groupByFields;  // MCOL-1052 SELECT
   TABLE_LIST* groupByTables;  // MCOL-1052 FROM
@@ -303,7 +301,7 @@ struct cal_connection_info
     ALTER_FIRST_RENAME
   };
   cal_connection_info()
-   : cal_conn_hndl(0)
+   : cal_conn_hndl(nullptr)
    , queryState(0)
    , currentTable(0)
    , traceFlags(0)
@@ -313,7 +311,7 @@ struct cal_connection_info
    , singleInsert(true)
    , isLoaddataInfile(false)
    , isCacheInsert(false)
-   , dmlProc(0)
+   , dmlProc(nullptr)
    , rowsHaveInserted(0)
    , rc(0)
    , tableOid(0)
@@ -322,7 +320,7 @@ struct cal_connection_info
    , expressionId(0)
    , mysqld_pid(getpid())
    , cpimport_pid(0)
-   , filePtr(0)
+   , filePtr(nullptr)
    , headerLength(0)
    , useXbit(false)
    , useCpimport(mcs_use_import_for_batchinsert_mode_t::ON)
@@ -429,7 +427,7 @@ void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
 void clearDeleteStacks(gp_walk_info& gwi);
 void parse_item(Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo,
-                gp_walk_info* gwip = NULL);
+                gp_walk_info* gwip = nullptr);
 const std::string bestTableName(const Item_field* ifp);
 bool isMCSTable(TABLE* table_ptr);
 bool isForeignTableUpdate(THD* thd);

@@ -39,7 +39,6 @@
 #include <cfloat>
 #include <execinfo.h>
 
-
 #include "hasher.h"
 
 #include "joblisttypes.h"
@@ -54,7 +53,7 @@
 #include "collation.h"
 #include "common/hashfamily.h"
 
-#include "stdlib.h"
+#include <cstdlib>
 #include "execinfo.h"
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
@@ -144,12 +143,12 @@ class StringStore
   // returns the offset.
   // it may receive nullptr as data and it is proper way to store NULL values.
   uint64_t storeString(const uint8_t* data, uint32_t length);
-  //please note getPointer can return nullptr.
+  // please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
   inline utils::ConstString getConstString(uint64_t offset) const
   {
-    return utils::ConstString((const char*)getPointer(offset), getStringLength(offset));
+    return {(const char*)getPointer(offset), getStringLength(offset)};
   }
   inline bool isEmpty() const;
   inline uint64_t getSize() const;
@@ -223,7 +222,6 @@ class UserDataStore
   UserDataStore& operator=(const UserDataStore&) = delete;
   UserDataStore& operator=(UserDataStore&&) = delete;
 
-
   void serialize(messageqcpp::ByteStream&) const;
   void deserialize(messageqcpp::ByteStream&);
 
@@ -244,13 +242,11 @@ class UserDataStore
   boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t offset) const;
 
  private:
-
   std::vector<StoreData> vStoreData;
 
   bool fUseUserDataMutex = false;
   boost::mutex fMutex;
 };
-
 
 class RowGroup;
 class Row;
@@ -267,8 +263,6 @@ class RGData
   RGData(const RGData&) = default;
   RGData(RGData&&) = default;
   virtual ~RGData() = default;
-
-
 
   // amount should be the # returned by RowGroup::getDataSize()
   void serialize(messageqcpp::ByteStream&, RGDataSizeType amount) const;
@@ -321,8 +315,8 @@ class RGData
   }
 
  private:
-  uint32_t rowSize = 0; // can't be.
-  uint32_t columnCount = 0; // shouldn't be, but...
+  uint32_t rowSize = 0;      // can't be.
+  uint32_t columnCount = 0;  // shouldn't be, but...
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
@@ -372,7 +366,7 @@ class Row
   inline uint32_t getColumnWidth(uint32_t colIndex) const;
   inline uint32_t getColumnCount() const;
   inline uint32_t getInternalSize() const;  // this is only accurate if there is no string table
-  inline uint32_t getSize() const;  // this is only accurate if there is no string table
+  inline uint32_t getSize() const;          // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
   inline uint32_t getOffset(uint32_t colIndex) const;
@@ -484,7 +478,7 @@ class Row
 
   inline void setDoubleField(double val, uint32_t colIndex);
   inline void setFloatField(float val, uint32_t colIndex);
-  inline void setDecimalField(double val, uint32_t colIndex){};  // TODO: Do something here
+  inline void setDecimalField(double val, uint32_t colIndex) {};  // TODO: Do something here
   inline void setLongDoubleField(const long double& val, uint32_t colIndex);
   inline void setInt128Field(const int128_t& val, uint32_t colIndex);
 
@@ -607,10 +601,10 @@ class Row
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
 
-private:
- inline bool inStringTable(uint32_t col) const;
+ private:
+  inline bool inStringTable(uint32_t col) const;
 
-private:
+ private:
   uint32_t columnCount = 0;
   uint64_t baseRid = 0;
 
@@ -650,7 +644,7 @@ inline void Row::setPointer(const Pointer& p)
 {
   data = p.data;
   strings = p.strings;
-  bool hasStrings = (strings != 0);
+  bool hasStrings = (strings != nullptr);
 
   if (useStringTable != hasStrings)
   {
@@ -696,7 +690,7 @@ inline uint32_t Row::getRealSize() const
   if (!useStringTable)
     return getSize();
 
-  uint32_t ret = columnCount; // account for NULL flags.
+  uint32_t ret = columnCount;  // account for NULL flags.
 
   for (uint32_t i = 0; i < columnCount; i++)
   {
@@ -863,8 +857,7 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
 
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
-    default:
-      idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
+    default: idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
 
@@ -1046,12 +1039,13 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   else
   {
     uint8_t* buf = &data[offsets[colIndex]];
-    memset(buf + length, 0, offsets[colIndex + 1] - (offsets[colIndex] + length)); // needed for memcmp in equals().
+    memset(buf + length, 0,
+           offsets[colIndex + 1] - (offsets[colIndex] + length));  // needed for memcmp in equals().
     if (str.str())
     {
       memcpy(buf, str.str(), length);
     }
-    else if (colWidth <= 8) // special magic value.
+    else if (colWidth <= 8)  // special magic value.
     {
       setToNull(colIndex);
     }
@@ -1478,7 +1472,7 @@ class RowGroup : public messageqcpp::Serializeable
 
   explicit RowGroup(messageqcpp::ByteStream& bs);
 
-  ~RowGroup();
+  ~RowGroup() override;
 
   inline void initRow(Row*, bool forceInlineData = false) const;
   inline uint32_t getRowCount() const;
@@ -1514,8 +1508,8 @@ class RowGroup : public messageqcpp::Serializeable
   void resetRowGroup(uint64_t baseRid);
 
   /* The Serializeable interface */
-  void serialize(messageqcpp::ByteStream&) const;
-  void deserialize(messageqcpp::ByteStream&);
+  void serialize(messageqcpp::ByteStream&) const override;
+  void deserialize(messageqcpp::ByteStream&) override;
 
   uint32_t getColumnWidth(uint32_t col) const;
   uint32_t getColumnCount() const;
@@ -1601,7 +1595,7 @@ class RowGroup : public messageqcpp::Serializeable
 
   std::vector<uint32_t> oldOffsets;  // inline data offsets
   std::vector<uint32_t> stOffsets;   // string table offsets
-  uint32_t* offsets = nullptr;                 // offsets either points to oldOffsets or stOffsets
+  uint32_t* offsets = nullptr;       // offsets either points to oldOffsets or stOffsets
   std::vector<uint32_t> colWidths;
   // oids: the real oid of the column, may have duplicates with alias.
   // This oid is necessary for front-end to decide the real column width.
@@ -1711,7 +1705,7 @@ inline void RowGroup::setUseStringTable(bool b)
 {
   useStringTable = (b && hasLongStringField);
   // offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
-  offsets = 0;
+  offsets = nullptr;
 
   if (useStringTable && !stOffsets.empty())
     offsets = &stOffsets[0];
@@ -2050,7 +2044,6 @@ inline void copyRowInline(const Row& in, Row* out, uint32_t colCount)
   copyRow(in, out, colCount);
 }
 
-
 inline utils::NullString StringStore::getString(uint64_t off) const
 {
   uint32_t length;
@@ -2130,7 +2123,7 @@ inline const uint8_t* StringStore::getPointer(uint64_t off) const
 
 inline bool StringStore::isNullValue(uint64_t off) const
 {
- if (off == std::numeric_limits<uint64_t>::max())
+  if (off == std::numeric_limits<uint64_t>::max())
     return true;
   return false;
 }

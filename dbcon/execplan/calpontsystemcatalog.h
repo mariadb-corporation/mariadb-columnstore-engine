@@ -134,15 +134,11 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     DictOID() : dictOID(0), listOID(0), treeOID(0), compressionType(0)
     {
     }
-    DictOID(OID dictOID_, OID listOID_, OID treeOID_, int compressionType_) :
-      dictOID(dictOID_), listOID(listOID_), treeOID(treeOID_),
-      compressionType(compressionType_)
+    DictOID(OID dictOID_, OID listOID_, OID treeOID_, int compressionType_)
+     : dictOID(dictOID_), listOID(listOID_), treeOID(treeOID_), compressionType(compressionType_)
     {
     }
-    DictOID(const DictOID& rhs)
-    : dictOID(rhs.dictOID), listOID(rhs.listOID), treeOID(rhs.treeOID), compressionType(rhs.compressionType)
-    {
-    }
+    DictOID(const DictOID& rhs) = default;
     OID dictOID;
     OID listOID;
     OID treeOID;
@@ -177,7 +173,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     // If we used an unorderedmap<OID, ColumnResult*>, we might improve performance.
     // Maybe.
     NJLSysDataVector sysDataVec;
-    NJLSysDataList(){};
+    NJLSysDataList() = default;
     ~NJLSysDataList();
     NJLSysDataVector::const_iterator begin() const
     {
@@ -440,9 +436,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   struct TableName
   {
-    TableName()
-    {
-    }
+    TableName() = default;
     TableName(std::string sch, std::string tb) : schema(sch), table(tb)
     {
     }

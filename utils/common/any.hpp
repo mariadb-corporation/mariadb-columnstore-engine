@@ -9,7 +9,7 @@
  * http://www.boost.org/LICENSE_1_0.txt
  */
 
-#include <stdint.h>
+#include <cstdint>
 #include <stdexcept>
 #include <cstring>
 #include "mcs_basic_types.h"
@@ -40,7 +40,7 @@ struct base_any_policy
 template <typename T>
 struct typed_base_any_policy : base_any_policy
 {
-  virtual size_t get_size()
+  size_t get_size() override
   {
     return sizeof(T);
   }
@@ -53,23 +53,23 @@ template <typename T>
 struct small_any_policy : typed_base_any_policy<T>
 {
   virtual ~small_any_policy() = default;
-  virtual void static_delete(void** x)
+  void static_delete(void** x) override
   {
-    *x = 0;
+    *x = nullptr;
   }
-  virtual void copy_from_value(void const* src, void** dest)
+  void copy_from_value(void const* src, void** dest) override
   {
     new (dest) T(*reinterpret_cast<T const*>(src));
   }
-  virtual void clone(void* const* src, void** dest)
+  void clone(void* const* src, void** dest) override
   {
     *dest = *src;
   }
-  virtual void move(void* const* src, void** dest)
+  void move(void* const* src, void** dest) override
   {
     *dest = *src;
   }
-  virtual void* get_value(void** src)
+  void* get_value(void** src) override
   {
     return reinterpret_cast<void*>(src);
   }
@@ -79,26 +79,26 @@ template <typename T>
 struct big_any_policy : typed_base_any_policy<T>
 {
   virtual ~big_any_policy() = default;
-  virtual void static_delete(void** x)
+  void static_delete(void** x) override
   {
     if (*x)
       delete (*reinterpret_cast<T**>(x));
-    *x = NULL;
+    *x = nullptr;
   }
-  virtual void copy_from_value(void const* src, void** dest)
+  void copy_from_value(void const* src, void** dest) override
   {
     *dest = new T(*reinterpret_cast<T const*>(src));
   }
-  virtual void clone(void* const* src, void** dest)
+  void clone(void* const* src, void** dest) override
   {
     *dest = new T(**reinterpret_cast<T* const*>(src));
   }
-  virtual void move(void* const* src, void** dest)
+  void move(void* const* src, void** dest) override
   {
     (*reinterpret_cast<T**>(dest))->~T();
     **reinterpret_cast<T**>(dest) = **reinterpret_cast<T* const*>(src);
   }
-  virtual void* get_value(void** src)
+  void* get_value(void** src) override
   {
     return *src;
   }
@@ -181,24 +181,24 @@ class any
  public:
   /// Initializing constructor.
   template <typename T>
-  any(const T& x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(NULL)
+  any(const T& x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(nullptr)
   {
     assign(x);
   }
 
   /// Empty constructor.
-  any() : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(NULL)
+  any() : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(nullptr)
   {
   }
 
   /// Special initializing constructor for string literals.
-  any(const char* x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(NULL)
+  any(const char* x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(nullptr)
   {
     assign(x);
   }
 
   /// Copy constructor.
-  any(const any& x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(NULL)
+  any(const any& x) : policy(anyimpl::get_policy<anyimpl::empty_any>()), object(nullptr)
   {
     assign(x);
   }

@@ -22,7 +22,7 @@
 #include <string>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <iostream>
 #include <unordered_map>
@@ -33,7 +33,7 @@ namespace storagemanager
 struct metadataObject
 {
   metadataObject();
-  metadataObject(uint64_t offset);  // so we can search mObjects by integer
+  explicit metadataObject(uint64_t offset);  // so we can search mObjects by integer
   metadataObject(uint64_t offset, uint64_t length, const std::string& key);
   uint64_t offset;
   mutable uint64_t length;
@@ -51,7 +51,7 @@ class MetadataFile
   {
   };
   MetadataFile();
-  MetadataFile(const boost::filesystem::path& filename);
+  explicit MetadataFile(const boost::filesystem::path& filename);
   MetadataFile(const boost::filesystem::path& path, no_create_t,
                bool appendExt);  // this one won't create it if it doesn't exist
 

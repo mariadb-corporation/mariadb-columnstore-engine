@@ -161,7 +161,7 @@ class BucketDL : public DataList<element_t>
  private:
   // Declare default constructors but don't define to disable their use
   explicit BucketDL();
-  explicit BucketDL(const BucketDL<element_t>&);
+  BucketDL(const BucketDL<element_t>&);
   BucketDL<element_t>& operator=(const BucketDL<element_t>&);
 
   ResourceManager* fRm;

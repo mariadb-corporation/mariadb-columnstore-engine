@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <queue>
 #include <boost/shared_ptr.hpp>
 
@@ -45,6 +45,7 @@ class BatchInsertProc
   typedef std::queue<messageqcpp::ByteStream> pkg_type;
   typedef boost::shared_ptr<pkg_type> SP_PKG;
   typedef std::vector<BRM::BulkSetHWMArg> BulkSetHWMArgs;
+  BatchInsertProc() = delete;
   BatchInsertProc(bool isAutocommitOn, uint32_t tableOid, execplan::CalpontSystemCatalog::SCN txnId,
                   BRM::DBRM* aDbrm);
   BatchInsertProc(const BatchInsertProc& rhs);

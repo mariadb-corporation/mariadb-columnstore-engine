@@ -34,15 +34,11 @@ namespace funcexp
 class Func_Bool : public Func
 {
  public:
-  Func_Bool()
+  Func_Bool() = default;
+  explicit Func_Bool(const std::string& funcName) : Func(funcName)
   {
   }
-  Func_Bool(const std::string& funcName) : Func(funcName)
-  {
-  }
-  virtual ~Func_Bool()
-  {
-  }
+  ~Func_Bool() override = default;
 
   /*
       virtual bool getBoolVal(rowgroup::Row& row,
@@ -53,58 +49,58 @@ class Func_Bool : public Func
   */
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct)
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return (getBoolVal(row, fp, isNull, op_ct) ? 1 : 0);
   }
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return (getBoolVal(row, fp, isNull, op_ct) ? 1.0 : 0.0);
   }
 
   long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return (getBoolVal(row, fp, isNull, op_ct) ? 1.0 : 0.0);
   }
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return (getBoolVal(row, fp, isNull, op_ct) ? "1" : "0");
   }
 
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return execplan::IDB_Decimal(getIntVal(row, fp, isNull, op_ct), 0, 0);
   }
 
   int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     isNull = true;
     return 0;
   }
 
   int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct)
+                            execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     isNull = true;
     return 0;
   }
 
   int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct)
+                             execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     isNull = true;
     return 0;
   }
 
   int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     isNull = true;
     return 0;
@@ -119,15 +115,13 @@ class Func_between : public Func_Bool
   Func_between() : Func_Bool("between")
   {
   }
-  virtual ~Func_between()
-  {
-  }
+  ~Func_between() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_notbetween class
@@ -138,15 +132,13 @@ class Func_notbetween : public Func_Bool
   Func_notbetween() : Func_Bool("notbetween")
   {
   }
-  virtual ~Func_notbetween()
-  {
-  }
+  ~Func_notbetween() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_in class
@@ -157,15 +149,13 @@ class Func_in : public Func_Bool
   Func_in() : Func_Bool("in")
   {
   }
-  virtual ~Func_in()
-  {
-  }
+  ~Func_in() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_notin class
@@ -176,15 +166,13 @@ class Func_notin : public Func_Bool
   Func_notin() : Func_Bool("notin")
   {
   }
-  virtual ~Func_notin()
-  {
-  }
+  ~Func_notin() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_regexp class
@@ -195,15 +183,13 @@ class Func_regexp : public Func_Bool
   Func_regexp() : Func_Bool("regexp")
   {
   }
-  virtual ~Func_regexp()
-  {
-  }
+  ~Func_regexp() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 };
 
 /** @brief Func_isnull class
@@ -217,24 +203,22 @@ class Func_isnull : public Func_Bool
   Func_isnull() : fIsNotNull(false)
   {
   }
-  Func_isnull(bool isnotnull) : fIsNotNull(isnotnull)
+  explicit Func_isnull(bool isnotnull) : fIsNotNull(isnotnull)
   {
   }
   /*
    * Destructor. isnull does not need to do anything here to clean up.
    */
-  virtual ~Func_isnull()
-  {
-  }
+  ~Func_isnull() override = default;
 
   /**
    * Decide on the function's operation type
    */
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct);
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
  private:
   bool fIsNotNull;
@@ -250,19 +234,17 @@ class Func_Truth : public Func_Bool
   {
   }
 
-  virtual ~Func_Truth()
-  {
-  }
+  ~Func_Truth() override = default;
 
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType)
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override
   {
     assert(fp.size() == 1);
     return fp[0]->data()->resultType();
   }
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                  execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     bool val = fp[0]->data()->getBoolVal(row, isNull);
 
@@ -292,9 +274,7 @@ class Func_IsTrue : public Func_Truth
   Func_IsTrue() : Func_Truth("istrue", true, true)
   {
   }
-  ~Func_IsTrue()
-  {
-  }
+  ~Func_IsTrue() override = default;
 };
 
 /** @brief Func_IsNotTrue class
@@ -305,9 +285,7 @@ class Func_IsNotTrue : public Func_Truth
   Func_IsNotTrue() : Func_Truth("isnottrue", true, false)
   {
   }
-  ~Func_IsNotTrue()
-  {
-  }
+  ~Func_IsNotTrue() override = default;
 };
 
 /** @brief Func_IsFalse class
@@ -318,9 +296,7 @@ class Func_IsFalse : public Func_Truth
   Func_IsFalse() : Func_Truth("isfalse", false, true)
   {
   }
-  ~Func_IsFalse()
-  {
-  }
+  ~Func_IsFalse() override = default;
 };
 
 /** @brief Func_IsNotFalse class
@@ -331,9 +307,7 @@ class Func_IsNotFalse : public Func_Truth
   Func_IsNotFalse() : Func_Truth("isnotfalse", false, false)
   {
   }
-  ~Func_IsNotFalse()
-  {
-  }
+  ~Func_IsNotFalse() override = default;
 };
 
 }  // namespace funcexp
