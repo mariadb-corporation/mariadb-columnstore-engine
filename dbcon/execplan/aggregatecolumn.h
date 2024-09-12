@@ -94,7 +94,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * ctor
    */
-  AggregateColumn(const uint32_t sessionID);
+  explicit AggregateColumn(const uint32_t sessionID);
 
   /**
    * ctor
@@ -109,9 +109,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * Destructors
    */
-  virtual ~AggregateColumn()
-  {
-  }
+  ~AggregateColumn() override = default;
 
   /**
    * Accessor Methods
@@ -167,7 +165,7 @@ class AggregateColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual AggregateColumn* clone() const override
+  inline AggregateColumn* clone() const override
   {
     return new AggregateColumn(*this);
   }
@@ -190,14 +188,14 @@ class AggregateColumn : public ReturnedColumn
   /**
    * ASC flag
    */
-  inline virtual bool asc() const override
+  inline bool asc() const override
   {
     return fAsc;
   }
   /**
    * ASC flag
    */
-  inline virtual void asc(const bool asc) override
+  inline void asc(const bool asc) override
   {
     fAsc = asc;
   }
@@ -205,7 +203,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * fData: SQL representation of this object
    */
-  virtual const std::string data() const override
+  const std::string data() const override
   {
     return fData;
   }
@@ -221,24 +219,24 @@ class AggregateColumn : public ReturnedColumn
   /**
    * Overloaded stream operator
    */
-  virtual const std::string toString() const override;
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  const std::string toString() const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
   /**
    * Serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
+  void serialize(messageqcpp::ByteStream&) const override;
   /**
    * Serialize interface
    */
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -253,7 +251,7 @@ class AggregateColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -309,8 +307,8 @@ class AggregateColumn : public ReturnedColumn
   static AggOp agname2num(const std::string&);
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate() override;
-  virtual bool hasWindowFunc() override
+  bool hasAggregate() override;
+  bool hasWindowFunc() override
   {
     return false;
   }
@@ -357,7 +355,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull);
@@ -368,7 +366,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getIntVal();
@@ -377,7 +375,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getUintVal();
@@ -386,7 +384,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getFloatVal();
@@ -395,7 +393,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDoubleVal();
@@ -404,7 +402,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
+  long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getLongDoubleVal();
@@ -413,7 +411,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDecimalVal();
@@ -421,7 +419,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
+  int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDateIntVal();
@@ -429,7 +427,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();
@@ -437,7 +435,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDatetimeIntVal();
@@ -445,7 +443,7 @@ class AggregateColumn : public ReturnedColumn
   /**
    * F&E
    */
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimestampIntVal();

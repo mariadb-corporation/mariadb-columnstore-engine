@@ -57,7 +57,7 @@ class RWLock_local
   class not_excl : public std::exception
   {
    public:
-    virtual const char* what() const throw()
+    const char* what() const noexcept override
     {
       return "not_excl";
     }
@@ -66,7 +66,7 @@ class RWLock_local
   class wouldblock : public std::exception
   {
    public:
-    virtual const char* what() const throw()
+    const char* what() const noexcept override
     {
       return "wouldblock";
     }
@@ -172,10 +172,9 @@ class ScopedRWLock_local
   void unlock();
 
  private:
-  explicit ScopedRWLock_local()
-  {
-  }
-  explicit ScopedRWLock_local(const ScopedRWLock_local&)
+  explicit ScopedRWLock_local() = default;
+
+  ScopedRWLock_local(const ScopedRWLock_local&)
   {
   }
   ScopedRWLock_local& operator=(const ScopedRWLock_local&)

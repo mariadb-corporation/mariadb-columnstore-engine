@@ -115,13 +115,7 @@ EMCasualPartition_struct::EMCasualPartition_struct()
   isValid = CP_INVALID;
 }
 
-EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum,
-                                                   const char status)
- : sequenceNum(seqNum), isValid(status), loVal(lo), hiVal(hi)
-{
-}
-
-EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum)
+EMCasualPartition_struct::EMCasualPartition_struct(int64_t lo, int64_t hi, int32_t seqNum)
 {
   loVal = lo;
   hiVal = hi;
@@ -129,8 +123,13 @@ EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64
   isValid = CP_INVALID;
 }
 
-EMCasualPartition_struct::EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi,
-                                                   const int32_t seqNum)
+EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum,
+                                                   const char status)
+ : sequenceNum(seqNum), isValid(status), loVal(lo), hiVal(hi)
+{
+}
+
+EMCasualPartition_struct::EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, int32_t seqNum)
 {
   bigLoVal = bigLo;
   bigHiVal = bigHi;
@@ -261,7 +260,7 @@ ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly
 boost::mutex FreeListImpl::fInstanceMutex;
 
 /*static*/
-FreeListImpl* FreeListImpl::fInstance = 0;
+FreeListImpl* FreeListImpl::fInstance = nullptr;
 
 /*static*/
 FreeListImpl* FreeListImpl::makeFreeListImpl(unsigned key, off_t size, bool readOnly)

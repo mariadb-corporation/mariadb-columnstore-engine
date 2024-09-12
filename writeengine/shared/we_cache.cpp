@@ -27,11 +27,11 @@ using namespace std;
 
 namespace WriteEngine
 {
-CacheControl* Cache::m_cacheParam = NULL;
-FreeBufList* Cache::m_freeList = NULL;
-CacheMap* Cache::m_lruList = NULL;
-CacheMap* Cache::m_writeList = NULL;
-    bool Cache::m_useCache = false;
+CacheControl* Cache::m_cacheParam = nullptr;
+FreeBufList* Cache::m_freeList = nullptr;
+CacheMap* Cache::m_lruList = nullptr;
+CacheMap* Cache::m_writeList = nullptr;
+bool Cache::m_useCache = false;
 /***********************************************************
  * DESCRIPTION:
  *    Clear all list and free memory
@@ -47,7 +47,7 @@ void Cache::clear()
   size_t i;
 
   // free list
-  if (m_freeList != NULL)
+  if (m_freeList != nullptr)
   {
     for (i = 0; i < m_freeList->size(); i++)
     {
@@ -57,7 +57,7 @@ void Cache::clear()
   }
 
   // LRU list
-  if (m_lruList != NULL)
+  if (m_lruList != nullptr)
   {
     for (it = m_lruList->begin(); it != m_lruList->end(); it++)
     {
@@ -70,7 +70,7 @@ void Cache::clear()
   }
 
   // Write list
-  if (m_writeList != NULL)
+  if (m_writeList != nullptr)
   {
     for (it = m_writeList->begin(); it != m_writeList->end(); it++)
     {
@@ -97,13 +97,13 @@ int Cache::flushCache()
   BlockBuffer* curBuf;
 
   // add lock here
-  if (m_lruList && m_lruList->size() > 0)
+  if (m_lruList && !m_lruList->empty())
   {
     bHasReadBlock = true;
 
-    for (CacheMapIt it = m_lruList->begin(); it != m_lruList->end(); it++)
+    for (auto& it : *m_lruList)
     {
-      curBuf = it->second;
+      curBuf = it.second;
       curBuf->clear();
       m_freeList->push_back(curBuf);
     }
@@ -112,19 +112,19 @@ int Cache::flushCache()
   }
 
   // must write to disk first
-  if (m_writeList && m_writeList->size() > 0)
+  if (m_writeList && !m_writeList->empty())
   {
     if (!bHasReadBlock)
-      for (CacheMapIt it = m_writeList->begin(); it != m_writeList->end(); it++)
+      for (auto& it : *m_writeList)
       {
-        curBuf = it->second;
+        curBuf = it.second;
         curBuf->clear();
         m_freeList->push_back(curBuf);
       }
     else
-      for (CacheMapIt it = m_writeList->begin(); it != m_writeList->end(); it++)
+      for (auto& it : *m_writeList)
       {
-        curBuf = it->second;
+        curBuf = it.second;
         (*curBuf).block.dirty = false;
         processCacheMap(m_lruList, curBuf, INSERT);
       }
@@ -152,7 +152,7 @@ void Cache::freeMemory()
   size_t i;
 
   // free list
-  if (m_freeList != NULL)
+  if (m_freeList != nullptr)
   {
     for (i = 0; i < m_freeList->size(); i++)
     {
@@ -163,11 +163,11 @@ void Cache::freeMemory()
 
     m_freeList->clear();
     delete m_freeList;
-    m_freeList = NULL;
+    m_freeList = nullptr;
   }
 
   // LRU list
-  if (m_lruList != NULL)
+  if (m_lruList != nullptr)
   {
     for (it = m_lruList->begin(); it != m_lruList->end(); it++)
     {
@@ -178,11 +178,11 @@ void Cache::freeMemory()
 
     m_lruList->clear();
     delete m_lruList;
-    m_lruList = NULL;
+    m_lruList = nullptr;
   }
 
   // Write list
-  if (m_writeList != NULL)
+  if (m_writeList != nullptr)
   {
     for (it = m_writeList->begin(); it != m_writeList->end(); it++)
     {
@@ -193,14 +193,14 @@ void Cache::freeMemory()
 
     m_writeList->clear();
     delete m_writeList;
-    m_writeList = NULL;
+    m_writeList = nullptr;
   }
 
   // param
-  if (m_cacheParam != NULL)
+  if (m_cacheParam != nullptr)
   {
     delete m_cacheParam;
-    m_cacheParam = NULL;
+    m_cacheParam = nullptr;
   }
 }
 
@@ -282,7 +282,7 @@ int Cache::insertLRUList(CommBlock& cb, const uint64_t lbid, const uint64_t fbo,
   BlockBuffer* buffer;
   vector<BlockBuffer*>::iterator it;
 
-  if (m_freeList->size() == 0)
+  if (m_freeList->empty())
     return ERR_FREE_LIST_EMPTY;
 
   // make sure flush first if necessary
@@ -397,10 +397,10 @@ void Cache::printCacheList()
   cout << "\nFree List has " << m_freeList->size() << " elements" << endl;
   cout << "LRU List has " << m_lruList->size() << " elements" << endl;
 
-  for (CacheMapIt it = m_lruList->begin(); it != m_lruList->end(); it++)
+  for (const auto& it : *m_lruList)
   {
-    buffer = it->second;
-    cout << "\t[" << i++ << "] key=" << it->first << " listType=" << buffer->listType
+    buffer = it.second;
+    cout << "\t[" << i++ << "] key=" << it.first << " listType=" << buffer->listType
          << " oid=" << (*buffer).cb.file.oid << " fbo=" << (*buffer).block.fbo
          << " dirty=" << (*buffer).block.dirty << " hitCount=" << (*buffer).block.hitCount << endl;
   }
@@ -408,10 +408,10 @@ void Cache::printCacheList()
   i = 0;
   cout << "Write List has " << m_writeList->size() << " elements" << endl;
 
-  for (CacheMapIt it = m_writeList->begin(); it != m_writeList->end(); it++)
+  for (const auto& it : *m_writeList)
   {
-    buffer = it->second;
-    cout << "\t[" << i++ << "] key=" << it->first << " listType=" << buffer->listType
+    buffer = it.second;
+    cout << "\t[" << i++ << "] key=" << it.first << " listType=" << buffer->listType
          << " oid=" << (*buffer).cb.file.oid << " fbo=" << (*buffer).block.fbo
          << " dirty=" << (*buffer).block.dirty << " hitCount=" << (*buffer).block.hitCount << endl;
   }

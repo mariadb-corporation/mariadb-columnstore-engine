@@ -46,7 +46,7 @@ class MarkPartitionProcessor : public DDLPackageProcessor, FormatStatementString
    *
    * @param createTableStmt the CreateTableStatement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* MarkPartitionStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* MarkPartitionStmt) override;
 };
 
 }  // namespace ddlpackageprocessor

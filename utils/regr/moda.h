@@ -55,7 +55,9 @@ namespace mcsv1sdk
 template <class T>
 struct hasher
 {
-  hasher(uint32_t cs_num){}
+  explicit hasher(uint32_t cs_num)
+  {
+  }
 
   inline size_t operator()(T val) const
   {
@@ -70,7 +72,9 @@ struct hasher
 template <>
 struct hasher<long double>
 {
-  hasher(uint32_t cs_num){}
+  explicit hasher(uint32_t cs_num)
+  {
+  }
   inline size_t operator()(long double val) const
   {
 #ifdef MASK_LONGDOUBLE
@@ -86,23 +90,27 @@ struct hasher<long double>
 };
 
 // A collation aware hasher for strings
-template<>
+template <>
 struct hasher<string>
 {
-  hasher(uint32_t cs_num) : fHasher(cs_num){}
+  explicit hasher(uint32_t cs_num) : fHasher(cs_num)
+  {
+  }
   inline size_t operator()(string val) const
   {
     return fHasher(val.c_str(), val.size());
   }
 
-private:
-  datatypes::CollationAwareHasher fHasher; 
+ private:
+  datatypes::CollationAwareHasher fHasher;
 };
 
-template<class T>
+template <class T>
 struct comparator
 {
-  comparator(uint32_t cs_num){}
+  explicit comparator(uint32_t cs_num)
+  {
+  }
 
   bool operator()(const T& lhs, const T& rhs) const
   {
@@ -113,35 +121,38 @@ struct comparator
 template <>
 struct comparator<std::string>
 {
-  comparator(uint32_t cs_num) : fCs(cs_num) {}
+  explicit comparator(uint32_t cs_num) : fCs(cs_num)
+  {
+  }
 
   bool operator()(const std::string lhs, const std::string rhs) const
   {
     return fCs.eq(lhs, rhs);
   }
+
  private:
   datatypes::Charset fCs;
 };
 
-
-
 // Override UserData for data storage
 struct ModaData : public UserData
 {
-  ModaData(uint32_t cs_num = 8)
-   : fMap(NULL)
+  explicit ModaData(uint32_t cs_num = 8)
+   : fMap(nullptr)
    , fReturnType((uint32_t)execplan::CalpontSystemCatalog::UNDEFINED)
    , fColWidth(0)
-   , modaImpl(NULL)
-   , fCs_num(cs_num){}
+   , modaImpl(nullptr)
+   , fCs_num(cs_num)
+  {
+  }
 
-  virtual ~ModaData()
+  ~ModaData() override
   {
     cleanup();
   }
 
-  virtual void serialize(messageqcpp::ByteStream& bs) const;
-  virtual void unserialize(messageqcpp::ByteStream& bs);
+  void serialize(messageqcpp::ByteStream& bs) const override;
+  void unserialize(messageqcpp::ByteStream& bs) override;
 
   template <class T>
   std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >* getMap()
@@ -149,8 +160,8 @@ struct ModaData : public UserData
     if (!fMap)
     {
       // Just in time creation
-      fMap = new std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >(
-        10, hasher<T>(fCs_num), comparator<T>(fCs_num));
+      fMap = new std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >(10, hasher<T>(fCs_num),
+                                                                            comparator<T>(fCs_num));
     }
     return (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
   }
@@ -169,7 +180,7 @@ struct ModaData : public UserData
     if (fMap)
     {
       delete (std::unordered_map<T, uint32_t, hasher<T>, comparator<T> >*)fMap;
-      fMap = NULL;
+      fMap = nullptr;
     }
   }
 
@@ -192,7 +203,7 @@ struct ModaData : public UserData
 
  private:
   // For now, copy construction is unwanted
-  ModaData(UserData&);
+  explicit ModaData(UserData&);
 
   void cleanup();
 
@@ -243,45 +254,46 @@ class Moda_impl_T : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  Moda_impl_T(){};
-  virtual ~Moda_impl_T(){};
+  Moda_impl_T() = default;
+  ~Moda_impl_T() override = default;
 
-  virtual mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
-  virtual mcsv1_UDAF::ReturnCode reset(mcsv1Context* context);
-  virtual mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
-  virtual mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
-  virtual mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
-  virtual mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  mcsv1_UDAF::ReturnCode reset(mcsv1Context* context) override;
+  mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
+  mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn) override;
+  mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
+  mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
   // Dummy: not used
-  virtual mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length)
+  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length) override
   {
     return mcsv1_UDAF::SUCCESS;
   }
 };
 
-template<> // string specialization
+template <>  // string specialization
 class Moda_impl_T<string> : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  Moda_impl_T() : cs(8) {};
-  virtual ~Moda_impl_T() {};
+  Moda_impl_T() : cs(8){};
+  ~Moda_impl_T() override = default;
 
-  virtual mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
-  virtual mcsv1_UDAF::ReturnCode reset(mcsv1Context* context);
-  virtual mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
-  virtual mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
-  virtual mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
-  virtual mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  mcsv1_UDAF::ReturnCode reset(mcsv1Context* context) override;
+  mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
+  mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn) override;
+  mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
+  mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
   // Dummy: not used
-  virtual mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length)
+  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length) override
   {
     return mcsv1_UDAF::SUCCESS;
   }
+
  private:
   datatypes::Charset cs;
 };
@@ -294,36 +306,36 @@ class moda : public mcsv1_UDAF
  public:
   // Defaults OK
   moda() : mcsv1_UDAF(){};
-  virtual ~moda(){};
+  ~moda() override = default;
 
-  virtual mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
-  virtual ReturnCode reset(mcsv1Context* context)
+  ReturnCode reset(mcsv1Context* context) override
   {
     return getImpl(context)->reset(context);
   }
 
-  virtual mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn)
+  mcsv1_UDAF::ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override
   {
     return getImpl(context)->nextValue(context, valsIn);
   }
 
-  virtual mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn)
+  mcsv1_UDAF::ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn) override
   {
     return getImpl(context)->subEvaluate(context, valIn);
   }
 
-  virtual mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut)
+  mcsv1_UDAF::ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override
   {
     return getImpl(context)->evaluate(context, valOut);
   }
 
-  virtual mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
+  mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override
   {
     return getImpl(context)->dropValue(context, valsDropped);
   }
 
-  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length)
+  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length) override
   {
     userData = new ModaData;
     length = sizeof(ModaData);

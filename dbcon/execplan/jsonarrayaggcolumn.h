@@ -47,25 +47,25 @@ class JsonArrayAggColumn : public AggregateColumn
    */
   JsonArrayAggColumn();
 
-  JsonArrayAggColumn(const uint32_t sessionID);
+  explicit JsonArrayAggColumn(const uint32_t sessionID);
 
   JsonArrayAggColumn(const JsonArrayAggColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  virtual ~JsonArrayAggColumn();
+  ~JsonArrayAggColumn() override;
 
   /**
    * Overloaded stream operator
    */
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  virtual JsonArrayAggColumn* clone() const override
+  JsonArrayAggColumn* clone() const override
   {
     return new JsonArrayAggColumn(*this);
   }
@@ -93,8 +93,8 @@ class JsonArrayAggColumn : public AggregateColumn
   /**
    * Serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -102,7 +102,7 @@ class JsonArrayAggColumn : public AggregateColumn
    * @return true iff every member of t is a duplicate copy of every member of this;
    *         false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -119,7 +119,7 @@ class JsonArrayAggColumn : public AggregateColumn
    * @return false iff every member of t is a duplicate copy of every member of this;
    *         true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -130,7 +130,7 @@ class JsonArrayAggColumn : public AggregateColumn
   using AggregateColumn::operator!=;
   virtual bool operator!=(const JsonArrayAggColumn& t) const;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;

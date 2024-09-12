@@ -269,7 +269,9 @@ class TreeNode
    ***********************************************************************/
   virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
   {
-    isNull = isNull || fResult.strVal.isNull(); // XXX: NullString returns isNull, we should remove that parameter altogether.
+    isNull = isNull ||
+             fResult.strVal
+                 .isNull();  // XXX: NullString returns isNull, we should remove that parameter altogether.
     return fResult.strVal;
   }
   virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
@@ -475,19 +477,20 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
       {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char* intAsChar = (const char*)(&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
       break;
 
     case CalpontSystemCatalog::CHAR:
-    case CalpontSystemCatalog::VARBINARY: // XXX: TODO: we don't have varbinary support now, but it may be handled just like varchar.
+    case CalpontSystemCatalog::VARBINARY:  // XXX: TODO: we don't have varbinary support now, but it may be
+                                           // handled just like varchar.
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 8)
       {
-        const char *intAsChar = (const char*) (&fResult.origIntVal);
+        const char* intAsChar = (const char*)(&fResult.origIntVal);
         fResult.strVal.assign((const uint8_t*)intAsChar, strlen(intAsChar));
       }
 
@@ -865,27 +868,27 @@ inline double TreeNode::getDoubleVal()
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
-        return strtod((char*)(&fResult.origIntVal), NULL);
+        return strtod((char*)(&fResult.origIntVal), nullptr);
 
       idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.str(), NULL);
+      return strtod(fResult.strVal.str(), nullptr);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
-        return strtod((char*)(&fResult.origIntVal), NULL);
+        return strtod((char*)(&fResult.origIntVal), nullptr);
 
       idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.str(), NULL);
+      return strtod(fResult.strVal.str(), nullptr);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 7)
-        return strtod((char*)(&fResult.origIntVal), NULL);
+        return strtod((char*)(&fResult.origIntVal), nullptr);
 
-      //idbassert(fResult.strVal.str());
-      return strtod(fResult.strVal.safeString("").c_str(), NULL);
+      // idbassert(fResult.strVal.str());
+      return strtod(fResult.strVal.safeString("").c_str(), nullptr);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:
@@ -936,27 +939,27 @@ inline long double TreeNode::getLongDoubleVal()
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
-        return strtold((char*)(&fResult.origIntVal), NULL);
+        return strtold((char*)(&fResult.origIntVal), nullptr);
 
       idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.str(), nullptr);
 
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
-        return strtold((char*)(&fResult.origIntVal), NULL);
+        return strtold((char*)(&fResult.origIntVal), nullptr);
 
       idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.str(), nullptr);
 
     // FIXME: ???
     case CalpontSystemCatalog::VARBINARY:
     case CalpontSystemCatalog::BLOB:
     case CalpontSystemCatalog::TEXT:
       if (fResultType.colWidth <= 7)
-        return strtold((char*)(&fResult.origIntVal), NULL);
+        return strtold((char*)(&fResult.origIntVal), nullptr);
 
       idbassert(fResult.strVal.str());
-      return strtold(fResult.strVal.str(), NULL);
+      return strtold(fResult.strVal.str(), nullptr);
 
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::TINYINT:

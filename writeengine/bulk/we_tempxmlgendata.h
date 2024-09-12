@@ -38,9 +38,9 @@ class TempXMLGenData : public XMLGenData
  public:
   TempXMLGenData(const std::string& jobId, const std::string& schema, const std::string& table);
 
-  virtual ~TempXMLGenData();
+  ~TempXMLGenData() override;
 
-  virtual void print(std::ostream& os) const;
+  void print(std::ostream& os) const override;
 
  private:
   TempXMLGenData(const TempXMLGenData&);             // disable default copy ctor

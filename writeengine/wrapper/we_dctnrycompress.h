@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "../dictionary/we_dctnry.h"
 #include "we_chunkmanager.h"
@@ -43,7 +43,7 @@ class DctnryCompress0 : public Dctnry
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~DctnryCompress0();
+  EXPORT ~DctnryCompress0() override;
 };
 
 /** Class DctnryCompress1 */
@@ -53,55 +53,56 @@ class DctnryCompress1 : public Dctnry
   /**
    * @brief Constructor
    */
-  EXPORT DctnryCompress1(uint32_t compressionType, Log* logger = 0);
+  EXPORT DctnryCompress1(uint32_t compressionType, Log* logger = nullptr);
 
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~DctnryCompress1();
+  EXPORT ~DctnryCompress1() override;
 
   /**
    * @brief virtual method in FileOp
    */
-  EXPORT int flushFile(int rc, std::map<FID, FID>& columnOids);
+  EXPORT int flushFile(int rc, std::map<FID, FID>& columnOids) override;
 
   /**
    * @brief virtual method in DBFileOp
    */
   EXPORT int readDBFile(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t lbid,
-                        const bool isFbo = false);
+                        const bool isFbo = false) override;
 
   /**
    * @brief virtual method in DBFileOp
    */
   EXPORT int writeDBFile(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t lbid,
-                         const int numOfBlock = 1);
+                         const int numOfBlock = 1) override;
 
   /**
    * @brief virtual method in DBFileOp
    */
   EXPORT int writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int fbo,
-                                  const int numOfBlock = 1);
+                                  const int numOfBlock = 1) override;
 
   /**
    * @brief virtual method in Dctnry
    */
-  IDBDataFile* createDctnryFile(const char* name, int width, const char* mode, int ioBuffSize, int64_t lbid);
+  IDBDataFile* createDctnryFile(const char* name, int width, const char* mode, int ioBuffSize,
+                                int64_t lbid) override;
 
   /**
    * @brief virtual method in Dctnry
    */
-  IDBDataFile* openDctnryFile(bool useTmpSuffix);
+  IDBDataFile* openDctnryFile(bool useTmpSuffix) override;
 
   /**
    * @brief virtual method in Dctnry
    */
-  void closeDctnryFile(bool doFlush, std::map<FID, FID>& columnOids);
+  void closeDctnryFile(bool doFlush, std::map<FID, FID>& columnOids) override;
 
   /**
    * @brief virtual method in Dctnry
    */
-  int numOfBlocksInFile();
+  int numOfBlocksInFile() override;
 
   /**
    * @brief For bulkload to use
@@ -110,15 +111,15 @@ class DctnryCompress1 : public Dctnry
   {
     m_chunkManager->setMaxActiveChunkNum(maxActiveChunkNum);
   };
-  void setBulkFlag(bool isBulkLoad)
+  void setBulkFlag(bool isBulkLoad) override
   {
     m_chunkManager->setBulkFlag(isBulkLoad);
   };
-  void setFixFlag(bool isFix)
+  void setFixFlag(bool isFix) override
   {
     m_chunkManager->setFixFlag(isFix);
   };
-  int checkFixLastDictChunk()
+  int checkFixLastDictChunk() override
   {
     return m_chunkManager->checkFixLastDictChunk(m_dctnryOID, m_dbRoot, m_partition, m_segment);
   };
@@ -127,7 +128,7 @@ class DctnryCompress1 : public Dctnry
   /**
    * @brief virtual method in FileOp
    */
-  void setTransId(const TxnID& transId)
+  void setTransId(const TxnID& transId) override
   {
     Dctnry::setTransId(transId);
 
@@ -148,7 +149,7 @@ class DctnryCompress1 : public Dctnry
   /**
    * @brief virtual method in FileOp
    */
-  int updateDctnryExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid);
+  int updateDctnryExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid) override;
 
   /**
    * @brief convert lbid to fbo

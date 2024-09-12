@@ -381,7 +381,7 @@ class BRMWrapper : public WEObj
    * @brief Commit the transaction
    */
   EXPORT int commit(const BRM::VER_t transID);
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
 
   /**
@@ -489,10 +489,9 @@ inline BRMWrapper::BRMWrapper()
 
 inline BRMWrapper::~BRMWrapper()
 {
-  if (blockRsltnMgrPtr)
-    delete blockRsltnMgrPtr;
+  delete blockRsltnMgrPtr;
 
-  blockRsltnMgrPtr = 0;
+  blockRsltnMgrPtr = nullptr;
 }
 
 inline BRM::DBRM* BRMWrapper::getDbrmObject()

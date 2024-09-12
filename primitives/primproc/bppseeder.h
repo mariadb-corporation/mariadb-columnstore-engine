@@ -46,13 +46,14 @@ namespace primitiveprocessor
 class BPPSeeder : public threadpool::FairThreadPool::Functor
 {
  public:
+  BPPSeeder() = delete;
   BPPSeeder(const messageqcpp::SBS&, const SP_UM_MUTEX& wLock, const SP_UM_IOSOCK& ios, const int pmThreads,
             const bool trace = false);
   BPPSeeder(const BPPSeeder& b);
 
-  virtual ~BPPSeeder();
+  ~BPPSeeder() override;
 
-  int operator()();
+  int operator()() override;
 
   bool isSysCat();
   boost::shared_ptr<std::ofstream> spof;
@@ -74,7 +75,6 @@ class BPPSeeder : public threadpool::FairThreadPool::Functor
   }
 
  private:
-  BPPSeeder();
   void catchHandler(const std::string& s, uint32_t uniqueID, uint32_t step);
   void flushSyscatOIDs();
 

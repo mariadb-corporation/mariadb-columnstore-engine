@@ -18,7 +18,7 @@
 #include "AppendTask.h"
 #include "messageFormat.h"
 #include "SMLogging.h"
-#include <errno.h>
+#include <cerrno>
 
 using namespace std;
 
@@ -50,7 +50,7 @@ bool AppendTask::run()
 
   success = read(cmdbuf, sizeof(append_cmd));
   check_error("AppendTask read", false);
-  append_cmd* cmd = (append_cmd*)cmdbuf;
+  auto* cmd = (append_cmd*)cmdbuf;
 
   if (cmd->flen > 1023 - sizeof(*cmd))
   {

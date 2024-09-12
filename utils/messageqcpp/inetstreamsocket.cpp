@@ -73,8 +73,6 @@ using namespace std;
 #include <boost/scoped_array.hpp>
 using boost::scoped_array;
 
-
-
 #define INETSTREAMSOCKET_DLLEXPORT
 #include "inetstreamsocket.h"
 #undef INETSTREAMSOCKET_DLLEXPORT
@@ -96,7 +94,6 @@ namespace
 // sometimes seeing "unknown error 512" error msgs in response to calls to
 // read(), so adding logic to retry after ERESTARTSYS the way we do for EINTR.
 // const int KERR_ERESTARTSYS = 512;
-
 
 int in_cksum(unsigned short* buf, int sz)
 {
@@ -135,9 +132,7 @@ InetStreamSocket::InetStreamSocket(size_t blocksize)
   fConnectionTimeout.tv_nsec = 0;
 }
 
-InetStreamSocket::~InetStreamSocket()
-{
-}
+InetStreamSocket::~InetStreamSocket() = default;
 
 void InetStreamSocket::open()
 {
@@ -171,7 +166,6 @@ void InetStreamSocket::open()
 #endif
     throw runtime_error(msg);
   }
-
 
   /*  XXXPAT:  If we have latency problems again, try these...
       bufferSizeSize = 4;
@@ -379,9 +373,8 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
       }
 
       ostringstream oss;
-      oss << "InetStreamSocket::readToMagic(): I/O error2.1: "
-          << "err = " << err << " e = " << e <<
-          ": " << strerror(e);
+      oss << "InetStreamSocket::readToMagic(): I/O error2.1: " << "err = " << err << " e = " << e << ": "
+          << strerror(e);
       throw runtime_error(oss.str());
     }
 
@@ -402,7 +395,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
   return true;
 }
 
-bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, const size_t numberOfBytes,
+bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, size_t numberOfBytes,
                                          const struct ::timespec* timeout, bool* isTimeOut, Stats* stats,
                                          int64_t msecs) const
 {
@@ -412,7 +405,7 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, co
     ssize_t currentBytesRead;
     int err;
 
-    if (timeout != NULL)
+    if (timeout != nullptr)
     {
       pfd[0].revents = 0;
       err = poll(pfd, 1, msecs);
@@ -438,7 +431,7 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, co
 
     if (currentBytesRead == 0)
     {
-      if (timeout == NULL)
+      if (timeout == nullptr)
       {
         logIoError("InetStreamSocket::read: timeout during first read", 0);
         return false;
@@ -482,7 +475,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
   pfd[0].fd = fSocketParms.sd();
   pfd[0].events = POLLIN;
 
-  if (timeout != 0)
+  if (timeout != nullptr)
     msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
   if (readToMagic(msecs, isTimeOut, stats) == false)  // indicates a timeout or EOF
@@ -707,7 +700,7 @@ const IOSocket InetStreamSocket::accept(const struct timespec* timeout)
   pfd[0].fd = socketParms().sd();
   pfd[0].events = POLLIN;
 
-  if (timeout != 0)
+  if (timeout != nullptr)
   {
     msecs = timeout->tv_sec * 1000 + timeout->tv_nsec / 1000000;
 
@@ -771,7 +764,7 @@ const IOSocket InetStreamSocket::accept(const struct timespec* timeout)
 #if STRERROR_R_CHAR_P
       const char* p;
 
-      if ((p = strerror_r(e, blah, 80)) != 0)
+      if ((p = strerror_r(e, blah, 80)) != nullptr)
         os << "InetStreamSocket::accept sync: " << p;
 
 #else
@@ -862,7 +855,7 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
 #if STRERROR_R_CHAR_P
     const char* p;
 
-    if ((p = strerror_r(e, blah, 80)) != 0)
+    if ((p = strerror_r(e, blah, 80)) != nullptr)
       os << "InetStreamSocket::connect: " << p;
 
 #else
@@ -883,9 +876,9 @@ const string InetStreamSocket::toString() const
   ostringstream oss;
   char buf[INET_ADDRSTRLEN];
   const SocketParms& sp = fSocketParms;
-  oss << "InetStreamSocket: sd: " << sp.sd() <<
-      " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN) <<
-      " port: " << ntohs(fSa.sin_port);
+  oss << "InetStreamSocket: sd: " << sp.sd()
+      << " inet: " << inet_ntop(AF_INET, &fSa.sin_addr, buf, INET_ADDRSTRLEN)
+      << " port: " << ntohs(fSa.sin_port);
   return oss.str();
 }
 
@@ -1030,7 +1023,7 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
     return -1;
   }
 
-  len = ::recvfrom(pingsock, pkt, pktlen, 0, 0, 0);
+  len = ::recvfrom(pingsock, pkt, pktlen, 0, nullptr, nullptr);
 
   if (len < 76)
   {
@@ -1049,7 +1042,6 @@ int InetStreamSocket::ping(const std::string& ipaddr, const struct timespec* tim
   }
 
   ::close(pingsock);
-
 
   return 0;
 }

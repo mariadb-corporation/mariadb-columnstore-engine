@@ -102,26 +102,26 @@ class pColStep : public JobStep
   pColStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tableOid,
            const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  pColStep(const pColScanStep& rhs);
+  explicit pColStep(const pColScanStep& rhs);
 
-  pColStep(const PassThruStep& rhs);
+  explicit pColStep(const PassThruStep& rhs);
 
-  virtual ~pColStep(){};
+  ~pColStep() override = default;
 
   /** @brief Starts processing.  Set at least the RID list before calling.
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run() {};
+  void run() override {};
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join() {};
+  void join() override {};
 
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
-  virtual bool isDictCol() const
+  bool isDictCol() const override
   {
     return fIsDict;
   }
@@ -186,12 +186,12 @@ class pColStep : public JobStep
     return fSwallowRows;
   }
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
 
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -222,15 +222,15 @@ class pColStep : public JobStep
   {
     isFilterFeeder = filterFeeder;
   }
-  virtual uint64_t msgsRcvdCount() const
+  uint64_t msgsRcvdCount() const override
   {
     return msgsRecvd;
   }
-  virtual uint64_t msgBytesIn() const
+  uint64_t msgBytesIn() const override
   {
     return fMsgBytesIn;
   }
-  virtual uint64_t msgBytesOut() const
+  uint64_t msgBytesOut() const override
   {
     return fMsgBytesOut;
   }
@@ -336,16 +336,14 @@ class pColScanStep : public JobStep
   pColScanStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tableOid,
                const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  pColScanStep(const pColStep& rhs);
-  ~pColScanStep()
-  {
-  }
+  explicit pColScanStep(const pColStep& rhs);
+  ~pColScanStep() override = default;
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run()
+  void run() override
   {
   }
 
@@ -353,11 +351,11 @@ class pColScanStep : public JobStep
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join()
+  void join() override
   {
   }
 
-  virtual bool isDictCol() const
+  bool isDictCol() const override
   {
     return fIsDict;
   };
@@ -413,14 +411,14 @@ class pColScanStep : public JobStep
     return fFilterCount;
   }
 
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
 
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -433,11 +431,11 @@ class pColScanStep : public JobStep
     return fRm;
   }
 
-  virtual uint64_t msgBytesIn() const
+  uint64_t msgBytesIn() const override
   {
     return fMsgBytesIn;
   }
-  virtual uint64_t msgBytesOut() const
+  uint64_t msgBytesOut() const override
   {
     return fMsgBytesOut;
   }
@@ -478,7 +476,6 @@ class pColScanStep : public JobStep
   {
     return fFilters;
   }
-
 
  private:
   // defaults okay?
@@ -545,16 +542,14 @@ class pDictionaryStep : public JobStep
   pDictionaryStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tabelOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  virtual ~pDictionaryStep()
-  {
-  }
+  ~pDictionaryStep() override = default;
 
   /** @brief virtual void Run method
    */
-  virtual void run()
+  void run() override
   {
   }
-  virtual void join()
+  void join() override
   {
   }
   // void setOutList(StringDataList* rids);
@@ -568,7 +563,7 @@ class pDictionaryStep : public JobStep
     fBOP = b;
   }
 
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
   execplan::CalpontSystemCatalog::ColType& colType()
   {
@@ -579,23 +574,23 @@ class pDictionaryStep : public JobStep
     return fColType;
   }
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
-  virtual uint64_t msgsRcvdCount() const
+  uint64_t msgsRcvdCount() const override
   {
     return msgsRecvd;
   }
-  virtual uint64_t msgBytesIn() const
+  uint64_t msgBytesIn() const override
   {
     return fMsgBytesIn;
   }
-  virtual uint64_t msgBytesOut() const
+  uint64_t msgBytesOut() const override
   {
     return fMsgBytesOut;
   }
@@ -677,18 +672,18 @@ class pDictionaryScan : public JobStep
   pDictionaryScan(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tableOid,
                   const execplan::CalpontSystemCatalog::ColType& ct, const JobInfo& jobInfo);
 
-  ~pDictionaryScan();
+  ~pDictionaryScan() override;
 
   /** @brief virtual void Run method
    */
-  virtual void run();
-  virtual void join();
+  void run() override;
+  void join() override;
   void setInputList(DataList_t* rids);
   void setBOP(int8_t b);
   void sendPrimitiveMessages();
   void receivePrimitiveMessages();
   void setSingleThread();
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
   void setRidList(DataList<ElementType>* rids);
 
@@ -713,32 +708,32 @@ class pDictionaryScan : public JobStep
       fDec->addQueue(uniqueID);
   }
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
 
-  uint64_t phyIOCount() const
+  uint64_t phyIOCount() const override
   {
     return fPhysicalIO;
   }
-  uint64_t cacheIOCount() const
+  uint64_t cacheIOCount() const override
   {
     return fCacheIO;
   }
-  uint64_t msgsRcvdCount() const
+  uint64_t msgsRcvdCount() const override
   {
     return msgsRecvd;
   }
-  uint64_t msgBytesIn() const
+  uint64_t msgBytesIn() const override
   {
     return fMsgBytesIn;
   }
-  uint64_t msgBytesOut() const
+  uint64_t msgBytesOut() const override
   {
     return fMsgBytesOut;
   }
@@ -781,7 +776,7 @@ class pDictionaryScan : public JobStep
   }
   void appendFilter(const messageqcpp::ByteStream& filter, unsigned count);
 
-  virtual void abort();
+  void abort() override;
 
   const execplan::CalpontSystemCatalog::ColType& colType() const
   {
@@ -859,7 +854,7 @@ class pDictionaryScan : public JobStep
 class BatchPrimitive : public JobStep, public DECEventListener
 {
  public:
-  BatchPrimitive(const JobInfo& jobInfo) : JobStep(jobInfo)
+  explicit BatchPrimitive(const JobInfo& jobInfo) : JobStep(jobInfo)
   {
   }
   virtual bool getFeederFlag() const = 0;
@@ -922,20 +917,20 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo);
   TupleBPS(const pDictionaryScan& rhs, const JobInfo& jobInfo);
   TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo);
-  virtual ~TupleBPS();
+  ~TupleBPS() override;
 
   /** @brief Starts processing.
    *
    * Starts processing.
    */
-  virtual void run();
+  void run() override;
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join();
+  void join() override;
 
-  void abort();
+  void abort() override;
   void abort_nolock();
 
   /** @brief The main loop for the send-side thread
@@ -960,11 +955,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
    * Add a filter when the column is anything but a 4-byte float type, including
    * 8-byte doubles.
    */
-  void setBPP(JobStep* jobStep);
-  void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2);
+  void setBPP(JobStep* jobStep) override;
+  void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2) override;
   bool scanit(uint64_t rid);
   void storeCasualPartitionInfo(const bool estimateRowCounts);
-  bool getFeederFlag() const
+  bool getFeederFlag() const override
   {
     return isFilterFeeder;
   }
@@ -972,7 +967,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   {
     isFilterFeeder = filterFeeder;
   }
-  void setSwallowRows(const bool swallowRows)
+  void setSwallowRows(const bool swallowRows) override
   {
     fSwallowRows = swallowRows;
   }
@@ -982,25 +977,25 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   }
 
   /* Base class interface fcn that can go away */
-  void setOutputType(BPSOutputType)
+  void setOutputType(BPSOutputType) override
   {
   }  // Can't change the ot of a TupleBPS
-  BPSOutputType getOutputType() const
+  BPSOutputType getOutputType() const override
   {
     return ROW_GROUP;
   }
-  void setBppStep()
+  void setBppStep() override
   {
   }
-  void setIsProjectionOnly()
+  void setIsProjectionOnly() override
   {
   }
 
-  uint64_t getRows() const
+  uint64_t getRows() const override
   {
     return ridsReturned;
   }
-  void setFirstStepType(PrimitiveStepType firstStepType)
+  void setFirstStepType(PrimitiveStepType firstStepType) override
   {
     ffirstStepType = firstStepType;
   }
@@ -1008,19 +1003,19 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   {
     return ffirstStepType;
   }
-  void setStepCount()
+  void setStepCount() override
   {
     fStepCount++;
   }
-  uint32_t getStepCount() const
+  uint32_t getStepCount() const override
   {
     return fStepCount;
   }
-  void setLastTupleId(uint64_t id)
+  void setLastTupleId(uint64_t id) override
   {
     fLastTupleId = id;
   }
-  uint64_t getLastTupleId() const
+  uint64_t getLastTupleId() const override
   {
     return fLastTupleId;
   }
@@ -1029,20 +1024,20 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
    *
    * Set the DistributedEngineComm object this instance should use
    */
-  void dec(DistributedEngineComm* dec);
+  void dec(DistributedEngineComm* dec) override;
 
-  virtual void stepId(uint16_t stepId);
-  virtual uint16_t stepId() const
+  void stepId(uint16_t stepId) override;
+  uint16_t stepId() const override
   {
     return fStepId;
   }
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -1050,40 +1045,40 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   {
     return fColType;
   }
-  const OIDVector& getProjectOids() const
+  const OIDVector& getProjectOids() const override
   {
     return projectOids;
   }
-  virtual uint64_t phyIOCount() const
+  uint64_t phyIOCount() const override
   {
     return fPhysicalIO;
   }
-  virtual uint64_t cacheIOCount() const
+  uint64_t cacheIOCount() const override
   {
     return fCacheIO;
   }
-  virtual uint64_t msgsRcvdCount() const
+  uint64_t msgsRcvdCount() const override
   {
     return msgsRecvd;
   }
-  virtual uint64_t msgBytesIn() const
+  uint64_t msgBytesIn() const override
   {
     return fMsgBytesIn;
   }
-  virtual uint64_t msgBytesOut() const
+  uint64_t msgBytesOut() const override
   {
     return fMsgBytesOut;
   }
-  virtual uint64_t blockTouched() const
+  uint64_t blockTouched() const override
   {
     return fBlockTouched;
   }
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
   //...Currently only supported by pColStep and pColScanStep, so didn't bother
   //...to define abstract method in base class, but if start adding to other
   //...classes, then should consider adding pure virtual method to JobStep.
-  uint64_t blksSkipped() const
+  uint64_t blksSkipped() const override
   {
     return fNumBlksSkipped;
   }
@@ -1094,17 +1089,17 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   }
   void useJoiner(std::shared_ptr<joiner::TupleJoiner>);
   void useJoiners(const std::vector<std::shared_ptr<joiner::TupleJoiner>>&);
-  bool wasStepRun() const
+  bool wasStepRun() const override
   {
     return fRunExecuted;
   }
 
   // DEC event listener interface
-  void newPMOnline(uint32_t connectionNumber);
+  void newPMOnline(uint32_t connectionNumber) override;
 
   void setInputRowGroup(const rowgroup::RowGroup& rg);
-  void setOutputRowGroup(const rowgroup::RowGroup& rg);
-  const rowgroup::RowGroup& getOutputRowGroup() const;
+  void setOutputRowGroup(const rowgroup::RowGroup& rg) override;
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
 
   void setAggregateStep(const rowgroup::SP_ROWAGG_PM_t& agg, const rowgroup::RowGroup& rg);
 
@@ -1118,7 +1113,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
     return bop;
   }
 
-  void setJobInfo(const JobInfo* jobInfo);
+  void setJobInfo(const JobInfo* jobInfo) override;
 
   // @bug 2123.  Added getEstimatedRowCount function.
   /* @brief estimates the number of rows that will be returned for use in determining the
@@ -1141,9 +1136,9 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
       JLF should register that object with the TBPS for that table.  If it's
       cross-table, then JLF should register it with the join step.
   */
-  void addFcnJoinExp(const std::vector<execplan::SRCP>& fe);
-  void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>& fe);
-  void setFE1Input(const rowgroup::RowGroup& feInput);
+  void addFcnJoinExp(const std::vector<execplan::SRCP>& fe) override;
+  void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>& fe) override;
+  void setFE1Input(const rowgroup::RowGroup& feInput) override;
 
   /* for use by the THJS only... */
   void setFcnExpGroup2(const boost::shared_ptr<funcexp::FuncExpWrapper>& fe2,
@@ -1152,17 +1147,17 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   /* Functions & Expressions in select and groupby clause.
   JLF should use these only if there isn't a join.  If there is, call the
   equivalent fcn on THJS instead */
-  void setFcnExpGroup3(const std::vector<execplan::SRCP>& fe);
-  void setFE23Output(const rowgroup::RowGroup& rg);
+  void setFcnExpGroup3(const std::vector<execplan::SRCP>& fe) override;
+  void setFE23Output(const rowgroup::RowGroup& rg) override;
   bool hasFcnExpGroup3()
   {
     return (fe2 != NULL);
   }
 
   // rowgroup to connector
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
 
   /* Interface for adding add'l predicates for casual partitioning.
    * This fcn checks for any intersection between the values in vals
@@ -1185,7 +1180,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   void reloadExtentLists();
   void initExtentMarkers();  // need a better name for this
 
-  virtual bool stringTableFriendly()
+  bool stringTableFriendly() override
   {
     return true;
   }
@@ -1486,16 +1481,16 @@ class FilterStep : public JobStep
 {
  public:
   FilterStep(const execplan::CalpontSystemCatalog::ColType& colType, const JobInfo& jobInfo);
-  ~FilterStep();
+  ~FilterStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
-  void join();
+  void run() override;
+  void join() override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
-  execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOID;
   }
@@ -1526,7 +1521,7 @@ class FilterStep : public JobStep
 
  private:
   // This i/f is not meaningful in this step
-  execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return 0;
   }
@@ -1562,31 +1557,31 @@ class PassThruStep : public JobStep
   PassThruStep(execplan::CalpontSystemCatalog::OID oid, execplan::CalpontSystemCatalog::OID tableOid,
                const execplan::CalpontSystemCatalog::ColType& colType, const JobInfo& jobInfo);
 
-  PassThruStep(const pColStep& rhs);
-  PassThruStep(const PseudoColStep& rhs);
+  explicit PassThruStep(const pColStep& rhs);
+  explicit PassThruStep(const PseudoColStep& rhs);
 
-  virtual ~PassThruStep();
+  ~PassThruStep() override;
 
   /** @brief Starts processing.  Set at least the RID list before calling.
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run();
+  void run() override;
 
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join();
+  void join() override;
 
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
-  virtual execplan::CalpontSystemCatalog::OID oid() const
+  execplan::CalpontSystemCatalog::OID oid() const override
   {
     return fOid;
   }
 
-  virtual execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -1595,7 +1590,7 @@ class PassThruStep : public JobStep
   {
     return colWidth;
   }
-  bool isDictCol() const
+  bool isDictCol() const override
   {
     return isDictColumn;
   }
@@ -1663,13 +1658,11 @@ class PseudoColStep : public pColStep
   {
   }
 
-  PseudoColStep(const PassThruStep& rhs) : pColStep(rhs), fPseudoColumnId(rhs.pseudoType())
+  explicit PseudoColStep(const PassThruStep& rhs) : pColStep(rhs), fPseudoColumnId(rhs.pseudoType())
   {
   }
 
-  virtual ~PseudoColStep()
-  {
-  }
+  ~PseudoColStep() override = default;
 
   uint32_t pseudoColumnId() const
   {
@@ -1686,8 +1679,8 @@ class PseudoColStep : public pColStep
  private:
   /** @brief disabled constuctor
    */
-  PseudoColStep(const pColScanStep&);
-  PseudoColStep(const pColStep&);
+  explicit PseudoColStep(const pColScanStep&);
+  explicit PseudoColStep(const pColStep&);
 };
 
 }  // namespace joblist

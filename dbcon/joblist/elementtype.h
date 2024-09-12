@@ -147,9 +147,7 @@ struct RowWrapper
       et[i] = rg.et[i];
   }
 
-  ~RowWrapper()
-  {
-  }
+  ~RowWrapper() = default;
 
   inline RowWrapper& operator=(const RowWrapper& rg)
   {
@@ -170,7 +168,7 @@ struct RIDElementType
   uint64_t first;
 
   RIDElementType();
-  RIDElementType(uint64_t f);
+  explicit RIDElementType(uint64_t f);
 
   const char* getHashString(uint64_t mode, uint64_t* len) const
   {
@@ -194,9 +192,7 @@ struct TupleType
 {
   uint64_t first;
   char* second;
-  TupleType()
-  {
-  }
+  TupleType() = default;
   TupleType(uint64_t f, char* s) : first(f), second(s)
   {
   }
@@ -244,14 +240,14 @@ extern std::ostream& operator<<(std::ostream& out, const TupleType& rhs);
 
 #ifndef NO_DATALISTS
 
-//#include "bandeddl.h"
-//#include "wsdl.h"
+// #include "bandeddl.h"
+// #include "wsdl.h"
 #include "fifo.h"
-//#include "bucketdl.h"
-//#include "constantdatalist.h"
-//#include "swsdl.h"
-//#include "zdl.h"
-//#include "deliverywsdl.h"
+// #include "bucketdl.h"
+// #include "constantdatalist.h"
+// #include "swsdl.h"
+// #include "zdl.h"
+// #include "deliverywsdl.h"
 
 namespace joblist
 {
@@ -350,7 +346,6 @@ class AnyDataList
 
   ~AnyDataList() = default;
 
-
   inline void rowGroupDL(boost::shared_ptr<RowGroupDL> dl)
   {
     fDatalist = dl;
@@ -367,8 +362,6 @@ class AnyDataList
   {
     return fDatalist.get();
   }
-
-
 
   enum DataListTypes
   {
@@ -408,8 +401,8 @@ class AnyDataList
   // bool operator==(const AnyDataList& rhs);
 
  private:
-  AnyDataList(const AnyDataList& rhs);
-  AnyDataList& operator=(const AnyDataList& rhs);
+  AnyDataList(const AnyDataList& rhs) = delete;
+  AnyDataList& operator=(const AnyDataList& rhs) = delete;
   boost::shared_ptr<RowGroupDL> fDatalist;
   bool fDisown;
 };
@@ -435,4 +428,3 @@ extern std::ostream& omitOidInDL(std::ostream& strm);
 }  // namespace joblist
 
 #endif
-

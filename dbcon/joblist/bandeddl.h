@@ -29,7 +29,7 @@
 #include <boost/thread/condition.hpp>
 
 #include "largedatalist.h"
-//#include "bucketdl.h"
+// #include "bucketdl.h"
 
 #include <time.h>
 
@@ -68,9 +68,9 @@ class BandedDL : public LargeDataList<std::vector<element_t>, element_t>
 
  protected:
  private:
-  explicit BandedDL(){};
-  explicit BandedDL(const BandedDL&){};
-  BandedDL& operator=(const BandedDL&){};
+  explicit BandedDL() = default;
+  BandedDL(const BandedDL&){};
+  BandedDL& operator=(const BandedDL&) {};
 
   // vars to support the WSDL-like next() fcn
   boost::condition nextSetLoaded;

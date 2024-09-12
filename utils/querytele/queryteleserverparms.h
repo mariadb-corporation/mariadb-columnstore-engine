@@ -30,9 +30,7 @@ class QueryTeleServerParms
   QueryTeleServerParms(const std::string h, int p) : host(h), port(p)
   {
   }
-  ~QueryTeleServerParms()
-  {
-  }
+  ~QueryTeleServerParms() = default;
 
   std::string host;
   int port;

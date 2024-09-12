@@ -11,7 +11,6 @@
 #include <thrift/protocol/TProtocol.h>
 #include <thrift/transport/TTransport.h>
 
-
 namespace querytele
 {
 struct QTType
@@ -176,9 +175,7 @@ class QueryTele
   {
   }
 
-  virtual ~QueryTele() throw()
-  {
-  }
+  virtual ~QueryTele() throw() = default;
 
   std::string query_uuid;
   QTType::type msg_type;
@@ -569,9 +566,7 @@ class StepTele
   {
   }
 
-  virtual ~StepTele() throw()
-  {
-  }
+  virtual ~StepTele() throw() = default;
 
   std::string query_uuid;
   STType::type msg_type;
@@ -807,9 +802,7 @@ class ImportTele
   {
   }
 
-  virtual ~ImportTele() throw()
-  {
-  }
+  virtual ~ImportTele() throw() = default;
 
   std::string job_uuid;
   std::string import_uuid;

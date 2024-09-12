@@ -89,7 +89,7 @@ struct DiskIoInfo
   bool fWrite;
 
   // c: byte count; b: is write operation?
-  DiskIoInfo(bool b = false) : fBytes(0), fWrite(b)
+  explicit DiskIoInfo(bool b = false) : fBytes(0), fWrite(b)
   {
   }
 };
@@ -205,7 +205,7 @@ LargeDataList<container_t, element_t>::LargeDataList(uint32_t nc, uint32_t eleme
  , fTraceOn(false)
  , fReUse(false)
  , fSaveForReuse(false)
- , fRestoreInfo(NULL)
+ , fRestoreInfo(nullptr)
 {
   loadedSet = 0;
   setCount = 1;

@@ -54,7 +54,7 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
   {
   }
 
-  virtual ~MCSAnalyzeTableExecutionPlan() = default;
+  ~MCSAnalyzeTableExecutionPlan() override = default;
 
   const ReturnedColumnList& returnedCols() const
   {
@@ -232,16 +232,16 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
     return ((fSessionID & 0x80000000) != 0);
   }
 
-  virtual void serialize(messageqcpp::ByteStream& bs) const;
+  void serialize(messageqcpp::ByteStream& bs) const override;
 
-  virtual void unserialize(messageqcpp::ByteStream& bs);
+  void unserialize(messageqcpp::ByteStream& bs) override;
 
   // TODO: Why do we need this?
-  virtual bool operator==(const CalpontExecutionPlan* t) const
+  bool operator==(const CalpontExecutionPlan* t) const override
   {
     return false;
   }
-  virtual bool operator!=(const CalpontExecutionPlan* t) const
+  bool operator!=(const CalpontExecutionPlan* t) const override
   {
     return false;
   }
