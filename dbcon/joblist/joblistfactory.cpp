@@ -2174,18 +2174,10 @@ SJLP makeJobList_(CalpontExecutionPlan* cplan, ResourceManager* rm,
         }
 
         oss << endl;
-        gettimeofday(&stTime, 0);
 
-        struct tm tmbuf;
-        localtime_r(&stTime.tv_sec, &tmbuf);
-        ostringstream tms;
-        tms << setfill('0') << setw(4) << (tmbuf.tm_year + 1900) << setw(2) << (tmbuf.tm_mon + 1) << setw(2)
-            << (tmbuf.tm_mday) << setw(2) << (tmbuf.tm_hour) << setw(2) << (tmbuf.tm_min) << setw(2)
-            << (tmbuf.tm_sec) << setw(6) << (stTime.tv_usec);
-        string tmstr(tms.str());
-        string jsrname("jobstep." + tmstr + ".dot");
+        auto jsrname = jlf_graphics::generateDotFileName("jobstep.");
         ofstream dotFile(jsrname.c_str());
-        jlf_graphics::writeDotCmds(dotFile, querySteps, projectSteps);
+        dotFile << jlf_graphics::GraphGeneratorNoStats(querySteps, projectSteps).writeDotCmds();
 
         char timestamp[80];
         ctime_r((const time_t*)&stTime.tv_sec, timestamp);
