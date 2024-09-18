@@ -4111,7 +4111,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   }
   else
   {
-    const Schema* funcSchema = ifp->schemaName();
+    const Schema* funcSchema = ifp->schema();
     if (funcSchema)
     {
       idbassert(funcSchema->name().str);
