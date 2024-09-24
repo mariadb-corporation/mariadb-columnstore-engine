@@ -1,11 +1,12 @@
 #!/bin/bash
 # Documentation:   bash cs_package_manager.sh help
 
-
 # Variables
 enterprise_token=""
 dev_drone_key="" 
-cs_pkg_manager_version="3.4"
+jenkins_user="" 
+jenkins_pwd=""   
+cs_pkg_manager_version="3.5"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -24,7 +25,7 @@ Example Remove:
 Example Single Node Install: 
     bash $0 install [enterprise|community] [version] --token [token]
     bash $0 install enterprise 10.6.12-8 --token [token]
-    bash $0 install community 11.1.1
+    bash $0 install community 11.1
 
 Example Cluster Install: 
     bash $0 install enterprise help
@@ -34,15 +35,19 @@ Example Single Node Upgrade:
     bash $0 upgrade [enterprise|community] [version] --token [token]
     bash $0 upgrade enterprise 10.6.18-14 --token [token]
     bash $0 upgrade community 11.1.4
-
 "   
 
     if [  -n "$dev_drone_key" ]; then
-        echo "Example Install Dev: 
+        echo "
+Example Install Dev: 
 bash $0 install [enterprise|community|dev] [version|cron|latest|pull_request] [build num] --token xxxxxxx
 bash $0 install dev develop cron/8629
 bash $0 install dev develop-23.02 pull_request/7256
 bash $0 install dev stable-23.10 pull_request/10820
+
+Example Install Jenkins: 
+bash $0 install [jenkins] [project]/[branch]/[git commit] --user xxxxxxx --password xxxxxxx
+bash $0 install jenkins ENTERPRISE/bb-10.6.14-9-cs-23.02.11-1/2d367136b3d3511ffeb53451de539d44db98ed91/
     "
     fi
 }
@@ -286,9 +291,17 @@ is_mariadb_installed() {
             echo "\nshutdown_mariadb_and_cmapi - package manager not implemented: $package_manager\n"
             exit 2;
     esac
+    
 
     if eval $mariadb_installed_command ; then
-        return 0
+        # Check if the systemd service file exists
+        if systemctl status mariadb &> /dev/null; then
+            # MariaDB systemd service file exists & package is installed
+            return 0
+        else
+            echo "Error: MariaDB systemd service file does not exist."
+            return 1
+        fi
     else 
         return 1
     fi
@@ -376,6 +389,7 @@ do_yum_remove() {
         kill_cs_processes 2>/dev/null
         stop_cs_via_systemctl_override
         kill_cs_processes 2>/dev/null
+        kill_mariadbd_processes 2>/dev/null
     fi
 
     printf "Prechecks\n"
@@ -402,6 +416,12 @@ do_yum_remove() {
 
     if yum list installed galera-* &>/dev/null; then
         yum remove galera-* -y
+    fi
+
+    # Check for rpms installed outside packagemanager
+    mariadb_packages_still_installed=$(yum list installed | grep MariaDB | awk '{print $1}')
+    if [ -n "$mariadb_packages_still_installed" ] ; then
+        yum remove $mariadb_packages_still_installed -y
     fi
 
     # remove offical & custom yum repos
@@ -532,7 +552,7 @@ print_enterprise_install_help_text() {
 
     Example:
         bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
-        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49 --replication-pwd \"My_custom_password123%\"
+        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49 --replication-pwd \"my_custom_password123%\"
     
     Note: When deploying a cluster, run the same command on all nodes at the same time.
             "
@@ -923,10 +943,10 @@ check_aws_cli_installed() {
                 ;;
             ubuntu | debian )
                 rm -rf aws awscliv2.zip
-                if ! sudo apt install unzip -y; then
+                if ! DEBIAN_FRONTEND=noninteractive apt install unzip -y; then
                     echo "[!!] Installing Unzip Failed: Trying update"
-                    sudo apt update -y;
-                    sudo apt install unzip -y;
+                    DEBIAN_FRONTEND=noninteractive  apt update -y;
+                    DEBIAN_FRONTEND=noninteractive  apt install unzip -y;
                 fi
                 curl "$cli_url" -o "awscliv2.zip";
                 unzip -q awscliv2.zip;
@@ -1186,6 +1206,21 @@ check_dev_build_exists() {
         printf "[!] Defined dev build doesnt exist in aws\n\n"
         exit 2;
     fi;
+}
+
+check_jenkins_build_exists() {
+
+    # Use curl to check if the URL exists
+    http_status=$(curl -s -o /dev/null -w "%{http_code}" --user "$jenkins_user:$jenkins_pwd" "$jenkins_url")
+
+    # Check if the HTTP status code is 200 (OK)
+    if [ "$http_status" -eq 200 ]; then
+        return 0
+    else
+        echo "URL does not exist or an error occurred:"
+        echo "$jenkins_url"
+        exit 2
+    fi
 }
 
 
@@ -1623,6 +1658,10 @@ kill_cs_processes() {
    ps -ef | grep -E '(PrimProc|ExeMgr|DMLProc|DDLProc|WriteEngineServer|StorageManager|controllernode|workernode|load_brm|save_brm)' | grep -v "grep" | awk '{print $2}' | xargs kill -9
 }
 
+kill_mariadbd_processes() {
+    ps -ef | grep -E '(mariadbd)' | grep -v "grep" | awk '{print $2}' | xargs kill -9
+}
+
 stop_cs_via_systemctl() {
     printf " - Trying to stop columnstore via systemctl"
     if systemctl stop mariadb-columnstore ; then
@@ -1809,6 +1848,217 @@ EOF
 
 }
 
+do_jenkins_yum_install() {
+
+    # list packages
+    grep_list="MariaDB-backup-*|MariaDB-client-*|MariaDB-columnstore-engine-*|MariaDB-common-*|MariaDB-server-*|MariaDB-shared-*|galera-enterprise-*|cmapi"
+    rpm_list=$(curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/ | grep -oP '(?<=href=").+?\.rpm' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
+    
+    if [ -z "$rpm_list" ]; then
+        echo "No RPMs found"
+        echo "command:  curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/"
+        exit 2
+    fi
+
+    for rpm in $rpm_list; do
+        echo "Downloading $rpm..."
+        if ! curl -s --user "$jenkins_user:$jenkins_pwd" -o "$rpm" "$jenkins_url/$os_package/$rpm"; then
+            echo "Failed to download: $rpm"
+            exit 2
+        fi
+    done
+
+    # Confirm Downloaded server rpm
+    if ! ls MariaDB-server-*.rpm 1> /dev/null 2>&1; then
+        echo "Error: No MariaDB-server RPMs were found."
+        exit 1
+    fi
+
+    # Install MariaDB Server
+    if ! yum install MariaDB-server-* galera-enterprise-* MariaDB-client-* MariaDB-common-* MariaDB-shared-* -y; then
+        printf "\n[!] Failed to install MariaDB-server \n\n"
+        exit 1;
+    fi
+
+    systemctl daemon-reload
+    systemctl enable mariadb
+    systemctl start mariadb
+
+    # Install Columnstore
+    if ! yum install MariaDB-columnstore-engine-* -y; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi
+
+    if ! ls MariaDB-columnstore-cmapi* 1> /dev/null 2>&1; then
+ 
+        # Construct URLs
+        dronePath="s3://$dev_drone_key"
+        branch="stable-23.10"
+        build="latest"
+        product="10.6-enterprise"
+        s3_path="$dronePath/$branch/$build/$product/$arch/rockylinux${version_id}"
+        check_aws_cli_installed
+        echo "Attempting to download cmapi from drone: $s3_path"
+        
+        aws s3 cp $s3_path/ . --recursive --exclude "*" --include "MariaDB-columnstore-cmapi-*" --exclude "*debug*" --no-sign-request
+
+        if ! ls MariaDB-columnstore-cmapi* 1> /dev/null 2>&1; then
+            echo "Error: No MariaDB-columnstore-cmapi RPMs were found."
+            exit 1
+        fi
+    fi
+
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! yum install MariaDB-columnstore-cmapi-* jq -y; then
+            printf "\n[!] Failed to install cmapi\n\n"
+            exit 1;
+        else
+            post_cmapi_install_configuration
+        fi
+    else
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
+    fi
+    
+    return
+}
+
+do_jenkins_apt_install() {
+    # list packages
+    echo "++++++++++++++++++++++++++++++++++++++++++++"
+    grep_list="mariadb-backup-*|mariadb-client-*|mariadb-plugin-columnstore-*|mariadb-common*|mariadb-server-*|mariadb-shared-*|galera-enterprise-*|cmapi|libmariadb3|mysql-common"
+    rpm_list=$(curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/ | grep -oP '(?<=href=").+?\.deb' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
+
+    if [ -z "$rpm_list" ]; then
+        echo "No RPMs found"
+        echo "command:  curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/"
+        exit 2
+    fi
+    
+    for rpm in $rpm_list; do
+        echo "Downloading $rpm..."
+        if ! curl -s --user "$jenkins_user:$jenkins_pwd" -o "$rpm" "$jenkins_url/$os_package/$rpm"; then
+            echo "Failed to download: $rpm"
+            exit 2
+        fi
+    done
+
+    # Install MariaDB
+    DEBIAN_FRONTEND=noninteractive apt update 
+    DEBIAN_FRONTEND=noninteractive apt upgrade -y --quiet
+    apt-get clean
+    DEBIAN_FRONTEND=noninteractive sudo apt install gawk libdbi-perl lsof perl rsync -y --quiet
+    DEBIAN_FRONTEND=noninteractive sudo apt install libdbi-perl socat libhtml-template-perl -y --quiet
+    if ! DEBIAN_FRONTEND=noninteractive apt install $(pwd)/mysql-common*.deb $(pwd)/mariadb-server*.deb $(pwd)/galera-enterprise-* $(pwd)/mariadb-common*.deb  $(pwd)/mariadb-client-*.deb $(pwd)/libmariadb3*.deb -y --quiet; then
+        printf "\n[!] Failed to install mariadb-server \n\n"
+        exit 1;
+    fi
+    sleep 2
+    systemctl daemon-reload
+    systemctl enable mariadb
+    systemctl start mariadb
+
+    # Install Columnstore
+    if ! DEBIAN_FRONTEND=noninteractive apt install $(pwd)/mariadb-plugin-columnstore*.deb  -y --quiet --allow-downgrades; then
+        printf "\n[!] Failed to install columnstore \n\n"
+        exit 1;
+    fi;
+
+    if ! ls mariadb-columnstore-cmapi*.deb 1> /dev/null 2>&1; then
+ 
+        # Construct URLs
+        dronePath="s3://$dev_drone_key"
+        branch="stable-23.10"
+        build="latest"
+        product="10.6-enterprise"
+        s3_path="$dronePath/$branch/$build/$product/$arch/$distro"
+        check_aws_cli_installed
+        echo "Attempting to download cmapi from drone: $s3_path"
+        
+        aws s3 cp $s3_path/ . --recursive --exclude "*" --include "mariadb-columnstore-cmapi*" --exclude "*debug*" --no-sign-request
+
+        if ! ls mariadb-columnstore-cmapi*.deb 1> /dev/null 2>&1; then
+            echo "Error: No MariaDB-columnstore-cmapi RPMs were found."
+            echo "do_jenkins_apt_install:   aws s3 ls $s3_path/ "
+            exit 1
+        fi
+    fi
+
+    # Install CMAPI
+    if $CONFIGURE_CMAPI ; then
+        if ! DEBIAN_FRONTEND=noninteractive apt install $(pwd)/mariadb-columnstore-cmapi*.deb jq -y --quiet ; then 
+            printf "\n[!] Failed to install cmapi \n\n"
+            mariadb -e "show status like '%Columnstore%';"
+        else 
+            post_cmapi_install_configuration
+        fi
+    else
+        create_mariadb_users
+        configure_columnstore_cross_engine_user
+    fi
+
+
+
+
+    return
+}
+
+
+jenkins_install() {
+
+    if [ -z $jenkins_user ]; then printf "Missing jenkins_user: \n"; exit; fi;
+    if [ -z $jenkins_pwd ]; then printf "Missing jenkins_pwd: \n"; exit; fi;
+
+    product_branch_commit="$3"
+    echo "Product/Branch/Commit: $product_branch_commit"
+    if [ -z "$product_branch_commit" ]; then printf "Missing Product/Branch/Commit: $product_branch_commit\n"; exit 2; fi;
+    parse_install_cluster_additional_args "$@"
+
+    # Construct URLs
+    jenkins_url="https://es-repo.mariadb.net/jenkins/${product_branch_commit}/"
+    echo "Jenkins URL: $jenkins_url"
+    process_cluster_variables
+    echo "###################################"
+    
+    check_jenkins_build_exists
+    
+    if $CONFIGURE_CMAPI && [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
+
+
+    case $distro_info in
+        centos | rhel | rocky )
+            jenkins_url="${jenkins_url}RPMS"
+            os_package="rhel-$version_id"
+            if [ "$architecture" == "arm64" ]; then
+                os_package+="rhel-$version_id-arm"
+            fi
+            do_jenkins_yum_install "$@" 
+            ;;
+            
+        ubuntu | debian )
+            jenkins_url="${jenkins_url}DEB"
+
+            if [ "$distro_info" == "ubuntu" ]; then
+                version_formatted="${version_id_exact//.}"
+                os_package="ubuntu-$version_formatted"
+            else
+                os_package="debian-$version_id"
+            fi
+      
+            
+            if [ "$architecture" == "arm64" ]; then
+                os_package="${os_package}-arm"
+            fi
+            do_jenkins_apt_install "$@" 
+            ;;
+        *)  # unknown option
+            printf "\njenkins_install: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
+}
+
 do_install() {
 
     check_operating_system
@@ -1836,6 +2086,10 @@ do_install() {
         dev )
             # pull from dev repo - requires dev_drone_key
             dev_install "$@" ;
+            ;;
+        jenkins ) 
+            # pull from jenkins repo - requires jenkins_user_name and jenkins_password
+            jenkins_install "$@" ;
             ;;
         -h | --help | help )
             print_install_help_text
