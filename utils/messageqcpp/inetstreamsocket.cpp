@@ -572,6 +572,9 @@ void InetStreamSocket::write(SBS msg, Stats* stats)
 
 void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stats* stats) const
 {
+  // !!!
+  // !!! Reducing BS size type from 64bit down to 32 and potentially loosing data.
+  // !!!
   uint32_t msglen = msg.length();
   uint32_t magic = whichMagic;
   uint32_t* realBuf;

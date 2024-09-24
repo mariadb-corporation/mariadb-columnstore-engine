@@ -753,7 +753,7 @@ void IdbOrderBy::initialize(const RowGroup& rg)
   // initialize rows
   IdbCompare::initialize(rg);
 
-  uint64_t newSize = rg.getSizeWithStrings(fRowsPerRG);
+  auto newSize = rg.getSizeWithStrings(fRowsPerRG);
   if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
   {
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
