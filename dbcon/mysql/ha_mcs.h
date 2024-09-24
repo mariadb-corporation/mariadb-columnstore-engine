@@ -45,7 +45,7 @@ class ha_mcs : public handler
   THR_LOCK_DATA lock;        ///< MySQL lock
   COLUMNSTORE_SHARE* share;  ///< Shared lock info
   ulonglong int_table_flags;
-  // We are using a vector here to mimick the stack functionality
+  // We are using a vector here to mimic the stack functionality
   // using push_back() and pop_back()
   // as apparently there is a linker error on the std::stack<COND*>::pop()
   // call on Ubuntu18.
@@ -58,7 +58,7 @@ class ha_mcs : public handler
 
  public:
   ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
-  virtual ~ha_mcs() = default;
+  ~ha_mcs() override = default;
 
   /** @brief
     The name that will be used for display purposes.
@@ -174,7 +174,7 @@ class ha_mcs : public handler
   /** @brief
     We implement this in ha_example.cc; it's a required method.
   */
-  int close(void) override;  // required
+  int close() override;  // required
 
   /** @brief
     We implement this in ha_example.cc. It's not an obligatory method;
@@ -257,7 +257,7 @@ class ha_mcs : public handler
   int info(uint32_t) override;                  ///< required
   int extra(enum ha_extra_function operation) override;
   int external_lock(THD* thd, int lock_type) override;  ///< required
-  int delete_all_rows(void) override;
+  int delete_all_rows() override;
   ha_rows records_in_range(uint32_t inx, const key_range* min_key, const key_range* max_key,
                            page_range* res) override;
   int delete_table(const char* from) override;
@@ -329,26 +329,26 @@ class ha_mcs_cache : public ha_mcs
     cache handler
   */
 
-  int create(const char* name, TABLE* table_arg, HA_CREATE_INFO* ha_create_info);
-  int open(const char* name, int mode, uint open_flags);
-  int delete_table(const char* name);
-  int rename_table(const char* from, const char* to);
-  int delete_all_rows(void);
-  int close(void);
+  int create(const char* name, TABLE* table_arg, HA_CREATE_INFO* ha_create_info) override;
+  int open(const char* name, int mode, uint open_flags) override;
+  int delete_table(const char* name) override;
+  int rename_table(const char* from, const char* to) override;
+  int delete_all_rows() override;
+  int close() override;
 
-  uint lock_count(void) const;
-  THR_LOCK_DATA** store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_type lock_type);
-  int external_lock(THD* thd, int lock_type);
-  int repair(THD* thd, HA_CHECK_OPT* check_opt);
-  bool is_crashed() const;
+  uint lock_count() const override;
+  THR_LOCK_DATA** store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_type lock_type) override;
+  int external_lock(THD* thd, int lock_type) override;
+  int repair(THD* thd, HA_CHECK_OPT* check_opt) override;
+  bool is_crashed() const override;
 
   /*
     Write row uses cache_handler, for normal inserts, otherwise derived
     handler
   */
-  int write_row(const uchar* buf);
-  void start_bulk_insert(ha_rows rows, uint flags);
-  int end_bulk_insert();
+  int write_row(const uchar* buf) override;
+  void start_bulk_insert(ha_rows rows, uint flags) override;
+  int end_bulk_insert() override;
 
   /* Cache functions */
   void free_locks();
