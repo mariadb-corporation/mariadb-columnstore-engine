@@ -113,7 +113,7 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store(static_cast<int64_t>(val), 1);
   }
 
-  int store_float(float dl)
+  int store_float(float dl) override
   {
     if (dl == std::numeric_limits<float>::infinity())
     {
@@ -128,7 +128,7 @@ class StoreFieldMariaDB : public StoreField
     return m_field->store(dl);
   }
 
-  int store_double(double dl)
+  int store_double(double dl) override
   {
     if (dl == std::numeric_limits<double>::infinity())
     {

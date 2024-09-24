@@ -77,7 +77,7 @@ class SubQuery
 class WhereSubQuery : public SubQuery
 {
  public:
-  WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSub(NULL), fFunc(NULL)
+  WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSub(nullptr), fFunc(nullptr)
   {
   }
   WhereSubQuery(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func)
@@ -156,7 +156,7 @@ class InSub : public WhereSubQuery
   InSub(const InSub& rhs);
   ~InSub() override;
   execplan::ParseTree* transform() override;
-  void handleFunc(gp_walk_info* gwip, Item_func* func);
+  void handleFunc(gp_walk_info* gwip, Item_func* func) override;
   void handleNot() override;
 };
 

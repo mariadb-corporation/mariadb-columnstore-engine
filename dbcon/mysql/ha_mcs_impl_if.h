@@ -185,7 +185,7 @@ struct gp_walk_info
    , condPush(false)
    , dropCond(false)
    , internalDecimalScale(4)
-   , thd(0)
+   , thd(nullptr)
    , subSelectType(uint64_t(-1))
    , subQuery(nullptr)
    , clauseType(INIT)
@@ -219,7 +219,7 @@ struct cal_table_info
   };
 
   cal_table_info()
-   : tpl_ctx(nullptr), c(0), msTablePtr(0), conn_hndl(nullptr), condInfo(nullptr), moreRows(false)
+   : tpl_ctx(nullptr), c(0), msTablePtr(nullptr), conn_hndl(nullptr), condInfo(nullptr), moreRows(false)
   {
   }
   ~cal_table_info() = default;
@@ -238,12 +238,12 @@ struct cal_table_info
 struct cal_group_info
 {
   cal_group_info()
-   : groupByFields(0)
-   , groupByTables(0)
-   , groupByWhere(0)
-   , groupByGroup(0)
-   , groupByOrder(0)
-   , groupByHaving(0)
+   : groupByFields(nullptr)
+   , groupByTables(nullptr)
+   , groupByWhere(nullptr)
+   , groupByGroup(nullptr)
+   , groupByOrder(nullptr)
+   , groupByHaving(nullptr)
    , groupByDistinct(false)
   {
   }
