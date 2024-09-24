@@ -79,9 +79,7 @@ class IntervalColumn : public ReturnedColumn
   IntervalColumn();
   IntervalColumn(SRCP&, int);
   IntervalColumn(const IntervalColumn& rhs, const uint32_t sessionID = 0);
-  virtual ~IntervalColumn()
-  {
-  }
+  ~IntervalColumn() override = default;
   const SRCP& val() const
   {
     return fVal;
@@ -99,22 +97,22 @@ class IntervalColumn : public ReturnedColumn
     fIntervalType = intervalType;
   }
   const std::string toString() const override;
-  inline virtual IntervalColumn* clone() const override
+  inline IntervalColumn* clone() const override
   {
     return new IntervalColumn(*this);
   }
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate() override
+  bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**
@@ -124,12 +122,12 @@ class IntervalColumn : public ReturnedColumn
   int fIntervalType;
 
   // okay to be private for now.
-  virtual bool operator==(const TreeNode* t) const override
+  bool operator==(const TreeNode* t) const override
   {
     return false;
   }
   bool operator==(const IntervalColumn& t) const;
-  virtual bool operator!=(const TreeNode* t) const override
+  bool operator!=(const TreeNode* t) const override
   {
     return false;
   }

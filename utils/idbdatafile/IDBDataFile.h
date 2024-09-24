@@ -201,7 +201,7 @@ class IDBDataFile
    * Constructor - takes the filename to be stored in a member variable
    * for logging purposes
    */
-  IDBDataFile(const char* fname);
+  explicit IDBDataFile(const char* fname);
 
   /**
    * The close() method closes the file.  It is defined as protected
@@ -226,9 +226,7 @@ inline IDBDataFile::IDBDataFile(const char* fname) : m_fname(fname), m_fColWidth
 {
 }
 
-inline IDBDataFile::~IDBDataFile()
-{
-}
+inline IDBDataFile::~IDBDataFile() = default;
 
 inline const std::string& IDBDataFile::name() const
 {

@@ -18,11 +18,10 @@
 #include "StatTask.h"
 #include "messageFormat.h"
 #include "SMLogging.h"
-#include <errno.h>
+#include <cerrno>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
 
 using namespace std;
 

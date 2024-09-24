@@ -461,11 +461,9 @@ class WriteBatchFieldMariaDB : public WriteBatchField
     }
     else
     {
-      int32_t tmp = (
-                     (*const_cast<uint8_t*>(buf) << 8) |
-                     (*const_cast<uint8_t*>(buf+1) << 16) |
-                     (*const_cast<uint8_t*>(buf+2) << 24)
-                    ) >> 8;
+      int32_t tmp = ((*const_cast<uint8_t*>(buf) << 8) | (*const_cast<uint8_t*>(buf + 1) << 16) |
+                     (*const_cast<uint8_t*>(buf + 2) << 24)) >>
+                    8;
       fprintf(ci.filePtr(), "%d%c", tmp, ci.delimiter());
     }
     return 3;
@@ -477,11 +475,8 @@ class WriteBatchFieldMariaDB : public WriteBatchField
       fprintf(ci.filePtr(), "%c", ci.delimiter());
     else
     {
-      uint32_t tmp = (
-                      (*const_cast<uint8_t*>(buf)) |
-                      (*const_cast<uint8_t*>(buf+1) << 8) |
-                      (*const_cast<uint8_t*>(buf+2) << 16)
-                     );
+      uint32_t tmp = ((*const_cast<uint8_t*>(buf)) | (*const_cast<uint8_t*>(buf + 1) << 8) |
+                      (*const_cast<uint8_t*>(buf + 2) << 16));
       fprintf(ci.filePtr(), "%u%c", tmp, ci.delimiter());
     }
     return 3;

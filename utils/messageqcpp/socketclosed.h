@@ -24,6 +24,7 @@
 
 #include <exception>
 #include <string>
+#include <utility>
 
 #pragma once
 
@@ -35,23 +36,21 @@ namespace messageqcpp
  */
 class SocketClosed : public std::exception
 {
-  std::string _M_msg;
+  std::string M_msg;
 
  public:
   /** Takes a character string describing the error.  */
-  explicit SocketClosed(const std::string& __arg) : _M_msg(__arg)
+  explicit SocketClosed(std::string _arg) : M_msg(std::move(_arg))
   {
   }
 
-  virtual ~SocketClosed() throw()
-  {
-  }
+  ~SocketClosed() noexcept override = default;
 
   /** Returns a C-style character string describing the general cause of
    *  the current error (the same string passed to the ctor).  */
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
-    return _M_msg.c_str();
+    return M_msg.c_str();
   }
 };
 

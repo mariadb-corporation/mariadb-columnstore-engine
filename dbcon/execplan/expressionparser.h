@@ -53,12 +53,12 @@ struct Token
   TreeNode* value;
   bool is_operator() const
   {
-    if (value == 0)
+    if (value == nullptr)
       return false;
 
     return (typeid(*value) == typeid(Operator));
   }
-  Token() : value(0)
+  Token() : value(nullptr)
   {
   }
   Token(TreeNode* v) : value(v)

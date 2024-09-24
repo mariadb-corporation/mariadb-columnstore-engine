@@ -26,7 +26,6 @@
 #include <vector>
 #include <boost/scoped_ptr.hpp>
 
-
 #include "returnedcolumn.h"  // SRCP
 #include "rowgroup.h"        // RowGroup
 #include "rowaggregation.h"  // SP_GroupConcat
@@ -48,7 +47,7 @@ class GroupConcatInfo
   virtual ~GroupConcatInfo();
 
   void prepGroupConcat(JobInfo&);
-  void mapColumns(const rowgroup::RowGroup&);
+  virtual void mapColumns(const rowgroup::RowGroup&);
 
   std::set<uint32_t>& columns()
   {
@@ -59,11 +58,11 @@ class GroupConcatInfo
     return fGroupConcat;
   }
 
-  const std::string toString() const;
+  virtual const std::string toString() const;
 
  protected:
-  uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  virtual uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
+  virtual std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 
   std::set<uint32_t> fColumns;
   std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
@@ -72,22 +71,22 @@ class GroupConcatInfo
 class GroupConcatAgUM : public rowgroup::GroupConcatAg
 {
  public:
-  EXPORT GroupConcatAgUM(rowgroup::SP_GroupConcat&);
-  EXPORT ~GroupConcatAgUM();
+  EXPORT explicit GroupConcatAgUM(rowgroup::SP_GroupConcat&);
+  EXPORT ~GroupConcatAgUM() override;
 
   using rowgroup::GroupConcatAg::merge;
-  void initialize();
-  void processRow(const rowgroup::Row&);
-  EXPORT void merge(const rowgroup::Row&, int64_t);
+  void initialize() override;
+  void processRow(const rowgroup::Row&) override;
+  EXPORT virtual void merge(const rowgroup::Row&, int64_t);
   boost::scoped_ptr<GroupConcator>& concator()
   {
     return fConcator;
   }
 
-  EXPORT uint8_t* getResult();
+  EXPORT uint8_t* getResult() override;
 
  protected:
-  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
+  virtual void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 
   boost::scoped_ptr<GroupConcator> fConcator;
   boost::scoped_array<uint8_t> fData;
@@ -133,17 +132,17 @@ class GroupConcatNoOrder : public GroupConcator
 {
  public:
   GroupConcatNoOrder();
-  virtual ~GroupConcatNoOrder();
+  ~GroupConcatNoOrder() override;
 
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
 
-  void merge(GroupConcator*);
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
-  //uint8_t* getResult(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
+  // uint8_t* getResult(const std::string& sep);
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
   rowgroup::RowGroup fRowGroup;
@@ -163,19 +162,19 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
 {
  public:
   GroupConcatOrderBy();
-  virtual ~GroupConcatOrderBy();
+  ~GroupConcatOrderBy() override;
 
   using ordering::IdbOrderBy::initialize;
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
-  uint64_t getKeyLength() const;
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
+  uint64_t getKeyLength() const override;
 
-  void merge(GroupConcator*);
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
-  //uint8_t* getResult(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
+  // uint8_t* getResult(const std::string& sep);
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
 };

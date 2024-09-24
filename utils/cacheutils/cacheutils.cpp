@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <sstream>
 #include <limits>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -77,9 +77,7 @@ class CacheOpThread
   CacheOpThread(const string& svr, const ByteStream& outBs) : fServerName(svr), fOutBs(outBs)
   {
   }
-  ~CacheOpThread()
-  {
-  }
+  ~CacheOpThread() = default;
   void operator()()
   {
     struct timespec ts = {10, 0};
@@ -89,7 +87,7 @@ class CacheOpThread
     try
     {
       cl->write(fOutBs);
-      rc = extractRespCode(cl->read(&ts));
+      rc = extractRespCode(*cl->read(&ts));
     }
     catch (...)
     {
@@ -343,7 +341,7 @@ int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId)
     oss << "PMS" << pmId;
     scoped_ptr<MessageQueueClient> cl(new MessageQueueClient(oss.str()));
     cl->write(bs);
-    rc = extractRespCode(cl->read(&ts));
+    rc = extractRespCode(*cl->read(&ts));
   }
   catch (...)
   {
@@ -353,4 +351,3 @@ int purgePrimProcFdCache(const std::vector<BRM::FileInfo> files, const int pmId)
   return rc;
 }
 }  // namespace cacheutils
-

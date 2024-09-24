@@ -100,9 +100,9 @@ typedef std::tr1::unordered_map<std::string, mcsv1_UDAF*> UDAF_MAP;
 class UDAFMap
 {
  public:
-  EXPORT UDAFMap(){};
+  EXPORT UDAFMap() = default;
 
-  EXPORT ~UDAFMap(){};
+  EXPORT ~UDAFMap() = default;
 
   static EXPORT UDAF_MAP& getMap();
 
@@ -129,8 +129,8 @@ class mcsv1Context;
 
 struct UserData
 {
-  UserData() : size(0), data(NULL){};
-  UserData(size_t sz)
+  UserData() : size(0), data(nullptr){};
+  explicit UserData(size_t sz)
   {
     size = sz;
     data = new uint8_t[sz];
@@ -468,8 +468,8 @@ class mcsv1_UDAF
     NOT_IMPLEMENTED = 2  // User UDA(n)F shouldn't return this
   };
   // Defaults OK
-  mcsv1_UDAF(){};
-  virtual ~mcsv1_UDAF(){};
+  mcsv1_UDAF() = default;
+  virtual ~mcsv1_UDAF() = default;
 
   /**
    * init()
@@ -667,19 +667,19 @@ inline mcsv1Context::mcsv1Context()
  , fColWidth(0)
  , fResultscale(0)
  , fResultPrecision(18)
- , dataFlags(NULL)
- , bInterrupted(NULL)
+ , dataFlags(nullptr)
+ , bInterrupted(nullptr)
  , fStartFrame(execplan::WF_UNBOUNDED_PRECEDING)
  , fEndFrame(execplan::WF_CURRENT_ROW)
  , fStartConstant(0)
  , fEndConstant(0)
- , func(NULL)
+ , func(nullptr)
  , fParamCount(0)
  , fCharsetNumber(8)  // Latin1
 {
 }
 
-inline mcsv1Context::mcsv1Context(const mcsv1Context& rhs) : dataFlags(NULL)
+inline mcsv1Context::mcsv1Context(const mcsv1Context& rhs) : dataFlags(nullptr)
 {
   copy(rhs);
 }
@@ -703,13 +703,11 @@ inline mcsv1Context& mcsv1Context::copy(const mcsv1Context& rhs)
   return *this;
 }
 
-inline mcsv1Context::~mcsv1Context()
-{
-}
+inline mcsv1Context::~mcsv1Context() = default;
 
 inline mcsv1Context& mcsv1Context::operator=(const mcsv1Context& rhs)
 {
-  dataFlags = NULL;
+  dataFlags = nullptr;
   return copy(rhs);
 }
 

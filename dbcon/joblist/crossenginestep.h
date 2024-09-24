@@ -60,76 +60,76 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
 
   /** @brief CrossEngineStep destructor
    */
-  ~CrossEngineStep();
+  ~CrossEngineStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void join method
    */
-  void join();
+  void join() override;
 
   /** @brief virtual string toString method
    */
-  const std::string toString() const;
+  const std::string toString() const override;
 
   // from BatchPrimitive
-  bool getFeederFlag() const
+  bool getFeederFlag() const override
   {
     return false;
   }
-  uint64_t getLastTupleId() const
+  uint64_t getLastTupleId() const override
   {
     return 0;
   }
-  uint32_t getStepCount() const
+  uint32_t getStepCount() const override
   {
     return 1;
   }
-  void setBPP(JobStep* jobStep);
-  void setFirstStepType(PrimitiveStepType firstStepType)
+  void setBPP(JobStep* jobStep) override;
+  void setFirstStepType(PrimitiveStepType firstStepType) override
   {
   }
-  void setIsProjectionOnly()
+  void setIsProjectionOnly() override
   {
   }
-  void setLastTupleId(uint64_t id)
+  void setLastTupleId(uint64_t id) override
   {
   }
-  void setOutputType(BPSOutputType outputType)
+  void setOutputType(BPSOutputType outputType) override
   {
   }
-  void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2);
-  void setStepCount()
+  void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2) override;
+  void setStepCount() override
   {
   }
-  void setSwallowRows(const bool swallowRows)
+  void setSwallowRows(const bool swallowRows) override
   {
   }
-  void setBppStep()
+  void setBppStep() override
   {
   }
-  void dec(DistributedEngineComm* dec)
+  void dec(DistributedEngineComm* dec) override
   {
   }
-  const OIDVector& getProjectOids() const
+  const OIDVector& getProjectOids() const override
   {
     return fOIDVector;
   }
-  uint64_t blksSkipped() const
+  uint64_t blksSkipped() const override
   {
     return 0;
   }
-  bool wasStepRun() const
+  bool wasStepRun() const override
   {
     return fRunExecuted;
   }
-  BPSOutputType getOutputType() const
+  BPSOutputType getOutputType() const override
   {
     return ROW_GROUP;
   }
-  uint64_t getRows() const
+  uint64_t getRows() const override
   {
     return fRowsReturned;
   }
@@ -145,27 +145,27 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   {
     return fAlias;
   }
-  void setJobInfo(const JobInfo* jobInfo)
+  void setJobInfo(const JobInfo* jobInfo) override
   {
   }
-  void setOutputRowGroup(const rowgroup::RowGroup&);
-  const rowgroup::RowGroup& getOutputRowGroup() const;
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
 
   // from DECEventListener
-  void newPMOnline(uint32_t)
+  void newPMOnline(uint32_t) override
   {
   }
 
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
-  void addFcnJoinExp(const std::vector<execplan::SRCP>&);
-  void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>&);
-  void setFE1Input(const rowgroup::RowGroup&);
-  void setFcnExpGroup3(const std::vector<execplan::SRCP>&);
-  void setFE23Output(const rowgroup::RowGroup&);
+  void addFcnJoinExp(const std::vector<execplan::SRCP>&) override;
+  void addFcnExpGroup1(const boost::shared_ptr<execplan::ParseTree>&) override;
+  void setFE1Input(const rowgroup::RowGroup&) override;
+  void setFcnExpGroup3(const std::vector<execplan::SRCP>&) override;
+  void setFE23Output(const rowgroup::RowGroup&) override;
 
   void addFilter(JobStep* jobStep);
   void addProject(JobStep* jobStep);
@@ -201,7 +201,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   class Runner
   {
    public:
-    Runner(CrossEngineStep* step) : fStep(step)
+    explicit Runner(CrossEngineStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -248,4 +248,3 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-

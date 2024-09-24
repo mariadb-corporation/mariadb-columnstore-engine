@@ -56,13 +56,13 @@ class RowColumn : public ReturnedColumn
   /**
    * Constructors
    */
-  RowColumn(const uint32_t sessionID = 0);
+  explicit RowColumn(const uint32_t sessionID = 0);
   RowColumn(const RowColumn& rhs, const uint32_t sessionID = 0);
-  RowColumn(const std::vector<SRCP>& columnVec, const uint32_t sessionID = 0);
+  explicit RowColumn(const std::vector<SRCP>& columnVec, const uint32_t sessionID = 0);
   /**
    * Destructor
    */
-  virtual ~RowColumn();
+  ~RowColumn() override;
 
   /**
    * Accessor Methods
@@ -80,7 +80,7 @@ class RowColumn : public ReturnedColumn
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual RowColumn* clone() const override
+  inline RowColumn* clone() const override
   {
     return new RowColumn(*this);
   }
@@ -95,20 +95,20 @@ class RowColumn : public ReturnedColumn
   // virtual void serialize(messageqcpp::ByteStream&) const;
   // virtual void unserialize(messageqcpp::ByteStream&);
 
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /**
    * Serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -122,7 +122,7 @@ class RowColumn : public ReturnedColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -131,16 +131,16 @@ class RowColumn : public ReturnedColumn
    */
   bool operator!=(const RowColumn& t) const;
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate() override
+  bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**
@@ -156,23 +156,21 @@ class SubSelect : public ReturnedColumn
   SubSelect() : ReturnedColumn()
   {
   }
-  ~SubSelect()
-  {
-  }
+  ~SubSelect() override = default;
   SubSelect* clone() const override
   {
     return new SubSelect();
   }
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate() override
+  bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc() override
+  bool hasWindowFunc() override
   {
     return false;
   }
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 };
 
 /**

@@ -46,7 +46,7 @@ class DbFileOp : public FileOp
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~DbFileOp();
+  EXPORT ~DbFileOp() override;
 
   EXPORT virtual int flushCache();
 

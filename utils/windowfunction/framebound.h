@@ -52,11 +52,11 @@ class FrameBound
   /** @brief FrameBound constructor
    *  @param  t, frame type
    */
-  FrameBound(int t = 0) : fBoundType(t), fStart(true){};
+  explicit FrameBound(int t = 0) : fBoundType(t), fStart(true){};
 
   /** @brief FrameBound destructor
    */
-  virtual ~FrameBound(){};
+  virtual ~FrameBound() = default;
 
   /** @brief clone
    */
@@ -144,4 +144,3 @@ class FrameBound
 extern std::map<int, std::string> colType2String;
 
 }  // namespace windowfunction
-

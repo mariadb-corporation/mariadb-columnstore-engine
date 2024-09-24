@@ -23,6 +23,6 @@
 // # of bytes in a block
 const uint64_t BLOCK_SIZE = 8192;
 
-// lobgical_block_rids is the # of rows 1-byter-column in a block
+// logical_block_rids is the # of rows 1-byter-column in a block
 // its value is the same as block_size, but different unit
 const uint64_t LOGICAL_BLOCK_RIDS = BLOCK_SIZE;

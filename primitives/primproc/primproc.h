@@ -155,12 +155,12 @@ class ServicePrimProc : public Service, public Opt
 
   void LogErrno() override
   {
-    cerr << strerror(errno) << endl;
+    std::cerr << strerror(errno) << std::endl;
   }
 
   void ParentLogChildMessage(const std::string& str) override
   {
-    cout << str << endl;
+    std::cout << str << std::endl;
   }
   int Child() override;
   int Run()

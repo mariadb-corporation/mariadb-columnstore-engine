@@ -39,28 +39,28 @@ class DictStep : public Command
 {
  public:
   DictStep();
-  virtual ~DictStep();
+  ~DictStep() override;
 
-  void execute();
-  void project();
+  void execute() override;
+  void project() override;
   void project(int64_t* vals);  // used by RTSCommand to redirect input
-  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t row);
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t row) override;
   void projectIntoRowGroup(rowgroup::RowGroup& rg, int64_t* vals, uint32_t col);
-  uint64_t getLBID();
+  uint64_t getLBID() override;
 
   /* This doesn't do anything for this class...  make it column-specific or not? */
-  void nextLBID();
-  void createCommand(messageqcpp::ByteStream&);
-  void resetCommand(messageqcpp::ByteStream&);
+  void nextLBID() override;
+  void createCommand(messageqcpp::ByteStream&) override;
+  void resetCommand(messageqcpp::ByteStream&) override;
 
   /* Put bootstrap code here (ie, build the template primitive msg) */
-  void prep(int8_t outputType, bool makeAbsRids);
+  void prep(int8_t outputType, bool makeAbsRids) override;
 
-  SCommand duplicate();
+  SCommand duplicate() override;
   bool operator==(const DictStep&) const;
   bool operator!=(const DictStep&) const;
 
-  int getCompType() const
+  int getCompType() const override
   {
     return compressionType;
   }
@@ -78,13 +78,11 @@ class DictStep : public Command
     const uint8_t* ptr;
     unsigned len;
 
-    StringPtr() : ptr(NULL), len(0)
+    StringPtr() : ptr(nullptr), len(0)
     {
-      ;
     }
     StringPtr(const uint8_t* p, unsigned l) : ptr(p), len(l)
     {
-      ;
     }
     utils::ConstString getConstString() const
     {
@@ -111,9 +109,7 @@ class DictStep : public Command
     OrderedToken() : inResult(false)
     {
     }
-    ~OrderedToken()
-    {
-    }
+    ~OrderedToken() = default;
   };
   struct TokenSorter
   {

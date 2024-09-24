@@ -49,9 +49,9 @@ class OuterJoinOnFilter : public Filter
    * Constructors
    */
   OuterJoinOnFilter();
-  OuterJoinOnFilter(const SPTP& pt);
+  explicit OuterJoinOnFilter(const SPTP& pt);
   OuterJoinOnFilter(const OuterJoinOnFilter& rhs);
-  virtual ~OuterJoinOnFilter();
+  ~OuterJoinOnFilter() override;
 
   /**
    * Accessor Methods
@@ -69,19 +69,19 @@ class OuterJoinOnFilter : public Filter
    * Overloaded stream operator
    */
   // virtual std::ostream& operator<< (std::ostream& output);
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual OuterJoinOnFilter* clone() const override
+  inline OuterJoinOnFilter* clone() const override
   {
     return new OuterJoinOnFilter(*this);
   }
@@ -91,7 +91,7 @@ class OuterJoinOnFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -105,7 +105,7 @@ class OuterJoinOnFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -113,7 +113,8 @@ class OuterJoinOnFilter : public Filter
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
   bool operator!=(const OuterJoinOnFilter& t) const;
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
+
  private:
   // default okay?
   // OuterJoinOnFilter& operator=(const OuterJoinOnFilter& rhs);

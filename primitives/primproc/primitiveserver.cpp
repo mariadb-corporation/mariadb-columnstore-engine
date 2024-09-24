@@ -45,6 +45,7 @@ using namespace std;
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
+#include <utility>
 #include <boost/thread.hpp>
 using namespace boost;
 #include "distributedenginecomm.h"
@@ -110,7 +111,7 @@ using namespace threadpool;
 // make global for blockcache
 //
 static const char* statsName = {"pm"};
-dbbc::Stats* gPMStatsPtr = 0;
+dbbc::Stats* gPMStatsPtr = nullptr;
 bool gPMProfOn = false;
 uint32_t gSession = 0;
 dbbc::Stats pmstats(statsName);
@@ -141,8 +142,6 @@ int noVB = 0;
 BPPMap bppMap;
 boost::mutex bppLock;
 
-#define DJLOCK_READ 0
-#define DJLOCK_WRITE 1
 boost::mutex djMutex;                      // lock for djLock, lol.
 std::map<uint64_t, shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
@@ -160,9 +159,7 @@ struct preFetchCond
     waiters = 0;
   }
 
-  ~preFetchCond()
-  {
-  }
+  ~preFetchCond() = default;
 };
 
 typedef preFetchCond preFetchBlock_t;
@@ -202,7 +199,7 @@ void waitForRetry(long count)
   timespec ts;
   ts.tv_sec = 5L * count / 10L;
   ts.tv_nsec = (5L * count % 10L) * 100000000L;
-  nanosleep(&ts, 0);
+  nanosleep(&ts, nullptr);
 }
 
 void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
@@ -234,7 +231,7 @@ void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
     return;
   }
 
-  preFetchBlock_t* pfb = 0;
+  preFetchBlock_t* pfb = nullptr;
   pfb = new preFetchBlock_t(lowlbid);
 
   pfBlockMap[lowlbid] = pfb;
@@ -304,7 +301,7 @@ void prefetchBlocks(const uint64_t lbid, const int compType, uint32_t* rCount)
     if (pfBlockMap.erase(lowlbid) > 0)
       delete pfb;
 
-    pfb = 0;
+    pfb = nullptr;
     pfbMutex.unlock();
     throw;
   }
@@ -326,7 +323,7 @@ cleanup:
   if (pfBlockMap.erase(lowlbid) > 0)
     delete pfb;
 
-  pfb = 0;
+  pfb = nullptr;
   pfbMutex.unlock();
 
 }  // prefetchBlocks()
@@ -524,15 +521,15 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
     boost::scoped_array<unsigned char> uCmpBufSa;
 
     ptrdiff_t alignedBuffer = 0;
-    void* readBufferPtr = NULL;
-    char* cmpHdrBuf = NULL;
-    char* cmpBuf = NULL;
-    unsigned char* uCmpBuf = NULL;
+    void* readBufferPtr = nullptr;
+    char* cmpHdrBuf = nullptr;
+    char* cmpBuf = nullptr;
+    unsigned char* uCmpBuf = nullptr;
     uint64_t cmpBufLen = 0;
     int blockReadRetryCount = 0;
     unsigned idx = 0;
     int pageSize = getpagesize();
-    IDBDataFile* fp = 0;
+    IDBDataFile* fp = nullptr;
 
     try
     {
@@ -543,7 +540,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
       int opts = directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
       fp = IDBDataFile::open(IDBPolicy::getType(fileNamePtr, IDBPolicy::PRIMPROC), fileNamePtr, "r", opts);
 
-      if (fp == NULL)
+      if (fp == nullptr)
       {
         int errCode = errno;
         SUMMARY_INFO2("open failed: ", fileNamePtr);
@@ -552,7 +549,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
         // #if STRERROR_R_CHAR_P
         const char* p;
 
-        if ((p = strerror_r(errCode, errbuf, 80)) != 0)
+        if ((p = strerror_r(errCode, errbuf, 80)) != nullptr)
           errMsg = p;
 
         if (errCode == EINVAL)
@@ -595,8 +592,8 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
           cout << "pread2(" << fd << ", 0x" << hex << (ptrdiff_t)readBufferPtr << dec << ", "
                << DATA_BLOCK_SIZE << ", " << offset << ") = " << i << endl;
         }
-#endif      // IDB_COMP_POC_DEBUG
-      }     // if (compType == 0)
+#endif  // IDB_COMP_POC_DEBUG
+      }  // if (compType == 0)
       else  // if (compType != 0)
       {
       // retry if file is out of sync -- compressed column file only.
@@ -692,7 +689,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
           uint64_t cmpBufOff = ptrList[idx].first;
           uint64_t cmpBufSz = ptrList[idx].second;
 
-          if (cmpBufSa.get() == NULL || cmpBufLen < cmpBufSz)
+          if (cmpBufSa.get() == nullptr || cmpBufLen < cmpBufSz)
           {
             cmpBufSa.reset(new char[cmpBufSz + pageSize]);
             cmpBufLen = cmpBufSz;
@@ -759,12 +756,12 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
     catch (...)
     {
       delete fp;
-      fp = 0;
+      fp = nullptr;
       throw;
     }
 
     delete fp;
-    fp = 0;
+    fp = nullptr;
 
     // log the retries
     if (blockReadRetryCount > 0)
@@ -787,7 +784,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
     return;
   }
 
-  FileBuffer* fbPtr = 0;
+  FileBuffer* fbPtr = nullptr;
   bool wasBlockInCache = false;
 
   fbPtr = bc.getBlockPtr(lbid, ver, flg);
@@ -827,12 +824,12 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
 
 struct AsynchLoader
 {
-  AsynchLoader(uint64_t l, const QueryContext& v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount,
-               bool trace, uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
+  AsynchLoader(uint64_t l, QueryContext v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount, bool trace,
+               uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
                boost::shared_ptr<BPPSendThread> st,  // sendThread for abort upon exception.
                VSSCache* vCache)
    : lbid(l)
-   , ver(v)
+   , ver(std::move(v))
    , txn(t)
    , compType(ct)
    , LBIDTrace(trace)
@@ -841,7 +838,7 @@ struct AsynchLoader
    , readCount(rCount)
    , busyLoaders(loaderCount)
    , mutex(m)
-   , sendThread(st)
+   , sendThread(std::move(st))
    , vssCache(vCache)
   {
   }
@@ -1016,10 +1013,10 @@ class DictScanJob : public threadpool::FairThreadPool::Functor
 {
  public:
   DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock);
-  virtual ~DictScanJob();
+  ~DictScanJob() override;
 
   void write(const SBS);
-  int operator()();
+  int operator()() override;
   void catchHandler(const std::string& ex, uint32_t id, uint16_t code = logging::primitiveServerErr);
   void sendErrorMsg(uint32_t id, uint16_t code);
 
@@ -1031,14 +1028,12 @@ class DictScanJob : public threadpool::FairThreadPool::Functor
 };
 
 DictScanJob::DictScanJob(SP_UM_IOSOCK ios, SBS bs, SP_UM_MUTEX writeLock)
- : fIos(ios), fByteStream(bs), fWriteLock(writeLock)
+ : fIos(std::move(ios)), fByteStream(std::move(bs)), fWriteLock(std::move(writeLock))
 {
   dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
 }
 
-DictScanJob::~DictScanJob()
-{
-}
+DictScanJob::~DictScanJob() = default;
 
 void DictScanJob::write(const SBS sbs)
 {
@@ -1215,9 +1210,8 @@ struct BPPHandler
 
   struct BPPHandlerFunctor : public FairThreadPool::Functor
   {
-    BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : bs(b)
+    BPPHandlerFunctor(boost::shared_ptr<BPPHandler> r, SBS b) : rt(std::move(r)), bs(std::move(b))
     {
-      rt = r;
       dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
     }
 
@@ -1228,10 +1222,10 @@ struct BPPHandler
 
   struct LastJoiner : public BPPHandlerFunctor
   {
-    LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
+    LastJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(std::move(r), std::move(b))
     {
     }
-    int operator()()
+    int operator()() override
     {
       utils::setThreadName("PPHandLastJoiner");
       return rt->lastJoinerMsg(*bs, dieTime);
@@ -1240,10 +1234,10 @@ struct BPPHandler
 
   struct Create : public BPPHandlerFunctor
   {
-    Create(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
+    Create(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(std::move(r), std::move(b))
     {
     }
-    int operator()()
+    int operator()() override
     {
       utils::setThreadName("PPHandCreate");
       rt->createBPP(*bs);
@@ -1253,10 +1247,10 @@ struct BPPHandler
 
   struct Destroy : public BPPHandlerFunctor
   {
-    Destroy(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
+    Destroy(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(std::move(r), std::move(b))
     {
     }
-    int operator()()
+    int operator()() override
     {
       utils::setThreadName("PPHandDestroy");
       return rt->destroyBPP(*bs, dieTime);
@@ -1265,10 +1259,10 @@ struct BPPHandler
 
   struct AddJoiner : public BPPHandlerFunctor
   {
-    AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
+    AddJoiner(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(std::move(r), std::move(b))
     {
     }
-    int operator()()
+    int operator()() override
     {
       utils::setThreadName("PPHandAddJoiner");
       return rt->addJoinerToBPP(*bs, dieTime);
@@ -1280,7 +1274,7 @@ struct BPPHandler
     Abort(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(r, b)
     {
     }
-    int operator()()
+    int operator()() override
     {
       utils::setThreadName("PPHandAbort");
       return rt->doAbort(*bs, dieTime);
@@ -1667,12 +1661,12 @@ struct BPPHandler
 class DictionaryOp : public FairThreadPool::Functor
 {
  public:
-  DictionaryOp(SBS cmd) : bs(cmd)
+  DictionaryOp(SBS cmd) : bs(std::move(cmd))
   {
     dieTime = posix_time::second_clock::universal_time() + posix_time::seconds(100);
   }
   virtual int execute() = 0;
-  int operator()()
+  int operator()() override
   {
     utils::setThreadName("PPDictOp");
     int ret;
@@ -1705,7 +1699,7 @@ class CreateEqualityFilter : public DictionaryOp
   CreateEqualityFilter(SBS cmd) : DictionaryOp(cmd)
   {
   }
-  int execute()
+  int execute() override
   {
     createEqualityFilter();
     return 0;
@@ -1739,10 +1733,10 @@ class CreateEqualityFilter : public DictionaryOp
 class DestroyEqualityFilter : public DictionaryOp
 {
  public:
-  DestroyEqualityFilter(SBS cmd) : DictionaryOp(cmd)
+  DestroyEqualityFilter(SBS cmd) : DictionaryOp(std::move(cmd))
   {
   }
-  int execute()
+  int execute() override
   {
     return destroyEqualityFilter();
   }
@@ -2167,9 +2161,7 @@ struct ReadThread
     mlp->logMessage(logging::M0058, args, false);
   }
 
-  ~ReadThread()
-  {
-  }
+  ~ReadThread() = default;
   string fServerName;
   IOSocket fIos;
   PrimitiveServer* fPrimitiveServerPtr;

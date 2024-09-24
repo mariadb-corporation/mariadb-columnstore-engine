@@ -18,11 +18,9 @@
 
 //  $Id: wf_stats.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
 #include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -33,13 +31,9 @@ using namespace boost;
 #include "idberrorinfo.h"
 using namespace logging;
 
-#include "rowgroup.h"
-using namespace rowgroup;
-
 #include "idborderby.h"
 using namespace ordering;
 
-#include "joblisttypes.h"
 #include "calpontsystemcatalog.h"
 using namespace execplan;
 
@@ -177,7 +171,7 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
       long double val = (long double)valIn;
       count_++;
       long double delta = val - mean_;
-      mean_ += delta/count_;
+      mean_ += delta / count_;
       scaledMomentum2_ += delta * (val - mean_);
     }
 
@@ -208,13 +202,13 @@ void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 
   if (count_ == 0)
   {
-    setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*)NULL);
+    setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*)nullptr);
   }
   else if (count_ == 1)
   {
     if (fFunctionId == WF__STDDEV_SAMP || fFunctionId == WF__VAR_SAMP)
     {
-      setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*)NULL);
+      setValue(CalpontSystemCatalog::DOUBLE, b, e, c, (double*)nullptr);
     }
     else  // fFunctionId == WF__STDDEV_POP || fFunctionId == WF__VAR_POP
     {

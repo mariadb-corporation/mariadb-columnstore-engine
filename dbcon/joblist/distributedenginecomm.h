@@ -72,7 +72,7 @@ namespace joblist
 class DECEventListener
 {
  public:
-  virtual ~DECEventListener(){};
+  virtual ~DECEventListener() = default;
 
   /* Do whatever needs to be done to init the new PM */
   virtual void newPMOnline(uint32_t newConnectionNumber) = 0;
@@ -135,7 +135,7 @@ class DistributedEngineComm
 
   /** reads queuesize/divisor msgs */
   EXPORT void read_some(uint32_t key, uint32_t divisor, std::vector<messageqcpp::SBS>& v,
-                        bool* flowControlOn = NULL);
+                        bool* flowControlOn = nullptr);
 
   /** @brief Write a primitive message
    *

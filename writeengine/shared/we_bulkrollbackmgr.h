@@ -68,7 +68,7 @@ class BulkRollbackMgr
    *        Currently used for logging only.
    */
   EXPORT BulkRollbackMgr(OID tableOID, uint64_t lockID, const std::string& tableName,
-                         const std::string& applName, Log* logger = 0);
+                         const std::string& applName, Log* logger = nullptr);
 
   /**
    * @brief BulkRollbackMgr destructor

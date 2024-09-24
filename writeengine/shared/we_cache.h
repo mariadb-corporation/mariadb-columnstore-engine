@@ -23,11 +23,7 @@
 
 #pragma once
 #include <iostream>
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 2
-#include <ext/hash_map>
-#else
-#include <tr1/unordered_map>
-#endif
+#include <unordered_map>
 #include <map>
 
 #include <we_obj.h>
@@ -65,13 +61,7 @@ struct eqCacheKey
   }
 };
 
-// typedef hash_map<Signature, TokenStruc, signatureHash<Signature>, eqSig> DCTNRYHASHMAP;
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 2
-typedef __gnu_cxx::hash_map<CacheKey, BlockBuffer*, hashCacheKey<CacheKey>, eqCacheKey> CacheMap;
-#else
-typedef std::tr1::unordered_map<CacheKey, BlockBuffer*, hashCacheKey<CacheKey>, eqCacheKey> CacheMap;
-#endif
-// typedef __gnu_cxx::hash_map<CacheKey, BlockBuffer*> CacheMap;
+typedef std::unordered_map<CacheKey, BlockBuffer*, hashCacheKey<CacheKey>, eqCacheKey> CacheMap;
 typedef CacheMap::iterator CacheMapIt;
 
 // typedef CacheMap                    LRUBufList;       /** @brief Least Recent Used Buffer list */
@@ -84,16 +74,12 @@ class Cache
   /**
    * @brief Constructor
    */
-  Cache()
-  {
-  }
+  Cache() = default;
 
   /**
    * @brief Default Destructor
    */
-  ~Cache()
-  {
-  }
+  ~Cache() = default;
 
   /**
    * @brief Check whether cache key exists
@@ -215,7 +201,7 @@ class Cache
   static CacheMap* m_lruList;         // LRU buffer list
   static CacheMap* m_writeList;       // Write buffer list
 
-      EXPORT static bool m_useCache;  // Use cache flag
+  EXPORT static bool m_useCache;  // Use cache flag
  private:
 };
 

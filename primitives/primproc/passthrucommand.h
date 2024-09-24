@@ -38,21 +38,21 @@ class PassThruCommand : public Command
 {
  public:
   PassThruCommand();
-  virtual ~PassThruCommand();
+  ~PassThruCommand() override;
 
-  void prep(int8_t outputType, bool makeAbsRids);
-  void execute();
-  void project();
-  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
-  uint64_t getLBID();
-  void nextLBID();
-  void createCommand(messageqcpp::ByteStream&);
-  void resetCommand(messageqcpp::ByteStream&);
-  SCommand duplicate();
+  void prep(int8_t outputType, bool makeAbsRids) override;
+  void execute() override;
+  void project() override;
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col) override;
+  uint64_t getLBID() override;
+  void nextLBID() override;
+  void createCommand(messageqcpp::ByteStream&) override;
+  void resetCommand(messageqcpp::ByteStream&) override;
+  SCommand duplicate() override;
   bool operator==(const PassThruCommand&) const;
   bool operator!=(const PassThruCommand&) const;
 
-  int getCompType() const
+  int getCompType() const override
   {
     return 0;
   }

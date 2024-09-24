@@ -24,7 +24,6 @@
 #include <vector>
 #include <boost/scoped_ptr.hpp>
 
-
 #include "groupconcat.h"
 
 #define EXPORT
@@ -39,31 +38,31 @@ class JsonArrayInfo : public GroupConcatInfo
 {
  public:
   void prepJsonArray(JobInfo&);
-  void mapColumns(const rowgroup::RowGroup&);
+  void mapColumns(const rowgroup::RowGroup&) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
-  uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo) override;
+  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&) override;
 };
 
 class JsonArrayAggregatAgUM : public GroupConcatAgUM
 {
  public:
-  EXPORT JsonArrayAggregatAgUM(rowgroup::SP_GroupConcat&);
-  EXPORT ~JsonArrayAggregatAgUM();
+  EXPORT explicit JsonArrayAggregatAgUM(rowgroup::SP_GroupConcat&);
+  EXPORT ~JsonArrayAggregatAgUM() override;
 
   using rowgroup::GroupConcatAg::merge;
-  void initialize();
-  void processRow(const rowgroup::Row&);
-  EXPORT void merge(const rowgroup::Row&, int64_t);
+  void initialize() override;
+  void processRow(const rowgroup::Row&) override;
+  EXPORT void merge(const rowgroup::Row&, int64_t) override;
 
   EXPORT void getResult(uint8_t*);
-  EXPORT uint8_t* getResult();
+  EXPORT uint8_t* getResult() override;
 
  protected:
-  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
+  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&) override;
 };
 
 // JSON_ARRAYAGG base
@@ -71,17 +70,17 @@ class JsonArrayAggregator : public GroupConcator
 {
  public:
   JsonArrayAggregator();
-  virtual ~JsonArrayAggregator();
+  ~JsonArrayAggregator() override;
 
-  virtual void initialize(const rowgroup::SP_GroupConcat&);
-  virtual void processRow(const rowgroup::Row&) = 0;
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override = 0;
 
-  virtual const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
-  virtual bool concatColIsNull(const rowgroup::Row&);
-  virtual void outputRow(std::ostringstream&, const rowgroup::Row&);
-  virtual int64_t lengthEstimate(const rowgroup::Row&);
+  bool concatColIsNull(const rowgroup::Row&) override;
+  void outputRow(std::ostringstream&, const rowgroup::Row&) override;
+  int64_t lengthEstimate(const rowgroup::Row&) override;
 };
 
 // For JSON_ARRAYAGG withour distinct or orderby
@@ -89,17 +88,17 @@ class JsonArrayAggNoOrder : public JsonArrayAggregator
 {
  public:
   JsonArrayAggNoOrder();
-  virtual ~JsonArrayAggNoOrder();
+  ~JsonArrayAggNoOrder() override;
 
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
 
   using GroupConcator::merge;
-  void merge(GroupConcator*);
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
   rowgroup::RowGroup fRowGroup;
@@ -118,19 +117,19 @@ class JsonArrayAggOrderBy : public JsonArrayAggregator, public ordering::IdbOrde
 {
  public:
   JsonArrayAggOrderBy();
-  virtual ~JsonArrayAggOrderBy();
+  ~JsonArrayAggOrderBy() override;
 
   using ordering::IdbOrderBy::initialize;
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
-  uint64_t getKeyLength() const;
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
+  uint64_t getKeyLength() const override;
 
   using GroupConcator::merge;
-  void merge(GroupConcator*);
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
 };

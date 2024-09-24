@@ -71,7 +71,7 @@ class allnull : public mcsv1_UDAF
  public:
   // Defaults OK
   allnull() : mcsv1_UDAF(){};
-  virtual ~allnull(){};
+  ~allnull() override = default;
 
   /**
    * init()
@@ -91,7 +91,7 @@ class allnull : public mcsv1_UDAF
    * colTypes or wrong number of arguments. Else return
    * mcsv1_UDAF::SUCCESS.
    */
-  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
   /**
    * reset()
@@ -106,7 +106,7 @@ class allnull : public mcsv1_UDAF
    *
    * Use this opportunity to initialize the userData.
    */
-  virtual ReturnCode reset(mcsv1Context* context);
+  ReturnCode reset(mcsv1Context* context) override;
 
   /**
    * nextValue()
@@ -126,7 +126,7 @@ class allnull : public mcsv1_UDAF
    *
    * valsIn (in) - a vector of the parameters from the row.
    */
-  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
 
   /**
    * subEvaluate()
@@ -153,7 +153,7 @@ class allnull : public mcsv1_UDAF
    * as seen in the last call to NextValue for a given PM.
    *
    */
-  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn);
+  ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) override;
 
   /**
    * evaluate()
@@ -174,11 +174,9 @@ class allnull : public mcsv1_UDAF
    *
    * To return a NULL value, don't assign to valOut.
    */
-  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
-
- protected:
+  ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
 };
 
-};  // namespace mcsv1sdk
+}  // namespace mcsv1sdk
 
 #undef EXPORT

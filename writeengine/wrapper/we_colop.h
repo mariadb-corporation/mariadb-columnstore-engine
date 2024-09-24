@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "we_dbfileop.h"
 #include "brmtypes.h"
@@ -54,7 +54,7 @@ class ColumnOp : public DbFileOp
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~ColumnOp();
+  EXPORT ~ColumnOp() override;
 
   EXPORT virtual int allocRowId(const TxnID& txnid, bool useStartingExtent, Column& column, uint64_t totalRow,
                                 RID* rowIdArray, HWM& hwm, bool& newExtent, uint64_t& rowsLeft, HWM& newHwm,
@@ -145,7 +145,7 @@ class ColumnOp : public DbFileOp
    */
   EXPORT int extendColumn(const Column& column, bool leaveFileOpen, HWM hwm, BRM::LBID_t startLbid,
                           int allocSize, uint16_t dbRoot, uint32_t partition, uint16_t segment,
-                          std::string& segFile, IDBDataFile*& pFile, bool& newFile, char* hdrs = NULL);
+                          std::string& segFile, IDBDataFile*& pFile, bool& newFile, char* hdrs = nullptr);
 
   /**
    * @brief Add an extent to the OID specified in the column argument.
@@ -165,7 +165,7 @@ class ColumnOp : public DbFileOp
    */
   EXPORT int addExtent(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                        std::string& segFile, BRM::LBID_t& startLbid, bool& newFile, int& allocSize,
-                       char* hdrs = NULL);
+                       char* hdrs = nullptr);
 
   /**
    * @brief Get columne data type
@@ -216,13 +216,13 @@ class ColumnOp : public DbFileOp
    * @brief Write row(s)
    */
   EXPORT virtual int writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray, const void* valArray,
-                              void* oldValArray = 0, bool bDelete = false);
+                              void* oldValArray = nullptr, bool bDelete = false);
 
   /**
    * @brief Write row(s) for delete  @Bug 1886,2870
    */
   EXPORT virtual int writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridList,
-                               const void* valArray, void* oldValArray = 0, bool bDelete = false);
+                               const void* valArray, void* oldValArray = nullptr, bool bDelete = false);
 
   /**
    * @brief MCOL-5021 Read-only version of the writeRows() function above.
@@ -232,13 +232,13 @@ class ColumnOp : public DbFileOp
      database files.
    */
   EXPORT virtual int writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList& ridList,
-                                       void* oldValArray = 0);
+                                       void* oldValArray = nullptr);
 
   /**
    * @brief Write row(s) for update @Bug 1886,2870
    */
   EXPORT virtual int writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& ridList,
-                                     const void* valArray, void* oldValArray = 0);
+                                     const void* valArray, void* oldValArray = nullptr);
 
   /**
    * @brief Test if the pFile is an abbreviated extent.

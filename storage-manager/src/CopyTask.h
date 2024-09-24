@@ -24,13 +24,11 @@ namespace storagemanager
 class CopyTask : public PosixTask
 {
  public:
+  CopyTask() = delete;
   CopyTask(int sock, uint length);
-  virtual ~CopyTask();
+  ~CopyTask() override;
 
-  bool run();
-
- private:
-  CopyTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

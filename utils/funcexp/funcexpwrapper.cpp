@@ -60,12 +60,13 @@ FuncExpWrapper::FuncExpWrapper(const FuncExpWrapper& f)
     rcs[i].reset(f.rcs[i]->clone());
 }
 
-FuncExpWrapper::~FuncExpWrapper()
-{
-}
+FuncExpWrapper::~FuncExpWrapper() = default;
 
-void FuncExpWrapper::operator=(const FuncExpWrapper& f)
+FuncExpWrapper& FuncExpWrapper::operator=(const FuncExpWrapper& f)
 {
+  if (&f == this)
+    return *this;
+
   uint32_t i;
 
   filters.resize(f.filters.size());
@@ -77,6 +78,7 @@ void FuncExpWrapper::operator=(const FuncExpWrapper& f)
 
   for (i = 0; i < f.rcs.size(); i++)
     rcs[i].reset(f.rcs[i]->clone());
+  return *this;
 }
 
 void FuncExpWrapper::serialize(ByteStream& bs) const
@@ -101,12 +103,12 @@ void FuncExpWrapper::deserialize(ByteStream& bs)
   bs >> rcsCount;
 
   for (i = 0; i < fCount; i++)
-    filters.push_back(boost::shared_ptr<ParseTree>(ObjectReader::createParseTree(bs)));
+    filters.emplace_back(ObjectReader::createParseTree(bs));
 
   for (i = 0; i < rcsCount; i++)
   {
-    ReturnedColumn* rc = (ReturnedColumn*)ObjectReader::createTreeNode(bs);
-    rcs.push_back(boost::shared_ptr<ReturnedColumn>(rc));
+    auto* rc = (ReturnedColumn*)ObjectReader::createTreeNode(bs);
+    rcs.emplace_back(rc);
   }
 }
 
@@ -133,4 +135,4 @@ void FuncExpWrapper::addReturnedColumn(const boost::shared_ptr<ReturnedColumn>& 
   rcs.push_back(rc);
 }
 
-};  // namespace funcexp
+}  // namespace funcexp

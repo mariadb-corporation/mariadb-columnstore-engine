@@ -53,19 +53,19 @@ class DeleteDMLPackage : public CalpontDMLPackage
 
   /** @brief dtor
    */
-  EXPORT virtual ~DeleteDMLPackage();
+  EXPORT ~DeleteDMLPackage() override;
 
   /** @brief write a DeleteDMLPackage to a ByteStream
    *
    * @param bytestream the ByteStream to write to
    */
-  EXPORT int write(messageqcpp::ByteStream& bytestream);
+  EXPORT int write(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief read a DeleteDMLPackage from a ByteStream
    *
    * @param bytestream the ByteStream to read from
    */
-  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  EXPORT int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief build a DeleteDMLPackage from a string buffer
    *
@@ -73,20 +73,20 @@ class DeleteDMLPackage : public CalpontDMLPackage
    * @param columns the number of columns in the buffer
    * @param rows the number of rows in the buffer
    */
-  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
+  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows) override;
 
   /** @brief build a DeleteDMLPackage from a parsed DeleteSqlStatement
    *
    * @param sqlStatement the parsed DeleteSqlStatement
    */
-  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement) override;
   /** @brief build a InsertDMLPackage from MySQL buffer
    *
    * @param colNameList, tableValuesMap
    * @param rows the number of rows in the buffer
    */
   EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns,
-                                  int rows, NullValuesBitset& nullValues);
+                                  int rows, NullValuesBitset& nullValues) override;
 
  protected:
  private:

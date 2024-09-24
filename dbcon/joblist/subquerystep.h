@@ -40,28 +40,28 @@ class SubQueryStep : public JobStep
  public:
   /** @brief SubQueryStep constructor
    */
-  SubQueryStep(const JobInfo&);
+  explicit SubQueryStep(const JobInfo&);
 
   /** @brief SubQueryStep destructor
    */
-  ~SubQueryStep();
+  ~SubQueryStep() override;
 
   /** @brief virtual void run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void join method
    */
-  void join();
+  void join() override;
 
   /** @brief virtual void abort method
    */
-  void abort();
+  void abort() override;
 
   /** @brief virtual get table OID
    *  @returns OID
    */
-  execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -76,7 +76,7 @@ class SubQueryStep : public JobStep
   /** @brief virtual output info to a string
    *  @returns string
    */
-  const std::string toString() const;
+  const std::string toString() const override;
 
   /** @brief virtual set the output rowgroup
    */
@@ -128,24 +128,24 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
 
   /** @brief SubAdapterStep destructor
    */
-  ~SubAdapterStep();
+  ~SubAdapterStep() override;
 
   /** @brief virtual void run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual void join method
    */
-  void join();
+  void join() override;
 
   /** @brief virtual void abort method
    */
-  void abort();
+  void abort() override;
 
   /** @brief virtual get table OID
    *  @returns OID
    */
-  execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOid;
   }
@@ -160,16 +160,16 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
   /** @brief virtual output info to a string
    *  @returns string
    */
-  const std::string toString() const;
+  const std::string toString() const override;
 
   /** @brief virtual set the output rowgroup
    */
-  void setOutputRowGroup(const rowgroup::RowGroup& rg);
+  void setOutputRowGroup(const rowgroup::RowGroup& rg) override;
 
   /** @brief virtual get the output rowgroup
    *  @returns RowGroup
    */
-  const rowgroup::RowGroup& getOutputRowGroup() const
+  const rowgroup::RowGroup& getOutputRowGroup() const override
   {
     return fRowGroupOut;
   }
@@ -177,24 +177,24 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
   /** @brief TupleDeliveryStep's pure virtual methods nextBand
    *  @returns row count
    */
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
   /** @brief Delivered Row Group
    *  @returns RowGroup
    */
-  const rowgroup::RowGroup& getDeliveredRowGroup() const
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override
   {
     return fRowGroupDeliver;
   }
 
   /** @brief Turn on/off string table delivery
    */
-  void deliverStringTableRowGroup(bool b);
+  void deliverStringTableRowGroup(bool b) override;
 
   /** @brief Check useStringTable flag on delivered RowGroup
    *  @returns boolean
    */
-  bool deliverStringTableRowGroup() const;
+  bool deliverStringTableRowGroup() const override;
 
   /** @brief set the rowgroup for FE to work on
    */
@@ -255,7 +255,7 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
   class Runner
   {
    public:
-    Runner(SubAdapterStep* step) : fStep(step)
+    explicit Runner(SubAdapterStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -272,4 +272,3 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-

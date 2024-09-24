@@ -49,7 +49,7 @@ class CreateTableProcessor : public DDLPackageProcessor
    *
    * @param createTableStmt the CreateTableStatement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* sqlTableStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* sqlTableStmt) override;
 };
 
 }  // namespace ddlpackageprocessor

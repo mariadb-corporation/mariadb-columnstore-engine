@@ -122,7 +122,7 @@ EMCasualPartition_struct::EMCasualPartition_struct()
   isValid = CP_INVALID;
 }
 
-EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum)
+EMCasualPartition_struct::EMCasualPartition_struct(int64_t lo, int64_t hi, int32_t seqNum)
 {
   loVal = lo;
   hiVal = hi;
@@ -130,8 +130,7 @@ EMCasualPartition_struct::EMCasualPartition_struct(const int64_t lo, const int64
   isValid = CP_INVALID;
 }
 
-EMCasualPartition_struct::EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi,
-                                                   const int32_t seqNum)
+EMCasualPartition_struct::EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, int32_t seqNum)
 {
   bigLoVal = bigLo;
   bigHiVal = bigHi;
@@ -246,7 +245,7 @@ ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly
 boost::mutex FreeListImpl::fInstanceMutex;
 
 /*static*/
-FreeListImpl* FreeListImpl::fInstance = 0;
+FreeListImpl* FreeListImpl::fInstance = nullptr;
 
 /*static*/
 FreeListImpl* FreeListImpl::makeFreeListImpl(unsigned key, off_t size, bool readOnly)
@@ -2745,7 +2744,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID, uint32_t co
       highestSegNum = emEntry.segmentNum;
       highestOffset = emEntry.blockOffset;
     }  // found extentmap entry for specified OID
-  }    // Loop through extent map entries
+  }  // Loop through extent map entries
 
   DBRootVec dbRootVec(getAllDbRoots());
   // 2. for empty DBRoot track hi seg# in user specified part#
@@ -2832,7 +2831,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID, uint32_t co
             }
           }
         }  // loop over em idents
-      }    // current dbroot == target dbroot
+      }  // current dbroot == target dbroot
       else
       {
         // 4. Track hi seg for hwm+1 partition
@@ -2853,8 +2852,8 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID, uint32_t co
             partHighSeg = emEntry.segmentNum;
         }
       }  // current dbroot != target dbroot
-    }    // loop over dbroots
-  }      // (lastExtentIndex >= 0)
+    }  // loop over dbroots
+  }  // (lastExtentIndex >= 0)
 
   //--------------------------------------------------------------------------
   // Third Step: Select partition and segment number for new extent
@@ -3038,7 +3037,7 @@ LBID_t ExtentMap::_createColumnExtent_DBroot(uint32_t size, int OID, uint32_t co
         newBlockOffset = lastExtent->blockOffset;
       }
     }
-  }     // lastExtentIndex >= 0
+  }  // lastExtentIndex >= 0
   else  // Empty DBRoot; use part# that the user specifies
   {
     if (bHighEmptySegNumSet)
@@ -3245,8 +3244,7 @@ void ExtentMap::logAndSetEMIndexReadOnly(const std::string& funcName)
 {
   fPExtMapIndexImpl_->makeReadOnly();
   ostringstream os;
-  os << "ExtentMap::" << funcName << ": "
-     << "Can not update EM Index. EM Index shmem segment is set to"
+  os << "ExtentMap::" << funcName << ": " << "Can not update EM Index. EM Index shmem segment is set to"
      << " readonly. Please restart Columnstore.";
   log(os.str(), logging::LOG_TYPE_CRITICAL);
 
@@ -4123,7 +4121,7 @@ void ExtentMap::deleteEmptyDictStoreExtents(const ExtentsInfoMap_t& extentsInfo)
           emIt = deleteExtent(emIt);
         }
       }  // em iterarors loop
-    }    // em info map loop
+    }  // em info map loop
   }
   else
   {
@@ -4193,7 +4191,7 @@ void ExtentMap::deleteEmptyDictStoreExtents(const ExtentsInfoMap_t& extentsInfo)
           }
         }
       }  // em iterarors loop
-    }    // em info map loop
+    }  // em info map loop
   }
 }
 //------------------------------------------------------------------------------
@@ -4613,11 +4611,11 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber, EmDbRootHWMInfo_v& 
       if (emDbRoot.status == EXTENTUNAVAILABLE)
       {
         ostringstream oss;
-        oss << "ExtentMap::getDbRootHWMInfo(): "
-            << "OID " << OID << " has HWM extent that is UNAVAILABLE for "
-            << "DBRoot" << emDbRoot.dbRoot << "; part#: " << emDbRoot.partitionNum
-            << ", seg#: " << emDbRoot.segmentNum << ", fbo: " << emDbRoot.fbo
-            << ", localHWM: " << emDbRoot.localHWM << ", lbid: " << emDbRoot.startLbid << endl;
+        oss << "ExtentMap::getDbRootHWMInfo(): " << "OID " << OID
+            << " has HWM extent that is UNAVAILABLE for " << "DBRoot" << emDbRoot.dbRoot
+            << "; part#: " << emDbRoot.partitionNum << ", seg#: " << emDbRoot.segmentNum
+            << ", fbo: " << emDbRoot.fbo << ", localHWM: " << emDbRoot.localHWM
+            << ", lbid: " << emDbRoot.startLbid << endl;
         log(oss.str(), logging::LOG_TYPE_CRITICAL);
         throw runtime_error(oss.str());
       }

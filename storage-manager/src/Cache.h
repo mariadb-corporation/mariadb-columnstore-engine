@@ -46,7 +46,7 @@ class Cache : public boost::noncopyable, public ConfigListener
 {
  public:
   static Cache* get();
-  virtual ~Cache();
+  ~Cache() override;
 
   // reading fcns
   // read() marks objects to be read s.t. they do not get flushed.
@@ -98,7 +98,7 @@ class Cache : public boost::noncopyable, public ConfigListener
   void reset();
   void validateCacheSize();
 
-  virtual void configListener() override;
+  void configListener() override;
 
  private:
   Cache();

@@ -44,7 +44,7 @@ class DMLTable : public DMLObject
 
   /** @brief dtor
    */
-  ~DMLTable();
+  ~DMLTable() override;
 
   /** @brief get the schema name
    */
@@ -85,7 +85,7 @@ class DMLTable : public DMLObject
    *
    * @param bytestream the ByteStream to read from
    */
-  int read(messageqcpp::ByteStream& bytestream);
+  int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief read a DMLTable metadata from a ByteStream
    *
@@ -103,7 +103,7 @@ class DMLTable : public DMLObject
    *
    * @param bytestream the ByteStream to write to
    */
-  int write(messageqcpp::ByteStream& bytestream);
+  int write(messageqcpp::ByteStream& bytestream) override;
 
  protected:
  private:

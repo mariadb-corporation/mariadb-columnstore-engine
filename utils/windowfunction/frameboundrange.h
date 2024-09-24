@@ -35,25 +35,25 @@ class FrameBoundRange : public FrameBound
    *  @param  n, order by sort spec: null first | null last
    *  @param  v, order by column data type
    */
-  FrameBoundRange(int t = 0, bool a = true, bool n = true)
+  explicit FrameBoundRange(int t = 0, bool a = true, bool n = true)
    : FrameBound(t), fAsc(a), fNullFirst(n), fIsZero(false){};
 
   /** @brief FrameBoundRange destructor
    */
-  virtual ~FrameBoundRange(){};
+  ~FrameBoundRange() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
-    return NULL;  // abstract class
+    return nullptr;  // abstract class
   }
 
   /** @brief virtual void getBound
    */
-  int64_t getBound(int64_t, int64_t, int64_t);
+  int64_t getBound(int64_t, int64_t, int64_t) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
   void setTupleId(std::vector<uint64_t> ids)
   {
@@ -125,9 +125,10 @@ class FrameBoundConstantRange : public FrameBoundRange
    *  @param  n, order by sort spec: null first | null last
    *  @param  c, constant value.  !! caller need to check NULL or negative value !!
    */
-  FrameBoundConstantRange(int t = 0, bool a = true, bool n = true, void* c = NULL) : FrameBoundRange(t, a, n)
+  explicit FrameBoundConstantRange(int t = 0, bool a = true, bool n = true, void* c = nullptr)
+   : FrameBoundRange(t, a, n)
   {
-    fValue.fIsNull = (c == NULL);
+    fValue.fIsNull = (c == nullptr);
 
     if (!fValue.fIsNull)
       fValue.fValue = *((T*)c);
@@ -135,20 +136,20 @@ class FrameBoundConstantRange : public FrameBoundRange
 
   /** @brief FrameBoundConstantRange destructor
    */
-  virtual ~FrameBoundConstantRange(){};
+  ~FrameBoundConstantRange() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
     return new FrameBoundConstantRange(*this);
   }
 
   /** @brief virtual void getBound
    */
-  int64_t getBound(int64_t, int64_t, int64_t);
+  int64_t getBound(int64_t, int64_t, int64_t) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
   // find the range offset
@@ -183,15 +184,16 @@ class FrameBoundExpressionRange : public FrameBoundConstantRange<T>
    *  @param  a, order by sort spec: asc | desc
    *  @param  n, order by sort spec: null first | null last
    */
-  FrameBoundExpressionRange(int t = 0, bool a = true, bool n = true) : FrameBoundConstantRange<T>(t, a, n){};
+  explicit FrameBoundExpressionRange(int t = 0, bool a = true, bool n = true)
+   : FrameBoundConstantRange<T>(t, a, n){};
 
   /** @brief FrameBoundExpressionRange destructor
    */
-  virtual ~FrameBoundExpressionRange(){};
+  ~FrameBoundExpressionRange() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
     return new FrameBoundExpressionRange(*this);
   }
@@ -200,16 +202,15 @@ class FrameBoundExpressionRange : public FrameBoundConstantRange<T>
    */
   // int64_t getBound(int64_t, int64_t, int64_t);
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
   // virtual in FrameBoundRange
-  int64_t getPrecedingOffset(int64_t j, int64_t i);
-  int64_t getFollowingOffset(int64_t j, int64_t k);
+  int64_t getPrecedingOffset(int64_t j, int64_t i) override;
+  int64_t getFollowingOffset(int64_t j, int64_t k) override;
 
   // validate the expression is not negative
-  void validate();
+  void validate() override;
 };
 
 }  // namespace windowfunction
-

@@ -17,7 +17,7 @@
 
 #include "PingTask.h"
 #include "messageFormat.h"
-#include <errno.h>
+#include <cerrno>
 
 namespace storagemanager
 {
@@ -25,9 +25,7 @@ PingTask::PingTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
 
-PingTask::~PingTask()
-{
-}
+PingTask::~PingTask() = default;
 
 bool PingTask::run()
 {
@@ -49,7 +47,7 @@ bool PingTask::run()
   }
 
   // send generic success response
-  sm_response ret;
+  sm_response ret{};
   ret.returnCode = 0;
   success = write(ret, 0);
   return success;

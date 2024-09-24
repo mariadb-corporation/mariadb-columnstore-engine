@@ -25,7 +25,7 @@
 
 #pragma once
 
-//#undef LOG_INFO
+// #undef LOG_INFO
 #include "ha_mcs_impl_if.h"
 #include "idb_mysql.h"
 
@@ -42,9 +42,7 @@ class View
   View(SELECT_LEX& select, gp_walk_info* parentGwip) : fSelect(select), fParentGwip(parentGwip)
   {
   }
-  ~View()
-  {
-  }
+  ~View() = default;
 
   execplan::CalpontSystemCatalog::TableAliasName& viewName();
   void viewName(execplan::CalpontSystemCatalog::TableAliasName& viewName);

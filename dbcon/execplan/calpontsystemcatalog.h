@@ -139,9 +139,8 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     {
     }
     DictOID(const DictOID& rhs)
-     : dictOID(rhs.dictOID), listOID(rhs.listOID), treeOID(rhs.treeOID), compressionType(rhs.compressionType)
-    {
-    }
+
+        = default;
     OID dictOID;
     OID listOID;
     OID treeOID;
@@ -176,7 +175,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     // If we used an unorderedmap<OID, ColumnResult*>, we might improve performance.
     // Maybe.
     NJLSysDataVector sysDataVec;
-    NJLSysDataList(){};
+    NJLSysDataList() = default;
     ~NJLSysDataList();
     NJLSysDataVector::const_iterator begin() const
     {
@@ -439,9 +438,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    */
   struct TableName
   {
-    TableName()
-    {
-    }
+    TableName() = default;
     TableName(std::string sch, std::string tb) : schema(sch), table(tb)
     {
     }
@@ -873,7 +870,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
  private:
   /** Constuctors */
-  explicit CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
+  CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
 
   CalpontSystemCatalog& operator=(const CalpontSystemCatalog& rhs);
 

@@ -23,13 +23,14 @@
 /** @file */
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <string>
 #include <map>
 #include <utility>
 #include <iostream>
 #include <bitset>
-#include <stdint.h>
+#include <cstdint>
 #include "nullstring.h"
 
 namespace dmlpackage
@@ -158,9 +159,7 @@ class SqlStatementList
  public:
   /** @brief ctor
    */
-  SqlStatementList()
-  {
-  }
+  SqlStatementList() = default;
 
   /** @brief dtor
    */
@@ -218,19 +217,19 @@ class InsertSqlStatement : public SqlStatement
 
   /** @brief dtor
    */
-  virtual ~InsertSqlStatement();
+  ~InsertSqlStatement() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get a string representation of the query spec
    */
-  virtual std::string getQueryString() const;
+  std::string getQueryString() const override;
 
   /** @brief get the statement type - DML_INSERT
    */
-  inline virtual int getStatementType() const
+  inline int getStatementType() const override
   {
     return DML_INSERT;
   }
@@ -259,25 +258,25 @@ class UpdateSqlStatement : public SqlStatement
    * @param whereClausePtr pointer to a WhereClause object - default 0
    */
   UpdateSqlStatement(TableName* tableNamePtr, ColumnAssignmentList* colAssignmentListPtr,
-                     WhereClause* whereClausePtr = 0);
+                     WhereClause* whereClausePtr = nullptr);
 
   /** @brief dtor
    */
-  virtual ~UpdateSqlStatement();
+  ~UpdateSqlStatement() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the
    *  SET assignment_commalist opt_where_clause
    *  statement
    */
-  virtual std::string getQueryString() const;
+  std::string getQueryString() const override;
 
   /** @brief get the statement type - DML_UPDATE
    */
-  inline virtual int getStatementType() const
+  inline int getStatementType() const override
   {
     return DML_UPDATE;
   }
@@ -304,23 +303,23 @@ class DeleteSqlStatement : public SqlStatement
    * @param tableNamePtr pointer to a TableName object
    * @param whereClausePtr pointer to a WhereClause object - default = 0
    */
-  DeleteSqlStatement(TableName* tableNamePtr, WhereClause* whereClausePtr = 0);
+  explicit DeleteSqlStatement(TableName* tableNamePtr, WhereClause* whereClausePtr = nullptr);
 
   /** @brief dtor
    */
-  virtual ~DeleteSqlStatement();
+  ~DeleteSqlStatement() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the WHERE clause
    */
-  virtual std::string getQueryString() const;
+  std::string getQueryString() const override;
 
   /** @brief get the statement type - DML_DELETE
    */
-  inline virtual int getStatementType() const
+  inline int getStatementType() const override
   {
     return DML_DELETE;
   }
@@ -346,22 +345,22 @@ class CommandSqlStatement : public SqlStatement
    *
    * @param command the COMMIT or ROLLBACK string
    */
-  CommandSqlStatement(std::string command);
+  explicit CommandSqlStatement(std::string command);
 
   /** @brief get the statement type - DML_COMMAND
    */
-  inline virtual int getStatementType() const
+  inline int getStatementType() const override
   {
     return DML_COMMAND;
   }
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the COMMIT or ROLLBACK string
    */
-  virtual std::string getQueryString() const;
+  std::string getQueryString() const override;
 
   std::string fCommandText;
 };
@@ -380,7 +379,7 @@ class TableName
    *
    * @param name the table name
    */
-  TableName(char* name);
+  explicit TableName(char* name);
 
   /** @brief ctor
    *
@@ -406,11 +405,10 @@ class TableName
 class ColumnAssignment
 {
  public:
-  explicit ColumnAssignment(std::string const& column, std::string const& op = "=",
-                            std::string const& expr = "")
-   : fColumn(column)
-   , fOperator(op)
-   , fScalarExpression(expr)
+  explicit ColumnAssignment(std::string column, std::string op = "=", std::string expr = "")
+   : fColumn(std::move(column))
+   , fOperator(std::move(op))
+   , fScalarExpression(std::move(expr))
    , fFromCol(false)
    , fFuncScale(0)
    , fIsNull(false){};
@@ -449,13 +447,13 @@ class ValuesOrQuery
    *
    * @param valuesPtr pointer to a ValuesList object
    */
-  ValuesOrQuery(ValuesList* valuesPtr);
+  explicit ValuesOrQuery(ValuesList* valuesPtr);
 
   /** @brief  ctor
    *
    * @param querySpecPtr pointer to a QuerySpec object
    */
-  ValuesOrQuery(QuerySpec* querySpecPtr);
+  explicit ValuesOrQuery(QuerySpec* querySpecPtr);
 
   /** @brief dtor
    */
@@ -491,7 +489,7 @@ class SelectFilter
    *
    * @param columnListPtr pointer to a ColumnNameList object
    */
-  SelectFilter(ColumnNameList* columnListPtr);
+  explicit SelectFilter(ColumnNameList* columnListPtr);
 
   /** @brief dtor
    */
@@ -524,7 +522,7 @@ class FromClause
    *
    * @param tableNameList pointer to a TableNameList object
    */
-  FromClause(TableNameList* tableNameList);
+  explicit FromClause(TableNameList* tableNameList);
 
   /** @brief dtor
    */
@@ -663,7 +661,7 @@ class Predicate
    *
    * @param predicateType the PREDICATE_TYPE
    */
-  Predicate(PREDICATE_TYPE predicateType);
+  explicit Predicate(PREDICATE_TYPE predicateType);
 
   /** @brief dtor
    */
@@ -696,16 +694,16 @@ class ComparisonPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~ComparisonPredicate();
+  ~ComparisonPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the COMPARISON
    * predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fLHScalarExpression;
   std::string fRHScalarExpression;
@@ -731,16 +729,16 @@ class BetweenPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~BetweenPredicate();
+  ~BetweenPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the BETWEEN
    *  predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fLHScalarExpression;
   std::string fRH1ScalarExpression;
@@ -766,16 +764,16 @@ class LikePredicate : public Predicate
 
   /** @brief dtor
    */
-  ~LikePredicate();
+  ~LikePredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the LIKE
    * predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fLHScalarExpression;
   std::string fAtom;
@@ -800,16 +798,16 @@ class NullTestPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~NullTestPredicate();
+  ~NullTestPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the NULL test
    * predicate
    */
-  std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fColumnRef;
 
@@ -834,16 +832,16 @@ class InPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~InPredicate();
+  ~InPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the IN
    * predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fScalarExpression;
   std::string fOperator;
@@ -867,16 +865,16 @@ class AllOrAnyPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~AllOrAnyPredicate();
+  ~AllOrAnyPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the
    * ALL or ANY predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   std::string fScalarExpression;
   std::string fOperator;
@@ -900,16 +898,16 @@ class ExistanceTestPredicate : public Predicate
 
   /** @brief dtor
    */
-  ~ExistanceTestPredicate();
+  ~ExistanceTestPredicate() override;
 
   /** @brief dump to stdout
    */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief get the string representation of the EXISTS
    * predicate
    */
-  virtual std::string getPredicateString() const;
+  std::string getPredicateString() const override;
 
   QuerySpec* fSubQuerySpecPtr;
 };

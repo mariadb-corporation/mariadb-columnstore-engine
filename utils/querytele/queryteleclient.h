@@ -35,7 +35,7 @@ class QueryTeleProtoImpl;
 class QueryTeleClient
 {
  public:
-  QueryTeleClient() : fProtoImpl(0)
+  QueryTeleClient() : fProtoImpl(nullptr)
   {
   }
   EXPORT explicit QueryTeleClient(const QueryTeleServerParms&);

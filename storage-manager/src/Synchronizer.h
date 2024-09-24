@@ -40,7 +40,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
 {
  public:
   static Synchronizer* get();
-  virtual ~Synchronizer();
+  ~Synchronizer() override;
 
   // these take keys as parameters, not full path names, ex, pass in '12345' not
   // 'cache/12345'.
@@ -61,7 +61,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
   boost::filesystem::path getCachePath();
   void printKPIs() const;
 
-  virtual void configListener() override;
+  void configListener() override;
 
  private:
   Synchronizer();
@@ -77,7 +77,7 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
   // this struct kind of got sloppy.  Need to clean it at some point.
   struct PendingOps
   {
-    PendingOps(int flags);
+    explicit PendingOps(int flags);
     ~PendingOps();
     int opFlags;
     int waiters;
@@ -89,9 +89,9 @@ class Synchronizer : public boost::noncopyable, public ConfigListener
 
   struct Job : public ThreadPool::Job
   {
-    virtual ~Job(){};
+    ~Job() override = default;
     Job(Synchronizer* s, std::list<std::string>::iterator i);
-    void operator()();
+    void operator()() override;
     Synchronizer* sync;
     std::list<std::string>::iterator it;
   };

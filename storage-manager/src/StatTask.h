@@ -24,13 +24,11 @@ namespace storagemanager
 class StatTask : public PosixTask
 {
  public:
+  StatTask() = delete;
   StatTask(int sock, uint length);
-  virtual ~StatTask();
+  ~StatTask() override;
 
-  bool run();
-
- private:
-  StatTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

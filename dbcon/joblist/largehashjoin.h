@@ -256,9 +256,7 @@ class HashJoin
 };
 
 template <typename element_t>
-HashJoin<element_t>::HashJoin()
-{
-}
+HashJoin<element_t>::HashJoin() = default;
 
 template <typename element_t>
 HashJoin<element_t>::HashJoin(joblist::BDLWrapper<element_t>& set1, joblist::BDLWrapper<element_t>& set2,

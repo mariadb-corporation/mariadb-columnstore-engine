@@ -65,17 +65,19 @@ class SimpleFilter : public Filter
     SEMI
   };
 
-  struct ForTestPurposesWithoutColumnsOIDS{};
+  struct ForTestPurposesWithoutColumnsOIDS
+  {
+  };
 
   SimpleFilter();
-  SimpleFilter(const std::string& sql);
+  explicit SimpleFilter(const std::string& sql);
   SimpleFilter(const std::string& sql, ForTestPurposesWithoutColumnsOIDS);
   SimpleFilter(const SOP& op, ReturnedColumn* lhs, ReturnedColumn* rhs, const long timeZone = 0);
   SimpleFilter(const SimpleFilter& rhs);
 
-  virtual ~SimpleFilter();
+  ~SimpleFilter() override;
 
-  inline virtual SimpleFilter* clone() const override
+  inline SimpleFilter* clone() const override
   {
     return new SimpleFilter(*this);
   }
@@ -106,7 +108,7 @@ class SimpleFilter : public Filter
   }
 
   using Filter::data;
-  virtual const std::string data() const override;
+  const std::string data() const override;
 
   /** assign fLhs
    *
@@ -129,20 +131,20 @@ class SimpleFilter : public Filter
    */
   void rhs(ReturnedColumn* rhs);
 
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true if every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -160,7 +162,6 @@ class SimpleFilter : public Filter
 
   bool operator<(const SimpleFilter& t) const;
 
-
   bool semanticEq(const SimpleFilter& t) const;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
@@ -168,7 +169,7 @@ class SimpleFilter : public Filter
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false if every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -221,7 +222,7 @@ class SimpleFilter : public Filter
 
   static std::string escapeString(const std::string& input);
 
-  virtual string toCppCode(IncludeSet& includes) const override;
+  string toCppCode(IncludeSet& includes) const override;
 
  private:
   SOP fOp;               /// operator
@@ -237,10 +238,10 @@ class SimpleFilter : public Filter
    *                      F&E framework                      *
    ***********************************************************/
  public:
-  inline virtual bool getBoolVal(rowgroup::Row& row, bool& isNull) override;
-  inline virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
-  inline virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
-  inline virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  inline bool getBoolVal(rowgroup::Row& row, bool& isNull) override;
+  inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
+  inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
 
   // get all simple columns involved in this column
   const std::vector<SimpleColumn*>& simpleColumnList();

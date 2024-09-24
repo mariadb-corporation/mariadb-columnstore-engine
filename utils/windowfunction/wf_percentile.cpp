@@ -18,11 +18,10 @@
 
 //  $Id: wf_percentile.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -34,13 +33,9 @@ using namespace boost;
 #include "idberrorinfo.h"
 using namespace logging;
 
-#include "rowgroup.h"
-using namespace rowgroup;
-
 #include "idborderby.h"
 using namespace ordering;
 
-#include "joblisttypes.h"
 #include "calpontsystemcatalog.h"
 #include "constantcolumn.h"
 using namespace execplan;
@@ -206,7 +201,7 @@ void WF_percentile<T>::parseParms(const std::vector<execplan::SRCP>& parms)
   // parms[0]: nve
   ConstantColumn* cc = dynamic_cast<ConstantColumn*>(parms[0].get());
 
-  if (cc != NULL)
+  if (cc != nullptr)
   {
     fNveNull = false;
     fNve = cc->getDoubleVal(fRow, fNveNull);  // row not used, no need to setData.
@@ -339,7 +334,7 @@ void WF_percentile<T>::operator()(int64_t b, int64_t e, int64_t c)
       tempvd[1] = 0;
 
       v = *(reinterpret_cast<T*>(&tempvd[0]));
-      //v = *(reinterpret_cast<T*>(&vd)); // XXX old code that produced out-of-bounds difference.
+      // v = *(reinterpret_cast<T*>(&vd)); // XXX old code that produced out-of-bounds difference.
       p = &v;
     }
     else  // (fFunctionId == WF__PERCENTILE_DISC)

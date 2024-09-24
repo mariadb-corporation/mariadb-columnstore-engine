@@ -41,18 +41,19 @@ class PassThruStep;
 class PassThruCommandJL : public CommandJL
 {
  public:
-  PassThruCommandJL(const PassThruStep&);
-  virtual ~PassThruCommandJL();
+  explicit PassThruCommandJL(const PassThruStep&);
+  ~PassThruCommandJL() override;
 
-  void setLBID(uint64_t data, uint32_t dbroot);  // converts a rid or dictionary token to an LBID.  For
-                                                 // ColumnCommandJL it's a RID, for a DictStep it's a token.
-  uint8_t getTableColumnType();
-  std::string toString();
+  void setLBID(uint64_t data,
+               uint32_t dbroot) override;  // converts a rid or dictionary token to an LBID.  For
+                                           // ColumnCommandJL it's a RID, for a DictStep it's a token.
+  uint8_t getTableColumnType() override;
+  std::string toString() override;
 
-  void createCommand(messageqcpp::ByteStream&) const;
-  void runCommand(messageqcpp::ByteStream&) const;
-  uint16_t getWidth();
-  CommandType getCommandType()
+  void createCommand(messageqcpp::ByteStream&) const override;
+  void runCommand(messageqcpp::ByteStream&) const override;
+  uint16_t getWidth() override;
+  CommandType getCommandType() override
   {
     return PASS_THRU;
   }

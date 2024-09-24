@@ -29,18 +29,19 @@ class LocalStorage : public CloudStorage
 {
  public:
   LocalStorage();
-  virtual ~LocalStorage();
+  ~LocalStorage() override;
 
-  int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL);
-  int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size = NULL);
-  int putObject(const std::string& sourceFile, const std::string& destKey);
-  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey);
-  int deleteObject(const std::string& key);
-  int copyObject(const std::string& sourceKey, const std::string& destKey);
-  int exists(const std::string& key, bool* out);
+  int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = nullptr) override;
+  int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data,
+                size_t* size = nullptr) override;
+  int putObject(const std::string& sourceFile, const std::string& destKey) override;
+  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey) override;
+  int deleteObject(const std::string& key) override;
+  int copyObject(const std::string& sourceKey, const std::string& destKey) override;
+  int exists(const std::string& key, bool* out) override;
 
   const boost::filesystem::path& getPrefix() const;
-  void printKPIs() const;
+  void printKPIs() const override;
 
  protected:
   size_t bytesRead, bytesWritten;

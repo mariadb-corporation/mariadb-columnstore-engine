@@ -28,20 +28,20 @@ class SMFileSystem : public IDBFileSystem, boost::noncopyable
 {
  public:
   SMFileSystem();
-  virtual ~SMFileSystem();
+  ~SMFileSystem() override;
 
   // why are some of these const and some not const in IDBFileSystem?
-  int mkdir(const char* pathname);
-  off64_t size(const char* path) const;
-  off64_t compressedSize(const char* path) const;
-  int remove(const char* pathname);
-  int rename(const char* oldpath, const char* newpath);
-  bool exists(const char* pathname) const;
-  int listDirectory(const char* pathname, std::list<std::string>& contents) const;
-  bool isDir(const char* pathname) const;
-  int copyFile(const char* srcPath, const char* destPath) const;
-  bool filesystemIsUp() const;
-  bool filesystemSync() const;
+  int mkdir(const char* pathname) override;
+  off64_t size(const char* path) const override;
+  off64_t compressedSize(const char* path) const override;
+  int remove(const char* pathname) override;
+  int rename(const char* oldpath, const char* newpath) override;
+  bool exists(const char* pathname) const override;
+  int listDirectory(const char* pathname, std::list<std::string>& contents) const override;
+  bool isDir(const char* pathname) const override;
+  int copyFile(const char* srcPath, const char* destPath) const override;
+  bool filesystemIsUp() const override;
+  bool filesystemSync() const override;
 };
 
 }  // namespace idbdatafile

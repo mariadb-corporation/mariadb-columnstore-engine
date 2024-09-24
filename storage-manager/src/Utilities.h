@@ -42,23 +42,23 @@ struct ScopedFileLock
 struct ScopedReadLock : public ScopedFileLock
 {
   ScopedReadLock(IOCoordinator* i, const std::string& k);
-  virtual ~ScopedReadLock();
-  void lock();
-  void unlock();
+  ~ScopedReadLock() override;
+  void lock() override;
+  void unlock() override;
 };
 
 struct ScopedWriteLock : public ScopedFileLock
 {
   ScopedWriteLock(IOCoordinator* i, const std::string& k);
-  virtual ~ScopedWriteLock();
-  void lock();
-  void unlock();
+  ~ScopedWriteLock() override;
+  void lock() override;
+  void unlock() override;
 };
 
 struct ScopedCloser
 {
   ScopedCloser();
-  ScopedCloser(int f);
+  explicit ScopedCloser(int f);
   ~ScopedCloser();
   int fd;
 };

@@ -44,16 +44,15 @@ class ColumnOpBulk : public ColumnOp
  public:
   ColumnOpBulk();
   ColumnOpBulk(Log* logger, int compressionType);
-  virtual ~ColumnOpBulk();
+  ~ColumnOpBulk() override;
 
-  virtual bool abbreviatedExtent(IDBDataFile*, int) const;
-  virtual int blocksInFile(IDBDataFile*) const;
-  virtual IDBDataFile* openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
-                                uint16_t segment, std::string& segFile, bool useTmpSuffix,
-                                const char* mode = "r+b", int ioBuffSize = DEFAULT_BUFSIZ,
-                                bool isReadOnly = false) const;
-  virtual int readBlock(IDBDataFile*, unsigned char*, const uint64_t);
-  virtual int saveBlock(IDBDataFile*, const unsigned char*, const uint64_t);
+  bool abbreviatedExtent(IDBDataFile*, int) const override;
+  int blocksInFile(IDBDataFile*) const override;
+  IDBDataFile* openFile(const WriteEngine::Column& column, uint16_t dbRoot, uint32_t partition,
+                        uint16_t segment, std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
+                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const override;
+  int readBlock(IDBDataFile*, unsigned char*, const uint64_t) override;
+  int saveBlock(IDBDataFile*, const unsigned char*, const uint64_t) override;
 };
 
 }  // namespace WriteEngine

@@ -56,7 +56,7 @@ class ClientRotator
     }
   }
 
-  /** @brief connnect
+  /** @brief connect
    *
    * Try connecting to client based on session id.  If no connection,
    * try connectList.
@@ -79,7 +79,7 @@ class ClientRotator
     {
       fClient->shutdown();
       delete fClient;
-      fClient = 0;
+      fClient = nullptr;
     }
   }
 
@@ -140,7 +140,7 @@ class ClientRotator
    */
   bool exeConnect(const std::string& clientName);
 
-  /** @brief connnect to list
+  /** @brief connect to list
    *
    * Try connecting to next client on list
    * until timeout lapses. Then throw exception.

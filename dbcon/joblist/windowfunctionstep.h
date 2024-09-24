@@ -58,7 +58,7 @@ struct RowPosition
   uint64_t fGroupId : 48;
   uint64_t fRowId : 16;
 
-  inline RowPosition(uint64_t i = 0, uint64_t j = 0) : fGroupId(i), fRowId(j){};
+  inline explicit RowPosition(uint64_t i = 0, uint64_t j = 0) : fGroupId(i), fRowId(j){};
 };
 
 /** @brief class WindowFunctionStep
@@ -71,23 +71,23 @@ class WindowFunctionStep : public JobStep, public TupleDeliveryStep
    * @param
    * @param
    */
-  WindowFunctionStep(const JobInfo&);
+  explicit WindowFunctionStep(const JobInfo&);
 
   /** @brief WindowFunctionStep destructor
    */
-  virtual ~WindowFunctionStep();
+  ~WindowFunctionStep() override;
 
   /** @brief virtual methods
    */
-  void run();
-  void join();
-  const std::string toString() const;
-  void setOutputRowGroup(const rowgroup::RowGroup&);
-  const rowgroup::RowGroup& getOutputRowGroup() const;
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  void run() override;
+  void join() override;
+  const std::string toString() const override;
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
   /** @brief initialize methods
    */
@@ -146,7 +146,7 @@ class WindowFunctionStep : public JobStep, public TupleDeliveryStep
   class Runner
   {
    public:
-    Runner(WindowFunctionStep* step) : fStep(step)
+    explicit Runner(WindowFunctionStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -188,7 +188,7 @@ class WindowFunctionStep : public JobStep, public TupleDeliveryStep
   class WFunction
   {
    public:
-    WFunction(WindowFunctionStep* step) : fStep(step)
+    explicit WFunction(WindowFunctionStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -220,4 +220,3 @@ class WindowFunctionStep : public JobStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-

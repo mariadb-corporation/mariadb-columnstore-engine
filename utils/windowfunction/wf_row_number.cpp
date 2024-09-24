@@ -17,29 +17,19 @@
 
 //  $Id: wf_row_number.cpp 3932 2013-06-25 16:08:10Z xlou $
 
-//#define NDEBUG
-#include <cassert>
+// #define NDEBUG
 #include <cmath>
-#include <sstream>
-#include <iomanip>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
 using namespace boost;
 
 #include "loggingid.h"
-#include "errorcodes.h"
-#include "idberrorinfo.h"
 using namespace logging;
-
-#include "rowgroup.h"
-using namespace rowgroup;
 
 #include "idborderby.h"
 using namespace ordering;
 
-#include "joblisttypes.h"
-#include "calpontsystemcatalog.h"
 using namespace execplan;
 
 #include "windowfunctionstep.h"
@@ -49,8 +39,8 @@ using namespace joblist;
 
 namespace windowfunction
 {
-boost::shared_ptr<WindowFunctionType> WF_row_number::makeFunction(int id, const string& name, int ct,
-                                                                  WindowFunctionColumn* wc)
+boost::shared_ptr<WindowFunctionType> WF_row_number::makeFunction(int id, const string& name, int,
+                                                                  WindowFunctionColumn*)
 {
   boost::shared_ptr<WindowFunctionType> func(new WF_row_number(id, name));
   return func;

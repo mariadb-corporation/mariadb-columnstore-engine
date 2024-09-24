@@ -58,7 +58,7 @@ class DataCondition
     return mError;
   }
 
-  // Adjust a sigened integer of any size to the range [-absMaxVal , +absMaxVal]
+  // Adjust a signed integer of any size to the range [-absMaxVal , +absMaxVal]
   template <typename T>
   void adjustSIntXRange(T& val, T absMaxVal)
   {

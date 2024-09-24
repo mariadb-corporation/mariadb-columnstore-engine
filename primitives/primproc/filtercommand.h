@@ -38,21 +38,21 @@ class FilterCommand : public Command
 {
  public:
   FilterCommand();
-  virtual ~FilterCommand();
+  ~FilterCommand() override;
 
   // returns a FilterCommand based on column types
   static Command* makeFilterCommand(messageqcpp::ByteStream&, std::vector<SCommand>& cmds);
 
   // virtuals from base class -- Command
-  void execute();
-  void project();
-  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
-  uint64_t getLBID();
-  void nextLBID();
-  void createCommand(messageqcpp::ByteStream&);
-  void resetCommand(messageqcpp::ByteStream&);
-  SCommand duplicate();
-  void prep(int8_t outputType, bool makeAbsRids);
+  void execute() override;
+  void project() override;
+  void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col) override;
+  uint64_t getLBID() override;
+  void nextLBID() override;
+  void createCommand(messageqcpp::ByteStream&) override;
+  void resetCommand(messageqcpp::ByteStream&) override;
+  SCommand duplicate() override;
+  void prep(int8_t outputType, bool makeAbsRids) override;
 
   void setColTypes(const execplan::CalpontSystemCatalog::ColType& left,
                    const execplan::CalpontSystemCatalog::ColType& right);
@@ -61,7 +61,7 @@ class FilterCommand : public Command
   bool operator==(const FilterCommand&) const;
   bool operator!=(const FilterCommand&) const;
 
-  int getCompType() const
+  int getCompType() const override
   {
     return 0;
   }
@@ -96,8 +96,8 @@ class ScaledFilterCmd : public FilterCommand
 {
  public:
   ScaledFilterCmd();
-  virtual ~ScaledFilterCmd();
-  SCommand duplicate();
+  ~ScaledFilterCmd() override;
+  SCommand duplicate() override;
 
   void setFactor(double);
   double factor();
@@ -108,7 +108,7 @@ class ScaledFilterCmd : public FilterCommand
 
  protected:
   // compare method, take the indices to the values array
-  bool compare(uint64_t, uint64_t);
+  bool compare(uint64_t, uint64_t) override;
 
   // value used in comparison;
   double fFactor;
@@ -123,11 +123,11 @@ class StrFilterCmd : public FilterCommand
 {
  public:
   StrFilterCmd();
-  virtual ~StrFilterCmd();
+  ~StrFilterCmd() override;
 
   // override FilterCommand methods
-  void execute();
-  SCommand duplicate();
+  void execute() override;
+  SCommand duplicate() override;
 
   void setCompareFunc(uint32_t);
   void setCharLength(size_t);
@@ -139,7 +139,7 @@ class StrFilterCmd : public FilterCommand
 
  protected:
   // compare method, take the indices to the values array
-  bool compare(uint64_t, uint64_t);
+  bool compare(uint64_t, uint64_t) override;
 
   // compare method for differernt column combination, c--char[], s--string
   // compare char[]-char[] is not the same as int-int due to endian issue.

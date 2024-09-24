@@ -29,6 +29,7 @@ namespace storagemanager
 class PosixTask
 {
  public:
+  PosixTask() = delete;
   PosixTask(int sock, uint length);
   virtual ~PosixTask();
 
@@ -39,18 +40,16 @@ class PosixTask
  protected:
   int read(uint8_t* buf, uint length);
   bool write(const std::vector<uint8_t>& buf);
-  bool write(sm_response& resp, uint payloadLength);
-  bool write(const uint8_t* buf, uint length);
+  bool write(sm_response& resp, uint payloadLength) const;
+  bool write(const uint8_t* buf, uint length) const;
   void consumeMsg();          // drains the remaining portion of the message
-  uint getLength();           // returns the total length of the msg
+  uint getLength() const;     // returns the total length of the msg
   uint getRemainingLength();  // returns the remaining length from the caller's perspective
   void handleError(const char* name, int errCode);
 
   IOCoordinator* ioc;
 
  private:
-  PosixTask();
-
   int sock;
   int totalLength;
   uint remainingLengthInStream;

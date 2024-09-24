@@ -18,10 +18,9 @@
 #include "PosixTask.h"
 #include "messageFormat.h"
 #include "SMLogging.h"
-#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
+#include <cstring>
 
 #define min(x, y) (x < y ? x : y)
 
@@ -53,7 +52,7 @@ void PosixTask::handleError(const char* name, int errCode)
   char buf[80];
 
   // send an error response if possible
-  sm_response* resp = (sm_response*)buf;
+  auto* resp = (sm_response*)buf;
   resp->returnCode = -1;
   *((int*)resp->payload) = errCode;
   bool success = write(*resp, 4);
@@ -67,7 +66,7 @@ uint PosixTask::getRemainingLength()
   return remainingLengthForCaller;
 }
 
-uint PosixTask::getLength()
+uint PosixTask::getLength() const
 {
   return totalLength;
 }
@@ -152,7 +151,7 @@ void PosixTask::primeBuffer()
   }
 }
 
-bool PosixTask::write(const uint8_t* buf, uint len)
+bool PosixTask::write(const uint8_t* buf, uint len) const
 {
   int err;
   uint count = 0;
@@ -167,11 +166,11 @@ bool PosixTask::write(const uint8_t* buf, uint len)
   return true;
 }
 
-bool PosixTask::write(sm_response& resp, uint payloadLength)
+bool PosixTask::write(sm_response& resp, uint payloadLength) const
 {
   int err;
   uint count = 0;
-  uint8_t* buf = (uint8_t*)&resp;
+  auto* buf = (uint8_t*)&resp;
 
   resp.header.type = SM_MSG_START;
   resp.header.flags = 0;

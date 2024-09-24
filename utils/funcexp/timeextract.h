@@ -32,7 +32,6 @@ class TimeExtractor
  public:
   TimeExtractor() : dayOfWeek(-1), dayOfYear(-1), weekOfYear(-1), sundayFirst(false)
   {
-    ;
   }
 
   /**

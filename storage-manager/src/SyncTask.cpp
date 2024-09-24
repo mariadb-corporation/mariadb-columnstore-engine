@@ -18,7 +18,7 @@
 #include "SyncTask.h"
 #include "Synchronizer.h"
 #include "messageFormat.h"
-#include <errno.h>
+#include <cerrno>
 
 namespace storagemanager
 {
@@ -26,9 +26,7 @@ SyncTask::SyncTask(int sock, uint len) : PosixTask(sock, len)
 {
 }
 
-SyncTask::~SyncTask()
-{
-}
+SyncTask::~SyncTask() = default;
 
 bool SyncTask::run()
 {

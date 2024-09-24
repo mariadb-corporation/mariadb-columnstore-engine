@@ -38,17 +38,17 @@ class LimitedOrderBy : public ordering::IdbOrderBy
 {
  public:
   LimitedOrderBy();
-  virtual ~LimitedOrderBy();
+  ~LimitedOrderBy() override;
   using ordering::IdbOrderBy::initialize;
   void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,
                   bool isMultiThreded = false);
-  void processRow(const rowgroup::Row&);
-  uint64_t getKeyLength() const;
+  void processRow(const rowgroup::Row&) override;
+  uint64_t getKeyLength() const override;
   uint64_t getLimitCount() const
   {
     return fCount;
   }
-  const std::string toString() const;
+  const std::string toString() const override;
 
   void finalize();
 

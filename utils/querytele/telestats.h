@@ -60,9 +60,7 @@ struct QueryTeleStats
     query_uuid = boost::uuids::nil_generator()();
   }
 
-  ~QueryTeleStats()
-  {
-  }
+  ~QueryTeleStats() = default;
 
   boost::uuids::uuid query_uuid;
   QTType msg_type;
@@ -138,9 +136,7 @@ struct StepTeleStats
     step_uuid = boost::uuids::nil_generator()();
   }
 
-  ~StepTeleStats()
-  {
-  }
+  ~StepTeleStats() = default;
 
   boost::uuids::uuid query_uuid;
   STType msg_type;
