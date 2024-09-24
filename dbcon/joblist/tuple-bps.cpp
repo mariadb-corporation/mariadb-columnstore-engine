@@ -79,6 +79,8 @@ using namespace querytele;
 #include "pseudocolumn.h"
 // #define DEBUG 1
 
+// #include "poormanprofiler.inc"
+
 extern boost::mutex fileLock_g;
 
 namespace
@@ -395,15 +397,6 @@ struct ByteStreamProcessor
 void TupleBPS::initializeConfigParms()
 {
   string strVal;
-
-  //...Get the tuning parameters that throttle msgs sent to primproc
-  //...fFilterRowReqLimit puts a cap on how many rids we will request from
-  //...    primproc, before pausing to let the consumer thread catch up.
-  //...    Without this limit, there is a chance that PrimProc could flood
-  //...    ExeMgr with thousands of messages that will consume massive
-  //...    amounts of memory for a 100 gigabyte database.
-  //...fFilterRowReqThreshold is the level at which the number of outstanding
-  //...    rids must fall below, before the producer can send more rids.
 
   // These could go in constructor
   fRequestSize = fRm->getJlRequestSize();
@@ -1674,11 +1667,11 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
 {
   uint32_t i;
   boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
+
   for (i = 0; i < jobs.size() && !cancelled(); i++)
   {
     fDec->write(uniqueID, jobs[i].msg);
     tplLock.lock();
-    // A single msg here is a message for a processed block.
     msgsSent += jobs[i].expectedResponses;
 
     if (recvWaiting)
@@ -2211,8 +2204,11 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
     bool unused;
     bool fromDictScan;
     fromPrimProc.clear();
+    // auto stopWatch = profiler.getTimer();
+    // stopWatch->start("getRowGroupData");
     fBPP->getRowGroupData(*bs, &fromPrimProc, &validCPData, &lbid, &fromDictScan, &min, &max, &cachedIO,
                           &physIO, &touchedBlocks, &unused, threadID, &hasBinaryColumn, fColType);
+    // stopWatch->stop("getRowGroupData");
 
     // Another layer of messiness.  Need to refactor this fcn.
     while (!fromPrimProc.empty() && !cancelled())
@@ -2228,6 +2224,9 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       // changes made here should also be made there and vice versa.
       if (hasUMJoin || !fBPP->pmSendsFinalResult())
       {
+        utils::setThreadName("BSPJoin");
+        // stopWatch->start("umJoin||!pmSendsFinalResult");
+
         data->joinedData = RGData(data->local_outputRG);
         data->local_outputRG.setData(&data->joinedData);
         data->local_outputRG.resetRowGroup(data->local_primRG.getBaseRid());
@@ -2341,6 +2340,9 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
         {
           rgDatav.push_back(data->joinedData);
         }
+
+        // stopWatch->stop("umJoin||!pmSendsFinalResult");
+        utils::setThreadName("ByteStreamProcessor");
       }
       else
       {
@@ -2352,12 +2354,17 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
         memAmount = 0;
       }
 
+      utils::setThreadName("BSPFE2");
+      // stopWatch->start("FE2");
       // Execute UM F & E group 2 on rgDatav
       if (fe2 && !bRunFEonPM && rgDatav.size() > 0 && !cancelled())
       {
         data->processFE2(rgDatav);
         rgDataVecToDl(rgDatav, data->local_fe2Output, dlp);
       }
+
+      // stopWatch->stop("FE2");
+      utils::setThreadName("ByteStreamProcessor");
 
       data->cachedIO_Thread += cachedIO;
       data->physIO_Thread += physIO;
