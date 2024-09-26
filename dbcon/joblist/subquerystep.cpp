@@ -19,7 +19,7 @@
 //  $Id: subquerystep.cpp 6370 2010-03-18 02:58:09Z xlou $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -147,6 +147,7 @@ SubAdapterStep::SubAdapterStep(SJSTEP& s, const JobInfo& jobInfo)
  , fOutputIterator(0)
  , fRunner(0)
 {
+  fExtendedInfo = "SAS: ";
   fAlias = s->alias();
   fView = s->view();
   fInputJobStepAssociation = s->outputAssociation();
