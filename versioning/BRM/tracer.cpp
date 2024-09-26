@@ -25,12 +25,9 @@
 #include <fstream>
 #include <algorithm>
 
-
 #include <unistd.h>
 
-#define TRACER_DLLEXPORT
 #include "tracer.h"
-#undef TRACER_DLLEXPORT
 
 #include "mcsconfig.h"
 
