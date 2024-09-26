@@ -4112,10 +4112,12 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   else
   {
     const Schema* funcSchema = ifp->type_handler()->schema();
+    idblog("func schema " << (funcSchema ? "not " : "") << "NULL");
     if (funcSchema)
     {
       idbassert(funcSchema->name().str);
       string funcSchemaName(funcSchema->name().str, funcSchema->name().length);
+      idblog("schema name '" << funcSchemaName << "'");
       if (funcSchemaName == "oracle_schema")
       {
         // XXX: this is a shortcut.
