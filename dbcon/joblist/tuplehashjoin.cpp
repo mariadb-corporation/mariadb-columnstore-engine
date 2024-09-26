@@ -97,10 +97,10 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
   fExtendedInfo = "THJS: ";
   joinType = INIT;
   joinThreadCount = resourceManager->getJlNumScanReceiveThreads();
-  largeBPS = NULL;
+  largeBPS = nullptr;
   moreInput = true;
   fQtc.stepParms().stepType = StepTeleStats::T_HJS;
-  outputDL = NULL;
+  outputDL = nullptr;
   ownsOutputDL = false;
   djsSmallUsage = jobInfo.smallSideUsage;
   djsSmallLimit = jobInfo.smallSideLimit;
