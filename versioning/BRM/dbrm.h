@@ -28,6 +28,7 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <memory>
 #include <vector>
 #include <set>
 #include <string>
@@ -601,7 +602,7 @@ class DBRM
    *
    * @return 0 on success, non-0 on error (see brmtypes.h)
    */
-  EXPORT int getDBRootsForRollback(VER_t transID, std::vector<uint16_t>* dbRootList) throw();
+  // EXPORT int getDBRootsForRollback(VER_t transID, std::vector<uint16_t>* dbRootList) throw();
 
   // @bug 1509.  Added getUncommittedExtentLBIDs function.
   /** @brief Retrieves a list of uncommitted extent LBIDs.
@@ -753,7 +754,7 @@ class DBRM
   /* SessionManager interface */
   EXPORT const QueryContext verID();
   EXPORT const QueryContext sysCatVerID();
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
   EXPORT const TxnID newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL = false);
   EXPORT void committed(BRM::TxnID& txnid);
@@ -1009,7 +1010,9 @@ class DBRM
   boost::scoped_ptr<MasterSegmentTable> mst;
   boost::scoped_ptr<ExtentMap> em;
   boost::scoped_ptr<VBBM> vbbm;
-  boost::scoped_ptr<VSS> vss;
+  // boost::scoped_ptr<VSS> vss;
+  VssClusterPtr vssCluster_;
+  VssClusterPtr vss_;
   boost::scoped_ptr<CopyLocks> copylocks;
   messageqcpp::MessageQueueClient* msgClient;
   std::string masterName;

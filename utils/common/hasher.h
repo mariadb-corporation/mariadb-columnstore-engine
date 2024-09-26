@@ -142,8 +142,9 @@ class Hasher
 class Hasher_r
 {
  public:
-  inline uint32_t operator()(const char* data, uint64_t len, uint32_t seed) const
+  inline uint32_t operator()(const void* ptr, uint64_t len, uint32_t seed = 0UL) const
   {
+    const char* data = reinterpret_cast<const char*>(ptr);
     const int nblocks = len / 4;
 
     uint32_t h1 = seed;

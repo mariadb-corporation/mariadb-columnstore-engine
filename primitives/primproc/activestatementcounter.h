@@ -59,6 +59,4 @@ class ActiveStatementCounter
   uint32_t fStatementsWaiting;
   boost::mutex fMutex;
   boost::condition condvar;
-  BRM::VSS fVss;
 };
-

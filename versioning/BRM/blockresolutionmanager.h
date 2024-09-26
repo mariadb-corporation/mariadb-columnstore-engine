@@ -112,7 +112,8 @@ class BlockResolutionManager
   MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;
-  VSS vss;
+  //   VSS vss ;
+  VssClusterPtr vss_;
   CopyLocks copylocks;
 };
 
