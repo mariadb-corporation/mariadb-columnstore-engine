@@ -272,12 +272,12 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   if (typelessJoin[index])
   {
     joiner.reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index], largeSideKeys[index], jt,
-                                 &jobstepThreadPool));
+                                 &jobstepThreadPool, numCores));
   }
   else
   {
     joiner.reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index][0], largeSideKeys[index][0],
-                                 jt, &jobstepThreadPool));
+                                 jt, &jobstepThreadPool, numCores));
   }
 
   joiner->setUniqueLimit(uniqueLimit);
@@ -1278,15 +1278,11 @@ void TupleHashJoinStep::formatMiniStats(uint32_t index)
   else
     oss << "- ";
 
-  oss << " "
-      << "- "
-      << "- "
-      << "- "
+  oss << " " << "- " << "- " << "- "
       << "- "
       //		<< JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
       //		dlTimes are not timed in this step, using '--------' instead.
-      << "-------- "
-      << "-\n";
+      << "-------- " << "-\n";
   fMiniInfo += oss.str();
 }
 
