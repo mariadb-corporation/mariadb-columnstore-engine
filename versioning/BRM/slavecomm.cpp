@@ -1638,7 +1638,8 @@ void SlaveComm::do_writeVBEntry(ByteStream& msg)
     return;
   }
 
-  err = slave->writeVBEntry(transID, lbid, vbOID, vbFBO);
+  bool vbbmIsLocked = false;
+  err = slave->writeVBEntry(transID, lbid, vbOID, vbFBO, vbbmIsLocked);
   reply << (uint8_t)err;
 #ifdef BRM_VERBOSE
   cerr << "WorkerComm: do_writeVBEntry() err code is " << err << endl;

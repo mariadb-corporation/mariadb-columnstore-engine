@@ -113,6 +113,7 @@ class BlockResolutionManager
   ExtentMap em;
   VBBM vbbm;
   VSS vss;
+  std::vector<std::unique_ptr<VSS>> vss_;
   CopyLocks copylocks;
 };
 
