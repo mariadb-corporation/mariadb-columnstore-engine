@@ -62,6 +62,7 @@
 namespace rowgroup
 {
 const int16_t rgCommonSize = 8192;
+using RGDataSizeType = uint64_t;
 
 /*
     The RowGroup family of classes encapsulate the data moved through the
@@ -270,14 +271,14 @@ class RGData
 
 
   // amount should be the # returned by RowGroup::getDataSize()
-  void serialize(messageqcpp::ByteStream&, uint32_t amount) const;
+  void serialize(messageqcpp::ByteStream&, RGDataSizeType amount) const;
 
   // the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
   // inline data with a length field.  Once that's converted to string table format, that
   // option can go away.
-  void deserialize(messageqcpp::ByteStream&, uint32_t amount = 0);  // returns the # of bytes read
+  void deserialize(messageqcpp::ByteStream&, RGDataSizeType amount = 0);  // returns the # of bytes read
 
-  inline uint64_t getStringTableMemUsage();
+  inline RGDataSizeType getStringTableMemUsage();
   void clear();
   void reinit(const RowGroup& rg);
   void reinit(const RowGroup& rg, uint32_t rowCount);
@@ -1496,15 +1497,15 @@ class RowGroup : public messageqcpp::Serializeable
   uint32_t getDBRoot() const;
   void setDBRoot(uint32_t);
 
-  uint32_t getDataSize() const;
-  uint32_t getDataSize(uint64_t n) const;
-  uint32_t getMaxDataSize() const;
-  uint32_t getMaxDataSizeWithStrings() const;
-  uint32_t getEmptySize() const;
+  RGDataSizeType getDataSize() const;
+  RGDataSizeType getDataSize(uint64_t n) const;
+  RGDataSizeType getMaxDataSize() const;
+  RGDataSizeType getMaxDataSizeWithStrings() const;
+  RGDataSizeType getEmptySize() const;
 
   // this returns the size of the row data with the string table
-  inline uint64_t getSizeWithStrings() const;
-  inline uint64_t getSizeWithStrings(uint64_t n) const;
+  inline RGDataSizeType getSizeWithStrings() const;
+  inline RGDataSizeType getSizeWithStrings(uint64_t n) const;
 
   // sets the row count to 0 and the baseRid to something
   // effectively initializing whatever chunk of memory
@@ -1625,11 +1626,11 @@ class RowGroup : public messageqcpp::Serializeable
   uint32_t sTableThreshold = 20;
   std::shared_ptr<bool[]> forceInline;
 
-  static const uint32_t headerSize = 18;
-  static const uint32_t rowCountOffset = 0;
-  static const uint32_t baseRidOffset = 4;
-  static const uint32_t statusOffset = 12;
-  static const uint32_t dbRootOffset = 14;
+  static const uint64_t headerSize = 18;
+  static const uint64_t rowCountOffset = 0;
+  static const uint64_t baseRidOffset = 4;
+  static const uint64_t statusOffset = 12;
+  static const uint64_t dbRootOffset = 14;
 };
 
 inline uint64_t convertToRid(const uint32_t& partNum, const uint16_t& segNum, const uint8_t& extentNum,
@@ -1775,7 +1776,7 @@ inline uint32_t RowGroup::getRowSizeWithStrings() const
   return oldOffsets[columnCount] + columnCount;
 }
 
-inline uint64_t RowGroup::getSizeWithStrings(uint64_t n) const
+inline RGDataSizeType RowGroup::getSizeWithStrings(uint64_t n) const
 {
   if (strings == nullptr)
     return getDataSize(n);

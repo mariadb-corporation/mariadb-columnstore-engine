@@ -20,6 +20,7 @@
  *
  ******************************************************************************/
 #include <iostream>
+#include "bytestream.h"
 #include "primitivemsg.h"
 #include "blocksize.h"
 #include "lbidlist.h"
@@ -700,7 +701,7 @@ bool LBIDList::CasualPartitionPredicate(const BRM::EMCasualPartition_t& cpRange,
                                         const execplan::CalpontSystemCatalog::ColType& ct, const uint8_t BOP,
                                         bool isDict)
 {
-  int length = bs->length(), pos = 0;
+  messageqcpp::BSSizeType length = bs->length(), pos = 0;
   const char* MsgDataPtr = (const char*)bs->buf();
   bool scan = true;
   int64_t value = 0;

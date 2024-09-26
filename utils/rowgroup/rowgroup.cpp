@@ -31,7 +31,6 @@
 #include <iterator>
 using namespace std;
 
-
 #include <numeric>
 
 #include "bytestream.h"
@@ -48,8 +47,6 @@ using namespace execplan;
 namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
-
-
 
 StringStore::~StringStore()
 {
@@ -302,47 +299,27 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  RGDataSizeType s = rg.getDataSize(rowCount);
+  rowData.reset(new uint8_t[s]);
 
   if (rg.usesStringTable() && rowCount > 0)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
-#endif
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
 }
 
 RGData::RGData(const RowGroup& rg)
 {
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
   rowData.reset(new uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getMaxDataSize());
-#endif
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
 }
@@ -356,16 +333,6 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
     strings.reset(new StringStore());
   else
     strings.reset();
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));
-#endif
-  columnCount = rg.getColumnCount();
-  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -373,7 +340,7 @@ void RGData::reinit(const RowGroup& rg)
   reinit(rg, 8192);
 }
 
-void RGData::serialize(ByteStream& bs, uint32_t amount) const
+void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
 {
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
@@ -399,9 +366,10 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
     bs << (uint8_t)0;
 }
 
-void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
+void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount)
 {
-  uint32_t amount, sig;
+  uint32_t sig;
+  RGDataSizeType amount;
   uint8_t* buf;
   uint8_t tmp8;
 
@@ -642,7 +610,7 @@ string Row::toCSV() const
 
 void Row::setToNull(uint32_t colIndex)
 {
-  setNullMark(colIndex, true); // mark as null.
+  setNullMark(colIndex, true);  // mark as null.
   switch (types[colIndex])
   {
     case CalpontSystemCatalog::TINYINT: data[offsets[colIndex]] = joblist::TINYINTNULL; break;
@@ -665,11 +633,11 @@ void Row::setToNull(uint32_t colIndex)
       *((int32_t*)&data[offsets[colIndex]]) = static_cast<int32_t>(joblist::DATENULL);
       break;
 
-      case CalpontSystemCatalog::BIGINT:
-        if (precision[colIndex] != MagicPrecisionForCountAgg)
-          *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
-        else  // work around for count() in outer join result.
-          *((uint64_t*)&data[offsets[colIndex]]) = 0;
+    case CalpontSystemCatalog::BIGINT:
+      if (precision[colIndex] != MagicPrecisionForCountAgg)
+        *((uint64_t*)&data[offsets[colIndex]]) = joblist::BIGINTNULL;
+      else  // work around for count() in outer join result.
+        *((uint64_t*)&data[offsets[colIndex]]) = 0;
 
       break;
 
@@ -680,9 +648,13 @@ void Row::setToNull(uint32_t colIndex)
       *((long double*)&data[offsets[colIndex]]) = joblist::LONGDOUBLENULL;
       break;
 
-    case CalpontSystemCatalog::DATETIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL; break;
+    case CalpontSystemCatalog::DATETIME:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::DATETIMENULL;
+      break;
 
-    case CalpontSystemCatalog::TIMESTAMP: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL; break;
+    case CalpontSystemCatalog::TIMESTAMP:
+      *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMESTAMPNULL;
+      break;
 
     case CalpontSystemCatalog::TIME: *((uint64_t*)&data[offsets[colIndex]]) = joblist::TIMENULL; break;
 
@@ -716,9 +688,7 @@ void Row::setToNull(uint32_t colIndex)
         case 7:
         case 8: *((uint64_t*)&data[offsets[colIndex]]) = joblist::CHAR8NULL; break;
 
-        default:
-          setNullMark(colIndex, true);
-          break;
+        default: setNullMark(colIndex, true); break;
       }
 
       break;
@@ -751,7 +721,9 @@ void Row::setToNull(uint32_t colIndex)
 
     case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
 
-    case CalpontSystemCatalog::USMALLINT: *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL; break;
+    case CalpontSystemCatalog::USMALLINT:
+      *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL;
+      break;
 
     case CalpontSystemCatalog::UMEDINT:
     case CalpontSystemCatalog::UINT: *((uint32_t*)&data[offsets[colIndex]]) = joblist::UINTNULL; break;
@@ -760,8 +732,8 @@ void Row::setToNull(uint32_t colIndex)
 
     default:
       ostringstream os;
-      os << "Row::initToNull(): got bad column type (" << types[colIndex] << ").  Width=" << getColumnWidth(colIndex)
-         << endl;
+      os << "Row::initToNull(): got bad column type (" << types[colIndex]
+         << ").  Width=" << getColumnWidth(colIndex) << endl;
       os << toString();
       throw logic_error(os.str());
   }
@@ -870,8 +842,8 @@ bool Row::isNullValue(uint32_t colIndex) const
         return strings->isNullValue(offset);
       }
 
-//      if (data[offsets[colIndex]] == 0)  // empty string
-//        return true;
+      //      if (data[offsets[colIndex]] == 0)  // empty string
+      //        return true;
 
       switch (len)
       {
@@ -1120,7 +1092,6 @@ RowGroup::RowGroup(const RowGroup& r)
     offsets = &stOffsets[0];
   else if (!useStringTable && !oldOffsets.empty())
     offsets = &oldOffsets[0];
-
 }
 
 RowGroup& RowGroup::operator=(const RowGroup& r)
@@ -1235,27 +1206,28 @@ void RowGroup::serializeRGData(ByteStream& bs) const
   rgData->serialize(bs, getDataSize());
 }
 
-uint32_t RowGroup::getDataSize() const
+RGDataSizeType RowGroup::getDataSize() const
 {
   return getDataSize(getRowCount());
 }
 
-uint32_t RowGroup::getDataSize(uint64_t n) const
+RGDataSizeType RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * getRowSize());
+  return headerSize + (n * static_cast<RGDataSizeType>(getRowSize()));
 }
 
-uint32_t RowGroup::getMaxDataSize() const
+RGDataSizeType RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * getRowSize());
+  return headerSize + (static_cast<RGDataSizeType>(rgCommonSize) * static_cast<RGDataSizeType>(getRowSize()));
 }
 
-uint32_t RowGroup::getMaxDataSizeWithStrings() const
+RGDataSizeType RowGroup::getMaxDataSizeWithStrings() const
 {
-  return headerSize + (8192 * (oldOffsets[columnCount] + columnCount));
+  return headerSize +
+         (static_cast<RGDataSizeType>(rgCommonSize) * static_cast<RGDataSizeType>(getRowSizeWithStrings()));
 }
 
-uint32_t RowGroup::getEmptySize() const
+RGDataSizeType RowGroup::getEmptySize() const
 {
   return headerSize;
 }
@@ -1325,9 +1297,8 @@ string RowGroup::toString(const std::vector<uint64_t>& used) const
     os << "rowcount = " << getRowCount() << endl;
     if (!used.empty())
     {
-      uint64_t cnt =
-          std::accumulate(used.begin(), used.end(), 0ULL,
-                          [](uint64_t a, uint64_t bits) { return a + __builtin_popcountll(bits); });
+      uint64_t cnt = std::accumulate(used.begin(), used.end(), 0ULL, [](uint64_t a, uint64_t bits)
+                                     { return a + __builtin_popcountll(bits); });
       os << "sparse row count = " << cnt << endl;
     }
     os << "base rid = " << getBaseRid() << endl;

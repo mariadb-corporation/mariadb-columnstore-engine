@@ -208,7 +208,7 @@ void WESplClient::send()
     messageqcpp::SBS aSbs = fSendQueue.front();
     fSendQueue.pop();
     aLock.unlock();
-    int aLen = (*aSbs).length();
+    messageqcpp::BSSizeType aLen = (*aSbs).length();
 
     if (aLen > 0)
     {
@@ -241,7 +241,7 @@ void WESplClient::recv()
   rm_ts.tv_sec = fRdSecTo;   // 0 when data sending otherwise 1- second
   rm_ts.tv_nsec = 20000000;  // 20 milliSec
   bool isTimeOut = false;
-  int aLen = 0;
+  messageqcpp::BSSizeType aLen = 0;
 
   try
   {

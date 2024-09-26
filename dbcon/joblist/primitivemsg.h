@@ -282,6 +282,8 @@ struct ISMPacketHeader
   uint32_t Interleave;
   uint16_t Flags;
   uint8_t Command;
+  // !!! This attribute is used to store a sum which arg type is potentially uint64_t.
+  // As of 23.02.10 uint32_t here is always enough for the purpose of this attribute though.
   uint16_t Size;
   unsigned Type : 4;
   unsigned MsgCount : 4;

@@ -16,6 +16,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#include "bytestream.h"
 #define _CRT_RAND_S  // for win rand_s
 #include <unistd.h>
 #include <boost/filesystem.hpp>
@@ -804,7 +805,7 @@ uint64_t JoinPartition::writeByteStream(int which, ByteStream& bs)
   }
 
   uint64_t ret = 0;
-  size_t len = bs.length();
+  BSSizeType len = bs.length();
   idbassert(len != 0);
 
   fs.seekp(offset);

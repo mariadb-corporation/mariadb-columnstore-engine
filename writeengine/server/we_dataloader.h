@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "bytestream.h"
 #include "rwlock_local.h"
 #include "resourcemanager.h"
 
@@ -58,32 +59,32 @@ class WEDataLoader : public Observer
  public:
   bool setupCpimport();                                // fork the cpimport
   void teardownCpimport(bool useStoredWaitPidStatus);  // @bug 4267
-  void pushData2Cpimport(ByteStream& Ibs);             // push data to cpimport from the queue
+  void pushData2Cpimport(messageqcpp::ByteStream& Ibs);  // push data to cpimport from the queue
   void closeWritePipe();
   void str2Argv(std::string CmdLine, std::vector<char*>& V);
 
  public:
-  void onReceiveKeepAlive(ByteStream& Ibs);
-  void onReceiveData(ByteStream& Ibs);
-  void onReceiveEod(ByteStream& Ibs);  // end of data
-  void onReceiveMode(ByteStream& Ibs);
+  void onReceiveKeepAlive(messageqcpp::ByteStream& Ibs);
+  void onReceiveData(messageqcpp::ByteStream& Ibs);
+  void onReceiveEod(messageqcpp::ByteStream& Ibs);  // end of data
+  void onReceiveMode(messageqcpp::ByteStream& Ibs);
   // void onReceiveCmd(messageqcpp::SBS bs);// {(ByteStream& Ibs);
-  void onReceiveCmd(ByteStream& bs);  // {(ByteStream& Ibs);
-  void onReceiveAck(ByteStream& Ibs);
-  void onReceiveNak(ByteStream& Ibs);
-  void onReceiveError(ByteStream& Ibs);
+  void onReceiveCmd(messageqcpp::ByteStream& bs);  // {(ByteStream& Ibs);
+  void onReceiveAck(messageqcpp::ByteStream& Ibs);
+  void onReceiveNak(messageqcpp::ByteStream& Ibs);
+  void onReceiveError(messageqcpp::ByteStream& Ibs);
 
-  void onReceiveJobId(ByteStream& Ibs);
-  void onReceiveJobData(ByteStream& Ibs);
-  void onReceiveImportFileName(ByteStream& Ibs);
-  void onReceiveCmdLineArgs(ByteStream& Ibs);
+  void onReceiveJobId(messageqcpp::ByteStream& Ibs);
+  void onReceiveJobData(messageqcpp::ByteStream& Ibs);
+  void onReceiveImportFileName(messageqcpp::ByteStream& Ibs);
+  void onReceiveCmdLineArgs(messageqcpp::ByteStream& Ibs);
   void onReceiveStartCpimport();
-  void onReceiveBrmRptFileName(ByteStream& Ibs);
-  void onReceiveCleanup(ByteStream& Ibs);
-  void onReceiveRollback(ByteStream& Ibs);
+  void onReceiveBrmRptFileName(messageqcpp::ByteStream& Ibs);
+  void onReceiveCleanup(messageqcpp::ByteStream& Ibs);
+  void onReceiveRollback(messageqcpp::ByteStream& Ibs);
 
-  void onReceiveErrFileRqst(ByteStream& Ibs);
-  void onReceiveBadFileRqst(ByteStream& Ibs);
+  void onReceiveErrFileRqst(messageqcpp::ByteStream& Ibs);
+  void onReceiveBadFileRqst(messageqcpp::ByteStream& Ibs);
 
   void onCpimportSuccess();
   void onCpimportFailure();
@@ -103,11 +104,11 @@ class WEDataLoader : public Observer
   {
     fMode = Mode;
   }
-  void updateTxBytes(unsigned int Tx)
+  void updateTxBytes(messageqcpp::BSSizeType Tx)
   {
     fTxBytes += Tx;
   }
-  void updateRxBytes(unsigned int Rx)
+  void updateRxBytes(messageqcpp::BSSizeType Rx)
   {
     fRxBytes += Rx;
   }
@@ -132,11 +133,11 @@ class WEDataLoader : public Observer
     fObjId = ObjId;
   }
 
-  unsigned int getTxBytes()
+  messageqcpp::BSSizeType getTxBytes()
   {
     return fTxBytes;
   }
-  unsigned int getRxBytes()
+  messageqcpp::BSSizeType getRxBytes()
   {
     return fRxBytes;
   }
@@ -172,8 +173,8 @@ class WEDataLoader : public Observer
   int fMode;
   std::ofstream fDataDumpFile;
   std::ofstream fJobFile;
-  unsigned int fTxBytes;
-  unsigned int fRxBytes;
+  messageqcpp::BSSizeType fTxBytes;
+  messageqcpp::BSSizeType fRxBytes;
   char fPmId;
   int fObjId;  // Object Identifier for logging
 
