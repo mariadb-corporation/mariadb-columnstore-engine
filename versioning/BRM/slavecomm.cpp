@@ -2182,6 +2182,9 @@ void SlaveComm::saveDelta()
 {
   try
   {
+    // !!!
+    // !!! Reducing BS size type from 64bit down to 32 and potentially loosing data.
+    // !!!
     uint32_t len = delta.length();
 
     journalh->seek(0, SEEK_END);
