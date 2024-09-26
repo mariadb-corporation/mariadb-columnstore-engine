@@ -27,7 +27,7 @@
 #include "blocksize.h"
 #include "filebuffer.h"
 #include "rwlock_local.h"
-#include <tr1/unordered_set>
+#include <unordered_set>
 #include <boost/thread.hpp>
 
 /**
@@ -92,9 +92,9 @@ inline bool operator<(const HashObject_t& f1, const HashObject_t& f2)
 class FileBufferMgr
 {
  public:
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
-  typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t;  // return type for insert
+  typedef std::unordered_set<HashObject_t, bcHasher, bcEqual> FilebufferUset;
+  typedef std::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
+  typedef std::pair<FilebufferUset::iterator, bool> filebuffer_pair_t;  // return type for insert
 
   typedef std::vector<uint32_t> intvec_t;
 
@@ -124,7 +124,7 @@ class FileBufferMgr
   /**
    * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
    **/
-  const int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
+  int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
   /**
    * @brief returns the total number of Disk Blocks in the Cache
@@ -177,7 +177,7 @@ class FileBufferMgr
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
   mutable boost::mutex fWLock;
-  mutable filebuffer_uset_t fbSet;
+  mutable FilebufferUset fbSet;
 
   mutable filebuffer_list_t fbList;  // rename this
   uint32_t fCacheSize;

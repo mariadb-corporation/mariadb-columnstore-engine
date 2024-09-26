@@ -23,13 +23,21 @@
  ***************************************************************************/
 
 #pragma once
-#include <iostream>
+
+#include <cstdint>
+#include <numeric>
+#include <unordered_set>
+#include <concepts>
+#include <deque>
 #include <fstream>
 #include <iomanip>
-#include <tr1/unordered_set>
-#include <boost/thread.hpp>
-#include <deque>
+#include <iostream>
+#include <mutex>
+#include <vector>
 
+#include "brmtypes.h"
+#include "extentmap.h"
+#include "hasher.h"
 #include "primitivemsg.h"
 #include "blocksize.h"
 #include "filebuffer.h"
@@ -47,6 +55,10 @@
 
 namespace dbbc
 {
+
+// class FileBufferMgrTest;  // WIP remove
+// class FileBufferMgrTest_bulkInsert_Test;
+// class FileBufferMgrTest_flushOIDs_Test;
 /**
  * @brief used as the hasher algorithm for the unordered_set used to store the disk blocks
  **/
@@ -63,13 +75,26 @@ struct FileBufferIndex
 
 struct CacheInsert_t
 {
-  CacheInsert_t(const BRM::LBID_t& l, const BRM::VER_t& v, const uint8_t* d) : lbid(l), ver(v), data(d)
+  CacheInsert_t(const BRM::LBID_t& l, const BRM::VER_t v, const uint8_t* d) : lbid(l), ver(v), data(d)
   {
   }
   BRM::LBID_t lbid;
   BRM::VER_t ver;
   const uint8_t* data;
+
+  BRM::LBID_t Lbid() const
+  {
+    return lbid;
+  }
+
+  BRM::VER_t Verid() const
+  {
+    return ver;
+  }
 };
+
+using CacheInsertVec = std::vector<CacheInsert_t>;
+using EMEntriesVec = std::optional<vector<BRM::EMEntry>>;
 
 typedef FileBufferIndex HashObject_t;
 
@@ -99,10 +124,9 @@ inline bool operator<(const HashObject_t& f1, const HashObject_t& f2)
 class FileBufferMgr
 {
  public:
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual> filebuffer_uset_t;
-  typedef std::tr1::unordered_set<HashObject_t, bcHasher, bcEqual>::const_iterator filebuffer_uset_iter_t;
-  typedef std::pair<filebuffer_uset_t::iterator, bool> filebuffer_pair_t;  // return type for insert
+  static constexpr const size_t PartitionsNumber = 8;
 
+  using FilebufferUset = std::unordered_set<HashObject_t, bcHasher, bcEqual>;
   typedef std::deque<uint32_t> emptylist_t;
 
   /**
@@ -120,32 +144,31 @@ class FileBufferMgr
    * @brief return TRUE if the Disk block lbid@ver is loaded into the Disk Block Buffer cache otherwise return
    *FALSE.
    **/
-  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t& ver) const;
+  bool exists(const BRM::LBID_t& lbid, const BRM::VER_t ver);
 
   /**
    * @brief return TRUE if the Disk block referenced by fb is loaded into the Disk Block Buffer cache
    *otherwise return FALSE.
    **/
-  bool exists(const HashObject_t& fb) const;
+  bool exists(const HashObject_t& fb);
 
   /**
    * @brief add the Disk Block reference by fb into the Disk Block Buffer Cache
    **/
-  int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
+  // int insert(const BRM::LBID_t lbid, const BRM::VER_t ver, const uint8_t* data);
 
-  int bulkInsert(const std::vector<CacheInsert_t>&);
+  int bulkInsert(const CacheInsertVec&);
 
   /**
    * @brief returns the total number of Disk Blocks in the Cache
    **/
-  uint32_t size() const
-  {
-    return fbSet.size();
-  }
+  // uint32_t size() const
+  // {
+  //   return fbSet.size();
+  // }
 
-  /**
-   * @brief
-   **/
+  void takeLocksAndflushCache();
+
   void flushCache();
 
   /**
@@ -165,6 +188,12 @@ class FileBufferMgr
 
   void flushOIDs(const uint32_t* oids, uint32_t count);
   void flushPartition(const std::vector<BRM::OID_t>& oids, const std::set<BRM::LogicalPartition>& partitions);
+  template <typename OIDsContainer>
+  EMEntriesVec getExtentsByOIDs(OIDsContainer oids, const uint32_t count) const;
+  template <typename Invokable>
+    requires std::invocable<Invokable, BRM::EMEntry&>
+  void flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions);
+  // void flushExtents(const vector<BRM::EMEntry>& extents);
 
   /**
    * @brief return the disk Block referenced by fb
@@ -187,14 +216,9 @@ class FileBufferMgr
     return fMaxNumBlocks;
   }
 
-  uint32_t listSize() const
+  uint32_t cacheSize() const
   {
-    return fbList.size();
-  }
-
-  const filebuffer_uset_iter_t end() const
-  {
-    return fbSet.end();
+    return std::accumulate(fCacheSizes.begin(), fCacheSizes.end(), 0);
   }
 
   void setReportingFrequency(const uint32_t d);
@@ -209,30 +233,104 @@ class FileBufferMgr
   uint32_t fMaxNumBlocks;  // the max number of blockSz blocks to keep in the Cache list
   uint32_t fBlockSz;       // size in bytes size of a data block - probably 8
 
-  mutable boost::mutex fWLock;
-  mutable filebuffer_uset_t fbSet;
+  std::mutex fBufferWLock;
+  std::array<std::mutex, PartitionsNumber> fWLocks;
 
-  mutable filebuffer_list_t fbList;  // rename this
+  // mutable FilebufferUset fbSet;
+  std::array<FilebufferUset, PartitionsNumber> fbSets;
+
+  // mutable filebuffer_list_t fbList;        // rename this
+  std::array<filebuffer_list_t, PartitionsNumber> fbLists;  // rename this
+
   uint32_t fCacheSize;
+  std::vector<size_t> fCacheSizes = std::vector<size_t>(PartitionsNumber, 0);
 
-  FileBufferPool_t fFBPool;  // vector<FileBuffer>
+  FileBufferPool_t fFBPool;  // ve)ctor<FileBuffer>
   uint32_t fDeleteBlocks;
-  emptylist_t fEmptyPoolSlots;  // keep track of FBPool slots that can be reused
+  // emptylist_t fEmptyPoolSlots;                // keep track of FBPool slots that can be reused
+  std::array<emptylist_t, PartitionsNumber>
+      fEmptyPoolsSlots;  // keep track of FBPool slots that can be reused
 
-  void depleteCache();
+  // void depleteCache();
+  void depleteCache(const size_t bucket);
+
   uint64_t fBlksLoaded;       // number of blocks inserted into cache
   uint64_t fBlksNotUsed;      // number of blocks inserted and not used
   uint64_t fReportFrequency;  // how many blocks are read between reports
   std::ofstream fLog;
-  config::Config* fConfig;
+  // To enable unit tests
+  // config::Config* fConfig;
 
   // do not implement
   FileBufferMgr(const FileBufferMgr& fbm);
   const FileBufferMgr& operator=(const FileBufferMgr& fbm);
 
   // used by bulkInsert
-  void updateLRU(const FBData_t& f);
-  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data);
+  void updateLRU(const FBData_t& f, const size_t bucket);
+  uint32_t doBlockCopy(const BRM::LBID_t& lbid, const BRM::VER_t& ver, const uint8_t* data,
+                       const size_t bucket);
+
+  size_t partition(const BRM::LBID_t lbid) const
+  {
+    utils::Hasher64_r hasher;
+    return hasher(&lbid, sizeof(BRM::LBID_t)) % PartitionsNumber;
+  }
+
+  // friend FileBufferMgrTest;
+  // friend FileBufferMgrTest_bulkInsert_Test;
+  // friend FileBufferMgrTest_flushOIDs_Test;
 };
+
+template <typename Invokable>
+  requires std::invocable<Invokable, BRM::EMEntry&>
+void FileBufferMgr::flushExtents(const vector<BRM::EMEntry>& extents, Invokable notInPartitions)
+{
+  using byLBID_t = std::unordered_multimap<BRM::LBID_t, FilebufferUset::iterator>;
+  // Take multiple mutexes in a safe way w/o a loop.
+  std::scoped_lock overalLock(fWLocks[0], fWLocks[1], fWLocks[2], fWLocks[3], fWLocks[4], fWLocks[5],
+                              fWLocks[6], fWLocks[7]);
+
+  /* Index the cache by LBID */
+  // TODO take only those sets that are affected by this flush.
+  byLBID_t byLBID;
+  for (auto& fbSet : fbSets)
+  {
+    for (auto it = fbSet.begin(); it != fbSet.end(); ++it)
+    {
+      byLBID.insert({it->lbid, it});
+    }
+  }
+
+  for (auto& extent : extents)
+  {
+    if (notInPartitions(extent))
+      continue;
+
+    const BRM::LBID_t lastLBID = extent.range.start + (extent.range.size * 1024);
+    for (auto currentLBID = extent.range.start; currentLBID < lastLBID; ++currentLBID)
+    {
+      auto fbSetRange4LBID = byLBID.equal_range(currentLBID);
+
+      for (auto lbidAndfbSetPair = fbSetRange4LBID.first; lbidAndfbSetPair != fbSetRange4LBID.second;
+           ++lbidAndfbSetPair)
+      {
+        const auto lbid = lbidAndfbSetPair->first;
+        auto fbSetItToErase = lbidAndfbSetPair->second;
+        const auto poolIdx = fbSetItToErase->poolIdx;
+
+        // WIP make a simplier hashe>>r to avoid needless complex math every loop iter.
+        // don't need to calculate bucket but get it from byLBID
+        const size_t part = partition(lbid);
+        if (!fCacheSizes[part])
+          return;
+
+        fbLists[part].erase(fFBPool[poolIdx].listLoc());
+        fEmptyPoolsSlots[part].push_back(poolIdx);
+        fbSets[part].erase(fbSetItToErase);
+        --fCacheSizes[part];
+      }
+    }
+  }
+}
 
 }  // namespace dbbc
