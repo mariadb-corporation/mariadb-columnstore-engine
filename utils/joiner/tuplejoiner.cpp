@@ -596,7 +596,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
   if (UNLIKELY(inUM() && (joinType & MATCHNULLS) && !isNull && !typelessJoin))
   {
-    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE)
+    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && ld)
     {
       uint bucket = bucketPicker((char*)&(joblist::LONGDOUBLENULL), sizeof(joblist::LONGDOUBLENULL), bpSeed) &
                     bucketMask;
@@ -605,7 +605,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
       for (; range.first != range.second; ++range.first)
         matches->push_back(range.first->second);
     }
-    else if (!largeRG.usesStringTable())
+    else if (!smallRG.usesStringTable())
     {
       auto nullVal = getJoinNullValue();
       uint bucket = bucketPicker((char*)&nullVal, sizeof(nullVal), bpSeed) & bucketMask;
