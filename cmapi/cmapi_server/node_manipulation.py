@@ -20,6 +20,8 @@ from cmapi_server.constants import (
     CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
     MCS_DATA_PATH,
 )
+from cmapi_server.handlers.foundation_db import FDBHandler
+from cmapi_server.managers.transaction import TransactionManager
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -55,12 +57,13 @@ def switch_node_maintenance(
         maintenance_element = etree.SubElement(config_root, 'Maintenance')
     maintenance_element.text = str(maintenance_state).lower()
     node_config.write_config(config_root, filename=output_config_filename)
-    # TODO: probably move publishing to cherrypy.emgine failover channel here?
+    # TODO: probably move publishing to cherrypy.engine failover channel here?
 
 
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
+    fdb_config_data: Optional[str] = None,
     rebalance_dbroots: bool = True
 ):
     """Add node to a cluster.
@@ -86,6 +89,8 @@ def add_node(
     :type input_config_filename: str, optional
     :param output_config_filename: mcs output config path, defaults to None
     :type output_config_filename: Optional[str], optional
+    :param fdb_config: fdb config data, defaults to None
+    :type fdb_config: str, optional
     :param rebalance_dbroots: rebalance dbroots or not, defaults to True
     :type rebalance_dbroots: bool, optional
     """
@@ -103,6 +108,17 @@ def add_node(
             if rebalance_dbroots:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
+        if fdb_config_data and not TransactionManager.internal_hadler_used():
+            FDBHandler.add_to_cluster(fdb_config_data)
+        elif (
+            not fdb_config_data and
+            not TransactionManager.internal_hadler_used()
+        ):
+            # TODO: can get fdb config from node, that made api call.
+            logging.warning(
+                f'No fdb config found while adding "{node}" to cluster. '
+                'Can\'t add FDB node.'
+            )
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -171,6 +187,8 @@ def remove_node(
                 else input_config_filename
             )
             return
+        if not TransactionManager.internal_hadler_used():
+            FDBHandler.remove_from_cluster()
 
     except Exception:
         logging.error(

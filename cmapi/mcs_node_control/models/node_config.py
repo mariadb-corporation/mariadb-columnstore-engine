@@ -132,6 +132,9 @@ class NodeConfig:
             # as we add revisions, add add'l checks on rev_node.text here
 
     def write_config(self, tree, filename=DEFAULT_MCS_CONF_PATH):
+        # TODO: search for another atomic config write methods and combine
+        #       them into one external function.
+        #       eg FDBHandler.write_cluster_config
         tmp_filename = filename + ".cmapi.tmp"
         with open(tmp_filename, "w") as f:
             f.write(self.to_string(tree))

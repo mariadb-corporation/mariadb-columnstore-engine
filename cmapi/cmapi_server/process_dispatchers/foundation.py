@@ -1,4 +1,7 @@
-"""Module contains systemd process dispatcher class implementation."""
+"""
+Module with Foundation DB process disptcher. First try.
+TODO: make some kind of SystemD base dispatcher + add container dispatcher.
+"""
 
 import logging
 import re
@@ -7,9 +10,9 @@ from typing import Union, Tuple
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
 
-class SystemdDispatcher(BaseDispatcher):
-    """Manipulates with systemd services."""
-    systemctl_version: int = 219  #CentOS 7 version
+class FDBDispatcher(BaseDispatcher):
+    """Manipulates with systemd FDB service."""
+    systemctl_version: int = 219  #  7 version
 
     @classmethod
     def _systemctl_call(
@@ -84,54 +87,18 @@ class SystemdDispatcher(BaseDispatcher):
         # command execution was unsuccessfull
         return False
 
-    @staticmethod
-    def _workernode_get_service_name(is_primary: bool) -> str:
-        """Get proper workernode service name based on primary status.
-
-        :param is_primary: is node where we running primary?
-        :type is_primary: bool
-        :return: correct workernode service name
-        :rtype: str
-        """
-        service = 'mcs-workernode'
-        return f'{service}@1.service' if is_primary else f'{service}@2.service'
-
-    @classmethod
-    def _workernode_enable(cls, enable: bool, use_sudo: bool = True) -> None:
-        """Enable workernode service.
-
-        :param enable: enable or disable
-        :type enable: bool
-        :param use_sudo: use sudo or not, defaults to True
-        :type use_sudo: bool, optional
-        """
-        sub_cmd = 'enable' if enable else 'disable'
-        service = 'mcs-workernode@1.service'
-
-        if not cls._systemctl_call(sub_cmd, service, use_sudo):
-            # enabling\disabling service is not critical, just log failure
-            logging.warning(f'Failed to {sub_cmd} {service}')
-
     @classmethod
     def start(
-        cls, service: str, is_primary: bool = True, use_sudo: bool = True
+        cls, use_sudo: bool = True
     ) -> bool:
-        """Start systemd service.
+        """Start FDB systemd service.
 
-        :param service: service name
-        :type service: str, optional
-        :param is_primary: is node primary or not
-        :type is_primary: bool, optional
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
         :return: True if service started successfully
         :rtype: bool
         """
-        service_name = service
-        if service_name == 'mcs-workernode':
-            service_name = cls._workernode_get_service_name(is_primary)
-            if is_primary:
-                cls._workernode_enable(True, use_sudo)
+        service_name = 'foundationdb'
 
         if cls.is_service_running(service_name, use_sudo):
             return True
@@ -141,31 +108,21 @@ class SystemdDispatcher(BaseDispatcher):
             logging.error(f'Failed while starting "{service_name}".')
             return False
 
-        if is_primary and service == 'mcs-ddlproc':
-            cls._run_dbbuilder(use_su=True)
-
         logging.debug(f'Successfully started {service_name}.')
         return cls.is_service_running(service_name, use_sudo)
 
     @classmethod
     def stop(
-        cls, service: str, is_primary: bool = True, use_sudo: bool = True
+        cls, use_sudo: bool = True
     ) -> bool:
-        """Stop systemd service.
+        """Stop FDB systemd service.
 
-        :param service: service name
-        :type service: str, optional
-        :param is_primary: is node primary or not
-        :type is_primary: bool, optional
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
         :return: True if service stopped successfully
         :rtype: bool
         """
-        service_name = service
-        if service_name == 'mcs-workernode':
-            service_name = f'{service_name}@1.service {service_name}@2.service'
-            cls._workernode_enable(False, use_sudo)
+        service_name = 'foundationdb'
 
         logging.debug(f'Stopping "{service_name}".')
         if not cls._systemctl_call('stop', service_name, use_sudo):
@@ -176,22 +133,16 @@ class SystemdDispatcher(BaseDispatcher):
 
     @classmethod
     def restart(
-        cls, service: str, is_primary: bool = True, use_sudo: bool = True
+        cls, use_sudo: bool = True
     ) -> bool:
         """Restart systemd service.
 
-        :param service: service name
-        :type service: str, optional
-        :param is_primary: is node primary or not, defaults to True
-        :type is_primary: bool, optional
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
         :return: True if service restarted successfully
         :rtype: bool
         """
-        service_name = service
-        if service_name == 'mcs-workernode':
-            service_name = cls._workernode_get_service_name(is_primary)
+        service_name = 'foundationdb'
 
         logging.debug(f'Restarting "{service_name}".')
         if not cls._systemctl_call('restart', service_name, use_sudo):
@@ -199,33 +150,3 @@ class SystemdDispatcher(BaseDispatcher):
             return False
 
         return cls.is_service_running(service_name, use_sudo)
-
-    @classmethod
-    def reload(
-        cls, service: str, is_primary: bool = True, use_sudo: bool=True
-    ) -> bool:
-        """Reload systemd service.
-
-        :param service: service name, defaults to 'Unknown_service'
-        :type service: str, optional
-        :param is_primary: is node primary or not, defaults to True
-        :type is_primary: bool, optional
-        :param use_sudo: use sudo or not, defaults to True
-        :type use_sudo: bool, optional
-        :return: True if service reloaded successfully
-        :rtype: bool
-
-        ..NOTE: For next releases. It should become important when we teach
-                MCS to add/remove nodes w/o whole cluster restart.
-                Additional error handling?
-        """
-        service_name = service
-        if service_name == 'mcs-workernode':
-            service_name = cls._workernode_get_service_name(is_primary)
-
-        logging.debug(f'Reloading "{service_name}".')
-        if not cls._systemctl_call('reload', service_name, use_sudo):
-            logging.error(f'Failed while reloading "{service_name}".')
-            return False
-
-        return not cls.is_service_running(service, use_sudo)

@@ -25,6 +25,7 @@ from cmapi_server.failover_agent import FailoverAgent
 from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.managers.transaction import TransactionManager
 from failover.node_monitor import NodeMonitor
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig
@@ -160,11 +161,13 @@ if __name__ == '__main__':
         cfg_parser
     )
     MCSProcessManager.detect(dispatcher_name, dispatcher_path)
+    TransactionManager.handler = helpers.get_txn_handler(cfg_parser)
+    if TransactionManager.internal_hadler_used():
+        TxnBackgroundThread(cherrypy.engine, app).subscribe()
     # If we don't have auto_failover flag in the config turn it ON by default.
     turn_on_failover = cfg_parser.getboolean(
         'application', 'auto_failover', fallback=True
     )
-    TxnBackgroundThread(cherrypy.engine, app).subscribe()
     # subscribe FailoverBackgroundThread plugin code to bus channels
     # code below not starting "real" failover background thread
     FailoverBackgroundThread(cherrypy.engine, turn_on_failover).subscribe()

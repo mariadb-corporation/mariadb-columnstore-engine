@@ -859,12 +859,15 @@ class ClusterController:
         request_body = request.json
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        fdb_config_data = request_body.get('fdb_config_data', None)
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
 
         try:
-            response = ClusterHandler.add_node(node, config)
+            response = ClusterHandler.add_node(
+                node, config, fdb_config_data=fdb_config_data
+            )
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 

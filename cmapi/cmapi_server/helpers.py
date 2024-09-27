@@ -873,6 +873,20 @@ def get_dispatcher_name_and_path(
     return dispatcher_name, dispatcher_path
 
 
+def get_txn_handler(config_parser: configparser.ConfigParser) -> str:
+    """Get internal cmapi transaction handler name from cmapi conf file.
+
+    :param config_parser: cmapi conf file parser
+    :type config_parser: configparser.ConfigParser
+    :return: transaction handler name
+    :rtype: str
+    """
+    txn_manager_name = dequote(
+        config_parser.get('Txn_handler', 'name', fallback='cmapi')
+    )
+    return txn_manager_name
+
+
 def build_url(
         base_url: str, query_params: dict, scheme: str = 'https',
         path: str = '', params: str = '', fragment: str = '',

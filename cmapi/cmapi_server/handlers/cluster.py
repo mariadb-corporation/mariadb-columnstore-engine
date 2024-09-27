@@ -196,6 +196,7 @@ class ClusterHandler():
     @staticmethod
     def add_node(
         node: str, config: str = DEFAULT_MCS_CONF_PATH,
+        fdb_config_data: Optional[str] = None,
         logger: logging.Logger = logging.getLogger('cmapi_server')
     ) -> dict:
         """Method to add node to MCS CLuster.
@@ -205,6 +206,8 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
+        :param fdb_config: fdb config data, defaults to None
+        :type fdb_config: str, optional
         :param logger: logger, defaults to logging.getLogger('cmapi_server')
         :type logger: logging.Logger, optional
         :raises CMAPIBasicError: on exception while starting transaction
@@ -238,7 +241,7 @@ class ClusterHandler():
         try:
             add_node(
                 node, input_config_filename=config,
-                output_config_filename=config
+                output_config_filename=config, fdb_config_data=fdb_config_data,
             )
             if not get_dbroots(node, config):
                 add_dbroot(
