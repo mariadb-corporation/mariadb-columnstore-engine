@@ -387,7 +387,7 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
     }
   }
 
-  if (aggInHaving == false)
+  if (false && aggInHaving == false)
   {
     // treated the same as where clause if no aggregate column in having.
     jobInfo.havingStep.reset();

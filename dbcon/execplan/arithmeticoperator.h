@@ -33,6 +33,27 @@
 #include "operator.h"
 #include "parsetree.h"
 
+#if 0
+#define aoidblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define aoidblog(_)
+#endif
 namespace messageqcpp
 {
 class ByteStream;
@@ -261,6 +282,11 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::TINYINT:
       fResult.intVal = execute(lop->getIntVal(row, isNull), rop->getIntVal(row, isNull), isNull);
+      aoidblog("result " << fResult.intVal << ", isNull " << int(isNull));
+      if (isNull)
+      {
+        fResult.intVal = joblist::INTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -282,6 +308,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
       fResult.uintVal = execute(lop->getUintVal(row, isNull), rop->getUintVal(row, isNull), isNull);
+      if (isNull)
+      {
+        fResult.uintVal = joblist::UBIGINTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::DOUBLE:
@@ -313,6 +343,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 template <typename T>
 inline T ArithmeticOperator::execute(T op1, T op2, bool& isNull)
 {
+	aoidblog("executing fOp " << int(fOp) << ", op1 " << op1 << ", op2 " << op2);
   switch (fOp)
   {
     case OP_ADD: return op1 + op2;

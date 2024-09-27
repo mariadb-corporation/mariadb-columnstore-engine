@@ -53,6 +53,28 @@ using namespace rowgroup;
 
 #include "expressionstep.h"
 
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
+
 namespace joblist
 {
 ExpressionStep::ExpressionStep()
@@ -483,6 +505,7 @@ void ExpressionStep::populateColumnInfo(AggregateColumn* ac, JobInfo& jobInfo)
 
 void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const JobInfo& jobInfo)
 {
+	idblog("fColumns size " << fColumns.size());
   // expression is handled as function join already
   if (fDoJoin)
     return;
@@ -493,6 +516,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
   for (vector<ReturnedColumn*>::iterator it = fColumns.begin(); it != fColumns.end(); ++it)
   {
     SimpleColumn* sc = dynamic_cast<SimpleColumn*>(*it);
+    idblog("on " << (*it)->toString());
 
     if (sc != NULL)
     {
@@ -528,6 +552,7 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
           key = jobInfo.keyInfo->dictKeyMap[key];
       }
 
+	    idblog("sc: setting input index " << indexMap[key]);
       sc->inputIndex(indexMap[key]);
 
       if (jobInfo.trace)
@@ -535,6 +560,9 @@ void ExpressionStep::updateInputIndex(map<uint32_t, uint32_t>& indexMap, const J
     }
     else
     {
+	    //auto etk = getExpTupleKey(jobInfo, (*it)->expressionId());
+	    //auto eid = (*it)->expressionId();
+	    //idblog("setting inputu index " << indexMap[getExpTupleKey(jobInfo, (*it)->expressionId())] << ", etk " << etk << ", eid " << eid);
       (*it)->inputIndex(indexMap[getExpTupleKey(jobInfo, (*it)->expressionId())]);
 
       if (jobInfo.trace)

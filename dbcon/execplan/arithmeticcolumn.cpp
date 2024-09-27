@@ -43,6 +43,27 @@ using namespace messageqcpp;
 
 namespace
 {
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(x)
+#endif
 /** print the tree
  *
  * this function is mostly for debug purpose
@@ -300,12 +321,12 @@ const string ArithmeticColumn::toString() const
   if (fAlias.length() > 0)
     oss << "Alias: " << fAlias << endl;
 
-  if (fExpression != 0)
-    fExpression->walk(walkfn, oss);
-
   oss << "expressionId=" << fExpressionId << endl;
   oss << "joinInfo=" << fJoinInfo << " returnAll=" << fReturnAll << " sequence#=" << fSequence << endl;
   oss << "resultType=" << colDataTypeToString(fResultType.colDataType) << "|" << fResultType.colWidth << endl;
+  if (fExpression != 0)
+    fExpression->walk(walkfn, oss);
+
   return oss.str();
 }
 

@@ -53,6 +53,28 @@ using namespace querytele;
 #include "jlf_common.h"
 #include "tuplehavingstep.h"
 
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(x)
+#endif
+
 namespace joblist
 {
 TupleHavingStep::TupleHavingStep(const JobInfo& jobInfo)
@@ -87,7 +109,10 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 
   for (uint64_t i = 0; i < fRowGroupIn.getKeys().size(); ++i)
     if (keyToIndexMap.find(fRowGroupIn.getKeys()[i]) == keyToIndexMap.end())
+    {
+	    idblog("mapping " << fRowGroupIn.getKeys()[i] << " to " << i << ", key " << fRowGroupIn.getKeys()[i]);
       keyToIndexMap.insert(make_pair(fRowGroupIn.getKeys()[i], i));
+    }
 
   updateInputIndex(keyToIndexMap, jobInfo);
 
@@ -117,17 +142,27 @@ void TupleHavingStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
   fRowGroupOut =
       RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold);
   fRowGroupOut.initRow(&fRowOut);
+  if (fExpressionFilter) { idblog("init expr filter: " << fExpressionFilter->toString()); }
 }
 
 void TupleHavingStep::expressionFilter(const ParseTree* filter, JobInfo& jobInfo)
 {
   // let base class handle the simple columns
   ExpressionStep::expressionFilter(filter, jobInfo);
+  idblog("filter: " << filter->toString());
+  idblog("fColumns size after ExpressionStep::expressionFilter " << fColumns.size());
 
   // extract simple columns from parse tree
+#if 01
   vector<AggregateColumn*> acv;
   fExpressionFilter->walk(getAggCols, &acv);
   fColumns.insert(fColumns.end(), acv.begin(), acv.end());
+  idblog("fColumns size after walk " << fColumns.size());
+  idblog("this: " << toString());
+#endif
+  for(uint32_t i = 0; i < fColumns.size(); i++) {
+	  idblog("final column " << i << ": " << fColumns[i]->toString());
+  }
 }
 
 void TupleHavingStep::run()
@@ -320,19 +355,31 @@ void TupleHavingStep::doHavingFilters()
   fRowGroupOut.getRow(0, &fRowOut);
   fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
 
+  idblog("evaluating " << fExpressionFilter->toString());
+  idblog("inputRG row count " << fRowGroupIn.getRowCount());
   for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
   {
+	  idblog("actual eval");
     if (fFeInstance->evaluate(fRowIn, fExpressionFilter))
     {
+	    idblog("copying row " << i << " in col count " << fRowIn.getColumnCount() << ", out col count " << fRowOut.getColumnCount());
+	    for(uint32_t j=0;j<fRowIn.getColumnCount();j++) {
+		    idblog(" in [" << j << "] type " << int(fRowIn.getColTypes()[i]) << ", width " << fRowIn.getColumnWidth(j));
+	    }
+	    for(uint32_t j=0;j<fRowOut.getColumnCount();j++) {
+		    idblog(" out [" << j << "] type " << int(fRowOut.getColTypes()[i]) << ", width " << fRowOut.getColumnWidth(j));
+	    }
       copyRow(fRowIn, &fRowOut);
       fRowGroupOut.incRowCount();
       fRowOut.nextRow();
     }
 
     fRowIn.nextRow();
+    idblog("fRowIn advanced");
   }
 
   fRowsReturned += fRowGroupOut.getRowCount();
+  idblog("outRG rows count " << fRowGroupOut.getRowCount());
 }
 
 const RowGroup& TupleHavingStep::getOutputRowGroup() const

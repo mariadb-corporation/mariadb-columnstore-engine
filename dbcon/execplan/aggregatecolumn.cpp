@@ -46,6 +46,28 @@ using namespace joblist;
 
 namespace execplan
 {
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
+
 void getAggCols(execplan::ParseTree* n, void* obj)
 {
   vector<AggregateColumn*>* list = reinterpret_cast<vector<AggregateColumn*>*>(obj);
@@ -338,6 +360,8 @@ bool AggregateColumn::hasAggregate()
 
 void AggregateColumn::evaluate(Row& row, bool& isNull)
 {
+  idblog("evaluating: " << toString());
+  idblog("input index " << fInputIndex);
   switch (fResultType.colDataType)
   {
     case CalpontSystemCatalog::DATE:
@@ -536,6 +560,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
       {
         case 16:
         {
+		idblog("getting TSInt128, input index " << fInputIndex);
           datatypes::TSInt128 val = row.getTSInt128Field(fInputIndex);
 
           if (val.isNull())
@@ -565,6 +590,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           break;
 
         case 4:
+		idblog("getting decimal from int4, input index " << fInputIndex);
           if (row.equals<4>(INTNULL, fInputIndex))
             isNull = true;
           else
@@ -574,6 +600,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
           break;
 
         default:
+		idblog("getting decimal from bigint, input index " << fInputIndex << " siize " << int(fResultType.colWidth));
           if (row.equals<8>(BIGINTNULL, fInputIndex))
             isNull = true;
           else

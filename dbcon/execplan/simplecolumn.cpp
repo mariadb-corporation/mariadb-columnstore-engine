@@ -53,6 +53,27 @@ using namespace joblist;
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
 
+#if 0
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
 namespace execplan
 {
 void getSimpleCols(execplan::ParseTree* n, void* obj)
@@ -208,6 +229,13 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
 {
 }
 
+SimpleColumn::SimpleColumn(const ReturnedColumn& rhs, const uint32_t sessionID)
+ : ReturnedColumn(rhs, sessionID)
+ , fData(rhs.data())
+ , fisColumnStore(true)
+{
+}
+
 SimpleColumn::~SimpleColumn()
 {
 }
@@ -270,7 +298,9 @@ const string SimpleColumn::toString() const
          << returnAll() << delim << sequence() << delim << cardinality() << delim << joinInfo() << delim
          << colSource() << delim << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << delim
          << colPosition() << delim << cs.getCharset().cs_name.str << delim << cs.getCharset().coll_name.str
-         << delim << endl;
+         << " inputindex/outputindex: " << fInputIndex << delim << fOutputIndex
+	 << " eid " << fExpressionId
+	 << endl;
 
   return output.str();
 }
@@ -512,6 +542,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     isNull = true;
     return;
   }
+  idblog("eval at simple col");
 
   switch (fResultType.colDataType)
   {
@@ -591,6 +622,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     case CalpontSystemCatalog::BIGINT:
     {
       fResult.intVal = row.getIntField<8>(fInputIndex);
+      idblog("got big int val " << fResult.intVal);
       break;
     }
 
@@ -598,6 +630,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     case CalpontSystemCatalog::MEDINT:
     {
       fResult.intVal = row.getIntField<4>(fInputIndex);
+      idblog("got med int val " << fResult.intVal);
       break;
     }
 

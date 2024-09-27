@@ -44,6 +44,27 @@ using namespace execplan;
 #include "ha_view.h"
 #include "ha_mcs_common.h"
 
+#if 1
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define idblog(_)
+#endif
 namespace cal_impl_if
 {
 extern uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
@@ -82,6 +103,7 @@ void View::transform()
   // @bug 1796. Remember table order on the FROM list.
   gwi.clauseType = FROM;
 
+  idblog("in view::transform");
   try
   {
     for (; table_ptr; table_ptr = table_ptr->next_local)
@@ -131,6 +153,7 @@ void View::transform()
       }
       else
       {
+	      idblog("a ergular taable");
         // check foreign engine tables
         bool columnStore = (table_ptr->table ? ha_mcs_common::isMCSTable(table_ptr->table) : true);
 

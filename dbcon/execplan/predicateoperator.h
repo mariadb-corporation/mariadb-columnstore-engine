@@ -41,6 +41,27 @@
 
 #include "collation.h"  // CHARSET_INFO
 
+#if 0
+#define poidblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+#else
+#define poidblog(_)
+#endif
 namespace messageqcpp
 {
 class ByteStream;
@@ -156,6 +177,7 @@ inline bool PredicateOperator::numericCompare(const IDB_Decimal& op1, const IDB_
 template <typename result_t>
 inline bool PredicateOperator::numericCompare(const result_t op1, const result_t op2)
 {
+	poidblog("comparing op " << int(fOp) << ", op1 " << op1 << ", op2 " << op2);
   switch (fOp)
   {
     case OP_EQ: return op1 == op2;
