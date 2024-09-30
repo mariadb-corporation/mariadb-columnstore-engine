@@ -57,6 +57,7 @@ using namespace execplan;
 namespace WriteEngine
 {
 BRMWrapper* volatile BRMWrapper::m_instance = NULL;
+std::atomic<bool> BRMWrapper::finishReported(false);
 boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
 boost::mutex BRMWrapper::m_instanceCreateMutex;
 
@@ -750,6 +751,10 @@ uint8_t BRMWrapper::newCpimportJob(uint32_t &jobId)
 
 void BRMWrapper::finishCpimportJob(uint32_t jobId)
 {
+  if (finishReported.exchange(true)) // get old and set to true; if old is true, do nothing.
+  {
+    return;
+  }
   blockRsltnMgrPtr->finishCpimportJob(jobId);
 }
 

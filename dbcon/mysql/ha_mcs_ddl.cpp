@@ -344,7 +344,7 @@ bool anyRowInTable(string& schema, string& tableName, int sessionID)
   rowgroup::RGData rgData;
   ByteStream::quadbyte qb = 4;
   msg << qb;
-  rowgroup::RowGroup* rowGroup = 0;
+  std::shared_ptr<rowgroup::RowGroup> rowGroup = 0;
   bool anyRow = false;
 
   exemgrClient->write(msg);
@@ -397,7 +397,7 @@ bool anyRowInTable(string& schema, string& tableName, int sessionID)
       if (!rowGroup)
       {
         // This is mete data
-        rowGroup = new rowgroup::RowGroup();
+        rowGroup.reset(new rowgroup::RowGroup());
         rowGroup->deserialize(msg);
         qb = 100;
         msg.restart();
@@ -515,7 +515,7 @@ bool anyTimestampColumn(string& schema, string& tableName, int sessionID)
   rowgroup::RGData rgData;
   ByteStream::quadbyte qb = 4;
   msg << qb;
-  rowgroup::RowGroup* rowGroup = 0;
+  std::shared_ptr<rowgroup::RowGroup> rowGroup = 0;
   bool anyRow = false;
 
   exemgrClient->write(msg);
@@ -568,7 +568,7 @@ bool anyTimestampColumn(string& schema, string& tableName, int sessionID)
       if (!rowGroup)
       {
         // This is mete data
-        rowGroup = new rowgroup::RowGroup();
+        rowGroup.reset(new rowgroup::RowGroup());
         rowGroup->deserialize(msg);
         qb = 100;
         msg.restart();

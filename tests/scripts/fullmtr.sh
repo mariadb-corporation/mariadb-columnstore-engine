@@ -7,6 +7,9 @@ CURRENT_DIR=`pwd`
 mysql -e "create database if not exists test;"
 SOCKET=`mysql -e "show variables like 'socket';" | grep socket | cut -f2`
 
+export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=/core/asan.hz
+
+
 cd ${INSTALLED_MTR_PATH}
 
 if [[ ! -d  ${COLUMSNTORE_MTR_INSTALLED} ]]; then
@@ -21,7 +24,15 @@ if [[ ! -d  '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
 fi
 run_suite()
 {
-    ./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    ls /core >$CURRENT_DIR/mtr.$1.cores-before
+    ./mtr --force --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    # dump analyses.
+    systemctl stop mariadb
+    systemctl start mariadb
+    ls /core >$CURRENT_DIR/mtr.$1.cores-after
+    echo "reports or coredumps:"
+    diff -u $CURRENT_DIR/mtr.$1.cores-before $CURRENT_DIR/mtr.$1.cores-after && echo "no new reports or coredumps"
+    rm $CURRENT_DIR/mtr.$1.cores-before $CURRENT_DIR/mtr.$1.cores-after
 }
 
 if (( $# == 2 )); then
@@ -29,8 +40,9 @@ if (( $# == 2 )); then
     exit 1
 fi
 
-run_suite setup
+run_suite basic
 run_suite bugfixes
+run_suite setup
 run_suite devregression
 run_suite autopilot
 run_suite extended

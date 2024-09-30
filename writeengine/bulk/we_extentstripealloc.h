@@ -46,21 +46,6 @@ class Log;
 class AllocExtEntry
 {
  public:
-  // Default constructor
-  AllocExtEntry()
-   : fOid(0)
-   , fColWidth(0)
-   , fDbRoot(0)
-   , fPartNum(0)
-   , fSegNum(0)
-   , fStartLbid(0)
-   , fAllocSize(0)
-   , fHwm(0)
-   , fStatus(NO_ERROR)
-   , fStripeKey(0)
-  {
-  }
-
   // Used to create entry for an existing extent we are going to add data to.
   AllocExtEntry(OID& oid, int colWidth, uint16_t dbRoot, uint32_t partNum, uint16_t segNum,
                 BRM::LBID_t startLbid, int allocSize, HWM hwm, int status, const std::string& statusMsg,
@@ -74,22 +59,22 @@ class AllocExtEntry
    , fAllocSize(allocSize)
    , fHwm(hwm)
    , fStatus(status)
-   , fStatusMsg(statusMsg)
+   , fStatusMsg(new std::string(statusMsg))
    , fStripeKey(stripeKey)
   {
   }
 
-  OID fOid;                 // column OID
-  int fColWidth;            // colum width (in bytes)
-  uint16_t fDbRoot;         // DBRoot of allocated extent
-  uint32_t fPartNum;        // Partition number of allocated extent
-  uint16_t fSegNum;         // Segment number of allocated extent
-  BRM::LBID_t fStartLbid;   // Starting LBID of allocated extent
-  int fAllocSize;           // Number of allocated LBIDS
-  HWM fHwm;                 // Starting fbo or hwm of allocated extent
-  int fStatus;              // Status of extent allocation
-  std::string fStatusMsg;   // Status msg of extent allocation
-  unsigned int fStripeKey;  // "Stripe" identifier for this extent
+  OID fOid = 0;                 // column OID
+  int fColWidth = 0;            // colum width (in bytes)
+  uint16_t fDbRoot = 0;         // DBRoot of allocated extent
+  uint32_t fPartNum = 0;        // Partition number of allocated extent
+  uint16_t fSegNum = 0;         // Segment number of allocated extent
+  BRM::LBID_t fStartLbid = 0;   // Starting LBID of allocated extent
+  int fAllocSize = 0;           // Number of allocated LBIDS
+  HWM fHwm = 0;                 // Starting fbo or hwm of allocated extent
+  int fStatus = NO_ERROR;              // Status of extent allocation
+  std::shared_ptr<std::string> fStatusMsg{new std::string()};   // Status msg of extent allocation
+  unsigned int fStripeKey = 0;  // "Stripe" identifier for this extent
 };
 
 //------------------------------------------------------------------------------
