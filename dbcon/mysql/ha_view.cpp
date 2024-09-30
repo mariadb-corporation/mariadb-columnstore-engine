@@ -65,7 +65,7 @@ void View::transform()
   csep->sessionID(fParentGwip->sessionid);
 
   // gwi for the sub query
-  gp_walk_info gwi(fParentGwip->timeZone);
+  gp_walk_info gwi(fParentGwip->timeZone, fParentGwip->subQueriesChain);
   gwi.thd = fParentGwip->thd;
 
   uint32_t sessionID = csep->sessionID();
@@ -150,6 +150,7 @@ void View::transform()
     if (gwi.fatalParseError)
     {
       setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+      delete csep;
       return;
     }
   }
@@ -157,6 +158,7 @@ void View::transform()
   {
     setError(gwi.thd, ER_INTERNAL_ERROR, ie.what());
     CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+    delete csep;
     return;
   }
   catch (...)
@@ -164,6 +166,7 @@ void View::transform()
     string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
     setError(gwi.thd, ER_INTERNAL_ERROR, emsg);
     CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+    delete csep;
     return;
   }
 
@@ -176,6 +179,7 @@ void View::transform()
 
   // merge view list to parent
   fParentGwip->viewList.insert(fParentGwip->viewList.end(), gwi.viewList.begin(), gwi.viewList.end());
+  gwi.viewList.clear();
 
   // merge non-collapsed outer join to parent select
   stack<ParseTree*> tmpstack;
@@ -191,6 +195,12 @@ void View::transform()
     fParentGwip->ptWorkStack.push(tmpstack.top());
     tmpstack.pop();
   }
+  while (!gwi.rcWorkStack.empty()) {
+    delete gwi.rcWorkStack.top();
+    gwi.rcWorkStack.pop();
+  }
+
+  delete csep;
 }
 
 uint32_t View::processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>& outerJoinStack)

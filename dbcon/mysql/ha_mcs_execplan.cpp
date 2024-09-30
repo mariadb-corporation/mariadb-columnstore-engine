@@ -293,13 +293,66 @@ string escapeBackTick(const char* str)
   return ret;
 }
 
-void clearStacks(gp_walk_info& gwi)
+cal_impl_if::gp_walk_info::~gp_walk_info()
+{
+  while (!rcWorkStack.empty())
+  {
+    delete rcWorkStack.top();
+    rcWorkStack.pop();
+  }
+
+  while (!ptWorkStack.empty())
+  {
+    delete ptWorkStack.top();
+    ptWorkStack.pop();
+  }
+  for (uint32_t i=0;i<viewList.size();i++) {
+    delete viewList[i];
+  }
+  viewList.clear();
+}
+
+void clearStacks(gp_walk_info& gwi, bool andViews = true, bool mayDelete = false)
 {
   while (!gwi.rcWorkStack.empty())
+  {
+    if (mayDelete)
+    {
+      delete gwi.rcWorkStack.top();
+    }
     gwi.rcWorkStack.pop();
+  }
 
   while (!gwi.ptWorkStack.empty())
+  {
+    if (mayDelete)
+    {
+      delete gwi.ptWorkStack.top();
+    }
     gwi.ptWorkStack.pop();
+  }
+  if (andViews)
+  {
+    gwi.viewList.clear();
+  }
+}
+void clearDeleteStacks(gp_walk_info& gwi)
+{
+  while (!gwi.rcWorkStack.empty())
+  {
+    delete gwi.rcWorkStack.top();
+    gwi.rcWorkStack.pop();
+  }
+
+  while (!gwi.ptWorkStack.empty())
+  {
+    delete gwi.ptWorkStack.top();
+    gwi.ptWorkStack.pop();
+  }
+  for (uint32_t i=0;i<gwi.viewList.size();i++) {
+    delete gwi.viewList[i];
+  }
+  gwi.viewList.clear();
 }
 
 bool nonConstFunc(Item_func* ifp)
@@ -1512,6 +1565,7 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
           ParseTree* pt = new ParseTree(onFilter);
           outerJoinStack.push(pt);
         }
+
       }
       else  // inner join
       {
@@ -1545,7 +1599,7 @@ ParseTree* buildRowPredicate(gp_walk_info* gwip, RowColumn* lhs, RowColumn* rhs,
 
   ParseTree* pt = new ParseTree(lo);
   sop->setOpType(lhs->columnVec()[0]->resultType(), rhs->columnVec()[0]->resultType());
-  SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[0].get(), rhs->columnVec()[0].get());
+  SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[0]->clone(), rhs->columnVec()[0]->clone());
   sf->timeZone(gwip->timeZone);
   pt->left(new ParseTree(sf));
 
@@ -1553,7 +1607,7 @@ ParseTree* buildRowPredicate(gp_walk_info* gwip, RowColumn* lhs, RowColumn* rhs,
   {
     sop.reset(po->clone());
     sop->setOpType(lhs->columnVec()[i]->resultType(), rhs->columnVec()[i]->resultType());
-    SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[i].get(), rhs->columnVec()[i].get());
+    SimpleFilter* sf = new SimpleFilter(sop, lhs->columnVec()[i]->clone(), rhs->columnVec()[i]->clone());
     sf->timeZone(gwip->timeZone);
     pt->right(new ParseTree(sf));
 
@@ -1570,6 +1624,12 @@ ParseTree* buildRowPredicate(gp_walk_info* gwip, RowColumn* lhs, RowColumn* rhs,
 
 bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, Item_func* ifp)
 {
+  // rhs and lhs are being dismembered here and then get thrown away, leaking.
+  // So we create two scoped pointers to get them delete'd automatically at
+  // return.
+  // Also look below into heldoutVals vector - it contains values produced from
+  // ifp's arguments.
+  const std::unique_ptr<RowColumn> rhsp(rhs), lhsp(lhs);
   if (ifp->functype() == Item_func::EQ_FUNC || ifp->functype() == Item_func::NE_FUNC)
   {
     // (c1,c2,..) = (v1,v2,...) transform to: c1=v1 and c2=v2 and ...
@@ -1601,6 +1661,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
     // two entries have been popped from the stack already: lhs and rhs
     stack<ReturnedColumn*> tmpStack;
     vector<RowColumn*> valVec;
+    vector<SRCP> heldOutVals; // these vals are not rhs/lhs and need to be freed
     tmpStack.push(rhs);
     tmpStack.push(lhs);
     assert(gwip->rcWorkStack.size() >= ifp->argument_count() - 2);
@@ -1608,6 +1669,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
     for (uint32_t i = 2; i < ifp->argument_count(); i++)
     {
       tmpStack.push(gwip->rcWorkStack.top());
+      heldOutVals.push_back(SRCP(gwip->rcWorkStack.top()));
 
       if (!gwip->rcWorkStack.empty())
         gwip->rcWorkStack.pop();
@@ -1627,7 +1689,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
       vals = dynamic_cast<RowColumn*>(tmpStack.top());
       valVec.push_back(vals);
       tmpStack.pop();
-      pt1->right(buildRowPredicate(gwip, columns->clone(), vals, predicateOp));
+      pt1->right(buildRowPredicate(gwip, columns, vals, predicateOp));
       pt = pt1;
     }
 
@@ -1644,7 +1706,7 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
 
     for (uint32_t i = 0; i < columns->columnVec().size(); i++)
     {
-      ConstantFilter* cf = new ConstantFilter();
+      std::unique_ptr<ConstantFilter> cf(new ConstantFilter());
 
       sop.reset(lo->clone());
       cf->op(sop);
@@ -1652,7 +1714,9 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
 
       // no optimization for non-simple column because CP won't apply
       if (!sc)
+      {
         continue;
+      }
 
       ssc.reset(sc->clone());
       cf->col(ssc);
@@ -1674,9 +1738,11 @@ bool buildRowColumnFilter(gp_walk_info* gwip, RowColumn* rhs, RowColumn* lhs, It
       }
 
       if (j < valVec.size())
+      {
         continue;
+      }
 
-      tmpPtStack.push(new ParseTree(cf));
+      tmpPtStack.push(new ParseTree(cf.release()));
     }
 
     // "and" all the filters together
@@ -2027,7 +2093,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
 
     if (!gwip->rcWorkStack.empty())
+    {
+      delete gwip->rcWorkStack.top();
       gwip->rcWorkStack.pop();  // pop gwip->scsp
+    }
 
     if (cf->filterList().size() < inp->argument_count() - 1)
     {
@@ -2838,7 +2907,6 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
 {
   setError(thd, errcode, errmsg);
-  clearStacks(gwi);
 }
 
 int setErrorAndReturn(gp_walk_info& gwi)
@@ -4108,6 +4176,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           if (!sptp)
           {
             nonSupport = true;
+            delete fc;
             return NULL;
           }
 
@@ -4122,6 +4191,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           nonSupport = true;
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SUB_EXPRESSION);
+          delete fc;
           return NULL;
         }
 
@@ -4153,6 +4223,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         if (!rc || nonSupport)
         {
           nonSupport = true;
+          delete fc;
           return NULL;
         }
 
@@ -4181,6 +4252,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         else
         {
           nonSupport = true;
+          delete fc;
           return NULL;
         }
       }
@@ -4569,6 +4641,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       gwi.inCaseStmt = false;
       if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top() == *sptp.get())
       {
+        delete gwi.ptWorkStack.top();
         gwi.ptWorkStack.pop();
       }
     }
@@ -4589,6 +4662,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         // We need to pop whichever stack is holding it, if any.
         if ((!gwi.rcWorkStack.empty()) && *gwi.rcWorkStack.top() == parm)
         {
+          delete gwi.rcWorkStack.top();
           gwi.rcWorkStack.pop();
         }
         else if (!gwi.ptWorkStack.empty())
@@ -4596,7 +4670,10 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
           ReturnedColumn* ptrc = dynamic_cast<ReturnedColumn*>(gwi.ptWorkStack.top()->data());
 
           if (ptrc && *ptrc == *parm)
+          {
+            delete gwi.ptWorkStack.top();
             gwi.ptWorkStack.pop();
+          }
         }
       }
       else
@@ -4606,6 +4683,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         // We need to pop whichever stack is holding it, if any.
         if ((!gwi.ptWorkStack.empty()) && *gwi.ptWorkStack.top()->data() == sptp->data())
         {
+          delete gwi.ptWorkStack.top();
           gwi.ptWorkStack.pop();
         }
         else if (!gwi.rcWorkStack.empty())
@@ -4616,6 +4694,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 
           if (ptrc && *ptrc == *gwi.rcWorkStack.top())
           {
+            delete gwi.rcWorkStack.top();
             gwi.rcWorkStack.pop();
           }
         }
@@ -5287,6 +5366,18 @@ ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi)
                   ac->constCol(SRCP(rc));
                   break;
                 }
+		// the "rc" can be in gwi.no_parm_func_list. erase it from that list and
+		// then delete it.
+		// kludge, I know.
+		uint32_t i;
+
+		for (i = 0; gwi.no_parm_func_list[i] != rc && i < gwi.no_parm_func_list.size(); i++) { }
+
+		if (i < gwi.no_parm_func_list.size())
+		{
+                  gwi.no_parm_func_list.erase(gwi.no_parm_func_list.begin() + i);
+                  delete rc;
+		}
               }
             }
 
@@ -5982,7 +6073,10 @@ void gp_walk(const Item* item, void* arg)
         {
           // @bug 4215. remove the argument in rcWorkStack.
           if (!gwip->rcWorkStack.empty())
+          {
+            delete gwip->rcWorkStack.top();
             gwip->rcWorkStack.pop();
+          }
 
           break;
         }
@@ -6017,6 +6111,7 @@ void gp_walk(const Item* item, void* arg)
 
         for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
         {
+          delete gwip->rcWorkStack.top();
           gwip->rcWorkStack.pop();
         }
 
@@ -6193,6 +6288,7 @@ void gp_walk(const Item* item, void* arg)
           }
           else
           {
+            delete rhs;
             gwip->ptWorkStack.push(lhs);
             continue;
           }
@@ -6824,21 +6920,21 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       if (table_ptr->derived)
       {
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
-        FromSubQuery fromSub(gwi, select_cursor);
+        FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
         string alias(table_ptr->alias.str);
         if (lower_case_table_names)
         {
           boost::algorithm::to_lower(alias);
         }
-        fromSub.alias(alias);
+        fromSub->alias(alias);
 
         CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
         // @bug 3852. check return execplan
-        SCSEP plan = fromSub.transform();
+        SCSEP plan = fromSub->transform();
 
         if (!plan)
         {
-          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
           CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
           return ER_INTERNAL_ERROR;
         }
@@ -6962,7 +7058,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       plan->data(csep->data());
 
       // gwi for the union unit
-      gp_walk_info union_gwi(gwi.timeZone);
+      gp_walk_info union_gwi(gwi.timeZone, gwi.subQueriesChain);
       union_gwi.thd = gwi.thd;
       uint32_t err = 0;
 
@@ -7165,14 +7261,28 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   std::stack<execplan::ParseTree*> outerJoinStack;
 
   if ((failed = buildJoin(gwi, select_lex.top_join_list, outerJoinStack)))
+  {
+    while (!outerJoinStack.empty())
+    {
+      delete outerJoinStack.top();
+      outerJoinStack.pop();
+    }
     return failed;
+  }
 
   if (gwi.subQuery)
   {
     for (uint i = 0; i < gwi.viewList.size(); i++)
     {
       if ((failed = gwi.viewList[i]->processJoin(gwi, outerJoinStack)))
+      {
+        while (!outerJoinStack.empty())
+        {
+          delete outerJoinStack.top();
+          outerJoinStack.pop();
+        }
         return failed;
+      }
     }
   }
 
@@ -7187,7 +7297,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   // is pushed to rcWorkStack.
   if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
   {
-    filters = new ParseTree(gwi.rcWorkStack.top());
+    gwi.ptWorkStack.push(new ParseTree(gwi.rcWorkStack.top()));
     gwi.rcWorkStack.pop();
   }
 
@@ -7240,6 +7350,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
              "columnstore_max_allowed_in_values "
              "threshold.",
              gwi);
+    delete filters;
     return ER_CHECK_NOT_IMPLEMENTED;
   }
 
@@ -7263,6 +7374,26 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   {
     csep->filters(filters);
   }
+
+  if (!gwi.rcWorkStack.empty())
+  {
+    while(!gwi.rcWorkStack.empty())
+    {
+      ReturnedColumn* t = gwi.rcWorkStack.top();
+      delete t;
+      gwi.rcWorkStack.pop();
+    }
+  }
+  if (!gwi.ptWorkStack.empty())
+  {
+    while(!gwi.ptWorkStack.empty())
+    {
+      ParseTree* t = gwi.ptWorkStack.top();
+      delete t;
+      gwi.ptWorkStack.pop();
+    }
+  }
+
 
   return 0;
 }
@@ -7599,7 +7730,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   vector<Item_field*> funcFieldVec;
 
   // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi);
+  clearStacks(gwi, false, true);
 
   // indicate the starting pos of scalar returned column, because some join column
   // has been inserted to the returned column list.
@@ -7936,6 +8067,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
 
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+
           return ER_CHECK_NOT_IMPLEMENTED;
         }
 
@@ -8047,8 +8179,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  clearStacks(gwi);
-  ParseTree* havingFilter = 0;
+  clearStacks(gwi, false, true);
+  std::unique_ptr<ParseTree> havingFilter;
   // clear fatalParseError that may be left from post process functions
   gwi.fatalParseError = false;
   gwi.parseErrorText = "";
@@ -8074,20 +8206,20 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     // @bug 4215. some function filter will be in the rcWorkStack.
     if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
     {
-      havingFilter = new ParseTree(gwi.rcWorkStack.top());
+      gwi.ptWorkStack.push(new ParseTree(gwi.rcWorkStack.top()));
       gwi.rcWorkStack.pop();
     }
 
     while (!gwi.ptWorkStack.empty())
     {
-      havingFilter = gwi.ptWorkStack.top();
+      havingFilter.reset(gwi.ptWorkStack.top());
       gwi.ptWorkStack.pop();
 
       if (gwi.ptWorkStack.empty())
         break;
 
       ptp = new ParseTree(new LogicOperator("and"));
-      ptp->left(havingFilter);
+      ptp->left(havingFilter.release());
       rhs = gwi.ptWorkStack.top();
       gwi.ptWorkStack.pop();
       ptp->right(rhs);
@@ -8118,9 +8250,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       if (havingFilter)
       {
         ParseTree* ptp = new ParseTree(new LogicOperator("and"));
-        ptp->left(havingFilter);
+        ptp->left(havingFilter.release());
         ptp->right(inToExistsFilter);
-        havingFilter = ptp;
+        havingFilter.reset(ptp);
       }
       else
       {
@@ -8350,6 +8482,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
             {
+              delete rc;
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
@@ -8362,6 +8495,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
             {
+              delete rc;
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
@@ -8713,21 +8847,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             {
             }
           }
-          else if (ord_item->type() == Item::FUNC_ITEM)
-          {
-            // @bug5636. check if this order by column is on the select list
-            ReturnedColumn* rc = buildFunctionColumn((Item_func*)(ord_item), gwi, gwi.fatalParseError);
-
-            for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-            {
-              if (rc && rc->operator==(gwi.returnedCols[i].get()))
-              {
-                ostringstream oss;
-                oss << i + 1;
-                break;
-              }
-            }
-          }
         }
       }
 
@@ -8830,20 +8949,28 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->orderByCols(gwi.orderByCols);
   csep->returnedCols(gwi.returnedCols);
   csep->columnMap(gwi.columnMap);
-  csep->having(havingFilter);
+  csep->having(havingFilter.release());
   csep->derivedTableList(gwi.derivedTbList);
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
-  clearStacks(gwi);
   return 0;
 }
 
 int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
 {
-  gp_walk_info* gwi = ti.condInfo;
 
-  if (!gwi)
-    gwi = new gp_walk_info(timeZone);
+  SubQueryChainHolder chainHolder;
+  bool allocated = false;
+  gp_walk_info* gwi;
+  if (ti.condInfo)
+  {
+    gwi = &ti.condInfo->gwi;
+  }
+  else
+  {
+    allocated = true;
+    gwi = new gp_walk_info(timeZone, &chainHolder.chain);
+  }
 
   gwi->thd = thd;
   LEX* lex = thd->lex;
@@ -8894,7 +9021,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   // get filter
   if (ti.condInfo)
   {
-    gp_walk_info* gwi = ti.condInfo;
+    gp_walk_info* gwi = &ti.condInfo->gwi;
     ParseTree* filters = 0;
     ParseTree* ptp = 0;
     ParseTree* rhs = 0;
@@ -8940,6 +9067,10 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
   csep->stringScanThreshold(get_string_scan_threshold(gwi->thd));
 
+  if (allocated)
+  {
+    delete gwi;
+  }
   return 0;
 }
 
@@ -8949,7 +9080,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  SubQuery* chain = nullptr;
+  gp_walk_info gwi(timeZoneOffset, &chain);
   gwi.thd = thd;
   gwi.isGroupByHandler = true;
   int status = getGroupPlan(gwi, *select_lex, csep, gi);
@@ -9087,6 +9219,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 #ifdef DEBUG_WALK_COND
   cerr << "getGroupPlan()" << endl;
 #endif
+  idbassert_s(false, "getGroupPlan is utterly out of date");
 
   // XXX: rollup is currently not supported (not tested) in this part.
   //      but this is not triggered in any of tests.
@@ -9187,21 +9320,21 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
         // Use Pushdown handler for subquery processing
-        FromSubQuery fromSub(gwi, select_cursor);
+        FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
         string alias(table_ptr->alias.str);
         if (lower_case_table_names)
         {
           boost::algorithm::to_lower(alias);
         }
-        fromSub.alias(alias);
+        fromSub->alias(alias);
 
         CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
         // @bug 3852. check return execplan
-        SCSEP plan = fromSub.transform();
+        SCSEP plan = fromSub->transform();
 
         if (!plan)
         {
-          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
           CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
           return ER_INTERNAL_ERROR;
         }
@@ -9453,7 +9586,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   bool redo = false;
 
   // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi);
+  clearStacks(gwi, false);
 
   // indicate the starting pos of scalar returned column, because some join column
   // has been inserted to the returned column list.
@@ -9903,7 +10036,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  clearStacks(gwi);
+  clearStacks(gwi, false);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
   gwi.fatalParseError = false;

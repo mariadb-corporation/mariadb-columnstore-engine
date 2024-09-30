@@ -105,7 +105,6 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
             column->fType->fLength = 16777215;
     }
 }
-
 %}
 
 %expect 17
@@ -255,6 +254,24 @@ ZEROFILL
 %type <str>                  opt_quoted_literal
 %type <str>                  opt_column_charset
 %type <str>                  opt_column_collate
+
+// for pointers to vectors of pointers:
+%destructor { if ($$) { for (auto p : *($$)) { delete p; } }; delete $$; } table_element_list
+
+// for objects allocated during parse:.
+%destructor { delete $$; } qualified_name ident table_element column_def exact_numeric_type
+%destructor { delete $$; } table_options opt_table_options table_name
+%destructor { delete $$; } column_name_list data_type column_constraint
+%destructor { delete $$; } column_constraint_def column_qualifier_list
+%destructor { delete $$; } opt_referential_triggered_action referential_triggered_action
+%destructor { delete $$; } table_option character_string_type binary_string_type blob_type
+%destructor { delete $$; } text_type numeric_type table_constraint table_constraint_def
+
+// NOTE: if you have a leak in this code and do not know which one leaks
+// add %destructor { printf("pop yykind %d\n"; fflush(stdout); } <*>
+// this will print tags in residual stack after syntax error and you'll see
+// what is not delete'd.
+
 %%
 stmtblock:	stmtmulti { x->fParseTree = $1; }
 		;
@@ -685,7 +702,7 @@ qualified_name:
 				if (x->fDBSchema.size())
 					$$ = new QualifiedName((char*)x->fDBSchema.c_str(), $1);
 				else
-				    $$ = new QualifiedName($1);   
+				    $$ = new QualifiedName($1);
 			}
     | ident '.' ident
         {
