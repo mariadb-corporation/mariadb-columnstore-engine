@@ -3263,6 +3263,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
       traces.push_back(oss.str());
     }
 
+    // If the tupleIDs are the same it's not a join, so a new TupleHashJoinStep must be created
     if (bps || tsas || (thjs && thjs->tupleId1() == thjs->tupleId2()))
     {
       thjs = new TupleHashJoinStep(jobInfo);
