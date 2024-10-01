@@ -702,6 +702,10 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
       // exemgrClient->shutdown();
       // delete exemgrClient;
       // exemgrClient = 0;
+      if (rowGroup)
+      {
+        delete rowGroup;
+      }
       throw runtime_error("Lost conection to ExeMgr.");
     }
     else
@@ -728,7 +732,8 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
         // exemgrClient->shutdown();
         // delete exemgrClient;
         // exemgrClient = 0;
-        throw runtime_error(emsgStr);
+        delete rowGroup;
+	throw runtime_error(emsgStr);
       }
 
       rowCount = rowGroup->getRowCount();
