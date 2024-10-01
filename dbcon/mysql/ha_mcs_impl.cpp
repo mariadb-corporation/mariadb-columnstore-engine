@@ -754,6 +754,11 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
     }
   }
 
+  if (rowGroup)
+  {
+    delete rowGroup;
+  }
+
   return returnVal;
 }
 
