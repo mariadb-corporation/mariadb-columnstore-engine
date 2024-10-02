@@ -1478,7 +1478,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 {
   JobStepVector jsv;
 
-  if (sf == 0)
+  if (sf == nullptr)
     return jsv;
 
   // cout << "doSimpleFilter " << endl;
