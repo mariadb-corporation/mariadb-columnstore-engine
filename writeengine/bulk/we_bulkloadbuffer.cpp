@@ -1670,7 +1670,7 @@ int BulkLoadBuffer::parseColParquet(ColumnInfo& columnInfo)
     // not aux column
     if (isNonAuxColumn)
     {
-      columnData = fParquetBatch->column(columnId);
+      columnData = fParquetBatchParser->column(columnId);
     }
     else  // aux column
     {
