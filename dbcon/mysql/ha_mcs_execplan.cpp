@@ -7122,6 +7122,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     ptp->right(rhs);
     gwi.ptWorkStack.push(ptp);
   }
+  idbassert(gwi.rcWorkStack.empty());
 
   while (!outerJoinStack.empty())
   {

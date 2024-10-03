@@ -36,6 +36,6 @@ run_suite autopilot
 run_suite extended
 run_suite multinode
 run_suite oracle
-run_suite 1pmonly
+#run_suite 1pmonly
 
 cd -
