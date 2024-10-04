@@ -3724,6 +3724,7 @@ int BulkLoadBuffer::fillFromFileParquet(RID& totalReadRows, RID& correctTotalRow
 
   try
   {
+    fParquetBatch.reset();
     PARQUET_THROW_NOT_OK(fParquetReader->ReadNext(&fParquetBatch));
     fStartRow = correctTotalRows;
     fStartRowForLogging = totalReadRows;
