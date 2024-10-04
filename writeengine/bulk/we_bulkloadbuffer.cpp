@@ -2740,6 +2740,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           std::static_pointer_cast<arrow::Decimal128Array>(columnData);
       std::shared_ptr<arrow::DecimalType> fType =
           std::static_pointer_cast<arrow::DecimalType>(decimalArray->type());
+      cout << "buffers count in wide decimal is " << decimalArray->data()->buffers.size() << "\n";
       idbassert(decimalArray->data()->buffers.size() > 1);
       const int128_t* dataPtr = decimalArray->data()->GetValues<int128_t>(1);
 
