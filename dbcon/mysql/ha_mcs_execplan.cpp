@@ -7153,7 +7153,6 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
       idblog("  left behind: " << t->toString());
       gwi.rcWorkStack.pop();
     }
-    idbassert_s(0, "bad behavior");
   }
 
   while (!outerJoinStack.empty())
