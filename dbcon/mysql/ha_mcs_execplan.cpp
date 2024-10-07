@@ -114,6 +114,10 @@ const uint64_t CORRELATED = 0x08;
     }                                                                                      \
   } while (0)
 
+extern "C" const char *__asan_default_options() {
+	  return "detect_odr_violation=0";
+}
+
 // In certain cases, gp_walk is called recursively. When done so,
 // we need to bookmark the rcWorkStack for those cases where a constant
 // expression such as 1=1 is used in an if statement or function call.
