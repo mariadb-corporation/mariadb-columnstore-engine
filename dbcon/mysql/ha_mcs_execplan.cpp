@@ -7150,7 +7150,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     while(!gwi.rcWorkStack.empty())
     {
       ReturnedColumn* t = gwi.rcWorkStack.top();
-      idblog("  left behind: " << t->toString());
+      cout << "  left behind: " << t->toString() << "\n";
       gwi.rcWorkStack.pop();
     }
     idbassert_s(0, "bad behavior");
