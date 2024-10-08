@@ -324,8 +324,12 @@ void clearStacks(gp_walk_info& gwi)
     gwi.rcWorkStack.pop();
   }
 
+  idblog("pasre tree work stack is" << (gwi.ptWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.ptWorkStack.empty())
+  {
+    delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
+  }
 }
 
 bool nonConstFunc(Item_func* ifp)
