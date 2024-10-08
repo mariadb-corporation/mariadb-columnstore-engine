@@ -320,14 +320,14 @@ void clearStacks(gp_walk_info& gwi)
   idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
   {
-    delete gwi.rcWorkStack.top();
+    //delete gwi.rcWorkStack.top();
     gwi.rcWorkStack.pop();
   }
 
   idblog("pasre tree work stack is" << (gwi.ptWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.ptWorkStack.empty())
   {
-    delete gwi.ptWorkStack.top();
+    //delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
   }
 }
