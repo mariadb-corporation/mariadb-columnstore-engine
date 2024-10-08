@@ -7159,9 +7159,19 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     while(!gwi.rcWorkStack.empty())
     {
       ReturnedColumn* t = gwi.rcWorkStack.top();
-      idblog("  left behind: " << t->toString());
+      idblog("  rc left behind: " << t->toString());
       delete t;
       gwi.rcWorkStack.pop();
+    }
+  }
+  if (!gwi.ptWorkStack.empty())
+  {
+    while(!gwi.ptWorkStack.empty())
+    {
+      ParseTree* t = gwi.ptWorkStack.top();
+      idblog("  pt left behind: " << t->toString());
+      delete t;
+      gwi.ptWorkStack.pop();
     }
   }
 
