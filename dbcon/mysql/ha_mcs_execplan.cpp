@@ -317,6 +317,7 @@ string escapeBackTick(const char* str)
 
 void clearStacks(gp_walk_info& gwi)
 {
+  idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
     gwi.rcWorkStack.pop();
 
@@ -6417,6 +6418,7 @@ void gp_walk(const Item* item, void* arg)
 
       // store a dummy subselect object. the transform is handled in item_func.
       SubSelect* subselect = new SubSelect();
+      idblog("allocating subselect");
       gwip->rcWorkStack.push(subselect);
       break;
     }
