@@ -30,6 +30,7 @@ if (( $# == 2 )); then
 fi
 
 run_suite setup
+run_suite basic
 run_suite bugfixes
 run_suite devregression
 run_suite autopilot
