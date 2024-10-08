@@ -6026,7 +6026,7 @@ void gp_walk(const Item* item, void* arg)
         {
           // @bug 4215. remove the argument in rcWorkStack.
           if (!gwip->rcWorkStack.empty())
-            gwip->rcWorkStack.pop();
+            gwip->rcWorkStack.pop(); // XXX DELETE???
 
           break;
         }
@@ -6061,7 +6061,7 @@ void gp_walk(const Item* item, void* arg)
 
         for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
         {
-          gwip->rcWorkStack.pop();
+          gwip->rcWorkStack.pop(); // XXX DELETE???
         }
 
         // bug 3137. If filter constant like 1=0, put it to ptWorkStack
@@ -7160,6 +7160,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     {
       ReturnedColumn* t = gwi.rcWorkStack.top();
       idblog("  left behind: " << t->toString());
+      delete t;
       gwi.rcWorkStack.pop();
     }
   }
