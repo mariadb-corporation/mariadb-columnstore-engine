@@ -29,9 +29,9 @@ if (( $# == 2 )); then
     exit 1
 fi
 
-run_suite setup
-run_suite basic
 run_suite bugfixes
+run_suite basic
+run_suite setup
 run_suite devregression
 run_suite autopilot
 run_suite extended
