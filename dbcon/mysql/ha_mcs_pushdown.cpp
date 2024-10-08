@@ -680,7 +680,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       create_explain_query_if_not_exists(thd->lex, thd->mem_root);
       Query_arena *arena, backup;
       arena = thd->activate_stmt_arena_if_needed(&backup);
-      COND* conds = join->conds;
+      COND* conds = join ? join->conds : nullptr;
       select_lex->where = conds;
 
       if (isPS)
@@ -688,7 +688,11 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         select_lex->prep_where = conds ? conds->copy_andor_structure(thd) : 0;
       }
 
-      select_lex->update_used_tables();
+      // no join indicates that there is no tables to update
+      if (join)
+      {
+        select_lex->update_used_tables();
+      }
 
       if (arena)
         thd->restore_active_arena(arena, &backup);
@@ -714,7 +718,8 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       JOIN* join = select_lex->join;
 
       // This is taken from JOIN::optimize()
-      join->fields = &select_lex->item_list;
+      if (join)
+        join->fields = &select_lex->item_list;
 
       // Instantiate handler::table, which is the place for the result set.
       if ((i == 0) && handler->prepare())
@@ -758,7 +763,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         return handler;
       }
 
-      if (!join->zero_result_cause && join->exec_const_cond && !join->exec_const_cond->val_int())
+      if (join && !join->zero_result_cause && join->exec_const_cond && !join->exec_const_cond->val_int())
         join->zero_result_cause = "Impossible WHERE noticed after reading const tables";
 
       // We've called exec_const_cond->val_int(). This may have caused an error.
@@ -769,7 +774,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         return handler;
       }
 
-      if (join->zero_result_cause)
+      if (join && join->zero_result_cause)
       {
         if (join->select_lex->have_window_funcs() && join->send_row_on_empty_set())
         {
@@ -789,7 +794,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         }
       }
 
-      if ((join->select_lex->options & OPTION_SCHEMA_TABLE) &&
+      if (join && (join->select_lex->options & OPTION_SCHEMA_TABLE) &&
           get_schema_tables_result(join, PROCESSED_BY_JOIN_EXEC))
       {
         if (!thd->is_error())
