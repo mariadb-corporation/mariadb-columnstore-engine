@@ -319,7 +319,10 @@ void clearStacks(gp_walk_info& gwi)
 {
   idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
+  {
+    delete gwi.rcWorkStack.top();
     gwi.rcWorkStack.pop();
+  }
 
   while (!gwi.ptWorkStack.empty())
     gwi.ptWorkStack.pop();
