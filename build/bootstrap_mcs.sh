@@ -212,6 +212,7 @@ clean_old_installation()
     rm -rf /etc/mysql
     rm -rf /etc/my.cnf.d/columnstore.cnf
     rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf
+    fdbcli --exec "writemode on; clearrange \x00 \xff"
 }
 
 build()
