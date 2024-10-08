@@ -7154,16 +7154,16 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     gwi.ptWorkStack.push(ptp);
   }
 
-//  if (!gwi.rcWorkStack.empty())
-//  {
-//    while(!gwi.rcWorkStack.empty())
-//    {
-//      ReturnedColumn* t = gwi.rcWorkStack.top();
-//      idblog("  left behind: " << t->toString());
-//      delete t;
-//      gwi.rcWorkStack.pop();
-//    }
-//  }
+  if (!gwi.rcWorkStack.empty())
+  {
+    while(!gwi.rcWorkStack.empty())
+    {
+      ReturnedColumn* t = gwi.rcWorkStack.top();
+      idblog("  left behind: " << t->toString());
+      delete t;
+      gwi.rcWorkStack.pop();
+    }
+  }
 
   while (!outerJoinStack.empty())
   {
