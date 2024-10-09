@@ -8695,6 +8695,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                 break;
               }
             }
+	    delete rc;
           }
         }
       }
