@@ -6,7 +6,7 @@ enterprise_token=""
 dev_drone_key="" 
 jenkins_user="" 
 jenkins_pwd=""   
-cs_pkg_manager_version="3.5"
+cs_pkg_manager_version="3.6"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -292,20 +292,43 @@ is_mariadb_installed() {
             exit 2;
     esac
     
-
+    
     if eval $mariadb_installed_command ; then
         # Check if the systemd service file exists
-        if systemctl status mariadb &> /dev/null; then
-            # MariaDB systemd service file exists & package is installed
-            return 0
-        else
-            echo "Error: MariaDB systemd service file does not exist."
-            return 1
-        fi
+        # if systemctl status mariadb &> /dev/null; then
+        #     # MariaDB systemd service file exists & package is installed
+        #     return 0
+        # else
+        #     echo "Error: MariaDB systemd service file does not exist."
+        #     return 1
+        # fi
+        return 0
     else 
         return 1
     fi
+}
 
+confirm_mariadb_online() {
+    
+    printf "%-35s ..." " - Checking local MariaDB online"
+    counter=0
+    sleep_timer=1
+    while true; do
+        
+        if mariadb -e "SELECT 1;" &> /dev/null; then
+            printf " Success\n"
+            break;
+        else
+            printf "."
+        fi
+
+        if [ $counter -gt 60 ]; then
+            echo "Failed to connect to mariadb after $counter checks"
+            exit;
+        fi
+        sleep $sleep_timer
+        ((counter++))
+    done
 }
 
 start_mariadb() {
@@ -908,7 +931,8 @@ check_no_mdb_installed() {
     if [ -n "$packages" ]; then
         printf "\nSome MariaDB packages are installed\nPlease uninstall the following before continuing:\n"
         printf "$packages";
-        printf "\n\nExample: bash $0 remove\n\n"
+        printf "\n\nExample: bash $0 remove\n"
+        printf "         bash $0 remove all # to delete all data & configs too\n\n"
         exit 2;
     fi;
 }
@@ -976,6 +1000,7 @@ check_cluster_dependancies() {
                 fi
                 ;;
             apt )
+                apt update
                 if ! apt install telnet -y --quiet; then
                     printf "\n[!!] Failed to install telnet. Please manually install \n\n"
                     exit 1;
@@ -1032,12 +1057,23 @@ server_id                              = $dbroot" > $server_cnf_location
     chown mysql:mysql $server_cnf_location
     stop_mariadb
     start_mariadb
+    confirm_mariadb_online
 
 }
 
 create_mariadb_users() {
 
     if [ -n "$cross_engine_user" ] && [ -n "$cross_engine_pwd" ]; then
+        # Check if user exists and delete the user if so
+        if mariadb -e "SELECT User FROM mysql.user WHERE User='$cross_engine_user'" | grep -q $cross_engine_user; then
+            if mariadb -e "DROP USER IF EXISTS '$cross_engine_user'@'127.0.0.1'"; then
+                echo " - Deleted User: $cross_engine_user "
+            else
+                echo "[!] FAILED to delete user: $cross_engine_user "
+                exit 1
+            fi
+        fi
+
         if mariadb -e "CREATE USER '$cross_engine_user'@'127.0.0.1' IDENTIFIED BY '$cross_engine_pwd'; GRANT SELECT,PROCESS ON *.* TO '$cross_engine_user'@'127.0.0.1'" ; then
             echo " - Created User: $cross_engine_user "
         else
@@ -1047,6 +1083,17 @@ create_mariadb_users() {
     fi
     
     if [ -n "$replication_user" ]; then
+        # Check if user exists and delete the user if so
+        if mariadb -e "SELECT User FROM mysql.user WHERE User='$replication_user'" | grep -q $replication_user; then
+            if mariadb -e "DROP USER IF EXISTS '$replication_user'@'%'"; then
+
+                echo " - Deleted User: $replication_user "
+            else
+                echo "[!] FAILED to delete user: $replication_user "
+                exit 1
+            fi
+        fi
+
         if mariadb -e "CREATE USER '$replication_user'@'%' IDENTIFIED BY '$replication_pwd'; GRANT REPLICA MONITOR, REPLICATION REPLICA, REPLICATION REPLICA ADMIN, REPLICATION MASTER ADMIN ON *.* TO '$replication_user'@'%';"; then
             echo " - Created User: $replication_user "
         else
@@ -1056,6 +1103,17 @@ create_mariadb_users() {
     fi
 
     if [ -n "$maxscale_user" ]; then
+        # Check if user exists and delete the user if so
+        if mariadb -e "SELECT User FROM mysql.user WHERE User='$maxscale_user'" | grep -q $maxscale_user; then
+            if mariadb -e "DROP USER IF EXISTS '$maxscale_user'@'%'"; then
+
+                echo " - Deleted User: $maxscale_user "
+            else
+                echo "[!] FAILED to delete user: $maxscale_user "
+                exit 1
+            fi
+        fi
+
         if mariadb -e "CREATE USER $maxscale_user@'%' IDENTIFIED BY '$maxscale_pwd';
         GRANT SUPER, RELOAD, REPLICATION CLIENT, REPLICATION SLAVE, SHOW DATABASES ON *.* TO $maxscale_user@'%';
         GRANT SELECT ON mysql.db TO $maxscale_user@'%';
@@ -1223,6 +1281,31 @@ check_jenkins_build_exists() {
     fi
 }
 
+optionally_install_cmapi_dependencies() {
+    
+    case $package_manager in
+        yum ) 
+
+            packages=("jq" "libxcrypt-compat")
+
+            for package in "${packages[@]}"; do
+                yum install $package -y; 
+            done
+
+            ;;
+        apt )
+            if ! apt install jq -y --quiet; then
+                printf "\n[!!] Failed to install jq. Please manually install \n\n"
+                exit 1;
+            fi
+            ;;
+        *)  # unknown option
+            printf "\noptionally_install_cmapi_dependencies: package manager not implemented - $package_manager\n"
+            exit 2;
+    esac
+   
+}
+
 
 post_cmapi_install_configuration() {
     
@@ -1385,7 +1468,6 @@ quick_version_check() {
             exit 1
             ;;
         *)
-            continue
             ;;
     esac
 
@@ -1394,6 +1476,41 @@ quick_version_check() {
         printf "\n[!] Version must contain at least one numeric character: $version\n\n"
         exit 1
     fi
+}
+
+check_columnstore_install_dependancies() {
+
+    case $distro_info in
+        centos | rhel | rocky )
+
+            package_list=("python3")
+
+            for package in "${package_list[@]}"; do
+                if ! yum install $package -y; then
+                    printf "\n[!] Failed to install dependancy: $package\n"
+                    printf "Please install manually and try again\n\n"
+                    exit 1;
+                fi
+            done
+            
+            ;;
+        ubuntu | debian )
+
+            package_list=("python3")
+
+            for package in "${package_list[@]}"; do
+                if ! apt install $package -y --quiet; then
+                    printf "\n[!] Failed to install dependancy: $package\n"
+                    printf "Please install manually and try again\n\n"
+                    exit 1;
+                fi
+            done
+       
+            ;;
+        *)  # unknown option
+            printf "\ncheck_columnstore_install_dependancies: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
 }
 
 enterprise_install() {
@@ -1412,6 +1529,9 @@ enterprise_install() {
     if $enterprise_staging; then 
         url="https://dlm.mariadb.com/$enterprise_token/enterprise-release-helpers-staging/mariadb_es_repo_setup"
     fi
+
+    # Check for install dependancies
+    check_columnstore_install_dependancies
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
@@ -1794,7 +1914,10 @@ enabled=1
 
     # Install CMAPI
     if $CONFIGURE_CMAPI ; then
-        if ! yum install MariaDB-columnstore-cmapi jq -y; then
+
+        optionally_install_cmapi_dependencies
+
+        if ! yum install MariaDB-columnstore-cmapi -y; then
             printf "\n[!] Failed to install cmapi\n\n"
             exit 1;
         else
