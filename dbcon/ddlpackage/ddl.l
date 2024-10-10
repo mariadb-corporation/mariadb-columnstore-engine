@@ -34,7 +34,7 @@ int ddldebug = 0;
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
-static char* scanner_copy(char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
+static char* scanner_copy(const char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
 
 %}
 
@@ -276,7 +276,7 @@ void scanner_finish(yyscan_t yyscanner)
    pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
+char* scanner_copy (const char *str, yyscan_t yyscanner, copy_action_t action)
 {
     char* result;
     char* nv = strdup(str);
