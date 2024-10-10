@@ -8355,6 +8355,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
             {
+              delete rc;
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
@@ -8367,6 +8368,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
           {
             if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
             {
+              delete rc;
               rc = gwi.returnedCols[j].get()->clone();
               rc->orderPos(j);
               break;
