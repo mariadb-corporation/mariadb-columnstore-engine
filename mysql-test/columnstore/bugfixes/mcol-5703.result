@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcol5703;
+CREATE DATABASE mcol5703;
+USE mcol5703;
+CREATE TABLE `doubles` (
+`a` int(11),
+`b` int(11)
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+INSERT INTO doubles VALUES (1, 2), (2, 4);
+SELECT a, b FROM doubles UNION VALUES (3, 6);
+ERROR 42000: The storage engine for the table doesn't support subquery with VALUES
+SELECT a, b FROM doubles UNION ALL VALUES (3, 6);
+ERROR 42000: The storage engine for the table doesn't support subquery with VALUES
+SELECT a, b FROM doubles UNION DISTINCT VALUES (3, 6);
+ERROR 42000: The storage engine for the table doesn't support subquery with VALUES
+DROP TABLE doubles;
+DROP DATABASE mcol5703;
