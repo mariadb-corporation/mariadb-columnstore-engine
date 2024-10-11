@@ -348,8 +348,6 @@ void clearDeleteStacks(gp_walk_info& gwi)
 	  delete gwi.viewList[i];
   }
   gwi.viewList.clear();
-  delete gwi.lastSub;
-  delete gwi.subQuery;
 }
 
 bool nonConstFunc(Item_func* ifp)
@@ -2825,6 +2823,10 @@ void buildSubselectFunc(Item_func* ifp, gp_walk_info* gwip)
     // no need to check NULL for now. error will be handled in gp_walk
     gwip->ptWorkStack.push(subquery->transform());
     // recover original sub. Save current sub for Not handling.
+    if (gwip->lastSub)
+    {
+      delete gwip->lastSub;
+    }
     gwip->lastSub = subquery;
     gwip->subQuery = orig;
   }
@@ -6429,6 +6431,10 @@ void gp_walk(const Item* item, void* arg)
         // MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
         // recover original
         gwip->subQuery = orig;
+	if (gwip->lastSub)
+	{
+          delete gwip->lastSub;
+	}
         gwip->lastSub = existsSub;
       }
       else if (sub->substype() == Item_subselect::IN_SUBS)
