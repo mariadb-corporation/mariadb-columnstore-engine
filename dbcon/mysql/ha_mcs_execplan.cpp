@@ -2825,6 +2825,7 @@ void buildSubselectFunc(Item_func* ifp, gp_walk_info* gwip)
     // recover original sub. Save current sub for Not handling.
     gwip->lastSub = subquery;
     gwip->subQuery = orig;
+    delete subquery;
   }
 
   return;

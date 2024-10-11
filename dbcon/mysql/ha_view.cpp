@@ -158,6 +158,7 @@ void View::transform()
   {
     setError(gwi.thd, ER_INTERNAL_ERROR, ie.what());
     CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+    delete csep;
     return;
   }
   catch (...)
@@ -165,6 +166,7 @@ void View::transform()
     string emsg = IDBErrorInfo::instance()->errorMsg(ERR_LOST_CONN_EXEMGR);
     setError(gwi.thd, ER_INTERNAL_ERROR, emsg);
     CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+    delete csep;
     return;
   }
 
@@ -192,6 +194,12 @@ void View::transform()
     fParentGwip->ptWorkStack.push(tmpstack.top());
     tmpstack.pop();
   }
+  for(uint32_t i = 0;i < gwi.viewList.size(); i++)
+  {
+    delete gwi.viewList[i];
+  }
+
+  delete csep;
 }
 
 uint32_t View::processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>& outerJoinStack)
