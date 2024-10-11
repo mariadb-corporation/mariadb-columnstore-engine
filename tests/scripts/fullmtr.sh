@@ -24,7 +24,7 @@ if [[ ! -d  '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
 fi
 run_suite()
 {
-    ./mtr --force --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    ./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
 }
 
 if (( $# == 2 )); then
