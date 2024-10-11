@@ -1225,7 +1225,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   else
     dmlStatement.set_DMLStatementType(DML_DELETE);
 
-  TableName* qualifiedTablName = new TableName();
 
   UpdateSqlStatement updateStmt;
   //@Bug 2753. To make sure the momory is freed.
@@ -1233,6 +1232,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
   if (ha_mcs_common::isUpdateStatement(thd->lex->sql_command))
   {
+    TableName* qualifiedTablName = new TableName();
     qualifiedTablName->fName = tableName;
     qualifiedTablName->fSchema = schemaName;
     updateStmt.fNamePtr = qualifiedTablName;
@@ -1256,8 +1256,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
           boost::algorithm::to_lower(tableName);
           boost::algorithm::to_lower(aliasName);
         }
-        qualifiedTablName->fName = tableName;
-        qualifiedTablName->fSchema = schemaName;
         pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
       }
       else
@@ -1281,8 +1279,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         boost::algorithm::to_lower(tableName);
         boost::algorithm::to_lower(aliasName);
       }
-      qualifiedTablName->fName = tableName;
-      qualifiedTablName->fSchema = schemaName;
       pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
     }
   }
@@ -1298,8 +1294,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       boost::algorithm::to_lower(tableName);
       boost::algorithm::to_lower(aliasName);
     }
-    qualifiedTablName->fName = tableName;
-    qualifiedTablName->fSchema = schemaName;
     pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
   }
 
