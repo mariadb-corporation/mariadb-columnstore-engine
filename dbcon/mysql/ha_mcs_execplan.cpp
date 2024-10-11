@@ -344,6 +344,10 @@ void clearDeleteStacks(gp_walk_info& gwi)
     delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
   }
+  for (uint32_t i=0;i<gwi.viewList.size();i++) {
+	  delete gwi.viewList[i];
+  }
+  gwi.viewList.clear();
 }
 
 bool nonConstFunc(Item_func* ifp)

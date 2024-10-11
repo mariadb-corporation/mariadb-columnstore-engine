@@ -25,6 +25,9 @@ fi
 run_suite()
 {
     ./mtr --force --max-test-fail=0 --testcase-timeout=60 --extern socket=$SOCKET --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    # dump analyses.
+    systemctl stop mariadb
+    systemctl start mariadb
 }
 
 if (( $# == 2 )); then
@@ -33,9 +36,7 @@ if (( $# == 2 )); then
 fi
 
 run_suite basic
-run_suite setup
 run_suite bugfixes
-run_suite basic
 run_suite setup
 run_suite devregression
 run_suite autopilot
