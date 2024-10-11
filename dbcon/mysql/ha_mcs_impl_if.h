@@ -135,7 +135,7 @@ struct gp_walk_info
   int8_t internalDecimalScale;
   THD* thd;
   uint64_t subSelectType;  // the type of sub select filter that owns the gwi
-  std::shared_ptr<SubQuery> subQuery;
+  SubQuery* subQuery;
   execplan::CalpontSelectExecutionPlan::SelectList derivedTbList;
   execplan::CalpontSelectExecutionPlan::TableList tbList;
   std::vector<execplan::CalpontSystemCatalog::TableAliasName> correlatedTbNameVec;
@@ -147,7 +147,7 @@ struct gp_walk_info
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
-  std::shared_ptr<SubQuery> lastSub;
+  SubQuery* lastSub;
   std::vector<View*> viewList;
   std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;
   uint32_t derivedTbCnt;
@@ -187,11 +187,13 @@ struct gp_walk_info
    , internalDecimalScale(4)
    , thd(0)
    , subSelectType(uint64_t(-1))
+   , subQuery(0)
    , clauseType(INIT)
    , implicitExplicitGroupBy(false)
    , aggOnSelect(false)
    , hasWindowFunc(false)
    , hasSubSelect(false)
+   , lastSub(0)
    , derivedTbCnt(0)
    , recursionLevel(-1)
    , recursionHWM(0)
