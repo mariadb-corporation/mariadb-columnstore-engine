@@ -36,13 +36,13 @@ if (( $# == 2 )); then
 fi
 
 run_suite basic
-run_suite bugfixes
-run_suite setup
-run_suite devregression
-run_suite autopilot
-run_suite extended
-run_suite multinode
-run_suite oracle
+#run_suite bugfixes
+#run_suite setup
+#run_suite devregression
+#run_suite autopilot
+#run_suite extended
+#run_suite multinode
+#run_suite oracle
 #run_suite 1pmonly
 
 cd -

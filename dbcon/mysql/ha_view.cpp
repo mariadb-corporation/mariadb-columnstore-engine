@@ -151,6 +151,7 @@ void View::transform()
     if (gwi.fatalParseError)
     {
       setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+      delete csep;
       return;
     }
   }
@@ -194,9 +195,9 @@ void View::transform()
     fParentGwip->ptWorkStack.push(tmpstack.top());
     tmpstack.pop();
   }
-  for(uint32_t i = 0;i < gwi.viewList.size(); i++)
-  {
-    delete gwi.viewList[i];
+  while (!gwi.rcWorkStack.empty()) {
+    delete gwi.rcWorkStack.top();
+    gwi.rcWorkStack.pop();
   }
 
   delete csep;
