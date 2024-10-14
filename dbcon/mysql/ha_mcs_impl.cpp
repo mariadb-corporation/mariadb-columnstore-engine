@@ -128,7 +128,7 @@ using namespace funcexp;
 #include "ha_mcs_datatype.h"
 #include "statistics.h"
 #include "ha_mcs_logging.h"
-#define "ha_subquery.h"
+#include "ha_subquery.h"
 
 namespace cal_impl_if
 {
