@@ -8863,7 +8863,10 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   gp_walk_info* gwi = ti.condInfo;
 
   if (!gwi)
-    gwi = new gp_walk_info(timeZone);
+  {
+    idbassert(0);
+    gwi = new gp_walk_info(timeZonei, nullptr);
+  }
 
   gwi->thd = thd;
   LEX* lex = thd->lex;

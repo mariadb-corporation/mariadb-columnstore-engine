@@ -3790,7 +3790,8 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
       const char* timeZone = thd->variables.time_zone->get_name()->ptr();
       long timeZoneOffset;
       dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-      ti.condInfo = new gp_walk_info(timeZoneOffset);
+      idbassert(0);
+      ti.condInfo = nullptr; //new gp_walk_info(timeZoneOffset);
     }
 
     gp_walk_info* gwi = ti.condInfo;
