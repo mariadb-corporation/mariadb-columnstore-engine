@@ -4694,6 +4694,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   IDEBUG(cout << "pushdown_init for table " << endl);
   THD* thd = current_thd;
 
+  SubQueryChainHolder chainHolder;
+
   if (thd->slave_thread && !get_replication_slave(thd) &&
       ha_mcs_common::isDMLStatement(thd->lex->sql_command))
     return 0;
@@ -4701,7 +4703,6 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  SubQueryChainHolder chainHolder;
   gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   bool err = false;
