@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include "SocketPool.h"
+#include "bytestream.h"
 #include "configcpp.h"
 #include "logger.h"
 #include "messageFormat.h"
@@ -87,8 +88,8 @@ SocketPool::~SocketPool()
 
 int SocketPool::send_recv(messageqcpp::ByteStream& in, messageqcpp::ByteStream* out)
 {
-  uint count = 0;
-  uint length = in.length();
+  messageqcpp::BSSizeType count = 0;
+  messageqcpp::BSSizeType length = in.length();
   int sock = -1;
   const uint8_t* inbuf = in.buf();
   ssize_t err = 0;

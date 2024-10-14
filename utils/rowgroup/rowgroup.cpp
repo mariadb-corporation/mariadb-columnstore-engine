@@ -305,42 +305,23 @@ void UserDataStore::deserialize(ByteStream& bs)
 
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  RGDataSizeType s = rg.getDataSize(rowCount);
+  rowData.reset(new uint8_t[s]);
 
   if (rg.usesStringTable() && rowCount > 0)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
-#endif
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));  // XXXPAT: make valgrind happy temporarily
 }
 
 RGData::RGData(const RowGroup& rg)
 {
-  // cout << "rgdata++ = " << __sync_add_and_fetch(&rgDataCount, 1) << endl;
   rowData.reset(new uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getMaxDataSize());
-#endif
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
@@ -352,14 +333,6 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
     strings.reset(new StringStore());
   else
     strings.reset();
-
-#ifdef VALGRIND
-  /* In a PM-join, we can serialize entire tables; not every value has been
-   * filled in yet.  Need to look into that.  Valgrind complains that
-   * those bytes are uninitialized, this suppresses that error.
-   */
-  memset(rowData.get(), 0, rg.getDataSize(rowCount));
-#endif
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -367,11 +340,11 @@ void RGData::reinit(const RowGroup& rg)
   reinit(rg, 8192);
 }
 
-void RGData::serialize(ByteStream& bs, uint32_t amount) const
+void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
 {
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
-  bs << (uint32_t)amount;
+  bs << amount;
   bs.append(rowData.get(), amount);
 
   if (strings)
@@ -391,9 +364,10 @@ void RGData::serialize(ByteStream& bs, uint32_t amount) const
     bs << (uint8_t)0;
 }
 
-void RGData::deserialize(ByteStream& bs, uint32_t defAmount)
+void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount)
 {
-  uint32_t amount, sig;
+  uint32_t sig;
+  RGDataSizeType amount;
   uint8_t* buf;
   uint8_t tmp8;
 
@@ -1224,27 +1198,27 @@ void RowGroup::serializeRGData(ByteStream& bs) const
   rgData->serialize(bs, getDataSize());
 }
 
-uint32_t RowGroup::getDataSize() const
+RGDataSizeType RowGroup::getDataSize() const
 {
   return headerSize + (getRowCount() * offsets[columnCount]);
 }
 
-uint32_t RowGroup::getDataSize(uint64_t n) const
+RGDataSizeType RowGroup::getDataSize(uint64_t n) const
 {
-  return headerSize + (n * offsets[columnCount]);
+  return headerSize + (n * static_cast<RGDataSizeType>(offsets[columnCount]));
 }
 
-uint32_t RowGroup::getMaxDataSize() const
+RGDataSizeType RowGroup::getMaxDataSize() const
 {
-  return headerSize + (8192 * offsets[columnCount]);
+  return headerSize + (8192 * static_cast<RGDataSizeType>(offsets[columnCount]));
 }
 
-uint32_t RowGroup::getMaxDataSizeWithStrings() const
+RGDataSizeType RowGroup::getMaxDataSizeWithStrings() const
 {
-  return headerSize + (8192 * oldOffsets[columnCount]);
+  return headerSize + (8192 * static_cast<RGDataSizeType>(oldOffsets[columnCount]));
 }
 
-uint32_t RowGroup::getEmptySize() const
+RGDataSizeType RowGroup::getEmptySize() const
 {
   return headerSize;
 }

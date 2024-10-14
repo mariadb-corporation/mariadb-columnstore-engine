@@ -69,6 +69,11 @@ class Config;
  */
 namespace joblist
 {
+constexpr uint32_t defaultLocalConnectionId()
+{
+  return std::numeric_limits<uint32_t>::max();
+}
+
 class DECEventListener
 {
  public:
@@ -315,7 +320,7 @@ class DistributedEngineComm
   boost::mutex ackLock;
 
   // localConnectionId_ is set running Setup() method
-  uint32_t localConnectionId_ = std::numeric_limits<uint32_t>::max();
+  uint32_t localConnectionId_ = defaultLocalConnectionId();
   std::vector<struct in_addr> localNetIfaceSins_;
   std::mutex inMemoryEM2PPExchMutex_;
   std::condition_variable inMemoryEM2PPExchCV_;
