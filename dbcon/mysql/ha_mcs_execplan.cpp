@@ -6803,7 +6803,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
         if (!plan)
         {
-          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
           CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
           return ER_INTERNAL_ERROR;
         }
@@ -9225,7 +9225,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         if (!plan)
         {
-          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub.gwip().parseErrorText, gwi);
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
           CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
           return ER_INTERNAL_ERROR;
         }
