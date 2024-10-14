@@ -6789,17 +6789,17 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       if (table_ptr->derived)
       {
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
-        FromSubQuery fromSub(gwi, select_cursor);
+        FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
         string alias(table_ptr->alias.str);
         if (lower_case_table_names)
         {
           boost::algorithm::to_lower(alias);
         }
-        fromSub.alias(alias);
+        fromSub->alias(alias);
 
         CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
         // @bug 3852. check return execplan
-        SCSEP plan = fromSub.transform();
+        SCSEP plan = fromSub->transform();
 
         if (!plan)
         {
@@ -9211,17 +9211,17 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
         // Use Pushdown handler for subquery processing
-        FromSubQuery fromSub(gwi, select_cursor);
+        FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
         string alias(table_ptr->alias.str);
         if (lower_case_table_names)
         {
           boost::algorithm::to_lower(alias);
         }
-        fromSub.alias(alias);
+        fromSub->alias(alias);
 
         CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
         // @bug 3852. check return execplan
-        SCSEP plan = fromSub.transform();
+        SCSEP plan = fromSub->transform();
 
         if (!plan)
         {
