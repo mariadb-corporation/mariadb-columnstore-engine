@@ -8865,7 +8865,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   if (!gwi)
   {
     idbassert(0);
-    gwi = new gp_walk_info(timeZonei, nullptr);
+    gwi = new gp_walk_info(timeZone, nullptr);
   }
 
   gwi->thd = thd;
