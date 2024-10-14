@@ -179,7 +179,13 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
-  gp_walk_info(long timeZone_)
+  // All SubQuery allocations are single-linked into this chain.
+  // At the end of gp_walk_info processing we can free whole chain at once.
+  // This is done so because the juggling of SubQuery pointers in the
+  // ha_mcs_execplan code.
+  SubQuery** subQueriesChain;
+
+  gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
    : sessionid(0)
    , fatalParseError(false)
    , condPush(false)
@@ -204,6 +210,7 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
+   , subQueriesChain(subQueriesChain_)
   {
   }
 

@@ -2823,10 +2823,6 @@ void buildSubselectFunc(Item_func* ifp, gp_walk_info* gwip)
     // no need to check NULL for now. error will be handled in gp_walk
     gwip->ptWorkStack.push(subquery->transform());
     // recover original sub. Save current sub for Not handling.
-    if (gwip->lastSub)
-    {
-      delete gwip->lastSub;
-    }
     gwip->lastSub = subquery;
     gwip->subQuery = orig;
   }
@@ -6431,10 +6427,6 @@ void gp_walk(const Item* item, void* arg)
         // MIGR::infinidb_vtable.isUnion = true; // only temp. bypass the 2nd phase.
         // recover original
         gwip->subQuery = orig;
-	if (gwip->lastSub)
-	{
-          delete gwip->lastSub;
-	}
         gwip->lastSub = existsSub;
       }
       else if (sub->substype() == Item_subselect::IN_SUBS)
@@ -6935,7 +6927,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       plan->data(csep->data());
 
       // gwi for the union unit
-      gp_walk_info union_gwi(gwi.timeZone);
+      gp_walk_info union_gwi(gwi.timeZone, gwi.subQueriesChain);
       union_gwi.thd = gwi.thd;
       uint32_t err = 0;
 
@@ -8977,7 +8969,8 @@ int cp_get_group_plan(THD* thd, SCSEP& csep, cal_impl_if::cal_group_info& gi)
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  SubQuery* chain = nullptr;
+  gp_walk_info gwi(timeZoneOffset, &chain);
   gwi.thd = thd;
   gwi.isGroupByHandler = true;
   int status = getGroupPlan(gwi, *select_lex, csep, gi);

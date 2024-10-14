@@ -45,6 +45,8 @@ class SubQuery
  public:
   SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false)
   {
+    next = *gwip.subQueriesChain;
+    *gwip.subQueriesChain = this;
   }
   virtual ~SubQuery()
   {
@@ -68,6 +70,7 @@ class SubQuery
   {
   }
 
+  SubQuery* next;
  protected:
   gp_walk_info& fGwip;
   bool fCorrelated;
