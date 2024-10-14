@@ -183,6 +183,8 @@ struct gp_walk_info
   // At the end of gp_walk_info processing we can free whole chain at once.
   // This is done so because the juggling of SubQuery pointers in the
   // ha_mcs_execplan code.
+  // There is a struct SubQueryChainHolder down below to hold chain root and free
+  // the chain using sorta kinda RAII.
   SubQuery** subQueriesChain;
 
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
@@ -216,6 +218,21 @@ struct gp_walk_info
 
   ~gp_walk_info()
   {
+  }
+};
+
+struct SubQueryChainHolder
+{
+  SubQuery* chain;
+  SubQueryChainHolder () : chain(nullptr) { }
+  ~SubQueryChainHolder ()
+  {
+    while (chain)
+    {
+      SubQuery* next = chain->next;
+      delete chain;
+      chain = next;
+    }
   }
 };
 

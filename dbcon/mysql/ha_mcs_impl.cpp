@@ -2149,8 +2149,8 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  SubQuery* chain = nullptr;
-  cal_impl_if::gp_walk_info gwi(timeZoneOffset, &chain);
+  SubQueryChainHolder chainHolder;
+  cal_impl_if::gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   int rc = 0;
 
@@ -2173,11 +2173,6 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
     *affected_rows = ci->affectedRows;
   }
 
-  while (chain) {
-    SubQuery* next = chain->next;
-    delete chain;
-    chain = next;
-  }
 
   return rc;
 }
@@ -2189,8 +2184,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  SubQuery* chain = nullptr;
-  gp_walk_info gwi(timeZoneOffset, &chain);
+  SubQueryChainHolder chainHolder;
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
@@ -3778,8 +3773,8 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     const char* timeZone = thd->variables.time_zone->get_name()->ptr();
     long timeZoneOffset;
     dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-    SubQuery* chain = nullptr;
-    gp_walk_info gwi(timeZoneOffset, &chain);
+    SubQueryChainHolder chainHolder;
+    gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
     gwi.condPush = true;
     gwi.sessionid = tid2sid(thd->thread_id);
     cout << "------------------ cond push -----------------------" << endl;
@@ -4704,8 +4699,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  SubQuery* chain = nullptr;
-  gp_walk_info gwi(timeZoneOffset, &chain);
+  SubQueryChainHolder chainHolder;
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   bool err = false;
 
