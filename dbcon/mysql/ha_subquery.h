@@ -76,6 +76,22 @@ class SubQuery
   bool fCorrelated;
 };
 
+struct SubQueryChainHolder
+{
+  SubQuery* chain;
+  SubQueryChainHolder () : chain(nullptr) { }
+  ~SubQueryChainHolder ()
+  {
+    while (chain)
+    {
+      SubQuery* next = chain->next;
+      delete chain;
+      chain = next;
+    }
+  }
+};
+
+
 /**
  * @brief A class to represent a generic WHERE clause subquery
  */

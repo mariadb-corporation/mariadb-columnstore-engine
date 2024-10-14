@@ -221,21 +221,6 @@ struct gp_walk_info
   }
 };
 
-struct SubQueryChainHolder
-{
-  SubQuery* chain;
-  SubQueryChainHolder () : chain(nullptr) { }
-  ~SubQueryChainHolder ()
-  {
-    while (chain)
-    {
-      SubQuery* next = chain->next;
-      delete chain;
-      chain = next;
-    }
-  }
-};
-
 struct cal_table_info
 {
   enum RowSources
