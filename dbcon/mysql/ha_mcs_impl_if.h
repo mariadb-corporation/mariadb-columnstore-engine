@@ -221,6 +221,7 @@ struct gp_walk_info
   }
 };
 
+struct SubQueryChainHolder;
 struct ext_cond_info
 {
   // having this as a direct field would introduce
