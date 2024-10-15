@@ -3745,6 +3745,13 @@ int ha_mcs_impl_delete_row(const uchar* buf)
   return 0;
 }
 
+// this place is as good as any.
+ext_cond_info::ext_cond_info(long timeZone)
+  : chainHolder(new SubQueryChainHolder())
+  : gwi(timeZone, &chainHolder->chain)
+{
+}
+
 COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condStack)
 {
   THD* thd = current_thd;
@@ -3792,10 +3799,10 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
       long timeZoneOffset;
       dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
       idbassert(0);
-      ti.condInfo = nullptr; //new gp_walk_info(timeZoneOffset);
+      ti.condInfo = new ext_cond_info(timeZoneOffset); //new gp_walk_info(timeZoneOffset);
     }
 
-    gp_walk_info* gwi = ti.condInfo;
+    gp_walk_info* gwi = &ti.condInfo.gwi;
     gwi->dropCond = false;
     gwi->fatalParseError = false;
     gwi->condPush = true;
@@ -4163,12 +4170,12 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
         mapiter = ci->tableMap.find(tl->table);
 
         if (mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL &&
-            mapiter->second.condInfo->condPush)
+            mapiter->second.condInfo->gwi.condPush)
         {
-          while (!mapiter->second.condInfo->ptWorkStack.empty())
+          while (!mapiter->second.condInfo->gwi.ptWorkStack.empty())
           {
-            ptIt = mapiter->second.condInfo->ptWorkStack.top();
-            mapiter->second.condInfo->ptWorkStack.pop();
+            ptIt = mapiter->second.condInfo->gwi.ptWorkStack.top();
+            mapiter->second.condInfo->gwi.ptWorkStack.pop();
             gi.pushedPts.push_back(ptIt);
           }
         }

@@ -221,6 +221,15 @@ struct gp_walk_info
   }
 };
 
+struct ext_cond_info
+{
+  // having this as a direct field would introduce
+  // circular dependency on header inclusion with ha_subquery.h.
+  boost::shared_ptr<SubQueryChainHolder> chainHolder;
+  gp_walk_info gwi;
+  ext_cond_info(long timeZone); // needs knowledge on SubQueryChainHolder, will be defined elsewhere
+};
+
 struct cal_table_info
 {
   enum RowSources
@@ -242,7 +251,7 @@ struct cal_table_info
   unsigned c;         // for debug purpose
   TABLE* msTablePtr;  // no ownership
   sm::cpsm_conhdl_t* conn_hndl;
-  gp_walk_info* condInfo;
+  ext_cond_info* condInfo;
   execplan::SCSEP csep;
   bool moreRows;  // are there more rows to consume (b/c of limit)
 };

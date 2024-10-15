@@ -8860,12 +8860,14 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
 int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
 {
-  gp_walk_info* gwi = ti.condInfo;
+  gp_walk_info* gwi = &ti.condInfo.gwi;
 
+  SubQueryChainHolder chainHolder;
+  bool allocated = false;
   if (!gwi)
   {
-    idbassert(0);
-    gwi = new gp_walk_info(timeZone, nullptr);
+    allocated = true;
+    gwi = new gp_walk_info(timeZone, &chainHolder.chain);
   }
 
   gwi->thd = thd;
@@ -8963,6 +8965,10 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
   csep->stringScanThreshold(get_string_scan_threshold(gwi->thd));
 
+  if (allocated)
+  {
+    delete gwi;
+  }
   return 0;
 }
 
