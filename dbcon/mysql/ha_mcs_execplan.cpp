@@ -8919,7 +8919,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   // get filter
   if (ti.condInfo)
   {
-    gp_walk_info* gwi = ti.condInfo;
+    gp_walk_info* gwi = &ti.condInfo->gwi;
     ParseTree* filters = 0;
     ParseTree* ptp = 0;
     ParseTree* rhs = 0;

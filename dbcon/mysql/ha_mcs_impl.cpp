@@ -3748,7 +3748,7 @@ int ha_mcs_impl_delete_row(const uchar* buf)
 // this place is as good as any.
 ext_cond_info::ext_cond_info(long timeZone)
   : chainHolder(new SubQueryChainHolder())
-  : gwi(timeZone, &chainHolder->chain)
+  , gwi(timeZone, &chainHolder->chain)
 {
 }
 
@@ -3802,7 +3802,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
       ti.condInfo = new ext_cond_info(timeZoneOffset); //new gp_walk_info(timeZoneOffset);
     }
 
-    gp_walk_info* gwi = &ti.condInfo.gwi;
+    gp_walk_info* gwi = &ti.condInfo->gwi;
     gwi->dropCond = false;
     gwi->fatalParseError = false;
     gwi->condPush = true;
