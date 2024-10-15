@@ -330,6 +330,7 @@ void clearStacks(gp_walk_info& gwi)
     //delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
   }
+  gwi.viewList.clear();
 }
 void clearDeleteStacks(gp_walk_info& gwi)
 {
@@ -1560,12 +1561,8 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
           ParseTree* pt = new ParseTree(onFilter);
           outerJoinStack.push(pt);
         }
-        while (!gwi_outer.rcWorkStack.empty())
-        {
-          delete gwi_outer.rcWorkStack.top();
-          gwi_outer.rcWorkStack.pop();
-        }
 
+        clearDeleteStacks(gwi_outer);
       }
       else  // inner join
       {
