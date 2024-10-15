@@ -1976,6 +1976,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
     gwip->rcWorkStack.pop();
     ReturnedColumn* filterCol = gwip->rcWorkStack.top();
+    idbassert(gwip->scsp.get() == gwip->rcWorkStack.top());
     gwip->rcWorkStack.pop();  // pop gwip->scsp;
     Item_func_opt_neg* inp = (Item_func_opt_neg*)ifp;
     SimpleFilter* sfr = 0;
@@ -2081,7 +2082,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     }
 
     if (!gwip->rcWorkStack.empty())
+    {
+      idbassert(gwip->rcWorkStack.top() == gwip.scsp->data());
       gwip->rcWorkStack.pop();  // pop gwip->scsp
+    }
 
     if (cf->filterList().size() < inp->argument_count() - 1)
     {
