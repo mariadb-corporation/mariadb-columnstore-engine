@@ -345,7 +345,7 @@ void clearDeleteStacks(gp_walk_info& gwi)
     gwi.ptWorkStack.pop();
   }
   for (uint32_t i=0;i<gwi.viewList.size();i++) {
-	  delete gwi.viewList[i];
+    delete gwi.viewList[i];
   }
   gwi.viewList.clear();
 }
@@ -1529,7 +1529,6 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
             gwi.fatalParseError = true;
             gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
-	    clearDeleteStacks(gwi_outer);
             return -1;
           }
         }
@@ -1561,7 +1560,12 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
           ParseTree* pt = new ParseTree(onFilter);
           outerJoinStack.push(pt);
         }
-	clearDeleteStacks(gwi_outer);
+        while (!gwi_outer.rcWorkStack.empty())
+        {
+          delete gwi_outer.rcWorkStack.top();
+          gwi_outer.rcWorkStack.pop();
+        }
+
       }
       else  // inner join
       {
