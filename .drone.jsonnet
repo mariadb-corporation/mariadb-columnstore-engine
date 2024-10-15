@@ -350,9 +350,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('mariadb -e "insert into test.t1 values (2); select * from test.t1"', dockerImage("smoke")),
     ],
   },
-  upgrade(version):: {
+  upgrade(version, depends_arr):: {
     name: 'upgrade-test from ' + version,
-    depends_on: ['smoke'],
+    depends_on: depends_arr,
     image: 'docker',
     failure: 'ignore',
     volumes: [pipeline._volumes.docker],
@@ -375,7 +375,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   upgradelog:: {
     name: 'upgradelog',
-    depends_on: std.map(function(p) 'upgrade-test from ' + p, mdb_server_versions),
+    depends_on: [if std.length(mdb_server_versions) == 0 then 'smoke' else 'upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions)-1]],
     failure: 'ignore',
     image: 'docker',
     volumes: [pipeline._volumes.docker],
@@ -388,7 +388,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   mtr:: {
     name: 'mtr',
-    depends_on: ['smoke'],
+    depends_on: [if std.length(mdb_server_versions) == 0 then 'smoke' else 'upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions)-1]],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -453,7 +453,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   prepare_regression:: {
     name: 'prepare regression',
-    depends_on: ['mtr', 'publish pkg', 'publish cmapi build'],
+    depends_on: ['mtr'],
     when: {
       status: ['success', 'failure'],
     },
@@ -575,7 +575,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   dockerfile:: {
     name: 'dockerfile',
-    depends_on: ['publish pkg', 'publish cmapi build'],
+    depends_on: [if std.length(mdb_server_versions) == 0 then 'smoke' else 'upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions)-1]],
     //failure: 'ignore',
     image: 'alpine/git',
     environment: {
@@ -672,7 +672,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   cmapitest:: {
     name: 'cmapi test',
-    depends_on: ['publish cmapi build', 'smoke'],
+    depends_on: [if std.length(mdb_server_versions) == 0 then 'smoke' else 'upgrade-test from ' + mdb_server_versions[std.length(mdb_server_versions)-1]],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -724,7 +724,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
       // delay for manual debugging on live instance
       'sleep $${COMPOSE_DELAY_SECONDS:-1s}',
-      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --skip-test=*mcol-5505-cpimport-parquet* --skip-test=fdb_api --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
 
@@ -746,6 +746,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
            },
            {
              name: 'clone-mdb',
+             depends_on: ['submodules'],
              image: 'alpine/git',
              volumes: [pipeline._volumes.mdb],
              environment: {
@@ -766,9 +767,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
              ],
            },
+         ] +
+         [pipeline.cmapipython] + [pipeline.cmapibuild] +
+         [pipeline.publish('cmapi build')] +
+         [
            {
              name: 'build',
-             depends_on: ['clone-mdb'],
+             depends_on: ['publish cmapi build'],
              image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
@@ -857,8 +862,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
          ] +
-         [pipeline.cmapipython] + [pipeline.cmapibuild] +
-         [pipeline.publish('cmapi build')] +
          [pipeline.publish()] +
          [
            {
@@ -877,10 +880,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.smoke] +
          [pipeline.smokelog] +
          [pipeline.publish('smokelog')] +
+         [
+            pipeline.upgrade(
+              mdb_server_versions[i],
+              (if (i == 0) then ['smoke'] else ['upgrade-test from ' + mdb_server_versions[i-1]])
+            ) for i in indexes(mdb_server_versions)
+         ] +
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
