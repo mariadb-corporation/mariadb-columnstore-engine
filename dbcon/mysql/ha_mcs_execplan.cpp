@@ -5860,7 +5860,7 @@ void gp_walk(const Item* item, void* arg)
 
         string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
-        gwip->rcWorkStack.push(scp->clone());
+        gwip->rcWorkStack.push(scp);
         boost::shared_ptr<SimpleColumn> scsp(scp);
         gwip->scsp = scsp;
 
