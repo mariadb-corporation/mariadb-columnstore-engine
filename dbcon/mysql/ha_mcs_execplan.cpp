@@ -315,7 +315,7 @@ string escapeBackTick(const char* str)
   return ret;
 }
 
-void clearStacks(gp_walk_info& gwi)
+void clearStacks(gp_walk_info& gwi, bool andViews = true)
 {
   idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
@@ -330,7 +330,10 @@ void clearStacks(gp_walk_info& gwi)
     //delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
   }
-  gwi.viewList.clear();
+  if (andViews)
+  {
+    gwi.viewList.clear();
+  }
 }
 void clearDeleteStacks(gp_walk_info& gwi)
 {
@@ -7591,7 +7594,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   vector<Item_field*> funcFieldVec;
 
   // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi);
+  clearStacks(gwi, false);
 
   // indicate the starting pos of scalar returned column, because some join column
   // has been inserted to the returned column list.
@@ -8054,7 +8057,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  clearStacks(gwi);
+  clearStacks(gwi, false);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
   gwi.fatalParseError = false;
@@ -9490,7 +9493,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
   bool redo = false;
 
   // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi);
+  clearStacks(gwi, false);
 
   // indicate the starting pos of scalar returned column, because some join column
   // has been inserted to the returned column list.
@@ -9940,7 +9943,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  clearStacks(gwi);
+  clearStacks(gwi, false);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
   gwi.fatalParseError = false;
