@@ -6061,8 +6061,8 @@ void gp_walk(const Item* item, void* arg)
           // @bug 4215. remove the argument in rcWorkStack.
           if (!gwip->rcWorkStack.empty())
 	  {
-		  idblog("may leak, pointer " << gwip->rcWorkStack.top() << ", " << gwip->rcWorkStack.top()->toString());
-            gwip->rcWorkStack.pop(); // XXX DELETE???
+            delete gwip->rcWorkStack.top();
+            gwip->rcWorkStack.pop();
 	  }
 
           break;
