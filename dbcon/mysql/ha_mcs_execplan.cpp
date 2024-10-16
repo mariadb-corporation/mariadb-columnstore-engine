@@ -4640,7 +4640,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       gwi.inCaseStmt = false;
       if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top() == *sptp.get())
       {
-        delete gwi.ptWorkStack.top()
+        delete gwi.ptWorkStack.top();
         gwi.ptWorkStack.pop();
       }
     }
