@@ -4661,7 +4661,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         // We need to pop whichever stack is holding it, if any.
         if ((!gwi.rcWorkStack.empty()) && *gwi.rcWorkStack.top() == parm)
         {
-		idblog("may leak, pointer " << gwi.rcWorkStack.top() << ", " << gwi.rcWorkStack.top()->toString());
+          delete gwi.rcWorkStack.top();
           gwi.rcWorkStack.pop();
         }
         else if (!gwi.ptWorkStack.empty())
@@ -4670,7 +4670,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 
           if (ptrc && *ptrc == *parm)
 	  {
-	     idblog("may leak, pointer is " << gwi.ptWorkStack.top() << ", " << gwi.ptWorkStack.top()->toString());
+            delete gwi.rcWorkStack.top();
             gwi.ptWorkStack.pop();
 	  }
         }
@@ -4693,6 +4693,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
 
           if (ptrc && *ptrc == *gwi.rcWorkStack.top())
           {
+            delete gwi.rcWorkStack.top();
 	     idblog("may leak, pointer is " << gwi.rcWorkStack.top() << ", " << gwi.rcWorkStack.top()->toString());
             gwi.rcWorkStack.pop();
           }
@@ -6098,7 +6099,7 @@ void gp_walk(const Item* item, void* arg)
 
         for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
         {
-		idblog("may leak again, pointer " << gwip->rcWorkStack.top());
+          delete gwip->rcWorkStack.top();
           gwip->rcWorkStack.pop(); // XXX DELETE???
         }
 
