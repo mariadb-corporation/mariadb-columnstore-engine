@@ -4640,7 +4640,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       gwi.inCaseStmt = false;
       if (!gwi.ptWorkStack.empty() && *gwi.ptWorkStack.top() == *sptp.get())
       {
-	     idblog("may leak, pointer is " << gwi.ptWorkStack.top() << ", " << gwi.ptWorkStack.top()->toString());
+        delete gwi.ptWorkStack.top()
         gwi.ptWorkStack.pop();
       }
     }
@@ -4682,7 +4682,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
         // We need to pop whichever stack is holding it, if any.
         if ((!gwi.ptWorkStack.empty()) && *gwi.ptWorkStack.top()->data() == sptp->data())
         {
-	     idblog("may leak, pointer is " << gwi.ptWorkStack.top() << ", " << gwi.ptWorkStack.top()->toString());
+          delete gwi.ptWorkStack.top();
           gwi.ptWorkStack.pop();
         }
         else if (!gwi.rcWorkStack.empty())
