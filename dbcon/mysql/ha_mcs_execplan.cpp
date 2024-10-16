@@ -2082,7 +2082,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     if (!gwip->rcWorkStack.empty())
     {
-      delete rcWorkStack.top();
+      delete gwip->rcWorkStack.top();
       gwip->rcWorkStack.pop();  // pop gwip->scsp
     }
 
@@ -5870,7 +5870,7 @@ void gp_walk(const Item* item, void* arg)
 
         string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
-        gwip->rcWorkStack.push(scp);
+        gwip->rcWorkStack.push(scp->clone());
         boost::shared_ptr<SimpleColumn> scsp(scp);
         gwip->scsp = scsp;
 
