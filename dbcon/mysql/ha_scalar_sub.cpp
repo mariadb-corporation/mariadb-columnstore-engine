@@ -244,7 +244,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
   csep->subType(CalpontSelectExecutionPlan::SINGLEROW_SUBS);
 
   // gwi for the sub query
-  gp_walk_info gwi(fGwip.timeZone);
+  gp_walk_info gwi(fGwip.timeZone, fGwip.subQueriesChain);
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
 
