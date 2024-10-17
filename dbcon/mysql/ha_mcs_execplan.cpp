@@ -6462,9 +6462,9 @@ void gp_walk(const Item* item, void* arg)
       }
 
       // store a dummy subselect object. the transform is handled in item_func.
-      SubSelect* subselect = new SubSelect();
-      idblog("allocating subselect");
-      gwip->rcWorkStack.push(subselect);
+      //SubSelect* subselect = new SubSelect();
+      //idblog("allocating subselect");
+      //gwip->rcWorkStack.push(subselect);
       break;
     }
 
