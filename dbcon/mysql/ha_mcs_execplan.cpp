@@ -320,14 +320,12 @@ void clearStacks(gp_walk_info& gwi, bool andViews = true)
   idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
   {
-    //delete gwi.rcWorkStack.top();
     gwi.rcWorkStack.pop();
   }
 
-  idblog("pasre tree work stack is" << (gwi.ptWorkStack.empty() ? "" : " NOT") << " empty");
+  idblog("parse tree work stack is" << (gwi.ptWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.ptWorkStack.empty())
   {
-    //delete gwi.ptWorkStack.top();
     gwi.ptWorkStack.pop();
   }
   if (andViews)
@@ -6276,6 +6274,7 @@ void gp_walk(const Item* item, void* arg)
           }
           else
           {
+            delete rhs;
             gwip->ptWorkStack.push(lhs);
             continue;
           }
