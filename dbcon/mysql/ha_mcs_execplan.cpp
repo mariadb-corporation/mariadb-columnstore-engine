@@ -4169,6 +4169,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           if (!sptp)
           {
             nonSupport = true;
+	    delete fc;
             return NULL;
           }
 
@@ -4183,6 +4184,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
           nonSupport = true;
           gwi.fatalParseError = true;
           gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SUB_EXPRESSION);
+	  delete fc;
           return NULL;
         }
 
@@ -4214,6 +4216,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         if (!rc || nonSupport)
         {
           nonSupport = true;
+	  delete fc;
           return NULL;
         }
 
@@ -4242,6 +4245,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         else
         {
           nonSupport = true;
+	  delete fc
           return NULL;
         }
       }
