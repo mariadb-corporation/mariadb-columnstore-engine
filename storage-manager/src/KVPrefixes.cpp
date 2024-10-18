@@ -15,10 +15,15 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "KVPrefixes.hpp"
+#include "KVPrefixes.h"
 
 namespace storagemanager
 {
 // FDB recommends keep the key size up to 32 bytes.
-const char* KVPrefixes[2] = {/*OWNERSHIP*/ "SM_O_", /*META*/ "SM_M_"};
+const char* KVPrefixes[3] = {/*OWNERSHIP*/ "SM_O_", /*META*/ "SM_M_", /*JOURNAL*/ "SM_J_"};
+
+std::string getJournalName(const std::string& key)
+{
+  return KVPrefixes[static_cast<uint32_t>(KVPrefixId::SM_JOURNAL)] + key;
+}
 }  // namespace storagemanager

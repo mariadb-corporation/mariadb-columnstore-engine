@@ -17,6 +17,8 @@
 
 #include "PrefixCache.h"
 #include "Cache.h"
+#include "KVPrefixes.h"
+#include "KVStorageInitializer.h"
 #include "Config.h"
 #include "Downloader.h"
 #include "Synchronizer.h"
@@ -575,7 +577,7 @@ void PrefixCache::rename(const string& oldKey, const string& newKey, ssize_t siz
 int PrefixCache::ifExistsThenDelete(const string& key)
 {
   bf::path cachedPath = cachePrefix / key;
-  bf::path journalPath = journalPrefix / (key + ".journal");
+  const auto journalName = getJournalName((journalPrefix / (key + ".journal")).string());
 
   boost::unique_lock<boost::mutex> s(lru_mutex);
   bool objectExists = false;
@@ -593,13 +595,17 @@ int PrefixCache::ifExistsThenDelete(const string& key)
     else  // let makeSpace() delete it if it's already in progress
       return 0;
   }
-  bool journalExists = bf::exists(journalPath);
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto tnx = kvStorage->createTransaction();
+  auto resultPair = tnx->get(journalName);
+
+  bool journalExists = resultPair.first;
   // assert(objectExists == bf::exists(cachedPath));
 
-  size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
+  //size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
   // size_t objectSize = (objectExists ? MetadataFile::getLengthFromKey(key) : 0);
-  size_t journalSize = (journalExists ? bf::file_size(journalPath) : 0);
-  currentCacheSize -= (objectSize + journalSize);
+  //size_t journalSize = (journalExists ? bf::file_size(journalPath) : 0);
+  //currentCacheSize -= (objectSize + journalSize);
 
   // assert(!objectExists || objectSize == bf::file_size(cachedPath));
 

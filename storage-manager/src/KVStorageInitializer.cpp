@@ -42,6 +42,7 @@ std::shared_ptr<FDBCS::FDBDataBase> KVStorageInitializer::getStorageInstance()
     logger->log(LOG_CRIT, msg);
     throw std::runtime_error(msg);
   }
+  std::cout << "set up and run network" << std::endl;
 
   fdbNetworkInstance = std::make_unique<FDBCS::FDBNetwork>();
   if (!fdbNetworkInstance->setUpAndRunNetwork())
