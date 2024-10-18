@@ -45,7 +45,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <unistd.h>
 #include "fdbcs.hpp"
-#include "KVPrefixes.hpp"
+#include "KVPrefixes.h"
 
 #define max(x, y) (x > y ? x : y)
 #define min(x, y) (x < y ? x : y)
