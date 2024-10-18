@@ -6215,6 +6215,7 @@ void gp_walk(const Item* item, void* arg)
 
             if (parseInfo & CORRELATED)
             {
+              idblog("field vec size" << fieldVec.size());
               gwip->fatalParseError = true;
               gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_CORRELATED_SUB_OR);
               return;
@@ -6462,9 +6463,9 @@ void gp_walk(const Item* item, void* arg)
       }
 
       // store a dummy subselect object. the transform is handled in item_func.
-      //SubSelect* subselect = new SubSelect();
-      //idblog("allocating subselect");
-      //gwip->rcWorkStack.push(subselect);
+      SubSelect* subselect = new SubSelect();
+      idblog("allocating subselect");
+      gwip->rcWorkStack.push(subselect);
       break;
     }
 
