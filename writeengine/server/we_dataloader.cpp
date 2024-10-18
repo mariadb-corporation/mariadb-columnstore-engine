@@ -437,7 +437,7 @@ void WEDataLoader::pushData2Cpimport(ByteStream& Ibs)
 {
   if (Ibs.length() > 0)
   {
-    int aLen = Ibs.length();
+    messageqcpp::BSSizeType aLen = Ibs.length();
     char* pStart = reinterpret_cast<char*>(Ibs.buf());
     char* pEnd = pStart + aLen;
     char* pPtr = pStart;

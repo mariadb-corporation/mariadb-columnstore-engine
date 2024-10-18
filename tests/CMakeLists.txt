@@ -80,6 +80,10 @@ if (WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
+    add_executable(bytestream bytestream.cpp)
+    target_link_libraries(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    add_test(NAME columnstore:bytestream COMMAND bytestream)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
