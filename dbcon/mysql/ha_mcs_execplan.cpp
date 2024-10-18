@@ -7868,6 +7868,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             if (after_size - before_size != 0)
             {
               gwi.parseErrorText = ifp->func_name();
+	      clearDeleteStacks(gwi);
               return -1;
             }
           }
