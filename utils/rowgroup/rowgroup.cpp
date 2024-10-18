@@ -333,6 +333,8 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
     strings.reset(new StringStore());
   else
     strings.reset();
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 void RGData::reinit(const RowGroup& rg)
@@ -344,7 +346,7 @@ void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
 {
   // cout << "serializing!\n";
   bs << (uint32_t)RGDATA_SIG;
-  bs << (uint32_t)amount;
+  bs << amount;
   bs << columnCount;
   bs << rowSize;
   bs.append(rowData.get(), amount);
