@@ -224,7 +224,25 @@ d	17	1
 b	18	1
 a	19	1
 SELECT a, b, COUNT(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) count FROM t1;
-ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+a	b	count
+NULL	NULL	0
+a	12	1
+a	13	1
+b	14	1
+c	15	1
+d	16	1
+d	17	1
+b	18	1
+a	19	1
 SELECT a, b, COUNT(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) count FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+a	b	count
+NULL	NULL	0
+a	19	3
+a	13	3
+a	12	3
+b	18	5
+b	14	5
+c	15	6
+d	16	8
+d	17	8
 DROP DATABASE mcs156_db;

@@ -20,12 +20,13 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 #include "hasher.h"
 #include "lbidlist.h"
 #include "spinlock.h"
 #include "vlarray.h"
+#include "threadnaming.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -282,8 +283,7 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
         done = false;
         continue;
       }
-      for (auto& element : buckets[i])
-        tables[i]->insert(element);
+      tables[i]->insert(buckets[i].begin(), buckets[i].end());
       m_bucketLocks[i].unlock();
       wasProductive = true;
       buckets[i].clear();
@@ -306,7 +306,7 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row& r)
     if (td[i].len == 0)
       continue;
     uint bucket = bucketPicker((char*)td[i].data, td[i].len, bpSeed) & bucketMask;
-    v[bucket].push_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
+    v[bucket].emplace_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
   }
   bucketsToTables(&v[0], ht.get());
 }
@@ -323,9 +323,9 @@ void TupleJoiner::um_insertLongDouble(uint rowCount, Row& r)
     uint bucket = bucketPicker((char*)&smallKey, 10, bpSeed) &
                   bucketMask;  // change if we decide to support windows again
     if (UNLIKELY(smallKey == joblist::LONGDOUBLENULL))
-      v[bucket].push_back(pair<long double, Row::Pointer>(joblist::LONGDOUBLENULL, r.getPointer()));
+      v[bucket].emplace_back(pair<long double, Row::Pointer>(joblist::LONGDOUBLENULL, r.getPointer()));
     else
-      v[bucket].push_back(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
+      v[bucket].emplace_back(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
   }
   bucketsToTables(&v[0], ld.get());
 }
@@ -345,9 +345,9 @@ void TupleJoiner::um_insertInlineRows(uint rowCount, Row& r)
       smallKey = (int64_t)r.getUintField(smallKeyColumn);
     uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
     if (UNLIKELY(smallKey == nullValueForJoinColumn))
-      v[bucket].push_back(pair<int64_t, uint8_t*>(getJoinNullValue(), r.getData()));
+      v[bucket].emplace_back(pair<int64_t, uint8_t*>(getJoinNullValue(), r.getData()));
     else
-      v[bucket].push_back(pair<int64_t, uint8_t*>(smallKey, r.getData()));
+      v[bucket].emplace_back(pair<int64_t, uint8_t*>(smallKey, r.getData()));
   }
   bucketsToTables(&v[0], h.get());
 }
@@ -367,9 +367,9 @@ void TupleJoiner::um_insertStringTable(uint rowCount, Row& r)
       smallKey = (int64_t)r.getUintField(smallKeyColumn);
     uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
     if (UNLIKELY(smallKey == nullValueForJoinColumn))
-      v[bucket].push_back(pair<int64_t, Row::Pointer>(getJoinNullValue(), r.getPointer()));
+      v[bucket].emplace_back(pair<int64_t, Row::Pointer>(getJoinNullValue(), r.getPointer()));
     else
-      v[bucket].push_back(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
+      v[bucket].emplace_back(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
   }
   bucketsToTables(&v[0], sth.get());
 }
@@ -670,6 +670,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
   }
 }
 
+using unordered_set_int128 = std::unordered_set<int128_t, utils::Hash128, utils::Equal128>;
+
 void TupleJoiner::doneInserting()
 {
   // a minor textual cleanup
@@ -694,7 +696,6 @@ void TupleJoiner::doneInserting()
 
   for (col = 0; col < smallKeyColumns.size(); col++)
   {
-    typedef std::tr1::unordered_set<int128_t, utils::Hash128, utils::Equal128> unordered_set_int128;
     unordered_set_int128 uniquer;
     unordered_set_int128::iterator uit;
     sthash_t::iterator sthit;
@@ -811,6 +812,8 @@ void TupleJoiner::setInPM()
 
 void TupleJoiner::umJoinConvert(size_t begin, size_t end)
 {
+  utils::setThreadName("TJUMJoinConvert1");
+
   Row smallRow;
   smallRG.initRow(&smallRow);
 
@@ -862,6 +865,8 @@ void TupleJoiner::setInUM()
 
 void TupleJoiner::umJoinConvert(uint threadID, vector<RGData>& rgs, size_t begin, size_t end)
 {
+  utils::setThreadName("TJUMJoinConvert2");
+
   RowGroup l_smallRG(smallRG);
 
   while (begin < end)
