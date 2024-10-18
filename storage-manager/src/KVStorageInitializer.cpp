@@ -24,6 +24,12 @@ static std::shared_ptr<FDBCS::FDBDataBase> fdbDataBaseInstance;
 static std::unique_ptr<FDBCS::FDBNetwork> fdbNetworkInstance;
 static std::mutex kvStorageLock;
 
+static void logError(SMLogging* logger, const char* errorMsg)
+{
+  logger->log(LOG_CRIT, errorMsg);
+  throw std::runtime_error(errorMsg);
+}
+
 std::shared_ptr<FDBCS::FDBDataBase> KVStorageInitializer::getStorageInstance()
 {
   if (fdbDataBaseInstance)
@@ -37,37 +43,21 @@ std::shared_ptr<FDBCS::FDBDataBase> KVStorageInitializer::getStorageInstance()
     return fdbDataBaseInstance;
 
   if (!FDBCS::setAPIVersion())
-  {
-    const char* msg = "Ownership: FDB setAPIVersion failed.";
-    logger->log(LOG_CRIT, msg);
-    throw std::runtime_error(msg);
-  }
+    logError(logger, "Ownership: FDB setAPIVersion failed.");
 
   fdbNetworkInstance = std::make_unique<FDBCS::FDBNetwork>();
   if (!fdbNetworkInstance->setUpAndRunNetwork())
-  {
-    const char* msg = "Ownership: FDB setUpAndRunNetwork failed.";
-    logger->log(LOG_CRIT, msg);
-    throw std::runtime_error(msg);
-  }
+    logError(logger, "Ownership: FDB setUpAndRunNetwork failed.");
 
   std::string clusterFilePath = config->getValue("ObjectStorage", "fdb_cluster_file_path");
-  std::cout << "Cluster file path: " << clusterFilePath << std::endl;
   if (clusterFilePath.empty())
-  {
-    const char* msg =
-        "Ownership: Need to specify `Foundation DB cluster file path` in the storagemanager.cnf file";
-    logger->log(LOG_CRIT, msg);
-    throw std::runtime_error(msg);
-  }
+    logError(logger,
+             "Ownership: Need to specify `Foundation DB cluster file path` in the storagemanager.cnf file");
 
   fdbDataBaseInstance = FDBCS::DataBaseCreator::createDataBase(clusterFilePath);
   if (!fdbDataBaseInstance)
-  {
-    const char* msg = "Ownership: FDB createDataBase failed.";
-    logger->log(LOG_CRIT, msg);
-    throw std::runtime_error(msg);
-  }
+    logError(logger, "Ownership: FDB createDataBase failed.");
+
   return fdbDataBaseInstance;
 }
 
