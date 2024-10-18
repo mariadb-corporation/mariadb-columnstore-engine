@@ -2894,7 +2894,7 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
 {
   setError(thd, errcode, errmsg);
-  clearStacks(gwi);
+  //clearStacks(gwi);
 }
 
 int setErrorAndReturn(gp_walk_info& gwi)
@@ -6215,7 +6215,7 @@ void gp_walk(const Item* item, void* arg)
 
             if (parseInfo & CORRELATED)
             {
-              idblog("field vec size" << fieldVec.size());
+              idblog("field vec size " << fieldVec.size());
               gwip->fatalParseError = true;
               gwip->parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_CORRELATED_SUB_OR);
               return;
@@ -6580,6 +6580,8 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
     {
       Item_func* isp = static_cast<Item_func*>(item);
 
+idblog("func item");
+
       if (string(isp->func_name()) == "<in_optimizer>")
       {
         parseInfo |= SUB_BIT;
@@ -6687,6 +6689,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
 
     case Item::SUBSELECT_ITEM:
     {
+	    idblog("subselect");
       parseInfo |= SUB_BIT;
       Item_subselect* sub = (Item_subselect*)item;
 
@@ -7955,6 +7958,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
             gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
 
           setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+
           clearDeleteStacks(gwi);
           return ER_CHECK_NOT_IMPLEMENTED;
         }
