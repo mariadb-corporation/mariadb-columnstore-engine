@@ -7158,14 +7158,28 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   std::stack<execplan::ParseTree*> outerJoinStack;
 
   if ((failed = buildJoin(gwi, select_lex.top_join_list, outerJoinStack)))
+  {
+    while (!outerJoinStack.empty())
+    {
+      delete outerJoinStack.top();
+      outerJoinStack.pop();
+    }
     return failed;
+  }
 
   if (gwi.subQuery)
   {
     for (uint i = 0; i < gwi.viewList.size(); i++)
     {
       if ((failed = gwi.viewList[i]->processJoin(gwi, outerJoinStack)))
+      {
+        while (!outerJoinStack.empty())
+        {
+          delete outerJoinStack.top();
+          outerJoinStack.pop();
+        }
         return failed;
+      }
     }
   }
 
