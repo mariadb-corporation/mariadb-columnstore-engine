@@ -128,6 +128,7 @@ using namespace funcexp;
 #include "ha_mcs_datatype.h"
 #include "statistics.h"
 #include "ha_mcs_logging.h"
+#include "ha_subquery.h"
 
 namespace cal_impl_if
 {
@@ -702,6 +703,10 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
       // exemgrClient->shutdown();
       // delete exemgrClient;
       // exemgrClient = 0;
+      if (rowGroup)
+      {
+        delete rowGroup;
+      }
       throw runtime_error("Lost conection to ExeMgr.");
     }
     else
@@ -728,7 +733,8 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
         // exemgrClient->shutdown();
         // delete exemgrClient;
         // exemgrClient = 0;
-        throw runtime_error(emsgStr);
+        delete rowGroup;
+	throw runtime_error(emsgStr);
       }
 
       rowCount = rowGroup->getRowCount();
@@ -752,6 +758,11 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
       // delete exemgrClient;
       // exemgrClient = 0;
     }
+  }
+
+  if (rowGroup)
+  {
+    delete rowGroup;
   }
 
   return returnVal;
@@ -1003,7 +1014,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         // sysdate() etc.
         if (!hasNonSupportItem && !cal_impl_if::nonConstFunc(ifp) && tmpVec.size() == 0)
         {
-          gp_walk_info gwi2(gwi.timeZone);
+          gp_walk_info gwi2(gwi.timeZone, gwi.subQueriesChain);
           gwi2.thd = thd;
           SRCP srcp(buildReturnedColumn(value, gwi2, gwi2.fatalParseError));
           ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(srcp.get());
@@ -1215,7 +1226,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   else
     dmlStatement.set_DMLStatementType(DML_DELETE);
 
-  TableName* qualifiedTablName = new TableName();
 
   UpdateSqlStatement updateStmt;
   //@Bug 2753. To make sure the momory is freed.
@@ -1223,6 +1233,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
   if (ha_mcs_common::isUpdateStatement(thd->lex->sql_command))
   {
+    TableName* qualifiedTablName = new TableName();
     qualifiedTablName->fName = tableName;
     qualifiedTablName->fSchema = schemaName;
     updateStmt.fNamePtr = qualifiedTablName;
@@ -1246,8 +1257,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
           boost::algorithm::to_lower(tableName);
           boost::algorithm::to_lower(aliasName);
         }
-        qualifiedTablName->fName = tableName;
-        qualifiedTablName->fSchema = schemaName;
         pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
       }
       else
@@ -1271,8 +1280,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         boost::algorithm::to_lower(tableName);
         boost::algorithm::to_lower(aliasName);
       }
-      qualifiedTablName->fName = tableName;
-      qualifiedTablName->fSchema = schemaName;
       pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
     }
   }
@@ -1288,8 +1295,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       boost::algorithm::to_lower(tableName);
       boost::algorithm::to_lower(aliasName);
     }
-    qualifiedTablName->fName = tableName;
-    qualifiedTablName->fSchema = schemaName;
     pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
   }
 
@@ -2145,7 +2150,8 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  cal_impl_if::gp_walk_info gwi(timeZoneOffset);
+  SubQueryChainHolder chainHolder;
+  cal_impl_if::gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   int rc = 0;
 
@@ -2168,6 +2174,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
     *affected_rows = ci->affectedRows;
   }
 
+
   return rc;
 }
 
@@ -2178,7 +2185,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  SubQueryChainHolder chainHolder;
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
@@ -3737,6 +3745,13 @@ int ha_mcs_impl_delete_row(const uchar* buf)
   return 0;
 }
 
+// this place is as good as any.
+ext_cond_info::ext_cond_info(long timeZone)
+  : chainHolder(new SubQueryChainHolder())
+  , gwi(timeZone, &chainHolder->chain)
+{
+}
+
 COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condStack)
 {
   THD* thd = current_thd;
@@ -3766,7 +3781,8 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     const char* timeZone = thd->variables.time_zone->get_name()->ptr();
     long timeZoneOffset;
     dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-    gp_walk_info gwi(timeZoneOffset);
+    SubQueryChainHolder chainHolder;
+    gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
     gwi.condPush = true;
     gwi.sessionid = tid2sid(thd->thread_id);
     cout << "------------------ cond push -----------------------" << endl;
@@ -3782,10 +3798,10 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
       const char* timeZone = thd->variables.time_zone->get_name()->ptr();
       long timeZoneOffset;
       dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-      ti.condInfo = new gp_walk_info(timeZoneOffset);
+      ti.condInfo = new ext_cond_info(timeZoneOffset); //new gp_walk_info(timeZoneOffset);
     }
 
-    gp_walk_info* gwi = ti.condInfo;
+    gp_walk_info* gwi = &ti.condInfo->gwi;
     gwi->dropCond = false;
     gwi->fatalParseError = false;
     gwi->condPush = true;
@@ -4153,12 +4169,12 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
         mapiter = ci->tableMap.find(tl->table);
 
         if (mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL &&
-            mapiter->second.condInfo->condPush)
+            mapiter->second.condInfo->gwi.condPush)
         {
-          while (!mapiter->second.condInfo->ptWorkStack.empty())
+          while (!mapiter->second.condInfo->gwi.ptWorkStack.empty())
           {
-            ptIt = mapiter->second.condInfo->ptWorkStack.top();
-            mapiter->second.condInfo->ptWorkStack.pop();
+            ptIt = mapiter->second.condInfo->gwi.ptWorkStack.top();
+            mapiter->second.condInfo->gwi.ptWorkStack.pop();
             gi.pushedPts.push_back(ptIt);
           }
         }
@@ -4684,6 +4700,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   IDEBUG(cout << "pushdown_init for table " << endl);
   THD* thd = current_thd;
 
+  SubQueryChainHolder chainHolder;
+
   if (thd->slave_thread && !get_replication_slave(thd) &&
       ha_mcs_common::isDMLStatement(thd->lex->sql_command))
     return 0;
@@ -4691,7 +4709,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   bool err = false;
 

@@ -151,7 +151,7 @@ execplan::ParseTree* InSub::transform()
   csep->subType(CalpontSelectExecutionPlan::IN_SUBS);
 
   // gwi for the sub query
-  gp_walk_info gwi(fGwip.timeZone);
+  gp_walk_info gwi(fGwip.timeZone, fGwip.subQueriesChain);
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
 

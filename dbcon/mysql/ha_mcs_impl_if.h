@@ -179,7 +179,15 @@ struct gp_walk_info
   TableOnExprList tableOnExprList;
   std::vector<COND*> condList;
 
-  gp_walk_info(long timeZone_)
+  // All SubQuery allocations are single-linked into this chain.
+  // At the end of gp_walk_info processing we can free whole chain at once.
+  // This is done so because the juggling of SubQuery pointers in the
+  // ha_mcs_execplan code.
+  // There is a struct SubQueryChainHolder down below to hold chain root and free
+  // the chain using sorta kinda RAII.
+  SubQuery** subQueriesChain;
+
+  gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
    : sessionid(0)
    , fatalParseError(false)
    , condPush(false)
@@ -204,12 +212,23 @@ struct gp_walk_info
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
+   , subQueriesChain(subQueriesChain_)
   {
   }
 
   ~gp_walk_info()
   {
   }
+};
+
+struct SubQueryChainHolder;
+struct ext_cond_info
+{
+  // having this as a direct field would introduce
+  // circular dependency on header inclusion with ha_subquery.h.
+  boost::shared_ptr<SubQueryChainHolder> chainHolder;
+  gp_walk_info gwi;
+  ext_cond_info(long timeZone); // needs knowledge on SubQueryChainHolder, will be defined elsewhere
 };
 
 struct cal_table_info
@@ -233,7 +252,7 @@ struct cal_table_info
   unsigned c;         // for debug purpose
   TABLE* msTablePtr;  // no ownership
   sm::cpsm_conhdl_t* conn_hndl;
-  gp_walk_info* condInfo;
+  ext_cond_info* condInfo;
   execplan::SCSEP csep;
   bool moreRows;  // are there more rows to consume (b/c of limit)
 };

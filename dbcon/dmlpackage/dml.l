@@ -42,7 +42,7 @@ namespace dmlpackage {
 int lineno = 1;
 
 
-static char* scanner_copy (char *str, yyscan_t yyscanner);
+static char* scanner_copy (const char *str, yyscan_t yyscanner);
 
 
 /* macro to save the text and return a token */
@@ -256,7 +256,7 @@ void scanner_finish(yyscan_t yyscanner)
    pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str, yyscan_t yyscanner)
+char* scanner_copy (const char *str, yyscan_t yyscanner)
 {
   char* nv = strdup(str);
   if(nv)
