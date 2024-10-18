@@ -4245,7 +4245,7 @@ ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& non
         else
         {
           nonSupport = true;
-	  delete fc
+	  delete fc;
           return NULL;
         }
       }
