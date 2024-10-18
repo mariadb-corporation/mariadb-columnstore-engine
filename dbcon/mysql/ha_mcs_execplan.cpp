@@ -315,17 +315,25 @@ string escapeBackTick(const char* str)
   return ret;
 }
 
-void clearStacks(gp_walk_info& gwi, bool andViews = true)
+void clearStacks(gp_walk_info& gwi, bool andViews = true, bool mayDelete = false)
 {
   idblog("retcol work stack is" << (gwi.rcWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.rcWorkStack.empty())
   {
+    if (mayDelete)
+    {
+      delete gwi.rcWorkStack.top();
+    }
     gwi.rcWorkStack.pop();
   }
 
   idblog("parse tree work stack is" << (gwi.ptWorkStack.empty() ? "" : " NOT") << " empty");
   while (!gwi.ptWorkStack.empty())
   {
+    if (mayDelete)
+    {
+      delete gwi.ptWorkStack.top();
+    }
     gwi.ptWorkStack.pop();
   }
   if (andViews)
@@ -2894,7 +2902,6 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
 void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
 {
   setError(thd, errcode, errmsg);
-  //clearStacks(gwi);
 }
 
 int setErrorAndReturn(gp_walk_info& gwi)
@@ -7630,7 +7637,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   vector<Item_field*> funcFieldVec;
 
   // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi, false);
+  clearStacks(gwi, false, true);
 
   // indicate the starting pos of scalar returned column, because some join column
   // has been inserted to the returned column list.
@@ -8094,7 +8101,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   // Having clause handling
   gwi.clauseType = HAVING;
-  clearStacks(gwi, false);
+  clearStacks(gwi, false, true);
   ParseTree* havingFilter = 0;
   // clear fatalParseError that may be left from post process functions
   gwi.fatalParseError = false;
@@ -9164,6 +9171,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, cal_gro
 #ifdef DEBUG_WALK_COND
   cerr << "getGroupPlan()" << endl;
 #endif
+  idbassert_s(false, "getGroupPlan is utterly out of date");
 
   // XXX: rollup is currently not supported (not tested) in this part.
   //      but this is not triggered in any of tests.
