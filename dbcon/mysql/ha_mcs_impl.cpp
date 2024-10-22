@@ -4610,6 +4610,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
         {
           bool ask_4_stats = (ci->traceFlags) ? true : false;
           sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats, clearScanCtx);
+	  ti.tpl_ctx = 0;
         }
         // Normaly stats variables are set in external_lock method but we set it here
         // since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
@@ -4654,7 +4655,6 @@ int ha_mcs_impl_group_by_end(TABLE* table)
     }
   }
 
-  delete ti.tpl_ctx;
   ti.tpl_ctx = 0;
 
   if (ti.tpl_ctx_st.size())
