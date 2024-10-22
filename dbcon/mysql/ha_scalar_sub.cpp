@@ -230,6 +230,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
     {
       fGwip.fatalParseError = true;
       fGwip.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_INVALID_OPERATOR_WITH_LIST);
+      delete op;
       return NULL;
     }
 
@@ -270,6 +271,7 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
       fGwip.parseErrorText = gwi.parseErrorText;
     }
 
+    delete op;
     return NULL;
   }
 

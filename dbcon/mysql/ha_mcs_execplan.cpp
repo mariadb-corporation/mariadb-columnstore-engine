@@ -1539,6 +1539,7 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
             gwi.fatalParseError = true;
             gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
             setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+	    clearDeleteStacks(gwi_outer);
             return -1;
           }
         }
