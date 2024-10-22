@@ -259,7 +259,7 @@ class ExtentMapRBTreeImpl
   {
     if (fInstance)
     {
-      fInstance.reset(NULL);
+      fInstance.reset();
     }
   }
 
