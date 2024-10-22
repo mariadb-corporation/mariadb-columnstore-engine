@@ -333,7 +333,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
 
     std::vector<CalpontSystemCatalog::ColType>& colTypes = ti.tpl_scan_ctx->ctp;
 
-    RowGroup* rowGroup = ti.tpl_scan_ctx->rowGroup;
+    std::shared_ptr<RowGroup> rowGroup = ti.tpl_scan_ctx->rowGroup;
 
     // table mode mysql expects all columns of the table. mapping between columnoid and position in rowgroup
     // set coltype.position to be the position in rowgroup. only set once.
@@ -2737,7 +2737,6 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
       else
         ci->cal_conn_hndl = hndl;
 
-      ti.tpl_ctx = 0;
     }
     catch (IDBExcept& e)
     {
@@ -2764,6 +2763,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     }
   }
 
+  delete ti.tpl_ctx;
   ti.tpl_ctx = 0;
 
   ci->tableMap[table] = ti;
@@ -4628,7 +4628,6 @@ int ha_mcs_impl_group_by_end(TABLE* table)
 
       ci->cal_conn_hndl = hndl;
 
-      ti.tpl_ctx = 0;
     }
     catch (IDBExcept& e)
     {
@@ -4655,6 +4654,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
     }
   }
 
+  delete ti.tpl_ctx;
   ti.tpl_ctx = 0;
 
   if (ti.tpl_ctx_st.size())

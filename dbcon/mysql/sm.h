@@ -137,12 +137,11 @@ struct cpsm_tplsch_t
   }
   ~cpsm_tplsch_t()
   {
-    delete rowGroup;
   }
 
   tableid_t tableid;
   uint64_t rowsreturned;
-  rowgroup::RowGroup* rowGroup;
+  std::shared_ptr<rowgroup::RowGroup> rowGroup;
   messageqcpp::ByteStream bs;  // rowgroup bytestream. need to stay with the life span of rowgroup
   uint32_t traceFlags;
   // @bug 649
@@ -158,7 +157,7 @@ struct cpsm_tplsch_t
   {
     if (!rowGroup)
     {
-      rowGroup = new rowgroup::RowGroup();
+      rowGroup.reset(new rowgroup::RowGroup());
       rowGroup->deserialize(bs);
     }
     else
