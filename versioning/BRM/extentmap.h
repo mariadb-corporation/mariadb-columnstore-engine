@@ -259,7 +259,8 @@ class ExtentMapRBTreeImpl
   {
     if (fInstance)
     {
-      fInstance.reset();
+      delete fInstance;
+      fInstance = NULL;
     }
   }
 
@@ -297,7 +298,7 @@ class ExtentMapRBTreeImpl
   BRMManagedShmImplRBTree fManagedShm;
 
   static boost::mutex fInstanceMutex;
-  static boost::shared_ptr<ExtentMapRBTreeImpl> fInstance;
+  static ExtentMapRBTreeImpl* fInstance;
 };
 
 class FreeListImpl

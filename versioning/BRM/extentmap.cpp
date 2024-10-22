@@ -216,7 +216,7 @@ boost::mutex ExtentMap::mutex;
 boost::mutex ExtentMap::emIndexMutex;
 
 boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
-boost::shared_ptr<ExtentMapRBTreeImpl> ExtentMapRBTreeImpl::fInstance = nullptr;
+ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
@@ -230,11 +230,11 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
       fInstance->fManagedShm.reMapSegment();
     }
 
-    return fInstance.get();
+    return fInstance;
   }
 
-  fInstance.reset(new ExtentMapRBTreeImpl(key, size, readOnly));
-  return fInstance.get();
+  fInstance = new ExtentMapRBTreeImpl(key, size, readOnly);
+  return fInstance;
 }
 
 ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
