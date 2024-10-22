@@ -2763,7 +2763,6 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
     }
   }
 
-  delete ti.tpl_ctx;
   ti.tpl_ctx = 0;
 
   ci->tableMap[table] = ti;
@@ -4625,6 +4624,10 @@ int ha_mcs_impl_group_by_end(TABLE* table)
           if (hndl->miniStats.length())
             ci->miniStats += hndl->miniStats;
         }
+      }
+      else
+      {
+        delete ti.tpl_ctx;
       }
 
       ci->cal_conn_hndl = hndl;
