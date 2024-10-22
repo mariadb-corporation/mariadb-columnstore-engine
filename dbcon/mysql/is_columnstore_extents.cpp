@@ -55,7 +55,7 @@ ST_FIELD_INFO is_columnstore_extents_fields[] = {
     Show::Column("DATA_SIZE", Show::ULonglong(0), NOT_NULL),    // 15
     Show::CEnd()};
 
-static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
+static int generate_result(BRM::OID_t oid, boost::shared_ptr<BRM::DBRM> emp, TABLE* table, THD* thd)
 {
   CHARSET_INFO* cs = system_charset_info;
   std::vector<struct BRM::EMEntry> entries;
@@ -187,7 +187,6 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
     if (schema_table_store_record(thd, table))
     {
-      delete emp;
       return 1;
     }
 
@@ -203,7 +202,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   TABLE* table = tables->table;
 
   BRM::DBRM::refreshShm();
-  BRM::DBRM* emp = new BRM::DBRM();
+  boost::shared_ptr<BRM::DBRM> emp(new BRM::DBRM());
 
   if (!emp || !emp->isDBRMReady())
   {
@@ -289,7 +288,6 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       return 1;
   }
 
-  delete emp;
   return 0;
 }
 
