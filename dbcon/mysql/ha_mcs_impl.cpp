@@ -4659,6 +4659,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
 
   if (ti.tpl_ctx_st.size())
   {
+    delete ti.tpl_ctx_st.top();
     ti.tpl_ctx_st.pop();
     if (ti.tpl_ctx_st.size())
       ti.tpl_ctx = ti.tpl_ctx_st.top();
