@@ -216,7 +216,7 @@ boost::mutex ExtentMap::mutex;
 boost::mutex ExtentMap::emIndexMutex;
 
 boost::mutex ExtentMapRBTreeImpl::fInstanceMutex;
-ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
+boost::shared_ptr<ExtentMapRBTreeImpl> ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
@@ -233,8 +233,8 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
     return fInstance;
   }
 
-  fInstance = new ExtentMapRBTreeImpl(key, size, readOnly);
-  return fInstance;
+  fInstance.reset(new ExtentMapRBTreeImpl(key, size, readOnly));
+  return fInstance->get();
 }
 
 ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
@@ -612,7 +612,6 @@ ExtentMap::~ExtentMap()
   }
 
   fPmDbRootMap.clear();
-  delete fPExtMapRBTreeImpl;
 }
 
 ExtentMapRBTree::iterator ExtentMap::findByLBID(const LBID_t lbid)
