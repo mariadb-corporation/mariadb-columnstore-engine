@@ -3808,7 +3808,7 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     gwi->thd = thd;
     gwi->sessionid = tid2sid(thd->thread_id);
     cond->traverse_cond(gp_walk, gwi, Item::POSTFIX);
-    clearDeleteStacks(gwi);
+    clearDeleteStacks(*gwi);
     ci->tableMap[table] = ti;
 
     if (gwi->fatalParseError)
