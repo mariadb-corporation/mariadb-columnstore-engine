@@ -230,11 +230,11 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
       fInstance->fManagedShm.reMapSegment();
     }
 
-    return fInstance;
+    return fInstance.get();
   }
 
   fInstance.reset(new ExtentMapRBTreeImpl(key, size, readOnly));
-  return fInstance->get();
+  return fInstance.get();
 }
 
 ExtentMapRBTreeImpl::ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly)
