@@ -206,7 +206,7 @@ struct refresher
   {
     BRM::DBRM::refreshShm();
   }
-}
+};
 static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
   BRM::OID_t cond_oid = 0;
