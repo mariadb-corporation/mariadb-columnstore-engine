@@ -244,6 +244,11 @@ struct cal_table_info
   }
   ~cal_table_info()
   {
+    for(;tpl_ctx_st.size();)
+    {
+      delete tpl_ctx_st.top();
+      tpl_ctx_st.pop();
+    }
   }
   sm::cpsm_tplh_t* tpl_ctx;
   std::stack<sm::cpsm_tplh_t*> tpl_ctx_st;
