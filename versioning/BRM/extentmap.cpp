@@ -612,6 +612,7 @@ ExtentMap::~ExtentMap()
   }
 
   fPmDbRootMap.clear();
+  delete fPExtMapRBTreeImpl;
 }
 
 ExtentMapRBTree::iterator ExtentMap::findByLBID(const LBID_t lbid)
