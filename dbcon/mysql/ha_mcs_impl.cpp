@@ -1216,7 +1216,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     boost::algorithm::to_lower(aTableName.table);
   }
 
-  CalpontDMLPackage* pDMLPackage = 0;
+  std::shared_ptr<CalpontDMLPackage> pDMLPackage;
   //	dmlStmt += ";";
   IDEBUG(cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id << endl);
   VendorDMLStatement dmlStatement(dmlStmt, sessionID);
@@ -1237,7 +1237,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     qualifiedTablName->fName = tableName;
     qualifiedTablName->fSchema = schemaName;
     updateStmt.fNamePtr = qualifiedTablName;
-    pDMLPackage = CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(dmlStatement, updateStmt);
+    pDMLPackage.reset(CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(dmlStatement, updateStmt));
   }
   else if ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI)  //@Bug 6121 error out on multi tables delete.
   {
@@ -1257,7 +1257,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
           boost::algorithm::to_lower(tableName);
           boost::algorithm::to_lower(aliasName);
         }
-        pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+        pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
       }
       else
       {
@@ -1280,7 +1280,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         boost::algorithm::to_lower(tableName);
         boost::algorithm::to_lower(aliasName);
       }
-      pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+      pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
     }
   }
   else
@@ -1295,7 +1295,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       boost::algorithm::to_lower(tableName);
       boost::algorithm::to_lower(aliasName);
     }
-    pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+    pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
   }
 
   if (!pDMLPackage)
@@ -1554,7 +1554,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   updateCP->serialize(*plan);
   pDMLPackage->write(bytestream);
 
-  delete pDMLPackage;
+  pDMLPackage.reset();
 
   ByteStream::byte b = 0;
   ByteStream::octbyte rows = 0;
@@ -1638,12 +1638,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             // cout << "doUpdateDelete start new DMLProc client for ctrl-c " <<  " for session " << sessionID
             // << endl;
             VendorDMLStatement cmdStmt("CTRL+C", DML_COMMAND, sessionID);
-            CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+	    std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
             pDMLPackage->set_TimeZone(timeZoneOffset);
             ByteStream bytestream;
             bytestream << static_cast<uint32_t>(sessionID);
             pDMLPackage->write(bytestream);
-            delete pDMLPackage;
+            pDMLPackage.reset();
             b = 1;
             retry = maxRetries;
             errorMsg = "Command canceled by user";
@@ -1761,13 +1761,13 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     if (command != "")
     {
       VendorDMLStatement cmdStmt(command, DML_COMMAND, sessionID);
-      CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+      std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
       pDMLPackage->set_TimeZone(timeZoneOffset);
       pDMLPackage->setTableOid(ci->tableOid);
       ByteStream bytestream;
       bytestream << static_cast<uint32_t>(sessionID);
       pDMLPackage->write(bytestream);
-      delete pDMLPackage;
+      pDMLPackage.reset();
 
       ByteStream::byte bc;
       std::string errMsg;
