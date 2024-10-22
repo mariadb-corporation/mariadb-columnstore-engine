@@ -298,7 +298,7 @@ class ExtentMapRBTreeImpl
   BRMManagedShmImplRBTree fManagedShm;
 
   static boost::mutex fInstanceMutex;
-  static ExtentMapRBTreeImpl* fInstance;
+  static boost::shared_ptr<ExtentMapRBTreeImpl> fInstance;
 };
 
 class FreeListImpl
