@@ -419,6 +419,7 @@ int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& cse
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
+void clearDeleteStacks(gp_walk_info& gwi);
 void parse_item(Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo,
                 gp_walk_info* gwip = NULL);
 const std::string bestTableName(const Item_field* ifp);
