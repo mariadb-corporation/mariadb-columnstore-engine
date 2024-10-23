@@ -55,7 +55,7 @@ ST_FIELD_INFO is_columnstore_extents_fields[] = {
     Show::Column("DATA_SIZE", Show::ULonglong(0), NOT_NULL),    // 15
     Show::CEnd()};
 
-static int generate_result(BRM::OID_t oid, boost::shared_ptr<BRM::DBRM> emp, TABLE* table, THD* thd)
+static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
 {
   CHARSET_INFO* cs = system_charset_info;
   std::vector<struct BRM::EMEntry> entries;
@@ -202,7 +202,7 @@ struct refresher
   refresher()
   {
     BRM::DBRM::refreshShm();
-    emp = new BRM::DBRM();
+    guarded = new BRM::DBRM();
   }
   ~refresher()
   {
