@@ -7202,10 +7202,9 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   // is pushed to rcWorkStack.
   if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
   {
-    filters = new ParseTree(gwi.rcWorkStack.top());
+    gwi.ptWorkStack.push(new ParseTree(gwi.rcWorkStack.top()));
     gwi.rcWorkStack.pop();
   }
-  assert((filters && gwi.ptWorkStack.empty()) || (!filters && !gwi.ptWorkStack.empty()));
 
   while (!gwi.ptWorkStack.empty())
   {
