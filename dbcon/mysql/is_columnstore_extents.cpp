@@ -198,13 +198,16 @@ static int generate_result(BRM::OID_t oid, boost::shared_ptr<BRM::DBRM> emp, TAB
 
 struct refresher
 {
+  BRM::DBRM guarded;
   refresher()
   {
     BRM::DBRM::refreshShm();
+    emp = new BRM::DBRM();
   }
   ~refresher()
   {
-    //BRM::DBRM::refreshShm();
+    delete guarded;
+    BRM::DBRM::refreshShm();
   }
 };
 static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
@@ -212,8 +215,9 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   BRM::OID_t cond_oid = 0;
   TABLE* table = tables->table;
 
+  BRM::DBRM* emp;
   refresher shmRefresher;
-  boost::shared_ptr<BRM::DBRM> emp(new BRM::DBRM());
+  emp = shmRefresher.guarded;
 
   if (!emp || !emp->isDBRMReady())
   {
