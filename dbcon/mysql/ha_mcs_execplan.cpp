@@ -7205,6 +7205,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     filters = new ParseTree(gwi.rcWorkStack.top());
     gwi.rcWorkStack.pop();
   }
+  assert((filters && gwi.ptWorkStack.empty()) || (!filters && !gwi.ptWorkStack.empty()));
 
   while (!gwi.ptWorkStack.empty())
   {
