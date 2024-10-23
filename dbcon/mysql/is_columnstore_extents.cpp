@@ -198,7 +198,7 @@ static int generate_result(BRM::OID_t oid, boost::shared_ptr<BRM::DBRM> emp, TAB
 
 struct refresher
 {
-  BRM::DBRM guarded;
+  BRM::DBRM* guarded;
   refresher()
   {
     BRM::DBRM::refreshShm();
