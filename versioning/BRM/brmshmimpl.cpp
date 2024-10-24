@@ -422,6 +422,7 @@ BRMManagedShmImplRBTree::BRMManagedShmImplRBTree(unsigned key, off_t size, bool 
 
 BRMManagedShmImplRBTree::~BRMManagedShmImplRBTree()
 {
+  delete fShmSegment;
 }
 
 void BRMManagedShmImplRBTree::setReadOnly()

@@ -201,7 +201,6 @@ struct refresher
   BRM::DBRM* guarded;
   refresher()
   {
-    BRM::DBRM::refreshShm();
     guarded = new BRM::DBRM();
   }
   ~refresher()
