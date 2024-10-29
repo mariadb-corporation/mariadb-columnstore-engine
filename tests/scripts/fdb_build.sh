@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-FDB_VERSION=7.1.63
+FDB_VERSION=7.3.43
 GCC_VERSION='11'
 BUILD_COMMAND='make -j2'
 . /etc/os-release
