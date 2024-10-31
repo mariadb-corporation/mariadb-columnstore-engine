@@ -895,8 +895,8 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
         if (fBatchQty < 10000)
           fBatchQty = 10000;
-        else if (fBatchQty > 100000)
-          fBatchQty = 10000;
+        // else if (fBatchQty > 100000)
+        //   fBatchQty = 10000;
 
         break;
       }
