@@ -137,7 +137,8 @@ elif [[ ${ID} == "rocky" ]]; then
         curl https://download.mono-project.com/repo/centos8-stable.repo | tee /etc/yum.repos.d/mono-centos8-stable.repo
     fi
 
-    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel python3-venv rpm-build unzip
+    dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel python3-pip rpm-build unzip
+    pip install --user virtualenv
     make_openssl
 
     OPENSSL_FLAGS=' -DOPENSSL_ROOT_DIR=/usr/local/openssl/ '
