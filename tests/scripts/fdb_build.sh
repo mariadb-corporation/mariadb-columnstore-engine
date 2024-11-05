@@ -123,6 +123,11 @@ else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
 fi
 
+make_lz4
+make_jemalloc
+
+cd /
+
 message "Downloading sources"
 wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
 unzip -q ${FDB_VERSION}.zip
@@ -131,8 +136,6 @@ message "Configuring cmake"
 mkdir -p fdb_build
 cd fdb_build
 
-make_lz4
-make_jemalloc
 #setup_sphinx
 
 export CLICOLOR_FORCE=1
