@@ -124,6 +124,8 @@ inline RowAggFunctionType functionIdMap(int planFuncId)
 
     case AggregateColumn::MULTI_PARM: return ROWAGG_MULTI_PARM;
 
+    case AggregateColumn::SELECT_SOME: return ROWAGG_SELECT_SOME;
+
     default: return ROWAGG_FUNCT_UNDEFINE;
   }
 }
@@ -289,7 +291,6 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
   fNumOfBuckets =
       calcNumberOfBuckets(memLimit, fNumOfThreads, fNumOfBuckets, fNumOfRowGroups, fRowGroupIn.getRowSize(),
                           fRowGroupOut.getRowSize(), fRm->getAllowDiskAggregation());
-
   fNumOfThreads = std::min(fNumOfThreads, fNumOfBuckets);
 
   fMemUsage.reset(new uint64_t[fNumOfThreads]);
@@ -393,7 +394,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
         rowGroupIn->initRow(&rowIn);
         auto* subDistAgg = dynamic_cast<RowAggregationUM*>(multiDist->subAggregators()[j].get());
 
-        while (subDistAgg->nextOutputRowGroup())
+        while (subDistAgg->nextRowGroup())
         {
           rowGroupIn = (multiDist->subAggregators()[j]->getOutputRowGroup());
           rgDataVec.emplace_back(subDistAgg->moveCurrentRGData());
@@ -417,7 +418,7 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
       rowGroupIn->initRow(&rowIn);
       auto* subAgg = dynamic_cast<RowAggregationUM*>(aggDist->aggregator().get());
 
-      while (subAgg->nextOutputRowGroup())
+      while (subAgg->nextRowGroup())
       {
         rowGroupIn->setData(aggDist->aggregator()->getOutputRowGroup()->getRGData());
         rgDataVec.emplace_back(subAgg->moveCurrentRGData());
@@ -572,7 +573,7 @@ bool TupleAggregateStep::nextDeliveredRowGroup()
 {
   for (; fBucketNum < fNumOfBuckets; fBucketNum++)
   {
-    while (fAggregators[fBucketNum]->nextOutputRowGroup())
+    while (fAggregators[fBucketNum]->nextRowGroup())
     {
       fAggregators[fBucketNum]->finalize();
       fRowGroupDelivered.setData(fAggregators[fBucketNum]->getOutputRowGroup()->getRGData());
@@ -1204,6 +1205,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     {
       case ROWAGG_MIN:
       case ROWAGG_MAX:
+      case ROWAGG_SELECT_SOME:
       {
         oidsAgg.push_back(oidsProj[colProj]);
         keysAgg.push_back(key);
@@ -1766,6 +1768,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
@@ -2176,6 +2179,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         case ROWAGG_BIT_AND:
         case ROWAGG_BIT_OR:
         case ROWAGG_BIT_XOR:
+        case ROWAGG_SELECT_SOME:
         default:
         {
           AGG_MAP::iterator it = aggFuncMap.find(
@@ -2832,7 +2836,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                     f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                     f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
                     f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_GROUP_CONCAT ||
-                    f->fAggFunction == ROWAGG_JSON_ARRAY))
+                    f->fAggFunction == ROWAGG_JSON_ARRAY || f->fAggFunction == ROWAGG_SELECT_SOME))
           {
             funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                               f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
@@ -3127,6 +3131,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
@@ -4044,6 +4049,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
       {
         case ROWAGG_MIN:
         case ROWAGG_MAX:
+        case ROWAGG_SELECT_SOME:
         {
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
@@ -5079,7 +5085,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
                      f->fAggFunction == ROWAGG_MIN || f->fAggFunction == ROWAGG_MAX ||
                      f->fAggFunction == ROWAGG_STATS || f->fAggFunction == ROWAGG_BIT_AND ||
                      f->fAggFunction == ROWAGG_BIT_OR || f->fAggFunction == ROWAGG_BIT_XOR ||
-                     f->fAggFunction == ROWAGG_CONSTANT)
+                     f->fAggFunction == ROWAGG_CONSTANT || f->fAggFunction == ROWAGG_SELECT_SOME)
             {
               funct.reset(new RowAggFunctionCol(f->fAggFunction, f->fStatsFunction, f->fInputColumnIndex,
                                                 f->fOutputColumnIndex, f->fAuxColumnIndex - multiParms));
@@ -5697,27 +5703,14 @@ void TupleAggregateStep::doAggregate()
   return;
 }
 
-/** @brief Aggregate input row groups in two-phase multi-threaded aggregation.
- * In second phase handle three different aggregation cases differently:
- * 1. Query contains at least one aggregation on a DISTINCT column, e.g. SUM (DISTINCT col1) AND at least one
- * GROUP BY column
- * 2. Query contains at least one aggregation on a DISTINCT column but no GROUP BY column
- * 3. Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
- * DISTINCT selects (e.g. SELECT DISTINCT col1 FROM ...) are handled in tupleannexstep.cpp.
- */
 uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp)
 {
-  // initialize return value variable
+  uint32_t i;
+  RGData rgData;
   uint64_t rowCount = 0;
 
   try
   {
-    /*
-     * Phase 1: Distribute input rows to different buckets depending on the hash value of the group by columns
-     * per row. Then distribute buckets equally on aggregators in fAggregators. (Number of fAggregators ==
-     * fNumOfBuckets). Each previously created hash bucket is represented as one RowGroup in a fAggregator.
-     */
-
     if (!fDoneAggregate)
     {
       initializeMultiThread();
@@ -5726,9 +5719,9 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       runners.reserve(fNumOfThreads);  // to prevent a resize during use
 
       // Start the aggregator threads
-      for (uint32_t threadNum = 0; threadNum < fNumOfThreads; threadNum++)
+      for (i = 0; i < fNumOfThreads; i++)
       {
-        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, threadNum)));
+        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregator(this, i)));
       }
 
       // Now wait for all those threads
@@ -5742,28 +5735,18 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
       // much memory on average
       uint32_t threads = std::max(1U, fNumOfThreads / 2);
       runners.reserve(threads);
-      for (uint32_t threadNum = 0; threadNum < threads; ++threadNum)
+      for (i = 0; i < threads; ++i)
       {
-        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregateFinalizer(this, threadNum)));
+        runners.push_back(jobstepThreadPool.invoke(ThreadedAggregateFinalizer(this, i)));
       }
       jobstepThreadPool.join(runners);
     }
 
-    /*
-     * Phase 2: Depending on query type (see below) do aggregation per previously created RowGroup of rows
-     * that need to aggregated and output results.
-     */
-
-    auto* distinctAggregator = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
-    const bool hasGroupByColumns = fAggregator->aggMapKeyLength() > 0;
-
-    // Case 1: Query contains at least one aggregation on a DISTINCT column AND at least one GROUP BY column
-    // e.g. SELECT SUM(DISTINCT col1) FROM test GROUP BY col2;
-    if (distinctAggregator && hasGroupByColumns)
+    if (dynamic_cast<RowAggregationDistinct*>(fAggregator.get()) && fAggregator->aggMapKeyLength() > 0)
     {
+      // 2nd phase multi-threaded aggregate
       if (!fEndOfResult)
       {
-        // Do multi-threaded second phase aggregation (per row group created for GROUP BY statement)
         if (!fDoneAggregate)
         {
           vector<uint64_t> runners;  // thread pool handles
@@ -5771,114 +5754,97 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
           uint32_t bucketsPerThread = fNumOfBuckets / fNumOfThreads;
           uint32_t numThreads = ((fNumOfBuckets % fNumOfThreads) == 0 ? fNumOfThreads : fNumOfThreads + 1);
+          // uint32_t bucketsPerThread = 1;
+          // uint32_t numThreads = fNumOfBuckets;
 
           runners.reserve(numThreads);
 
-          for (uint32_t threadNum = 0; threadNum < numThreads; threadNum++)
+          for (i = 0; i < numThreads; i++)
           {
             runners.push_back(jobstepThreadPool.invoke(
-                ThreadedSecondPhaseAggregator(this, threadNum * bucketsPerThread, bucketsPerThread)));
+                ThreadedSecondPhaseAggregator(this, i * bucketsPerThread, bucketsPerThread)));
           }
 
           jobstepThreadPool.join(runners);
         }
 
-        // Deliver results
         fDoneAggregate = true;
         bool done = true;
-        while (nextDeliveredRowGroup() && !cancelled())
+
+        while (nextDeliveredRowGroup())
         {
           done = false;
           rowCount = fRowGroupOut.getRowCount();
 
           if (rowCount != 0)
           {
-            if (!cleanUpAndOutputRowGroup(bs, dlp))
+            if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+              pruneAuxColumns();
+
+            if (dlp)
+            {
+              rgData = fRowGroupDelivered.duplicate();
+              dlp->insert(rgData);
+            }
+            else
+            {
+              bs.restart();
+              fRowGroupDelivered.serializeRGData(bs);
               break;
+            }
           }
 
           done = true;
         }
 
         if (done)
-        {
           fEndOfResult = true;
-        }
       }
     }
-    // Case 2. Query contains at least one aggregation on a DISTINCT column but no GROUP BY column
-    // e.g. SELECT SUM(DISTINCT col1) FROM test;
-    else if (distinctAggregator)
+    else
     {
+      auto* agg = dynamic_cast<RowAggregationDistinct*>(fAggregator.get());
+
       if (!fEndOfResult)
       {
         if (!fDoneAggregate)
         {
-          // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
-          // easy way of multi-threading this and it's done in a single thread for now.
-          for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; bucketNum++)
+          for (i = 0; i < fNumOfBuckets; i++)
           {
             if (fEndOfResult == false)
             {
-              // The distinctAggregator accumulates the aggregation results of all row groups by being added
-              // all row groups of each bucket aggregator and doing an aggregation step after each addition.
-              auto* bucketMultiDistinctAggregator =
-                  dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[bucketNum].get());
-              auto* bucketDistinctAggregator =
-                  dynamic_cast<RowAggregationDistinct*>(fAggregators[bucketNum].get());
-              distinctAggregator->aggregator(bucketDistinctAggregator->aggregator());
-
-              if (bucketMultiDistinctAggregator)
+              // do the final aggregtion and deliver the results
+              // at least one RowGroup for aggregate results
+              // for "distinct without group by" case
+              if (agg != nullptr)
               {
-                (dynamic_cast<RowAggregationMultiDistinct*>(distinctAggregator))
-                    ->subAggregators(bucketMultiDistinctAggregator->subAggregators());
-              }
+                auto* aggMultiDist = dynamic_cast<RowAggregationMultiDistinct*>(fAggregators[i].get());
+                auto* aggDist = dynamic_cast<RowAggregationDistinct*>(fAggregators[i].get());
+                agg->aggregator(aggDist->aggregator());
 
-              distinctAggregator->aggregator()->finalAggregation();
-              distinctAggregator->doDistinctAggregation();
+                if (aggMultiDist)
+                {
+                  (dynamic_cast<RowAggregationMultiDistinct*>(agg))
+                      ->subAggregators(aggMultiDist->subAggregators());
+                }
+
+                agg->doDistinctAggregation();
+              }
+              // for "group by without distinct" case
+              else
+              {
+                fAggregator->append(fAggregators[i].get());
+              }
             }
           }
         }
 
-        // Deliver results
         fDoneAggregate = true;
-        bool done = true;
-        while (fAggregator->nextRowGroup() && !cancelled())
-        {
-          done = false;
-          fAggregator->finalize();
-          rowCount = fRowGroupOut.getRowCount();
-          fRowsReturned += rowCount;
-          fRowGroupDelivered.setData(fRowGroupOut.getRGData());
-
-          if (rowCount != 0)
-          {
-            if (!cleanUpAndOutputRowGroup(bs, dlp))
-              break;
-          }
-          done = true;
-        }
-        if (done)
-          fEndOfResult = true;
-      }
-    }
-    // CASE 3: Query contains no aggregation on a DISTINCT column, but at least one GROUP BY column
-    // e.g. SELECT SUM(col1) FROM test GROUP BY col2;
-    // Do aggregation over all row groups. As all row groups need to be aggregated together there is no
-    // easy way of multi-threading this and it's done in a single thread for now.
-    else if (hasGroupByColumns)
-    {
-      if (!fEndOfResult && !fDoneAggregate)
-      {
-        for (uint32_t bucketNum = 0; bucketNum < fNumOfBuckets; ++bucketNum)
-        {
-          fAggregator->append(fAggregators[bucketNum].get());
-        }
       }
 
-      fDoneAggregate = true;
       bool done = true;
 
+      //@bug4459
       while (fAggregator->nextRowGroup() && !cancelled())
       {
         done = false;
@@ -5889,9 +5855,22 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
 
         if (rowCount != 0)
         {
-          if (!cleanUpAndOutputRowGroup(bs, dlp))
+          if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
+            pruneAuxColumns();
+
+          if (dlp)
+          {
+            rgData = fRowGroupDelivered.duplicate();
+            dlp->insert(rgData);
+          }
+          else
+          {
+            bs.restart();
+            fRowGroupDelivered.serializeRGData(bs);
             break;
+          }
         }
+
         done = true;
       }
 
@@ -5900,14 +5879,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
         fEndOfResult = true;
       }
     }
-    else
-    {
-      throw logic_error(
-          "TupleAggregateStep::doThreadedAggregate: No DISTINCT columns nested into aggregation function "
-          "or "
-          "GROUP BY columns found. Should not reach here.");
-    }
-  }
+  }  // try
   catch (...)
   {
     handleException(std::current_exception(), logging::tupleAggregateStepErr,
@@ -5945,23 +5917,6 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
   }
 
   return rowCount;
-}
-
-bool TupleAggregateStep::cleanUpAndOutputRowGroup(ByteStream& bs, RowGroupDL* dlp)
-{
-  if (fRowGroupOut.getColumnCount() != fRowGroupDelivered.getColumnCount())
-    pruneAuxColumns();
-
-  if (dlp)
-  {
-    RGData rgData = fRowGroupDelivered.duplicate();
-    dlp->insert(rgData);
-    return true;
-  }
-
-  bs.restart();
-  fRowGroupDelivered.serializeRGData(bs);
-  return false;
 }
 
 void TupleAggregateStep::pruneAuxColumns()

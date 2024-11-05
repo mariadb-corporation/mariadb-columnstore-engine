@@ -63,6 +63,23 @@ def raise_422_error(
     raise APIError(422, err_msg)
 
 
+# TODO: Move somwhere else, eg. to helpers
+def get_use_sudo(app_config: dict) -> bool:
+    """Get value about using superuser or not from app config.
+
+    :param app_config: CherryPy application config
+    :type app_config: dict
+    :return: use_sudo config value
+    :rtype: bool
+    """
+    privileges_section = app_config.get('Privileges', None)
+    if privileges_section is not None:
+        use_sudo = privileges_section.get('use_sudo', False)
+    else:
+        use_sudo = False
+    return use_sudo
+
+
 @cherrypy.tools.register('before_handler', priority=80)
 def validate_api_key():
     """Validate API key.
@@ -513,6 +530,7 @@ IP address.")
         module_logger.debug(f'{func_name} returns {str(begin_response)}')
         return begin_response
 
+
 class CommitController:
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()
@@ -599,15 +617,6 @@ class RollbackController:
         app.config['txn']['config_changed'] = False
 
         return rollback_response
-
-
-def get_use_sudo(app_config):
-    privileges_section = app_config.get('Privileges', None)
-    if privileges_section is not None:
-        use_sudo = privileges_section.get('use_sudo', False)
-    else:
-        use_sudo = False
-    return use_sudo
 
 
 class StartController:
@@ -1137,3 +1146,59 @@ class AppController():
             return {'started': True}
         else:
             raise APIError(503, 'CMAPI not ready to handle requests.')
+
+
+class NodeProcessController():
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def put_stop_dmlproc(self):
+        """Handler for /node/stop_dmlproc (PUT) endpoint."""
+        # TODO: make it works only from cli tool like set_api_key made
+        func_name = 'put_stop_dmlproc'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        timeout = request_body.get('timeout', 10)
+        force = request_body.get('force', False)
+
+        if force:
+            module_logger.debug(
+                f'Calling DMLproc to force stop after timeout={timeout}.'
+            )
+            MCSProcessManager.stop(
+                name='DMLProc', is_primary=True, use_sudo=True, timeout=timeout
+            )
+        else:
+            module_logger.debug('Callling stop DMLproc gracefully.')
+            try:
+                MCSProcessManager.gracefully_stop_dmlproc()
+            except (ConnectionRefusedError, RuntimeError):
+                raise_422_error(
+                    logger=module_logger, func_name=func_name,
+                    err_msg='Couldn\'t stop DMlproc gracefully'
+                )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def get_process_running(self, process_name):
+        """Handler for /node/is_process_running (GET) endpoint."""
+        func_name = 'get_process_running'
+        log_begin(module_logger, func_name)
+
+        process_running = MCSProcessManager.is_service_running(process_name)
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'process_name': process_name,
+            'running': process_running
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response

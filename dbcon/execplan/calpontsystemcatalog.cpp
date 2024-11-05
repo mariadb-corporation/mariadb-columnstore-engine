@@ -6192,7 +6192,7 @@ CalpontSystemCatalog::ColType& CalpontSystemCatalog::ColType::operator=(const Co
   return *this;
 }
 
-CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset()
+CHARSET_INFO* CalpontSystemCatalog::ColType::getCharset() const
 {
   if (!cs)
     cs = &datatypes::Charset(charsetNumber).getCharset();

@@ -25,10 +25,12 @@
 #include "AppendTask.h"
 #include "CopyTask.h"
 #include "ListDirectoryTask.h"
+#include "ListIOTask.h"
 #include "OpenTask.h"
 #include "PingTask.h"
 #include "ReadTask.h"
 #include "StatTask.h"
+#include "TerminateIOTask.h"
 #include "TruncateTask.h"
 #include "UnlinkTask.h"
 #include "WriteTask.h"
@@ -93,6 +95,8 @@ void ProcessTask::operator()()
     case PING: task.reset(new PingTask(sock, length)); break;
     case SYNC: task.reset(new SyncTask(sock, length)); break;
     case COPY: task.reset(new CopyTask(sock, length)); break;
+    case LIST_IOTASKS: task.reset(new ListIOTask(sock, length)); break;
+    case TERMINATE_IOTASK: task.reset(new TerminateIOTask(sock, length)); break;
     default: throw runtime_error("ProcessTask: got an unknown opcode");
   }
   task->primeBuffer();

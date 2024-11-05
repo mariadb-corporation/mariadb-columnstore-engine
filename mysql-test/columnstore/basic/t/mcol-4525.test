@@ -85,7 +85,6 @@ INSERT INTO t1 VALUES(10,'bob',10);
 SET columnstore_select_handler=ON;
 --error 1178
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
---error 1815
 SELECT col1 c FROM t1 ORDER BY AVG(col1);
 SET columnstore_select_handler=AUTO;
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;

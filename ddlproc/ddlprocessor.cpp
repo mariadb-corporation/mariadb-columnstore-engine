@@ -504,7 +504,7 @@ class PackageHandler
           qts.schema_name = createTableStmt.schemaName();
           fQtc.postQueryTele(qts);
 
-          result = processor->processPackage(createTableStmt);
+          result = processor->processPackage(&createTableStmt);
 
           systemCatalogPtr->removeCalpontSystemCatalog(createTableStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(createTableStmt.fSessionID | 0x80000000);
@@ -539,7 +539,7 @@ class PackageHandler
 
           processor->fTimeZone = alterTableStmt.getTimeZone();
 
-          result = processor->processPackage(alterTableStmt);
+          result = processor->processPackage(&alterTableStmt);
 
           systemCatalogPtr->removeCalpontSystemCatalog(alterTableStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(alterTableStmt.fSessionID | 0x80000000);
@@ -574,7 +574,7 @@ class PackageHandler
           fQtc.postQueryTele(qts);
 
           // cout << "Drop table using txnid " << fTxnid.id << endl;
-          result = processor->processPackage(dropTableStmt);
+          result = processor->processPackage(&dropTableStmt);
 
           systemCatalogPtr->removeCalpontSystemCatalog(dropTableStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(dropTableStmt.fSessionID | 0x80000000);
@@ -608,7 +608,7 @@ class PackageHandler
           qts.schema_name = truncTableStmt.schemaName();
           fQtc.postQueryTele(qts);
 
-          result = processor->processPackage(truncTableStmt);
+          result = processor->processPackage(&truncTableStmt);
 
           systemCatalogPtr->removeCalpontSystemCatalog(truncTableStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(truncTableStmt.fSessionID | 0x80000000);
@@ -628,7 +628,7 @@ class PackageHandler
           boost::scoped_ptr<MarkPartitionProcessor> processor(new MarkPartitionProcessor(fDbrm));
           (processor->fTxnid).id = fTxnid.id;
           (processor->fTxnid).valid = true;
-          result = processor->processPackage(markPartitionStmt);
+          result = processor->processPackage(&markPartitionStmt);
           systemCatalogPtr->removeCalpontSystemCatalog(markPartitionStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(markPartitionStmt.fSessionID | 0x80000000);
         }
@@ -643,7 +643,7 @@ class PackageHandler
           boost::scoped_ptr<RestorePartitionProcessor> processor(new RestorePartitionProcessor(fDbrm));
           (processor->fTxnid).id = fTxnid.id;
           (processor->fTxnid).valid = true;
-          result = processor->processPackage(restorePartitionStmt);
+          result = processor->processPackage(&restorePartitionStmt);
           systemCatalogPtr->removeCalpontSystemCatalog(restorePartitionStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(restorePartitionStmt.fSessionID | 0x80000000);
         }
@@ -658,7 +658,7 @@ class PackageHandler
           boost::scoped_ptr<DropPartitionProcessor> processor(new DropPartitionProcessor(fDbrm));
           (processor->fTxnid).id = fTxnid.id;
           (processor->fTxnid).valid = true;
-          result = processor->processPackage(dropPartitionStmt);
+          result = processor->processPackage(&dropPartitionStmt);
           systemCatalogPtr->removeCalpontSystemCatalog(dropPartitionStmt.fSessionID);
           systemCatalogPtr->removeCalpontSystemCatalog(dropPartitionStmt.fSessionID | 0x80000000);
         }

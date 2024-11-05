@@ -470,6 +470,61 @@ class Func_replace : public Func_Str
                         execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
+class Func_regexp_replace : public Func_Str
+{
+ public:
+  Func_regexp_replace() : Func_Str("regexp_replace")
+  {
+  }
+  virtual ~Func_regexp_replace()
+  {
+  }
+
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+
+  std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+class Func_regexp_instr : public Func_Str
+{
+ public:
+  Func_regexp_instr() : Func_Str("regexp_instr")
+  {
+  }
+  virtual ~Func_regexp_instr()
+  {
+  }
+
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+
+  std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+class Func_regexp_substr : public Func_Str
+{
+ public:
+  Func_regexp_substr() : Func_Str("regexp_substr")
+  {
+  }
+  virtual ~Func_regexp_substr()
+  {
+  }
+
+  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
+                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+
+  std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& op_ct);
+};
+
+
+
 class Func_replace_oracle : public Func_Str
 {
  public:

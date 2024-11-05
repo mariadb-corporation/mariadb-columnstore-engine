@@ -79,11 +79,11 @@ CGroupConfigurator::CGroupConfigurator()
   else
     cGroupDefined = true;
 
+  if (cGroupName == "just_no_group_use_local")
+    cGroupName = std::string{};
 
   ifstream v2Check("/sys/fs/cgroup/cgroup.controllers");
   cGroupVersion_ = (v2Check) ? v2 : v1;
-
-
 }
 
 CGroupConfigurator::~CGroupConfigurator()

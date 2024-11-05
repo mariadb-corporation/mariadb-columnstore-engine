@@ -84,6 +84,9 @@ INSTALL(FILES mcs_aws
 INSTALL(FILES mcs_gsutil
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
+INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            DESTINATION ${BIN_DIR})
 
 OPTION(RPM "Build an RPM" OFF)
 IF(RPM)
@@ -135,8 +138,11 @@ IF(RPM)
 
     STRING(REGEX MATCH "^." OS_VERSION_MAJOR "${LSB_RELEASE_VERSION_SHORT}")
     MESSAGE(STATUS ${OS_VERSION_MAJOR})
-    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky")
+    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma")
         SET(OS_NAME_SHORT "el")
+        IF (OS_VERSION_MAJOR MATCHES "9")
+	    SET(CPACK_RPM_PACKAGE_REQUIRES "libxcrypt-compat")
+        ENDIF()
     ELSE()
         SET(OS_NAME_SHORT "unknown")
     ENDIF()

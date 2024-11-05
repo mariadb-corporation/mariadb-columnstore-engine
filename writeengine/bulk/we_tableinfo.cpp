@@ -2381,5 +2381,10 @@ int TableInfo::allocateBRMColumnExtent(OID columnOID, uint16_t dbRoot, uint32_t&
   return rc;
 }
 
+bool TableInfo::readFromSTDIN()
+{
+  return fReadFromStdin;
+}
+
 }  // namespace WriteEngine
 // end of namespace

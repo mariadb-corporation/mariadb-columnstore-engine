@@ -199,6 +199,15 @@ class PackageHandler
   }
 
  private:
+  int32_t setupDec()
+  {
+    joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
+    joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
+    return fEc->Setup();
+  }
+  execplan::CalpontSystemCatalog::ROPair getTableRID(boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc,
+                                                     execplan::CalpontSystemCatalog::TableName& tableName);
+
   messageqcpp::IOSocket fIos;
   boost::shared_ptr<messageqcpp::ByteStream> fByteStream;
   boost::scoped_ptr<dmlpackageprocessor::DMLPackageProcessor> fProcessor;
@@ -311,22 +320,21 @@ class RollbackTransactionProcessor : public dmlpackageprocessor::DMLPackageProce
   RollbackTransactionProcessor(BRM::DBRM* aDbrm) : DMLPackageProcessor(aDbrm, 1)
   {
   }
-  /** @brief process an Rollback transactions
-   *
-   * @param cpackage the UpdateDMLPackage to process
-   */
-  inline DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage)
-  {
-    DMLResult result;
-    result.result = NO_ERROR;
-    return result;
-  }
 
   void processBulkRollback(BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm, uint64_t uniqueId,
                            oam::OamCache::dbRootPMMap_t& dbRootPMMap, bool& lockReleased);
 
  protected:
+ private:
+  /** @brief process an Rollback transactions
+   *
+   * @param cpackage the UpdateDMLPackage to process
+   */
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage)
+  {
+    DMLResult result;
+    result.result = NO_ERROR;
+    return result;
+  }
 };
-
 }  // namespace dmlprocessor
-

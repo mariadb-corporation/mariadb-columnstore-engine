@@ -1,19 +1,19 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
 
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; version 2 of
-   the License.
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; version 2 of
+  the License.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA. */
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA. */
 
 // $Id: jlf_graphics.cpp 9550 2013-05-17 23:58:07Z xlou $
 
@@ -23,7 +23,12 @@
 #include <iostream>
 using namespace std;
 
+#include <cstddef>
+#include <iterator>
+#include <sstream>
+
 #include "joblist.h"
+#include "jobstep.h"
 #include "primitivestep.h"
 #include "subquerystep.h"
 #include "windowfunctionstep.h"
@@ -44,301 +49,422 @@ using namespace joblist;
 
 namespace jlf_graphics
 {
-ostream& writeDotCmds(ostream& dotFile, const JobStepVector& query, const JobStepVector& project)
+std::string generateDotFileName(const std::string& prefix)
+{
+  ostringstream oss;
+  struct timeval tvbuf;
+  gettimeofday(&tvbuf, 0);
+  struct tm tmbuf;
+  localtime_r(reinterpret_cast<time_t*>(&tvbuf.tv_sec), &tmbuf);
+  oss << prefix << setfill('0') << setw(4) << (tmbuf.tm_year + 1900) << setw(2) << (tmbuf.tm_mon + 1)
+      << setw(2) << (tmbuf.tm_mday) << setw(2) << (tmbuf.tm_hour) << setw(2) << (tmbuf.tm_min) << setw(2)
+      << (tmbuf.tm_sec) << setw(6) << (tvbuf.tv_usec) << ".dot";
+  return oss.str();
+}
+
+JobStepVector GraphGeneratorInterface::extractSubquerySteps(const SJSTEP& sqs)
+{
+  JobStepVector res;
+  auto* subQueryStep = dynamic_cast<SubQueryStep*>(sqs.get());
+
+  if (subQueryStep)
+  {
+    JobStepVector subQuerySteps;
+    auto& stepsBeforeRecursion = subQueryStep->subJoblist()->querySteps();
+    for (auto& step : stepsBeforeRecursion)
+    {
+      auto steps = extractJobSteps(step);
+      subQuerySteps.insert(subQuerySteps.end(), steps.begin(), steps.end());
+    }
+    res.insert(res.end(), subQuerySteps.begin(), subQuerySteps.end());
+  }
+  res.push_back(sqs);
+  return res;
+}
+
+// This f() is recursive to handle nested subqueries
+JobStepVector GraphGeneratorInterface::extractJobSteps(const SJSTEP& umbrella)
+{
+  JobStepVector res;
+  if (typeid(*umbrella) == typeid(SubAdapterStep))
+  {
+    auto* subAdapterStep = dynamic_cast<SubAdapterStep*>(umbrella.get());
+    assert(subAdapterStep);
+    auto subQuerySteps = extractSubquerySteps(subAdapterStep->subStep());
+    res.insert(res.end(), subQuerySteps.begin(), subQuerySteps.end());
+    res.push_back(umbrella);
+  }
+
+  else if (typeid(*umbrella) == typeid(SubQueryStep))
+  {
+    auto subQuerySteps = extractSubquerySteps(umbrella);
+    res.insert(res.end(), subQuerySteps.begin(), subQuerySteps.end());
+  }
+  else
+  {
+    res.push_back(umbrella);
+  }
+  return res;
+}
+
+std::string getLadderRepr(const JobStepVector& steps, const std::vector<size_t>& tabsToPretify)
+{
+  std::ostringstream oss;
+  assert(tabsToPretify.size() == steps.size());
+  // Tabs are in the reverse order of the steps
+  auto tabsIt = tabsToPretify.begin();
+  // Reverse the order of the steps to draw the graph from top to bottom
+  for (auto s = steps.rbegin(); s != steps.rend(); ++s, ++tabsIt)
+  {
+    oss << std::string(*tabsIt, '\t');
+    oss << (*s)->extendedInfo() << std::endl;
+  }
+  return oss.str();
+}
+
+std::string GraphGeneratorInterface::getGraphNode(const SJSTEP& stepPtr)
+{
+  auto& step = *stepPtr;
+  uint16_t stepidIn = step.stepId();
+  std::ostringstream oss;
+  oss << stepidIn << " [label=\"st_" << stepidIn << " ";
+
+  if (typeid(step) == typeid(pColStep))
+  {
+    oss << "(" << step.tableOid() << "/" << step.oid() << ")" << "\"";
+    oss << " shape=ellipse";
+  }
+  else if (typeid(step) == typeid(pColScanStep))
+  {
+    oss << "(" << step.tableOid() << "/" << step.oid() << ")" << "\"";
+    oss << " shape=box";
+  }
+  else if (typeid(step) == typeid(TupleBPS))
+  {
+    bool isTuple = false;
+    BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(stepPtr.get());
+
+    if (dynamic_cast<TupleBPS*>(bps) != 0)
+      isTuple = true;
+
+    oss << "(" << bps->tableOid() << "/" << bps->oid() << "/" << bps->alias();
+    OIDVector projectOids = bps->getProjectOids();
+
+    if (projectOids.size() > 0)
+    {
+      oss << "\\l";
+      oss << "PC: ";
+    }
+
+    for (unsigned int i = 0; i < projectOids.size(); i++)
+    {
+      oss << projectOids[i] << " ";
+
+      if ((i + 1) % 3 == 0)
+        oss << "\\l";
+    }
+
+    oss << ")\"";
+    oss << " shape=box style=bold";
+
+    if (isTuple)
+      oss << " peripheries=2";
+  }
+  else if (typeid(step) == typeid(CrossEngineStep))
+  {
+    CrossEngineStep* cej = dynamic_cast<CrossEngineStep*>(stepPtr.get());
+    oss << "(" << cej->tableName() << "/" << cej->tableAlias() << ")\"";
+    oss << " shape=cylinder style=bold";
+  }
+  else if (typeid(step) == typeid(TupleHashJoinStep))
+  {
+    oss << "\"";
+    oss << " shape=diamond peripheries=2";
+  }
+  else if (typeid(step) == typeid(TupleUnion))
+  {
+    oss << "\"";
+    oss << " shape=triangle";
+  }
+  else if (typeid(step) == typeid(pDictionaryStep))
+  {
+    oss << "\"";
+    oss << " shape=trapezium";
+  }
+  else if (typeid(step) == typeid(FilterStep))
+  {
+    oss << "\"";
+    oss << " shape=invhouse";
+  }
+
+  else if (typeid(step) == typeid(TupleAggregateStep))
+  {
+    oss << "\"";
+    oss << " shape=invtriangle";
+  }
+  else if (typeid(step) == typeid(TupleAnnexStep))
+  {
+    oss << "\"";
+    oss << " shape=star";
+  }
+  else if (typeid(step) == typeid(WindowFunctionStep))
+  {
+    oss << "\"";
+    oss << " shape=invtriangle";
+    oss << " peripheries=2";
+  }
+  else if (typeid(step) == typeid(SubAdapterStep))
+  {
+    oss << "\"";
+    oss << " shape=polygon";
+    oss << " peripheries=2";
+  }
+  else if (typeid(step) == typeid(SubQueryStep))
+  {
+    oss << "\"";
+    oss << " shape=polygon";
+  }
+  else
+  {
+    oss << "\"";
+  }
+
+  oss << "]" << endl;
+  return oss.str();
+}
+
+std::pair<size_t, std::string> GraphGeneratorInterface::getTabsAndEdges(
+    const JobStepVector& querySteps, const JobStepVector& projectSteps, const SJSTEP& stepPtr,
+    const std::vector<size_t>& tabsToPretify)
+{
+  auto& step = *stepPtr;
+  uint16_t stepidIn = step.stepId();
+  std::ostringstream oss;
+  size_t tab = 0;
+
+  for (unsigned int i = 0; i < step.outputAssociation().outSize(); i++)
+  {
+    ptrdiff_t dloutptr = 0;
+    auto* dlout = step.outputAssociation().outAt(i)->rowGroupDL();
+    uint32_t numConsumers = step.outputAssociation().outAt(i)->getNumConsumers();
+
+    if (dlout)
+    {
+      dloutptr = (ptrdiff_t)dlout;
+    }
+
+    for (auto it = querySteps.rbegin(); it != querySteps.rend(); ++it)
+    {
+      auto& otherStep = *it;
+      // Reverse order idx
+      auto otherIdx = std::distance(querySteps.rbegin(), it);
+      uint16_t stepidOut = otherStep.get()->stepId();
+      JobStepAssociation queryInputSA = otherStep.get()->inputAssociation();
+
+      for (unsigned int j = 0; j < queryInputSA.outSize(); j++)
+      {
+        ptrdiff_t dlinptr = 0;
+        auto* dlin = queryInputSA.outAt(j)->rowGroupDL();
+
+        if (dlin)
+        {
+          dlinptr = (ptrdiff_t)dlin;
+        }
+
+        if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
+        {
+          oss << stepidIn << " -> " << stepidOut;
+
+          if (dlin)
+          {
+            oss << " [label=\"[" << numConsumers << "]\"]" << endl;
+            tab = tabsToPretify[otherIdx] + 1;
+          }
+        }
+      }
+    }
+
+    for (auto& otherProjectStep : projectSteps)
+    {
+      uint16_t stepidOut = otherProjectStep->stepId();
+      JobStepAssociation projectInputSA = otherProjectStep->inputAssociation();
+
+      for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
+      {
+        ptrdiff_t dlinptr = 0;
+        auto* dlin = projectInputSA.outAt(j)->rowGroupDL();
+
+        if (dlin)
+          dlinptr = (ptrdiff_t)dlin;
+
+        if (dloutptr == dlinptr)
+        {
+          oss << stepidIn << " -> " << stepidOut;
+
+          if (dlin)
+          {
+            oss << " [label=\"[" << numConsumers << "]\"]" << endl;
+          }
+        }
+      }
+    }
+  }
+  return {tab, oss.str()};
+}
+
+std::string GraphGeneratorInterface::getGraphProjectionNode(SJSTEP& step)
+{
+  std::ostringstream oss;
+  uint16_t stepidIn = step->stepId();
+  oss << stepidIn << " [label=\"st_" << stepidIn << " ";
+
+  if (typeid(*(step)) == typeid(pColStep))
+  {
+    oss << "(" << step->tableOid() << "/" << step->oid() << ")" << "\"";
+    oss << " shape=ellipse";
+  }
+  else if (typeid(*(step)) == typeid(pColScanStep))
+  {
+    oss << "(" << step->tableOid() << "/" << step->oid() << ")" << "\"";
+    oss << " shape=box";
+  }
+  else if (typeid(*(step)) == typeid(pDictionaryStep))
+  {
+    oss << "\"";
+    oss << " shape=trapezium";
+  }
+  else if (typeid(*(step)) == typeid(PassThruStep))
+  {
+    oss << "(" << step->tableOid() << "/" << step->oid() << ")" << "\"";
+    oss << " shape=octagon";
+  }
+  else if (typeid(*(step)) == typeid(TupleBPS))
+  {
+    bool isTuple = false;
+    BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(step.get());
+
+    if (dynamic_cast<TupleBPS*>(bps) != 0)
+      isTuple = true;
+
+    oss << "(" << bps->tableOid() << ":\\l";
+    OIDVector projectOids = bps->getProjectOids();
+
+    for (unsigned int i = 0; i < projectOids.size(); i++)
+    {
+      oss << projectOids[i] << " ";
+
+      if ((i + 1) % 3 == 0)
+        oss << "\\l";
+    }
+
+    oss << ")\"";
+    oss << " shape=box style=bold";
+
+    if (isTuple)
+      oss << " peripheries=2";
+  }
+  else if (typeid(*(step)) == typeid(CrossEngineStep))
+  {
+    CrossEngineStep* cej = dynamic_cast<CrossEngineStep*>(step.get());
+    oss << "(" << cej->tableName() << "/" << cej->tableAlias() << ")\"";
+    oss << " shape=cylinder style=bold";
+  }
+  else
+    oss << "\"";
+
+  oss << "]" << endl;
+  return oss.str();
+}
+
+std::string GraphGeneratorInterface::getProjectionEdges(JobStepVector& steps, SJSTEP& step,
+                                                        const std::size_t ctn)
+{
+  uint16_t stepidIn = step->stepId();
+  std::ostringstream oss;
+
+  for (unsigned int i = 0; i < step->outputAssociation().outSize(); i++)
+  {
+    ptrdiff_t dloutptr = 0;
+    auto* dlout = step->outputAssociation().outAt(i)->rowGroupDL();
+    uint32_t numConsumers = step->outputAssociation().outAt(i)->getNumConsumers();
+
+    if (dlout)
+    {
+      dloutptr = (ptrdiff_t)dlout;
+    }
+
+    for (auto k = ctn + 1; k < steps.size(); k++)
+    {
+      uint16_t stepidOut = steps[k].get()->stepId();
+      JobStepAssociation projectInputSA = steps[k].get()->inputAssociation();
+
+      for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
+      {
+        ptrdiff_t dlinptr = 0;
+        auto* dlin = projectInputSA.outAt(j)->rowGroupDL();
+
+        if (dlin)
+          dlinptr = (ptrdiff_t)dlin;
+
+        if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
+        {
+          oss << stepidIn << " -> " << stepidOut;
+
+          if (dlin)
+          {
+            oss << " [label=\"[" << numConsumers << "]\"]" << endl;
+          }
+        }
+      }
+    }
+  }
+  return oss.str();
+}
+
+std::string GraphGeneratorInterface::writeDotCmds()
 {
   // Graphic view draw
-  dotFile << "digraph G {" << endl;
-  JobStepVector::iterator qsi;
-  JobStepVector::iterator psi;
-  int ctn = 0;
+  std::ostringstream oss;
+  oss << "digraph G {" << endl;
 
   // merge in the subquery steps
-  JobStepVector querySteps = query;
+  JobStepVector querySteps;
+  for (auto& step : query)
+  {
+    auto steps = extractJobSteps(step);
+    querySteps.insert(querySteps.end(), steps.begin(), steps.end());
+  }
+
   JobStepVector projectSteps = project;
+  std::vector<size_t> tabsToPretify;
+  // Reverse the order of the steps to draw the graph from top to bottom
+  for (auto it = querySteps.rbegin(); it != querySteps.rend(); ++it)
   {
-    SubQueryStep* subquery = NULL;
-    qsi = querySteps.begin();
-
-    while (qsi != querySteps.end())
-    {
-      if ((subquery = dynamic_cast<SubQueryStep*>(qsi->get())) != NULL)
-      {
-        querySteps.erase(qsi);
-        JobStepVector subSteps = subquery->subJoblist()->querySteps();
-        querySteps.insert(querySteps.end(), subSteps.begin(), subSteps.end());
-        qsi = querySteps.begin();
-      }
-      else
-      {
-        qsi++;
-      }
-    }
+    auto& step = *it;
+    oss << getGraphNode(step);
+    auto [tab, graphEdges] = getTabsAndEdges(querySteps, projectSteps, step, tabsToPretify);
+    tabsToPretify.push_back(tab);
+    oss << graphEdges;
   }
 
-  for (qsi = querySteps.begin(); qsi != querySteps.end(); ctn++, qsi++)
+  for (auto psi = projectSteps.begin(); psi != projectSteps.end(); ++psi)
   {
-    //		if (dynamic_cast<OrDelimiter*>(qsi->get()) != NULL)
-    //			continue;
-
-    uint16_t stepidIn = qsi->get()->stepId();
-    dotFile << stepidIn << " [label=\"st_" << stepidIn << " ";
-
-    if (typeid(*(qsi->get())) == typeid(pColStep))
-    {
-      dotFile << "(" << qsi->get()->tableOid() << "/" << qsi->get()->oid() << ")"
-              << "\"";
-      dotFile << " shape=ellipse";
-    }
-    else if (typeid(*(qsi->get())) == typeid(pColScanStep))
-    {
-      dotFile << "(" << qsi->get()->tableOid() << "/" << qsi->get()->oid() << ")"
-              << "\"";
-      dotFile << " shape=box";
-    }
-    //		else if (typeid(*(qsi->get())) == typeid(HashJoinStep) ||
-    //				 typeid(*(qsi->get())) == typeid(StringHashJoinStep))
-    //		{
-    //			dotFile << "\"";
-    //			dotFile << " shape=diamond";
-    //		}
-    else if (typeid(*(qsi->get())) == typeid(TupleHashJoinStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=diamond peripheries=2";
-    }
-    //		else if (typeid(*(qsi->get())) == typeid(UnionStep) ||
-    //				 typeid(*(qsi->get())) == typeid(TupleUnion) )
-    else if (typeid(*(qsi->get())) == typeid(TupleUnion))
-    {
-      dotFile << "\"";
-      dotFile << " shape=triangle";
-    }
-    else if (typeid(*(qsi->get())) == typeid(pDictionaryStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=trapezium";
-    }
-    else if (typeid(*(qsi->get())) == typeid(FilterStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=house orientation=180";
-    }
-    //		else if (typeid(*(qsi->get())) == typeid(ReduceStep))
-    //		{
-    //			dotFile << "\"";
-    //			dotFile << " shape=triangle orientation=180";
-    //		}
-    //		else if (typeid(*(qsi->get())) == typeid(BatchPrimitiveStep) || typeid(*(qsi->get())) ==
-    //typeid(TupleBPS))
-    else if (typeid(*(qsi->get())) == typeid(TupleBPS))
-    {
-      bool isTuple = false;
-      BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(qsi->get());
-
-      if (dynamic_cast<TupleBPS*>(bps) != 0)
-        isTuple = true;
-
-      dotFile << "(" << bps->tableOid() << "/" << bps->oid();
-      OIDVector projectOids = bps->getProjectOids();
-
-      if (projectOids.size() > 0)
-      {
-        dotFile << "\\l";
-        dotFile << "PC: ";
-      }
-
-      for (unsigned int i = 0; i < projectOids.size(); i++)
-      {
-        dotFile << projectOids[i] << " ";
-
-        if ((i + 1) % 3 == 0)
-          dotFile << "\\l";
-      }
-
-      dotFile << ")\"";
-      dotFile << " shape=box style=bold";
-
-      if (isTuple)
-        dotFile << " peripheries=2";
-    }
-    else if (typeid(*(qsi->get())) == typeid(CrossEngineStep))
-    {
-      BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(qsi->get());
-      dotFile << "(" << bps->alias() << ")\"";
-      dotFile << " shape=box style=bold";
-      dotFile << " peripheries=2";
-    }
-    else if (typeid(*(qsi->get())) == typeid(TupleAggregateStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=triangle orientation=180";
-    }
-    else if (typeid(*(qsi->get())) == typeid(TupleAnnexStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=star";
-    }
-    else if (typeid(*(qsi->get())) == typeid(WindowFunctionStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=triangle orientation=180";
-      dotFile << " peripheries=2";
-    }
-    //		else if (typeid(*(qsi->get())) == typeid(AggregateFilterStep))
-    //		{
-    //			dotFile << "\"";
-    //			dotFile << " shape=hexagon peripheries=2 style=bold";
-    //		}
-    //		else if (typeid(*(qsi->get())) == typeid(BucketReuseStep))
-    //		{
-    //			dotFile << "(" << qsi->get()->tableOid() << "/" << qsi->get()->oid() << ")" << "\"";
-    //			dotFile << " shape=box style=dashed";
-    //		}
-    else
-      dotFile << "\"";
-
-    dotFile << "]" << endl;
-
-    for (unsigned int i = 0; i < qsi->get()->outputAssociation().outSize(); i++)
-    {
-      RowGroupDL* dlout = qsi->get()->outputAssociation().outAt(i)->rowGroupDL();
-      ptrdiff_t dloutptr = (ptrdiff_t)dlout;
-
-      for (unsigned int k = 0; k < querySteps.size(); k++)
-      {
-        uint16_t stepidOut = querySteps[k].get()->stepId();
-        JobStepAssociation queryInputSA = querySteps[k].get()->inputAssociation();
-
-        for (unsigned int j = 0; j < queryInputSA.outSize(); j++)
-        {
-          RowGroupDL* dlin = queryInputSA.outAt(j)->rowGroupDL();
-          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
-
-          if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
-          {
-            dotFile << stepidIn << " -> " << stepidOut;
-          }
-        }
-      }
-
-      for (psi = projectSteps.begin(); psi < projectSteps.end(); psi++)
-      {
-        uint16_t stepidOut = psi->get()->stepId();
-        JobStepAssociation projectInputSA = psi->get()->inputAssociation();
-
-        for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
-        {
-          RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
-          ptrdiff_t dlinptr = (ptrdiff_t)dlin;;
-
-          if (dloutptr == dlinptr)
-          {
-            dotFile << stepidIn << " -> " << stepidOut;
-          }
-        }
-      }
-    }
+    auto& step = *psi;
+    oss << getGraphProjectionNode(step);
+    auto idx = std::distance(projectSteps.begin(), psi);
+    oss << getProjectionEdges(projectSteps, step, idx);
   }
 
-  for (psi = projectSteps.begin(), ctn = 0; psi != projectSteps.end(); ctn++, psi++)
-  {
-    uint16_t stepidIn = psi->get()->stepId();
-    dotFile << stepidIn << " [label=\"st_" << stepidIn << " ";
+  oss << "}" << endl;
 
-    if (typeid(*(psi->get())) == typeid(pColStep))
-    {
-      dotFile << "(" << psi->get()->tableOid() << "/" << psi->get()->oid() << ")"
-              << "\"";
-      dotFile << " shape=ellipse";
-    }
-    else if (typeid(*(psi->get())) == typeid(pColScanStep))
-    {
-      dotFile << "(" << psi->get()->tableOid() << "/" << psi->get()->oid() << ")"
-              << "\"";
-      dotFile << " shape=box";
-    }
-    else if (typeid(*(psi->get())) == typeid(pDictionaryStep))
-    {
-      dotFile << "\"";
-      dotFile << " shape=trapezium";
-    }
-    else if (typeid(*(psi->get())) == typeid(PassThruStep))
-    {
-      dotFile << "(" << psi->get()->tableOid() << "/" << psi->get()->oid() << ")"
-              << "\"";
-      dotFile << " shape=octagon";
-    }
-    //		else if (typeid(*(psi->get())) == typeid(BatchPrimitiveStep) || typeid(*(psi->get())) ==
-    //typeid(TupleBPS))
-    else if (typeid(*(psi->get())) == typeid(TupleBPS))
-    {
-      bool isTuple = false;
-      BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(psi->get());
+  auto ladderRepr = getLadderRepr(querySteps, tabsToPretify);
+  cout << endl;
+  cout << ladderRepr;
 
-      if (dynamic_cast<TupleBPS*>(bps) != 0)
-        isTuple = true;
-
-      dotFile << "(" << bps->tableOid() << ":\\l";
-      OIDVector projectOids = bps->getProjectOids();
-
-      for (unsigned int i = 0; i < projectOids.size(); i++)
-      {
-        dotFile << projectOids[i] << " ";
-
-        if ((i + 1) % 3 == 0)
-          dotFile << "\\l";
-      }
-
-      dotFile << ")\"";
-      dotFile << " shape=box style=bold";
-
-      if (isTuple)
-        dotFile << " peripheries=2";
-    }
-    else if (typeid(*(qsi->get())) == typeid(CrossEngineStep))
-    {
-      BatchPrimitive* bps = dynamic_cast<BatchPrimitive*>(qsi->get());
-      dotFile << "(" << bps->alias() << ")\"";
-      dotFile << " shape=box style=bold";
-      dotFile << " peripheries=2";
-    }
-    else
-      dotFile << "\"";
-
-    dotFile << "]" << endl;
-
-    for (unsigned int i = 0; i < psi->get()->outputAssociation().outSize(); i++)
-    {
-      RowGroupDL* dlout = psi->get()->outputAssociation().outAt(i)->rowGroupDL();
-      ptrdiff_t dloutptr = (ptrdiff_t)dlout;
-
-      for (unsigned int k = ctn + 1; k < projectSteps.size(); k++)
-      {
-        uint16_t stepidOut = projectSteps[k].get()->stepId();
-        JobStepAssociation projectInputSA = projectSteps[k].get()->inputAssociation();
-
-        for (unsigned int j = 0; j < projectInputSA.outSize(); j++)
-        {
-          RowGroupDL* dlin = projectInputSA.outAt(j)->rowGroupDL();
-          ptrdiff_t dlinptr = (ptrdiff_t)dlin;
-
-          if ((ptrdiff_t)dloutptr == (ptrdiff_t)dlinptr)
-          {
-            dotFile << stepidIn << " -> " << stepidOut;
-
-          }
-        }
-      }
-    }
-  }
-
-  dotFile << "}" << endl;
-
-  return dotFile;
+  return oss.str();
 }
 
 }  // end namespace jlf_graphics
-
 
 #ifdef __clang__
 #pragma clang diagnostic pop

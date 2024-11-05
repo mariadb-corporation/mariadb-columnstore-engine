@@ -124,12 +124,12 @@ void number_int_value(const string& data, cscDataType typeCode,
   if (y != string::npos)
     throw QueryDataExcept("')' is not matched.", formatErr);
 
-  if (boost::iequals(valStr, "true"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(valStr, "true"))
   {
     intVal = 1;
     return;
   }
-  if (boost::iequals(valStr, "false"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(valStr, "false"))
   {
     intVal = 0;
     return;

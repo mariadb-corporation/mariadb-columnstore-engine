@@ -215,7 +215,10 @@ FuncExp::FuncExp()
   fFuncMap["quarter"] = new Func_quarter();
   fFuncMap["radians"] = new Func_radians();  // dlh
   fFuncMap["rand"] = new Func_rand();
-  fFuncMap["regexp"] = new Func_regexp();                  // dlh
+  fFuncMap["regexp"] = new Func_regexp();
+  fFuncMap["regexp_instr"] = new Func_regexp_instr();
+  fFuncMap["regexp_replace"] = new Func_regexp_replace();
+  fFuncMap["regexp_substr"] = new Func_regexp_substr();                  // dlh
   fFuncMap["repeat"] = new Func_repeat();                  // dlh
   fFuncMap["replace"] = new Func_replace();                // dlh
   fFuncMap["replace_oracle"] = new Func_replace_oracle();  // dlh

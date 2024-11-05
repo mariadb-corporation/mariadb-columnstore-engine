@@ -6,7 +6,7 @@ from cmapi_server.controllers.endpoints import (
     StatusController, ConfigController, BeginController, CommitController,
     RollbackController, StartController, ShutdownController,
     ExtentMapController, ClusterController, ApiKeyController,
-    LoggingConfigController, AppController
+    LoggingConfigController, AppController, NodeProcessController
 )
 
 from cmapi_server.controllers.s3dataload import S3DataLoadController
@@ -237,6 +237,26 @@ dispatcher.connect(
     route = '/cmapi/ready',
     action = 'ready',
     controller = AppController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/stop_dmlproc/ (PUT)
+dispatcher.connect(
+    name = 'stop_dmlproc',
+    route = f'/cmapi/{_version}/node/stop_dmlproc',
+    action = 'put_stop_dmlproc',
+    controller = NodeProcessController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/is_process_running/ (PUT)
+dispatcher.connect(
+    name = 'is_process_running',
+    route = f'/cmapi/{_version}/node/is_process_running',
+    action = 'get_process_running',
+    controller = NodeProcessController(),
     conditions = {'method': ['GET']}
 )
 

@@ -125,6 +125,8 @@ struct WidthToSIntegralType<16> : _WidthToSIntegralType<16, int128_t>
 {
 };
 
+void decimalPrecisionAndScale(const utils::NullString& value, int& precision, int& scale);
+
 class SystemCatalog
 {
  public:

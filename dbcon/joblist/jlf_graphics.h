@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "joblist.h"
 
 namespace jlf_graphics
@@ -30,7 +28,53 @@ namespace jlf_graphics
 /** Format a stream of dot commands
  * Format a stream of dot commands
  */
-std::ostream& writeDotCmds(std::ostream& dotFile, const joblist::JobStepVector& querySteps,
-                           const joblist::JobStepVector& projectSteps);
+
+std::string getLadderRepr(const joblist::JobStepVector& steps, const std::vector<size_t>& tabsToPretify);
+std::string generateDotFileName(const std::string& prefix);
+
+class GraphGeneratorInterface
+{
+ public:
+  GraphGeneratorInterface(const joblist::JobStepVector& query, const joblist::JobStepVector& project)
+   : query(query), project(project){};
+
+  virtual ~GraphGeneratorInterface(){};
+
+  virtual std::string writeDotCmds();
+
+ private:
+  virtual joblist::JobStepVector extractSubquerySteps(const joblist::SJSTEP& sqs);
+  virtual joblist::JobStepVector extractJobSteps(const joblist::SJSTEP& umbrella);
+
+  virtual std::string getGraphNode(const joblist::SJSTEP& stepPtr);
+  virtual std::pair<size_t, std::string> getTabsAndEdges(const joblist::JobStepVector& querySteps,
+                                                         const joblist::JobStepVector& projectSteps,
+                                                         const joblist::SJSTEP& stepPtr,
+                                                         const std::vector<size_t>& tabsToPretify);
+  virtual std::string getGraphProjectionNode(joblist::SJSTEP& step);
+  virtual std::string getProjectionEdges(joblist::JobStepVector& steps, joblist::SJSTEP& step,
+                                         const std::size_t ctn);
+
+  const joblist::JobStepVector& query;
+  const joblist::JobStepVector& project;
+};
+
+class GraphGeneratorNoStats : public GraphGeneratorInterface
+{
+ public:
+  GraphGeneratorNoStats(const joblist::JobStepVector& query, const joblist::JobStepVector& project)
+   : GraphGeneratorInterface(query, project){};
+  ~GraphGeneratorNoStats(){};
+};
+
+class GraphGeneratorWStats : public GraphGeneratorInterface
+{
+ public:
+  GraphGeneratorWStats(const joblist::JobStepVector& query, const joblist::JobStepVector& project)
+   : GraphGeneratorInterface(query, project){};
+  ~GraphGeneratorWStats(){};
+
+ private:
+};
 
 }  // namespace jlf_graphics

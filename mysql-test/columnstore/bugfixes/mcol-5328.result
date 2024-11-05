@@ -1,0 +1,27 @@
+DROP DATABASE IF EXISTS mcol5328;
+CREATE DATABASE mcol5328;
+USE mcol5328;
+CREATE TABLE cst1(a INT NOT NULL, b VARCHAR(100)) ENGINE=columnstore;
+INSERT INTO cst1 VALUES(1, 'My mouse'),(2,'Breakfast Food');
+SELECT a, b FROM cst1 WHERE b REGEXP '^My';
+a	b
+1	My mouse
+SELECT a, b FROM cst1 WHERE b REGEXP '[a|e|i|o|u]$';
+a	b
+1	My mouse
+SELECT a, b FROM cst1 WHERE b REGEXP '^Br[aeiou]{2}.*[aeiou]{2}d$';
+a	b
+2	Breakfast Food
+SELECT a, REGEXP_SUBSTR(b, 'a|e|i|o|u') AS "vowel" FROM cst1;
+a	vowel
+1	o
+2	e
+select a, REGEXP_INSTR(b, 'a|e|i|o|u') AS "vowel" FROM cst1;
+a	vowel
+1	5
+2	3
+select a, REGEXP_REPLACE(b, 'a|e|i|o|u', 'x') AS "vowel" FROM cst1;
+a	vowel
+1	My mxxsx
+2	Brxxkfxst Fxxd
+DROP DATABASE mcol5328;

@@ -1,0 +1,22 @@
+#
+# Alter table add column
+# Author: Bharath, bharath.bokka@mariadb.com
+#
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL_5175;
+--enable_warnings
+
+CREATE DATABASE MCOL_5175;
+USE MCOL_5175;
+
+create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8;
+show create table testtext2;
+alter table testtext2 add column myvalue2 text;
+show create table testtext2;
+insert into testtext2 (myvalue2) VALUES ('myvalue');
+select * from testtext2;
+
+DROP DATABASE MCOL_5175;

@@ -80,7 +80,8 @@ SET columnstore_select_handler=ON;
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
 ERROR 42000: The storage engine for the table doesn't support MCS-2016: Non supported item 'col2' on the GROUP BY list.
 SELECT col1 c FROM t1 ORDER BY AVG(col1);
-ERROR HY000: Internal error: MCS-2021: 'c' is not in GROUP BY clause. All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause.
+c
+10
 SET columnstore_select_handler=AUTO;
 SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2;
 col2

@@ -57,7 +57,7 @@
 #include "rowstorage.h"
 
 //..comment out NDEBUG to enable assertions, uncomment NDEBUG to disable
-// #define NDEBUG
+//#define NDEBUG
 #include "mcs_decimal.h"
 
 using namespace std;
@@ -315,7 +315,7 @@ void RowAggregation::updateStringMinMax(utils::NullString val1, utils::NullStrin
   if (val1.isNull())
   {
     // as any comparison with NULL is false, it should not affect min/max ranges.
-    return;  // do nothing.
+    return ; // do nothing.
   }
   CHARSET_INFO* cs = fRow.getCharset(col);
   int tmp = cs->strnncoll(val1.str(), val1.length(), val2.str(), val2.length());
@@ -810,9 +810,8 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
                                   std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
   uint32_t cnt = fRollupFlag ? fGroupByCols.size() : 1;
-  for (uint32_t z = 0; z < cnt; z++)
-  {
-    // groupby column list is not empty, find the entry.
+  for (uint32_t z = 0; z < cnt; z++) {
+  // groupby column list is not empty, find the entry.
     if (!fGroupByCols.empty())
     {
       bool is_new_row;
@@ -857,8 +856,7 @@ void RowAggregation::aggregateRow(Row& row, const uint64_t* hash,
     updateEntry(row, rgContextColl);
     // these quantities are unsigned and comparing z and cnt - 1 can be incorrect
     // because cnt can be zero.
-    if ((z + 1 < cnt))
-    {
+    if ((z + 1 < cnt)) {
       // if we are rolling up, we mark appropriate field as NULL and also increment
       // value in the "mark" column, so that we can differentiate between data and
       // various rollups.
@@ -1171,8 +1169,8 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
     {
       if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
       {
-        updateIntMinMax(rowIn.getTSInt128Field(colIn).getValue(), fRow.getTSInt128Field(colOut).getValue(),
-                        colOut, funcType);
+        updateIntMinMax(rowIn.getTSInt128Field(colIn).getValue(), fRow.getTSInt128Field(colOut).getValue(), colOut,
+                        funcType);
       }
       else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
       {
@@ -1250,6 +1248,108 @@ void RowAggregation::doMinMax(const Row& rowIn, int64_t colIn, int64_t colOut, i
 
     default:
     {
+      break;
+    }
+  }
+}
+//------------------------------------------------------------------------------
+// Update the fields with anything that goes in.
+// rowIn(in)    - Row to be included in aggregation.
+// colIn(in)    - column in the input row group
+// colOut(in)   - column in the output row group
+//------------------------------------------------------------------------------
+void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOut)
+{
+  int colDataType = (fRowGroupIn.getColTypes())[colIn];
+
+  switch (colDataType)
+  {
+    case execplan::CalpontSystemCatalog::UTINYINT:
+    case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::UMEDINT:
+    case execplan::CalpontSystemCatalog::UINT:
+    case execplan::CalpontSystemCatalog::UBIGINT:
+    case execplan::CalpontSystemCatalog::TINYINT:
+    case execplan::CalpontSystemCatalog::SMALLINT:
+    case execplan::CalpontSystemCatalog::MEDINT:
+    case execplan::CalpontSystemCatalog::INT:
+    case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      fRow.setIntField(rowIn.getIntField(colIn), colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DECIMAL:
+    case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
+      if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
+      {
+        fRow.setInt128Field(rowIn.getTSInt128Field(colIn).getValue(), colOut);
+      }
+      else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+      {
+        fRow.setIntField(rowIn.getIntField(colIn), colOut);
+      }
+      else
+      {
+        idbassert(0);
+        throw std::logic_error("RowAggregation::doMinMax(): DECIMAL bad length.");
+      }
+
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    {
+      auto valIn = rowIn.getStringField(colIn);
+      fRow.setStringField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
+    {
+      double valIn = rowIn.getDoubleField(colIn);
+      fRow.setDoubleField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
+    {
+      float valIn = rowIn.getFloatField(colIn);
+      fRow.setFloatField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      uint64_t valIn = rowIn.getUintField(colIn);
+      fRow.setUintField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::LONGDOUBLE:
+    {
+      long double valIn = rowIn.getLongDoubleField(colIn);
+      fRow.setLongDoubleField(valIn, colOut);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::CLOB:
+    case execplan::CalpontSystemCatalog::BLOB:
+    {
+      fRow.setVarBinaryField(rowIn.getVarBinaryField(colIn), rowIn.getVarBinaryLength(colIn), colOut);
+      break;
+    }
+    default:
+    {
+      idbassert_s(0, "unknown data type in doSelectSome()");
       break;
     }
   }
@@ -1723,6 +1823,11 @@ void RowAggregation::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1Co
         doUDAF(rowIn, colIn, colOut, colOut + 1, i, rgContextColl);
         break;
       }
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
+        break;
+      }
 
       default:
       {
@@ -1782,6 +1887,12 @@ void RowAggregation::mergeEntries(const Row& rowIn)
       case ROWAGG_GROUP_CONCAT: break;
 
       case ROWAGG_UDAF: doUDAF(rowIn, colOut, colOut, colOut + 1, i); break;
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colOut, colOut);
+        break;
+      }
 
       default:
         std::ostringstream errmsg;
@@ -2009,8 +2120,9 @@ void RowAggregation::doStatistics(const Row& rowIn, int64_t colIn, int64_t colOu
   long double mean = fRow.getLongDoubleField(colAux);
   long double scaledMomentum2 = fRow.getLongDoubleField(colAux + 1);
   volatile long double delta = valIn - mean;
-  mean += delta / count;
+  mean += delta/count;
   scaledMomentum2 += delta * (valIn - mean);
+
 
   fRow.setDoubleField(count, colOut);
   fRow.setLongDoubleField(mean, colAux);
@@ -2061,7 +2173,8 @@ void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int
       cc = dynamic_cast<execplan::ConstantColumn*>(fFunctionCols[funcColsIdx]->fpConstCol.get());
     }
 
-    if ((cc && cc->isNull()) || (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
+    if ((cc && cc->isNull()) ||
+        (!cc && isNull(&fRowGroupIn, rowIn, colIn) == true))
     {
       if (udafContextsColl[origFuncColsIdx].getRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS))
       {
@@ -2387,8 +2500,7 @@ void RowAggregation::loadEmptySet(messageqcpp::ByteStream& bs)
 //------------------------------------------------------------------------------
 RowAggregationUM::RowAggregationUM(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                    const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit,
-                                   bool withRollup)
+                                   joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
  : RowAggregation(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
  , fHasAvg(false)
  , fHasStatsFunc(false)
@@ -2614,6 +2726,12 @@ void RowAggregationUM::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 
@@ -3110,7 +3228,7 @@ void RowAggregationUM::SetUDAFAnyValue(static_any::any& valOut, int64_t colOut)
 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::TEXT: fRow.setStringField(strOut, colOut); break;
+    case execplan::CalpontSystemCatalog::TEXT:    fRow.setStringField(strOut, colOut); break;
 
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::CLOB:
@@ -3702,10 +3820,13 @@ void RowAggregationUM::doNotNullConstantAggregate(const ConstantAggData& aggData
           auto width = fRow.getColumnWidth(colOut);
           if (width == datatypes::MAXDECIMALWIDTH)
           {
+            int precision, scale;
+            // MCOL-5708 Calculate precision and scale based on the given value.
+            datatypes::decimalPrecisionAndScale(aggData.fConstValue, precision, scale);
             execplan::CalpontSystemCatalog::TypeHolderStd colType;
             colType.colWidth = width;
-            colType.precision = fRow.getPrecision(i);
-            colType.scale = fRow.getScale(i);
+            colType.precision = precision;
+            colType.scale = scale;
             colType.colDataType = colDataType;
             int128_t constValue = colType.decimal128FromString(aggData.fConstValue);
             int128_t sum;
@@ -4099,26 +4220,13 @@ bool RowAggregationUM::nextRowGroup()
   return more;
 }
 
-bool RowAggregationUM::nextOutputRowGroup()
-{
-  bool more = fRowAggStorage->getNextOutputRGData(fCurRGData);
-
-  if (more)
-  {
-    fRowGroupOut->setData(fCurRGData.get());
-  }
-
-  return more;
-}
-
 //------------------------------------------------------------------------------
 // Row Aggregation constructor used on UM
 // For 2nd phase of two-phase case, from partial RG to final aggregated RG
 //------------------------------------------------------------------------------
 RowAggregationUMP2::RowAggregationUMP2(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                                        const vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols,
-                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit,
-                                       bool withRollup)
+                                       joblist::ResourceManager* r, boost::shared_ptr<int64_t> sessionLimit, bool withRollup)
  : RowAggregationUM(rowAggGroupByCols, rowAggFunctionCols, r, sessionLimit, withRollup)
 {
 }
@@ -4205,6 +4313,12 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcs
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 
@@ -4336,8 +4450,7 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
   {
     if (LIKELY(cnt > 0))
     {
-      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();
-      ;
+      int128_t valOut = fRow.getTSInt128Field(colOut).getValue();;
       int128_t sum = valOut + wideValue;
       fRow.setInt128Field(sum, colOut);
       fRow.setUintField(rowIn.getUintField(colAuxIn) + cnt, colAux);
@@ -4396,8 +4509,7 @@ void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t c
   {
     volatile long double delta = mean - blockMean;
     nextMean = (mean * count + blockMean * blockCount) / nextCount;
-    nextScaledMomentum2 =
-        scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
+    nextScaledMomentum2 = scaledMomentum2 + blockScaledMomentum2 + delta * delta * (count * blockCount / nextCount);
   }
   fRow.setDoubleField(nextCount, colOut);
   fRow.setLongDoubleField(nextMean, colAux);
@@ -4570,28 +4682,18 @@ void RowAggregationDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationDistinct::doDistinctAggregation()
 {
-  auto* umAggregator = dynamic_cast<RowAggregationUM*>(fAggregator.get());
-  if (umAggregator)
+  while (dynamic_cast<RowAggregationUM*>(fAggregator.get())->nextRowGroup())
   {
-    while (umAggregator->nextOutputRowGroup())
+    fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
+
+    Row rowIn;
+    fRowGroupIn.initRow(&rowIn);
+    fRowGroupIn.getRow(0, &rowIn);
+
+    for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
     {
-      fRowGroupIn.setData(fAggregator->getOutputRowGroup()->getRGData());
-
-      Row rowIn;
-      fRowGroupIn.initRow(&rowIn);
-      fRowGroupIn.getRow(0, &rowIn);
-
-      for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i, rowIn.nextRow())
-      {
-        aggregateRow(rowIn);
-      }
+      aggregateRow(rowIn);
     }
-  }
-  else
-  {
-    std::ostringstream errmsg;
-    errmsg << "RowAggregationDistinct: incorrect fAggregator class.";
-    cerr << errmsg.str() << endl;
   }
 }
 
@@ -4697,6 +4799,12 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn, std::vector<mcsv1sdk:
       case ROWAGG_UDAF:
       {
         doUDAF(rowIn, colIn, colOut, colAux, i, rgContextColl);
+        break;
+      }
+
+      case ROWAGG_SELECT_SOME:
+      {
+        doSelectSome(rowIn, colIn, colOut);
         break;
       }
 

@@ -428,6 +428,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
 
   if ((pseudoType == PSEUDO_EXTENTMIN || pseudoType == PSEUDO_EXTENTMAX) &&
       (sc->colType().colDataType == CalpontSystemCatalog::VARBINARY ||
+       (sc->colType().colDataType == CalpontSystemCatalog::TEXT) ||
        (sc->colType().colDataType == CalpontSystemCatalog::VARCHAR && sc->colType().colWidth > 7) ||
        (sc->colType().colDataType == CalpontSystemCatalog::CHAR && sc->colType().colWidth > 8)))
     return nullOnError(gwi, funcName);

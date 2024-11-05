@@ -42,6 +42,96 @@ t1_INT	t1_INT REGEXP '-26'
 -7299	0
 103	0
 9913	0
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '99$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '99$')
+-7299	99
+103	
+9913	
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '\.99$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '\.99$')
+-7299	299
+103	
+9913	
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '03$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '03$')
+-7299	
+103	03
+9913	
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '\.+') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '\.+')
+-7299	-7299
+103	103
+9913	9913
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '0?') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '0?')
+-7299	
+103	
+9913	
+SELECT t1_INT, REGEXP_SUBSTR(t1_INT, '-26') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_SUBSTR(t1_INT, '-26')
+-7299	
+103	
+9913	
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '99$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '99$')
+-7299	4
+103	0
+9913	0
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '\.99$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '\.99$')
+-7299	3
+103	0
+9913	0
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '03$') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '03$')
+-7299	0
+103	2
+9913	0
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '\.+') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '\.+')
+-7299	1
+103	1
+9913	1
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '0?') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '0?')
+-7299	1
+103	1
+9913	1
+SELECT t1_INT, REGEXP_INSTR(t1_INT, '-26') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_INSTR(t1_INT, '-26')
+-7299	0
+103	0
+9913	0
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '99$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '99$', 'TeddyBear')
+-7299	-72TeddyBear
+103	103
+9913	9913
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '\.99$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '\.99$', 'TeddyBear')
+-7299	-7TeddyBear
+103	103
+9913	9913
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '03$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '03$', 'TeddyBear')
+-7299	-7299
+103	1TeddyBear
+9913	9913
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '\.+', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '\.+', 'TeddyBear')
+-7299	TeddyBear
+103	TeddyBear
+9913	TeddyBear
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '0?', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '0?', 'TeddyBear')
+-7299	TeddyBear-TeddyBear7TeddyBear2TeddyBear9TeddyBear9TeddyBear
+103	TeddyBear1TeddyBearTeddyBear3TeddyBear
+9913	TeddyBear9TeddyBear9TeddyBear1TeddyBear3TeddyBear
+SELECT t1_INT, REGEXP_REPLACE(t1_INT, '-26', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_INT	REGEXP_REPLACE(t1_INT, '-26', 'TeddyBear')
+-7299	-7299
+103	103
+9913	9913
 SELECT t1_DECIMAL, t1_DECIMAL REGEXP '99$' FROM t1 ORDER BY 1;
 t1_DECIMAL	t1_DECIMAL REGEXP '99$'
 111.99000	0
@@ -72,6 +162,96 @@ t1_DECIMAL	t1_DECIMAL REGEXP '-26'
 111.99000	0
 1234.56990	0
 98765.43210	0
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '99$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '99$')
+111.99000	
+1234.56990	
+98765.43210	
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '\.99$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '\.99$')
+111.99000	
+1234.56990	
+98765.43210	
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '03$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '03$')
+111.99000	
+1234.56990	
+98765.43210	
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '\.+') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '\.+')
+111.99000	111.99000
+1234.56990	1234.56990
+98765.43210	98765.43210
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '0?') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '0?')
+111.99000	
+1234.56990	
+98765.43210	
+SELECT t1_DECIMAL, REGEXP_SUBSTR(t1_DECIMAL, '-26') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_SUBSTR(t1_DECIMAL, '-26')
+111.99000	
+1234.56990	
+98765.43210	
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '99$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '99$')
+111.99000	0
+1234.56990	0
+98765.43210	0
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '\.99$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '\.99$')
+111.99000	0
+1234.56990	0
+98765.43210	0
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '03$') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '03$')
+111.99000	0
+1234.56990	0
+98765.43210	0
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '\.+') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '\.+')
+111.99000	1
+1234.56990	1
+98765.43210	1
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '0?') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '0?')
+111.99000	1
+1234.56990	1
+98765.43210	1
+SELECT t1_DECIMAL, REGEXP_INSTR(t1_DECIMAL, '-26') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_INSTR(t1_DECIMAL, '-26')
+111.99000	0
+1234.56990	0
+98765.43210	0
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '99$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '99$', 'TeddyBear')
+111.99000	111.99000
+1234.56990	1234.56990
+98765.43210	98765.43210
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '\.99$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '\.99$', 'TeddyBear')
+111.99000	111.99000
+1234.56990	1234.56990
+98765.43210	98765.43210
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '03$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '03$', 'TeddyBear')
+111.99000	111.99000
+1234.56990	1234.56990
+98765.43210	98765.43210
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '\.+', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '\.+', 'TeddyBear')
+111.99000	TeddyBear
+1234.56990	TeddyBear
+98765.43210	TeddyBear
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '0?', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '0?', 'TeddyBear')
+111.99000	TeddyBear1TeddyBear1TeddyBear1TeddyBear.TeddyBear9TeddyBear9TeddyBearTeddyBearTeddyBearTeddyBear
+1234.56990	TeddyBear1TeddyBear2TeddyBear3TeddyBear4TeddyBear.TeddyBear5TeddyBear6TeddyBear9TeddyBear9TeddyBearTeddyBear
+98765.43210	TeddyBear9TeddyBear8TeddyBear7TeddyBear6TeddyBear5TeddyBear.TeddyBear4TeddyBear3TeddyBear2TeddyBear1TeddyBearTeddyBear
+SELECT t1_DECIMAL, REGEXP_REPLACE(t1_DECIMAL, '-26', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DECIMAL	REGEXP_REPLACE(t1_DECIMAL, '-26', 'TeddyBear')
+111.99000	111.99000
+1234.56990	1234.56990
+98765.43210	98765.43210
 SELECT t1_TEXT, t1_TEXT REGEXP 'oooo$' FROM t1 ORDER BY 1;
 t1_TEXT	t1_TEXT REGEXP 'oooo$'
 ooooo	1
@@ -112,6 +292,131 @@ t1_TEXT	t1_TEXT REGEXP 'o?o'
 ooooo	1
 ppppp	0
 qqqqq	0
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'oooo$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'oooo$')
+ooooo	oooo
+ppppp	
+qqqqq	
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'q$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'q$')
+ooooo	
+ppppp	
+qqqqq	q
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'ppppp$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'ppppp$')
+ooooo	
+ppppp	ppppp
+qqqqq	
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, '(ooo)+') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, '(ooo)+')
+ooooo	ooo
+ppppp	
+qqqqq	
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, '(qqqqq)+') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, '(qqqqq)+')
+ooooo	
+ppppp	
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'p*') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'p*')
+ooooo	
+ppppp	ppppp
+qqqqq	
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'qq+q') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'qq+q')
+ooooo	
+ppppp	
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_SUBSTR(t1_TEXT, 'o?o') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_SUBSTR(t1_TEXT, 'o?o')
+ooooo	oo
+ppppp	
+qqqqq	
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'oooo$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'oooo$')
+ooooo	2
+ppppp	0
+qqqqq	0
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'q$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'q$')
+ooooo	0
+ppppp	0
+qqqqq	5
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'ppppp$') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'ppppp$')
+ooooo	0
+ppppp	1
+qqqqq	0
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, '(ooo)+') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, '(ooo)+')
+ooooo	1
+ppppp	0
+qqqqq	0
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, '(qqqqq)+') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, '(qqqqq)+')
+ooooo	0
+ppppp	0
+qqqqq	1
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'p*') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'p*')
+ooooo	1
+ppppp	1
+qqqqq	1
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'qq+q') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'qq+q')
+ooooo	0
+ppppp	0
+qqqqq	1
+SELECT t1_TEXT, REGEXP_INSTR(t1_TEXT, 'o?o') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_INSTR(t1_TEXT, 'o?o')
+ooooo	1
+ppppp	0
+qqqqq	0
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'oooo$', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'oooo$', 'KittyCat')
+ooooo	oKittyCat
+ppppp	ppppp
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'q$', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'q$', 'KittyCat')
+ooooo	ooooo
+ppppp	ppppp
+qqqqq	qqqqKittyCat
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'ppppp$', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'ppppp$', 'KittyCat')
+ooooo	ooooo
+ppppp	KittyCat
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, '(ooo)+', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, '(ooo)+', 'KittyCat')
+ooooo	KittyCatoo
+ppppp	ppppp
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, '(qqqqq)+', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, '(qqqqq)+', 'KittyCat')
+ooooo	ooooo
+ppppp	ppppp
+qqqqq	KittyCat
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'p*', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'p*', 'KittyCat')
+ooooo	KittyCatoKittyCatoKittyCatoKittyCatoKittyCatoKittyCat
+ppppp	KittyCatKittyCat
+qqqqq	KittyCatqKittyCatqKittyCatqKittyCatqKittyCatqKittyCat
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'qq+q', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'qq+q', 'KittyCat')
+ooooo	ooooo
+ppppp	ppppp
+qqqqq	KittyCat
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'o?o', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'o?o', 'KittyCat')
+ooooo	KittyCatKittyCatKittyCat
+ppppp	ppppp
+qqqqq	qqqqq
+SELECT t1_TEXT, REGEXP_REPLACE(t1_TEXT, 'q', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TEXT	REGEXP_REPLACE(t1_TEXT, 'q', 'KittyCat')
+ooooo	ooooo
+ppppp	ppppp
+qqqqq	KittyCatKittyCatKittyCatKittyCatKittyCat
 SELECT t1_DATE, t1_DATE REGEXP '(1997)+' FROM t1 ORDER BY 1;
 t1_DATE	t1_DATE REGEXP '(1997)+'
 1997-12-12	1
@@ -132,6 +437,66 @@ t1_DATE	t1_DATE REGEXP '(09-12-)+'
 1997-12-12	0
 2001-01-01	0
 2009-12-11	1
+SELECT t1_DATE, REGEXP_SUBSTR(t1_DATE, '(1997)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_SUBSTR(t1_DATE, '(1997)+')
+1997-12-12	1997
+2001-01-01	
+2009-12-11	
+SELECT t1_DATE, REGEXP_SUBSTR(t1_DATE, '01$') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_SUBSTR(t1_DATE, '01$')
+1997-12-12	
+2001-01-01	01
+2009-12-11	
+SELECT t1_DATE, REGEXP_SUBSTR(t1_DATE, '(59)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_SUBSTR(t1_DATE, '(59)+')
+1997-12-12	
+2001-01-01	
+2009-12-11	
+SELECT t1_DATE, REGEXP_SUBSTR(t1_DATE, '(09-12-)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_SUBSTR(t1_DATE, '(09-12-)+')
+1997-12-12	
+2001-01-01	
+2009-12-11	09-12-
+SELECT t1_DATE, REGEXP_INSTR(t1_DATE, '(1997)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_INSTR(t1_DATE, '(1997)+')
+1997-12-12	1
+2001-01-01	0
+2009-12-11	0
+SELECT t1_DATE, REGEXP_INSTR(t1_DATE, '01$') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_INSTR(t1_DATE, '01$')
+1997-12-12	0
+2001-01-01	9
+2009-12-11	0
+SELECT t1_DATE, REGEXP_INSTR(t1_DATE, '(59)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_INSTR(t1_DATE, '(59)+')
+1997-12-12	0
+2001-01-01	0
+2009-12-11	0
+SELECT t1_DATE, REGEXP_INSTR(t1_DATE, '(09-12-)+') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_INSTR(t1_DATE, '(09-12-)+')
+1997-12-12	0
+2001-01-01	0
+2009-12-11	3
+SELECT t1_DATE, REGEXP_REPLACE(t1_DATE, '(1997)+', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_REPLACE(t1_DATE, '(1997)+', 'TeddyBear')
+1997-12-12	TeddyBear-12-12
+2001-01-01	2001-01-01
+2009-12-11	2009-12-11
+SELECT t1_DATE, REGEXP_REPLACE(t1_DATE, '01$', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_REPLACE(t1_DATE, '01$', 'TeddyBear')
+1997-12-12	1997-12-12
+2001-01-01	2001-01-TeddyBear
+2009-12-11	2009-12-11
+SELECT t1_DATE, REGEXP_REPLACE(t1_DATE, '(59)+', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_REPLACE(t1_DATE, '(59)+', 'TeddyBear')
+1997-12-12	1997-12-12
+2001-01-01	2001-01-01
+2009-12-11	2009-12-11
+SELECT t1_DATE, REGEXP_REPLACE(t1_DATE, '(09-12-)+', 'TeddyBear') FROM t1 ORDER BY 1;
+t1_DATE	REGEXP_REPLACE(t1_DATE, '(09-12-)+', 'TeddyBear')
+1997-12-12	1997-12-12
+2001-01-01	2001-01-01
+2009-12-11	20TeddyBear11
 SELECT t1_TIME, t1_TIME REGEXP '(59)+' FROM t1 ORDER BY 1;
 t1_TIME	t1_TIME REGEXP '(59)+'
 01:08:59	1
@@ -142,4 +507,161 @@ t1_TIME	t1_TIME REGEXP '22$'
 01:08:59	0
 22:12:02	0
 23:59:59	0
+SELECT t1_TIME, REGEXP_SUBSTR(t1_TIME, '(59)+') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_SUBSTR(t1_TIME, '(59)+')
+01:08:59	59
+22:12:02	
+23:59:59	59
+SELECT t1_TIME, REGEXP_SUBSTR(t1_TIME, '22$') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_SUBSTR(t1_TIME, '22$')
+01:08:59	
+22:12:02	
+23:59:59	
+SELECT t1_TIME, REGEXP_INSTR(t1_TIME, '(59)+') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_INSTR(t1_TIME, '(59)+')
+01:08:59	7
+22:12:02	0
+23:59:59	4
+SELECT t1_TIME, REGEXP_INSTR(t1_TIME, '22$') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_INSTR(t1_TIME, '22$')
+01:08:59	0
+22:12:02	0
+23:59:59	0
+SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '(59)+', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_REPLACE(t1_TIME, '(59)+', 'KittyCat')
+01:08:59	01:08:KittyCat
+22:12:02	22:12:02
+23:59:59	23:KittyCat:KittyCat
+SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat') FROM t1 ORDER BY 1;
+t1_TIME	REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat')
+01:08:59	01:08:59
+22:12:02	22:12:02
+23:59:59	23:59:59
+SET character_set_connection = 'utf8';
+SET NAMES utf8mb3;
+CREATE TABLE t2 (hello text) DEFAULT CHARSET=utf8 engine columnstore;
+INSERT INTO t2 values('こんにちは');
+INSERT INTO t2 values('привет');
+INSERT INTO t2 values('Γεια');
+INSERT INTO t2 values('სალამი');
+SELECT hello, hello regexp 'ん.ち' FROM t2;
+hello	hello regexp 'ん.ち'
+こんにちは	0
+привет	0
+Γεια	0
+სალამი	0
+SELECT hello, hello regexp 'и.е' FROM t2;
+hello	hello regexp 'и.е'
+こんにちは	0
+привет	0
+Γεια	0
+სალამი	0
+SELECT hello, hello regexp 'ε.α' FROM t2;
+hello	hello regexp 'ε.α'
+こんにちは	0
+привет	0
+Γεια	0
+სალამი	0
+SELECT hello, hello regexp 'ა.ა' FROM t2;
+hello	hello regexp 'ა.ა'
+こんにちは	0
+привет	0
+Γεια	0
+სალამი	0
+SELECT hello, regexp_substr(hello, 'ん.ち') FROM t2;
+hello	regexp_substr(hello, 'ん.ち')
+こんにちは	んにち
+привет	
+Γεια	
+სალამი	
+SELECT hello, regexp_substr(hello, 'и.е') FROM t2;
+hello	regexp_substr(hello, 'и.е')
+こんにちは	
+привет	иве
+Γεια	
+სალამი	
+SELECT hello, regexp_substr(hello, 'ε.α') FROM t2;
+hello	regexp_substr(hello, 'ε.α')
+こんにちは	
+привет	
+Γεια	εια
+სალამი	
+SELECT hello, regexp_substr(hello, 'ა.ა') FROM t2;
+hello	regexp_substr(hello, 'ა.ა')
+こんにちは	
+привет	
+Γεια	
+სალამი	ალა
+SELECT hello, regexp_instr(hello, 'ん.ち') FROM t2;
+hello	regexp_instr(hello, 'ん.ち')
+こんにちは	2
+привет	0
+Γεια	0
+სალამი	0
+SELECT hello, regexp_instr(hello, 'и.е') FROM t2;
+hello	regexp_instr(hello, 'и.е')
+こんにちは	0
+привет	3
+Γεια	0
+სალამი	0
+SELECT hello, regexp_instr(hello, 'ε.α') FROM t2;
+hello	regexp_instr(hello, 'ε.α')
+こんにちは	0
+привет	0
+Γεια	2
+სალამი	0
+SELECT hello, regexp_instr(hello, 'ა.ა') FROM t2;
+hello	regexp_instr(hello, 'ა.ა')
+こんにちは	0
+привет	0
+Γεια	0
+სალამი	2
+SELECT hello, regexp_replace(hello, 'ん.ち', 'Достоевский') FROM t2;
+hello	regexp_replace(hello, 'ん.ち', 'Достоевский')
+こんにちは	こДостоевскийは
+привет	привет
+Γεια	Γεια
+სალამი	სალამი
+SELECT hello, regexp_replace(hello, 'и.е', 'Достоевский') FROM t2;
+hello	regexp_replace(hello, 'и.е', 'Достоевский')
+こんにちは	こんにちは
+привет	прДостоевскийт
+Γεια	Γεια
+სალამი	სალამი
+SELECT hello, regexp_replace(hello, 'ε.α', 'Достоевский') FROM t2;
+hello	regexp_replace(hello, 'ε.α', 'Достоевский')
+こんにちは	こんにちは
+привет	привет
+Γεια	ΓДостоевский
+სალამი	სალამი
+SELECT hello, regexp_replace(hello, 'ა.ა', 'Достоевский') FROM t2;
+hello	regexp_replace(hello, 'ა.ა', 'Достоевский')
+こんにちは	こんにちは
+привет	привет
+Γεια	Γεια
+სალამი	სДостоевскийმი
+SHOW VARIABLES LIKE 'character_set%';
+Variable_name	Value
+character_set_client	utf8mb3
+character_set_connection	utf8mb3
+character_set_database	utf8mb3
+character_set_filesystem	binary
+character_set_results	utf8mb3
+character_set_server	utf8mb3
+character_set_system	utf8mb3
+character_sets_dir	/usr/share/mysql/charsets/
+CREATE TABLE tw(hello text) DEFAULT CHARSET=cp1251 ENGINE COLUMNSTORE;
+INSERT INTO tw values(convert('привет' USING cp1251));
+SELECT hello, regexp_instr(hello, convert('и.е' USING cp1251)) FROM tw;
+hello	regexp_instr(hello, convert('и.е' USING cp1251))
+привет	3
+SELECT hello, convert(regexp_substr(hello, convert('и.е' USING cp1251)) using utf8) FROM tw;
+hello	convert(regexp_substr(hello, convert('и.е' USING cp1251)) using utf8)
+привет	иве
+SELECT hello, convert(regexp_replace(hello, convert('и.е' USING cp1251), convert('Достоевкий' USING cp1251))  using utf8) FROM tw;
+hello	convert(regexp_replace(hello, convert('и.е' USING cp1251), convert('Достоевкий' USING cp1251))  using utf8)
+привет	привет
+SELECT hello, hello regexp convert('и.е' USING cp1251) FROM tw;
+hello	hello regexp convert('и.е' USING cp1251)
+привет	1
 DROP DATABASE mcs228_db;

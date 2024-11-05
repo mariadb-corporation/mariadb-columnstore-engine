@@ -60,8 +60,7 @@ SELECT t1.spID, t2.userid, MIN(t1.score)
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.spID, t2.userid;
 
 # columns in ORDER BY clause not included in the GROUP BY clause.
-#Suspected bug. Innodb succeeds.
---error 1815
+--sorted_result
 SELECT t1.spID, t2.userid, MIN(t1.score) 
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid, t1.spID ORDER BY t1.date;
 
@@ -76,10 +75,13 @@ SELECT t2.userid, MIN(t1.score)
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY unknown;
 
 # order by null
-#Suspected bug. Innodb succeeds.
---error 1815
+# Innodb succeeds - it is a workaround to speed up GROUP BY.
+--sorted_result
 SELECT t2.userid, MIN(t1.score)
  FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY NULL;
+
+SELECT * FROM t1 GROUP BY spID, userID ORDER BY score ASC, spID, userID;
+SELECT * FROM t1 GROUP BY spID, userID ORDER BY score DESC, spID, userID;
 
 #Clean up
 DROP DATABASE IF EXISTS mcs36_db1;

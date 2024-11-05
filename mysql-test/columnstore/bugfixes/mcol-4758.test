@@ -11,9 +11,9 @@ INSERT INTO src VALUES (1, "Pretty Bloby Thing", "This is some text");
 select * from src where c0=1 and substr(cLT, 1, 4)="This";
 
 # To be uncommented when MCOL-4480 is fixed
-#ALTER TABLE src ADD COLUMN (cLT2 LONGTEXT);
-#UPDATE src SET cLT2="My Friday Night" where c0=1;
-#select * from src where c0=1 and substr(cLT, 1, 4)="This";
+ALTER TABLE src ADD COLUMN (cLT2 LONGTEXT);
+UPDATE src SET cLT2="My Friday Night" where c0=1;
+select * from src where c0=1 and substr(cLT, 1, 4)="This";
 
 # cleanup
 DROP DATABASE `mcol_4758`;

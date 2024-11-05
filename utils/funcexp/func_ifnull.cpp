@@ -25,6 +25,7 @@
 #include <string>
 using namespace std;
 
+#include "constantcolumn.h"
 #include "functor_all.h"
 #include "functioncolumn.h"
 using namespace execplan;
@@ -60,7 +61,14 @@ int64_t Func_ifnull::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
   if (isNull)
   {
     isNull = false;
-    return parm[1]->data()->getIntVal(row, isNull);
+    r = parm[1]->data()->getIntVal(row, isNull);
+    // MCOL-5237 In case we substitude a null value for `DATETIME` column with a value from `ConstantColumn`
+    // we have to convert the value into the `DATETIME` format for `int64_t` type.
+    if (parm[0]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME &&
+        dynamic_cast<ConstantColumn*>(parm[1]->data()))
+    {
+      r = r << 48;
+    }
   }
 
   return r;

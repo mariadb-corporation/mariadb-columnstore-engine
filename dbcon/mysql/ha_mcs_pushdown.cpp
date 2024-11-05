@@ -332,6 +332,10 @@ void item_check(Item* item, bool* unsupported_feature)
 
 bool check_user_var(SELECT_LEX* select_lex)
 {
+  if (!select_lex) {
+    // There are definitely no user vars if select_lex is null
+    return false;
+  }
   List_iterator_fast<Item> it(select_lex->item_list);
   Item* item;
   bool is_user_var_func = false;

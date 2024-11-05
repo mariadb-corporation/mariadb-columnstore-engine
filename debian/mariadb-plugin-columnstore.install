@@ -44,7 +44,9 @@ usr/bin/reset_locks
 usr/bin/rollback
 usr/bin/save_brm
 usr/bin/smcat
+usr/bin/smkill
 usr/bin/smls
+usr/bin/smps
 usr/bin/smput
 usr/bin/smrm
 usr/bin/testS3Connection

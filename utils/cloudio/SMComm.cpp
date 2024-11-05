@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include "SMComm.h"
+#include "bytestream.h"
 #include "messageFormat.h"
 
 using namespace std;
@@ -270,6 +271,47 @@ int SMComm::copyFile(const string& file1, const string& file2)
   string absfilename2(getAbsFilename(file2));
 
   *command << (uint8_t)storagemanager::COPY << absfilename1 << absfilename2;
+  err = sockets.send_recv(*command, response);
+  if (err)
+    common_exit(command, response, err);
+  check_for_error(command, response, err);
+  common_exit(command, response, err);
+}
+
+int SMComm::listIOTasks(vector<storagemanager::list_iotask_resp_entry>* entries)
+{
+  ByteStream* command = buffers.getByteStream();
+  ByteStream* response = buffers.getByteStream();
+  ssize_t err;
+
+  *command << (uint8_t)storagemanager::LIST_IOTASKS;
+  err = sockets.send_recv(*command, response);
+  if (err)
+    common_exit(command, response, err);
+  check_for_error(command, response, err);
+
+  uint32_t numElements;
+  entries->clear();
+  *response >> numElements;
+  entries->reserve(numElements);
+  while (numElements > 0)
+  {
+    storagemanager::list_iotask_resp_entry entry;
+    *response >> entry.id >> entry.runningTime;
+    entries->push_back(std::move(entry));
+    --numElements;
+  }
+
+  common_exit(command, response, err);
+}
+
+int SMComm::killIOTask(uint64_t id)
+{
+  ByteStream* command = buffers.getByteStream();
+  ByteStream* response = buffers.getByteStream();
+  ssize_t err;
+
+  *command << (uint8_t)storagemanager::TERMINATE_IOTASK << id;
   err = sockets.send_recv(*command, response);
   if (err)
     common_exit(command, response, err);

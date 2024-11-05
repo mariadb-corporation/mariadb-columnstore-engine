@@ -20,7 +20,6 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "idbcompress.h"
-#include <cstdint>
 #include <random>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -36,15 +35,10 @@ class RowPosHashStorage;
 using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
 
-using RGDataUnPtr = std::unique_ptr<RGData>;
-using PosOpos = std::pair<uint64_t, uint64_t>;
-using FgidTgid = std::pair<uint64_t, uint64_t>;
-
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 
 constexpr const size_t MaxConstStrSize = 2048ULL;
 constexpr const size_t MaxConstStrBufSize = MaxConstStrSize << 1;
-constexpr const uint64_t HashMaskElements = 64ULL;
 
 class RowAggStorage
 {
@@ -102,12 +96,6 @@ class RowAggStorage
    * @returns pointer to the next RGData or nullptr if empty
    */
   std::unique_ptr<RGData> getNextRGData();
-
-  /** @brief Remove last RGData from in-memory storage or disk.
-   * Iterates over all generations on disk if available.
-   * @returns True if RGData is returned in parameter or false if no more RGDatas can be returned.
-   */
-  bool getNextOutputRGData(std::unique_ptr<RGData>& rgdata);
 
   /** @brief TODO
    *
