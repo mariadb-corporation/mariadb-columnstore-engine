@@ -78,6 +78,23 @@ setup_sphinx()
 }
 
 
+make_cmake()
+{
+    if [ "$(uname -m)" == "aarch64" ]; then \
+        CMAKE_SHA256="4a750db7becfa426a37f702fa87267e836dda6720f2b768e31828f4cb5e2e24b"; \
+    else \
+        CMAKE_SHA256="b1dfd11d50e2dfb3d18be86ca1a369da1c1131badc14b659491dd42be1fed704"; \
+    fi && \
+    curl -Ls https://github.com/Kitware/CMake/releases/download/v3.26.1/cmake-3.26.1-$(uname -s)-$(uname -m).tar.gz -o cmake.tar.gz && \
+    echo "${CMAKE_SHA256}  cmake.tar.gz" > cmake-sha.txt && \
+    sha256sum --quiet -c cmake-sha.txt && \
+    mkdir cmake && \
+    tar --strip-components 1 --no-same-owner --directory cmake -xf cmake.tar.gz && \
+    cp -r cmake/* /usr/local/ && \
+    rm -rf /tmp/*
+
+}
+
 
 if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     message "Preparing dev requirements for ubuntu|debian"
@@ -123,6 +140,7 @@ else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
 fi
 
+make_cmake
 make_lz4
 make_jemalloc
 
