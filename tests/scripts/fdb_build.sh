@@ -39,6 +39,7 @@ make_openssl()
     make -j1 install && \
     cd ../ && \
     rm -rf /tmp/*
+    message "Done ・ Compiling static openssl"
 }
 
 make_lz4()
@@ -54,6 +55,7 @@ make_lz4()
     make install && \
     cd ../ && \
     rm -rf /tmp/*
+    message "Done ・ Compiling static lz4"
 }
 
 make_jemalloc()
@@ -69,6 +71,8 @@ make_jemalloc()
     make -j32 && \
     cd .. && \
     rm -rf /tmp/*
+    message "Done ・ Compiling jemalloc 5.3"
+
 }
 
 setup_sphinx()
@@ -80,6 +84,7 @@ setup_sphinx()
 
 make_cmake()
 {
+    message "Installing CMake "
     if [ "$(uname -m)" == "aarch64" ]; then \
         CMAKE_SHA256="4a750db7becfa426a37f702fa87267e836dda6720f2b768e31828f4cb5e2e24b"; \
     else \
@@ -90,8 +95,9 @@ make_cmake()
     sha256sum --quiet -c cmake-sha.txt && \
     mkdir cmake && \
     tar --strip-components 1 --no-same-owner --directory cmake -xf cmake.tar.gz && \
-    cp -r cmake/* /usr/local/ && \
+    cp -rf cmake/* /usr/ && \
     rm -rf /tmp/*
+    message "Done ・ Installing CMake "
 
 }
 
