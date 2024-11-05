@@ -56,6 +56,29 @@ make_lz4()
     rm -rf /tmp/*
 }
 
+make_jemalloc()
+{
+    message "Compiling jemalloc 5.3"
+    curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc.tar.bz2 && \
+    echo "2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa  jemalloc.tar.bz2" > jemalloc-sha.txt && \
+    sha256sum --quiet -c jemalloc-sha.txt && \
+    mkdir -p /opt/jemalloc_5.3.0 && \
+    tar --strip-components 1 --no-same-owner --no-same-permissions --directory /opt/jemalloc_5.3.0 -xjf jemalloc.tar.bz2 && \
+    cd /opt/jemalloc_5.3.0 && \
+    ./configure --enable-static --disable-cxx --enable-prof && \
+    make -j32 && \
+    cd .. && \
+    rm -rf /tmp/*
+}
+
+setup_sphinx()
+{
+    message "installing Sphinx"
+    python3 -m pip install setuptools==65.3.0 sphinx-bootstrap-theme==0.8.1 docutils==0.19 sphinx==5.1.1 sphinx-autobuild Jinja2==3.1.2 urllib3==2.0.2
+}
+
+
+
 if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     message "Preparing dev requirements for ubuntu|debian"
     GENERATOR='DEB'
@@ -92,7 +115,7 @@ elif [[ ${ID} == "rocky" ]]; then
 
     dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel rpm-build unzip
     make_openssl
-
+    
     OPENSSL_FLAGS=' -DOPENSSL_ROOT_DIR=/usr/local/openssl/ '
 
 else
@@ -108,6 +131,8 @@ mkdir -p fdb_build
 cd fdb_build
 
 make_lz4
+make_jemalloc
+setup_sphinx
 
 export CLICOLOR_FORCE=1
 
