@@ -138,7 +138,7 @@ elif [[ ${ID} == "rocky" ]]; then
     fi
 
     dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel python3-pip rpm-build unzip
-    pip install --user virtualenv
+    pip3 install --user virtualenv
     make_openssl
 
     OPENSSL_FLAGS=' -DOPENSSL_ROOT_DIR=/usr/local/openssl/ '
