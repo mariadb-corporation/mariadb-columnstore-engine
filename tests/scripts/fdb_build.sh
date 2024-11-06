@@ -3,6 +3,7 @@
 set -e
 FDB_VERSION=7.3.43
 GCC_VERSION='11'
+CLANG_VERSION='16'
 BUILD_COMMAND='make -j2'
 . /etc/os-release
 
@@ -14,6 +15,15 @@ message()
 
     echo "${color_cyan}・・・・・・・・・・・${color_normal} $@"
 }
+
+error()
+{
+    color_normal=$(tput sgr0 -T xterm-256color )
+    color_red=$(tput setaf 1 -T xterm-256color)
+    echo "${color_red}・・・・・・・・・・・${color_normal} $@"
+    exit 1
+}
+
 
 print_env()
 {
@@ -96,6 +106,31 @@ install_cmake()
 }
 
 
+install_clang()
+{
+    message "Installing clang"
+    OS_ID=$1
+    if [[ ${OS_ID} == 'ubuntu']]; then
+        CLANG_REPO_URL="deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${CLANG_VERSION}"
+    elif [[ ${OS_ID} == 'debian']]; then
+        CLANG_REPO_URL="deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-${CLANG_VERSION}"
+    else
+        error "Clang if not avaliable of ${OS_ID}"
+    fi
+
+    apt update && apt install -y gnupg wget \
+        && echo "${CLANG_REPO_URL} main" >>  /etc/apt/sources.list \
+        && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-${CLANG_VERSION}
+
+     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION}
+     && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 \
+     && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
+    export CC=/usr/bin/clang; export CXX=/usr/bin/clang++
+
+    message "Installing clang done "
+}
+
+
 if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     message "Preparing dev requirements for ubuntu|debian"
     GENERATOR='DEB'
@@ -105,6 +140,10 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     print_env
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl file g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev python3-venv unzip
+
+    if [[ ${OS_ID} == 'ubuntu' && ${VERSION_ID} == '20.04' || ${OS_ID} == 'debian' && ${VERSION_ID} == '11' ]]; then
+        install_clang()
+    fi
 
 elif [[ ${ID} == "rocky" ]]; then
     PKG_MANAGER='yum install -y'
@@ -132,6 +171,7 @@ elif [[ ${ID} == "rocky" ]]; then
     fi
 
     dnf install -y -q --allowerasing automake cmake curl dnf gcc git jemalloc-devel jq mono-devel patch perl python3-devel python3-pip rpm-build unzip
+    pip3 install --upgrade pip
     pip3 install --user virtualenv
     make_openssl
 
