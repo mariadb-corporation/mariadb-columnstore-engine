@@ -122,7 +122,7 @@ install_clang()
         && echo "${CLANG_REPO_URL} main" >>  /etc/apt/sources.list \
         && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-${CLANG_VERSION}
 
-     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION}
+     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} \
      && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 \
      && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
     export CC=/usr/bin/clang; export CXX=/usr/bin/clang++
@@ -142,7 +142,7 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl file g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev python3-venv unzip
 
     if [[ ${OS_ID} == 'ubuntu' && ${VERSION_ID} == '20.04' || ${OS_ID} == 'debian' && ${VERSION_ID} == '11' ]]; then
-        install_clang()
+        install_clang ${OS_ID}
     fi
 
 elif [[ ${ID} == "rocky" ]]; then
