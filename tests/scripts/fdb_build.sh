@@ -64,25 +64,19 @@ make_jemalloc()
     curl -Ls https://github.com/jemalloc/jemalloc/releases/download/5.3.0/jemalloc-5.3.0.tar.bz2 -o jemalloc.tar.bz2 && \
     echo "2db82d1e7119df3e71b7640219b6dfe84789bc0537983c3b7ac4f7189aecfeaa  jemalloc.tar.bz2" > jemalloc-sha.txt && \
     sha256sum --quiet -c jemalloc-sha.txt && \
-    mkdir -p /opt/jemalloc_5.3.0 && \
-    tar --strip-components 1 --no-same-owner --no-same-permissions --directory /opt/jemalloc_5.3.0 -xjf jemalloc.tar.bz2 && \
-    cd /opt/jemalloc_5.3.0 && \
+    mkdir jemalloc && \
+    tar --strip-components 1 --no-same-owner --no-same-permissions --directory jemalloc -xjf jemalloc.tar.bz2 && \
+    cd jemalloc && \
     ./configure --enable-static --disable-cxx --enable-prof && \
-    make -j32 && \
+    make && \
+    make install && \
     cd .. && \
     rm -rf /tmp/*
     message "Done ・ Compiling jemalloc 5.3"
 
 }
 
-setup_sphinx()
-{
-    message "installing Sphinx"
-    python3 -m pip install setuptools==65.3.0 sphinx-bootstrap-theme==0.8.1 docutils==0.19 sphinx==5.1.1 sphinx-autobuild Jinja2==3.1.2 urllib3==2.0.2
-}
-
-
-make_cmake()
+install_cmake()
 {
     message "Installing CMake "
     if [ "$(uname -m)" == "aarch64" ]; then \
@@ -147,7 +141,7 @@ else
     echo "Unsupported distribution. This script only supports Rocky[8|9], Ubuntu [20.04|22.04|24.04] Debian[11|12]"
 fi
 
-make_cmake
+install_cmake
 make_lz4
 make_jemalloc
 
@@ -160,8 +154,6 @@ unzip -q ${FDB_VERSION}.zip
 message "Configuring cmake"
 mkdir -p fdb_build
 cd fdb_build
-
-#setup_sphinx
 
 export CLICOLOR_FORCE=1
 
@@ -181,22 +173,28 @@ cmake  -DWITH_PYTHON=ON \
        ${OPENSSL_FLAGS} \
             ../foundationdb-${FDB_VERSION}
 
-message "Compiling sources"
+
+message "Compiling actorcompiler"
+${BUILD_COMMAND} actorcompiler
 
 message "Compiling fdbserver"
 cd fdbserver
 ${BUILD_COMMAND}
 cd -
+
 message "Compiling fdbcli"
 cd fdbcli
 ${BUILD_COMMAND}
 cd -
+
 message "Compiling fdbclient"
 cd fdbclient
 ${BUILD_COMMAND}
 cd -
+
 message "Compiling rest"
 ${BUILD_COMMAND}
+
 
 message "Generating packages"
 cpack -G ${GENERATOR}
