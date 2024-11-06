@@ -110,9 +110,9 @@ install_clang()
 {
     message "Installing clang"
     OS_ID=$1
-    if [[ ${OS_ID} == 'ubuntu']]; then
+    if [[ ${OS_ID} == 'ubuntu' ]]; then
         CLANG_REPO_URL="deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${CLANG_VERSION}"
-    elif [[ ${OS_ID} == 'debian']]; then
+    elif [[ ${OS_ID} == 'debian' ]]; then
         CLANG_REPO_URL="deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-${CLANG_VERSION}"
     else
         error "Clang if not avaliable of ${OS_ID}"
