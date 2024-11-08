@@ -1089,25 +1089,35 @@ int IOCoordinator::copyFile(const char* _filename1, const char* _filename2)
       }
 
       const auto journalName = getJournalName((journalPath / firstDir1 / (object.key + ".journal")).string());
+      auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+      FDBCS::BlobHandler journalReader(keyGen);
       auto kvStorage = KVStorageInitializer::getStorageInstance();
-      auto tnx = kvStorage->createTransaction();
-      auto resultPair = tnx->get(journalName);
-      // if there's a journal file for this object, make a copy
-      if (false && resultPair.first)
+      auto resultPair = journalReader.readBlob(kvStorage, journalName);
+      if (resultPair.first)
       {
+        const auto& journalData = resultPair.second;
         const std::string oldJournalDataHeader = resultPair.second;
         const auto newJournalName =
             getJournalName((journalPath / firstDir2 / (newObj.key + ".journal")).string());
-        auto tnx = kvStorage->createTransaction();
-        tnx->set(newJournalName, oldJournalDataHeader);
-        tnx->remove(journalName);
-        tnx->commit();
-        size_t tmp = 100;  // bf::file_size(newJournalFile);
+        const auto newJournalSizeName =
+            getJournalName((journalPath / firstDir2 / (newObj.key + "_size.journal")).string());
+
+        FDBCS::BlobHandler journalWriter(keyGen);
+        if (!journalWriter.writeBlob(kvStorage, newJournalName, journalData))
+          logger->log(LOG_CRIT, "Cannot write new journal, while copying files.");
+
+        {
+          auto tnx = kvStorage->createTransaction();
+          tnx->set(newJournalSizeName, to_string(journalData.size()));
+          if (!tnx->commit())
+            logger->log(LOG_CRIT, "Cannot write new journal size, while copying files.");
+        }
+
         ++iocJournalsCreated;
-        iocBytesRead += tmp;
-        iocBytesWritten += tmp;
-        cache->newJournalEntry(firstDir2, tmp);
-        newJournalEntries.push_back(pair<string, size_t>(newObj.key, tmp));
+        iocBytesRead += journalData.size();
+        iocBytesWritten += journalData.size();
+        cache->newJournalEntry(firstDir2, journalData.size());
+        newJournalEntries.push_back(pair<string, size_t>(newObj.key, journalData.size()));
       }
     }
   }
