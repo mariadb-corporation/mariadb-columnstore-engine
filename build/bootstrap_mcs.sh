@@ -49,6 +49,9 @@ optparse.define short=F long=show-build-flags desc="Print CMake flags, while bui
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
+optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
+optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
+
 
 source $( optparse.build )
 
@@ -445,9 +448,10 @@ fix_config_files()
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
-
-    message Reloading systemd
-    systemctl daemon-reload
+    if [[ $RECOMPILE_ONLY = false ]] ; then
+        message Reloading systemd
+        systemctl daemon-reload
+    fi
 }
 
 make_dir()
@@ -458,77 +462,79 @@ make_dir()
 
 install()
 {
-    message_split
-    message "Installing MariaDB"
-    disable_plugins_for_bootstrap
+    if [[ $RECOMPILE_ONLY = false ]] ; then
+        message_split
+        message "Installing MariaDB"
+        disable_plugins_for_bootstrap
 
-    make_dir $REPORT_PATH
-    chmod 777 $REPORT_PATH
+        make_dir $REPORT_PATH
+        chmod 777 $REPORT_PATH
 
-    check_user_and_group mysql
-    check_user_and_group syslog
+        check_user_and_group mysql
+        check_user_and_group syslog
 
 
-    make_dir $CONFIG_DIR
+        make_dir $CONFIG_DIR
 
-    echo "[client-server]
-socket=/run/mysqld/mysqld.sock" > $CONFIG_DIR/socket.cnf
+        echo "[client-server]
+    socket=/run/mysqld/mysqld.sock" > $CONFIG_DIR/socket.cnf
 
-    mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
-    make_dir /var/lib/mysql
+        mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
+        make_dir /var/lib/mysql
 
-    message "Running mysql_install_db"
-    sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
-    mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
+        message "Running mysql_install_db"
+        sudo -u mysql mysql_install_db --rpm --user=mysql > /dev/null
+        mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
 
-    enable_columnstore_back
+        enable_columnstore_back
 
-    make_dir /etc/columnstore
+        make_dir /etc/columnstore
 
-    cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
-    cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
+        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
 
-    cp $MDB_SOURCE_PATH/support-files/*.service /lib/systemd/system/
-    cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
+        cp $MDB_SOURCE_PATH/support-files/*.service /lib/systemd/system/
+        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
-    if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
-        make_dir /usr/share/mysql
-        make_dir /etc/mysql/
-        cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
-        cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
-        > /etc/mysql/debian.cnf
+        if [[ "$OS" = 'Ubuntu' || "$OS" = 'Debian' ]]; then
+            make_dir /usr/share/mysql
+            make_dir /etc/mysql/
+            cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
+            cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
+            > /etc/mysql/debian.cnf
+        fi
+
+        fix_config_files
+
+        make_dir /etc/my.cnf.d
+        if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
+            message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
+            cp -rp /etc/mysql/mariadb.conf.d/* /etc/my.cnf.d
+        fi
+
+        if [ -d "/etc/mysql/conf.d/" ]; then
+            message "Copying configs from /etc/mysql/conf.d/ to /etc/my.cnf.d"
+            cp -rp /etc/mysql/conf.d/* /etc/my.cnf.d
+        fi
+
+        make_dir /var/lib/columnstore/data1
+        make_dir /var/lib/columnstore/data1/systemFiles
+        make_dir /var/lib/columnstore/data1/systemFiles/dbrm
+        make_dir /run/mysqld/
+        make_dir $DATA_DIR
+
+        chmod +x $INSTALL_PREFIX/bin/mariadb*
+
+        ldconfig
+
+        start_storage_manager_if_needed
+
+        message "Running columnstore-post-install"
+        make_dir /var/lib/columnstore/local
+        columnstore-post-install --rpmmode=install
+        message "Running install_mcs_mysql"
+        install_mcs_mysql.sh
     fi
-
-    fix_config_files
-
-    make_dir /etc/my.cnf.d
-    if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
-        message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
-        cp -rp /etc/mysql/mariadb.conf.d/* /etc/my.cnf.d
-    fi
-
-    if [ -d "/etc/mysql/conf.d/" ]; then
-        message "Copying configs from /etc/mysql/conf.d/ to /etc/my.cnf.d"
-        cp -rp /etc/mysql/conf.d/* /etc/my.cnf.d
-    fi
-
-    make_dir /var/lib/columnstore/data1
-    make_dir /var/lib/columnstore/data1/systemFiles
-    make_dir /var/lib/columnstore/data1/systemFiles/dbrm
-    make_dir /run/mysqld/
-    make_dir $DATA_DIR
-
-    chmod +x $INSTALL_PREFIX/bin/mariadb*
-
-    ldconfig
-
-    start_storage_manager_if_needed
-
-    message "Running columnstore-post-install"
-    make_dir /var/lib/columnstore/local
-    columnstore-post-install --rpmmode=install
-    message "Running install_mcs_mysql"
-    install_mcs_mysql.sh
 
     chown -R syslog:syslog /var/log/mariadb/
     chmod 777 /var/log/mariadb/
@@ -574,7 +580,9 @@ if [[ $INSTALL_DEPS = true ]] ; then
     install_deps
 fi
 
-stop_service
+if [[ $RESTART_SERVICES = true ]] ; then
+    stop_service
+fi
 
 if [[ $NO_CLEAN = false ]] ; then
     clean_old_installation
@@ -584,8 +592,10 @@ build
 run_unit_tests
 run_microbenchmarks_tests
 install
-start_service
-smoke
-generate_svgs
+if [[ $RESTART_SERVICES = true ]] ; then
+    start_service
+    smoke
+    generate_svgs
+fi
 
 message_splitted "FINISHED"
