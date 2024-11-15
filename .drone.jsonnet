@@ -90,7 +90,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'mkdir -p ' + builddir,
                'cd ' + builddir,
                'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/fdb_build.sh',
-               'wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/mariadb_foundationdb-7.1.63_gcc.patch',
                'bash fdb_build.sh',
                'mkdir -p  /drone/src/' + result,
                'ls -al fdb_build/packages',

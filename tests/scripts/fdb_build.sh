@@ -5,8 +5,6 @@ FDB_VERSION=7.3.43
 GCC_VERSION='11'
 CLANG_VERSION='16'
 BUILD_COMMAND='make -j2'
-SCRIPT_LOCATION=$(dirname "$0")
-SCRIPT_PATH=$(realpath $SCRIPT_LOCATION)
 
 . /etc/os-release
 
@@ -195,12 +193,11 @@ wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
 unzip -q ${FDB_VERSION}.zip
 
 
+# assume patch file is already in the root /
 message "Patching sources"
+wget https://raw.githubusercontent.com/mariadb-corporation/mariadb-columnstore-engine/fdb_build/tests/scripts/mariadb_foundationdb-${FDB_VERSION}_gcc.patch
 cd foundationdb-${FDB_VERSION}
-ls ${SCRIPT_PATH}
-ls
-pwd
-patch -p1 -i ${SCRIPT_PATH}/mariadb_foundationdb-${FDB_VERSION}_gcc.patch
+patch -p1 -i ../mariadb_foundationdb-${FDB_VERSION}_gcc.patch
 cd -
 
 
