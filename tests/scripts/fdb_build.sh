@@ -5,6 +5,8 @@ FDB_VERSION=7.3.43
 GCC_VERSION='11'
 CLANG_VERSION='16'
 BUILD_COMMAND='make -j2'
+SCRIPT_LOCATION=$(dirname "$0")
+
 . /etc/os-release
 
 
@@ -194,7 +196,7 @@ unzip -q ${FDB_VERSION}.zip
 
 message "Patching sources"
 cd foundationdb-${FDB_VERSION}
-patch -p1 -i ../mariadb_foundationdb-${FDB_VERSION}_gcc.patch
+patch -p1 -i ${SCRIPT_LOCATION}/mariadb_foundationdb-${FDB_VERSION}_gcc.patch
 cd -
 
 
