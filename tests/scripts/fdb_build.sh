@@ -141,8 +141,8 @@ if [[ ${ID} == 'ubuntu' || ${ID} == 'debian' ]]; then
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
     DEBIAN_FRONTEND=noninteractive apt install -y -qq automake cmake curl file g++ gcc git jq libjemalloc-dev libssl-dev mono-devel patch python3-dev python3-venv unzip
 
-    if [[ ${OS_ID} == 'ubuntu' && ${VERSION_ID} == '20.04' || ${OS_ID} == 'debian' && ${VERSION_ID} == '11' ]]; then
-        install_clang ${OS_ID}
+    if [[ ${ID} == 'ubuntu' && ${VERSION_ID} == '20.04' || ${ID} == 'debian' && ${VERSION_ID} == '11' ]]; then
+        install_clang ${ID}
     fi
 
 elif [[ ${ID} == "rocky" ]]; then
@@ -190,6 +190,13 @@ cd /
 message "Downloading sources"
 wget https://github.com/apple/foundationdb/archive/refs/tags/${FDB_VERSION}.zip
 unzip -q ${FDB_VERSION}.zip
+
+
+message "Patching sources"
+cd foundationdb-${FDB_VERSION}
+patch -p1 -i ../mariadb_foundationdb-7.1.63_gcc.patch
+cd -
+
 
 message "Configuring cmake"
 mkdir -p fdb_build
