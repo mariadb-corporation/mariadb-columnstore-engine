@@ -196,6 +196,9 @@ unzip -q ${FDB_VERSION}.zip
 
 message "Patching sources"
 cd foundationdb-${FDB_VERSION}
+ls ${SCRIPT_LOCATION}
+ls
+pwd
 patch -p1 -i ${SCRIPT_LOCATION}/mariadb_foundationdb-${FDB_VERSION}_gcc.patch
 cd -
 
