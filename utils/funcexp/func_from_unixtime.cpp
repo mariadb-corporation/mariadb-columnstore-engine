@@ -125,7 +125,7 @@ string Func_from_unixtime::getStrVal(rowgroup::Row& row, FunctionParm& parm, boo
   if (parm.size() == 2)
   {
     const string& format = parm[1]->data()->getStrVal(row, isNull);
-    return helpers::IDB_date_format(dt, format);
+    return helpers::IDB_date_format(dt, format, isNull);
   }
 
   char buf[256] = {0};

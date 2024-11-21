@@ -137,7 +137,8 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
         isNull = true;
         break;
       }
-      val1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+      val1 = isTime1 ? parm[0]->data()->getTimeIntVal(row, isNull)
+                     : parm[0]->data()->getDatetimeIntVal(row, isNull);
       break;
 
     case execplan::CalpontSystemCatalog::TIMESTAMP:
@@ -225,7 +226,8 @@ string Func_timediff::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
       isTime2 = true;
       /* fall through */
     case execplan::CalpontSystemCatalog::DATETIME:
-      val2 = parm[1]->data()->getDatetimeIntVal(row, isNull);
+      val2 = isTime2 ? parm[1]->data()->getTimeIntVal(row, isNull)
+                     : parm[1]->data()->getDatetimeIntVal(row, isNull);
       break;
 
     case execplan::CalpontSystemCatalog::TIMESTAMP:
