@@ -395,7 +395,7 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     Item_ref* ifp_sort_ref = static_cast<Item_ref*>(sort_item);
     found = sortItemIsInGroupRec(*ifp_sort_ref->ref, group_item);
   }
-  else if (!found && sort_item->type() == Item::FIELD_ITEM)
+  else if (sort_item->type() == Item::FIELD_ITEM)
   {
     return found;
   }
