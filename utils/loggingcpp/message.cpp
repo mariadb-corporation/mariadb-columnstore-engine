@@ -42,6 +42,8 @@ using namespace config;
 #include "installdir.h"
 
 #include "format.h"
+#include "mcs_int128.h"
+
 namespace
 {
 boost::mutex mx;
@@ -125,6 +127,11 @@ void Message::Args::add(int i)
 void Message::Args::add(uint64_t u64)
 {
   fArgs.push_back(u64);
+}
+
+void Message::Args::add(int128_t i128)
+{
+  fArgs.push_back(datatypes::TSInt128(i128).toString());
 }
 
 void Message::Args::add(const string& s)

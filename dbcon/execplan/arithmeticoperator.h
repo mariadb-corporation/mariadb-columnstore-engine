@@ -323,6 +323,19 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 template <typename result_t>
 inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& isNull)
 {
+  if (isNull)
+  {
+    // at least one operand is NULL.
+    // do nothing, return 0.
+    if constexpr (std::is_same<T, datatypes::TSInt128>::value)
+    {
+      return datatypes::TSInt128();  // returns 0
+    }
+    else
+    {
+      return T{0};
+    }
+  }
   switch (fOp)
   {
     case OP_ADD: return op1 + op2;
