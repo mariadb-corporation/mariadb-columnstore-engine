@@ -94,6 +94,8 @@ namespace exemgr
     }
   };
 
+  void printTotalUmMemory(int sig);
+
   class ServiceExeMgr : public Service, public Opt
   {
     using SessionMemMap_t = std::map<uint32_t, size_t>;
@@ -111,16 +113,8 @@ namespace exemgr
     }
 
   public:
-    ServiceExeMgr(const Opt& opt) : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16))
-    {
-      bool runningWithExeMgr = true;
-      rm_ = joblist::ResourceManager::instance(runningWithExeMgr);
-    }
-    ServiceExeMgr(const Opt& opt, config::Config* aConfig) : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16))
-    {
-      bool runningWithExeMgr = true;
-      rm_ = joblist::ResourceManager::instance(runningWithExeMgr, aConfig);
-    }
+    ServiceExeMgr(const Opt& opt, joblist::ResourceManager* rm) : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16)), rm_(rm)
+    { }
     void LogErrno() override
     {
       log(logging::LOG_TYPE_CRITICAL, std::string(strerror(errno)));

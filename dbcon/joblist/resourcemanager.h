@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include <atomic>
 #include <vector>
 #include <iostream>
 #include <boost/thread.hpp>
@@ -33,6 +34,7 @@
 
 #include "configcpp.h"
 #include "calpontselectexecutionplan.h"
+#include "countingallocator.h"
 #include "resourcedistributor.h"
 #include "installdir.h"
 #include "branchpred.h"
@@ -100,9 +102,9 @@ const uint64_t defaultRowsPerBatch = 10000;
 /* HJ CP feedback, see bug #1465 */
 const uint32_t defaultHjCPUniqueLimit = 100;
 
-const constexpr uint64_t defaultFlowControlEnableBytesThresh = 50000000;     // ~50Mb
+const constexpr uint64_t defaultFlowControlEnableBytesThresh = 50000000;   // ~50Mb
 const constexpr uint64_t defaultFlowControlDisableBytesThresh = 10000000;  // ~10 MB
-const constexpr uint64_t defaultBPPSendThreadBytesThresh = 250000000;       // ~250 MB
+const constexpr uint64_t defaultBPPSendThreadBytesThresh = 250000000;      // ~250 MB
 const constexpr uint64_t BPPSendThreadMsgThresh = 100;
 
 const bool defaultAllowDiskAggregation = false;
@@ -286,12 +288,14 @@ class ResourceManager
 
   uint64_t getDECEnableBytesThresh() const
   {
-    return getUintVal(FlowControlStr, "DECFlowControlEnableBytesThresh(", defaultFlowControlEnableBytesThresh);
+    return getUintVal(FlowControlStr, "DECFlowControlEnableBytesThresh(",
+                      defaultFlowControlEnableBytesThresh);
   }
 
   uint32_t getDECDisableBytesThresh() const
   {
-    return getUintVal(FlowControlStr, "DECFlowControlDisableBytesThresh", defaultFlowControlDisableBytesThresh);
+    return getUintVal(FlowControlStr, "DECFlowControlDisableBytesThresh",
+                      defaultFlowControlDisableBytesThresh);
   }
 
   uint32_t getBPPSendThreadBytesThresh() const
@@ -325,16 +329,16 @@ class ResourceManager
   bool getMemory(int64_t amount, bool patience = true);
   inline void returnMemory(int64_t amount)
   {
-    atomicops::atomicAdd(&totalUmMemLimit, amount);
+    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
   }
   inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
   {
-    atomicops::atomicAdd(&totalUmMemLimit, amount);
+    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
     sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
   }
   inline int64_t availableMemory() const
   {
-    return totalUmMemLimit;
+    return totalUmMemLimit.load(std::memory_order_relaxed);
   }
 
   /* old HJ mem interface, used by HashJoin */
@@ -454,6 +458,12 @@ class ResourceManager
     return configuredUmMemLimit;
   }
 
+  template<typename T>
+  allocators::CountingAllocator<T> getAllocator()
+  {
+    return allocators::CountingAllocator<T>(totalUmMemLimit);
+  }
+
  private:
   void logResourceChangeMessage(logging::LOG_TYPE logType, uint32_t sessionID, uint64_t newvalue,
                                 uint64_t value, const std::string& source, logging::Message::MessageID mid);
@@ -504,7 +514,7 @@ class ResourceManager
   LockedSessionMap fHJPmMaxMemorySmallSideSessionMap;
 
   /* new HJ/Union/Aggregation support */
-  volatile int64_t totalUmMemLimit;  // mem limit for join, union, and aggregation on the UM
+  std::atomic<int64_t> totalUmMemLimit{0};  // mem limit for join, union, and aggregation on the UM
   int64_t configuredUmMemLimit;
   uint64_t pmJoinMemLimit;  // mem limit on individual PM joins
 

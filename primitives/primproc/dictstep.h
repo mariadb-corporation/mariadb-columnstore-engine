@@ -42,8 +42,8 @@ class DictStep : public Command
   virtual ~DictStep();
 
   void execute();
-  void project();
-  void project(int64_t* vals);  // used by RTSCommand to redirect input
+  void project(messageqcpp::SBS& bs);
+  void project(messageqcpp::SBS& bs, int64_t* vals);  // used by RTSCommand to redirect input
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t row);
   void projectIntoRowGroup(rowgroup::RowGroup& rg, int64_t* vals, uint32_t col);
   uint64_t getLBID();
@@ -97,7 +97,7 @@ class DictStep : public Command
   void processResult();
   void projectResult(std::string* tmpStrings);
   void projectResult(StringPtr* tmpStrings);
-  void _project();
+  void _project(messageqcpp::SBS& bs);
   void _projectToRG(rowgroup::RowGroup& rg, uint32_t col);
 
   // struct used for scratch space

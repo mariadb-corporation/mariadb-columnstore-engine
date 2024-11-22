@@ -31,6 +31,7 @@
 #pragma once
 
 #include <memory>
+#include "bytestream.h"
 #include "columnwidth.h"
 #include "command.h"
 #include "calpontsystemcatalog.h"
@@ -71,7 +72,7 @@ class ColumnCommand : public Command
   void execute();
   void execute(int64_t* vals);  // used by RTSCommand to redirect values
   virtual void prep(int8_t outputType, bool absRids);
-  void project();
+  void project(messageqcpp::SBS& bs);
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t pos);
   void nextLBID();
   bool isScan()
@@ -151,7 +152,7 @@ class ColumnCommand : public Command
   template <int W>
   void _process_OT_DATAVALUE();
   void process_OT_ROWGROUP();
-  void projectResult();
+  void projectResult(messageqcpp::SBS& bs);
   template <typename T>
   void _projectResultRGLoop(rowgroup::Row& r, const T* valuesArray, const uint32_t offset);
   template <int W>

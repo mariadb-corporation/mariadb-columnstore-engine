@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "bytestream.h"
 #include "command.h"
 #include <boost/scoped_ptr.hpp>
 #include <memory>
@@ -43,7 +44,7 @@ class RTSCommand : public Command
   virtual ~RTSCommand();
 
   void execute();
-  void project();
+  void project(messageqcpp::SBS& bs);
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
   uint64_t getLBID();
   void nextLBID();

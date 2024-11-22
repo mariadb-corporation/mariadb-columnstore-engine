@@ -36,6 +36,7 @@
 #include "exceptclasses.h"
 #include "serializeable.h"
 #include "any.hpp"
+#include "countingallocator.h"
 
 class ByteStreamTestSuite;
 
@@ -44,7 +45,7 @@ class ByteStreamTestSuite;
 namespace messageqcpp
 {
 typedef boost::shared_ptr<ByteStream> SBS;
-
+using BSBufType = uint8_t;
 /**
  * @brief A class to marshall bytes as a stream
  *
@@ -76,6 +77,7 @@ class ByteStream : public Serializeable
    *	default ctor
    */
   EXPORT explicit ByteStream(uint32_t initSize = 8192);  // multiples of pagesize are best
+  explicit ByteStream(allocators::CountingAllocator<BSBufType>* alloc, uint32_t initSize = 8192);
   /**
    *	ctor with a uint8_t array and len initializer
    */
@@ -456,6 +458,9 @@ class ByteStream : public Serializeable
   void doCopy(const ByteStream& rhs);
 
  private:
+  BSBufType* allocate(const size_t size);
+  void deallocate(BSBufType* ptr);
+
   // Put struct `MemChunk` declaration here, to avoid circular dependency.
   struct MemChunk
   {
@@ -464,12 +469,13 @@ class ByteStream : public Serializeable
     uint8_t data[];
   };
 
-  uint8_t* fBuf;        /// the start of the allocated buffer
-  uint8_t* fCurInPtr;   // the point in fBuf where data is inserted next
-  uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
+  BSBufType* fBuf;        /// the start of the allocated buffer
+  BSBufType* fCurInPtr;   // the point in fBuf where data is inserted next
+  BSBufType* fCurOutPtr;  // the point in fBuf where data is extracted from next
   uint32_t fMaxLen;     // how big fBuf is currently
   // Stores `long strings`.
-    std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  allocators::CountingAllocator<BSBufType>* allocator = nullptr;
 };
 
 template <int W, typename T = void>
@@ -524,7 +530,7 @@ inline ByteStream::ByteStream(const uint8_t* bp, const uint32_t len) : fBuf(0), 
 }
 inline ByteStream::~ByteStream()
 {
-  delete[] fBuf;
+  deallocate(fBuf);
 }
 
 inline const uint8_t* ByteStream::buf() const
@@ -549,7 +555,7 @@ inline uint32_t ByteStream::lengthWithHdrOverhead() const
 }
 inline void ByteStream::reset()
 {
-  delete[] fBuf;
+  deallocate(fBuf);
   fMaxLen = 0;
   fCurInPtr = fCurOutPtr = fBuf = 0;
 }

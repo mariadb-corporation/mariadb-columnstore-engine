@@ -121,7 +121,6 @@ void setupSignalHandlers()
   sigset_t sigset;
   sigemptyset(&sigset);
   sigaddset(&sigset, SIGPIPE);
-  sigaddset(&sigset, SIGUSR1);
   sigaddset(&sigset, SIGUSR2);
   sigprocmask(SIG_BLOCK, &sigset, 0);
 
@@ -337,12 +336,15 @@ int ServicePrimProc::Child()
 
     return 2;
   }
+  bool runningWithExeMgr = true;
+  auto* rm = joblist::ResourceManager::instance(runningWithExeMgr, cf);
+
   utils::USpaceSpinLock startupRaceLock(getStartupRaceFlag());
   std::thread exeMgrThread(
-      [this, cf]()
+      [this, rm]()
       {
         exemgr::Opt opt;
-        exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, cf);
+        exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, rm);
         // primitive delay to avoid 'not connected to PM' log error messages
         // from EM. PrimitiveServer::start() releases SpinLock after sockets
         // are available.

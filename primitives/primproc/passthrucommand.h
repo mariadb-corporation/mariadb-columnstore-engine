@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "bytestream.h"
 #include "command.h"
 
 namespace primitiveprocessor
@@ -42,7 +43,7 @@ class PassThruCommand : public Command
 
   void prep(int8_t outputType, bool makeAbsRids);
   void execute();
-  void project();
+  void project(messageqcpp::SBS& bs);
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col);
   uint64_t getLBID();
   void nextLBID();

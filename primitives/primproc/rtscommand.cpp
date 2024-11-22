@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "bpp.h"
+#include "bytestream.h"
 #include "exceptclasses.h"
 
 using namespace std;
@@ -53,7 +54,7 @@ void RTSCommand::execute()
   throw logic_error("RTSCommand shouldn't be used for filter steps");
 }
 
-void RTSCommand::project()
+void RTSCommand::project(messageqcpp::SBS& bs)
 {
   uint32_t i;
 
@@ -70,7 +71,7 @@ void RTSCommand::project()
 
     // need something in values
 
-    dict.project();
+    dict.project(bs);
   }
   else
   {
@@ -99,7 +100,7 @@ void RTSCommand::project()
       }
     }
 
-    dict.project(tmpValues);
+    dict.project(bs, tmpValues);
   }
 }
 
