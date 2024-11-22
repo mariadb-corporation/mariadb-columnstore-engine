@@ -33,9 +33,10 @@
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <boost/thread.hpp>
 
+#include "countingallocator.h"
 #include "errorcodes.h"
 #include "serializeable.h"
 #include "messagequeue.h"
@@ -189,20 +190,20 @@ class BatchPrimitiveProcessor
 #ifdef PRIMPROC_STOPWATCH
   void execute(logging::StopWatch* stopwatch);
 #else
-  void execute();
+  void execute(messageqcpp::SBS& bs);
 #endif
-  void writeProjectionPreamble();
-  void makeResponse();
-  void sendResponse();
+  void writeProjectionPreamble(messageqcpp::SBS& bs);
+  void makeResponse(messageqcpp::SBS& bs);
+  void sendResponse(messageqcpp::SBS& bs);
   /* Used by scan operations to increment the LBIDs in successive steps */
   void nextLBID();
 
   /* these send relative rids, should this be abs rids? */
-  void serializeElementTypes();
-  void serializeStrings();
+  void serializeElementTypes(messageqcpp::SBS& bs);
+  void serializeStrings(messageqcpp::SBS& bs);
 
   void asyncLoadProjectColumns();
-  void writeErrorMsg(const std::string& error, uint16_t errCode, bool logIt = true, bool critical = true);
+  void writeErrorMsg(messageqcpp::SBS& bs, const std::string& error, uint16_t errCode, bool logIt = true, bool critical = true);
 
   BPSOutputType ot;
 
@@ -269,7 +270,7 @@ class BatchPrimitiveProcessor
   uint32_t physIO, cachedIO, touchedBlocks;
 
   SP_UM_IOSOCK sock;
-  messageqcpp::SBS serialized;
+  // messageqcpp::SBS serialized;
   SP_UM_MUTEX writelock;
 
   // MCOL-744 using pthread mutex instead of Boost mutex because
@@ -308,16 +309,23 @@ class BatchPrimitiveProcessor
   bool hasRowGroup;
 
   /* Rowgroups + join */
-  typedef std::tr1::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
-                                       std::equal_to<uint64_t>,
-                                       utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>
-      TJoiner;
+  // typedef std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
+  //                                      std::equal_to<uint64_t>,
+  //                                      utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>
+  //     TJoiner;
+  using TJoiner =
+      std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
+                              allocators::CountingAllocator<std::pair<const uint64_t, uint32_t>>>;
 
-  typedef std::tr1::unordered_multimap<
-      joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
-      joiner::TupleJoiner::TypelessDataComparator,
-      utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>
-      TLJoiner;
+  // typedef std::unordered_multimap<
+  //     joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
+  //     joiner::TupleJoiner::TypelessDataComparator,
+  //     utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>
+  //     TLJoiner;
+  using TLJoiner =
+      std::unordered_multimap<joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
+                              joiner::TupleJoiner::TypelessDataComparator,
+                              allocators::CountingAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;
 
   bool generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth = 0);
   /* generateJoinedRowGroup helper fcns & vars */

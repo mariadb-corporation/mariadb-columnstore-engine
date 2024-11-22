@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "bytestream.h"
 #include "command.h"
 #include <boost/scoped_ptr.hpp>
 #include <memory>
@@ -43,7 +44,7 @@ class RTSCommand : public Command
   ~RTSCommand() override;
 
   void execute() override;
-  void project() override;
+  void project(messageqcpp::SBS& bs) override;
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col) override;
   uint64_t getLBID() override;
   void nextLBID() override;

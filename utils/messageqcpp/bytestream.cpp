@@ -50,8 +50,8 @@ void ByteStream::doCopy(const ByteStream& rhs)
 
   if (fMaxLen < rlen)
   {
-    delete[] fBuf;
-    fBuf = new uint8_t[rlen + ISSOverhead];
+    deallocate(fBuf);
+    fBuf = allocate(rlen + ISSOverhead);
     fMaxLen = rlen;
   }
 
@@ -83,7 +83,7 @@ ByteStream& ByteStream::operator=(const ByteStream& rhs)
       doCopy(rhs);
     else
     {
-      delete[] fBuf;
+      deallocate(fBuf);
       fBuf = fCurInPtr = fCurOutPtr = 0;
       fMaxLen = 0;
       // Clear `longStrings`.
@@ -100,12 +100,39 @@ ByteStream::ByteStream(BSSizeType initSize) : fBuf(0), fCurInPtr(0), fCurOutPtr(
     growBuf(initSize);
 }
 
+ByteStream::ByteStream(allocators::CountingAllocator<uint8_t>* allocator, uint32_t initSize)
+ : fBuf(0), fCurInPtr(0), fCurOutPtr(0), fMaxLen(0), allocator(allocator)
+{
+  if (initSize > 0)
+    growBuf(initSize);
+}
+
 void ByteStream::add(const uint8_t b)
 {
   if (fBuf == 0 || (static_cast<BSSizeType>(fCurInPtr - fBuf) == fMaxLen + ISSOverhead))
     growBuf();
 
   *fCurInPtr++ = b;
+}
+
+BSBufType* ByteStream::allocate(const size_t size)
+{
+  if (allocator)
+  {
+    auto* mem = allocator->allocate(size);
+    return new (mem) BSBufType[size];
+  }
+  return new BSBufType[size];
+}
+
+void ByteStream::deallocate(BSBufType* ptr)
+{
+  if (allocator)
+  {
+    size_t count = (fMaxLen) ? fMaxLen + ISSOverhead : 0;
+    return allocator->deallocate(ptr, count);
+  }
+  return delete[] fBuf;
 }
 
 void ByteStream::growBuf(BSSizeType toSize)
@@ -117,7 +144,7 @@ void ByteStream::growBuf(BSSizeType toSize)
     else
       toSize = ((toSize + BlockSize - 1) / BlockSize) * BlockSize;
 
-    fBuf = new uint8_t[toSize + ISSOverhead];
+    fBuf = allocate(toSize + ISSOverhead);
 #ifdef ZERO_ON_NEW
     memset(fBuf, 0, (toSize + ISSOverhead));
 #endif
@@ -137,14 +164,14 @@ void ByteStream::growBuf(BSSizeType toSize)
     // Make sure we at least double the allocation
     toSize = std::max(toSize, fMaxLen * 2);
 
-    uint8_t* t = new uint8_t[toSize + ISSOverhead];
+    BSBufType* t = allocate(toSize + ISSOverhead);
     BSSizeType curOutOff = fCurOutPtr - fBuf;
     BSSizeType curInOff = fCurInPtr - fBuf;
     memcpy(t, fBuf, fCurInPtr - fBuf);
 #ifdef ZERO_ON_NEW
     memset(t + (fCurInPtr - fBuf), 0, (toSize + ISSOverhead) - (fCurInPtr - fBuf));
 #endif
-    delete[] fBuf;
+    deallocate(fBuf);
     fBuf = t;
     fMaxLen = toSize;
     fCurInPtr = fBuf + curInOff;
@@ -541,8 +568,8 @@ void ByteStream::load(const uint8_t* bp, BSSizeType len)
 
   if (len > fMaxLen)
   {
-    delete[] fBuf;
-    fBuf = new uint8_t[newMaxLen + ISSOverhead];
+    deallocate(fBuf);
+    fBuf = allocate(newMaxLen + ISSOverhead);
     fMaxLen = newMaxLen;
   }
 
@@ -575,8 +602,10 @@ void ByteStream::swap(ByteStream& rhs)
   std::swap(fCurOutPtr, rhs.fCurOutPtr);
   std::swap(fMaxLen, rhs.fMaxLen);
   std::swap(longStrings, rhs.longStrings);
+  std::swap(allocator, rhs.allocator);
 }
 
+// WIP use allocator
 ifstream& operator>>(ifstream& ifs, ByteStream& bs)
 {
   int ifs_len;
@@ -652,7 +681,6 @@ void ByteStream::needAtLeast(BSSizeType amount)
   if (currentSpace < amount)
     growBuf(fMaxLen + amount);
 }
-
 
 ByteStream& ByteStream::operator<<(const ByteStream& bs)
 {

@@ -358,7 +358,7 @@ Error:
   boost::mutex::scoped_lock lk(fMlock);
 
   MessageQueueMap::iterator map_tok;
-  sbs.reset(new ByteStream(0));
+  sbs.reset(new ByteStream(0U));
 
   for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
   {

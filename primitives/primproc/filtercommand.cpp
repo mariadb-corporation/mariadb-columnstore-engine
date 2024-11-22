@@ -201,7 +201,7 @@ void FilterCommand::prep(int8_t outputType, bool absRids)
 {
 }
 
-void FilterCommand::project()
+void FilterCommand::project(messageqcpp::SBS& bs)
 {
 }
 

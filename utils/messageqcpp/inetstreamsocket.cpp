@@ -487,25 +487,25 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     //		{
     //			logIoError("InetStreamSocket::read: timeout during readToMagic", 0);
     //		}
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
   }
 
   // we need to read the 4-byte message length first.
   uint32_t msglen;
   if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&msglen), sizeof(msglen), timeout, isTimeOut, stats,
                          msecs))
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
 
   // Read the number of the `long strings`.
   uint32_t longStringSize;
   if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&longStringSize), sizeof(longStringSize), timeout,
                          isTimeOut, stats, msecs))
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
 
   // Read the actual data of the `ByteStream`.
   SBS res(new ByteStream(msglen));
   if (!readFixedSizeData(pfd, res->getInputPtr(), msglen, timeout, isTimeOut, stats, msecs))
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
   res->advanceInputPtr(msglen);
 
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
@@ -517,7 +517,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
       rowgroup::StringStore::MemChunk memChunk;
       if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&memChunk),
                              sizeof(rowgroup::StringStore::MemChunk), timeout, isTimeOut, stats, msecs))
-        return SBS(new ByteStream(0));
+        return SBS(new ByteStream(0U));
 
       // Allocate new memory for the `long string`.
       std::shared_ptr<uint8_t[]> longString(
@@ -532,7 +532,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
       // Read the `long string`.
       if (!readFixedSizeData(pfd, memChunkPointer->data, memChunkPointer->currentSize, timeout, isTimeOut,
                              stats, msecs))
-        return SBS(new ByteStream(0));
+        return SBS(new ByteStream(0U));
 
       longStrings.push_back(longString);
     }
@@ -540,7 +540,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
   catch (std::bad_alloc& exception)
   {
     logIoError("InetStreamSocket::read: error during read for 'long strings' - 'bad_alloc'", 0);
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
   }
   catch (std::exception& exception)
   {
