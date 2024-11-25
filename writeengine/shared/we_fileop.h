@@ -27,7 +27,6 @@
 #include <map>
 #include <boost/thread.hpp>
 
-
 #include "we_blockop.h"
 #include "we_brm.h"
 #include "we_config.h"
@@ -129,6 +128,12 @@ class FileOp : public BlockOp, public WeUIDGID
    * that the OID directory exists on one or more of the DBRoots.
    */
   EXPORT bool existsOIDDir(FID fid) const;
+
+  /**
+   * @brief Check whether a column file exists by the given `fid` in all
+   * available db roots and default values for `partition` and `segment`.
+   */
+  EXPORT bool existsDefaultFile(FID fid) const;
 
   /**
    * @brief Expand current abbreviated extent for this column to a full extent
