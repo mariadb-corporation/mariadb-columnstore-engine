@@ -254,7 +254,7 @@ int MetadataFile::generateStatStructInfo(struct stat* out)
       return -1;
 
     statCache.resize(sizeof(struct stat));
-    std::memcpy(&statCache[0], &out, sizeof(struct stat));
+    std::memcpy(&statCache[0], out, sizeof(struct stat));
     statCached = true;
     std::filesystem::remove(statFileName);
     out->st_size = getLength();
