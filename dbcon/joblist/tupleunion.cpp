@@ -1601,7 +1601,7 @@ uint32_t TupleUnion::nextBand(messageqcpp::ByteStream& bs)
     outputRG.setData(&mem);
   else
   {
-    mem = RGData(outputRG, 0);
+    mem = RGData(outputRG, 0U);
     outputRG.setData(&mem);
     outputRG.resetRowGroup(0);
     outputRG.setStatus(status());

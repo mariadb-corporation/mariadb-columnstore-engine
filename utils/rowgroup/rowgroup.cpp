@@ -48,6 +48,11 @@ namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
+StringStore::StringStore(allocators::CountingAllocator<StringStoreBufType>* alloc) : StringStore()
+{
+  this->alloc = alloc;
+}
+
 StringStore::~StringStore()
 {
 #if 0
@@ -91,11 +96,22 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   if (mem.size() > 0)
     lastMC = (MemChunk*)mem.back().get();
 
+  std::cout << "StringStore::storeString len " << len << std::endl;
   if ((len + 4) >= CHUNK_SIZE)
   {
-    std::shared_ptr<uint8_t[]> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
-    longStrings.push_back(newOne);
-    lastMC = (MemChunk*)longStrings.back().get();
+    auto allocSize = len + sizeof(MemChunk) + 4;
+    if (alloc)
+    {
+      cout << "StringStore::storeString longStrings with alloc " << std::endl;
+      longStrings.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, allocSize));
+    }
+    else
+    {
+      cout << "StringStore::storeString longStrings no alloc " << std::endl;
+      longStrings.emplace_back(std::make_shared<uint8_t[]>(allocSize));
+    }
+    // std::shared_ptr<uint8_t[]> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
+    lastMC = reinterpret_cast<MemChunk*>(longStrings.back().get());
     lastMC->capacity = lastMC->currentSize = len + 4;
     memcpy(lastMC->data, &len, 4);
     memcpy(lastMC->data + 4, data, len);
@@ -109,10 +125,21 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
     {
       // mem usage debugging
       // if (lastMC)
-      // cout << "Memchunk efficiency = " << lastMC->currentSize << "/" << lastMC->capacity << endl;
-      std::shared_ptr<uint8_t[]> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
-      mem.push_back(newOne);
-      lastMC = (MemChunk*)mem.back().get();
+      if (alloc)
+      {
+        cout << "StringStore::storeString with alloc " << std::endl;
+        mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
+        // std::allocate_shared) newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
+      }
+      else
+      {
+        cout << "StringStore::storeString no alloc " << std::endl;
+        mem.emplace_back(std::make_shared<uint8_t[]>(CHUNK_SIZE + sizeof(MemChunk)));
+        // mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
+        // std::shared_ptr<uint8_t[]> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
+      }
+      // mem.push_back(newOne);
+      lastMC = reinterpret_cast<MemChunk*>(mem.back().get());
       lastMC->currentSize = 0;
       lastMC->capacity = CHUNK_SIZE;
       memset(lastMC->data, 0, CHUNK_SIZE);
@@ -169,7 +196,7 @@ void StringStore::deserialize(ByteStream& bs)
 
   // mem.clear();
   bs >> count;
-  mem.resize(count);
+  // mem.resize(count);
   bs >> tmp8;
   empty = (bool)tmp8;
 
@@ -178,7 +205,18 @@ void StringStore::deserialize(ByteStream& bs)
     bs >> size;
     // cout << "deserializing " << size << " bytes\n";
     buf = bs.buf();
-    mem[i].reset(new uint8_t[size + sizeof(MemChunk)]);
+
+    if (alloc)
+    {
+      cout << "StringStore::deserialize with alloc " << std::endl;
+      mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, size + sizeof(MemChunk)));
+    }
+    else
+    {
+      cout << "StringStore::deserialize no alloc " << std::endl;
+      mem.emplace_back(std::make_shared<uint8_t[]>(size + sizeof(MemChunk)));
+    }
+    // mem[i].reset(new uint8_t[size + sizeof(MemChunk)]);
     mc = (MemChunk*)mem[i].get();
     mc->currentSize = size;
     mc->capacity = size;
@@ -320,17 +358,41 @@ RGData::RGData(const RowGroup& rg)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-  columnCount = rg.getColumnCount();
-  rowSize = rg.getRowSize();
+
+columnCount = rg.getColumnCount();
+}
+
+
+RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>* alloc) : alloc(alloc)
+{
+  // rowData = shared_ptr<uint8_t[]>(buf, [alloc, allocSize](uint8_t* p) { alloc->deallocate(p, allocSize);
+  // });
+  rowData = std::allocate_shared<RGDataBufType>(*alloc, rg.getMaxDataSize());
+  // rowData = std::make_shared(uint8_t[rg.getMaxDataSize()]);
+
+  if (rg.usesStringTable())
+    strings.reset(new StringStore(alloc));
+
+  userDataStore.reset();
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
-  rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  if (alloc)
+  {
+    cout << "RGData::reinit with alloc " << std::endl;
+    rowData = std::allocate_shared<RGDataBufType>(*alloc, rg.getDataSize(rowCount));
+  }
+  else
+  {
+    cout << "RGData::reinit no alloc " << std::endl;
+    rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
+  }
+
   userDataStore.reset();
 
   if (rg.usesStringTable())
-    strings.reset(new StringStore());
+    strings.reset(new StringStore(alloc));
   else
     strings.reset();
   columnCount = rg.getColumnCount();

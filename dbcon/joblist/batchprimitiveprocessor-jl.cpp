@@ -790,7 +790,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
   if (in.length() == 0)
   {
     // done, return an empty RG
-    rgData = RGData(org, 0);
+    rgData = RGData(org, 0U);
     org.setData(&rgData);
     org.resetRowGroup(0);
     out->push_back(rgData);
@@ -925,7 +925,7 @@ RGData BatchPrimitiveProcessorJL::getErrorRowGroupData(uint16_t error) const
   RGData ret;
   rowgroup::RowGroup rg(projectionRG);
 
-  ret = RGData(rg, 0);
+  ret = RGData(rg, 0U);
   rg.setData(&ret);
   // rg.convertToInlineDataInPlace();
   rg.resetRowGroup(0);

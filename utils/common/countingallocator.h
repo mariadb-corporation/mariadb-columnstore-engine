@@ -46,8 +46,12 @@ public:
     CountingAllocator(const CountingAllocator<U>& other) noexcept
         : memoryLimitRef_(other.memoryLimitRef_) {}
 
+
     // Allocate memory for n objects of type T
-    T* allocate(std::size_t n) {
+    template <typename U = T>
+    typename std::enable_if<!std::is_array<U>::value, U*>::type
+    allocate(std::size_t n) 
+    {
         auto memCounted = memoryLimitRef_.fetch_sub(n * sizeof(T), std::memory_order_relaxed);
         if (memCounted < memoryLimitLowerBound) {
             memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
@@ -60,8 +64,25 @@ public:
         return ptr;
     }
 
+       template <typename U = T>
+    typename std::enable_if<std::is_array<U>::value, typename std::remove_extent<U>::type*>::type
+    allocate(std::size_t n) 
+    {
+        auto memCounted = memoryLimitRef_.fetch_sub(n * sizeof(T), std::memory_order_relaxed);
+        if (memCounted < memoryLimitLowerBound) {
+            memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
+            throw std::bad_alloc();
+        }
+        
+        T ptr = static_cast<T>(::operator new[](n));
+        // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
+        //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        return ptr;
+    }
+
     // Deallocate memory for n objects of type T
-    void deallocate(T* ptr, std::size_t n) noexcept {
+    void deallocate(T* ptr, std::size_t n) noexcept 
+    {
         ::operator delete(ptr);
         memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
         // std::cout << "[Deallocate] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
@@ -70,12 +91,14 @@ public:
 
     // Equality operators (allocators are equal if they share the same counter)
     template <typename U>
-    bool operator==(const CountingAllocator<U>& other) const noexcept {
+    bool operator==(const CountingAllocator<U>& other) const noexcept 
+    {
         return &memoryLimitRef_ == &other.memoryLimitRef_;
     }
 
     template <typename U>
-    bool operator!=(const CountingAllocator<U>& other) const noexcept {
+    bool operator!=(const CountingAllocator<U>& other) const noexcept 
+    {
         return !(*this == other);
     }
 

@@ -33,8 +33,11 @@
 
 #include <atomic>
 
+#include "countingallocator.h"
+
 namespace utils
 {
+using PoolAllocatorBufType = uint8_t;
 class PoolAllocator
 {
  public:
@@ -51,6 +54,18 @@ class PoolAllocator
    , lock(false)
   {
   }
+  PoolAllocator(allocators::CountingAllocator<PoolAllocatorBufType>* allocator, unsigned windowSize = DEFAULT_WINDOW_SIZE,
+                bool isTmpSpace = false, bool _useLock = false)
+   : allocSize(windowSize)
+   , tmpSpace(isTmpSpace)
+   , capacityRemaining(0)
+   , memUsage(0)
+   , nextAlloc(0)
+   , useLock(_useLock)
+   , lock(false)
+   , allocator(allocator)
+  {
+  }
   PoolAllocator(const PoolAllocator& p)
    : allocSize(p.allocSize)
    , tmpSpace(p.tmpSpace)
@@ -59,6 +74,7 @@ class PoolAllocator
    , nextAlloc(0)
    , useLock(p.useLock)
    , lock(false)
+   , allocator(p.allocator)
   {
   }
   virtual ~PoolAllocator()
@@ -90,21 +106,23 @@ class PoolAllocator
   void* allocOOB(uint64_t size);
 
   unsigned allocSize;
-  std::vector<std::shared_ptr<uint8_t[]>> mem;
+  std::vector<std::shared_ptr<PoolAllocatorBufType[]>> mem;
   bool tmpSpace;
   unsigned capacityRemaining;
   uint64_t memUsage;
-  uint8_t* nextAlloc;
+  PoolAllocatorBufType* nextAlloc;
   bool useLock;
   std::atomic<bool> lock;
 
   struct OOBMemInfo
   {
-    std::shared_ptr<uint8_t[]> mem;
+    std::shared_ptr<PoolAllocatorBufType[]> mem;
     uint64_t size;
   };
   typedef std::map<void*, OOBMemInfo> OutOfBandMap;
   OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
+  // WIP rename to allocator
+  allocators::CountingAllocator<PoolAllocatorBufType>* allocator = nullptr;
 };
 
 inline void* PoolAllocator::allocate(uint64_t size)
@@ -136,4 +154,4 @@ inline void* PoolAllocator::allocate(uint64_t size)
   return ret;
 }
 
-}  // namespace utils
+}  // namespace allocators

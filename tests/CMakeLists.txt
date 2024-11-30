@@ -75,6 +75,7 @@ if (WITH_UNITTESTS)
     target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET fair_threadpool_test TEST_PREFIX columnstore:)
 
+    set_source_files_properties(counting_allocator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare")
     add_executable(counting_allocator counting_allocator.cpp)
     add_dependencies(counting_allocator googletest)
     target_link_libraries(counting_allocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
@@ -94,7 +95,7 @@ if (WITH_UNITTESTS)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 endif()
-
+# -Werror=sign-compare
 if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     find_package(benchmark REQUIRED)
     add_executable(primitives_scan_bench primitives_scan_bench.cpp)

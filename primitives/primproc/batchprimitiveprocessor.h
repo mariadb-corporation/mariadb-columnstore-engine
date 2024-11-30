@@ -188,7 +188,7 @@ class BatchPrimitiveProcessor
 
   void initProcessor();
 #ifdef PRIMPROC_STOPWATCH
-  void execute(logging::StopWatch* stopwatch);
+  void execute(logging::StopWatch* stopwatch, messageqcpp::SBS& bs);
 #else
   void execute(messageqcpp::SBS& bs);
 #endif
@@ -379,14 +379,15 @@ class BatchPrimitiveProcessor
 
   inline void getJoinResults(const rowgroup::Row& r, uint32_t jIndex, std::vector<uint32_t>& v);
   // these allocators hold the memory for the keys stored in tlJoiners
-  std::shared_ptr<utils::PoolAllocator[]> storedKeyAllocators;
+  // WIP This was a shared vec of allocators originally but it might not be necessary.
+  // This might give far memory allocations for keys used by JOIN hashmap.
+  std::vector<utils::PoolAllocator> storedKeyAllocators;
 
   /* PM Aggregation */
   rowgroup::RowGroup joinedRG;  // if there's a join, the rows are formatted with this
   rowgroup::SP_ROWAGG_PM_t fAggregator;
   rowgroup::RowGroup fAggregateRG;
   rowgroup::RGData fAggRowGroupData;
-  // boost::scoped_array<uint8_t> fAggRowGroupData;
 
   /* OR hacks */
   uint8_t bop;  // BOP_AND or BOP_OR

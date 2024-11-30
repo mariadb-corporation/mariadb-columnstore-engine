@@ -16,8 +16,11 @@
    MA 02110-1301, USA. */
 
 #include <gtest/gtest.h>  // googletest header file
+#include <cstring>
 #include <iostream>
+#include <numeric>
 
+#include "countingallocator.h"
 #include "rowgroup.h"
 #include "columnwidth.h"
 #include "joblisttypes.h"
@@ -28,13 +31,44 @@
 
 using CSCDataType = execplan::CalpontSystemCatalog::ColDataType;
 using datatypes::TSInt128;
+using RGFieldsType = std::vector<uint32_t>;
+
+rowgroup::RowGroup setupRG(const std::vector<execplan::CalpontSystemCatalog::ColDataType>& cts,
+                           const RGFieldsType& widths, const RGFieldsType& charsets)
+{
+  std::vector<execplan::CalpontSystemCatalog::ColDataType> types = cts;
+  RGFieldsType offsets{2};
+  for (auto w : widths)
+  {
+    offsets.push_back(offsets.back() + w);
+  }
+  RGFieldsType roids(widths.size());
+  std::iota(roids.begin(), roids.end(), 3000);
+  RGFieldsType tkeys(widths.size());
+  std::fill(tkeys.begin(), tkeys.end(), 1);
+  RGFieldsType cscale(widths.size());
+  std::fill(cscale.begin(), cscale.end(), 0);
+  RGFieldsType precision(widths.size());
+  std::fill(precision.begin(), precision.end(), 20);
+  return rowgroup::RowGroup(roids.size(),  // column count
+                            offsets,       // oldOffset
+                            roids,         // column oids
+                            tkeys,         // keys
+                            types,         // types
+                            charsets,      // charset numbers
+                            cscale,        // scale
+                            precision,     // precision
+                            20,            // sTableThreshold
+                            true          // useStringTable
+  );
+}
 
 class RowDecimalTest : public ::testing::Test
 {
  protected:
   void SetUp() override
   {
-    uint32_t precision = WIDE_DEC_PRECISION;
+     uint32_t precision = WIDE_DEC_PRECISION;
     uint32_t oid = 3001;
 
     std::vector<CSCDataType> types;
@@ -81,7 +115,6 @@ class RowDecimalTest : public ::testing::Test
                             20,             // sTableThreshold
                             false           // useStringTable
     );
-
     rg = rgOut = inRG;
     rgD.reinit(rg);
     rgDOut.reinit(rgOut);
@@ -319,4 +352,91 @@ TEST_F(RowDecimalTest, RowEqualsCheck)
       nonequiRow.nextRow();
     }
   }
+}
+
+static const constexpr int64_t MemoryAllowance = 10 * 1024 * 1024;
+
+class RGDataTest : public ::testing::Test
+{
+ protected:
+  RGDataTest()
+    : allocatedMemory(MemoryAllowance), alloc(allocatedMemory, MemoryAllowance / 100) {}
+  void SetUp() override
+  {
+    rg = setupRG({execplan::CalpontSystemCatalog::VARCHAR, execplan::CalpontSystemCatalog::UDECIMAL,
+                         execplan::CalpontSystemCatalog::DECIMAL, execplan::CalpontSystemCatalog::DECIMAL,
+                         execplan::CalpontSystemCatalog::DECIMAL, execplan::CalpontSystemCatalog::DECIMAL},
+                        {65536, 16, 8, 4, 2, 1}, {8, 8, 8, 8, 8, 8});
+
+    // rgD = rowgroup::RGData(rg, &alloc);
+    // rg.setData(&rgD);
+    // rg.initRow(&r);
+    // rg.getRow(0, &r);
+
+    // for (size_t i = 0; i < sValueVector.size(); i++)
+    // {
+    //   // setStringField
+    //   r.setBinaryField_offset(&sValueVector[i], sizeof(sValueVector[0]), offsets[0]);
+    //   r.setBinaryField_offset(&anotherValueVector[i], sizeof(anotherValueVector[0]), offsets[1]);
+    //   r.setIntField(s64ValueVector[i], 2);
+    //   r.setIntField(s32ValueVector[i], 3);
+    //   r.setIntField(s16ValueVector[i], 4);
+    //   r.setIntField(s8ValueVector[i], 5);
+    //   r.nextRow(rowSize);
+    // }
+
+    // rowCount = sValueVector.size();
+  }
+
+  // void TearDown() override {}
+
+  rowgroup::Row r;
+  rowgroup::RowGroup rg;
+  rowgroup::RGData rgD;
+  std::atomic<int64_t> allocatedMemory{MemoryAllowance};
+  allocators::CountingAllocator<rowgroup::RGDataBufType> alloc;
+};
+  // bool useStringTable = true;
+TEST_F(RGDataTest, AllocData)
+{
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << " rowsize " << rg.getRowSize() << " " << rg.getMaxDataSize() << std::endl;
+    rgD = rowgroup::RGData(rg, &alloc);
+    rg.setData(&rgD);
+    rg.initRow(&r);
+    rg.getRow(0, &r);
+    std::cout << " test inStringTable(colIndex) " << r.inStringTable(0) << std::endl;
+
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
+    auto currentAllocation = allocatedMemory.load();
+    EXPECT_LE(currentAllocation, MemoryAllowance - rg.getMaxDataSize());
+
+    r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
+    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
+    EXPECT_LE(allocatedMemory.load(), currentAllocation);
+
+    currentAllocation = allocatedMemory.load();
+    r.nextRow();
+    r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
+    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
+    EXPECT_EQ(allocatedMemory.load(), currentAllocation);
+
+    currentAllocation = allocatedMemory.load();
+    r.nextRow();
+    std::string longString(64 * 1024 + 1000, 'a');
+    auto cs = utils::ConstString(longString);
+    std::cout << "test longString " << longString.size() << " cs len " << cs.length()<< std::endl;
+
+    r.setStringField(cs, 0);
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
+    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
+    EXPECT_LE(allocatedMemory.load(), currentAllocation);
+
+    rgD = rowgroup::RGData(rg);
+    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
+
+    EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
+
+    // reinit
 }
