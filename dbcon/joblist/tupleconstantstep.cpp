@@ -362,7 +362,7 @@ uint32_t TupleConstantStep::nextBand(messageqcpp::ByteStream& bs)
   if (fEndOfResult)
   {
     // send an empty / error band
-    RGData rgData(fRowGroupOut, 0);
+    RGData rgData(fRowGroupOut, 0U);
     fRowGroupOut.setData(&rgData);
     fRowGroupOut.resetRowGroup(0);
     fRowGroupOut.setStatus(status());
@@ -720,7 +720,7 @@ uint32_t TupleConstantOnlyStep::nextBand(messageqcpp::ByteStream& bs)
   else
   {
     // send an empty / error band
-    RGData rgData(fRowGroupOut, 0);
+    RGData rgData(fRowGroupOut, 0U);
     fRowGroupOut.setData(&rgData);
     fRowGroupOut.resetRowGroup(0);
     fRowGroupOut.setStatus(status());
@@ -809,7 +809,7 @@ void TupleConstantBooleanStep::run()
 uint32_t TupleConstantBooleanStep::nextBand(messageqcpp::ByteStream& bs)
 {
   // send an empty band
-  RGData rgData(fRowGroupOut, 0);
+  RGData rgData(fRowGroupOut, 0U);
   fRowGroupOut.setData(&rgData);
   fRowGroupOut.resetRowGroup(0);
   fRowGroupOut.setStatus(status());

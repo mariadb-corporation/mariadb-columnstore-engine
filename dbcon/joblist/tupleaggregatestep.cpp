@@ -611,7 +611,7 @@ uint32_t TupleAggregateStep::nextBand_singleThread(messageqcpp::ByteStream& bs)
     postStepSummaryTele(sts);
 
     // send an empty / error band
-    RGData rgData(fRowGroupOut, 0);
+    RGData rgData(fRowGroupOut, 0U);
     fRowGroupOut.setData(&rgData);
     fRowGroupOut.resetRowGroup(0);
     fRowGroupOut.setStatus(status());
@@ -5857,7 +5857,7 @@ uint64_t TupleAggregateStep::doThreadedAggregate(ByteStream& bs, RowGroupDL* dlp
     else
     {
       // send an empty / error band
-      RGData rgData(fRowGroupOut, 0);
+      RGData rgData(fRowGroupOut, 0U);
       fRowGroupOut.setData(&rgData);
       fRowGroupOut.resetRowGroup(0);
       fRowGroupOut.setStatus(status());

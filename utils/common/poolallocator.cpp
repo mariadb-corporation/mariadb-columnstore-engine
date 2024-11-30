@@ -52,13 +52,13 @@ void PoolAllocator::deallocateAll()
 
 void PoolAllocator::newBlock()
 {
-  std::shared_ptr<uint8_t[]> next;
+  std::shared_ptr<PoolAllocatorBufType[]> next;
 
   capacityRemaining = allocSize;
 
   if (!tmpSpace || mem.size() == 0)
   {
-    next.reset(new uint8_t[allocSize]);
+    next.reset(new PoolAllocatorBufType[allocSize]);
     mem.push_back(next);
     nextAlloc = next.get();
   }
@@ -71,7 +71,7 @@ void* PoolAllocator::allocOOB(uint64_t size)
   OOBMemInfo memInfo;
 
   memUsage += size;
-  memInfo.mem.reset(new uint8_t[size]);
+  memInfo.mem.reset(new PoolAllocatorBufType[size]);
   memInfo.size = size;
   void* ret = (void*)memInfo.mem.get();
   oob[ret] = memInfo;

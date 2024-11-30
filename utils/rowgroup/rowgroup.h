@@ -40,6 +40,7 @@
 #include <execinfo.h>
 
 
+#include "countingallocator.h"
 #include "hasher.h"
 
 #include "joblisttypes.h"
@@ -126,10 +127,15 @@ inline T derefFromTwoVectorPtrs(const std::vector<T>* outer, const std::vector<T
   return outer->operator[](outerIdx);
 }
 
+using RGDataBufType = uint8_t[];
+// using RGDataBufType = std::vector<uint8_t>;
+using StringStoreBufType = uint8_t[];
+
 class StringStore
 {
  public:
   StringStore() = default;
+  StringStore(allocators::CountingAllocator<StringStoreBufType>* alloc);
   StringStore(const StringStore&) = delete;
   StringStore(StringStore&&) = delete;
   StringStore& operator=(const StringStore&) = delete;
@@ -184,6 +190,7 @@ class StringStore
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
   boost::mutex fMutex;
+  allocators::CountingAllocator<StringStoreBufType>* alloc = nullptr;
 };
 
 // Where we store user data for UDA(n)F
@@ -248,6 +255,7 @@ class UserDataStore
 class RowGroup;
 class Row;
 
+
 /* TODO: OO the rowgroup data to the extent there's no measurable performance hit. */
 class RGData
 {
@@ -255,6 +263,7 @@ class RGData
   RGData() = default;  // useless unless followed by an = or a deserialize operation
   RGData(const RowGroup& rg, uint32_t rowCount);  // allocates memory for rowData
   explicit RGData(const RowGroup& rg);
+  explicit RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>* alloc);
   RGData& operator=(const RGData&) = default;
   RGData& operator=(RGData&&) = default;
   RGData(const RGData&) = default;
@@ -314,9 +323,10 @@ class RGData
   }
 
  private:
-  std::shared_ptr<uint8_t[]> rowData;
+  std::shared_ptr<RGDataBufType> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
+  allocators::CountingAllocator<RGDataBufType>* alloc = nullptr;
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
@@ -584,9 +594,9 @@ class Row
   }
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
+ inline bool inStringTable(uint32_t col) const;
 
 private:
- inline bool inStringTable(uint32_t col) const;
 
 private:
   uint32_t columnCount = 0;
@@ -987,6 +997,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
 
   if (inStringTable(colIndex))
   {
+    std::cout << "setStringField storeString len " << length << std::endl; 
     offset = strings->storeString((const uint8_t*)str.str(), length);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
     //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
@@ -995,6 +1006,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
+    std::cout << "setStringField memcpy " << std::endl; 
     memcpy(&data[offsets[colIndex]], str.str(), length);
     memset(&data[offsets[colIndex] + length], 0, offsets[colIndex + 1] - (offsets[colIndex] + length));
   }
