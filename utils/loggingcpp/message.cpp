@@ -42,6 +42,8 @@ using namespace config;
 #include "installdir.h"
 
 #include "format.h"
+#include "mcs_int128.h"
+
 namespace
 {
 boost::mutex mx;
@@ -129,26 +131,7 @@ void Message::Args::add(uint64_t u64)
 
 void Message::Args::add(int128_t i128)
 {
-  uint128_t x = i128 < 0 ? -i128 : i128;
-  std::vector<char> digits;
-  std::ostringstream oss;
-  while (x > 0) {
-    char c = (x % 10) + '0';
-    digits.push_back(c);
-    x /= 10;
-  }
-  if (digits.size() < 1) {
-    digits.push_back('0');
-  }
-  if (i128 < 0)
-  {
-    oss << '-';
-  }
-  for(int32_t i=int(digits.size() - 1); i >= 0; i--)
-  {
-    oss << digits[i];
-  }
-  fArgs.push_back(oss.str());
+  fArgs.push_back(TSInt128(i128).toString());
 }
 
 void Message::Args::add(const string& s)
