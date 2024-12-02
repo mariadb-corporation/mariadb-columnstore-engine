@@ -131,7 +131,7 @@ void Message::Args::add(uint64_t u64)
 
 void Message::Args::add(int128_t i128)
 {
-  fArgs.push_back(TSInt128(i128).toString());
+  fArgs.push_back(datatypes::TSInt128(i128).toString());
 }
 
 void Message::Args::add(const string& s)
