@@ -509,7 +509,6 @@ void TupleAggregateStep::doThreadedSecondPhaseAggregate(uint32_t threadID)
       fRm->returnMemory(totalMemSizeConsumed, fSessionMemLimit);
       if (cancelled())
       {
-        fRm->returnMemory(totalMemSizeConsumed, fSessionMemLimit);
         finishedSecondPhase = true;
         fEndOfResult = true;
       }
