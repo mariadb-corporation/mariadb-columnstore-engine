@@ -1,0 +1,4 @@
+--echo "Check that quick mode is enabled"
+# the following line will fail the test if quick mode
+# is not enabled in (some) configuration file as default.
+system mariadb --help | grep -q -E "^quick +TRUE\$";
