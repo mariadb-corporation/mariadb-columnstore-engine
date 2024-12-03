@@ -61,6 +61,7 @@ public:
         T* ptr = static_cast<T*>(::operator new(n * sizeof(T)));
         // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
         //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        // std::cout << std::dec;
         return ptr;
     }
 
@@ -87,6 +88,7 @@ public:
         memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
         // std::cout << "[Deallocate] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
         //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        // std::cout << std::dec;
     }
 
     // Equality operators (allocators are equal if they share the same counter)
