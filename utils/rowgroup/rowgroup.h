@@ -190,7 +190,7 @@ class StringStore
   std::string empty_str;
   static constexpr const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
 
-  std::vector<std::shared_ptr<uint8_t[]>> mem;
+  std::vector<boost::shared_ptr<uint8_t[]>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
@@ -286,7 +286,7 @@ class RGData
   void clear();
   void reinit(const RowGroup& rg);
   void reinit(const RowGroup& rg, uint32_t rowCount);
-  inline void setStringStore(std::shared_ptr<StringStore>& ss)
+  inline void setStringStore(boost::shared_ptr<StringStore>& ss)
   {
     strings = ss;
   }
@@ -327,8 +327,8 @@ class RGData
  private:
   uint32_t rowSize = 0;      // can't be.
   uint32_t columnCount = 0;  // shouldn't be, but...
-  std::shared_ptr<RGDataBufType> rowData;
-  std::shared_ptr<StringStore> strings;
+  boost::shared_ptr<RGDataBufType> rowData;
+  boost::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
   allocators::CountingAllocator<RGDataBufType>* alloc = nullptr;
 
@@ -1599,7 +1599,7 @@ class RowGroup : public messageqcpp::Serializeable
                          const uint16_t& blockNum);
   inline void getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* extentNum, uint16_t* blockNum);
 
-  inline void setStringStore(std::shared_ptr<StringStore>);
+  inline void setStringStore(boost::shared_ptr<StringStore>);
 
   const CHARSET_INFO* getCharset(uint32_t col);
 
@@ -1911,7 +1911,8 @@ inline uint32_t RowGroup::getStringTableThreshold() const
   return sTableThreshold;
 }
 
-inline void RowGroup::setStringStore(std::shared_ptr<StringStore> ss)
+// WIP mb unused
+inline void RowGroup::setStringStore(boost::shared_ptr<StringStore> ss)
 {
   if (useStringTable)
   {

@@ -100,12 +100,12 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   if ((len + 4) >= CHUNK_SIZE)
   {
     auto allocSize = len + sizeof(MemChunk) + 4;
-    if (alloc)
-    {
-      cout << "StringStore::storeString longStrings with alloc " << std::endl;
-      longStrings.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, allocSize));
-    }
-    else
+    // if (alloc)
+    // {
+    //   cout << "StringStore::storeString longStrings with alloc " << std::endl;
+    //   longStrings.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, allocSize));
+    // }
+    // else
     {
       cout << "StringStore::storeString longStrings no alloc " << std::endl;
       longStrings.emplace_back(std::make_shared<uint8_t[]>(allocSize));
@@ -128,14 +128,14 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
       if (alloc)
       {
         cout << "StringStore::storeString with alloc " << std::endl;
-        mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
-        // std::allocate_shared) newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
+        mem.emplace_back(boost::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
+        // boost::allocate_shared) newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
       }
       else
       {
         cout << "StringStore::storeString no alloc " << std::endl;
-        mem.emplace_back(std::make_shared<uint8_t[]>(CHUNK_SIZE + sizeof(MemChunk)));
-        // mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
+        mem.emplace_back(boost::make_shared<uint8_t[]>(CHUNK_SIZE + sizeof(MemChunk)));
+        // mem.emplace_back(boost::allocate_shared<StringStoreBufType>(*alloc, CHUNK_SIZE + sizeof(MemChunk)));
         // std::shared_ptr<uint8_t[]> newOne(new uint8_t[CHUNK_SIZE + sizeof(MemChunk)]);
       }
       // mem.push_back(newOne);
@@ -209,12 +209,12 @@ void StringStore::deserialize(ByteStream& bs)
     if (alloc)
     {
       cout << "StringStore::deserialize with alloc " << std::endl;
-      mem.emplace_back(std::allocate_shared<StringStoreBufType>(*alloc, size + sizeof(MemChunk)));
+      mem.emplace_back(boost::allocate_shared<StringStoreBufType>(*alloc, size + sizeof(MemChunk)));
     }
     else
     {
       cout << "StringStore::deserialize no alloc " << std::endl;
-      mem.emplace_back(std::make_shared<uint8_t[]>(size + sizeof(MemChunk)));
+      mem.emplace_back(boost::make_shared<uint8_t[]>(size + sizeof(MemChunk)));
     }
     // mem[i].reset(new uint8_t[size + sizeof(MemChunk)]);
     mc = (MemChunk*)mem[i].get();
@@ -230,7 +230,7 @@ void StringStore::deserialize(ByteStream& bs)
 
 void StringStore::clear()
 {
-  vector<std::shared_ptr<uint8_t[]> > emptyv;
+  vector<boost::shared_ptr<uint8_t[]> > emptyv;
   vector<std::shared_ptr<uint8_t[]> > emptyv2;
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
@@ -367,7 +367,7 @@ RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>*
 {
   // rowData = shared_ptr<uint8_t[]>(buf, [alloc, allocSize](uint8_t* p) { alloc->deallocate(p, allocSize);
   // });
-  rowData = std::allocate_shared<RGDataBufType>(*alloc, rg.getMaxDataSize());
+  rowData = boost::allocate_shared<RGDataBufType>(*alloc, rg.getMaxDataSize());
   // rowData = std::make_shared(uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
@@ -381,7 +381,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
   if (alloc)
   {
     cout << "RGData::reinit with alloc " << std::endl;
-    rowData = std::allocate_shared<RGDataBufType>(*alloc, rg.getDataSize(rowCount));
+    rowData = boost::allocate_shared<RGDataBufType>(*alloc, rg.getDataSize(rowCount));
   }
   else
   {
