@@ -37,6 +37,7 @@
 #include "serializeable.h"
 #include "any.hpp"
 #include "countingallocator.h"
+#include "buffertypes.h"
 
 class ByteStreamTestSuite;
 
@@ -437,9 +438,9 @@ class ByteStream : public Serializeable
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
   // Methods to get and set `long strings`.
-  EXPORT std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings();
-  EXPORT const std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings() const;
-  EXPORT void setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other);
+  EXPORT std::vector<rowgroup::StringStoreBufSPType>& getLongStrings();
+  EXPORT const std::vector<rowgroup::StringStoreBufSPType>& getLongStrings() const;
+  EXPORT void setLongStrings(const std::vector<rowgroup::StringStoreBufSPType>& other);
 
   friend class ::ByteStreamTestSuite;
 
@@ -474,7 +475,7 @@ class ByteStream : public Serializeable
   BSBufType* fCurOutPtr;  // the point in fBuf where data is extracted from next
   uint32_t fMaxLen;     // how big fBuf is currently
   // Stores `long strings`.
-  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  std::vector<rowgroup::StringStoreBufSPType> longStrings;
   allocators::CountingAllocator<BSBufType>* allocator = nullptr;
 };
 

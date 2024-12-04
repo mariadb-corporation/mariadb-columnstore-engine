@@ -19,6 +19,7 @@
 #include <atomic>
 #include <cstddef>
 #include "countingallocator.h"
+#include "rowgroup.h"
 
 using namespace allocators;
 
@@ -107,6 +108,13 @@ TEST_F(CountingAllocatorTest, AllocateSharedUsesAllocator)
   EXPECT_LE(allocatedMemory.load(), MemoryAllowance - static_cast<int64_t>(sizeof(TestClass)));
 
   ptr.reset();
+  EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
+
+  size_t allocSize = 16ULL * rowgroup::rgCommonSize;
+  auto buf = boost::allocate_shared<rowgroup::RGDataBufType>(allocator, allocSize);
+  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - allocSize);
+
+  buf.reset();
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 }
 
