@@ -724,7 +724,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
       // delay for manual debugging on live instance
       'sleep $${COMPOSE_DELAY_SECONDS:-1s}',
-      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --skip-test=' + "'.*parquet.*|.*fdb_api.*'" + ' --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
 

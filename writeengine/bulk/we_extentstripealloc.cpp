@@ -140,7 +140,7 @@ int ExtentStripeAlloc::allocateExtent(OID oid, uint16_t dbRoot,
     startLbid = extentEntryIter->second.fStartLbid;
     allocSize = extentEntryIter->second.fAllocSize;
     hwm = extentEntryIter->second.fHwm;
-    errMsg = extentEntryIter->second.fStatusMsg;
+    errMsg = *extentEntryIter->second.fStatusMsg;
     retStatus = extentEntryIter->second.fStatus;
 
     fMap.erase(extentEntryIter);
@@ -274,7 +274,7 @@ void ExtentStripeAlloc::print()
           << "; seg: " << iter->second.fSegNum << "; lbid: " << iter->second.fStartLbid
           << "; size: " << iter->second.fAllocSize << "; hwm: " << iter->second.fHwm
           << "; stripe: " << iter->second.fStripeKey << "; stat: " << iter->second.fStatus
-          << "; msg: " << iter->second.fStatusMsg;
+          << "; msg: " << *iter->second.fStatusMsg;
     }
   }
   else

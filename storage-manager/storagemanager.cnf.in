@@ -80,6 +80,10 @@ max_concurrent_uploads = 21
 # negotiate ownership of data from a failed instance.
 common_prefix_depth = 3
 
+# This value is used to specify a cluster file path to FDB cluster.
+# See more: https://apple.github.io/foundationdb/administration.html
+fdb_cluster_file_path = /etc/foundationdb/fdb.cluster
+
 [S3]
 # These should be self-explanatory.  Region can be blank or commented
 # if using a private cloud storage system.  Bucket has to be set to

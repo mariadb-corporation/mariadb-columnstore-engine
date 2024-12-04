@@ -38,20 +38,21 @@ namespace funcexp
 {
 namespace helpers
 {
-const string IDB_date_format(const DateTime& dt, const string& format)
+const string IDB_date_format(const DateTime& dt, const string& format, bool& isNull)
 {
   // assume 256 is enough. assume not allowing incomplete date
+  // XXX: imagine %W gets repeated 60 times and day of week is "wednesday"..
+  std::ostringstream oss;
   char buf[256];
-  char* ptr = buf;
   uint32_t weekday = 0;
   uint32_t dayval = 0;
   uint32_t weekval = 0;
   uint32_t weekyear = 0;
 
-  for (uint32_t i = 0; i < format.length(); i++)
+  for (uint32_t i = 0; !isNull && i < format.length(); i++)
   {
     if (format[i] != '%')
-      *ptr++ = format[i];
+      oss << format[i];
     else
     {
       i++;
@@ -59,176 +60,170 @@ const string IDB_date_format(const DateTime& dt, const string& format)
       switch (format[i])
       {
         case 'M':
-          sprintf(ptr, "%s", helpers::monthFullNames[dt.month].c_str());
-          ptr += helpers::monthFullNames[dt.month].length();
+          oss << helpers::monthFullNames[dt.month];
           break;
 
         case 'b':
-          sprintf(ptr, "%s", helpers::monthAbNames[dt.month].c_str());
-          ptr += helpers::monthAbNames[dt.month].length();
+          oss << helpers::monthAbNames[dt.month].c_str();
           break;
 
         case 'W':
-          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, false);
-          sprintf(ptr, "%s", helpers::weekdayFullNames[weekday].c_str());
-          ptr += helpers::weekdayFullNames[weekday].length();
+          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, false, isNull);
+          oss << helpers::weekdayFullNames[weekday];
           break;
 
         case 'w':
-          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, true);
-          sprintf(ptr, "%01d", weekday);
-          ptr += 1;
+          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, true, isNull);
+          sprintf(buf, "%01d", weekday);
+          oss << buf;
           break;
 
         case 'a':
-          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, false);
-          sprintf(ptr, "%s", helpers::weekdayAbNames[weekday].c_str());
-          ptr += helpers::weekdayAbNames[weekday].length();
+          weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, false, isNull);
+          oss << helpers::weekdayAbNames[weekday];
           break;
 
         case 'D':
-          sprintf(ptr, "%s", helpers::dayOfMonth[dt.day].c_str());
-          ptr += helpers::dayOfMonth[dt.day].length();
+          oss << helpers::dayOfMonth[dt.day].c_str();
           break;
 
         case 'Y':
-          sprintf(ptr, "%04d", dt.year);
-          ptr += 4;
+          sprintf(buf, "%04d", dt.year);
+          oss << buf;
           break;
 
         case 'y':
-          sprintf(ptr, "%02d", dt.year % 100);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.year % 100);
+          oss << buf;
           break;
 
         case 'm':
-          sprintf(ptr, "%02d", dt.month);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.month);
+          oss << buf;
           break;
 
         case 'c':
-          sprintf(ptr, "%d", dt.month);
-          ptr = ptr + (dt.month >= 10 ? 2 : 1);
+          sprintf(buf, "%d", dt.month);
+          oss << buf;
           break;
 
         case 'd':
-          sprintf(ptr, "%02d", dt.day);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.day);
+          oss << buf;
           break;
 
         case 'e':
-          sprintf(ptr, "%d", dt.day);
-          ptr = ptr + (dt.day >= 10 ? 2 : 1);
+          sprintf(buf, "%d", dt.day);
+          oss << buf;
           break;
 
         case 'f':
-          sprintf(ptr, "%06d", dt.msecond);
-          ptr += 6;
+          sprintf(buf, "%06d", dt.msecond);
+          oss << buf;
           break;
 
         case 'H':
-          sprintf(ptr, "%02d", dt.hour);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.hour);
+          oss << buf;
           break;
 
         case 'h':
         case 'I':
-          sprintf(ptr, "%02d", (dt.hour % 24 + 11) % 12 + 1);
-          ptr += 2;
+          sprintf(buf, "%02d", (dt.hour % 24 + 11) % 12 + 1);
+          oss << buf;
           break;
 
         case 'i': /* minutes */
-          sprintf(ptr, "%02d", dt.minute);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.minute);
+          oss << buf;
           break;
 
         case 'j':
           dayval = helpers::calc_mysql_daynr(dt.year, dt.month, dt.day) -
                    helpers::calc_mysql_daynr(dt.year, 1, 1) + 1;
-          sprintf(ptr, "%03d", dayval);
-          ptr += 3;
+          sprintf(buf, "%03d", dayval);
+          oss << buf;
           break;
 
         case 'k':
-          sprintf(ptr, "%d", dt.hour);
-          ptr += (dt.hour >= 10 ? 2 : 1);
+          sprintf(buf, "%d", dt.hour);
+          oss << buf;
           break;
 
         case 'l':
-          sprintf(ptr, "%d", (dt.hour % 24 + 11) % 12 + 1);
-          ptr += ((dt.hour % 24 + 11) % 12 + 1 >= 10 ? 2 : 1);
+          sprintf(buf, "%d", (dt.hour % 24 + 11) % 12 + 1);
+          oss << buf;
           break;
 
         case 'p':
-          sprintf(ptr, "%s", (dt.hour % 24 < 12 ? "AM" : "PM"));
-          ptr += 2;
+          sprintf(buf, "%s", (dt.hour % 24 < 12 ? "AM" : "PM"));
+          oss << buf;
           break;
 
         case 'r':
-          sprintf(ptr, (dt.hour % 24 < 12 ? "%02d:%02d:%02d AM" : "%02d:%02d:%02d PM"),
+          sprintf(buf, (dt.hour % 24 < 12 ? "%02d:%02d:%02d AM" : "%02d:%02d:%02d PM"),
                   (dt.hour + 11) % 12 + 1, dt.minute, dt.second);
-          ptr += 11;
+          oss << buf;
           break;
 
         case 'S':
         case 's':
-          sprintf(ptr, "%02d", dt.second);
-          ptr += 2;
+          sprintf(buf, "%02d", dt.second);
+          oss << buf;
           break;
 
         case 'T':
-          sprintf(ptr, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
-          ptr += 8;
+          sprintf(buf, "%02d:%02d:%02d", dt.hour, dt.minute, dt.second);
+          oss << buf;
           break;
 
         case 'U':
           weekval = helpers::calc_mysql_week(dt.year, dt.month, dt.day, 0);
-          sprintf(ptr, "%02d", weekval);
-          ptr += 2;
+          sprintf(buf, "%02d", weekval);
+          oss << buf;
           break;
 
         case 'V':
           weekval = helpers::calc_mysql_week(dt.year, dt.month, dt.day, helpers::WEEK_NO_ZERO);
-          sprintf(ptr, "%02d", weekval);
-          ptr += 2;
+          sprintf(buf, "%02d", weekval);
+          oss << buf;
           break;
 
         case 'u':
           weekval = helpers::calc_mysql_week(dt.year, dt.month, dt.day,
                                              helpers::WEEK_MONDAY_FIRST | helpers::WEEK_GT_THREE_DAYS);
-          sprintf(ptr, "%02d", weekval);
-          ptr += 2;
+          sprintf(buf, "%02d", weekval);
+          oss << buf;
           break;
 
         case 'v':
           weekval = helpers::calc_mysql_week(
               dt.year, dt.month, dt.day,
               helpers::WEEK_NO_ZERO | helpers::WEEK_MONDAY_FIRST | helpers::WEEK_GT_THREE_DAYS);
-          sprintf(ptr, "%02d", weekval);
-          ptr += 2;
+          sprintf(buf, "%02d", weekval);
+          oss << buf;
           break;
 
         case 'x':
           helpers::calc_mysql_week(
               dt.year, dt.month, dt.day,
               helpers::WEEK_NO_ZERO | helpers::WEEK_MONDAY_FIRST | helpers::WEEK_GT_THREE_DAYS, &weekyear);
-          sprintf(ptr, "%04d", weekyear);
-          ptr += 4;
+          sprintf(buf, "%04d", weekyear);
+          oss << buf;
           break;
 
         case 'X':
           helpers::calc_mysql_week(dt.year, dt.month, dt.day, helpers::WEEK_NO_ZERO, &weekyear);
-          sprintf(ptr, "%04d", weekyear);
-          ptr += 4;
+          sprintf(buf, "%04d", weekyear);
+          oss << buf;
           break;
 
-        default: *ptr++ = format[i];
+        default: oss << format[i];
       }
     }
   }
 
-  *ptr = 0;
-  return string(buf);
+  return oss.str();
 }
 }  // namespace helpers
 
@@ -394,7 +389,7 @@ string Func_date_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
 
   const string& format = parm[1]->data()->getStrVal(row, isNull).safeString("");
 
-  return helpers::IDB_date_format(dt, format);
+  return helpers::IDB_date_format(dt, format, isNull);
 }
 
 int32_t Func_date_format::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,

@@ -112,12 +112,12 @@ class pColStep : public JobStep
    *
    * Starts processing.  Set at least the RID list before calling this.
    */
-  virtual void run(){};
+  virtual void run() {};
   /** @brief Sync's the caller with the end of execution.
    *
    * Does nothing.  Returns when this instance is finished.
    */
-  virtual void join(){};
+  virtual void join() {};
 
   virtual const std::string toString() const;
 
@@ -1459,6 +1459,8 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   void interleaveJobs(std::vector<Job>* jobs) const;
   void sendJobs(const std::vector<Job>& jobs);
   uint32_t numDBRoots;
+  // presumably there must be not more than 2^32 blocks per job as of 23.02.
+  uint32_t blocksPerJob;
 
   /* Pseudo column filter processing.  Think about refactoring into a separate class. */
   bool processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<std::map<int, int>> dbRootPMMap) const;

@@ -689,6 +689,7 @@ class RowGroupStorage
       if (fRGDatas[rgid])
       {
         fRowGroupOut->setData(fRGDatas[rgid].get());
+        // An implicit s2u type cast.
         int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
         if (!fMM->acquire(memSz))
         {
@@ -965,7 +966,7 @@ class RowGroupStorage
 
     while (rgid >= fRGDatas.size())
     {
-      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+      auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
       if (!fMM->acquire(memSz))
       {
         throw logging::IDBExcept(

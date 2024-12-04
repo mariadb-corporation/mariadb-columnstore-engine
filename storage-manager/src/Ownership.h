@@ -22,12 +22,20 @@
 #include <boost/thread.hpp>
 #include <map>
 #include "SMLogging.h"
+#include "fdbcs.hpp"
 
 /* This class tracks the ownership of each prefix and manages ownership transfer.
    Could we come up with a better name btw? */
 
 namespace storagemanager
 {
+enum class OwnershipStateId
+{
+  OWNED = 0,
+  FLUSHING,
+  REQUEST_TRANSFER
+};
+
 class Ownership : public boost::noncopyable
 {
  public:
@@ -50,6 +58,7 @@ class Ownership : public boost::noncopyable
   void takeOwnership(const boost::filesystem::path&);
   void releaseOwnership(const boost::filesystem::path&, bool isDtor = false);
   void _takeOwnership(const boost::filesystem::path&);
+  inline void removeKeys(const std::string& fileName, const std::vector<OwnershipStateId>& states);
 
   struct Monitor
   {
