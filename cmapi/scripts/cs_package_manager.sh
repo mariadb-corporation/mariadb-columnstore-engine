@@ -6,50 +6,68 @@ enterprise_token=""
 dev_drone_key="" 
 jenkins_user="" 
 jenkins_pwd=""   
-cs_pkg_manager_version="3.6"
+cs_pkg_manager_version="3.7"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
 
 print_help_text() {
-    echo "Version $cs_pkg_manager_version
 
-Example Check:
+    echo "
+MariaDB Columnstore Package Manager
+Version: $cs_pkg_manager_version 
+
+Actions:
+
+    check        Print the mariadb server version to columnstore version mapping for this os/cpu/machine           
+    remove       Uninstall MariaDB Columnstore
+    install      Install a specific version of MariaDB Columnstore
+    upgrade      Upgrade your columnstore deployment running on this machine
+
+Documentation:
+    bash $0 <action> help
+
+Example:
+    bash $0 install help
+    "
+}
+
+print_help_remove() {
+    echo "
+MariaDB Columnstore Package Manager - Remove
+
+Usage: bash $0 remove [flags]
+
+Flags:
+    -a  | --all                 Delete all mariadb & columnstore files, configurations, data and directories
+    -f  | --force               Force stop colunstore and mariadb processes by killing them harshly
+    -h  | --help                Help & documentation
+
+The remove action will uninstall MariaDB & Columnstore but keep configurations and data unless --all is used
+
+Example:
+    bash $0 remove
+    bash $0 remove --all --force
+    
+    "
+}
+
+print_check_help_text() {
+    echo "
+MariaDB Columnstore Package Manager - Check
+
+Usage: bash $0 check [enterprise|community] [flags]
+
+Flags:
+    -h  | --help                Help text & documentation
+
+The check action will map the possible MariaDB server versions to the latest Columnstore version for this OS/CPU/Machine
+
+Example:
     bash $0 check community
     bash $0 check enterprise
-
-Example Remove: 
-    bash $0 remove
-    bash $0 remove all --force
-
-Example Single Node Install: 
-    bash $0 install [enterprise|community] [version] --token [token]
-    bash $0 install enterprise 10.6.12-8 --token [token]
-    bash $0 install community 11.1
-
-Example Cluster Install: 
-    bash $0 install enterprise help
-    bash $0 install enterprise [version] --token [token] --nodes [Ip1,Ip2,Ip3] [flags]
-
-Example Single Node Upgrade: 
-    bash $0 upgrade [enterprise|community] [version] --token [token]
-    bash $0 upgrade enterprise 10.6.18-14 --token [token]
-    bash $0 upgrade community 11.1.4
-"   
-
-    if [  -n "$dev_drone_key" ]; then
-        echo "
-Example Install Dev: 
-bash $0 install [enterprise|community|dev] [version|cron|latest|pull_request] [build num] --token xxxxxxx
-bash $0 install dev develop cron/8629
-bash $0 install dev develop-23.02 pull_request/7256
-bash $0 install dev stable-23.10 pull_request/10820
-
-Example Install Jenkins: 
-bash $0 install [jenkins] [project]/[branch]/[git commit] --user xxxxxxx --password xxxxxxx
-bash $0 install jenkins ENTERPRISE/bb-10.6.14-9-cs-23.02.11-1/2d367136b3d3511ffeb53451de539d44db98ed91/
     "
-    fi
+
 }
 
 wait_cs_down() {
@@ -368,17 +386,20 @@ stop_mariadb() {
 }
 
 parse_remove_additional_args() {
-    # Skip the first parameter
-    shift 
 
     # Defaults
     FORCE=false
+    REMOVE_ALL=false
 
     while [[ $# -gt 0 ]]; do
         key="$1"
 
         case $key in
-            all)
+            remove)
+                shift # past argument
+                ;;
+            -a | --all)
+                REMOVE_ALL=true
                 shift # past argument
                 ;;
             -f | --force)
@@ -386,11 +407,11 @@ parse_remove_additional_args() {
                 shift # past argument
                 ;;
             -h|--help|help)
-                print_help_text
+                print_help_remove
                 exit 1;
                 ;;
             *)    # unknown option
-                print_help_text
+                print_help_remove
                 echo "unknown flag: $1"
                 exit 1
                 ;;
@@ -404,8 +425,6 @@ do_yum_remove() {
         printf "[!!] Cant access yum\n"
         exit 1;
     fi
-
-    parse_remove_additional_args "$@"
 
     if [ "$FORCE" == "true" ]; then
         printf "Forcing Stop\n"
@@ -452,7 +471,7 @@ do_yum_remove() {
     print_and_delete "/etc/yum.repos.d/mariadb.repo"
     print_and_delete "/etc/yum.repos.d/drone.repo"
 
-    if [ "$2" == "all" ]; then
+    if [ "$REMOVE_ALL" == "true" ]; then
         print_and_delete "/var/lib/mysql/"
         print_and_delete "/var/lib/columnstore/"
         print_and_delete "/etc/my.cnf.d/*"
@@ -466,8 +485,6 @@ do_apt_remove() {
         printf "[!!] Cant access apt\n"
         exit 1;
     fi
-
-    parse_remove_additional_args "$@"
 
     if [ "$FORCE" == "true" ]; then
         printf "Forcing Stop\n"
@@ -499,7 +516,7 @@ do_apt_remove() {
 
     # remove all current MDB packages
     if [ "$(apt list --installed mariadb-* 2>/dev/null | wc -l)" -gt 1 ];  then
-        if [ "$2" == "all" ]; then
+        if [ "$REMOVE_ALL" == "true" ]; then
             DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-plugin-columnstore mariadb-columnstore-cmapi 
             DEBIAN_FRONTEND=noninteractive apt remove --purge -y mariadb-*
         else
@@ -520,7 +537,8 @@ do_apt_remove() {
     fi
 
     printf "\n[+] Removing all columnstore files & dirs\n"
-    if [ "$2" == "all" ]; then
+
+    if [ "$REMOVE_ALL" == "true" ]; then
             print_and_delete "/var/lib/mysql"
             print_and_delete "/var/lib/columnstore"
             print_and_delete "/etc/columnstore"
@@ -536,6 +554,8 @@ do_apt_remove() {
 }
 
 do_remove() {
+
+    parse_remove_additional_args "$@"
 
     check_operating_system
     check_package_managers
@@ -558,97 +578,116 @@ do_remove() {
 
 print_enterprise_install_help_text() {
     echo "
-    MariaDB Columnstore Package Manager - Enterprise Quick Cluster Install
+MariaDB Columnstore Package Manager - Enterprise Quick Cluster Install
 
-    Usage: bash $0 install enterprise [version] --token [token] [flags]
+Usage: bash $0 install enterprise [version] --token [token] [flags]
 
-    Flags:
-        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
-        -ru | --replication-user    Replication user        Default: repl
-        -rp | --replication-pwd     Replication password    Default: Mariadb123%
-        -mu | --maxscale-user       Maxscale user           Default: mxs
-        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
-        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
-        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
-        -t  | --token               Enterprise token        Required
-        -h  | --help                Help
+Flags:
+    -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+    -ru | --replication-user    Replication user        Default: repl
+    -rp | --replication-pwd     Replication password    Default: Mariadb123%
+    -mu | --maxscale-user       Maxscale user           Default: mxs
+    -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+    -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+    -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+    -t  | --token               Enterprise token        Required
+    -h  | --help                Help Text
 
-    Example:
-        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
-        bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49 --replication-pwd \"my_custom_password123%\"
-    
-    Note: When deploying a cluster, run the same command on all nodes at the same time.
+Example:
+    bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
+    bash cs_package_manager.sh install enterprise 10.6.14-9 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49 --replication-pwd \"my_custom_password123%\"
+
+Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
             "
 }
 
 print_community_install_help_text() {
     echo "
-    MariaDB Columnstore Package Manager - Community Quick Cluster Install
+MariaDB Columnstore Package Manager - Community Quick Cluster Install
 
-    Usage: bash $0 install community [version] [flags]
+Usage: bash $0 install community [version] [flags]
 
-    Flags:
-        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
-        -ru | --replication-user    Replication user        Default: repl
-        -rp | --replication-pwd     Replication password    Default: Mariadb123%
-        -mu | --maxscale-user       Maxscale user           Default: mxs
-        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
-        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
-        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
-        -h  | --help                Help
+Flags:
+    -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+    -ru | --replication-user    Replication user        Default: repl
+    -rp | --replication-pwd     Replication password    Default: Mariadb123%
+    -mu | --maxscale-user       Maxscale user           Default: mxs
+    -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+    -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+    -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+    -h  | --help                Help Text
 
-    Example:
-        bash cs_package_manager.sh install community 11.1.5 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
-    
-    Note: When deploying a cluster, run the same command on all nodes at the same time.
+Example:
+    bash cs_package_manager.sh install community 11.1.5 --token xxxxxx-xxxx-xxx-xxxx-xxxxxx --nodes 172.31.45.105,172.31.42.49
+
+Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
             "
 }
 
 print_dev_install_help_text() {
     echo "
-    MariaDB Columnstore Package Manager - Dev Quick Cluster Install
+MariaDB Columnstore Package Manager - Dev Quick Cluster Install
 
-    Usage: bash $0 install dev
+Usage: bash $0 install dev [version] [branch/build number] [flags]
 
-    Flags:
-        -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
-        -ru | --replication-user    Replication user        Default: repl
-        -rp | --replication-pwd     Replication password    Default: Mariadb123%
-        -mu | --maxscale-user       Maxscale user           Default: mxs
-        -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
-        -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
-        -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
-        -h  | --help                Help Text
+Flags:
+    -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+    -ru | --replication-user    Replication user        Default: repl
+    -rp | --replication-pwd     Replication password    Default: Mariadb123%
+    -mu | --maxscale-user       Maxscale user           Default: mxs
+    -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+    -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+    -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+    -h  | --help                Help Text
 
-    Example:
-        bash $0 install dev develop cron/8629
-        bash $0 install dev develop-23.02 pull_request/7256
-        bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
-    
-    Note: When deploying a cluster, run the same command on all nodes at the same time.
+Example:
+    bash $0 install dev develop cron/8629
+    bash $0 install dev develop-23.02 pull_request/7256
+    bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+
+Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
+            "
+}
+
+print_jenkins_install_help_text() {
+
+    echo "
+MariaDB Columnstore Package Manager - Jenkins Quick Cluster Install
+
+Usage: bash $0 install jenkins [project]/[branch]/[git commit] --user [username] --password [password]
+
+Flags:
+    -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
+    -ru | --replication-user    Replication user        Default: repl
+    -rp | --replication-pwd     Replication password    Default: Mariadb123%
+    -mu | --maxscale-user       Maxscale user           Default: mxs
+    -mp | --maxscale-pwd        Maxscale password       Default: Mariadb123%
+    -cu | --cross-engine-user   Cross-engine user       Default: cross_engine 
+    -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
+    -h  | --help                Help Text
+
+Example:
+    bash $0 install jenkins ENTERPRISE/bb-10.6.14-9-cs-23.02.11-1/2d367136b3d3511ffeb53451de539d44db98ed91/ --user xxxxx --password xxxxxx
+
+Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
             "
 }
 
 print_install_top_level_help_text() {
     echo "
-    MariaDB Columnstore Package Manager - Install
+MariaDB Columnstore Package Manager - Install
 
-    Usage: bash $0 install [enterprise|community] [version] [flags]
+Usage: bash $0 install [enterprise|community] [version] [flags]
 
-    Flags:
-        -h  | --help | help               Help Text
+Flags:
+    -h  | --help                Help
 
-    Examples:
-        bash $0 install community help
-        bash $0 install enterprise help
-        "
+Examples:
+    bash $0 install community help
+    bash $0 install enterprise help"
 
     if [  -n "$dev_drone_key" ]; then
-        echo "Example Install Dev: 
-    bash $0 install [enterprise|community|dev] [version|cron|latest|pull_request] [build num] --token xxxxxxx
-    bash $0 install dev develop cron/8629
-    bash $0 install dev develop-23.02 pull_request/7256
-    bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+        echo "    bash $0 install dev help
     "
     fi
 }
@@ -665,12 +704,17 @@ print_install_help_text() {
         dev )
             print_dev_install_help_text
             ;;
+        jenkins )
+            print_jenkins_install_help_text
+            ;;
         -h|--help|help)
             print_install_top_level_help_text
             exit 1;
             ;;
         *)  # unknown option
-            echo "print_install_help_text: Unknown repo: $repo\n"
+            printf "print_install_help_text: Invalid repository '$repo'\n"
+            printf "Options: [community|enterprise] \n\n"
+            print_install_top_level_help_text
             exit 2;
     esac
 
@@ -705,6 +749,9 @@ parse_install_cluster_additional_args() {
         key="$1"
 
         case $key in
+            install|enterprise|community|dev)
+                shift # past argument
+                ;;
             -t | --token)
                 enterprise_token="$2"
                 shift # past argument
@@ -841,9 +888,6 @@ check_operating_system() {
     version_id_exact=$( grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
     version_id=$( echo "$version_id_exact" | awk -F. '{print $1}')
 
-    echo "Distro: $distro_info"
-    echo "Version: $version_id"
-
     # distros=(centos7 debian11 debian12 rockylinux8 rockylinux9 ubuntu20.04 ubuntu22.04)
     case $distro_info in
         centos | rhel )
@@ -868,7 +912,6 @@ check_operating_system() {
 check_cpu_architecture() {
 
     architecture=$(uname -m)
-    echo "CPU: $architecture"
 
     # arch=(amd64 arm64)
     case $architecture in
@@ -899,7 +942,7 @@ check_mdb_installed() {
             current_mariadb_version="${current_mariadb_version%%+*}"
             ;;
         *)  # unknown option
-            printf "\ncheck_no_mdb_installed: package manager not implemented - $package_manager\n"
+            printf "\ncheck_mdb_installed: package manager not implemented - $package_manager\n"
             exit 2;
     esac
 
@@ -929,10 +972,12 @@ check_no_mdb_installed() {
     esac
 
     if [ -n "$packages" ]; then
+
         printf "\nSome MariaDB packages are installed\nPlease uninstall the following before continuing:\n"
         printf "$packages";
-        printf "\n\nExample: bash $0 remove\n"
-        printf "         bash $0 remove all # to delete all data & configs too\n\n"
+        printf "\n\nExample: \n"
+        printf "         bash $0 remove\n"
+        printf "         bash $0 remove --all # to delete all data & configs too\n\n"
         exit 2;
     fi;
 }
@@ -1026,7 +1071,7 @@ configure_default_mariadb_server_config() {
             server_cnf_location="/etc/mysql/mariadb.conf.d/server.cnf"
             ;;
         *)  # unknown option
-            printf "\ncheck_no_mdb_installed: os & version not implemented: $distro_info\n"
+            printf "\nconfigure_default_mariadb_server_config: os & version not implemented: $distro_info\n"
             exit 2;
     esac
     
@@ -1145,6 +1190,7 @@ configure_columnstore_cross_engine_user() {
 poll_for_cmapi_online() {
 
     local sleep_timer=3
+    local timeout_seconds=5
 
     # Use telnet to check port 8640 on replica nodes
     for node in $(echo $nodes | tr "," "\n"); do
@@ -1152,7 +1198,7 @@ poll_for_cmapi_online() {
         printf "%-35s ..." " - Checking cmapi port 8640 on $node "
         while true; do
         
-            if telnet $node 8640 < /dev/null 2>&1 | grep -q 'Connected'; then
+            if timeout $timeout_seconds telnet $node 8640 < /dev/null 2>&1 | grep -q 'Connected'; then
                 printf " Success\n"
                 break;
             else
@@ -1335,7 +1381,7 @@ post_cmapi_install_configuration() {
     else
         # Handle Single node
         confirm_cmapi_online_and_configured
-        create_mariadb_users
+        create_mariadb_users  
         configure_columnstore_cross_engine_user
         init_cs_up
     fi
@@ -1513,15 +1559,32 @@ check_columnstore_install_dependancies() {
     esac
 }
 
+print_install_variables() {
+
+    echo "Distro: $distro_info"
+    echo "Version: $version_id"
+    echo "CPU: $architecture"
+    echo "Repository: $repo"
+    echo "Package Manager: $package_manager"
+
+    if [ $repo == "enterprise" ] || [ $repo == "enterprise_staging" ] ; then
+        echo "Token: $enterprise_token"
+        echo "MariaDB Enterprise Version: $version"
+    elif [ $repo == "community" ]; then
+        echo "MariaDB Community Version: $version"
+    fi
+
+    
+}
+
 enterprise_install() {
     
     version=$3 
     quick_version_check
 
     parse_install_cluster_additional_args "$@"
-
-    echo "Token: $enterprise_token"
-    echo "MariaDB Version: $version"
+    print_install_variables
+    check_no_mdb_installed
     process_cluster_variables
     echo "-----------------------------------------------"
 
@@ -1579,8 +1642,8 @@ community_install() {
     quick_version_check
     
     parse_install_cluster_additional_args "$@"
-
-    echo "MariaDB Community Version: $version"
+    print_install_variables
+    check_no_mdb_installed
     process_cluster_variables
     echo "-----------------------------------------------"
 
@@ -1838,7 +1901,9 @@ dev_install() {
     
     if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
     check_aws_cli_installed
-
+    parse_install_cluster_additional_args "$@"
+    print_install_variables
+    check_no_mdb_installed
     echo "Branch: $3"
     echo "Build: $4"
     dronePath="s3://$dev_drone_key"
@@ -1847,7 +1912,7 @@ dev_install() {
     product="10.6-enterprise"
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
-    parse_install_cluster_additional_args "$@"
+   
 
     # Construct URLs
     s3_path="$dronePath/$branch/$build/$product/$arch"
@@ -2138,6 +2203,8 @@ jenkins_install() {
     echo "Product/Branch/Commit: $product_branch_commit"
     if [ -z "$product_branch_commit" ]; then printf "Missing Product/Branch/Commit: $product_branch_commit\n"; exit 2; fi;
     parse_install_cluster_additional_args "$@"
+    print_install_variables
+    check_no_mdb_installed
 
     # Construct URLs
     jenkins_url="https://es-repo.mariadb.net/jenkins/${product_branch_commit}/"
@@ -2186,13 +2253,11 @@ do_install() {
 
     check_operating_system
     check_cpu_architecture
-    check_no_mdb_installed
     check_package_managers
     set_default_cluster_variables
 
     repo=$2
     enterprise_staging=false
-    echo "Repository: $repo"
     case $repo in
         enterprise )
             # pull from enterprise repo
@@ -2220,7 +2285,7 @@ do_install() {
             ;;
         *)  # unknown option
             print_install_help_text
-            echo "Unknown repo: $repo\n"
+            echo "do_install: Unknown repo: $repo\n"
             exit 2;
     esac
 
@@ -2894,8 +2959,30 @@ prompt_user_for_os() {
     
 }
 
+parse_check_additional_args() {
+    if [ -z $2 ]; then
+        printf "\n[!] Missing repository: enterprise, community\n\n"
+        print_check_help_text
+        exit 2;
+    fi
+
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+
+        case $key in
+            help | -h | --help | -help)
+                print_check_help_text
+                exit 1;
+                ;;
+            *)    # unknown option
+                shift # past argument
+        esac
+    done
+}
+
 do_check() {
     
+    parse_check_additional_args "$@"
     check_operating_system
     check_cpu_architecture   
 
