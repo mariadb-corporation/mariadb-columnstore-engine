@@ -179,17 +179,17 @@ void ByteStream::growBuf(BSSizeType toSize)
   }
 }
 
-std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings()
+std::vector<rowgroup::StringStoreBufSPType>& ByteStream::getLongStrings()
 {
   return longStrings;
 }
 
-const std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings() const
+const std::vector<rowgroup::StringStoreBufSPType>& ByteStream::getLongStrings() const
 {
   return longStrings;
 }
 
-void ByteStream::setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other)
+void ByteStream::setLongStrings(const std::vector<rowgroup::StringStoreBufSPType>& other)
 {
   longStrings = other;
 }

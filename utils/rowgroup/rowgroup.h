@@ -54,6 +54,7 @@
 
 #include "collation.h"
 #include "common/hashfamily.h"
+#include "buffertypes.h"
 
 #include <cstdlib>
 #include "execinfo.h"
@@ -131,9 +132,9 @@ inline T derefFromTwoVectorPtrs(const std::vector<T>* outer, const std::vector<T
   return outer->operator[](outerIdx);
 }
 
-using RGDataBufType = uint8_t[];
-// using RGDataBufType = std::vector<uint8_t>;
-using StringStoreBufType = uint8_t[];
+// using RGDataBufType = uint8_t[];
+// using StringStoreBufType = uint8_t[];
+// using StringStoreBufSPType = boost::shared_ptr<uint8_t[]>;
 
 class StringStore
 {
@@ -193,7 +194,7 @@ class StringStore
   std::vector<boost::shared_ptr<uint8_t[]>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
-  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  std::vector<StringStoreBufSPType> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
   boost::mutex fMutex;

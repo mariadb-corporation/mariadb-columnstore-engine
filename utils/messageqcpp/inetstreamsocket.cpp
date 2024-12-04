@@ -508,7 +508,7 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     return SBS(new ByteStream(0U));
   res->advanceInputPtr(msglen);
 
-  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  std::vector<rowgroup::StringStoreBufSPType> longStrings;
   try
   {
     for (uint32_t i = 0; i < longStringSize; ++i)
@@ -520,7 +520,8 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
         return SBS(new ByteStream(0U));
 
       // Allocate new memory for the `long string`.
-      std::shared_ptr<uint8_t[]> longString(
+      // WIP must account this allocation also.
+      rowgroup::StringStoreBufSPType longString(
           new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
 
       uint8_t* longStringData = longString.get();
