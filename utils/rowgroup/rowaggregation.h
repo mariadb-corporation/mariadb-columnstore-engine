@@ -681,6 +681,17 @@ class RowAggregationUM : public RowAggregation
    */
   bool nextRowGroup();
 
+  /** @brief Returns aggregated rows in a RowGroup as long as there are still not returned result RowGroups.
+   *
+   * This function should be called repeatedly until false is returned (meaning end of data).
+   * Returns data from in-memory storage, as well as spilled data from disk. If disk-based aggregation is
+   * happening, finalAggregation() should be called before returning result RowGroups to finalize the used
+   * RowAggStorages, merge different spilled generations and obtain correct aggregation results.
+   *
+   * @returns True if there are more result RowGroups, else false if all results have been returned.
+   */
+  bool nextOutputRowGroup();
+
   /** @brief Add an aggregator for DISTINCT aggregation
    */
   void distinctAggregator(const boost::shared_ptr<RowAggregation>& da)
