@@ -38,13 +38,13 @@ public:
     using value_type = T;
 
     // Constructor accepting a reference to an atomic counter
-    explicit CountingAllocator(std::atomic<int64_t>& memoryLimit, const uint64_t lowerBound = MemoryLimitLowerBound) noexcept
-        : memoryLimitRef_(memoryLimit), memoryLimitLowerBound(lowerBound) {}
+    explicit CountingAllocator(std::atomic<int64_t>* memoryLimit, const uint64_t lowerBound = MemoryLimitLowerBound) noexcept
+        : memoryLimit_(memoryLimit), memoryLimitLowerBound(lowerBound) {}
 
     // Copy constructor (template to allow conversion between different types)
     template <typename U>
     CountingAllocator(const CountingAllocator<U>& other) noexcept
-        : memoryLimitRef_(other.memoryLimitRef_) {}
+        : memoryLimit_(other.memoryLimit_) {}
 
 
     // Allocate memory for n objects of type T
@@ -52,15 +52,15 @@ public:
     typename std::enable_if<!std::is_array<U>::value, U*>::type
     allocate(std::size_t n) 
     {
-        auto memCounted = memoryLimitRef_.fetch_sub(n * sizeof(T), std::memory_order_relaxed);
+        auto memCounted = memoryLimit_->fetch_sub(n * sizeof(T), std::memory_order_relaxed);
         if (memCounted < memoryLimitLowerBound) {
-            memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
+            memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
             throw std::bad_alloc();
         }
         
         T* ptr = static_cast<T*>(::operator new(n * sizeof(T)));
         // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
         // std::cout << std::dec;
         return ptr;
     }
@@ -69,15 +69,15 @@ public:
     typename std::enable_if<std::is_array<U>::value, typename std::remove_extent<U>::type*>::type
     allocate(std::size_t n) 
     {
-        auto memCounted = memoryLimitRef_.fetch_sub(n * sizeof(T), std::memory_order_relaxed);
+        auto memCounted = memoryLimit_->fetch_sub(n * sizeof(T), std::memory_order_relaxed);
         if (memCounted < memoryLimitLowerBound) {
-            memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
+            memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
             throw std::bad_alloc();
         }
         
         T ptr = static_cast<T>(::operator new[](n));
         // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
         return ptr;
     }
 
@@ -85,9 +85,9 @@ public:
     void deallocate(T* ptr, std::size_t n) noexcept 
     {
         ::operator delete(ptr);
-        memoryLimitRef_.fetch_add(n * sizeof(T), std::memory_order_relaxed);
+        memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
         // std::cout << "[Deallocate] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimitRef_.load() << std::hex << " bytes.\n";
+        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
         // std::cout << std::dec;
     }
 
@@ -95,7 +95,7 @@ public:
     template <typename U>
     bool operator==(const CountingAllocator<U>& other) const noexcept 
     {
-        return &memoryLimitRef_ == &other.memoryLimitRef_;
+        return memoryLimit_ == other.memoryLimit_;
     }
 
     template <typename U>
@@ -105,7 +105,7 @@ public:
     }
 
 private:
-    std::atomic<int64_t>& memoryLimitRef_;
+    std::atomic<int64_t>* memoryLimit_ = nullptr;
     int64_t memoryLimitLowerBound = 0;
 
     // Grant access to other instances of CountingAllocator with different types

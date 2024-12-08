@@ -461,7 +461,7 @@ class ResourceManager
   template<typename T>
   allocators::CountingAllocator<T> getAllocator()
   {
-    return allocators::CountingAllocator<T>(totalUmMemLimit);
+    return allocators::CountingAllocator<T>(&totalUmMemLimit);
   }
 
  private:
