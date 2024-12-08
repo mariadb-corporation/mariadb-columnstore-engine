@@ -360,7 +360,7 @@ class RGDataTest : public ::testing::Test
 {
  protected:
   RGDataTest()
-    : allocatedMemory(MemoryAllowance), alloc(allocatedMemory, MemoryAllowance / 100) {}
+    : allocatedMemory(MemoryAllowance), alloc(&allocatedMemory, MemoryAllowance / 100) {}
   void SetUp() override
   {
     rg = setupRG({execplan::CalpontSystemCatalog::VARCHAR, execplan::CalpontSystemCatalog::UDECIMAL,

@@ -47,7 +47,7 @@ class CountingAllocatorTest : public ::testing::Test
 
   // Constructor
   CountingAllocatorTest()
-   : allocatedMemory(MemoryAllowance), allocator(allocatedMemory, MemoryAllowance / 100)
+   : allocatedMemory(MemoryAllowance), allocator(&allocatedMemory, MemoryAllowance / 100)
   {
   }
 
@@ -79,12 +79,12 @@ TEST_F(CountingAllocatorTest, Deallocation)
 // Test 3: Allocator equality based on shared counter
 TEST_F(CountingAllocatorTest, AllocatorEquality)
 {
-  CountingAllocator<TestClass> allocator1(allocatedMemory);
-  CountingAllocator<TestClass> allocator2(allocatedMemory);
+  CountingAllocator<TestClass> allocator1(&allocatedMemory);
+  CountingAllocator<TestClass> allocator2(&allocatedMemory);
   EXPECT_TRUE(allocator1 == allocator2);
 
   std::atomic<int64_t> anotherCounter(0);
-  CountingAllocator<TestClass> allocator3(anotherCounter);
+  CountingAllocator<TestClass> allocator3(&anotherCounter);
   EXPECT_FALSE(allocator1 == allocator3);
 }
 
