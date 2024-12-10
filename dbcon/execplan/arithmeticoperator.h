@@ -333,7 +333,7 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
     }
     else
     {
-      return T{0};
+      return 0;
     }
   }
   switch (fOp)
