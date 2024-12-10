@@ -327,13 +327,13 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
   {
     // at least one operand is NULL.
     // do nothing, return 0.
-    if constexpr (std::is_same<T, datatypes::TSInt128>::value)
+    if constexpr (std::is_same<result_t, datatypes::TSInt128>::value)
     {
       return datatypes::TSInt128();  // returns 0
     }
     else
     {
-      return 0;
+      return result_t{0};
     }
   }
   switch (fOp)
