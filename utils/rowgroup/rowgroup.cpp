@@ -48,29 +48,13 @@ namespace rowgroup
 {
 using cscType = execplan::CalpontSystemCatalog::ColDataType;
 
-StringStore::StringStore(allocators::CountingAllocator<StringStoreBufType>* alloc) : StringStore()
+StringStore::StringStore(allocators::CountingAllocator<StringStoreBufType> alloc) : StringStore()
 {
   this->alloc = alloc;
 }
 
 StringStore::~StringStore()
 {
-#if 0
-    // for mem usage debugging
-    uint32_t i;
-    uint64_t inUse = 0, allocated = 0;
-
-    for (i = 0; i < mem.size(); i++)
-    {
-        MemChunk* tmp = (MemChunk*) mem.back().get();
-        inUse += tmp->currentSize;
-        allocated += tmp->capacity;
-    }
-
-    if (allocated > 0)
-        cout << "~SS: " << inUse << "/" << allocated << " = " << (float) inUse / (float) allocated << endl;
-
-#endif
 }
 
 uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
@@ -363,15 +347,16 @@ columnCount = rg.getColumnCount();
 }
 
 
-RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>* alloc) : alloc(alloc)
+RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>& _alloc) : alloc(_alloc)
 {
-  // rowData = shared_ptr<uint8_t[]>(buf, [alloc, allocSize](uint8_t* p) { alloc->deallocate(p, allocSize);
-  // });
-  rowData = boost::allocate_shared<RGDataBufType>(*alloc, rg.getMaxDataSize());
+  rowData = boost::allocate_shared<RGDataBufType>(alloc.value(), rg.getMaxDataSize());
   // rowData = std::make_shared(uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
-    strings.reset(new StringStore(alloc));
+  {
+    allocators::CountingAllocator<StringStoreBufType> ssAlloc = _alloc;
+    strings.reset(new StringStore(ssAlloc)); 
+  }
 
   userDataStore.reset();
 }
@@ -391,8 +376,19 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 
   userDataStore.reset();
 
-  if (rg.usesStringTable())
-    strings.reset(new StringStore(alloc));
+if (rg.usesStringTable())
+  {
+    if (alloc)
+    {
+      allocators::CountingAllocator<StringStoreBufType> ssAlloc = alloc.value();
+      strings.reset(new StringStore(ssAlloc)); 
+    }
+    else
+    {
+      strings.reset(new StringStore()); 
+    }
+
+  }
   else
     strings.reset();
   columnCount = rg.getColumnCount();

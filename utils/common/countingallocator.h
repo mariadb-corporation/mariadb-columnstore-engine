@@ -44,8 +44,7 @@ public:
     // Copy constructor (template to allow conversion between different types)
     template <typename U>
     CountingAllocator(const CountingAllocator<U>& other) noexcept
-        : memoryLimit_(other.memoryLimit_) {}
-
+        : memoryLimit_(other.memoryLimit_),  memoryLimitLowerBound(other.memoryLimitLowerBound) {}
 
     // Allocate memory for n objects of type T
     template <typename U = T>

@@ -100,7 +100,8 @@ ByteStream::ByteStream(BSSizeType initSize) : fBuf(0), fCurInPtr(0), fCurOutPtr(
     growBuf(initSize);
 }
 
-ByteStream::ByteStream(allocators::CountingAllocator<uint8_t>* allocator, uint32_t initSize)
+// WIP remove this one, replacing the allocator arg with a default nullptr.
+ByteStream::ByteStream(allocators::CountingAllocator<uint8_t>& allocator, uint32_t initSize)
  : fBuf(0), fCurInPtr(0), fCurOutPtr(0), fMaxLen(0), allocator(allocator)
 {
   if (initSize > 0)

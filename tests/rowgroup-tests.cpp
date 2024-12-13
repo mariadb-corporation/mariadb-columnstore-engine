@@ -367,25 +367,6 @@ class RGDataTest : public ::testing::Test
                          execplan::CalpontSystemCatalog::DECIMAL, execplan::CalpontSystemCatalog::DECIMAL,
                          execplan::CalpontSystemCatalog::DECIMAL, execplan::CalpontSystemCatalog::DECIMAL},
                         {65536, 16, 8, 4, 2, 1}, {8, 8, 8, 8, 8, 8});
-
-    // rgD = rowgroup::RGData(rg, &alloc);
-    // rg.setData(&rgD);
-    // rg.initRow(&r);
-    // rg.getRow(0, &r);
-
-    // for (size_t i = 0; i < sValueVector.size(); i++)
-    // {
-    //   // setStringField
-    //   r.setBinaryField_offset(&sValueVector[i], sizeof(sValueVector[0]), offsets[0]);
-    //   r.setBinaryField_offset(&anotherValueVector[i], sizeof(anotherValueVector[0]), offsets[1]);
-    //   r.setIntField(s64ValueVector[i], 2);
-    //   r.setIntField(s32ValueVector[i], 3);
-    //   r.setIntField(s16ValueVector[i], 4);
-    //   r.setIntField(s8ValueVector[i], 5);
-    //   r.nextRow(rowSize);
-    // }
-
-    // rowCount = sValueVector.size();
   }
 
   // void TearDown() override {}
@@ -400,7 +381,7 @@ class RGDataTest : public ::testing::Test
 TEST_F(RGDataTest, AllocData)
 {
     std::cout << " test  allocatedMemery " << allocatedMemory.load() << " rowsize " << rg.getRowSize() << " " << rg.getMaxDataSize() << std::endl;
-    rgD = rowgroup::RGData(rg, &alloc);
+    rgD = rowgroup::RGData(rg, alloc);
     rg.setData(&rgD);
     rg.initRow(&r);
     rg.getRow(0, &r);

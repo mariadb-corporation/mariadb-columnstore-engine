@@ -241,8 +241,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
   uint8_t tmp8;
   uint16_t tmp16;
   Command::CommandType type;
-  auto cnt = exemgr::globServiceExeMgr->getRm().availableMemory();
-  std::cout << "initBPP availableMemory: " << cnt << std::endl;
 
   bs.advance(sizeof(ISMPacketHeader));  // skip the header
   bs >> tmp8;
@@ -848,8 +846,6 @@ int BatchPrimitiveProcessor::endOfJoiner()
   {
     endOfJoinerRan = true;
     pthread_mutex_unlock(&objLock);
-    auto cnt = exemgr::globServiceExeMgr->getRm().availableMemory();
-    std::cout << "endOfJoiner availableMemory: " << cnt << std::endl;
     return 0;
   }
 
@@ -892,8 +888,6 @@ int BatchPrimitiveProcessor::endOfJoiner()
   endOfJoinerRan = true;
 
   pthread_mutex_unlock(&objLock);
-  auto cnt = exemgr::globServiceExeMgr->getRm().availableMemory();
-  std::cout << "endOfJoiner availableMemory: " << cnt << std::endl;
   return 0;
 }
 
@@ -2234,7 +2228,7 @@ int BatchPrimitiveProcessor::operator()()
     cpDataFromDictScan = false;
 
     auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<messageqcpp::BSBufType>();
-    messageqcpp::SBS bs(new ByteStream(&allocator));
+    messageqcpp::SBS bs(new ByteStream(allocator));
 
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->start("BPP() execute");
@@ -2300,14 +2294,14 @@ void BatchPrimitiveProcessor::allocLargeBuffers()
   if (ot == ROW_GROUP && !outRowGroupData)
   {
     // outputRG.setUseStringTable(true);
-    outRowGroupData.reset(new RGData(outputRG, &allocator));
+    outRowGroupData.reset(new RGData(outputRG, allocator));
     outputRG.setData(outRowGroupData.get());
   }
 
   if (fe1 && !fe1Data)
   {
     // fe1Input.setUseStringTable(true);
-    fe1Data.reset(new RGData(fe1Input, &allocator));
+    fe1Data.reset(new RGData(fe1Input, allocator));
     // fe1Data.reset(new uint8_t[fe1Input.getMaxDataSize()]);
     fe1Input.setData(fe1Data.get());
   }
@@ -2315,14 +2309,14 @@ void BatchPrimitiveProcessor::allocLargeBuffers()
   if (fe2 && !fe2Data)
   {
     // fe2Output.setUseStringTable(true);
-    fe2Data.reset(new RGData(fe2Output, &allocator));
+    fe2Data.reset(new RGData(fe2Output, allocator));
     fe2Output.setData(fe2Data.get());
   }
 
   if (getTupleJoinRowGroupData && !joinedRGMem)
   {
     // joinedRG.setUseStringTable(true);
-    joinedRGMem.reset(new RGData(joinedRG, &allocator));
+    joinedRGMem.reset(new RGData(joinedRG, allocator));
     joinedRG.setData(joinedRGMem.get());
   }
 }
