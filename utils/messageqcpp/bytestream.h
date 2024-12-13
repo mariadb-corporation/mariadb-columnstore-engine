@@ -19,6 +19,7 @@
 */
 
 #pragma once
+#include <optional>
 #include <string>
 #include <iostream>
 #include <sys/types.h>
@@ -78,7 +79,7 @@ class ByteStream : public Serializeable
    *	default ctor
    */
   EXPORT explicit ByteStream(uint32_t initSize = 8192);  // multiples of pagesize are best
-  explicit ByteStream(allocators::CountingAllocator<BSBufType>* alloc, uint32_t initSize = 8192);
+  explicit ByteStream(allocators::CountingAllocator<BSBufType>& alloc, uint32_t initSize = 8192);
   /**
    *	ctor with a uint8_t array and len initializer
    */
@@ -476,7 +477,7 @@ class ByteStream : public Serializeable
   uint32_t fMaxLen;     // how big fBuf is currently
   // Stores `long strings`.
   std::vector<rowgroup::StringStoreBufSPType> longStrings;
-  allocators::CountingAllocator<BSBufType>* allocator = nullptr;
+  std::optional<allocators::CountingAllocator<BSBufType>> allocator = {};
 };
 
 template <int W, typename T = void>

@@ -15,9 +15,11 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 #include <gtest/gtest.h>
-#include <memory>
 #include <atomic>
 #include <cstddef>
+#include <memory>
+#include <thread>
+
 #include "countingallocator.h"
 #include "rowgroup.h"
 
@@ -116,6 +118,14 @@ TEST_F(CountingAllocatorTest, AllocateSharedUsesAllocator)
 
   buf.reset();
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
+
+  CountingAllocator<rowgroup::RGDataBufType> allocator1(&allocatedMemory, MemoryAllowance / 100);
+  std::optional<CountingAllocator<rowgroup::RGDataBufType>> allocator2(allocator1);
+  auto buf1 = boost::allocate_shared<rowgroup::RGDataBufType>(*allocator2, allocSize);
+  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - allocSize);
+
+  buf1.reset();
+  EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 }
 
 // Test 5: Thread Safety - Concurrent Allocations and Deallocations
@@ -158,4 +168,12 @@ TEST_F(CountingAllocatorTest, AllocateZeroObjects)
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
   allocator.deallocate(ptr, 0);
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
+}
+
+TEST_F(CountingAllocatorTest, CopyAssignable)
+{
+    CountingAllocator<TestClass> allocator1(&allocatedMemory);
+    CountingAllocator<TestClass> allocator2(&allocatedMemory);
+    allocator1 = allocator2;
+    EXPECT_EQ(allocator1, allocator2);
 }
