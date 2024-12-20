@@ -54,7 +54,7 @@ static void testBlobHandler(std::shared_ptr<FDBCS::FDBDataBase> db)
   std::vector<uint32_t> blobSizes{0, 1, 11, 101, 1001, 10001, 100001, 1000001, 10000001, 100000001};
   std::vector<uint32_t> blockSizes{10000, 100000};
 #else
-  std::vector<uint32_t> blobSizes{0, 1, 10001, 100001, 10000001, 100000001};
+  std::vector<uint32_t> blobSizes{0, 1, 100001, 10000001, 100000001};
   std::vector<uint32_t> blockSizes{100000};
 #endif
 
@@ -87,6 +87,10 @@ static void testBlobHandler(std::shared_ptr<FDBCS::FDBDataBase> db)
       std::cout << "Read blob time: " << ms_int.count() << std::endl;
       t1 = high_resolution_clock::now();
 #endif
+      auto blobB = generateBlob(blobSize + 1);
+      assert_internal(handler.writeOrUpdateBlob(db, rootKey, blobB), "Remove blob error");
+      p = handler.readBlob(db, rootKey);
+      assert_internal(p.second == blobB, "Blobs not equal");
       assert_internal(handler.removeBlob(db, rootKey), "Remove blob error");
 #ifdef TEST_PERF
       t2 = high_resolution_clock::now();
