@@ -239,6 +239,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::TINYINT:
       fResult.intVal = execute(lop->getIntVal(row, isNull), rop->getIntVal(row, isNull), isNull);
+      if (isNull)
+      {
+        fResult.intVal = joblist::INTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -292,6 +296,10 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
       fResult.uintVal = execute(lop->getUintVal(row, isNull), rop->getUintVal(row, isNull), isNull);
+      if (isNull)
+      {
+        fResult.uintVal = joblist::UBIGINTNULL;
+      }
       break;
 
     case execplan::CalpontSystemCatalog::DOUBLE:
@@ -323,6 +331,19 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
 template <typename result_t>
 inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& isNull)
 {
+  if (isNull)
+  {
+    // at least one operand is NULL.
+    // do nothing, return 0.
+    if constexpr (std::is_same<result_t, datatypes::TSInt128>::value)
+    {
+      return datatypes::TSInt128();  // returns 0
+    }
+    else
+    {
+      return 0;
+    }
+  }
   switch (fOp)
   {
     case OP_ADD: return op1 + op2;

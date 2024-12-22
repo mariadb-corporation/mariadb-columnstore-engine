@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
+#include <cstdint>
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
@@ -78,6 +79,11 @@ std::string errorString(int errNo)
   char tmp[1024];
   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
   return {buf};
+}
+
+size_t findFirstSetBit(const uint64_t mask)
+{
+  return __builtin_ffsll(mask);
 }
 }  // anonymous namespace
 
@@ -552,7 +558,7 @@ class Dumper
 class RowGroupStorage
 {
  public:
-  using RGDataStorage = std::vector<std::unique_ptr<RGData>>;
+  using RGDataStorage = std::vector<RGDataUnPtr>;
 
  public:
   /** @brief Default constructor
@@ -613,6 +619,54 @@ class RowGroupStorage
     return fRowGroupOut->getSizeWithStrings(fMaxRows);
   }
 
+  // This shifts data within RGData such that it compacts the non finalized rows
+  PosOpos shiftRowsInRowGroup(RGDataUnPtr& rgdata, uint64_t fgid, uint64_t tgid)
+  {
+    uint64_t pos = 0;
+    uint64_t opos = 0;
+
+    fRowGroupOut->setData(rgdata.get());
+    for (auto i = fgid; i < tgid; ++i)
+    {
+      if ((i - fgid) * HashMaskElements >= fRowGroupOut->getRowCount())
+        break;
+      uint64_t mask = ~fFinalizedRows[i];
+      if ((i - fgid + 1) * HashMaskElements > fRowGroupOut->getRowCount())
+      {
+        mask &= (~0ULL) >> ((i - fgid + 1) * HashMaskElements - fRowGroupOut->getRowCount());
+      }
+      opos = (i - fgid) * HashMaskElements;
+
+      if (mask == ~0ULL)
+      {
+        if (LIKELY(pos != opos))
+          moveRows(rgdata.get(), pos, opos, HashMaskElements);
+        pos += HashMaskElements;
+        continue;
+      }
+
+      if (mask == 0)
+        continue;
+
+      while (mask != 0)
+      {
+        // find position until block full of not finalized rows.
+        size_t b = findFirstSetBit(mask);
+        size_t e = findFirstSetBit(~(mask >> b)) + b;
+        if (UNLIKELY(e >= HashMaskElements))
+          mask = 0;
+        else
+          mask >>= e;
+        if (LIKELY(pos != opos + b - 1))
+          moveRows(rgdata.get(), pos, opos + b - 1, e - b);
+        pos += e - b;
+        opos += e;
+      }
+      --opos;
+    }
+    return {pos, opos};
+  }
+
   /** @brief Take away RGDatas from another RowGroupStorage
    *
    *    If some of the RGDatas is not in the memory do not load them,
@@ -626,7 +680,7 @@ class RowGroupStorage
   }
   void append(RowGroupStorage* o)
   {
-    std::unique_ptr<RGData> rgd;
+    RGDataUnPtr rgd;
     std::string ofname;
     while (o->getNextRGData(rgd, ofname))
     {
@@ -667,11 +721,130 @@ class RowGroupStorage
     }
   }
 
+  /** @brief Get the last RGData from fRGDatas, remove it from the vector and return its id.
+   *
+   * @param rgdata The RGData to be retrieved
+   */
+  uint64_t getLastRGData(RGDataUnPtr& rgdata)
+  {
+    assert(!fRGDatas.empty());
+    uint64_t rgid = fRGDatas.size() - 1;
+    rgdata = std::move(fRGDatas[rgid]);
+    fRGDatas.pop_back();
+    return rgid;
+  }
+
+  static FgidTgid calculateGids(const uint64_t rgid, const uint64_t fMaxRows)
+  {
+    // Calculate from first and last uint64_t entry in fFinalizedRows BitMap
+    // which contains information about rows in the RGData.
+    uint64_t fgid = rgid * fMaxRows / HashMaskElements;
+    uint64_t tgid = fgid + fMaxRows / HashMaskElements;
+    return {fgid, tgid};
+  }
+
+  /** @brief Used to output aggregation results from memory and disk in the current generation in the form of
+   * RGData. Returns next RGData, loads from disk if necessary. Skips finalized rows as they would contain
+   * duplicate results, compacts actual rows into start of RGData and adapts number of rows transmitted in
+   * RGData.
+   * @returns A pointer to the next RGData or an empty pointer if there are no more RGDatas in this
+   * generation.
+   */
+  bool getNextOutputRGData(RGDataUnPtr& rgdata)
+  {
+    if (UNLIKELY(fRGDatas.empty()))
+    {
+      fMM->release();
+      return false;
+    }
+
+    while (!fRGDatas.empty())
+    {
+      auto rgid = getLastRGData(rgdata);
+      auto [fgid, tgid] = calculateGids(rgid, fMaxRows);
+
+      if (fFinalizedRows.size() <= fgid)
+      {
+        // There are no finalized rows in this RGData. We can just return it.
+        // Load from disk if necessary and unlink DumpFile.
+        if (!rgdata)
+        {
+          loadRG(rgid, rgdata, true);
+        }
+        return true;
+      }
+
+      if (tgid >= fFinalizedRows.size())
+        fFinalizedRows.resize(tgid + 1, 0ULL);
+
+      // Check if there are rows to process
+      bool hasReturnRows = false;
+      for (auto i = fgid; i < tgid; ++i)
+      {
+        if (fFinalizedRows[i] != ~0ULL)
+        {
+          // Not all rows are finalized, we have to return at least parts of this RGData
+          hasReturnRows = true;
+          break;
+        }
+      }
+
+      if (rgdata)
+      {
+        // RGData is currently in memory
+        if (!hasReturnRows)
+        {
+          // All rows are finalized, don't return this RGData
+          continue;
+        }
+      }
+      else
+      {
+        if (hasReturnRows)
+        {
+          // Load RGData from disk, unlink dump file and continue processing
+          loadRG(rgid, rgdata, true);
+        }
+        else
+        {
+          // All rows are finalized. Unlink dump file and continue search for return RGData
+          unlink(makeRGFilename(rgid).c_str());
+          continue;
+        }
+      }
+
+      auto [pos, opos] = shiftRowsInRowGroup(rgdata, fgid, tgid);
+
+      // Nothing got shifted at all -> all rows must be finalized. If all rows finalized remove
+      // RGData and file and don't give it out.
+      if (pos == 0)
+      {
+        fLRU->remove(rgid);
+        unlink(makeRGFilename(rgid).c_str());
+        continue;
+      }
+
+      // set RGData with number of not finalized rows which have been compacted at front of RGData
+      fRowGroupOut->setData(rgdata.get());
+      fRowGroupOut->setRowCount(pos);
+      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+
+      // Release the memory used by the current rgdata from this MemoryManager.
+      fMM->release(memSz);
+      unlink(makeRGFilename(rgid).c_str());
+
+      // to periodically clean up freed memory so it can be used by other threads.
+      fLRU->remove(rgid);
+      return true;
+    }
+    return false;
+  }
+
   /** @brief Returns next RGData, load it from disk if necessary.
    *
    * @returns pointer to the next RGData or empty pointer if there is nothing
    */
-  std::unique_ptr<RGData> getNextRGData()
+  RGDataUnPtr getNextRGData()
   {
     while (!fRGDatas.empty())
     {
@@ -1031,7 +1204,7 @@ class RowGroupStorage
    * @param fname(out)  Filename of the dump if it's not in the memory
    * @returns true if there is available RGData
    */
-  bool getNextRGData(std::unique_ptr<RGData>& rgdata, std::string& fname)
+  bool getNextRGData(RGDataUnPtr& rgdata, std::string& fname)
   {
     if (UNLIKELY(fRGDatas.empty()))
     {
@@ -1040,12 +1213,9 @@ class RowGroupStorage
     }
     while (!fRGDatas.empty())
     {
-      uint64_t rgid = fRGDatas.size() - 1;
-      rgdata = std::move(fRGDatas[rgid]);
-      fRGDatas.pop_back();
+      auto rgid = getLastRGData(rgdata);
+      auto [fgid, tgid] = calculateGids(rgid, fMaxRows);
 
-      uint64_t fgid = rgid * fMaxRows / 64;
-      uint64_t tgid = fgid + fMaxRows / 64;
       if (fFinalizedRows.size() > fgid)
       {
         if (tgid >= fFinalizedRows.size())
@@ -1069,45 +1239,7 @@ class RowGroupStorage
           continue;
         }
 
-        uint64_t pos = 0;
-        uint64_t opos = 0;
-        fRowGroupOut->setData(rgdata.get());
-        for (auto i = fgid; i < tgid; ++i)
-        {
-          if ((i - fgid) * 64 >= fRowGroupOut->getRowCount())
-            break;
-          uint64_t mask = ~fFinalizedRows[i];
-          if ((i - fgid + 1) * 64 > fRowGroupOut->getRowCount())
-          {
-            mask &= (~0ULL) >> ((i - fgid + 1) * 64 - fRowGroupOut->getRowCount());
-          }
-          opos = (i - fgid) * 64;
-          if (mask == ~0ULL)
-          {
-            if (LIKELY(pos != opos))
-              moveRows(rgdata.get(), pos, opos, 64);
-            pos += 64;
-            continue;
-          }
-
-          if (mask == 0)
-            continue;
-
-          while (mask != 0)
-          {
-            size_t b = __builtin_ffsll(mask);
-            size_t e = __builtin_ffsll(~(mask >> b)) + b;
-            if (UNLIKELY(e >= 64))
-              mask = 0;
-            else
-              mask >>= e;
-            if (LIKELY(pos != opos + b - 1))
-              moveRows(rgdata.get(), pos, opos + b - 1, e - b);
-            pos += e - b;
-            opos += e;
-          }
-          --opos;
-        }
+        auto [pos, opos] = shiftRowsInRowGroup(rgdata, fgid, tgid);
 
         if (pos == 0)
         {
@@ -1120,6 +1252,7 @@ class RowGroupStorage
         fRowGroupOut->setRowCount(pos);
       }
 
+      // Release the memory used by the current rgdata.
       if (rgdata)
       {
         fRowGroupOut->setData(rgdata.get());
@@ -1131,6 +1264,7 @@ class RowGroupStorage
       {
         fname = makeRGFilename(rgid);
       }
+      // to periodically clean up freed memory so it can be used by other threads.
       fLRU->remove(rgid);
       return true;
     }
@@ -1170,7 +1304,7 @@ class RowGroupStorage
     loadRG(rgid, fRGDatas[rgid]);
   }
 
-  void loadRG(uint64_t rgid, std::unique_ptr<RGData>& rgdata, bool unlinkDump = false)
+  void loadRG(uint64_t rgid, RGDataUnPtr& rgdata, bool unlinkDump = false)
   {
     auto fname = makeRGFilename(rgid);
 
@@ -1738,7 +1872,7 @@ void RowAggStorage::append(RowAggStorage& other)
   }
 }
 
-std::unique_ptr<RGData> RowAggStorage::getNextRGData()
+RGDataUnPtr RowAggStorage::getNextRGData()
 {
   if (!fStorage)
   {
@@ -1747,6 +1881,43 @@ std::unique_ptr<RGData> RowAggStorage::getNextRGData()
   cleanup();
   freeData();
   return fStorage->getNextRGData();
+}
+
+bool RowAggStorage::getNextOutputRGData(RGDataUnPtr& rgdata)
+{
+  if (!fStorage)
+  {
+    return {};
+  }
+
+  cleanup();
+  freeData();
+
+  // fGeneration is an unsigned int, we need a signed int for a comparison >= 0
+  int32_t gen = fGeneration;
+  while (gen >= 0)
+  {
+    bool moreInGeneration = fStorage->getNextOutputRGData(rgdata);
+
+    if (moreInGeneration)
+    {
+      fRowGroupOut->setData(rgdata.get());
+      return true;
+    }
+
+    // all generations have been emptied
+    if (fGeneration == 0)
+    {
+      break;
+    }
+
+    // current generation has no more RGDatas to return
+    // load earlier generation and continue with returning its RGDatas
+    gen--;
+    fGeneration--;
+    fStorage.reset(fStorage->clone(fGeneration));
+  }
+  return false;
 }
 
 void RowAggStorage::freeData()

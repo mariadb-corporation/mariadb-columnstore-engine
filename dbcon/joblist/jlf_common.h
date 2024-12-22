@@ -225,6 +225,7 @@ struct JobInfo
    , stringScanThreshold(1)
    , wfqLimitStart(0)
    , wfqLimitCount(-1)
+   , djsForceRun(false)
    , timeZone(0)
    , maxPmJoinResultCount(1048576)
   {

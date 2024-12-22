@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -474,6 +475,8 @@ class BRMWrapper : public WEObj
   static IDBDataFile* m_curVBFile;
 
   BRM::DBRM* blockRsltnMgrPtr;
+
+  EXPORT static std::atomic<bool> finishReported;
 };
 
 //------------------------------------------------------------------------------

@@ -46,6 +46,7 @@ using namespace joblist;
 
 namespace execplan
 {
+
 void getAggCols(execplan::ParseTree* n, void* obj)
 {
   vector<AggregateColumn*>* list = reinterpret_cast<vector<AggregateColumn*>*>(obj);

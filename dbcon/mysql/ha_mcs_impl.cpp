@@ -128,6 +128,7 @@ using namespace funcexp;
 #include "ha_mcs_datatype.h"
 #include "statistics.h"
 #include "ha_mcs_logging.h"
+#include "ha_subquery.h"
 
 namespace cal_impl_if
 {
@@ -332,7 +333,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
 
     std::vector<CalpontSystemCatalog::ColType>& colTypes = ti.tpl_scan_ctx->ctp;
 
-    RowGroup* rowGroup = ti.tpl_scan_ctx->rowGroup;
+    std::shared_ptr<RowGroup> rowGroup = ti.tpl_scan_ctx->rowGroup;
 
     // table mode mysql expects all columns of the table. mapping between columnoid and position in rowgroup
     // set coltype.position to be the position in rowgroup. only set once.
@@ -656,7 +657,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
   rowgroup::RGData rgData;
   ByteStream::quadbyte qb = 4;
   msg << qb;
-  rowgroup::RowGroup* rowGroup = 0;
+  std::unique_ptr<rowgroup::RowGroup> rowGroup;
   uint32_t rowCount;
 
   exemgrClient->write(msg);
@@ -709,7 +710,7 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
       if (!rowGroup)
       {
         // This is mete data
-        rowGroup = new rowgroup::RowGroup();
+        rowGroup.reset(new rowgroup::RowGroup());
         rowGroup->deserialize(msg);
         qb = 100;
         msg.restart();
@@ -887,7 +888,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   //@Bug 2753. the memory already freed by destructor of UpdateSqlStatement
   if (isUpdateStatement(thd->lex->sql_command))
   {
-    ColumnAssignment* columnAssignmentPtr;
+    ColumnAssignment* columnAssignmentPtr = nullptr;
     Item_field* item;
     List_iterator_fast<Item> field_it(thd->lex->first_select_lex()->item_list);
     List_iterator_fast<Item> value_it(thd->lex->value_list);
@@ -919,6 +920,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       }
       else if (strcmp(tableName.c_str(), tmpTableName.c_str()) != 0)
       {
+        delete colAssignmentListPtr;
+        delete columnAssignmentPtr;
         //@ Bug3326 error out for multi table update
         string emsg(IDBErrorInfo::instance()->errorMsg(ERR_UPDATE_NOT_SUPPORT_FEATURE));
         thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, emsg.c_str());
@@ -929,6 +932,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
       if (!item->db_name.str)
       {
+        delete colAssignmentListPtr;
+        delete columnAssignmentPtr;
         //@Bug 5312. if subselect, wait until the schema info is available.
         if (thd->derived_tables_processing)
           return 0;
@@ -1003,7 +1008,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         // sysdate() etc.
         if (!hasNonSupportItem && !cal_impl_if::nonConstFunc(ifp) && tmpVec.size() == 0)
         {
-          gp_walk_info gwi2(gwi.timeZone);
+          gp_walk_info gwi2(gwi.timeZone, gwi.subQueriesChain);
           gwi2.thd = thd;
           SRCP srcp(buildReturnedColumn(value, gwi2, gwi2.fatalParseError));
           ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(srcp.get());
@@ -1114,6 +1119,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       }
       else if (value->type() == Item::WINDOW_FUNC_ITEM)
       {
+        delete colAssignmentListPtr;
+        delete columnAssignmentPtr;
         setError(thd, ER_INTERNAL_ERROR, logging::IDBErrorInfo::instance()->errorMsg(ERR_WF_UPDATE));
         return ER_CHECK_NOT_IMPLEMENTED;
       }
@@ -1178,6 +1185,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   if (colAssignmentListPtr->empty() && isUpdateStatement(thd->lex->sql_command))
   {
     ci->affectedRows = 0;
+    delete colAssignmentListPtr;
     return 0;
   }
 
@@ -1205,7 +1213,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     boost::algorithm::to_lower(aTableName.table);
   }
 
-  CalpontDMLPackage* pDMLPackage = 0;
+  std::shared_ptr<CalpontDMLPackage> pDMLPackage;
   //	dmlStmt += ";";
   IDEBUG(cout << "STMT: " << dmlStmt << " and sessionID " << thd->thread_id << endl);
   VendorDMLStatement dmlStatement(dmlStmt, sessionID);
@@ -1215,7 +1223,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   else
     dmlStatement.set_DMLStatementType(DML_DELETE);
 
-  TableName* qualifiedTablName = new TableName();
 
   UpdateSqlStatement updateStmt;
   //@Bug 2753. To make sure the momory is freed.
@@ -1223,10 +1230,11 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
   if (isUpdateStatement(thd->lex->sql_command))
   {
+    TableName* qualifiedTablName = new TableName();
     qualifiedTablName->fName = tableName;
     qualifiedTablName->fSchema = schemaName;
     updateStmt.fNamePtr = qualifiedTablName;
-    pDMLPackage = CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(dmlStatement, updateStmt);
+    pDMLPackage.reset(CalpontDMLFactory::makeCalpontUpdatePackageFromMysqlBuffer(dmlStatement, updateStmt));
   }
   else if ((thd->lex)->sql_command == SQLCOM_DELETE_MULTI)  //@Bug 6121 error out on multi tables delete.
   {
@@ -1246,9 +1254,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
           boost::algorithm::to_lower(tableName);
           boost::algorithm::to_lower(aliasName);
         }
-        qualifiedTablName->fName = tableName;
-        qualifiedTablName->fSchema = schemaName;
-        pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+        pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
       }
       else
       {
@@ -1271,9 +1277,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
         boost::algorithm::to_lower(tableName);
         boost::algorithm::to_lower(aliasName);
       }
-      qualifiedTablName->fName = tableName;
-      qualifiedTablName->fSchema = schemaName;
-      pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+      pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
     }
   }
   else
@@ -1288,9 +1292,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
       boost::algorithm::to_lower(tableName);
       boost::algorithm::to_lower(aliasName);
     }
-    qualifiedTablName->fName = tableName;
-    qualifiedTablName->fSchema = schemaName;
-    pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement);
+    pDMLPackage.reset(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(dmlStatement));
   }
 
   if (!pDMLPackage)
@@ -1549,7 +1551,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
   updateCP->serialize(*plan);
   pDMLPackage->write(bytestream);
 
-  delete pDMLPackage;
+  pDMLPackage.reset();
 
   ByteStream::byte b = 0;
   ByteStream::octbyte rows = 0;
@@ -1633,12 +1635,12 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             // cout << "doUpdateDelete start new DMLProc client for ctrl-c " <<  " for session " << sessionID
             // << endl;
             VendorDMLStatement cmdStmt("CTRL+C", DML_COMMAND, sessionID);
-            CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+	    std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
             pDMLPackage->set_TimeZone(timeZoneOffset);
             ByteStream bytestream;
             bytestream << static_cast<uint32_t>(sessionID);
             pDMLPackage->write(bytestream);
-            delete pDMLPackage;
+            pDMLPackage.reset();
             b = 1;
             retry = maxRetries;
             errorMsg = "Command canceled by user";
@@ -1756,13 +1758,13 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     if (command != "")
     {
       VendorDMLStatement cmdStmt(command, DML_COMMAND, sessionID);
-      CalpontDMLPackage* pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+      std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
       pDMLPackage->set_TimeZone(timeZoneOffset);
       pDMLPackage->setTableOid(ci->tableOid);
       ByteStream bytestream;
       bytestream << static_cast<uint32_t>(sessionID);
       pDMLPackage->write(bytestream);
-      delete pDMLPackage;
+      pDMLPackage.reset();
 
       ByteStream::byte bc;
       std::string errMsg;
@@ -2144,7 +2146,8 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  cal_impl_if::gp_walk_info gwi(timeZoneOffset);
+  SubQueryChainHolder chainHolder;
+  cal_impl_if::gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   int rc = 0;
 
@@ -2166,6 +2169,7 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
     *affected_rows = ci->affectedRows;
   }
 
+
   return rc;
 }
 
@@ -2176,7 +2180,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  SubQueryChainHolder chainHolder;
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
@@ -2450,9 +2455,9 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   ti = ci->tableMap[table];
   ti.msTablePtr = table;
 
-  if (ti.tpl_ctx == nullptr)
+  if (!ti.tpl_ctx)
   {
-    ti.tpl_ctx = new sm::cpsm_tplh_t();
+    ti.tpl_ctx.reset(new sm::cpsm_tplh_t());
     ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
   }
 
@@ -2728,7 +2733,6 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
       else
         ci->cal_conn_hndl = hndl;
 
-      ti.tpl_ctx = 0;
     }
     catch (IDBExcept& e)
     {
@@ -3731,6 +3735,13 @@ int ha_mcs_impl_delete_row(const uchar* buf)
   return 0;
 }
 
+// this place is as good as any.
+ext_cond_info::ext_cond_info(long timeZone)
+  : chainHolder(new SubQueryChainHolder())
+  , gwi(timeZone, &chainHolder->chain)
+{
+}
+
 COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condStack)
 {
   THD* thd = current_thd;
@@ -3759,7 +3770,8 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     const char* timeZone = thd->variables.time_zone->get_name()->ptr();
     long timeZoneOffset;
     dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-    gp_walk_info gwi(timeZoneOffset);
+    SubQueryChainHolder chainHolder;
+    gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
     gwi.condPush = true;
     gwi.sessionid = tid2sid(thd->thread_id);
     cout << "------------------ cond push -----------------------" << endl;
@@ -3775,16 +3787,17 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
       const char* timeZone = thd->variables.time_zone->get_name()->ptr();
       long timeZoneOffset;
       dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-      ti.condInfo = new gp_walk_info(timeZoneOffset);
+      ti.condInfo = new ext_cond_info(timeZoneOffset);
     }
 
-    gp_walk_info* gwi = ti.condInfo;
+    gp_walk_info* gwi = &ti.condInfo->gwi;
     gwi->dropCond = false;
     gwi->fatalParseError = false;
     gwi->condPush = true;
     gwi->thd = thd;
     gwi->sessionid = tid2sid(thd->thread_id);
     cond->traverse_cond(gp_walk, gwi, Item::POSTFIX);
+    clearDeleteStacks(*gwi);
     ci->tableMap[table] = ti;
 
     if (gwi->fatalParseError)
@@ -4145,12 +4158,12 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
         mapiter = ci->tableMap.find(tl->table);
 
         if (mapiter != ci->tableMap.end() && mapiter->second.condInfo != NULL &&
-            mapiter->second.condInfo->condPush)
+            mapiter->second.condInfo->gwi.condPush)
         {
-          while (!mapiter->second.condInfo->ptWorkStack.empty())
+          while (!mapiter->second.condInfo->gwi.ptWorkStack.empty())
           {
-            ptIt = mapiter->second.condInfo->ptWorkStack.top();
-            mapiter->second.condInfo->ptWorkStack.pop();
+            ptIt = mapiter->second.condInfo->gwi.ptWorkStack.top();
+            mapiter->second.condInfo->gwi.ptWorkStack.pop();
             gi.pushedPts.push_back(ptIt);
           }
         }
@@ -4330,7 +4343,7 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
 
   {
     // MCOL-1601 Using stacks of ExeMgr conn hndls, table and scan contexts.
-    ti.tpl_ctx = new sm::cpsm_tplh_t();
+    ti.tpl_ctx.reset(new sm::cpsm_tplh_t());
     ti.tpl_ctx_st.push(ti.tpl_ctx);
     ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
     ti.tpl_scan_ctx_st.push(ti.tpl_scan_ctx);
@@ -4582,6 +4595,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
         {
           bool ask_4_stats = (ci->traceFlags) ? true : false;
           sm::tpl_close(ti.tpl_ctx, &hndl, ci->stats, ask_4_stats, clearScanCtx);
+	  ti.tpl_ctx = 0;
         }
         // Normaly stats variables are set in external_lock method but we set it here
         // since they we pretend we are in vtable_disabled mode and the stats vars won't be set.
@@ -4597,10 +4611,13 @@ int ha_mcs_impl_group_by_end(TABLE* table)
             ci->miniStats += hndl->miniStats;
         }
       }
+      else
+      {
+	ti.tpl_ctx.reset();
+      }
 
       ci->cal_conn_hndl = hndl;
 
-      ti.tpl_ctx = 0;
     }
     catch (IDBExcept& e)
     {
@@ -4679,7 +4696,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   const char* timeZone = thd->variables.time_zone->get_name()->ptr();
   long timeZoneOffset;
   dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
-  gp_walk_info gwi(timeZoneOffset);
+  SubQueryChainHolder chainHolder;
+  gp_walk_info gwi(timeZoneOffset, &chainHolder.chain);
   gwi.thd = thd;
   bool err = false;
 
@@ -5036,7 +5054,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   {
     if (ti.tpl_ctx == 0)
     {
-      ti.tpl_ctx = new sm::cpsm_tplh_t();
+      ti.tpl_ctx.reset(new sm::cpsm_tplh_t());
       ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
     }
 
@@ -5159,7 +5177,7 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table, long timeZone)
   {
     if (ti.tpl_ctx == 0)
     {
-      ti.tpl_ctx = new sm::cpsm_tplh_t();
+      ti.tpl_ctx.reset(new sm::cpsm_tplh_t());
       ti.tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
     }
 

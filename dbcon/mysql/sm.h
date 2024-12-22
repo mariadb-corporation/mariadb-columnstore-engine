@@ -137,12 +137,11 @@ struct cpsm_tplsch_t
   }
   ~cpsm_tplsch_t()
   {
-    delete rowGroup;
   }
 
   tableid_t tableid;
   uint64_t rowsreturned;
-  rowgroup::RowGroup* rowGroup;
+  std::shared_ptr<rowgroup::RowGroup> rowGroup;
   messageqcpp::ByteStream bs;  // rowgroup bytestream. need to stay with the life span of rowgroup
   uint32_t traceFlags;
   // @bug 649
@@ -158,7 +157,7 @@ struct cpsm_tplsch_t
   {
     if (!rowGroup)
     {
-      rowGroup = new rowgroup::RowGroup();
+      rowGroup.reset(new rowgroup::RowGroup());
       rowGroup->deserialize(bs);
     }
     else
@@ -280,6 +279,7 @@ struct cpsm_tplh_t
   uint16_t saveFlag;
   int bandsInTable;
 };
+typedef std::shared_ptr<cpsm_tplh_t> sp_cpsm_tplh_t;
 
 struct cpsm_tid_t
 {
@@ -293,11 +293,11 @@ struct cpsm_tid_t
 extern status_t sm_init(uint32_t, cpsm_conhdl_t**, uint32_t columnstore_local_query = false);
 extern status_t sm_cleanup(cpsm_conhdl_t*);
 
-extern status_t tpl_open(tableid_t, cpsm_tplh_t*, cpsm_conhdl_t*);
+extern status_t tpl_open(tableid_t, sp_cpsm_tplh_t&, cpsm_conhdl_t*);
 extern status_t tpl_scan_open(tableid_t, sp_cpsm_tplsch_t&, cpsm_conhdl_t*);
 extern status_t tpl_scan_fetch(sp_cpsm_tplsch_t&, cpsm_conhdl_t*, int* k = 0);
 extern status_t tpl_scan_close(sp_cpsm_tplsch_t&);
-extern status_t tpl_close(cpsm_tplh_t*, cpsm_conhdl_t**, querystats::QueryStats& stats, bool ask_4_stats,
+extern status_t tpl_close(sp_cpsm_tplh_t&, cpsm_conhdl_t**, querystats::QueryStats& stats, bool ask_4_stats,
                           bool clear_scan_ctx = false);
 
 }  // namespace sm

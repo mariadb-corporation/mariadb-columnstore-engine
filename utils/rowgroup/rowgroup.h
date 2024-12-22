@@ -1249,6 +1249,7 @@ inline void Row::setUintField(uint64_t val, uint32_t colIndex)
 template <int len>
 inline void Row::setIntField(int64_t val, uint32_t colIndex)
 {
+//	idbassert(getColumnWidth(colIndex) == len);
   switch (len)
   {
     case 1: *((int8_t*)&data[offsets[colIndex]]) = val; break;

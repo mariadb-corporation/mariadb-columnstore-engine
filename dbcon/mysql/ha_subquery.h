@@ -45,6 +45,8 @@ class SubQuery
  public:
   SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false)
   {
+    next = *gwip.subQueriesChain;
+    *gwip.subQueriesChain = this;
   }
   virtual ~SubQuery()
   {
@@ -68,10 +70,27 @@ class SubQuery
   {
   }
 
+  SubQuery* next;
  protected:
   gp_walk_info& fGwip;
   bool fCorrelated;
 };
+
+struct SubQueryChainHolder
+{
+  SubQuery* chain;
+  SubQueryChainHolder () : chain(nullptr) { }
+  ~SubQueryChainHolder ()
+  {
+    while (chain)
+    {
+      SubQuery* next = chain->next;
+      delete chain;
+      chain = next;
+    }
+  }
+};
+
 
 /**
  * @brief A class to represent a generic WHERE clause subquery

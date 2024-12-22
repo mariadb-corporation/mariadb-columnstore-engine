@@ -70,7 +70,7 @@ const std::string ERR_LOG_SUFFIX = ".err";  // Job err log file suffix
 // extern WriteEngine::BRMWrapper* brmWrapperPtr;
 namespace WriteEngine
 {
-/* static */ boost::ptr_vector<TableInfo> BulkLoad::fTableInfo;
+/* static */ std::vector<std::shared_ptr<TableInfo>> BulkLoad::fTableInfo;
 /* static */ boost::mutex* BulkLoad::fDDLMutex = 0;
 
 /* static */ const std::string BulkLoad::DIR_BULK_JOB("job");
@@ -519,7 +519,7 @@ void BulkLoad::spawnWorkers()
 //    NO_ERROR if success
 //    other if fail
 //------------------------------------------------------------------------------
-int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
+int BulkLoad::preProcess(Job& job, int tableNo, std::shared_ptr<TableInfo>& tableInfo)
 {
   int rc = NO_ERROR, minWidth = 9999;  // give a big number
   HWM minHWM = 999999;                 // rp 9/25/07 Bug 473
@@ -701,7 +701,7 @@ int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
         << "Table-" << job.jobTableList[tableNo].tblName << "...";
   fLog.logMsg(oss11.str(), MSGLVL_INFO2);
 
-  rc = saveBulkRollbackMetaData(job, tableInfo, segFileInfo, dbRootHWMInfoColVec);
+  rc = saveBulkRollbackMetaData(job, tableInfo.get(), segFileInfo, dbRootHWMInfoColVec);
 
   if (rc != NO_ERROR)
   {
@@ -733,10 +733,10 @@ int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
 
     if (job.jobTableList[tableNo].colList[i].compressionType)
       info = new ColumnInfoCompressed(&fLog, i, job.jobTableList[tableNo].colList[i], pDBRootExtentTracker,
-                                      tableInfo);
+                                      tableInfo.get());
     // tableInfo->rbMetaWriter());
     else
-      info = new ColumnInfo(&fLog, i, job.jobTableList[tableNo].colList[i], pDBRootExtentTracker, tableInfo);
+      info = new ColumnInfo(&fLog, i, job.jobTableList[tableNo].colList[i], pDBRootExtentTracker, tableInfo.get());
 
     if (pwd)
       info->setUIDGID(pwd->pw_uid, pwd->pw_gid);
@@ -840,7 +840,7 @@ int BulkLoad::preProcess(Job& job, int tableNo, TableInfo* tableInfo)
   if (rc)
     return rc;
 
-  fTableInfo.push_back(tableInfo);
+  fTableInfo.push_back(std::shared_ptr<TableInfo>(tableInfo));
 
   return NO_ERROR;
 }
@@ -1039,19 +1039,19 @@ int BulkLoad::processJob()
   //--------------------------------------------------------------------------
   // Validate the existence of the import data files
   //--------------------------------------------------------------------------
-  std::vector<TableInfo*> tables;
+  std::vector<std::shared_ptr<TableInfo>> tables;
 
   for (i = 0; i < curJob.jobTableList.size(); i++)
   {
-    TableInfo* tableInfo = new TableInfo(&fLog, fTxnID, fProcessName, curJob.jobTableList[i].mapOid,
-                                         curJob.jobTableList[i].tblName, fKeepRbMetaFiles);
+    std::shared_ptr<TableInfo> tableInfo(new TableInfo(&fLog, fTxnID, fProcessName, curJob.jobTableList[i].mapOid,
+                                         curJob.jobTableList[i].tblName, fKeepRbMetaFiles));
 
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) || (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
       tableInfo->setBulkLoadMode(fBulkMode, fBRMRptFileName);
 
     tableInfo->setErrorDir(string(getErrorDir()));
     tableInfo->setTruncationAsError(getTruncationAsError());
-    rc = manageImportDataFileList(curJob, i, tableInfo);
+    rc = manageImportDataFileList(curJob, i, tableInfo.get());
 
     if (rc != NO_ERROR)
     {
@@ -1495,7 +1495,7 @@ int BulkLoad::rollbackLockedTables()
 
   for (unsigned i = 0; i < fTableInfo.size(); i++)
   {
-    if (fTableInfo[i].isTableLocked())
+    if (fTableInfo[i]->isTableLocked())
     {
       lockedTableFound = true;
       break;
@@ -1509,10 +1509,10 @@ int BulkLoad::rollbackLockedTables()
     // Report the tables that were successfully loaded
     for (unsigned i = 0; i < fTableInfo.size(); i++)
     {
-      if (!fTableInfo[i].isTableLocked())
+      if (!fTableInfo[i]->isTableLocked())
       {
         ostringstream oss;
-        oss << "Table " << fTableInfo[i].getTableName() << " was successfully loaded. ";
+        oss << "Table " << fTableInfo[i]->getTableName() << " was successfully loaded. ";
         fLog.logMsg(oss.str(), MSGLVL_INFO1);
       }
     }
@@ -1520,24 +1520,24 @@ int BulkLoad::rollbackLockedTables()
     // Report the tables that were not successfully loaded
     for (unsigned i = 0; i < fTableInfo.size(); i++)
     {
-      if (fTableInfo[i].isTableLocked())
+      if (fTableInfo[i]->isTableLocked())
       {
-        if (fTableInfo[i].hasProcessingBegun())
+        if (fTableInfo[i]->hasProcessingBegun())
         {
           ostringstream oss;
-          oss << "Table " << fTableInfo[i].getTableName() << " (OID-" << fTableInfo[i].getTableOID() << ")"
+          oss << "Table " << fTableInfo[i]->getTableName() << " (OID-" << fTableInfo[i]->getTableOID() << ")"
               << " was not successfully loaded.  Rolling back.";
           fLog.logMsg(oss.str(), MSGLVL_INFO1);
         }
         else
         {
           ostringstream oss;
-          oss << "Table " << fTableInfo[i].getTableName() << " (OID-" << fTableInfo[i].getTableOID() << ")"
+          oss << "Table " << fTableInfo[i]->getTableName() << " (OID-" << fTableInfo[i]->getTableOID() << ")"
               << " did not start loading.  No rollback necessary.";
           fLog.logMsg(oss.str(), MSGLVL_INFO1);
         }
 
-        rc = rollbackLockedTable(fTableInfo[i]);
+        rc = rollbackLockedTable(*fTableInfo[i]);
 
         if (rc != NO_ERROR)
         {
@@ -1603,9 +1603,9 @@ bool BulkLoad::addErrorMsg2BrmUpdater(const std::string& tablename, const ostrin
 
   for (int tableId = 0; tableId < size; tableId++)
   {
-    if (fTableInfo[tableId].getTableName() == tablename)
+    if (fTableInfo[tableId]->getTableName() == tablename)
     {
-      fTableInfo[tableId].fBRMReporter.addToErrMsgEntry(oss.str());
+      fTableInfo[tableId]->fBRMReporter.addToErrMsgEntry(oss.str());
       return true;
     }
   }

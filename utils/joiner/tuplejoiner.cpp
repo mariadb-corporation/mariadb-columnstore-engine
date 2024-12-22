@@ -39,7 +39,7 @@ namespace joiner
 // Typed joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          uint32_t smallJoinColumn, uint32_t largeJoinColumn, JoinType jt,
-                         threadpool::ThreadPool* jsThreadPool)
+                         threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -49,6 +49,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , bSignedUnsignedJoin(false)
  , uniqueLimit(100)
  , finished(false)
+ , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
 {
@@ -145,7 +146,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 // Typeless joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          const vector<uint32_t>& smallJoinColumns, const vector<uint32_t>& largeJoinColumns,
-                         JoinType jt, threadpool::ThreadPool* jsThreadPool)
+                         JoinType jt, threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -157,6 +158,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , bSignedUnsignedJoin(false)
  , uniqueLimit(100)
  , finished(false)
+ , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
 {
@@ -254,11 +256,6 @@ bool TupleJoiner::operator<(const TupleJoiner& tj) const
 
 void TupleJoiner::getBucketCount()
 {
-  // get the # of cores, round up to nearest power of 2
-  // make the bucket mask
-  numCores = sysconf(_SC_NPROCESSORS_ONLN);
-  if (numCores <= 0)
-    numCores = 8;
   bucketCount = (numCores == 1 ? 1 : (1 << (32 - __builtin_clz(numCores - 1))));
   bucketMask = bucketCount - 1;
 }

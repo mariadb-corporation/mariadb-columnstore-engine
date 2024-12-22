@@ -33,10 +33,9 @@ if (WITH_UNITTESTS)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rowgroup_tests TEST_PREFIX columnstore:)
 
-
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
-    target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
+    target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)

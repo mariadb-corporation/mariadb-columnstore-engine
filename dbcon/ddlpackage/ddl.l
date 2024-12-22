@@ -34,7 +34,7 @@ int ddldebug = 0;
 int lineno = 1;
 void ddlerror(struct pass_to_bison* x, char const *s);
 
-static char* scanner_copy(char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
+static char* scanner_copy(const char *str, yyscan_t yyscanner, copy_action_t action = NOOP );
 
 %}
 
@@ -115,9 +115,9 @@ CONSTRAINT {return CONSTRAINT;}
 CONSTRAINTS {return CONSTRAINTS;}
 CREATE {return CREATE;}
 CURRENT_USER {return CURRENT_USER;}
-DATE {ddlget_lval(yyscanner)->str=strdup("date"); return DATE;}
+DATE {ddlget_lval(yyscanner)->str = scanner_copy("date", yyscanner); return DATE;}
 DATETIME {return DATETIME;}
-TIME {ddlget_lval(yyscanner)->str=strdup("time"); return TIME;}
+TIME {ddlget_lval(yyscanner)->str = scanner_copy("time", yyscanner); return TIME;}
 TIMESTAMP {return TIMESTAMP;}
 DECIMAL {return DECIMAL;}
 DEC {return DECIMAL;}
@@ -276,7 +276,7 @@ void scanner_finish(yyscan_t yyscanner)
    pScanData->valbuf.clear();
 }
 
-char* scanner_copy (char *str, yyscan_t yyscanner, copy_action_t action)
+char* scanner_copy (const char *str, yyscan_t yyscanner, copy_action_t action)
 {
     char* result;
     char* nv = strdup(str);

@@ -170,7 +170,7 @@ int64_t Func_dayofweek::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
     default: isNull = true; return -1;
   }
 
-  return helpers::calc_mysql_weekday(year, month, day, true) + 1;
+  return helpers::calc_mysql_weekday(year, month, day, true, isNull) + 1;
 }
 
 }  // namespace funcexp

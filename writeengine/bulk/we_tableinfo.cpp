@@ -178,7 +178,6 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
 TableInfo::~TableInfo()
 {
   fBRMReporter.sendErrMsgToFile(fBRMRptFileName);
-  freeProcessingBuffers();
 }
 
 //------------------------------------------------------------------------------
