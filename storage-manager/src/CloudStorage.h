@@ -41,6 +41,7 @@ class CloudStorage
 
   struct IOTaskData
   {
+    IOTaskData(uint64_t id_, double runningTime_) : id(id_), runningTime(runningTime_) {}
     uint64_t id;
     double runningTime;
   };
