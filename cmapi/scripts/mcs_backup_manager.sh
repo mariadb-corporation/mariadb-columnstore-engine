@@ -2778,7 +2778,7 @@ print_dbrm_backup_help_text() {
         -nb  | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
         -ssm | --skip-storage-manager  skip backing up storagemanager directory
 
-        Default: ./$0 dbrm_backup -m once --retention-days 7 --backup-location /tmp/dbrm_backups
+        Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
         Examples:
             ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups 
