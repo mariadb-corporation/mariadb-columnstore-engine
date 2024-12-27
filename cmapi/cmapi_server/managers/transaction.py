@@ -6,7 +6,7 @@ from signal import (
 )
 from typing import Optional, Type
 
-from cmapi_server.constants import DEFAULT_MCS_CONF_PATH
+from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, TRANSACTION_TIMEOUT
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
     get_id, commit_transaction, rollback_transaction, start_transaction
@@ -17,7 +17,7 @@ class TransactionManager(ContextDecorator):
     """Context manager and decorator to put any code inside CMAPI transaction.
 
     :param timeout: time in sec after transaction will be autocommitted,
-                    defaults to 300.0
+                    defaults to 300.0 (TRANSACTION_TIMEOUT)
 
     :param timeout: _description_, defaults to 300
     :type timeout: float, optional
@@ -28,8 +28,8 @@ class TransactionManager(ContextDecorator):
     """
 
     def __init__(
-            self, timeout: float = 300, txn_id: Optional[int] = None,
-            handle_signals: bool = False
+            self, timeout: float = TRANSACTION_TIMEOUT,
+            txn_id: Optional[int] = None, handle_signals: bool = False
     ):
         self.timeout = timeout
         self.txn_id = txn_id or get_id()
