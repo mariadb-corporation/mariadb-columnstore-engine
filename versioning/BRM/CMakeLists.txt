@@ -116,3 +116,15 @@ add_executable(load_brm ${load_brm_SRCS})
 target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
 install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+
+add_executable(mcs-load-em load_em.cpp)
+target_link_libraries(mcs-load-em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+install(TARGETS mcs-load-em DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+
+add_executable(mcs-load-brm-from-file load_brm_from_file.cpp)
+target_link_libraries(mcs-load-brm-from-file ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} CLI11)
+install(TARGETS mcs-load-brm-from-file DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+
+add_executable(mcs-shmem-locks shmem_locks.cpp)
+target_link_libraries(mcs-shmem-locks ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} CLI11)
+install(TARGETS mcs-shmem-locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)

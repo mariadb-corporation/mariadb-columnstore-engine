@@ -82,7 +82,8 @@ RestorePartitionProcessor::DDLResult RestorePartitionProcessor::processPackageIn
   CalpontSystemCatalog::DictOIDList dictOIDList;
   std::string processName("DDLProc");
 
-  string stmt = restorePartitionStmt->fSql + "|" + restorePartitionStmt->fTableName->fSchema + "|";
+  auto stmt = formatStatementString(restorePartitionStmt->fSql, restorePartitionStmt->fTableName->fSchema,
+                                    restorePartitionStmt->fTableName->fName, restorePartitionStmt->fPartitions);
   SQLLogger logger(stmt, fDDLLoggingId, restorePartitionStmt->fSessionID, txnID.id);
 
   uint32_t processID = 0;

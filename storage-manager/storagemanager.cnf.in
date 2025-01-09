@@ -80,6 +80,10 @@ max_concurrent_uploads = 21
 # negotiate ownership of data from a failed instance.
 common_prefix_depth = 3
 
+# This value is used to specify a cluster file path to FDB cluster.
+# See more: https://apple.github.io/foundationdb/administration.html
+fdb_cluster_file_path = /etc/foundationdb/fdb.cluster
+
 [S3]
 # These should be self-explanatory.  Region can be blank or commented
 # if using a private cloud storage system.  Bucket has to be set to
@@ -140,6 +144,16 @@ bucket = some_bucket
 # libs3_debug setting controls S3 library debugging printouts
 # Default is libs3_debug = disabled
 # libs3_debug = disabled
+
+# Sets the maximum time in seconds for the connection phase to take. This
+# timeout only limits the connection phase, it has no impact once the connection
+# is established. The default value indicating that the default libcurl
+# timeout (300 seconds?) will be used.
+# connect_timeout = 5.5
+
+# Sets the maximum time in seconds for the entire transfer operation to take.
+# Default (no value) - no timeout at all.
+# timeout = 7.5
 
 # The LocalStorage section configures the 'local storage' module
 # if specified by ObjectStorage/service.

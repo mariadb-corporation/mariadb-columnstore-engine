@@ -475,6 +475,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
     funcexp::Func_idbpartition* idbpartition = new funcexp::Func_idbpartition();
     fc->operationType(idbpartition->operationType(parms, fc->resultType()));
     fc->alias(ifp->full_name() ? ifp->full_name() : "");
+    delete idbpartition;
     return fc;
   }
 

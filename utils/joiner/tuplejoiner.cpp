@@ -20,12 +20,13 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 #include "hasher.h"
 #include "lbidlist.h"
 #include "spinlock.h"
 #include "vlarray.h"
+#include "threadnaming.h"
 
 using namespace std;
 using namespace rowgroup;
@@ -38,7 +39,7 @@ namespace joiner
 // Typed joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          uint32_t smallJoinColumn, uint32_t largeJoinColumn, JoinType jt,
-                         threadpool::ThreadPool* jsThreadPool)
+                         threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -48,6 +49,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , bSignedUnsignedJoin(false)
  , uniqueLimit(100)
  , finished(false)
+ , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
 {
@@ -144,7 +146,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 // Typeless joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          const vector<uint32_t>& smallJoinColumns, const vector<uint32_t>& largeJoinColumns,
-                         JoinType jt, threadpool::ThreadPool* jsThreadPool)
+                         JoinType jt, threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -156,6 +158,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , bSignedUnsignedJoin(false)
  , uniqueLimit(100)
  , finished(false)
+ , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
 {
@@ -253,11 +256,6 @@ bool TupleJoiner::operator<(const TupleJoiner& tj) const
 
 void TupleJoiner::getBucketCount()
 {
-  // get the # of cores, round up to nearest power of 2
-  // make the bucket mask
-  numCores = sysconf(_SC_NPROCESSORS_ONLN);
-  if (numCores <= 0)
-    numCores = 8;
   bucketCount = (numCores == 1 ? 1 : (1 << (32 - __builtin_clz(numCores - 1))));
   bucketMask = bucketCount - 1;
 }
@@ -282,8 +280,7 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
         done = false;
         continue;
       }
-      for (auto& element : buckets[i])
-        tables[i]->insert(element);
+      tables[i]->insert(buckets[i].begin(), buckets[i].end());
       m_bucketLocks[i].unlock();
       wasProductive = true;
       buckets[i].clear();
@@ -306,7 +303,7 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row& r)
     if (td[i].len == 0)
       continue;
     uint bucket = bucketPicker((char*)td[i].data, td[i].len, bpSeed) & bucketMask;
-    v[bucket].push_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
+    v[bucket].emplace_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
   }
   bucketsToTables(&v[0], ht.get());
 }
@@ -323,9 +320,9 @@ void TupleJoiner::um_insertLongDouble(uint rowCount, Row& r)
     uint bucket = bucketPicker((char*)&smallKey, 10, bpSeed) &
                   bucketMask;  // change if we decide to support windows again
     if (UNLIKELY(smallKey == joblist::LONGDOUBLENULL))
-      v[bucket].push_back(pair<long double, Row::Pointer>(joblist::LONGDOUBLENULL, r.getPointer()));
+      v[bucket].emplace_back(pair<long double, Row::Pointer>(joblist::LONGDOUBLENULL, r.getPointer()));
     else
-      v[bucket].push_back(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
+      v[bucket].emplace_back(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
   }
   bucketsToTables(&v[0], ld.get());
 }
@@ -345,9 +342,9 @@ void TupleJoiner::um_insertInlineRows(uint rowCount, Row& r)
       smallKey = (int64_t)r.getUintField(smallKeyColumn);
     uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
     if (UNLIKELY(smallKey == nullValueForJoinColumn))
-      v[bucket].push_back(pair<int64_t, uint8_t*>(getJoinNullValue(), r.getData()));
+      v[bucket].emplace_back(pair<int64_t, uint8_t*>(getJoinNullValue(), r.getData()));
     else
-      v[bucket].push_back(pair<int64_t, uint8_t*>(smallKey, r.getData()));
+      v[bucket].emplace_back(pair<int64_t, uint8_t*>(smallKey, r.getData()));
   }
   bucketsToTables(&v[0], h.get());
 }
@@ -367,9 +364,9 @@ void TupleJoiner::um_insertStringTable(uint rowCount, Row& r)
       smallKey = (int64_t)r.getUintField(smallKeyColumn);
     uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
     if (UNLIKELY(smallKey == nullValueForJoinColumn))
-      v[bucket].push_back(pair<int64_t, Row::Pointer>(getJoinNullValue(), r.getPointer()));
+      v[bucket].emplace_back(pair<int64_t, Row::Pointer>(getJoinNullValue(), r.getPointer()));
     else
-      v[bucket].push_back(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
+      v[bucket].emplace_back(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
   }
   bucketsToTables(&v[0], sth.get());
 }
@@ -599,7 +596,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
   if (UNLIKELY(inUM() && (joinType & MATCHNULLS) && !isNull && !typelessJoin))
   {
-    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE)
+    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && ld)
     {
       uint bucket = bucketPicker((char*)&(joblist::LONGDOUBLENULL), sizeof(joblist::LONGDOUBLENULL), bpSeed) &
                     bucketMask;
@@ -608,7 +605,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
       for (; range.first != range.second; ++range.first)
         matches->push_back(range.first->second);
     }
-    else if (!largeRG.usesStringTable())
+    else if (!smallRG.usesStringTable())
     {
       auto nullVal = getJoinNullValue();
       uint bucket = bucketPicker((char*)&nullVal, sizeof(nullVal), bpSeed) & bucketMask;
@@ -670,6 +667,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
   }
 }
 
+using unordered_set_int128 = std::unordered_set<int128_t, utils::Hash128, utils::Equal128>;
+
 void TupleJoiner::doneInserting()
 {
   // a minor textual cleanup
@@ -694,7 +693,6 @@ void TupleJoiner::doneInserting()
 
   for (col = 0; col < smallKeyColumns.size(); col++)
   {
-    typedef std::tr1::unordered_set<int128_t, utils::Hash128, utils::Equal128> unordered_set_int128;
     unordered_set_int128 uniquer;
     unordered_set_int128::iterator uit;
     sthash_t::iterator sthit;
@@ -811,6 +809,8 @@ void TupleJoiner::setInPM()
 
 void TupleJoiner::umJoinConvert(size_t begin, size_t end)
 {
+  utils::setThreadName("TJUMJoinConvert1");
+
   Row smallRow;
   smallRG.initRow(&smallRow);
 
@@ -862,6 +862,8 @@ void TupleJoiner::setInUM()
 
 void TupleJoiner::umJoinConvert(uint threadID, vector<RGData>& rgs, size_t begin, size_t end)
 {
+  utils::setThreadName("TJUMJoinConvert2");
+
   RowGroup l_smallRG(smallRG);
 
   while (begin < end)

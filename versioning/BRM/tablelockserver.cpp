@@ -110,7 +110,7 @@ void TableLockServer::load()
   if (!in)
   {
     ostringstream os;
-    os << "TableLockServer::load(): could not open the save file" << filename;
+    os << "TableLockServer::load(): either this is the first cluster start or could not open the save file" << filename;
     log(os.str(), logging::LOG_TYPE_DEBUG);
     return;
   }

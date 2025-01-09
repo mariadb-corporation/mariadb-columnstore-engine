@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2024 MariaDB Corporation, Inc.
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -20,67 +20,81 @@
  * If you re-compile extentmap.cpp to dump the extent map as it loads, you'll get a csv file on stdout.
  * Save this to a file and edit it as needed (remove the cruft at the top & bottom for sure). Then use
  * this tool to create a binary BRM_saves_em file.
- *
- * compile with
- * g++ -g -Wall -o load_brm_from_file -I$HOME/genii/export/include -I/usr/include/libxml2
- * load_brm_from_file.cpp
- *
  */
+
 #include <iostream>
 #include <stdint.h>
 #include <fstream>
 #include <cerrno>
 #include <string>
 #include <cstdlib>
-//#define NDEBUG
 #include <cassert>
 #include <limits>
 using namespace std;
 
-#include <boost/tokenizer.hpp>
-using namespace boost;
-
+#include "CLI11.hpp"
 #include "extentmap.h"
-using namespace BRM;
 
-#define EM_MAGIC_V4 0x76f78b1f
+static const char* BIN_NAME = "mcs-load-brm-from-file";
 
-namespace BRM
+template <typename T>
+T parseField(std::stringstream& ss, const char delimiter)
 {
-EMEntry::EMEntry()
-{
-  fileID = 0;
-  blockOffset = 0;
-  HWM = 0;
-  partitionNum = 0;
-  segmentNum = 0;
-  dbRoot = 0;
-  colWid = 0;
-  status = 0;
+  std::string field;
+  std::getline(ss, field, delimiter);
+  return std::stoll(field);
 }
-EMCasualPartition_struct::EMCasualPartition_struct()
+
+BRM::EMEntry parseLine(const std::string& line, char delimiter = '|')
 {
-  lo_val = numeric_limits<int64_t>::min();
-  hi_val = numeric_limits<int64_t>::max();
-  sequenceNum = 0;
-  isValid = CP_INVALID;
+  std::stringstream ss(line);
+  std::string field;
+
+  auto rangeStart = parseField<int64_t>(ss, delimiter);
+  auto rangeSize = parseField<uint32_t>(ss, delimiter);
+  BRM::InlineLBIDRange range{rangeStart, rangeSize};
+
+  auto fileID = parseField<int>(ss, delimiter);
+  auto blockOffset = parseField<uint32_t>(ss, delimiter);
+  auto hwm = parseField<BRM::HWM_t>(ss, delimiter);
+  auto partitionNum = parseField<BRM::PartitionNumberT>(ss, delimiter);
+  auto segmentNum = parseField<uint16_t>(ss, delimiter);
+  auto dbRoot = parseField<BRM::DBRootT>(ss, delimiter);
+  auto colWid = parseField<uint16_t>(ss, delimiter);
+  auto status = parseField<int16_t>(ss, delimiter);
+
+  auto hiVal = parseField<int64_t>(ss, delimiter);
+  auto loVal = parseField<int64_t>(ss, delimiter);
+  auto sequenceNum = parseField<int32_t>(ss, delimiter);
+  auto isValid = parseField<char>(ss, delimiter);
+  auto partition = BRM::EMCasualPartition_t{loVal, hiVal, sequenceNum, isValid};
+
+  return BRM::EMEntry{range,      fileID, blockOffset, hwm,    partitionNum,
+                      segmentNum, dbRoot, colWid,      status, {partition}};
 }
-}  // namespace BRM
 
 int main(int argc, char** argv)
 {
-  int e;
+  CLI::App app{BIN_NAME};
+  app.description(
+      "A tool to build Extent Map image file from its text representation. A text representation can be obtained using 'editem -i'"
+      "display the lock state.");
+  std::string srcFilename;
+  std::string dstFilename;
+  bool debug = false;
 
-  int loadSize[3];
+  app.add_option("-i,--input-filename", srcFilename,
+                 "Extent Map as its text representation.")
+      ->required();
+  app.add_option("-o,--output-filename", dstFilename,
+                 "Extent Map output image file, default as input-filename.out")
+      ->default_val("");
+  app.add_option("-d,--debug", debug, "Print extra output")->default_val(false);
 
-  if (argc < 2)
-  {
-    cerr << "filename arg needed" << endl;
-    return 1;
-  }
+  CLI11_PARSE(app, argc, argv);
 
-  ifstream in(argv[1]);
-  e = errno;
+  ifstream in(srcFilename);
+  int e = errno;
 
   if (!in)
   {
@@ -90,81 +104,43 @@ int main(int argc, char** argv)
 
   // Brute force count the number of lines
   int numEMEntries = 0;
-
-  string line;
-
-  getline(in, line);
-
-  while (!in.eof())
   {
-    numEMEntries++;
+    string line;
     getline(in, line);
+    while (!in.eof())
+    {
+      numEMEntries++;
+      getline(in, line);
+    }
   }
 
-  // start at the beginning again...
-  in.clear();
-  in.seekg(0, ios_base::beg);
+  std::cout << "Number of entries: " << numEMEntries << std::endl;
 
-  idbassert(in.good());
-  idbassert(in.tellg() == static_cast<streampos>(0));
-
-  string outname(argv[1]);
-  outname += ".out";
-
-  ofstream out(outname.c_str());
-  e = errno;
-
-  if (!out)
+  if (dstFilename.empty())
   {
-    cerr << "file write error: " << strerror(e) << endl;
+    dstFilename = srcFilename + ".out";
+  }
+  ofstream outFile(dstFilename);
+
+  BRM::InlineLBIDRange maxLBIDinUse{0, 0};
+
+  std::ifstream infile(srcFilename);
+  if (!infile.is_open())
+  {
+    std::cerr << "Can not open file " << srcFilename << std::endl;
     return 1;
   }
 
-  loadSize[0] = EM_MAGIC_V4;
+  int loadSize[3];
+  loadSize[0] = EM_MAGIC_V5;
   loadSize[1] = numEMEntries;
   loadSize[2] = 1;  // one free list entry
-  out.write((char*)&loadSize, (3 * sizeof(int)));
+  outFile.write((char*)&loadSize, (3 * sizeof(int)));
 
-  InlineLBIDRange fl;
-  fl.start = 0;
-  // the max lbid is 2^54-1, the size is in units of 1k
-  fl.size = numeric_limits<uint32_t>::max();
-
-  InlineLBIDRange maxLBIDinUse;
-  maxLBIDinUse.start = 0;
-  maxLBIDinUse.size = 0;
-
-  getline(in, line);
-
-  while (!in.eof())
+  string line;
+  while (std::getline(infile, line))
   {
-    EMEntry em;
-    int64_t v;
-    tokenizer<> tok(line);
-    tokenizer<>::iterator beg = tok.begin();
-#if 0
-        emSrc[i].range.start
-                << '\t' << emSrc[i].range.size
-                << '\t' << emSrc[i].fileID
-                << '\t' << emSrc[i].blockOffset
-                << '\t' << emSrc[i].HWM
-                << '\t' << emSrc[i].partitionNum
-                << '\t' << emSrc[i].segmentNum
-                << '\t' << emSrc[i].dbRoot
-                << '\t' << emSrc[i].colWid
-                << '\t' << emSrc[i].status
-                << '\t' << emSrc[i].partition.cprange.hi_val
-                << '\t' << emSrc[i].partition.cprange.lo_val
-                << '\t' << emSrc[i].partition.cprange.sequenceNum
-                << '\t' << (int)(emSrc[i].partition.cprange.isValid)
-#endif
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.range.start = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.range.size = v;
+    BRM::EMEntry em = parseLine(line);
 
     if (em.range.start > maxLBIDinUse.start)
     {
@@ -172,66 +148,26 @@ int main(int argc, char** argv)
       maxLBIDinUse.size = em.range.size;
     }
 
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.fileID = v;
+    if (debug)
+    {
+      std::cout << em.range.start << '\t' << em.range.size << '\t' << em.fileID << '\t' << em.blockOffset
+                << '\t' << em.HWM << '\t' << em.partitionNum << '\t' << em.segmentNum << '\t' << em.dbRoot
+                << '\t' << em.colWid << '\t' << em.status << '\t' << em.partition.cprange.hiVal << '\t'
+                << em.partition.cprange.loVal << '\t' << em.partition.cprange.sequenceNum << '\t'
+                << (short int)(em.partition.cprange.isValid) << std::endl;
+    }
 
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.blockOffset = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.HWM = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.partitionNum = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.segmentNum = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.dbRoot = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.colWid = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.status = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.partition.cprange.hi_val = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.partition.cprange.lo_val = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.partition.cprange.sequenceNum = v;
-
-    v = strtoll(beg->c_str(), 0, 0);
-    ++beg;
-    em.partition.cprange.isValid = v;
-
-    out.write((char*)&em, sizeof(em));
-
-    getline(in, line);
+    outFile.write((char*)&em, sizeof(em));
   }
+  infile.close();
 
-  fl.start = maxLBIDinUse.start + maxLBIDinUse.size * 1024;
-  fl.size -= fl.start / 1024;
+  auto flStart = maxLBIDinUse.start + maxLBIDinUse.size * 1024;
+  assert(flStart / 1024 <= numeric_limits<uint32_t>::max());
+  uint32_t flEnd = numeric_limits<uint32_t>::max() - flStart / 1024;
+  BRM::InlineLBIDRange fl{flStart, flEnd};
 
-  out.write((char*)&fl, sizeof(fl));
-
-  out.close();
-  in.close();
+  outFile.write((char*)&fl, sizeof(fl));
+  outFile.close();
 
   return 0;
 }

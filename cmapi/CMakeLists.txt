@@ -132,7 +132,7 @@ IF(RPM)
     SET(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAPI_CONF_FILEPATH}")
 
     SET(CPACK_RPM_PACKAGE_OBSOLETES "mariadb-columnstore-cmapi")
-    SET(CPACK_RPM_PACKAGE_REQUIRES "curl")
+    SET(CPACK_RPM_PACKAGE_REQUIRES "curl, foundationdb-server")
     STRING(REPLACE "-" "_" SERVER_VERSION ${SERVER_VERSION})
     get_linux_lsb_release_information()
 
@@ -174,7 +174,7 @@ IF(DEB)
     SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/prerm;${CMAKE_CURRENT_SOURCE_DIR}/postinst;${CMAKE_CURRENT_SOURCE_DIR}/conffiles")
 
     SET(CPACK_DEBIAN_PACKAGE_REPLACES "mariadb-columnstore-cmapi")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl, foundationdb-server")
     STRING(REPLACE "-" "." SERVER_VERSION ${SERVER_VERSION})
     SET(PATCHLEVEL "+maria")
     get_linux_lsb_release_information()

@@ -19,7 +19,7 @@
 //  $Id: tuple-bps.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -77,7 +77,9 @@ using namespace querytele;
 
 #include "columnwidth.h"
 #include "pseudocolumn.h"
-//#define DEBUG 1
+// #define DEBUG 1
+
+// #include "poormanprofiler.inc"
 
 extern boost::mutex fileLock_g;
 
@@ -396,15 +398,6 @@ void TupleBPS::initializeConfigParms()
 {
   string strVal;
 
-  //...Get the tuning parameters that throttle msgs sent to primproc
-  //...fFilterRowReqLimit puts a cap on how many rids we will request from
-  //...    primproc, before pausing to let the consumer thread catch up.
-  //...    Without this limit, there is a chance that PrimProc could flood
-  //...    ExeMgr with thousands of messages that will consume massive
-  //...    amounts of memory for a 100 gigabyte database.
-  //...fFilterRowReqThreshold is the level at which the number of outstanding
-  //...    rids must fall below, before the producer can send more rids.
-
   // These could go in constructor
   fRequestSize = fRm->getJlRequestSize();
   fMaxOutstandingRequests = fRm->getJlMaxOutstandingRequests();
@@ -556,14 +549,14 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
 
       throw runtime_error(oss.str());
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
       oss << " due to:  " << ex.what();
       throw runtime_error(oss.str());
     }
-    catch(...)
+    catch (...)
     {
       std::ostringstream oss;
       oss << "Error getting AUX column OID for table " << tableName.toString();
@@ -1684,7 +1677,8 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
     if (recvWaiting)
       condvar.notify_all();
 
-    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests << LOGICAL_EXTENT_CONVERTER) && !fDie)
+    // Send not more than fMaxOutstandingRequests jobs out. min(blocksPerJob) = 16
+    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie)
     {
       sendWaiting = true;
       condvarWakeupProducer.wait(tplLock);
@@ -2007,7 +2001,6 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   uint32_t i;
   uint32_t lbidsToScan;
   uint32_t blocksToScan;
-  uint32_t blocksPerJob;
   LBID_t startingLBID;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
   boost::shared_ptr<map<int, int>> dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
@@ -2227,6 +2220,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       // changes made here should also be made there and vice versa.
       if (hasUMJoin || !fBPP->pmSendsFinalResult())
       {
+        utils::setThreadName("BSPJoin");
+
         data->joinedData = RGData(data->local_outputRG);
         data->local_outputRG.setData(&data->joinedData);
         data->local_outputRG.resetRowGroup(data->local_primRG.getBaseRid());
@@ -2340,6 +2335,8 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
         {
           rgDatav.push_back(data->joinedData);
         }
+
+        utils::setThreadName("ByteStreamProcessor");
       }
       else
       {
@@ -2351,12 +2348,15 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
         memAmount = 0;
       }
 
+      utils::setThreadName("BSPFE2");
       // Execute UM F & E group 2 on rgDatav
       if (fe2 && !bRunFEonPM && rgDatav.size() > 0 && !cancelled())
       {
         data->processFE2(rgDatav);
         rgDataVecToDl(rgDatav, data->local_fe2Output, dlp);
       }
+
+        utils::setThreadName("ByteStreamProcessor");
 
       data->cachedIO_Thread += cachedIO;
       data->physIO_Thread += physIO;
@@ -2777,8 +2777,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
              << totalBlockedReadCount << "/" << totalBlockedWriteCount << "; output size-" << ridsReturned
              << endl
              << "\tPartitionBlocksEliminated-" << fNumBlksSkipped << "; MsgBytesIn-" << msgBytesInKB << "KB"
-             << "; MsgBytesOut-" << msgBytesOutKB << "KB"
-             << "; TotalMsgs-" << totalMsgs << endl
+             << "; MsgBytesOut-" << msgBytesOutKB << "KB" << "; TotalMsgs-" << totalMsgs << endl
              << "\t1st read " << dlTimes.FirstReadTimeString() << "; EOI " << dlTimes.EndOfInputTimeString()
              << "; runtime-" << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
              << "s\n\tUUID " << uuids::to_string(fStepUuid) << "\n\tQuery UUID "
@@ -3179,9 +3178,8 @@ bool TupleBPS::deliverStringTableRowGroup() const
 void TupleBPS::formatMiniStats()
 {
   ostringstream oss;
-  oss << "BPS "
-      << "PM " << alias() << " " << fTableOid << " " << fBPP->toMiniString() << " " << fPhysicalIO << " "
-      << fCacheIO << " " << fNumBlksSkipped << " "
+  oss << "BPS " << "PM " << alias() << " " << fTableOid << " " << fBPP->toMiniString() << " " << fPhysicalIO
+      << " " << fCacheIO << " " << fNumBlksSkipped << " "
       << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << ridsReturned
       << " ";
 

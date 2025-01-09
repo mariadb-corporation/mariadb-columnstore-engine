@@ -156,6 +156,11 @@ int64_t Func_dayofyear::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
     default: isNull = true; return -1;
   }
 
+  if (year == 0 && month == 0 && day == 0)
+  {
+    isNull = true;
+    return 0;
+  }
   return helpers::calc_mysql_daynr(year, month, day) - helpers::calc_mysql_daynr(year, 1, 1) + 1;
 }
 

@@ -863,6 +863,32 @@ bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&)
   return !(iss >> f >> t).fail();
 }
 
+class FormatStatementString
+{
+ public:
+  FormatStatementString() = default;
+  ~FormatStatementString() = default;
+
+  std::string formatStatementString(const std::string& cmd, const std::string& schema,
+                                    const std::string& table,
+                                    const std::set<BRM::LogicalPartition>& partitions)
+  {
+    std::ostringstream stmt;
+    stmt << cmd << "(" << schema << "," << table << ",";
+
+    // There must be at least one partition to drop.
+    for (auto& p : partitions)
+    {
+      stmt << p << ",";
+    }
+
+    auto res = stmt.str();
+    res.back() = ')';
+
+    return res;
+  }
+};
+
 }  // namespace ddlpackageprocessor
 
 #undef EXPORT

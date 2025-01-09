@@ -20,6 +20,7 @@
  *
  *
  ***********************************************************************/
+#include "bytestream.h"
 #include "mcsconfig.h"
 
 #include <stdexcept>
@@ -117,7 +118,7 @@ const SBS CompressedInetStreamSocket::read(const struct timespec* timeout, bool*
 
 void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats)
 {
-  size_t len = msg.length();
+  BSSizeType len = msg.length();
 
   if (useCompression && (len > 512))
   {
@@ -126,6 +127,9 @@ void CompressedInetStreamSocket::write(const ByteStream& msg, Stats* stats)
 
     alg->compress((char*)msg.buf(), len, (char*)smsg.getInputPtr() + HEADER_SIZE, &outLen);
     // Save original len.
+    // !!!
+    // !!! Reducing BS size type from 64bit down to 32 and potentially loosing data.
+    // !!!
     *(uint32_t*)smsg.getInputPtr() = len;
     smsg.advanceInputPtr(outLen + HEADER_SIZE);
 

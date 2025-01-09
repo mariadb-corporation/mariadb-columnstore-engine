@@ -68,6 +68,7 @@ using namespace oam;
 using namespace joblist;
 
 #include "atomicops.h"
+#include "threadnaming.h"
 
 namespace
 {
@@ -131,6 +132,7 @@ struct EngineCommRunner
   uint32_t connIndex;
   void operator()()
   {
+    utils::setThreadName("DECRunner");
     // cout << "Listening on client at 0x" << hex << (ptrdiff_t)client << dec << endl;
     try
     {
@@ -181,6 +183,17 @@ struct QueueShutdown
 
 namespace joblist
 {
+
+bool isDefaultLocalConnectionId(const uint32_t connectionId)
+{
+  return defaultLocalConnectionId() == connectionId;
+}
+
+bool needToSendToLocalPM(const bool isExeMgr, const uint32_t connectionId)
+{
+  return isExeMgr && !isDefaultLocalConnectionId(connectionId);
+}
+
 DistributedEngineComm* DistributedEngineComm::fInstance = 0;
 
 /*static*/
@@ -725,7 +738,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
       nextPMToACK(mqe, l_msgCount, &sockIndex, toAck);
       idbassert(*toAck <= l_msgCount);
       l_msgCount -= *toAck;
-      if (sockIndex == localConnectionId_ && fIsExeMgr)
+      if (sockIndex == localConnectionId_ && needToSendToLocalPM(fIsExeMgr, sockIndex))
       {
         sendToLocal = true;
         continue;
@@ -766,7 +779,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
             writeToClient(i, ackCommand);
           }
         }
-        if (!pmAcked[localConnectionId_] && fIsExeMgr)
+        if (needToSendToLocalPM(fIsExeMgr, localConnectionId_) && !pmAcked[localConnectionId_])
         {
           writeToClient(localConnectionId_, msg);
         }
@@ -857,8 +870,10 @@ void DistributedEngineComm::setFlowControl(bool enabled, uint32_t uniqueID, boos
     }
     writeToClient(i, msg);
   }
-  if (fIsExeMgr)
+  if (needToSendToLocalPM(fIsExeMgr, localConnectionId_))
+  {
     writeToClient(localConnectionId_, msg);
+  }
 }
 
 int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
@@ -898,7 +913,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
               return rc;
             }
           }
-          if (fIsExeMgr)
+          if (needToSendToLocalPM(fIsExeMgr, localConnectionId_))
           {
             return writeToClient(localConnectionId_, msg);
           }

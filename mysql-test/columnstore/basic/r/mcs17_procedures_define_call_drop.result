@@ -19,7 +19,7 @@ ERROR 42000: OUT or INOUT argument 1 for routine mcs17_db.proc1 is not a variabl
 CALL proc1();
 ERROR 42000: Incorrect number of arguments for PROCEDURE mcs17_db.proc1; expected 1, got 0
 CALL proc1(cnt);
-ERROR 42S22: Unknown column 'cnt' in 'field list'
+ERROR 42S22: Unknown column 'cnt' in 'CALL'
 CREATE PROCEDURE proc1 (OUT cnt INT) COMMENT 'comment2'
 BEGIN
 SELECT COUNT(*) INTO cnt FROM t1;

@@ -316,7 +316,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
   Item_window_func* wf = (Item_window_func*)item;
   Item_sum* item_sum = wf->window_func();
   string funcName = ConvertFuncName(item_sum);
-  WindowFunctionColumn* ac = new WindowFunctionColumn(funcName);
+  std::unique_ptr<WindowFunctionColumn> ac(new WindowFunctionColumn(funcName));
   ac->timeZone(gwi.timeZone);
   ac->distinct(item_sum->has_with_distinct());
   Window_spec* win_spec = wf->window_spec;
@@ -902,8 +902,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
   ac->charsetNumber(item->collation.collation->number);
 
   // put ac on windowFuncList
-  gwi.windowFuncList.push_back(ac);
-  return ac;
+  // we clone our managed pointer to put it into uunmanaged world.
+  WindowFunctionColumn* retAC = ac.release();
+  gwi.windowFuncList.push_back(retAC);
+  return retAC;
 }
 
 }  // namespace cal_impl_if

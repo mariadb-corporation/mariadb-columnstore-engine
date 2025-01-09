@@ -22,11 +22,12 @@
 #include "mcsconfig.h"
 
 #include <string>
-#include <boost/algorithm/string.hpp>
 #include <stdexcept>
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 #include <vector>
+
+#include "collation.h"
 using namespace std;
 
 #include "xmlparser.h"
@@ -47,7 +48,7 @@ const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, co
   {
     string cur1name = (const char*)cur1->name;
 
-    if ((boost::iequals(cur1name, section)))
+    if ((datatypes::ASCIIStringCaseInsensetiveEquals(cur1name, section)))
     {
       xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
@@ -55,7 +56,7 @@ const string XMLParser::getConfig(const xmlDocPtr doc, const string& section, co
       {
         string cur2name = (const char*)cur2->name;
 
-        if ((boost::iequals(cur2name, name)))
+        if ((datatypes::ASCIIStringCaseInsensetiveEquals(cur2name, name)))
         {
           xmlNodePtr cur3 = cur2->xmlChildrenNode;
 
@@ -92,7 +93,7 @@ void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const stri
   {
     string cur1name = (const char*)cur1->name;
 
-    if ((boost::iequals(cur1name, section)))
+    if (datatypes::ASCIIStringCaseInsensetiveEquals(cur1name, section))
     {
       xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
@@ -100,7 +101,7 @@ void XMLParser::getConfig(const xmlDocPtr doc, const string& section, const stri
       {
         string cur2name = (const char*)cur2->name;
 
-        if ((boost::iequals(cur2name, name)))
+        if (datatypes::ASCIIStringCaseInsensetiveEquals(cur2name, name))
         {
           res.clear();
           xmlNodePtr cur3 = cur2->xmlChildrenNode;
@@ -134,7 +135,7 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
   {
     string cur1name = (const char*)cur1->name;
 
-    if (boost::iequals(cur1name, section))
+    if (datatypes::ASCIIStringCaseInsensetiveEquals(cur1name, section))
     {
       cur2 = cur1->xmlChildrenNode;
 
@@ -142,7 +143,7 @@ void XMLParser::setConfig(xmlDocPtr doc, const string& section, const string& na
       {
         string cur2name = (const char*)cur2->name;
 
-        if (boost::iequals(cur2name, name))
+        if (datatypes::ASCIIStringCaseInsensetiveEquals(cur2name, name))
         {
           xmlNodePtr cur3 = cur2->xmlChildrenNode;
 
@@ -201,7 +202,7 @@ void XMLParser::delConfig(xmlDocPtr doc, const string& section, const string& na
   {
     string cur1name = (const char*)cur1->name;
 
-    if ((boost::iequals(cur1name, section)))
+    if (datatypes::ASCIIStringCaseInsensetiveEquals(cur1name, section))
     {
       xmlNodePtr cur2 = cur1->xmlChildrenNode;
 
@@ -211,7 +212,7 @@ void XMLParser::delConfig(xmlDocPtr doc, const string& section, const string& na
         cur2 = cur2->next;
         string tmpname = (const char*)tmp->name;
 
-        if ((boost::iequals(tmpname, name)))
+        if (datatypes::ASCIIStringCaseInsensetiveEquals(tmpname, name))
         {
           xmlUnlinkNode(tmp);
           xmlFreeNode(tmp);

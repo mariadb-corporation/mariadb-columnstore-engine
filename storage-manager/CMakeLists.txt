@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(storagemanager)
 
-include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_UTILS_COMMON_INCLUDE} ${S3API_DIR})
+include_directories(include ${CMAKE_BINARY_DIR}/include ${ENGINE_COMMON_INCLUDES} ${S3API_DIR})
 
 set(storagemanager_SRCS
     src/AppendTask.cpp
@@ -36,6 +36,10 @@ set(storagemanager_SRCS
     src/Ownership.cpp
     src/PrefixCache.cpp
     src/SyncTask.cpp
+    src/ListIOTask.cpp
+    src/TerminateIOTask.cpp
+    src/KVStorageInitializer.cpp
+    src/KVPrefixes.cpp
     ../utils/common/crashtrace.cpp
 )
 
@@ -60,13 +64,11 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf.in" "${CMAKE_CURR
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
-
-
 add_library(storagemanager SHARED ${storagemanager_SRCS})
-add_dependencies(storagemanager marias3 external_boost)
+add_dependencies(storagemanager marias3 external_boost fdbcs)
 
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
+target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread fdbcs ${S3API_DEPS})
 
 add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
@@ -125,12 +127,24 @@ target_link_libraries(smrm storagemanager cloudio
     ${ENGINE_EXEC_LIBS}
 )
 
+add_executable(smps src/smps.cpp)
+target_link_libraries(smps storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+)
+
+
+add_executable(smkill src/smkill.cpp)
+target_link_libraries(smkill storagemanager cloudio
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_EXEC_LIBS}
+)
 install(TARGETS storagemanager
     LIBRARY DESTINATION ${ENGINE_LIBDIR}
     COMPONENT columnstore-engine
 )
 
-install(TARGETS StorageManager smcat smput smls smrm testS3Connection
+install(TARGETS StorageManager smcat smkill smps smput smls smrm testS3Connection
     RUNTIME DESTINATION ${ENGINE_BINDIR}
     COMPONENT columnstore-engine
 )

@@ -67,6 +67,11 @@ pthread_mutex_t mcs_mutex;
 #endif
 #define DEBUG_RETURN return
 
+#if MYSQL_VERSION_ID >= 110500
+/* because of renames in the handler class */
+#define rows_changed rows_stats.updated
+#endif
+
 /**
   @brief
   Function we use in the creation of our hash to get key.

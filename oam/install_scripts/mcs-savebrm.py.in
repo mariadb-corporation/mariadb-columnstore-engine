@@ -25,7 +25,7 @@ MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
 EM_FILE_SUFFIX = '_em'
 EM_FILE_SIZE_THRESHOLD = 1000
-HALF_A_MINUTE = 30
+FIVE_SECS = 5
 NUMBER_OF_FILES_TO_KEEP = 40
 DEFAULT_EM_LOCAL_PATH_PREFIX = ''
 LOCALHOST = '127.0.0.1'
@@ -73,7 +73,7 @@ def cmapi_available():
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
     try:
-        with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+        with urlopen(request, context=ctx, timeout=FIVE_SECS) as req:
             _ = req.read().decode('utf-8')
     except HTTPError as exc:
         if exc.code == 404:
@@ -164,7 +164,7 @@ def is_node_primary(conf_root):
 
         success = False
         try:
-            with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+            with urlopen(request, context=ctx, timeout=FIVE_SECS) as req:
                 response = req.read()
             success = True
         except HTTPError as exc:

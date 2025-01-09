@@ -99,4 +99,14 @@ void CloudStorage::printKPIs() const
   cout << "\texistenceChecks = " << existenceChecks << endl;
 }
 
+vector<CloudStorage::IOTaskData> CloudStorage::taskList() const
+{
+  return {};
+}
+
+bool CloudStorage::killTask(uint64_t)
+{
+  return false;
+}
+
 }  // namespace storagemanager

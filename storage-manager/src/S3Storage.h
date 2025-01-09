@@ -21,6 +21,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 #include "CloudStorage.h"
 #include "libmarias3/marias3.h"
 #include "Config.h"
@@ -31,24 +32,28 @@ namespace storagemanager
 class S3Storage : public CloudStorage
 {
  public:
-  S3Storage(bool skipRetry = false);
+  explicit S3Storage(bool skipRetry = false);
 
-  virtual ~S3Storage();
+  ~S3Storage() override;
 
-  int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL);
-  int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size = NULL);
-  int putObject(const std::string& sourceFile, const std::string& destKey);
-  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey);
-  int deleteObject(const std::string& key);
-  int copyObject(const std::string& sourceKey, const std::string& destKey);
-  int exists(const std::string& key, bool* out);
+  int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL) override;
+  int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size = NULL) override;
+  int putObject(const std::string& sourceFile, const std::string& destKey) override;
+  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey) override;
+  int deleteObject(const std::string& key) override;
+  int copyObject(const std::string& sourceKey, const std::string& destKey) override;
+  int exists(const std::string& key, bool* out) override;
+
+  std::vector<IOTaskData> taskList() const override;
+  bool killTask(uint64_t task_id) override;
 
  private:
+  struct Connection;
   bool getIAMRoleFromMetadataEC2();
   bool getCredentialsFromMetadataEC2();
   void testConnectivityAndPerms();
-  ms3_st* getConnection();
-  void returnConnection(ms3_st*);
+  std::shared_ptr<Connection> getConnection();
+  void returnConnection(std::shared_ptr<Connection> conn);
 
   bool skipRetryableErrors;
 
@@ -67,25 +72,32 @@ class S3Storage : public CloudStorage
   bool useHTTP;
   bool sslVerify;
   int portNumber;
+  std::optional<float> connectTimeout;
+  std::optional<float> operationTimeout;
 
   struct Connection
   {
-    ms3_st* conn;
-    timespec idleSince;
+    Connection(uint64_t id): id(id) {}
+    uint64_t id;
+    ms3_st* conn{nullptr};
+    timespec touchedAt{};
+    bool terminate{false};
   };
   struct ScopedConnection
   {
-    ScopedConnection(S3Storage*, ms3_st*);
+    ScopedConnection(S3Storage*, std::shared_ptr<Connection>);
     ~ScopedConnection();
     S3Storage* s3;
-    ms3_st* conn;
+    std::shared_ptr<Connection> conn;
   };
 
   // for sanity checking
   // std::map<ms3_st *, boost::mutex> connMutexes;
 
-  boost::mutex connMutex;
-  std::deque<Connection> freeConns;  // using this as a stack to keep lru objects together
+  mutable boost::mutex connMutex;
+  std::deque<std::shared_ptr<Connection>> freeConns;  // using this as a stack to keep lru objects together
+  std::unordered_map<uint64_t, std::shared_ptr<Connection>> usedConns;  // using this for displaying and killing tasks
+  uint64_t nextConnId = 0;
   const time_t maxIdleSecs = 30;
 };
 

@@ -1670,7 +1670,7 @@ int BulkLoadBuffer::parseColParquet(ColumnInfo& columnInfo)
     // not aux column
     if (isNonAuxColumn)
     {
-      columnData = fParquetBatch->column(columnId);
+      columnData = fParquetBatchParser->column(columnId);
     }
     else  // aux column
     {
@@ -1789,6 +1789,13 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
 
   int width = column.width;
 
+  int bufIndex = 1;
+
+  if (columnData->data()->buffers.size() < 2)
+  {
+    bufIndex = 0;
+  }
+
   //--------------------------------------------------------------------------
   // Parse based on column data type
   //--------------------------------------------------------------------------
@@ -1799,7 +1806,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     //----------------------------------------------------------------------
     case WriteEngine::WR_FLOAT:
     {
-      const float* dataPtr = columnData->data()->GetValues<float>(1);
+      const float* dataPtr = columnData->data()->GetValues<float>(bufIndex);
 
       for (uint32_t i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -1855,7 +1862,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     //----------------------------------------------------------------------
     case WriteEngine::WR_DOUBLE:
     {
-      const double* dataPtr = columnData->data()->GetValues<double>(1);
+      const double* dataPtr = columnData->data()->GetValues<double>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2005,7 +2012,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     case WriteEngine::WR_SHORT:
     {
       long long origVal;
-      const short* dataPtr = columnData->data()->GetValues<short>(1);
+      const short* dataPtr = columnData->data()->GetValues<short>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2085,7 +2092,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     case WriteEngine::WR_USHORT:
     {
       int64_t origVal = 0;
-      const uint16_t* dataPtr = columnData->data()->GetValues<uint16_t>(1);
+      const uint16_t* dataPtr = columnData->data()->GetValues<uint16_t>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2161,7 +2168,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
       // if use int8_t here, it will take 8 bool value of parquet array
       std::shared_ptr<arrow::BooleanArray> boolArray =
           std::static_pointer_cast<arrow::BooleanArray>(columnData);
-      const int8_t* dataPtr = columnData->data()->GetValues<int8_t>(1);
+      const int8_t* dataPtr = columnData->data()->GetValues<int8_t>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2250,7 +2257,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
       // special handling for aux column to fix segmentation error
       if (columnData->type_id() != arrow::Type::type::NA)
       {
-        const uint8_t* dataPtr = columnData->data()->GetValues<uint8_t>(1);
+        const uint8_t* dataPtr = columnData->data()->GetValues<uint8_t>(bufIndex);
 
         for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
@@ -2382,7 +2389,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
       if (column.dataType != CalpontSystemCatalog::DATETIME &&
           column.dataType != CalpontSystemCatalog::TIMESTAMP && column.dataType != CalpontSystemCatalog::TIME)
       {
-        const long long* dataPtr = columnData->data()->GetValues<long long>(1);
+        const long long* dataPtr = columnData->data()->GetValues<long long>(bufIndex);
 
         for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
         {
@@ -2740,7 +2747,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
           std::static_pointer_cast<arrow::Decimal128Array>(columnData);
       std::shared_ptr<arrow::DecimalType> fType =
           std::static_pointer_cast<arrow::DecimalType>(decimalArray->type());
-      const int128_t* dataPtr = decimalArray->data()->GetValues<int128_t>(1);
+      const int128_t* dataPtr = decimalArray->data()->GetValues<int128_t>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2803,7 +2810,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     //----------------------------------------------------------------------
     case WriteEngine::WR_ULONGLONG:
     {
-      const uint64_t* dataPtr = columnData->data()->GetValues<uint64_t>(1);
+      const uint64_t* dataPtr = columnData->data()->GetValues<uint64_t>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2869,7 +2876,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     case WriteEngine::WR_UINT:
     {
       int64_t origVal;
-      const uint32_t* dataPtr = columnData->data()->GetValues<uint32_t>(1);
+      const uint32_t* dataPtr = columnData->data()->GetValues<uint32_t>(bufIndex);
 
       for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
       {
@@ -2947,7 +2954,7 @@ void BulkLoadBuffer::convertParquet(std::shared_ptr<arrow::Array> columnData, un
     {
       if (column.dataType != CalpontSystemCatalog::DATE)
       {
-        const int* dataPtr = columnData->data()->GetValues<int>(1);
+        const int* dataPtr = columnData->data()->GetValues<int>(bufIndex);
         long long origVal;
 
         for (unsigned int i = 0; i < fTotalReadRowsParser; i++)
@@ -3724,6 +3731,7 @@ int BulkLoadBuffer::fillFromFileParquet(RID& totalReadRows, RID& correctTotalRow
 
   try
   {
+    fParquetBatch.reset();
     PARQUET_THROW_NOT_OK(fParquetReader->ReadNext(&fParquetBatch));
     fStartRow = correctTotalRows;
     fStartRowForLogging = totalReadRows;

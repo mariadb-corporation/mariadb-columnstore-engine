@@ -37,6 +37,9 @@ usr/bin/mcs-loadbrm.py
 usr/bin/mcs_parquet_ddl
 usr/bin/mcs_parquet_gen
 usr/bin/mcs-stop-controllernode.sh
+usr/bin/mcs-load-brm-from-file
+usr/bin/mcs-load-em
+usr/bin/mcs-shmem-locks
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig
 usr/bin/mycnfUpgrade
@@ -46,10 +49,13 @@ usr/bin/reset_locks
 usr/bin/rollback
 usr/bin/save_brm
 usr/bin/smcat
+usr/bin/smkill
 usr/bin/smls
+usr/bin/smps
 usr/bin/smput
 usr/bin/smrm
 usr/bin/testS3Connection
+usr/bin/test_fdb_api
 usr/bin/viewtablelock
 usr/bin/workernode
 usr/lib/*/libbatchloader.so
@@ -87,6 +93,7 @@ usr/lib/*/libwriteengine.so
 usr/lib/*/libwriteengineclient.so
 usr/lib/*/libwriteengineredistribute.so
 usr/lib/*/libdatatypes.so
+usr/lib/*/libfdbcs.so
 usr/lib/mysql/plugin/ha_columnstore.so
 usr/lib/mysql/plugin/libregr_mysql.so
 usr/lib/mysql/plugin/libudf_mysql.so

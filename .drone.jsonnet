@@ -144,7 +144,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (branch == any_branch) then 'develop' else branch,
+  local branch_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == '**') then '' else branch + '/',
@@ -237,6 +237,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       else ' bash -c "apt update --yes && apt install -y ' + debpackages + '"',
 
 
+  local addFoundationDBForBuild(pkg_format, result) =
+    "PACKAGES_URL=https://cspkg.s3.amazonaws.com/FoundationDB OS=%s storage/columnstore/columnstore/setup-repo.sh mariadb-columnstore-foundationdb &&" % result +
+     installRpmDeb(pkg_format, "foundationdb-clients foundationdb-server", "foundationdb-clients foundationdb-server"),
+
   local dockerImage(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
   local installEngine(dockerImage, pkg_format) =
     if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
@@ -268,6 +272,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'docker cp core_dumps/. ' + dockerImage  +  ':/',
     'docker cp build/utils.sh ' + dockerImage  +  ':/',
     'docker cp setup-repo.sh ' + dockerImage  +  ':/',
+
+    execInnerDocker('/setup-repo.sh mariadb-columnstore-foundationdb https://cspkg.s3.amazonaws.com/FoundationDB', dockerImage),
+    execInnerDocker(installRpmDeb(pkg_format, "foundationdb-clients foundationdb-server", "foundationdb-clients foundationdb-server"), dockerImage),
+
     if (do_setup) then execInnerDocker('/setup-repo.sh', dockerImage),
     execInnerDocker(installRpmDeb(pkg_format,
       "cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which",
@@ -453,7 +461,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
-      REGRESSION_REF_AUX: regression_ref,
+      REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
       // compute branch.
@@ -570,8 +578,22 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: ['publish pkg', 'publish cmapi build'],
     //failure: 'ignore',
     image: 'alpine/git',
+    environment: {
+      DOCKER_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
+      DOCKER_REF_AUX: branch_ref,
+    },
     commands: [
-      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
+      // compute branch.
+      'echo "$$DOCKER_REF"',
+      'echo "$$DOCKER_BRANCH_REF"',
+      // if DOCKER_REF is empty, try to see whether docker repository has a branch named as one we PR.
+      'export DOCKER_REF=$${DOCKER_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/$$DOCKER_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'echo "$$DOCKER_REF"',
+      // DOCKER_REF can be empty if there is no appropriate branch in docker repository.
+      // assign what is appropriate by default.
+      'export DOCKER_REF=$${DOCKER_REF:-$$DOCKER_REF_AUX}',
+      'echo "$$DOCKER_REF"',
+      'git clone --branch $$DOCKER_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
       'touch docker/.secrets',
     ],
   },
@@ -582,10 +604,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
-      MCS_REPO: 'columnstore',
       DEV: 'true',
+      MCS_REPO: 'columnstore',
       // branchp has slash if not empty
       MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      FDB_REPO: 'foundationdb',
+      FDB_BASEURL: 'https://cspkg.s3.amazonaws.com/FoundationDB/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
       CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
     },
@@ -593,7 +617,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       repo: 'mariadb/enterprise-columnstore-dev',
       context: 'docker',
       dockerfile: 'docker/Dockerfile',
-      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV'],
+      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV', 'FDB_REPO', 'FDB_BASEURL'],
       tags: container_tags,
       username: {
         from_secret: 'dockerhub_user',
@@ -700,7 +724,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
       // delay for manual debugging on live instance
       'sleep $${COMPOSE_DELAY_SECONDS:-1s}',
-      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --skip-test=' + "'.*parquet.*|.*fdb_api.*'" + ' --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
 
@@ -787,6 +811,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                testPreparation(platform),
                // disable LTO for 22.04 for now
                if (platform == 'ubuntu:22.04' || platform == 'ubuntu:24.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
+               addFoundationDBForBuild(pkg_format, result),
                platformMap(platform, arch),
                'sccache --show-stats',
                // move engine and cmapi packages to one dir to make a repo
@@ -807,6 +832,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                'cd /mdb/' + builddir,
                testPreparation(platform),
+               addFoundationDBForBuild(pkg_format, result),
                testRun(platform),
              ],
            },

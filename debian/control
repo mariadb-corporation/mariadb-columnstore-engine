@@ -9,6 +9,8 @@ Depends: binutils,
          net-tools,
          python3,
          procps,
+         foundationdb-clients (= 7.1.63),
+         foundationdb-server (= 7.1.63),
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-columnstore-libs,

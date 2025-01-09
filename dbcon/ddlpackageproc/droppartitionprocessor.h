@@ -33,7 +33,7 @@ namespace ddlpackageprocessor
  * for interacting with the Write Engine to process
  * drop table ddl statements.
  */
-class DropPartitionProcessor : public DDLPackageProcessor
+class DropPartitionProcessor : public DDLPackageProcessor, FormatStatementString
 {
  public:
   DropPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)

@@ -343,7 +343,6 @@ class BatchPrimitiveProcessorJL
 
   /* for RowGroup return type */
   rowgroup::RowGroup inputRG, projectionRG;
-  bool sendRowGroups;
   uint32_t valueColumn;
 
   /* for PM Aggregation */

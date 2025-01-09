@@ -151,6 +151,8 @@ class DictStep : public Command
   int compressionType;
   messageqcpp::ByteStream filterString;
   uint32_t filterCount;
+  // !!! This attribute is used to store a sum which arg type is potentially uint64_t.
+  // As of 23.02.10 uint32_t here is always enough for the purpose of this attribute though.
   uint32_t bufferSize;
   uint32_t charsetNumber;
   uint16_t inputRidCount;

@@ -76,10 +76,10 @@ spID	userid	MIN(t1.score)
 3	3	3
 SELECT t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY unknown ORDER BY t2.userid;
-ERROR 42S22: Unknown column 'unknown' in 'group statement'
+ERROR 42S22: Unknown column 'unknown' in 'GROUP BY'
 SELECT t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY unknown;
-ERROR 42S22: Unknown column 'unknown' in 'order clause'
+ERROR 42S22: Unknown column 'unknown' in 'ORDER BY'
 SELECT t2.userid, MIN(t1.score)
 FROM t1, t2 WHERE t1.userID=t2.userID GROUP BY t2.userid ORDER BY NULL;
 userid	MIN(t1.score)

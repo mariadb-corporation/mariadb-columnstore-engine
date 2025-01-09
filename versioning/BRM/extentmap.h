@@ -79,6 +79,12 @@ class IDBDataFile;
 
 namespace BRM
 {
+#define EM_MAGIC_V1 0x76f78b1c
+#define EM_MAGIC_V2 0x76f78b1d
+#define EM_MAGIC_V3 0x76f78b1e
+#define EM_MAGIC_V4 0x76f78b1f
+#define EM_MAGIC_V5 0x76f78b20
+
 using PartitionNumberT = uint32_t;
 using DBRootT = uint16_t;
 using SegmentT = uint16_t;
@@ -158,6 +164,8 @@ struct EMCasualPartition_struct
   EXPORT EMCasualPartition_struct();
   EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
   EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, const int32_t seqNum);
+  EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum,
+                                  const char status);
   EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
   EXPORT EMCasualPartition_struct& operator=(const EMCasualPartition_struct& em);
 };
@@ -182,6 +190,8 @@ struct EMEntry
   int16_t status;  // extent avail for query or not, or out of service
   EMPartition_t partition;
   EXPORT EMEntry();
+  EMEntry(const InlineLBIDRange& range, int fileID, uint32_t bOffset, HWM_t hwm, PartitionNumberT pNum,
+          uint16_t sNum, DBRootT dRoot, uint16_t cWid, int16_t s, EMPartition_t partition);
   EXPORT EMEntry(const EMEntry&);
   EXPORT EMEntry& operator=(const EMEntry&);
   EXPORT bool operator<(const EMEntry&) const;

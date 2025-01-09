@@ -45,6 +45,8 @@ using namespace ddlpackage;
 #include "messagelog.h"
 using namespace logging;
 
+#include "mariadb_my_sys.h"
+
 #include "we_messages.h"
 #include "we_ddlcommandclient.h"
 #include "we_ddlcommon.h"
@@ -88,6 +90,14 @@ struct extentInfo
 
 namespace
 {
+
+bool checkTextTypesLengthAreUqual(const CalpontSystemCatalog::ColType& colType, const ColumnType& newType)
+{
+  auto newTypeCharset = get_charset(newType.fCharsetNum, MYF(MY_WME));
+  auto bytesInChar = newTypeCharset ? newTypeCharset->mbmaxlen : colType.getCharset()->mbmaxlen;
+  return colType.colWidth == newType.fLength * bytesInChar;
+}
+
 bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType& newType)
 {
   switch (colType.colDataType)
@@ -117,7 +127,7 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
       break;
 
     case (CalpontSystemCatalog::CHAR):
-      if (newType.fType == DDL_CHAR && colType.colWidth == newType.fLength)
+      if (newType.fType == DDL_CHAR && checkTextTypesLengthAreUqual(colType, newType))
         return true;
 
       break;
@@ -252,7 +262,7 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
       break;
 
     case (CalpontSystemCatalog::VARCHAR):
-      if (newType.fType == DDL_VARCHAR && colType.colWidth == newType.fLength)
+      if (newType.fType == DDL_VARCHAR && checkTextTypesLengthAreUqual(colType, newType))
         return true;
 
       break;
@@ -738,8 +748,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
   if ((dataType == CalpontSystemCatalog::CHAR && columnDefPtr->fType->fLength > 8) ||
       (dataType == CalpontSystemCatalog::VARCHAR && columnDefPtr->fType->fLength > 7) ||
       (dataType == CalpontSystemCatalog::VARBINARY && columnDefPtr->fType->fLength > 7) ||
-      (dataType == CalpontSystemCatalog::TEXT) ||
-      (dataType == CalpontSystemCatalog::BLOB))
+      (dataType == CalpontSystemCatalog::TEXT) || (dataType == CalpontSystemCatalog::BLOB))
   {
     isDict = true;
   }
