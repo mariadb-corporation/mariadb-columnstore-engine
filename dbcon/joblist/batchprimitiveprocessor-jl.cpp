@@ -54,7 +54,7 @@ using namespace joiner;
 
 namespace joblist
 {
-BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
+BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(ResourceManager* rm)
  : ot(BPS_ELEMENT_TYPE)
  , needToSetLBID(true)
  , count(1)
@@ -80,6 +80,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
  , fJoinerChunkSize(rm->getJlJoinerChunkSize())
  , hasSmallOuterJoin(false)
  , _priority(1)
+ , rm_(rm)
 {
   PMJoinerCount = 0;
   uuid = bu::nil_generator()();
@@ -1481,7 +1482,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
   if (tJoiners[joinerNum]->isTypelessJoin())
   {
-    utils::FixedAllocator fa(tlKeyLens[joinerNum], true);
+    auto alloc = rm_->getAllocator<utils::FixedAllocatorBufType>();
+    utils::FixedAllocator fa(alloc, tlKeyLens[joinerNum], true);
 
     for (i = pos; i < pos + toSend; i++)
     {

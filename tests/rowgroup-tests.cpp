@@ -380,42 +380,31 @@ class RGDataTest : public ::testing::Test
   // bool useStringTable = true;
 TEST_F(RGDataTest, AllocData)
 {
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << " rowsize " << rg.getRowSize() << " " << rg.getMaxDataSize() << std::endl;
     rgD = rowgroup::RGData(rg, alloc);
     rg.setData(&rgD);
     rg.initRow(&r);
     rg.getRow(0, &r);
-    std::cout << " test inStringTable(colIndex) " << r.inStringTable(0) << std::endl;
 
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
     auto currentAllocation = allocatedMemory.load();
     EXPECT_LE(currentAllocation, MemoryAllowance - rg.getMaxDataSize());
 
     r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
-    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
     EXPECT_LE(allocatedMemory.load(), currentAllocation);
 
     currentAllocation = allocatedMemory.load();
     r.nextRow();
     r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
-    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
     EXPECT_EQ(allocatedMemory.load(), currentAllocation);
 
     currentAllocation = allocatedMemory.load();
     r.nextRow();
     std::string longString(64 * 1024 + 1000, 'a');
     auto cs = utils::ConstString(longString);
-    std::cout << "test longString " << longString.size() << " cs len " << cs.length()<< std::endl;
 
     r.setStringField(cs, 0);
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
-    std::cout << " test  inStringTable " << r.getColumnWidth(0) << std::endl;
     EXPECT_LE(allocatedMemory.load(), currentAllocation);
 
     rgD = rowgroup::RGData(rg);
-    std::cout << " test  allocatedMemery " << allocatedMemory.load() << std::endl;
 
     EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 

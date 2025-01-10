@@ -69,11 +69,13 @@ select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b an
 select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
 
 ### Outer query containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3;
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2);
 select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1;
 
 ### Both IN subquery and outer queries containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 
 ## NOT IN subquery
 ### Basic tests
@@ -120,7 +122,8 @@ select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2);
 select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2) and cs1.a=1;
 
 ### Both IN subquery and outer queries containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 
 ## NOT IN subquery without NULLs
 ### Basic tests
@@ -158,7 +161,8 @@ select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 wh
 select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null) and cs1.a=1;
 
 ### Both IN subquery and outer queries containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 
 # Special cases involving NULLs
 select * from cs1 where a in (select b from cs2 where b is null);
@@ -213,8 +217,10 @@ select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.
 select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
 
 ### Outer query containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by 1,2,3,4;
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by 1,2,3,4;
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2);
+--sorted_result
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1;
 
 ### Both IN subquery and outer queries containing joins
 select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);

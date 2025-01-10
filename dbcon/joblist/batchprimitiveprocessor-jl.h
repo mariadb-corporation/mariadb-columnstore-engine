@@ -59,7 +59,7 @@ class BatchPrimitiveProcessorJL
 {
  public:
   /* Constructor used by the JobStep */
-  explicit BatchPrimitiveProcessorJL(const ResourceManager* rm);
+  explicit BatchPrimitiveProcessorJL(ResourceManager* rm);
   ~BatchPrimitiveProcessorJL();
 
   /* Interface used by the JobStep */
@@ -383,6 +383,8 @@ class BatchPrimitiveProcessorJL
   uint32_t _priority;
 
   boost::uuids::uuid uuid;
+
+  joblist::ResourceManager* rm_ = nullptr;
 
   friend class CommandJL;
   friend class ColumnCommandJL;

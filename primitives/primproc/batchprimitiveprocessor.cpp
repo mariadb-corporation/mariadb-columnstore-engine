@@ -331,8 +331,8 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       {
         // storedKeyAllocators[j].setUseLock(true);
         // WIP use one copy of the allocator
-        auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
-        storedKeyAllocators.emplace_back(PoolAllocator(&allocator, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
+        auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
+        storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
       }
 
       joinNullValues.reset(new uint64_t[joinerCount]);

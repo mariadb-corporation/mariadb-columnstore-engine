@@ -112,7 +112,7 @@ a
 1
 2
 3
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by 1,2,3;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2);
 a	b	c
 1	1	100
 1	1	101
@@ -124,7 +124,7 @@ select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and c
 a	b	c
 1	1	100
 1	1	101
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 a	b	c
 1	1	100
 1	1	101
@@ -193,7 +193,7 @@ select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2);
 a	b	c
 select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2) and cs1.a=1;
 a	b	c
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 a	b	c
 2	2	200
 3	3	300
@@ -249,7 +249,7 @@ select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 wh
 a	b	c
 select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select b from cs2 where b is not null) and cs1.a=1;
 a	b	c
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by 1,2,3;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a not in (select t1.b from (select b from cs2 where b is not null) t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 a	b	c
 2	2	200
 3	3	300
@@ -348,21 +348,21 @@ select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1
 a	d
 1	100
 3	302
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by 1,2,3,4;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2);
 a	d	b	c
 1	100	1	100
 1	100	1	101
 3	302	3	300
 3	302	3	301
 3	302	3	302
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by 1,2,3,4;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1;
 a	d	b	c
 1	100	1	100
 1	100	1	101
 select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
 a	d	b	c
-1	100	1	100
 1	100	1	101
+1	100	1	100
 drop table cs1;
 create table cs1 (a int);
 insert into cs1 values (1), (2), (3), (4), (null);

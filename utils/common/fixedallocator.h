@@ -34,16 +34,23 @@
 
 #include <stdint.h>
 
+#include <optional>
 #include <vector>
-#include <limits>
 #include <unistd.h>
 #include <atomic>
+
+#include <boost/smart_ptr/allocate_shared_array.hpp>
+
+#include "countingallocator.h"
 #include "spinlock.h"
 
 #define EXPORT
 
 namespace utils
 {
+using FixedAllocatorBufIntegralType = uint8_t;
+using FixedAllocatorBufType = FixedAllocatorBufIntegralType[];
+
 class FixedAllocator
 {
  public:
@@ -60,7 +67,8 @@ class FixedAllocator
    , lock(false)
   {
   }
-  EXPORT explicit FixedAllocator(unsigned long allocSize, bool isTmpSpace = false,
+
+  EXPORT explicit FixedAllocator(allocators::CountingAllocator<FixedAllocatorBufType> alloc, unsigned long allocSize, bool isTmpSpace = false,
                                  unsigned long numElements = DEFAULT_NUM_ELEMENTS)
    : capacityRemaining(0)
    , elementCount(numElements)
@@ -70,8 +78,10 @@ class FixedAllocator
    , nextAlloc(0)
    , useLock(false)
    , lock(false)
+   , alloc(alloc)
   {
   }
+
   EXPORT FixedAllocator(const FixedAllocator&);
   EXPORT FixedAllocator& operator=(const FixedAllocator&);
   virtual ~FixedAllocator()
@@ -88,20 +98,21 @@ class FixedAllocator
   EXPORT void deallocateAll();  // drops all memory in use
   EXPORT uint64_t getMemUsage() const;
   void setUseLock(bool);
-  void setAllocSize(uint);
+  void setAllocSize(uint32_t);
 
  private:
   void newBlock();
 
-  std::vector<std::shared_ptr<uint8_t[]>> mem;
+  std::vector<boost::shared_ptr<FixedAllocatorBufType>> mem;
   unsigned long capacityRemaining;
   uint64_t elementCount;
   unsigned long elementSize;
   uint64_t currentlyStored;
   bool tmpSpace;
-  uint8_t* nextAlloc;
+  FixedAllocatorBufIntegralType* nextAlloc;
   bool useLock;
   std::atomic<bool> lock;
+  std::optional<allocators::CountingAllocator<FixedAllocatorBufType>> alloc {};
 };
 
 inline void* FixedAllocator::allocate()

@@ -27,9 +27,12 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <optional>
 #include <vector>
 #include <map>
 #include <memory>
+
+#include <boost/smart_ptr/allocate_shared_array.hpp>
 
 #include <atomic>
 
@@ -37,7 +40,8 @@
 
 namespace utils
 {
-using PoolAllocatorBufType = uint8_t;
+using PoolAllocatorBufIntegralType = uint8_t;
+using PoolAllocatorBufType = PoolAllocatorBufIntegralType[];
 class PoolAllocator
 {
  public:
@@ -54,7 +58,7 @@ class PoolAllocator
    , lock(false)
   {
   }
-  PoolAllocator(allocators::CountingAllocator<PoolAllocatorBufType>* allocator, unsigned windowSize = DEFAULT_WINDOW_SIZE,
+  PoolAllocator(allocators::CountingAllocator<PoolAllocatorBufType> alloc, unsigned windowSize = DEFAULT_WINDOW_SIZE,
                 bool isTmpSpace = false, bool _useLock = false)
    : allocSize(windowSize)
    , tmpSpace(isTmpSpace)
@@ -63,7 +67,7 @@ class PoolAllocator
    , nextAlloc(0)
    , useLock(_useLock)
    , lock(false)
-   , allocator(allocator)
+   , alloc(alloc)
   {
   }
   PoolAllocator(const PoolAllocator& p)
@@ -74,7 +78,7 @@ class PoolAllocator
    , nextAlloc(0)
    , useLock(p.useLock)
    , lock(false)
-   , allocator(p.allocator)
+   , alloc(p.alloc)
   {
   }
   virtual ~PoolAllocator()
@@ -106,23 +110,22 @@ class PoolAllocator
   void* allocOOB(uint64_t size);
 
   unsigned allocSize;
-  std::vector<std::shared_ptr<PoolAllocatorBufType[]>> mem;
+  std::vector<boost::shared_ptr<PoolAllocatorBufType>> mem;
   bool tmpSpace;
   unsigned capacityRemaining;
   uint64_t memUsage;
-  PoolAllocatorBufType* nextAlloc;
+  PoolAllocatorBufIntegralType* nextAlloc;
   bool useLock;
   std::atomic<bool> lock;
 
   struct OOBMemInfo
   {
-    std::shared_ptr<PoolAllocatorBufType[]> mem;
+    boost::shared_ptr<PoolAllocatorBufType> mem;
     uint64_t size;
   };
   typedef std::map<void*, OOBMemInfo> OutOfBandMap;
   OutOfBandMap oob;  // for mem chunks bigger than the window size; these can be dealloc'd
-  // WIP rename to allocator
-  allocators::CountingAllocator<PoolAllocatorBufType>* allocator = nullptr;
+  std::optional<allocators::CountingAllocator<PoolAllocatorBufType>> alloc {};
 };
 
 inline void* PoolAllocator::allocate(uint64_t size)
