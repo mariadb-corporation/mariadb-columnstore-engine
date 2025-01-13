@@ -765,6 +765,7 @@ int ha_mcs_group_by_handler::end_scan()
 ***********************************************************/
 select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex, SELECT_LEX_UNIT* sel_unit)
 {
+	idblog("in create_columnstore_select_handler");
   mcs_select_handler_mode_t select_handler_mode = get_select_handler_mode(thd);
 
   // Check the session variable value to enable/disable use of
