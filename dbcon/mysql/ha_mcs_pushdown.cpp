@@ -27,6 +27,24 @@
 
 #include "ha_mcs_pushdown.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 void update_counters_on_multi_update()
 {
   if (ha_mcs_common::isMultiUpdateStatement(current_thd->lex->sql_command) &&
