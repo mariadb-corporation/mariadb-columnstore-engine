@@ -130,6 +130,24 @@ using namespace funcexp;
 #include "ha_mcs_logging.h"
 #include "ha_subquery.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
@@ -4698,6 +4716,7 @@ int ha_mcs_impl_group_by_end(TABLE* table)
  ***********************************************************/
 int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool isSelectLexUnit)
 {
+	idblog("in ha_mcs_impl_pushdown_init");
   IDEBUG(cout << "pushdown_init for table " << endl);
   THD* thd = current_thd;
 
