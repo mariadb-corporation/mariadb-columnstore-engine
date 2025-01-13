@@ -30,12 +30,13 @@
 #include <cstdlib>
 #include <cassert>
 #include <limits>
+
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 using namespace std;
 
-#include "CLI11.hpp"
 #include "extentmap.h"
-
-static const char* BIN_NAME = "mcs-load-brm-from-file";
 
 template <typename T>
 T parseField(std::stringstream& ss, const char delimiter)
@@ -75,23 +76,37 @@ BRM::EMEntry parseLine(const std::string& line, char delimiter = '|')
 
 int main(int argc, char** argv)
 {
-  CLI::App app{BIN_NAME};
-  app.description(
-      "A tool to build Extent Map image file from its text representation. A text representation can be obtained using 'editem -i'"
+  po::options_description desc(
+      "A tool to build Extent Map image file from its text representation. A text representation can be "
+      "obtained using 'editem -i'"
       "display the lock state.");
+
   std::string srcFilename;
   std::string dstFilename;
   bool debug = false;
 
-  app.add_option("-i,--input-filename", srcFilename,
-                 "Extent Map as its text representation.")
-      ->required();
-  app.add_option("-o,--output-filename", dstFilename,
-                 "Extent Map output image file, default as input-filename.out")
-      ->default_val("");
-  app.add_option("-d,--debug", debug, "Print extra output")->default_val(false);
+  // clang-format off
+  desc.add_options()
+    ("help", "produce help message")
+    ("input-filename,i",
+        po::value<std::string>(&srcFilename)->required(),
+        "Extent Map as its text representation.")
+    ("output-filename,o",
+        po::value<std::string>(&dstFilename)->default_value(""),
+        "Extent Map output image file, default as input-filename.out")
+    ("debug,d", po::bool_switch(&debug)->default_value(false), "Print extra output");
+  // clang-format on
 
-  CLI11_PARSE(app, argc, argv);
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+
+  if (argc == 1 || vm.count("help"))
+  {
+    cout << desc << "\n";
+    return 1;
+  }
+
+  po::notify(vm);
 
   ifstream in(srcFilename);
   int e = errno;

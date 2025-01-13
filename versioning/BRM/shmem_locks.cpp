@@ -21,12 +21,11 @@
 #include <stdlib.h>
 #include <rwlock.h>
 
-#include "CLI11.hpp"
-
 using namespace std;
 using namespace rwlock;
 
-static const char* BIN_NAME = "mcs-load-brm-from-file";
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 std::string getShmemLocksList()
 {
@@ -85,31 +84,66 @@ int lockOp(size_t minLockId, size_t maxLockId, bool lock, bool read)
   return 0;
 }
 
+void conflicting_options(const boost::program_options::variables_map& vm, const std::string& opt1,
+                         const std::string& opt2)
+{
+  if (vm.count(opt1) && !vm[opt1].defaulted() && vm.count(opt2) && !vm[opt2].defaulted())
+  {
+    throw std::logic_error(std::string("Conflicting options '") + opt1 + "' and '" + opt2 + "'.");
+  }
+}
+
+template <class T>
+void check_value(const boost::program_options::variables_map& vm, const std::string& opt1, T lower_bound,
+                 T upper_bound)
+{
+  auto value = vm[opt1].as<T>();
+  if (value < lower_bound || value >= upper_bound)
+  {
+    throw std::logic_error(std::string("Option '") + opt1 + "' is out of range.:  " + std::to_string(value));
+  }
+}
+
 int main(int argc, char** argv)
 {
-  CLI::App app{BIN_NAME};
-  app.description(
-      "A tool to operate or view shmem locks. If neither read nor write operation is specified, the tool will "
-      "display the lock state.");
-  uint8_t lockId;
+  int lockId;
   bool debug = false;
   bool read = false;
   bool write = false;
   bool lock = false;
   bool unlock = false;
 
-  app.add_option<uint8_t>("-i, --lock-id", lockId, "Shmem lock numerical id: " + getShmemLocksList())
-      ->expected(0, RWLockNames.size())
-      ->required();
-  app.add_flag("-r, --read-lock", read, "Use read lock.")->default_val(false);
-  app.add_flag("-w, --write-lock", write, "Use write lock..")->default_val(false)->excludes("-r");
-  app.add_flag("-l, --lock", lock, "Lock the corresponding shmem lock.")->default_val(false);
-  app.add_flag("-u, --unlock", unlock, "Unlock the corresponding shmem write lock.")
-      ->default_val(false)
-      ->excludes("-l");
-  app.add_flag("-d,--debug", debug, "Print extra output.")->default_val(false);
+  po::options_description desc(
+      "A tool to operate or view shmem locks. If neither read nor write operation is specified, the tool "
+      "will "
+      "display the lock state.");
 
-  CLI11_PARSE(app, argc, argv);
+  std::string lockid_description = std::string("Shmem lock numerical id: ") + getShmemLocksList();
+
+  // clang-format off
+  desc.add_options()("help", "produce help message")
+      ("lock-id,i", po::value<int>(&lockId)->required(), lockid_description.c_str())
+      ("read-lock,r", po::bool_switch(&read)->default_value(false), "Use read lock.")
+      ("write-lock,w", po::bool_switch(&write)->default_value(false), "Use write lock.")
+      ("lock,l", po::bool_switch(&lock)->default_value(false), "Lock the corresponding shmem lock.")
+      ("unlock,u", po::bool_switch(&unlock)->default_value(false), "Unlock the corresponding shmem write lock.")
+      ("debug,d", po::bool_switch(&debug)->default_value(false), "Print extra output.");
+  // clang-format on
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+
+  if (argc == 1 || vm.count("help"))
+  {
+    cout << desc << "\n";
+    return 1;
+  }
+
+  conflicting_options(vm, "lock", "unlock");
+  conflicting_options(vm, "read-lock", "write-lock");
+  check_value<int>(vm, "lock-id", 0, RWLockNames.size());
+
+  po::notify(vm);
 
   if (!read && !write)
   {
@@ -125,4 +159,3 @@ int main(int argc, char** argv)
 
   return 0;
 }
-
