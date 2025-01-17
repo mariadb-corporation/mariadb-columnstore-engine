@@ -60,7 +60,7 @@
 
 namespace rowgroup
 {
-const int16_t rgCommonSize = 8192;
+constexpr int16_t rgCommonSize = 8192;
 using RGDataSizeType = uint64_t;
 
 /*
@@ -168,6 +168,8 @@ class StringStore
   {
     return fUseStoreStringMutex;
   }
+  void useOnlyLongStrings(bool b) { fUseOnlyLongStrings = b; }
+  bool useOnlyLongStrings() const { return fUseOnlyLongStrings; }
 
   // This is an overlay b/c the underlying data needs to be any size,
   // and alloc'd in one chunk.  data can't be a separate dynamic chunk.
@@ -189,6 +191,7 @@ class StringStore
   std::vector<std::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
+  bool fUseOnlyLongStrings = false;
   boost::mutex fMutex;
 };
 
@@ -1547,6 +1550,8 @@ class RowGroup : public messageqcpp::Serializeable
 
   inline bool usesStringTable() const;
   inline void setUseStringTable(bool);
+  void setUseOnlyLongString(bool b) { useOnlyLongStrings = b; }
+  bool usesOnlyLongString() const { return useOnlyLongStrings ; }
 
   bool hasLongString() const
   {
@@ -1619,6 +1624,8 @@ class RowGroup : public messageqcpp::Serializeable
   RGData* rgData = nullptr;
   StringStore* strings = nullptr;  // note, strings and data belong to rgData
   bool useStringTable = true;
+  bool useOnlyLongStrings = false;
+  bool useAggregateDataStore = true;
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
