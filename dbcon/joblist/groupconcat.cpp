@@ -332,6 +332,7 @@ void GroupConcatAgUM::initialize()
   {
     fRowGroup = fGroupConcat->fRowGroup;
     fRowGroup.setUseStringTable(true);
+    fRowGroup.setUseOnlyLongString(true);
     fRowRGData.reinit(fRowGroup, 1);
     fRowGroup.setData(&fRowRGData);
     fRowGroup.resetRowGroup(0);
@@ -998,6 +999,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   GroupConcator::initialize(gcc);
 
   fRowGroup = gcc->fRowGroup;
+  fRowGroup.setUseOnlyLongString(true);
   fRowsPerRG = 128;
   fErrorCode = ERR_AGGREGATION_TOO_BIG;
   fRm = gcc->fRm;
@@ -1010,7 +1012,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-  if (!fRm->getMemory(newSize, fSessionMemLimit))
+  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
   {
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
     throw IDBExcept(fErrorCode);
@@ -1020,6 +1022,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   fData.reinit(fRowGroup, fRowsPerRG);
   fRowGroup.setData(&fData);
+  fRowGroup.setUseOnlyLongString(true);
   fRowGroup.resetRowGroup(0);
   fRowGroup.initRow(&fRow);
   fRowGroup.getRow(0, &fRow);
