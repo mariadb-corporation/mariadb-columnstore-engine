@@ -30,7 +30,7 @@
 
 namespace utils
 {
-// A class for striings that can hold NULL values - a value that is separate from all possible string.
+// A class for strings that can hold NULL values - a value that is separate from all possible string.
 class NullString
 {
  protected:
@@ -58,6 +58,9 @@ class NullString
   explicit NullString(const ConstString& str) : mStrPtr()
   {
     assign((const uint8_t*)str.str(), str.length());
+  }
+  size_t getDataSize() const {
+    return mStrPtr ? mStrPtr->capacity() : 0;
   }
   ConstString toConstString() const
   {
