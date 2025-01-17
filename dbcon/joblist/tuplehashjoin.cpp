@@ -302,7 +302,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
 
   stopMemTracking = false;
   utils::VLArray<uint64_t> jobs(numCores);
-  uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
+  // uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
   // starting 1 thread when in PM mode, since it's only inserting into a
   // vector of rows.  The rest will be started when converted to UM mode.
   if (joiners[index]->inUM())
@@ -331,7 +331,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   stopMemTracking = true;
   memTrackDone.notify_one();
   memTrackMutex.unlock();
-  jobstepThreadPool.join(memMonitor);
+  // jobstepThreadPool.join(memMonitor);
 
   /* If there was an error or an abort, drain the input DL,
       do endOfInput on the output */
@@ -479,6 +479,22 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
       dlMutex.lock();
       more = smallDL->next(smallIt, &oneRG);
       dlMutex.unlock();
+    }
+  }
+  catch (std::bad_alloc& exc)
+  {
+    if (!joinIsTooBig &&
+        (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
+    {
+      joinIsTooBig = true;
+      ostringstream oss;
+      oss << "(" << __LINE__ << ") "
+          << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+      fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
+      errorMessage(oss.str());
+      status(logging::ERR_JOIN_TOO_BIG);
+      cout << "Join is too big, raise the UM join limit for now" << endl;
+      abort();
     }
   }
   catch (...)
@@ -2035,6 +2051,9 @@ void TupleHashJoinStep::abort()
 {
   JobStep::abort();
   boost::mutex::scoped_lock sl(djsLock);
+
+  for (auto& joiner : joiners)
+    joiner->abort();
 
   if (djs.size())
   {

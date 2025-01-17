@@ -26,6 +26,7 @@
 #include <boost/scoped_array.hpp>
 #include <unordered_map>
 
+#include "countingallocator.h"
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "joiner.h"
@@ -471,22 +472,26 @@ class TupleJoiner
     return finished;
   }
   void setConvertToDiskJoin();
+  void abort()
+  {
+    wasAborted_ = true;
+  }
 
  private:
   typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
-                                  utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*> > >
+                                  allocators::CountingAllocator<std::pair<const int64_t, uint8_t*> > >
       hash_t;
   typedef std::unordered_multimap<int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-                                  utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
+                                  allocators::CountingAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
       sthash_t;
   typedef std::unordered_multimap<
       TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
-      utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > >
+      allocators::CountingAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > >
       typelesshash_t;
   // MCOL-1822 Add support for Long Double AVG/SUM small side
   typedef std::unordered_multimap<
       long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
-      utils::STLPoolAllocator<std::pair<const long double, rowgroup::Row::Pointer> > >
+      allocators::CountingAllocator<std::pair<const long double, rowgroup::Row::Pointer> > >
       ldhash_t;
 
   typedef hash_t::iterator iterator;
@@ -525,6 +530,7 @@ class TupleJoiner
   };
   JoinAlg joinAlg;
   joblist::JoinType joinType;
+  // WIP
   std::shared_ptr<boost::shared_ptr<utils::PoolAllocator>[]> _pool;  // pools for the table and nodes
   uint32_t threadCount;
   std::string tableName;
@@ -558,7 +564,7 @@ class TupleJoiner
   uint bucketCount;
   uint bucketMask;
   boost::scoped_array<boost::mutex> m_bucketLocks;
-  boost::mutex m_typelessLock, m_cpValuesLock;
+  boost::mutex m_cpValuesLock;
   utils::Hasher_r bucketPicker;
   const uint32_t bpSeed = 0x4545e1d7;  // an arbitrary random #
   threadpool::ThreadPool* jobstepThreadPool;
@@ -572,7 +578,7 @@ class TupleJoiner
 
   bool _convertToDiskJoin;
   joblist::ResourceManager* resourceManager_ = nullptr;
-
+  bool wasAborted_ = false;
 };
 
 }  // namespace joiner

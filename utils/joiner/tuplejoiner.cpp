@@ -18,6 +18,7 @@
 
 #include "tuplejoiner.h"
 #include <algorithm>
+#include <boost/thread/lock_types.hpp>
 #include <vector>
 #include <limits>
 #include <unordered_set>
@@ -37,13 +38,6 @@ using namespace joblist;
 
 namespace joiner
 {
-// TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
-//                          uint32_t smallJoinColumn, uint32_t largeJoinColumn, JoinType jt,
-//                          threadpool::ThreadPool* jsThreadPool)
-//  : TupleJoiner(smallInput, largeInput, smallJoinColumn, largeJoinColumn, jt, jsThreadPool, nullptr)
-// {
-// }
-
 // Typed joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          uint32_t smallJoinColumn, uint32_t largeJoinColumn, JoinType jt,
@@ -60,6 +54,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
+ , resourceManager_(rm)
 {
   uint i;
 
@@ -69,11 +64,12 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
   if (smallRG.getColTypes()[smallJoinColumn] == CalpontSystemCatalog::LONGDOUBLE)
   {
     ld.reset(new boost::scoped_ptr<ldhash_t>[bucketCount]);
-    _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
+    // _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const long double, Row::Pointer>> alloc(resourceManager_);
-      _pool[i] = alloc.getPoolAllocator();
+      // STLPoolAllocator<pair<const long double, Row::Pointer>> alloc(resourceManager_);
+      // _pool[i] = alloc.getPoolAllocator();
+      auto alloc = resourceManager_->getAllocator<pair<const long double, Row::Pointer>>();
       ld[i].reset(new ldhash_t(10, hasher(), ldhash_t::key_equal(), alloc));
     }
   }
@@ -83,8 +79,9 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
     _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const int64_t, Row::Pointer>> alloc(resourceManager_);
-      _pool[i] = alloc.getPoolAllocator();
+      // STLPoolAllocator<pair<const int64_t, Row::Pointer>> alloc(resourceManager_);
+      // _pool[i] = alloc.getPoolAllocator();
+      auto alloc = resourceManager_->getAllocator<pair<const int64_t, Row::Pointer>>();
       sth[i].reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
     }
   }
@@ -94,8 +91,9 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
     _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const int64_t, uint8_t*>> alloc(resourceManager_);
-      _pool[i] = alloc.getPoolAllocator();
+      // STLPoolAllocator<pair<const int64_t, uint8_t*>> alloc(resourceManager_);
+      // _pool[i] = alloc.getPoolAllocator();
+      auto alloc = resourceManager_->getAllocator<pair<const int64_t, uint8_t*>>();
       h[i].reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
     }
   }
@@ -176,6 +174,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
+ , resourceManager_(rm)
 {
   uint i;
 
@@ -185,8 +184,9 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
   ht.reset(new boost::scoped_ptr<typelesshash_t>[bucketCount]);
   for (i = 0; i < bucketCount; i++)
   {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc(resourceManager_);
-    _pool[i] = alloc.getPoolAllocator();
+    // STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc(resourceManager_);
+    // _pool[i] = alloc.getPoolAllocator();
+    auto alloc = resourceManager_->getAllocator<pair<const TypelessData, Row::Pointer>>();
     ht[i].reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
   }
   m_bucketLocks.reset(new boost::mutex[bucketCount]);
@@ -284,7 +284,7 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
   uint i;
 
   bool done = false, wasProductive;
-  while (!done)
+  while (!done && !wasAborted_)
   {
     done = true;
     wasProductive = false;
@@ -292,14 +292,16 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
     {
       if (buckets[i].empty())
         continue;
-      bool gotIt = m_bucketLocks[i].try_lock();
-      if (!gotIt)
       {
-        done = false;
-        continue;
+        boost::unique_lock<boost::mutex> lock(m_bucketLocks[i], boost::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          done = false;
+          continue;
+        }
+        tables[i]->insert(buckets[i].begin(), buckets[i].end());
       }
-      tables[i]->insert(buckets[i].begin(), buckets[i].end());
-      m_bucketLocks[i].unlock();
+      
       wasProductive = true;
       buckets[i].clear();
     }
@@ -398,13 +400,15 @@ void TupleJoiner::insertRGData(RowGroup& rg, uint threadID)
   rowCount = rg.getRowCount();
 
   rg.getRow(0, &r);
-  m_cpValuesLock.lock();
-  for (i = 0; i < rowCount; i++, r.nextRow())
   {
-    updateCPData(r);
-    r.zeroRid();
+    boost::unique_lock<boost::mutex> lock(m_cpValuesLock);
+    for (i = 0; i < rowCount; i++, r.nextRow())
+    {
+      updateCPData(r);
+      r.zeroRid();
+    }
   }
-  m_cpValuesLock.unlock();
+  
   rg.getRow(0, &r);
 
   if (joinAlg == UM)
@@ -1828,8 +1832,9 @@ void TupleJoiner::clearData()
 
   for (uint i = 0; i < bucketCount; i++)
   {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc;
-    _pool[i] = alloc.getPoolAllocator();
+    // STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc;
+    // _pool[i] = alloc.getPoolAllocator();
+    auto alloc = resourceManager_->getAllocator<pair<const TypelessData, Row::Pointer>>();
     if (typelessJoin)
       ht[i].reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
     else if (smallRG.getColTypes()[smallKeyColumns[0]] == CalpontSystemCatalog::LONGDOUBLE)
