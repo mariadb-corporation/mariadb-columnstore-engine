@@ -91,7 +91,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
   if (mem.size() > 0)
     lastMC = (MemChunk*)mem.back().get();
 
-  if ((len + 4) >= CHUNK_SIZE)
+  if ((len + 4) >= CHUNK_SIZE || fUseOnlyLongStrings)
   {
     std::shared_ptr<uint8_t[]> newOne(new uint8_t[len + sizeof(MemChunk) + 4]);
     longStrings.push_back(newOne);
@@ -304,8 +304,10 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   RGDataSizeType s = rg.getDataSize(rowCount);
   rowData.reset(new uint8_t[s]);
 
-  if (rg.usesStringTable() && rowCount > 0)
+  if (rg.usesStringTable() && rowCount > 0) {
     strings.reset(new StringStore());
+    strings->useOnlyLongStrings(rg.usesOnlyLongString());
+  }
 
   userDataStore.reset();
   columnCount = rg.getColumnCount();
@@ -317,7 +319,10 @@ RGData::RGData(const RowGroup& rg)
   rowData.reset(new uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
+  {
     strings.reset(new StringStore());
+    strings->useOnlyLongStrings(rg.usesOnlyLongString());
+  }
 
   userDataStore.reset();
   columnCount = rg.getColumnCount();
@@ -329,8 +334,10 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
   userDataStore.reset();
 
-  if (rg.usesStringTable())
+  if (rg.usesStringTable() || rg.usesOnlyLongString()) {
     strings.reset(new StringStore());
+    strings->useOnlyLongStrings(rg.usesOnlyLongString());
+  }
   else
     strings.reset();
   columnCount = rg.getColumnCount();
@@ -339,7 +346,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 
 void RGData::reinit(const RowGroup& rg)
 {
-  reinit(rg, 8192);
+  reinit(rg, rgCommonSize);
 }
 
 void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
@@ -1087,6 +1094,7 @@ RowGroup::RowGroup(const RowGroup& r)
  , rgData(r.rgData)
  , strings(r.strings)
  , useStringTable(r.useStringTable)
+ , useOnlyLongStrings(r.useOnlyLongStrings)
  , hasCollation(r.hasCollation)
  , hasLongStringField(r.hasLongStringField)
  , sTableThreshold(r.sTableThreshold)
@@ -1119,6 +1127,7 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   rgData = r.rgData;
   strings = r.strings;
   useStringTable = r.useStringTable;
+  useOnlyLongStrings = r.useOnlyLongStrings;
   hasCollation = r.hasCollation;
   hasLongStringField = r.hasLongStringField;
   sTableThreshold = r.sTableThreshold;
@@ -1171,6 +1180,7 @@ void RowGroup::serialize(ByteStream& bs) const
   bs << (uint8_t)hasLongStringField;
   bs << sTableThreshold;
   bs.append((uint8_t*)&forceInline[0], sizeof(bool) * columnCount);
+  bs << (uint8_t)useOnlyLongStrings;
 }
 
 void RowGroup::deserialize(ByteStream& bs)
@@ -1197,6 +1207,8 @@ void RowGroup::deserialize(ByteStream& bs)
   forceInline.reset(new bool[columnCount]);
   memcpy(&forceInline[0], bs.buf(), sizeof(bool) * columnCount);
   bs.advance(sizeof(bool) * columnCount);
+  bs >> tmp8;
+  useOnlyLongStrings = (bool)tmp8;
   // offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
   offsets = 0;
 
