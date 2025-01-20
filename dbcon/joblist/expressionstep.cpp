@@ -87,6 +87,7 @@ ExpressionStep::ExpressionStep(const ExpressionStep& rhs)
  , fAliases(rhs.aliases())
  , fViews(rhs.views())
  , fSchemas(rhs.schemas())
+ , fPartitionss(rhs.fPartitionss)
  , fTableKeys(rhs.tableKeys())
  , fColumnKeys(rhs.columnKeys())
  , fVarBinOK(rhs.fVarBinOK)
@@ -370,6 +371,7 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
   string alias = extractTableAlias(sc);
   string view = sc->viewName();
   string schema = sc->schemaName();
+  execplan::Partitions part = sc->partitions();
   fTableOids.push_back(tblOid);
   CalpontSystemCatalog::ColType ct;
 
@@ -400,6 +402,7 @@ void ExpressionStep::populateColumnInfo(SimpleColumn* sc, JobInfo& jobInfo)
 
   fAliases.push_back(alias);
   fViews.push_back(view);
+  fPartitionss.push_back(part);
   fSchemas.push_back(schema);
   fTableKeys.push_back(makeTableKey(jobInfo, sc));
   fColumns.push_back(sc);
@@ -450,9 +453,11 @@ void ExpressionStep::populateColumnInfo(WindowFunctionColumn* wc, JobInfo& jobIn
   string alias("");
   string view("");
   string schema("");
+  execplan::Partitions part;
   fTableOids.push_back(jobInfo.keyInfo->tupleKeyToTableOid[wcKey]);
   fAliases.push_back(alias);
   fViews.push_back(view);
+  fPartitionss.push_back(part);
   fSchemas.push_back(schema);
   fTableKeys.push_back(jobInfo.keyInfo->colKeyToTblKey[wcKey]);
   fColumnKeys.push_back(wcKey);
@@ -476,6 +481,7 @@ void ExpressionStep::populateColumnInfo(AggregateColumn* ac, JobInfo& jobInfo)
   fTableOids.push_back(jobInfo.keyInfo->tupleKeyToTableOid[acKey]);
   fAliases.push_back(alias);
   fViews.push_back(view);
+  fPartitionss.push_back(execplan::Partitions());
   fSchemas.push_back(schema);
   fTableKeys.push_back(jobInfo.keyInfo->colKeyToTblKey[acKey]);
   fColumnKeys.push_back(acKey);
@@ -739,6 +745,7 @@ bool ExpressionStep::parseFuncJoinColumn(ReturnedColumn* rc, JobInfo& jobInfo)
   string alias;
   string view;
   string schema;
+  execplan::Partitions part;
 
   if (sc && tids.size() == 1)
   {
@@ -747,6 +754,7 @@ bool ExpressionStep::parseFuncJoinColumn(ReturnedColumn* rc, JobInfo& jobInfo)
     alias = extractTableAlias(sc);
     view = sc->viewName();
     schema = sc->schemaName();
+    part = sc->partitions();
   }
   else if (dynamic_cast<AggregateColumn*>(rc) || dynamic_cast<WindowFunctionColumn*>(rc) ||
            dynamic_cast<ArithmeticColumn*>(rc) || dynamic_cast<FunctionColumn*>(rc))
@@ -772,6 +780,7 @@ bool ExpressionStep::parseFuncJoinColumn(ReturnedColumn* rc, JobInfo& jobInfo)
   fFunctionJoinInfo->fSequence.push_back(rc->sequence());
   fFunctionJoinInfo->fAlias.push_back(alias);
   fFunctionJoinInfo->fView.push_back(view);
+  fFunctionJoinInfo->fPartitionss.push_back(part);
   fFunctionJoinInfo->fSchema.push_back(schema);
 
   return true;

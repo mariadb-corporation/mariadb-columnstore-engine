@@ -824,7 +824,7 @@ void addOrderByAndLimit(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
         }
 
         oid = sc->oid();
-        ct = jobInfo.vtableColTypes[UniqId(oid, alias, "", "")];
+        ct = jobInfo.vtableColTypes[UniqId(oid, alias, "", "", execplan::Partitions())];
       }
 
       tupleKey = getTupleKey(jobInfo, sc);

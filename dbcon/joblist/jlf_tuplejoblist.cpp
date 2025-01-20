@@ -817,7 +817,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     }
     else
     {
-      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fAlias, jobInfo));
+      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions, mit->second.fAlias, jobInfo));
 
       bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
     }
@@ -1004,7 +1004,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
           else
           {
             sjsp.reset(
-                new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fAlias, jobInfo));
+                new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions, mit->second.fAlias, jobInfo));
             bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
           }
         }
@@ -3139,6 +3139,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
         largeJoinInfo->fAlias = tableInfoMap[large].fAlias;
         largeJoinInfo->fView = tableInfoMap[large].fView;
         largeJoinInfo->fSchema = tableInfoMap[large].fSchema;
+        largeJoinInfo->fPartitions = tableInfoMap[large].fPartitions;
 
         largeJoinInfo->fDl = tableInfoMap[large].fDl;
         largeJoinInfo->fRowGroup = tableInfoMap[large].fRowGroup;
@@ -3407,7 +3408,7 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
           if ((jointypes[i] & SEMI) || (jointypes[i] & ANTI) || (jointypes[i] & SCALAR))
           {
             uint32_t tid = getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias,
-                                       smallSides[i]->fSchema, smallSides[i]->fView);
+                                       smallSides[i]->fSchema, smallSides[i]->fView, smallSides[i]->fPartitions);
             correlateTables[tid] = i;
             correlateCompare[tid] = NULL;
           }
@@ -4173,7 +4174,7 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
         if ((jointypes[i] & SEMI) || (jointypes[i] & ANTI) || (jointypes[i] & SCALAR))
         {
           uint32_t tid = getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias,
-                                     smallSides[i]->fSchema, smallSides[i]->fView);
+                                     smallSides[i]->fSchema, smallSides[i]->fView, smallSides[i]->fPartitions);
           correlateTables[tid] = i;
           correlateCompare[tid] = NULL;
         }
@@ -4576,6 +4577,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     tableInfoMap[tableUid].fSchema = jobInfo.keyInfo->tupleKeyVec[tableUid].fSchema;
     tableInfoMap[tableUid].fSubId = jobInfo.keyInfo->tupleKeyVec[tableUid].fSubId;
     tableInfoMap[tableUid].fColsInColMap = jobInfo.columnMap[tableUid];
+    tableInfoMap[tableUid].fPartitions = jobInfo.keyInfo->tupleKeyVec[tableUid].fPart;
   }
 
   // Set of the columns being projected.

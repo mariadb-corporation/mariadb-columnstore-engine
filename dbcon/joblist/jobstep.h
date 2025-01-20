@@ -220,6 +220,15 @@ class JobStep
   {
     fView = vw;
   }
+  // MCOL-5886 support partitions
+  virtual execplan::Partitions partitions() const
+  {
+    return fPartitions;
+  }
+  virtual void partitions(const execplan::Partitions& ps)
+  {
+    fPartitions = ps;
+  }
   // @bug 3438, stats with column name
   virtual std::string name() const
   {
@@ -465,6 +474,7 @@ class JobStep
 
   std::string fAlias;
   std::string fView;
+  execplan::Partitions fPartitions;
   std::string fName;
   std::string fSchema;
   uint32_t fTraceFlags;

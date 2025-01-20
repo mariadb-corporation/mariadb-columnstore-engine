@@ -1508,6 +1508,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     const ConstantColumn* cc = static_cast<const ConstantColumn*>(rhs);
     string alias(extractTableAlias(sc));
     string view(sc->viewName());
+    execplan::Partitions partitions(sc->partitions());
     string schema(sc->schemaName());
     tbl_oid = tableOid(sc, jobInfo.csc);
 
@@ -1520,7 +1521,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     {
       // bug 3749, mark outer join table with isNull filter
       if (cc->isNull() && (opis == *sop || opisnull == *sop))
-        jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, "", view));
+        jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, "", view, partitions));
 
       return doExpressionFilter(sf, jobInfo);
     }
@@ -1814,7 +1815,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
         }
 
         if (cc->isNull() && (opis == *sop || opisnull == *sop))
-          jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, sc->schemaName(), view));
+          jobInfo.tableHasIsNull.insert(getTableKey(jobInfo, tbl_oid, alias, sc->schemaName(), view, sc->partitions()));
       }
       else
       {
@@ -2045,10 +2046,10 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
         // cascade outer table attribute.
         CalpontSystemCatalog::OID tableOid1 = tableOid(sc1, jobInfo.csc);
         uint64_t tid1 =
-            getTableKey(jobInfo, tableOid1, sc1->tableAlias(), sc1->schemaName(), sc1->viewName());
+            getTableKey(jobInfo, tableOid1, sc1->tableAlias(), sc1->schemaName(), sc1->viewName(), sc1->partitions());
         CalpontSystemCatalog::OID tableOid2 = tableOid(sc2, jobInfo.csc);
         uint64_t tid2 =
-            getTableKey(jobInfo, tableOid2, sc2->tableAlias(), sc2->schemaName(), sc2->viewName());
+            getTableKey(jobInfo, tableOid2, sc2->tableAlias(), sc2->schemaName(), sc2->viewName(), sc2->partitions());
 
         if (tablesInOuter.find(tid1) != tablesInOuter.end())
           sc1->returnAll(true);
@@ -2195,7 +2196,7 @@ const JobStepVector doOuterJoinOnFilter(OuterJoinOnFilter* oj, JobInfo& jobInfo)
         if (sc != NULL)
         {
           CalpontSystemCatalog::OID tblOid = tableOid(sc, jobInfo.csc);
-          uint64_t tid = getTableKey(jobInfo, tblOid, sc->tableAlias(), sc->schemaName(), sc->viewName());
+          uint64_t tid = getTableKey(jobInfo, tblOid, sc->tableAlias(), sc->schemaName(), sc->viewName(), sc->partitions());
 
           // skip outer table filters or table not directly involved in the outer join
           if (tablesInOuter.find(tid) != tablesInOuter.end() || tablesInJoin.find(tid) == tablesInJoin.end())

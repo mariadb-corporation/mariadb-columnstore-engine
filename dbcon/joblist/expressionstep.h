@@ -75,6 +75,11 @@ class ExpressionStep : public JobStep
   {
     return fViews.empty() ? "" : fViews.front();
   }
+  using JobStep::partitions;
+  execplan::Partitions partitions() const
+  {
+    return fPartitions;
+  }
   using JobStep::schema;
   std::string schema() const override
   {
@@ -123,6 +128,10 @@ class ExpressionStep : public JobStep
   {
     return fViews;
   }
+  const std::vector<execplan::Partitions>& partitionss() const
+  {
+    return fPartitionss;
+  }
   const std::vector<std::string>& schemas() const
   {
     return fSchemas;
@@ -147,6 +156,10 @@ class ExpressionStep : public JobStep
   std::vector<std::string>& views()
   {
     return fViews;
+  }
+  std::vector<execplan::Partitions>& partitionss()
+  {
+    return fPartitionss;
   }
   std::vector<std::string>& schemas()
   {
@@ -237,6 +250,7 @@ class ExpressionStep : public JobStep
   std::vector<std::string> fAliases;
   std::vector<std::string> fViews;
   std::vector<std::string> fSchemas;
+  std::vector<execplan::Partitions> fPartitionss;
   std::vector<uint32_t> fTableKeys;
   std::vector<uint32_t> fColumnKeys;
   std::vector<execplan::ReturnedColumn*> fColumns;

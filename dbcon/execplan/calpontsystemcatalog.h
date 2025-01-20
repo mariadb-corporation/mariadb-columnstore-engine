@@ -72,6 +72,36 @@ class SessionManager;
 const int32_t CNX_VTABLE_ID = 100;
 const int32_t IDB_VTABLE_ID = CNX_VTABLE_ID;
 
+/**
+ * A struct to hold a list of table partitions.
+ */
+struct Partitions {
+  std::vector<std::string> fPartNames;
+  void serialize(messageqcpp::ByteStream& b) const
+  {
+    uint32_t n = fPartNames.size();
+    b << n;
+    for (uint32_t i = 0; i < n; i++)
+    {
+      b << fPartNames[i];
+    }
+  }
+  void unserialize(messageqcpp::ByteStream& b)
+  {
+    uint32_t n;
+    b >> n;
+    for (uint32_t i = 0; i < n; i++)
+    {
+      std::string t;
+      b >> t;
+      fPartNames.push_back(t);
+    }
+
+  }
+};
+bool operator <(const Partitions& a, const Partitions& b);
+bool operator ==(const Partitions& a, const Partitions& b);
+
 /** The CalpontSystemCatalog class
  *
  * This object encapsulates the system catalog stored in the engine
@@ -410,6 +440,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     std::string table;
     std::string alias;
     std::string view;
+    execplan::Partitions partitions;
     bool fisColumnStore;
     void clear();
     bool operator<(const TableAliasName& rhs) const;
@@ -420,7 +451,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     bool operator==(const TableAliasName& rhs) const
     {
       return (schema == rhs.schema && table == rhs.table && alias == rhs.alias && view == rhs.view &&
-              fisColumnStore == rhs.fisColumnStore);
+              partitions == rhs.partitions && fisColumnStore == rhs.fisColumnStore);
     }
     bool operator!=(const TableAliasName& rhs) const
     {

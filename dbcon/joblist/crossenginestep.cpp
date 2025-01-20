@@ -60,6 +60,7 @@ using namespace querytele;
 namespace joblist
 {
 CrossEngineStep::CrossEngineStep(const std::string& schema, const std::string& table,
+                                 const execplan::Partitions& partitions,
                                  const std::string& alias, const JobInfo& jobInfo)
  : BatchPrimitive(jobInfo)
  , fRowsRetrieved(0)
@@ -72,6 +73,7 @@ CrossEngineStep::CrossEngineStep(const std::string& schema, const std::string& t
  , fSchema(schema)
  , fTable(table)
  , fAlias(alias)
+ , fPartitions(partitions)
  , fColumnCount(0)
  , fFeInstance(funcexp::FuncExp::instance())
 {
@@ -668,6 +670,20 @@ std::string CrossEngineStep::makeQuery()
 {
   ostringstream oss;
   oss << fSelectClause << " FROM `" << fTable << "`";
+
+  if (fPartitions.fPartNames.size())
+  {
+    oss << "PARTITION (";
+    for (uint32_t i=0;i<fPartitions.fPartNames.size();i++)
+    {
+      if (i > 0)
+      {
+        oss << ", ";
+      }
+      oss << fPartitions.fPartNames[i];
+    }
+    oss << ") ";
+  }
 
   if (fTable.compare(fAlias) != 0)
     oss << " `" << fAlias << "`";

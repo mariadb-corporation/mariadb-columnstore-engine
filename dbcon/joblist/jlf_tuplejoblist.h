@@ -34,6 +34,7 @@ struct JoinInfo
   std::string fAlias;
   std::string fSchema;
   std::string fView;
+  execplan::Partitions fPartitions;
   AnyDataListSPtr fDl;           // output data list
   rowgroup::RowGroup fRowGroup;  // rowgroup meta data for the data list
   // colOid and alias can be retrieved from JobInfo.tupleKeyVec using join key.
@@ -66,6 +67,7 @@ struct TableInfo
   std::string fName;
   std::string fAlias;
   std::string fSchema;
+  execplan::Partitions fPartitions;
   std::string fView;
   uint64_t fSubId;
   JobStepVector fQuerySteps;
@@ -103,6 +105,7 @@ struct FunctionJoinInfo
   std::vector<std::string> fAlias;
   std::vector<std::string> fView;
   std::vector<std::string> fSchema;
+  std::vector<execplan::Partitions> fPartitionss;
   JobStepVector fStep;
   JoinType fJoinType;
   int64_t fJoinId;

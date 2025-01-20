@@ -160,6 +160,14 @@ class SimpleColumn : public ReturnedColumn
     if (lower_case_table_names)
       boost::algorithm::to_lower(fViewName);
   }
+  inline const execplan::Partitions& partitions() const
+  {
+    return fPartitions;
+  }
+  inline void partitions(const execplan::Partitions& partitions)
+  {
+    fPartitions = partitions;
+  }
   inline long timeZone() const
   {
     return fTimeZone;
@@ -270,6 +278,7 @@ class SimpleColumn : public ReturnedColumn
   std::string fIndexName;
   // if belong to view, view name is non-empty
   std::string fViewName;
+  execplan::Partitions fPartitions;
   long fTimeZone;
   bool fisColumnStore;
 

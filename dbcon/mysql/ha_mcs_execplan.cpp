@@ -49,6 +49,8 @@ using namespace logging;
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include "idb_mysql.h"
+#include "partition_element.h"
+#include "partition_info.h"
 
 #include "mcsv1_udaf.h"
 
@@ -314,12 +316,57 @@ void convertOuterJoinToInnerJoin(List<TABLE_LIST>* join_list, TableOnExprList& t
   }
 }
 
-CalpontSystemCatalog::TableAliasName makeTableAliasName(TABLE_LIST* table)
+static execplan::Partitions getPartitions(TABLE* table)
+{
+  execplan::Partitions result;
+
+  if (table->part_info)
+  {
+    List_iterator<partition_element> part_el_it(table->part_info->partitions);
+
+    partition_element* pe;
+
+    while ((pe = part_el_it++)) // this is how server does it.
+    {
+      result.fPartNames.emplace_back(pe->partition_name);
+    }
+  }
+  return result;
+}
+static execplan::Partitions getPartitions(TABLE_LIST* table)
+{
+  execplan::Partitions result;
+
+  if (table->partition_names)
+  {
+    List_iterator<String> part_name_it(*(table->partition_names));
+
+    String* n;
+
+    while ((n = part_name_it++)) // this is how server does it.
+    {
+      std::string pn(n->ptr(), n->length());
+      result.fPartNames.push_back(pn);
+    }
+  }
+  return result;
+}
+
+
+CalpontSystemCatalog::TableAliasName makeTableAliasName_(TABLE_LIST* table)
 {
   return make_aliasview(
       (table->db.length ? table->db.str : ""), (table->table_name.length ? table->table_name.str : ""),
       (table->alias.length ? table->alias.str : ""), getViewName(table), true, lower_case_table_names);
 }
+
+CalpontSystemCatalog::TableAliasName makeTableAliasName(TABLE_LIST* table)
+{
+  CalpontSystemCatalog::TableAliasName result = makeTableAliasName_(table);
+  result.partitions = getPartitions(table);
+  return result;
+}
+
 
 //@bug5228. need to escape backtick `
 string escapeBackTick(const char* str)
@@ -2575,6 +2622,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
           sc->tableAlias(gwi.tbList[i].alias);
           sc->viewName(viewName, lower_case_table_names);
+	  sc->partitions(gwi.tbList[i].partitions);
           sc->resultType(ct);
           sc->timeZone(gwi.timeZone);
           break;
@@ -2660,6 +2708,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
           }
           sc->resultType(cols[j]->resultType());
           sc->hasAggregate(cols[j]->hasAggregate());
+	  // XXX partitions???
 
           if (col)
             sc->isColumnStore(col->isColumnStore());
@@ -2771,6 +2820,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->colPosition(j);
         sc->tableAlias(csep->derivedTbAlias());
         sc->viewName(gwi.tbList[i].view);
+	sc->partitions(gwi.tbList[i].partitions);
         sc->resultType(cols[j]->resultType());
         sc->timeZone(gwi.timeZone);
 
@@ -2819,6 +2869,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->alias(tcn.column);
         sc->resultType(ct);
         sc->tableAlias(gwi.tbList[i].alias, lower_case_table_names);
+        sc->partitions(gwi.tbList[i].partitions);
         sc->viewName(viewName, lower_case_table_names);
         sc->timeZone(gwi.timeZone);
         srcp.reset(sc);
@@ -3162,6 +3213,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
         sc->columnName(rc->alias());
         sc->sequence(0);
         sc->tableAlias(tan.alias);
+	sc->partitions(tan.partitions);
         sc->timeZone(gwi.timeZone);
         sc->derivedTable(csep->derivedTbAlias());
         sc->derivedRefCol(rc);
@@ -3180,6 +3232,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
     SimpleColumn* sc = new SimpleColumn(table->s->db.str, table->s->table_name.str, field->field_name.str,
                                         tan.fisColumnStore, gwi.sessionid, lower_case_table_names);
     sc->tableAlias(table->alias.ptr(), lower_case_table_names);
+    sc->partitions(tan.partitions);
     sc->isColumnStore(false);
     sc->timeZone(gwi.timeZone);
     sc->resultType(fieldType_MysqlToIDB(field));
@@ -3211,6 +3264,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
   SimpleColumn* sc = new SimpleColumn(tcn.schema, tcn.table, tcn.column, csc->sessionID());
   sc->tableAlias(tan.alias);
   sc->viewName(tan.view);
+  sc->partitions(tan.partitions);
   sc->timeZone(gwi.timeZone);
   sc->resultType(csc->colType(oidlist[minWidthColOffset].objnum));
   sc->charsetNumber(table->field[minWidthColOffset]->charset()->number);
@@ -5019,6 +5073,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
   // view name
   sc->viewName(getViewName(ifp->cached_table), lower_case_table_names);
+  //sc->partitions(...); // XXX how???
   sc->alias(ifp->name.str);
 
   sc->isColumnStore(prm.columnStore());
@@ -5043,6 +5098,11 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
     if (gwi.subSelectType == CalpontSelectExecutionPlan::SELECT_SUBS)
       sc->joinInfo(sc->joinInfo() | JOIN_SCALAR | JOIN_OUTER_SELECT);
+  }
+
+  if (ifp->cached_table)
+  {
+    sc->partitions(getPartitions(ifp->cached_table));
   }
 
   return sc;
@@ -7116,9 +7176,12 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         CalpontSystemCatalog::TableAliasName tn =
             make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore,
                            lower_case_table_names);
+	execplan::Partitions parts = getPartitions(table_ptr);
+	tn.partitions = parts;
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable(
             table_ptr->db.str, table_name, table_ptr->alias.str, columnStore, lower_case_table_names);
+	tan.partitions = parts;
         gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
         cerr << tn << endl;
@@ -9048,6 +9111,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       sc1->tableName(sc->tableName());
       sc1->tableAlias(sc->tableAlias());
       sc1->viewName(sc->viewName());
+      sc1->partitions(sc->partitions());
       sc1->colPosition(0);
       sc1->timeZone(gwi.timeZone);
       minSc.reset(sc1);
@@ -9151,6 +9215,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
       }
       sc->tableAlias(alias);
       sc->timeZone(gwi->timeZone);
+      sc->partitions(getPartitions(table));
       assert(sc);
       boost::shared_ptr<SimpleColumn> spsc(sc);
       gwi->returnedCols.push_back(spsc);
@@ -9213,7 +9278,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   csep->columnMap(gwi->columnMap);
   CalpontSelectExecutionPlan::TableList tblist;
   tblist.push_back(make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr(), true,
-                                   lower_case_table_names));
+			  lower_case_table_names));
   csep->tableList(tblist);
 
   // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering

@@ -209,7 +209,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
   else  // must be vtable mode
   {
     oid = (tbl_oid + 1) + sc->colPosition();
-    ct = jobInfo.vtableColTypes[UniqId(oid, alias, "", "")];
+    ct = jobInfo.vtableColTypes[UniqId(oid, alias, "", "", execplan::Partitions())];
     ti = setTupleInfo(ct, oid, jobInfo, tbl_oid, sc, alias);
   }
 
@@ -574,7 +574,9 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
       if (sc)
         col = UniqId(sc);
       else
-        col = UniqId(rc->expressionId(), rc->alias(), "", "");
+      {
+        col = UniqId(rc->expressionId(), rc->alias(), "", "", execplan::Partitions());
+      }
 
       if (colInGroupBy.find(col) == colInGroupBy.end() || selectSubquery)
       {
@@ -722,7 +724,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
       else
       {
         gbOid = (tblOid + 1) + sc->colPosition();
-        ct = jobInfo.vtableColTypes[UniqId(gbOid, alias, "", "")];
+        ct = jobInfo.vtableColTypes[UniqId(gbOid, alias, "", "", execplan::Partitions())];
       }
 
       // As of bug3695, make sure varbinary is not used in group by.
@@ -1034,7 +1036,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             else
             {
               retOid = (tblOid + 1) + sc->colPosition();
-              ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "")];
+              ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "", execplan::Partitions())];
             }
 
             TupleInfo ti(setTupleInfo(ct, retOid, jobInfo, tblOid, sc, alias));
@@ -1190,7 +1192,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         else
         {
           retOid = (tblOid + 1) + sc->colPosition();
-          ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "")];
+          ct = jobInfo.vtableColTypes[UniqId(retOid, alias, "", "", execplan::Partitions())];
         }
 
         TupleInfo ti(setTupleInfo(ct, retOid, jobInfo, tblOid, sc, alias));
@@ -1964,7 +1966,7 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
     else
       oid = 0;
 
-    uint32_t tableUid = makeTableKey(jobInfo, oid, it->table, it->alias, it->schema, it->view);
+    uint32_t tableUid = makeTableKey(jobInfo, oid, it->table, it->alias, it->schema, it->view, it->partitions);
     jobInfo.tableList.push_back(tableUid);
   }
 

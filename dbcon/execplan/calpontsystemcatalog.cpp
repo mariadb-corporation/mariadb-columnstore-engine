@@ -340,8 +340,15 @@ bool CalpontSystemCatalog::TableAliasName::operator<(const TableAliasName& rhs) 
         }
         else if (view == rhs.view)
         {
-          if (fisColumnStore < rhs.fisColumnStore)
+          if (partitions < rhs.partitions)
+	  {
             return true;
+	  }
+	  if (partitions == rhs.partitions)
+	  {
+            if (fisColumnStore < rhs.fisColumnStore)
+              return true;
+	  }
         }
       }
     }
@@ -357,6 +364,7 @@ void CalpontSystemCatalog::TableAliasName::serialize(messageqcpp::ByteStream& b)
   b << alias;
   b << view;
   b << static_cast<ByteStream::doublebyte>(fisColumnStore);
+  partitions.serialize(b);
 }
 
 void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& b)
@@ -366,6 +374,7 @@ void CalpontSystemCatalog::TableAliasName::unserialize(messageqcpp::ByteStream& 
   b >> alias;
   b >> view;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fisColumnStore);
+  partitions.unserialize(b);
 }
 
 /*static*/
@@ -6317,6 +6326,48 @@ vector<CalpontSystemCatalog::OID> getAllSysCatOIDs()
 bool ctListSort(const CalpontSystemCatalog::ColType& a, const CalpontSystemCatalog::ColType& b)
 {
   return a.colPosition < b.colPosition;
+}
+
+bool operator <(const Partitions& a, const Partitions& b)
+{
+  // lexicographic order.
+  uint32_t l = std::min(a.fPartNames.size(), b.fPartNames.size());
+  for (uint32_t i = 0; i < l; i++)
+  {
+    if (a.fPartNames[i] < b.fPartNames[i])
+    {
+      return true;
+    }
+    if (a.fPartNames[i] > b.fPartNames[i])
+    {
+      return false;
+    }
+  }
+  if (l < a.fPartNames.size())
+  {
+    return false;
+  }
+  if (l < b.fPartNames.size())
+  {
+    return true;
+  }
+  return false;
+}
+bool operator ==(const Partitions& a, const Partitions& b)
+{
+  if (a.fPartNames.size() != b.fPartNames.size())
+  {
+    return false;
+  }
+  uint32_t l = a.fPartNames.size();
+  for (uint32_t i = 0; i < l; i++)
+  {
+    if (a.fPartNames[i] != b.fPartNames[i])
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace execplan
