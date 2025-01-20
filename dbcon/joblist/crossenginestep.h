@@ -55,7 +55,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
  public:
   /** @brief CrossEngineStep constructor
    */
-  CrossEngineStep(const std::string& schema, const std::string& table, const std::sting& partition,
+  CrossEngineStep(const std::string& schema, const std::string& table, const std::string& partition,
                   const std::string& alias, const JobInfo& jobInfo);
 
   /** @brief CrossEngineStep destructor
