@@ -60,6 +60,7 @@ using namespace querytele;
 namespace joblist
 {
 CrossEngineStep::CrossEngineStep(const std::string& schema, const std::string& table,
+                                 const std::string& partition,
                                  const std::string& alias, const JobInfo& jobInfo)
  : BatchPrimitive(jobInfo)
  , fRowsRetrieved(0)
