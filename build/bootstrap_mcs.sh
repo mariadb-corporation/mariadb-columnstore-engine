@@ -51,6 +51,7 @@ optparse.define short=f long=do-not-freeze-revision desc="Disable revision freez
 optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
+optparse.define short=s long=skip-cmake-submodule-update variable=SKIP_CMAKE_SUBMODULE_UPDATE default=false value=true
 
 
 source $( optparse.build )
@@ -243,6 +244,9 @@ build()
                      -DCMAKE_EXPORT_COMPILE_COMMANDS=1
                      "
 
+    if [[ $SKIP_CMAKE_SUBMODULE_UPDATE = true ]] ; then
+        local MDB_CMAKE_FLAGS="$MDB_CMAKE_FLAGS -DCMAKE_UPDATE_SUBMODULES=NO"
+    fi
 
     if [[ $SKIP_UNIT_TESTS = true ]] ; then
         warn "Unittests are not build"

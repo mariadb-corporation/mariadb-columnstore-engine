@@ -83,32 +83,32 @@ void VirtualTable::addColumn(const SRCP& column)
     //		oss << agc->functionName() << "_" << agc->expressionId();
     //		oss << "Aggregate_" << agc->expressionId();
     columnName = agc->data();
-    colId = UniqId(agc->expressionId(), "", "", "");
+    colId = UniqId(agc->expressionId(), "", "", "", execplan::Partitions());
   }
   else if ((wc = dynamic_cast<WindowFunctionColumn*>(column.get())) != NULL)
   {
     //		oss << wc->functionName() << "_" << wc->expressionId();
     //		oss << "Window_" << wc->expressionId();
     columnName = wc->data();
-    colId = UniqId(wc->expressionId(), "", "", "");
+    colId = UniqId(wc->expressionId(), "", "", "", execplan::Partitions());
   }
   else if ((arc = dynamic_cast<ArithmeticColumn*>(column.get())) != NULL)
   {
     //		oss << "Arithmetic_" << arc->expressionId();
     columnName = arc->data();
-    colId = UniqId(arc->expressionId(), "", "", "");
+    colId = UniqId(arc->expressionId(), "", "", "", execplan::Partitions());
   }
   else if ((fc = dynamic_cast<FunctionColumn*>(column.get())) != NULL)
   {
     //		oss << fc->functionName() << "_" << fc->expressionId();
     columnName = fc->data();
-    colId = UniqId(fc->expressionId(), "", "", "");
+    colId = UniqId(fc->expressionId(), "", "", "", execplan::Partitions());
   }
   else if ((cc = dynamic_cast<ConstantColumn*>(column.get())) != NULL)
   {
     //		oss << "Constant_" << cc->expressionId();
     columnName = cc->data();
-    colId = UniqId(cc->expressionId(), cc->alias(), "", fView);
+    colId = UniqId(cc->expressionId(), cc->alias(), "", fView, execplan::Partitions());
   }
   else  // new column type has added, but this code is not updated.
   {

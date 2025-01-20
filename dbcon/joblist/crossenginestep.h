@@ -55,8 +55,9 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
  public:
   /** @brief CrossEngineStep constructor
    */
-  CrossEngineStep(const std::string& schema, const std::string& table, const std::string& alias,
-                  const JobInfo& jobInfo);
+  CrossEngineStep(const std::string& schema, const std::string& table,
+		  const execplan::Partitions& partitions,
+                  const std::string& alias, const JobInfo& jobInfo);
 
   /** @brief CrossEngineStep destructor
    */
@@ -225,6 +226,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   std::string fSchema;
   std::string fTable;
   std::string fAlias;
+  execplan::Partitions fPartitions;
   unsigned int fPort;
 
   // returned columns and primitive filters
@@ -245,6 +247,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
 
   funcexp::FuncExp* fFeInstance;
   utils::LibMySQL* mysql;
+  std::string fPartition;
 };
 
 }  // namespace joblist

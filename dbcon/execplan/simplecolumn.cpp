@@ -203,6 +203,7 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
  , fData(rhs.data())
  , fIndexName(rhs.indexName())
  , fViewName(rhs.viewName())
+ , fPartitions(rhs.fPartitions)
  , fTimeZone(rhs.timeZone())
  , fisColumnStore(rhs.isColumnStore())
 {
@@ -250,6 +251,7 @@ SimpleColumn& SimpleColumn::operator=(const SimpleColumn& rhs)
     fSequence = rhs.sequence();
     fDistinct = rhs.distinct();
     fisColumnStore = rhs.isColumnStore();
+    fPartitions = rhs.fPartitions;
   }
 
   return *this;
@@ -267,12 +269,22 @@ const string SimpleColumn::toString() const
   static const char delim = '/';
   ostringstream output;
 
+  ostringstream ossps;
+  for (uint32_t i=0;i<fPartitions.fPartNames.size();i++)
+  {
+    if (i > 0)
+    {
+      ossps << ",";
+    }
+    ossps << fPartitions.fPartNames[i];
+  }
   output << "SimpleColumn " << data() << endl;
   // collations in both result and operations type are the same and
   // set in the plugin code.
   datatypes::Charset cs(fResultType.charsetNumber);
-  output << "  s/t/c/v/o/ct/TA/CA/RA/#/card/join/source/engine/colPos/cs/coll: " << schemaName() << delim
-         << tableName() << delim << columnName() << delim << viewName() << delim << oid() << delim
+  output << "  s/t/ps/c/v/o/ct/TA/CA/RA/#/card/join/source/engine/colPos/cs/coll: " << schemaName() << delim
+         << tableName() << delim << ossps.str() << delim << columnName() << delim
+	 << viewName() << delim << oid() << delim
          << colDataTypeToString(fResultType.colDataType) << delim << tableAlias() << delim << alias() << delim
          << returnAll() << delim << sequence() << delim << cardinality() << delim << joinInfo() << delim
          << colSource() << delim << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << delim
@@ -377,6 +389,12 @@ void SimpleColumn::serialize(messageqcpp::ByteStream& b) const
   b << fTableAlias;
   b << (uint32_t)fSequence;
   b << static_cast<ByteStream::doublebyte>(fisColumnStore);
+  uint32_t nparts = fPartitions.fPartNames.size();
+  b << nparts;
+  for (uint32_t i = 0; i < nparts; i++)
+  {
+    b << fPartitions.fPartNames[i];
+  }
 }
 
 void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
@@ -396,6 +414,14 @@ void SimpleColumn::unserialize(messageqcpp::ByteStream& b)
   b >> fTableAlias;
   b >> (uint32_t&)fSequence;
   b >> reinterpret_cast<ByteStream::doublebyte&>(fisColumnStore);
+  uint32_t nparts;
+  b >> nparts;
+  for (uint32_t i = 0; i < nparts; i++)
+  {
+    std::string temps;
+    b >> temps;
+    fPartitions.fPartNames.push_back(temps);
+  }
 }
 
 bool SimpleColumn::operator==(const SimpleColumn& t) const
@@ -439,6 +465,9 @@ bool SimpleColumn::operator==(const SimpleColumn& t) const
     return false;
 
   if (fisColumnStore != t.fisColumnStore)
+    return false;
+
+  if (fPartitions != t.fPartitions)
     return false;
 
   return true;
