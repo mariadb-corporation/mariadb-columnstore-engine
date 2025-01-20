@@ -157,14 +157,15 @@ uint32_t fudgeWidth(const CalpontSystemCatalog::ColType& ict, CalpontSystemCatal
 TupleInfo setTupleInfo_(const CalpontSystemCatalog::ColType& ct, CalpontSystemCatalog::OID col_oid,
                         JobInfo& jobInfo, CalpontSystemCatalog::OID tbl_oid, const string& col_name,
                         const string& col_alias, const string& sch_name, const string& tbl_name,
-                        const string& tbl_alias, const string& vw_name, bool correlated = false,
+                        const string& tbl_alias, const string& vw_name, const string& partition,
+			bool correlated = false,
                         uint32_t pc_id = 0, uint64_t engine = 0)
 {
   // get the unique tupleOids for this column
-  uint32_t tbl_key = uniqTupleKey(jobInfo, tbl_oid, tbl_oid, "", "", tbl_name, tbl_alias, sch_name, vw_name,
+  uint32_t tbl_key = uniqTupleKey(jobInfo, tbl_oid, tbl_oid, "", "", tbl_name, tbl_alias, sch_name, vw_name, partition
                                   0, engine, correlated);
   uint32_t col_key = uniqTupleKey(jobInfo, col_oid, tbl_oid, col_name, col_alias, tbl_name, tbl_alias,
-                                  sch_name, vw_name, pc_id, engine, correlated);
+                                  sch_name, vw_name, partition, pc_id, engine, correlated);
   // If this is the first time we've seen this col, add it to the tim
   TupleInfoMap::iterator it = jobInfo.keyInfo->tupleInfoMap.find(col_key);
   TupleInfo ti;
@@ -399,7 +400,7 @@ uint32_t getTupleKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc, bool ad
   {
     // TupleInfo is expected to be set already
     return getTupleKey_(jobInfo, sc->oid(), sc->columnName(), extractTableAlias(sc), sc->schemaName(),
-                        sc->viewName(), ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0), pseudoType,
+                        sc->viewName(), "", ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0), pseudoType,
                         (sc->isColumnStore() ? 0 : 1));
   }
 
@@ -480,9 +481,9 @@ uint32_t getTupleKey(JobInfo& jobInfo, const SRCP& srcp, bool add)
 }
 
 uint32_t getTableKey(const JobInfo& jobInfo, execplan::CalpontSystemCatalog::OID tableOid,
-                     const string& alias, const string& schema, const string& view)
+                     const string& alias, const string& schema, const string& view, const string& part)
 {
-  return getTupleKey_(jobInfo, tableOid, "", alias, schema, view);
+  return getTupleKey_(jobInfo, tableOid, "", alias, schema, view, part);
 }
 
 uint32_t getTableKey(const JobInfo& jobInfo, uint32_t cid)
@@ -498,7 +499,7 @@ void updateTableKey(uint32_t cid, uint32_t tid, JobInfo& jobInfo)
 uint32_t getTableKey(JobInfo& jobInfo, JobStep* js)
 {
   CalpontSystemCatalog::OID tableOid = js->tableOid();
-  return getTupleKey_(jobInfo, tableOid, "", js->alias(), js->schema(), js->view());
+  return getTupleKey_(jobInfo, tableOid, "", js->alias(), js->schema(), js->view(), "");
 }
 
 uint32_t makeTableKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc)
