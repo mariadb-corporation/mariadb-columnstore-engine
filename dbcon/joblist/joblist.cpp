@@ -672,7 +672,7 @@ void JobList::graph(uint32_t sessionID)
     else if (typeid(*(qsi->get())) == typeid(CrossEngineStep))
     {
       tcn.schema = qsi->get()->schema();
-      tcn.table = qsi->get()->alias();
+      tcn.table = qsi->get()->alias(); // XXX is it correct? why not table name?
     }
 
     dotFile << JSTimeStamp::tsdiffstr(qsi->get()->dlTimes.EndOfInputTime(),

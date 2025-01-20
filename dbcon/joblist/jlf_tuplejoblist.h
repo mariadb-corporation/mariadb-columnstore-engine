@@ -66,6 +66,7 @@ struct TableInfo
   std::string fName;
   std::string fAlias;
   std::string fSchema;
+  std::string fPartition;
   std::string fView;
   uint64_t fSubId;
   JobStepVector fQuerySteps;

@@ -75,6 +75,7 @@ CrossEngineStep::CrossEngineStep(const std::string& schema, const std::string& t
  , fAlias(alias)
  , fColumnCount(0)
  , fFeInstance(funcexp::FuncExp::instance())
+ , fPartition(partition)
 {
   fExtendedInfo = "CES: ";
   getMysqldInfo(jobInfo);

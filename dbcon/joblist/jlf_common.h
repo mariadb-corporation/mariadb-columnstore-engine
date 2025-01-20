@@ -134,6 +134,7 @@ struct UniqId
   std::string fTable;   // table name (table alias)
   std::string fSchema;  // schema name
   std::string fView;    // view name
+  std::string fPart;    // partition name
   uint32_t fPseudo;     // pseudo type
                         //	uint64_t	fEngine; // InfiniDB == 0
   uint64_t fSubId;      // subquery ID
@@ -141,9 +142,10 @@ struct UniqId
   UniqId() : fId(-1), fSubId(-1)
   {
   }
-  UniqId(int i, const std::string& t, const std::string& s, const std::string& v, uint32_t pi = 0,
+  UniqId(int i, const std::string& t, const std::string& s, const std::string& v,
+         const std::string& p, uint32_t pi = 0,
          uint64_t l = -1)
-   : fId(i), fTable(t), fSchema(s), fView(v), fPseudo(pi), fSubId(l)
+   : fId(i), fTable(t), fSchema(s), fView(v), fPart(p), fPseudo(pi), fSubId(l)
   {
   }
   UniqId(const execplan::SimpleColumn* sc);

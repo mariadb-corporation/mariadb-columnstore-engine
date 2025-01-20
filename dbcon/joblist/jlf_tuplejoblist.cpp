@@ -817,7 +817,7 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     }
     else
     {
-      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fAlias, jobInfo));
+      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second->fPartition, mit->second.fAlias, jobInfo));
 
       bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
     }
@@ -4536,6 +4536,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     tableInfoMap[tableUid] = TableInfo();
     tableInfoMap[tableUid].fTableOid = jobInfo.keyInfo->tupleKeyVec[tableUid].fId;
     tableInfoMap[tableUid].fName = jobInfo.keyInfo->keyName[tableUid];
+    tableInfoMap[tableUid].fPartition = ""; // XXX ??? XXX
     tableInfoMap[tableUid].fAlias = jobInfo.keyInfo->tupleKeyVec[tableUid].fTable;
     tableInfoMap[tableUid].fView = jobInfo.keyInfo->tupleKeyVec[tableUid].fView;
     tableInfoMap[tableUid].fSchema = jobInfo.keyInfo->tupleKeyVec[tableUid].fSchema;

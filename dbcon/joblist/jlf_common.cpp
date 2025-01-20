@@ -44,7 +44,8 @@ namespace
 // @brief Returns unique key for a column, table, or expresssion.
 uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSystemCatalog::OID& t,
                       const string& cn, const string& ca, const string& tn, const string& ta,
-                      const string& sn, const string& vw, uint32_t pi, uint64_t en, bool correlated = false)
+                      const string& sn, const string& vw, const string& pa, uint32_t pi, uint64_t en,
+                      bool correlated = false)
 {
   uint64_t subId = jobInfo.subId;
 
@@ -59,7 +60,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
   if (!cn.empty())
     nm += "." + cn;
 
-  UniqId id(o, ta, sn, vw, pi, subId);
+  UniqId id(o, ta, sn, vw, pa, pi, subId);
   TupleKeyMap::iterator iter = jobInfo.keyInfo->tupleKeyMap.find(id);
 
   if (iter != jobInfo.keyInfo->tupleKeyMap.end())
@@ -193,6 +194,7 @@ TupleInfo setTupleInfo_(const CalpontSystemCatalog::ColType& ct, CalpontSystemCa
 
 uint32_t getTupleKey_(const JobInfo& jobInfo, CalpontSystemCatalog::OID oid, const string& colName,
                       const string& tblAlias, const string& schema, const string& view,
+		      const string& part,
                       bool correlated = false, uint32_t pseudo = 0, uint64_t engine = 0)
 {
   uint64_t subId = jobInfo.subId;
@@ -208,7 +210,7 @@ uint32_t getTupleKey_(const JobInfo& jobInfo, CalpontSystemCatalog::OID oid, con
 
   //	if (!colAlias.empty())
   //		alias += "." + colAlias;
-  UniqId id(oid, tblAlias, schema, view, pseudo, subId);
+  UniqId id(oid, tblAlias, schema, view, part, pseudo, subId);
   TupleKeyMap::const_iterator iter = jobInfo.keyInfo->tupleKeyMap.find(id);
 
   if (iter != jobInfo.keyInfo->tupleKeyMap.end())
@@ -252,6 +254,7 @@ UniqId::UniqId(const execplan::SimpleColumn* sc)
  fTable(extractTableAlias(sc))
  , fSchema(sc->schemaName())
  , fView(sc->viewName())
+ , fPart("")
  , fPseudo(0)
  , fSubId(-1)
 {
@@ -267,6 +270,7 @@ UniqId::UniqId(int o, const execplan::SimpleColumn* sc)
  fTable(extractTableAlias(sc))
  , fSchema(sc->schemaName())
  , fView(sc->viewName())
+ , fPart("")
  , fPseudo(0)
  , fSubId(-1)
 {
@@ -275,7 +279,8 @@ UniqId::UniqId(int o, const execplan::SimpleColumn* sc)
 string UniqId::toString() const
 {
   ostringstream strstm;
-  strstm << fId << ":" << fTable << ":" << fSchema << ":" << fView << ":" << fPseudo << ":"
+  strstm << fId << ":" << fTable << ":" << fSchema << ":" << fView << ":" << fPart << ":"
+         << fPseudo << ":"
          << (int64_t)fSubId;
   return strstm.str();
 }
@@ -634,15 +639,17 @@ bool operator<(const struct UniqId& x, const struct UniqId& y)
           (x.fId == y.fId && x.fTable == y.fTable && x.fSchema < y.fSchema) ||
           (x.fId == y.fId && x.fTable == y.fTable && x.fSchema == y.fSchema && x.fView < y.fView) ||
           (x.fId == y.fId && x.fTable == y.fTable && x.fSchema == y.fSchema && x.fView == y.fView &&
-           x.fPseudo < y.fPseudo) ||
+           x.fPart < y.fPart) ||
           (x.fId == y.fId && x.fTable == y.fTable && x.fSchema == y.fSchema && x.fView == y.fView &&
-           x.fPseudo == y.fPseudo && x.fSubId < y.fSubId));
+           x.fPart == y.fPart && x.fPseudo < y.fPseudo) ||
+          (x.fId == y.fId && x.fTable == y.fTable && x.fSchema == y.fSchema && x.fView == y.fView &&
+           x.fPart == y.fPart && x.fPseudo == y.fPseudo && x.fSubId < y.fSubId));
 }
 
 bool operator==(const struct UniqId& x, const struct UniqId& y)
 {
   return (x.fId == y.fId && x.fTable == y.fTable && x.fSchema == y.fSchema && x.fView == y.fView &&
-          x.fPseudo == y.fPseudo && x.fSubId == y.fSubId);
+          x.fPart == y.fPart && x.fPseudo == y.fPseudo && x.fSubId == y.fSubId);
 }
 
 void updateDerivedColumn(JobInfo& jobInfo, SimpleColumn* sc, CalpontSystemCatalog::ColType& ct)
