@@ -650,6 +650,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   bool stopMemTracking;
   void trackMem(uint index);
   void startSmallRunners(uint index);
+  void outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> joiner);
 
   friend class DiskJoinStep;
 };

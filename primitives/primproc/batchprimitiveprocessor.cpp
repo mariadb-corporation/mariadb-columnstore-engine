@@ -2227,8 +2227,9 @@ int BatchPrimitiveProcessor::operator()()
     validCPData = false;
     cpDataFromDictScan = false;
 
-    auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<messageqcpp::BSBufType>();
-    messageqcpp::SBS bs(new ByteStream(allocator));
+    // auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<messageqcpp::BSBufType>();
+    // messageqcpp::SBS bs(new ByteStream(allocator));
+    messageqcpp::SBS bs(new ByteStream());
 
 #ifdef PRIMPROC_STOPWATCH
     stopwatch->start("BPP() execute");

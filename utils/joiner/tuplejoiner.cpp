@@ -305,6 +305,7 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
       wasProductive = true;
       buckets[i].clear();
     }
+    // TODO use CV here instead of busy sleep
     if (!done && !wasProductive)
       ::usleep(1000 * numCores);
   }

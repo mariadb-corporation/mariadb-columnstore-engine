@@ -81,6 +81,7 @@ if (WITH_UNITTESTS)
     target_link_libraries(counting_allocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET counting_allocator TEST_PREFIX columnstore:)
 
+    set_source_files_properties(poolallocator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare")
     add_executable(poolallocator poolallocator.cpp)
     add_dependencies(poolallocator googletest)
     target_link_libraries(poolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
