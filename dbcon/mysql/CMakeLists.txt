@@ -8,6 +8,8 @@ include_directories( ${ENGINE_COMMON_INCLUDES}
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)
 
 SET ( libcalmysql_SRCS
+    ../../utils/libmysql_client/libmysql_client.cpp
+    ../../utils/querystats/querystats.cpp
     ha_mcs_sysvars.cpp
     ha_mcs_client_udfs.cpp
     ha_mcs_opt_rewrites.cpp
@@ -39,7 +41,7 @@ if (COMMAND mysql_add_plugin)
   ENDIF()
   
   mysql_add_plugin(columnstore ${libcalmysql_SRCS} STORAGE_ENGINE MODULE_ONLY ${disabled}
-      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool
+      LINK_LIBRARIES ${ENGINE_LDFLAGS} ${PLUGIN_EXEC_LIBS} ${PLUGIN_WRITE_LIBS} joblist_server ${NETSNMP_LIBRARIES} threadpool
       VERSION ${PACKAGE_VERSION}
       COMPONENT columnstore-engine CONFIG columnstore.cnf)
 else ()
