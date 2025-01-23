@@ -21,6 +21,7 @@ ALTER TABLE t1 ENGINE=;
 ALTER TABLE t1 ENGINE=Invalid;
 --error 1286
 ALTER TABLE t1 ENGINE='#!~@$%^&*()_+-,.*`~';
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 # Rename
@@ -62,6 +63,7 @@ connection addconroot1;
 --error 1069
 ALTER TABLE mcs13_db1.t1 ADD KEY k1(c1);
 connection default;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE mcs13_db1.t1;
 SELECT * FROM mcs13_db1.t1;
 disconnect addconroot1;

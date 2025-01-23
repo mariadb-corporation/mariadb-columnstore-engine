@@ -70,7 +70,7 @@ RETURN 'func2';
 END//
 SHOW CREATE FUNCTION func2;
 Function	sql_mode	Create Function	character_set_client	collation_connection	Database Collation
-func2	STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION	CREATE DEFINER=`root`@`localhost` FUNCTION `func2`() RETURNS char(10) CHARSET latin1
+func2	STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION	CREATE DEFINER=`root`@`localhost` FUNCTION `func2`() RETURNS char(10) CHARSET latin1 COLLATE latin1_swedish_ci
     NO SQL
     SQL SECURITY INVOKER
     COMMENT 'comment for func2'

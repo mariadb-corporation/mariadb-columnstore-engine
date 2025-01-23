@@ -15,6 +15,7 @@ SET default_storage_engine=Columnstore;
 
 CREATE TABLE t1 (a CHAR(1), b INT);
 INSERT INTO t1 VALUES ('', NULL), ('m', 6), ('N', 5), ('o', 4);
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 SELECT ASCII(0);

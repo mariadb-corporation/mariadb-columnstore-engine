@@ -4,6 +4,20 @@
 #
 -- source ../include/have_columnstore.inc
 
+#
+# If the calpontsys database does not exist, let's create it.
+# It's possible if we're running mtr without --extern.
+#
+let $calpontsys_exits=`SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='calpontsys' AND TABLE_NAME='syscolumn';`;
+--disable_query_log
+if (!$calpontsys_exits)
+{
+  --exec $MYSQL < $MCS_SYSCATALOG_MYSQL_SQL
+  use test;
+}
+--enable_query_log
+
+
 --disable_warnings
 DROP DATABASE IF EXISTS mcs229_db;
 --enable_warnings
@@ -20,6 +34,7 @@ CREATE TABLE t1
  t1_DATE DATE,
  t1_TIME TIME
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
 set columnstore_compression_type=1;
@@ -31,9 +46,20 @@ CREATE TABLE t2
  t2_DATE DATE,
  t2_TIME TIME
  )ENGINE=Columnstore;
+--replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
 SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
 
 # Clean UP
 DROP DATABASE mcs229_db;
+
+
+--disable_query_log
+if (!$calpontsys_exits)
+{
+  drop table calpontsys.systable restrict;
+  drop table calpontsys.syscolumn restrict;
+  drop database calpontsys;
+}
+--enable_query_log
