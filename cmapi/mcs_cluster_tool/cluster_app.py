@@ -176,18 +176,24 @@ def start():
 
 @app.command(rich_help_panel='cluster and single node commands')
 @handle_output
+@TransactionManager(
+    timeout=timedelta(days=1).total_seconds(), handle_signals=True
+)
 def restart():
     """Restart the Columnstore cluster."""
-    stop_result = client.shutdown_cluster()
+    stop_result = client.shutdown_cluster({'in_transaction': True})
     if 'error' in stop_result:
         return stop_result
-    result = client.start_cluster()
+    result = client.start_cluster({'in_transaction': True})
     result['stop_timestamp'] = stop_result['timestamp']
     return result
 
 
 @node_app.command(rich_help_panel='cluster node commands')
 @handle_output
+@TransactionManager(
+    timeout=timedelta(days=1).total_seconds(), handle_signals=True
+)
 def add(
     nodes: Optional[List[str]] = typer.Option(
         ...,
@@ -225,6 +231,9 @@ def remove(nodes: Optional[List[str]] = typer.Option(
 
 @set_app.command()
 @handle_output
+@TransactionManager(
+    timeout=timedelta(days=1).total_seconds(), handle_signals=True
+)
 def mode(cluster_mode: str = typer.Option(
         ...,
         '--mode',

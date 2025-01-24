@@ -25,8 +25,9 @@ from cmapi_server.helpers import (
     system_ready, save_cmapi_conf_file, dequote, in_maintenance_state,
 )
 from cmapi_server.logging_management import change_loggers_level
-from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.application import AppManager
+from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
 from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
@@ -800,7 +801,11 @@ class ClusterController:
         in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.start(config, in_transaction)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.start(config)
+            else:
+                response = ClusterHandler.start(config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -821,7 +826,11 @@ class ClusterController:
         in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.shutdown(config, in_transaction)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.shutdown(config)
+            else:
+                response = ClusterHandler.shutdown(config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -840,9 +849,14 @@ class ClusterController:
         request_body = request.json
         mode = request_body.get('mode', 'readonly')
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.set_mode(mode, config=config)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.set_mode(mode, config=config)
+            else:
+                response = ClusterHandler.set_mode(mode, config=config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -861,12 +875,17 @@ class ClusterController:
         request_body = request.json
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
 
         try:
-            response = ClusterHandler.add_node(node, config)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.add_node(node, config)
+            else:
+                response = ClusterHandler.add_node(node, config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -884,7 +903,8 @@ class ClusterController:
         request_body = request.json
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
-        response = {'timestamp': str(datetime.now())}
+        #TODO: for next release
+        in_transaction = request_body.get('in_transaction', False)
 
         #TODO: add arguments verification decorator
         if node is None:
