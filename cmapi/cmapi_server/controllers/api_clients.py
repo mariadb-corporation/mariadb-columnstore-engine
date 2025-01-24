@@ -21,43 +21,45 @@ class ClusterControllerClient:
         self.request_timeout = request_timeout
 
     def start_cluster(
-            self, data: Optional[Dict[str, Any]] = None
+            self, extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Start the cluster.
 
         :return: The response from the API.
         """
-        return self._request('PUT', 'start', data)
+        return self._request('PUT', 'start', extra)
 
     def shutdown_cluster(
-            self, data: Optional[Dict[str, Any]] = None
+            self, extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Shutdown the cluster.
 
         :return: The response from the API.
         """
-        return self._request('PUT', 'shutdown', data)
+        return self._request('PUT', 'shutdown', extra)
 
-    def set_mode(self, mode: str) -> Union[Dict[str, Any], Dict[str, str]]:
+    def set_mode(
+            self, mode: str, extra: Dict[str, Any] = dict()
+        ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Set the cluster mode.
 
         :param mode: The mode to set.
         :return: The response from the API.
         """
-        return self._request('PUT', 'mode-set', {'mode': mode})
+        return self._request('PUT', 'mode-set', {'mode': mode, **extra})
 
     def add_node(
-            self, node_info: Dict[str, Any]
+            self, node_info: Dict[str, Any], extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Add a node to the cluster.
 
         :param node_info: Information about the node to add.
         :return: The response from the API.
         """
-        return self._request('PUT', 'node', node_info)
+        return self._request('PUT', 'node', {**node_info, **extra})
 
     def remove_node(
-            self, node_id: str
+            self, node_id: str, extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Remove a node from the cluster.
 
