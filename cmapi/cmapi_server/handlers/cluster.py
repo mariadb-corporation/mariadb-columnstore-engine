@@ -108,18 +108,12 @@ class ClusterHandler():
         return response
 
     @staticmethod
-    def start(
-        config: str = DEFAULT_MCS_CONF_PATH, in_transaction: bool = False
-    ) -> dict:
+    def start(config: str = DEFAULT_MCS_CONF_PATH) -> dict:
         """Method to start MCS Cluster.
 
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param in_transaction: is function called in existing transaction or no
-                               If we started transaction in cli tool than we
-                               don't need to handle it here again
-        :type in_transaction: bool
         :raises CMAPIBasicError: if no nodes in the cluster
         :return: start timestamp
         :rtype: dict
@@ -127,27 +121,19 @@ class ClusterHandler():
         logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.info('Cluster start command called. Starting the cluster.')
         operation_start_time = str(datetime.now())
-        if not in_transaction:
-            with TransactionManager():
-                toggle_cluster_state(ClusterAction.START, config)
-        else:
-            toggle_cluster_state(ClusterAction.START, config)
-
+        toggle_cluster_state(ClusterAction.START, config)
         logger.info('Successfully finished cluster start.')
         return {'timestamp': operation_start_time}
 
     @staticmethod
     def shutdown(
-        config: str = DEFAULT_MCS_CONF_PATH, in_transaction: bool = False,
-        timeout: int = 15
+        config: str = DEFAULT_MCS_CONF_PATH, timeout: int = 15
     ) -> dict:
         """Method to stop the MCS Cluster.
 
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param in_transaction: is function called in existing transaction or no
-        :type in_transaction: bool
         :param timeout: timeout in seconds to gracefully stop DMLProc
                         TODO: for next releases
         :type timeout: int
@@ -160,20 +146,12 @@ class ClusterHandler():
             'Cluster shutdown command called. Shutting down the cluster.'
         )
         operation_start_time = str(datetime.now())
-        if not in_transaction:
-            with TransactionManager():
-                toggle_cluster_state(ClusterAction.STOP, config)
-        else:
-            toggle_cluster_state(ClusterAction.STOP, config)
-
+        toggle_cluster_state(ClusterAction.STOP, config)
         logger.debug('Successfully finished shutting down the cluster.')
         return {'timestamp': operation_start_time}
 
     @staticmethod
-    def add_node(
-        node: str, config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
-    ) -> dict:
+    def add_node(node: str, config: str = DEFAULT_MCS_CONF_PATH) -> dict:
         """Method to add node to MCS CLuster.
 
         :param node: node IP or name or FQDN
@@ -181,8 +159,6 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while adding node
@@ -192,24 +168,10 @@ class ClusterHandler():
         :return: result of adding node
         :rtype: dict
         """
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug(f'Cluster add node command called. Adding node {node}.')
 
         response = {'timestamp': str(datetime.now())}
-        transaction_id = get_id()
-
-        try:
-            suceeded, transaction_id, successes = start_transaction(
-                cs_config_filename=config, extra_nodes=[node],
-                txn_id=transaction_id
-            )
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while starting the transaction.'
-            ) from err
-        if not suceeded:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Starting transaction isn\'t successful.')
 
         try:
             add_node(
@@ -222,7 +184,6 @@ class ClusterHandler():
                     output_config_filename=config
                 )
         except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
             raise CMAPIBasicError('Error while adding node.') from err
 
         response['node_id'] = node
@@ -233,31 +194,18 @@ class ClusterHandler():
         try:
             broadcast_successful = broadcast_new_config(config)
         except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
             raise CMAPIBasicError(
                 'Error while distributing config file.'
             ) from err
 
         if not broadcast_successful:
-            rollback_transaction(transaction_id, cs_config_filename=config)
             raise CMAPIBasicError('Config distribution isn\'t successful.')
-
-        try:
-            commit_transaction(transaction_id, cs_config_filename=config)
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while committing transaction.'
-            ) from err
 
         logger.debug(f'Successfully finished adding node {node}.')
         return response
 
     @staticmethod
-    def remove_node(
-        node: str, config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
-    ) -> dict:
+    def remove_node(node: str, config: str = DEFAULT_MCS_CONF_PATH) -> dict:
         """Method to remove node from MCS CLuster.
 
         :param node: node IP or name or FQDN
@@ -265,8 +213,6 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while removing node
@@ -276,6 +222,9 @@ class ClusterHandler():
         :return: result of node removing
         :rtype: dict
         """
+        #TODO: This method will be moved to transaction manager in next release
+        #      Due to specific use of txn_nodes inside.
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug(
             f'Cluster remove node command called. Removing node {node}.'
         )
@@ -387,19 +336,6 @@ class ClusterHandler():
             payload = {'cluster_mode': mode}
             url = f'https://{master}:8640/cmapi/{get_version()}/node/config'
 
-        try:
-            suceeded, transaction_id, successes = start_transaction(
-                cs_config_filename=config, txn_id=transaction_id
-            )
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while starting the transaction.'
-            ) from err
-        if not suceeded:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Starting transaction isn\'t successful.')
-
         nc = NodeConfig()
         root = nc.get_current_config_root(config_filename=config)
         payload['manager'] = root.find('./ClusterManager').text
@@ -412,17 +348,8 @@ class ClusterHandler():
             r.raise_for_status()
             response['cluster-mode'] = mode
         except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
             raise CMAPIBasicError(
                 f'Error while setting cluster mode to {mode}'
-            ) from err
-
-        try:
-            commit_transaction(transaction_id, cs_config_filename=config)
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while committing transaction.'
             ) from err
 
         logger.debug(f'Successfully set cluster mode to {mode}.')
