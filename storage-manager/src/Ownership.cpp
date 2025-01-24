@@ -77,7 +77,7 @@ bf::path Ownership::get(const bf::path& p, bool getOwnership)
   bf::path::const_iterator pit;
   int i, levels;
 
-  normalizedPath.lexically_normal();
+  normalizedPath.normalize();
   // cerr << "Ownership::get() param = " << normalizedPath.string() << endl;
   if (prefixDepth > 0)
   {
