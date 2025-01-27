@@ -20,7 +20,7 @@ wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O
 chmod +x mariadb_es_repo_setup
 bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools"
 apt update --yes
-apt install --yes mariadb-server mariadb-client mariadb-plugin-columnstore
+apt install --yes -oDebug::RunScripts=1 mariadb-server mariadb-client mariadb-plugin-columnstore
 systemctl start mariadb
 systemctl start mariadb-columnstore
 
@@ -49,7 +49,7 @@ bash -c "./setup-repo.sh"
 
 # the -o options are used to make choise of keep your currently-installed version without interactive prompt
 
-apt-get --yes --with-new-pkgs -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+apt-get --yes --with-new-pkgs -oDebug::RunScripts=1 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
 
 UPGRADED_VERSION=$(mariadb -e "select @@version;")
 
