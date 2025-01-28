@@ -342,9 +342,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('mariadb -e "insert into test.t1 values (2); select * from test.t1"', dockerImage("smoke")),
     ],
   },
-  upgrade(version):: {
-    name: 'upgrade-test from ' + version,
-    depends_on: ['regressionlog'],
+  upgrade(version, depends_on):: {
+    name: 'upgrade-' + version,
+    depends_on: depends_on,
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -366,7 +366,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   upgradelog:: {
     name: 'upgradelog',
-    depends_on: std.map(function(p) 'upgrade-test from ' + p, mdb_server_versions),
+    depends_on: [if std.length(mdb_server_versions) == 0 then 'regressionlog' else 'upgrade-' + mdb_server_versions[std.length(mdb_server_versions)-1]],
     image: 'docker',
     volumes: [pipeline._volumes.docker],
     commands: [
@@ -872,7 +872,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+         [pipeline.upgrade(mdb_server_versions[i], [if (i == 0) then 'regressionlog' else 'upgrade-' + mdb_server_versions[i - 1]]) for i in indexes(mdb_server_versions)] +
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
