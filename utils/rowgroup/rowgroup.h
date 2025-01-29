@@ -28,6 +28,7 @@
 #pragma once
 
 #include <vector>
+#include <span>
 #include <string>
 #include <stdexcept>
 // #define NDEBUG
@@ -254,6 +255,31 @@ class UserDataStore
   boost::mutex fMutex;
 };
 
+class GroupConcat;
+class GroupConcatAg;
+
+class AggregateDataStore
+{
+public:
+  AggregateDataStore() = default;
+  ~AggregateDataStore() = default;
+  AggregateDataStore(const AggregateDataStore&) = delete;
+  AggregateDataStore& operator=(AggregateDataStore&) = delete;
+  AggregateDataStore(AggregateDataStore&&) = delete;
+  AggregateDataStore& operator=(AggregateDataStore&&) = delete;
+
+  void serialize(messageqcpp::ByteStream&) const;
+  void deserialize(messageqcpp::ByteStream&, std::span<boost::shared_ptr<GroupConcat>>);
+
+  uint32_t storeAggregateData(boost::shared_ptr<GroupConcatAg>& data);
+  boost::shared_ptr<GroupConcatAg> getAggregateData(uint32_t pos) const;
+
+  size_t getSize() const;
+
+private:
+  std::vector<boost::shared_ptr<GroupConcatAg>> fData;
+};
+
 
 class RowGroup;
 class Row;
@@ -269,9 +295,7 @@ class RGData
   RGData& operator=(RGData&&) = default;
   RGData(const RGData&) = default;
   RGData(RGData&&) = default;
-  virtual ~RGData() = default;
-
-
+  ~RGData() = default;
 
   // amount should be the # returned by RowGroup::getDataSize()
   void serialize(messageqcpp::ByteStream&, RGDataSizeType amount) const;
@@ -279,7 +303,7 @@ class RGData
   // the 'hasLengthField' is there b/c PM aggregation (and possibly others) currently sends
   // inline data with a length field.  Once that's converted to string table format, that
   // option can go away.
-  void deserialize(messageqcpp::ByteStream&, RGDataSizeType amount = 0);  // returns the # of bytes read
+  void deserialize(messageqcpp::ByteStream&, RGDataSizeType amount = 0, std::span<boost::shared_ptr<GroupConcat>> groupConcats = {});  // returns the # of bytes read
 
   inline RGDataSizeType getStringTableMemUsage();
   void clear();
@@ -329,6 +353,7 @@ class RGData
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
+  std::shared_ptr<AggregateDataStore> aggregateDataStore;
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
@@ -353,9 +378,13 @@ class Row
     inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) : data(d), strings(s), userDataStore(u)
     {
     }
+    inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u, AggregateDataStore* a) : data(d), strings(s), userDataStore(u), aggregateDataStore(a)
+    {
+    }
     uint8_t* data = nullptr;
     StringStore* strings = nullptr;
     UserDataStore* userDataStore = nullptr;
+    AggregateDataStore* aggregateDataStore = nullptr;
   };
 
   Row() = default;
@@ -527,6 +556,9 @@ class Row
   inline void setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<mcsv1sdk::UserData> userData,
                           uint32_t len, uint32_t colIndex);
 
+  inline void setAggregateData(boost::shared_ptr<GroupConcatAg> data, uint32_t colIndex);
+  inline GroupConcatAg* getAggregateData(uint32_t colIndex) const;
+
   uint64_t getNullValue(uint32_t colIndex) const;
   bool isNullValue(uint32_t colIndex) const;
   template <cscDataType cscDT, int width>
@@ -639,13 +671,14 @@ private:
   uint32_t sTableThreshold = 20;
   std::shared_ptr<bool[]> forceInline;
   UserDataStore* userDataStore = nullptr;  // For UDAF
+  AggregateDataStore* aggregateDataStore = nullptr;  // For GROUP_CONCAT & JSON_ARRAYAGG
 
   friend class RowGroup;
 };
 
 inline Row::Pointer Row::getPointer() const
 {
-  return Pointer(data, strings, userDataStore);
+  return Pointer(data, strings, userDataStore, aggregateDataStore);
 }
 inline uint8_t* Row::getData() const
 {
@@ -665,6 +698,7 @@ inline void Row::setPointer(const Pointer& p)
   }
 
   userDataStore = p.userDataStore;
+  aggregateDataStore = p.aggregateDataStore;
 }
 
 inline void Row::setData(const Pointer& p)
@@ -1359,6 +1393,25 @@ inline void Row::setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<
   *((uint32_t*)&data[offsets[colIndex] + 4]) = len;
 }
 
+inline void Row::setAggregateData(boost::shared_ptr<GroupConcatAg> agData, uint32_t colIndex) {
+  if (!aggregateDataStore) {
+    return;
+  }
+
+  uint32_t pos = aggregateDataStore->storeAggregateData(agData );
+  *((uint32_t*)&data[offsets[colIndex]]) = pos;
+}
+
+inline GroupConcatAg *Row::getAggregateData(uint32_t colIndex) const {
+  if (!aggregateDataStore) {
+    return nullptr;
+  }
+
+  uint32_t pos = *((uint32_t*)&data[offsets[colIndex]]);
+  return aggregateDataStore->getAggregateData(pos).get();
+}
+
+
 inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 {
   uint32_t n = offsets[destIndex + 1] - offsets[destIndex];
@@ -1558,6 +1611,12 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
   void setUseOnlyLongString(bool b) { useOnlyLongStrings = b; }
   bool usesOnlyLongString() const { return useOnlyLongStrings ; }
+  void setUseAggregateDataStore(bool b) {
+    useAggregateDataStore = b;
+    if (b && !aggregateDataStore)
+      aggregateDataStore = rgData->aggregateDataStore.get();
+  }
+  bool usesAggregateDataStore() const { return useAggregateDataStore ; }
 
   bool hasLongString() const
   {
@@ -1629,6 +1688,7 @@ class RowGroup : public messageqcpp::Serializeable
   // string table impl
   RGData* rgData = nullptr;
   StringStore* strings = nullptr;  // note, strings and data belong to rgData
+  AggregateDataStore* aggregateDataStore = nullptr;
   bool useStringTable = true;
   bool useOnlyLongStrings = false;
   bool useAggregateDataStore = true;
@@ -1697,12 +1757,14 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
   r->data = &(data[headerSize + (rowNum * r->getSize())]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
+  r->aggregateDataStore = rgData->aggregateDataStore.get();
 }
 
 inline void RowGroup::setData(RGData* rgd)
 {
   data = rgd->rowData.get();
   strings = rgd->strings.get();
+  aggregateDataStore = rgd->aggregateDataStore.get();
   rgData = rgd;
 }
 
@@ -1775,6 +1837,7 @@ void RowGroup::initRow(Row* r, bool forceInlineData) const
   r->sTableThreshold = sTableThreshold;
   r->forceInline = forceInline;
   r->hasCollation = hasCollation;
+  r->aggregateDataStore = aggregateDataStore;
 }
 
 inline uint32_t RowGroup::getRowSize() const
@@ -1789,10 +1852,12 @@ inline uint32_t RowGroup::getRowSizeWithStrings() const
 
 inline RGDataSizeType RowGroup::getSizeWithStrings(uint64_t n) const
 {
-  if (strings == nullptr)
-    return getDataSize(n);
-  else
-    return getDataSize(n) + strings->getSize();
+  auto ret = getDataSize(n);
+  if (strings)
+    ret += strings->getSize();
+  if (aggregateDataStore)
+    ret += aggregateDataStore->getSize();
+  return ret;
 }
 
 inline uint64_t RowGroup::getSizeWithStrings() const
@@ -2212,7 +2277,7 @@ inline void RGData::getRow(uint32_t num, Row* row)
   idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
   row->setData(
-      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get(), aggregateDataStore.get()));
 }
 
 }  // namespace rowgroup

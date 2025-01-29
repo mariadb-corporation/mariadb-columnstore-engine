@@ -29,6 +29,10 @@
 // #define NDEBUG
 #include <sstream>
 #include <iterator>
+
+#include "batchprimitiveprocessor-jl.h"
+#include "groupconcat.h"
+#include "jsonarrayagg.h"
 using namespace std;
 
 #include <numeric>
@@ -38,6 +42,8 @@ using namespace messageqcpp;
 
 #include "calpontsystemcatalog.h"
 using namespace execplan;
+
+#include "rowaggregation.h"
 
 #include "nullvaluemanip.h"
 #include "rowgroup.h"
@@ -295,8 +301,58 @@ void UserDataStore::deserialize(ByteStream& bs)
     userData->unserialize(bs);
     vStoreData[i].userData = boost::shared_ptr<mcsv1sdk::UserData>(userData);
   }
+}
 
-  return;
+void AggregateDataStore::serialize(messageqcpp::ByteStream &bs) const {
+  bs << static_cast<uint32_t>(fData.size());
+  for (const auto& data: fData) {
+    auto *gcau = dynamic_cast<joblist::GroupConcatAgUM*>(data.get());
+    idbassert(gcau != nullptr);
+    uint8_t gctype = dynamic_cast<joblist::JsonArrayAggregatAgUM*>(gcau) ? ROWAGG_JSON_ARRAY : ROWAGG_GROUP_CONCAT;
+    bs << gctype;
+    bs << data->getGroupConcatId();
+    data->serialize(bs);
+  }
+}
+
+void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs, std::span<SP_GroupConcat> groupConcats) {
+  uint32_t sz;
+  bs >> sz;
+  if (sz > 0) {
+    fData.clear();
+    fData.reserve(sz);
+    for (uint32_t i = 0; i < sz; i++) {
+      uint8_t gctype;
+      bs >> gctype;
+      uint32_t groupConcatId;
+      bs >> groupConcatId;
+      if (groupConcatId >= groupConcats.size()) {
+        throw std::logic_error("AggregateDataStore::deserialize: groupConcatId is invalid");
+      }
+      SP_GroupConcatAg data;
+      data.reset(GroupConcatAg::create(static_cast<RowAggFunctionType>(gctype), groupConcats[groupConcatId]));
+      data->deserialize(bs, groupConcats);
+      fData.push_back(data);
+    }
+  }
+}
+
+uint32_t AggregateDataStore::storeAggregateData(SP_GroupConcatAg &data) {
+  fData.emplace_back(data);
+  return fData.size() - 1;
+}
+
+SP_GroupConcatAg AggregateDataStore::getAggregateData(uint32_t pos) const {
+  idbassert(pos < fData.size());
+  return fData[pos];
+}
+
+size_t AggregateDataStore::getSize() const {
+  size_t ret = 0;
+  for (const auto& data: fData) {
+    ret += data->getDataSize();
+  }
+  return ret;
 }
 
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
@@ -310,6 +366,7 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   }
 
   userDataStore.reset();
+  aggregateDataStore.reset(new AggregateDataStore());
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
 }
@@ -325,6 +382,7 @@ RGData::RGData(const RowGroup& rg)
   }
 
   userDataStore.reset();
+  aggregateDataStore.reset(new AggregateDataStore());
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
 }
@@ -333,6 +391,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
 {
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
   userDataStore.reset();
+  aggregateDataStore.reset(new AggregateDataStore());
 
   if (rg.usesStringTable() || rg.usesOnlyLongString()) {
     strings.reset(new StringStore());
@@ -373,9 +432,16 @@ void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
   }
   else
     bs << (uint8_t)0;
+
+  if (aggregateDataStore) {
+    bs << (uint8_t)1;
+    aggregateDataStore->serialize(bs);
+  }
+  else
+    bs << (uint8_t)0;
 }
 
-void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount)
+void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount, span<SP_GroupConcat> groupConcats)
 {
   uint32_t sig;
   RGDataSizeType amount;
@@ -427,6 +493,12 @@ void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount)
     }
     else
       userDataStore.reset();
+
+    bs >> tmp8;
+    aggregateDataStore.reset(new AggregateDataStore());
+    if (tmp8) {
+      aggregateDataStore->deserialize(bs, groupConcats);
+    }
   }
 
   return;
@@ -437,6 +509,7 @@ void RGData::clear()
   rowData.reset();
   strings.reset();
   userDataStore.reset();
+  aggregateDataStore.reset();
 }
 
 // UserDataStore is only used for UDAF.
@@ -471,6 +544,7 @@ Row::Row(const Row& r)
  , sTableThreshold(r.sTableThreshold)
  , forceInline(r.forceInline)
  , userDataStore(nullptr)
+ , aggregateDataStore(r.aggregateDataStore)
 {
 }
 
@@ -1093,8 +1167,10 @@ RowGroup::RowGroup(const RowGroup& r)
  , precision(r.precision)
  , rgData(r.rgData)
  , strings(r.strings)
+ , aggregateDataStore(r.aggregateDataStore)
  , useStringTable(r.useStringTable)
  , useOnlyLongStrings(r.useOnlyLongStrings)
+ , useAggregateDataStore(r.useAggregateDataStore)
  , hasCollation(r.hasCollation)
  , hasLongStringField(r.hasLongStringField)
  , sTableThreshold(r.sTableThreshold)
@@ -1126,10 +1202,12 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   precision = r.precision;
   rgData = r.rgData;
   strings = r.strings;
+  aggregateDataStore = r.aggregateDataStore;
   useStringTable = r.useStringTable;
   useOnlyLongStrings = r.useOnlyLongStrings;
   hasCollation = r.hasCollation;
   hasLongStringField = r.hasLongStringField;
+  useAggregateDataStore = r.useAggregateDataStore;
   sTableThreshold = r.sTableThreshold;
   forceInline = r.forceInline;
   // offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
@@ -1181,6 +1259,7 @@ void RowGroup::serialize(ByteStream& bs) const
   bs << sTableThreshold;
   bs.append((uint8_t*)&forceInline[0], sizeof(bool) * columnCount);
   bs << (uint8_t)useOnlyLongStrings;
+  bs << (uint8_t)useAggregateDataStore;
 }
 
 void RowGroup::deserialize(ByteStream& bs)
@@ -1209,6 +1288,8 @@ void RowGroup::deserialize(ByteStream& bs)
   bs.advance(sizeof(bool) * columnCount);
   bs >> tmp8;
   useOnlyLongStrings = (bool)tmp8;
+  bs >> tmp8;
+  useAggregateDataStore = (bool)tmp8;
   // offsets = (useStringTable ? &stOffsets[0] : &oldOffsets[0]);
   offsets = 0;
 

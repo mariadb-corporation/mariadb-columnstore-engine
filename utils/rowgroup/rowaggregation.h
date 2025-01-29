@@ -198,7 +198,7 @@ struct RowAggFunctionCol
   // 1. for AVG - point to the count column, the fInputColumnIndex is for sum
   // 2. for statistics function - point to sum(x), +1 is sum(x**2)
   // 3. for UDAF - contain the context user data as binary
-  // 4. for duplicate - point to the real aggretate column to be copied from
+  // 4. for duplicate - point to the real aggregate column to be copied from
   // Set only on UM, the fAuxColumnIndex is defaulted to fOutputColumnIndex+1 on PM.
   uint32_t fAuxColumnIndex;
 
@@ -343,6 +343,7 @@ struct GroupConcat
   joblist::ResourceManager* fRm;                 // resource manager
   boost::shared_ptr<int64_t> fSessionMemLimit;
   long fTimeZone;
+  uint32_t id;
 
   GroupConcat() : fRm(nullptr)
   {
@@ -357,14 +358,22 @@ class GroupConcatAg
   explicit GroupConcatAg(SP_GroupConcat&);
   virtual ~GroupConcatAg();
 
-  virtual void initialize(){};
-  virtual void processRow(const rowgroup::Row&){};
-  virtual void merge(const rowgroup::Row&, uint64_t){};
+  static GroupConcatAg* create(RowAggFunctionType rowagg_func_type, SP_GroupConcat&);
 
-  uint8_t* getResult()
+  virtual void initialize() = 0;
+  virtual void processRow(const rowgroup::Row&) = 0;
+  virtual void merge(const rowgroup::Row&, uint64_t) = 0;
+
+  virtual void serialize(messageqcpp::ByteStream&) const = 0;
+  virtual void deserialize(messageqcpp::ByteStream&, std::span<SP_GroupConcat>) = 0;
+
+  virtual uint8_t* getResult()
   {
     return nullptr;
   }
+
+  uint32_t getGroupConcatId() const { return fGroupConcat->id; }
+  virtual size_t getDataSize() const = 0;
 
  protected:
   rowgroup::SP_GroupConcat fGroupConcat;
@@ -551,6 +560,7 @@ class RowAggregation : public messageqcpp::Serializeable
   virtual void doBitOp(const Row&, int64_t, int64_t, int);
   virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx,
                       std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr);
+  void mergeGroupConcat(const Row&, uint64_t pos);
   virtual bool countSpecial(const RowGroup* pRG)
   {
     fRow.setUintField<8>(fRow.getUintField<8>(0) + pRG->getRowCount(), 0);
@@ -643,6 +653,7 @@ class RowAggregation : public messageqcpp::Serializeable
   std::string fTmpDir = config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
   std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
 
+  std::vector<SP_GroupConcat> fGroupConcat; // FIXME: kemm
 };
 
 //------------------------------------------------------------------------------
@@ -655,9 +666,7 @@ class RowAggregationUM : public RowAggregation
  public:
   /** @brief RowAggregationUM constructor
    */
-  RowAggregationUM()
-  {
-  }
+  RowAggregationUM() = default;
   RowAggregationUM(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                    const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                    boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);
@@ -809,8 +818,8 @@ class RowAggregationUM : public RowAggregation
   std::vector<ConstantAggData> fConstantAggregate;
 
   // @bug3362, group_concat
-  std::vector<SP_GroupConcat> fGroupConcat;
-  std::vector<SP_GroupConcatAg> fGroupConcatAg;
+  // FIXME kemm: std::vector<SP_GroupConcat> fGroupConcat;
+  // FIXME kemm: std::vector<SP_GroupConcatAg> fGroupConcatAg;
   std::vector<SP_ROWAGG_FUNC_t> fFunctionColGc;
 
  private:
@@ -831,9 +840,7 @@ class RowAggregationUMP2 : public RowAggregationUM
  public:
   /** @brief RowAggregationUM constructor
    */
-  RowAggregationUMP2()
-  {
-  }
+  RowAggregationUMP2() = default;
   RowAggregationUMP2(const std::vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCols,
                      const std::vector<SP_ROWAGG_FUNC_t>& rowAggFunctionCols, joblist::ResourceManager*,
                      boost::shared_ptr<int64_t> sessionMemLimit, bool withRollup);

@@ -35,6 +35,7 @@ class MemManager;
 class RowPosHashStorage;
 using RowPosHashStoragePtr = std::unique_ptr<RowPosHashStorage>;
 class RowGroupStorage;
+class GroupConcat;
 
 using RGDataUnPtr = std::unique_ptr<RGData>;
 using PosOpos = std::pair<uint64_t, uint64_t>;
@@ -49,16 +50,16 @@ constexpr const uint64_t HashMaskElements = 64ULL;
 class RowAggStorage
 {
  public:
-  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, RowGroup* keysRowGroup, uint32_t keyCount,
+  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, RowGroup* keysRowGroup, uint32_t keyCount, std::span<boost::shared_ptr<GroupConcat>> groupConcats,
                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false, bool allowGenerations = false,
                 compress::CompressInterface* compressor = nullptr);
 
-  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, uint32_t keyCount,
+  RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, uint32_t keyCount, std::span<boost::shared_ptr<GroupConcat>> groupConcats,
                 joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessLimit = {},
                 bool enabledDiskAgg = false, bool allowGenerations = false,
                 compress::CompressInterface* compressor = nullptr)
-   : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount, rm, std::move(sessLimit), enabledDiskAgg,
+   : RowAggStorage(tmpDir, rowGroupOut, rowGroupOut, keyCount, groupConcats, rm, std::move(sessLimit), enabledDiskAgg,
                    allowGenerations, compressor)
   {
   }
@@ -377,6 +378,7 @@ class RowAggStorage
   rowgroup::RowGroup* fRowGroupOut;
   rowgroup::RowGroup* fKeysRowGroup;
   uint64_t fRandom = 0xc4ceb9fe1a85ec53ULL;  // initial integer to set PRNG up
+  std::span<boost::shared_ptr<GroupConcat>> fGroupConcats;
 };
 
 }  // namespace rowgroup

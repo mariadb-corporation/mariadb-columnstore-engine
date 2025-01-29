@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include "rowstorage.h"
 #include "robin_hood.h"
+#include "rowaggregation.h"
 
 namespace
 {
@@ -575,7 +576,7 @@ class RowGroupStorage
    *                            false -> deal with it later
    * @param compressor          pointer to CompressInterface impl or nullptr
    */
-  RowGroupStorage(const std::string& tmpDir, RowGroup* rowGroupOut, size_t maxRows,
+  RowGroupStorage(const std::string& tmpDir, RowGroup* rowGroupOut, size_t maxRows, std::span<SP_GroupConcat> groupConcats,
                   joblist::ResourceManager* rm = nullptr, boost::shared_ptr<int64_t> sessLimit = {},
                   bool wait = false, bool strict = false, compress::CompressInterface* compressor = nullptr)
    : fRowGroupOut(rowGroupOut)
@@ -584,6 +585,7 @@ class RowGroupStorage
    , fUniqId(this)
    , fTmpDir(tmpDir)
    , fCompressor(compressor)
+   , fGroupConcats(std::move(groupConcats))
   {
     if (rm)
     {
@@ -1149,7 +1151,7 @@ class RowGroupStorage
   /** @brief Create new RowGroupStorage with the save LRU, MemManager & uniq ID */
   RowGroupStorage* clone(uint16_t gen) const
   {
-    auto* ret = new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows);
+    auto* ret = new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows, fGroupConcats);
     ret->fRGDatas.clear();
     ret->fLRU.reset(fLRU->clone());
     ret->fMM.reset(fMM->clone());
@@ -1323,7 +1325,7 @@ class RowGroupStorage
     if (unlinkDump)
       unlink(fname.c_str());
     rgdata.reset(new RGData());
-    rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
+    rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows), fGroupConcats);
 
     fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
@@ -1421,6 +1423,7 @@ class RowGroupStorage
   std::string fTmpDir;
   compress::CompressInterface* fCompressor;
   std::unique_ptr<Dumper> fDumper;
+  std::span<SP_GroupConcat> fGroupConcats;
 };
 
 /** @brief Internal data for the hashmap */
@@ -1617,7 +1620,7 @@ class RowPosHashStorage
  * elements, that can be dumped on disk either.
  ----------------------------------------------------------------------------*/
 RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, RowGroup* keysRowGroup,
-                             uint32_t keyCount, joblist::ResourceManager* rm,
+                             uint32_t keyCount, std::span<boost::shared_ptr<GroupConcat>> groupConcats, joblist::ResourceManager* rm,
                              boost::shared_ptr<int64_t> sessLimit, bool enabledDiskAgg, bool allowGenerations,
                              compress::CompressInterface* compressor)
  : fMaxRows(getMaxRows(enabledDiskAgg))
@@ -1630,6 +1633,7 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, R
  , fTmpDir(tmpDir)
  , fRowGroupOut(rowGroupOut)
  , fKeysRowGroup(keysRowGroup)
+ , fGroupConcats(std::move(groupConcats))
 {
   char suffix[PATH_MAX];
   snprintf(suffix, sizeof(suffix), "/p%u-t%p/", getpid(), this);
@@ -1647,11 +1651,11 @@ RowAggStorage::RowAggStorage(const std::string& tmpDir, RowGroup* rowGroupOut, R
     fMM.reset(new MemManager());
     fNumOfInputRGPerThread = 1;
   }
-  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg,
+  fStorage.reset(new RowGroupStorage(fTmpDir, rowGroupOut, 1, fGroupConcats, rm, sessLimit, !enabledDiskAgg, !enabledDiskAgg,
                                      fCompressor.get()));
   if (fExtKeys)
   {
-    fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, keysRowGroup, 1, rm, sessLimit, !enabledDiskAgg,
+    fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, keysRowGroup, 1, fGroupConcats, rm, sessLimit, !enabledDiskAgg,
                                                !enabledDiskAgg, fCompressor.get()));
     fKeysStorage = fRealKeysStorage.get();
   }
@@ -1682,12 +1686,12 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
   if (UNLIKELY(!fInitialized))
   {
     fInitialized = true;
-    fStorage.reset(new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows, fMM->getResourceManaged(),
+    fStorage.reset(new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows, fGroupConcats, fMM->getResourceManaged(),
                                        fMM->getSessionLimit(), !fEnabledDiskAggregation,
                                        !fEnabledDiskAggregation, fCompressor.get()));
     if (fExtKeys)
     {
-      fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, fKeysRowGroup, fMaxRows, fMM->getResourceManaged(),
+      fRealKeysStorage.reset(new RowGroupStorage(fTmpDir, fKeysRowGroup, fMaxRows, fGroupConcats, fMM->getResourceManaged(),
                                                  fMM->getSessionLimit(), !fEnabledDiskAggregation,
                                                  !fEnabledDiskAggregation, fCompressor.get()));
       fKeysStorage = fRealKeysStorage.get();
