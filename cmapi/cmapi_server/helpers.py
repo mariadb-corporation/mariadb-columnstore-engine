@@ -290,7 +290,7 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
-    timeout: int = 10
+    timeout: Optional[int] = None
 ) -> bool:
     """Send new config to nodes. Now in async way.
 
@@ -496,7 +496,7 @@ def save_cmapi_conf_file(cfg_parser, config_filepath: str = CMAPI_CONF_PATH):
         )
 
 
-def get_active_nodes(config:str = DEFAULT_MCS_CONF_PATH) -> list:
+def get_active_nodes(config: str = DEFAULT_MCS_CONF_PATH) -> list:
     """Get active nodes from Columnstore.xml.
 
     Actually this is only names of nodes by which node have been added.

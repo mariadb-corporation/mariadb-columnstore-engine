@@ -22,7 +22,7 @@ from cmapi_server.helpers import (
 from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
 from mcs_node_control.models.node_config import NodeConfig
-from cmapi.cmapi_server.controllers.api_clients import ClusterControllerClient
+from cmapi_server.controllers.api_clients import ClusterControllerClient
 
 
 logger = logging.getLogger('mcs_cli')
@@ -191,9 +191,6 @@ def restart():
 
 @node_app.command(rich_help_panel='cluster node commands')
 @handle_output
-@TransactionManager(
-    timeout=timedelta(days=1).total_seconds(), handle_signals=True
-)
 def add(
     nodes: Optional[List[str]] = typer.Option(
         ...,
@@ -206,8 +203,12 @@ def add(
 ):
     """Add nodes to the Columnstore cluster."""
     result = []
-    for node in nodes:
-        result.append(client.add_node({'node': node}))
+    with TransactionManager(
+        timeout=timedelta(days=1).total_seconds(), handle_signals=True,
+        extra_nodes=nodes
+    ):
+        for node in nodes:
+            result.append(client.add_node({'node': node}))
     return result
 
 
@@ -224,8 +225,12 @@ def remove(nodes: Optional[List[str]] = typer.Option(
 ):
     """Remove nodes from the Columnstore cluster."""
     result = []
-    for node in nodes:
-        result.append(client.remove_node(node))
+    with TransactionManager(
+        timeout=timedelta(days=1).total_seconds(), handle_signals=True,
+        remove_nodes=nodes
+    ):
+        for node in nodes:
+            result.append(client.remove_node(node))
     return result
 
 
@@ -265,6 +270,7 @@ def api_key(key: str = typer.Option(..., help='API key to set.')):
     return client.set_api_key(key)
 
 
+#TODO: remove in next releases
 @set_app.command()
 @handle_output
 def log_level(level: str = typer.Option(..., help='Logging level to set.')):
