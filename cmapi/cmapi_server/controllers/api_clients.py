@@ -1,7 +1,13 @@
 import requests
 from typing import Any, Dict, Optional, Union
+
+import pyotp
+
 from cmapi_server.controllers.dispatcher import _version
-from cmapi_server.constants import CURRENT_NODE_CMAPI_URL
+from cmapi_server.constants import (
+    CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY,
+)
+from cmapi_server.helpers import get_config_parser, get_current_key
 
 
 class ClusterControllerClient:
@@ -10,6 +16,10 @@ class ClusterControllerClient:
             request_timeout: Optional[float] = None
     ):
         """Initialize the ClusterControllerClient with the base URL.
+
+        WARNING: This class only handles the API requests, it does not
+        handle the transaction management. So it should be started
+        at level above using TransactionManager (decorator or context manager).
 
         :param base_url: The base URL for the API endpoints,
                          defaults to CURRENT_NODE_CMAPI_URL
@@ -59,14 +69,14 @@ class ClusterControllerClient:
         return self._request('PUT', 'node', {**node_info, **extra})
 
     def remove_node(
-            self, node_id: str, extra: Dict[str, Any] = dict()
+            self, node: str, extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Remove a node from the cluster.
 
-        :param node_id: The ID of the node to remove.
+        :param node: node IP, name or FQDN.
         :return: The response from the API.
         """
-        return self._request('DELETE', 'node', {'node_id': node_id})
+        return self._request('DELETE', 'node', {'node': node, **extra})
 
     def get_status(self) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get the status of the cluster.
@@ -83,7 +93,12 @@ class ClusterControllerClient:
         :param api_key: The API key to set.
         :return: The response from the API.
         """
-        return self._request('put', 'apikey-set', {'api_key': api_key})
+        totp = pyotp.TOTP(SECRET_KEY)
+        payload = {
+            'api_key': api_key,
+            'verification_key': totp.now()
+        }
+        return self._request('put', 'apikey-set', payload)
 
     def set_log_level(
             self, log_level: str
@@ -117,9 +132,16 @@ class ClusterControllerClient:
         :return: The response from the API.
         """
         url = f'{self.base_url}/cmapi/{_version}/cluster/{endpoint}'
+        cmapi_cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+        key = get_current_key(cmapi_cfg_parser)
+        headers = {'x-api-key': key}
+        if method in ['PUT', 'POST', 'DELETE']:
+            headers['Content-Type'] = 'application/json'
+            data = {'in_transaction': True, **(data or {})}
         try:
             response = requests.request(
-                method, url, json=data, timeout=self.request_timeout
+                method, url, headers=headers, json=data,
+                timeout=self.request_timeout, verify=False
             )
             response.raise_for_status()
             return response.json()

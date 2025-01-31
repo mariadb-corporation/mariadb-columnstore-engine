@@ -11,11 +11,9 @@ from cmapi_server.constants import (
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
-    broadcast_new_config, commit_transaction, get_active_nodes, get_dbroots,
-    get_config_parser, get_current_key, get_id, get_version, start_transaction,
-    rollback_transaction, update_revision_and_manager,
+    broadcast_new_config, get_active_nodes, get_dbroots, get_config_parser,
+    get_current_key, get_version, update_revision_and_manager,
 )
-from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import (
     add_node, add_dbroot, remove_node, switch_node_maintenance,
 )
@@ -28,9 +26,9 @@ class ClusterAction(Enum):
     STOP = 'stop'
 
 
-def toggle_cluster_state(action: ClusterAction, config: str) -> dict:
-    """
-    Toggle the state of the cluster (start or stop).
+def toggle_cluster_state(
+        action: ClusterAction, config: str) -> dict:
+    """Toggle the state of the cluster (start or stop).
 
     :param action: The cluster action to perform.
                    (ClusterAction.START or ClusterAction.STOP).
@@ -127,16 +125,16 @@ class ClusterHandler():
 
     @staticmethod
     def shutdown(
-        config: str = DEFAULT_MCS_CONF_PATH, timeout: int = 15
+        config: str = DEFAULT_MCS_CONF_PATH, timeout: Optional[int] = None
     ) -> dict:
         """Method to stop the MCS Cluster.
 
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param timeout: timeout in seconds to gracefully stop DMLProc
-                        TODO: for next releases
-        :type timeout: int
+        :param timeout: timeout in seconds to gracefully stop DMLProc,
+                        defaults to None
+        :type timeout: Optional[int], optional
         :raises CMAPIBasicError: if no nodes in the cluster
         :return: start timestamp
         :rtype: dict
@@ -229,21 +227,6 @@ class ClusterHandler():
             f'Cluster remove node command called. Removing node {node}.'
         )
         response = {'timestamp': str(datetime.now())}
-        transaction_id = get_id()
-
-        try:
-            suceeded, transaction_id, txn_nodes = start_transaction(
-                cs_config_filename=config, remove_nodes=[node],
-                txn_id=transaction_id
-            )
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while starting the transaction.'
-            ) from err
-        if not suceeded:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Starting transaction isn\'t successful.')
 
         try:
             remove_node(
@@ -251,50 +234,31 @@ class ClusterHandler():
                 output_config_filename=config
             )
         except Exception as err:
-            rollback_transaction(
-                transaction_id, nodes=txn_nodes, cs_config_filename=config
-            )
             raise CMAPIBasicError('Error while removing node.') from err
 
         response['node_id'] = node
-        if len(txn_nodes) > 0:
+        active_nodes = get_active_nodes(config)
+        if len(active_nodes) > 0:
             update_revision_and_manager(
                 input_config_filename=config, output_config_filename=config
             )
             try:
                 broadcast_successful = broadcast_new_config(
-                    config, nodes=txn_nodes
+                    config, nodes=active_nodes
                 )
             except Exception as err:
-                rollback_transaction(
-                    transaction_id, nodes=txn_nodes, cs_config_filename=config
-                )
                 raise CMAPIBasicError(
                     'Error while distributing config file.'
                 ) from err
             if not broadcast_successful:
-                rollback_transaction(
-                    transaction_id, nodes=txn_nodes, cs_config_filename=config
-                )
                 raise CMAPIBasicError('Config distribution isn\'t successful.')
-
-        try:
-            commit_transaction(transaction_id, cs_config_filename=config)
-        except Exception as err:
-            rollback_transaction(
-                transaction_id, nodes=txn_nodes, cs_config_filename=config
-            )
-            raise CMAPIBasicError(
-                'Error while committing transaction.'
-            ) from err
 
         logger.debug(f'Successfully finished removing node {node}.')
         return response
 
     @staticmethod
     def set_mode(
-        mode: str, timeout:int = 60, config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
+        mode: str, timeout: int = 60, config: str = DEFAULT_MCS_CONF_PATH,
     ) -> dict:
         """Method to set MCS CLuster mode.
 
@@ -303,8 +267,6 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :raises CMAPIBasicError: if no master found in the cluster
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
@@ -315,6 +277,7 @@ class ClusterHandler():
         :return: result of adding node
         :rtype: dict
         """
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug(
             f'Cluster mode set command called. Setting mode to {mode}.'
         )
@@ -323,7 +286,6 @@ class ClusterHandler():
         cmapi_cfg_parser = get_config_parser(CMAPI_CONF_PATH)
         api_key = get_current_key(cmapi_cfg_parser)
         headers = {'x-api-key': api_key}
-        transaction_id = get_id()
 
         master = None
         if len(get_active_nodes(config)) != 0:
@@ -359,7 +321,6 @@ class ClusterHandler():
     def set_api_key(
         api_key: str, verification_key: str,
         config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
     ) -> dict:
         """Method to set API key for each CMAPI node in cluster.
 
@@ -370,13 +331,12 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :raises CMAPIBasicError: if catch some exception while setting API key
                                  to each node
         :return: status result
         :rtype: dict
         """
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug('Cluster set API key command called.')
 
         active_nodes = get_active_nodes(config)
