@@ -7,7 +7,8 @@ lxml==4.7.1
 psutil==5.9.1
 pyotp==2.6.0
 requests==2.27.1
-typer==0.9.0
+typer==0.15.1
+
 
 # indirect dependencies
 aiohttp==3.8.1
@@ -24,7 +25,7 @@ certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.12
 cheroot==8.6.0
-click==8.1.7
+click==8.1.8
 colorama==0.4.4
 crcmod==1.7
 docutils==0.16
@@ -44,6 +45,8 @@ jaraco.context==4.1.1
 jaraco.functools==3.5.0
 jaraco.text==3.7.0
 jmespath==1.0.1
+markdown-it-py==3.0.0
+mdurl==0.1.2
 monotonic==1.6
 more-itertools==8.12.0
 multidict==6.0.2
@@ -53,20 +56,23 @@ portend==3.1.0
 pyasn1-modules==0.2.8
 pyasn1==0.4.8
 pycparser==2.21
+Pygments==2.19.1
 pyOpenSSL==22.0.0
 pyparsing==3.0.9
 python-dateutil==2.8.2
 pytz==2021.3
 pyu2f==0.1.5
 PyYAML==5.4.1
+rich==13.9.4
 repoze.lru==0.7
 retry-decorator==1.1.1
 Routes==2.5.1
 rsa==4.7.2
 s3transfer==0.6.0
+shellingham==1.5.4
 six==1.16.0
 tempora==5.0.1
-typing-extensions==4.8.0
+typing_extensions==4.12.2
 urllib3==1.26.8
 yarl==1.8.1
 zc.lockfile==2.0

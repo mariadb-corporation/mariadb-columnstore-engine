@@ -1,0 +1,776 @@
+.TH \fB\fCmcs\fR
+.PP
+The  MCS  Command  Line  Interface is a unified tool to manage your MCS services
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCbackup\fR: Backup Columnstore and/or MariDB data.
+.IP \(bu 2
+\fB\fCdbrm_backup\fR: Columnstore DBRM Backup.
+.IP \(bu 2
+\fB\fCrestore\fR: Restore Columnstore (and/or MariaDB) data.
+.IP \(bu 2
+\fB\fCdbrm_restore\fR: Restore Columnstore DBRM data.
+.IP \(bu 2
+\fB\fChelp\-all\fR: Show help for all commands in man page style.
+.IP \(bu 2
+\fB\fCstatus\fR: Get status information.
+.IP \(bu 2
+\fB\fCstop\fR: Stop the Columnstore cluster.
+.IP \(bu 2
+\fB\fCstart\fR: Start the Columnstore cluster.
+.IP \(bu 2
+\fB\fCrestart\fR: Restart the Columnstore cluster.
+.IP \(bu 2
+\fB\fCnode\fR: Cluster nodes management.
+.IP \(bu 2
+\fB\fCset\fR: Set cluster parameters.
+.IP \(bu 2
+\fB\fCcluster\fR: MariaDB Columnstore cluster management...
+.IP \(bu 2
+\fB\fCcmapi\fR: CMAPI itself related commands.
+.RE
+.SH \fB\fCmcs backup\fR
+.PP
+Backup Columnstore and/or MariDB data.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs backup [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-bl, \-\-backup\-location TEXT\fR: What directory to store the backups on this machine or the target machine.
+Consider write permissions of the scp user and the user running this script.
+Mariadb\-backup will use this location as a tmp dir for S3 and remote backups temporarily.
+Example: /mnt/backups/  [default: /tmp/backups/]
+.IP \(bu 2
+\fB\fC\-bd, \-\-backup\-destination TEXT\fR: Are the backups going to be stored on the same machine this script is running on or another server \- if Remote you need to setup scp=Options: \[dq]Local\[dq] or \[dq]Remote\[dq]  [default: Local]
+.IP \(bu 2
+\fB\fC\-scp TEXT\fR: Used only if \-\-backup\-destination=\[dq]Remote\[dq]\&.
+The user/credentials that will be used to scp the backup files
+Example: \[dq]\[la]centos@10.14.51.62\[ra]\[dq]
+.IP \(bu 2
+\fB\fC\-bb, \-\-backup\-bucket TEXT\fR: Only used if \-\-storage=S3
+Name of the bucket to store the columnstore backups.
+Example: \[dq]s3://my\-cs\-backups\[dq]
+.IP \(bu 2
+\fB\fC\-url, \-\-endpoint\-url TEXT\fR: Used by on premise S3 vendors.
+Example: \[dq]\[la]http://127.0.0.1:8000\[ra]\[dq]
+.IP \(bu 2
+\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl / \-v\-ssl, \-\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v\-ssl]
+.IP \(bu 2
+\fB\fC\-s, \-\-storage TEXT\fR: What storage topogoly is being used by Columnstore \- found in /etc/columnstore/storagemanager.cnf.
+Options: \[dq]LocalStorage\[dq] or \[dq]S3\[dq]  [default: LocalStorage]
+.IP \(bu 2
+\fB\fC\-i, \-\-incremental TEXT\fR: Adds columnstore deltas to an existing full backup. Backup folder to apply increment could be a value or \[dq]auto\fImost\fPrecent\[dq] \- the incremental backup applies to last full backup.
+.IP \(bu 2
+\fB\fC\-ha, \-\-highavilability / \-no\-ha, \-\-no\-highavilability\fR: Hint wether shared storage is attached @ below on all nodes to see all data
+HA LocalStorage ( /var/lib/columnstore/dataX/ )
+HA S3           ( /var/lib/columnstore/storagemanager/ )  [default: no\-ha]
+.IP \(bu 2
+\fB\fC\-f, \-\-config\-file TEXT\fR: Path to backup configuration file to load variables from.
+.IP \(bu 2
+\fB\fC\-sbrm, \-\-skip\-save\-brm / \-no\-sbrm, \-\-no\-skip\-save\-brm\fR: Skip saving brm prior to running a backup \- ideal for dirty backups.  [default: no\-sbrm]
+.IP \(bu 2
+\fB\fC\-spoll, \-\-skip\-polls / \-no\-spoll, \-\-no\-skip\-polls\fR: Skip sql checks confirming no write/cpimports running.  [default: no\-spoll]
+.IP \(bu 2
+\fB\fC\-slock, \-\-skip\-locks / \-no\-slock, \-\-no\-skip\-locks\fR: Skip issuing write locks \- ideal for dirty backups.  [default: no\-slock]
+.IP \(bu 2
+\fB\fC\-smdb, \-\-skip\-mariadb\-backup / \-no\-smdb, \-\-no\-skip\-mariadb\-backup\fR: Skip running a mariadb\-backup for innodb data \- ideal for incremental dirty backups.  [default: no\-smdb]
+.IP \(bu 2
+\fB\fC\-sb, \-\-skip\-bucket\-data / \-no\-sb, \-\-no\-skip\-bucket\-data\fR: Skip taking a copy of the columnstore data in the bucket.  [default: no\-sb]
+.IP \(bu 2
+\fB\fC\-pi, \-\-poll\-interval INTEGER\fR: Number of seconds between poll checks for active writes & cpimports.  [default: 5]
+.IP \(bu 2
+\fB\fC\-pmw, \-\-poll\-max\-wait INTEGER\fR: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.  [default: 60]
+.IP \(bu 2
+\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+.IP \(bu 2
+\fB\fC\-c, \-\-compress TEXT\fR: Compress backup in X format \- Options: [ pigz ].
+.IP \(bu 2
+\fB\fC\-P, \-\-parallel INTEGER\fR: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if \[dq]\-c/\-\-compress\[dq] argument not set.  [default: 4]
+.IP \(bu 2
+\fB\fC\-nb, \-\-name\-backup TEXT\fR: Define the name of the backup \- default: $(date +%m\-%d\-%Y)  [default: 03\-06\-2025]
+.IP \(bu 2
+\fB\fC\-r, \-\-retention\-days INTEGER\fR: Retain backups created within the last X days, default 0 == keep all backups.  [default: 0]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs dbrm_backup\fR
+.PP
+Columnstore DBRM Backup.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs dbrm_backup [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-m, \-\-mode TEXT\fR: \[dq]loop\[dq] or \[dq]once\[dq] ; Determines if this script runs in a forever loop sleeping \-i minutes or just once.  [default: once]
+.IP \(bu 2
+\fB\fC\-i, \-\-interval INTEGER\fR: Number of minutes to sleep when \-\-mode=loop.  [default: 90]
+.IP \(bu 2
+\fB\fC\-r, \-\-retention\-days INTEGER\fR: Retain dbrm backups created within the last X days, the rest are deleted  [default: 7]
+.IP \(bu 2
+\fB\fC\-p, \-\-path TEXT\fR: Path of where to save the dbrm backups on disk.  [default: /tmp/dbrm_backups]
+.IP \(bu 2
+\fB\fC\-nb, \-\-name\-backup TEXT\fR: Custom name to prefex dbrm backups with.  [default: dbrm_backup]
+.IP \(bu 2
+\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+.IP \(bu 2
+\fB\fC\-ssm, \-\-skip\-storage\-manager / \-no\-ssm, \-\-no\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.  [default: no\-ssm]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs restore\fR
+.PP
+Restore Columnstore (and/or MariaDB) data.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs restore [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-l, \-\-load TEXT\fR: What date folder to load from the backup_location.
+.IP \(bu 2
+\fB\fC\-bl, \-\-backup\-location TEXT\fR: Where the backup to load is found.
+Example: /mnt/backups/  [default: /tmp/backups/]
+.IP \(bu 2
+\fB\fC\-bd, \-\-backup_destination TEXT\fR: Is this backup on the same or remote server compared to where this script is running.
+Options: \[dq]Local\[dq] or \[dq]Remote\[dq]  [default: Local]
+.IP \(bu 2
+\fB\fC\-scp, \-\-secure\-copy\-protocol TEXT\fR: Used only if \-\-backup\-destination=RemoteThe user/credentials that will be used to scp the backup files.Example: \[dq]\[la]centos@10.14.51.62\[ra]\[dq]
+.IP \(bu 2
+\fB\fC\-bb, \-\-backup\-bucket TEXT\fR: Only used if \-\-storage=S3
+Name of the bucket to store the columnstore backups.
+Example: \[dq]s3://my\-cs\-backups\[dq]
+.IP \(bu 2
+\fB\fC\-url, \-\-endpoint\-url TEXT\fR: Used by on premise S3 vendors.
+Example: \[dq]\[la]http://127.0.0.1:8000\[ra]\[dq]
+.IP \(bu 2
+\fB\fC\-s, \-\-storage TEXT\fR: What storage topogoly is being used by Columnstore \- found in /etc/columnstore/storagemanager.cnf.
+Options: \[dq]LocalStorage\[dq] or \[dq]S3\[dq]  [default: LocalStorage]
+.IP \(bu 2
+\fB\fC\-dbs, \-\-dbroots INTEGER\fR: Number of database roots in the backup.  [default: 1]
+.IP \(bu 2
+\fB\fC\-pm, \-\-nodeid TEXT\fR: Forces the handling of the restore as this node as opposed to whats detected on disk.
+.IP \(bu 2
+\fB\fC\-nb, \-\-new\-bucket TEXT\fR: Defines the new bucket to copy the s3 data to from the backup bucket. Use \-nb if the new restored cluster should use a different bucket than the backup bucket itself.
+.IP \(bu 2
+\fB\fC\-nr, \-\-new\-region TEXT\fR: Defines the region of the new bucket to copy the s3 data to from the backup bucket.
+.IP \(bu 2
+\fB\fC\-nk, \-\-new\-key TEXT\fR: Defines the aws key to connect to the new_bucket.
+.IP \(bu 2
+\fB\fC\-ns, \-\-new\-secret TEXT\fR: Defines the aws secret of the aws key to connect to the new_bucket.
+.IP \(bu 2
+\fB\fC\-ha, \-\-highavilability / \-no\-ha, \-\-no\-highavilability\fR: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)  [default: no\-ha]
+.IP \(bu 2
+\fB\fC\-cont, \-\-continue / \-no\-cont, \-\-no\-continue\fR: This acknowledges data in your \-\-new\fIbucket is ok to delete when restoring S3. When set to true skips the enforcement that new\fPbucket should be empty prior to starting a restore.  [default: no\-cont]
+.IP \(bu 2
+\fB\fC\-f, \-\-config\-file TEXT\fR: Path to backup configuration file to load variables from.
+.IP \(bu 2
+\fB\fC\-smdb, \-\-skip\-mariadb\-backup / \-no\-smdb, \-\-no\-skip\-mariadb\-backup\fR: Skip restoring mariadb server via mariadb\-backup \- ideal for only restoring columnstore.  [default: no\-smdb]
+.IP \(bu 2
+\fB\fC\-sb, \-\-skip\-bucket\-data / \-no\-sb, \-\-no\-skip\-bucket\-data\fR: Skip restoring columnstore data in the bucket \- ideal if looking to only restore mariadb server.  [default: no\-sb]
+.IP \(bu 2
+\fB\fC\-c, \-\-compress TEXT\fR: Hint that the backup is compressed in X format. Options: [ pigz ].
+.IP \(bu 2
+\fB\fC\-P, \-\-parallel INTEGER\fR: Determines number of decompression and mdbstream threads. Ignored if \[dq]\-c/\-\-compress\[dq] argument not set.  [default: 4]
+.IP \(bu 2
+\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+.IP \(bu 2
+\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl / \-v\-ssl, \-\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v\-ssl]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs dbrm_restore\fR
+.PP
+Restore Columnstore DBRM data.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs dbrm_restore [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-p, \-\-path TEXT\fR: Path of where dbrm backups stored on disk.  [default: /tmp/dbrm_backups]
+.IP \(bu 2
+\fB\fC\-d, \-\-directory TEXT\fR: Date or directory chose to restore from.
+.IP \(bu 2
+\fB\fC\-ns, \-\-no\-start\fR: Do not attempt columnstore startup post dbrm_restore.
+.IP \(bu 2
+\fB\fC\-sdbk, \-\-skip\-dbrm\-backup / \-no\-sdbk, \-\-no\-skip\-dbrm\-backup\fR: Skip backing up dbrms before restoring.  [default: sdbk]
+.IP \(bu 2
+\fB\fC\-ssm, \-\-skip\-storage\-manager / \-no\-ssm, \-\-no\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.  [default: ssm]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs help\-all\fR
+.PP
+Show help for all commands in man page style.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs help\-all [OPTIONS]
+.fi
+.RE
+.SH \fB\fCmcs status\fR
+.PP
+Get status information.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs status [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs stop\fR
+.PP
+Stop the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs stop [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-i, \-\-interactive / \-no\-i, \-\-no\-interactive\fR: Use this option on active cluster as interactive stop waits for current writes to complete in DMLProc before shutting down. Ensuring consistency, preventing data loss of active writes.  [default: no\-interactive]
+.IP \(bu 2
+\fB\fC\-t, \-\-timeout INTEGER\fR: Time in seconds to wait for DMLproc to gracefully stop.Warning: Low wait timeout values could result in data loss if the cluster is very active.In interactive mode means delay time between promts.  [default: 15]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs start\fR
+.PP
+Start the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs start [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs restart\fR
+.PP
+Restart the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs restart [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs node\fR
+.PP
+Cluster nodes management.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs node [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCadd\fR: Add nodes to the Columnstore cluster.
+.IP \(bu 2
+\fB\fCremove\fR: Remove nodes from the Columnstore cluster.
+.RE
+.SS \fB\fCmcs node add\fR
+.PP
+Add nodes to the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs node add [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs node remove\fR
+.PP
+Remove nodes from the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs node remove [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to remove several nodes at a time.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs set\fR
+.PP
+Set cluster parameters.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs set [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCmode\fR: Set Columnstore cluster mode.
+.IP \(bu 2
+\fB\fCapi\-key\fR: Set API key for communication with cluster...
+.IP \(bu 2
+\fB\fClog\-level\fR: Set logging level on all cluster nodes for...
+.RE
+.SS \fB\fCmcs set mode\fR
+.PP
+Set Columnstore cluster mode.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs set mode [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-mode TEXT\fR: cluster mode to set. \[dq]readonly\[dq] or \[dq]readwrite\[dq] are the only acceptable values.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs set api\-key\fR
+.PP
+Set API key for communication with cluster nodes via API.
+.PP
+WARNING: this command will affect API key value on all cluster nodes.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs set api\-key [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-key TEXT\fR: API key to set.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs set log\-level\fR
+.PP
+Set logging level on all cluster nodes for develop purposes.
+.PP
+WARNING: this could dramatically affect the number of log lines.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs set log\-level [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-level TEXT\fR: Logging level to set.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs cluster\fR
+.PP
+MariaDB Columnstore cluster management command line tool.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCstatus\fR: Get status information.
+.IP \(bu 2
+\fB\fCstop\fR: Stop the Columnstore cluster.
+.IP \(bu 2
+\fB\fCstart\fR: Start the Columnstore cluster.
+.IP \(bu 2
+\fB\fCrestart\fR: Restart the Columnstore cluster.
+.IP \(bu 2
+\fB\fCnode\fR: Cluster nodes management.
+.IP \(bu 2
+\fB\fCset\fR: Set cluster parameters.
+.RE
+.SS \fB\fCmcs cluster status\fR
+.PP
+Get status information.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster status [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster stop\fR
+.PP
+Stop the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster stop [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-i, \-\-interactive / \-no\-i, \-\-no\-interactive\fR: Use this option on active cluster as interactive stop waits for current writes to complete in DMLProc before shutting down. Ensuring consistency, preventing data loss of active writes.  [default: no\-interactive]
+.IP \(bu 2
+\fB\fC\-t, \-\-timeout INTEGER\fR: Time in seconds to wait for DMLproc to gracefully stop.Warning: Low wait timeout values could result in data loss if the cluster is very active.In interactive mode means delay time between promts.  [default: 15]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster start\fR
+.PP
+Start the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster start [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster restart\fR
+.PP
+Restart the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster restart [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster node\fR
+.PP
+Cluster nodes management.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster node [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCadd\fR: Add nodes to the Columnstore cluster.
+.IP \(bu 2
+\fB\fCremove\fR: Remove nodes from the Columnstore cluster.
+.RE
+.SS \fB\fCmcs cluster node add\fR
+.PP
+Add nodes to the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster node add [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster node remove\fR
+.PP
+Remove nodes from the Columnstore cluster.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster node remove [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to remove several nodes at a time.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster set\fR
+.PP
+Set cluster parameters.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster set [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCmode\fR: Set Columnstore cluster mode.
+.IP \(bu 2
+\fB\fCapi\-key\fR: Set API key for communication with cluster...
+.IP \(bu 2
+\fB\fClog\-level\fR: Set logging level on all cluster nodes for...
+.RE
+.SS \fB\fCmcs cluster set mode\fR
+.PP
+Set Columnstore cluster mode.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster set mode [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-mode TEXT\fR: cluster mode to set. \[dq]readonly\[dq] or \[dq]readwrite\[dq] are the only acceptable values.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster set api\-key\fR
+.PP
+Set API key for communication with cluster nodes via API.
+.PP
+WARNING: this command will affect API key value on all cluster nodes.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster set api\-key [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-key TEXT\fR: API key to set.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cluster set log\-level\fR
+.PP
+Set logging level on all cluster nodes for develop purposes.
+.PP
+WARNING: this could dramatically affect the number of log lines.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cluster set log\-level [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-level TEXT\fR: Logging level to set.  [required]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs cmapi\fR
+.PP
+CMAPI itself related commands.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cmapi [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCis\-ready\fR: Check CMAPI is ready to handle requests.
+.RE
+.SS \fB\fCmcs cmapi is\-ready\fR
+.PP
+Check CMAPI is ready to handle requests.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cmapi is\-ready [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-node TEXT\fR: Which node to check the CMAPI is ready to handle requests.  [default: 127.0.0.1]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
