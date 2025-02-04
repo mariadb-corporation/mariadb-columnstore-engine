@@ -48,6 +48,7 @@ SET(CMAPI_DIR "${SHARE_DIR}/cmapi")
 SET(SYSTEMD_UNIT_DIR "/usr/lib/systemd/system")
 SET(SYSTEMD_ENGINE_UNIT_NAME "mariadb-columnstore")
 SET(CMAPI_CONF_FILEPATH "${ETC_DIR}/cmapi_server.conf")
+SET(MAN_DIR "/usr/share/man/man1")
 
 STRING(TOLOWER ${CPACK_PACKAGE_NAME} SYSTEMD_UNIT_NAME)
 
@@ -65,7 +66,8 @@ INSTALL(DIRECTORY python deps mcs_node_control failover cmapi_server engine_file
             DESTINATION ${CMAPI_DIR}
             USE_SOURCE_PERMISSIONS
             PATTERN "test" EXCLUDE
-            PATTERN "cmapi_server.conf" EXCLUDE)
+            PATTERN "cmapi_server.conf" EXCLUDE
+            PATTERN "README" EXCLUDE)
 INSTALL(FILES LICENSE.GPL2 VERSION
             DESTINATION ${CMAPI_DIR})
 INSTALL(FILES check_ready.sh
@@ -87,6 +89,7 @@ INSTALL(FILES mcs_gsutil
 INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
 
 OPTION(RPM "Build an RPM" OFF)
 IF(RPM)
