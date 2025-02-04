@@ -1,4 +1,5 @@
 import logging
+import subprocess
 import sys
 
 import typer
@@ -17,13 +18,25 @@ app = typer.Typer(
         'The  MCS  Command  Line  Interface is a unified tool to manage your '
         'MCS services'
     ),
+    rich_markup_mode='rich',
 )
-app.add_typer(cluster_app.app, name='cluster')
+app.add_typer(cluster_app.app)
+# TODO: keep this only for potential backward compatibility
+app.add_typer(cluster_app.app, name='cluster', hidden=True)
 app.add_typer(cmapi_app.app, name='cmapi')
-app.command()(backup_commands.backup)
-app.command('backup-dbrm')(backup_commands.dbrm_backup)
-app.command()(restore_commands.restore)
-app.command('restore-dbrm')(restore_commands.dbrm_restore)
+app.command('backup')(backup_commands.backup)
+app.command('dbrm_backup')(backup_commands.dbrm_backup)
+app.command('restore')(restore_commands.restore)
+app.command('dbrm_restore')(restore_commands.dbrm_restore)
+
+
+@app.command(
+        name='help-all', help='Show help for all commands in man page style.',
+        add_help_option=False
+)
+def help_all():
+    # Open the man page in interactive mode
+    subprocess.run(['man', 'mcs'])
 
 
 if __name__ == '__main__':

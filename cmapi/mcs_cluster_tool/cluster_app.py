@@ -35,14 +35,14 @@ set_app = typer.Typer(help='Set cluster parameters.')
 app.add_typer(set_app, name='set')
 
 
-@app.command()
+@app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 def status():
     """Get status information."""
     return ClusterHandler.status(logger=logger)
 
 
-@app.command()
+@app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 @TransactionManager(
     timeout=timedelta(days=1).total_seconds(), handle_signals=True
@@ -161,14 +161,14 @@ def stop(
     return {'timestamp': start_time}
 
 
-@app.command()
+@app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 def start():
     """Start the Columnstore cluster."""
     return ClusterHandler.start(logger=logger)
 
 
-@app.command()
+@app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 def restart():
     """Restart the Columnstore cluster."""
@@ -180,7 +180,7 @@ def restart():
     return result
 
 
-@node_app.command()
+@node_app.command(rich_help_panel='cluster node commands')
 @handle_output
 def add(
     nodes: Optional[List[str]] = typer.Option(
@@ -199,7 +199,7 @@ def add(
     return result
 
 
-@node_app.command()
+@node_app.command(rich_help_panel='cluster node commands')
 @handle_output
 def remove(nodes: Optional[List[str]] = typer.Option(
         ...,
