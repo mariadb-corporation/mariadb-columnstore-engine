@@ -220,7 +220,7 @@ class QszMonThd
 };
 #endif
 
-#define DUMP_CACHE_CONTENTS
+// #define DUMP_CACHE_CONTENTS
 #ifdef DUMP_CACHE_CONTENTS
 void* waitForSIGUSR1(void* p)
 {

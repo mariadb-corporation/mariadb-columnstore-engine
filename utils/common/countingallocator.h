@@ -17,99 +17,217 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstdint>
-#include <limits>
-#include <memory>
 #include <atomic>
 #include <cstddef>
-#include <iostream>
-#include <utility>
+#include <cstdlib>
 
-namespace allocators 
+#include <iostream>
+
+namespace allocators
 {
 
-// const constexpr std::uint64_t CounterUpdateUnitSize = 4 * 1024 * 1024; 
-const constexpr std::int64_t MemoryLimitLowerBound = 100 * 1024 * 1024;  // WIP
+// WIP placement
+
+
+// const constexpr std::uint64_t CounterUpdateUnitSize = 4 * 1024 * 1024;
+const constexpr std::int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;  // WIP
+const constexpr std::int64_t CheckPointStepSize = 100 * 1024 * 1024;     // WIP
 
 // Custom Allocator that tracks allocated memory using an atomic counter
 template <typename T>
-class CountingAllocator {
-public:
-    using value_type = T;
+class CountingAllocator
+{
+ public:
+  using value_type = T;
 
-    // Constructor accepting a reference to an atomic counter
-    explicit CountingAllocator(std::atomic<int64_t>* memoryLimit, const uint64_t lowerBound = MemoryLimitLowerBound) noexcept
-        : memoryLimit_(memoryLimit), memoryLimitLowerBound(lowerBound) {}
+  bool needCheckPoint(const int64_t sizeChange, const int64_t diffSinceLastCheckPoint,
+                      const int64_t checkPointStepSize)
+  {
+    return std::llabs(sizeChange + diffSinceLastCheckPoint) > checkPointStepSize;
+  }
 
-    // Copy constructor (template to allow conversion between different types)
-    template <typename U>
-    CountingAllocator(const CountingAllocator<U>& other) noexcept
-        : memoryLimit_(other.memoryLimit_),  memoryLimitLowerBound(other.memoryLimitLowerBound) {}
+  int64_t int_distance(const int64_t x, const int64_t y)
+  {
+    return (x > y) ? x - y : y - x;
+  }
 
-    // Allocate memory for n objects of type T
-    template <typename U = T>
-    typename std::enable_if<!std::is_array<U>::value, U*>::type
-    allocate(std::size_t n) 
+  // INVARIANT: sizeChange > 0
+  void changeLocalAndGlobalMemoryLimits(const int64_t sizeChange)
+  {
+    // This routine must be used for mem allocation accounting path only!
+    // The case Current > last checkpoint(we deallocated mem since the last checkpoint), sizeIncrease is
+    // negative b/c we now move into the opposite direction. The case Last Checkpoint > Current (we allocated
+    // mem since the last checkpoint), sizeIncrease is positive
+    int64_t sizeChangeWDirection =
+        (currentLocalMemoryUsage_ <= lastMemoryLimitCheckpoint_) ? -sizeChange : sizeChange;
+    int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
+    if (needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_))
     {
-        auto memCounted = memoryLimit_->fetch_sub(n * sizeof(T), std::memory_order_relaxed);
-        if (memCounted < memoryLimitLowerBound) {
-            memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
-            throw std::bad_alloc();
-        }
-        
-        T* ptr = static_cast<T*>(::operator new(n * sizeof(T)));
-        // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
-        // std::cout << std::dec;
-        return ptr;
+      // std::cout << "changeLocalAndGlobalMemoryLimits " << sizeChange << " bytes at "
+      //           << " diffSinceLastCheckPoint " << diffSinceLastCheckPoint << ". current timit: " << std::dec
+      //           << memoryLimit_->load() << std::hex << " bytes.\n";
+      // std::cout << std::dec;
+
+      // auto lastMemoryLimitCheckpointDiff = diffSinceLastCheckPoint + sizeChangeWDirection;
+      int64_t lastMemoryLimitCheckpointDiff = (currentLocalMemoryUsage_ <= lastMemoryLimitCheckpoint_)
+                                                  ? sizeChange - diffSinceLastCheckPoint
+                                                  : sizeChange + diffSinceLastCheckPoint;
+      assert(lastMemoryLimitCheckpointDiff > 0);
+      // {
+      //   std::cout << "[Allocate::changeLocalAndGlobalMemoryLimits!!!] lastMemoryLimitCheckpoint_ "
+      //             << lastMemoryLimitCheckpoint_ << " currentLocalMemoryUsage_ " << currentLocalMemoryUsage_
+      //             << " sizeChangeWDirection " << sizeChangeWDirection << " lastMemoryLimitCheckpointDiff " << lastMemoryLimitCheckpointDiff
+      //             << std::endl;
+      // }
+
+      // lastMemoryLimitCheckpointDiff sign signifies a direction we move allocating memory.
+      auto currentGlobalMemoryLimit =
+          memoryLimit_->fetch_sub(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+      if (currentGlobalMemoryLimit < memoryLimitLowerBound_)
+      {
+        memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+        // ? what to do with local counters here
+        throw std::bad_alloc();
+      }
+      lastMemoryLimitCheckpoint_ += lastMemoryLimitCheckpointDiff;
     }
 
-       template <typename U = T>
-    typename std::enable_if<std::is_array<U>::value, typename std::remove_extent<U>::type*>::type
-    allocate(std::size_t n) 
+    currentLocalMemoryUsage_ += sizeChange;
+  }
+
+  // Constructor accepting a reference to an atomic counter
+  explicit CountingAllocator(std::atomic<int64_t>* memoryLimit,
+                             const uint64_t lowerBound = MemoryLimitLowerBound,
+                             const uint64_t checkPointStepSize = CheckPointStepSize) noexcept
+   : memoryLimit_(memoryLimit), memoryLimitLowerBound_(lowerBound), checkPointStepSize_(checkPointStepSize)
+  {
+  }
+
+  // Copy constructor (template to allow conversion between different types)
+  template <typename U>
+  CountingAllocator(const CountingAllocator<U>& other) noexcept
+   : memoryLimit_(other.memoryLimit_)
+   , memoryLimitLowerBound_(other.memoryLimitLowerBound_)
+   , checkPointStepSize_(other.checkPointStepSize_)
+  {
+  }
+
+  // Allocate memory for n objects of type T
+  template <typename U = T>
+  typename std::enable_if<!std::is_array<U>::value, U*>::type allocate(std::size_t n)
+  {
+    auto sizeAllocated = n * sizeof(T);
+
+    changeLocalAndGlobalMemoryLimits(sizeAllocated);
+
+    T* ptr = static_cast<T*>(::operator new(sizeAllocated));
+    // std::cout << "[Allocate] non-array " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
+    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
+    // std::cout << std::dec;
+    return ptr;
+  }
+
+  template <typename U = T>
+  typename std::enable_if<std::is_array<U>::value, typename std::remove_extent<U>::type*>::type allocate(
+      std::size_t n)
+  {
+    auto sizeAllocated = n * sizeof(T);
+
+    changeLocalAndGlobalMemoryLimits(sizeAllocated);
+
+    T ptr = static_cast<T>(::operator new[](n));
+    // std::cout << "[Allocate] array " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
+    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
+    return ptr;
+  }
+
+  // Deallocate memory for n objects of type T
+  void deallocate(T* ptr, std::size_t n) noexcept
+  {
+    ::operator delete(ptr);
+
+    int64_t sizeToDeallocate = n * sizeof(T);
+
+    // std::cout << "[Deallocate start] " << sizeToDeallocate << " bytes from " << static_cast<void*>(ptr)
+    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
+    // std::cout << std::dec;
+
+    int64_t sizeChangeWDirection =
+        (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_) ? -sizeToDeallocate : sizeToDeallocate;
+    int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
+
+    if (needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_))
     {
-        auto memCounted = memoryLimit_->fetch_sub(n * sizeof(T), std::memory_order_relaxed);
-        if (memCounted < memoryLimitLowerBound) {
-            memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
-            throw std::bad_alloc();
-        }
-        
-        T ptr = static_cast<T>(::operator new[](n));
-        // std::cout << "[Allocate] " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
-        return ptr;
+      // Invariant is lastMemoryLimitCheckpoint_ >= currentLocalMemoryUsage_ - sizeToDeallocate
+      // and lastMemoryLimitCheckpoint_ value must be negative.
+      // int64_t lastMemoryLimitCheckpointDiff =
+      //     labs(lastMemoryLimitCheckpoint_ - currentLocalMemoryUsage_ - sizeToDeallocate);
+      // auto lastMemoryLimitCheckpointDiff = diffSinceLastCheckPoint + sizeChangeWDirection;
+      int64_t lastMemoryLimitCheckpointDiff =
+          (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_)
+              ? sizeToDeallocate - (currentLocalMemoryUsage_ - lastMemoryLimitCheckpoint_)
+              : diffSinceLastCheckPoint + sizeToDeallocate;
+
+      assert(lastMemoryLimitCheckpointDiff > 0);
+
+      // std::cout << "[Deallocate checkpoint!!!] lastMemoryLimitCheckpoint_ " << lastMemoryLimitCheckpoint_
+      //           << " currentLocalMemoryUsage_ " << currentLocalMemoryUsage_ << " sizeChangeWDirection "
+      //           << sizeChangeWDirection << " lastMemoryLimitCheckpointDiff " << lastMemoryLimitCheckpointDiff
+      //           << std::endl;
+
+      // assert(lastMemoryLimitCheckpointDiff < 0);
+      memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+
+      lastMemoryLimitCheckpoint_ -= (lastMemoryLimitCheckpoint_ == 0) ? 0 : lastMemoryLimitCheckpointDiff;
     }
+    currentLocalMemoryUsage_ = currentLocalMemoryUsage_ - sizeToDeallocate;
 
-    // Deallocate memory for n objects of type T
-    void deallocate(T* ptr, std::size_t n) noexcept 
-    {
-        ::operator delete(ptr);
-        memoryLimit_->fetch_add(n * sizeof(T), std::memory_order_relaxed);
-        // std::cout << "[Deallocate] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
-        //           << ". current timit: " << std::dec << memoryLimit_.load() << std::hex << " bytes.\n";
-        // std::cout << std::dec;
-    }
+    // std::cout << "[Deallocate end] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
+    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
 
-    // Equality operators (allocators are equal if they share the same counter)
-    template <typename U>
-    bool operator==(const CountingAllocator<U>& other) const noexcept 
-    {
-        return memoryLimit_ == other.memoryLimit_;
-    }
+    // std::cout << std::dec;
+  }
 
-    template <typename U>
-    bool operator!=(const CountingAllocator<U>& other) const noexcept 
-    {
-        return !(*this == other);
-    }
+  // Equality operators (allocators are equal if they share the same counter)
+  template <typename U>
+  bool operator==(const CountingAllocator<U>& other) const noexcept
+  {
+    return memoryLimit_ == other.memoryLimit_;
+  }
 
-private:
-    std::atomic<int64_t>* memoryLimit_ = nullptr;
-    int64_t memoryLimitLowerBound = 0;
+  template <typename U>
+  bool operator!=(const CountingAllocator<U>& other) const noexcept
+  {
+    return !(*this == other);
+  }
 
-    // Grant access to other instances of CountingAllocator with different types
-    template <typename U>
-    friend class CountingAllocator;
+  int64_t getMemoryLimitLowerBound() const noexcept
+  {
+    return memoryLimitLowerBound_;
+  }
+
+  int64_t getlastMemoryLimitCheckpoint() const noexcept
+  {
+    return lastMemoryLimitCheckpoint_;
+  }
+
+  int64_t getCurrentLocalMemoryUsage() const noexcept
+  {
+    return currentLocalMemoryUsage_;
+  }
+
+ private:
+  std::atomic<int64_t>* memoryLimit_ = nullptr;
+  int64_t memoryLimitLowerBound_ = MemoryLimitLowerBound;
+  int64_t checkPointStepSize_ = CheckPointStepSize;
+  int64_t lastMemoryLimitCheckpoint_ = 0;
+  int64_t currentLocalMemoryUsage_ = 0;
+
+  // Grant access to other instances of CountingAllocator with different types
+  template <typename U>
+  friend class CountingAllocator;
 };
 
 }  // namespace allocators

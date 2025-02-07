@@ -102,7 +102,7 @@ STLPoolAllocator<T>::STLPoolAllocator(joblist::ResourceManager* rm)
   if (rm) 
   {
     auto alloc = rm->getAllocator<PoolAllocatorBufType>();
-    pa.reset(new PoolAllocator(alloc));
+    pa.reset(new PoolAllocator(alloc, DEFAULT_SIZE));
   }
   else
   {
