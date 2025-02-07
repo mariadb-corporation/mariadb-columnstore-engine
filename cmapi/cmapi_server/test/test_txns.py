@@ -10,7 +10,7 @@ from mcs_node_control.models.node_config import NodeConfig
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.unittest_global import (
-    mcs_config_filename, cmapi_config_filename, tmp_mcs_config_filename, 
+    mcs_config_filename, cmapi_config_filename, tmp_mcs_config_filename,
     tmp_cmapi_config_filename,
 )
 
@@ -115,7 +115,10 @@ class TestTransactions(unittest.TestCase):
                 node_manipulation.add_node(myaddr, mcs_config_filename, mcs_config_filename)
 
                 # Note, 1.2.3.4 is intentional -> doesn't exist, so shouldn't end up in the node list returned
-                print("\n\nNOTE!  This is expected to pause here for ~10s, this isn't an error, yet.\n")
+                print(
+                    "\n\nNOTE!  This is expected to pause here for ~10s, "
+                    "this isn't an error, yet.\n"
+                )
                 result = helpers.start_transaction(
                     cmapi_config_filename, mcs_config_filename,
                     optional_nodes = ['1.2.3.4']
@@ -123,17 +126,24 @@ class TestTransactions(unittest.TestCase):
                 self.assertTrue(result[0])
                 self.assertEqual(len(result[2]), 1)
                 self.assertEqual(result[2][0], myaddr)
-                success = helpers.broadcast_new_config(
-                    mcs_config_filename,
-                    cmapi_config_filename=cmapi_config_filename,
-                    test_mode=True,
-                    nodes = result[2]
-                )
-                # not specifying nodes here to exercise the nodes = None path
-                helpers.commit_transaction(
-                    result[1], cmapi_config_filename, mcs_config_filename
-                )
-                self.assertTrue(success)
+                try:
+                    helpers.broadcast_new_config(
+                        mcs_config_filename,
+                        cmapi_config_filename=cmapi_config_filename,
+                        test_mode=True,
+                        nodes = result[2]
+                    )
+                    # not specifying nodes here to exercise the
+                    # nodes = None path
+                    helpers.commit_transaction(
+                        result[1], cmapi_config_filename, mcs_config_filename
+                    )
+                except Exception as exc:
+                    self.fail(
+                        'Unexpected broadcast_new_config failure with error: '
+                        f'{exc}'
+                    )
+                    raise
             except:
                 cherrypy.engine.exit()
                 cherrypy.engine.block()

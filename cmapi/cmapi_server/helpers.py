@@ -4,7 +4,6 @@ TODO: remove NodeConfig usage and move to arguments (eg. nc or root)
 """
 
 import asyncio
-import concurrent
 import configparser
 import datetime
 import logging
@@ -18,6 +17,7 @@ from shutil import copyfile
 from typing import Tuple, Optional
 from urllib.parse import urlencode, urlunparse
 
+import aiohttp
 import lxml.objectify
 import requests
 
@@ -291,8 +291,8 @@ def broadcast_new_config(
     test_mode: bool = False,
     nodes: Optional[list] = None,
     timeout: Optional[int] = None
-) -> bool:
-    """Send new config to nodes. Now in async way.
+) -> None:
+    """Send new config to nodes in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
@@ -309,9 +309,8 @@ def broadcast_new_config(
     :type nodes: Optional[list], optional
     :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
                     releases. Could affect all logic of broadcacting new config
-    :type timeout: int
-    :return: success state
-    :rtype: bool
+    :type timeout: Optional[int], optional
+    :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
     # TODO: move this from multiple places to one, eg to helpers
@@ -343,72 +342,75 @@ def broadcast_new_config(
     if test_mode:
         body['test'] = True
 
-    failed_nodes = []
-    success_nodes = []
+    async def update_config(node: str, headers: dict, body: dict) -> None:
+        """Update remote node config asyncronously.
 
-    async def update_config(node, success_nodes, failed_nodes, headers, body):
+        :param node: node ip address or hostname
+        :type node: str
+        :param headers: headers for request
+        :type headers: dict
+        :param body: request body
+        :type body: dict
+        :raises CMAPIBasicError: If request failed by status code
+        :raises CMAPIBasicError: If request failed by some undefined error
+        :raises CMAPIBasicError: If request failed by timeout
+        :raises CMAPIBasicError: If undefined error happened
+        """
         url = f'https://{node}:8640/cmapi/{version}/node/config'
-        # TODO: investigate about hardcoded 120 seconds timeout
-        #       Check e1242eed47b61276ebc86136f124f6d974655515 in cmapi old
-        #       repo to get more info. Patric made it because:
-        #       "Made the timeout for a CS process restart 120s, since
-        #        the container dispatcher waits up to 60s for SM to stop"
-        request_put = partial(
-            requests.put, url, verify=False, headers=headers, json=body,
-            timeout=120
-        )
-        success = False
-        executor = concurrent.futures.ThreadPoolExecutor()
-        loop = asyncio.get_event_loop()
 
-        # TODO: remove this retry, it cause retries and long waiting time
-        #       for eg if some of mcs processes couldn't properly start/stop.
-        #       Fix error handling, could be raising error instead of returning
-        #       bool value
-        for retry in range(5):
+        async with aiohttp.ClientSession() as session:
             try:
-                r = await loop.run_in_executor(executor, request_put)
-                r.raise_for_status()
-            except requests.Timeout as e:
-                logging.warning(
-                    f'Timeout while pushing new config to "{node}"'
+                async with session.put(
+                    url, headers=headers, json=body, ssl=False, timeout=120
+                ) as response:
+                    response.raise_for_status()
+                logging.info(f'Node "{node}" config put successfull.')
+            except aiohttp.ClientResponseError as err:
+                message = (
+                    f'Node "{node}" config put failed with status: '
+                    f'"{err.status}" and message: {err.message}'
                 )
-            except requests.exceptions.RequestException as e:
-                logging.warning(
-                    'Error while pushing new config to "%s": %s"', node, str(e)
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except aiohttp.ClientError as err:
+                message = (
+                        f'Node "{node}" config put failed with ClientError: '
+                        f'{str(err)}'
+                    )
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except asyncio.TimeoutError:
+                message = f'Node "{node}" config put failed by Timeout: '
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except Exception as err:
+                message = (
+                    f'Node "{node}" config put failed by undefined exception: '
+                    f'{str(err)}'
                 )
-                logging.debug('Response: %s', r.text)
-            except Exception as e:
-                logging.warning(
-                    f'Got an unexpected error pushing new config to "{node}"',
-                    exc_info=True
-                )
-            else:
-                success_nodes.append(node)
-                success = True
-                break
-        if not success:
-            failed_nodes.append(node)
+                logging.error(message)
+                raise CMAPIBasicError(message)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     tasks = [
-        update_config(node, success_nodes, failed_nodes, headers, body)
+        update_config(node, headers, body)
         for node in nodes
     ]
-    loop.run_until_complete(asyncio.wait(tasks))
+    error_messages = []
+    results = loop.run_until_complete(
+        asyncio.gather(*tasks, return_exceptions=True)
+    )
+    for result in results:
+        if isinstance(result, Exception):
+            error_messages.append(result.message)
     loop.close()
-
-    if len(success_nodes) > 0:
-        logging.info(
-            f'Successfully pushed new config file to {success_nodes}'
+    if error_messages:
+        errors_str = ', '.join(error_messages)
+        final_message = (
+            f'Broadcasting config to nodes failed with errors: {errors_str}'
         )
-    if len(failed_nodes) > 0:
-        logging.error(
-            f'Failed to push the new config to {failed_nodes}'
-        )
-        return False
-    return True
+        raise CMAPIBasicError(final_message)
 
 
 # Might be more appropriate to put these in node_manipulation?
