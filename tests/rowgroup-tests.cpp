@@ -360,7 +360,7 @@ class RGDataTest : public ::testing::Test
 {
  protected:
   RGDataTest()
-    : allocatedMemory(MemoryAllowance), alloc(&allocatedMemory, MemoryAllowance / 100) {}
+    : allocatedMemory(MemoryAllowance) {}
   void SetUp() override
   {
     rg = setupRG({execplan::CalpontSystemCatalog::VARCHAR, execplan::CalpontSystemCatalog::UDECIMAL,
@@ -375,38 +375,38 @@ class RGDataTest : public ::testing::Test
   rowgroup::RowGroup rg;
   rowgroup::RGData rgD;
   std::atomic<int64_t> allocatedMemory{MemoryAllowance};
-  allocators::CountingAllocator<rowgroup::RGDataBufType> alloc;
 };
   // bool useStringTable = true;
 TEST_F(RGDataTest, AllocData)
 {
-    rgD = rowgroup::RGData(rg, alloc);
-    rg.setData(&rgD);
-    rg.initRow(&r);
-    rg.getRow(0, &r);
+  allocators::CountingAllocator<rowgroup::RGDataBufType> alloc(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 10000);
+  rgD = rowgroup::RGData(rg, alloc);
+  rg.setData(&rgD);
+  rg.initRow(&r);
+  rg.getRow(0, &r);
 
-    auto currentAllocation = allocatedMemory.load();
-    EXPECT_LE(currentAllocation, MemoryAllowance - rg.getMaxDataSize());
+  auto currentAllocation = allocatedMemory.load();
+  EXPECT_LE(currentAllocation, MemoryAllowance - rg.getMaxDataSize());
 
-    r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
-    EXPECT_LE(allocatedMemory.load(), currentAllocation);
+  r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
+  EXPECT_LE(allocatedMemory.load(), currentAllocation);
 
-    currentAllocation = allocatedMemory.load();
-    r.nextRow();
-    r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
-    EXPECT_EQ(allocatedMemory.load(), currentAllocation);
+  currentAllocation = allocatedMemory.load();
+  r.nextRow();
+  r.setStringField(utils::ConstString{"testaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, 0);
+  EXPECT_EQ(allocatedMemory.load(), currentAllocation);
 
-    currentAllocation = allocatedMemory.load();
-    r.nextRow();
-    std::string longString(64 * 1024 + 1000, 'a');
-    auto cs = utils::ConstString(longString);
+  currentAllocation = allocatedMemory.load();
+  r.nextRow();
+  std::string longString(64 * 1024 + 1000, 'a');
+  auto cs = utils::ConstString(longString);
 
-    r.setStringField(cs, 0);
-    EXPECT_LE(allocatedMemory.load(), currentAllocation);
+  r.setStringField(cs, 0);
+  EXPECT_LE(allocatedMemory.load(), currentAllocation);
 
-    rgD = rowgroup::RGData(rg);
+  rgD = rowgroup::RGData(rg);
 
-    EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
+  EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 
     // reinit
 }

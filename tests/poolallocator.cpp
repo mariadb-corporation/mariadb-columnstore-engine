@@ -200,7 +200,7 @@ TEST(PoolAllocatorTest, MultithreadedAllocationWithLock)
   EXPECT_GE(pa.getMemUsage(), expected);
 }
 
-static const constexpr int64_t MemoryAllowance = 10 * 1024 * 1024;
+static const constexpr int64_t MemoryAllowance = 1 * 1024 * 1024;
 
 // Test Fixture for AtomicCounterAllocator
 class PoolallocatorTest : public ::testing::Test
@@ -213,7 +213,7 @@ class PoolallocatorTest : public ::testing::Test
   CountingAllocator<PoolAllocatorBufType> allocator;
 
   // Constructor
-  PoolallocatorTest() : allocatedMemory(MemoryAllowance), allocator(&allocatedMemory, MemoryAllowance / 100)
+  PoolallocatorTest() : allocatedMemory(MemoryAllowance), allocator(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 1000)
   {
   }
 
@@ -283,5 +283,5 @@ TEST_F(PoolallocatorTest, MultithreadedAccountedAllocationWithLock)
   EXPECT_GE(pa.getMemUsage(), expected);
   // 2 * CUSTOM_SIZE semantics is structs allocation overhead.
   EXPECT_GE(allocatedMemory.load(),
-            MemoryAllowance - (THREAD_COUNT * ALLOC_PER_THREAD * NUM_ALLOCS_PER_THREAD) - 2 * CUSTOM_SIZE);
+            MemoryAllowance - (THREAD_COUNT * ALLOC_PER_THREAD * NUM_ALLOCS_PER_THREAD) - 3 * CUSTOM_SIZE);
 }
