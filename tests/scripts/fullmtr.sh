@@ -40,6 +40,12 @@ if (( $# == 2 )); then
     exit 1
 fi
 
+if (( $# == 1 )); then
+    run_suite $1
+    exit 1
+fi
+
+
 run_suite basic
 run_suite bugfixes
 run_suite setup
