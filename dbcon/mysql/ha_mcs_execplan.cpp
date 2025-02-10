@@ -3794,7 +3794,8 @@ ArithmeticColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool
     int32_t leftColWidth = leftColType.colWidth;
     int32_t rightColWidth = rightColType.colWidth;
 
-    if (leftColWidth == datatypes::MAXDECIMALWIDTH || rightColWidth == datatypes::MAXDECIMALWIDTH)
+    if ((leftColWidth == datatypes::MAXDECIMALWIDTH || rightColWidth == datatypes::MAXDECIMALWIDTH)
+        && datatypes::isDecimal(mysqlType.colDataType))
     {
       mysqlType.colWidth = datatypes::MAXDECIMALWIDTH;
 
