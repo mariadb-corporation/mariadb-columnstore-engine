@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include "boost_copy_options_compat.hpp"
 #include "LocalStorage.h"
 #include "Config.h"
 
@@ -94,7 +95,7 @@ inline void LocalStorage::addLatency()
 int LocalStorage::copy(const bf::path& source, const bf::path& dest)
 {
   boost::system::error_code err;
-  bf::copy_file(source, dest, bf::copy_option::fail_if_exists, err);
+  bf::copy_file(source, dest, bf::copy_options::none, err);
   if (err)
   {
     errno = err.value();
