@@ -760,8 +760,9 @@ void IdbOrderBy::initialize(const RowGroup& rg)
     throw IDBExcept(fErrorCode);
   }
   fMemSize += newSize;
-  fData.reinit(fRowGroup, fRowsPerRG);
-  fRowGroup.setData(&fData);
+  RGData rgdata(fRowGroup, fRowsPerRG);
+  fDataQueue.emplace(std::move(rgdata));
+  fRowGroup.setData(&fDataQueue.back());
   fRowGroup.resetRowGroup(0);
   fRowGroup.initRow(&fRow0);
   fRowGroup.getRow(0, &fRow0);

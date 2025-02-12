@@ -769,32 +769,31 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
     // the RID is no meaning here, use it to store the estimated length.
     int16_t estLen = lengthEstimate(fRow0);
     fRow0.setRid(estLen);
-    OrderByRow newRow(fRow0, fRule);
+    OrderByRow newRow(fRow0, getCurrentRowPos(), fRule);
     fOrderByQueue.push(newRow);
     fCurrentLength += estLen;
 
     // add to the distinct map
     if (fDistinct)
-      fDistinctMap->insert(fRow0.getPointer());
+      fDistinctMap->emplace(fRow0.getPointer(), getCurrentRowPos());
 
     fRowGroup.incRowCount();
     fRow0.nextRow();
 
     if (fRowGroup.getRowCount() >= fRowsPerRG)
     {
-      fDataQueue.push(fData);
-
       uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-      if (!fRm->getMemory(newSize, fSessionMemLimit))
+      if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
       {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
       }
       fMemSize += newSize;
 
-      fData.reinit(fRowGroup, fRowsPerRG);
-      fRowGroup.setData(&fData);
+      RGData rgdata(fRowGroup, fRowsPerRG);
+      fDataQueue.emplace(std::move(rgdata));
+      fRowGroup.setData(&fDataQueue.back());
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow0);
     }
@@ -817,7 +816,7 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
       // only the copyRow does useful work here
       fDistinctMap->erase(swapRow.fData);
       copyRow(row, &fRow2);
-      fDistinctMap->insert(swapRow.fData);
+      fDistinctMap->emplace(swapRow.fData, swapRow.fPos);
     }
 
     int16_t estLen = lengthEstimate(fRow2);
@@ -832,9 +831,21 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
 {
   JsonArrayAggOrderBy* go = dynamic_cast<JsonArrayAggOrderBy*>(gc);
 
+  size_t mySz = fDataQueue.size();
+  while (!go->fDataQueue.empty()) {
+    fDataQueue.emplace(std::move(go->fDataQueue.front()));
+    go->fDataQueue.pop();
+  }
+
   while (go->fOrderByQueue.empty() == false)
   {
-    const OrderByRow& row = go->fOrderByQueue.top();
+    OrderByRow row = go->fOrderByQueue.top();
+    uint64_t new_rgid = (row.fPos >> 16) + mySz;
+    row.fPos = (new_rgid << 16) + (row.fPos & 0xffff);
+    fRowGroup.setData(&fDataQueue[new_rgid]);
+    Row tmp_row;
+    fRowGroup.getRow(row.fPos & 0xffff, &tmp_row);
+    row.fData = tmp_row.getPointer();
 
     // check if the distinct row already exists
     if (fDistinct && fDistinctMap->find(row.fData) != fDistinctMap->end())
@@ -851,7 +862,7 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
 
       // add to the distinct map
       if (fDistinct)
-        fDistinctMap->insert(row.fData);
+        fDistinctMap->emplace(row.fData, row.fPos);
     }
 
     else if (fOrderByCond.size() > 0 && fRule.less(row.fData, fOrderByQueue.top().fData))
@@ -864,7 +875,7 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
       if (fDistinct)
       {
         fDistinctMap->erase(swapRow.fData);
-        fDistinctMap->insert(row.fData);
+        fDistinctMap->emplace(row.fData, row.fPos);
       }
 
       row1.setData(row.fData);
@@ -931,6 +942,10 @@ const string JsonArrayAggOrderBy::toString() const
   return (baseStr + oss.str());
 }
 
+uint64_t JsonArrayAggOrderBy::getCurrentRowPos() const {
+  return ((fDataQueue.size() - 1) << 16) + fRowGroup.getRowCount() - 1;
+}
+
 JsonArrayAggNoOrder::JsonArrayAggNoOrder()
  : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
 {
@@ -959,15 +974,16 @@ void JsonArrayAggNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-  if (!fRm->getMemory(newSize, fSessionMemLimit))
+  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
   {
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
     throw IDBExcept(fErrorCode);
   }
   fMemSize += newSize;
 
-  fData.reinit(fRowGroup, fRowsPerRG);
-  fRowGroup.setData(&fData);
+  RGData rgdata(fRowGroup, fRowsPerRG);
+  fDataQueue.emplace(std::move(rgdata));
+  fRowGroup.setData(&fDataQueue.back());
   fRowGroup.resetRowGroup(0);
   fRowGroup.initRow(&fRow);
   fRowGroup.getRow(0, &fRow);
@@ -998,9 +1014,9 @@ void JsonArrayAggNoOrder::processRow(const rowgroup::Row& row)
       }
       fMemSize += newSize;
 
-      fDataQueue.push(fData);
-      fData.reinit(fRowGroup, fRowsPerRG);
-      fRowGroup.setData(&fData);
+      RGData rgdata(fRowGroup, fRowsPerRG);
+      fDataQueue.emplace(std::move(rgdata));
+      fRowGroup.setData(&fDataQueue.back());
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow);
     }
@@ -1017,7 +1033,7 @@ void JsonArrayAggNoOrder::merge(GroupConcator* gc)
     in->fDataQueue.pop();
   }
 
-  fDataQueue.push(in->fData);
+  fRowGroup.setData(&fDataQueue.back());
   fMemSize += in->fMemSize;
   in->fMemSize = 0;
 }
@@ -1029,7 +1045,6 @@ uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
   if (fRowGroup.getRowCount() > 0)
   {
     oss << '[';
-    fDataQueue.push(fData);
 
     while (fDataQueue.size() > 0)
     {
@@ -1046,8 +1061,6 @@ uint8_t* JsonArrayAggNoOrder::getResultImpl(const string&)
         outputRow(oss, fRow);
         fRow.nextRow();
       }
-
-      fDataQueue.pop();
     }
     oss << ']';
   }

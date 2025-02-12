@@ -48,7 +48,8 @@ class GroupConcatInfo
   virtual ~GroupConcatInfo();
 
   void prepGroupConcat(JobInfo&);
-  void mapColumns(const rowgroup::RowGroup&);
+
+  virtual void mapColumns(const rowgroup::RowGroup&);
 
   std::set<uint32_t>& columns()
   {
@@ -59,11 +60,12 @@ class GroupConcatInfo
     return fGroupConcat;
   }
 
-  const std::string toString() const;
+  virtual const std::string toString() const;
 
  protected:
-  uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  virtual uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
+
+  virtual std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
 
   std::set<uint32_t> fColumns;
   std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
@@ -72,22 +74,27 @@ class GroupConcatInfo
 class GroupConcatAgUM : public rowgroup::GroupConcatAg
 {
  public:
-  EXPORT GroupConcatAgUM(rowgroup::SP_GroupConcat&);
-  EXPORT ~GroupConcatAgUM();
+  EXPORT explicit GroupConcatAgUM(rowgroup::SP_GroupConcat&);
+  EXPORT ~GroupConcatAgUM() override;
 
   using rowgroup::GroupConcatAg::merge;
-  void initialize();
-  void processRow(const rowgroup::Row&);
-  EXPORT void merge(const rowgroup::Row&, int64_t);
+  void initialize() override;
+  void processRow(const rowgroup::Row&) override;
+  EXPORT void merge(const rowgroup::Row&, uint64_t) override;
   boost::scoped_ptr<GroupConcator>& concator()
   {
     return fConcator;
   }
 
-  EXPORT uint8_t* getResult();
+  EXPORT uint8_t* getResult() override;
+
+  void serialize(messageqcpp::ByteStream &) const override;
+  void deserialize(messageqcpp::ByteStream &, std::span<rowgroup::SP_GroupConcat>) override;
+
+  size_t getDataSize() const override;
 
  protected:
-  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
+  virtual void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 
   boost::scoped_ptr<GroupConcator> fConcator;
   boost::scoped_array<uint8_t> fData;
@@ -112,7 +119,13 @@ class GroupConcator
   virtual uint8_t* getResult(const std::string& sep);
   uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull);
 
+  virtual void serialize(messageqcpp::ByteStream &) const;
+  virtual void deserialize(messageqcpp::ByteStream &, std::span<rowgroup::SP_GroupConcat> groupConcats);
+
   virtual const std::string toString() const;
+  virtual rowgroup::RGDataSizeType getDataSize() const {
+   return sizeof(*this);
+  }
 
  protected:
   virtual bool concatColIsNull(const rowgroup::Row&);
@@ -128,28 +141,35 @@ class GroupConcator
   long fTimeZone;
 };
 
-// For GROUP_CONCAT withour distinct or orderby
+// For GROUP_CONCAT without distinct or orderby
 class GroupConcatNoOrder : public GroupConcator
 {
  public:
   GroupConcatNoOrder();
-  virtual ~GroupConcatNoOrder();
 
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
+  ~GroupConcatNoOrder() override;
 
-  void merge(GroupConcator*);
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
+
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
   //uint8_t* getResult(const std::string& sep);
+  void serialize(messageqcpp::ByteStream &) const override;
+  void deserialize(messageqcpp::ByteStream &, span<rowgroup::SP_GroupConcat> groupConcats) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
+  rowgroup::RGDataSizeType getDataSize() const override
+  {
+    return GroupConcator::getDataSize() + fRowGroup.getSizeWithStrings() + fMemSize;
+  }
 
  protected:
   rowgroup::RowGroup fRowGroup;
   rowgroup::Row fRow;
-  rowgroup::RGData fData;
-  std::queue<rowgroup::RGData> fDataQueue;
+  //rowgroup::RGData fData;
+  ordering::iterableQueue<rowgroup::RGData> fDataQueue;
   uint64_t fRowsPerRG;
   uint64_t fErrorCode;
   uint64_t fMemSize;
@@ -163,21 +183,28 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
 {
  public:
   GroupConcatOrderBy();
-  virtual ~GroupConcatOrderBy();
+
+  ~GroupConcatOrderBy() override;
 
   using ordering::IdbOrderBy::initialize;
-  void initialize(const rowgroup::SP_GroupConcat&);
-  void processRow(const rowgroup::Row&);
-  uint64_t getKeyLength() const;
+  void initialize(const rowgroup::SP_GroupConcat&) override;
+  void processRow(const rowgroup::Row&) override;
+  uint64_t getKeyLength() const override;
 
-  void merge(GroupConcator*);
+  void merge(GroupConcator*) override;
   using GroupConcator::getResult;
-  uint8_t* getResultImpl(const std::string& sep);
+  uint8_t* getResultImpl(const std::string& sep) override;
   //uint8_t* getResult(const std::string& sep);
 
-  const std::string toString() const;
-
+  const std::string toString() const override;
+  void serialize(messageqcpp::ByteStream &) const override;
+  void deserialize(messageqcpp::ByteStream &, span<rowgroup::SP_GroupConcat> groupConcats) override;
+  rowgroup::RGDataSizeType getDataSize() const override
+  {
+    return GroupConcator::getDataSize() + fRowGroup.getSizeWithStrings() + fMemSize;
+  }
  protected:
+  uint64_t getCurrentRowPos() const;
 };
 
 }  // namespace joblist

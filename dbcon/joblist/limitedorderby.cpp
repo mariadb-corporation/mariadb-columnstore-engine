@@ -113,7 +113,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
   if (fOrderByQueue.size() < fStart + fCount)
   {
     copyRow(row, &fRow0);
-    OrderByRow newRow(fRow0, fRule);
+    OrderByRow newRow(fRow0, 0, fRule);
     fOrderByQueue.push(newRow);
 
     uint64_t memSizeInc = sizeof(newRow);
@@ -131,14 +131,13 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
 
     // add to the distinct map
     if (fDistinct)
-      fDistinctMap->insert(fRow0.getPointer());
+      fDistinctMap->emplace(fRow0.getPointer(), 0);
 
     fRowGroup.incRowCount();
     fRow0.nextRow();
 
     if (fRowGroup.getRowCount() >= fRowsPerRG)
     {
-      fDataQueue.push(fData);
       uint64_t newSize = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
 
       if (!fRm->getMemory(newSize, fSessionMemLimit))
@@ -148,8 +147,9 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
       }
       fMemSize += newSize;
 
-      fData.reinit(fRowGroup, fRowsPerRG);
-      fRowGroup.setData(&fData);
+      RGData rgdata(fRowGroup, fRowsPerRG);
+      fDataQueue.emplace(std::move(rgdata));
+      fRowGroup.setData(&fDataQueue.back());
       fRowGroup.resetRowGroup(0);
       fRowGroup.getRow(0, &fRow0);
     }
@@ -164,7 +164,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     if (fDistinct)
     {
       fDistinctMap->erase(fOrderByQueue.top().fData);
-      fDistinctMap->insert(row1.getPointer());
+      fDistinctMap->emplace(row1.getPointer(), 0);
     }
 
     fOrderByQueue.pop();
@@ -190,9 +190,11 @@ void LimitedOrderBy::finalize()
     fUncommitedMemory = 0;
   }
 
-  queue<RGData> tempQueue;
+  iterableQueue<RGData> tempQueue;
+#if 0 // FIXME kemm
   if (fRowGroup.getRowCount() > 0)
     fDataQueue.push(fData);
+#endif
 
   if (fOrderByQueue.size() > 0)
   {
@@ -231,8 +233,9 @@ void LimitedOrderBy::finalize()
     i = 0;
     uint32_t rSize = fRow0.getSize();
     uint64_t preLastRowNumb = fRowsPerRG - 1;
-    fData.reinit(fRowGroup, fRowsPerRG);
-    fRowGroup.setData(&fData);
+    RGData rgdata(fRowGroup, fRowsPerRG);
+    fDataQueue.emplace(std::move(rgdata));
+    fRowGroup.setData(&fDataQueue.back());
     fRowGroup.resetRowGroup(0);
     // *DRRTUY This approach won't work with
     // OFSET > fRowsPerRG
@@ -252,7 +255,7 @@ void LimitedOrderBy::finalize()
       // if RG has fRowsPerRG rows
       if (offset == (uint64_t)-1)
       {
-        tempRGDataList.push_front(fData);
+        tempRGDataList.push_front(fDataQueue.back());
 
         if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
         {
@@ -261,8 +264,9 @@ void LimitedOrderBy::finalize()
         }
         fMemSize += memSizeInc;
 
-        fData.reinit(fRowGroup, fRowsPerRG);
-        fRowGroup.setData(&fData);
+        RGData rgdata(fRowGroup, fRowsPerRG);
+        fDataQueue.emplace(std::move(rgdata));
+        fRowGroup.setData(&fDataQueue.back());
         fRowGroup.resetRowGroup(0);  // ?
         fRowGroup.getRow(preLastRowNumb, &fRow0);
         offset = preLastRowNumb;
@@ -270,7 +274,7 @@ void LimitedOrderBy::finalize()
     }
     // Push the last/only group into the queue.
     if (fRowGroup.getRowCount() > 0)
-      tempRGDataList.push_front(fData);
+      tempRGDataList.push_front(fDataQueue.back());
 
     for (tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
       tempQueue.push(*tempListIter);

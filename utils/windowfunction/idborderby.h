@@ -29,7 +29,7 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include <tr1/unordered_set>
+#include <unordered_map>
 
 #include "rowgroup.h"
 #include "hasher.h"
@@ -48,7 +48,9 @@ template <typename _Tp, typename _Sequence = std::vector<_Tp>,
 class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 {
  public:
-  typedef typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type size_type;
+  using base_type = std::priority_queue<_Tp, _Sequence, _Compare>;
+  using size_type = typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type;
+  using value_type = typename std::priority_queue<_Tp, _Sequence, _Compare>::value_type;
   reservablePQ(size_type capacity = 0)
   {
     reserve(capacity);
@@ -61,11 +63,51 @@ class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
   {
     return this->c.capacity();
   }
+
+  typename base_type::container_type::const_iterator begin() const {
+      return this->c.begin();
+  }
+  typename base_type::container_type::const_iterator end() const {
+      return this->c.end();
+  }
+  const value_type& operator[](size_type i) const {
+      return this->c.at(i);
+  }
   using std::priority_queue<_Tp, _Sequence, _Compare>::size;
   using std::priority_queue<_Tp, _Sequence, _Compare>::top;
   using std::priority_queue<_Tp, _Sequence, _Compare>::pop;
   using std::priority_queue<_Tp, _Sequence, _Compare>::push;
+  using std::priority_queue<_Tp, _Sequence, _Compare>::emplace;
   using std::priority_queue<_Tp, _Sequence, _Compare>::empty;
+};
+
+template<typename _Tp, typename _Container = std::deque<_Tp>>
+class iterableQueue: private std::queue<_Tp, _Container> {
+public:
+    using base_type = std::queue<_Tp, _Container>;
+    using size_type = typename std::queue<_Tp, _Container>::size_type;
+    using value_type = typename std::queue<_Tp, _Container>::value_type;
+
+    typename base_type::container_type::const_iterator begin() const {
+        return this->c.begin();
+    }
+    typename base_type::container_type::const_iterator end() const {
+        return this->c.end();
+    }
+    const value_type& operator[](size_type i) const {
+        return this->c.at(i);
+    }
+    value_type& operator[](size_type i) {
+        return this->c.at(i);
+    }
+    using std::queue<_Tp, _Container>::size;
+    using std::queue<_Tp, _Container>::empty;
+    using std::queue<_Tp, _Container>::front;
+    using std::queue<_Tp, _Container>::back;
+    using std::queue<_Tp, _Container>::pop;
+    using std::queue<_Tp, _Container>::push;
+    using std::queue<_Tp, _Container>::emplace;
+    using std::queue<_Tp, _Container>::swap;
 };
 
 // forward reference
@@ -346,7 +388,7 @@ class IdbCompare
 class OrderByRow
 {
  public:
-  OrderByRow(const rowgroup::Row& r, CompareRule& c) : fData(r.getPointer()), fRule(&c)
+  OrderByRow(const rowgroup::Row& r, uint64_t pos, CompareRule& c) : fData(r.getPointer()), fPos(pos), fRule(&c)
   {
   }
 
@@ -356,6 +398,7 @@ class OrderByRow
   }
 
   rowgroup::Row::Pointer fData;
+  uint64_t fPos;
   CompareRule* fRule;
 };
 
@@ -434,8 +477,7 @@ class IdbOrderBy : public IdbCompare
   rowgroup::Row fRow0;
   CompareRule fRule;
 
-  rowgroup::RGData fData;
-  std::queue<rowgroup::RGData> fDataQueue;
+  iterableQueue<rowgroup::RGData> fDataQueue;
 
   struct Hasher
   {
@@ -457,8 +499,8 @@ class IdbOrderBy : public IdbCompare
     bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
   };
 
-  typedef std::tr1::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
-                                  utils::STLPoolAllocator<rowgroup::Row::Pointer> >
+  typedef std::unordered_map<rowgroup::Row::Pointer, uint64_t /* FIXME kemm */, Hasher, Eq,
+                                  utils::STLPoolAllocator<std::pair<const rowgroup::Row::Pointer, uint64_t>>>
       DistinctMap_t;
   boost::scoped_ptr<DistinctMap_t> fDistinctMap;
   rowgroup::Row row1, row2;  // scratch space for Hasher & Eq
