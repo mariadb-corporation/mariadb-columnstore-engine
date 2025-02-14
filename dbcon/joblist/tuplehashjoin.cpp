@@ -207,60 +207,6 @@ void TupleHashJoinStep::join()
   }
 }
 
-// simple sol'n.  Poll mem usage of Joiner once per second.  Request mem
-// increase after the fact.  Failure to get mem will be detected and handled by
-// the threads inserting into Joiner.
-void TupleHashJoinStep::trackMem(uint index)
-{
-  auto joiner = joiners[index];
-  ssize_t memBefore = 0, memAfter = 0;
-  bool gotMem;
-
-  boost::unique_lock<boost::mutex> scoped(memTrackMutex);
-  while (!stopMemTracking)
-  {
-    memAfter = joiner->getMemUsage();
-    if (memAfter != memBefore)
-    {
-      gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
-      if (gotMem)
-        atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-      else
-        return;
-
-      memBefore = memAfter;
-    }
-    memTrackDone.timed_wait(scoped, boost::posix_time::seconds(1));
-  }
-
-  // one more iteration to capture mem usage since last poll, for this one
-  // raise an error if mem went over the limit
-  memAfter = joiner->getMemUsage();
-  if (memAfter == memBefore)
-    return;
-  gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
-  if (gotMem)
-  {
-    atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-  }
-  else
-  {
-    if (!joinIsTooBig &&
-        (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
-    {
-      joinIsTooBig = true;
-      ostringstream oss;
-      oss << "(" << __LINE__ << ") "
-          << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-      fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-      errorMessage(oss.str());
-      status(logging::ERR_JOIN_TOO_BIG);
-      cout << "Join is too big, raise the UM join limit for now (monitor thread)" << endl;
-      abort();
-    }
-  }
-}
-
 void TupleHashJoinStep::startSmallRunners(uint index)
 {
   utils::setThreadName("HJSStartSmall");
@@ -302,7 +248,6 @@ void TupleHashJoinStep::startSmallRunners(uint index)
 
   stopMemTracking = false;
   utils::VLArray<uint64_t> jobs(numCores);
-  // uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
   // starting 1 thread when in PM mode, since it's only inserting into a
   // vector of rows.  The rest will be started when converted to UM mode.
   if (joiners[index]->inUM())

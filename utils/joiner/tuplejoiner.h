@@ -204,6 +204,9 @@ class TypelessDataStructure
   }
 };
 
+using RowPointersVec =
+    std::vector<rowgroup::Row::Pointer, allocators::CountingAllocator<rowgroup::Row::Pointer>>;
+using RowPointersVecUP = std::unique_ptr<RowPointersVec>;
 class TupleJoiner
 {
  public:
@@ -268,20 +271,12 @@ class TupleJoiner
   };
 
   /* ctor to use for numeric join */
-  // TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
-  //             uint32_t smallJoinColumn, uint32_t largeJoinColumn, joblist::JoinType jt,
-  //             threadpool::ThreadPool* jsThreadPool);
-
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               uint32_t smallJoinColumn, uint32_t largeJoinColumn, joblist::JoinType jt,
               threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm, const uint64_t numCores);
 
   /* ctor to use for string & compound join */
-  // TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
-  //             const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
-  //             joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool);
-
-    TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
+  TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
               joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm, const uint64_t numCores);
 
@@ -333,9 +328,9 @@ class TupleJoiner
   void setThreadCount(uint32_t cnt);
   void setPMJoinResults(std::shared_ptr<std::vector<uint32_t>[]>, uint32_t threadID);
   std::shared_ptr<std::vector<uint32_t>[]> getPMJoinArrays(uint32_t threadID);
-  std::vector<rowgroup::Row::Pointer>* getSmallSide()
+  RowPointersVec& getSmallSide()
   {
-    return &rows;
+    return *rows;
   }
   inline bool smallOuterJoin()
   {
@@ -381,8 +376,6 @@ class TupleJoiner
   /* To allow sorting */
   bool operator<(const TupleJoiner&) const;
 
-  uint64_t getMemUsage() const;
-
   /* Typeless join interface */
   inline bool isTypelessJoin()
   {
@@ -410,7 +403,7 @@ class TupleJoiner
   {
     return discreteValues;
   }
-  inline const boost::scoped_array<std::vector<int128_t> >& getCPData()
+  inline const boost::scoped_array<std::vector<int128_t>>& getCPData()
   {
     return cpValues;
   }
@@ -478,37 +471,22 @@ class TupleJoiner
   }
 
  private:
-    // typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
-    //                                 utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*> > >
-    //     hash_t;
-    // typedef std::unordered_multimap<int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-    //                                 utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
-    //     sthash_t;
-    // typedef std::unordered_multimap<
-    //     TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
-    //     utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > >
-    //     typelesshash_t;
-    // // MCOL-1822 Add support for Long Double AVG/SUM small side
-    // typedef std::unordered_multimap<
-    //     long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
-    //     utils::STLPoolAllocator<std::pair<const long double, rowgroup::Row::Pointer> > >
-    //     ldhash_t;
-
-    typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
-                                    allocators::CountingAllocator<std::pair<const int64_t, uint8_t*> > >
-        hash_t;
-    typedef std::unordered_multimap<int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-                                    allocators::CountingAllocator<std::pair<const int64_t, rowgroup::Row::Pointer> > >
-        sthash_t;
-    typedef std::unordered_multimap<
-        TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
-        allocators::CountingAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer> > >
-        typelesshash_t;
-    // MCOL-1822 Add support for Long Double AVG/SUM small side
-    typedef std::unordered_multimap<
-        long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
-        allocators::CountingAllocator<std::pair<const long double, rowgroup::Row::Pointer> > >
-        ldhash_t;
+  typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
+                                  allocators::CountingAllocator<std::pair<const int64_t, uint8_t*>>>
+      hash_t;
+  typedef std::unordered_multimap<
+      int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
+      allocators::CountingAllocator<std::pair<const int64_t, rowgroup::Row::Pointer>>>
+      sthash_t;
+  typedef std::unordered_multimap<
+      TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
+      allocators::CountingAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer>>>
+      typelesshash_t;
+  // MCOL-1822 Add support for Long Double AVG/SUM small side
+  typedef std::unordered_multimap<
+      long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
+      allocators::CountingAllocator<std::pair<const long double, rowgroup::Row::Pointer>>>
+      ldhash_t;
 
   typedef hash_t::iterator iterator;
   typedef typelesshash_t::iterator thIterator;
@@ -521,11 +499,11 @@ class TupleJoiner
 
   rowgroup::RGData smallNullMemory;
 
-  boost::scoped_array<boost::scoped_ptr<hash_t> > h;  // used for UM joins on ints
-  boost::scoped_array<boost::scoped_ptr<sthash_t> >
+  std::vector<std::unique_ptr<hash_t>> h;  // used for UM joins on ints
+  std::vector<std::unique_ptr<sthash_t>>
       sth;  // used for UM join on ints where the backing table uses a string table
-  boost::scoped_array<boost::scoped_ptr<ldhash_t> > ld;  // used for UM join on long double
-  std::vector<rowgroup::Row::Pointer> rows;              // used for PM join
+  std::vector<std::unique_ptr<ldhash_t>> ld;  // used for UM join on long double
+  RowPointersVecUP rows;                      // used for PM join
 
   /* This struct is rough.  The BPP-JL stores the parsed results for
   the logical block being processed.  There are X threads at once, so
@@ -546,18 +524,16 @@ class TupleJoiner
   };
   JoinAlg joinAlg;
   joblist::JoinType joinType;
-  // WIP
-  std::shared_ptr<boost::shared_ptr<utils::PoolAllocator>[]> _pool;  // pools for the table and nodes
   uint32_t threadCount;
   std::string tableName;
 
   /* vars, & fcns for typeless join */
   bool typelessJoin;
   std::vector<uint32_t> smallKeyColumns, largeKeyColumns;
-  boost::scoped_array<boost::scoped_ptr<typelesshash_t> > ht;  // used for UM join on strings
+  std::vector<std::unique_ptr<typelesshash_t>> ht;  // used for UM join on strings
   uint32_t keyLength;
-  boost::scoped_array<utils::FixedAllocator> storedKeyAlloc;
-  boost::scoped_array<utils::FixedAllocator> tmpKeyAlloc;
+  std::vector<utils::FixedAllocator> storedKeyAlloc;
+  std::vector<utils::FixedAllocator> tmpKeyAlloc;
   bool bSignedUnsignedJoin;  // Set if we have a signed vs unsigned compare in a join. When not set, we can
                              // save checking for the signed bit.
 
@@ -571,7 +547,7 @@ class TupleJoiner
   /* Runtime casual partitioning support */
   void updateCPData(const rowgroup::Row& r);
   boost::scoped_array<bool> discreteValues;
-  boost::scoped_array<std::vector<int128_t> > cpValues;  // if !discreteValues, [0] has min, [1] has max
+  boost::scoped_array<std::vector<int128_t>> cpValues;  // if !discreteValues, [0] has min, [1] has max
   uint32_t uniqueLimit;
   bool finished;
 
@@ -590,7 +566,7 @@ class TupleJoiner
   void um_insertStringTable(uint rowcount, rowgroup::Row& r);
 
   template <typename buckets_t, typename hash_table_t>
-  void bucketsToTables(buckets_t*, hash_table_t*);
+  void bucketsToTables(buckets_t*, hash_table_t&);
 
   bool _convertToDiskJoin;
   joblist::ResourceManager* resourceManager_ = nullptr;

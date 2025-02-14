@@ -117,12 +117,6 @@ STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<T>& s) throw()
 }
 
 template <class T>
-STLPoolAllocator<T>::STLPoolAllocator(uint32_t capacity) throw()
-{
-  pa.reset(new PoolAllocator(capacity));
-}
-
-template <class T>
 template <class U>
 STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<U>& s) throw()
 {
@@ -132,17 +126,6 @@ STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<U>& s) throw()
 template <class T>
 STLPoolAllocator<T>::~STLPoolAllocator()
 {
-}
-
-template <class T>
-void STLPoolAllocator<T>::usePoolAllocator(boost::shared_ptr<PoolAllocator> p)
-{
-  pa = p;
-}
-template <class T>
-boost::shared_ptr<utils::PoolAllocator> STLPoolAllocator<T>::getPoolAllocator()
-{
-  return pa;
 }
 
 template <class T>

@@ -42,6 +42,7 @@ FixedAllocator::FixedAllocator(const FixedAllocator& f)
   currentlyStored = 0;
   useLock = f.useLock;
   lock = false;
+  alloc = f.alloc;
 }
 
 FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
@@ -51,6 +52,7 @@ FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
   tmpSpace = f.tmpSpace;
   useLock = f.useLock;
   lock = false;
+  alloc = f.alloc;
   deallocateAll();
   return *this;
 }

@@ -1397,7 +1397,7 @@ bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
   for (i = 0; i < PMJoinerCount; i++)
   {
     joinerNum = (joinerNum + 1) % PMJoinerCount;
-    if (posByJoinerNum[joinerNum] != tJoiners[joinerNum]->getSmallSide()->size())
+    if (posByJoinerNum[joinerNum] != tJoiners[joinerNum]->getSmallSide().size())
       break;
   }
   if (i == PMJoinerCount)
@@ -1410,10 +1410,9 @@ bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
 /* XXXPAT: Going to interleave across joiners to take advantage of the new locking env in PrimProc */
 bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 {
-  uint32_t size = 0, toSend, i, j;
+  uint32_t toSend, i, j;
   ISMPacketHeader ism;
   Row r;
-  vector<Row::Pointer>* tSmallSide;
   joiner::TypelessData tlData;
   uint32_t smallKeyCol;
   uint32_t largeKeyCol;
@@ -1436,8 +1435,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
   }
 
   memset((void*)&ism, 0, sizeof(ism));
-  tSmallSide = tJoiners[joinerNum]->getSmallSide();
-  size = tSmallSide->size();
+  auto& tSmallSide = tJoiners[joinerNum]->getSmallSide();
+  auto size = tSmallSide.size();
 
 #if 0
     if (joinerNum == PMJoinerCount - 1 && pos == size)
@@ -1487,7 +1486,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
     for (i = pos; i < pos + toSend; i++)
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
       isNull = false;
       bSignedUnsigned = tJoiners[joinerNum]->isSignedUnsignedJoin();
 
@@ -1554,7 +1553,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
     for (i = pos, j = 0; i < pos + toSend; ++i, ++j)
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
 
       if (r.getColType(smallKeyCol) == CalpontSystemCatalog::LONGDOUBLE)
       {
@@ -1627,7 +1626,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
     for (i = pos; i < pos + toSend; i++, tmpRow.nextRow())
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
       copyRow(r, &tmpRow);
     }
 
