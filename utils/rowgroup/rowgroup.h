@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019 MariaDB Corporation
+   Copyright (c) 2016-2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -131,10 +131,6 @@ inline T derefFromTwoVectorPtrs(const std::vector<T>* outer, const std::vector<T
   auto outerIdx = inner->operator[](innerIdx);
   return outer->operator[](outerIdx);
 }
-
-// using RGDataBufType = uint8_t[];
-// using StringStoreBufType = uint8_t[];
-// using StringStoreBufSPType = boost::shared_ptr<uint8_t[]>;
 
 class StringStore
 {
@@ -1043,7 +1039,6 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
 
   if (inStringTable(colIndex))
   {
-    // std::cout << "setStringField storeString len " << length << std::endl; 
     offset = strings->storeString((const uint8_t*)str.str(), length);
     *((uint64_t*)&data[offsets[colIndex]]) = offset;
     //		cout << " -- stored offset " << *((uint32_t *) &data[offsets[colIndex]])
@@ -1912,7 +1907,7 @@ inline uint32_t RowGroup::getStringTableThreshold() const
   return sTableThreshold;
 }
 
-// WIP mb unused
+// TODO This is unused, so rm this in the dev branch.
 inline void RowGroup::setStringStore(boost::shared_ptr<StringStore> ss)
 {
   if (useStringTable)

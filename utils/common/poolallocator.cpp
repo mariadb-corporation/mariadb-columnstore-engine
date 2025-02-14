@@ -20,7 +20,6 @@
  *
  ******************************************************************************************/
 
-#include <iostream>
 //#define NDEBUG
 #include <cassert>
 #include <boost/smart_ptr/allocate_shared_array.hpp>
@@ -48,15 +47,12 @@ void PoolAllocator::deallocateAll()
   capacityRemaining = 0;
   nextAlloc = NULL;
   memUsage = 0;
-  // WIP double check the space is cleaned up.
   mem.clear();
   oob.clear();
 }
 
 void PoolAllocator::newBlock()
 {
-  // boost::shared_ptr<PoolAllocatorBufType[]> next;
-
   capacityRemaining = allocSize;
 
   if (!tmpSpace || mem.size() == 0)
@@ -69,7 +65,6 @@ void PoolAllocator::newBlock()
     {
       mem.emplace_back(boost::make_shared<PoolAllocatorBufType>(allocSize));
     }
-    // mem.push_back(next);
     nextAlloc = mem.back().get();
   }
   else

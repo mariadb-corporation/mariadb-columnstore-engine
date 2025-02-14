@@ -1481,6 +1481,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
   if (tJoiners[joinerNum]->isTypelessJoin())
   {
+    // TODO: change RM ptr to ref b/c its scope and lifetime lasts till the end of the program.
     auto alloc = rm_->getAllocator<utils::FixedAllocatorBufType>();
     utils::FixedAllocator fa(alloc, tlKeyLens[joinerNum], true);
 

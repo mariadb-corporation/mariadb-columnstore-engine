@@ -23,15 +23,18 @@
 #include <cstddef>
 #include <cstdlib>
 
-#include <iostream>
-
 namespace allocators
 {
 
-// WIP placement
+// This is an aggregating custom allocator that tracks the memory usage using
+// a globally unique atomic counter.
+// It is supposed to recv a ptr to an atomic from a singleton entity, e.g. ResourceManager.
+// NB The atomic provides an upper hard limit for the memory usage and not the usage counter.
+// The allocator's model counts allocated size locally and to sync allocated size difference
+// every CheckPointStepSize(100MB by default) both allocating and deallocating.
+// When a sync op hits MemoryLimitLowerBound trying to allocate more memory, it throws.
+// SQL operators or TBPS runtime must catch the exception and act acordingly.
 
-
-// const constexpr std::uint64_t CounterUpdateUnitSize = 4 * 1024 * 1024;
 const constexpr std::int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;  // WIP
 const constexpr std::int64_t CheckPointStepSize = 100 * 1024 * 1024;     // WIP
 
@@ -57,38 +60,24 @@ class CountingAllocator
   void changeLocalAndGlobalMemoryLimits(const int64_t sizeChange)
   {
     // This routine must be used for mem allocation accounting path only!
-    // The case Current > last checkpoint(we deallocated mem since the last checkpoint), sizeIncrease is
-    // negative b/c we now move into the opposite direction. The case Last Checkpoint > Current (we allocated
+    // The case CurrentCheckpoint > LastCheckpoint(we deallocated mem since the last checkpoint), sizeIncrease is
+    // negative b/c we now move into the opposite direction. The case Last > Current (we allocated
     // mem since the last checkpoint), sizeIncrease is positive
     int64_t sizeChangeWDirection =
         (currentLocalMemoryUsage_ <= lastMemoryLimitCheckpoint_) ? -sizeChange : sizeChange;
     int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
     if (needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_))
     {
-      // std::cout << "changeLocalAndGlobalMemoryLimits " << sizeChange << " bytes at "
-      //           << " diffSinceLastCheckPoint " << diffSinceLastCheckPoint << ". current timit: " << std::dec
-      //           << memoryLimit_->load() << std::hex << " bytes.\n";
-      // std::cout << std::dec;
-
-      // auto lastMemoryLimitCheckpointDiff = diffSinceLastCheckPoint + sizeChangeWDirection;
       int64_t lastMemoryLimitCheckpointDiff = (currentLocalMemoryUsage_ <= lastMemoryLimitCheckpoint_)
                                                   ? sizeChange - diffSinceLastCheckPoint
                                                   : sizeChange + diffSinceLastCheckPoint;
       assert(lastMemoryLimitCheckpointDiff > 0);
-      // {
-      //   std::cout << "[Allocate::changeLocalAndGlobalMemoryLimits!!!] lastMemoryLimitCheckpoint_ "
-      //             << lastMemoryLimitCheckpoint_ << " currentLocalMemoryUsage_ " << currentLocalMemoryUsage_
-      //             << " sizeChangeWDirection " << sizeChangeWDirection << " lastMemoryLimitCheckpointDiff " << lastMemoryLimitCheckpointDiff
-      //             << std::endl;
-      // }
 
-      // lastMemoryLimitCheckpointDiff sign signifies a direction we move allocating memory.
       auto currentGlobalMemoryLimit =
           memoryLimit_->fetch_sub(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
       if (currentGlobalMemoryLimit < memoryLimitLowerBound_)
       {
         memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
-        // ? what to do with local counters here
         throw std::bad_alloc();
       }
       lastMemoryLimitCheckpoint_ += lastMemoryLimitCheckpointDiff;
@@ -123,9 +112,6 @@ class CountingAllocator
     changeLocalAndGlobalMemoryLimits(sizeAllocated);
 
     T* ptr = static_cast<T*>(::operator new(sizeAllocated));
-    // std::cout << "[Allocate] non-array " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
-    // std::cout << std::dec;
     return ptr;
   }
 
@@ -138,8 +124,6 @@ class CountingAllocator
     changeLocalAndGlobalMemoryLimits(sizeAllocated);
 
     T ptr = static_cast<T>(::operator new[](n));
-    // std::cout << "[Allocate] array " << n * sizeof(T) << " bytes at " << static_cast<void*>(ptr)
-    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
     return ptr;
   }
 
@@ -150,10 +134,6 @@ class CountingAllocator
 
     int64_t sizeToDeallocate = n * sizeof(T);
 
-    // std::cout << "[Deallocate start] " << sizeToDeallocate << " bytes from " << static_cast<void*>(ptr)
-    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
-    // std::cout << std::dec;
-
     int64_t sizeChangeWDirection =
         (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_) ? -sizeToDeallocate : sizeToDeallocate;
     int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
@@ -161,33 +141,17 @@ class CountingAllocator
     if (needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_))
     {
       // Invariant is lastMemoryLimitCheckpoint_ >= currentLocalMemoryUsage_ - sizeToDeallocate
-      // and lastMemoryLimitCheckpoint_ value must be negative.
-      // int64_t lastMemoryLimitCheckpointDiff =
-      //     labs(lastMemoryLimitCheckpoint_ - currentLocalMemoryUsage_ - sizeToDeallocate);
-      // auto lastMemoryLimitCheckpointDiff = diffSinceLastCheckPoint + sizeChangeWDirection;
       int64_t lastMemoryLimitCheckpointDiff =
           (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_)
               ? sizeToDeallocate - (currentLocalMemoryUsage_ - lastMemoryLimitCheckpoint_)
               : diffSinceLastCheckPoint + sizeToDeallocate;
 
       assert(lastMemoryLimitCheckpointDiff > 0);
-
-      // std::cout << "[Deallocate checkpoint!!!] lastMemoryLimitCheckpoint_ " << lastMemoryLimitCheckpoint_
-      //           << " currentLocalMemoryUsage_ " << currentLocalMemoryUsage_ << " sizeChangeWDirection "
-      //           << sizeChangeWDirection << " lastMemoryLimitCheckpointDiff " << lastMemoryLimitCheckpointDiff
-      //           << std::endl;
-
-      // assert(lastMemoryLimitCheckpointDiff < 0);
       memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
 
       lastMemoryLimitCheckpoint_ -= (lastMemoryLimitCheckpoint_ == 0) ? 0 : lastMemoryLimitCheckpointDiff;
     }
     currentLocalMemoryUsage_ = currentLocalMemoryUsage_ - sizeToDeallocate;
-
-    // std::cout << "[Deallocate end] " << n * sizeof(T) << " bytes from " << static_cast<void*>(ptr)
-    //           << ". current timit: " << std::dec << memoryLimit_->load() << std::hex << " bytes.\n";
-
-    // std::cout << std::dec;
   }
 
   // Equality operators (allocators are equal if they share the same counter)

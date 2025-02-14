@@ -520,7 +520,8 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
         return SBS(new ByteStream(0U));
 
       // Allocate new memory for the `long string`.
-      // WIP must account this allocation also.
+      // TODO account this allocation also despite the fact BS allocations are insignificant
+      // compared with structs used by SQL operators. 
       rowgroup::StringStoreBufSPType longString(
           new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
 

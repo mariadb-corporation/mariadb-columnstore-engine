@@ -69,8 +69,6 @@ void FixedAllocator::setAllocSize(uint allocSize)
 
 void FixedAllocator::newBlock()
 {
-  // boost::shared_ptr<FixedAllocatorBufType> next;
-
   capacityRemaining = elementCount * elementSize;
 
   if (!tmpSpace || mem.size() == 0)
@@ -83,9 +81,6 @@ void FixedAllocator::newBlock()
     {
       mem.emplace_back(boost::make_shared<FixedAllocatorBufType>(elementCount * elementSize));
     }
-    // next.reset(new uint8_t[elementCount * elementSize]);
-    // mem.push_back(next);
-    // nextAlloc = next.get();
     nextAlloc = mem.back().get();
   }
   else

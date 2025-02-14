@@ -270,7 +270,6 @@ class BatchPrimitiveProcessor
   uint32_t physIO, cachedIO, touchedBlocks;
 
   SP_UM_IOSOCK sock;
-  // messageqcpp::SBS serialized;
   SP_UM_MUTEX writelock;
 
   // MCOL-744 using pthread mutex instead of Boost mutex because
@@ -309,19 +308,10 @@ class BatchPrimitiveProcessor
   bool hasRowGroup;
 
   /* Rowgroups + join */
-  // typedef std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
-  //                                      std::equal_to<uint64_t>,
-  //                                      utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>
-  //     TJoiner;
   using TJoiner =
       std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
                               allocators::CountingAllocator<std::pair<const uint64_t, uint32_t>>>;
 
-  // typedef std::unordered_multimap<
-  //     joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
-  //     joiner::TupleJoiner::TypelessDataComparator,
-  //     utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>
-  //     TLJoiner;
   using TLJoiner =
       std::unordered_multimap<joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
                               joiner::TupleJoiner::TypelessDataComparator,
@@ -379,7 +369,6 @@ class BatchPrimitiveProcessor
 
   inline void getJoinResults(const rowgroup::Row& r, uint32_t jIndex, std::vector<uint32_t>& v);
   // these allocators hold the memory for the keys stored in tlJoiners
-  // WIP This was a shared vec of allocators originally but it might not be necessary.
   // This might give far memory allocations for keys used by JOIN hashmap.
   std::vector<utils::PoolAllocator> storedKeyAllocators;
 

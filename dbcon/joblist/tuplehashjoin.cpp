@@ -276,7 +276,6 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   stopMemTracking = true;
   memTrackDone.notify_one();
   memTrackMutex.unlock();
-  // jobstepThreadPool.join(memMonitor);
 
   /* If there was an error or an abort, drain the input DL,
       do endOfInput on the output */
@@ -438,27 +437,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
             if disk join is enabled, use it.
             else abort.
         */
-        // boost::unique_lock<boost::mutex> sl(saneErrMsg);
-
-        // if (cancelled())
-        //   return;
-        // if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
-        // {
-        //   joinIsTooBig = true;
-        //   ostringstream oss;
-        //   oss << "(" << __LINE__ << ") "
-        //       << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-        //   fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-        //   errorMessage(oss.str());
-        //   status(logging::ERR_JOIN_TOO_BIG);
-        //   cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
-        //   abort();
-        // }
-        // else if (allowDJS)
-        // {
-        //   joiner->setConvertToDiskJoin();
-        //   // TODO RGData that triggers this path is lost. Need to store it to pass it future.
-        // }
         return outOfMemoryHandler(joiner);
       }
       joiner->insertRGData(smallRG, threadID);
@@ -480,37 +458,6 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
   }
   catch (std::bad_alloc& exc)
   {
-    // boost::unique_lock<boost::mutex> sl(saneErrMsg);
-
-    // if (!joinIsTooBig &&
-    //     (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
-    // {
-    //   joinIsTooBig = true;
-    //   ostringstream oss;
-    //   oss << "(" << __LINE__ << ") "
-    //       << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-    //   fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-    //   errorMessage(oss.str());
-    //   status(logging::ERR_JOIN_TOO_BIG);
-    //   cout << "Join is too big, raise the UM join limit for now" << endl;
-    //   abort();
-    // }
-    // else if (allowDJS)
-    // {
-    //   joiner->setConvertToDiskJoin();
-    //   // RGData that triggers OOM is saved but the hash table is too big.
-    //   // TBD need to store RGData if counting allocator will be used for RGData.
-
-    //   // Need to clean hash tables and vec.
-    //   // joiner->clearData(); // `finished` flag can implicitly interfere.
-    // }
-    // return;
-
-    // RGData that triggers OOM is saved but the hash table is too big.
-    // TBD need to store RGData if counting allocator will be used for RGData.
-
-    // Need to clean hash tables and vec.
-    // joiner->clearData(); // `finished` flag can implicitly interfere.
     return outOfMemoryHandler(joiner);
   }
   catch (...)

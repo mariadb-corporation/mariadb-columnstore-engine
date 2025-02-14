@@ -326,12 +326,9 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       typelessJoin.reset(new bool[joinerCount]);
       tlSmallSideKeyLengths.reset(new uint32_t[joinerCount]);
 
-      // storedKeyAllocators.reset(new PoolAllocator[joinerCount]);
+      auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
       for (uint j = 0; j < joinerCount; ++j)
       {
-        // storedKeyAllocators[j].setUseLock(true);
-        // WIP use one copy of the allocator
-        auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
         storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
       }
 
