@@ -113,8 +113,8 @@ TEST_F(CountingAllocatorTest, AllocatorEquality)
 TEST_F(CountingAllocatorTest, AllocateSharedUsesAllocator)
 {
   // Create a shared_ptr using allocate_shared with the custom allocator
-  CountingAllocator<TestClass> allocatorSmallerStep(&allocatedMemory, MemoryAllowance / 100,
-                                                    MemoryAllowance / 1000);
+  CountingAllocator<TestClass> allocatorSmallerStep(&allocatedMemory,
+                                                    MemoryAllowance / 1000, MemoryAllowance / 100);
   std::shared_ptr<TestClass> ptr1 = std::allocate_shared<TestClass>(allocatorSmallerStep, 100);
   std::shared_ptr<TestClass> ptr2 = std::allocate_shared<TestClass>(allocatorSmallerStep, 100);
   std::shared_ptr<TestClass> ptr3 = std::allocate_shared<TestClass>(allocatorSmallerStep, 100);
@@ -164,8 +164,8 @@ TEST_F(CountingAllocatorTest, ThreadSafety)
   auto worker = [this]()
   {
     std::vector<TestClass*> ptrs;
-    CountingAllocator<TestClass> allocatorLocal(&allocatedMemory, MemoryAllowance / 100,
-                                                MemoryAllowance / 1000);
+    CountingAllocator<TestClass> allocatorLocal(&allocatedMemory, MemoryAllowance / 1000,
+                                                MemoryAllowance / 100);
     for (std::size_t i = 0; i < allocationsPerThread; ++i)
     {
       ptrs.push_back(allocatorLocal.allocate(1));

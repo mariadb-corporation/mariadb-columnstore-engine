@@ -262,6 +262,7 @@ class RGData
 {
  public:
   RGData() = default;  // useless unless followed by an = or a deserialize operation
+  RGData(allocators::CountingAllocator<RGDataBufType>&);
   RGData(const RowGroup& rg, uint32_t rowCount);  // allocates memory for rowData
   explicit RGData(const RowGroup& rg);
   explicit RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>& alloc);

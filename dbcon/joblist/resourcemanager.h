@@ -456,10 +456,12 @@ class ResourceManager
     return configuredUmMemLimit;
   }
 
-  template<typename T>
-  allocators::CountingAllocator<T> getAllocator()
+  template <typename T>
+  allocators::CountingAllocator<T> getAllocator(
+      const int64_t checkPointStepSize = allocators::CheckPointStepSize,
+      const int64_t memoryLimitLowerBound = allocators::MemoryLimitLowerBound)
   {
-    return allocators::CountingAllocator<T>(&totalUmMemLimit);
+    return allocators::CountingAllocator<T>(&totalUmMemLimit, checkPointStepSize, memoryLimitLowerBound);
   }
 
  private:

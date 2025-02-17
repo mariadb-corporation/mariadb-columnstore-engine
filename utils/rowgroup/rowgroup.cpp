@@ -305,6 +305,12 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
+
+RGData::RGData(allocators::CountingAllocator<RGDataBufType>& _alloc) : RGData()
+{
+  alloc = _alloc;
+}
+
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
   RGDataSizeType s = rg.getDataSize(rowCount);

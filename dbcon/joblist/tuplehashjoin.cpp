@@ -1403,13 +1403,16 @@ void TupleHashJoinStep::finishSmallOuterJoin()
   uint32_t smallSideCount = smallDLs.size();
   uint32_t i, j, k;
   std::shared_ptr<uint8_t[]> largeNullMemory;
-  RGData joinedData;
   Row joinedBaseRow, fe2InRow, fe2OutRow;
   std::shared_ptr<Row[]> smallRowTemplates;
   std::shared_ptr<Row[]> smallNullRows;
   Row largeNullRow;
   RowGroup l_outputRG = outputRG;
   RowGroup l_fe2Output = fe2Output;
+
+  // auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
+  // RGData joinedData(alloc);
+  RGData joinedData;
 
   joiners[lastSmallOuterJoiner]->getUnmarkedRows(&unmatched);
 
@@ -1724,7 +1727,8 @@ void TupleHashJoinStep::joinOneRG(
   if (!smallNullMem)
     smallNullMem = &smallNullMemory;
 
-  RGData joinedData;
+  auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
+  RGData joinedData(alloc);
   uint32_t matchCount, smallSideCount = tjoiners->size();
   uint32_t j, k;
 
@@ -1857,13 +1861,13 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
     {
       smallRow.setPointer(joinerOutput[depth][i]);
 
-      if (UNLIKELY(l_outputRG.getRowCount() == 8192))
+      if (UNLIKELY(l_outputRG.getRowCount() == rowgroup::rgCommonSize))
       {
         uint32_t dbRoot = l_outputRG.getDBRoot();
         uint64_t baseRid = l_outputRG.getBaseRid();
         outputData.push_back(rgData);
         // Count the memory
-        if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
+        if (UNLIKELY(!getMemory(l_outputRG.getSizeWithStrings())))
         {
           // MCOL-5512
           if (fe2)
@@ -1876,6 +1880,9 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
             l_outputRG.initRow(&fe2InRow);
             l_fe2RG.initRow(&fe2OutRow);
 
+            // WIP do we remove previosuly pushed(line 1824) rgData
+            // replacing it with a new FE2 rgdata added by processFE2?
+            // Generates a new RGData w/o accounting its memory consumption
             processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
           }
           // Don't let the join results buffer get out of control.

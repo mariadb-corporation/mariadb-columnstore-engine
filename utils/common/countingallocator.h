@@ -35,8 +35,8 @@ namespace allocators
 // When a sync op hits MemoryLimitLowerBound trying to allocate more memory, it throws.
 // SQL operators or TBPS runtime must catch the exception and act acordingly.
 
-const constexpr std::int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;  // WIP
-const constexpr std::int64_t CheckPointStepSize = 100 * 1024 * 1024;     // WIP
+const constexpr int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;  // WIP
+const constexpr int64_t CheckPointStepSize = 100 * 1024 * 1024;     // WIP
 
 // Custom Allocator that tracks allocated memory using an atomic counter
 template <typename T>
@@ -88,8 +88,8 @@ class CountingAllocator
 
   // Constructor accepting a reference to an atomic counter
   explicit CountingAllocator(std::atomic<int64_t>* memoryLimit,
-                             const uint64_t lowerBound = MemoryLimitLowerBound,
-                             const uint64_t checkPointStepSize = CheckPointStepSize) noexcept
+                             const int64_t checkPointStepSize = CheckPointStepSize,
+                             const int64_t lowerBound = MemoryLimitLowerBound) noexcept
    : memoryLimit_(memoryLimit), memoryLimitLowerBound_(lowerBound), checkPointStepSize_(checkPointStepSize)
   {
   }

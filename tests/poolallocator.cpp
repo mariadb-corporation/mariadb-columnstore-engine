@@ -213,7 +213,9 @@ class PoolallocatorTest : public ::testing::Test
   CountingAllocator<PoolAllocatorBufType> allocator;
 
   // Constructor
-  PoolallocatorTest() : allocatedMemory(MemoryAllowance), allocator(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 1000)
+  PoolallocatorTest()
+   : allocatedMemory(MemoryAllowance)
+   , allocator(&allocatedMemory, MemoryAllowance / 1000, MemoryAllowance / 100)
   {
   }
 
