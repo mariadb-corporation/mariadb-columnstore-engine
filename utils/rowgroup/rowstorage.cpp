@@ -584,6 +584,7 @@ class RowGroupStorage
    , fUniqId(this)
    , fTmpDir(tmpDir)
    , fCompressor(compressor)
+   , fUseDisk(!strict)
   {
     if (rm)
     {
@@ -698,7 +699,7 @@ class RowGroupStorage
               logging::ERR_AGGREGATION_TOO_BIG);
         }
 
-        if (fMM->getFree() < memSz * 2)
+        if (fUseDisk && fMM->getFree() < memSz * 2)
         {
           saveRG(rgid);
           fRGDatas[rgid].reset();
@@ -880,8 +881,7 @@ class RowGroupStorage
    */
   void getRow(uint64_t idx, Row& row)
   {
-    uint64_t rgid = idx / fMaxRows;
-    uint64_t rid = idx % fMaxRows;
+    auto [rgid, rid] = rowIdxToGidRid(idx, fMaxRows);
     if (UNLIKELY(!fRGDatas[rgid]))
     {
       loadRG(rgid);
@@ -947,7 +947,7 @@ class RowGroupStorage
     }
 
     fLRU->add(fCurRgid);
-    idx = fCurRgid * fMaxRows + fRowGroupOut->getRowCount();
+    idx = rowGidRidToIdx(fCurRgid, fRowGroupOut->getRowCount(), fMaxRows);
     fRowGroupOut->getRow(fRowGroupOut->getRowCount(), &row);
     fRowGroupOut->incRowCount();
   }
@@ -962,7 +962,7 @@ class RowGroupStorage
    */
   void putKeyRow(uint64_t idx, Row& row)
   {
-    uint64_t rgid = idx / fMaxRows;
+    auto [rgid, rid] = rowIdxToGidRid(idx, fMaxRows);
 
     while (rgid >= fRGDatas.size())
     {
@@ -1157,6 +1157,7 @@ class RowGroupStorage
     ret->fGeneration = gen;
     ret->fCompressor = fCompressor;
     ret->fDumper.reset(new Dumper(fCompressor, fMM.get()));
+    ret->fUseDisk = fUseDisk;
     ret->loadFinalizedInfo();
     return ret;
   }
@@ -1165,8 +1166,7 @@ class RowGroupStorage
    */
   void markFinalized(uint64_t idx)
   {
-    uint64_t gid = idx / 64;
-    uint64_t rid = idx % 64;
+    auto [gid, rid] = rowIdxToGidRid(idx, 64);
     if (LIKELY(fFinalizedRows.size() <= gid))
       fFinalizedRows.resize(gid + 1, 0ULL);
 
@@ -1176,8 +1176,7 @@ class RowGroupStorage
   /** @brief Check if row at specified index was finalized earlier */
   bool isFinalized(uint64_t idx) const
   {
-    uint64_t gid = idx / 64;
-    uint64_t rid = idx % 64;
+    auto [gid, rid] = rowIdxToGidRid(idx, 64);
     if (LIKELY(fFinalizedRows.size() <= gid))
       return false;
 
@@ -1324,6 +1323,7 @@ class RowGroupStorage
       unlink(fname.c_str());
     rgdata.reset(new RGData());
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
+    assert(bs.length() == 0);
 
     fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
@@ -1379,12 +1379,12 @@ class RowGroupStorage
     fRowGroupOut->serialize(bs);
 
     char buf[1024];
-    snprintf(buf, sizeof(buf), "/tmp/kemm/META-p%u-t%p", getpid(), fUniqPtr);
+    snprintf(buf, sizeof(buf), "%s/META-p%u-t%p", fTmpDir.c_str(), getpid(), fUniqId);
     int fd = open(buf, O_WRONLY | O_TRUNC | O_CREAT, 0644);
     assert(fd >= 0);
 
     auto r = write(fd, bs.buf(), bs.length());
-    assert(r == bs.length());
+    assert(size_t(r) == bs.length());
     close(fd);
   }
 #endif
@@ -1421,6 +1421,7 @@ class RowGroupStorage
   std::string fTmpDir;
   compress::CompressInterface* fCompressor;
   std::unique_ptr<Dumper> fDumper;
+  bool fUseDisk;
 };
 
 /** @brief Internal data for the hashmap */

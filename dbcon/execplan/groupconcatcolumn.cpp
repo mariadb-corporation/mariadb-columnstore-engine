@@ -41,11 +41,12 @@ namespace execplan
 /**
  * Constructors/Destructors
  */
-GroupConcatColumn::GroupConcatColumn() : AggregateColumn()
+GroupConcatColumn::GroupConcatColumn(bool isJsonArrayAgg) : AggregateColumn(), fIsJsonArrayAgg(isJsonArrayAgg)
 {
 }
 
-GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID) : AggregateColumn(sessionID)
+GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID, bool isJsonArrayAgg)
+ : AggregateColumn(sessionID), fIsJsonArrayAgg(isJsonArrayAgg)
 {
 }
 
@@ -53,10 +54,7 @@ GroupConcatColumn::GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_
  : AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs))
  , fOrderCols(rhs.fOrderCols)
  , fSeparator(rhs.fSeparator)
-{
-}
-
-GroupConcatColumn::~GroupConcatColumn()
+ , fIsJsonArrayAgg(rhs.fIsJsonArrayAgg)
 {
 }
 
@@ -67,16 +65,26 @@ GroupConcatColumn::~GroupConcatColumn()
 const string GroupConcatColumn::toString() const
 {
   ostringstream output;
-  output << "GroupConcatColumn " << data() << endl;
-  output << AggregateColumn::toString() << endl;
-  output << "Group Concat Order Columns: " << endl;
+  if (fIsJsonArrayAgg)
+  {
+    output << "JsonArrayAggColumn " << data() << endl;
+    output << AggregateColumn::toString() << endl;
+    output << "Json Array Order Columns: " << endl;
+  }
+  else
+  {
+    output << "GroupConcatColumn " << data() << endl;
+    output << AggregateColumn::toString() << endl;
+    output << "Group Concat Order Columns: " << endl;
+  }
 
   for (uint32_t i = 0; i < fOrderCols.size(); i++)
   {
     output << *fOrderCols[i];
   }
 
-  output << "\nSeparator: " << fSeparator << endl;
+  if (!fIsJsonArrayAgg)
+    output << "\nSeparator: " << fSeparator << endl;
   return output.str();
 }
 
@@ -84,7 +92,7 @@ string GroupConcatColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("groupconcatcolumn.h");
   stringstream ss;
-  ss << "GroupConcatColumn(" << sessionID() << ")";
+  ss << "GroupConcatColumn(" << sessionID() << "," << std::boolalpha << fIsJsonArrayAgg << ")";
 
   return ss.str();
 }
@@ -100,13 +108,13 @@ void GroupConcatColumn::serialize(messageqcpp::ByteStream& b) const
   b << (uint8_t)ObjectReader::GROUPCONCATCOLUMN;
   AggregateColumn::serialize(b);
 
-  CalpontSelectExecutionPlan::ReturnedColumnList::const_iterator rcit;
   b << static_cast<uint32_t>(fOrderCols.size());
 
-  for (rcit = fOrderCols.begin(); rcit != fOrderCols.end(); ++rcit)
-    (*rcit)->serialize(b);
+  for (const auto& col : fOrderCols)
+    col->serialize(b);
 
   b << fSeparator;
+  b << (uint8_t)fIsJsonArrayAgg;
 }
 
 void GroupConcatColumn::unserialize(messageqcpp::ByteStream& b)
@@ -127,6 +135,9 @@ void GroupConcatColumn::unserialize(messageqcpp::ByteStream& b)
   }
 
   b >> fSeparator;
+  uint8_t tmp8;
+  b >> tmp8;
+  fIsJsonArrayAgg = tmp8;
 }
 
 bool GroupConcatColumn::operator==(const GroupConcatColumn& t) const
@@ -154,6 +165,9 @@ bool GroupConcatColumn::operator==(const GroupConcatColumn& t) const
   }
 
   if (fSeparator != t.fSeparator)
+    return false;
+
+  if (fIsJsonArrayAgg != t.fIsJsonArrayAgg)
     return false;
 
   return true;

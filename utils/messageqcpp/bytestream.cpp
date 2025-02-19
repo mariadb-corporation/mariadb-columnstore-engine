@@ -431,7 +431,6 @@ ByteStream& ByteStream::operator>>(utils::NullString& s)
   return *this;
 }
 
-
 ByteStream& ByteStream::operator>>(uint8_t*& bpr)
 {
   peek(bpr);

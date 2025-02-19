@@ -25,7 +25,6 @@ set(joblist_LIB_SRCS
     joblistfactory.cpp
     jobstep.cpp
     jobstepassociation.cpp
-    jsonarrayagg.cpp
     lbidlist.cpp
     limitedorderby.cpp
     passthrucommand-jl.cpp

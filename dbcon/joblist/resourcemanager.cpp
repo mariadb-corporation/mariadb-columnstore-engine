@@ -237,9 +237,6 @@ ResourceManager::ResourceManager(bool runningInExeMgr, config::Config* aConfig)
   else
     fUseHdfs = false;
 
-  fAllowedDiskAggregation =
-      getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
-
   if (!load_encryption_keys())
   {
     Logger log;
@@ -388,6 +385,11 @@ bool ResourceManager::getMemory(int64_t amount, bool patience)
     atomicops::atomicAddRef(totalUmMemLimit, amount);
   }
   return ret1;
+}
+
+bool ResourceManager::getAllowDiskAggregation() const
+{
+    return getBoolVal(fRowAggregationStr, "AllowDiskBasedAggregation", defaultAllowDiskAggregation);
 }
 
 }  // namespace joblist
