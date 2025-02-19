@@ -38,6 +38,7 @@
 #include <cmath>
 #include <cfloat>
 #include <execinfo.h>
+#include <boost/format/group.hpp>
 
 #include "hasher.h"
 
@@ -251,6 +252,32 @@ class UserDataStore
   boost::mutex fMutex;
 };
 
+struct GroupConcat;
+class GroupConcatAg;
+
+class AggregateDataStore {
+public:
+  AggregateDataStore() = delete;
+  explicit AggregateDataStore(const std::vector<boost::shared_ptr<GroupConcat>>& groupConcat): fGroupConcat(groupConcat) {}
+  ~AggregateDataStore() = default;
+  AggregateDataStore(const AggregateDataStore&) = delete;
+  AggregateDataStore(AggregateDataStore&&) = delete;
+  AggregateDataStore& operator=(const AggregateDataStore&) = delete;
+  AggregateDataStore& operator=(AggregateDataStore&&) = delete;
+
+  void serialize(messageqcpp::ByteStream&) const;
+  void deserialize(messageqcpp::ByteStream&);
+
+  uint32_t storeAggregateData(boost::shared_ptr<GroupConcatAg>& data);
+  boost::shared_ptr<GroupConcatAg> getAggregateData(uint32_t pos) const;
+
+  RGDataSizeType getDataSize() const;
+private:
+  friend class RGData;
+  std::vector<boost::shared_ptr<GroupConcat>> fGroupConcat;
+  std::vector<boost::shared_ptr<GroupConcatAg>> fData;
+};
+
 class RowGroup;
 class Row;
 
@@ -323,6 +350,7 @@ class RGData
   std::shared_ptr<uint8_t[]> rowData;
   std::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
+  std::shared_ptr<AggregateDataStore> aggregateDataStore;
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
@@ -347,9 +375,13 @@ class Row
     inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) : data(d), strings(s), userDataStore(u)
     {
     }
+    inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u, AggregateDataStore* a) : data(d), strings(s), userDataStore(u), aggregateDataStore(a)
+    {
+    }
     uint8_t* data = nullptr;
     StringStore* strings = nullptr;
     UserDataStore* userDataStore = nullptr;
+    AggregateDataStore* aggregateDataStore = nullptr;
   };
 
   Row() = default;
@@ -520,6 +552,8 @@ class Row
   inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
   inline void setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<mcsv1sdk::UserData> userData,
                           uint32_t len, uint32_t colIndex);
+  inline void setAggregateData(boost::shared_ptr<GroupConcatAg> data, uint32_t colIndex);
+  inline GroupConcatAg* getAggregateData(uint32_t colIndex) const;
 
   uint64_t getNullValue(uint32_t colIndex) const;
   bool isNullValue(uint32_t colIndex) const;
@@ -633,13 +667,14 @@ class Row
   uint32_t sTableThreshold = 20;
   std::shared_ptr<bool[]> forceInline;
   UserDataStore* userDataStore = nullptr;  // For UDAF
+  AggregateDataStore* aggregateDataStore = nullptr; // group_concat & json_arrayagg
 
   friend class RowGroup;
 };
 
 inline Row::Pointer Row::getPointer() const
 {
-  return Pointer(data, strings, userDataStore);
+  return Pointer(data, strings, userDataStore, aggregateDataStore);
 }
 inline uint8_t* Row::getData() const
 {
@@ -659,6 +694,7 @@ inline void Row::setPointer(const Pointer& p)
   }
 
   userDataStore = p.userDataStore;
+  aggregateDataStore = p.aggregateDataStore;
 }
 
 inline void Row::setData(const Pointer& p)
@@ -1353,6 +1389,24 @@ inline void Row::setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<
   *((uint32_t*)&data[offsets[colIndex] + 4]) = len;
 }
 
+inline void Row::setAggregateData(boost::shared_ptr<GroupConcatAg> agData, uint32_t colIndex) {
+  if (!aggregateDataStore) {
+    throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
+  }
+
+  uint32_t pos = aggregateDataStore->storeAggregateData(agData );
+  *((uint32_t*)&data[offsets[colIndex]]) = pos;
+}
+
+inline GroupConcatAg *Row::getAggregateData(uint32_t colIndex) const {
+  if (!aggregateDataStore) {
+    throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
+  }
+
+  uint32_t pos = *((uint32_t*)&data[offsets[colIndex]]);
+  return aggregateDataStore->getAggregateData(pos).get();
+}
+
 inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 {
   uint32_t n = offsets[destIndex + 1] - offsets[destIndex];
@@ -1552,6 +1606,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
   void setUseOnlyLongString(bool b) { useOnlyLongStrings = b; }
   bool usesOnlyLongString() const { return useOnlyLongStrings ; }
+  void setUseAggregateDataStore(bool b) { useAggregateDataStore = b;};
+  bool usesAggregateDataStore() const { return useAggregateDataStore; }
 
   bool hasLongString() const
   {
@@ -1623,9 +1679,10 @@ class RowGroup : public messageqcpp::Serializeable
   // string table impl
   RGData* rgData = nullptr;
   StringStore* strings = nullptr;  // note, strings and data belong to rgData
+  AggregateDataStore* aggregateDataStore = nullptr;
   bool useStringTable = true;
   bool useOnlyLongStrings = false;
-  bool useAggregateDataStore = true;
+  bool useAggregateDataStore = false;
   bool hasCollation = false;
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
@@ -1691,12 +1748,14 @@ inline void RowGroup::getRow(uint32_t rowNum, Row* r) const
   r->data = &(data[headerSize + (rowNum * r->getSize())]);
   r->strings = strings;
   r->userDataStore = rgData->userDataStore.get();
+  r->aggregateDataStore = rgData->aggregateDataStore.get();
 }
 
 inline void RowGroup::setData(RGData* rgd)
 {
   data = rgd->rowData.get();
   strings = rgd->strings.get();
+  aggregateDataStore = rgd->aggregateDataStore.get();
   rgData = rgd;
 }
 

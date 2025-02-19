@@ -85,6 +85,9 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
 
   EXPORT uint8_t* getResult() override;
 
+  void serialize(messageqcpp::ByteStream &bs) const override;
+  void deserialize(messageqcpp::ByteStream &bs) override;
+
  protected:
   virtual void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 
@@ -112,6 +115,9 @@ class GroupConcator
   uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull);
 
   virtual const std::string toString() const;
+
+  virtual void serialize(messageqcpp::ByteStream &) const;
+  virtual void deserialize(messageqcpp::ByteStream &);
 
  protected:
   virtual bool concatColIsNull(const rowgroup::Row&);

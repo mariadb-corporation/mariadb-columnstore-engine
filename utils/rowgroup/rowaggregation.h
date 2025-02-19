@@ -327,7 +327,7 @@ struct ConstantAggData
 typedef boost::shared_ptr<RowAggGroupByCol> SP_ROWAGG_GRPBY_t;
 typedef boost::shared_ptr<RowAggFunctionCol> SP_ROWAGG_FUNC_t;
 
-struct GroupConcat
+struct GroupConcat: public messageqcpp::Serializeable
 {
   // GROUP_CONCAT(DISTINCT col1, 'const', col2 ORDER BY col3 desc SEPARATOR 'sep')
   std::vector<std::pair<uint32_t, uint32_t>> fGroupCols;  // columns to concatenate, and position
@@ -343,10 +343,15 @@ struct GroupConcat
   joblist::ResourceManager* fRm;                 // resource manager
   boost::shared_ptr<int64_t> fSessionMemLimit;
   long fTimeZone;
+  uint32_t id;
 
   GroupConcat() : fRm(nullptr)
   {
   }
+
+  void serialize(messageqcpp::ByteStream& bs) const override;
+  void deserialize(messageqcpp::ByteStream& bs) override;
+  RGDataSizeType getDataSize() const;
 };
 
 typedef boost::shared_ptr<GroupConcat> SP_GroupConcat;
@@ -357,14 +362,22 @@ class GroupConcatAg
   explicit GroupConcatAg(SP_GroupConcat&);
   virtual ~GroupConcatAg();
 
-  virtual void initialize() {};
-  virtual void processRow(const rowgroup::Row&) {};
-  virtual void merge(const rowgroup::Row&, uint64_t) {};
+  static GroupConcatAg* create(RowAggFunctionType rowagg_func_type, SP_GroupConcat&);
+
+  virtual void initialize() = 0;
+  virtual void processRow(const rowgroup::Row&) = 0;
+  virtual void merge(const rowgroup::Row&, uint64_t) = 0;
 
   virtual uint8_t* getResult()
   {
     return nullptr;
   }
+
+  uint32_t getGroupConcatId() const { return fGroupConcat->id; }
+  virtual RGDataSizeType getDataSize() const = 0;
+
+  virtual void serialize(messageqcpp::ByteStream& bs) const = 0;
+  virtual void deserialize(messageqcpp::ByteStream& bs) = 0;
 
  protected:
   rowgroup::SP_GroupConcat fGroupConcat;
@@ -650,6 +663,8 @@ class RowAggregation : public messageqcpp::Serializeable
   std::string fTmpDir =
       config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
   std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
+
+  std::vector<SP_GroupConcat> fGroupConcat;
 };
 
 //------------------------------------------------------------------------------
@@ -814,8 +829,6 @@ class RowAggregationUM : public RowAggregation
   std::vector<ConstantAggData> fConstantAggregate;
 
   // @bug3362, group_concat
-  std::vector<SP_GroupConcat> fGroupConcat;
-  std::vector<SP_GroupConcatAg> fGroupConcatAg;
   std::vector<SP_ROWAGG_FUNC_t> fFunctionColGc;
 
  private:

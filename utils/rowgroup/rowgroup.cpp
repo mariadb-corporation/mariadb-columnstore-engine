@@ -29,6 +29,8 @@
 // #define NDEBUG
 #include <sstream>
 #include <iterator>
+
+#include "rowaggregation.h"
 using namespace std;
 
 #include <numeric>
@@ -299,6 +301,64 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
+void AggregateDataStore::serialize(messageqcpp::ByteStream &bs) const {
+  uint64_t size = fGroupConcat.size();
+  bs << size;
+  for (const auto& gc: fGroupConcat) {
+    gc->serialize(bs);
+  }
+  size = fData.size();
+  for (const auto& gca: fData) {
+    uint16_t gctype = gca->getType();
+    bs << gctype;
+    bs << gca->getGroupConcatId();
+    gca->serialize(bs);
+  }
+}
+
+void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs) {
+  fGroupConcat.clear();
+  fData.clear();
+  uint64_t size;
+  bs >> size;
+  fGroupConcat.resize(size);
+  for (uint64_t i = 0; i < size; i++) {
+    fGroupConcat[i].reset(new GroupConcat());
+    fGroupConcat[i]->deserialize(bs);
+  }
+  bs >> size;
+  fData.resize(size);
+  for (uint64_t i = 0; i < size; i++) {
+    uint16_t gctype;
+    bs >> gctype;
+    uint32_t gc_id;
+    bs >> gc_id;
+    idbassert(gc_id < fGroupConcat.size());
+    fData[i].reset(GroupConcatAg::create(static_cast<RowAggFunctionType>(gctype), fGroupConcat[gc_id]));
+  }
+}
+
+uint32_t AggregateDataStore::storeAggregateData(boost::shared_ptr<GroupConcatAg> &data) {
+  fData.emplace_back(data);
+  return fData.size() - 1;
+}
+
+boost::shared_ptr<GroupConcatAg> AggregateDataStore::getAggregateData(uint32_t pos) const {
+  idbassert(pos < fData.size());
+  return fData[pos];
+}
+
+RGDataSizeType AggregateDataStore::getDataSize() const {
+  RGDataSizeType size = 0;
+  for (const auto& gc: fGroupConcat) {
+    size += gc->getDataSize();
+  }
+  for (const auto& gca: fData) {
+    size += gca->getDataSize();
+  }
+  return size;
+}
+
 RGData::RGData(const RowGroup& rg, uint32_t rowCount)
 {
   RGDataSizeType s = rg.getDataSize(rowCount);
@@ -309,24 +369,17 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
     strings->useOnlyLongStrings(rg.usesOnlyLongString());
   }
 
-  userDataStore.reset();
-  columnCount = rg.getColumnCount();
-  rowSize = rg.getRowSize();
-}
-
-RGData::RGData(const RowGroup& rg)
-{
-  rowData.reset(new uint8_t[rg.getMaxDataSize()]);
-
-  if (rg.usesStringTable())
-  {
-    strings.reset(new StringStore());
-    strings->useOnlyLongStrings(rg.usesOnlyLongString());
+  if (rg.usesAggregateDataStore()) {
+    aggregateDataStore.reset(new AggregateDataStore());
   }
 
   userDataStore.reset();
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
+}
+
+RGData::RGData(const RowGroup& rg): RGData(rg, rgCommonSize)
+{
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
@@ -340,6 +393,12 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
   }
   else
     strings.reset();
+
+  if (rg.usesAggregateDataStore()) {
+    aggregateDataStore.reset(new AggregateDataStore());
+  }
+  else
+    aggregateDataStore.reset();
   columnCount = rg.getColumnCount();
   rowSize = rg.getRowSize();
 }
@@ -370,6 +429,14 @@ void RGData::serialize(ByteStream& bs, RGDataSizeType amount) const
   {
     bs << (uint8_t)1;
     userDataStore->serialize(bs);
+  }
+  else
+    bs << (uint8_t)0;
+
+  if (aggregateDataStore)
+  {
+    bs << (uint8_t)1;
+    aggregateDataStore->serialize(bs);
   }
   else
     bs << (uint8_t)0;
@@ -427,6 +494,15 @@ void RGData::deserialize(ByteStream& bs, RGDataSizeType defAmount)
     }
     else
       userDataStore.reset();
+
+    bs >> tmp8;
+    if (tmp8)
+    {
+      aggregateDataStore.reset(new AggregateDataStore());
+      aggregateDataStore->deserialize(bs);
+    }
+    else
+      aggregateDataStore.reset();
   }
 
   return;
@@ -1093,8 +1169,10 @@ RowGroup::RowGroup(const RowGroup& r)
  , precision(r.precision)
  , rgData(r.rgData)
  , strings(r.strings)
+ , aggregateDataStore(r.aggregateDataStore)
  , useStringTable(r.useStringTable)
  , useOnlyLongStrings(r.useOnlyLongStrings)
+ , useAggregateDataStore(r.useAggregateDataStore)
  , hasCollation(r.hasCollation)
  , hasLongStringField(r.hasLongStringField)
  , sTableThreshold(r.sTableThreshold)
@@ -1126,8 +1204,10 @@ RowGroup& RowGroup::operator=(const RowGroup& r)
   precision = r.precision;
   rgData = r.rgData;
   strings = r.strings;
+  aggregateDataStore = r.aggregateDataStore;
   useStringTable = r.useStringTable;
   useOnlyLongStrings = r.useOnlyLongStrings;
+  useAggregateDataStore = r.useAggregateDataStore;
   hasCollation = r.hasCollation;
   hasLongStringField = r.hasLongStringField;
   sTableThreshold = r.sTableThreshold;

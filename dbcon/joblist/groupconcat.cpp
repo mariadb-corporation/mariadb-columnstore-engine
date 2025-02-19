@@ -68,12 +68,12 @@ GroupConcatInfo::~GroupConcatInfo()
 
 void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 {
-  RetColsVector::iterator i = jobInfo.groupConcatCols.begin();
+  auto i = jobInfo.groupConcatCols.begin();
 
   while (i != jobInfo.groupConcatCols.end())
   {
-    GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(i->get());
-    const RowColumn* rcp = dynamic_cast<const RowColumn*>(gcc->aggParms()[0].get());
+    auto* gcc = dynamic_cast<GroupConcatColumn*>(i->get());
+    const auto* rcp = dynamic_cast<const RowColumn*>(gcc->aggParms()[0].get());
 
     SP_GroupConcat groupConcat(new GroupConcat);
     groupConcat->fSeparator = gcc->separator();
@@ -88,9 +88,9 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 
     for (uint64_t j = 0, k = 0; j < cols.size(); j++)
     {
-      const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(cols[j].get());
+      const auto* cc = dynamic_cast<const ConstantColumn*>(cols[j].get());
 
-      if (cc == NULL)
+      if (cc == nullptr)
       {
         key = getColumnKey(cols[j], jobInfo);
         fColumns.insert(key);
@@ -104,7 +104,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 
     vector<SRCP>& orderCols = gcc->orderCols();
 
-    for (vector<SRCP>::iterator k = orderCols.begin(); k != orderCols.end(); k++)
+    for (auto k = orderCols.begin(); k != orderCols.end(); k++)
     {
       if (dynamic_cast<const ConstantColumn*>(k->get()) != NULL)
         continue;
@@ -114,9 +114,10 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       groupConcat->fOrderCols.push_back(make_pair(key, k->get()->asc()));
     }
 
-    fGroupConcat.push_back(groupConcat);
+    groupConcat->id = fGroupConcat.size();
+    fGroupConcat.emplace_back(std::move(groupConcat));
 
-    i++;
+    ++i;
   }
 
   // Rare case: all columns in group_concat are constant columns, use a column in column map.
@@ -124,8 +125,8 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
   {
     int key = -1;
 
-    for (vector<uint32_t>::iterator i = jobInfo.tableList.begin(); i != jobInfo.tableList.end() && key == -1;
-         i++)
+    for (auto i = jobInfo.tableList.begin(); i != jobInfo.tableList.end() && key == -1;
+         ++i)
     {
       if (jobInfo.columnMap[*i].size() > 0)
       {
@@ -147,9 +148,9 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo)
 {
   int colKey = -1;
-  const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
+  const auto* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
 
-  if (sc != NULL)
+  if (sc != nullptr)
   {
     if (sc->schemaName().empty())
     {
@@ -169,10 +170,10 @@ uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo)
   }
   else
   {
-    const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
-    const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
+    const auto* ac = dynamic_cast<const ArithmeticColumn*>(srcp.get());
+    const auto* fc = dynamic_cast<const FunctionColumn*>(srcp.get());
 
-    if (ac != NULL || fc != NULL)
+    if (ac != nullptr || fc != nullptr)
     {
       colKey = getExpTupleKey(jobInfo, srcp->expressionId());
     }
@@ -194,7 +195,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
   for (uint64_t i = 0; i < projRG.getColumnCount(); i++)
     projColumnMap[keysProj[i]] = i;
 
-  for (vector<SP_GroupConcat>::iterator k = fGroupConcat.begin(); k != fGroupConcat.end(); k++)
+  for (auto k = fGroupConcat.begin(); k != fGroupConcat.end(); k++)
   {
     vector<uint32_t> pos;
     vector<uint32_t> oids;
@@ -225,14 +226,14 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
       scale.push_back(projRG.getScale()[j->second]);
       precision.push_back(projRG.getPrecision()[j->second]);
 
-      i1++;
+      ++i1;
     }
 
     vector<pair<uint32_t, bool> >::iterator i2 = (*k)->fOrderCols.begin();
 
     while (i2 != (*k)->fOrderCols.end())
     {
-      map<uint32_t, uint32_t>::iterator j = projColumnMap.find(i2->first);
+      auto j = projColumnMap.find(i2->first);
 
       if (j == projColumnMap.end())
       {
@@ -262,7 +263,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
       (*k)->fOrderCond.push_back(make_pair(idx, i2->second));
 
-      i2++;
+      ++i2;
     }
 
     (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
