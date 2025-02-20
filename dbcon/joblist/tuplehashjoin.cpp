@@ -1727,8 +1727,8 @@ void TupleHashJoinStep::joinOneRG(
   if (!smallNullMem)
     smallNullMem = &smallNullMemory;
 
-  auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
-  RGData joinedData(alloc);
+  // auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
+  RGData joinedData;
   uint32_t matchCount, smallSideCount = tjoiners->size();
   uint32_t j, k;
 
