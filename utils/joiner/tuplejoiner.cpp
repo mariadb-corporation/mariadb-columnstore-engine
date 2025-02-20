@@ -162,6 +162,9 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 {
   uint i;
 
+  auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+  rows.reset(new RowPointersVec(alloc));
+
   getBucketCount();
 
   for (i = 0; i < bucketCount; i++)
