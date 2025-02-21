@@ -74,10 +74,9 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
   EXPORT explicit GroupConcatAgUM(rowgroup::SP_GroupConcat&);
   EXPORT ~GroupConcatAgUM() override;
 
-  using rowgroup::GroupConcatAg::merge;
   void initialize() override;
   void processRow(const rowgroup::Row&) override;
-  EXPORT virtual void merge(const rowgroup::Row&, int64_t);
+  EXPORT void merge(const rowgroup::Row&, uint64_t) override;
   boost::scoped_ptr<GroupConcator>& concator()
   {
     return fConcator;
@@ -85,8 +84,12 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
 
   EXPORT uint8_t* getResult() override;
 
+
   void serialize(messageqcpp::ByteStream &bs) const override;
   void deserialize(messageqcpp::ByteStream &bs) override;
+
+  rowgroup::RGDataSizeType getDataSize() const override;
+  uint16_t getType() const override { return rowgroup::ROWAGG_GROUP_CONCAT; }
 
  protected:
   virtual void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
@@ -97,14 +100,15 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
   rowgroup::RGData fRowRGData;
   rowgroup::RowGroup fRowGroup;
   bool fNoOrder;
+  rowgroup::RGDataSizeType fMemSize{0};
 };
 
 // GROUP_CONCAT base
 class GroupConcator
 {
  public:
-  GroupConcator();
-  virtual ~GroupConcator();
+  GroupConcator() = default;
+  virtual ~GroupConcator() = default;
 
   virtual void initialize(const rowgroup::SP_GroupConcat&);
   virtual void processRow(const rowgroup::Row&) = 0;
@@ -118,6 +122,7 @@ class GroupConcator
 
   virtual void serialize(messageqcpp::ByteStream &) const;
   virtual void deserialize(messageqcpp::ByteStream &);
+  virtual rowgroup::RGDataSizeType getDataSize() const = 0;
 
  protected:
   virtual bool concatColIsNull(const rowgroup::Row&);
@@ -126,18 +131,18 @@ class GroupConcator
 
   std::vector<uint32_t> fConcatColumns;
   std::vector<std::pair<utils::NullString, uint32_t> > fConstCols;
-  int64_t fCurrentLength;
-  int64_t fGroupConcatLen;
-  int64_t fConstantLen;
+  int64_t fCurrentLength{0};
+  int64_t fGroupConcatLen{0};
+  int64_t fConstantLen{0};
   std::unique_ptr<std::string> outputBuf_;
-  long fTimeZone;
+  long fTimeZone{0};
 };
 
 // For GROUP_CONCAT withour distinct or orderby
 class GroupConcatNoOrder : public GroupConcator
 {
  public:
-  GroupConcatNoOrder();
+  GroupConcatNoOrder() = default;
   ~GroupConcatNoOrder() override;
 
   void initialize(const rowgroup::SP_GroupConcat&) override;
@@ -148,17 +153,23 @@ class GroupConcatNoOrder : public GroupConcator
   uint8_t* getResultImpl(const std::string& sep) override;
   // uint8_t* getResult(const std::string& sep);
 
+  void serialize(messageqcpp::ByteStream &) const override;
+  void deserialize(messageqcpp::ByteStream &) override;
+
+  rowgroup::RGDataSizeType getDataSize() const override { return fMemSize; }
+
   const std::string toString() const override;
 
  protected:
+  void createNewRGData();
   rowgroup::RowGroup fRowGroup;
   rowgroup::Row fRow;
-  rowgroup::RGData fData;
-  std::queue<rowgroup::RGData> fDataQueue;
-  uint64_t fRowsPerRG;
-  uint64_t fErrorCode;
-  uint64_t fMemSize;
-  ResourceManager* fRm;
+  std::vector<rowgroup::RGDataUnPtr> fDataVec;
+  uint64_t fRowsPerRG{128};
+  uint64_t fErrorCode{logging::ERR_AGGREGATION_TOO_BIG};
+  rowgroup::RGDataSizeType fMemSize{0};
+  rowgroup::RGDataSizeType fCurMemSize{0};
+  ResourceManager* fRm{nullptr};
   boost::shared_ptr<int64_t> fSessionMemLimit;
 };
 
@@ -174,6 +185,11 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
   void initialize(const rowgroup::SP_GroupConcat&) override;
   void processRow(const rowgroup::Row&) override;
   uint64_t getKeyLength() const override;
+
+  void serialize(messageqcpp::ByteStream &) const override;
+  void deserialize(messageqcpp::ByteStream &) override;
+
+  rowgroup::RGDataSizeType getDataSize() const override;
 
   void merge(GroupConcator*) override;
   using GroupConcator::getResult;

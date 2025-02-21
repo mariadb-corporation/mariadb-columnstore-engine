@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <span>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -257,7 +258,7 @@ class GroupConcatAg;
 
 class AggregateDataStore {
 public:
-  AggregateDataStore() = delete;
+  AggregateDataStore() = default;
   explicit AggregateDataStore(const std::vector<boost::shared_ptr<GroupConcat>>& groupConcat): fGroupConcat(groupConcat) {}
   ~AggregateDataStore() = default;
   AggregateDataStore(const AggregateDataStore&) = delete;
@@ -1606,7 +1607,7 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setUseStringTable(bool);
   void setUseOnlyLongString(bool b) { useOnlyLongStrings = b; }
   bool usesOnlyLongString() const { return useOnlyLongStrings ; }
-  void setUseAggregateDataStore(bool b) { useAggregateDataStore = b;};
+  void setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats = {});
   bool usesAggregateDataStore() const { return useAggregateDataStore; }
 
   bool hasLongString() const
@@ -1653,6 +1654,8 @@ class RowGroup : public messageqcpp::Serializeable
 
   const CHARSET_INFO* getCharset(uint32_t col);
 
+  const auto& getGroupConcats() const { return fGroupConcats; }
+
  private:
   uint32_t columnCount = 0;
   uint8_t* data = nullptr;
@@ -1688,11 +1691,13 @@ class RowGroup : public messageqcpp::Serializeable
   uint32_t sTableThreshold = 20;
   std::shared_ptr<bool[]> forceInline;
 
-  static const uint64_t headerSize = 18;
-  static const uint64_t rowCountOffset = 0;
-  static const uint64_t baseRidOffset = 4;
-  static const uint64_t statusOffset = 12;
-  static const uint64_t dbRootOffset = 14;
+  std::vector<boost::shared_ptr<GroupConcat>> fGroupConcats;
+
+  static constexpr uint64_t headerSize = 18;
+  static constexpr uint64_t rowCountOffset = 0;
+  static constexpr uint64_t baseRidOffset = 4;
+  static constexpr uint64_t statusOffset = 12;
+  static constexpr uint64_t dbRootOffset = 14;
 };
 
 inline uint64_t convertToRid(const uint32_t& partNum, const uint16_t& segNum, const uint8_t& extentNum,

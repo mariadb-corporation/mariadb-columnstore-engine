@@ -346,6 +346,7 @@ void GroupConcatAgUM::initialize()
     fData.reset(new uint8_t[fRow.getSize()]);
     fRow.setData(rowgroup::Row::Pointer(fData.get()));
   }
+  fMemSize = fRowGroup.getSizeWithStrings(1);
 }
 
 void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
@@ -365,6 +366,46 @@ void GroupConcatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
 uint8_t* GroupConcatAgUM::getResult()
 {
   return fConcator->getResult(fGroupConcat->fSeparator);
+}
+
+void GroupConcatAgUM::serialize(messageqcpp::ByteStream &bs) const {
+  fGroupConcat->serialize(bs);
+  fConcator->serialize(bs);
+  if (fRowGroup.hasLongString()) {
+    bs << uint8_t(1);
+    fRowRGData.serialize(bs, fRowGroup.getDataSize(1));
+  } else {
+    bs << uint8_t(0);
+    bs.append(fData.get(), fRow.getSize());
+  }
+}
+
+void GroupConcatAgUM::deserialize(messageqcpp::ByteStream &bs) {
+  fGroupConcat->deserialize(bs);
+  if (fGroupConcat->fDistinct || !fGroupConcat->fOrderCols.empty()) {
+    fConcator.reset(new GroupConcatOrderBy());
+  } else {
+    fConcator.reset(new GroupConcatNoOrder());
+  }
+  fConcator->deserialize(bs);
+  uint8_t tmp8;
+  bs >> tmp8;
+  if (tmp8) {
+    fRowRGData.deserialize(bs, fRow.getSize());
+    fRowGroup.setData(&fRowRGData);
+    fRowGroup.initRow(&fRow);
+  } else {
+    RGDataSizeType size;
+    bs >> size;
+    fData.reset(new uint8_t[size]);
+    memcpy(fData.get(), bs.buf(), size);
+    bs.advance(size);
+    fRow.setData(rowgroup::Row::Pointer(fData.get()));
+  }
+}
+
+rowgroup::RGDataSizeType GroupConcatAgUM::getDataSize() const {
+  return fMemSize + fConcator->getDataSize();
 }
 
 void GroupConcatAgUM::applyMapping(const std::shared_ptr<int[]>& mapping, const Row& row)
@@ -405,14 +446,6 @@ void GroupConcatAgUM::applyMapping(const std::shared_ptr<int[]>& mapping, const 
 }
 
 // GroupConcator class implementation
-GroupConcator::GroupConcator() : fCurrentLength(0), fGroupConcatLen(0), fConstantLen(0)
-{
-}
-
-GroupConcator::~GroupConcator()
-{
-}
-
 void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
 {
   // MCOL-901 This value comes from the Server and it is
@@ -718,6 +751,39 @@ const string GroupConcator::toString() const
   return oss.str();
 }
 
+void GroupConcator::serialize(messageqcpp::ByteStream &bs) const {
+  messageqcpp::serializeInlineVector(bs, fConcatColumns);
+  RGDataSizeType size = fConstCols.size();
+  bs << size;
+  for (const auto& [k, v] : fConstCols) {
+    bs << k;
+    bs << v;
+  }
+  bs << fCurrentLength;
+  bs << fGroupConcatLen;
+  bs << fConstantLen;
+  bs << fTimeZone;
+}
+
+void GroupConcator::deserialize(messageqcpp::ByteStream &bs) {
+  fConstCols.clear();
+  messageqcpp::deserializeInlineVector(bs, fConcatColumns);
+  RGDataSizeType size;
+  bs >> size;
+  fConstCols.reserve(size);
+  for (RGDataSizeType i = 0; i < size; i++) {
+    NullString f;
+    bs >> f;
+    uint32_t s;
+    bs >> s;
+    fConstCols.emplace_back(f, s);
+  }
+  bs >> fCurrentLength;
+  bs >> fGroupConcatLen;
+  bs >> fConstantLen;
+  bs >> fTimeZone;
+}
+
 // GroupConcatOrderBy class implementation
 GroupConcatOrderBy::GroupConcatOrderBy()
 {
@@ -758,6 +824,18 @@ uint64_t GroupConcatOrderBy::getKeyLength() const
 {
   // only distinct the concatenated columns
   return fConcatColumns.size();  // cols 0 to fConcatColumns.size() - 1 will be compared
+}
+
+void GroupConcatOrderBy::serialize(messageqcpp::ByteStream &bs) const {
+  GroupConcator::serialize(bs);
+}
+
+void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
+  GroupConcator::deserialize(bs);
+}
+
+rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const {
+  return 0;
 }
 
 void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
@@ -978,11 +1056,6 @@ const string GroupConcatOrderBy::toString() const
 }
 
 // GroupConcatNoOrder class implementation
-GroupConcatNoOrder::GroupConcatNoOrder()
- : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
-{
-}
-
 GroupConcatNoOrder::~GroupConcatNoOrder()
 {
   if (fRm)
@@ -1000,27 +1073,11 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRm = gcc->fRm;
   fSessionMemLimit = gcc->fSessionMemLimit;
 
-  vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
-
-  while (i != gcc->fGroupCols.end())
-    fConcatColumns.push_back((*(i++)).second);
-
-  uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
-
-  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
-  {
-    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(fErrorCode);
+  for (uint32_t colIdx : views::values(gcc->fGroupCols)) {
+    fConcatColumns.push_back(colIdx);
   }
 
-  fMemSize += newSize;
-
-  fData.reinit(fRowGroup, fRowsPerRG);
-  fRowGroup.setData(&fData);
-  fRowGroup.setUseOnlyLongString(true);
-  fRowGroup.resetRowGroup(0);
-  fRowGroup.initRow(&fRow);
-  fRowGroup.getRow(0, &fRow);
+  createNewRGData();
 }
 
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
@@ -1036,41 +1093,38 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
     fCurrentLength += estLen;
     fRowGroup.incRowCount();
     fRow.nextRow();
-
-    if (fRowGroup.getRowCount() >= fRowsPerRG)
-    {
-      // A "postfix" but accurate RAM accounting that sums up sizes of RGDatas.
-      uint64_t newSize = fRowGroup.getSizeWithStrings();
-
-      if (!fRm->getMemory(newSize, fSessionMemLimit))
-      {
+    auto newSize = fRowGroup.getSizeWithStrings(fRowsPerRG);
+    if (newSize > fCurMemSize) {
+      auto diff = newSize - fCurMemSize;
+      if (fRm && !fRm->getMemory(diff, fSessionMemLimit)) {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
       }
-      fMemSize += newSize;
+      fCurMemSize = newSize;
+      fMemSize += diff;
+    }
 
-      fDataQueue.push(fData);
-      fData.reinit(fRowGroup, fRowsPerRG);
-      fRowGroup.setData(&fData);
-      fRowGroup.resetRowGroup(0);
-      fRowGroup.getRow(0, &fRow);
+    if (fRowGroup.getRowCount() >= fRowsPerRG)
+    {
+      createNewRGData();
     }
   }
 }
 
 void GroupConcatNoOrder::merge(GroupConcator* gc)
 {
-  GroupConcatNoOrder* in = dynamic_cast<GroupConcatNoOrder*>(gc);
+  auto* in = dynamic_cast<GroupConcatNoOrder*>(gc);
+  assert(in != nullptr);
 
-  while (in->fDataQueue.size() > 0)
-  {
-    fDataQueue.push(in->fDataQueue.front());
-    in->fDataQueue.pop();
+  RGDataUnPtr tmp = std::move(fDataVec.back());
+  fDataVec.pop_back();
+
+  for (auto& i : in->fDataVec) {
+    fDataVec.emplace_back(std::move(i));
   }
-
-  fDataQueue.push(in->fData);
+  fDataVec.emplace_back(std::move(tmp));
   fMemSize += in->fMemSize;
-  in->fMemSize = 0;
+  in->fMemSize = in->fCurMemSize = 0;
 }
 
 uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
@@ -1078,13 +1132,12 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
   ostringstream oss;
   bool addSep = false;
 
-  fDataQueue.push(fData);
   size_t prevResultSize = 0;
 
   bool isNull = true;
-  while (fDataQueue.size() > 0)
+  for (auto& rgdata : fDataVec)
   {
-    fRowGroup.setData(&fDataQueue.front());
+    fRowGroup.setData(rgdata.get());
     fRowGroup.getRow(0, &fRow);
 
     for (uint64_t i = 0; i < fRowGroup.getRowCount(); i++)
@@ -1100,16 +1153,44 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
     }
     size_t sizeDiff = oss.str().size() - prevResultSize;
     prevResultSize = oss.str().size();
-    if (!fRm->getMemory(sizeDiff, fSessionMemLimit))
+    if (fRm && !fRm->getMemory(sizeDiff, fSessionMemLimit))
     {
       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
       throw IDBExcept(fErrorCode);
     }
     fMemSize += sizeDiff;
-    fDataQueue.pop();
+    rgdata.reset();
   }
 
   return swapStreamWithStringAndReturnBuf(oss, isNull);
+}
+
+void GroupConcatNoOrder::serialize(messageqcpp::ByteStream &bs) const {
+  GroupConcator::serialize(bs);
+  RGDataSizeType sz = fDataVec.size();
+  bs << sz;
+  for (auto& i : fDataVec) {
+    i->serialize(bs, fRowGroup.getDataSize());
+  }
+}
+
+void GroupConcatNoOrder::deserialize(messageqcpp::ByteStream &bs) {
+  GroupConcator::deserialize(bs);
+  RGDataSizeType sz;
+  bs >> sz;
+  fMemSize = fCurMemSize = 0;
+  for (RGDataSizeType i = 0; i < sz; i++) {
+    RGDataUnPtr rgdata(new RGData());
+    rgdata->deserialize(bs, fRowGroup.getDataSize());
+    fRowGroup.setData(rgdata.get());
+    fCurMemSize = fRowGroup.getSizeWithStrings(fRowsPerRG);
+    fMemSize += fCurMemSize;
+    if (fRm && !fRm->getMemory(fCurMemSize, fSessionMemLimit)) {
+      cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+      throw IDBExcept(fErrorCode);
+    }
+    fDataVec.emplace_back(std::move(rgdata));
+  }
 }
 
 const string GroupConcatNoOrder::toString() const
@@ -1117,4 +1198,23 @@ const string GroupConcatNoOrder::toString() const
   return GroupConcator::toString();
 }
 
+void GroupConcatNoOrder::createNewRGData() {
+  auto newSize = fRowGroup.getDataSize(fRowsPerRG);
+
+  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
+  {
+    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+    throw IDBExcept(fErrorCode);
+  }
+
+  fMemSize += newSize;
+  fCurMemSize = newSize;
+
+  fDataVec.emplace_back(make_unique<rowgroup::RGData>(fRowGroup, fRowsPerRG));
+  fRowGroup.setData(fDataVec.back().get());
+  fRowGroup.setUseOnlyLongString(true);
+  fRowGroup.resetRowGroup(0);
+  fRowGroup.initRow(&fRow);
+  fRowGroup.getRow(0, &fRow);
+}
 }  // namespace joblist

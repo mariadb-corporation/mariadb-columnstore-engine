@@ -370,7 +370,7 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   }
 
   if (rg.usesAggregateDataStore()) {
-    aggregateDataStore.reset(new AggregateDataStore());
+    aggregateDataStore.reset(new AggregateDataStore(rg.getGroupConcats()));
   }
 
   userDataStore.reset();
@@ -395,7 +395,7 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
     strings.reset();
 
   if (rg.usesAggregateDataStore()) {
-    aggregateDataStore.reset(new AggregateDataStore());
+    aggregateDataStore.reset(new AggregateDataStore(rg.getGroupConcats()));
   }
   else
     aggregateDataStore.reset();

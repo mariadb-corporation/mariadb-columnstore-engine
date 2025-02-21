@@ -663,7 +663,7 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 void RowAggregation::initialize(bool hasGroupConcat)
 {
   if (hasGroupConcat) {
-    fRowGroupOut->setUseAggregateDataStore(true);
+    fRowGroupOut->setUseAggregateDataStore(true, fGroupConcat);
   }
   // Calculate the length of the hashmap key.
   fAggMapKeyCount = fGroupByCols.size();

@@ -374,6 +374,7 @@ class GroupConcatAg
   }
 
   uint32_t getGroupConcatId() const { return fGroupConcat->id; }
+  virtual uint16_t getType() const = 0;
   virtual RGDataSizeType getDataSize() const = 0;
 
   virtual void serialize(messageqcpp::ByteStream& bs) const = 0;
