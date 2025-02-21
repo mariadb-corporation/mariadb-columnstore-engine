@@ -395,69 +395,53 @@ void TupleAnnexStep::executeNoOrderBy()
     sts.total_units_of_work = 1;
     postStepStartTele(sts);
 
-    if (!fConstant && fLimitCount == std::numeric_limits<uint64_t>::max())
+    while (more && !cancelled() && !fLimitHit)
     {
-      while (more && !cancelled())
+      fRowGroupIn.setData(&rgDataIn);
+      fRowGroupIn.getRow(0, &fRowIn);
+      // Get a new output rowgroup for each input rowgroup to preserve the rids
+      rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+      fRowGroupOut.setData(&rgDataOut);
+      fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+      fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
+      fRowGroupOut.getRow(0, &fRowOut);
+
+      for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled() && !fLimitHit; ++i)
       {
-        fRowGroupIn.setData(&rgDataIn);
-        if (fRowGroupIn.getRowCount() > 0)
+        // skip first limit-start rows
+        if (fRowsProcessed++ < fLimitStart)
         {
-          fOutputDL->insert(rgDataIn);
+          fRowIn.nextRow();
+          continue;
         }
 
-        more = fInputDL->next(fInputIterator, &rgDataIn);
+        if (UNLIKELY(fRowsReturned >= fLimitCount))
+        {
+          fLimitHit = true;
+          fJobList->abortOnLimit((JobStep*)this);
+          continue;
+        }
+
+        if (fConstant)
+          fConstant->fillInConstants(fRowIn, fRowOut);
+        else
+          copyRow(fRowIn, &fRowOut);
+
+        fRowGroupOut.incRowCount();
+
+        if (++fRowsReturned < fLimitCount)
+        {
+          fRowOut.nextRow();
+          fRowIn.nextRow();
+        }
       }
-    }
-    else
-    {
-      while (more && !cancelled() && !fLimitHit)
+
+      if (fRowGroupOut.getRowCount() > 0)
       {
-        fRowGroupIn.setData(&rgDataIn);
-        fRowGroupIn.getRow(0, &fRowIn);
-        // Get a new output rowgroup for each input rowgroup to preserve the rids
-        rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-        fRowGroupOut.setData(&rgDataOut);
-        fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
-        fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
-        fRowGroupOut.getRow(0, &fRowOut);
-
-        for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled() && !fLimitHit; ++i)
-        {
-          // skip first limit-start rows
-          if (fRowsProcessed++ < fLimitStart)
-          {
-            fRowIn.nextRow();
-            continue;
-          }
-
-          if (UNLIKELY(fRowsReturned >= fLimitCount))
-          {
-            fLimitHit = true;
-            fJobList->abortOnLimit((JobStep*)this);
-            continue;
-          }
-
-          if (fConstant)
-            fConstant->fillInConstants(fRowIn, fRowOut);
-          else
-            copyRow(fRowIn, &fRowOut);
-
-          fRowGroupOut.incRowCount();
-
-          if (++fRowsReturned < fLimitCount)
-          {
-            fRowOut.nextRow();
-            fRowIn.nextRow();
-          }
-        }
-
-        if (fRowGroupOut.getRowCount() > 0)
-        {
-          fOutputDL->insert(rgDataOut);
-        }
-
-        more = fInputDL->next(fInputIterator, &rgDataIn);
+        fOutputDL->insert(rgDataOut);
       }
+
+      more = fInputDL->next(fInputIterator, &rgDataIn);
     }
   }
   catch (...)
