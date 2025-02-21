@@ -1,0 +1,29 @@
+-- source ../include/have_columnstore.inc
+
+# Setup: Create a test database
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5890;
+CREATE DATABASE MCOL5890;
+USE MCOL5890;
+--enable_warnings
+
+# Test 1: DROP TABLE IF EXISTS on a non-existent table should succeed silently
+--echo # Test 1: DROP TABLE IF EXISTS on non-existent table
+DROP TABLE IF EXISTS test.does_not_exist;
+
+# Test 2: DROP TABLE on a non-existent table should fail with ER_BAD_TABLE_ERROR
+--echo # Test 2: DROP TABLE on non-existent table
+--error ER_BAD_TABLE_ERROR
+DROP TABLE test.does_not_exist;
+
+# Test 3: DROP TABLE IF EXISTS on an existing table should succeed
+--echo # Test 3: DROP TABLE IF EXISTS on existing table
+CREATE TABLE t1 (id INT) ENGINE=ColumnStore;
+DROP TABLE IF EXISTS t1;
+
+# Verify table is dropped
+--error ER_NO_SUCH_TABLE
+SELECT * FROM t1;
+
+# Cleanup
+DROP DATABASE MCOL5890;

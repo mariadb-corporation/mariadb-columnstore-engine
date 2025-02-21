@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS MCOL5890;
+CREATE DATABASE MCOL5890;
+USE MCOL5890;
+# Test 1: DROP TABLE IF EXISTS on non-existent table
+DROP TABLE IF EXISTS test.does_not_exist;
+Warnings:
+Note	1051	Unknown table 'test.does_not_exist'
+# Test 2: DROP TABLE on non-existent table
+DROP TABLE test.does_not_exist;
+ERROR 42S02: Unknown table 'test.does_not_exist'
+# Test 3: DROP TABLE IF EXISTS on existing table
+CREATE TABLE t1 (id INT) ENGINE=ColumnStore;
+DROP TABLE IF EXISTS t1;
+SELECT * FROM t1;
+ERROR 42S02: Table 'MCOL5890.t1' doesn't exist
+DROP DATABASE MCOL5890;
