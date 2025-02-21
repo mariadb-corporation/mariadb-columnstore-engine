@@ -1520,8 +1520,8 @@ class RowGroup : public messageqcpp::Serializeable
   void resetRowGroup(uint64_t baseRid);
 
   /* The Serializeable interface */
-  void serialize(messageqcpp::ByteStream&) const;
-  void deserialize(messageqcpp::ByteStream&);
+  void serialize(messageqcpp::ByteStream&) const override;
+  void deserialize(messageqcpp::ByteStream&) override;
 
   uint32_t getColumnWidth(uint32_t col) const;
   uint32_t getColumnCount() const;

@@ -361,7 +361,7 @@ class GroupConcatAg
   virtual void processRow(const rowgroup::Row&){};
   virtual void merge(const rowgroup::Row&, uint64_t){};
 
-  uint8_t* getResult()
+  virtual uint8_t* getResult()
   {
     return nullptr;
   }
