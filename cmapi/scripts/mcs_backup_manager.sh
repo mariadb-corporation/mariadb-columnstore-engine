@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.9
+# Version: 3.11
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,26 +26,26 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.9"
+mcs_bk_manager_version="3.11"
 start=$(date +%s)
 action=$1
 
 print_action_help_text() {
     echo "
-    MariaDB Columnstore Backup Manager
-    
-    Actions:
+MariaDB Columnstore Backup Manager
 
-        backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
-        restore                 Restore a backup taken with this script
-        dbrm_backup             Quick hot backup of internal columnstore metadata only - only use under support recommendation
-        dbrm_restore            Restore internal columnstore metadata from dbrm_backup - only use under support recommendation
+Actions:
 
-    Documentation:
-        bash $0 <action> help
+    backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
+    restore                 Restore a backup taken with this script
+    dbrm_backup             Quick hot backup of internal columnstore metadata only - only use under support recommendation
+    dbrm_restore            Restore internal columnstore metadata from dbrm_backup - only use under support recommendation
 
-    Example:
-        bash $0 backup help
+Documentation:
+    bash $0 <action> help
+
+Example:
+    bash $0 backup help
     "
 }
 
@@ -170,6 +170,7 @@ load_default_backup_variables() {
     rsync_flags=" -av";
     poll_interval=5
     poll_max_wait=60;
+    list_backups=false
 
     # Compression Variables
     compress_format=""
@@ -275,7 +276,7 @@ parse_backup_variables() {
                 skip_locks=true
                 shift # past argument
                 ;;
-            -smdb | --skip-mariadb-backup)
+            -smdb |  --skip-mariadb-backup)
                 skip_mdb=true
                 shift # past argument
                 ;;
@@ -320,6 +321,10 @@ parse_backup_variables() {
                 retention_days="$2"
                 shift # past argument
                 shift # past value
+                ;;
+            "list")
+                list_backups=true
+                shift # past argument
                 ;;
             -h|--help|-help|help)
                 print_backup_help_text;
@@ -995,6 +1000,10 @@ poll_check_no_active_sql_writes() {
     no_writes=false
     while [ "$attempts" -lt "$max_poll_attempts" ]; do
         active_writes=$( mariadb -s -N -e "$query" )
+        if [ "$?" -ne 0 ]; then
+            handle_early_exit_on_backup "\n$active_writes\n[X] Failed to poll for active writes\n" true
+        fi
+
         if [ "$active_writes" -le 0 ]; then
             printf "Done\n"
             no_writes=true
@@ -1479,6 +1488,18 @@ run_backup() {
                 esac
             fi
 
+            # Save replication details
+            slave_status=$(mariadb -e "show slave status\G" 2>/dev/null)
+            if [[ $? -eq 0 ]]; then
+                if [[ -n "$slave_status" ]]; then
+                    mariadb -e "show slave status\G" | grep -E "Master_Host|Master_User|Master_Port" > $backup_location$today/replication_details.txt
+                else
+                    echo "No replication details to save"
+                fi
+            else
+                handle_early_exit_on_backup "[!] - Failed to execute the MariaDB command:   mariadb -e 'show slave status\G' \n"
+            fi
+
             if $incremental ; then 
                 # Log each incremental run
                 now=$(date "+%m-%d-%Y %H:%M:%S"); echo "$pm updated on $now" >> $backup_location$today/incrementallyUpdated.txt
@@ -1488,7 +1509,7 @@ run_backup() {
                 extra_flags=""
                 if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi; 
                 if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
-                echo "./$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT -m $mode $extra_flags --quiet" > $backup_location$today/restore.job
+                echo "$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT -m $mode $extra_flags --quiet" > $backup_location$today/restore.job
             fi
 
             final_message+=" @ $backup_location$today"
@@ -1734,7 +1755,7 @@ run_backup() {
             if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
             if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
             if [ -n "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
-            echo "./$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
+            echo "$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
         fi
@@ -1842,6 +1863,7 @@ load_default_restore_variables() {
     xtra_s3_args=""
     xtra_cmd_args=""
     rsync_flags=" -av";
+    list_backups=false
 }
 
 parse_restore_variables() {
@@ -1966,6 +1988,10 @@ parse_restore_variables() {
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
+            "list")
+                list_backups=true
+                shift # past argument
+                ;;
             -h|--help|-help|help)
                 print_restore_help_text;
                 exit 1;
@@ -2009,7 +2035,6 @@ print_restore_help_text()
         -sb  | --skip-bucket-data       Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
         -q   | --quiet                  Silence verbose copy command outputs
         -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
-        -P   | --parallel               Number of parallel decompression and mbstream threads to run
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
@@ -2044,8 +2069,7 @@ print_restore_variables()
     if [[ -n "$compress_format" ]]; then
         echo "Compression:        true"
         echo "Compression Format: $compress_format";
-        echo "Decompression Threads:" "$PARALLEL_THREADS";
-    else
+    else 
         echo "Compression:        false"
     fi
     if [ $storage == "LocalStorage" ]; then 
@@ -2135,7 +2159,7 @@ validation_prechecks_for_restore() {
     esac
 
     if eval $cmapi_installed_command ; then
-        if ! sudo mcs cmapi is-ready ; then 
+        if ! sudo mcs cmapi is-ready &> /dev/null ; then 
             printf " - Columnstore Management API Status .. Offline\n"; 
         else 
             handle_early_exit_on_restore "\n[X] Cmapi is ONLINE - please turn off \n\n"; 
@@ -2724,7 +2748,7 @@ load_default_dbrm_variables() {
      # Default variables
     backup_base_name="dbrm_backup"
     backup_interval_minutes=90
-    retention_days=7
+    retention_days=0
     backup_location=/tmp/dbrm_backups
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
@@ -2747,6 +2771,7 @@ load_default_dbrm_restore_variables() {
     backup_folder_to_restore=""
     skip_dbrm_backup=false
     skip_storage_manager=false
+    list_dbrm_backups=false
 
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then 
@@ -2761,18 +2786,19 @@ print_dbrm_backup_help_text() {
         -m   | --mode                  ['loop','once']; Determines if this script runs in a forever loop sleeping -i minutes or just once 
         -i   | --interval              Number of minutes to sleep when --mode loop 
         -r   | --retention-days        Retain dbrm backups created within the last X days, the rest are deleted
-        -p   | --path                  path of where to save the dbrm backups on disk
-        -nb  | --name-backup           custom name to prefex dbrm backups with
+        -bl  | --backup-location       Path of where to save the dbrm backups on disk
+        -nb  | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
         -ssm | --skip-storage-manager  skip backing up storagemanager directory
 
-        Default: ./$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups
+        Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
         Examples:
-            ./$0 dbrm_backup --mode loop --interval 90 --retention-days 7 --path /mnt/dbrm_backups
-            ./$0 dbrm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
+            ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups 
+            ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode once -nb my-one-off-backup-before-upgrade
+            ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode loop --interval 90
             
         Cron Example:
-        */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+        */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --backup-location /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
     ";
 }
 
@@ -2780,17 +2806,17 @@ print_dbrm_restore_help_text() {
     echo "
     Columnstore DBRM Restore
 
-        -p   | --path                  path of where to save the dbrm backups on disk
-        -d   | --directory             date or directory chose to restore from
-        -ns  | --no-start              do not attempt columnstore startup post dbrm_restore
-        -sdbk| --skip-dbrm-backup      skip backing up dbrms brefore restoring
-        -ssm | --skip-storage-manager  skip restoring storagemanager directory
+        -bl  | --backup-location       Path of where the dbrm backups exist on disk
+        -l   | --load                  Name of the directory to restore from -bl
+        -ns  | --no-start              Do not attempt columnstore startup post dbrm_restore
+        -sdbk| --skip-dbrm-backup      Skip backing up dbrms brefore restoring
+        -ssm | --skip-storage-manager  Skip restoring storagemanager directory
 
-        Default: ./$0 dbrm_restore --path /tmp/dbrm_backups 
+        Default: ./$0 dbrm_restore --backup-location /tmp/dbrm_backups 
 
         Examples:
-            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842    
-            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
+            ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842    
+            ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842 --no-start
     ";
 }
 
@@ -2813,7 +2839,7 @@ parse_dbrms_variables() {
                 shift # past argument
                 shift # past value
                 ;;
-            -p|--path)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
@@ -2836,13 +2862,13 @@ parse_dbrms_variables() {
                 quiet=true
                 shift # past argument
                 ;;
-            -h|--help|-help|help)
-                print_dbrm_backup_help_text;
-                exit 1;
-                ;;
             "list")
                 list_dbrm_backups=true
                 shift # past argument
+                ;;
+            -h|--help|-help|help)
+                print_dbrm_backup_help_text;
+                exit 1;
                 ;;
             *)  # unknown option
                 printf "\nunknown flag: $1\n"
@@ -2861,12 +2887,12 @@ parse_dbrm_restore_variables() {
             dbrm_restore)
                 shift # past argument
                 ;;
-            -p|--path)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -d|--directory)
+            -l|--load)
                 backup_folder_to_restore="$2"
                 shift # past argument
                 shift # past value
@@ -2881,6 +2907,10 @@ parse_dbrm_restore_variables() {
                 ;;
             -ssm|--skip-storage-manager)
                 skip_storage_manager=true
+                shift # past argument
+                ;;
+            "list")
+                list_dbrm_backups=true
                 shift # past argument
                 ;;
             -h|--help|-help|help)
@@ -2956,14 +2986,14 @@ validation_prechecks_before_listing_restore_options() {
 
     # confirm backup directory exists
     if [ ! -d $backup_location ]; then
-        printf "[!!] Backups Directory does NOT exist --path $backup_location \n"
+        printf "[!!] Backups Directory does NOT exist --backup-location $backup_location \n"
         printf "ls -la $backup_location\n\n"
         exit 1;
     fi
     
     # Check if backup directory is empty
     if [ -z "$(find "$backup_location" -mindepth 1 | head )" ]; then
-        printf "[!!] Backups Directory is empty --path $backup_location \n"
+        printf "[!!] Backups Directory is empty --backup-location $backup_location \n"
         printf "ls -la $backup_location\n\n"
         exit 1
     fi
@@ -2990,7 +3020,7 @@ validation_prechecks_for_dbrm_restore() {
     fi
 
     if [ ! -d "${backup_location}/${backup_folder_to_restore_dbrms}" ]; then 
-        printf "[!] \$backup_folder_to_restore: Path of backup to restore does Not exist\n"
+        printf "[!] --load: Path of backup to restore does NOT exist\n"
         printf "Path: ${backup_location}/${backup_folder_to_restore_dbrms}\n\n"
         exit 2;
     else   
@@ -3098,14 +3128,7 @@ process_dbrm_backup() {
     load_default_dbrm_variables
     parse_dbrms_variables "$@";
 
-    if $list_dbrm_backups; then
-        validation_prechecks_before_listing_restore_options
-        printf "\nExisting DBRM Backups\n";
-        list_restore_options_from_backups "$@"
-        echo "--------------------------------------------------------------------------"
-        printf "Restore with ./$0 dbrm_restore --path $backup_location --directory <backup_folder_from_above>\n\n"
-        exit 0;
-    fi;
+    handle_list_dbrm_backups
 
     if ! $quiet ; then
 
@@ -3249,13 +3272,13 @@ shutdown_columnstore_mariadb_cmapi() {
 # Input
 # $1 - directory to search
 # Output
-# subdir_dbrms
-# latest_em_file
-# em_file_size
-# em_file_created
-# em_file_full_path
-# storagemanager_dir_exists
-get_latest_em_from_directory() {
+#   subdir_dbrms
+#   latest_em_file
+#   em_file_size
+#   em_file_created
+#   em_file_full_path
+#   storagemanager_dir_exists
+get_latest_em_from_dbrm_directory() {
     
     subdir_dbrms=""
     latest_em_file=""
@@ -3307,13 +3330,82 @@ get_latest_em_from_directory() {
 
 list_restore_options_from_backups() {
 
+    if [ $storage == "S3" ]; then 
+        echo " Not implemented" ; exit 1;
+    else 
+        
+        if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then
+            echo "--------------------------------------------------------------------------"
+            echo "Retention Policy: $retention_days days"
+        fi;
+        echo "--------------------------------------------------------------------------"
+        printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "Options" "Last-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size" "Days Old"
+
+        # Iterate over subdirectories
+        for subdir in "${backup_location}"/*; do
+            
+            if [ -f "${subdir}/cs-localfiles.tar.pigz" ]; then
+                em_file_created=$( date -r "$subdir" +"%b %d %H:%M" )
+                em_file_size="N/A"
+                em_file_name="N/A"
+                journal_file="N/A"
+                vbbm_file="N/A"
+                vss_file="N/A"
+
+                file_age=$(($(date +%s) - $(date -r "$subdir" +%s)))
+                file_age_days=$((file_age / 86400))
+                will_delete="$(find "$subdir" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec echo {} \;)"
+                if [ -n "$will_delete" ]; then
+                    file_age_days="$file_age_days (Will Delete)"
+                fi
+
+                printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file" "$file_age_days"
+                continue
+            fi
+            
+            get_latest_em_from_dbrm_directory "$subdir/data1/systemFiles/dbrm/"
+               
+
+            if [ -f "${subdir_dbrms}/BRM_saves_journal" ]; then
+                em_file_name=$(basename "$em_file_full_path")
+                version_prefix=${em_file_name::-3}
+                journal_file=$(ls -la "${subdir_dbrms}/BRM_saves_journal" 2>/dev/null | awk 'NR==1 {print $5}' )
+                vbbm_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vbbm" 2>/dev/null | awk 'NR==1 {print $5}' )
+                vss_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vss" 2>/dev/null | awk 'NR==1 {print $5}' )
+
+                file_age=$(($(date +%s) - $(date -r "$subdir/data1/systemFiles" +%s)))
+                file_age_days=$((file_age / 86400))
+
+                # Check if the backup will be deleted given the retention policy defined
+                if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then 
+                    will_delete="$(find "$subdir/data1/systemFiles" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec echo {} \;)"
+
+                    if [ -n "$will_delete" ]; then
+                        file_age_days="$file_age_days (Will Delete)"
+                    fi
+                fi;
+
+                printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file" "$file_age_days"
+            fi
+        done
+    fi
+
+
+}
+
+list_dbrm_restore_options_from_backups() {
+
+    if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then
+        echo "--------------------------------------------------------------------------"
+        echo "Retention Policy: $retention_days days"
+    fi;
     echo "--------------------------------------------------------------------------"
     printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "Options" "Last-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size"
 
     # Iterate over subdirectories
     for subdir in "${backup_location}"/*; do
 
-        get_latest_em_from_directory "$subdir"
+        get_latest_em_from_dbrm_directory "$subdir"
 
         if [ -f "${subdir_dbrms}/BRM_saves_journal" ]; then
             em_file_name=$(basename "$em_file_full_path")
@@ -3324,11 +3416,39 @@ list_restore_options_from_backups() {
             if [ $storagemanager_dir_exists == false ]; then
                 vss_file+=" (No Storagemanager Dir)"
             fi; 
+            
             printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file"
         fi
     done
 
 
+}
+
+# $1 message
+dynamic_list_dbrm_backups() {
+
+    validation_prechecks_before_listing_restore_options
+    printf "$1";
+    list_dbrm_restore_options_from_backups "$@"
+    echo "--------------------------------------------------------------------------"
+    printf "Restore with ./$0 dbrm_restore --backup-location $backup_location --load <backup_folder_from_above>\n\n"
+}
+
+handle_list_dbrm_backups () {
+    
+    if $list_dbrm_backups; then
+        dynamic_list_dbrm_backups "\nExisting DBRM Backups\n"
+        exit 0
+    fi;
+
+} 
+
+handle_empty_dbrm_restore_folder() { 
+
+    if [ -z "$backup_folder_to_restore" ]; then
+        dynamic_list_dbrm_backups "[!] Pick Option [Required]\n"
+        exit 1
+    fi;
 }
 
 process_dbrm_restore() {
@@ -3346,26 +3466,15 @@ process_dbrm_restore() {
     printf "Backup to Restore:    $backup_folder_to_restore \n\n"
 
     validation_prechecks_before_listing_restore_options
-
-    # Display restore options 
-    if [ -z "$backup_folder_to_restore" ]; then
-        printf "[!] Pick Option\n"
-        list_restore_options_from_backups "$@"
-        printf "\nExample: \n"
-        printf " --directory dbrm_backup_20240103_183536 \n\n"
-        printf "Define which backup to restore via flag --directory \n"
-        echo "Rerun:    $0 $@ --directory xxxxxxx" 
-        echo ""
-        exit 1;
-    fi;
-    
+    handle_list_dbrm_backups
+    handle_empty_dbrm_restore_folder
     validation_prechecks_for_dbrm_restore
     shutdown_columnstore_mariadb_cmapi
 
     # Take an automated backup
     if [[ $skip_dbrm_backup == false ]]; then
         printf " - Saving a DBRM backup before restoring ... \n"
-        if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then 
+        if ! process_dbrm_backup -bl $backup_location -r 0 -nb dbrms_before_restore_backup --quiet ; then 
             echo "[!!] Failed to take a DBRM backup before restoring"
             echo "exiting ..."
             exit 1;
@@ -3373,7 +3482,7 @@ process_dbrm_restore() {
     fi;
 
     # Detect newest date _em from the set, if smaller than the current one throw a warning
-    get_latest_em_from_directory "${backup_location}/${backup_folder_to_restore}"
+    get_latest_em_from_dbrm_directory "${backup_location}/${backup_folder_to_restore}"
     if [ ! -f $em_file_full_path ]; then 
         echo "[!] Failed to parse _em file: $em_file_full_path doesnt exist"
         exit 1;
@@ -3661,7 +3770,33 @@ manually_run_loadbrm_and_savebrm() {
     clearShm 
     printf "Done\n"
     sleep 2
+}
 
+# $1 - message
+dynamic_list_backups() {
+
+    validation_prechecks_before_listing_restore_options
+    printf "$1";
+    list_restore_options_from_backups "$@"
+    echo "--------------------------------------------------------------------------"
+    printf "Restore with ./$0 restore --backup-location $backup_location --load <backup_folder_from_above>\n\n"
+}
+
+
+handle_list_backups () {
+
+    if $list_backups ; then
+        dynamic_list_backups "\nExisting Backups\n"
+        exit 0
+    fi;
+}
+
+handle_empty_restore_folder() {   
+
+    if [ -z "$load_date" ]; then
+        dynamic_list_backups "\n[!] Pick Option [Required]\n"
+        exit 1
+    fi;
 }
 
 
@@ -3669,6 +3804,7 @@ process_backup()
 {   
     load_default_backup_variables;
     parse_backup_variables "$@";
+    handle_list_backups "$@"
     print_backup_variables;
     check_for_dependancies "backup";
     validation_prechecks_for_backup;
@@ -3682,6 +3818,8 @@ process_restore()
 {
     load_default_restore_variables;
     parse_restore_variables "$@";
+    handle_list_backups "$@"
+    handle_empty_restore_folder "$@"
     print_restore_variables;
     check_for_dependancies "restore";
     validation_prechecks_for_restore;
