@@ -29,8 +29,9 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include <tr1/unordered_set>
+#include <unordered_set>
 
+#include "countingallocator.h"
 #include "rowgroup.h"
 #include "hasher.h"
 #include "stlpoolallocator.h"
@@ -455,9 +456,8 @@ class IdbOrderBy : public IdbCompare
     bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
   };
 
-  typedef std::tr1::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
-                                  utils::STLPoolAllocator<rowgroup::Row::Pointer> >
-      DistinctMap_t;
+  using DistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
+                                  allocators::CountingAllocator<rowgroup::Row::Pointer>>;
   boost::scoped_ptr<DistinctMap_t> fDistinctMap;
   rowgroup::Row row1, row2;  // scratch space for Hasher & Eq
 

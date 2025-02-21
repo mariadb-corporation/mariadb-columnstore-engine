@@ -747,13 +747,14 @@ IdbOrderBy::~IdbOrderBy()
     delete *i++;
 }
 
+// INV fRm is not NULL here
 void IdbOrderBy::initialize(const RowGroup& rg)
 {
   // initialize rows
   IdbCompare::initialize(rg);
 
   auto newSize = rg.getSizeWithStrings(fRowsPerRG);
-  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
+  if (!fRm->getMemory(newSize, fSessionMemLimit))
   {
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
     throw IDBExcept(fErrorCode);
@@ -773,7 +774,8 @@ void IdbOrderBy::initialize(const RowGroup& rg)
 
   if (fDistinct)
   {
-    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength())));
+    auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
+    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength()), alloc));
   }
 }
 
