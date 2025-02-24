@@ -419,6 +419,7 @@ void GroupConcatAgUM::applyMapping(const std::shared_ptr<int[]>& mapping, const 
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::VARCHAR ||
           fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT)
       {
+        // TODO: free previous string if it is in the StringStorage
         fRow.setStringField(row.getConstString(mapping[i]), i);
       }
       else if (fRow.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE)
