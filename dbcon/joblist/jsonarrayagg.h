@@ -56,7 +56,7 @@ class JsonArrayAggregatAgUM : public GroupConcatAgUM
   using rowgroup::GroupConcatAg::merge;
   void initialize() override;
   void processRow(const rowgroup::Row&) override;
-  EXPORT void merge(const rowgroup::Row&, int64_t) override;
+  EXPORT void merge(const rowgroup::Row&, uint64_t) override;
 
   EXPORT void getResult(uint8_t*);
   EXPORT uint8_t* getResult() override;
@@ -93,6 +93,8 @@ class JsonArrayAggNoOrder : public JsonArrayAggregator
   void initialize(const rowgroup::SP_GroupConcat&) override;
   void processRow(const rowgroup::Row&) override;
 
+  rowgroup::RGDataSizeType getDataSize() const override { return fMemSize; }
+
   using GroupConcator::merge;
   void merge(GroupConcator*) override;
   using GroupConcator::getResult;
@@ -123,6 +125,8 @@ class JsonArrayAggOrderBy : public JsonArrayAggregator, public ordering::IdbOrde
   void initialize(const rowgroup::SP_GroupConcat&) override;
   void processRow(const rowgroup::Row&) override;
   uint64_t getKeyLength() const override;
+
+  rowgroup::RGDataSizeType getDataSize() const override { return 0; }
 
   using GroupConcator::merge;
   void merge(GroupConcator*) override;

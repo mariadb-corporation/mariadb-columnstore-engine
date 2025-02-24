@@ -345,7 +345,7 @@ void JsonArrayAggregatAgUM::processRow(const rowgroup::Row& inRow)
   fConcator->processRow(fRow);
 }
 
-void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
+void JsonArrayAggregatAgUM::merge(const rowgroup::Row& inRow, uint64_t i)
 {
   uint8_t* data = inRow.getData();
   joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + inRow.getOffset(i)));
