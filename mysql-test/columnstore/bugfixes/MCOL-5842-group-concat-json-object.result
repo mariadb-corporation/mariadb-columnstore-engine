@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS MCOL5842;
+CREATE DATABASE MCOL5842;
+USE MCOL5842;
+CREATE TABLE tcs(t TEXT) ENGINE=Columnstore;
+INSERT INTO tcs(t) VALUES ('');
+SELECT JSON_OBJECT('t', t, 'a', 'b') FROM tcs;
+JSON_OBJECT('t', t, 'a', 'b')
+{"t": "", "a": "b"}
+SELECT GROUP_CONCAT(JSON_OBJECT('t', t, 'a', 'b')) FROM tcs;
+GROUP_CONCAT(JSON_OBJECT('t', t, 'a', 'b'))
+{"t": "", "a": "b"}
+DROP DATABASE MCOL5842;
