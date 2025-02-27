@@ -2633,6 +2633,9 @@ void RowAggregationUM::attachGroupConcatAg()
 
     for (uint64_t i = 0; i < fFunctionColGc.size(); i++)
     {
+      if (fFunctionColGc[i]->fAggFunction == ROWAGG_SELECT_SOME) {
+        continue;
+      }
       int64_t colOut = fFunctionColGc[i]->fOutputColumnIndex;
       SP_GroupConcatAg gcc(GroupConcatAg::create(fFunctionColGc[i]->fAggFunction, fGroupConcat[gc_idx++]));
       fRow.setAggregateData(gcc, colOut);

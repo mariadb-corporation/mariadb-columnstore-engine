@@ -1301,6 +1301,20 @@ void RowGroup::deserialize(ByteStream& bs)
   charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
+void RowGroup::setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats) {
+  idbassert(!b || !group_concats.empty());
+  if (useAggregateDataStore && !b) {
+    fGroupConcats.clear();
+  } else if (b) {
+    fGroupConcats.assign(group_concats.begin(), group_concats.end());
+    if (rgData) {
+      rgData->aggregateDataStore.reset(new AggregateDataStore(fGroupConcats));
+      aggregateDataStore = rgData->aggregateDataStore.get();
+    }
+  }
+  useAggregateDataStore = b;
+}
+
 void RowGroup::serializeRGData(ByteStream& bs) const
 {
   rgData->serialize(bs, getDataSize());

@@ -2268,7 +2268,10 @@ inline void RGData::getRow(uint32_t num, Row* row)
   idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
   row->setData(
-      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)],
+       strings.get(),
+       userDataStore.get(),
+       aggregateDataStore.get()));
 }
 
 }  // namespace rowgroup
