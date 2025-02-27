@@ -39,7 +39,6 @@
 #include <cmath>
 #include <cfloat>
 #include <execinfo.h>
-#include <boost/format/group.hpp>
 
 #include "hasher.h"
 

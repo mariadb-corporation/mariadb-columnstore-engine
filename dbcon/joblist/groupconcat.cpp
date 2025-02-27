@@ -18,9 +18,11 @@
 
 //  $Id: groupconcat.cpp 9705 2013-07-17 20:06:07Z pleblanc $
 
+#include <algorithm>
 #include <iostream>
 // #define NDEBUG
 #include <cassert>
+#include <ranges>
 #include <string>
 using namespace std;
 
@@ -355,11 +357,9 @@ void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
   fConcator->processRow(fRow);
 }
 
-void GroupConcatAgUM::merge(const rowgroup::Row& inRow, int64_t i)
+void GroupConcatAgUM::merge(const rowgroup::Row& inRow, uint64_t i)
 {
-  uint8_t* data = inRow.getData();
-  joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + inRow.getOffset(i)));
-
+  auto* gccAg = dynamic_cast<joblist::GroupConcatAgUM*>(inRow.getAggregateData(i));
   fConcator->merge(gccAg->concator().get());
 }
 
@@ -459,8 +459,9 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fConstCols = gcc->fConstCols;
   fConstantLen = sepSize;
 
-  for (uint64_t i = 0; i < fConstCols.size(); i++)
-    fConstantLen += strlen(fConstCols[i].first.str());
+  for (const auto& str : views::keys(gcc->fConstCols)) {
+    fConstantLen += str.length();
+  }
 }
 
 void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
@@ -589,18 +590,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
 bool GroupConcator::concatColIsNull(const rowgroup::Row& row)
 {
-  bool ret = false;
-
-  for (vector<uint32_t>::iterator i = fConcatColumns.begin(); i != fConcatColumns.end(); i++)
-  {
-    if (row.isNullValue(*i))
-    {
-      ret = true;
-      break;
-    }
-  }
-
-  return ret;
+  return ranges::any_of(fConcatColumns, [&](uint32_t idx) { return row.isNullValue(idx); });
 }
 
 int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
