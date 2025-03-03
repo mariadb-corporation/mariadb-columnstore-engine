@@ -143,6 +143,7 @@ class GroupConcatNoOrder : public GroupConcator
 {
  public:
   GroupConcatNoOrder() = default;
+  GroupConcatNoOrder(messageqcpp::ByteStream& bs, rowgroup::SP_GroupConcat& gcc);
   ~GroupConcatNoOrder() override;
 
   void initialize(const rowgroup::SP_GroupConcat&) override;
@@ -175,16 +176,17 @@ class GroupConcatNoOrder : public GroupConcator
 
 // ORDER BY used in GROUP_CONCAT class
 // This version is for GROUP_CONCAT, the size is limited by the group_concat_max_len.
-class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
+class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
 {
  public:
   GroupConcatOrderBy();
+  GroupConcatOrderBy(messageqcpp::ByteStream& bs, rowgroup::SP_GroupConcat& gcc);
   ~GroupConcatOrderBy() override;
 
-  using ordering::IdbOrderBy::initialize;
+  using ordering::IdbCompare::initialize;
   void initialize(const rowgroup::SP_GroupConcat&) override;
   void processRow(const rowgroup::Row&) override;
-  uint64_t getKeyLength() const override;
+  uint64_t getKeyLength() const;
 
   void serialize(messageqcpp::ByteStream &) const override;
   void deserialize(messageqcpp::ByteStream &) override;
@@ -199,6 +201,49 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbOrderBy
   const std::string toString() const override;
 
  protected:
+  struct Hasher
+  {
+   GroupConcatOrderBy* ts;
+   utils::Hasher_r h;
+   uint32_t colCount;
+
+   Hasher(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c) {
+   }
+   uint64_t operator()(const rowgroup::Row::Pointer &) const;
+  };
+
+  struct Eq {
+   GroupConcatOrderBy* ts;
+   uint32_t colCount;
+
+   Eq(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c) {
+   }
+
+   bool operator()(const rowgroup::Row::Pointer &, const rowgroup::Row::Pointer &) const;
+  };
+
+  using DistinctMap = std::unordered_map<rowgroup::Row::Pointer, uint64_t, Hasher, Eq>;
+
+  class SortingPQ;
+
+ protected:
+  uint64_t getCurrentRowIdx() const;
+  static uint64_t shiftGroupIdxBy(uint64_t idx, uint32_t shift);
+
+  rowgroup::RGDataSizeType fMemSize{0};
+  static constexpr uint64_t fRowsPerRG{128};
+  static constexpr uint64_t fErrorCode{logging::ERR_AGGREGATION_TOO_BIG};
+  joblist::ResourceManager* fRm{nullptr};
+  boost::shared_ptr<int64_t> fSessionMemLimit;
+
+  std::vector<ordering::IdbSortSpec> fOrderByCond;
+  rowgroup::Row fRow0;
+  rowgroup::Row row1, row2;
+  ordering::CompareRule fRule;
+  std::vector<rowgroup::RGDataUnPtr> fDataVec;
+  bool fDistinct;
+  std::unique_ptr<DistinctMap> fDistinctMap;
+  std::unique_ptr<SortingPQ> fOrderByQueue;
 };
 
 }  // namespace joblist
