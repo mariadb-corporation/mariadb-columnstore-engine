@@ -388,6 +388,7 @@ void GroupConcatAgUM::deserialize(messageqcpp::ByteStream &bs) {
   } else {
     fConcator.reset(new GroupConcatNoOrder());
   }
+  fConcator->initialize(fGroupConcat);
   fConcator->deserialize(bs);
   uint8_t tmp8;
   bs >> tmp8;
@@ -900,14 +901,119 @@ uint64_t GroupConcatOrderBy::getKeyLength() const
 
 void GroupConcatOrderBy::serialize(messageqcpp::ByteStream &bs) const {
   GroupConcator::serialize(bs);
+  uint64_t sz = fOrderByCond.size();
+  bs << sz;
+  for (const auto& obcond : fOrderByCond) {
+    bs << obcond.fIndex;
+    bs << uint8_t(obcond.fAsc);
+    bs << uint8_t(obcond.fNf);
+  }
+  sz = fDataVec.size();
+  bs << sz;
+  for (const auto& rgdata: fDataVec) {
+    rgdata->serialize(bs, fRowGroup.getDataSize(fRowsPerRG));
+  }
+  bs << uint8_t(fDistinct);
+  if (fDistinct) {
+    sz = fDistinctMap->size();
+    bs << sz;
+    for (const auto& idx: views::values(*fDistinctMap)) {
+      bs << idx;
+    }
+  }
+  sz = fOrderByQueue->size();
+  bs << sz;
+  for (const auto& obq: *fOrderByQueue) {
+    bs << obq.fIdx;
+  }
 }
 
 void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
   GroupConcator::deserialize(bs);
+  if (fRm) {
+    fRm->returnMemory(fMemSize, fSessionMemLimit);
+  }
+  fMemSize = 0;
+  uint64_t sz;
+  bs >> sz;
+  fOrderByCond.resize(sz);
+  uint8_t tmp8;
+  for (uint8_t i = 0; i < sz; ++i) {
+      bs >> fOrderByCond[i].fIndex;
+      bs >> tmp8;
+      fOrderByCond[i].fAsc = tmp8;
+      bs >> tmp8;
+      fOrderByCond[i].fNf = tmp8;
+  }
+
+  bs >> sz;
+  fDataVec.resize(sz);
+  for (uint64_t i = 0; i < sz; ++i)
+  {
+      fDataVec[i].reset(new rowgroup::RGData(fRowGroup, fRowsPerRG));
+      fDataVec[i]->deserialize(bs, fRowGroup.getDataSize(fRowsPerRG));
+      fRowGroup.setData(fDataVec[i].get());
+      auto rgsize = fRowGroup.getSizeWithStrings(fRowsPerRG);
+      fMemSize += rgsize;
+      if (fRm && !fRm->getMemory(rgsize, fSessionMemLimit)) {
+        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+        throw IDBExcept(fErrorCode);
+      }
+  }
+
+  fRowGroup.initRow(&fRow0);
+  fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
+
+  fRule.fIdbCompare = this;
+  for (auto& compare: fRule.fCompares) {
+    delete compare;
+    compare = nullptr;
+  }
+  fRule.fCompares.clear();
+  fRule.compileRules(fOrderByCond, fRowGroup);
+  fRowGroup.initRow(&row1);
+  fRowGroup.initRow(&row2);
+
+  bs >> tmp8;
+  fDistinct = tmp8;
+  if (fDistinct)
+  {
+    bs >> sz;
+    fDistinctMap.reset(new DistinctMap(sz, Hasher(this, getKeyLength()), Eq(this, getKeyLength())));
+    for (uint64_t i = 0; i < sz; ++i)
+    {
+        uint64_t idx;
+        bs >> idx;
+        uint64_t gid = idx >> 16;
+        uint64_t rid = idx & 0xffff;
+        rowgroup::Row row;
+        fRowGroup.setData(fDataVec[gid].get());
+        fRowGroup.initRow(&row);
+        fRowGroup.getRow(rid, &row);
+        fDistinctMap->emplace(row.getPointer(), idx);
+    }
+  }
+
+  bs >> sz;
+  fOrderByQueue.reset(new SortingPQ(sz));
+  for (uint64_t i = 0; i < sz; ++i)
+  {
+      uint64_t idx;
+      bs >> idx;
+      uint64_t gid = idx >> 16;
+      uint64_t rid = idx & 0xffff;
+      rowgroup::Row row;
+      fRowGroup.setData(fDataVec[gid].get());
+      fRowGroup.initRow(&row);
+      fRowGroup.getRow(rid, &row);
+      fOrderByQueue->push(OrderByRow(row, idx, fRule));
+  }
+  fRowGroup.setData(fDataVec.back().get());
+  fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
 }
 
 rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const {
-  return 0;
+  return fMemSize;
 }
 
 void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
@@ -1228,14 +1334,15 @@ void GroupConcatNoOrder::merge(GroupConcator* gc)
   auto* in = dynamic_cast<GroupConcatNoOrder*>(gc);
   assert(in != nullptr);
 
-  RGDataUnPtr tmp = std::move(fDataVec.back());
-  fDataVec.pop_back();
-
   for (auto& i : in->fDataVec) {
     fDataVec.emplace_back(std::move(i));
   }
-  fDataVec.emplace_back(std::move(tmp));
+  fRowGroup.setData(fDataVec.back().get());
+  fRowGroup.setUseOnlyLongString(true);
+  fRowGroup.initRow(&fRow);
+  fRowGroup.getRow(fRowGroup.getRowCount(), &fRow);
   fMemSize += in->fMemSize;
+  fCurMemSize = in->fCurMemSize;
   in->fMemSize = in->fCurMemSize = 0;
 }
 
@@ -1250,6 +1357,7 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
   for (auto& rgdata : fDataVec)
   {
     fRowGroup.setData(rgdata.get());
+    fRowGroup.initRow(&fRow);
     fRowGroup.getRow(0, &fRow);
 
     for (uint64_t i = 0; i < fRowGroup.getRowCount(); i++)
