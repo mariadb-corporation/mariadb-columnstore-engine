@@ -275,9 +275,10 @@ uint64_t TupleBPS::JoinLocalData::generateJoinResultSet(const uint32_t depth,
         uint64_t baseRid = local_outputRG.getBaseRid();
         outputData.push_back(joinedData);
         // Don't let the join results buffer get out of control.
-        if (tbps->resourceManager()->getMemory(local_outputRG.getMaxDataSize(), false))
+        auto outputDataSize = local_outputRG.getMaxDataSizeWithStrings();
+        if (tbps->resourceManager()->getMemory(outputDataSize, false))
         {
-          memSizeForOutputRG += local_outputRG.getMaxDataSize();
+          memSizeForOutputRG += outputDataSize;
         }
         else
         {
