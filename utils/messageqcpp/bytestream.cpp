@@ -58,8 +58,6 @@ void ByteStream::doCopy(const ByteStream& rhs)
   memcpy(fBuf + ISSOverhead, rhs.fCurOutPtr, rlen);
   fCurInPtr = fBuf + ISSOverhead + rlen;
   fCurOutPtr = fBuf + ISSOverhead;
-  // Copy `longStrings` as well.
-  longStrings = rhs.longStrings;
 }
 
 ByteStream::ByteStream(const ByteStream& rhs) : fBuf(0), fCurInPtr(0), fCurOutPtr(0), fMaxLen(0)
@@ -86,8 +84,6 @@ ByteStream& ByteStream::operator=(const ByteStream& rhs)
       delete[] fBuf;
       fBuf = fCurInPtr = fCurOutPtr = 0;
       fMaxLen = 0;
-      // Clear `longStrings`.
-      longStrings.clear();
     }
   }
 
@@ -150,21 +146,6 @@ void ByteStream::growBuf(BSSizeType toSize)
     fCurInPtr = fBuf + curInOff;
     fCurOutPtr = fBuf + curOutOff;
   }
-}
-
-std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings()
-{
-  return longStrings;
-}
-
-const std::vector<std::shared_ptr<uint8_t[]>>& ByteStream::getLongStrings() const
-{
-  return longStrings;
-}
-
-void ByteStream::setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other)
-{
-  longStrings = other;
 }
 
 ByteStream& ByteStream::operator<<(const int8_t b)
@@ -574,7 +555,6 @@ void ByteStream::swap(ByteStream& rhs)
   std::swap(fCurInPtr, rhs.fCurInPtr);
   std::swap(fCurOutPtr, rhs.fCurOutPtr);
   std::swap(fMaxLen, rhs.fMaxLen);
-  std::swap(longStrings, rhs.longStrings);
 }
 
 ifstream& operator>>(ifstream& ifs, ByteStream& bs)
@@ -596,27 +576,6 @@ bool ByteStream::operator==(const ByteStream& b) const
 
   if (memcmp(fCurOutPtr, b.fCurOutPtr, length()) != 0)
     return false;
-
-  // Check the `longString` sizes.
-  if (longStrings.size() != b.longStrings.size())
-    return false;
-
-  // For each `longString`.
-  for (uint32_t i = 0, e = b.longStrings.size(); i < e; ++i)
-  {
-    const auto* leftMemChunk = reinterpret_cast<MemChunk*>(longStrings[i].get());
-    const auto* rightMemChunk = reinterpret_cast<MemChunk*>(b.longStrings[i].get());
-    if (leftMemChunk == nullptr || rightMemChunk == nullptr)
-      return false;
-
-    const uint32_t leftSize = leftMemChunk->currentSize;
-    const uint32_t rightSize = rightMemChunk->currentSize;
-    if (leftSize != rightSize)
-      return false;
-
-    if (memcmp(leftMemChunk->data, rightMemChunk->data, leftSize) != 0)
-      return false;
-  }
 
   return true;
 }

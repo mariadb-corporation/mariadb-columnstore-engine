@@ -444,10 +444,6 @@ class ByteStream : public Serializeable
   EXPORT static const BSSizeType ISSOverhead =
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
-  // Methods to get and set `long strings`.
-  EXPORT std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings();
-  EXPORT const std::vector<std::shared_ptr<uint8_t[]>>& getLongStrings() const;
-  EXPORT void setLongStrings(const std::vector<std::shared_ptr<uint8_t[]>>& other);
 
   friend class ::ByteStreamTestSuite;
 
@@ -466,19 +462,10 @@ class ByteStream : public Serializeable
   void doCopy(const ByteStream& rhs);
 
  private:
-  // Put struct `MemChunk` declaration here, to avoid circular dependency.
-  struct MemChunk
-  {
-    uint32_t currentSize;
-    uint32_t capacity;
-    uint8_t data[];
-  };
-
   uint8_t* fBuf;        /// the start of the allocated buffer
   uint8_t* fCurInPtr;   // the point in fBuf where data is inserted next
   uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
   BSSizeType fMaxLen;   // how big fBuf is currently
-  std::vector<std::shared_ptr<uint8_t[]>> longStrings;  // Stores `long strings`.
 };
 
 template <int W, typename T = void>
