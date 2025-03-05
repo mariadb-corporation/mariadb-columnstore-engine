@@ -448,11 +448,6 @@ class ByteStream : public Serializeable
   EXPORT static const BSSizeType ISSOverhead =
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
-  // Methods to get and set `long strings`.
-  EXPORT std::vector<rowgroup::StringStoreBufSPType>& getLongStrings();
-  EXPORT const std::vector<rowgroup::StringStoreBufSPType>& getLongStrings() const;
-  EXPORT void setLongStrings(const std::vector<rowgroup::StringStoreBufSPType>& other);
-
   friend class ::ByteStreamTestSuite;
 
  protected:
@@ -473,20 +468,10 @@ class ByteStream : public Serializeable
   BSBufType* allocate(const size_t size);
   void deallocate(BSBufType* ptr);
 
-  // Put struct `MemChunk` declaration here, to avoid circular dependency.
-  struct MemChunk
-  {
-    uint32_t currentSize;
-    uint32_t capacity;
-    uint8_t data[];
-  };
-
   BSBufType* fBuf;        /// the start of the allocated buffer
   BSBufType* fCurInPtr;   // the point in fBuf where data is inserted next
   BSBufType* fCurOutPtr;  // the point in fBuf where data is extracted from next
   BSSizeType fMaxLen;      // how big fBuf is currently
-  // Stores `long strings`.
-  std::vector<rowgroup::StringStoreBufSPType> longStrings;
   std::optional<allocators::CountingAllocator<BSBufType>> allocator = {};
 };
 

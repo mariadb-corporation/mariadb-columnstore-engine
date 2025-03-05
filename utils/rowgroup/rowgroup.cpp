@@ -157,7 +157,14 @@ void StringStore::serialize(ByteStream& bs) const
     bs.append(mc->data, mc->currentSize);
   }
 
-  bs.setLongStrings(longStrings);
+  bs << (uint8_t)useOnlyLongStrings();
+  RGDataSizeType sz = longStrings.size();
+  bs << sz;
+  for (const auto& ls : longStrings)
+  {
+    mc = reinterpret_cast<MemChunk*>(ls.get());
+    bs.append(ls.get(), mc->currentSize + sizeof(*mc));
+  }
 }
 
 void StringStore::deserialize(ByteStream& bs)
@@ -194,9 +201,17 @@ void StringStore::deserialize(ByteStream& bs)
     memcpy(mc->data, buf, size);
     bs.advance(size);
   }
-
-  longStrings = bs.getLongStrings();
-  return;
+  bs >> tmp8;
+  useOnlyLongStrings(tmp8);
+  bs >> size;
+  longStrings.resize(size);
+  for (i = 0; i < size; i++)
+  {
+    mc = reinterpret_cast<MemChunk*>(bs.buf());
+    longStrings[i].reset(new uint8_t[mc->currentSize + sizeof(*mc)]);
+    memcpy(longStrings[i].get(), bs.buf(), mc->currentSize + sizeof(*mc));
+    bs.advance(mc->currentSize + sizeof(*mc));
+  }
 }
 
 void StringStore::clear()
