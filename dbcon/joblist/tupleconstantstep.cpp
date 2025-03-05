@@ -284,7 +284,9 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
 void TupleConstantStep::run()
 {
   if (fInputJobStepAssociation.outSize() == 0)
+  {
     throw logic_error("No input data list for constant step.");
+  }
 
   fInputDL = fInputJobStepAssociation.outAt(0)->rowGroupDL();
 
@@ -585,7 +587,9 @@ void TupleConstantStep::formatMiniStats()
 }
 
 // class TupleConstantOnlyStep
-TupleConstantOnlyStep::TupleConstantOnlyStep(const JobInfo& jobInfo) : TupleConstantStep(jobInfo)
+TupleConstantOnlyStep::TupleConstantOnlyStep(const JobInfo& jobInfo)
+  : TupleConstantStep(jobInfo)
+  , fEmptySet(jobInfo.constantFalse)
 {
   //	fExtendedInfo = "TCOS: ";
 }
@@ -667,7 +671,10 @@ void TupleConstantOnlyStep::run()
 
       fillInConstants();
 
-      fOutputDL->insert(rgDataOut);
+      if (!fEmptySet)
+      {
+        fOutputDL->insert(rgDataOut);
+      }
     }
     catch (...)
     {

@@ -132,6 +132,7 @@ class TupleConstantOnlyStep : public TupleConstantStep
   uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
  protected:
+  bool fEmptySet;
   using TupleConstantStep::fillInConstants;
   void fillInConstants() override;
 };

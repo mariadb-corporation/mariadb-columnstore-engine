@@ -4520,33 +4520,6 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     cout << endl;
   }
 
-  // @bug 2771, handle no table select query
-  if (jobInfo.tableList.empty())
-  {
-    makeNoTableJobStep(querySteps, projectSteps, deliverySteps, jobInfo);
-    return;
-  }
-
-  // Create a step vector for each table in the from clause.
-  TableInfoMap tableInfoMap;
-
-  for (uint64_t i = 0; i < jobInfo.tableList.size(); i++)
-  {
-    uint32_t tableUid = jobInfo.tableList[i];
-    tableInfoMap[tableUid] = TableInfo();
-    tableInfoMap[tableUid].fTableOid = jobInfo.keyInfo->tupleKeyVec[tableUid].fId;
-    tableInfoMap[tableUid].fName = jobInfo.keyInfo->keyName[tableUid];
-    tableInfoMap[tableUid].fAlias = jobInfo.keyInfo->tupleKeyVec[tableUid].fTable;
-    tableInfoMap[tableUid].fView = jobInfo.keyInfo->tupleKeyVec[tableUid].fView;
-    tableInfoMap[tableUid].fSchema = jobInfo.keyInfo->tupleKeyVec[tableUid].fSchema;
-    tableInfoMap[tableUid].fSubId = jobInfo.keyInfo->tupleKeyVec[tableUid].fSubId;
-    tableInfoMap[tableUid].fColsInColMap = jobInfo.columnMap[tableUid];
-  }
-
-  // Set of the columns being projected.
-  for (auto i = jobInfo.pjColList.begin(); i != jobInfo.pjColList.end(); i++)
-    jobInfo.returnColSet.insert(i->key);
-
   // Strip constantbooleanquerySteps
   for (uint64_t i = 0; i < querySteps.size();)
   {
@@ -4581,6 +4554,33 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
       i++;
     }
   }
+
+  // @bug 2771, handle no table select query
+  if (jobInfo.tableList.empty())
+  {
+    makeNoTableJobStep(querySteps, projectSteps, deliverySteps, jobInfo);
+    return;
+  }
+
+  // Create a step vector for each table in the from clause.
+  TableInfoMap tableInfoMap;
+
+  for (uint64_t i = 0; i < jobInfo.tableList.size(); i++)
+  {
+    uint32_t tableUid = jobInfo.tableList[i];
+    tableInfoMap[tableUid] = TableInfo();
+    tableInfoMap[tableUid].fTableOid = jobInfo.keyInfo->tupleKeyVec[tableUid].fId;
+    tableInfoMap[tableUid].fName = jobInfo.keyInfo->keyName[tableUid];
+    tableInfoMap[tableUid].fAlias = jobInfo.keyInfo->tupleKeyVec[tableUid].fTable;
+    tableInfoMap[tableUid].fView = jobInfo.keyInfo->tupleKeyVec[tableUid].fView;
+    tableInfoMap[tableUid].fSchema = jobInfo.keyInfo->tupleKeyVec[tableUid].fSchema;
+    tableInfoMap[tableUid].fSubId = jobInfo.keyInfo->tupleKeyVec[tableUid].fSubId;
+    tableInfoMap[tableUid].fColsInColMap = jobInfo.columnMap[tableUid];
+  }
+
+  // Set of the columns being projected.
+  for (auto i = jobInfo.pjColList.begin(); i != jobInfo.pjColList.end(); i++)
+    jobInfo.returnColSet.insert(i->key);
 
   // double check if the function join canditates are still there.
   JobStepVector steps = querySteps;
