@@ -102,7 +102,7 @@ def backup(
                 'Adds columnstore deltas to an existing full backup. '
                 'Backup folder to apply increment could be a value or '
                 '"auto_most_recent" - the incremental backup applies to '
-                'last full backup.'   
+                'last full backup.'
             ),
             show_default=False
         )
@@ -123,7 +123,10 @@ def backup(
         str,
         typer.Option(
             '-f', '--config-file',
-            help='Path to backup configuration file to load variables from.',
+            help=(
+                'Path to backup configuration file to load variables from - '
+                'relative or full path accepted.'
+            ),
             show_default=False
         )
     ] = '',
@@ -245,6 +248,13 @@ def backup(
             )
         )
     ] = 0,
+    list: Annotated[
+        bool,
+        typer.Option(
+            'list',
+            help='List backups.'
+        )
+    ] = False
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -303,10 +313,10 @@ def dbrm_backup(
             )
         )
     ] = 7,
-    p: Annotated[
+    bl: Annotated[
         str,
         typer.Option(
-            '-p', '--path',
+            '-bl', '--backup-location',
             help='Path of where to save the dbrm backups on disk.'
         )
     ] = '/tmp/dbrm_backups',
@@ -314,7 +324,10 @@ def dbrm_backup(
         str,
         typer.Option(
             '-nb', '--name-backup',
-            help='Custom name to prefex dbrm backups with.'
+            help=(
+                'Define the prefix of the backup - '
+                'default: dbrm_backup+date +%Y%m%d_%H%M%S'
+            )
         )
     ] = 'dbrm_backup',
     q: Annotated[
@@ -334,14 +347,15 @@ def dbrm_backup(
 ):
     """Columnstore DBRM Backup."""
 
-    # Default: ./$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups
+    # Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
     #     Examples:
-    #         ./$0 dbrm_backup --mode loop --interval 90 --retention-days 7 --path /mnt/dbrm_backups
-    #         ./$0 dbrm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
+    #         ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups
+    #         ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode once -nb my-one-off-backup-before-upgrade
+    #         ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode loop --interval 90brm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
 
     #     Cron Example:
-    #     */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+    #         */60 */3 * * * root bash /root/$0 dbrm_backup -m once --retention-days 7 --backup-location /tmp/dbrm_backups >> /tmp/dbrm_backups/cs_backup.log 2>&1
     arguments = []
     for arg_name, value in locals().items():
         sh_arg = cook_sh_arg(arg_name, value)
