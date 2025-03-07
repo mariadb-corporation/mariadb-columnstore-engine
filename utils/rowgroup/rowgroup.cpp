@@ -321,6 +321,7 @@ void AggregateDataStore::serialize(messageqcpp::ByteStream &bs) const {
     gc->serialize(bs);
   }
   size = fData.size();
+  bs << size;
   for (const auto& gca: fData) {
     uint16_t gctype = gca->getType();
     bs << gctype;
@@ -348,6 +349,7 @@ void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs) {
     bs >> gc_id;
     idbassert(gc_id < fGroupConcat.size());
     fData[i].reset(GroupConcatAg::create(static_cast<RowAggFunctionType>(gctype), fGroupConcat[gc_id]));
+    fData[i]->deserialize(bs);
   }
 }
 

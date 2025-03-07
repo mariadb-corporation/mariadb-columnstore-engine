@@ -671,8 +671,7 @@ void RowAggregation::initialize(bool hasGroupConcat)
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
-        fun->fAggFunction == ROWAGG_JSON_ARRAY)
+    if (fun->fAggFunction == ROWAGG_UDAF)
     {
       allow_gen = false;
       break;
@@ -761,8 +760,7 @@ void RowAggregation::aggReset()
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
-        fun->fAggFunction == ROWAGG_JSON_ARRAY)
+    if (fun->fAggFunction == ROWAGG_UDAF)
     {
       allow_gen = false;
       break;
@@ -1889,8 +1887,11 @@ void RowAggregation::mergeEntries(const Row& rowIn)
       case ROWAGG_DUP_STATS:
       case ROWAGG_DUP_UDAF:
       case ROWAGG_CONSTANT:
+        break;
       case ROWAGG_JSON_ARRAY:
-      case ROWAGG_GROUP_CONCAT: break;
+      case ROWAGG_GROUP_CONCAT:
+        mergeGroupConcat(rowIn, colOut);
+        break;
 
       case ROWAGG_UDAF: doUDAF(rowIn, colOut, colOut, colOut + 1, i); break;
 
@@ -2140,6 +2141,11 @@ void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t
   fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + rowIn.getLongDoubleField(colAux), colAux);
   fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + rowIn.getLongDoubleField(colAux + 1),
                           colAux + 1);
+}
+
+void RowAggregation::mergeGroupConcat(const Row& rowIn, uint64_t colOut) {
+  auto* gccAg = fRow.getAggregateData(colOut);
+  gccAg->merge(rowIn, colOut);
 }
 
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
