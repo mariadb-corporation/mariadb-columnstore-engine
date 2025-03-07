@@ -170,7 +170,10 @@ def restore(
         str,
         typer.Option(
             '-f', '--config-file',
-            help='Path to backup configuration file to load variables from.',
+            help=(
+                'Path to backup configuration file to load variables from - '
+                'relative or full path accepted.'
+            ),
             show_default=False
         )
     ] = '',
@@ -242,6 +245,13 @@ def restore(
             help='Skips verifying ssl certs, useful for onpremise s3 storage.'
         )
     ] = False,
+    list: Annotated[
+        bool,
+        typer.Option(
+            'list',
+            help='List backups.'
+        )
+    ] = False
 ):
     """Restore Columnstore (and/or MariaDB) data."""
 
@@ -266,18 +276,18 @@ def restore(
 
 @handle_output
 def dbrm_restore(
-    p: Annotated[
+    bl: Annotated[
         str,
         typer.Option(
-            '-p', '--path',
-            help='Path of where dbrm backups stored on disk.'
+            '-bl', '--backup-location',
+            help='Path of where dbrm backups exist on disk.'
         )
     ] = '/tmp/dbrm_backups',
-    d: Annotated[
+    l: Annotated[
         str,
         typer.Option(
-            '-d', '--directory',
-            help='Date or directory chose to restore from.'
+            '-l', '--load',
+            help='Name of the directory to restore from -bl'
         )
     ] = '',
     ns: Annotated[
@@ -305,14 +315,21 @@ def dbrm_restore(
             help='Skip backing up storagemanager directory.'
         )
     ] = True,
+    list: Annotated[
+        bool,
+        typer.Option(
+            'list',
+            help='List backups.'
+        )
+    ] = False
 ):
     """Restore Columnstore DBRM data."""
 
-    # Default: ./$0 dbrm_restore --path /tmp/dbrm_backups
+    # Default: ./$0 dbrm_restore --backup-location /tmp/dbrm_backups
 
     # Examples:
-    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842
-    #   ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
+    #       ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842
+    #       ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842 --no-startdbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
     arguments = []
     for arg_name, value in locals().items():
         sh_arg = cook_sh_arg(arg_name, value)
