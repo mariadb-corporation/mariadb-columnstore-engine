@@ -95,7 +95,10 @@ def add_node(
     try:
         if not _replace_localhost(c_root, node):
             pm_num = _add_node_to_PMS(c_root, node)
-            _add_WES(c_root, pm_num, node)
+
+            if not node_config.is_read_only():
+                _add_WES(c_root, pm_num, node)
+
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
@@ -140,7 +143,10 @@ def remove_node(
 
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, node)
-            _remove_WES(c_root, pm_num)
+
+            if not node_config.is_read_only():
+                _remove_WES(c_root, pm_num)
+
             _remove_DBRM_Worker(c_root, node)
             _remove_Module_entries(c_root, node)
             _remove_from_ExeMgrs(c_root, node)

@@ -37,17 +37,17 @@ Packages have bundled python interpreter and python dependencies.
 ## Get dependencies
 
 # get portable python
-wget -qO- https://cspkg.s3.amazonaws.com/python-dist-no-nis.tar.gz | tar xzf - -C ./
+wget -qO- https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst | tar --zstd -xvf - -C ./
 
 # install python dependencies
-python/bin/pip3 install -t deps --only-binary :all -r requirements.txt
+python/install/bin/pip3 install -t deps --only-binary :all -r requirements.txt
 
 ## RPM
 
 ```sh
 ./cleanup.sh
 yum install -y wget cmake make rpm-build
-cmake -DRPM=1 .
+cmake -DRPM=1 -DSERVER_DIR=<path to server repo root> .
 make package
 ```
 
@@ -56,6 +56,6 @@ make package
 ```sh
 ./cleanup.sh
 DEBIAN_FRONTEND=noninteractive apt update && apt install -y cmake make
-cmake -DDEB=1 .
+cmake -DDEB=1 -DSERVER_DIR=<path to server repo root> .
 make package
 ```

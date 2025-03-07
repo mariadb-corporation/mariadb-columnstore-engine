@@ -115,3 +115,6 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
                 is_primary=True, node_stopped=False
             )
         )
+
+
+    # TODO tests for read-only node
