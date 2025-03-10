@@ -1099,11 +1099,13 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
   for (auto& rgdata: go->fDataVec) {
     fDataVec.emplace_back(std::move(rgdata));
   }
+  go->fDataVec.clear();
 
   while (!go->fOrderByQueue->empty())
   {
     OrderByRow row = go->fOrderByQueue->top();
     row.fIdx = shiftGroupIdxBy(row.fIdx, shift);
+    row.fRule = &fRule;
 
     // check if the distinct row already exists
     if (fDistinct && fDistinctMap->find(row.fData) != fDistinctMap->end())
