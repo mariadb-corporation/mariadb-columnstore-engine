@@ -109,12 +109,13 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
   if (fCount == 0)
     return;
 
+  auto& orderByQueue = getQueue();
   // if the row count is less than the limit
-  if (fOrderByQueue.size() < fStart + fCount)
+  if (orderByQueue.size() < fStart + fCount)
   {
     copyRow(row, &fRow0);
     OrderByRow newRow(fRow0, fRule);
-    fOrderByQueue.push(newRow);
+    orderByQueue.push(newRow);
 
     uint64_t memSizeInc = sizeof(newRow);
     fUncommitedMemory += memSizeInc;
@@ -155,20 +156,20 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     }
   }
 
-  else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), fOrderByQueue.top().fData))
+  else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), orderByQueue.top().fData))
   {
-    OrderByRow swapRow = fOrderByQueue.top();
+    OrderByRow swapRow = orderByQueue.top();
     row1.setData(swapRow.fData);
     copyRow(row, &row1);
 
     if (fDistinct)
     {
-      fDistinctMap->erase(fOrderByQueue.top().fData);
+      fDistinctMap->erase(orderByQueue.top().fData);
       fDistinctMap->insert(row1.getPointer());
     }
 
-    fOrderByQueue.pop();
-    fOrderByQueue.push(swapRow);
+    orderByQueue.pop();
+    orderByQueue.push(swapRow);
   }
 }
 
@@ -194,7 +195,9 @@ void LimitedOrderBy::finalize()
   if (fRowGroup.getRowCount() > 0)
     fDataQueue.push(fData);
 
-  if (fOrderByQueue.size() > 0)
+  auto& orderByQueue = getQueue();
+  
+  if (orderByQueue.size() > 0)
   {
     // *DRRTUY Very memory intensive. CS needs to account active
     // memory only and release memory if needed.
@@ -210,7 +213,7 @@ void LimitedOrderBy::finalize()
     uint64_t offset = 0;
     uint64_t i = 0;
     // Reduce queue size by an offset value if it applicable.
-    uint64_t queueSizeWoOffset = fOrderByQueue.size() > fStart ? fOrderByQueue.size() - fStart : 0;
+    uint64_t queueSizeWoOffset = orderByQueue.size() > fStart ? orderByQueue.size() - fStart : 0;
     list<RGData> tempRGDataList;
 
     if (fCount <= queueSizeWoOffset)
@@ -239,15 +242,15 @@ void LimitedOrderBy::finalize()
     offset = offset != 0 ? offset - 1 : offset;
     fRowGroup.getRow(offset, &fRow0);
 
-    while ((fOrderByQueue.size() > fStart) && (i++ < fCount))
+    while ((orderByQueue.size() > fStart) && (i++ < fCount))
     {
-      const OrderByRow& topRow = fOrderByQueue.top();
+      const OrderByRow& topRow = orderByQueue.top();
       row1.setData(topRow.fData);
       copyRow(row1, &fRow0);
       fRowGroup.incRowCount();
       offset--;
       fRow0.prevRow(rSize);
-      fOrderByQueue.pop();
+      orderByQueue.pop();
 
       // if RG has fRowsPerRG rows
       if (offset == (uint64_t)-1)

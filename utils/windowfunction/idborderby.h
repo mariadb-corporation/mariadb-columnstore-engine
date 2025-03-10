@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -34,7 +35,7 @@
 #include "countingallocator.h"
 #include "rowgroup.h"
 #include "hasher.h"
-#include "stlpoolallocator.h"
+// #include "stlpoolallocator.h"
 
 // forward reference
 namespace joblist
@@ -44,16 +45,26 @@ class ResourceManager;
 
 namespace ordering
 {
-template <typename _Tp, typename _Sequence = std::vector<_Tp>,
+template <typename _Tp, typename _Sequence = std::vector<_Tp, allocators::CountingAllocator<_Tp>>,
           typename _Compare = std::less<typename _Sequence::value_type> >
-class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
+class ReservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 {
  public:
   typedef typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type size_type;
-  explicit reservablePQ(size_type capacity = 0)
+  explicit explicit ReservablePQ(size_type capacity, std::atomic<int64_t>* memoryLimit,
+                    const int64_t checkPointStepSize = allocators::CheckPointStepSize,
+                    const int64_t lowerBound = allocators::MemoryLimitLowerBound)
+    : std::priority_queue<_Tp, _Sequence, _Compare>(_Compare(),
+        _Sequence(allocators::CountingAllocator<_Tp>(memoryLimit, checkPointStepSize, lowerBound)))
   {
     reserve(capacity);
-  };
+  }
+  explicit ReservablePQ(size_type capacity, allocators::CountingAllocator<_Tp> alloc)
+    : std::priority_queue<_Tp, _Sequence, _Compare>(_Compare(),
+        _Sequence(alloc))
+  {
+    reserve(capacity);
+  }
   void reserve(size_type capacity)
   {
     this->c.reserve(capacity);
@@ -73,7 +84,7 @@ class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 class IdbCompare;
 class OrderByRow;
 
-typedef reservablePQ<OrderByRow> SortingPQ;
+using SortingPQ = ReservablePQ<OrderByRow>;
 
 // order by specification
 struct IdbSortSpec
@@ -417,16 +428,17 @@ class IdbOrderBy : public IdbCompare
   {
     return fDistinct;
   }
+  // INV fOrderByQueue is always a valid pointer that is instantiated in constructor
   SortingPQ& getQueue()
   {
-    return fOrderByQueue;
+    return *fOrderByQueue;
   }
   CompareRule& getRule()
   {
     return fRule;
   }
 
-  SortingPQ fOrderByQueue;
+  std::unique_ptr<SortingPQ> fOrderByQueue = nullptr;
 
  protected:
   std::vector<IdbSortSpec> fOrderByCond;

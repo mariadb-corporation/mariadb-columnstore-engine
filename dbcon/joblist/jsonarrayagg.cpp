@@ -762,6 +762,8 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
   if (concatColIsNull(row))
     return;
 
+  auto& orderByQueue = getQueue();
+  
   // if the row count is less than the limit
   if (fCurrentLength < fGroupConcatLen)
   {
@@ -770,7 +772,7 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
     int16_t estLen = lengthEstimate(fRow0);
     fRow0.setRid(estLen);
     OrderByRow newRow(fRow0, fRule);
-    fOrderByQueue.push(newRow);
+    orderByQueue.push(newRow);
     fCurrentLength += estLen;
 
     // add to the distinct map
@@ -800,11 +802,11 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
     }
   }
 
-  else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), fOrderByQueue.top().fData))
+  else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), orderByQueue.top().fData))
   {
-    OrderByRow swapRow = fOrderByQueue.top();
+    OrderByRow swapRow = orderByQueue.top();
     fRow1.setData(swapRow.fData);
-    fOrderByQueue.pop();
+    orderByQueue.pop();
     fCurrentLength -= fRow1.getRelRid();
     fRow2.setData(swapRow.fData);
 
@@ -824,7 +826,7 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
     fRow2.setRid(estLen);
     fCurrentLength += estLen;
 
-    fOrderByQueue.push(swapRow);
+    orderByQueue.push(swapRow);
   }
 }
 
@@ -832,9 +834,12 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
 {
   JsonArrayAggOrderBy* go = dynamic_cast<JsonArrayAggOrderBy*>(gc);
 
-  while (go->fOrderByQueue.empty() == false)
+  auto& orderByQueue = getQueue();
+  auto mergeQueue = go->getQueue();
+
+  while (mergeQueue.empty() == false)
   {
-    const OrderByRow& row = go->fOrderByQueue.top();
+    const OrderByRow& row = mergeQueue.top();
 
     // check if the distinct row already exists
     if (fDistinct && fDistinctMap->find(row.fData) != fDistinctMap->end())
@@ -845,7 +850,7 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
     // if the row count is less than the limit
     else if (fCurrentLength < fGroupConcatLen)
     {
-      fOrderByQueue.push(row);
+      orderByQueue.push(row);
       row1.setData(row.fData);
       fCurrentLength += row1.getRelRid();
 
@@ -854,11 +859,11 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
         fDistinctMap->insert(row.fData);
     }
 
-    else if (fOrderByCond.size() > 0 && fRule.less(row.fData, fOrderByQueue.top().fData))
+    else if (fOrderByCond.size() > 0 && fRule.less(row.fData, orderByQueue.top().fData))
     {
-      OrderByRow swapRow = fOrderByQueue.top();
+      OrderByRow swapRow = orderByQueue.top();
       row1.setData(swapRow.fData);
-      fOrderByQueue.pop();
+      orderByQueue.pop();
       fCurrentLength -= row1.getRelRid();
 
       if (fDistinct)
@@ -870,10 +875,10 @@ void JsonArrayAggOrderBy::merge(GroupConcator* gc)
       row1.setData(row.fData);
       fCurrentLength += row1.getRelRid();
 
-      fOrderByQueue.push(row);
+      orderByQueue.push(row);
     }
 
-    go->fOrderByQueue.pop();
+    mergeQueue.pop();
   }
 }
 
@@ -884,11 +889,12 @@ uint8_t* JsonArrayAggOrderBy::getResultImpl(const string&)
 
   // need to reverse the order
   stack<OrderByRow> rowStack;
+  auto& orderByQueue = getQueue();
 
-  while (fOrderByQueue.size() > 0)
+  while (orderByQueue.size() > 0)
   {
-    rowStack.push(fOrderByQueue.top());
-    fOrderByQueue.pop();
+    rowStack.push(orderByQueue.top());
+    orderByQueue.pop();
   }
   if (rowStack.size() > 0)
   {

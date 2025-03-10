@@ -165,6 +165,8 @@ void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
 
 void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 {
+  // Initialize ResourceManager to acount memory usage. 
+  fRm = jobInfo.rm;
   // Initialize structures used by separate workers
   uint64_t id = 1;
   fRowGroupIn = rgIn;
@@ -709,7 +711,9 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   fRowGroupOut.resetRowGroup(0);
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
-  ordering::SortingPQ finalPQ;
+
+  auto alloc = fRm->getAllocator<ordering::OrderByRow>();
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
   scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
@@ -903,7 +907,8 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   uint32_t rowSize = 0;
 
   rowgroup::RGData rgDataOut;
-  ordering::SortingPQ finalPQ;
+  auto alloc = fRm->getAllocator<ordering::OrderByRow>();
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
   fRowGroupOut.setData(&rgDataOut);
   fRowGroupOut.resetRowGroup(0);

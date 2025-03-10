@@ -171,25 +171,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   std::vector<uint64_t> fRunnersList;
   uint16_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
-};
-
-template <class T>
-class reservablePQ : private std::priority_queue<T>
-{
- public:
-  typedef typename std::priority_queue<T>::size_type size_type;
-  explicit reservablePQ(size_type capacity = 0)
-  {
-    reserve(capacity);
-  };
-  void reserve(size_type capacity)
-  {
-    this->c.reserve(capacity);
-  }
-  size_type capacity() const
-  {
-    return this->c.capacity();
-  }
+  joblist::ResourceManager* fRm;
 };
 
 }  // namespace joblist
