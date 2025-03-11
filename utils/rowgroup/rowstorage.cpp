@@ -1324,6 +1324,9 @@ class RowGroupStorage
       unlink(fname.c_str());
     rgdata.reset(new RGData());
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
+    assert(bs.length() == 0);
+    if (unlinkDump)
+      unlink(fname.c_str());
 
     fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
@@ -1379,12 +1382,12 @@ class RowGroupStorage
     fRowGroupOut->serialize(bs);
 
     char buf[1024];
-    snprintf(buf, sizeof(buf), "/tmp/kemm/META-p%u-t%p", getpid(), fUniqPtr);
+    snprintf(buf, sizeof(buf), "%s/META-p%u-t%p", fTmpDir.c_str(), getpid(), fUniqId);
     int fd = open(buf, O_WRONLY | O_TRUNC | O_CREAT, 0644);
     assert(fd >= 0);
 
     auto r = write(fd, bs.buf(), bs.length());
-    assert(r == bs.length());
+    assert(size_t(r) == bs.length());
     close(fd);
   }
 #endif

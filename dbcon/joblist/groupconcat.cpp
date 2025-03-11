@@ -905,8 +905,8 @@ void GroupConcatOrderBy::serialize(messageqcpp::ByteStream &bs) const {
   bs << sz;
   for (const auto& obcond : fOrderByCond) {
     bs << obcond.fIndex;
-    bs << uint8_t(obcond.fAsc);
-    bs << uint8_t(obcond.fNf);
+    bs << obcond.fAsc;
+    bs << obcond.fNf;
   }
   sz = fDataVec.size();
   bs << sz;
@@ -940,16 +940,15 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
   uint8_t tmp8;
   for (uint8_t i = 0; i < sz; ++i) {
       bs >> fOrderByCond[i].fIndex;
-      bs >> tmp8;
-      fOrderByCond[i].fAsc = tmp8;
-      bs >> tmp8;
-      fOrderByCond[i].fNf = tmp8;
+      bs >> fOrderByCond[i].fAsc;
+      bs >> fOrderByCond[i].fNf;
   }
 
   bs >> sz;
   fDataVec.resize(sz);
-  for (uint64_t i = 0; i < sz; ++i)
-  {
+  if (sz > 0) {
+    for (uint64_t i = 0; i < sz; ++i)
+    {
       fDataVec[i].reset(new rowgroup::RGData(fRowGroup, fRowsPerRG));
       fDataVec[i]->deserialize(bs, fRowGroup.getDataSize(fRowsPerRG));
       fRowGroup.setData(fDataVec[i].get());
@@ -959,10 +958,13 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
         cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
         throw IDBExcept(fErrorCode);
       }
-  }
+    }
 
-  fRowGroup.initRow(&fRow0);
-  fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
+    fRowGroup.initRow(&fRow0);
+    fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
+  } else {
+    createNewRGData();
+  }
 
   fRule.fIdbCompare = this;
   for (auto& compare: fRule.fCompares) {
@@ -1010,6 +1012,25 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
   }
   fRowGroup.setData(fDataVec.back().get());
   fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
+}
+
+void GroupConcatOrderBy::createNewRGData() {
+  auto newSize = fRowGroup.getDataSize(fRowsPerRG);
+
+  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
+  {
+    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+    throw IDBExcept(fErrorCode);
+  }
+
+  fMemSize += newSize;
+
+  fDataVec.emplace_back(make_unique<rowgroup::RGData>(fRowGroup, fRowsPerRG));
+  fRowGroup.setData(fDataVec.back().get());
+  fRowGroup.setUseOnlyLongString(true);
+  fRowGroup.resetRowGroup(0);
+  fRowGroup.initRow(&fRow0);
+  fRowGroup.getRow(0, &fRow0);
 }
 
 rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const {
@@ -1174,6 +1195,7 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     outputRow(oss, fRow0);
     isNull = false;
     rowStack.pop();
+    ++rowsProcessed;
     if (rowsProcessed >= fRowsPerRG)
     {
       size_t sizeDiff = oss.str().size() - prevResultSize;
@@ -1393,11 +1415,7 @@ void GroupConcatNoOrder::serialize(messageqcpp::ByteStream &bs) const {
   bs << sz;
   for (auto& rgdata : fDataVec) {
     if (rgdata) {
-      bs << uint8_t(1);
       rgdata->serialize(bs, fRowGroup.getDataSize());
-    }
-    else {
-      bs << uint8_t(0);
     }
   }
 }
@@ -1408,10 +1426,10 @@ void GroupConcatNoOrder::deserialize(messageqcpp::ByteStream &bs) {
   bs >> sz;
   fMemSize = fCurMemSize = 0;
   fDataVec.resize(sz);
-  for (RGDataSizeType i = 0; i < sz; i++) {
-    uint8_t tmp8;
-    bs >> tmp8;
-    if (tmp8) {
+  if (sz == 0) {
+    createNewRGData();
+  } else {
+    for (RGDataSizeType i = 0; i < sz; i++) {
       fDataVec[i].reset(new RGData(fRowGroup, fRowsPerRG));
       fDataVec[i]->deserialize(bs, fRowGroup.getDataSize(fRowsPerRG));
       fRowGroup.setData(fDataVec[i].get());

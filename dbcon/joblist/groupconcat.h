@@ -227,6 +227,7 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
   class SortingPQ;
 
  protected:
+  void createNewRGData();
   uint64_t getCurrentRowIdx() const;
   static uint64_t shiftGroupIdxBy(uint64_t idx, uint32_t shift);
 
