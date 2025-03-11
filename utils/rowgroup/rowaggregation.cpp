@@ -5140,7 +5140,7 @@ void GroupConcat::serialize(messageqcpp::ByteStream &bs) const {
   size = fRowGroup.getColumnCount() * sizeof(int);
   bs << size;
   bs.append(reinterpret_cast<uint8_t*>(fMapping.get()), size);
-  size = fOrderCols.size();
+  size = fOrderCond.size();
   bs << size;
   for (const auto& [k, v]: fOrderCond) {
     bs << k;
