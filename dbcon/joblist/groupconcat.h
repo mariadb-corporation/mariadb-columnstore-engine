@@ -167,11 +167,8 @@ class GroupConcatNoOrder : public GroupConcator
   rowgroup::Row fRow;
   std::vector<rowgroup::RGDataUnPtr> fDataVec;
   uint64_t fRowsPerRG{128};
-  uint64_t fErrorCode{logging::ERR_AGGREGATION_TOO_BIG};
   rowgroup::RGDataSizeType fMemSize{0};
   rowgroup::RGDataSizeType fCurMemSize{0};
-  ResourceManager* fRm{nullptr};
-  boost::shared_ptr<int64_t> fSessionMemLimit;
 };
 
 // ORDER BY used in GROUP_CONCAT class
@@ -233,9 +230,6 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
 
   rowgroup::RGDataSizeType fMemSize{0};
   static constexpr uint64_t fRowsPerRG{128};
-  static constexpr uint64_t fErrorCode{logging::ERR_AGGREGATION_TOO_BIG};
-  joblist::ResourceManager* fRm{nullptr};
-  boost::shared_ptr<int64_t> fSessionMemLimit;
 
   std::vector<ordering::IdbSortSpec> fOrderByCond;
   rowgroup::Row fRow0;

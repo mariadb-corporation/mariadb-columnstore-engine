@@ -1846,10 +1846,16 @@ inline uint32_t RowGroup::getRowSizeWithStrings() const
 
 inline RGDataSizeType RowGroup::getSizeWithStrings(uint64_t n) const
 {
-  if (strings == nullptr)
-    return getDataSize(n);
-  else
-    return getDataSize(n) + strings->getSize();
+  RGDataSizeType ret = getDataSize(n);
+  if (strings)
+  {
+    ret += strings->getSize();
+  }
+  if (aggregateDataStore)
+  {
+    ret += aggregateDataStore->getDataSize();
+  }
+  return ret;
 }
 
 inline uint64_t RowGroup::getSizeWithStrings() const

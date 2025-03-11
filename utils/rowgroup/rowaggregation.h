@@ -340,14 +340,10 @@ struct GroupConcat: public messageqcpp::Serializeable
   RowGroup fRowGroup;
   std::shared_ptr<int[]> fMapping;
   std::vector<std::pair<int, bool>> fOrderCond;  // position to order by [asc/desc]
-  joblist::ResourceManager* fRm;                 // resource manager
-  boost::shared_ptr<int64_t> fSessionMemLimit;
   long fTimeZone;
   uint32_t id;
 
-  GroupConcat() : fRm(nullptr)
-  {
-  }
+  GroupConcat() = default;
 
   void serialize(messageqcpp::ByteStream& bs) const override;
   void deserialize(messageqcpp::ByteStream& bs) override;

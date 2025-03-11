@@ -72,8 +72,6 @@ void JsonArrayInfo::prepJsonArray(JobInfo& jobInfo)
     groupConcat->fSeparator = gcc->separator();  // or ,?
     groupConcat->fDistinct = gcc->distinct();
     groupConcat->fSize = gcc->resultType().colWidth;
-    groupConcat->fRm = jobInfo.rm;
-    groupConcat->fSessionMemLimit = jobInfo.umMemLimit;
     groupConcat->fTimeZone = jobInfo.timeZone;
 
     int key = -1;
@@ -735,8 +733,6 @@ void JsonArrayAggOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
   fDistinct = gcc->fDistinct;
   fRowsPerRG = 128;
   fErrorCode = ERR_AGGREGATION_TOO_BIG;
-  fRm = gcc->fRm;
-  fSessionMemLimit = gcc->fSessionMemLimit;
 
   vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
 
@@ -786,11 +782,6 @@ void JsonArrayAggOrderBy::processRow(const rowgroup::Row& row)
 
       uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-      if (!fRm->getMemory(newSize, fSessionMemLimit))
-      {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
       fMemSize += newSize;
 
       fData.reinit(fRowGroup, fRowsPerRG);
@@ -932,14 +923,12 @@ const string JsonArrayAggOrderBy::toString() const
 }
 
 JsonArrayAggNoOrder::JsonArrayAggNoOrder()
- : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0), fRm(NULL)
+ : fRowsPerRG(128), fErrorCode(ERR_AGGREGATION_TOO_BIG), fMemSize(0)
 {
 }
 
 JsonArrayAggNoOrder::~JsonArrayAggNoOrder()
 {
-  if (fRm)
-    fRm->returnMemory(fMemSize, fSessionMemLimit);
 }
 
 void JsonArrayAggNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
@@ -949,8 +938,6 @@ void JsonArrayAggNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRowGroup = gcc->fRowGroup;
   fRowsPerRG = 128;
   fErrorCode = ERR_AGGREGATION_TOO_BIG;
-  fRm = gcc->fRm;
-  fSessionMemLimit = gcc->fSessionMemLimit;
 
   vector<std::pair<uint32_t, uint32_t> >::iterator i = gcc->fGroupCols.begin();
 
@@ -959,11 +946,6 @@ void JsonArrayAggNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-  if (!fRm->getMemory(newSize, fSessionMemLimit))
-  {
-    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(fErrorCode);
-  }
   fMemSize += newSize;
 
   fData.reinit(fRowGroup, fRowsPerRG);
@@ -991,11 +973,6 @@ void JsonArrayAggNoOrder::processRow(const rowgroup::Row& row)
     {
       uint64_t newSize = fRowsPerRG * fRowGroup.getRowSize();
 
-      if (!fRm->getMemory(newSize, fSessionMemLimit))
-      {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
       fMemSize += newSize;
 
       fDataQueue.push(fData);

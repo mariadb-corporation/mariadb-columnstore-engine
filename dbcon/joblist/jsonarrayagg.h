@@ -110,8 +110,6 @@ class JsonArrayAggNoOrder : public JsonArrayAggregator
   uint64_t fRowsPerRG;
   uint64_t fErrorCode;
   uint64_t fMemSize;
-  ResourceManager* fRm;
-  boost::shared_ptr<int64_t> fSessionMemLimit;
 };
 
 // ORDER BY used in JSON_ARRAYAGG class

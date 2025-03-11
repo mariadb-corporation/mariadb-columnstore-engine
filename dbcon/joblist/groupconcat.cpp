@@ -29,7 +29,6 @@ using namespace std;
 
 
 #include "errorids.h"
-#include "exceptclasses.h"
 using namespace logging;
 
 #include "returnedcolumn.h"
@@ -55,35 +54,25 @@ using namespace ordering;
 
 #include "jobstep.h"
 #include "jlf_common.h"
-#include "limitedorderby.h"
 #include "mcs_decimal.h"
 
 namespace joblist
 {
 // GroupConcatInfo class implementation
-GroupConcatInfo::GroupConcatInfo()
-{
-}
-
-GroupConcatInfo::~GroupConcatInfo()
-{
-}
+GroupConcatInfo::GroupConcatInfo() = default;
+GroupConcatInfo::~GroupConcatInfo() = default;
 
 void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
 {
-  auto i = jobInfo.groupConcatCols.begin();
-
-  while (i != jobInfo.groupConcatCols.end())
+  for (const auto& gccol : jobInfo.groupConcatCols)
   {
-    auto* gcc = dynamic_cast<GroupConcatColumn*>(i->get());
+    auto* gcc = dynamic_cast<GroupConcatColumn*>(gccol.get());
     const auto* rcp = dynamic_cast<const RowColumn*>(gcc->aggParms()[0].get());
 
     SP_GroupConcat groupConcat(new GroupConcat);
     groupConcat->fSeparator = gcc->separator();
     groupConcat->fDistinct = gcc->distinct();
     groupConcat->fSize = gcc->resultType().colWidth;
-    groupConcat->fRm = jobInfo.rm;
-    groupConcat->fSessionMemLimit = jobInfo.umMemLimit;
     groupConcat->fTimeZone = jobInfo.timeZone;
 
     int key = -1;
@@ -97,41 +86,39 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
       {
         key = getColumnKey(cols[j], jobInfo);
         fColumns.insert(key);
-        groupConcat->fGroupCols.push_back(make_pair(key, k++));
+        groupConcat->fGroupCols.emplace_back(key, k++);
       }
       else
       {
-        groupConcat->fConstCols.push_back(make_pair(cc->constval(), j));
+        groupConcat->fConstCols.emplace_back(cc->constval(), j);
       }
     }
 
     vector<SRCP>& orderCols = gcc->orderCols();
 
-    for (auto k = orderCols.begin(); k != orderCols.end(); k++)
+    for (const auto& orderCol : orderCols)
     {
-      if (dynamic_cast<const ConstantColumn*>(k->get()) != NULL)
+      if (dynamic_cast<const ConstantColumn*>(orderCol.get()) != nullptr)
         continue;
 
-      key = getColumnKey(*k, jobInfo);
+      key = getColumnKey(orderCol, jobInfo);
       fColumns.insert(key);
-      groupConcat->fOrderCols.push_back(make_pair(key, k->get()->asc()));
+      groupConcat->fOrderCols.emplace_back(key, orderCol->asc());
     }
 
     groupConcat->id = fGroupConcat.size();
     fGroupConcat.emplace_back(std::move(groupConcat));
-
-    ++i;
   }
 
   // Rare case: all columns in group_concat are constant columns, use a column in column map.
-  if (jobInfo.groupConcatCols.size() > 0 && fColumns.size() == 0)
+  if (!jobInfo.groupConcatCols.empty() && fColumns.empty())
   {
     int key = -1;
 
     for (auto i = jobInfo.tableList.begin(); i != jobInfo.tableList.end() && key == -1;
          ++i)
     {
-      if (jobInfo.columnMap[*i].size() > 0)
+      if (!jobInfo.columnMap[*i].empty())
       {
         key = *(jobInfo.columnMap[*i].begin());
       }
@@ -838,9 +825,6 @@ GroupConcatOrderBy::GroupConcatOrderBy(messageqcpp::ByteStream &bs, SP_GroupConc
 
 GroupConcatOrderBy::~GroupConcatOrderBy()
 {
-  if (fRm) {
-    fRm->returnMemory(fMemSize, fSessionMemLimit);
-  }
   // delete compare objects
   for (auto& compare : fRule.fCompares) {
     delete compare;
@@ -862,18 +846,12 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
   }
 
   fDistinct = gcc->fDistinct;
-  fRm = gcc->fRm;
-  fSessionMemLimit = gcc->fSessionMemLimit;
 
   for (uint32_t x : views::values(gcc->fGroupCols)) {
     fConcatColumns.emplace_back(x);
   }
 
   auto size = fRowGroup.getSizeWithStrings(fRowsPerRG);
-  if (fRm && !fRm->getMemory(size, fSessionMemLimit)) {
-    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(fErrorCode);
-  }
   fMemSize += size;
   RGDataUnPtr rgdata(new RGData(fRowGroup, fRowsPerRG));
   fRowGroup.setData(rgdata.get());
@@ -930,9 +908,6 @@ void GroupConcatOrderBy::serialize(messageqcpp::ByteStream &bs) const {
 
 void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
   GroupConcator::deserialize(bs);
-  if (fRm) {
-    fRm->returnMemory(fMemSize, fSessionMemLimit);
-  }
   fMemSize = 0;
   uint64_t sz;
   bs >> sz;
@@ -954,10 +929,6 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
       fRowGroup.setData(fDataVec[i].get());
       auto rgsize = fRowGroup.getSizeWithStrings(fRowsPerRG);
       fMemSize += rgsize;
-      if (fRm && !fRm->getMemory(rgsize, fSessionMemLimit)) {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
     }
 
     fRowGroup.initRow(&fRow0);
@@ -1017,12 +988,6 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream &bs) {
 void GroupConcatOrderBy::createNewRGData() {
   auto newSize = fRowGroup.getDataSize(fRowsPerRG);
 
-  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
-  {
-    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(fErrorCode);
-  }
-
   fMemSize += newSize;
 
   fDataVec.emplace_back(make_unique<rowgroup::RGData>(fRowGroup, fRowsPerRG));
@@ -1071,11 +1036,6 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
       // A "postfix" but accurate RAM accounting that sums up sizes of RGDatas.
       uint64_t newSize = fRowGroup.getSizeWithStrings();
 
-      if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
-      {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
       fMemSize += newSize;
 
       rowgroup::RGDataUnPtr rgdata(new rowgroup::RGData(fRowGroup, fRowsPerRG));
@@ -1116,6 +1076,8 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
 void GroupConcatOrderBy::merge(GroupConcator* gc)
 {
   GroupConcatOrderBy* go = dynamic_cast<GroupConcatOrderBy*>(gc);
+  fMemSize += go->fMemSize;
+  go->fMemSize = 0;
   uint32_t shift = fDataVec.size();
   for (auto& rgdata: go->fDataVec) {
     fDataVec.emplace_back(std::move(rgdata));
@@ -1200,11 +1162,6 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
     {
       size_t sizeDiff = oss.str().size() - prevResultSize;
       prevResultSize = oss.str().size();
-      if (!fRm->getMemory(sizeDiff, fSessionMemLimit))
-      {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
       fMemSize += sizeDiff;
       rowsProcessed = 0;
     }
@@ -1290,9 +1247,6 @@ GroupConcatNoOrder::GroupConcatNoOrder(messageqcpp::ByteStream &bs, SP_GroupConc
   fRowGroup = gcc->fRowGroup;
   fRowGroup.setUseOnlyLongString(true);
   fRowsPerRG = 128;
-  fErrorCode = ERR_AGGREGATION_TOO_BIG;
-  fRm = gcc->fRm;
-  fSessionMemLimit = gcc->fSessionMemLimit;
 
   deserialize(bs);
 }
@@ -1300,8 +1254,6 @@ GroupConcatNoOrder::GroupConcatNoOrder(messageqcpp::ByteStream &bs, SP_GroupConc
 // GroupConcatNoOrder class implementation
 GroupConcatNoOrder::~GroupConcatNoOrder()
 {
-  if (fRm)
-    fRm->returnMemory(fMemSize, fSessionMemLimit);
 }
 
 void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
@@ -1311,9 +1263,6 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRowGroup = gcc->fRowGroup;
   fRowGroup.setUseOnlyLongString(true);
   fRowsPerRG = 128;
-  fErrorCode = ERR_AGGREGATION_TOO_BIG;
-  fRm = gcc->fRm;
-  fSessionMemLimit = gcc->fSessionMemLimit;
 
   for (uint32_t colIdx : views::values(gcc->fGroupCols)) {
     fConcatColumns.push_back(colIdx);
@@ -1338,10 +1287,6 @@ void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
     auto newSize = fRowGroup.getSizeWithStrings(fRowsPerRG);
     if (newSize > fCurMemSize) {
       auto diff = newSize - fCurMemSize;
-      if (fRm && !fRm->getMemory(diff, fSessionMemLimit)) {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
       fCurMemSize = newSize;
       fMemSize += diff;
     }
@@ -1397,11 +1342,6 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
     }
     size_t sizeDiff = oss.str().size() - prevResultSize;
     prevResultSize = oss.str().size();
-    if (fRm && !fRm->getMemory(sizeDiff, fSessionMemLimit))
-    {
-      cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-      throw IDBExcept(fErrorCode);
-    }
     fMemSize += sizeDiff;
     rgdata.reset();
   }
@@ -1435,10 +1375,6 @@ void GroupConcatNoOrder::deserialize(messageqcpp::ByteStream &bs) {
       fRowGroup.setData(fDataVec[i].get());
       fCurMemSize = fRowGroup.getSizeWithStrings(fRowsPerRG);
       fMemSize += fCurMemSize;
-      if (fRm && !fRm->getMemory(fCurMemSize, fSessionMemLimit)) {
-        cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(fErrorCode);
-      }
     }
   }
 }
@@ -1450,12 +1386,6 @@ const string GroupConcatNoOrder::toString() const
 
 void GroupConcatNoOrder::createNewRGData() {
   auto newSize = fRowGroup.getDataSize(fRowsPerRG);
-
-  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
-  {
-    cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    throw IDBExcept(fErrorCode);
-  }
 
   fMemSize += newSize;
   fCurMemSize = newSize;
