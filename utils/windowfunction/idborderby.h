@@ -33,6 +33,7 @@
 #include <unordered_set>
 
 #include "countingallocator.h"
+#include "resourcemanager.h"
 #include "rowgroup.h"
 #include "hasher.h"
 // #include "stlpoolallocator.h"
@@ -432,6 +433,20 @@ class IdbOrderBy : public IdbCompare
   SortingPQ& getQueue()
   {
     return *fOrderByQueue;
+  }
+  void returnAllRGDataMemory2RM()
+  {
+    while (!fOrderByQueue->empty())
+    {
+      fOrderByQueue->pop();
+    }
+    fRm->returnMemory(fMemSize, fSessionMemLimit);
+    fMemSize = 0;
+  }
+   void returnRGDataMemory2RM(const size_t rgDataSize)
+  {
+    fRm->returnMemory(rgDataSize, fSessionMemLimit);
+    fMemSize -= rgDataSize;
   }
   CompareRule& getRule()
   {

@@ -109,6 +109,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void executeWithOrderBy();
   void executeParallelOrderBy(uint64_t id);
   void executeNoOrderByWithDistinct();
+  void checkAndAllocateMemory4RGData(const rowgroup::RowGroup& rowGroup);
   void formatMiniStats();
   void printCalTrace();
   void finalizeParallelOrderBy();

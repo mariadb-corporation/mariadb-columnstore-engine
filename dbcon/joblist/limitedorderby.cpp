@@ -54,7 +54,7 @@ void LimitedOrderBy::initialize(const RowGroup& rg, const JobInfo& jobInfo, bool
 {
   fRm = jobInfo.rm;
   fSessionMemLimit = jobInfo.umMemLimit;
-  fErrorCode = ERR_LIMIT_TOO_BIG;
+  fErrorCode = ERR_ORDERBY_TOO_BIG;
 
   // locate column position in the rowgroup
   map<uint32_t, uint32_t> keyToIndexMap;

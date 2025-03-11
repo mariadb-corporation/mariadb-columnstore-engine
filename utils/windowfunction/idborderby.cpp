@@ -737,7 +737,8 @@ IdbOrderBy::IdbOrderBy()
 
 IdbOrderBy::~IdbOrderBy()
 {
-  if (fRm)
+  // returnRGDataMemory2RM() returns all memory before the dtor is called.
+  if (fRm && fMemSize > 0)
     fRm->returnMemory(fMemSize, fSessionMemLimit);
 
   // delete compare objects
