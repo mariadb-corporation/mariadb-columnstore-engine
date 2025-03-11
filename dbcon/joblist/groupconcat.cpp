@@ -1025,11 +1025,11 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
     fOrderByQueue->push(newRow);
     fCurrentLength += estLen;
 
-    fRow0.nextRow();
-
     // add to the distinct map
     if (fDistinct)
       fDistinctMap->emplace(fRow0.getPointer(), getCurrentRowIdx());
+
+    fRow0.nextRow();
 
     if (fRowGroup.getRowCount() >= fRowsPerRG)
     {
