@@ -1,12 +1,18 @@
 """Module contains all things related to working with .secrets file."""
+import binascii
 import json
 import logging
 import os
+import pwd
+import stat
+from shutil import copyfile
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 
-from cmapi_server.constants import MCS_SECRETS_FILE_PATH
+from cmapi_server.constants import (
+    MCS_DATA_PATH, MCS_SECRETS_FILENAME, MCS_SECRETS_FILE_PATH
+)
 from cmapi_server.exceptions import CEJError
 
 
@@ -20,7 +26,7 @@ class CEJPasswordHandler():
     """Handler for CrossEngineSupport password decryption."""
 
     @classmethod
-    def secretsfile_exists(cls):
+    def secretsfile_exists(cls) -> bool:
         """Check the .secrets file in MCS_SECRETS_FILE_PATH.
 
         :return: True if file exists and not empty.
@@ -43,7 +49,7 @@ class CEJPasswordHandler():
         return False
 
     @classmethod
-    def get_secrets_json(cls):
+    def get_secrets_json(cls) -> dict:
         """Get json from .secrets file.
 
         :raises CEJError: on empty\corrupted\wrong format .secrets file
@@ -68,7 +74,7 @@ class CEJPasswordHandler():
             return secrets_json
 
     @classmethod
-    def decrypt_password(cls, enc_data:str):
+    def decrypt_password(cls, enc_data: str) -> str:
         """Decrypt CEJ password if needed.
 
         :param enc_data: encrypted initialization vector + password in hex str
@@ -91,7 +97,7 @@ class CEJPasswordHandler():
             ) from value_error
 
         secrets_json = cls.get_secrets_json()
-        encryption_key_hex = secrets_json.get('encryption_key')
+        encryption_key_hex = secrets_json.get('encryption_key', None)
         if not encryption_key_hex:
             raise CEJError(
                 f'Empty "encryption key" found in {MCS_SECRETS_FILE_PATH}'
@@ -117,3 +123,93 @@ class CEJPasswordHandler():
             unpadder.update(padded_passwd_bytes) + unpadder.finalize()
         )
         return passwd_bytes.decode()
+
+    @classmethod
+    def encrypt_password(cls, passwd: str) -> str:
+        iv = os.urandom(size=AES_IV_BIN_SIZE)
+
+        secrets_json = cls.get_secrets_json()
+        encryption_key_hex = secrets_json.get('encryption_key')
+        if not encryption_key_hex:
+            raise CEJError(
+                f'Empty "encryption key" found in {MCS_SECRETS_FILE_PATH}'
+            )
+        try:
+            encryption_key = bytes.fromhex(encryption_key_hex)
+        except ValueError as value_error:
+            raise CEJError(
+                'Non-hexadecimal number found in encryption key from '
+                f'{MCS_SECRETS_FILE_PATH} file.'
+            ) from value_error
+        cipher = Cipher(
+            algorithms.AES(encryption_key),
+            modes.CBC(iv)
+        )
+
+        encryptor = cipher.encryptor()
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(passwd.encode()) + padder.finalize()
+
+        encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
+
+        return iv + encrypted_data
+
+    @classmethod
+    def generate_secrets_data(cls) -> dict:
+        """Generate secrets data for .secrets file.
+
+        :return: secrets data
+        :rtype: dict
+        """
+        key_length = algorithms.AES256.key_size // 8
+        encryption_key = os.urandom(size=key_length)
+        encryption_key_hex = binascii.hexlify(encryption_key).decode()
+        secrets_dict = {
+            'description': 'Columnstore CrossEngineSupport password encryption/decryption key',
+            'encryption_cipher': 'EVP_aes_256_cbc',
+            'encryption_key': encryption_key_hex
+        }
+
+        return secrets_dict
+
+    @classmethod
+    def save_secrets(
+        cls, secrets: dict, filepath: str = MCS_SECRETS_FILE_PATH,
+        owner: str = 'mysql'
+    ) -> None:
+        """Write secrets to .secrets file.
+
+        :param secrets: secrets dict
+        :type secrets: dict
+        :param filepath: path to the .secrets file
+        :type filepath: str, optional
+        :param owner: owner of the file
+        :type owner: str, optional
+        """
+        if cls.secretsfile_exists():
+            copyfile(
+                filepath,
+                os.path.join(
+                    os.path.dirname(filepath),
+                    f'{os.path.basename(filepath)}.cmapi.save'
+                )
+            )
+
+        try:
+            with open(
+                MCS_SECRETS_FILE_PATH, 'w', encoding='utf-8'
+            ) as secrets_file:
+                json.dump(secrets, secrets_file)
+        except Exception as exc:
+            raise CEJError(f'Write to .secrets file failed.') from exc
+
+        try:
+            os.chmod(MCS_SECRETS_FILE_PATH, stat.S_IRUSR)
+            userinfo = pwd.getpwnam(owner)
+            os.chown(MCS_SECRETS_FILE_PATH, userinfo.pw_uid, userinfo.pw_gid)
+            logging.debug(f'Permissions of .secrets file set to {owner}:read.')
+            logging.debug(f'Ownership of .secrets file given to {owner}.')
+        except Exception as exc:
+            raise CEJError(
+                f'Failed to set permissions or ownership for .secrets file.'
+            ) from exc

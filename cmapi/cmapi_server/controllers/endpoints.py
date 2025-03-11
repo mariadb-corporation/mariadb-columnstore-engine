@@ -19,6 +19,7 @@ from cmapi_server.constants import (
 )
 from cmapi_server.controllers.error import APIError
 from cmapi_server.handlers.cej import CEJError
+from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
     cmapi_config_check, dequote, get_active_nodes, get_config_parser,
@@ -363,6 +364,7 @@ class ConfigController:
         sm_config_filename = request_body.get(
             'sm_config_filename', DEFAULT_SM_CONF_PATH
         )
+        secrets = request_body.get('secrets', None)
 
         if request_mode is None and request_config is None:
             raise_422_error(
@@ -390,6 +392,9 @@ class ConfigController:
                 socket.gethostname()
             )
         request_response = {'timestamp': str(datetime.now())}
+
+        if secrets:
+            CEJPasswordHandler().save_secrets(secrets)
 
         node_config = NodeConfig()
         xml_config = request_body.get('config', None)

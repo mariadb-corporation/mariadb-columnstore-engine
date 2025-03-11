@@ -290,9 +290,10 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
-    timeout: Optional[int] = None
+    timeout: Optional[int] = None,
+    distribute_secrets: bool = False
 ) -> None:
-    """Send new config to nodes in async way.
+    """Send new config to nodes. Now in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
@@ -310,6 +311,8 @@ def broadcast_new_config(
     :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
                     releases. Could affect all logic of broadcacting new config
     :type timeout: Optional[int], optional
+    :param distribute_secrets: flag to distribute secrets to nodes
+    :type distribute_secrets: bool
     :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
@@ -338,6 +341,12 @@ def broadcast_new_config(
         'sm_config_filename': sm_config_filename,
         'sm_config': sm_config_text
     }
+
+    if distribute_secrets:
+        # TODO: do not restart cluster when put xml config only with
+        secrets = CEJPasswordHandler.get_secrets_json()
+        body['secrets'] = secrets
+
     # TODO: remove test mode here and replace it by mock in tests
     if test_mode:
         body['test'] = True

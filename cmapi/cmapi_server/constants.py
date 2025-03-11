@@ -20,9 +20,11 @@ EM_PATH_SUFFIX = 'data1/systemFiles/dbrm'
 MCS_EM_PATH = os.path.join(MCS_DATA_PATH, EM_PATH_SUFFIX)
 MCS_BRM_CURRENT_PATH = os.path.join(MCS_EM_PATH, 'BRM_saves_current')
 S3_BRM_CURRENT_PATH = os.path.join(EM_PATH_SUFFIX, 'BRM_saves_current')
+
 # keys file for CEJ password encryption\decryption
 # (CrossEngineSupport section in Columnstore.xml)
-MCS_SECRETS_FILE_PATH = os.path.join(MCS_DATA_PATH, '.secrets')
+MCS_SECRETS_FILENAME = '.secrets'
+MCS_SECRETS_FILE_PATH = os.path.join(MCS_DATA_PATH, MCS_SECRETS_FILENAME)
 
 # CMAPI SERVER
 CMAPI_CONFIG_FILENAME = 'cmapi_server.conf'

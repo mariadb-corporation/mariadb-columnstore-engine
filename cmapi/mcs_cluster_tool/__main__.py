@@ -6,7 +6,7 @@ import typer
 
 from cmapi_server.logging_management import dict_config, add_logging_level, enable_console_logging
 from mcs_cluster_tool import (
-    cluster_app, cmapi_app, backup_commands, restore_commands
+    cluster_app, cmapi_app, backup_commands, restore_commands, tools_commands
 )
 from mcs_cluster_tool.constants import MCS_CLI_LOG_CONF_PATH
 
@@ -21,13 +21,25 @@ app = typer.Typer(
     rich_markup_mode='rich',
 )
 app.add_typer(cluster_app.app)
-# TODO: keep this only for potential backward compatibility
+# keep this only for potential backward compatibility and userfriendliness
 app.add_typer(cluster_app.app, name='cluster', hidden=True)
 app.add_typer(cmapi_app.app, name='cmapi')
-app.command('backup')(backup_commands.backup)
-app.command('dbrm_backup')(backup_commands.dbrm_backup)
-app.command('restore')(restore_commands.restore)
-app.command('dbrm_restore')(restore_commands.dbrm_restore)
+app.command(
+    'backup', rich_help_panel='Tools commands'
+)(backup_commands.backup)
+app.command(
+    'dbrm_backup', rich_help_panel='Tools commands'
+)(backup_commands.dbrm_backup)
+app.command(
+    'restore', rich_help_panel='Tools commands'
+)(restore_commands.restore)
+app.command(
+    'dbrm_restore', rich_help_panel='Tools commands'
+)(restore_commands.dbrm_restore)
+app.command('cskeys', rich_help_panel='Tools commands')(tools_commands.cskeys)
+app.command(
+    'cspasswd', rich_help_panel='Tools commands'
+)(tools_commands.cspasswd)
 
 
 @app.command(

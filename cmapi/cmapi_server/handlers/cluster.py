@@ -178,8 +178,7 @@ class ClusterHandler():
         update_revision_and_manager(
             input_config_filename=config, output_config_filename=config
         )
-
-        broadcast_new_config(config)
+        broadcast_new_config(config, distribute_secrets=True)
         logger.debug(f'Successfully finished adding node {node}.')
         return response
 

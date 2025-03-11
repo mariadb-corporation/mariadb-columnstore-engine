@@ -2,9 +2,9 @@
 import logging
 import sys
 from datetime import datetime
-from typing_extensions import Annotated
 
 import typer
+from typing_extensions import Annotated
 
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from mcs_cluster_tool.constants import MCS_BACKUP_MANAGER_SH
