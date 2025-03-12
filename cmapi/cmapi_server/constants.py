@@ -4,6 +4,7 @@ TODO: move main constant paths here and replace in files in next releases.
 """
 import os
 from typing import NamedTuple
+from enum import Enum
 
 
 # default MARIADB ColumnStore config path
@@ -53,6 +54,16 @@ CMAPI_SINGLE_NODE_XML = os.path.join(
     CMAPI_INSTALL_PATH, 'cmapi_server/SingleNode.xml'
 )
 
+class MCSProgs(Enum):
+    STORAGE_MANAGER = 'StorageManager'
+    WORKER_NODE = 'workernode'
+    CONTROLLER_NODE = 'controllernode'
+    PRIM_PROC = 'PrimProc'
+    EXE_MGR = 'ExeMgr'
+    WRITE_ENGINE_SERVER = 'WriteEngineServer'
+    DML_PROC = 'DMLProc'
+    DDL_PROC = 'DDLProc'
+
 # constants for dispatchers
 class ProgInfo(NamedTuple):
     """NamedTuple for some additional info about handling mcs processes."""
@@ -66,17 +77,17 @@ class ProgInfo(NamedTuple):
 # on top level of process handling
 # mcs-storagemanager starts conditionally inside mcs-loadbrm, but should be
 # stopped using cmapi
-ALL_MCS_PROGS = {
+ALL_MCS_PROGS: dict[MCSProgs, ProgInfo] = {
     # workernode starts on primary and non primary node with 1 or 2 added
     # to subcommand (DBRM_Worker1 - on primary, DBRM_Worker2 - non primary)
-    'StorageManager': ProgInfo(15, 'mcs-storagemanager', '', False, 1),
-    'workernode': ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
-    'controllernode': ProgInfo(11, 'mcs-controllernode', 'fg', True),
-    'PrimProc': ProgInfo(5, 'mcs-primproc', '', False, 1),
-    'ExeMgr': ProgInfo(9, 'mcs-exemgr', '', False, 1),
-    'WriteEngineServer': ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
-    'DMLProc': ProgInfo(3, 'mcs-dmlproc', '', False),
-    'DDLProc': ProgInfo(1, 'mcs-ddlproc', '', False),
+    MCSProgs.STORAGE_MANAGER: ProgInfo(15, 'mcs-storagemanager', '', False, 1),
+    MCSProgs.WORKER_NODE: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
+    MCSProgs.CONTROLLER_NODE: ProgInfo(11, 'mcs-controllernode', 'fg', True),
+    MCSProgs.PRIM_PROC: ProgInfo(5, 'mcs-primproc', '', False, 1),
+    MCSProgs.EXE_MGR: ProgInfo(9, 'mcs-exemgr', '', False, 1),
+    MCSProgs.WRITE_ENGINE_SERVER: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
+    MCSProgs.DML_PROC: ProgInfo(3, 'mcs-dmlproc', '', False),
+    MCSProgs.DDL_PROC: ProgInfo(1, 'mcs-ddlproc', '', False),
 }
 
 # constants for docker container dispatcher
