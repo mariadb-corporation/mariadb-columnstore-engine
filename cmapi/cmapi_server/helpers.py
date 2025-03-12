@@ -314,6 +314,7 @@ def broadcast_new_config(
     :rtype: bool
     """
 
+    # TODO: move this from multiple places to one, eg to helpers
     cfg_parser = get_config_parser(cmapi_config_filename)
     key = get_current_key(cfg_parser)
     version = get_version()

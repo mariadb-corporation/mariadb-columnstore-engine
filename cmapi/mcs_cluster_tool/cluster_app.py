@@ -13,16 +13,16 @@ import typer
 from typing_extensions import Annotated
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH, SECRET_KEY
+    CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH, REQUEST_TIMEOUT
 )
 from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
     get_config_parser, get_current_key, get_version, build_url
 )
 from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
 from mcs_node_control.models.node_config import NodeConfig
+from cmapi.cmapi_server.controllers.api_clients import ClusterControllerClient
 
 
 logger = logging.getLogger('mcs_cli')
@@ -33,13 +33,15 @@ node_app = typer.Typer(help='Cluster nodes management.')
 app.add_typer(node_app, name='node')
 set_app = typer.Typer(help='Set cluster parameters.')
 app.add_typer(set_app, name='set')
+client = ClusterControllerClient()
 
 
 @app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 def status():
     """Get status information."""
-    return ClusterHandler.status(logger=logger)
+    client.request_timeout = REQUEST_TIMEOUT
+    return client.get_status()
 
 
 @app.command(rich_help_panel='cluster and single node commands')
@@ -157,25 +159,29 @@ def stop(
         # TODO: investigate more on how changing the hardcoded timeout
         #       could affect put_config (helpers.py broadcast_config) operation
         timeout = 0
-    _ = ClusterHandler.shutdown(logger=logger, in_transaction=True)
+
+    resp = client.shutdown_cluster({'in_transaction': True})
     return {'timestamp': start_time}
 
 
 @app.command(rich_help_panel='cluster and single node commands')
 @handle_output
+@TransactionManager(
+    timeout=timedelta(days=1).total_seconds(), handle_signals=True
+)
 def start():
     """Start the Columnstore cluster."""
-    return ClusterHandler.start(logger=logger)
+    return client.start_cluster({'in_transaction': True})
 
 
 @app.command(rich_help_panel='cluster and single node commands')
 @handle_output
 def restart():
     """Restart the Columnstore cluster."""
-    stop_result = ClusterHandler.shutdown(logger=logger)
+    stop_result = client.shutdown_cluster()
     if 'error' in stop_result:
         return stop_result
-    result = ClusterHandler.start(logger=logger)
+    result = client.start_cluster()
     result['stop_timestamp'] = stop_result['timestamp']
     return result
 
@@ -195,7 +201,7 @@ def add(
     """Add nodes to the Columnstore cluster."""
     result = []
     for node in nodes:
-        result.append(ClusterHandler.add_node(node, logger=logger))
+        result.append(client.add_node({'node': node}))
     return result
 
 
@@ -213,7 +219,7 @@ def remove(nodes: Optional[List[str]] = typer.Option(
     """Remove nodes from the Columnstore cluster."""
     result = []
     for node in nodes:
-        result.append(ClusterHandler.remove_node(node, logger=logger))
+        result.append(client.remove_node(node))
     return result
 
 
@@ -233,7 +239,8 @@ def mode(cluster_mode: str = typer.Option(
         raise typer.BadParameter(
             '"readonly" or "readwrite" are the only acceptable modes now.'
         )
-    return ClusterHandler.set_mode(cluster_mode, logger=logger)
+    client.request_timeout = REQUEST_TIMEOUT
+    return client.set_mode(cluster_mode)
 
 
 @set_app.command()
@@ -245,10 +252,8 @@ def api_key(key: str = typer.Option(..., help='API key to set.')):
     """
     if not key:
         raise typer.BadParameter('Empty API key not allowed.')
-
-    totp = pyotp.TOTP(SECRET_KEY)
-
-    return ClusterHandler.set_api_key(key, totp.now(), logger=logger)
+    client.request_timeout = REQUEST_TIMEOUT
+    return client.set_api_key(key)
 
 
 @set_app.command()
@@ -260,5 +265,5 @@ def log_level(level: str = typer.Option(..., help='Logging level to set.')):
     """
     if not level:
         raise typer.BadParameter('Empty log level not allowed.')
-
-    return ClusterHandler.set_log_level(level, logger=logger)
+    client.request_timeout = REQUEST_TIMEOUT
+    return client.set_log_level(level)

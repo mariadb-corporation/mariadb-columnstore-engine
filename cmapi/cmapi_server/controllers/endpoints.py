@@ -797,9 +797,10 @@ class ClusterController:
         request = cherrypy.request
         request_body = request.json
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.start(config)
+            response = ClusterHandler.start(config, in_transaction)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -817,9 +818,10 @@ class ClusterController:
         request = cherrypy.request
         request_body = request.json
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.shutdown(config)
+            response = ClusterHandler.shutdown(config, in_transaction)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
