@@ -344,6 +344,10 @@ def broadcast_new_config(
 
     if distribute_secrets:
         # TODO: do not restart cluster when put xml config only with
+        #       distribute secrets
+        if not CEJPasswordHandler.secretsfile_exists():
+            secrets_dict = CEJPasswordHandler.generate_secrets_data()
+            CEJPasswordHandler.save_secrets(secrets=secrets_dict)
         secrets = CEJPasswordHandler.get_secrets_json()
         body['secrets'] = secrets
 
@@ -798,7 +802,7 @@ def get_cej_info(config_root):
             'Columnstore.xml has an empty CrossEngineSupport.Password tag'
         )
 
-    if CEJPasswordHandler.secretsfile_exists():
+    if CEJPasswordHandler.secretsfile_exists() and cej_password:
         cej_password = CEJPasswordHandler.decrypt_password(cej_password)
 
     return cej_host, cej_port, cej_username, cej_password

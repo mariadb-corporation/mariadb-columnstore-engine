@@ -5,7 +5,9 @@ import typer
 from typing_extensions import Annotated
 
 
-from cmapi_server.constants import MCS_SECRETS_FILE_PATH
+from cmapi_server.constants import (
+    MCS_DATA_PATH, MCS_SECRETS_FILENAME
+)
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from mcs_cluster_tool.decorators import handle_output
@@ -18,22 +20,33 @@ logger = logging.getLogger('mcs_cli')
 
 @handle_output
 def cskeys(
-    filepath: Annotated[
+    user: Annotated[
         str,
         typer.Option(
-            '-f', '--filepath',
-            help='Path to the output file',
-        )
-    ] = MCS_SECRETS_FILE_PATH,
-    username: Annotated[
-        str,
-        typer.Option(
-            '-u', '--username',
-            help='Username for the key',
+            '-u', '--user',
+            help='Designate the owner of the generated file.',
         )
     ] = 'mysql',
+    directory: Annotated[
+        str,
+        typer.Argument(
+            help='The directory where to store the file in.',
+        )
+    ] = MCS_DATA_PATH
 ):
-    if CEJPasswordHandler().secretsfile_exists():
+    """
+    This utility generates a random AES encryption key and init vector
+    and writes them to disk. The data is written to the file '.secrets',
+    in the specified directory. The key and init vector are used by
+    the utility 'cspasswd' to encrypt passwords used in Columnstore
+    configuration files, as well as by Columnstore itself to decrypt the
+    passwords.
+
+    WARNING: Re-creating the file invalidates all existing encrypted
+    passwords in the configuration files.
+    """
+    filepath = os.path.join(directory, MCS_SECRETS_FILENAME)
+    if CEJPasswordHandler().secretsfile_exists(directory=directory):
         typer.echo(
             (
                 f'Secrets file "{filepath}" already exists. '
@@ -44,14 +57,18 @@ def cskeys(
         raise typer.Exit(code=1)
     elif not os.path.exists(os.path.dirname(filepath)):
         typer.echo(
-            f'Directory "{os.path.dirname(filepath)}" does not exist.',
+            f'Directory "{directory}" does not exist.',
             color='red'
         )
         raise typer.Exit(code=1)
 
     new_secrets_data = CEJPasswordHandler().generate_secrets_data()
     try:
-        CEJPasswordHandler().save_secrets(new_secrets_data, owner=username)
+        CEJPasswordHandler().save_secrets(
+            new_secrets_data, owner=user, directory=directory
+        )
+        typer.echo(f'Permissions of "{filepath}" set to owner:read.')
+        typer.echo(f'Ownership of "{filepath}" given to {user}.')
     except CEJError as cej_error:
         typer.echo(cej_error.message, color='red')
         raise typer.Exit(code=2)
@@ -71,10 +88,14 @@ def cspasswd(
         bool,
         typer.Option(
             '--decrypt',
-            help='Decrypt the provided password',
+            help='Decrypt an encrypted password instead.',
         )
     ] = False
 ):
+    """
+    Encrypt a Columnstore plaintext password using the encryption key in
+    the key file.
+    """
     if decrypt:
         try:
             decrypted_password = CEJPasswordHandler().decrypt_password(

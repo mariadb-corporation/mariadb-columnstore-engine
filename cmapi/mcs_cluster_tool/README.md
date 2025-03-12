@@ -18,6 +18,8 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 * `dbrm_backup`: Columnstore DBRM Backup.
 * `restore`: Restore Columnstore (and/or MariaDB) data.
 * `dbrm_restore`: Restore Columnstore DBRM data.
+* `cskeys`: Generates a random AES encryption key and init vector and writes them to disk.
+* `cspasswd`: Encrypt a Columnstore plaintext password using the encryption key in the key file.
 * `help-all`: Show help for all commands in man page style.
 * `status`: Get status information.
 * `stop`: Stop the Columnstore cluster.
@@ -160,6 +162,50 @@ $ mcs dbrm_restore [OPTIONS]
 * `-sdbk, --skip-dbrm-backup / -no-sdbk, --no-skip-dbrm-backup`: Skip backing up dbrms before restoring.  [default: sdbk]
 * `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: ssm]
 * `-li, --list`: List backups.
+* `--help`: Show this message and exit.
+
+## `mcs cskeys`
+
+This utility generates a random AES encryption key and init vector
+and writes them to disk. The data is written to the file &#x27;.secrets&#x27;,
+in the specified directory. The key and init vector are used by
+the utility &#x27;cspasswd&#x27; to encrypt passwords used in Columnstore
+configuration files, as well as by Columnstore itself to decrypt the
+passwords.
+
+WARNING: Re-creating the file invalidates all existing encrypted
+passwords in the configuration files.
+
+**Usage**:
+
+```console
+$ mcs cskeys [OPTIONS] [DIRECTORY]
+```
+
+**Arguments**:
+
+* `[DIRECTORY]`: The directory where to store the file in.  [default: /var/lib/columnstore]
+
+**Options**:
+
+* `-u, --user TEXT`: Designate the owner of the generated file.  [default: mysql]
+* `--help`: Show this message and exit.
+
+## `mcs cspasswd`
+
+Encrypt a Columnstore plaintext password using the encryption key in
+the key file.
+
+**Usage**:
+
+```console
+$ mcs cspasswd [OPTIONS]
+```
+
+**Options**:
+
+* `--password TEXT`: Password to encrypt/decrypt  [required]
+* `--decrypt`: Decrypt an encrypted password instead.
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`

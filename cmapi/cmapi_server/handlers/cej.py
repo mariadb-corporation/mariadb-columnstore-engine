@@ -10,9 +10,7 @@ from shutil import copyfile
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 
-from cmapi_server.constants import (
-    MCS_DATA_PATH, MCS_SECRETS_FILENAME, MCS_SECRETS_FILE_PATH
-)
+from cmapi_server.constants import MCS_DATA_PATH, MCS_SECRETS_FILENAME
 from cmapi_server.exceptions import CEJError
 
 
@@ -26,16 +24,19 @@ class CEJPasswordHandler():
     """Handler for CrossEngineSupport password decryption."""
 
     @classmethod
-    def secretsfile_exists(cls) -> bool:
-        """Check the .secrets file in MCS_SECRETS_FILE_PATH.
+    def secretsfile_exists(cls, directory: str = MCS_DATA_PATH) -> bool:
+        """Check the .secrets file in directory. Default MCS_SECRETS_FILE_PATH.
 
+        :param directory: path to the directory with .secrets file
+        :type directory: str, optional
         :return: True if file exists and not empty.
         :rtype: bool
         """
+        secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
         try:
             if (
-                os.path.isfile(MCS_SECRETS_FILE_PATH) and
-                os.path.getsize(MCS_SECRETS_FILE_PATH) > 0
+                os.path.isfile(secrets_file_path) and
+                os.path.getsize(secrets_file_path) > 0
             ):
                 return True
         except Exception:
@@ -49,40 +50,48 @@ class CEJPasswordHandler():
         return False
 
     @classmethod
-    def get_secrets_json(cls) -> dict:
+    def get_secrets_json(cls, directory: str = MCS_DATA_PATH) -> dict:
         """Get json from .secrets file.
 
-        :raises CEJError: on empty\corrupted\wrong format .secrets file
+        :param directory: path to the directory with .secrets file
+        :type directory: str, optional
         :return: json from .secrets file
         :rtype: dict
+        :raises CEJError: on empty\corrupted\wrong format .secrets file
         """
-        if not cls.secretsfile_exists():
-            raise CEJError(f'{MCS_SECRETS_FILE_PATH} file does not exist.')
-        with open(MCS_SECRETS_FILE_PATH) as secrets_file:
+        secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
+        if not cls.secretsfile_exists(directory=directory):
+            raise CEJError(f'{secrets_file_path} file does not exist.')
+        with open(secrets_file_path) as secrets_file:
             try:
                 secrets_json = json.load(secrets_file)
             except Exception:
                 logging.error(
                     'Something went wrong while loading json from '
-                    f'{MCS_SECRETS_FILE_PATH}',
+                    f'{secrets_file_path}',
                     exc_info=True
                 )
                 raise CEJError(
-                    f'Looks like file {MCS_SECRETS_FILE_PATH} is corrupted or'
+                    f'Looks like file {secrets_file_path} is corrupted or'
                     'has wrong format.'
                 ) from None
             return secrets_json
 
     @classmethod
-    def decrypt_password(cls, enc_data: str) -> str:
+    def decrypt_password(
+        cls, enc_data: str, directory: str = MCS_DATA_PATH
+    ) -> str:
         """Decrypt CEJ password if needed.
 
+        :param directory: path to the directory with .secrets file
+        :type directory: str, optional
         :param enc_data: encrypted initialization vector + password in hex str
         :type enc_data: str
         :return: decrypted CEJ password
         :rtype: str
         """
-        if not cls.secretsfile_exists():
+        secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
+        if not cls.secretsfile_exists(directory=directory):
             logging.warning('Unencrypted CrossEngineSupport password used.')
             return enc_data
 
@@ -96,18 +105,18 @@ class CEJPasswordHandler():
                 'Non-hexadecimal number found in encrypted CEJ password.'
             ) from value_error
 
-        secrets_json = cls.get_secrets_json()
+        secrets_json = cls.get_secrets_json(directory=directory)
         encryption_key_hex = secrets_json.get('encryption_key', None)
         if not encryption_key_hex:
             raise CEJError(
-                f'Empty "encryption key" found in {MCS_SECRETS_FILE_PATH}'
+                f'Empty "encryption key" found in {secrets_file_path}'
             )
         try:
             encryption_key = bytes.fromhex(encryption_key_hex)
         except ValueError as value_error:
             raise CEJError(
                 'Non-hexadecimal number found in encryption key from '
-                f'{MCS_SECRETS_FILE_PATH} file.'
+                f'{secrets_file_path} file.'
             ) from value_error
         cipher = Cipher(
             algorithms.AES(encryption_key),
@@ -125,21 +134,34 @@ class CEJPasswordHandler():
         return passwd_bytes.decode()
 
     @classmethod
-    def encrypt_password(cls, passwd: str) -> str:
-        iv = os.urandom(size=AES_IV_BIN_SIZE)
+    def encrypt_password(
+        cls, passwd: str, directory: str = MCS_DATA_PATH
+    ) -> str:
+        """Encrypt CEJ password.
 
-        secrets_json = cls.get_secrets_json()
+        :param directory: path to the directory with .secrets file
+        :type directory: str, optional
+        :param passwd: CEJ password
+        :type passwd: str
+        :return: encrypted CEJ password in uppercase hex format
+        :rtype: str
+        """
+
+        secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
+        iv = os.urandom(AES_IV_BIN_SIZE)
+
+        secrets_json = cls.get_secrets_json(directory=directory)
         encryption_key_hex = secrets_json.get('encryption_key')
         if not encryption_key_hex:
             raise CEJError(
-                f'Empty "encryption key" found in {MCS_SECRETS_FILE_PATH}'
+                f'Empty "encryption key" found in {secrets_file_path}'
             )
         try:
             encryption_key = bytes.fromhex(encryption_key_hex)
         except ValueError as value_error:
             raise CEJError(
                 'Non-hexadecimal number found in encryption key from '
-                f'{MCS_SECRETS_FILE_PATH} file.'
+                f'{secrets_file_path} file.'
             ) from value_error
         cipher = Cipher(
             algorithms.AES(encryption_key),
@@ -151,8 +173,8 @@ class CEJPasswordHandler():
         padded_data = padder.update(passwd.encode()) + padder.finalize()
 
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
-
-        return iv + encrypted_data
+        encrypted_passwd_bytes = iv + encrypted_data
+        return encrypted_passwd_bytes.hex().upper()
 
     @classmethod
     def generate_secrets_data(cls) -> dict:
@@ -161,8 +183,8 @@ class CEJPasswordHandler():
         :return: secrets data
         :rtype: dict
         """
-        key_length = algorithms.AES256.key_size // 8
-        encryption_key = os.urandom(size=key_length)
+        key_length = 32  # AES256 key_size
+        encryption_key = os.urandom(key_length)
         encryption_key_hex = binascii.hexlify(encryption_key).decode()
         secrets_dict = {
             'description': 'Columnstore CrossEngineSupport password encryption/decryption key',
@@ -174,11 +196,13 @@ class CEJPasswordHandler():
 
     @classmethod
     def save_secrets(
-        cls, secrets: dict, filepath: str = MCS_SECRETS_FILE_PATH,
+        cls, secrets: dict, directory: str = MCS_DATA_PATH,
         owner: str = 'mysql'
     ) -> None:
         """Write secrets to .secrets file.
 
+        :param directory: path to the directory with .secrets file
+        :type directory: str, optional
         :param secrets: secrets dict
         :type secrets: dict
         :param filepath: path to the .secrets file
@@ -186,29 +210,43 @@ class CEJPasswordHandler():
         :param owner: owner of the file
         :type owner: str, optional
         """
-        if cls.secretsfile_exists():
-            copyfile(
-                filepath,
-                os.path.join(
-                    os.path.dirname(filepath),
-                    f'{os.path.basename(filepath)}.cmapi.save'
+        secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
+        if cls.secretsfile_exists(directory=directory):
+            if cls.get_secrets_json(directory=directory) != secrets:
+                copyfile(
+                    secrets_file_path,
+                    os.path.join(
+                        directory,
+                        f'{MCS_SECRETS_FILENAME}.cmapi.save'
+                    )
                 )
-            )
+                logging.warning(
+                    f'Backup of {secrets_file_path} file created.'
+                )
+            else:
+                logging.debug(
+                    f'No changes in {secrets_file_path} file detected.'
+                )
+                return
 
         try:
             with open(
-                MCS_SECRETS_FILE_PATH, 'w', encoding='utf-8'
+                secrets_file_path, 'w', encoding='utf-8'
             ) as secrets_file:
                 json.dump(secrets, secrets_file)
         except Exception as exc:
             raise CEJError(f'Write to .secrets file failed.') from exc
 
         try:
-            os.chmod(MCS_SECRETS_FILE_PATH, stat.S_IRUSR)
+            os.chmod(secrets_file_path, stat.S_IRUSR)
             userinfo = pwd.getpwnam(owner)
-            os.chown(MCS_SECRETS_FILE_PATH, userinfo.pw_uid, userinfo.pw_gid)
-            logging.debug(f'Permissions of .secrets file set to {owner}:read.')
-            logging.debug(f'Ownership of .secrets file given to {owner}.')
+            os.chown(secrets_file_path, userinfo.pw_uid, userinfo.pw_gid)
+            logging.debug(
+                f'Permissions of {secrets_file_path} file set to {owner}:read.'
+            )
+            logging.debug(
+                f'Ownership of {secrets_file_path} file given to {owner}.'
+            )
         except Exception as exc:
             raise CEJError(
                 f'Failed to set permissions or ownership for .secrets file.'
