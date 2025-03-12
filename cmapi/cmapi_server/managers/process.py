@@ -7,7 +7,8 @@ from time import sleep
 import psutil
 
 from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS
+from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs
+from cmapi_server.process_dispatchers.base import BaseDispatcher
 from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
 from cmapi_server.process_dispatchers.container import (
     ContainerDispatcher
@@ -18,7 +19,7 @@ from mcs_node_control.models.misc import get_workernodes
 from mcs_node_control.models.process import Process
 
 
-PROCESS_DISPATCHERS = {
+PROCESS_DISPATCHERS: dict[str, type[BaseDispatcher]] = {
     'systemd': SystemdDispatcher,
     # could be used in docker containers and OSes w/o systemd
     'container': ContainerDispatcher,
@@ -404,19 +405,21 @@ class MCSProcessManager:
         return set(node_progs) == set(p['name'] for p in running_procs)
 
     @classmethod
-    def start_node(cls, is_primary: bool, use_sudo: bool = True):
+    def start_node(cls, is_primary: bool, use_sudo: bool = True, is_read_only: bool = False) -> None:
         """Start mcs node processes.
 
         :param is_primary: is node primary or not, defaults to True
         :type is_primary: bool
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
+        :param is_read_only: if true, doesn't start WriteEngine
+        :type is_read_only: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not started
         """
         for prog_name in cls._get_sorted_progs(is_primary):
             if (
                     cls.dispatcher_name == 'systemd'
-                    and prog_name == 'StorageManager'
+                    and prog_name == MCSProgs.STORAGE_MANAGER.value
             ):
                 # TODO: MCOL-5458
                 logging.info(
@@ -424,17 +427,24 @@ class MCSProcessManager:
                 )
                 continue
             # TODO: additional error handling
-            if prog_name == 'controllernode':
+            if prog_name == MCSProgs.CONTROLLER_NODE.value:
                 cls._wait_for_workernodes()
-            if prog_name in ('DMLProc', 'DDLProc'):
+            if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
                 cls._wait_for_controllernode()
+            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
+                logging.debug('Node is in read-only mode, not starting WriteEngine')
+                continue
             if not cls.start(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not started properly.')
                 raise CMAPIBasicError(f'Error while starting "{prog_name}".')
 
     @classmethod
     def stop_node(
-        cls, is_primary: bool, use_sudo: bool = True, timeout: int = 10
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        timeout: int = 10,
+        is_read_only: bool = False,
     ):
         """Stop mcs node processes.
 
@@ -444,6 +454,8 @@ class MCSProcessManager:
         :type use_sudo: bool, optional
         :param timeout: timeout for DMLProc gracefully stop using DBRM, seconds
         :type timeout: int
+        :param is_read_only: if true, doesn't stop WriteEngine
+        :type is_read_only: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not stopped
         """
         # Every time try to stop all processes no matter primary it or slave,
@@ -451,13 +463,16 @@ class MCSProcessManager:
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
         for prog_name in cls._get_sorted_progs(True, reverse=True):
+            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
+                logging.debug('Node is in read-only mode, not stopping WriteEngine')
+                continue
             if not cls.stop(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not stopped properly.')
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
 
     @classmethod
-    def restart_node(cls, is_primary: bool, use_sudo: bool):
+    def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_only: bool = False):
         """TODO: For next releases."""
         if cls.get_running_mcs_procs():
-            cls.stop_node(is_primary, use_sudo)
-        cls.start_node(is_primary, use_sudo)
+            cls.stop_node(is_primary, use_sudo, is_read_only)
+        cls.start_node(is_primary, use_sudo, is_read_only)
