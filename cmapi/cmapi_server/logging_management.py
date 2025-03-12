@@ -123,7 +123,8 @@ def enable_console_logging(logger: logging.Logger) -> None:
 def config_cmapi_server_logging():
     # add custom level TRACE only for develop purposes
     # could be activated using API endpoints or cli tool without relaunching
-    add_logging_level('TRACE', 5)
+    if not hasattr(logging, 'TRACE'):
+        add_logging_level('TRACE', 5)
     cherrypy._cplogging.LogManager.error = custom_cherrypy_error
     # reconfigure cherrypy.access log message format
     # Default access_log_format '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'

@@ -27,6 +27,7 @@ from cmapi_server.node_manipulation import (
     add_node,
     remove_node,
     switch_node_maintenance,
+    update_dbroots_of_read_replicas,
 )
 
 
@@ -149,7 +150,10 @@ class ClusterHandler:
         return {'timestamp': operation_start_time}
 
     @staticmethod
-    def add_node(node: str, config: str = DEFAULT_MCS_CONF_PATH) -> dict:
+    def add_node(
+        node: str, config: str = DEFAULT_MCS_CONF_PATH,
+        read_replica: bool = False,
+    ) -> dict:
         """Method to add node to MCS CLuster.
 
         :param node: node IP or name or FQDN
@@ -157,6 +161,8 @@ class ClusterHandler:
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
+        :param read_replica: add node as read replica, defaults to False
+        :type read_replica: bool, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while adding node
@@ -167,20 +173,25 @@ class ClusterHandler:
         :rtype: dict
         """
         logger: logging.Logger = logging.getLogger('cmapi_server')
-        logger.debug(f'Cluster add node command called. Adding node {node}.')
+        logger.debug(
+            f'Cluster add node command called. Adding node {node} in '
+            f'{"read-replica" if read_replica else "read-write"} mode.'
+        )
 
         response = {'timestamp': str(datetime.now())}
 
         with exc_to_cmapi_error(prefix='Error while adding node'):
             add_node(
                 node, input_config_filename=config,
-                output_config_filename=config
+                output_config_filename=config,
+                read_replica=read_replica,
             )
             if not get_dbroots(node, config):
-                add_dbroot(
-                    host=node, input_config_filename=config,
-                    output_config_filename=config
-                )
+                if not read_replica:  # Read replicas don't own dbroots
+                    add_dbroot(
+                        host=node, input_config_filename=config,
+                        output_config_filename=config
+                    )
 
         response['node_id'] = node
         update_revision_and_manager(
@@ -225,6 +236,9 @@ class ClusterHandler:
         response['node_id'] = node
         active_nodes = get_active_nodes(config)
         if len(active_nodes) > 0:
+            with NodeConfig().modify_config(config) as root:
+                update_dbroots_of_read_replicas(root)
+
             update_revision_and_manager(
                 input_config_filename=config, output_config_filename=config
             )

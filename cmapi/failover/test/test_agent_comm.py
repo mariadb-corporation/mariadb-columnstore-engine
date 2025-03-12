@@ -1,17 +1,18 @@
-import unittest
-import time
-import socket
 import datetime
-import cherrypy
-import os.path
+import socket
+import time
+import unittest
 from contextlib import contextmanager
-from ..agent_comm import AgentComm
-from cmapi_server import helpers, node_manipulation
-from cmapi_server.failover_agent import FailoverAgent
-from mcs_node_control.models.node_config import NodeConfig
-from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
-from cmapi_server.managers.certificate import CertificateManager
 
+import cherrypy
+
+from cmapi_server import helpers, node_manipulation
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.failover_agent import FailoverAgent
+from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.test.mock_resolution import MockResolutionBuilder
+
+from ..agent_comm import AgentComm
 
 config_filename = './cmapi_server/cmapi_server.conf'
 
@@ -43,13 +44,19 @@ class TestAgentComm(unittest.TestCase):
 
     def test_with_agent_base(self):
         agent = AgentComm()
-        # Add events except for enterStandbyMode
-        agent.activateNodes(["mysql.com"])
-        agent.activateNodes(["mysql.com"])  # an intentional dup
-        agent.designatePrimaryNode("mysql.com")
-        agent.deactivateNodes(["mysql.com"])
-        agent.deactivateNodes(["mysql.com"])
-        agent.designatePrimaryNode(socket.gethostname())
+        test_ip = '104.17.191.14'
+        with (
+            MockResolutionBuilder()
+            .add_mapping('mysql.com', test_ip)
+            .add_mapping(socket.gethostname(), test_ip)
+            .build()
+        ):
+            agent.activateNodes(["mysql.com"])
+            agent.activateNodes(["mysql.com"])  # an intentional dup
+            agent.designatePrimaryNode("mysql.com")
+            agent.deactivateNodes(["mysql.com"])
+            agent.deactivateNodes(["mysql.com"])
+            agent.designatePrimaryNode(socket.gethostname())
 
         health = agent.getNodeHealth()
         agent.raiseAlarm("Hello world!")
@@ -93,13 +100,19 @@ class TestAgentComm(unittest.TestCase):
                 # to mysql.com.  :D
                 time.sleep(1)
 
-                # do the same as above.
-                agentcomm.activateNodes(["mysql.com"])
-                agentcomm.activateNodes(["mysql.com"])  # an intentional dup
-                agentcomm.designatePrimaryNode("mysql.com")
-                agentcomm.deactivateNodes(["mysql.com"])
-                agentcomm.deactivateNodes(["mysql.com"])
-                agentcomm.designatePrimaryNode(socket.gethostname())
+                test_ip = '104.17.191.14'
+                with (
+                    MockResolutionBuilder()
+                    .add_mapping('mysql.com', test_ip)
+                    .add_mapping(socket.gethostname(), test_ip)
+                    .build()
+                ):
+                    agentcomm.activateNodes(["mysql.com"])
+                    agentcomm.activateNodes(["mysql.com"])  # an intentional dup
+                    agentcomm.designatePrimaryNode("mysql.com")
+                    agentcomm.deactivateNodes(["mysql.com"])
+                    agentcomm.deactivateNodes(["mysql.com"])
+                    agentcomm.designatePrimaryNode(socket.gethostname())
 
                 health = agent.getNodeHealth()
                 agent.raiseAlarm("Hello world!")

@@ -1,9 +1,7 @@
 import logging
-
 import socket
 import subprocess
 import time
-
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -11,19 +9,32 @@ from pathlib import Path
 import cherrypy
 import pyotp
 import requests
+from mcs_node_control.models.dbrm import set_cluster_mode
+from mcs_node_control.models.node_config import NodeConfig
+from mcs_node_control.models.node_status import NodeStatus
 
-from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
 from cmapi_server.constants import (
-    DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX,
-    MCS_BRM_CURRENT_PATH, MCS_EM_PATH, S3_BRM_CURRENT_PATH, SECRET_KEY,
+    DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
 )
 from cmapi_server.controllers.error import APIError
-from cmapi_server.handlers.cej import CEJError
-from cmapi_server.handlers.cej import CEJPasswordHandler
+from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
+from cmapi_server.handlers.cej import CEJError, CEJPasswordHandler
 from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
-    cmapi_config_check, dequote, get_active_nodes, get_config_parser,
-    get_current_key, get_dbroots, in_maintenance_state, save_cmapi_conf_file,
+    cmapi_config_check,
+    dequote,
+    get_active_nodes,
+    get_config_parser,
+    get_current_key,
+    get_dbroots,
+    in_maintenance_state,
+    save_cmapi_conf_file,
     system_ready,
 )
 from cmapi_server.logging_management import change_loggers_level
@@ -31,10 +42,6 @@ from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
-from mcs_node_control.models.dbrm import set_cluster_mode
-from mcs_node_control.models.node_config import NodeConfig
-from mcs_node_control.models.node_status import NodeStatus
-
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -434,7 +441,7 @@ class ConfigController:
                 MCSProcessManager.stop_node(
                     is_primary=node_config.is_primary_node(),
                     use_sudo=use_sudo,
-                    timeout=request_timeout
+                    timeout=request_timeout,
                 )
             except CMAPIBasicError as err:
                 raise_422_error(
@@ -463,6 +470,7 @@ class ConfigController:
                     MCSProcessManager.start_node(
                         is_primary=node_config.is_primary_node(),
                         use_sudo=use_sudo,
+                        is_read_replica=node_config.am_i_read_replica(),
                     )
                 except CMAPIBasicError as err:
                     raise_422_error(
@@ -666,7 +674,8 @@ class StartController:
         try:
             MCSProcessManager.start_node(
                 is_primary=node_config.is_primary_node(),
-                use_sudo=use_sudo
+                use_sudo=use_sudo,
+                is_read_replica=node_config.am_i_read_replica(),
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -701,7 +710,7 @@ class ShutdownController:
             MCSProcessManager.stop_node(
                 is_primary=node_config.is_primary_node(),
                 use_sudo=use_sudo,
-                timeout=timeout
+                timeout=timeout,
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -920,6 +929,7 @@ class ClusterController:
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
+        read_replica = bool(request_body.get('read_replica', False))
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
@@ -927,9 +937,9 @@ class ClusterController:
         with cmapi_error_to_422(module_logger, func_name):
             if not in_transaction:
                 with TransactionManager(extra_nodes=[node]):
-                    response = ClusterHandler.add_node(node, config)
+                    response = ClusterHandler.add_node(node, config, read_replica)
             else:
-                response = ClusterHandler.add_node(node, config)
+                response = ClusterHandler.add_node(node, config, read_replica)
 
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response

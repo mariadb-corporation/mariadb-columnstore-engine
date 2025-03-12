@@ -4,24 +4,25 @@ import logging
 import pwd
 import re
 import socket
-from os import mkdir, replace, chown
+from contextlib import contextmanager
+from os import chown, mkdir, replace
 from pathlib import Path
 from shutil import copyfile
-from typing import Iterator
-from xml.dom import minidom   # to pick up pretty printing functionality
+from typing import Optional
+from collections.abc import Iterator
+from xml.dom import minidom  # to pick up pretty printing functionality
 
 from lxml import etree
 
 from cmapi_server.constants import (
-    DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH,
     MCS_MODULE_FILE_PATH,
 )
-# from cmapi_server.managers.process import MCSProcessManager
-from mcs_node_control.models.misc import (
-    read_module_id, get_dbroots_list
-)
-from mcs_node_control.models.network_ifaces import get_network_interfaces
 
+# from cmapi_server.managers.process import MCSProcessManager
+from mcs_node_control.models.misc import get_dbroots_list, read_module_id
+from mcs_node_control.models.network_ifaces import get_network_interfaces
 
 module_logger = logging.getLogger()
 
@@ -37,7 +38,7 @@ class NodeConfig:
     """
     def get_current_config_root(
         self, config_filename: str = DEFAULT_MCS_CONF_PATH, upgrade=True
-    ):
+    ) -> etree.Element:
         """Retrieves current configuration.
 
         Read the config and returns Element.
@@ -50,7 +51,7 @@ class NodeConfig:
         self.upgrade_config(tree=tree, upgrade=upgrade)
         return tree.getroot()
 
-    def get_root_from_string(self, config_string: str):
+    def get_root_from_string(self, config_string: str) -> etree.Element:
         root = etree.fromstring(config_string)
         self.upgrade_config(root=root)
         return root
@@ -137,6 +138,26 @@ class NodeConfig:
         with open(tmp_filename, "w") as f:
             f.write(self.to_string(tree))
         replace(tmp_filename, filename)    # atomic replacement
+
+    @contextmanager
+    def modify_config(
+        self,
+        input_config_filename: str = DEFAULT_MCS_CONF_PATH,
+        output_config_filename: Optional[str] = None,
+        ):
+        """Context manager to modify the config file
+        If exception is raised, the config file is not modified and exception is re-raised
+        If output_config_filename is not provided, the input config file is modified
+        """
+        try:
+            c_root = self.get_current_config_root(input_config_filename)
+            yield c_root
+        except Exception as e:
+            logging.error(f"modify_config(): Caught exception: '{str(e)}', config file not modified")
+            raise
+        else:
+            output_config_filename = output_config_filename or input_config_filename
+            self.write_config(c_root, output_config_filename)
 
     def to_string(self, tree):
         # TODO: try to use lxml to do this to avoid the add'l dependency
@@ -562,4 +583,47 @@ has dbroot {subel.text}')
         for i in range(1, mod_count+1):
             for j in range(1, int(smc_node.find(f"./ModuleDBRootCount{i}-3").text) + 1):
                 dbroots.append(smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text)
+
         return dbroots
+
+    def get_read_replicas(self, root=None) -> list[str]:
+        """Collects IP addresses of read replicas.
+
+        A read replica is any PM that does not have a corresponding WriteEngineServer.
+        """
+        root = root or self.get_current_config_root()
+
+        # Collect all PM IP addresses
+        smc_node = root.find("./SystemModuleConfig")
+        mod_count = int(smc_node.find("./ModuleCount3").text)
+        pm_addrs = set()
+        for i in range(1, mod_count + 1):
+            ip_node = smc_node.find(f"./ModuleIPAddr{i}-1-3")
+            if ip_node is not None and ip_node.text:
+                pm_addrs.add(ip_node.text)
+
+        # Collect all WriteEngineServer IP addresses
+        wes_addrs = set()
+        for i in range(1, mod_count + 1):
+            wes = root.find(f"./pm{i}_WriteEngineServer")
+            if wes is not None:
+                ip = wes.findtext("./IPAddr")
+                if ip:
+                    wes_addrs.add(ip)
+
+        # Find PMs without a WriteEngineServer
+        return list(sorted(pm_addrs - wes_addrs))
+
+    def am_i_read_replica(self, root=None) -> bool:
+        """Checks if this node is configured as a read replica.
+
+        "am i" in the name highlights that we check the current node.
+        """
+        root = root or self.get_current_config_root()
+
+        pm_num = self.get_current_pm_num(root)
+        pm_ip = self.get_module_net_address(root, module_id=pm_num)
+
+        # Check if our PM's IP is in the list of read replicas
+        read_replicas = set(self.get_read_replicas(root))
+        return pm_ip in read_replicas

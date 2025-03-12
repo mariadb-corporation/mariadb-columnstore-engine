@@ -98,3 +98,6 @@ mcs_aws
 mcs_gsutil
 _CPack_Packages/
 venv/
+
+*.log
+*.puml

@@ -3,8 +3,11 @@ import fcntl
 import logging
 import socket
 import struct
+from dataclasses import dataclass
 from ipaddress import ip_address
-from typing import Optional
+from typing import List, Optional, cast
+
+from cmapi_server.exceptions import CMAPIBasicError
 
 try:
     import psutil
@@ -13,7 +16,6 @@ except ImportError:
     psutil = None
     _PSUTIL_AVAILABLE = False
 
-from cmapi_server.exceptions import CMAPIBasicError
 
 
 SIOCGIFADDR = 0x8915  # SIOCGIFADDR "socket ioctl get interface address"
@@ -47,7 +49,7 @@ class NetworkManager:
             return False
 
     @classmethod
-    def resolve_hostname_to_ip(
+    def resolve_hostname_to_ips(
         cls,
         hostname: str,
         only_ipv4: bool = True,
@@ -241,7 +243,7 @@ class NetworkManager:
         :return: True if all resolved IPs are loopback, False otherwise
         :rtype: bool
         """
-        ips = cls.resolve_hostname_to_ip(hostname)
+        ips = cls.resolve_hostname_to_ips(hostname)
         if not ips:
             return False
         for ip in ips:
@@ -250,7 +252,7 @@ class NetworkManager:
         return True
 
     @classmethod
-    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, str]:
+    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, Optional[str]]:
         """Resolve input string to an (IP, hostname) pair.
 
         :param input_str: Input which may be an IP address or a hostname
@@ -260,14 +262,14 @@ class NetworkManager:
         :raises CMAPIBasicError: if hostname resolution yields no IPs
         """
         ip: str = ''
-        hostname: str = None
+        hostname: Optional[str] = None
 
         if cls.is_ip(input_str):
             ip = input_str
             hostname = cls.get_hostname(input_str)
         else:
             hostname = input_str
-            ip_list = cls.resolve_hostname_to_ip(
+            ip_list = cls.resolve_hostname_to_ips(
                 input_str,
                 exclude_loopback=not cls.is_only_loopback_hostname(input_str)
             )
@@ -287,7 +289,7 @@ class NetworkManager:
         :raises CMAPIBasicError: if validation fails
         """
         exclude_loopback = not cls.is_only_loopback_hostname(hostname)
-        ips = cls.resolve_hostname_to_ip(
+        ips = cls.resolve_hostname_to_ips(
             hostname,
             only_ipv4=True,
             exclude_loopback=exclude_loopback,

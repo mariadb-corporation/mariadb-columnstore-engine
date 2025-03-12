@@ -71,6 +71,7 @@ class ClusterControllerClient:
         :param node_info: Information about the node to add.
         :return: The response from the API.
         """
+        #TODO: fix interface as in remove_node used or think about universal
         return self._request('PUT', 'node', {**node_info, **extra})
 
     def remove_node(
