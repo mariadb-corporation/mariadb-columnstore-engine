@@ -1,26 +1,27 @@
 import configparser
+from contextlib import contextmanager
 import grp
 import logging
 import pwd
 import re
 import socket
-from os import mkdir, replace, chown
+from os import chown, mkdir, replace
 from pathlib import Path
 from shutil import copyfile
-from xml.dom import minidom   # to pick up pretty printing functionality
+from typing import Optional
+from xml.dom import minidom  # to pick up pretty printing functionality
 
 from lxml import etree
 
 from cmapi_server.constants import (
-    DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH,
     MCS_MODULE_FILE_PATH,
 )
-# from cmapi_server.managers.process import MCSProcessManager
-from mcs_node_control.models.misc import (
-    read_module_id, get_dbroots_list
-)
-from mcs_node_control.models.network_ifaces import get_network_interfaces
 
+# from cmapi_server.managers.process import MCSProcessManager
+from mcs_node_control.models.misc import get_dbroots_list, read_module_id
+from mcs_node_control.models.network_ifaces import get_network_interfaces
 
 module_logger = logging.getLogger()
 
@@ -36,7 +37,7 @@ class NodeConfig:
     """
     def get_current_config_root(
         self, config_filename: str = DEFAULT_MCS_CONF_PATH, upgrade=True
-    ):
+    ) -> etree.Element:
         """Retrieves current configuration.
 
         Read the config and returns Element.
@@ -49,7 +50,7 @@ class NodeConfig:
         self.upgrade_config(tree=tree, upgrade=upgrade)
         return tree.getroot()
 
-    def get_root_from_string(self, config_string: str):
+    def get_root_from_string(self, config_string: str) -> etree.Element:
         root = etree.fromstring(config_string)
         self.upgrade_config(root=root)
         return root
@@ -136,6 +137,26 @@ class NodeConfig:
         with open(tmp_filename, "w") as f:
             f.write(self.to_string(tree))
         replace(tmp_filename, filename)    # atomic replacement
+
+    @contextmanager
+    def modify_config(
+        self,
+        input_config_filename: str = DEFAULT_MCS_CONF_PATH,
+        output_config_filename: Optional[str] = None,
+        ):
+        """Context manager to modify the config file
+        If exception is raised, the config file is not modified and exception is re-raised
+        If output_config_filename is not provided, the input config file is modified
+        """
+        try:
+            c_root = self.get_current_config_root(input_config_filename)
+            yield c_root
+        except Exception as e:
+            logging.error(f"modify_config(): Caught exception: '{str(e)}', config file not modified")
+            raise
+        else:
+            output_config_filename = output_config_filename or input_config_filename
+            self.write_config(c_root, output_config_filename)
 
     def to_string(self, tree):
         # TODO: try to use lxml to do this to avoid the add'l dependency
@@ -566,4 +587,18 @@ has dbroot {subel.text}')
         for i in range(1, mod_count+1):
             for j in range(1, int(smc_node.find(f"./ModuleDBRootCount{i}-3").text) + 1):
                 dbroots.append(smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text)
+
         return dbroots
+
+    def get_read_only_nodes(self, root=None) -> list[str]:
+        """Get names of read only nodes from config"""
+        root = root or self.get_current_config_root()
+        return [node.text for node in root.findall('./ReadOnlyNodes/Node')]
+
+    def is_read_only(self, root=None) -> bool:
+        """Checks if this node is in read-only mode"""
+
+        root = root or self.get_current_config_root()
+        read_only_nodes = set(self.get_read_only_nodes(root))
+        my_names = set(self.get_network_addresses_and_names())
+        return bool(read_only_nodes.intersection(my_names))

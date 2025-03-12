@@ -62,7 +62,8 @@ def switch_node_maintenance(
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    use_rebalance_dbroots: bool = True
+    use_rebalance_dbroots: bool = True,
+    read_only: bool = False,
 ):
     """Add node to a cluster.
 
@@ -96,14 +97,23 @@ def add_node(
     try:
         if not _replace_localhost(c_root, node):
             pm_num = _add_node_to_PMS(c_root, node)
-            _add_WES(c_root, pm_num, node)
+
+            if not read_only:
+                _add_WES(c_root, pm_num, node)
+            else:
+                logging.info('Node is read-only, skipping WES addition.')
+                _add_read_only_node(c_root, node)
+
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
             if use_rebalance_dbroots:
-                _rebalance_dbroots(c_root)
-                _move_primary_node(c_root)
+                if not read_only:
+                    _rebalance_dbroots(c_root)
+                    _move_primary_node(c_root)
+
+            update_dbroots_of_readonly_nodes(c_root)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -157,7 +167,11 @@ def remove_node(
 
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, node)
-            _remove_WES(c_root, pm_num)
+
+            is_read_only = node in node_config.get_read_only_nodes(c_root)
+            if not is_read_only:
+                _remove_WES(c_root, pm_num)
+
             _remove_DBRM_Worker(c_root, node)
             _remove_Module_entries(c_root, node)
             _remove_from_ExeMgrs(c_root, node)
@@ -168,9 +182,11 @@ def remove_node(
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
 
-            if use_rebalance_dbroots:
+            if use_rebalance_dbroots and not is_read_only:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
+
+            update_dbroots_of_readonly_nodes(c_root)
         else:
             # TODO:
             #   - IMO undefined behaviour here. Removing one single node
@@ -244,7 +260,7 @@ def rebalance_dbroots(
 #
 # returns the id of the new dbroot on success
 # raises an exception on error
-def add_dbroot(input_config_filename = None, output_config_filename = None, host = None):
+def add_dbroot(input_config_filename = None, output_config_filename = None, host = None) -> int:
     node_config = NodeConfig()
     if input_config_filename is None:
         c_root = node_config.get_current_config_root()
@@ -376,11 +392,15 @@ def __remove_helper(parent_node, node):
 
 def _remove_node(root, node):
     '''
-    remove node from DesiredNodes, InactiveNodes, and ActiveNodes
+    remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadOnlyNodes
     '''
 
     for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
         __remove_helper(n, node)
+
+    read_only_nodes = root.find('./ReadOnlyNodes')
+    if read_only_nodes is not None:
+        __remove_helper(read_only_nodes, node)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
@@ -529,6 +549,19 @@ def unassign_dbroot1(root):
         i += 1
 
 
+def _get_existing_db_roots(root: etree.Element) -> list[int]:
+    '''Get all the existing dbroot IDs from the config file'''
+    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
+    # Going to scan from 1-99 instead
+    sysconf_node = root.find("./SystemConfig")
+    existing_dbroots = []
+    for num in range(1, 100):
+        node = sysconf_node.find(f"./DBRoot{num}")
+        if node is not None:
+            existing_dbroots.append(num)
+    return existing_dbroots
+
+
 def _rebalance_dbroots(root, test_mode=False):
     # TODO: add code to detect whether we are using shared storage or not.  If not, exit
     # without doing anything.
@@ -572,14 +605,7 @@ def _rebalance_dbroots(root, test_mode=False):
 
     current_mapping = get_current_dbroot_mapping(root)
     sysconf_node = root.find("./SystemConfig")
-
-    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
-    # Going to scan from 1-99 instead.
-    existing_dbroots = []
-    for num in range(1, 100):
-        node = sysconf_node.find(f"./DBRoot{num}")
-        if node is not None:
-            existing_dbroots.append(num)
+    existing_dbroots = _get_existing_db_roots(root)
 
     # assign the unassigned dbroots
     unassigned_dbroots = set(existing_dbroots) - set(current_mapping[0])
@@ -631,7 +657,7 @@ def _rebalance_dbroots(root, test_mode=False):
                         # timed out
                         # possible node is not ready, leave retry as-is
                         pass
-                    except Exception as e:
+                    except Exception:
                         retry = False
 
                 if not found_master:
@@ -994,6 +1020,22 @@ def _add_WES(root, pm_num, node):
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
+def _add_read_only_node(root: etree.Element, node: str) -> None:
+    '''Add node name to ReadOnlyNodes if it is not already there'''
+    read_only_nodes = root.find('./ReadOnlyNodes')
+    if read_only_nodes is None:
+        read_only_nodes = etree.SubElement(root, 'ReadOnlyNodes')
+    else:
+        for n in read_only_nodes.findall("./Node"):
+            if n.text == node:
+                logging.warning(
+                    f"_add_read_only_node(): node {node} already exists in ReadOnlyNodes"
+                )
+                return
+
+    etree.SubElement(read_only_nodes, "Node").text = node
+
+
 def _add_DBRM_Worker(root, node):
     '''
     find the highest numbered DBRM_Worker entry, or one that isn't used atm
@@ -1096,7 +1138,7 @@ def _add_node_to_PMS(root, node):
 
     return new_pm_num
 
-def _replace_localhost(root, node):
+def _replace_localhost(root: etree.Element, node: str) -> bool:
     # if DBRM_Controller/IPAddr is 127.0.0.1 or localhost,
     # then replace all instances, else do nothing.
     controller_host = root.find('./DBRM_Controller/IPAddr')
@@ -1144,3 +1186,75 @@ def _replace_localhost(root, node):
 # New Exception types
 class NodeNotFoundException(Exception):
     pass
+
+
+def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
+    """Get a mapping of PM module numbers to their IP addresses"""
+    module_num_to_addr = {}
+    smc_node = root.find("./SystemModuleConfig")
+    mod_count = int(smc_node.find("./ModuleCount3").text)
+    for i in range(1, mod_count + 1):
+        ip_addr = smc_node.find(f"./ModuleIPAddr{i}-1-3").text
+        module_num_to_addr[i] = ip_addr
+    return module_num_to_addr
+
+
+def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
+    """Read-only nodes do not have their own dbroots, but they must have all the dbroots of the other nodes
+    So this function sets list of dbroots of each read-only node to the list of all the dbroots in the cluster
+    """
+    nc = NodeConfig()
+    pm_num_to_addr = get_pm_module_num_to_addr_map(root)
+    for ro_node in nc.get_read_only_nodes(root):
+        # Get PM num by IP address
+        this_ip_pm_num = None
+        for pm_num, pm_addr in pm_num_to_addr.items():
+            if pm_addr == ro_node:
+                this_ip_pm_num = pm_num
+                break
+
+        if this_ip_pm_num is not None:
+            # Add dbroots of other nodes to this read-only node
+            add_dbroots_of_other_nodes(root, this_ip_pm_num)
+        else:  # This should not happen
+            err_msg = f"Could not find PM number for read-only node {ro_node}"
+            logging.error(err_msg)
+            raise NodeNotFoundException(err_msg)
+
+
+def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
+    """Adds all the dbroots listed in the config to this (read-only) node"""
+    existing_dbroots = _get_existing_db_roots(root)
+    sysconf_node = root.find("./SystemModuleConfig")
+
+    # Remove existing dbroots from this module
+    remove_dbroots_of_node(root, module_num)
+
+    # Write node's dbroot count
+    dbroot_count_node = etree.SubElement(
+        sysconf_node, f"ModuleDBRootCount{module_num}-3"
+    )
+    dbroot_count_node.text = str(len(existing_dbroots))
+
+    # Write new dbroot IDs to the module mapping
+    for i, dbroot_id in enumerate(existing_dbroots, start=1):
+        dbroot_id_node = etree.SubElement(
+            sysconf_node, f"ModuleDBRootID{module_num}-{i}-3"
+        )
+        dbroot_id_node.text = str(dbroot_id)
+
+    logging.info("Added %d dbroots to read-only node %d: %s", len(existing_dbroots), module_num, sorted(existing_dbroots))
+
+
+def remove_dbroots_of_node(root: etree.Element, module_num: int) -> None:
+    """Removes all the dbroots listed in the config from this (read-only) node"""
+    sysconf_node = root.find("./SystemModuleConfig")
+    dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
+    if dbroot_count_node is not None:
+        sysconf_node.remove(dbroot_count_node)
+
+    # Remove existing dbroot IDs
+    for i in range(1, 100):
+        dbroot_id_node = sysconf_node.find(f"./ModuleDBRootID{module_num}-{i}-3")
+        if dbroot_id_node is not None:
+            sysconf_node.remove(dbroot_id_node)
