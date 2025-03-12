@@ -198,6 +198,14 @@ def add(
             'node IP, name or FQDN. '
             'Can be used multiple times to add several nodes at a time.'
         )
+    ),
+    read_only: bool = typer.Option(
+        False,
+        '--read-only',
+        help=(
+            'Add node (or nodes, if more than one is passed) in read-only '
+            'mode.'
+        )
     )
 ):
     """Add nodes to the Columnstore cluster."""
@@ -207,7 +215,9 @@ def add(
         extra_nodes=nodes
     ):
         for node in nodes:
-            result.append(client.add_node({'node': node}))
+            result.append(
+                client.add_node({'node': node, 'read_only': read_only})
+            )
     return result
 
 
