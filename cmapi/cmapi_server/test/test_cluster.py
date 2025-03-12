@@ -6,6 +6,7 @@ from shutil import copyfile
 
 import requests
 
+from cmapi_server.constants import MCSProgs
 from cmapi_server.controllers.dispatcher import _version
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.test.unittest_global import (
@@ -199,8 +200,12 @@ class ClusterAddNodeTestCase(BaseClusterTestCase):
 
         # Check Columntore started
         controllernode = subprocess.check_output(
-            ['pgrep', 'controllernode'])
+            ['pgrep', MCSProgs.CONTROLLER_NODE.value])
         self.assertIsNotNone(controllernode)
+
+        # Check that WriteEngineServer was started
+        wes = subprocess.check_output(['pgrep', MCSProgs.WRITE_ENGINE_SERVER.value])
+        self.assertIsNotNone(wes)
 
 
 class ClusterRemoveNodeTestCase(BaseClusterTestCase):

@@ -61,7 +61,8 @@ def switch_node_maintenance(
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    use_rebalance_dbroots: bool = True
+    use_rebalance_dbroots: bool = True,
+    read_only: bool = False,
 ):
     """Add node to a cluster.
 
@@ -95,14 +96,23 @@ def add_node(
     try:
         if not _replace_localhost(c_root, node):
             pm_num = _add_node_to_PMS(c_root, node)
-            _add_WES(c_root, pm_num, node)
+
+            if not read_only:
+                _add_WES(c_root, pm_num, node)
+            else:
+                logging.info("Node is read-only, skipping WES addition")
+                _add_read_only_node(c_root, node)
+
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
             if use_rebalance_dbroots:
-                _rebalance_dbroots(c_root)
-                _move_primary_node(c_root)
+                if not read_only:
+                    _rebalance_dbroots(c_root)
+                    _move_primary_node(c_root)
+                else:
+                    logging.debug("Node is read-only, skipping dbroots rebalancing")
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -156,7 +166,11 @@ def remove_node(
 
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, node)
-            _remove_WES(c_root, pm_num)
+
+            is_read_only = node in helpers.get_read_only_nodes(c_root)
+            if not is_read_only:
+                _remove_WES(c_root, pm_num)
+
             _remove_DBRM_Worker(c_root, node)
             _remove_Module_entries(c_root, node)
             _remove_from_ExeMgrs(c_root, node)
@@ -167,7 +181,7 @@ def remove_node(
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
 
-            if use_rebalance_dbroots:
+            if use_rebalance_dbroots and not is_read_only:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
         else:
@@ -375,11 +389,15 @@ def __remove_helper(parent_node, node):
 
 def _remove_node(root, node):
     '''
-    remove node from DesiredNodes, InactiveNodes, and ActiveNodes
+    remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadOnlyNodes
     '''
 
     for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
         __remove_helper(n, node)
+
+    read_only_nodes = root.find("./ReadOnlyNodes")
+    if read_only_nodes is not None:
+        __remove_helper(read_only_nodes, node)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
@@ -988,6 +1006,19 @@ def _add_WES(root, pm_num, node):
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
+def _add_read_only_node(root, node) -> None:
+    """Add node name to ReadOnlyNodes if it's not already there"""
+    read_only_nodes = root.find("./ReadOnlyNodes")
+    if read_only_nodes is None:
+        read_only_nodes = etree.SubElement(root, "ReadOnlyNodes")
+    else:
+        for n in read_only_nodes.findall("./Node"):
+            if n.text == node:
+                return
+
+    etree.SubElement(read_only_nodes, "Node").text = node
+
+
 def _add_DBRM_Worker(root, node):
     '''
     find the highest numbered DBRM_Worker entry, or one that isn't used atm
@@ -1090,7 +1121,7 @@ def _add_node_to_PMS(root, node):
 
     return new_pm_num
 
-def _replace_localhost(root, node):
+def _replace_localhost(root: etree.Element, node: str) -> bool:
     # if DBRM_Controller/IPAddr is 127.0.0.1 or localhost,
     # then replace all instances, else do nothing.
     controller_host = root.find('./DBRM_Controller/IPAddr')
