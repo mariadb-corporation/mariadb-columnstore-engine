@@ -11,7 +11,6 @@ import os
 import socket
 import time
 from collections import namedtuple
-from functools import partial
 from random import random
 from shutil import copyfile
 from typing import Tuple, Optional
@@ -380,7 +379,7 @@ def broadcast_new_config(
                 ) as response:
                     resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node {node} config put successfull.')
+                logging.info(f'Node {node} config put successful.')
             except aiohttp.ClientResponseError as err:
                 # TODO: may be better to check if resp status is 422 cause
                 #       it's like a signal that cmapi server raised it in
@@ -578,6 +577,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     dbroots = []
     smc_node = root.find('./SystemModuleConfig')
     mod_count = int(smc_node.find('./ModuleCount3').text)
+
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
@@ -597,6 +597,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
+
     return dbroots
 
 

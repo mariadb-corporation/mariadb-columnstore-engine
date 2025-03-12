@@ -65,7 +65,7 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
 
     def test_mcs_process_manager(self):
         MCSProcessManager.detect('systemd', '')
-        for prog in MCSProcessManager._get_sorted_progs(True, True).values():
+        for prog in MCSProcessManager._get_sorted_progs(is_primary=True, reverse=True).values():
             serv_name = self.get_systemd_serv_name(prog.service_name)
             os.system(f'{SYSTEMCTL} stop {serv_name}')
         self.assertIsNone(MCSProcessManager.start_node(is_primary=True, use_sudo=False))
@@ -95,7 +95,7 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
             )
         )
 
-        for prog in MCSProcessManager._get_sorted_progs(True).values():
+        for prog in MCSProcessManager._get_sorted_progs(is_primary=True).values():
             serv_name = self.get_systemd_serv_name(prog.service_name)
             os.system(f'{SYSTEMCTL} start {serv_name}')
 

@@ -15,7 +15,7 @@ from cmapi_server.helpers import (
     get_current_key, get_version, update_revision_and_manager,
 )
 from cmapi_server.node_manipulation import (
-    add_node, add_dbroot, remove_node, switch_node_maintenance,
+    add_node, add_dbroot, remove_node, switch_node_maintenance, update_dbroots_of_readonly_nodes,
 )
 from mcs_node_control.models.misc import get_dbrm_master
 from mcs_node_control.models.node_config import NodeConfig
@@ -140,7 +140,10 @@ class ClusterHandler():
         return {'timestamp': operation_start_time}
 
     @staticmethod
-    def add_node(node: str, config: str = DEFAULT_MCS_CONF_PATH) -> dict:
+    def add_node(
+        node: str, config: str = DEFAULT_MCS_CONF_PATH,
+        read_only: bool = False,
+    ) -> dict:
         """Method to add node to MCS CLuster.
 
         :param node: node IP or name or FQDN
@@ -148,6 +151,8 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
+        :param read_only: add node in read-only mode, defaults to False
+        :type read_only: bool, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while adding node
@@ -158,20 +163,25 @@ class ClusterHandler():
         :rtype: dict
         """
         logger: logging.Logger = logging.getLogger('cmapi_server')
-        logger.debug(f'Cluster add node command called. Adding node {node}.')
+        logger.debug(
+            f'Cluster add node command called. Adding node {node} in '
+            f'{"read-only" if read_only else "read-write"} mode.'
+        )
 
         response = {'timestamp': str(datetime.now())}
 
         try:
             add_node(
                 node, input_config_filename=config,
-                output_config_filename=config
+                output_config_filename=config,
+                read_only=read_only,
             )
             if not get_dbroots(node, config):
-                add_dbroot(
-                    host=node, input_config_filename=config,
-                    output_config_filename=config
-                )
+                if not read_only:  # Read-only nodes don't own dbroots
+                    add_dbroot(
+                        host=node, input_config_filename=config,
+                        output_config_filename=config
+                    )
         except Exception as err:
             raise CMAPIBasicError('Error while adding node.') from err
 
@@ -214,6 +224,8 @@ class ClusterHandler():
                 node, input_config_filename=config,
                 output_config_filename=config
             )
+            with NodeConfig().modify_config(config) as root:
+                update_dbroots_of_readonly_nodes(root)
         except Exception as err:
             raise CMAPIBasicError('Error while removing node.') from err
 
