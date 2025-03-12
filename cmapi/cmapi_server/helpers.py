@@ -541,6 +541,10 @@ def get_desired_nodes(config=DEFAULT_MCS_CONF_PATH):
     return [ node.text for node in nodes ]
 
 
+def get_read_only_nodes(root) -> list[str]:
+    return [node.text for node in root.findall("./ReadOnlyNodes/Node")]
+
+
 def in_maintenance_state(config=DEFAULT_MCS_CONF_PATH):
     nc = NodeConfig()
     root = nc.get_current_config_root(config, upgrade=False)
@@ -577,6 +581,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     dbroots = []
     smc_node = root.find('./SystemModuleConfig')
     mod_count = int(smc_node.find('./ModuleCount3').text)
+
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
@@ -596,6 +601,12 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
+
+    if dbroots and nc.is_read_only():
+        logger = logging.getLogger("dbroots")
+        logger.warning("Config contains dbroots %s for this read-only node, ignoring", dbroots)
+        return []
+
     return dbroots
 
 

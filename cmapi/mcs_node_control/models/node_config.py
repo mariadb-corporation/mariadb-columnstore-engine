@@ -36,7 +36,7 @@ class NodeConfig:
     """
     def get_current_config_root(
         self, config_filename: str = DEFAULT_MCS_CONF_PATH, upgrade=True
-    ):
+    ) -> etree.Element:
         """Retrieves current configuration.
 
         Read the config and returns Element.
@@ -49,7 +49,7 @@ class NodeConfig:
         self.upgrade_config(tree=tree, upgrade=upgrade)
         return tree.getroot()
 
-    def get_root_from_string(self, config_string: str):
+    def get_root_from_string(self, config_string: str) -> etree.Element:
         root = etree.fromstring(config_string)
         self.upgrade_config(root=root)
         return root
@@ -566,4 +566,19 @@ has dbroot {subel.text}')
         for i in range(1, mod_count+1):
             for j in range(1, int(smc_node.find(f"./ModuleDBRootCount{i}-3").text) + 1):
                 dbroots.append(smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text)
+
+        # TODO not sure about it
+        if dbroots and self.is_read_only(root):
+            module_logger.warning("Config contains dbroots %s for this read-only node, ignoring", dbroots)
+            return []
+
         return dbroots
+
+    def is_read_only(self, root=None) -> bool:
+        """Checks if this node is in read-only mode"""
+        from cmapi_server.helpers import get_read_only_nodes # Avoid circular import
+
+        root = root or self.get_current_config_root()
+        read_only_nodes = set(get_read_only_nodes(root))
+        my_names = set(self.get_network_addresses_and_names())
+        return bool(read_only_nodes.intersection(my_names))

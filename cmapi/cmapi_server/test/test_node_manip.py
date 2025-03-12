@@ -1,10 +1,12 @@
 import logging
 import socket
 
+from unittest.mock import patch
 from lxml import etree
 
 from cmapi_server import node_manipulation
 from cmapi_server.constants import MCS_DATA_PATH
+from cmapi_server.helpers import get_read_only_nodes
 from cmapi_server.test.unittest_global import (
     tmp_mcs_config_filename, BaseNodeManipTestCase
 )
@@ -12,6 +14,8 @@ from mcs_node_control.models.node_config import NodeConfig
 
 
 logging.basicConfig(level='DEBUG')
+
+SINGLE_NODE_XML = "./cmapi_server/SingleNode.xml"
 
 
 class NodeManipTester(BaseNodeManipTestCase):
@@ -51,6 +55,61 @@ class NodeManipTester(BaseNodeManipTestCase):
         # TODO: Fix node_manipulation add_node logic and _replace_localhost
         # node = root.find('./PMS2/IPAddr')
         # self.assertEqual(node, None)
+
+    def test_add_remove_read_only_node(self):
+        """add_node(read_only=True) should add a read-only node into the config, it does not add a WriteEngineServer (WES) and does not own dbroots"""
+        self.tmp_files = ('./config_output_rw.xml', './config_output_ro.xml', './config_output_ro_removed.xml')
+
+        # Add this host as a read-write node
+        local_host_addr = socket.gethostbyname(socket.gethostname())
+        node_manipulation.add_node(
+            local_host_addr, SINGLE_NODE_XML, self.tmp_files[0]
+        )
+
+        # Mock _rebalance_dbroots and _move_primary_node (only after the first node is added)
+        with patch('cmapi_server.node_manipulation._rebalance_dbroots') as mock_rebalance_dbroots, \
+             patch('cmapi_server.node_manipulation._move_primary_node') as mock_move_primary_node:
+
+            # Add a read-only node
+            node_manipulation.add_node(
+                self.NEW_NODE_NAME, self.tmp_files[0], self.tmp_files[1],
+                read_only=True,
+            )
+
+            nc = NodeConfig()
+            root = nc.get_current_config_root(self.tmp_files[1])
+
+            # Check if read-only nodes section exists and is filled
+            read_only_nodes = get_read_only_nodes(root)
+            self.assertEqual(len(read_only_nodes), 1)
+            self.assertEqual(read_only_nodes[0], self.NEW_NODE_NAME)
+
+            # Check if PMS was added
+            pms_node_ipaddr = root.find('./PMS2/IPAddr')
+            self.assertEqual(pms_node_ipaddr.text, self.NEW_NODE_NAME)
+
+            # Check that WriteEngineServer was not added
+            wes_node = root.find('./pm2_WriteEngineServer')
+            self.assertIsNone(wes_node)
+
+            # Check that the dbroot related methods were not called
+            mock_rebalance_dbroots.assert_not_called()
+            mock_move_primary_node.assert_not_called()
+
+            # Test read-only node removal
+            node_manipulation.remove_node(
+                self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
+            )
+
+            nc = NodeConfig()
+            root = nc.get_current_config_root(self.tmp_files[2])
+            read_only_nodes = get_read_only_nodes(root)
+            self.assertEqual(len(read_only_nodes), 0)
+
+            # Check that dbroot related methods were not called
+            mock_rebalance_dbroots.assert_not_called()
+            mock_move_primary_node.assert_not_called()
+
 
     def test_add_dbroots_nodes_rebalance(self):
         self.tmp_files = (
