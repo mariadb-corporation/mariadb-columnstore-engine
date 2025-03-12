@@ -135,6 +135,56 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
+
+local ClonePipeline() = {
+  kind: 'pipeline',
+  type: 'docker',
+  name: 'clone-mdb',
+
+  steps: [
+    {
+      name: 'submodules',
+      image: 'alpine/git',
+      commands: [
+        'git submodule update --init --recursive',
+        'git config cmake.update-submodules no',
+        'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
+      ],
+    },
+    {
+      name: 'clone-mdb',
+      image: 'alpine/git',
+      volumes: [{ name: 'mdb', path: '/mdb' }],
+      environment: {
+        SERVER_REF: '${SERVER_REF:-' + server + '}',
+        SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
+        SERVER_SHA: '${SERVER_SHA:-' + server + '}',
+      },
+      commands: [
+        'echo $$SERVER_REF',
+        'echo $$SERVER_REMOTE',
+        'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
+        'git config --global url."https://github.com/".insteadOf git@github.com:',
+        'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+        'git reset --hard $$SERVER_SHA',
+        'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
+        'git config cmake.update-submodules no',
+        'rm -rf storage/columnstore/columnstore',
+        'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
+      ],
+    },
+  ],
+
+  volumes: [
+    { name: 'mdb', path: '/mdb' },
+  ],
+
+  trigger: {
+    event: events,
+  },
+};
+
+
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
@@ -717,43 +767,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
 
   kind: 'pipeline',
+  depends_on: ['clone-mdb'],
   type: 'docker',
   name: std.join(' ', [branch, platform, event, arch, server]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
   steps: [
-           {
-             name: 'submodules',
-             image: 'alpine/git',
-             commands: [
-               'git submodule update --init --recursive',
-               'git config cmake.update-submodules no',
-               'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
-             ],
-           },
-           {
-             name: 'clone-mdb',
-             image: 'alpine/git',
-             volumes: [pipeline._volumes.mdb],
-             environment: {
-               SERVER_REF: '${SERVER_REF:-' + server + '}',
-               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
-               SERVER_SHA: '${SERVER_SHA:-' + server + '}',
-             },
-             commands: [
-               'echo $$SERVER_REF',
-               'echo $$SERVER_REMOTE',
-               'mkdir -p /mdb/' + builddir + ' && cd /mdb/' + builddir,
-               'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
-               'git reset --hard $$SERVER_SHA',
-               'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
-               'git config cmake.update-submodules no',
-               'rm -rf storage/columnstore/columnstore',
-               'cp -r /drone/src /mdb/' + builddir + '/storage/columnstore/columnstore',
-             ],
-           },
            {
              name: 'build',
              depends_on: ['clone-mdb'],
@@ -913,6 +933,8 @@ local FinalPipeline(branch, event) = {
   depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
               std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
 };
+
+[ ClonePipeline() ] +
 
 [
   Pipeline(b, p, e, 'amd64', s)
