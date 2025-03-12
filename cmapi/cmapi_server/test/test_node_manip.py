@@ -1,17 +1,19 @@
 import logging
 import socket
+import unittest
+from unittest.mock import patch
 
 from lxml import etree
 
 from cmapi_server import node_manipulation
 from cmapi_server.constants import MCS_DATA_PATH
-from cmapi_server.test.unittest_global import (
-    tmp_mcs_config_filename, BaseNodeManipTestCase
-)
+from cmapi_server.node_manipulation import add_dbroots_of_other_nodes, remove_dbroots_of_node, update_dbroots_of_readonly_nodes
+from cmapi_server.test.unittest_global import BaseNodeManipTestCase, tmp_mcs_config_filename
 from mcs_node_control.models.node_config import NodeConfig
 
-
 logging.basicConfig(level='DEBUG')
+
+SINGLE_NODE_XML = "./cmapi_server/SingleNode.xml"
 
 
 class NodeManipTester(BaseNodeManipTestCase):
@@ -21,12 +23,18 @@ class NodeManipTester(BaseNodeManipTestCase):
             './test-output0.xml','./test-output1.xml','./test-output2.xml'
         )
         hostaddr = socket.gethostbyname(socket.gethostname())
-        node_manipulation.add_node(
-            self.NEW_NODE_NAME, tmp_mcs_config_filename, self.tmp_files[0]
-        )
-        node_manipulation.add_node(
-            hostaddr, self.tmp_files[0], self.tmp_files[1]
-        )
+
+        with patch('cmapi_server.node_manipulation.update_dbroots_of_readonly_nodes') as mock_update_dbroots_of_readonly_nodes:
+            node_manipulation.add_node(
+                self.NEW_NODE_NAME, tmp_mcs_config_filename, self.tmp_files[0]
+            )
+            mock_update_dbroots_of_readonly_nodes.assert_called_once()
+            mock_update_dbroots_of_readonly_nodes.reset_mock()
+
+            node_manipulation.add_node(
+                hostaddr, self.tmp_files[0], self.tmp_files[1]
+            )
+            mock_update_dbroots_of_readonly_nodes.assert_called_once()
 
         # get a NodeConfig, read test.xml
         # look for some of the expected changes.
@@ -40,10 +48,13 @@ class NodeManipTester(BaseNodeManipTestCase):
         node = root.find("./ExeMgr2/IPAddr")
         self.assertEqual(node.text, hostaddr)
 
-        node_manipulation.remove_node(
-            self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
-            test_mode=True
-        )
+        with patch('cmapi_server.node_manipulation.update_dbroots_of_readonly_nodes') as mock_update_dbroots_of_readonly_nodes:
+            node_manipulation.remove_node(
+                self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
+                test_mode=True
+            )
+            mock_update_dbroots_of_readonly_nodes.assert_called_once()
+
         nc = NodeConfig()
         root = nc.get_current_config_root(self.tmp_files[2])
         node = root.find('./PMS1/IPAddr')
@@ -51,6 +62,64 @@ class NodeManipTester(BaseNodeManipTestCase):
         # TODO: Fix node_manipulation add_node logic and _replace_localhost
         # node = root.find('./PMS2/IPAddr')
         # self.assertEqual(node, None)
+
+    def test_add_remove_read_only_node(self):
+        """add_node(read_only=True) should add a read-only node into the config, it does not add a WriteEngineServer (WES) and does not own dbroots"""
+        self.tmp_files = ('./config_output_rw.xml', './config_output_ro.xml', './config_output_ro_removed.xml')
+
+        # Add this host as a read-write node
+        local_host_addr = socket.gethostbyname(socket.gethostname())
+        node_manipulation.add_node(
+            local_host_addr, SINGLE_NODE_XML, self.tmp_files[0]
+        )
+
+        # Mock _rebalance_dbroots and _move_primary_node (only after the first node is added)
+        with patch('cmapi_server.node_manipulation._rebalance_dbroots') as mock_rebalance_dbroots, \
+             patch('cmapi_server.node_manipulation._move_primary_node') as mock_move_primary_node, \
+             patch('cmapi_server.node_manipulation.update_dbroots_of_readonly_nodes') as mock_update_dbroots_of_readonly_nodes:
+
+            # Add a read-only node
+            node_manipulation.add_node(
+                self.NEW_NODE_NAME, self.tmp_files[0], self.tmp_files[1],
+                read_only=True,
+            )
+
+            nc = NodeConfig()
+            root = nc.get_current_config_root(self.tmp_files[1])
+
+            # Check if read-only nodes section exists and is filled
+            read_only_nodes = nc.get_read_only_nodes(root)
+            self.assertEqual(len(read_only_nodes), 1)
+            self.assertEqual(read_only_nodes[0], self.NEW_NODE_NAME)
+
+            # Check if PMS was added
+            pms_node_ipaddr = root.find('./PMS2/IPAddr')
+            self.assertEqual(pms_node_ipaddr.text, self.NEW_NODE_NAME)
+
+            # Check that WriteEngineServer was not added
+            wes_node = root.find('./pm2_WriteEngineServer')
+            self.assertIsNone(wes_node)
+
+            mock_rebalance_dbroots.assert_not_called()
+            mock_move_primary_node.assert_not_called()
+            mock_update_dbroots_of_readonly_nodes.assert_called_once()
+            mock_update_dbroots_of_readonly_nodes.reset_mock()
+
+            # Test read-only node removal
+            node_manipulation.remove_node(
+                self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
+                deactivate_only=False,
+            )
+
+            nc = NodeConfig()
+            root = nc.get_current_config_root(self.tmp_files[2])
+            read_only_nodes = nc.get_read_only_nodes(root)
+            self.assertEqual(len(read_only_nodes), 0)
+
+            mock_rebalance_dbroots.assert_not_called()
+            mock_move_primary_node.assert_not_called()
+            mock_update_dbroots_of_readonly_nodes.assert_called_once()
+
 
     def test_add_dbroots_nodes_rebalance(self):
         self.tmp_files = (
@@ -209,3 +278,111 @@ class NodeManipTester(BaseNodeManipTestCase):
             caught_it = True
 
         self.assertTrue(caught_it)
+
+
+class TestDBRootsManipulation(unittest.TestCase):
+    our_module_idx = 3
+    ro_node1_ip = '192.168.1.3'
+    ro_node2_ip = '192.168.1.4'
+
+    def setUp(self):
+        # Mock initial XML structure (add two nodes and two dbroots)
+        self.root = etree.Element('Columnstore')
+        # Add two PM modules with IP addresses
+        smc = etree.SubElement(self.root, 'SystemModuleConfig')
+        module_count = etree.SubElement(smc, 'ModuleCount3')
+        module_count.text = '2'
+        module1_ip = etree.SubElement(smc, 'ModuleIPAddr1-1-3')
+        module1_ip.text = '192.168.1.1'
+        module2_ip = etree.SubElement(smc, 'ModuleIPAddr2-1-3')
+        module2_ip.text = '192.168.1.2'
+
+        system_config = etree.SubElement(self.root, 'SystemConfig')
+        dbroot_count = etree.SubElement(system_config, 'DBRootCount')
+        dbroot_count.text = '2'
+        dbroot1 = etree.SubElement(system_config, 'DBRoot1')
+        dbroot1.text = '/data/dbroot1'
+        dbroot2 = etree.SubElement(system_config, 'DBRoot2')
+        dbroot2.text = '/data/dbroot2'
+
+    def test_get_pm_module_num_to_addr_map(self):
+        result = node_manipulation.get_pm_module_num_to_addr_map(self.root)
+
+        expected = {
+            1: '192.168.1.1',
+            2: '192.168.1.2',
+        }
+        self.assertEqual(result, expected)
+
+    def test_add_dbroots_of_other_nodes(self):
+        '''add_dbroots_of_other_nodes must add dbroots of other nodes into mapping of the node.'''
+        add_dbroots_of_other_nodes(self.root, self.our_module_idx)
+
+        # Check that ModuleDBRootCount of the module was updated
+        module_count = self.root.find(f'./SystemModuleConfig/ModuleDBRootCount{self.our_module_idx}-3')
+        self.assertIsNotNone(module_count)
+        self.assertEqual(module_count.text, '2')
+
+        # Check that dbroots were added to ModuleDBRootID{module_num}-{i}-3
+        dbroot1 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot2 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-2-3')
+        self.assertIsNotNone(dbroot1)
+        self.assertIsNotNone(dbroot2)
+        self.assertEqual(dbroot1.text, '1')
+        self.assertEqual(dbroot2.text, '2')
+
+    def test_remove_dbroots_of_node(self):
+        '''Test that remove_dbroots_of_node correctly removes dbroots from the node's mapping'''
+        # Add dbroot association to the node
+        smc = self.root.find('./SystemModuleConfig')
+        dbroot1 = etree.SubElement(smc, f'ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot1.text = '1'
+        dbroot2 = etree.SubElement(smc, f'ModuleDBRootID{self.our_module_idx}-2-3')
+        dbroot2.text = '2'
+        # Add ModuleDBRootCount to the node
+        module_count = etree.SubElement(smc, f'ModuleDBRootCount{self.our_module_idx}-3')
+        module_count.text = '2'
+
+        remove_dbroots_of_node(self.root, self.our_module_idx)
+
+        # Check that ModuleDBRootCount was removed
+        module_count = self.root.find(f'./SystemModuleConfig/ModuleDBRootCount{self.our_module_idx}-3')
+        self.assertIsNone(module_count)
+        # Check that dbroot mappings of the module were removed
+        dbroot1 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot2 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-2-3')
+        self.assertIsNone(dbroot1)
+        self.assertIsNone(dbroot2)
+
+    def test_update_dbroots_of_readonly_nodes(self):
+        """Test that update_dbroots_of_readonly_nodes adds all existing dbroots to all existing read-only nodes"""
+        # Add two new new modules to the XML structure (two already exist)
+        smc = self.root.find('./SystemModuleConfig')
+        module_count = smc.find('./ModuleCount3')
+        module_count.text = '4'
+        module3_ip = etree.SubElement(smc, 'ModuleIPAddr3-1-3')
+        module3_ip.text = self.ro_node1_ip
+        module4_ip = etree.SubElement(smc, 'ModuleIPAddr4-1-3')
+        module4_ip.text = self.ro_node2_ip
+        # Add them to ReadOnlyNodes
+        read_only_nodes = etree.SubElement(self.root, 'ReadOnlyNodes')
+        for ip in [self.ro_node1_ip, self.ro_node2_ip]:
+            node = etree.SubElement(read_only_nodes, 'Node')
+            node.text = ip
+
+        update_dbroots_of_readonly_nodes(self.root)
+
+        # Check that read only nodes have all the dbroots
+        for ro_module_idx in range(3, 5):
+            module_count = self.root.find(f'./SystemModuleConfig/ModuleDBRootCount{ro_module_idx}-3')
+            self.assertIsNotNone(module_count)
+            self.assertEqual(module_count.text, '2')
+
+            dbroot1 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{ro_module_idx}-1-3')
+            dbroot2 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{ro_module_idx}-2-3')
+            self.assertIsNotNone(dbroot1)
+            self.assertIsNotNone(dbroot2)
+            self.assertEqual(dbroot1.text, '1')
+            self.assertEqual(dbroot2.text, '2')
+
+

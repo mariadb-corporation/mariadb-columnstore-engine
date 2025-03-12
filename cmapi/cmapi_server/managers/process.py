@@ -7,7 +7,8 @@ from time import sleep
 import psutil
 
 from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS
+from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs, ProgInfo
+from cmapi_server.process_dispatchers.base import BaseDispatcher
 from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
 from cmapi_server.process_dispatchers.container import (
     ContainerDispatcher
@@ -18,7 +19,7 @@ from mcs_node_control.models.misc import get_workernodes
 from mcs_node_control.models.process import Process
 
 
-PROCESS_DISPATCHERS = {
+PROCESS_DISPATCHERS: dict[str, type[BaseDispatcher]] = {
     'systemd': SystemdDispatcher,
     # could be used in docker containers and OSes w/o systemd
     'container': ContainerDispatcher,
@@ -32,10 +33,10 @@ class MCSProcessManager:
     e.g. re/-start or stop systemd services, run executable.
     """
     CONTROLLER_MAX_RETRY = 30
-    mcs_progs = {}
+    mcs_progs: dict[str, ProgInfo] = {}
     mcs_version_info = None
     dispatcher_name = None
-    process_dispatcher = None
+    process_dispatcher: BaseDispatcher = None
 
     @classmethod
     def _get_prog_name(cls, name: str) -> str:
@@ -47,12 +48,13 @@ class MCSProcessManager:
         :rtype: str
         """
         if cls.dispatcher_name == 'systemd':
-            return ALL_MCS_PROGS[name].service_name
+            prog = MCSProgs(name)
+            return ALL_MCS_PROGS[prog].service_name
         return name
 
     @classmethod
     def _get_sorted_progs(
-        cls, is_primary: bool, reverse: bool = False
+        cls, is_primary: bool, reverse: bool = False, is_read_only: bool = False
     ) -> dict:
         """Get sorted services dict.
 
@@ -72,6 +74,13 @@ class MCSProcessManager:
                 for prog_name, prog_info in cls.mcs_progs.items()
                 if prog_name not in PRIMARY_PROGS
             }
+
+        if is_read_only:
+            logging.debug('Node is in read-only mode, skipping WriteEngine')
+            unsorted_progs.pop(
+                MCSProgs.WRITE_ENGINE_SERVER.value, None
+            )
+
         if reverse:
             # stop sequence builds using stop_priority property
             return dict(
@@ -89,7 +98,8 @@ class MCSProcessManager:
         if cls.mcs_progs:
             logging.warning('Mcs ProcessHandler already detected processes.')
 
-        for prog_name, prog_info in ALL_MCS_PROGS.items():
+        for prog, prog_info in ALL_MCS_PROGS.items():
+            prog_name = prog.value
             if os.path.exists(os.path.join(MCS_INSTALL_BIN, prog_name)):
                 cls.mcs_progs[prog_name] = prog_info
 
@@ -404,19 +414,26 @@ class MCSProcessManager:
         return set(node_progs) == set(p['name'] for p in running_procs)
 
     @classmethod
-    def start_node(cls, is_primary: bool, use_sudo: bool = True):
+    def start_node(
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        is_read_only: bool = False,
+    ) -> None:
         """Start mcs node processes.
 
         :param is_primary: is node primary or not, defaults to True
         :type is_primary: bool
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
+        :param is_read_only: if true, doesn't start WriteEngine
+        :type is_read_only: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not started
         """
-        for prog_name in cls._get_sorted_progs(is_primary):
+        for prog_name in cls._get_sorted_progs(is_primary=is_primary, is_read_only=is_read_only):
             if (
                     cls.dispatcher_name == 'systemd'
-                    and prog_name == 'StorageManager'
+                    and prog_name == MCSProgs.STORAGE_MANAGER.value
             ):
                 # TODO: MCOL-5458
                 logging.info(
@@ -424,9 +441,9 @@ class MCSProcessManager:
                 )
                 continue
             # TODO: additional error handling
-            if prog_name == 'controllernode':
+            if prog_name == MCSProgs.CONTROLLER_NODE.value:
                 cls._wait_for_workernodes()
-            if prog_name in ('DMLProc', 'DDLProc'):
+            if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
                 cls._wait_for_controllernode()
             if not cls.start(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not started properly.')
@@ -434,7 +451,10 @@ class MCSProcessManager:
 
     @classmethod
     def stop_node(
-        cls, is_primary: bool, use_sudo: bool = True, timeout: int = 10
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        timeout: int = 10,
     ):
         """Stop mcs node processes.
 
@@ -450,14 +470,14 @@ class MCSProcessManager:
         # so use full available list of processes. Otherwise, it could cause
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
-        for prog_name in cls._get_sorted_progs(True, reverse=True):
+        for prog_name in cls._get_sorted_progs(is_primary=True, reverse=True):
             if not cls.stop(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not stopped properly.')
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
 
     @classmethod
-    def restart_node(cls, is_primary: bool, use_sudo: bool):
+    def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_only: bool = False):
         """TODO: For next releases."""
         if cls.get_running_mcs_procs():
             cls.stop_node(is_primary, use_sudo)
-        cls.start_node(is_primary, use_sudo)
+        cls.start_node(is_primary, use_sudo, is_read_only)

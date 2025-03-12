@@ -434,7 +434,7 @@ class ConfigController:
                 MCSProcessManager.stop_node(
                     is_primary=node_config.is_primary_node(),
                     use_sudo=use_sudo,
-                    timeout=request_timeout
+                    timeout=request_timeout,
                 )
             except CMAPIBasicError as err:
                 raise_422_error(
@@ -463,6 +463,7 @@ class ConfigController:
                     MCSProcessManager.start_node(
                         is_primary=node_config.is_primary_node(),
                         use_sudo=use_sudo,
+                        is_read_only=node_config.is_read_only(),
                     )
                 except CMAPIBasicError as err:
                     raise_422_error(
@@ -666,7 +667,8 @@ class StartController:
         try:
             MCSProcessManager.start_node(
                 is_primary=node_config.is_primary_node(),
-                use_sudo=use_sudo
+                use_sudo=use_sudo,
+                is_read_only=node_config.is_read_only(),
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -701,7 +703,7 @@ class ShutdownController:
             MCSProcessManager.stop_node(
                 is_primary=node_config.is_primary_node(),
                 use_sudo=use_sudo,
-                timeout=timeout
+                timeout=timeout,
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -910,6 +912,7 @@ class ClusterController:
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
+        read_only = request_body.get('read_only', False)
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
@@ -917,9 +920,9 @@ class ClusterController:
         try:
             if not in_transaction:
                 with TransactionManager(extra_nodes=[node]):
-                    response = ClusterHandler.add_node(node, config)
+                    response = ClusterHandler.add_node(node, config, read_only)
             else:
-                response = ClusterHandler.add_node(node, config)
+                response = ClusterHandler.add_node(node, config, read_only)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
