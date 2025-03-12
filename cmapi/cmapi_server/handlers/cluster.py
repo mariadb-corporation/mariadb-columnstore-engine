@@ -1,6 +1,7 @@
 """Module contains Cluster business logic functions."""
 import logging
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 import requests
@@ -22,26 +23,61 @@ from mcs_node_control.models.misc import get_dbrm_master
 from mcs_node_control.models.node_config import NodeConfig
 
 
+class ClusterAction(Enum):
+    START = 'start'
+    STOP = 'stop'
+
+
+def toggle_cluster_state(action: ClusterAction, config: str) -> dict:
+    """
+    Toggle the state of the cluster (start or stop).
+
+    :param action: The cluster action to perform.
+                   (ClusterAction.START or ClusterAction.STOP).
+    :type action: ClusterAction
+    :param config: The path to the MariaDB Columnstore configuration file.
+    :type config: str
+    """
+    if action == ClusterAction.START:
+        maintainance_flag = True
+    elif action == ClusterAction.STOP:
+        maintainance_flag = True
+    else:
+        raise ValueError(
+            'Invalid action. Use ClusterAction.START or ClusterAction.STOP.'
+        )
+
+    switch_node_maintenance(maintainance_flag)
+    update_revision_and_manager()
+
+    # TODO: move this from multiple places to one
+    try:
+        broadcast_successful = broadcast_new_config(config)
+    except Exception as err:
+        raise CMAPIBasicError(
+            'Error while distributing config file.'
+        ) from err
+
+    if not broadcast_successful:
+        raise CMAPIBasicError('Config distribution isn\'t successful.')
+
+
 class ClusterHandler():
     """Class for handling MCS Cluster operations."""
 
     @staticmethod
-    def status(
-        config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
-    ) -> dict:
+    def status(config: str = DEFAULT_MCS_CONF_PATH) -> dict:
         """Method to get MCS Cluster status information
 
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :raises CMAPIBasicError: if catch some exception while getting status
                                  from each node separately
         :return: status result
         :rtype: dict
         """
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug('Cluster status command called. Getting status.')
 
         response = {'timestamp': str(datetime.now())}
@@ -73,78 +109,36 @@ class ClusterHandler():
 
     @staticmethod
     def start(
-        config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server')
+        config: str = DEFAULT_MCS_CONF_PATH, in_transaction: bool = False
     ) -> dict:
         """Method to start MCS Cluster.
 
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
-        :raises CMAPIBasicError: on exception while starting transaction
-        :raises CMAPIBasicError: if transaction start isn't successful
+        :param in_transaction: is function called in existing transaction or no
+                               If we started transaction in cli tool than we
+                               don't need to handle it here again
+        :type in_transaction: bool
         :raises CMAPIBasicError: if no nodes in the cluster
-        :raises CMAPIBasicError: on exception while distributing new config
-        :raises CMAPIBasicError: on unsuccessful distibuting config file
-        :raises CMAPIBasicError: on exception while committing transaction
         :return: start timestamp
         :rtype: dict
         """
-        logger.debug('Cluster start command called. Starting the cluster.')
-        start_time = str(datetime.now())
-        transaction_id = get_id()
+        logger: logging.Logger = logging.getLogger('cmapi_server')
+        logger.info('Cluster start command called. Starting the cluster.')
+        operation_start_time = str(datetime.now())
+        if not in_transaction:
+            with TransactionManager():
+                toggle_cluster_state(ClusterAction.START, config)
+        else:
+            toggle_cluster_state(ClusterAction.START, config)
 
-        try:
-            suceeded, transaction_id, successes = start_transaction(
-                cs_config_filename=config, txn_id=transaction_id
-            )
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while starting the transaction.'
-            ) from err
-        if not suceeded:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Starting transaction isn\'t successful.')
-
-        if suceeded and len(successes) == 0:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('There are no nodes in the cluster.')
-
-        switch_node_maintenance(False)
-        update_revision_and_manager()
-
-        # TODO: move this from multiple places to one, eg to helpers
-        try:
-            broadcast_successful = broadcast_new_config(config)
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while distributing config file.'
-            ) from err
-
-        if not broadcast_successful:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError('Config distribution isn\'t successful.')
-
-        try:
-            commit_transaction(transaction_id, cs_config_filename=config)
-        except Exception as err:
-            rollback_transaction(transaction_id, cs_config_filename=config)
-            raise CMAPIBasicError(
-                'Error while committing transaction.'
-            ) from err
-
-        logger.debug('Successfully finished cluster start.')
-        return {'timestamp': start_time}
+        logger.info('Successfully finished cluster start.')
+        return {'timestamp': operation_start_time}
 
     @staticmethod
     def shutdown(
-        config: str = DEFAULT_MCS_CONF_PATH,
-        logger: logging.Logger = logging.getLogger('cmapi_server'),
-        in_transaction: bool = False,
+        config: str = DEFAULT_MCS_CONF_PATH, in_transaction: bool = False,
         timeout: int = 15
     ) -> dict:
         """Method to stop the MCS Cluster.
@@ -152,8 +146,6 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param logger: logger, defaults to logging.getLogger('cmapi_server')
-        :type logger: logging.Logger, optional
         :param in_transaction: is function called in existing transaction or no
         :type in_transaction: bool
         :param timeout: timeout in seconds to gracefully stop DMLProc
@@ -163,35 +155,19 @@ class ClusterHandler():
         :return: start timestamp
         :rtype: dict
         """
+        logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.debug(
             'Cluster shutdown command called. Shutting down the cluster.'
         )
-
-        def process_shutdown():
-            """Raw node shutdown processing."""
-            switch_node_maintenance(True)
-            update_revision_and_manager()
-
-            # TODO: move this from multiple places to one, eg to helpers
-            try:
-                broadcast_successful = broadcast_new_config(config)
-            except Exception as err:
-                raise CMAPIBasicError(
-                    'Error while distributing config file.'
-                ) from err
-
-            if not broadcast_successful:
-                raise CMAPIBasicError('Config distribution isn\'t successful.')
-
-        start_time = str(datetime.now())
+        operation_start_time = str(datetime.now())
         if not in_transaction:
             with TransactionManager():
-                process_shutdown()
+                toggle_cluster_state(ClusterAction.STOP, config)
         else:
-            process_shutdown()
+            toggle_cluster_state(ClusterAction.STOP, config)
 
         logger.debug('Successfully finished shutting down the cluster.')
-        return {'timestamp': start_time}
+        return {'timestamp': operation_start_time}
 
     @staticmethod
     def add_node(
