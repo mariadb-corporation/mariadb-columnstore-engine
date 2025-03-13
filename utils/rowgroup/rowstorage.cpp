@@ -1325,8 +1325,6 @@ class RowGroupStorage
     rgdata.reset(new RGData());
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
     assert(bs.length() == 0);
-    if (unlinkDump)
-      unlink(fname.c_str());
 
     fRowGroupOut->setData(rgdata.get());
     auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
