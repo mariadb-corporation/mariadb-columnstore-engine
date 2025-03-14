@@ -22,7 +22,7 @@ from cmapi_server.helpers import (
 from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
 from mcs_node_control.models.node_config import NodeConfig
-from cmapi.cmapi_server.controllers.api_clients import ClusterControllerClient
+from cmapi_server.controllers.api_clients import ClusterControllerClient
 
 
 logger = logging.getLogger('mcs_cli')
