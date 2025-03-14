@@ -390,10 +390,10 @@ int MetadataFile::writeMetadata()
     stringstream stream;
     write_json(stream, *jsontree);
 
-    if (!blobWriter.writeBlob(kvStorage, metaKVName_, stream.str()))
+    if (!blobWriter.writeOrUpdateBlob(kvStorage, metaKVName_, stream.str()))
     {
-      SMLogging::get()->log(LOG_CRIT, "Metadatafile: cannot commit tnx set().");
-      throw runtime_error("Metadatafile: cannot commit tnx set().");
+      SMLogging::get()->log(LOG_CRIT, "Metadatafile: cannot write metadata to storage.");
+      throw runtime_error("Metadatafile: cannot write metadata to storage.");
     }
   }
 

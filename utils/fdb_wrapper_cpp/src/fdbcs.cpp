@@ -50,6 +50,24 @@ Transaction::~Transaction()
   }
 }
 
+bool Transaction::swap(const ByteArray& key1, const ByteArray& key2)
+{
+  if (!tnx_)
+    return false;
+
+  auto resultPair1 = get(key1);
+  if (!resultPair1.first)
+    return false;
+
+  auto resultPair2 = get(key2);
+  if (!resultPair2.first)
+    return false;
+
+  set(key1, resultPair2.second);
+  set(key2, resultPair1.second);
+  return true;
+}
+
 void Transaction::set(const ByteArray& key, const ByteArray& value) const
 {
   if (tnx_)
@@ -71,6 +89,14 @@ std::pair<bool, ByteArray> Transaction::get(const ByteArray& key) const
       return {false, {}};
     }
 
+    err = fdb_future_get_error(future);
+    if (err)
+    {
+      fdb_future_destroy(future);
+      std::cerr << "fdb_future_get_error error, code: " << (int)err << std::endl;
+      return {false, {}};
+    }
+
     const uint8_t* outValue;
     int outValueLength;
     fdb_bool_t present;
@@ -85,13 +111,9 @@ std::pair<bool, ByteArray> Transaction::get(const ByteArray& key) const
 
     fdb_future_destroy(future);
     if (present)
-    {
       return {true, ByteArray(outValue, outValue + outValueLength)};
-    }
     else
-    {
       return {false, {}};
-    }
   }
   return {false, {}};
 }
@@ -115,25 +137,25 @@ void Transaction::removeRange(const ByteArray& beginKey, const ByteArray& endKey
 
 bool Transaction::commit() const
 {
-  if (tnx_)
+  if (!tnx_)
+    return false;
+
+  FDBFuture* future = fdb_transaction_commit(tnx_);
+  auto err = fdb_future_block_until_ready(future);
+  if (err)
   {
-    FDBFuture* future = fdb_transaction_commit(tnx_);
-    auto err = fdb_future_block_until_ready(future);
-    if (err)
-    {
-      fdb_future_destroy(future);
-      std::cerr << "fdb_future_block_until_ready error, code: " << (int)err << std::endl;
-      return false;
-    }
-    err = fdb_future_get_error(future);
-    if (err)
-    {
-      fdb_future_destroy(future);
-      std::cerr << "fdb_future_get_error(), code: " << (int)err << std::endl;
-      return false;
-    }
     fdb_future_destroy(future);
+    std::cerr << "fdb_future_block_until_ready error, code: " << (int)err << std::endl;
+    return false;
   }
+  err = fdb_future_get_error(future);
+  if (err)
+  {
+    fdb_future_destroy(future);
+    std::cerr << "fdb_future_get_error(), code: " << (int)err << std::endl;
+    return false;
+  }
+  fdb_future_destroy(future);
   return true;
 }
 
@@ -320,6 +342,9 @@ TreeLevelNumKeysMap BlobHandler::computeNumKeysForEachTreeLevel(const int32_t tr
 bool BlobHandler::writeBlob(std::shared_ptr<FDBCS::FDBDataBase> dataBase, const ByteArray& key,
                             const ByteArray& blob)
 {
+  if (!dataBase)
+    return false;
+
   const size_t blobSizeInBytes = blob.size();
   if (!blobSizeInBytes)
     return commitKey(dataBase, key, "");
@@ -383,6 +408,37 @@ bool BlobHandler::writeBlob(std::shared_ptr<FDBCS::FDBDataBase> dataBase, const 
   return true;
 }
 
+bool BlobHandler::keyExists(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key)
+{
+  auto tnx = database->createTransaction();
+  if (!tnx)
+    return false;
+  return tnx->get(key).first;
+}
+
+bool BlobHandler::writeOrUpdateBlob(std::shared_ptr<FDBCS::FDBDataBase> dataBase, const ByteArray& key,
+                                    const ByteArray& blob)
+{
+  if (!dataBase)
+    return false;
+
+  if (keyExists(dataBase, key))
+  {
+    auto newKey = key + "new";
+    if (!writeBlob(dataBase, newKey, blob))
+      return false;
+    // Tnx destructor calls destroy on transaction if it fails/not commited.
+    {
+      auto tnx = dataBase->createTransaction();
+      if (!tnx->swap(newKey, key) || !tnx->commit())
+        return false;
+    }
+    return removeBlob(dataBase, newKey);
+  }
+  else
+    return writeBlob(dataBase, key, blob);
+}
+
 std::pair<bool, Keys> BlobHandler::getKeysFromBlock(const Block& block)
 {
   Keys keys;
@@ -406,66 +462,88 @@ bool BlobHandler::isDataBlock(const Block& block)
   return block.second.compare(0, keyBlockIdentifier.size(), keyBlockIdentifier) != 0;
 }
 
+std::pair<bool, std::vector<Block>> BlobHandler::readBlocks(std::shared_ptr<FDBCS::FDBDataBase> database,
+                                                            const std::vector<ByteArray>& keys,
+                                                            uint32_t& index, bool& dataBlockReached)
+{
+  if (!database)
+    return {false, {}};
+
+  auto tnx = database->createTransaction();
+  if (!tnx)
+    return {false, {}};
+
+  size_t currentTnxSize = 0;
+  std::vector<Block> blocks;
+  // Take in account the size of the data that was read.
+  while ((index < keys.size()) && (currentTnxSize + blockSizeInBytes_ < maxTnxSize_))
+  {
+    const auto& key = keys[index];
+    auto p = tnx->get(key);
+    if (!p.first)
+      return {false, {}};
+    currentTnxSize += key.size() + p.second.size();
+
+    Block block{0, p.second};
+    if (!dataBlockReached && isDataBlock(block))
+      dataBlockReached = true;
+
+    blocks.push_back(block);
+    ++index;
+  }
+
+  return {true, blocks};
+}
+
 std::pair<bool, std::string> BlobHandler::readBlob(std::shared_ptr<FDBCS::FDBDataBase> database,
                                                    const ByteArray& key)
 {
+  if (!database)
+    return {false, ""};
+
   Keys currentKeys{key};
   bool dataBlockReached = false;
+  std::string blob;
 
   while (!dataBlockReached)
   {
-    auto tnx = database->createTransaction();
-    if (!tnx)
-      return {false, ""};
-
     std::vector<Block> blocks;
-    for (const auto& key : currentKeys)
+    blocks.reserve(currentKeys.size());
+
+    uint32_t index = 0;
+    while (index < currentKeys.size())
     {
-      auto p = tnx->get(key);
+      const auto p = readBlocks(database, currentKeys, index, dataBlockReached);
       if (!p.first)
         return {false, ""};
-
-      Block block{0, p.second};
-      if (isDataBlock(block))
-      {
-        dataBlockReached = true;
-        break;
-      }
-      blocks.push_back(block);
+      blocks.insert(blocks.end(), p.second.begin(), p.second.end());
     }
 
-    if (dataBlockReached)
-      break;
-
-    Keys nextKeys;
-    for (const auto& block : blocks)
+    if (!dataBlockReached) [[likely]]
     {
-      auto keysPair = getKeysFromBlock(block);
-      if (!keysPair.first)
-        return {false, ""};
+      Keys nextKeys;
+      for (const auto& block : blocks)
+      {
+        auto keysPair = getKeysFromBlock(block);
+        if (!keysPair.first)
+          return {false, ""};
 
-      auto& keys = keysPair.second;
-      nextKeys.insert(nextKeys.end(), keys.begin(), keys.end());
+        auto& keys = keysPair.second;
+        nextKeys.insert(nextKeys.end(), keys.begin(), keys.end());
+      }
+      currentKeys = std::move(nextKeys);
     }
-    currentKeys = std::move(nextKeys);
-  }
-
-  std::string blob;
-  for (const auto& key : currentKeys)
-  {
-    auto tnx = database->createTransaction();
-    if (!tnx)
-      return {false, ""};
-
-    auto resultPair = tnx->get(key);
-    if (!resultPair.first)
-      return {false, ""};
-
-    auto& dataBlock = resultPair.second;
-    if (!dataBlock.size())
-      return {false, ""};
-
-    blob.insert(blob.end(), dataBlock.begin() + dataBlockIdentifier.size(), dataBlock.end());
+    else
+    {
+      blob.reserve(blocks.size() * dataBlockSizeInBytes_);
+      for (const auto& dataBlock : blocks)
+      {
+        if (!dataBlock.second.size())
+          return {false, ""};
+        blob.insert(blob.end(), dataBlock.second.begin() + dataBlockIdentifier.size(),
+                    dataBlock.second.end());
+      }
+    }
   }
 
   return {true, blob};
@@ -488,29 +566,30 @@ bool BlobHandler::removeKeys(std::shared_ptr<FDBCS::FDBDataBase> database, const
 bool BlobHandler::removeBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const Key& key)
 {
   std::unordered_map<uint32_t, Keys> treeLevel;
-  auto tnx = database->createTransaction();
-  if (!tnx)
-    return false;
-
-  uint32_t currentLevel = 0;
+  int32_t currentLevel = 0;
   treeLevel[0] = {key};
+  bool dataBlockReached = false;
 
   while (true)
   {
     const auto& currentKeys = treeLevel[currentLevel];
     std::vector<Block> blocks;
-    for (const auto& key : currentKeys)
+    blocks.reserve(currentKeys.size());
+
+    uint32_t index = 0;
+    while (index < currentKeys.size())
     {
-      auto p = tnx->get(key);
+      const auto p = readBlocks(database, currentKeys, index, dataBlockReached);
       if (!p.first)
         return false;
-      blocks.push_back({0, p.second});
+      blocks.insert(blocks.end(), p.second.begin(), p.second.end());
     }
 
-    if (isDataBlock(blocks.front()) || !currentKeys.size())
+    if (dataBlockReached)
       break;
 
     Keys nextKeys;
+    nextKeys.reserve(blocks.size() * numKeysInBlock_);
     for (const auto& block : blocks)
     {
       auto keysPair = getKeysFromBlock(block);
@@ -525,8 +604,14 @@ bool BlobHandler::removeBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const
     treeLevel[currentLevel] = std::move(nextKeys);
   }
 
-  for (uint32_t level = 0; level <= currentLevel; ++level)
-    RETURN_ON_ERROR(removeKeys(database, treeLevel[level]));
+  // Start to remove keys from the bottom of the tree.
+  // If we fail in the middle of removing operation, we can try to remove a unremoved data again, because a
+  // tree is still in a valid state, even if the bottom levels are removed.
+  while (currentLevel >= 0)
+  {
+    RETURN_ON_ERROR(removeKeys(database, treeLevel[currentLevel]));
+    --currentLevel;
+  }
 
   return true;
 }
