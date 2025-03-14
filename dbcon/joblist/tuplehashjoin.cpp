@@ -1410,8 +1410,6 @@ void TupleHashJoinStep::finishSmallOuterJoin()
   RowGroup l_outputRG = outputRG;
   RowGroup l_fe2Output = fe2Output;
 
-  // auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
-  // RGData joinedData(alloc);
   RGData joinedData;
 
   joiners[lastSmallOuterJoiner]->getUnmarkedRows(&unmatched);
@@ -1727,7 +1725,6 @@ void TupleHashJoinStep::joinOneRG(
   if (!smallNullMem)
     smallNullMem = &smallNullMemory;
 
-  // auto alloc = resourceManager->getAllocator<RGDataBufType>(10 * 1024 * 1024);
   RGData joinedData;
   uint32_t matchCount, smallSideCount = tjoiners->size();
   uint32_t j, k;
@@ -1880,7 +1877,7 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
             l_outputRG.initRow(&fe2InRow);
             l_fe2RG.initRow(&fe2OutRow);
 
-            // WIP do we remove previosuly pushed(line 1824) rgData
+            // WIP do we remove previosuly pushed(line 1825) rgData
             // replacing it with a new FE2 rgdata added by processFE2?
             // Generates a new RGData w/o accounting its memory consumption
             processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
@@ -2022,6 +2019,7 @@ void TupleHashJoinStep::abort()
   JobStep::abort();
   boost::mutex::scoped_lock sl(djsLock);
 
+  // To prevent potential endless loop in bucketsToTables()
   for (auto& joiner : joiners)
     joiner->abort();
 
