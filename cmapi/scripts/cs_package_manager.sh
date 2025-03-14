@@ -6,7 +6,7 @@ enterprise_token=""
 dev_drone_key="" 
 jenkins_user="" 
 jenkins_pwd=""   
-cs_pkg_manager_version="3.8"
+cs_pkg_manager_version="3.9"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -594,7 +594,7 @@ do_remove() {
     check_package_managers
     
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             do_yum_remove "$@"
             ;;
 
@@ -862,6 +862,11 @@ parse_install_cluster_additional_args() {
                 CONFIGURE_CMAPI=false
                 shift # past argument
                 ;;
+            -dev | --dev-drone-key)
+                dev_drone_key="$2"
+                shift # past argument
+                shift # past value
+                ;;
             -h|--help|help)
                 print_install_help_text
                 exit 1;
@@ -888,6 +893,16 @@ parse_install_cluster_additional_args() {
 
             exit 1;
         fi;
+    fi
+
+    # Dev checks
+    if [ $repo == "dev" ]; then
+        if [ -z "$dev_drone_key" ]; then printf "Missing dev_drone_key: \n"; exit; fi;
+        # check via s3 that bucket not empty
+        if ! aws s3 ls s3://$dev_drone_key/ --no-sign-request &> /dev/null; then
+            printf "Invalid dev_drone_key: $dev_drone_key \n"
+            exit 1;
+        fi
     fi
 }
 
@@ -951,7 +966,7 @@ set_distro_based_on_distro_info() {
         debian )
             distro="${distro_info}${version_id_exact}"
             ;;
-        rocky )
+        rocky | almalinux )
             distro="rockylinux${version_id}"
             ;;
         ubuntu )
@@ -1037,7 +1052,7 @@ check_no_mdb_installed() {
 
     packages=""
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             packages=$(yum list installed | grep -i mariadb)
             ;;
         ubuntu | debian )
@@ -1078,7 +1093,7 @@ check_aws_cli_installed() {
         esac    
 
         case $distro_info in
-            centos | rhel | rocky )
+            centos | rhel | rocky | almalinux )
                 rm -rf aws awscliv2.zip
                 yum install unzip -y;
                 curl "$cli_url" -o "awscliv2.zip";
@@ -1139,7 +1154,7 @@ check_cluster_dependancies() {
 configure_default_mariadb_server_config() {
     
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             server_cnf_dir="/etc/my.cnf.d"
             server_cnf_location="/etc/my.cnf.d/server.cnf"
             ;;
@@ -1277,9 +1292,13 @@ poll_for_cmapi_online() {
         counter=0
         printf "%-35s ..." " - Checking cmapi port 8640 on $node "
         while true; do
-        
-            if timeout $timeout_seconds telnet $node 8640 < /dev/null 2>&1 | grep -q 'Connected'; then
+
+            # use mcs cmapi is-ready if it exists and works, fallback to telnet if not
+            if which mcs >/dev/null 2>&1 & timeout $timeout_seconds mcs cmapi is-ready --node $node 1> /dev/null 2>&1; then
                 printf " Success\n"
+                break;
+            elif timeout $timeout_seconds telnet $node 8640 < /dev/null 2>&1 | grep -q 'Connected'; then
+                printf " Success (via telnet) \n"
                 break;
             else
                 printf "."
@@ -1611,10 +1630,10 @@ quick_version_check() {
     fi
 }
 
-check_columnstore_install_dependancies() {
+check_columnstore_install_dependencies() {
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
 
             package_list=("python3")
 
@@ -1641,7 +1660,7 @@ check_columnstore_install_dependancies() {
        
             ;;
         *)  # unknown option
-            printf "\ncheck_columnstore_install_dependancies: os & version not implemented: $distro_info\n"
+            printf "\ncheck_columnstore_install_dependencies: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 }
@@ -1681,7 +1700,7 @@ enterprise_install() {
     fi
 
     # Check for install dependancies
-    check_columnstore_install_dependancies
+    check_columnstore_install_dependencies
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
@@ -1693,7 +1712,7 @@ enterprise_install() {
     fi;
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
 
             if [ ! -f "/etc/yum.repos.d/mariadb.repo" ]; then printf "\n[!] Expected to find mariadb.repo in /etc/yum.repos.d \n\n"; exit 1; fi;
 
@@ -1736,14 +1755,15 @@ community_install() {
 
     # Download Repo setup
     rm -rf mariadb_repo_setup
-   
-    if !  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup |  bash -s -- --mariadb-server-version=mariadb-$version ; then
+    
+    community_setup_script="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+    if !  curl -sSL $community_setup_script |  bash -s -- --mariadb-server-version=mariadb-$version ; then
         echo "version bad or mariadb_repo_setup unavailable. exiting ..."
         exit 2;
     fi;
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             do_community_yum_install "$@" 
             ;;
         ubuntu | debian )
@@ -1986,7 +2006,6 @@ add_primary_node_cmapi() {
 
 dev_install() {
     
-    if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
     check_aws_cli_installed
     parse_install_cluster_additional_args "$@"
     print_install_variables
@@ -1997,6 +2016,7 @@ dev_install() {
     branch="$3"
     build="$4"
     product="10.6-enterprise"
+    if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
    
@@ -2013,7 +2033,7 @@ dev_install() {
     check_dev_build_exists
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             s3_path="${s3_path}/$distro"
             drone_http="${drone_http}/$distro"
             do_dev_yum_install "$@" 
@@ -2305,7 +2325,7 @@ jenkins_install() {
 
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             jenkins_url="${jenkins_url}RPMS"
             os_package="rhel-$version_id"
             if [ "$architecture" == "arm64" ]; then
@@ -2378,7 +2398,7 @@ check_rpms_debs_exist() {
     )
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             if ! ls $rpm_deb_files_directory/*.rpm 1> /dev/null 2>&1; then
                 printf "\n[!] No RPMs found in directory: $rpm_deb_files_directory\n\n"
                 exit 1;
@@ -2387,7 +2407,7 @@ check_rpms_debs_exist() {
             # Check if each expected RPM exists
             missing_rpms=()
             for rpm in "${expected_packages[@]}"; do
-                if ! ls ${rpm_deb_files_directory}/*${rpm}*.rpm 1> /dev/null 2>&1; then
+                if ! ls ${rpm_deb_files_directory}/*${rpm}*.rpm | grep -iv debuginfo 1> /dev/null 2>&1; then
                     missing_rpms+=("$rpm")
                 fi
             done
@@ -2402,7 +2422,7 @@ check_rpms_debs_exist() {
 
             ;;
         ubuntu | debian )
-            if ! ls $rpm_deb_files_directory/*.deb 1> /dev/null 2>&1; then
+            if ! ls $rpm_deb_files_directory/*.deb | grep -iv dbgsym 1> /dev/null 2>&1; then
                 printf "\n[!] No DEBs found in directory: $rpm_deb_files_directory\n\n"
                 exit 1;
             fi
@@ -2487,11 +2507,11 @@ local_install() {
     check_no_mdb_installed
     process_cluster_variables
     echo "-----------------------------------------------"
-    check_columnstore_install_dependancies
+    check_columnstore_install_dependencies
     check_rpms_debs_exist
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             do_local_rpm_install "$@" 
             ;;
         ubuntu | debian )
@@ -2935,7 +2955,7 @@ pre_upgrade_dbrm_backup() {
 pre_upgrade_configuration_backup() {
     pre_upgrade_config_directory="/tmp/preupgrade-configurations-$(date +%m-%d-%Y-%H%M)"
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             printf "Created: $pre_upgrade_config_directory \n"
             mkdir -p $pre_upgrade_config_directory
             print_and_copy "/etc/columnstore/Columnstore.xml" "$pre_upgrade_config_directory"
@@ -3171,7 +3191,7 @@ do_upgrade() {
 }
 
 prompt_user_for_cpu_architecture(){
-    # Prompt the user to select an operating system
+    # Prompt the user to select CPU architecture
     echo "Please select a CPU architecture:"
     cpu_options=("x86_64 (amd64)" "aarch64 (arm64)")
     select opt in "${cpu_options[@]}"; do
@@ -3328,7 +3348,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rhel | rocky )
+                        centos | rhel | rocky | almalinux )
                             path="rpm/rhel/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
@@ -3405,7 +3425,7 @@ do_check() {
                     if [ "$minor_link" != "$url_page" ]; then
                         #echo "  Minor: $minor_link"
                         case $distro_info in
-                        centos | rhel | rocky )
+                        centos | rhel | rocky | almalinux )
                             path="yum/centos/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
                             package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
@@ -3486,6 +3506,11 @@ parse_download_additional_args() {
             -a | --all)
                 download_all=true
                 shift # past argument
+                ;;
+            -dev | --dev-drone-key)
+                dev_drone_key="$2"
+                shift # past argument
+                shift # past value
                 ;;
             help | -h | --help | -help)
                 print_download_help_text
@@ -3789,7 +3814,7 @@ download_enterprise() {
    
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             do_local_yum_enterprise_download
             ;;
         ubuntu | debian )
@@ -3826,7 +3851,7 @@ download_dev() {
     check_dev_build_exists
 
     case $distro_info in
-        centos | rhel | rocky )
+        centos | rhel | rocky | almalinux )
             
             printf "Removing $(pwd)/*.rpm";
             if rm -rf *.rpm; then
