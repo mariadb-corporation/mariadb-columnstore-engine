@@ -144,6 +144,16 @@ def restore(
             )
         )
     ] = '',
+    P: Annotated[
+        int,
+        typer.Option(
+            '-P', '--parallel',
+            help=(
+                'Determines number of decompression and mdbstream threads. '
+                'Ignored if "-c/--compress" argument not set.'
+            )
+        )
+    ] = 4,
     ha: Annotated[
         bool,
         typer.Option(
@@ -221,16 +231,6 @@ def restore(
             show_default=False
         )
     ] = '',
-    P: Annotated[
-        int,
-        typer.Option(
-            '-P', '--parallel',
-            help=(
-                'Determines number of decompression and mdbstream threads. '
-                'Ignored if "-c/--compress" argument not set.'
-            )
-        )
-    ] = 4,
     q: Annotated[
         bool,
         typer.Option(
@@ -248,7 +248,7 @@ def restore(
     list: Annotated[
         bool,
         typer.Option(
-            'list',
+            '-li', '--list',
             help='List backups.'
         )
     ] = False
@@ -318,7 +318,7 @@ def dbrm_restore(
     list: Annotated[
         bool,
         typer.Option(
-            'list',
+            '-li', '--list',
             help='List backups.'
         )
     ] = False

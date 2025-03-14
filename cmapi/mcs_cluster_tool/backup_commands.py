@@ -76,13 +76,6 @@ def backup(
             )
         )
     ] = '',
-    nv_ssl: Annotated[
-        bool,
-        typer.Option(
-            '-nv-ssl/-v-ssl','--no-verify-ssl/--verify-ssl',
-            help='Skips verifying ssl certs, useful for onpremise s3 storage.'
-        )
-    ] = False,
     s: Annotated[
         str,
         typer.Option(
@@ -107,6 +100,18 @@ def backup(
             show_default=False
         )
     ] = '',
+    P: Annotated[
+        int,
+        typer.Option(
+            '-P', '--parallel',
+            help=(
+                'Determines if columnstore data directories will have '
+                'multiple rsync running at the same time for different '
+                'subfolders to parallelize writes. '
+                'Ignored if "-c/--compress" argument not set.'
+            )
+        )
+    ] = 4,
     ha: Annotated[
         bool,
         typer.Option(
@@ -171,53 +176,6 @@ def backup(
             help='Skip taking a copy of the columnstore data in the bucket.'
         )
     ] = False,
-    pi: Annotated[
-        int,
-        typer.Option(
-            '-pi', '--poll-interval',
-            help=(
-                'Number of seconds between poll checks for active writes & '
-                'cpimports.'
-            )
-        )
-    ] = 5,
-    pmw: Annotated[
-        int,
-        typer.Option(
-            '-pmw', '--poll-max-wait',
-            help=(
-                'Max number of minutes for polling checks for writes to wait '
-                'before exiting as a failed backup attempt.'
-            )
-        )
-    ] = 60,
-    q: Annotated[
-        bool,
-        typer.Option(
-            '-q/-no-q', '--quiet/--no-quiet',
-            help='Silence verbose copy command outputs.'
-        )
-    ] = False,
-    c: Annotated[
-        str,
-        typer.Option(
-            '-c', '--compress',
-            help='Compress backup in X format - Options: [ pigz ].',
-            show_default=False
-        )
-    ] = '',
-    P: Annotated[
-        int,
-        typer.Option(
-            '-P', '--parallel',
-            help=(
-                'Determines if columnstore data directories will have '
-                'multiple rsync running at the same time for different '
-                'subfolders to parallelize writes. '
-                'Ignored if "-c/--compress" argument not set.'
-            )
-        )
-    ] = 4,
     nb: Annotated[
         str,
         typer.Option(
@@ -238,6 +196,48 @@ def backup(
             hidden=True
         )
     ] = 'direct',
+    c: Annotated[
+        str,
+        typer.Option(
+            '-c', '--compress',
+            help='Compress backup in X format - Options: [ pigz ].',
+            show_default=False
+        )
+    ] = '',
+    q: Annotated[
+        bool,
+        typer.Option(
+            '-q/-no-q', '--quiet/--no-quiet',
+            help='Silence verbose copy command outputs.'
+        )
+    ] = False,
+    nv_ssl: Annotated[
+        bool,
+        typer.Option(
+            '-nv-ssl/-v-ssl','--no-verify-ssl/--verify-ssl',
+            help='Skips verifying ssl certs, useful for onpremise s3 storage.'
+        )
+    ] = False,
+    pi: Annotated[
+        int,
+        typer.Option(
+            '-pi', '--poll-interval',
+            help=(
+                'Number of seconds between poll checks for active writes & '
+                'cpimports.'
+            )
+        )
+    ] = 5,
+    pmw: Annotated[
+        int,
+        typer.Option(
+            '-pmw', '--poll-max-wait',
+            help=(
+                'Max number of minutes for polling checks for writes to wait '
+                'before exiting as a failed backup attempt.'
+            )
+        )
+    ] = 60,
     r: Annotated[
         int,
         typer.Option(
@@ -248,13 +248,23 @@ def backup(
             )
         )
     ] = 0,
+    aro: Annotated[
+        bool,
+        typer.Option(
+            '-aro', '--apply-retention-only',
+            help=(
+                'Only apply retention policy to existing backups, '
+                'does not run a backup.'
+            )
+        )
+    ] = False,
     list: Annotated[
         bool,
         typer.Option(
-            'list',
+            '-li', '--list',
             help='List backups.'
         )
-    ] = False
+    ] = False,
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -286,16 +296,6 @@ def backup(
 
 @handle_output
 def dbrm_backup(
-    m: Annotated[
-        str,
-        typer.Option(
-            '-m', '--mode',
-            help=(
-                '"loop" or "once" ; Determines if this script runs in a '
-                'forever loop sleeping -i minutes or just once.'
-            ),
-        )
-    ] = 'once',
     i: Annotated[
         int,
         typer.Option(
@@ -320,6 +320,16 @@ def dbrm_backup(
             help='Path of where to save the dbrm backups on disk.'
         )
     ] = '/tmp/dbrm_backups',
+    m: Annotated[
+        str,
+        typer.Option(
+            '-m', '--mode',
+            help=(
+                '"loop" or "once" ; Determines if this script runs in a '
+                'forever loop sleeping -i minutes or just once.'
+            ),
+        )
+    ] = 'once',
     nb: Annotated[
         str,
         typer.Option(
@@ -330,6 +340,13 @@ def dbrm_backup(
             )
         )
     ] = 'dbrm_backup',
+    ssm: Annotated[
+        bool,
+        typer.Option(
+            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
+            help='Skip backing up storagemanager directory.'
+        )
+    ] = False,
     q: Annotated[
         bool,
         typer.Option(
@@ -337,11 +354,11 @@ def dbrm_backup(
             help='Silence verbose copy command outputs.'
         )
     ] = False,
-    ssm: Annotated[
+    list: Annotated[
         bool,
         typer.Option(
-            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
-            help='Skip backing up storagemanager directory.'
+            '-li', '--list',
+            help='List backups.'
         )
     ] = False,
 ):

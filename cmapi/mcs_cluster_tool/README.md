@@ -53,26 +53,28 @@ Name of the bucket to store the columnstore backups.
 Example: &quot;s3://my-cs-backups&quot;
 * `-url, --endpoint-url TEXT`: Used by on premise S3 vendors.
 Example: &quot;http://127.0.0.1:8000&quot;
-* `-nv-ssl, --no-verify-ssl / -v-ssl, --verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v-ssl]
 * `-s, --storage TEXT`: What storage topogoly is being used by Columnstore - found in /etc/columnstore/storagemanager.cnf.
 Options: &quot;LocalStorage&quot; or &quot;S3&quot;  [default: LocalStorage]
 * `-i, --incremental TEXT`: Adds columnstore deltas to an existing full backup. Backup folder to apply increment could be a value or &quot;auto_most_recent&quot; - the incremental backup applies to last full backup.
+* `-P, --parallel INTEGER`: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
 * `-ha, --highavilability / -no-ha, --no-highavilability`: Hint wether shared storage is attached @ below on all nodes to see all data
 HA LocalStorage ( /var/lib/columnstore/dataX/ )
 HA S3           ( /var/lib/columnstore/storagemanager/ )  [default: no-ha]
-* `-f, --config-file TEXT`: Path to backup configuration file to load variables from.
+* `-f, --config-file TEXT`: Path to backup configuration file to load variables from - relative or full path accepted.
 * `-sbrm, --skip-save-brm / -no-sbrm, --no-skip-save-brm`: Skip saving brm prior to running a backup - ideal for dirty backups.  [default: no-sbrm]
 * `-spoll, --skip-polls / -no-spoll, --no-skip-polls`: Skip sql checks confirming no write/cpimports running.  [default: no-spoll]
 * `-slock, --skip-locks / -no-slock, --no-skip-locks`: Skip issuing write locks - ideal for dirty backups.  [default: no-slock]
 * `-smdb, --skip-mariadb-backup / -no-smdb, --no-skip-mariadb-backup`: Skip running a mariadb-backup for innodb data - ideal for incremental dirty backups.  [default: no-smdb]
 * `-sb, --skip-bucket-data / -no-sb, --no-skip-bucket-data`: Skip taking a copy of the columnstore data in the bucket.  [default: no-sb]
+* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)  [default: 03-20-2025]
+* `-c, --compress TEXT`: Compress backup in X format - Options: [ pigz ].
+* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
+* `-nv-ssl, --no-verify-ssl / -v-ssl, --verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v-ssl]
 * `-pi, --poll-interval INTEGER`: Number of seconds between poll checks for active writes &amp; cpimports.  [default: 5]
 * `-pmw, --poll-max-wait INTEGER`: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.  [default: 60]
-* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
-* `-c, --compress TEXT`: Compress backup in X format - Options: [ pigz ].
-* `-P, --parallel INTEGER`: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
-* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)  [default: 03-06-2025]
 * `-r, --retention-days INTEGER`: Retain backups created within the last X days, default 0 == keep all backups.  [default: 0]
+* `-aro, --apply-retention-only`: Only apply retention policy to existing backups, does not run a backup.
+* `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
 ## `mcs dbrm_backup`
@@ -87,13 +89,14 @@ $ mcs dbrm_backup [OPTIONS]
 
 **Options**:
 
-* `-m, --mode TEXT`: &quot;loop&quot; or &quot;once&quot; ; Determines if this script runs in a forever loop sleeping -i minutes or just once.  [default: once]
 * `-i, --interval INTEGER`: Number of minutes to sleep when --mode=loop.  [default: 90]
 * `-r, --retention-days INTEGER`: Retain dbrm backups created within the last X days, the rest are deleted  [default: 7]
-* `-p, --path TEXT`: Path of where to save the dbrm backups on disk.  [default: /tmp/dbrm_backups]
-* `-nb, --name-backup TEXT`: Custom name to prefex dbrm backups with.  [default: dbrm_backup]
-* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
+* `-bl, --backup-location TEXT`: Path of where to save the dbrm backups on disk.  [default: /tmp/dbrm_backups]
+* `-m, --mode TEXT`: &quot;loop&quot; or &quot;once&quot; ; Determines if this script runs in a forever loop sleeping -i minutes or just once.  [default: once]
+* `-nb, --name-backup TEXT`: Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S  [default: dbrm_backup]
 * `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: no-ssm]
+* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
+* `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
 ## `mcs restore`
@@ -127,15 +130,16 @@ Options: &quot;LocalStorage&quot; or &quot;S3&quot;  [default: LocalStorage]
 * `-nr, --new-region TEXT`: Defines the region of the new bucket to copy the s3 data to from the backup bucket.
 * `-nk, --new-key TEXT`: Defines the aws key to connect to the new_bucket.
 * `-ns, --new-secret TEXT`: Defines the aws secret of the aws key to connect to the new_bucket.
+* `-P, --parallel INTEGER`: Determines number of decompression and mdbstream threads. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
 * `-ha, --highavilability / -no-ha, --no-highavilability`: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)  [default: no-ha]
 * `-cont, --continue / -no-cont, --no-continue`: This acknowledges data in your --new_bucket is ok to delete when restoring S3. When set to true skips the enforcement that new_bucket should be empty prior to starting a restore.  [default: no-cont]
-* `-f, --config-file TEXT`: Path to backup configuration file to load variables from.
+* `-f, --config-file TEXT`: Path to backup configuration file to load variables from - relative or full path accepted.
 * `-smdb, --skip-mariadb-backup / -no-smdb, --no-skip-mariadb-backup`: Skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore.  [default: no-smdb]
 * `-sb, --skip-bucket-data / -no-sb, --no-skip-bucket-data`: Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server.  [default: no-sb]
 * `-c, --compress TEXT`: Hint that the backup is compressed in X format. Options: [ pigz ].
-* `-P, --parallel INTEGER`: Determines number of decompression and mdbstream threads. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
 * `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
 * `-nv-ssl, --no-verify-ssl / -v-ssl, --verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v-ssl]
+* `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
 ## `mcs dbrm_restore`
@@ -150,11 +154,12 @@ $ mcs dbrm_restore [OPTIONS]
 
 **Options**:
 
-* `-p, --path TEXT`: Path of where dbrm backups stored on disk.  [default: /tmp/dbrm_backups]
-* `-d, --directory TEXT`: Date or directory chose to restore from.
+* `-bl, --backup-location TEXT`: Path of where dbrm backups exist on disk.  [default: /tmp/dbrm_backups]
+* `-l, --load TEXT`: Name of the directory to restore from -bl
 * `-ns, --no-start`: Do not attempt columnstore startup post dbrm_restore.
 * `-sdbk, --skip-dbrm-backup / -no-sdbk, --no-skip-dbrm-backup`: Skip backing up dbrms before restoring.  [default: sdbk]
 * `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: ssm]
+* `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`
