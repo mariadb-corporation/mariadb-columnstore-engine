@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.12
+# Version: 3.13
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.12"
+mcs_bk_manager_version="3.13"
 start=$(date +%s)
 action=$1
 
@@ -328,7 +328,7 @@ parse_backup_variables() {
                 apply_retention_only=true
                 shift # past argument
                 ;;
-            "list")
+            -li | --list)
                 list_backups=true
                 shift # past argument
                 ;;
@@ -378,6 +378,7 @@ print_backup_help_text() {
         -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
         -r     | --retention-days         Retain backups created within the last X days, the rest are deleted, default 0 = keep all backups
         -aro   | --apply-retention-only   Only apply retention policy to existing backups, does not run a backup
+        -li    | --list                   List all backups available in the backup location
         -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ ) 
@@ -386,6 +387,7 @@ print_backup_help_text() {
             ./$0 backup -bl /tmp/backups/ 
             ./$0 backup -bl /tmp/backups/ -P 8
             ./$0 backup -bl /tmp/backups/ --incremental auto_most_recent
+            ./$0 backup -bl /tmp/backups/ --list
             ./$0 backup -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
 
         S3 Examples:  
@@ -2227,7 +2229,7 @@ parse_restore_variables() {
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
-            "list")
+            -li | --list)
                 list_backups=true
                 shift # past argument
                 ;;
@@ -2274,6 +2276,7 @@ print_restore_help_text()
         -sb  | --skip-bucket-data       Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
         -q   | --quiet                  Silence verbose copy command outputs
         -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
+        -li  | --list                   List available backups in the backup location
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
@@ -3030,10 +3033,12 @@ print_dbrm_backup_help_text() {
         -bl  | --backup-location       Path of where to save the dbrm backups on disk
         -nb  | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
         -ssm | --skip-storage-manager  skip backing up storagemanager directory
+        -li  | --list                  List available dbrm backups in the backup location
 
         Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
         Examples:
+            ./$0 dbrm_backup --list
             ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups 
             ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode once -nb my-one-off-backup-before-upgrade
             ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode loop --interval 90
@@ -3052,10 +3057,12 @@ print_dbrm_restore_help_text() {
         -ns  | --no-start              Do not attempt columnstore startup post dbrm_restore
         -sdbk| --skip-dbrm-backup      Skip backing up dbrms brefore restoring
         -ssm | --skip-storage-manager  Skip restoring storagemanager directory
+        -li  | --list                  List available dbrm backups in the backup location
 
         Default: ./$0 dbrm_restore --backup-location /tmp/dbrm_backups 
 
         Examples:
+            ./$0 dbrm_restore --list
             ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842    
             ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842 --no-start
     ";
@@ -3103,7 +3110,7 @@ parse_dbrms_variables() {
                 quiet=true
                 shift # past argument
                 ;;
-            "list")
+            -li | --list)
                 list_dbrm_backups=true
                 shift # past argument
                 ;;
@@ -3150,7 +3157,7 @@ parse_dbrm_restore_variables() {
                 skip_storage_manager=true
                 shift # past argument
                 ;;
-            "list")
+            -li | --list)
                 list_dbrm_backups=true
                 shift # past argument
                 ;;
