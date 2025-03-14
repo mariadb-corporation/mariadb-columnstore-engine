@@ -582,12 +582,6 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
     if (fRowGroupOut.getRowCount() > 0)
       dataVec.push_back(rgDataOut);
 
-    for (vector<RGData>::iterator i = dataVec.begin(); i != dataVec.end(); i++)
-    {
-      rgDataOut = *i;
-      fRowGroupOut.setData(&rgDataOut);
-      fOutputDL->insert(rgDataOut);
-    }
     while (!dataVec.empty())
     {
       auto& rgData = dataVec.back();
