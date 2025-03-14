@@ -1630,41 +1630,6 @@ quick_version_check() {
     fi
 }
 
-check_columnstore_install_dependencies() {
-
-    case $distro_info in
-        centos | rhel | rocky | almalinux )
-
-            package_list=("python3")
-
-            for package in "${package_list[@]}"; do
-                if ! yum install $package -y; then
-                    printf "\n[!] Failed to install dependancy: $package\n"
-                    printf "Please install manually and try again\n\n"
-                    exit 1;
-                fi
-            done
-            
-            ;;
-        ubuntu | debian )
-
-            package_list=("python3")
-
-            for package in "${package_list[@]}"; do
-                if ! apt install $package -y --quiet; then
-                    printf "\n[!] Failed to install dependancy: $package\n"
-                    printf "Please install manually and try again\n\n"
-                    exit 1;
-                fi
-            done
-       
-            ;;
-        *)  # unknown option
-            printf "\ncheck_columnstore_install_dependencies: os & version not implemented: $distro_info\n"
-            exit 2;
-    esac
-}
-
 print_install_variables() {
 
     echo "Distro: $distro_info"
@@ -1698,9 +1663,6 @@ enterprise_install() {
     if $enterprise_staging; then 
         url="https://dlm.mariadb.com/$enterprise_token/enterprise-release-helpers-staging/mariadb_es_repo_setup"
     fi
-
-    # Check for install dependancies
-    check_columnstore_install_dependencies
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
@@ -2507,7 +2469,6 @@ local_install() {
     check_no_mdb_installed
     process_cluster_variables
     echo "-----------------------------------------------"
-    check_columnstore_install_dependencies
     check_rpms_debs_exist
 
     case $distro_info in
