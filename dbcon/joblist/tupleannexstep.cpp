@@ -252,12 +252,7 @@ void TupleAnnexStep::run()
     fRunnersList.resize(fMaxThreads);
     fInputIteratorsList.resize(fMaxThreads + 1);
 
-    // *DRRTUY Make this block conditional
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     for (uint32_t id = 1; id <= fMaxThreads; id++)
@@ -350,12 +345,7 @@ void TupleAnnexStep::execute()
   else
     executeNoOrderBy();
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   if (traceOn())
@@ -389,11 +379,7 @@ void TupleAnnexStep::executeNoOrderBy()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled() && !fLimitHit)
@@ -495,11 +481,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled() && !fLimitHit)
@@ -628,11 +610,7 @@ void TupleAnnexStep::executeWithOrderBy()
     if (traceOn())
       dlTimes.setFirstReadTime();
 
-    StepTeleStats sts;
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     while (more && !cancelled())
@@ -908,12 +886,7 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
     fOrderByList[id]->returnAllRGDataMemory2RM();
   }
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 }
 
@@ -1099,12 +1072,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
     fOrderByList[id]->returnAllRGDataMemory2RM();
   }
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 }
 

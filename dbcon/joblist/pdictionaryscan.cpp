@@ -544,14 +544,9 @@ void pDictionaryScan::receivePrimitiveMessages()
   fOutputRowGroup.setData(&rgData);
   fOutputRowGroup.resetRowGroup(0);
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-
   if (fOid >= 3000)
   {
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = fMsgsExpect;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, fMsgsExpect);
     postStepStartTele(sts);
   }
 
@@ -660,9 +655,7 @@ void pDictionaryScan::receivePrimitiveMessages()
           if (progress > fProgress)
           {
             fProgress = progress;
-            sts.msg_type = StepTeleStats::ST_PROGRESS;
-            sts.total_units_of_work = fMsgsExpect;
-            sts.units_of_work_completed = msgsRecvd;
+            StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_PROGRESS, fMsgsExpect, msgsRecvd);
             postStepProgressTele(sts);
           }
         }
@@ -790,13 +783,10 @@ void pDictionaryScan::receivePrimitiveMessages()
       formatMiniStats();
     }
 
-    sts.msg_type = StepTeleStats::ST_SUMMARY;
-    sts.phy_io = fPhysicalIO;
-    sts.cache_io = fCacheIO;
-    sts.msg_rcv_cnt = sts.total_units_of_work = sts.units_of_work_completed = msgsRecvd;
-    sts.msg_bytes_in = fMsgBytesIn;
-    sts.msg_bytes_out = fMsgBytesOut;
-    sts.rows = fRidResults;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY,
+                        msgsRecvd, msgsRecvd, fRidResults,
+                        fPhysicalIO, fCacheIO, msgsRecvd,
+                        fMsgBytesIn, fMsgBytesOut);
     postStepSummaryTele(sts);
   }
 

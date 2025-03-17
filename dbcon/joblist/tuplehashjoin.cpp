@@ -613,15 +613,9 @@ void TupleHashJoinStep::hjRunner()
     return;
   }
 
-  StepTeleStats sts;
-
   if (fTableOID1 >= 3000)
   {
-    sts.query_uuid = fQueryUuid;
-    sts.step_uuid = fStepUuid;
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.start_time = QueryTeleClient::timeNowms();
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1, QueryTeleClient::timeNowms());
     postStepStartTele(sts);
   }
 
@@ -958,9 +952,7 @@ void TupleHashJoinStep::hjRunner()
 
   if (fTableOID1 >= 3000)
   {
-    sts.msg_type = StepTeleStats::ST_SUMMARY;
-    sts.end_time = QueryTeleClient::timeNowms();
-    sts.total_units_of_work = sts.units_of_work_completed = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, QueryTeleClient::timeNowms(), 1);
     postStepSummaryTele(sts);
   }
 }

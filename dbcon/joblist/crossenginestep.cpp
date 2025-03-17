@@ -379,14 +379,9 @@ void CrossEngineStep::join()
 void CrossEngineStep::execute()
 {
   int ret = 0;
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-
   try
   {
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     ret = mysql->init(fHost.c_str(), fPort, fUser.c_str(), fPasswd.c_str(), fSchema.c_str());
@@ -577,9 +572,7 @@ void CrossEngineStep::execute()
                     "CrossEngineStep::execute()");
   }
 
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   fEndOfResult = true;

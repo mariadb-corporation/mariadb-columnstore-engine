@@ -138,6 +138,52 @@ struct StepTeleStats
 
   ~StepTeleStats() = default;
 
+  // Constructor for creating a stats object with specified parameters
+  StepTeleStats(const boost::uuids::uuid& qUuid, const boost::uuids::uuid& sUuid, 
+                STType msgType, int32_t totalWork,
+                int32_t completedWork = 0, int64_t rowCount = 0)
+    : StepTeleStats() // Reuse default constructor
+  {
+    query_uuid = qUuid;
+    step_uuid = sUuid;
+    msg_type = msgType;
+    total_units_of_work = totalWork;
+    units_of_work_completed = completedWork;
+    rows = rowCount;
+  }
+
+  // Constructor for creating a stats object with IO and message stats
+  StepTeleStats(const boost::uuids::uuid& qUuid, const boost::uuids::uuid& sUuid,
+                STType msgType, int32_t totalWork, int32_t completedWork,
+                int64_t rowCount, int64_t physicalIO, int64_t cacheIO,
+                int64_t msgCount, int64_t bytesIn, int64_t bytesOut)
+    : StepTeleStats() // Reuse default constructor
+  {
+    query_uuid = qUuid;
+    step_uuid = sUuid;
+    msg_type = msgType;
+    total_units_of_work = totalWork;
+    units_of_work_completed = completedWork;
+    rows = rowCount;
+    phy_io = physicalIO;
+    cache_io = cacheIO;
+    msg_rcv_cnt = msgCount;
+    msg_bytes_in = bytesIn;
+    msg_bytes_out = bytesOut;
+  }
+
+  // Constructor for creating a stats object with time tracking
+  StepTeleStats(const boost::uuids::uuid& qUuid, const boost::uuids::uuid& sUuid,
+                STType msgType, int32_t totalWork, int64_t timeStamp,
+                int32_t completedWork = 0, int64_t rowCount = 0)
+    : StepTeleStats(qUuid, sUuid, msgType, totalWork, completedWork, rowCount) // Delegate to base constructor
+  {
+    if (msgType == ST_START)
+      start_time = timeStamp;
+    else if (msgType == ST_SUMMARY)
+      end_time = timeStamp;
+  }
+
   boost::uuids::uuid query_uuid;
   STType msg_type;
   StepType step_type;
