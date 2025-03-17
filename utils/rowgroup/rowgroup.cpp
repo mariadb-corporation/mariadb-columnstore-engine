@@ -45,6 +45,7 @@ using namespace execplan;
 #include "rowgroup.h"
 #include "dataconvert.h"
 #include "columnwidth.h"
+#include "groupconcat.h"
 
 namespace rowgroup
 {
@@ -323,8 +324,6 @@ void AggregateDataStore::serialize(messageqcpp::ByteStream &bs) const {
   size = fData.size();
   bs << size;
   for (const auto& gca: fData) {
-    uint16_t gctype = gca->getType();
-    bs << gctype;
     bs << gca->getGroupConcatId();
     gca->serialize(bs);
   }
@@ -343,22 +342,20 @@ void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs) {
   bs >> size;
   fData.resize(size);
   for (uint64_t i = 0; i < size; i++) {
-    uint16_t gctype;
-    bs >> gctype;
     uint32_t gc_id;
     bs >> gc_id;
     idbassert(gc_id < fGroupConcat.size());
-    fData[i].reset(GroupConcatAg::create(static_cast<RowAggFunctionType>(gctype), fGroupConcat[gc_id]));
+    fData[i].reset(new joblist::GroupConcatAg(fGroupConcat[gc_id]));
     fData[i]->deserialize(bs);
   }
 }
 
-uint32_t AggregateDataStore::storeAggregateData(boost::shared_ptr<GroupConcatAg> &data) {
+uint32_t AggregateDataStore::storeAggregateData(boost::shared_ptr<joblist::GroupConcatAg> &data) {
   fData.emplace_back(data);
   return fData.size() - 1;
 }
 
-boost::shared_ptr<GroupConcatAg> AggregateDataStore::getAggregateData(uint32_t pos) const {
+boost::shared_ptr<joblist::GroupConcatAg> AggregateDataStore::getAggregateData(uint32_t pos) const {
   idbassert(pos < fData.size());
   return fData[pos];
 }

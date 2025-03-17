@@ -56,6 +56,9 @@ using namespace ordering;
 #include "jlf_common.h"
 #include "mcs_decimal.h"
 
+#include "utils/json/json.hpp"
+using namespace nlohmann;
+
 namespace joblist
 {
 // GroupConcatInfo class implementation
@@ -135,7 +138,7 @@ void GroupConcatInfo::prepGroupConcat(JobInfo& jobInfo)
   }
 }
 
-uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo)
+uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo) const
 {
   int colKey = -1;
   const auto* sc = dynamic_cast<const SimpleColumn*>(srcp.get());
@@ -169,8 +172,8 @@ uint32_t GroupConcatInfo::getColumnKey(const SRCP& srcp, JobInfo& jobInfo)
     }
     else
     {
-      cerr << "Unsupported GROUP_CONCAT column. " << srcp->toString() << endl;
-      throw runtime_error("Unsupported GROUP_CONCAT column.");
+      cerr << "Unsupported GROUP_CONCAT/JSON_ARRAYAGG column. " << srcp->toString() << endl;
+      throw runtime_error("Unsupported GROUP_CONCAT/JSON_ARRAYAGG column.");
     }
   }
 
@@ -196,7 +199,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
     vector<uint32_t> csNums;
     pos.push_back(2);
 
-    vector<pair<uint32_t, uint32_t> >::iterator i1 = (*k)->fGroupCols.begin();
+    auto i1 = (*k)->fGroupCols.begin();
 
     while (i1 != (*k)->fGroupCols.end())
     {
@@ -204,7 +207,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
 
       if (j == projColumnMap.end())
       {
-        cerr << "Concat Key:" << i1->first << " is not projected." << endl;
+        cerr << "Concat/ArrayAgg Key:" << i1->first << " is not projected." << endl;
         throw runtime_error("Project error.");
       }
 
@@ -219,7 +222,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
       ++i1;
     }
 
-    vector<pair<uint32_t, bool> >::iterator i2 = (*k)->fOrderCols.begin();
+    auto i2 = (*k)->fOrderCols.begin();
 
     while (i2 != (*k)->fOrderCols.end())
     {
@@ -259,7 +262,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
     (*k)->fRowGroup = RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision,
                                projRG.getStringTableThreshold(), false);
 
-    // MCOL-5429 Use stringstore if the datatype of the groupconcat
+    // MCOL-5429/MCOL-5491 Use stringstore if the datatype of the groupconcat/json_arrayagg
     // field is a long string.
     if ((*k)->fRowGroup.hasLongString())
     {
@@ -270,7 +273,7 @@ void GroupConcatInfo::mapColumns(const RowGroup& projRG)
   }
 }
 
-std::shared_ptr<int[]> GroupConcatInfo::makeMapping(const RowGroup& in, const RowGroup& out)
+std::shared_ptr<int[]> GroupConcatInfo::makeMapping(const RowGroup& in, const RowGroup& out) const
 {
   // For some reason using the rowgroup mapping fcns don't work completely right in this class
   std::shared_ptr<int[]> mapping(new int[out.getColumnCount()]);
@@ -299,25 +302,23 @@ const string GroupConcatInfo::toString() const
   return oss.str();
 }
 
-GroupConcatAgUM::GroupConcatAgUM(rowgroup::SP_GroupConcat& gcc) : GroupConcatAg(gcc)
+GroupConcatAg::GroupConcatAg(rowgroup::SP_GroupConcat& gcc, bool isJsonArrayAgg) : fGroupConcat(gcc), fIsJsonArrayAgg(isJsonArrayAgg)
 {
   initialize();
 }
 
-GroupConcatAgUM::~GroupConcatAgUM()
-{
-}
+GroupConcatAg::~GroupConcatAg() = default;
 
-void GroupConcatAgUM::initialize()
+void GroupConcatAg::initialize()
 {
   if (fGroupConcat->fDistinct || fGroupConcat->fOrderCols.size() > 0)
-    fConcator.reset(new GroupConcatOrderBy());
+    fConcator.reset(new GroupConcatOrderBy(fIsJsonArrayAgg));
   else
-    fConcator.reset(new GroupConcatNoOrder());
+    fConcator.reset(new GroupConcatNoOrder(fIsJsonArrayAgg));
 
   fConcator->initialize(fGroupConcat);
 
-  // MCOL-5429 Use stringstore if the datatype of the groupconcat
+  // MCOL-5429/MCOL-5491 Use stringstore if the datatype of the group_concat/json_arrayagg
   // field is a long string.
   if (fGroupConcat->fRowGroup.hasLongString())
   {
@@ -339,24 +340,25 @@ void GroupConcatAgUM::initialize()
   fMemSize = fRowGroup.getSizeWithStrings(1);
 }
 
-void GroupConcatAgUM::processRow(const rowgroup::Row& inRow)
+void GroupConcatAg::processRow(const rowgroup::Row& inRow)
 {
   applyMapping(fGroupConcat->fMapping, inRow);
   fConcator->processRow(fRow);
 }
 
-void GroupConcatAgUM::merge(const rowgroup::Row& inRow, uint64_t i)
+void GroupConcatAg::merge(const rowgroup::Row& inRow, uint64_t i)
 {
-  auto* gccAg = dynamic_cast<joblist::GroupConcatAgUM*>(inRow.getAggregateData(i));
+  auto* gccAg = dynamic_cast<joblist::GroupConcatAg*>(inRow.getAggregateData(i));
   fConcator->merge(gccAg->concator().get());
 }
 
-uint8_t* GroupConcatAgUM::getResult()
+uint8_t* GroupConcatAg::getResult()
 {
   return fConcator->getResult(fGroupConcat->fSeparator);
 }
 
-void GroupConcatAgUM::serialize(messageqcpp::ByteStream &bs) const {
+void GroupConcatAg::serialize(messageqcpp::ByteStream &bs) const {
+  bs << (uint8_t)fIsJsonArrayAgg;
   fGroupConcat->serialize(bs);
   fConcator->serialize(bs);
   if (fRowGroup.hasLongString()) {
@@ -368,16 +370,18 @@ void GroupConcatAgUM::serialize(messageqcpp::ByteStream &bs) const {
   }
 }
 
-void GroupConcatAgUM::deserialize(messageqcpp::ByteStream &bs) {
+void GroupConcatAg::deserialize(messageqcpp::ByteStream &bs) {
+  uint8_t tmp8;
+  bs >> tmp8;
+  fIsJsonArrayAgg = tmp8;
   fGroupConcat->deserialize(bs);
   if (fGroupConcat->fDistinct || !fGroupConcat->fOrderCols.empty()) {
-    fConcator.reset(new GroupConcatOrderBy());
+    fConcator.reset(new GroupConcatOrderBy(fIsJsonArrayAgg));
   } else {
-    fConcator.reset(new GroupConcatNoOrder());
+    fConcator.reset(new GroupConcatNoOrder(fIsJsonArrayAgg));
   }
   fConcator->initialize(fGroupConcat);
   fConcator->deserialize(bs);
-  uint8_t tmp8;
   bs >> tmp8;
   if (tmp8) {
     fRowRGData.deserialize(bs, fRow.getSize());
@@ -393,11 +397,11 @@ void GroupConcatAgUM::deserialize(messageqcpp::ByteStream &bs) {
   }
 }
 
-rowgroup::RGDataSizeType GroupConcatAgUM::getDataSize() const {
+rowgroup::RGDataSizeType GroupConcatAg::getDataSize() const {
   return fMemSize + fConcator->getDataSize();
 }
 
-void GroupConcatAgUM::applyMapping(const std::shared_ptr<int[]>& mapping, const Row& row)
+void GroupConcatAg::applyMapping(const std::shared_ptr<int[]>& mapping, const Row& row)
 {
   // For some reason the rowgroup mapping fcns don't work right in this class.
   for (uint64_t i = 0; i < fRow.getColumnCount(); i++)
@@ -517,9 +521,20 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
       case CalpontSystemCatalog::CHAR:
       case CalpontSystemCatalog::VARCHAR:
-      case CalpontSystemCatalog::TEXT:
-      {
-        oss << row.getStringField(*i).str();
+      case CalpontSystemCatalog::TEXT: {
+        if (fIsJsonArrayAgg) {
+          auto maybeJson = row.getStringField(*i).safeString(""); // XXX: MULL??? it is not checked anywhere.
+          const auto j = json::parse(maybeJson, nullptr, false);
+          if (j.is_discarded()) {
+            oss << std::quoted(maybeJson.c_str());
+          }
+          else {
+            oss << maybeJson.c_str();
+          }
+        }
+        else {
+          oss << row.getStringField(*i).str();
+        }
         break;
       }
 
@@ -545,25 +560,37 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
       case CalpontSystemCatalog::DATE:
       {
-        oss << DataConvert::dateToString(row.getUintField(*i));
+        if (fIsJsonArrayAgg)
+          oss << std::quoted(DataConvert::dateToString(row.getUintField(*i)));
+        else
+          oss << DataConvert::dateToString(row.getUintField(*i));
         break;
       }
 
       case CalpontSystemCatalog::DATETIME:
       {
-        oss << DataConvert::datetimeToString(row.getUintField(*i));
+        if (fIsJsonArrayAgg)
+          oss << std::quoted(DataConvert::datetimeToString(row.getUintField(*i)));
+        else
+          oss << DataConvert::datetimeToString(row.getUintField(*i));
         break;
       }
 
       case CalpontSystemCatalog::TIMESTAMP:
       {
-        oss << DataConvert::timestampToString(row.getUintField(*i), fTimeZone);
+        if (fIsJsonArrayAgg)
+          oss << std::quoted(DataConvert::timestampToString(row.getUintField(*i), fTimeZone));
+        else
+          oss << DataConvert::timestampToString(row.getUintField(*i), fTimeZone);
         break;
       }
 
       case CalpontSystemCatalog::TIME:
       {
-        oss << DataConvert::timeToString(row.getUintField(*i));
+        if (fIsJsonArrayAgg)
+          oss << std::quoted(DataConvert::timeToString(row.getUintField(*i)));
+        else
+          oss << DataConvert::timeToString(row.getUintField(*i));
         break;
       }
 
@@ -806,21 +833,9 @@ public:
 };
 
 // GroupConcatOrderBy class implementation
-GroupConcatOrderBy::GroupConcatOrderBy()
+GroupConcatOrderBy::GroupConcatOrderBy(bool isJsonArrayAgg): GroupConcator(isJsonArrayAgg)
 {
   fRule.fIdbCompare = this;
-}
-
-GroupConcatOrderBy::GroupConcatOrderBy(messageqcpp::ByteStream &bs, SP_GroupConcat &gcc) {
-  gcc->fRowGroup.setUseOnlyLongString(true);
-  GroupConcator::initialize(gcc);
-  fRowGroup = gcc->fRowGroup;
-  fRowGroup.initRow(&fRow1);
-  fRowGroup.initRow(&fRow2);
-  for (uint32_t x : views::values(gcc->fGroupCols)) {
-    fConcatColumns.emplace_back(x);
-  }
-  deserialize(bs);
 }
 
 GroupConcatOrderBy::~GroupConcatOrderBy()
@@ -1145,26 +1160,32 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
   size_t prevResultSize = 0;
   size_t rowsProcessed = 0;
   bool isNull = true;
-  while (rowStack.size() > 0)
-  {
-    if (addSep)
-      oss << sep;
-    else
-      addSep = true;
-
-    const OrderByRow& topRow = rowStack.top();
-    fRow0.setData(topRow.fData);
-    outputRow(oss, fRow0);
-    isNull = false;
-    rowStack.pop();
-    ++rowsProcessed;
-    if (rowsProcessed >= fRowsPerRG)
+  if (rowStack.size() > 0) {
+    if (fIsJsonArrayAgg)
+      oss << "[";
+    while (rowStack.size() > 0)
     {
-      size_t sizeDiff = oss.str().size() - prevResultSize;
-      prevResultSize = oss.str().size();
-      fMemSize += sizeDiff;
-      rowsProcessed = 0;
+      if (addSep)
+        oss << sep;
+      else
+        addSep = true;
+
+      const OrderByRow& topRow = rowStack.top();
+      fRow0.setData(topRow.fData);
+      outputRow(oss, fRow0);
+      isNull = false;
+      rowStack.pop();
+      ++rowsProcessed;
+      if (rowsProcessed >= fRowsPerRG)
+      {
+        size_t sizeDiff = oss.str().size() - prevResultSize;
+        prevResultSize = oss.str().size();
+        fMemSize += sizeDiff;
+        rowsProcessed = 0;
+      }
     }
+    if (fIsJsonArrayAgg)
+      oss << "]";
   }
 
   return swapStreamWithStringAndReturnBuf(oss, isNull);
@@ -1241,16 +1262,6 @@ uint64_t GroupConcatOrderBy::shiftGroupIdxBy(uint64_t idx, uint32_t shift) {
   return ((gid + shift) << 16) + rid;
 }
 
-GroupConcatNoOrder::GroupConcatNoOrder(messageqcpp::ByteStream &bs, SP_GroupConcat &gcc) {
-  GroupConcator::initialize(gcc);
-
-  fRowGroup = gcc->fRowGroup;
-  fRowGroup.setUseOnlyLongString(true);
-  fRowsPerRG = 128;
-
-  deserialize(bs);
-}
-
 // GroupConcatNoOrder class implementation
 GroupConcatNoOrder::~GroupConcatNoOrder()
 {
@@ -1323,6 +1334,7 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
   size_t prevResultSize = 0;
 
   bool isNull = true;
+  bool addBrackets = true;
   for (auto& rgdata : fDataVec)
   {
     fRowGroup.setData(rgdata.get());
@@ -1331,6 +1343,10 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
 
     for (uint64_t i = 0; i < fRowGroup.getRowCount(); i++)
     {
+      if (addBrackets && fIsJsonArrayAgg) {
+        oss << "[";
+        addBrackets = false;
+      }
       if (addSep)
         oss << sep;
       else
@@ -1345,6 +1361,8 @@ uint8_t* GroupConcatNoOrder::getResultImpl(const string& sep)
     fMemSize += sizeDiff;
     rgdata.reset();
   }
+  if (fIsJsonArrayAgg && oss.tellp() != 0)
+    oss << "]";
 
   return swapStreamWithStringAndReturnBuf(oss, isNull);
 }

@@ -352,36 +352,6 @@ struct GroupConcat: public messageqcpp::Serializeable
 
 typedef boost::shared_ptr<GroupConcat> SP_GroupConcat;
 
-class GroupConcatAg
-{
- public:
-  explicit GroupConcatAg(SP_GroupConcat&);
-  virtual ~GroupConcatAg();
-
-  static GroupConcatAg* create(RowAggFunctionType rowagg_func_type, SP_GroupConcat&);
-
-  virtual void initialize() = 0;
-  virtual void processRow(const rowgroup::Row&) = 0;
-  virtual void merge(const rowgroup::Row&, uint64_t) = 0;
-
-  virtual uint8_t* getResult()
-  {
-    return nullptr;
-  }
-
-  uint32_t getGroupConcatId() const { return fGroupConcat->id; }
-  virtual uint16_t getType() const = 0;
-  virtual RGDataSizeType getDataSize() const = 0;
-
-  virtual void serialize(messageqcpp::ByteStream& bs) const = 0;
-  virtual void deserialize(messageqcpp::ByteStream& bs) = 0;
-
- protected:
-  rowgroup::SP_GroupConcat fGroupConcat;
-};
-
-typedef boost::shared_ptr<GroupConcatAg> SP_GroupConcatAg;
-
 //------------------------------------------------------------------------------
 /** @brief Class that aggregates RowGroups.
  */
@@ -808,7 +778,6 @@ class RowAggregationUM : public RowAggregation
 
   // @bug3362, group_concat
   virtual void doGroupConcat(const Row&, int64_t, int64_t);
-  virtual void doJsonAgg(const Row&, int64_t, int64_t);
   virtual void setGroupConcatString();
 
   bool fHasAvg;
@@ -868,7 +837,6 @@ class RowAggregationUMP2 : public RowAggregationUM
   void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false) override;
   void doStatistics(const Row&, int64_t, int64_t, int64_t) override;
   void doGroupConcat(const Row&, int64_t, int64_t) override;
-  void doJsonAgg(const Row&, int64_t, int64_t) override;
   void doBitOp(const Row&, int64_t, int64_t, int) override;
   void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx,
               std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
@@ -976,7 +944,6 @@ class RowAggregationSubDistinct : public RowAggregationUM
  protected:
   // virtual methods from RowAggregationUM
   void doGroupConcat(const Row&, int64_t, int64_t) override;
-  void doJsonAgg(const Row&, int64_t, int64_t) override;
   // for groupby columns and the aggregated distinct column
   Row fDistRow;
   boost::scoped_array<uint8_t> fDistRowData;

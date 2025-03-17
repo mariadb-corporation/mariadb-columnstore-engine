@@ -26,12 +26,11 @@
 #include <vector>
 #include <boost/scoped_ptr.hpp>
 
-#include "returnedcolumn.h"  // SRCP
-#include "rowgroup.h"        // RowGroup
-#include "rowaggregation.h"  // SP_GroupConcat
-#include "limitedorderby.h"  // IdbOrderBy
-
-#define EXPORT
+#include "groupconcatcolumn.h" // GroupConcatColumn
+#include "returnedcolumn.h"    // SRCP
+#include "rowgroup.h"          // RowGroup
+#include "rowaggregation.h"    // SP_GroupConcat
+#include "limitedorderby.h"    // IdbOrderBy
 
 namespace joblist
 {
@@ -44,10 +43,10 @@ class GroupConcatInfo
 {
  public:
   GroupConcatInfo();
-  virtual ~GroupConcatInfo();
+  ~GroupConcatInfo();
 
   void prepGroupConcat(JobInfo&);
-  virtual void mapColumns(const rowgroup::RowGroup&);
+  void mapColumns(const rowgroup::RowGroup&);
 
   std::set<uint32_t>& columns()
   {
@@ -58,42 +57,44 @@ class GroupConcatInfo
     return fGroupConcat;
   }
 
-  virtual const std::string toString() const;
+  const std::string toString() const;
 
  protected:
-  virtual uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo);
-  virtual std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&);
+  uint32_t getColumnKey(const execplan::SRCP& srcp, JobInfo& jobInfo) const;
+  std::shared_ptr<int[]> makeMapping(const rowgroup::RowGroup&, const rowgroup::RowGroup&) const;
 
   std::set<uint32_t> fColumns;
   std::vector<rowgroup::SP_GroupConcat> fGroupConcat;
 };
 
-class GroupConcatAgUM : public rowgroup::GroupConcatAg
+class GroupConcatAg
 {
  public:
-  EXPORT explicit GroupConcatAgUM(rowgroup::SP_GroupConcat&);
-  EXPORT ~GroupConcatAgUM() override;
+   explicit GroupConcatAg(rowgroup::SP_GroupConcat&, bool isJsonArrayAgg = false);
+   ~GroupConcatAg();
 
-  void initialize() override;
-  void processRow(const rowgroup::Row&) override;
-  EXPORT void merge(const rowgroup::Row&, uint64_t) override;
-  boost::scoped_ptr<GroupConcator>& concator()
-  {
-    return fConcator;
-  }
+   void initialize();
+   void processRow(const rowgroup::Row&);
+   void merge(const rowgroup::Row&, uint64_t);
+   boost::scoped_ptr<GroupConcator>& concator()
+   {
+     return fConcator;
+   }
 
-  EXPORT uint8_t* getResult() override;
+   uint8_t* getResult();
 
+  uint32_t getGroupConcatId() const { return fGroupConcat->id; }
 
-  void serialize(messageqcpp::ByteStream &bs) const override;
-  void deserialize(messageqcpp::ByteStream &bs) override;
+  void serialize(messageqcpp::ByteStream &bs) const;
+  void deserialize(messageqcpp::ByteStream &bs);
 
-  rowgroup::RGDataSizeType getDataSize() const override;
-  uint16_t getType() const override { return rowgroup::ROWAGG_GROUP_CONCAT; }
+  rowgroup::RGDataSizeType getDataSize() const;
 
  protected:
-  virtual void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
+  void applyMapping(const std::shared_ptr<int[]>&, const rowgroup::Row&);
 
+  rowgroup::SP_GroupConcat fGroupConcat;
+  bool fIsJsonArrayAgg{false};
   boost::scoped_ptr<GroupConcator> fConcator;
   boost::scoped_array<uint8_t> fData;
   rowgroup::Row fRow;
@@ -103,11 +104,13 @@ class GroupConcatAgUM : public rowgroup::GroupConcatAg
   rowgroup::RGDataSizeType fMemSize{0};
 };
 
+using SP_GroupConcatAg = boost::shared_ptr<GroupConcatAg>;
+
 // GROUP_CONCAT base
 class GroupConcator
 {
  public:
-  GroupConcator() = default;
+  explicit GroupConcator(bool isJsonArrayAgg): fIsJsonArrayAgg(isJsonArrayAgg) {}
   virtual ~GroupConcator() = default;
 
   virtual void initialize(const rowgroup::SP_GroupConcat&);
@@ -136,14 +139,14 @@ class GroupConcator
   int64_t fConstantLen{0};
   std::unique_ptr<std::string> outputBuf_;
   long fTimeZone{0};
+  bool fIsJsonArrayAgg{false};
 };
 
 // For GROUP_CONCAT withour distinct or orderby
 class GroupConcatNoOrder : public GroupConcator
 {
  public:
-  GroupConcatNoOrder() = default;
-  GroupConcatNoOrder(messageqcpp::ByteStream& bs, rowgroup::SP_GroupConcat& gcc);
+  explicit GroupConcatNoOrder(bool isJsonArrayAgg): GroupConcator(isJsonArrayAgg) {}
   ~GroupConcatNoOrder() override;
 
   void initialize(const rowgroup::SP_GroupConcat&) override;
@@ -176,8 +179,7 @@ class GroupConcatNoOrder : public GroupConcator
 class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
 {
  public:
-  GroupConcatOrderBy();
-  GroupConcatOrderBy(messageqcpp::ByteStream& bs, rowgroup::SP_GroupConcat& gcc);
+  explicit GroupConcatOrderBy(bool isJsonArrayAgg);
   ~GroupConcatOrderBy() override;
 
   using ordering::IdbCompare::initialize;
@@ -242,5 +244,3 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
 };
 
 }  // namespace joblist
-
-#undef EXPORT

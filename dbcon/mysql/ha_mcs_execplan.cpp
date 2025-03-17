@@ -71,7 +71,6 @@ using namespace cal_impl_if;
 #include "functioncolumn.h"
 #include "groupconcatcolumn.h"
 #include "intervalcolumn.h"
-#include "jsonarrayaggcolumn.h"
 #include "logicoperator.h"
 #include "outerjoinonfilter.h"
 #include "predicateoperator.h"
@@ -5238,7 +5237,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
   }
   else if (isp->sum_func() == Item_sum::JSON_ARRAYAGG_FUNC)
   {
-    ac = new JsonArrayAggColumn(gwi.sessionid);
+    ac = new GroupConcatColumn(gwi.sessionid, true);
   }
   else if (isp->sum_func() == Item_sum::UDF_SUM_FUNC)
   {
@@ -5416,7 +5415,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
       }
 
       rowCol->columnVec(selCols);
-      (dynamic_cast<JsonArrayAggColumn*>(ac))->orderCols(orderCols);
+      (dynamic_cast<GroupConcatColumn*>(ac))->orderCols(orderCols);
       parm.reset(rowCol);
       ac->aggParms().push_back(parm);
 
@@ -5424,7 +5423,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
       {
         string separator;
         separator.assign(gc->get_separator()->ptr(), gc->get_separator()->length());
-        (dynamic_cast<JsonArrayAggColumn*>(ac))->separator(separator);
+        (dynamic_cast<GroupConcatColumn*>(ac))->separator(separator);
       }
     }
     else if (isSupportedAggregateWithOneConstArg(isp, sfitempp))

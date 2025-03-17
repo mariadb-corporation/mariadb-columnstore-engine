@@ -58,6 +58,9 @@
 #include "execinfo.h"
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
+namespace joblist {
+class GroupConcatAg;
+}
 
 namespace rowgroup
 {
@@ -253,7 +256,6 @@ class UserDataStore
 };
 
 struct GroupConcat;
-class GroupConcatAg;
 
 class AggregateDataStore {
 public:
@@ -268,14 +270,14 @@ public:
   void serialize(messageqcpp::ByteStream&) const;
   void deserialize(messageqcpp::ByteStream&);
 
-  uint32_t storeAggregateData(boost::shared_ptr<GroupConcatAg>& data);
-  boost::shared_ptr<GroupConcatAg> getAggregateData(uint32_t pos) const;
+  uint32_t storeAggregateData(boost::shared_ptr<joblist::GroupConcatAg>& data);
+  boost::shared_ptr<joblist::GroupConcatAg> getAggregateData(uint32_t pos) const;
 
   RGDataSizeType getDataSize() const;
 private:
   friend class RGData;
   std::vector<boost::shared_ptr<GroupConcat>> fGroupConcat;
-  std::vector<boost::shared_ptr<GroupConcatAg>> fData;
+  std::vector<boost::shared_ptr<joblist::GroupConcatAg>> fData;
 };
 
 class RowGroup;
@@ -552,8 +554,8 @@ class Row
   inline boost::shared_ptr<mcsv1sdk::UserData> getUserData(uint32_t colIndex) const;
   inline void setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<mcsv1sdk::UserData> userData,
                           uint32_t len, uint32_t colIndex);
-  inline void setAggregateData(boost::shared_ptr<GroupConcatAg> data, uint32_t colIndex);
-  inline GroupConcatAg* getAggregateData(uint32_t colIndex) const;
+  inline void setAggregateData(boost::shared_ptr<joblist::GroupConcatAg> data, uint32_t colIndex);
+  inline joblist::GroupConcatAg* getAggregateData(uint32_t colIndex) const;
 
   uint64_t getNullValue(uint32_t colIndex) const;
   bool isNullValue(uint32_t colIndex) const;
@@ -1389,7 +1391,7 @@ inline void Row::setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<
   *((uint32_t*)&data[offsets[colIndex] + 4]) = len;
 }
 
-inline void Row::setAggregateData(boost::shared_ptr<GroupConcatAg> agData, uint32_t colIndex) {
+inline void Row::setAggregateData(boost::shared_ptr<joblist::GroupConcatAg> agData, uint32_t colIndex) {
   if (!aggregateDataStore) {
     throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
   }
@@ -1398,7 +1400,7 @@ inline void Row::setAggregateData(boost::shared_ptr<GroupConcatAg> agData, uint3
   *((uint32_t*)&data[offsets[colIndex]]) = pos;
 }
 
-inline GroupConcatAg *Row::getAggregateData(uint32_t colIndex) const {
+inline joblist::GroupConcatAg *Row::getAggregateData(uint32_t colIndex) const {
   if (!aggregateDataStore) {
     throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
   }
