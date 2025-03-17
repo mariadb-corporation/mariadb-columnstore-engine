@@ -347,23 +347,23 @@ bool ResourceManager::userPriorityEnabled() const
 // If both have space, return true.
 bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience)
 {
-  bool ret1 = (totalUmMemLimit.fetch_sub(amount, std::memory_order_relaxed) >= 0);
+  bool ret1 = (atomicops::atomicSubRef(totalUmMemLimit, amount) >= 0);
   bool ret2 = sessionLimit ? (atomicops::atomicSub(sessionLimit.get(), amount) >= 0) : ret1;
 
   uint32_t retryCounter = 0, maxRetries = 20;  // 10s delay
 
   while (patience && !(ret1 && ret2) && retryCounter++ < maxRetries)
   {
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
     sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
     usleep(500000);
-    ret1 = (totalUmMemLimit.fetch_sub(amount, std::memory_order_relaxed) >= 0);
+    ret1 = (atomicops::atomicSubRef(totalUmMemLimit, amount) >= 0);
     ret2 = sessionLimit ? (atomicops::atomicSub(sessionLimit.get(), amount) >= 0) : ret1;
   }
   if (!(ret1 && ret2))
   {
     // If  we  didn't  get any memory, restore the counters.
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
     sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
   }
   return (ret1 && ret2);
@@ -372,20 +372,20 @@ bool ResourceManager::getMemory(int64_t amount, boost::shared_ptr<int64_t>& sess
 // The amount type is unsafe if amount close to max<int64_t> that is unrealistic in 2024.
 bool ResourceManager::getMemory(int64_t amount, bool patience)
 {
-  bool ret1 = (totalUmMemLimit.fetch_sub(amount, std::memory_order_relaxed) >= 0);
+  bool ret1 = (atomicops::atomicSubRef(totalUmMemLimit, amount) >= 0);
 
   uint32_t retryCounter = 0, maxRetries = 20;  // 10s delay
 
   while (patience && !ret1 && retryCounter++ < maxRetries)
   {
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
     usleep(500000);
-    ret1 = (totalUmMemLimit.fetch_sub(amount, std::memory_order_relaxed) >= 0);
+    ret1 = (atomicops::atomicSubRef(totalUmMemLimit, amount) >= 0);
   }
   if (!ret1)
   {
     // If  we  didn't  get any memory, restore the counters.
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
   }
   return ret1;
 }

@@ -22,6 +22,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdlib>
+#include "atomicops.h"
 
 namespace allocators
 {
@@ -74,10 +75,10 @@ class CountingAllocator
       assert(lastMemoryLimitCheckpointDiff > 0);
 
       auto currentGlobalMemoryLimit =
-          memoryLimit_->fetch_sub(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+          atomicops::atomicSubRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
       if (currentGlobalMemoryLimit < memoryLimitLowerBound_)
       {
-        memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+        atomicops::atomicAddRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
         throw std::bad_alloc();
       }
       lastMemoryLimitCheckpoint_ += lastMemoryLimitCheckpointDiff;
@@ -147,7 +148,7 @@ class CountingAllocator
               : diffSinceLastCheckPoint + sizeToDeallocate;
 
       assert(lastMemoryLimitCheckpointDiff > 0);
-      memoryLimit_->fetch_add(lastMemoryLimitCheckpointDiff, std::memory_order_relaxed);
+      atomicops::atomicAddRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
 
       lastMemoryLimitCheckpoint_ -= (lastMemoryLimitCheckpoint_ == 0) ? 0 : lastMemoryLimitCheckpointDiff;
     }

@@ -327,11 +327,11 @@ class ResourceManager
   bool getMemory(int64_t amount, bool patience = true);
   inline void returnMemory(int64_t amount)
   {
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
   }
   inline void returnMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
   {
-    totalUmMemLimit.fetch_add(amount, std::memory_order_relaxed);
+    atomicops::atomicAddRef(totalUmMemLimit, amount);
     sessionLimit ? atomicops::atomicAdd(sessionLimit.get(), amount) : 0;
   }
   inline int64_t availableMemory() const
