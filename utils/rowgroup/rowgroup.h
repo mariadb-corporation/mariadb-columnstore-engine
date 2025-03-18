@@ -58,7 +58,8 @@
 #include "execinfo.h"
 
 // Workaround for my_global.h #define of isnan(X) causing a std::std namespace
-namespace joblist {
+namespace joblist
+{
 class GroupConcatAg;
 }
 
@@ -172,8 +173,14 @@ class StringStore
   {
     return fUseStoreStringMutex;
   }
-  void useOnlyLongStrings(bool b) { fUseOnlyLongStrings = b; }
-  bool useOnlyLongStrings() const { return fUseOnlyLongStrings; }
+  void useOnlyLongStrings(bool b)
+  {
+    fUseOnlyLongStrings = b;
+  }
+  bool useOnlyLongStrings() const
+  {
+    return fUseOnlyLongStrings;
+  }
 
   // This is an overlay b/c the underlying data needs to be any size,
   // and alloc'd in one chunk.  data can't be a separate dynamic chunk.
@@ -257,10 +264,14 @@ class UserDataStore
 
 struct GroupConcat;
 
-class AggregateDataStore {
-public:
+class AggregateDataStore
+{
+ public:
   AggregateDataStore() = default;
-  explicit AggregateDataStore(const std::vector<boost::shared_ptr<GroupConcat>>& groupConcat): fGroupConcat(groupConcat) {}
+  explicit AggregateDataStore(const std::vector<boost::shared_ptr<GroupConcat>>& groupConcat)
+   : fGroupConcat(groupConcat)
+  {
+  }
   ~AggregateDataStore() = default;
   AggregateDataStore(const AggregateDataStore&) = delete;
   AggregateDataStore(AggregateDataStore&&) = delete;
@@ -274,7 +285,8 @@ public:
   boost::shared_ptr<joblist::GroupConcatAg> getAggregateData(uint32_t pos) const;
 
   RGDataSizeType getDataSize() const;
-private:
+
+ private:
   friend class RGData;
   std::vector<boost::shared_ptr<GroupConcat>> fGroupConcat;
   std::vector<boost::shared_ptr<joblist::GroupConcatAg>> fData;
@@ -377,7 +389,8 @@ class Row
     inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u) : data(d), strings(s), userDataStore(u)
     {
     }
-    inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u, AggregateDataStore* a) : data(d), strings(s), userDataStore(u), aggregateDataStore(a)
+    inline Pointer(uint8_t* d, StringStore* s, UserDataStore* u, AggregateDataStore* a)
+     : data(d), strings(s), userDataStore(u), aggregateDataStore(a)
     {
     }
     uint8_t* data = nullptr;
@@ -668,8 +681,8 @@ class Row
   bool hasLongStringField = false;
   uint32_t sTableThreshold = 20;
   std::shared_ptr<bool[]> forceInline;
-  UserDataStore* userDataStore = nullptr;  // For UDAF
-  AggregateDataStore* aggregateDataStore = nullptr; // group_concat & json_arrayagg
+  UserDataStore* userDataStore = nullptr;            // For UDAF
+  AggregateDataStore* aggregateDataStore = nullptr;  // group_concat & json_arrayagg
 
   friend class RowGroup;
 };
@@ -1287,7 +1300,7 @@ inline void Row::setUintField(uint64_t val, uint32_t colIndex)
 template <int len>
 inline void Row::setIntField(int64_t val, uint32_t colIndex)
 {
-//	idbassert(getColumnWidth(colIndex) == len);
+  //	idbassert(getColumnWidth(colIndex) == len);
   switch (len)
   {
     case 1: *((int8_t*)&data[offsets[colIndex]]) = val; break;
@@ -1391,17 +1404,21 @@ inline void Row::setUserData(mcsv1sdk::mcsv1Context& context, boost::shared_ptr<
   *((uint32_t*)&data[offsets[colIndex] + 4]) = len;
 }
 
-inline void Row::setAggregateData(boost::shared_ptr<joblist::GroupConcatAg> agData, uint32_t colIndex) {
-  if (!aggregateDataStore) {
+inline void Row::setAggregateData(boost::shared_ptr<joblist::GroupConcatAg> agData, uint32_t colIndex)
+{
+  if (!aggregateDataStore)
+  {
     throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
   }
 
-  uint32_t pos = aggregateDataStore->storeAggregateData(agData );
+  uint32_t pos = aggregateDataStore->storeAggregateData(agData);
   *((uint32_t*)&data[offsets[colIndex]]) = pos;
 }
 
-inline joblist::GroupConcatAg *Row::getAggregateData(uint32_t colIndex) const {
-  if (!aggregateDataStore) {
+inline joblist::GroupConcatAg* Row::getAggregateData(uint32_t colIndex) const
+{
+  if (!aggregateDataStore)
+  {
     throw std::logic_error("Row::getAggregateData: no aggregateDataStore");
   }
 
@@ -1606,10 +1623,19 @@ class RowGroup : public messageqcpp::Serializeable
 
   inline bool usesStringTable() const;
   inline void setUseStringTable(bool);
-  void setUseOnlyLongString(bool b) { useOnlyLongStrings = b; }
-  bool usesOnlyLongString() const { return useOnlyLongStrings ; }
+  void setUseOnlyLongString(bool b)
+  {
+    useOnlyLongStrings = b;
+  }
+  bool usesOnlyLongString() const
+  {
+    return useOnlyLongStrings;
+  }
   void setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats = {});
-  bool usesAggregateDataStore() const { return useAggregateDataStore; }
+  bool usesAggregateDataStore() const
+  {
+    return useAggregateDataStore;
+  }
 
   bool hasLongString() const
   {
@@ -1655,7 +1681,10 @@ class RowGroup : public messageqcpp::Serializeable
 
   const CHARSET_INFO* getCharset(uint32_t col);
 
-  const auto& getGroupConcats() const { return fGroupConcats; }
+  const auto& getGroupConcats() const
+  {
+    return fGroupConcats;
+  }
 
  private:
   uint32_t columnCount = 0;
@@ -2275,11 +2304,8 @@ inline void RGData::getRow(uint32_t num, Row* row)
 {
   idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
   uint32_t size = row->getSize();
-  row->setData(
-      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)],
-       strings.get(),
-       userDataStore.get(),
-       aggregateDataStore.get()));
+  row->setData(Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(),
+                            userDataStore.get(), aggregateDataStore.get()));
 }
 
 }  // namespace rowgroup

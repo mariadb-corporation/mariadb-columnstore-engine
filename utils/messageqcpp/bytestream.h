@@ -444,7 +444,6 @@ class ByteStream : public Serializeable
   EXPORT static const BSSizeType ISSOverhead =
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
-
   friend class ::ByteStreamTestSuite;
 
  protected:

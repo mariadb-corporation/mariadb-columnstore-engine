@@ -161,7 +161,8 @@ void StringStore::serialize(ByteStream& bs) const
   bs << (uint8_t)useOnlyLongStrings();
   RGDataSizeType sz = longStrings.size();
   bs << sz;
-  for (const auto& ls : longStrings) {
+  for (const auto& ls : longStrings)
+  {
     mc = reinterpret_cast<MemChunk*>(ls.get());
     bs.append(ls.get(), mc->currentSize + sizeof(*mc));
   }
@@ -198,7 +199,8 @@ void StringStore::deserialize(ByteStream& bs)
   useOnlyLongStrings(tmp8);
   bs >> size;
   longStrings.resize(size);
-  for (i = 0; i < size; i++) {
+  for (i = 0; i < size; i++)
+  {
     mc = reinterpret_cast<MemChunk*>(bs.buf());
     longStrings[i].reset(new uint8_t[mc->currentSize + sizeof(*mc)]);
     memcpy(longStrings[i].get(), bs.buf(), mc->currentSize + sizeof(*mc));
@@ -208,8 +210,8 @@ void StringStore::deserialize(ByteStream& bs)
 
 void StringStore::clear()
 {
-  vector<std::shared_ptr<uint8_t[]> > emptyv;
-  vector<std::shared_ptr<uint8_t[]> > emptyv2;
+  vector<std::shared_ptr<uint8_t[]>> emptyv;
+  vector<std::shared_ptr<uint8_t[]>> emptyv2;
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
   empty = true;
@@ -315,33 +317,39 @@ void UserDataStore::deserialize(ByteStream& bs)
   return;
 }
 
-void AggregateDataStore::serialize(messageqcpp::ByteStream &bs) const {
+void AggregateDataStore::serialize(messageqcpp::ByteStream& bs) const
+{
   uint64_t size = fGroupConcat.size();
   bs << size;
-  for (const auto& gc: fGroupConcat) {
+  for (const auto& gc : fGroupConcat)
+  {
     gc->serialize(bs);
   }
   size = fData.size();
   bs << size;
-  for (const auto& gca: fData) {
+  for (const auto& gca : fData)
+  {
     bs << gca->getGroupConcatId();
     gca->serialize(bs);
   }
 }
 
-void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs) {
+void AggregateDataStore::deserialize(messageqcpp::ByteStream& bs)
+{
   fGroupConcat.clear();
   fData.clear();
   uint64_t size;
   bs >> size;
   fGroupConcat.resize(size);
-  for (uint64_t i = 0; i < size; i++) {
+  for (uint64_t i = 0; i < size; i++)
+  {
     fGroupConcat[i].reset(new GroupConcat());
     fGroupConcat[i]->deserialize(bs);
   }
   bs >> size;
   fData.resize(size);
-  for (uint64_t i = 0; i < size; i++) {
+  for (uint64_t i = 0; i < size; i++)
+  {
     uint32_t gc_id;
     bs >> gc_id;
     idbassert(gc_id < fGroupConcat.size());
@@ -350,22 +358,27 @@ void AggregateDataStore::deserialize(messageqcpp::ByteStream &bs) {
   }
 }
 
-uint32_t AggregateDataStore::storeAggregateData(boost::shared_ptr<joblist::GroupConcatAg> &data) {
+uint32_t AggregateDataStore::storeAggregateData(boost::shared_ptr<joblist::GroupConcatAg>& data)
+{
   fData.emplace_back(data);
   return fData.size() - 1;
 }
 
-boost::shared_ptr<joblist::GroupConcatAg> AggregateDataStore::getAggregateData(uint32_t pos) const {
+boost::shared_ptr<joblist::GroupConcatAg> AggregateDataStore::getAggregateData(uint32_t pos) const
+{
   idbassert(pos < fData.size());
   return fData[pos];
 }
 
-RGDataSizeType AggregateDataStore::getDataSize() const {
+RGDataSizeType AggregateDataStore::getDataSize() const
+{
   RGDataSizeType size = 0;
-  for (const auto& gc: fGroupConcat) {
+  for (const auto& gc : fGroupConcat)
+  {
     size += gc->getDataSize();
   }
-  for (const auto& gca: fData) {
+  for (const auto& gca : fData)
+  {
     size += gca->getDataSize();
   }
   return size;
@@ -376,12 +389,14 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   RGDataSizeType s = rg.getDataSize(rowCount);
   rowData.reset(new uint8_t[s]);
 
-  if (rg.usesStringTable() && rowCount > 0) {
+  if (rg.usesStringTable() && rowCount > 0)
+  {
     strings.reset(new StringStore());
     strings->useOnlyLongStrings(rg.usesOnlyLongString());
   }
 
-  if (rg.usesAggregateDataStore()) {
+  if (rg.usesAggregateDataStore())
+  {
     aggregateDataStore.reset(new AggregateDataStore(rg.getGroupConcats()));
   }
 
@@ -390,7 +405,7 @@ RGData::RGData(const RowGroup& rg, uint32_t rowCount)
   rowSize = rg.getRowSize();
 }
 
-RGData::RGData(const RowGroup& rg): RGData(rg, rgCommonSize)
+RGData::RGData(const RowGroup& rg) : RGData(rg, rgCommonSize)
 {
 }
 
@@ -399,14 +414,16 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
   rowData.reset(new uint8_t[rg.getDataSize(rowCount)]);
   userDataStore.reset();
 
-  if (rg.usesStringTable() || rg.usesOnlyLongString()) {
+  if (rg.usesStringTable() || rg.usesOnlyLongString())
+  {
     strings.reset(new StringStore());
     strings->useOnlyLongStrings(rg.usesOnlyLongString());
   }
   else
     strings.reset();
 
-  if (rg.usesAggregateDataStore()) {
+  if (rg.usesAggregateDataStore())
+  {
     aggregateDataStore.reset(new AggregateDataStore(rg.getGroupConcats()));
   }
   else
@@ -1313,13 +1330,18 @@ void RowGroup::deserialize(ByteStream& bs)
   charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
-void RowGroup::setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats) {
+void RowGroup::setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats)
+{
   idbassert(!b || !group_concats.empty());
-  if (useAggregateDataStore && !b) {
+  if (useAggregateDataStore && !b)
+  {
     fGroupConcats.clear();
-  } else if (b) {
+  }
+  else if (b)
+  {
     fGroupConcats.assign(group_concats.begin(), group_concats.end());
-    if (rgData) {
+    if (rgData)
+    {
       rgData->aggregateDataStore.reset(new AggregateDataStore(fGroupConcats));
       aggregateDataStore = rgData->aggregateDataStore.get();
     }

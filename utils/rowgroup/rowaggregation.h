@@ -327,7 +327,7 @@ struct ConstantAggData
 typedef boost::shared_ptr<RowAggGroupByCol> SP_ROWAGG_GRPBY_t;
 typedef boost::shared_ptr<RowAggFunctionCol> SP_ROWAGG_FUNC_t;
 
-struct GroupConcat: public messageqcpp::Serializeable
+struct GroupConcat : public messageqcpp::Serializeable
 {
   // GROUP_CONCAT(DISTINCT col1, 'const', col2 ORDER BY col3 desc SEPARATOR 'sep')
   std::vector<std::pair<uint32_t, uint32_t>> fGroupCols;  // columns to concatenate, and position
@@ -535,7 +535,7 @@ class RowAggregation : public messageqcpp::Serializeable
   virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
   virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
   void mergeStatistics(const Row&, uint64_t colOut, uint64_t colAux);
-  void mergeGroupConcat(const Row &rowIn, uint64_t colOut);
+  void mergeGroupConcat(const Row& rowIn, uint64_t colOut);
 
   virtual void doBitOp(const Row&, int64_t, int64_t, int);
   virtual void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx,

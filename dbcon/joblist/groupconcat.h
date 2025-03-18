@@ -26,11 +26,11 @@
 #include <vector>
 #include <boost/scoped_ptr.hpp>
 
-#include "groupconcatcolumn.h" // GroupConcatColumn
-#include "returnedcolumn.h"    // SRCP
-#include "rowgroup.h"          // RowGroup
-#include "rowaggregation.h"    // SP_GroupConcat
-#include "limitedorderby.h"    // IdbOrderBy
+#include "groupconcatcolumn.h"  // GroupConcatColumn
+#include "returnedcolumn.h"     // SRCP
+#include "rowgroup.h"           // RowGroup
+#include "rowaggregation.h"     // SP_GroupConcat
+#include "limitedorderby.h"     // IdbOrderBy
 
 namespace joblist
 {
@@ -70,23 +70,26 @@ class GroupConcatInfo
 class GroupConcatAg
 {
  public:
-   explicit GroupConcatAg(rowgroup::SP_GroupConcat&, bool isJsonArrayAgg = false);
-   ~GroupConcatAg();
+  explicit GroupConcatAg(rowgroup::SP_GroupConcat&, bool isJsonArrayAgg = false);
+  ~GroupConcatAg();
 
-   void initialize();
-   void processRow(const rowgroup::Row&);
-   void merge(const rowgroup::Row&, uint64_t);
-   boost::scoped_ptr<GroupConcator>& concator()
-   {
-     return fConcator;
-   }
+  void initialize();
+  void processRow(const rowgroup::Row&);
+  void merge(const rowgroup::Row&, uint64_t);
+  boost::scoped_ptr<GroupConcator>& concator()
+  {
+    return fConcator;
+  }
 
-   uint8_t* getResult();
+  uint8_t* getResult();
 
-  uint32_t getGroupConcatId() const { return fGroupConcat->id; }
+  uint32_t getGroupConcatId() const
+  {
+    return fGroupConcat->id;
+  }
 
-  void serialize(messageqcpp::ByteStream &bs) const;
-  void deserialize(messageqcpp::ByteStream &bs);
+  void serialize(messageqcpp::ByteStream& bs) const;
+  void deserialize(messageqcpp::ByteStream& bs);
 
   rowgroup::RGDataSizeType getDataSize() const;
 
@@ -110,7 +113,9 @@ using SP_GroupConcatAg = boost::shared_ptr<GroupConcatAg>;
 class GroupConcator
 {
  public:
-  explicit GroupConcator(bool isJsonArrayAgg): fIsJsonArrayAgg(isJsonArrayAgg) {}
+  explicit GroupConcator(bool isJsonArrayAgg) : fIsJsonArrayAgg(isJsonArrayAgg)
+  {
+  }
   virtual ~GroupConcator() = default;
 
   virtual void initialize(const rowgroup::SP_GroupConcat&);
@@ -123,8 +128,8 @@ class GroupConcator
 
   virtual const std::string toString() const;
 
-  virtual void serialize(messageqcpp::ByteStream &) const;
-  virtual void deserialize(messageqcpp::ByteStream &);
+  virtual void serialize(messageqcpp::ByteStream&) const;
+  virtual void deserialize(messageqcpp::ByteStream&);
   virtual rowgroup::RGDataSizeType getDataSize() const = 0;
 
  protected:
@@ -146,7 +151,9 @@ class GroupConcator
 class GroupConcatNoOrder : public GroupConcator
 {
  public:
-  explicit GroupConcatNoOrder(bool isJsonArrayAgg): GroupConcator(isJsonArrayAgg) {}
+  explicit GroupConcatNoOrder(bool isJsonArrayAgg) : GroupConcator(isJsonArrayAgg)
+  {
+  }
   ~GroupConcatNoOrder() override;
 
   void initialize(const rowgroup::SP_GroupConcat&) override;
@@ -157,10 +164,13 @@ class GroupConcatNoOrder : public GroupConcator
   uint8_t* getResultImpl(const std::string& sep) override;
   // uint8_t* getResult(const std::string& sep);
 
-  void serialize(messageqcpp::ByteStream &) const override;
-  void deserialize(messageqcpp::ByteStream &) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void deserialize(messageqcpp::ByteStream&) override;
 
-  rowgroup::RGDataSizeType getDataSize() const override { return fMemSize; }
+  rowgroup::RGDataSizeType getDataSize() const override
+  {
+    return fMemSize;
+  }
 
   const std::string toString() const override;
 
@@ -187,8 +197,8 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
   void processRow(const rowgroup::Row&) override;
   uint64_t getKeyLength() const;
 
-  void serialize(messageqcpp::ByteStream &) const override;
-  void deserialize(messageqcpp::ByteStream &) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void deserialize(messageqcpp::ByteStream&) override;
 
   rowgroup::RGDataSizeType getDataSize() const override;
 
@@ -202,23 +212,26 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
  protected:
   struct Hasher
   {
-   GroupConcatOrderBy* ts;
-   utils::Hasher_r h;
-   uint32_t colCount;
+    GroupConcatOrderBy* ts;
+    utils::Hasher_r h;
+    uint32_t colCount;
 
-   Hasher(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c) {
-   }
-   uint64_t operator()(const rowgroup::Row::Pointer &) const;
+    Hasher(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c)
+    {
+    }
+    uint64_t operator()(const rowgroup::Row::Pointer&) const;
   };
 
-  struct Eq {
-   GroupConcatOrderBy* ts;
-   uint32_t colCount;
+  struct Eq
+  {
+    GroupConcatOrderBy* ts;
+    uint32_t colCount;
 
-   Eq(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c) {
-   }
+    Eq(GroupConcatOrderBy* t, uint32_t c) : ts(t), colCount(c)
+    {
+    }
 
-   bool operator()(const rowgroup::Row::Pointer &, const rowgroup::Row::Pointer &) const;
+    bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
   };
 
   using DistinctMap = std::unordered_map<rowgroup::Row::Pointer, uint64_t, Hasher, Eq>;

@@ -45,7 +45,8 @@ GroupConcatColumn::GroupConcatColumn(bool isJsonArrayAgg) : AggregateColumn(), f
 {
 }
 
-GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID, bool isJsonArrayAgg) : AggregateColumn(sessionID), fIsJsonArrayAgg(isJsonArrayAgg)
+GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID, bool isJsonArrayAgg)
+ : AggregateColumn(sessionID), fIsJsonArrayAgg(isJsonArrayAgg)
 {
 }
 
@@ -64,12 +65,14 @@ GroupConcatColumn::GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_
 const string GroupConcatColumn::toString() const
 {
   ostringstream output;
-  if (fIsJsonArrayAgg) {
+  if (fIsJsonArrayAgg)
+  {
     output << "JsonArrayAggColumn " << data() << endl;
     output << AggregateColumn::toString() << endl;
     output << "Json Array Order Columns: " << endl;
   }
-  else {
+  else
+  {
     output << "GroupConcatColumn " << data() << endl;
     output << AggregateColumn::toString() << endl;
     output << "Group Concat Order Columns: " << endl;

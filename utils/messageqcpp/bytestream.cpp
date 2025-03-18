@@ -384,7 +384,6 @@ ByteStream& ByteStream::operator>>(utils::NullString& s)
   return *this;
 }
 
-
 ByteStream& ByteStream::operator>>(uint8_t*& bpr)
 {
   peek(bpr);
@@ -611,7 +610,6 @@ void ByteStream::needAtLeast(BSSizeType amount)
   if (currentSpace < amount)
     growBuf(fMaxLen + amount);
 }
-
 
 ByteStream& ByteStream::operator<<(const ByteStream& bs)
 {
