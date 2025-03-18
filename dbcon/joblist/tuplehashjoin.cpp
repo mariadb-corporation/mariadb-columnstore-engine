@@ -615,7 +615,7 @@ void TupleHashJoinStep::hjRunner()
 
   if (fTableOID1 >= 3000)
   {
-    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1, QueryTeleClient::timeNowms());
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1, QueryTeleClient::timeNowms(), 0, 0);
     postStepStartTele(sts);
   }
 
@@ -952,7 +952,7 @@ void TupleHashJoinStep::hjRunner()
 
   if (fTableOID1 >= 3000)
   {
-    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, QueryTeleClient::timeNowms(), 1);
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, QueryTeleClient::timeNowms(), 1, 0);
     postStepSummaryTele(sts);
   }
 }

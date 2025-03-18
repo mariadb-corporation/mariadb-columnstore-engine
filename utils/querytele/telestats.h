@@ -175,7 +175,7 @@ struct StepTeleStats
   // Constructor for creating a stats object with time tracking
   StepTeleStats(const boost::uuids::uuid& qUuid, const boost::uuids::uuid& sUuid,
                 STType msgType, int32_t totalWork, int64_t timeStamp,
-                int32_t completedWork = 0, int64_t rowCount = 0)
+                int32_t completedWork, int64_t rowCount)
     : StepTeleStats(qUuid, sUuid, msgType, totalWork, completedWork, rowCount) // Delegate to base constructor
   {
     if (msgType == ST_START)
