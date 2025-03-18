@@ -446,6 +446,10 @@ fix_config_files()
         fi
     fi
 
+    message Setting lowercase for tablenames and utf-8 as default encoding
+    sed -i "/^.mariadb.$/a lower_case_table_names=1" "$CONFIG_DIR/server.cnf"
+    sed -i "/^.client.$/a default-character-set=utf8" "$CONFIG_DIR/client.cnf"
+
     message Reloading systemd
     systemctl daemon-reload
 }
