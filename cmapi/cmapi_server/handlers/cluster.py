@@ -37,7 +37,7 @@ def toggle_cluster_state(
     :type config: str
     """
     if action == ClusterAction.START:
-        maintainance_flag = True
+        maintainance_flag = False
     elif action == ClusterAction.STOP:
         maintainance_flag = True
     else:
