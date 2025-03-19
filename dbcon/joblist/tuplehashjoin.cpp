@@ -365,30 +365,6 @@ void TupleHashJoinStep::outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> 
   }
 }
 
-void TupleHashJoinStep::outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> joiner)
-{
-  boost::unique_lock<boost::mutex> sl(saneErrMsg);
-
-  if (cancelled())
-    return;
-  if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
-  {
-    joinIsTooBig = true;
-    ostringstream oss;
-    oss << "(" << __LINE__ << ") " << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-    fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-    errorMessage(oss.str());
-    status(logging::ERR_JOIN_TOO_BIG);
-    cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
-    abort();
-  }
-  else if (allowDJS)
-  {
-    joiner->setConvertToDiskJoin();
-    // TODO RGData that triggers this path is lost. Need to store it to pass it future.
-  }
-}
-
 /* Index is which small input to read. */
 void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* jobs)
 {

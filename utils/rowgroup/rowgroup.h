@@ -609,7 +609,6 @@ class Row
   }
 
   const CHARSET_INFO* getCharset(uint32_t col) const;
- inline bool inStringTable(uint32_t col) const;
 
  private:
   inline bool inStringTable(uint32_t col) const;

@@ -52,7 +52,7 @@ class ReservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 {
  public:
   typedef typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type size_type;
-  explicit explicit ReservablePQ(size_type capacity, std::atomic<int64_t>* memoryLimit,
+  explicit ReservablePQ(size_type capacity, std::atomic<int64_t>* memoryLimit,
                     const int64_t checkPointStepSize = allocators::CheckPointStepSize,
                     const int64_t lowerBound = allocators::MemoryLimitLowerBound)
     : std::priority_queue<_Tp, _Sequence, _Compare>(_Compare(),
