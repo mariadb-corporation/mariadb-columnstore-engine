@@ -606,7 +606,6 @@ void ByteStream::swap(ByteStream& rhs)
   std::swap(allocator, rhs.allocator);
 }
 
-// WIP use allocator
 ifstream& operator>>(ifstream& ifs, ByteStream& bs)
 {
   int ifs_len;

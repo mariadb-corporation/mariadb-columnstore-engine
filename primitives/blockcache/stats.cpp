@@ -176,7 +176,6 @@ class StatMon
     sigset_t sigset;
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGPIPE);
-    // sigaddset(&sigset, SIGUSR1);
     sigaddset(&sigset, SIGUSR2);
     pthread_sigmask(SIG_BLOCK, &sigset, 0);
   }

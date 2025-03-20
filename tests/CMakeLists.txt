@@ -29,6 +29,7 @@ if (WITH_UNITTESTS)
 
     #GoogleTest tests
     add_executable(rowgroup_tests rowgroup-tests.cpp)
+    target_compile_options(rowgroup_tests PRIVATE -Wno-sign-compare)
     add_dependencies(rowgroup_tests googletest)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rowgroup_tests TEST_PREFIX columnstore:)
@@ -75,14 +76,14 @@ if (WITH_UNITTESTS)
     target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET fair_threadpool_test TEST_PREFIX columnstore:)
 
-    set_source_files_properties(counting_allocator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare")
     add_executable(counting_allocator counting_allocator.cpp)
+    target_compile_options(counting_allocator PRIVATE -Wno-sign-compare)
     add_dependencies(counting_allocator googletest)
     target_link_libraries(counting_allocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET counting_allocator TEST_PREFIX columnstore:)
 
-    set_source_files_properties(poolallocator.cpp PROPERTIES COMPILE_FLAGS "-Wno-sign-compare")
     add_executable(poolallocator poolallocator.cpp)
+    target_compile_options(poolallocator PRIVATE -Wno-sign-compare)
     add_dependencies(poolallocator googletest)
     target_link_libraries(poolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET poolallocator TEST_PREFIX columnstore:)
@@ -101,7 +102,7 @@ if (WITH_UNITTESTS)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 endif()
-# -Werror=sign-compare
+
 if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     find_package(benchmark REQUIRED)
     add_executable(primitives_scan_bench primitives_scan_bench.cpp)
