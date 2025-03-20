@@ -157,7 +157,13 @@ def active_operation():
 
 @cherrypy.tools.register('before_handler', priority=82)
 def has_active_nodes():
-    """Check if there are any active nodes in the cluster."""
+    """Check if there are any active nodes in the cluster.
+
+    TODO: Remove in next releases due to never used.
+          Now TransactionManager has this check inside.
+          Before removing, have to check all API endpoints without transaction
+          mechanics to potential use of this handler.
+    """
     active_nodes = get_active_nodes()
 
     if len(active_nodes) == 0:
@@ -834,7 +840,6 @@ class ClusterController:
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
-    @cherrypy.tools.has_active_nodes()  # pylint: disable=no-member
     def put_shutdown(self):
         func_name = 'put_shutdown'
         log_begin(module_logger, func_name)
