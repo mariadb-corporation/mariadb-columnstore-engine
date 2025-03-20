@@ -584,6 +584,7 @@ class RowGroupStorage
    , fUniqId(this)
    , fTmpDir(tmpDir)
    , fCompressor(compressor)
+   , fUseDisk(!strict)
   {
     if (rm)
     {
@@ -698,7 +699,7 @@ class RowGroupStorage
               logging::ERR_AGGREGATION_TOO_BIG);
         }
 
-        if (fMM->getFree() < memSz * 2)
+        if (fUseDisk && fMM->getFree() < memSz * 2)
         {
           saveRG(rgid);
           fRGDatas[rgid].reset();
@@ -1157,6 +1158,7 @@ class RowGroupStorage
     ret->fGeneration = gen;
     ret->fCompressor = fCompressor;
     ret->fDumper.reset(new Dumper(fCompressor, fMM.get()));
+    ret->fUseDisk = fUseDisk;
     ret->loadFinalizedInfo();
     return ret;
   }
@@ -1422,6 +1424,7 @@ class RowGroupStorage
   std::string fTmpDir;
   compress::CompressInterface* fCompressor;
   std::unique_ptr<Dumper> fDumper;
+  bool fUseDisk;
 };
 
 /** @brief Internal data for the hashmap */
