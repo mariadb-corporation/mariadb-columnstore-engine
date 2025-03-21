@@ -332,15 +332,14 @@ RGData::RGData(const RowGroup& rg)
     strings.reset(new StringStore());
 
   userDataStore.reset();
-
-columnCount = rg.getColumnCount();
+  columnCount = rg.getColumnCount();
+  rowSize = rg.getRowSize();
 }
 
 
 RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>& _alloc) : alloc(_alloc)
 {
   rowData = boost::allocate_shared<RGDataBufType>(alloc.value(), rg.getMaxDataSize());
-  // rowData = std::make_shared(uint8_t[rg.getMaxDataSize()]);
 
   if (rg.usesStringTable())
   {
@@ -349,6 +348,8 @@ RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>&
   }
 
   userDataStore.reset();
+  rowSize = rg.getRowSize();
+  columnCount = rg.getColumnCount();
 }
 
 void RGData::reinit(const RowGroup& rg, uint32_t rowCount)

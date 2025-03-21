@@ -2203,10 +2203,11 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
-  idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
-  uint32_t size = row->getSize();
+  uint32_t incomingRowSize = row->getSize();
+  idbassert(columnCount == row->getColumnCount() && rowSize == incomingRowSize);
+  
   row->setData(
-      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * incomingRowSize)], strings.get(), userDataStore.get()));
 }
 
 }  // namespace rowgroup
