@@ -14,7 +14,7 @@ SELECT id + 1 AS id, longtxt FROM series WHERE id < 50000
 ) SELECT id, longtxt FROM series);
 SET columnstore_um_mem_limit=64;
 SELECT id, GROUP_CONCAT(longtxt) FROM gc GROUP BY 1 ORDER BY 1 LIMIT 10;
-ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups()[0] MCS-2003: Aggregation/Distinct memory limit is exceeded.
+ERROR HY000: Internal error: TupleAggregateStep::threadedAggregateRowGroups() MCS-2003: Aggregation/Distinct memory limit is exceeded.
 SET columnstore_um_mem_limit=512;
 SELECT id, GROUP_CONCAT(longtxt) FROM gc GROUP BY 1 ORDER BY 1 LIMIT 10;
 id	GROUP_CONCAT(longtxt)
