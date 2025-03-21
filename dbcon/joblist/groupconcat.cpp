@@ -329,14 +329,15 @@ void GroupConcatAg::initialize()
     fRowGroup.resetRowGroup(0);
     fRowGroup.initRow(&fRow);
     fRowGroup.getRow(0, &fRow);
+    fMemSize = fRowGroup.getSizeWithStrings(1);
   }
   else
   {
     fGroupConcat->fRowGroup.initRow(&fRow, true);
     fData.reset(new uint8_t[fRow.getSize()]);
     fRow.setData(rowgroup::Row::Pointer(fData.get()));
+    fMemSize = fRow.getSize();
   }
-  fMemSize = fRowGroup.getSizeWithStrings(1);
 }
 
 void GroupConcatAg::processRow(const rowgroup::Row& inRow)
@@ -1055,7 +1056,7 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream& bs)
 
 void GroupConcatOrderBy::createNewRGData()
 {
-  auto newSize = fRowGroup.getDataSize(fRowsPerRG);
+  auto newSize = fRowGroup.getSizeWithStrings(fRowsPerRG);
 
   fMemSize += newSize;
 
@@ -1069,7 +1070,9 @@ void GroupConcatOrderBy::createNewRGData()
 
 rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const
 {
-  return fMemSize;
+  return fMemSize
+      + fOrderByQueue->capacity() * sizeof(OrderByRow)
+      + fDistinctMap->size() * 32 /* TODO: speculative unordered_map memory consumption per item, replace it with counting allocator */;
 }
 
 void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
