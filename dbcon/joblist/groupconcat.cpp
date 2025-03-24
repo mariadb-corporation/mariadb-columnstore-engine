@@ -813,14 +813,14 @@ void GroupConcator::deserialize(messageqcpp::ByteStream& bs)
   bs >> fTimeZone;
 }
 
-class OrderByRow
+class GroupConcatOrderByRow
 {
  public:
-  OrderByRow(const rowgroup::Row& r, uint64_t rowIdx, ordering::CompareRule& c)
+  GroupConcatOrderByRow(const rowgroup::Row& r, uint64_t rowIdx, ordering::CompareRule& c)
    : fData(r.getPointer()), fIdx(rowIdx), fRule(&c)
   {
   }
-  bool operator<(const OrderByRow& rhs) const
+  bool operator<(const GroupConcatOrderByRow& rhs) const
   {
     return fRule->less(fData, rhs.fData);
   }
@@ -829,10 +829,10 @@ class OrderByRow
   ordering::CompareRule* fRule;
 };
 
-class GroupConcatOrderBy::SortingPQ : public priority_queue<OrderByRow, vector<OrderByRow>, less<OrderByRow>>
+class GroupConcatOrderBy::SortingPQ : public priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>
 {
  public:
-  using BaseType = std::priority_queue<OrderByRow, vector<OrderByRow>, less<OrderByRow>>;
+  using BaseType = std::priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>;
   using size_type = BaseType::size_type;
 
   SortingPQ(size_type capacity) : BaseType()
@@ -840,7 +840,7 @@ class GroupConcatOrderBy::SortingPQ : public priority_queue<OrderByRow, vector<O
     reserve(capacity);
   }
 
-  SortingPQ(const container_type& v) : BaseType(less<OrderByRow>(), v)
+  SortingPQ(const container_type& v) : BaseType(less<GroupConcatOrderByRow>(), v)
   {
   }
 
@@ -1048,7 +1048,7 @@ void GroupConcatOrderBy::deserialize(messageqcpp::ByteStream& bs)
     fRowGroup.setData(fDataVec[gid].get());
     fRowGroup.initRow(&row);
     fRowGroup.getRow(rid, &row);
-    fOrderByQueue->push(OrderByRow(row, idx, fRule));
+    fOrderByQueue->push(GroupConcatOrderByRow(row, idx, fRule));
   }
   fRowGroup.setData(fDataVec.back().get());
   fRowGroup.getRow(fRowGroup.getRowCount() - 1, &fRow0);
@@ -1071,7 +1071,7 @@ void GroupConcatOrderBy::createNewRGData()
 rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const
 {
   return fMemSize
-      + fOrderByQueue->capacity() * sizeof(OrderByRow)
+      + fOrderByQueue->capacity() * sizeof(GroupConcatOrderByRow)
       + fDistinctMap->size() * 32 /* TODO: speculative unordered_map memory consumption per item, replace it with counting allocator */;
 }
 
@@ -1094,7 +1094,7 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
     fRow0.setRid(estLen);
     fRowGroup.incRowCount();
 
-    OrderByRow newRow(fRow0, getCurrentRowIdx(), fRule);
+    GroupConcatOrderByRow newRow(fRow0, getCurrentRowIdx(), fRule);
     fOrderByQueue->push(newRow);
     fCurrentLength += estLen;
 
@@ -1120,7 +1120,7 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
   }
   else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), fOrderByQueue->top().fData))
   {
-    OrderByRow swapRow = fOrderByQueue->top();
+    GroupConcatOrderByRow swapRow = fOrderByQueue->top();
     fRow1.setData(swapRow.fData);
     fOrderByQueue->pop();
     fCurrentLength -= fRow1.getRelRid();
@@ -1160,7 +1160,7 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
 
   while (!go->fOrderByQueue->empty())
   {
-    OrderByRow row = go->fOrderByQueue->top();
+    GroupConcatOrderByRow row = go->fOrderByQueue->top();
     row.fIdx = shiftGroupIdxBy(row.fIdx, shift);
     row.fRule = &fRule;
 
@@ -1182,7 +1182,7 @@ void GroupConcatOrderBy::merge(GroupConcator* gc)
     }
     else if (fOrderByCond.size() > 0 && fRule.less(row.fData, fOrderByQueue->top().fData))
     {
-      OrderByRow swapRow = fOrderByQueue->top();
+      GroupConcatOrderByRow swapRow = fOrderByQueue->top();
       row1.setData(swapRow.fData);
       fOrderByQueue->pop();
       fCurrentLength -= row1.getRelRid();
@@ -1209,7 +1209,7 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
   bool addSep = false;
 
   // need to reverse the order
-  stack<OrderByRow> rowStack;
+  stack<GroupConcatOrderByRow> rowStack;
   while (fOrderByQueue->size() > 0)
   {
     rowStack.push(fOrderByQueue->top());
@@ -1230,7 +1230,7 @@ uint8_t* GroupConcatOrderBy::getResultImpl(const string& sep)
       else
         addSep = true;
 
-      const OrderByRow& topRow = rowStack.top();
+      const GroupConcatOrderByRow& topRow = rowStack.top();
       fRow0.setData(topRow.fData);
       outputRow(oss, fRow0);
       isNull = false;
