@@ -13,7 +13,6 @@ INCLUDE (CheckCXXSourceCompiles)
 STRING(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 STRING(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 
-
 FOREACH(p CMP0135)
   IF(POLICY ${p})
     CMAKE_POLICY(SET ${p} NEW)
@@ -249,12 +248,6 @@ IF (MASK_LONGDOUBLE)
     MY_CHECK_AND_SET_COMPILER_FLAG("-DMASK_LONGDOUBLE")
 ENDIF()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
-endif()
-
 IF (WITH_COLUMNSTORE_ASAN)
     MY_CHECK_AND_SET_COMPILER_FLAG("-U_FORTIFY_SOURCE" DEBUG RELWITHDEBINFO)
     MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fsanitize-address-use-after-scope -fPIC")
@@ -263,6 +256,15 @@ ENDIF()
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
+
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    STRING(REPLACE -Wno-cast-function-type-strict "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition -Wno-cast-function-type-strict")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
+endif()
+
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
 SET (ENGINE_DT_LIB datatypes)
 SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
