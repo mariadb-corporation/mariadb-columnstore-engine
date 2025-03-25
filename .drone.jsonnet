@@ -102,7 +102,7 @@ local platformMap(platform, arch) =
     'debian:12': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bookworm' debian/autobake-deb.sh",
     'ubuntu:20.04': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + ubuntu20_04_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
     'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
-    'ubuntu:24.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
+    'ubuntu:24.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=noble' debian/autobake-deb.sh",
   };
   local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
   'export CLICOLOR_FORCE=1; ' + platform_map[platform] + ' | storage/columnstore/columnstore/build/ansi2txt.sh ' + result + '/build.log';
@@ -161,9 +161,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
-  local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
+  local get_sccache = 'echo getting sccache... && (apt update -y && apt install -y curl || yum install -y curl || true) ' +
+                      '&& curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
                       '&& tar xzf sccache.tar.gz ' +
-                      '&& install sccache*/sccache /usr/local/bin/',
+                      '&& install sccache*/sccache /usr/local/bin/ && echo sccache installed',
 
   local pipeline = self,
 
@@ -776,35 +777,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                //SCCACHE_LOG: 'debug',
              },
              commands: [
-               'cd /mdb/' + builddir,
-               'ls -la ../',
-               'mkdir ' + result,
-               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
-               if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
-               // Remove Debian build flags that could prevent ColumnStore from building
-               "sed -i '/-DPLUGIN_COLUMNSTORE=NO/d' debian/rules",
-               // Disable dh_missing strict check for missing files
-               'sed -i s/--fail-missing/--list-missing/ debian/rules',
-               // Tweak debian packaging stuff
-               'for i in mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
-               "sed -i 's/Depends: galera.*/Depends:/' debian/control",
-               'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
-               // Install build dependencies for deb
-               if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
-               // Change plugin_maturity level
-               // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
-               if (pkg_format == 'deb') then 'apt update -y && apt install -y curl' else if (platform == 'rockylinux:9') then 'yum install -y curl-minimal' else 'yum install -y curl',
-               get_sccache,
-               testPreparation(platform),
-               // disable LTO for 22.04 for now
-               if (platform == 'ubuntu:22.04' || platform == 'ubuntu:24.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
-               platformMap(platform, arch),
-               'sccache --show-stats',
-               // move engine and cmapi packages to one dir to make a repo
-               'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
-               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-               // list storage manager binary
-               'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
+                get_sccache,
+                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh --build-type RelWithDebInfo --distro ' + platform + ' --sccache --build-packages --server-version ' + server,
+                'sccache --show-stats',
              ],
            },
            {
