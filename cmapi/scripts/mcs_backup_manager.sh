@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.13
+# Version: 3.14
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.13"
+mcs_bk_manager_version="3.14"
 start=$(date +%s)
 action=$1
 
@@ -350,6 +350,9 @@ parse_backup_variables() {
 
     # Adjustment for indirect mode
     if [ $mode == "indirect" ]; then skip_locks=true; skip_save_brm=true; fi;
+
+    # check retention_days isnt empty string and is an integer
+    confirm_integer_else_fail "$retention_days" "Retention"
 }
 
 print_backup_help_text() {
@@ -664,8 +667,8 @@ validation_prechecks_for_backup() {
     if [ "$mode" != "direct" ] && [ "$mode" != "indirect" ] ; then printf "\n[!!!] Invalid field --mode: $mode\n"; exit 1; fi
 
     # Poll Variable Checks
-    confirm_numerical_or_decimal_else_fail "$poll_interval" "poll_interval"
-    confirm_numerical_or_decimal_else_fail "$poll_max_wait" "poll_max_wait"
+    confirm_integer_else_fail "$poll_interval" "poll_interval"
+    confirm_integer_else_fail "$poll_max_wait" "poll_max_wait"
     max_poll_attempts=$((poll_max_wait * 60 / poll_interval))
     if [ "$max_poll_attempts" -lt 1 ]; then max_poll_attempts=1; fi;
 
@@ -1093,7 +1096,7 @@ issue_write_locks()
 poll_check_no_active_sql_writes() {
     poll_active_sql_writes_start=$(date +%s)
     printf " - Polling for active Writes ...                      "
-    query="SELECT COUNT(*) FROM information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"
+    query="SELECT COUNT(*) FROM information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '% INSERT %' OR info LIKE '% UPDATE %' OR info LIKE '% DELETE %' OR info LIKE '% LOAD DATA %');"
     attempts=0
     no_writes=false
     while [ "$attempts" -lt "$max_poll_attempts" ]; do
@@ -1111,7 +1114,7 @@ poll_check_no_active_sql_writes() {
             
             if ! $quiet; then 
                 printf "\nActive write operations detected: $active_writes\n"; 
-                mariadb -e "select ID,USER,TIME,LEFT(INFO, 50) from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"
+                mariadb -e "select ID,USER,TIME,LEFT(INFO, 50) from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '% INSERT %' OR info LIKE '% UPDATE %' OR info LIKE '% DELETE %' OR info LIKE '% LOAD DATA %');"
             else 
                 printf "."
             fi;
@@ -1121,7 +1124,7 @@ poll_check_no_active_sql_writes() {
     done
 
     if ! $no_writes; then
-        mariadb -e "select ID,USER,TIME,INFO from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"   
+        mariadb -e "select ID,USER,TIME,INFO from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '% INSERT %' OR info LIKE '% UPDATE %' OR info LIKE '% DELETE %' OR info LIKE '% LOAD DATA %');"   
         handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive write operations detected: $active_writes \n" true
     fi;
     
@@ -3124,6 +3127,8 @@ parse_dbrms_variables() {
                 exit 1;
         esac
     done
+
+    confirm_integer_else_fail "$retention_days" "Retention"
 }
 
 parse_dbrm_restore_variables() {
@@ -3178,6 +3183,20 @@ parse_dbrm_restore_variables() {
     fi
 }
 
+confirm_integer_else_fail() {
+    local input="$1"
+    local variable_name="$2"
+
+    # Regular expression to match integer values
+    if [[ $input =~ ^[0-9]+$ ]]; then
+        return 0
+    else
+        printf "[!] $variable_name = '$input' is not an integer.\n\n"
+        alert "[!] $variable_name = '$input' is not an integer.\n\n"
+        exit 2;
+    fi
+}
+
 confirm_numerical_or_decimal_else_fail() {
     local input="$1"
     local variable_name="$2"
@@ -3213,7 +3232,6 @@ validation_prechecks_for_dbrm_backup() {
 
     # Check numbers
     confirm_numerical_or_decimal_else_fail "$backup_interval_minutes" "Interval"
-    confirm_numerical_or_decimal_else_fail "$retention_days" "Retention"
 
     # Check backup location exists
     if [ ! -d $backup_location ]; then 
