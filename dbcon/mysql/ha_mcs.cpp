@@ -83,9 +83,9 @@ pthread_mutex_t mcs_mutex;
   Function we use in the creation of our hash to get key.
 */
 
-static uchar* mcs_get_key(void* share, size_t* length, my_bool not_used __attribute__((unused)))
+static const uchar* mcs_get_key(const void* share, size_t* length, my_bool not_used __attribute__((unused)))
 {
-  auto* sharePtr = reinterpret_cast<COLUMNSTORE_SHARE*>(share);
+  auto* sharePtr = reinterpret_cast<const COLUMNSTORE_SHARE*>(share);
   *length = sharePtr->table_name_length;
   return (uchar*)sharePtr->table_name;
 }
