@@ -529,6 +529,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
     }
     void operator()()
     {
+      std::string name = "HJSJoinRun" + std::to_string(index);
+      utils::setThreadName(name.c_str());
       HJ->joinRunnerFcn(index);
     }
     TupleHashJoinStep* HJ;

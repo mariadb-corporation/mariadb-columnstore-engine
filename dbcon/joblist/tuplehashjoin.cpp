@@ -1828,7 +1828,10 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
   }
   else
   {
+    // NB In case of OUTER JOIN this loop can produce a lot of RGDatas,
+    // so it is a must to periodically flush from this loop.   
     l_outputRG.getRow(l_outputRG.getRowCount(), &joinedRow);
+    auto flushThreshold = outputDL->maxElements();
 
     for (i = 0; i < joinerOutput[depth].size(); i++, joinedRow.nextRow(), l_outputRG.incRowCount())
     {
@@ -1840,7 +1843,7 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
         uint64_t baseRid = l_outputRG.getBaseRid();
         outputData.push_back(rgData);
         // Count the memory
-        if (UNLIKELY(!getMemory(l_outputRG.getSizeWithStrings())))
+        if (UNLIKELY(outputData.size() > flushThreshold || !getMemory(l_outputRG.getSizeWithStrings())))
         {
           // MCOL-5512
           if (fe2)
