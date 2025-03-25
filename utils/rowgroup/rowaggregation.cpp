@@ -2637,7 +2637,8 @@ void RowAggregationUM::attachGroupConcatAg()
 
     for (uint64_t i = 0; i < fFunctionColGc.size(); i++)
     {
-      if (fFunctionColGc[i]->fAggFunction == ROWAGG_SELECT_SOME)
+      if (fFunctionColGc[i]->fAggFunction != ROWAGG_GROUP_CONCAT &&
+          fFunctionColGc[i]->fAggFunction != ROWAGG_JSON_ARRAY)
       {
         continue;
       }
