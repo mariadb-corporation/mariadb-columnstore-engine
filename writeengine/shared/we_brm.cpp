@@ -58,7 +58,7 @@ namespace WriteEngine
 {
 BRMWrapper* volatile BRMWrapper::m_instance = NULL;
 std::atomic<bool> BRMWrapper::finishReported(false);
-boost::thread_specific_ptr<int> BRMWrapper::m_ThreadDataPtr;
+thread_local int BRMWrapper::m_brmRc = 0;
 boost::mutex BRMWrapper::m_instanceCreateMutex;
 
 bool BRMWrapper::m_useVb = true;
@@ -441,17 +441,7 @@ int BRMWrapper::saveState()
 //------------------------------------------------------------------------------
 void BRMWrapper::saveBrmRc(int brmRc)
 {
-  int* dataPtr = m_ThreadDataPtr.get();
-
-  if (dataPtr == 0)
-  {
-    dataPtr = new int(brmRc);
-    m_ThreadDataPtr.reset(dataPtr);
-  }
-  else
-  {
-    *dataPtr = brmRc;
-  }
+  m_brmRc = brmRc;
 }
 
 //------------------------------------------------------------------------------
@@ -555,13 +545,10 @@ int BRMWrapper::getTableLockInfo(uint64_t lockID, BRM::TableLockInfo* lockInfo, 
 /* static */
 int BRMWrapper::getBrmRc(bool reset)
 {
-  if (m_ThreadDataPtr.get() == 0)
-    return BRM::ERR_OK;
-
-  int brmRc = *m_ThreadDataPtr;
+  int brmRc = m_brmRc;
 
   if (reset)
-    m_ThreadDataPtr.reset(new int(BRM::ERR_OK));
+    m_brmRc = static_cast<int>(BRM::ERR_OK);
 
   return brmRc;
 }
