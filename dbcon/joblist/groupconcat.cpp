@@ -1072,7 +1072,7 @@ rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const
 {
   return fMemSize
       + fOrderByQueue->capacity() * sizeof(GroupConcatOrderByRow)
-      + fDistinctMap->size() * 32 /* TODO: speculative unordered_map memory consumption per item, replace it with counting allocator */;
+      + (fDistinct ? fDistinctMap->size() : 0) * 32 /* TODO: speculative unordered_map memory consumption per item, replace it with counting allocator */;
 }
 
 void GroupConcatOrderBy::processRow(const rowgroup::Row& row)

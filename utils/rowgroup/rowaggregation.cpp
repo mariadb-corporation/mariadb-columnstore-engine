@@ -4505,8 +4505,7 @@ void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t c
 //------------------------------------------------------------------------------
 void RowAggregationUMP2::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::GroupConcatAg* gccAg = *((joblist::GroupConcatAg**)(data + fRow.getOffset(o)));
+  auto* gccAg = fRow.getAggregateData(o);
   gccAg->merge(rowIn, i);
 }
 
@@ -4899,8 +4898,7 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationSubDistinct::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::GroupConcatAg* gccAg = *((joblist::GroupConcatAg**)(data + fRow.getOffset(o)));
+  auto* gccAg = fRow.getAggregateData(o);
   gccAg->merge(rowIn, i);
 }
 
