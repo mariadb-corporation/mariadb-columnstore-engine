@@ -102,6 +102,7 @@ class CountingAllocator
    , memoryLimitLowerBound_(other.memoryLimitLowerBound_)
    , checkPointStepSize_(other.checkPointStepSize_)
   {
+
   }
 
   // Allocate memory for n objects of type T
@@ -131,15 +132,17 @@ class CountingAllocator
   // Deallocate memory for n objects of type T
   void deallocate(T* ptr, std::size_t n) noexcept
   {
-    ::operator delete(ptr);
-
+    // Calculate all size-related values before deletion
     int64_t sizeToDeallocate = n * sizeof(T);
-
     int64_t sizeChangeWDirection =
         (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_) ? -sizeToDeallocate : sizeToDeallocate;
     int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
+    bool needsCheckpoint = needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_);
 
-    if (needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_))
+    // Now safe to delete
+    ::operator delete(ptr);
+
+    if (needsCheckpoint)
     {
       // Invariant is lastMemoryLimitCheckpoint_ >= currentLocalMemoryUsage_ - sizeToDeallocate
       int64_t lastMemoryLimitCheckpointDiff =
@@ -148,11 +151,14 @@ class CountingAllocator
               : diffSinceLastCheckPoint + sizeToDeallocate;
 
       assert(lastMemoryLimitCheckpointDiff > 0);
+
       atomicops::atomicAddRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
 
       lastMemoryLimitCheckpoint_ -= (lastMemoryLimitCheckpoint_ == 0) ? 0 : lastMemoryLimitCheckpointDiff;
     }
+
     currentLocalMemoryUsage_ = currentLocalMemoryUsage_ - sizeToDeallocate;
+
   }
 
   // Equality operators (allocators are equal if they share the same counter)
