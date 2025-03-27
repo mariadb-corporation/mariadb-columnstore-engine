@@ -73,47 +73,47 @@ JSON_VALID(JSON_ARRAYAGG(b))
 1
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1;
 JSON_ARRAYAGG(a)	JSON_ARRAYAGG(b)
-[1,1,2,2,2,2,3,1,1,2,2,2,2,3]	["Hello","World","This","Will","Work","!","Hello","World","This","Will","Work","!"]
+[1,1,2,2,2,2,3,1,1,2,2,2,2,3]	["Hello","World","This","Will","Work","!",null,"Hello","World","This","Will","Work","!",null]
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1 GROUP BY a;
 JSON_ARRAYAGG(a)	JSON_ARRAYAGG(b)
 [1,1,1,1]	["Hello","World","Hello","World"]
 [2,2,2,2,2,2,2,2]	["This","Will","Work","!","This","Will","Work","!"]
-[3,3]	
+[3,3]	[null,null]
 #
 # DISTINCT and LIMIT
 #
 SELECT JSON_ARRAYAGG(b LIMIT 1) FROM t1;
 JSON_ARRAYAGG(b LIMIT 1)
-["Hello","World","This","Will","Work","!","Hello","World","This","Will","Work","!"]
+["Hello","World","This","Will","Work","!",null,"Hello","World","This","Will","Work","!",null]
 SELECT JSON_ARRAYAGG(b LIMIT 2) FROM t1;
 JSON_ARRAYAGG(b LIMIT 2)
-["Hello","World","This","Will","Work","!","Hello","World","This","Will","Work","!"]
+["Hello","World","This","Will","Work","!",null,"Hello","World","This","Will","Work","!",null]
 SELECT JSON_ARRAYAGG(b LIMIT 1) FROM t1 GROUP BY b;
 JSON_ARRAYAGG(b LIMIT 1)
-
 ["!","!"]
 ["Hello","Hello"]
 ["This","This"]
 ["Will","Will"]
 ["Work","Work"]
 ["World","World"]
+[null,null]
 SELECT JSON_ARRAYAGG(b LIMIT 2) FROM t1 GROUP BY a;
 JSON_ARRAYAGG(b LIMIT 2)
-
 ["Hello","World","Hello","World"]
 ["This","Will","Work","!","This","Will","Work","!"]
+[null,null]
 SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 JSON_ARRAYAGG(DISTINCT a)
 [3,2,1]
 SELECT JSON_ARRAYAGG(DISTINCT b) FROM t1;
 JSON_ARRAYAGG(DISTINCT b)
-["Will","World","Work","!","This","Hello"]
+["Will","World","Work",null,"!","This","Hello"]
 SELECT JSON_ARRAYAGG(DISTINCT a LIMIT 2) FROM t1;
 JSON_ARRAYAGG(DISTINCT a LIMIT 2)
 [3,2,1]
 SELECT JSON_ARRAYAGG(DISTINCT b LIMIT 2) FROM t1;
 JSON_ARRAYAGG(DISTINCT b LIMIT 2)
-["Will","World","Work","!","This","Hello"]
+["Will","World","Work",null,"!","This","Hello"]
 #
 # JSON aggregation
 #
@@ -156,7 +156,7 @@ DROP TABLE t1;
 CREATE TABLE t1 (a INT)ENGINE=COLUMNSTORE;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 JSON_ARRAYAGG(a)
-
+NULL
 DROP TABLE t1;
 #
 #
@@ -195,10 +195,10 @@ JSON_ARRAYAGG(DISTINCT a)
 INSERT INTO t1 VALUES (NULL,NULL), (NULL,NULL);
 SELECT JSON_ARRAYAGG(a) FROM t1;
 JSON_ARRAYAGG(a)
-[1,2,3,1,2,3]
+[1,2,3,1,2,3,null,null]
 SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 JSON_ARRAYAGG(DISTINCT a)
-[3,2,1]
+[null,2,3,1]
 DROP TABLE t1;
 CREATE TABLE t1(a VARCHAR(10), b INT)ENGINE=COLUMNSTORE;
 INSERT INTO t1 VALUES (1,1), (2,2), (3,3);
@@ -212,10 +212,10 @@ JSON_ARRAYAGG(DISTINCT a)
 INSERT INTO t1 VALUES (NULL,NULL), (NULL,NULL);
 SELECT JSON_ARRAYAGG(a) FROM t1;
 JSON_ARRAYAGG(a)
-[1,2,3,1,2,3]
+[1,2,3,1,2,3,null,null]
 SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 JSON_ARRAYAGG(DISTINCT a)
-[3,2,1]
+[null,2,3,1]
 DROP TABLE t1;
 #
 #
@@ -233,13 +233,13 @@ JSON_ARRAYAGG(a ORDER BY a ASC)
 INSERT INTO t1 VALUES (NULL);
 SELECT JSON_ARRAYAGG(a) FROM t1;
 JSON_ARRAYAGG(a)
-["red","blue"]
+["red","blue",null]
 SELECT JSON_ARRAYAGG(a ORDER BY a DESC) FROM t1;
 JSON_ARRAYAGG(a ORDER BY a DESC)
-["red","blue"]
+["red","blue",null]
 SELECT JSON_ARRAYAGG(a ORDER BY a ASC) FROM t1;
 JSON_ARRAYAGG(a ORDER BY a ASC)
-["blue","red"]
+[null,"blue","red"]
 DROP TABLE t1;
 set group_concat_max_len=64;
 create table t1 (a varchar(254))ENGINE=COLUMNSTORE;
