@@ -27,8 +27,6 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <boost/thread.hpp>
-#include <boost/thread/tss.hpp>
 
 #include "brm.h"
 #include "we_obj.h"
@@ -466,7 +464,7 @@ class BRMWrapper : public WEObj
   //--------------------------------------------------------------------------
 
   static BRMWrapper* volatile m_instance;
-  static boost::thread_specific_ptr<int> m_ThreadDataPtr;
+  static thread_local int m_brmRc;
   static boost::mutex m_instanceCreateMutex;
 
   EXPORT static bool m_useVb;
