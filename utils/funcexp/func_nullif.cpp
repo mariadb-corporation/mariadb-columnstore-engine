@@ -56,7 +56,14 @@ int64_t Func_nullif::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isN
                                execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   int64_t exp1 = parm[0]->data()->getIntVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
+
   int64_t exp2 = 0;
+
 
   switch (parm[1]->data()->resultType().colDataType)
   {
@@ -236,6 +243,11 @@ uint64_t Func_nullif::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& i
                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   uint64_t exp1 = parm[0]->data()->getUintVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   uint64_t exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -349,6 +361,11 @@ string Func_nullif::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
                               CalpontSystemCatalog::ColType& op_ct)
 {
   string exp1 = parm[0]->data()->getStrVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   CHARSET_INFO* cs = parm[0]->data()->resultType().getCharset();
 
   if (isNull)
@@ -395,6 +412,11 @@ int32_t Func_nullif::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
                                    CalpontSystemCatalog::ColType& ct)
 {
   int64_t exp1 = parm[0]->data()->getDateIntVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   int64_t exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -482,6 +504,11 @@ int64_t Func_nullif::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, b
                                        CalpontSystemCatalog::ColType& ct)
 {
   int64_t exp1 = parm[0]->data()->getDatetimeIntVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   int64_t exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -547,6 +574,11 @@ int64_t Func_nullif::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool&
                                    CalpontSystemCatalog::ColType& ct)
 {
   int64_t exp1 = parm[0]->data()->getTimeIntVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   int64_t exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -598,6 +630,11 @@ int64_t Func_nullif::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, 
                                         CalpontSystemCatalog::ColType& ct)
 {
   int64_t exp1 = parm[0]->data()->getTimestampIntVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   int64_t exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -649,6 +686,11 @@ double Func_nullif::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& i
                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   double exp1 = parm[0]->data()->getDoubleVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   double exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -737,6 +779,11 @@ long double Func_nullif::getLongDoubleVal(rowgroup::Row& row, FunctionParm& parm
                                           execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   long double exp1 = parm[0]->data()->getLongDoubleVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   long double exp2 = 0;
 
   switch (parm[1]->data()->resultType().colDataType)
@@ -838,6 +885,11 @@ execplan::IDB_Decimal Func_nullif::getDecimalVal(rowgroup::Row& row, FunctionPar
                                                  execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   IDB_Decimal exp1 = parm[0]->data()->getDecimalVal(row, isNull);
+
+  // NULL equals anything is NULL, so we return NULL as a value of parm[0]
+  if (isNull)
+    return exp1;
+
   IDB_Decimal exp2;
 
   switch (parm[1]->data()->resultType().colDataType)
