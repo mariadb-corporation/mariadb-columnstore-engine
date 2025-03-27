@@ -498,9 +498,16 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::INT:
       case CalpontSystemCatalog::BIGINT:
       {
-        int64_t intVal = row.getIntField(*i);
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
+        {
+          oss << "null";
+        }
+        else
+        {
+          int64_t intVal = row.getIntField(*i);
 
-        oss << intVal;
+          oss << intVal;
+        }
 
         break;
       }
@@ -508,7 +515,14 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::DECIMAL:
       case CalpontSystemCatalog::UDECIMAL:
       {
-        oss << fixed << row.getDecimalField(*i);
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
+        {
+          oss << "null";
+        }
+        else
+        {
+          oss << fixed << row.getDecimalField(*i);
+        }
         break;
       }
 
@@ -518,18 +532,25 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::UINT:
       case CalpontSystemCatalog::UBIGINT:
       {
-        uint64_t uintVal = row.getUintField(*i);
-        int scale = (int)row.getScale(*i);
-
-        if (scale == 0)
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
         {
-          oss << uintVal;
+          oss << "null";
         }
         else
         {
-          oss << fixed
-              << datatypes::Decimal(datatypes::TSInt128((int128_t)uintVal), scale,
-                                    datatypes::INT128MAXPRECISION);
+          uint64_t uintVal = row.getUintField(*i);
+          int scale = (int)row.getScale(*i);
+
+          if (scale == 0)
+          {
+            oss << uintVal;
+          }
+          else
+          {
+            oss << fixed
+                << datatypes::Decimal(datatypes::TSInt128((int128_t)uintVal), scale,
+                                      datatypes::INT128MAXPRECISION);
+          }
         }
 
         break;
@@ -541,7 +562,8 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       {
         if (fIsJsonArrayAgg)
         {
-          auto maybeJson = row.getStringField(*i).safeString("");  // XXX: MULL??? it is not checked anywhere.
+          auto maybeJson =
+              row.getStringField(*i).safeString("null");  // XXX: MULL??? it is not checked anywhere.
           const auto j = json::parse(maybeJson, nullptr, false);
           if (j.is_discarded())
           {
@@ -562,56 +584,121 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       case CalpontSystemCatalog::DOUBLE:
       case CalpontSystemCatalog::UDOUBLE:
       {
-        oss << setprecision(15) << row.getDoubleField(*i);
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
+        {
+          oss << "null";
+        }
+        else
+        {
+          oss << setprecision(15) << row.getDoubleField(*i);
+        }
         break;
       }
 
       case CalpontSystemCatalog::LONGDOUBLE:
       {
-        oss << setprecision(15) << row.getLongDoubleField(*i);
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
+        {
+          oss << "null";
+        }
+        else
+        {
+          oss << setprecision(15) << row.getLongDoubleField(*i);
+        }
         break;
       }
 
       case CalpontSystemCatalog::FLOAT:
       case CalpontSystemCatalog::UFLOAT:
       {
-        oss << row.getFloatField(*i);
+        if (fIsJsonArrayAgg && row.isNullValue(*i))
+        {
+          oss << "null";
+        }
+        else
+        {
+          oss << row.getFloatField(*i);
+        }
         break;
       }
 
       case CalpontSystemCatalog::DATE:
       {
         if (fIsJsonArrayAgg)
-          oss << std::quoted(DataConvert::dateToString(row.getUintField(*i)));
+        {
+          if (row.isNullValue(*i))
+          {
+            oss << "null";
+          }
+          else
+          {
+            oss << std::quoted(DataConvert::dateToString(row.getUintField(*i)));
+          }
+        }
         else
+        {
           oss << DataConvert::dateToString(row.getUintField(*i));
+        }
         break;
       }
 
       case CalpontSystemCatalog::DATETIME:
       {
         if (fIsJsonArrayAgg)
-          oss << std::quoted(DataConvert::datetimeToString(row.getUintField(*i)));
+        {
+          if (row.isNullValue(*i))
+          {
+            oss << "null";
+          }
+          else
+          {
+            oss << std::quoted(DataConvert::datetimeToString(row.getUintField(*i)));
+          }
+        }
         else
+        {
           oss << DataConvert::datetimeToString(row.getUintField(*i));
+        }
         break;
       }
 
       case CalpontSystemCatalog::TIMESTAMP:
       {
         if (fIsJsonArrayAgg)
-          oss << std::quoted(DataConvert::timestampToString(row.getUintField(*i), fTimeZone));
+        {
+          if (row.isNullValue(*i))
+          {
+            oss << "null";
+          }
+          else
+          {
+            oss << std::quoted(DataConvert::timestampToString(row.getUintField(*i), fTimeZone));
+          }
+        }
         else
+        {
           oss << DataConvert::timestampToString(row.getUintField(*i), fTimeZone);
+        }
         break;
       }
 
       case CalpontSystemCatalog::TIME:
       {
         if (fIsJsonArrayAgg)
-          oss << std::quoted(DataConvert::timeToString(row.getUintField(*i)));
+        {
+          if (row.isNullValue(*i))
+          {
+            oss << "null";
+          }
+          else
+          {
+            oss << std::quoted(DataConvert::timeToString(row.getUintField(*i)));
+          }
+        }
         else
+        {
           oss << DataConvert::timeToString(row.getUintField(*i));
+        }
         break;
       }
 
@@ -621,7 +708,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
       }
     }
 
-    i++;
+    ++i;
   }
 }
 
@@ -832,10 +919,12 @@ class GroupConcatOrderByRow
   ordering::CompareRule* fRule;
 };
 
-class GroupConcatOrderBy::SortingPQ : public priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>
+class GroupConcatOrderBy::SortingPQ
+ : public priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>
 {
  public:
-  using BaseType = std::priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>;
+  using BaseType =
+      std::priority_queue<GroupConcatOrderByRow, vector<GroupConcatOrderByRow>, less<GroupConcatOrderByRow>>;
   using size_type = BaseType::size_type;
 
   SortingPQ(size_type capacity) : BaseType()
@@ -1071,9 +1160,10 @@ void GroupConcatOrderBy::createNewRGData()
 
 rowgroup::RGDataSizeType GroupConcatOrderBy::getDataSize() const
 {
-  return fMemSize
-      + fOrderByQueue->capacity() * sizeof(GroupConcatOrderByRow)
-      + (fDistinct ? fDistinctMap->size() : 0) * 32 /* TODO: speculative unordered_map memory consumption per item, replace it with counting allocator */;
+  return fMemSize + fOrderByQueue->capacity() * sizeof(GroupConcatOrderByRow) +
+         (fDistinct ? fDistinctMap->size() : 0) * 32 /* TODO: speculative unordered_map memory consumption per
+                                                        item, replace it with counting allocator */
+      ;
 }
 
 void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
@@ -1083,7 +1173,7 @@ void GroupConcatOrderBy::processRow(const rowgroup::Row& row)
     return;
 
   // this row is skipped if any concatenated column is null.
-  if (concatColIsNull(row))
+  if (!fIsJsonArrayAgg && concatColIsNull(row))
     return;
 
   // if the row count is less than the limit
@@ -1356,7 +1446,7 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
 void GroupConcatNoOrder::processRow(const rowgroup::Row& row)
 {
   // if the row count is less than the limit
-  if (fCurrentLength < fGroupConcatLen && concatColIsNull(row) == false)
+  if (fCurrentLength < fGroupConcatLen && (fIsJsonArrayAgg || concatColIsNull(row) == false))
   {
     copyRow(row, &fRow);
 
