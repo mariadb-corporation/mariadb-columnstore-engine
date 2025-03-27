@@ -381,7 +381,7 @@ class Func_mod : public Func_Real
         return static_cast<ModType>(integralRemainder.toTFloat128() + intAndFract.second);
       }
     }
-    int64_t value = d.value / pow(10.0, d.scale);
+    int64_t value = d.value / static_cast<int64_t>(pow(10.0, d.scale));
     return value % div;
   }
 };
