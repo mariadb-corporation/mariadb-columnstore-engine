@@ -103,7 +103,7 @@ const SBS CompressedInetStreamSocket::read(const struct timespec* timeout, bool*
   uint32_t storedLen = *(uint32_t*)readBS->buf();
 
   if (!storedLen)
-    return SBS(new ByteStream(0));
+    return SBS(new ByteStream(0U));
 
   uncompressedSize = storedLen;
   ret.reset(new ByteStream(uncompressedSize));

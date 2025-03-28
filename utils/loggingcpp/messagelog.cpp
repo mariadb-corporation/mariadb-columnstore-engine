@@ -100,7 +100,7 @@ void closeLog()
 {
 }
 
-void openLog(unsigned subsystemid, int localLogNum)
+void openLog(unsigned subsystemid)
 {
   if (subsystemid >= SubsystemID.size())
     subsystemid = 0;
@@ -128,7 +128,7 @@ namespace logging
 MessageLog::MessageLog(const LoggingID& initData, int localLogNum)
  : fLogData(initData), fFacility(localLogNum)
 {
-  openLog(fLogData.fSubsysID, fFacility);
+  openLog(fLogData.fSubsysID);
 }
 
 void MessageLog::logData(const LoggingID& logData)
@@ -136,7 +136,7 @@ void MessageLog::logData(const LoggingID& logData)
   if (fLogData.fSubsysID != logData.fSubsysID)
   {
     closeLog();
-    openLog(logData.fSubsysID, fFacility);
+    openLog(logData.fSubsysID);
   }
 
   fLogData = logData;
@@ -195,63 +195,62 @@ void MessageLog::logCriticalMessage(const Message& msg)
 // will turn off data_mods.log.
 void logDML(unsigned sessionId, unsigned txnId, const string& statement, const string& owner)
 {
-  /*	logging::Message::Args args;
+  logging::Message::Args args;
 
-      unsigned subsystemId = 20; // DMLProc
-      unsigned threadId = 0; // 0 for now
+  unsigned subsystemId = 20; // DMLProc
+  unsigned threadId = 0; // 0 for now
 
-      logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
-      logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
-      logging::Message m(M0017);
-      args.add("|" + owner + "|" + statement);
-      m.format(args);
-      messageLog.logCriticalMessage(m); */
+  logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
+  logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
+  logging::Message m(M0017);
+  args.add("|" + owner + "|" + statement);
+  m.format(args);
+  messageLog.logDebugMessage(m);
 }
 
 void logDDL(unsigned sessionId, unsigned txnId, const string& statement, const string& owner)
 {
-  /*
-      logging::Message::Args args;
+  logging::Message::Args args;
 
-      unsigned subsystemId = 15; // DDLProc
-      unsigned threadId = 0; // 0 for now
+  unsigned subsystemId = 15; // DDLProc
+  unsigned threadId = 0; // 0 for now
 
-      logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
-      logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
-      logging::Message m(M0018);
-      args.add("|" + owner + "|" + statement);
-      m.format(args);
-      messageLog.logCriticalMessage(m); */
+  logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
+  logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
+  logging::Message m(M0018);
+  args.add("|" + owner + "|" + statement);
+  m.format(args);
+  messageLog.logDebugMessage(m); 
 }
 
 void logCommand(unsigned sessionId, unsigned txnId, const string& statement)
 {
-  /*	logging::Message::Args args;
+  logging::Message::Args args;
 
-      unsigned subsystemId = 20; // DMLProc
-      unsigned threadId = 0; // 0 for now
+  unsigned subsystemId = 20; // DMLProc
+  unsigned threadId = 0; // 0 for now
 
-      logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
-      logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
-      logging::Message m(M0019);
-      args.add("|" + statement);
-      m.format(args);
-      messageLog.logCriticalMessage(m); */
+  logging::LoggingID loggingId(subsystemId, sessionId, txnId, threadId);
+  logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
+  logging::Message m(M0019);
+  args.add("|" + statement);
+  m.format(args);
+  messageLog.logDebugMessage(m);
 }
 
 void logEventToDataLog(unsigned messageId, const string& messageText)
 {
-  /*	logging::Message::Args args;
+  logging::Message::Args args;
 
-      unsigned subsystemId = 20; // DMLProc
-      unsigned threadId = 0; // 0 for now
+  unsigned subsystemId = 20; // DMLProc
+  unsigned threadId = 0; // 0 for now
 
-      logging::LoggingID loggingId(subsystemId, 0, 0, threadId);
-      logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
-      logging::Message m(messageId);
-      args.add(messageText);
-      m.format(args);
-      messageLog.logCriticalMessage(m); */
+  logging::LoggingID loggingId(subsystemId, 0, 0, threadId);
+  logging::MessageLog messageLog(loggingId, LOG_LOCAL2);
+  logging::Message m(messageId);
+  args.add(messageText);
+  m.format(args);
+  messageLog.logDebugMessage(m);
 }
 
 }  // namespace logging

@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <utility>
 #include <vector>
@@ -29,11 +30,13 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include <tr1/unordered_set>
+#include <unordered_set>
 
+#include "countingallocator.h"
+#include "resourcemanager.h"
 #include "rowgroup.h"
 #include "hasher.h"
-#include "stlpoolallocator.h"
+// #include "stlpoolallocator.h"
 
 // forward reference
 namespace joblist
@@ -43,16 +46,26 @@ class ResourceManager;
 
 namespace ordering
 {
-template <typename _Tp, typename _Sequence = std::vector<_Tp>,
+template <typename _Tp, typename _Sequence = std::vector<_Tp, allocators::CountingAllocator<_Tp>>,
           typename _Compare = std::less<typename _Sequence::value_type> >
-class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
+class ReservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 {
  public:
   typedef typename std::priority_queue<_Tp, _Sequence, _Compare>::size_type size_type;
-  explicit reservablePQ(size_type capacity = 0)
+  explicit ReservablePQ(size_type capacity, std::atomic<int64_t>* memoryLimit,
+                    const int64_t checkPointStepSize = allocators::CheckPointStepSize,
+                    const int64_t lowerBound = allocators::MemoryLimitLowerBound)
+    : std::priority_queue<_Tp, _Sequence, _Compare>(_Compare(),
+        _Sequence(allocators::CountingAllocator<_Tp>(memoryLimit, checkPointStepSize, lowerBound)))
   {
     reserve(capacity);
-  };
+  }
+  explicit ReservablePQ(size_type capacity, allocators::CountingAllocator<_Tp> alloc)
+    : std::priority_queue<_Tp, _Sequence, _Compare>(_Compare(),
+        _Sequence(alloc))
+  {
+    reserve(capacity);
+  }
   void reserve(size_type capacity)
   {
     this->c.reserve(capacity);
@@ -72,7 +85,7 @@ class reservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
 class IdbCompare;
 class OrderByRow;
 
-typedef reservablePQ<OrderByRow> SortingPQ;
+using SortingPQ = ReservablePQ<OrderByRow>;
 
 // order by specification
 struct IdbSortSpec
@@ -416,16 +429,31 @@ class IdbOrderBy : public IdbCompare
   {
     return fDistinct;
   }
+  // INV fOrderByQueue is always a valid pointer that is instantiated in constructor
   SortingPQ& getQueue()
   {
-    return fOrderByQueue;
+    return *fOrderByQueue;
+  }
+  void returnAllRGDataMemory2RM()
+  {
+    while (!fOrderByQueue->empty())
+    {
+      fOrderByQueue->pop();
+    }
+    fRm->returnMemory(fMemSize, fSessionMemLimit);
+    fMemSize = 0;
+  }
+   void returnRGDataMemory2RM(const size_t rgDataSize)
+  {
+    fRm->returnMemory(rgDataSize, fSessionMemLimit);
+    fMemSize -= rgDataSize;
   }
   CompareRule& getRule()
   {
     return fRule;
   }
 
-  SortingPQ fOrderByQueue;
+  std::unique_ptr<SortingPQ> fOrderByQueue = nullptr;
 
  protected:
   std::vector<IdbSortSpec> fOrderByCond;
@@ -455,9 +483,8 @@ class IdbOrderBy : public IdbCompare
     bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
   };
 
-  typedef std::tr1::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
-                                  utils::STLPoolAllocator<rowgroup::Row::Pointer> >
-      DistinctMap_t;
+  using DistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
+                                  allocators::CountingAllocator<rowgroup::Row::Pointer>>;
   boost::scoped_ptr<DistinctMap_t> fDistinctMap;
   rowgroup::Row row1, row2;  // scratch space for Hasher & Eq
 

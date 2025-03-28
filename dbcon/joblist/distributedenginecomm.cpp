@@ -427,7 +427,7 @@ Error:
   // eventually let jobstep error out.
   std::unique_lock lk(fMlock);
   MessageQueueMap::iterator map_tok;
-  sbs.reset(new ByteStream(0));
+  sbs.reset(new ByteStream(0U));
 
   for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
   {
@@ -1103,7 +1103,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     std::unique_lock lk(fMlock);
     // std::cout << "WARNING: DEC WRITE BROKEN PIPE. PMS index = " << index << std::endl;
     MessageQueueMap::iterator map_tok;
-    sbs.reset(new ByteStream(0));
+    sbs.reset(new ByteStream(0U));
 
     for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
     {

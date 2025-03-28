@@ -737,7 +737,8 @@ IdbOrderBy::IdbOrderBy()
 
 IdbOrderBy::~IdbOrderBy()
 {
-  if (fRm)
+  // returnRGDataMemory2RM() returns all memory before the dtor is called.
+  if (fRm && fMemSize > 0)
     fRm->returnMemory(fMemSize, fSessionMemLimit);
 
   // delete compare objects
@@ -747,13 +748,14 @@ IdbOrderBy::~IdbOrderBy()
     delete *i++;
 }
 
+// INV fRm is not NULL here
 void IdbOrderBy::initialize(const RowGroup& rg)
 {
   // initialize rows
   IdbCompare::initialize(rg);
 
   auto newSize = rg.getSizeWithStrings(fRowsPerRG);
-  if (fRm && !fRm->getMemory(newSize, fSessionMemLimit))
+  if (!fRm->getMemory(newSize, fSessionMemLimit))
   {
     cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
     throw IDBExcept(fErrorCode);
@@ -771,9 +773,16 @@ void IdbOrderBy::initialize(const RowGroup& rg)
   fRowGroup.initRow(&row1);
   fRowGroup.initRow(&row2);
 
+  // These two blocks contain structs with memory accounting.
+  {
+    auto alloc = fRm->getAllocator<OrderByRow>();
+    fOrderByQueue.reset(new SortingPQ(rowgroup::rgCommonSize, alloc));
+  }
+
   if (fDistinct)
   {
-    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength())));
+    auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
+    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength()), alloc));
   }
 }
 

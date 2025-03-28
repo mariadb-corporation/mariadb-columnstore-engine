@@ -1,6 +1,6 @@
 /*
    Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (c) 2019 MariaDB Corporation
+   Copyright (c) 2016-2024 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -39,6 +39,8 @@
 #include <cfloat>
 #include <execinfo.h>
 
+
+#include "countingallocator.h"
 #include "hasher.h"
 
 #include "joblisttypes.h"
@@ -52,6 +54,7 @@
 
 #include "collation.h"
 #include "common/hashfamily.h"
+#include "buffertypes.h"
 
 #include <cstdlib>
 #include "execinfo.h"
@@ -133,6 +136,7 @@ class StringStore
 {
  public:
   StringStore() = default;
+  StringStore(allocators::CountingAllocator<StringStoreBufType> alloc);
   StringStore(const StringStore&) = delete;
   StringStore(StringStore&&) = delete;
   StringStore& operator=(const StringStore&) = delete;
@@ -183,13 +187,14 @@ class StringStore
   std::string empty_str;
   static constexpr const uint32_t CHUNK_SIZE = 64 * 1024;  // allocators like powers of 2
 
-  std::vector<std::shared_ptr<uint8_t[]>> mem;
+  std::vector<boost::shared_ptr<uint8_t[]>> mem;
 
   // To store strings > 64KB (BLOB/TEXT)
-  std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  std::vector<boost::shared_ptr<uint8_t[]>> longStrings;
   bool empty = true;
   bool fUseStoreStringMutex = false;  //@bug6065, make StringStore::storeString() thread safe
   boost::mutex fMutex;
+  std::optional<allocators::CountingAllocator<StringStoreBufType>> alloc {};
 };
 
 // Where we store user data for UDA(n)F
@@ -251,14 +256,17 @@ class UserDataStore
 class RowGroup;
 class Row;
 
+
 /* TODO: OO the rowgroup data to the extent there's no measurable performance hit. */
 class RGData
 {
  public:
   RGData() = default;  // useless unless followed by an = or a deserialize operation
+  RGData(allocators::CountingAllocator<RGDataBufType>&);
   RGData(const RowGroup& rg, uint32_t rowCount);  // allocates memory for rowData
   explicit RGData(const RowGroup& rg);
-  RGData& operator=(const RGData&) = default;
+  explicit RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>& alloc);
+  RGData& operator=(const RGData& rhs) = default;
   RGData& operator=(RGData&&) = default;
   RGData(const RGData&) = default;
   RGData(RGData&&) = default;
@@ -276,7 +284,7 @@ class RGData
   void clear();
   void reinit(const RowGroup& rg);
   void reinit(const RowGroup& rg, uint32_t rowCount);
-  inline void setStringStore(std::shared_ptr<StringStore>& ss)
+  inline void setStringStore(boost::shared_ptr<StringStore>& ss)
   {
     strings = ss;
   }
@@ -317,9 +325,10 @@ class RGData
  private:
   uint32_t rowSize = 0;      // can't be.
   uint32_t columnCount = 0;  // shouldn't be, but...
-  std::shared_ptr<uint8_t[]> rowData;
-  std::shared_ptr<StringStore> strings;
+  boost::shared_ptr<RGDataBufType> rowData;
+  boost::shared_ptr<StringStore> strings;
   std::shared_ptr<UserDataStore> userDataStore;
+  std::optional<allocators::CountingAllocator<RGDataBufType>> alloc = {};
 
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
@@ -1038,6 +1047,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
+    // std::cout << "setStringField memcpy " << std::endl; 
     uint8_t* buf = &data[offsets[colIndex]];
     memset(buf + length, 0,
            offsets[colIndex + 1] - (offsets[colIndex] + length));  // needed for memcmp in equals().
@@ -1585,7 +1595,7 @@ class RowGroup : public messageqcpp::Serializeable
                          const uint16_t& blockNum);
   inline void getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* extentNum, uint16_t* blockNum);
 
-  inline void setStringStore(std::shared_ptr<StringStore>);
+  inline void setStringStore(boost::shared_ptr<StringStore>);
 
   const CHARSET_INFO* getCharset(uint32_t col);
 
@@ -1897,7 +1907,8 @@ inline uint32_t RowGroup::getStringTableThreshold() const
   return sTableThreshold;
 }
 
-inline void RowGroup::setStringStore(std::shared_ptr<StringStore> ss)
+// TODO This is unused, so rm this in the dev branch.
+inline void RowGroup::setStringStore(boost::shared_ptr<StringStore> ss)
 {
   if (useStringTable)
   {
@@ -2192,10 +2203,11 @@ inline uint64_t StringStore::getSize() const
 
 inline void RGData::getRow(uint32_t num, Row* row)
 {
-  idbassert(columnCount == row->getColumnCount() && rowSize == row->getSize());
-  uint32_t size = row->getSize();
+  uint32_t incomingRowSize = row->getSize();
+  idbassert(columnCount == row->getColumnCount() && rowSize == incomingRowSize);
+  
   row->setData(
-      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * size)], strings.get(), userDataStore.get()));
+      Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * incomingRowSize)], strings.get(), userDataStore.get()));
 }
 
 }  // namespace rowgroup

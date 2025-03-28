@@ -54,7 +54,7 @@ using namespace joiner;
 
 namespace joblist
 {
-BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
+BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(ResourceManager* rm)
  : ot(BPS_ELEMENT_TYPE)
  , needToSetLBID(true)
  , count(1)
@@ -80,6 +80,7 @@ BatchPrimitiveProcessorJL::BatchPrimitiveProcessorJL(const ResourceManager* rm)
  , fJoinerChunkSize(rm->getJlJoinerChunkSize())
  , hasSmallOuterJoin(false)
  , _priority(1)
+ , rm_(rm)
 {
   PMJoinerCount = 0;
   uuid = bu::nil_generator()();
@@ -790,7 +791,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
   if (in.length() == 0)
   {
     // done, return an empty RG
-    rgData = RGData(org, 0);
+    rgData = RGData(org, 0U);
     org.setData(&rgData);
     org.resetRowGroup(0);
     out->push_back(rgData);
@@ -925,7 +926,7 @@ RGData BatchPrimitiveProcessorJL::getErrorRowGroupData(uint16_t error) const
   RGData ret;
   rowgroup::RowGroup rg(projectionRG);
 
-  ret = RGData(rg, 0);
+  ret = RGData(rg, 0U);
   rg.setData(&ret);
   // rg.convertToInlineDataInPlace();
   rg.resetRowGroup(0);
@@ -1396,7 +1397,7 @@ bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
   for (i = 0; i < PMJoinerCount; i++)
   {
     joinerNum = (joinerNum + 1) % PMJoinerCount;
-    if (posByJoinerNum[joinerNum] != tJoiners[joinerNum]->getSmallSide()->size())
+    if (posByJoinerNum[joinerNum] != tJoiners[joinerNum]->getSmallSide().size())
       break;
   }
   if (i == PMJoinerCount)
@@ -1409,10 +1410,9 @@ bool BatchPrimitiveProcessorJL::pickNextJoinerNum()
 /* XXXPAT: Going to interleave across joiners to take advantage of the new locking env in PrimProc */
 bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 {
-  uint32_t size = 0, toSend, i, j;
+  uint32_t toSend, i, j;
   ISMPacketHeader ism;
   Row r;
-  vector<Row::Pointer>* tSmallSide;
   joiner::TypelessData tlData;
   uint32_t smallKeyCol;
   uint32_t largeKeyCol;
@@ -1435,8 +1435,8 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
   }
 
   memset((void*)&ism, 0, sizeof(ism));
-  tSmallSide = tJoiners[joinerNum]->getSmallSide();
-  size = tSmallSide->size();
+  auto& tSmallSide = tJoiners[joinerNum]->getSmallSide();
+  auto size = tSmallSide.size();
 
 #if 0
     if (joinerNum == PMJoinerCount - 1 && pos == size)
@@ -1481,11 +1481,13 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
   if (tJoiners[joinerNum]->isTypelessJoin())
   {
-    utils::FixedAllocator fa(tlKeyLens[joinerNum], true);
+    // TODO: change RM ptr to ref b/c its scope and lifetime lasts till the end of the program.
+    auto alloc = rm_->getAllocator<utils::FixedAllocatorBufType>();
+    utils::FixedAllocator fa(alloc, tlKeyLens[joinerNum], true);
 
     for (i = pos; i < pos + toSend; i++)
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
       isNull = false;
       bSignedUnsigned = tJoiners[joinerNum]->isSignedUnsignedJoin();
 
@@ -1552,7 +1554,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
     for (i = pos, j = 0; i < pos + toSend; ++i, ++j)
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
 
       if (r.getColType(smallKeyCol) == CalpontSystemCatalog::LONGDOUBLE)
       {
@@ -1625,7 +1627,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
 
     for (i = pos; i < pos + toSend; i++, tmpRow.nextRow())
     {
-      r.setPointer((*tSmallSide)[i]);
+      r.setPointer(tSmallSide[i]);
       copyRow(r, &tmpRow);
     }
 

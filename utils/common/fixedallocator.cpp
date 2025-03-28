@@ -21,21 +21,13 @@
  ******************************************************************************************/
 
 // This is one of the first files we compile, check the compiler...
-#if defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1)
-#error "This is a very old GCC, and it's probably not going to work."
-#endif
-#else
-#error "This compiler is not known and it's probably not going to work."
-#endif
-
 #include <stdint.h>
-#include <iostream>
-#include <memory>
 
-#define FIXEDALLOCATOR_DLLEXPORT
 #include "fixedallocator.h"
-#undef FIXEDALLOCATOR_DLLEXPORT
+
+#include <boost/smart_ptr/allocate_shared_array.hpp>
+#include <boost/smart_ptr/make_shared_array.hpp>
+
 
 using namespace std;
 
@@ -50,6 +42,7 @@ FixedAllocator::FixedAllocator(const FixedAllocator& f)
   currentlyStored = 0;
   useLock = f.useLock;
   lock = false;
+  alloc = f.alloc;
 }
 
 FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
@@ -59,6 +52,7 @@ FixedAllocator& FixedAllocator::operator=(const FixedAllocator& f)
   tmpSpace = f.tmpSpace;
   useLock = f.useLock;
   lock = false;
+  alloc = f.alloc;
   deallocateAll();
   return *this;
 }
@@ -75,15 +69,19 @@ void FixedAllocator::setAllocSize(uint allocSize)
 
 void FixedAllocator::newBlock()
 {
-  std::shared_ptr<uint8_t[]> next;
-
   capacityRemaining = elementCount * elementSize;
 
   if (!tmpSpace || mem.size() == 0)
   {
-    next.reset(new uint8_t[elementCount * elementSize]);
-    mem.push_back(next);
-    nextAlloc = next.get();
+    if (alloc)
+    {
+      mem.emplace_back(boost::allocate_shared<FixedAllocatorBufType>(*alloc, elementCount * elementSize)); 
+    }
+    else 
+    {
+      mem.emplace_back(boost::make_shared<FixedAllocatorBufType>(elementCount * elementSize));
+    }
+    nextAlloc = mem.back().get();
   }
   else
   {

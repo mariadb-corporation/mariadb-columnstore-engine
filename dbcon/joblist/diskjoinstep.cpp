@@ -519,16 +519,18 @@ void DiskJoinStep::joinFcn(const uint32_t threadID)
               // cout << "inserting a full RG" << endl;
               if (thjs)
               {
-                // FIXME: Possible false positive. Something wrong with this calculation, just put a warning
-                // until fixed.
-                if (!thjs->getMemory(l_outputRG.getMaxDataSize()))
+                if (!thjs->getMemory(l_outputRG.getMaxDataSizeWithStrings()))
                 {
                   // FIXME: This is also looks wrong.
                   // calculate guess of size required for error message
-                  uint64_t memReqd = (unmatched.size() * outputRG.getDataSize(1)) / 1048576;
-                  uint64_t memLimit = thjs->resourceManager->getConfiguredUMMemLimit() / 1048576;
-                  std::cerr << "DiskJoin::joinFcn() possible OOM for the join result, mem required: "
-                            << memReqd << " mem limit: " << memLimit << std::endl;
+                  uint64_t memReqd = (l_outputRG.getMaxDataSizeWithStrings()) / 1048576;
+                  Message::Args args;
+                  args.add(memReqd);
+                  args.add(thjs->resourceManager->getConfiguredUMMemLimit() / 1048576);
+                  std::cerr << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_RESULT_TOO_BIG,
+                                                                           args)
+                            << " @" << __FILE__ << ":" << __LINE__;
+                  throw logging::IDBExcept(logging::ERR_JOIN_RESULT_TOO_BIG, args);
                 }
               }
 

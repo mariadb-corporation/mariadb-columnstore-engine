@@ -207,60 +207,6 @@ void TupleHashJoinStep::join()
   }
 }
 
-// simple sol'n.  Poll mem usage of Joiner once per second.  Request mem
-// increase after the fact.  Failure to get mem will be detected and handled by
-// the threads inserting into Joiner.
-void TupleHashJoinStep::trackMem(uint index)
-{
-  auto joiner = joiners[index];
-  ssize_t memBefore = 0, memAfter = 0;
-  bool gotMem;
-
-  boost::unique_lock<boost::mutex> scoped(memTrackMutex);
-  while (!stopMemTracking)
-  {
-    memAfter = joiner->getMemUsage();
-    if (memAfter != memBefore)
-    {
-      gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
-      if (gotMem)
-        atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-      else
-        return;
-
-      memBefore = memAfter;
-    }
-    memTrackDone.timed_wait(scoped, boost::posix_time::seconds(1));
-  }
-
-  // one more iteration to capture mem usage since last poll, for this one
-  // raise an error if mem went over the limit
-  memAfter = joiner->getMemUsage();
-  if (memAfter == memBefore)
-    return;
-  gotMem = resourceManager->getMemory(memAfter - memBefore, sessionMemLimit, true);
-  if (gotMem)
-  {
-    atomicops::atomicAdd(&memUsedByEachJoin[index], memAfter - memBefore);
-  }
-  else
-  {
-    if (!joinIsTooBig &&
-        (isDML || !allowDJS || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000)))
-    {
-      joinIsTooBig = true;
-      ostringstream oss;
-      oss << "(" << __LINE__ << ") "
-          << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-      fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-      errorMessage(oss.str());
-      status(logging::ERR_JOIN_TOO_BIG);
-      cout << "Join is too big, raise the UM join limit for now (monitor thread)" << endl;
-      abort();
-    }
-  }
-}
-
 void TupleHashJoinStep::startSmallRunners(uint index)
 {
   utils::setThreadName("HJSStartSmall");
@@ -277,22 +223,21 @@ void TupleHashJoinStep::startSmallRunners(uint index)
 
   if (typelessJoin[index])
   {
-    joiner.reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index], largeSideKeys[index], jt,
-                                 &jobstepThreadPool, numCores));
+    joiners[index].reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index], largeSideKeys[index],
+                                         jt, &jobstepThreadPool, resourceManager, numCores));
   }
   else
   {
-    joiner.reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index][0], largeSideKeys[index][0],
-                                 jt, &jobstepThreadPool, numCores));
+    joiners[index].reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index][0],
+                                         largeSideKeys[index][0], jt, &jobstepThreadPool, resourceManager, numCores));
   }
 
-  joiner->setUniqueLimit(uniqueLimit);
-  joiner->setTableName(smallTableNames[index]);
-  joiners[index] = joiner;
+  joiners[index]->setUniqueLimit(uniqueLimit);
+  joiners[index]->setTableName(smallTableNames[index]);
 
   /* check for join types unsupported on the PM. */
   if (!largeBPS || !isExeMgr)
-    joiner->setInUM(rgData[index]);
+    joiners[index]->setInUM(rgData[index]);
 
   /*
       start the small runners
@@ -303,10 +248,9 @@ void TupleHashJoinStep::startSmallRunners(uint index)
 
   stopMemTracking = false;
   utils::VLArray<uint64_t> jobs(numCores);
-  uint64_t memMonitor = jobstepThreadPool.invoke([this, index] { this->trackMem(index); });
   // starting 1 thread when in PM mode, since it's only inserting into a
   // vector of rows.  The rest will be started when converted to UM mode.
-  if (joiner->inUM())
+  if (joiners[index]->inUM())
   {
     for (int i = 0; i < numCores; i++)
     {
@@ -320,7 +264,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
 
   // wait for the first thread to join, then decide whether the others exist and need joining
   jobstepThreadPool.join(jobs[0]);
-  if (joiner->inUM())
+  if (joiners[index]->inUM())
   {
     for (int i = 1; i < numCores; i++)
     {
@@ -332,7 +276,6 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   stopMemTracking = true;
   memTrackDone.notify_one();
   memTrackMutex.unlock();
-  jobstepThreadPool.join(memMonitor);
 
   /* If there was an error or an abort, drain the input DL,
       do endOfInput on the output */
@@ -352,7 +295,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   end_time = boost::posix_time::microsec_clock::universal_time();
   if (!(fSessionId & 0x80000000))
       cout << "hash table construction time = " << end_time - start_time <<
-      " size = " << joiner->size() << endl;
+      " size = " << joiners[index]->size() << endl;
   */
 
   if (traceOn())
@@ -361,13 +304,13 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   }
 
   ostringstream oss;
-  if (!joiner->onDisk())
+  if (!joiners[index]->onDisk())
   {
     // add extended info, and if not aborted then tell joiner
     // we're done reading the small side.
     if (traceOn())
     {
-      if (joiner->inPM())
+      if (joiners[index]->inPM())
       {
         {
           oss << "PM join (" << index << ")" << endl;
@@ -377,7 +320,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
           extendedInfo += oss.str();
         }
       }
-      else if (joiner->inUM())
+      else if (joiners[index]->inUM())
       {
         oss << "UM join (" << index << ")" << endl;
   #ifdef JLF_DEBUG
@@ -387,7 +330,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       }
     }
     if (!cancelled())
-      joiner->doneInserting();
+      joiners[index]->doneInserting();
   }
 
   if (traceOn())
@@ -395,6 +338,30 @@ void TupleHashJoinStep::startSmallRunners(uint index)
     boost::mutex::scoped_lock lk(*fStatsMutexPtr);
     fExtendedInfo += extendedInfo;
     formatMiniStats(index);
+  }
+}
+
+void TupleHashJoinStep::outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> joiner)
+{
+  boost::unique_lock<boost::mutex> sl(saneErrMsg);
+
+  if (cancelled())
+    return;
+  if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
+  {
+    joinIsTooBig = true;
+    ostringstream oss;
+    oss << "(" << __LINE__ << ") " << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
+    fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
+    errorMessage(oss.str());
+    status(logging::ERR_JOIN_TOO_BIG);
+    cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
+    abort();
+  }
+  else if (allowDJS)
+  {
+    joiner->setConvertToDiskJoin();
+    // TODO RGData that triggers this path is lost. Need to store it to pass it future.
   }
 }
 
@@ -421,6 +388,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
     ssize_t rgSize;
     bool gotMem;
     goto next;
+    // TODO need to quit this loop early of on-disk flag is set by any of the small size threads.
     while (more && !cancelled())
     {
       smallRG.setData(&oneRG);
@@ -445,25 +413,7 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
             if disk join is enabled, use it.
             else abort.
         */
-        boost::unique_lock<boost::mutex> sl(saneErrMsg);
-        if (cancelled())
-          return;
-        if (!allowDJS || isDML || (fSessionId & 0x80000000) || (tableOid() < 3000 && tableOid() >= 1000))
-        {
-          joinIsTooBig = true;
-          ostringstream oss;
-          oss << "(" << __LINE__ << ") "
-              << logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_JOIN_TOO_BIG);
-          fLogger->logMessage(logging::LOG_TYPE_INFO, oss.str());
-          errorMessage(oss.str());
-          status(logging::ERR_JOIN_TOO_BIG);
-          cout << "Join is too big, raise the UM join limit for now (small runner)" << endl;
-          abort();
-        }
-        else if (allowDJS)
-          joiner->setConvertToDiskJoin();
-
-        return;
+        return outOfMemoryHandler(joiner);
       }
       joiner->insertRGData(smallRG, threadID);
       if (!joiner->inUM() && (memUsedByEachJoin[index] > pmMemLimit))
@@ -481,6 +431,10 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
       more = smallDL->next(smallIt, &oneRG);
       dlMutex.unlock();
     }
+  }
+  catch (std::bad_alloc& exc)
+  {
+    return outOfMemoryHandler(joiner);
   }
   catch (...)
   {
@@ -1425,13 +1379,14 @@ void TupleHashJoinStep::finishSmallOuterJoin()
   uint32_t smallSideCount = smallDLs.size();
   uint32_t i, j, k;
   std::shared_ptr<uint8_t[]> largeNullMemory;
-  RGData joinedData;
   Row joinedBaseRow, fe2InRow, fe2OutRow;
   std::shared_ptr<Row[]> smallRowTemplates;
   std::shared_ptr<Row[]> smallNullRows;
   Row largeNullRow;
   RowGroup l_outputRG = outputRG;
   RowGroup l_fe2Output = fe2Output;
+
+  RGData joinedData;
 
   joiners[lastSmallOuterJoiner]->getUnmarkedRows(&unmatched);
 
@@ -1873,19 +1828,22 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
   }
   else
   {
+    // NB In case of OUTER JOIN this loop can produce a lot of RGDatas,
+    // so it is a must to periodically flush from this loop.   
     l_outputRG.getRow(l_outputRG.getRowCount(), &joinedRow);
+    auto flushThreshold = outputDL->maxElements();
 
     for (i = 0; i < joinerOutput[depth].size(); i++, joinedRow.nextRow(), l_outputRG.incRowCount())
     {
       smallRow.setPointer(joinerOutput[depth][i]);
 
-      if (UNLIKELY(l_outputRG.getRowCount() == 8192))
+      if (UNLIKELY(l_outputRG.getRowCount() == rowgroup::rgCommonSize))
       {
         uint32_t dbRoot = l_outputRG.getDBRoot();
         uint64_t baseRid = l_outputRG.getBaseRid();
         outputData.push_back(rgData);
         // Count the memory
-        if (UNLIKELY(!getMemory(l_outputRG.getMaxDataSize())))
+        if (UNLIKELY(outputData.size() > flushThreshold || !getMemory(l_outputRG.getSizeWithStrings())))
         {
           // MCOL-5512
           if (fe2)
@@ -1898,6 +1856,9 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
             l_outputRG.initRow(&fe2InRow);
             l_fe2RG.initRow(&fe2OutRow);
 
+            // WIP do we remove previosuly pushed(line 1825) rgData
+            // replacing it with a new FE2 rgdata added by processFE2?
+            // Generates a new RGData w/o accounting its memory consumption
             processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
           }
           // Don't let the join results buffer get out of control.
@@ -2036,6 +1997,10 @@ void TupleHashJoinStep::abort()
 {
   JobStep::abort();
   boost::mutex::scoped_lock sl(djsLock);
+
+  // To prevent potential endless loop in bucketsToTables()
+  for (auto& joiner : joiners)
+    joiner->abort();
 
   if (djs.size())
   {

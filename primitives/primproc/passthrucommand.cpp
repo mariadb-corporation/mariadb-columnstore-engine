@@ -60,11 +60,11 @@ void PassThruCommand::execute()
   // 	throw logic_error("PassThruCommand isn't a filter step");
 }
 
-void PassThruCommand::project()
+void PassThruCommand::project(messageqcpp::SBS& bs)
 {
   uint32_t i;
 
-  *bpp->serialized << (uint32_t)(bpp->ridCount * colWidth);
+  *bs << (uint32_t)(bpp->ridCount * colWidth);
 #if 0
     cout << "pass thru serializing " << (uint32_t) (bpp->ridCount * colWidth) << " bytes:\n";
     cout << "at relative position " << bpp->serialized->length() - sizeof(ISMPacketHeader) - sizeof(PrimitiveHeader) - 4 << endl;
@@ -76,25 +76,25 @@ void PassThruCommand::project()
 
   switch (colWidth)
   {
-    case 16: bpp->serialized->append((uint8_t*)bpp->wide128Values, bpp->ridCount << 4); break;
+    case 16: bs->append((uint8_t*)bpp->wide128Values, bpp->ridCount << 4); break;
 
-    case 8: bpp->serialized->append((uint8_t*)bpp->values, bpp->ridCount << 3); break;
+    case 8: bs->append((uint8_t*)bpp->values, bpp->ridCount << 3); break;
 
     case 4:
       for (i = 0; i < bpp->ridCount; i++)
-        *bpp->serialized << (uint32_t)bpp->values[i];
+        *bs << (uint32_t)bpp->values[i];
 
       break;
 
     case 2:
       for (i = 0; i < bpp->ridCount; i++)
-        *bpp->serialized << (uint16_t)bpp->values[i];
+        *bs << (uint16_t)bpp->values[i];
 
       break;
 
     case 1:
       for (i = 0; i < bpp->ridCount; i++)
-        *bpp->serialized << (uint8_t)bpp->values[i];
+        *bs << (uint8_t)bpp->values[i];
 
       break;
 

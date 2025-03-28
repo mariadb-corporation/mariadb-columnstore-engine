@@ -18,12 +18,14 @@
 
 #include "tuplejoiner.h"
 #include <algorithm>
+#include <boost/thread/lock_types.hpp>
 #include <vector>
 #include <limits>
 #include <unordered_set>
 
 #include "hasher.h"
 #include "lbidlist.h"
+#include "resourcemanager.h"
 #include "spinlock.h"
 #include "vlarray.h"
 #include "threadnaming.h"
@@ -39,7 +41,7 @@ namespace joiner
 // Typed joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          uint32_t smallJoinColumn, uint32_t largeJoinColumn, JoinType jt,
-                         threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
+                         threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -52,43 +54,38 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
+ , resourceManager_(rm)
 {
   uint i;
+
+  auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+  rows.reset(new RowPointersVec(alloc));
 
   getBucketCount();
   m_bucketLocks.reset(new boost::mutex[bucketCount]);
 
   if (smallRG.getColTypes()[smallJoinColumn] == CalpontSystemCatalog::LONGDOUBLE)
   {
-    ld.reset(new boost::scoped_ptr<ldhash_t>[bucketCount]);
-    _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const long double, Row::Pointer>> alloc;
-      _pool[i] = alloc.getPoolAllocator();
-      ld[i].reset(new ldhash_t(10, hasher(), ldhash_t::key_equal(), alloc));
+      auto alloc = resourceManager_->getAllocator<pair<const long double, Row::Pointer>>();
+      ld.emplace_back(std::unique_ptr<ldhash_t>(new ldhash_t(10, hasher(), ldhash_t::key_equal(), alloc)));
     }
   }
   else if (smallRG.usesStringTable())
   {
-    sth.reset(new boost::scoped_ptr<sthash_t>[bucketCount]);
-    _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const int64_t, Row::Pointer>> alloc;
-      _pool[i] = alloc.getPoolAllocator();
-      sth[i].reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
+      auto alloc = resourceManager_->getAllocator<pair<const int64_t, Row::Pointer>>();
+      sth.emplace_back(std::unique_ptr<sthash_t>(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc)));
     }
   }
   else
   {
-    h.reset(new boost::scoped_ptr<hash_t>[bucketCount]);
-    _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
     for (i = 0; i < bucketCount; i++)
     {
-      STLPoolAllocator<pair<const int64_t, uint8_t*>> alloc;
-      _pool[i] = alloc.getPoolAllocator();
-      h[i].reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
+      auto alloc = resourceManager_->getAllocator<pair<const int64_t, uint8_t*>>();
+      h.emplace_back(std::unique_ptr<hash_t>(new hash_t(10, hasher(), hash_t::key_equal(), alloc)));
     }
   }
 
@@ -146,7 +143,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 // Typeless joiner ctor
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          const vector<uint32_t>& smallJoinColumns, const vector<uint32_t>& largeJoinColumns,
-                         JoinType jt, threadpool::ThreadPool* jsThreadPool, const uint64_t numCores)
+                         JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm, const uint64_t numCores)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -161,18 +158,20 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , numCores(numCores)
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
+ , resourceManager_(rm)
 {
   uint i;
 
+  auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+  rows.reset(new RowPointersVec(alloc));
+
   getBucketCount();
 
-  _pool.reset(new boost::shared_ptr<PoolAllocator>[bucketCount]);
-  ht.reset(new boost::scoped_ptr<typelesshash_t>[bucketCount]);
   for (i = 0; i < bucketCount; i++)
   {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc;
-    _pool[i] = alloc.getPoolAllocator();
-    ht[i].reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
+    auto alloc = resourceManager_->getAllocator<pair<const TypelessData, Row::Pointer>>();
+    ht.emplace_back(std::unique_ptr<typelesshash_t>(
+        new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc)));
   }
   m_bucketLocks.reset(new boost::mutex[bucketCount]);
 
@@ -224,9 +223,11 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 
   // note, 'numcores' is implied by tuplehashjoin on calls to insertRGData().
   // TODO: make it explicit to avoid future confusion.
-  storedKeyAlloc.reset(new FixedAllocator[numCores]);
   for (i = 0; i < (uint)numCores; i++)
-    storedKeyAlloc[i].setAllocSize(keyLength);
+  {
+    auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+    storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
+  }
 }
 
 TupleJoiner::TupleJoiner()
@@ -261,12 +262,12 @@ void TupleJoiner::getBucketCount()
 }
 
 template <typename buckets_t, typename hash_table_t>
-void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
+void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t& tables)
 {
   uint i;
 
   bool done = false, wasProductive;
-  while (!done)
+  while (!done && !wasAborted_)
   {
     done = true;
     wasProductive = false;
@@ -274,17 +275,20 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t* tables)
     {
       if (buckets[i].empty())
         continue;
-      bool gotIt = m_bucketLocks[i].try_lock();
-      if (!gotIt)
       {
-        done = false;
-        continue;
+        boost::unique_lock<boost::mutex> lock(m_bucketLocks[i], boost::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          done = false;
+          continue;
+        }
+        tables[i]->insert(buckets[i].begin(), buckets[i].end());
       }
-      tables[i]->insert(buckets[i].begin(), buckets[i].end());
-      m_bucketLocks[i].unlock();
+
       wasProductive = true;
       buckets[i].clear();
     }
+    // TODO use CV here instead of busy sleep
     if (!done && !wasProductive)
       ::usleep(1000 * numCores);
   }
@@ -305,7 +309,7 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row& r)
     uint bucket = bucketPicker((char*)td[i].data, td[i].len, bpSeed) & bucketMask;
     v[bucket].emplace_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
   }
-  bucketsToTables(&v[0], ht.get());
+  bucketsToTables(&v[0], ht);
 }
 
 void TupleJoiner::um_insertLongDouble(uint rowCount, Row& r)
@@ -324,7 +328,7 @@ void TupleJoiner::um_insertLongDouble(uint rowCount, Row& r)
     else
       v[bucket].emplace_back(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
   }
-  bucketsToTables(&v[0], ld.get());
+  bucketsToTables(&v[0], ld);
 }
 
 void TupleJoiner::um_insertInlineRows(uint rowCount, Row& r)
@@ -346,7 +350,7 @@ void TupleJoiner::um_insertInlineRows(uint rowCount, Row& r)
     else
       v[bucket].emplace_back(pair<int64_t, uint8_t*>(smallKey, r.getData()));
   }
-  bucketsToTables(&v[0], h.get());
+  bucketsToTables(&v[0], h);
 }
 
 void TupleJoiner::um_insertStringTable(uint rowCount, Row& r)
@@ -368,7 +372,7 @@ void TupleJoiner::um_insertStringTable(uint rowCount, Row& r)
     else
       v[bucket].emplace_back(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
   }
-  bucketsToTables(&v[0], sth.get());
+  bucketsToTables(&v[0], sth);
 }
 
 void TupleJoiner::insertRGData(RowGroup& rg, uint threadID)
@@ -380,13 +384,15 @@ void TupleJoiner::insertRGData(RowGroup& rg, uint threadID)
   rowCount = rg.getRowCount();
 
   rg.getRow(0, &r);
-  m_cpValuesLock.lock();
-  for (i = 0; i < rowCount; i++, r.nextRow())
   {
-    updateCPData(r);
-    r.zeroRid();
+    boost::unique_lock<boost::mutex> lock(m_cpValuesLock);
+    for (i = 0; i < rowCount; i++, r.nextRow())
+    {
+      updateCPData(r);
+      r.zeroRid();
+    }
   }
-  m_cpValuesLock.unlock();
+
   rg.getRow(0, &r);
 
   if (joinAlg == UM)
@@ -404,7 +410,7 @@ void TupleJoiner::insertRGData(RowGroup& rg, uint threadID)
   {
     // while in PM-join mode, inserting is single-threaded
     for (i = 0; i < rowCount; i++, r.nextRow())
-      rows.push_back(r.getPointer());
+      rows->push_back(r.getPointer());
   }
 }
 
@@ -469,7 +475,7 @@ void TupleJoiner::insert(Row& r, bool zeroTheRid)
     }
   }
   else
-    rows.push_back(r.getPointer());
+    rows->push_back(r.getPointer());
 }
 
 void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uint32_t threadID,
@@ -485,8 +491,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
     uint32_t size = v.size();
 
     for (i = 0; i < size; i++)
-      if (v[i] < rows.size())
-        matches->push_back(rows[v[i]]);
+      if (v[i] < rows->size())
+        matches->push_back((*rows)[v[i]]);
 
     if (UNLIKELY((semiJoin() || antiJoin()) && matches->size() == 0))
       matches->push_back(smallNullRow.getPointer());
@@ -513,7 +519,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
       for (; range.first != range.second; ++range.first)
         matches->push_back(range.first->second);
     }
-    else if (largeSideRow.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && ld)
+    else if (largeSideRow.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && !ld.empty())
     {
       // This is a compare of two long double
       long double largeKey;
@@ -549,7 +555,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
         largeKey = largeSideRow.getIntField(largeKeyColumns[0]);
       }
 
-      if (ld)
+      if (!ld.empty())
       {
         // Compare against long double
         long double ldKey = largeKey;
@@ -596,7 +602,7 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
   if (UNLIKELY(inUM() && (joinType & MATCHNULLS) && !isNull && !typelessJoin))
   {
-    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && ld)
+    if (largeRG.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && !ld.empty())
     {
       uint bucket = bucketPicker((char*)&(joblist::LONGDOUBLENULL), sizeof(joblist::LONGDOUBLENULL), bpSeed) &
                     bucketMask;
@@ -726,7 +732,7 @@ void TupleJoiner::doneInserting()
     for (i = 0; i < rowCount; i++)
     {
       if (joinAlg == PM)
-        smallRow.setPointer(rows[pmpos++]);
+        smallRow.setPointer((*rows)[pmpos++]);
       else if (typelessJoin)
       {
         while (thit == ht[bucket]->end())
@@ -816,14 +822,13 @@ void TupleJoiner::umJoinConvert(size_t begin, size_t end)
 
   while (begin < end)
   {
-    smallRow.setPointer(rows[begin++]);
+    smallRow.setPointer((*rows)[begin++]);
     insert(smallRow);
   }
 }
 
 void TupleJoiner::setInUM()
 {
-  vector<Row::Pointer> empty;
   Row smallRow;
   uint32_t i, size;
 
@@ -831,7 +836,7 @@ void TupleJoiner::setInUM()
     return;
 
   joinAlg = UM;
-  size = rows.size();
+  size = rows->size();
   size_t chunkSize =
       ((size / numCores) + 1 < 50000 ? 50000
                                      : (size / numCores) + 1);  // don't start a thread to process < 50k rows
@@ -849,14 +854,16 @@ void TupleJoiner::setInUM()
 #ifdef TJ_DEBUG
   cout << "done\n";
 #endif
-  rows.swap(empty);
+  auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+  rows.reset(new RowPointersVec(alloc));
 
   if (typelessJoin)
   {
-    tmpKeyAlloc.reset(new FixedAllocator[threadCount]);
-
     for (i = 0; i < threadCount; i++)
-      tmpKeyAlloc[i] = FixedAllocator(keyLength, true);
+    {
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
+    }
   }
 }
 
@@ -882,8 +889,8 @@ void TupleJoiner::setInUM(vector<RGData>& rgs)
     return;
 
   {  // don't need rows anymore, free the mem
-    vector<Row::Pointer> empty;
-    rows.swap(empty);
+    auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+    rows.reset(new RowPointersVec(alloc));
   }
 
   joinAlg = UM;
@@ -908,10 +915,11 @@ void TupleJoiner::setInUM(vector<RGData>& rgs)
 
   if (typelessJoin)
   {
-    tmpKeyAlloc.reset(new FixedAllocator[threadCount]);
-
     for (i = 0; i < threadCount; i++)
-      tmpKeyAlloc[i] = FixedAllocator(keyLength, true);
+    {
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
+    }
   }
 }
 
@@ -928,9 +936,9 @@ void TupleJoiner::markMatches(uint32_t threadID, uint32_t rowCount)
   for (i = 0; i < rowCount; i++)
     for (j = 0; j < matches[i].size(); j++)
     {
-      if (matches[i][j] < rows.size())
+      if (matches[i][j] < rows->size())
       {
-        smallRow[threadID].setPointer(rows[matches[i][j]]);
+        smallRow[threadID].setPointer((*rows)[matches[i][j]]);
         smallRow[threadID].markRow();
       }
     }
@@ -964,10 +972,11 @@ void TupleJoiner::setThreadCount(uint32_t cnt)
 
   if (typelessJoin)
   {
-    tmpKeyAlloc.reset(new FixedAllocator[threadCount]);
-
     for (uint32_t i = 0; i < threadCount; i++)
-      tmpKeyAlloc[i] = FixedAllocator(keyLength, true);
+    {
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
+    }
   }
 
   if (fe)
@@ -990,14 +999,14 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
   {
     uint32_t i, size;
 
-    size = rows.size();
+    size = rows->size();
 
     for (i = 0; i < size; i++)
     {
-      smallR.setPointer(rows[i]);
+      smallR.setPointer((*rows)[i]);
 
       if (!smallR.isMarked())
-        out->push_back(rows[i]);
+        out->push_back((*rows)[i]);
     }
   }
   else
@@ -1055,28 +1064,6 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
         }
     }
   }
-}
-
-uint64_t TupleJoiner::getMemUsage() const
-{
-  if (inUM() && typelessJoin)
-  {
-    size_t ret = 0;
-    for (uint i = 0; i < bucketCount; i++)
-      ret += _pool[i]->getMemUsage();
-    for (int i = 0; i < numCores; i++)
-      ret += storedKeyAlloc[i].getMemUsage();
-    return ret;
-  }
-  else if (inUM())
-  {
-    size_t ret = 0;
-    for (uint i = 0; i < bucketCount; i++)
-      ret += _pool[i]->getMemUsage();
-    return ret;
-  }
-  else
-    return (rows.size() * sizeof(Row::Pointer));
 }
 
 void TupleJoiner::setFcnExpFilter(boost::shared_ptr<funcexp::FuncExpWrapper> pt)
@@ -1217,7 +1204,7 @@ size_t TupleJoiner::size() const
     return ret;
   }
 
-  return rows.size();
+  return rows->size();
 }
 
 class TypelessDataStringEncoder
@@ -1788,20 +1775,10 @@ void TupleJoiner::setTableName(const string& tname)
 
 void TupleJoiner::clearData()
 {
-  _pool.reset(new boost::shared_ptr<utils::PoolAllocator>[bucketCount]);
-  if (typelessJoin)
-    ht.reset(new boost::scoped_ptr<typelesshash_t>[bucketCount]);
-  else if (smallRG.getColTypes()[smallKeyColumns[0]] == CalpontSystemCatalog::LONGDOUBLE)
-    ld.reset(new boost::scoped_ptr<ldhash_t>[bucketCount]);
-  else if (smallRG.usesStringTable())
-    sth.reset(new boost::scoped_ptr<sthash_t>[bucketCount]);
-  else
-    h.reset(new boost::scoped_ptr<hash_t>[bucketCount]);
-
+  // This loop calls dtors and deallocates mem.
   for (uint i = 0; i < bucketCount; i++)
   {
-    STLPoolAllocator<pair<const TypelessData, Row::Pointer>> alloc;
-    _pool[i] = alloc.getPoolAllocator();
+    auto alloc = resourceManager_->getAllocator<pair<const TypelessData, Row::Pointer>>();
     if (typelessJoin)
       ht[i].reset(new typelesshash_t(10, hasher(), typelesshash_t::key_equal(), alloc));
     else if (smallRG.getColTypes()[smallKeyColumns[0]] == CalpontSystemCatalog::LONGDOUBLE)
@@ -1809,11 +1786,13 @@ void TupleJoiner::clearData()
     else if (smallRG.usesStringTable())
       sth[i].reset(new sthash_t(10, hasher(), sthash_t::key_equal(), alloc));
     else
+    {
       h[i].reset(new hash_t(10, hasher(), hash_t::key_equal(), alloc));
+    }
   }
 
-  std::vector<rowgroup::Row::Pointer> empty;
-  rows.swap(empty);
+  auto alloc = resourceManager_->getAllocator<rowgroup::Row::Pointer>();
+  rows.reset(new RowPointersVec(alloc));
   finished = false;
 }
 
@@ -1839,6 +1818,7 @@ std::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
 
   ret->discreteValues.reset(new bool[smallKeyColumns.size()]);
   ret->cpValues.reset(new vector<int128_t>[smallKeyColumns.size()]);
+  ret->resourceManager_ = resourceManager_;
 
   for (uint32_t i = 0; i < smallKeyColumns.size(); i++)
   {
@@ -1875,9 +1855,11 @@ std::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
 
   if (typelessJoin)
   {
-    ret->storedKeyAlloc.reset(new FixedAllocator[numCores]);
     for (int i = 0; i < numCores; i++)
-      ret->storedKeyAlloc[i].setAllocSize(keyLength);
+    {
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
+    }
   }
 
   ret->numCores = numCores;

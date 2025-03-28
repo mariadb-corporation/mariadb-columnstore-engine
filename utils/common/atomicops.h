@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sched.h>
+#include <atomic>
 
 /*
 This is an attempt to wrap the differneces between Windows and Linux around atomic ops.
@@ -30,6 +31,16 @@ Boost has something in interprocess::ipcdetail, but it doesn't have 64-bit API's
 
 namespace atomicops
 {
+// Atomic operations for atomic<int64_t> references
+inline int64_t atomicAddRef(std::atomic<int64_t>& ref, int64_t val)
+{
+  return ref.fetch_add(val, std::memory_order_relaxed);
+}
+
+inline int64_t atomicSubRef(std::atomic<int64_t>& ref, int64_t val)
+{
+  return ref.fetch_sub(val, std::memory_order_relaxed);
+}
 // Returns the resulting, incremented value
 template <typename T>
 inline T atomicInc(volatile T* mem)

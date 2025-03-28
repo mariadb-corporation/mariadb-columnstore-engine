@@ -22,7 +22,7 @@
 #include <cassert>
 #include <sstream>
 #include <iomanip>
-#include <tr1/unordered_set>
+#include <unordered_set>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -83,8 +83,7 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-typedef tr1::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >
-    DistinctMap_t;
+using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, allocators::CountingAllocator<rowgroup::Row::Pointer> >;
 };  // namespace
 
 inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
@@ -165,6 +164,8 @@ void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
 
 void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 {
+  // Initialize ResourceManager to acount memory usage. 
+  fRm = jobInfo.rm;
   // Initialize structures used by separate workers
   uint64_t id = 1;
   fRowGroupIn = rgIn;
@@ -376,7 +377,7 @@ void TupleAnnexStep::execute(uint32_t id)
 
 void TupleAnnexStep::executeNoOrderBy()
 {
-  utils::setThreadName("TASwoOrd");
+  utils::setThreadName("TNSwoOrd");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
@@ -459,8 +460,7 @@ void TupleAnnexStep::executeNoOrderBy()
 
 void TupleAnnexStep::executeNoOrderByWithDistinct()
 {
-  utils::setThreadName("TASwoOrdDist");
-  scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
+  utils::setThreadName("TNSwoOrdDist");
   vector<RGData> dataVec;
   vector<RGData> dataVecSkip;
   RGData rgDataIn;
@@ -469,6 +469,9 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   RowGroup rowGroupSkip;
   Row rowSkip;
   bool more = false;
+
+  auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), alloc));
 
   rgDataOut.reinit(fRowGroupOut);
   fRowGroupOut.setData(&rgDataOut);
@@ -506,7 +509,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
       for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled() && !fLimitHit; ++i)
       {
-        pair<DistinctMap_t::iterator, bool> inserted;
+        pair<TNSDistinctMap_t::iterator, bool> inserted;
         Row* rowPtr;
 
         if (distinctMap->size() < fLimitStart)
@@ -542,6 +545,8 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
               // allocate new RGData for skipped rows below the fLimitStart
               // offset (do not take it into account in RM assuming there
               // are few skipped rows
+              checkAndAllocateMemory4RGData(rowGroupSkip);
+
               dataVecSkip.push_back(rgDataSkip);
               rgDataSkip.reinit(rowGroupSkip);
               rowGroupSkip.setData(&rgDataSkip);
@@ -558,6 +563,7 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
           if (UNLIKELY(fRowGroupOut.getRowCount() >= rowgroup::rgCommonSize))
           {
+            checkAndAllocateMemory4RGData(fRowGroupOut);
             dataVec.push_back(rgDataOut);
             rgDataOut.reinit(fRowGroupOut);
             fRowGroupOut.setData(&rgDataOut);
@@ -570,14 +576,19 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
       more = fInputDL->next(fInputIterator, &rgDataIn);
     }
 
+    // to reduce memory consumption
+    dataVecSkip.clear();
+
     if (fRowGroupOut.getRowCount() > 0)
       dataVec.push_back(rgDataOut);
 
-    for (vector<RGData>::iterator i = dataVec.begin(); i != dataVec.end(); i++)
+    while (!dataVec.empty())
     {
-      rgDataOut = *i;
-      fRowGroupOut.setData(&rgDataOut);
-      fOutputDL->insert(rgDataOut);
+      auto& rgData = dataVec.back();
+      fRowGroupOut.setData(&rgData);
+      fRm->returnMemory(fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize());
+      fOutputDL->insert(rgData);
+      dataVec.pop_back();
     }
   }
   catch (...)
@@ -593,9 +604,19 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   fOutputDL->endOfInput();
 }
 
+void TupleAnnexStep::checkAndAllocateMemory4RGData(const rowgroup::RowGroup& rowGroup)
+{
+    uint64_t size = rowGroup.getSizeWithStrings() - rowGroup.getHeaderSize();
+    if (!fRm->getMemory(size, false))
+    {
+        cerr << IDBErrorInfo::instance()->errorMsg(ERR_TNS_DISTINCT_IS_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
+        throw IDBExcept(ERR_TNS_DISTINCT_IS_TOO_BIG);
+    }
+}
+
 void TupleAnnexStep::executeWithOrderBy()
 {
-  utils::setThreadName("TASwOrd");
+  utils::setThreadName("TNSwOrd");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
@@ -667,6 +688,10 @@ void TupleAnnexStep::executeWithOrderBy()
         {
           fRowsReturned += fRowGroupOut.getRowCount();
           fOutputDL->insert(rgDataOut);
+
+          // release RGData memory
+          size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
+          fOrderBy->returnRGDataMemory2RM(rgDataSize);
         }
       }
     }
@@ -698,7 +723,7 @@ void TupleAnnexStep::executeWithOrderBy()
 */
 void TupleAnnexStep::finalizeParallelOrderByDistinct()
 {
-  utils::setThreadName("TASwParOrdDistM");
+  utils::setThreadName("TNSwParOrdDistM");
   uint64_t count = 0;
   uint64_t offset = 0;
   uint32_t rowSize = 0;
@@ -709,8 +734,11 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   fRowGroupOut.resetRowGroup(0);
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
-  ordering::SortingPQ finalPQ;
-  scoped_ptr<DistinctMap_t> distinctMap(new DistinctMap_t(10, TAHasher(this), TAEq(this)));
+
+  auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
+  auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), allocDistinct));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
 
@@ -727,7 +755,7 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
       fOrderByList[id]->getRule().revertRules();
       ordering::SortingPQ& currentPQ = fOrderByList[id]->getQueue();
       finalPQ.reserve(finalPQ.size() + currentPQ.size());
-      pair<DistinctMap_t::iterator, bool> inserted;
+      pair<TNSDistinctMap_t::iterator, bool> inserted;
       while (currentPQ.size())
       {
         ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(currentPQ.top());
@@ -864,14 +892,6 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
 
   fOutputDL->endOfInput();
 
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
-  postStepSummaryTele(sts);
-
   if (traceOn())
   {
     if (dlTimes.FirstReadTime().tv_sec == 0)
@@ -881,6 +901,20 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
     dlTimes.setEndOfInputTime();
     printCalTrace();
   }
+
+  // Release memory before ctor
+  for (uint64_t id = 1; id <= fMaxThreads; id++)
+  {
+    fOrderByList[id]->returnAllRGDataMemory2RM();
+  }
+
+  StepTeleStats sts;
+  sts.query_uuid = fQueryUuid;
+  sts.step_uuid = fStepUuid;
+  sts.msg_type = StepTeleStats::ST_SUMMARY;
+  sts.total_units_of_work = sts.units_of_work_completed = 1;
+  sts.rows = fRowsReturned;
+  postStepSummaryTele(sts);
 }
 
 /*
@@ -897,13 +931,14 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
 */
 void TupleAnnexStep::finalizeParallelOrderBy()
 {
-  utils::setThreadName("TASwParOrdMerge");
+  utils::setThreadName("TNSwParOrdMerge");
   uint64_t count = 0;
   uint64_t offset = 0;
   uint32_t rowSize = 0;
 
   rowgroup::RGData rgDataOut;
-  ordering::SortingPQ finalPQ;
+  auto alloc = fRm->getAllocator<ordering::OrderByRow>();
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
   fRowGroupOut.setData(&rgDataOut);
   fRowGroupOut.resetRowGroup(0);
@@ -1051,6 +1086,19 @@ void TupleAnnexStep::finalizeParallelOrderBy()
 
   fOutputDL->endOfInput();
 
+  if (traceOn())
+  {
+    dlTimes.setLastReadTime();
+    dlTimes.setEndOfInputTime();
+    printCalTrace();
+  }
+
+  // Release memory before ctor
+  for (uint64_t id = 1; id <= fMaxThreads; id++)
+  {
+    fOrderByList[id]->returnAllRGDataMemory2RM();
+  }
+
   StepTeleStats sts;
   sts.query_uuid = fQueryUuid;
   sts.step_uuid = fStepUuid;
@@ -1058,18 +1106,11 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   sts.total_units_of_work = sts.units_of_work_completed = 1;
   sts.rows = fRowsReturned;
   postStepSummaryTele(sts);
-
-  if (traceOn())
-  {
-    dlTimes.setLastReadTime();
-    dlTimes.setEndOfInputTime();
-    printCalTrace();
-  }
 }
 
 void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
 {
-  utils::setThreadName("TASwParOrd");
+  utils::setThreadName("TNSwParOrd");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;

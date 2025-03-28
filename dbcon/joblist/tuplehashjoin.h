@@ -529,6 +529,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
     }
     void operator()()
     {
+      std::string name = "HJSJoinRun" + std::to_string(index);
+      utils::setThreadName(name.c_str());
       HJ->joinRunnerFcn(index);
     }
     TupleHashJoinStep* HJ;
@@ -650,6 +652,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   bool stopMemTracking;
   void trackMem(uint index);
   void startSmallRunners(uint index);
+  void outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> joiner);
 
   friend class DiskJoinStep;
 };

@@ -25,6 +25,7 @@
 #include <memory>
 #include <boost/shared_ptr.hpp>
 #include "poolallocator.h"
+#include "resourcemanager.h"
 
 #undef min
 #undef max
@@ -61,6 +62,7 @@ class STLPoolAllocator
   };
 
   STLPoolAllocator() throw();
+  STLPoolAllocator(joblist::ResourceManager* rm);
   STLPoolAllocator(const STLPoolAllocator&) throw();
   STLPoolAllocator(uint32_t capacity) throw();
   template <class U>
@@ -95,15 +97,23 @@ STLPoolAllocator<T>::STLPoolAllocator() throw()
 }
 
 template <class T>
-STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<T>& s) throw()
+STLPoolAllocator<T>::STLPoolAllocator(joblist::ResourceManager* rm)
 {
-  pa = s.pa;
+  if (rm) 
+  {
+    auto alloc = rm->getAllocator<PoolAllocatorBufType>();
+    pa.reset(new PoolAllocator(alloc, DEFAULT_SIZE));
+  }
+  else
+  {
+    pa.reset(new PoolAllocator(DEFAULT_SIZE));
+  }
 }
 
 template <class T>
-STLPoolAllocator<T>::STLPoolAllocator(uint32_t capacity) throw()
+STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<T>& s) throw()
 {
-  pa.reset(new PoolAllocator(capacity));
+  pa = s.pa;
 }
 
 template <class T>
@@ -116,17 +126,6 @@ STLPoolAllocator<T>::STLPoolAllocator(const STLPoolAllocator<U>& s) throw()
 template <class T>
 STLPoolAllocator<T>::~STLPoolAllocator()
 {
-}
-
-template <class T>
-void STLPoolAllocator<T>::usePoolAllocator(boost::shared_ptr<PoolAllocator> p)
-{
-  pa = p;
-}
-template <class T>
-boost::shared_ptr<utils::PoolAllocator> STLPoolAllocator<T>::getPoolAllocator()
-{
-  return pa;
 }
 
 template <class T>

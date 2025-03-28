@@ -45,7 +45,7 @@ class FilterCommand : public Command
 
   // virtuals from base class -- Command
   void execute() override;
-  void project() override;
+  void project(messageqcpp::SBS& bs) override;
   void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col) override;
   uint64_t getLBID() override;
   void nextLBID() override;

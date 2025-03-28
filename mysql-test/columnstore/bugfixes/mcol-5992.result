@@ -1,0 +1,9 @@
+DROP DATABASE IF EXISTS mcol5992;
+CREATE DATABASE mcol5992;
+USE mcol5992;
+CREATE TABLE `CS_LEG` (`ID` bigint(20) DEFAULT NULL, `sess_count` smallint(6) DEFAULT NULL) ENGINE=Columnstore;
+insert into CS_LEG(ID) values(1);
+select NULLIF(sess_count,0) from CS_LEG;
+NULLIF(sess_count,0)
+NULL
+DROP DATABASE mcol5992;

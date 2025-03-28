@@ -414,7 +414,7 @@ void DictStep::_execute()
 }
 
 /* This will do the same thing as execute() but put the result in bpp->serialized */
-void DictStep::_project()
+void DictStep::_project(messageqcpp::SBS& bs)
 {
   /* Need to loop over bpp->values, issuing a primitive for each LBID */
   uint32_t i;
@@ -466,13 +466,13 @@ void DictStep::_project()
   }
 
   idbassert(tmpResultCounter == bpp->ridCount);
-  *bpp->serialized << totalResultLength;
+  *bs << totalResultLength;
 
   // cout << "_project() total length = " << totalResultLength << endl;
   for (i = 0; i < tmpResultCounter; i++)
   {
     // cout << "serializing " << tmpStrings[i] << endl;
-    *bpp->serialized << tmpStrings[i];
+    *bs << tmpStrings[i];
   }
 
   // cout << "DS: /_project() l: " << l_lbid << endl;
@@ -645,16 +645,16 @@ void DictStep::_projectToRG(RowGroup& rg, uint32_t col)
   //	<<  endl;
 }
 
-void DictStep::project()
+void DictStep::project(messageqcpp::SBS& bs)
 {
   values = bpp->values;
-  _project();
+  _project(bs);
 }
 
-void DictStep::project(int64_t* vals)
+void DictStep::project(messageqcpp::SBS& bs, int64_t* vals)
 {
   values = vals;
-  _project();
+  _project(bs);
 }
 
 void DictStep::projectIntoRowGroup(RowGroup& rg, uint32_t col)

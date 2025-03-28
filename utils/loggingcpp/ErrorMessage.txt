@@ -110,6 +110,8 @@
 
 2061	ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION	%1% is not in GROUP BY clause, not a column or an expression that contains function.
 
+2063	ERR_TNS_DISTINCT_IS_TOO_BIG	DISTINCT memory limit is exceeded whilst running TNS step.
+
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.
 3002	ERR_MORE_THAN_1_ROW	Subquery returns more than 1 row.

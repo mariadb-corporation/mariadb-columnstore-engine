@@ -20,10 +20,10 @@
  *
  ******************************************************************************************/
 
-#include <iostream>
 //#define NDEBUG
 #include <cassert>
-
+#include <boost/smart_ptr/allocate_shared_array.hpp>
+#include <boost/smart_ptr/make_shared_array.hpp>
 
 #include "poolallocator.h"
 
@@ -37,6 +37,7 @@ PoolAllocator& PoolAllocator::operator=(const PoolAllocator& v)
   allocSize = v.allocSize;
   tmpSpace = v.tmpSpace;
   useLock = v.useLock;
+  alloc = v.alloc;
   deallocateAll();
   return *this;
 }
@@ -52,15 +53,19 @@ void PoolAllocator::deallocateAll()
 
 void PoolAllocator::newBlock()
 {
-  std::shared_ptr<uint8_t[]> next;
-
   capacityRemaining = allocSize;
 
   if (!tmpSpace || mem.size() == 0)
   {
-    next.reset(new uint8_t[allocSize]);
-    mem.push_back(next);
-    nextAlloc = next.get();
+    if (alloc)
+    {
+      mem.emplace_back(boost::allocate_shared<PoolAllocatorBufType>(*alloc, allocSize)); 
+    }
+    else 
+    {
+      mem.emplace_back(boost::make_shared<PoolAllocatorBufType>(allocSize));
+    }
+    nextAlloc = mem.back().get();
   }
   else
     nextAlloc = mem.front().get();
@@ -71,7 +76,14 @@ void* PoolAllocator::allocOOB(uint64_t size)
   OOBMemInfo memInfo;
 
   memUsage += size;
-  memInfo.mem.reset(new uint8_t[size]);
+  if (alloc)
+  {
+    memInfo.mem = boost::allocate_shared<PoolAllocatorBufType>(*alloc, size);
+  }
+  else 
+  {
+    memInfo.mem = boost::make_shared<PoolAllocatorBufType>(size);
+  }
   memInfo.size = size;
   void* ret = (void*)memInfo.mem.get();
   oob[ret] = memInfo;

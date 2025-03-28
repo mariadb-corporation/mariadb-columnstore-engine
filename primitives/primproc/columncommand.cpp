@@ -654,7 +654,7 @@ void ColumnCommand::fillInPrimitiveMessageHeader(const int8_t outputType, const 
 }
 
 /* Assumes OT_DATAVALUE */
-void ColumnCommand::projectResult()
+void ColumnCommand::projectResult(messageqcpp::SBS& bs)
 {
   auto nvals = outMsg->NVALS;
   if (primMsg->NVALS != nvals || nvals != bpp->ridCount)
@@ -687,8 +687,8 @@ void ColumnCommand::projectResult()
   idbassert(primMsg->NVALS == nvals);
   idbassert(bpp->ridCount == nvals);
   uint32_t valuesByteSize = nvals * colType.colWidth;
-  *bpp->serialized << valuesByteSize;
-  bpp->serialized->append(primitives::getFirstValueArrayPosition(outMsg), valuesByteSize);
+  *bs << valuesByteSize;
+  bs->append(primitives::getFirstValueArrayPosition(outMsg), valuesByteSize);
 }
 
 void ColumnCommand::removeRowsFromRowGroup(RowGroup& rg)
@@ -815,19 +815,19 @@ void ColumnCommand::projectResultRG(RowGroup& rg, uint32_t pos)
   }
 }
 
-void ColumnCommand::project()
+void ColumnCommand::project(messageqcpp::SBS& bs)
 {
   /* bpp->ridCount == 0 would signify a scan operation */
   if (bpp->ridCount == 0)
   {
-    *bpp->serialized << (uint32_t)0;
+    *bs << (uint32_t)0;
     blockCount += colType.colWidth;
     return;
   }
 
   makeStepMsg();
   issuePrimitive();
-  projectResult();
+  projectResult(bs);
 }
 
 void ColumnCommand::projectIntoRowGroup(RowGroup& rg, uint32_t pos)

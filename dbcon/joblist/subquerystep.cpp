@@ -239,7 +239,7 @@ uint32_t SubAdapterStep::nextBand(messageqcpp::ByteStream& bs)
   if (fEndOfResult)
   {
     // send an empty / error band
-    RGData rgData(fRowGroupDeliver, 0);
+    RGData rgData(fRowGroupDeliver, 0U);
     fRowGroupDeliver.setData(&rgData);
     fRowGroupDeliver.resetRowGroup(0);
     fRowGroupDeliver.setStatus(status());
