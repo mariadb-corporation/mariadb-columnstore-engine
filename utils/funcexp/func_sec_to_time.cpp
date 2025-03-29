@@ -221,7 +221,7 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row, Functi
     tmpVal = strtoll(str, &ep, 10);
   }
 
-  if (parm[0]->data()->resultType().isWideDecimalType())
+  if (op_ct.isWideDecimalType())
     d.s128Value = tmpVal;
   else
     d.value = tmpVal;
