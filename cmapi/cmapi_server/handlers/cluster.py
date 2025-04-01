@@ -162,7 +162,10 @@ class ClusterHandler():
         :rtype: dict
         """
         logger: logging.Logger = logging.getLogger('cmapi_server')
-        logger.debug('Cluster add node command called. Adding node %s in %s mode.', node, 'read-only' if read_only else 'read-write')
+        logger.debug(
+            'Cluster add node command called. '
+            f'Adding node {node} in {"read-only" if read_only else "read-write"} mode.'
+        )
 
         response = {'timestamp': str(datetime.now())}
 
@@ -179,7 +182,7 @@ class ClusterHandler():
                         output_config_filename=config
                     )
                 else:
-                    logger.debug("Node %s is read-only, skipping dbroot addition", node)
+                    logger.debug(f"Node {node} is read-only, skipping dbroot addition")
 
         except Exception as err:
             raise CMAPIBasicError('Error while adding node.') from err
