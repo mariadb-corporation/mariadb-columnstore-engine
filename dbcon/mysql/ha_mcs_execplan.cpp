@@ -7790,1036 +7790,10 @@ void buildInToExistsFilter(gp_walk_info& gwi, SELECT_LEX& select_lex)
   }
 }
 
-/*@brief  Translates SELECT_LEX into CSEP                  */
-/***********************************************************
- * DESCRIPTION:
- *  This function takes SELECT_LEX and tries to produce
- *  a corresponding CSEP out of it. It is made of parts that
- *  process parts of the query, e.g. FROM, WHERE, SELECT,
- *  HAVING, GROUP BY, ORDER BY. FROM, WHERE, LIMIT are processed
- *  by corresponding methods. CS calls getSelectPlan()
- *  recursively to process subqueries.
- * ARGS
- *  isUnion if true CS processes UNION unit now
- *  isSelectHandlerTop removes offset at the top of SH query.
- * RETURNS
- *  error id as an int
- ***********************************************************/
-int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
-                  bool isSelectHandlerTop, bool isSelectLexUnit, const std::vector<COND*>& condStack)
+static int processOrderBy(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, ORDER* startOrderCol, boost::shared_ptr<CalpontSystemCatalog>& csc, SRCP& minSc, bool isUnion, bool unionSel, bool isSelectHandlerTop)
 {
-#ifdef DEBUG_WALK_COND
-  cerr << "getSelectPlan()" << endl;
-#endif
-  int rc = 0;
-  // rollup is currently not supported
-  bool withRollup = select_lex.olap == ROLLUP_TYPE;
-
-  setExecutionParams(gwi, csep);
-
-  gwi.subSelectType = csep->subType();
+  int rc;
   uint32_t sessionID = csep->sessionID();
-  gwi.sessionid = sessionID;
-  boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
-  csc->identity(CalpontSystemCatalog::FE);
-  csep->timeZone(gwi.timeZone);
-  gwi.csc = csc;
-
-  CalpontSelectExecutionPlan::SelectList derivedTbList;
-  // @bug 1796. Remember table order on the FROM list.
-  gwi.clauseType = FROM;
-  if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop, isSelectLexUnit)))
-  {
-    return rc;
-  }
-
-  gwi.clauseType = WHERE;
-  if ((rc = processWhere(select_lex, gwi, csep, condStack)))
-  {
-    return rc;
-  }
-
-  bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
-
-  ORDER* startOrderCol = nullptr; // single traverse point for all ORDER BY analyses.
-
-  {
-    SQL_I_List<ORDER> order_list = select_lex.order_list;
-    startOrderCol = static_cast<ORDER*>(order_list.first);
-    if (unionSel)
-    {
-      order_list = select_lex.master_unit()->global_parameters()->order_list;
-      startOrderCol = static_cast<ORDER*>(order_list.first);
-    }
-    if (!startOrderCol && select_lex.master_unit()->fake_select_lex)
-    {
-      order_list = select_lex.master_unit()->fake_select_lex->order_list;
-      startOrderCol = static_cast<ORDER*>(order_list.first);
-    }
-  }
-
-  gwi.clauseType = SELECT;
-  SELECT_LEX* oldSelectLex = gwi.select_lex; // XXX: SZ: should it be restored in case of error return?
-  gwi.select_lex = &select_lex;
-#ifdef DEBUG_WALK_COND
-  {
-    cerr << "------------------- SELECT --------------------" << endl;
-    List_iterator_fast<Item> it(select_lex.item_list);
-    Item* item;
-
-    while ((item = it++))
-    {
-      debug_walk(item, 0);
-    }
-
-    cerr << "-----------------------------------------------\n" << endl;
-  }
-#endif
-
-  // analyze SELECT and ORDER BY parts - do they have implicit GROUP BY induced by aggregates?
-  {
-    if (select_lex.group_list.first)
-    {
-      // we have an explicit GROUP BY.
-      gwi.implicitExplicitGroupBy = true;
-    }
-    else
-    {
-      // do we have an implicit GROUP BY?
-      List_iterator_fast<Item> it(select_lex.item_list);
-      Item* item;
-
-      while ((item = it++))
-      {
-        analyzeForImplicitGroupBy(item, gwi);
-      }
-      ORDER* ordercol = startOrderCol;
-
-      for (; ordercol; ordercol = ordercol->next)
-      {
-        analyzeForImplicitGroupBy(*(ordercol->item), gwi);
-      }
-    }
-  }
-  // populate returnedcolumnlist and columnmap
-  List_iterator_fast<Item> it(select_lex.item_list);
-  Item* item;
-  vector<Item_field*> funcFieldVec;
-
-  // empty rcWorkStack and ptWorkStack. They should all be empty by now.
-  clearStacks(gwi, false, true);
-
-  // indicate the starting pos of scalar returned column, because some join column
-  // has been inserted to the returned column list.
-  if (gwi.subQuery)
-  {
-    ScalarSub* scalar = dynamic_cast<ScalarSub*>(gwi.subQuery);
-
-    if (scalar)
-      scalar->returnedColPos(gwi.additionalRetCols.size());
-  }
-
-  CalpontSelectExecutionPlan::SelectList selectSubList;
-
-  while ((item = it++))
-  {
-    string itemAlias = (item->name.length ? item->name.str : "<NULL>");
-
-    // @bug 5916. Need to keep checking until getting concret item in case
-    // of nested view.
-    Item* baseItem = item;
-    while (item->type() == Item::REF_ITEM)
-    {
-      Item_ref* ref = (Item_ref*)item;
-      item = (*(ref->ref));
-    }
-
-    Item::Type itype = item->type();
-
-    switch (itype)
-    {
-      case Item::FIELD_ITEM:
-      {
-        Item_field* ifp = (Item_field*)item;
-        SimpleColumn* sc = NULL;
-
-        if (ifp->field_name.length && string(ifp->field_name.str) == "*")
-        {
-          collectAllCols(gwi, ifp);
-          break;
-        }
-        sc = buildSimpleColumn(ifp, gwi);
-
-        if (sc)
-        {
-          string fullname;
-          String str;
-          ifp->print(&str, QT_ORDINARY);
-          fullname = str.c_ptr();
-
-          if (!ifp->is_explicit_name())  // no alias
-          {
-            sc->alias(fullname);
-          }
-          else  // alias
-          {
-            if (!itemAlias.empty())
-              sc->alias(itemAlias);
-          }
-
-          // We need to look into GROUP BY columns to decide if we need to wrap a column.
-          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
-
-          SRCP sprc(rc);
-	  pushReturnedCol(gwi, baseItem, sprc);
-
-          gwi.columnMap.insert(
-              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), sprc));
-          TABLE_LIST* tmp = 0;
-
-          if (ifp->cached_table)
-            tmp = ifp->cached_table;
-
-          gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(),
-                                       sc->isColumnStore())] = make_pair(1, tmp);
-        }
-        else
-        {
-          setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-          delete sc;
-          return ER_INTERNAL_ERROR;
-        }
-
-        break;
-      }
-
-      // aggregate column
-      case Item::SUM_FUNC_ITEM:
-      {
-        ReturnedColumn* ac = buildAggregateColumn(item, gwi);
-
-        if (gwi.fatalParseError)
-        {
-          // e.g., non-support ref column
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          delete ac;
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        // add this agg col to returnedColumnList
-        boost::shared_ptr<ReturnedColumn> spac(ac);
-	pushReturnedCol(gwi, item, spac);
-        break;
-      }
-
-      case Item::FUNC_ITEM:
-      {
-        Item_func* ifp = static_cast<Item_func*>(item);
-
-        // @bug4383. error out non-support stored function
-        if (ifp->functype() == Item_func::FUNC_SP)
-        {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        if (string(ifp->func_name()) == "xor")
-        {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        uint16_t parseInfo = 0;
-        vector<Item_field*> tmpVec;
-        bool hasNonSupportItem = false;
-        parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo, &gwi);
-
-        if (ifp->with_subquery() || string(ifp->func_name()) == string("<in_optimizer>") ||
-            ifp->functype() == Item_func::NOT_ALL_FUNC || parseInfo & SUB_BIT)
-        {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        // if "IN" or "BETWEEN" are in the SELECT clause, build function column
-        string funcName = ifp->func_name();
-        ReturnedColumn* rc;
-        if (funcName == "in" || funcName == " IN " || funcName == "between")
-        {
-          rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, true);
-        }
-        else
-        {
-          rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
-        }
-
-        SRCP srcp(rc);
-
-        if (rc)
-        {
-          // MCOL-2178 CS has to process determenistic functions with constant arguments.
-          if (!hasNonSupportItem && ifp->const_item() && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
-          {
-            srcp.reset(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-	    pushReturnedCol(gwi, item, srcp);
-
-            if (ifp->name.length)
-              srcp->alias(ifp->name.str);
-
-            continue;
-          }
-
-	  pushReturnedCol(gwi, item, srcp);
-        }
-        else  // This was a vtable post-process block
-        {
-          hasNonSupportItem = false;
-          uint32_t before_size = funcFieldVec.size();
-          parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo, &gwi);
-          uint32_t after_size = funcFieldVec.size();
-
-          // pushdown handler projection functions
-          // @bug3881. set_user_var can not be treated as constant function
-          // @bug5716. Try to avoid post process function for union query.
-          if (!hasNonSupportItem && (after_size - before_size) == 0 && !(parseInfo & AGG_BIT) &&
-              !(parseInfo & SUB_BIT))
-          {
-            ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
-
-            SRCP srcp(cc);
-
-            if (ifp->name.length)
-              cc->alias(ifp->name.str);
-
-	    pushReturnedCol(gwi, ifp, srcp);
-
-            // clear the error set by buildFunctionColumn
-            gwi.fatalParseError = false;
-            gwi.parseErrorText = "";
-            break;
-          }
-          else if (hasNonSupportItem || parseInfo & AGG_BIT || parseInfo & SUB_BIT ||
-                   (gwi.fatalParseError && gwi.subQuery))
-          {
-            if (gwi.parseErrorText.empty())
-            {
-              Message::Args args;
-              args.add(ifp->func_name());
-              gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
-            }
-
-            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-            return ER_CHECK_NOT_IMPLEMENTED;
-          }
-          else if (gwi.subQuery && (isPredicateFunction(ifp, &gwi) || ifp->type() == Item::COND_ITEM))
-          {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-            return ER_CHECK_NOT_IMPLEMENTED;
-          }
-
-          //@Bug 3030 Add error check for dml statement
-          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
-          {
-            if (after_size - before_size != 0)
-            {
-              gwi.parseErrorText = ifp->func_name();
-              return -1;
-            }
-          }
-          else
-          {
-            Message::Args args;
-            args.add(ifp->func_name());
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
-            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-            return ER_CHECK_NOT_IMPLEMENTED;
-          }
-        }
-
-        break;
-      }  // End of FUNC_ITEM
-
-      // DRRTUY Replace the whole section with typeid() checks or use
-      // static_cast here
-      case Item::CONST_ITEM:
-      {
-        switch (item->cmp_type())
-
-        {
-          case INT_RESULT:
-          case STRING_RESULT:
-          case DECIMAL_RESULT:
-          case REAL_RESULT:
-          case TIME_RESULT:
-          {
-            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
-            {
-            }
-            else
-            {
-              // do not push the dummy column (mysql added) to returnedCol
-              if (item->name.length && string(item->name.str) == "Not_used")
-                continue;
-
-              // @bug3509. Constant column is sent to ExeMgr now.
-              SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-
-              if (item->name.length)
-                srcp->alias(item->name.str);
-
-	      pushReturnedCol(gwi, item, srcp);
-            }
-
-            break;
-          }
-          // MCOL-2178 This switch doesn't handl
-          // ROW_
-          default:
-          {
-            IDEBUG(cerr << "Warning unsupported cmp_type() in projection" << endl);
-            // noop
-          }
-        }
-        break;
-      }  // CONST_ITEM ends here
-
-      case Item::NULL_ITEM:
-      {
-        if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
-        {
-        }
-        else
-        {
-          SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
-	  pushReturnedCol(gwi, item, srcp);
-
-          if (item->name.length)
-            srcp->alias(item->name.str);
-        }
-
-        break;
-      }
-
-      case Item::SUBSELECT_ITEM:
-      {
-        Item_subselect* sub = (Item_subselect*)item;
-
-        if (sub->substype() != Item_subselect::SINGLEROW_SUBS)
-        {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-#ifdef DEBUG_WALK_COND
-        cerr << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
-        JOIN* join = sub->get_select_lex()->join;
-
-        if (join)
-        {
-          Item_cond* cond = static_cast<Item_cond*>(join->conds);
-
-          if (cond)
-            cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-        }
-
-        cerr << "Finish SELECT clause subselect item traversing" << endl;
-#endif
-        SelectSubQuery* selectSub = new SelectSubQuery(gwi, sub);
-        // selectSub->gwip(&gwi);
-        SCSEP ssub = selectSub->transform();
-
-        if (!ssub || gwi.fatalParseError)
-        {
-          if (gwi.parseErrorText.empty())
-            gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
-
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-        selectSubList.push_back(ssub);
-        SimpleColumn* rc = new SimpleColumn();
-        rc->colSource(rc->colSource() | SELECT_SUB);
-        rc->timeZone(gwi.timeZone);
-
-        if (sub->get_select_lex()->get_table_list())
-        {
-          rc->viewName(getViewName(sub->get_select_lex()->get_table_list()), lower_case_table_names);
-        }
-        if (sub->name.length)
-          rc->alias(sub->name.str);
-
-        gwi.returnedCols.push_back(SRCP(rc));
-
-        break;
-      }
-
-      case Item::COND_ITEM:
-      {
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
-
-      case Item::EXPR_CACHE_ITEM:
-      {
-        printf("EXPR_CACHE_ITEM in getSelectPlan\n");
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL);
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
-
-      case Item::WINDOW_FUNC_ITEM:
-      {
-        SRCP srcp(buildWindowFunctionColumn(item, gwi, gwi.fatalParseError));
-
-        if (!srcp || gwi.fatalParseError)
-        {
-          if (gwi.parseErrorText.empty())
-            gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
-
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-
-	pushReturnedCol(gwi, item, srcp);
-        break;
-      }
-      case Item::TYPE_HOLDER:
-      {
-        if (!gwi.tbList.size())
-        {
-          gwi.parseErrorText = "subquery with VALUES";
-          gwi.fatalParseError = true;
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-        else
-        {
-          std::cerr << "********** received TYPE_HOLDER *********" << std::endl;
-        }
-        break;
-      }
-
-      default:
-      {
-        break;
-      }
-    }
-  }
-
-  // @bug4388 normalize the project coltypes for union main select list
-  if (!csep->unionVec().empty())
-  {
-    unsigned int unionedTypeRc = 0;
-
-    for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
-    {
-      vector<CalpontSystemCatalog::ColType> coltypes;
-
-      for (uint32_t j = 0; j < csep->unionVec().size(); j++)
-      {
-        CalpontSelectExecutionPlan* unionCsep =
-            dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get());
-        coltypes.push_back(unionCsep->returnedCols()[i]->resultType());
-
-        // @bug5976. set hasAggregate true for the main column if
-        // one corresponding union column has aggregate
-        if (unionCsep->returnedCols()[i]->hasAggregate())
-          gwi.returnedCols[i]->hasAggregate(true);
-      }
-
-      gwi.returnedCols[i]->resultType(
-          CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
-
-      if (unionedTypeRc != 0)
-      {
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(unionedTypeRc);
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
-    }
-  }
-
-  // Having clause handling
-  gwi.clauseType = HAVING;
-  gwi.havingDespiteSelect = true;
-  clearStacks(gwi, false, true);
-  std::unique_ptr<ParseTree> havingFilter;
-
-  // clear fatalParseError that may be left from post process functions
-  gwi.fatalParseError = false;
-  gwi.parseErrorText = "";
-
-  gwi.disableWrapping = false;
-  gwi.havingDespiteSelect = true;
-  if (select_lex.having != 0)
-  {
-#ifdef DEBUG_WALK_COND
-    cerr << "------------------- HAVING ---------------------" << endl;
-    select_lex.having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
-    cerr << "------------------------------------------------\n" << endl;
-#endif
-    select_lex.having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
-
-    if (gwi.fatalParseError)
-    {
-      setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-      return ER_INTERNAL_ERROR;
-    }
-
-    ParseTree* ptp = 0;
-    ParseTree* rhs = 0;
-
-    // @bug 4215. some function filter will be in the rcWorkStack.
-    if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
-    {
-      gwi.ptWorkStack.push(new ParseTree(gwi.rcWorkStack.top()));
-      gwi.rcWorkStack.pop();
-    }
-
-    while (!gwi.ptWorkStack.empty())
-    {
-      havingFilter.reset(gwi.ptWorkStack.top());
-      gwi.ptWorkStack.pop();
-
-      if (gwi.ptWorkStack.empty())
-        break;
-
-      ptp = new ParseTree(new LogicOperator("and"));
-      ptp->left(havingFilter.release());
-      rhs = gwi.ptWorkStack.top();
-      gwi.ptWorkStack.pop();
-      ptp->right(rhs);
-      gwi.ptWorkStack.push(ptp);
-    }
-  }
-  gwi.havingDespiteSelect = false;
-  gwi.disableWrapping = false;
-
-  // MCOL-4617 If this is an IN subquery, then create the in-to-exists
-  // predicate and inject it into the csep
-  if (gwi.subQuery && gwi.subSelectType == CalpontSelectExecutionPlan::IN_SUBS && gwi.inSubQueryLHS &&
-      gwi.inSubQueryLHSItem)
-  {
-    // create the predicate
-    buildInToExistsFilter(gwi, select_lex);
-
-    if (gwi.fatalParseError)
-    {
-      setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
-      return ER_INTERNAL_ERROR;
-    }
-
-    // now inject the created predicate
-    if (!gwi.ptWorkStack.empty())
-    {
-      ParseTree* inToExistsFilter = gwi.ptWorkStack.top();
-      gwi.ptWorkStack.pop();
-
-      if (havingFilter)
-      {
-        ParseTree* ptp = new ParseTree(new LogicOperator("and"));
-        ptp->left(havingFilter.release());
-        ptp->right(inToExistsFilter);
-        havingFilter.reset(ptp);
-      }
-      else
-      {
-        if (csep->filters())
-        {
-          ParseTree* ptp = new ParseTree(new LogicOperator("and"));
-          ptp->left(csep->filters());
-          ptp->right(inToExistsFilter);
-          csep->filters(ptp);
-        }
-        else
-        {
-          csep->filters(inToExistsFilter);
-        }
-      }
-    }
-  }
-
-  // for post process expressions on the select list
-  // error out post process for union and sub select unit
-  if (isUnion || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
-  {
-    if (funcFieldVec.size() != 0 && !gwi.fatalParseError)
-    {
-      string emsg("Fatal parse error in vtable mode: Unsupported Items in union or sub select unit");
-      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
-      return ER_CHECK_NOT_IMPLEMENTED;
-    }
-  }
-
-  for (uint32_t i = 0; i < funcFieldVec.size(); i++)
-  {
-    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
-
-    if (!sc || gwi.fatalParseError)
-    {
-      string emsg;
-
-      if (gwi.parseErrorText.empty())
-      {
-        emsg = "un-recognized column";
-
-        if (funcFieldVec[i]->name.length)
-          emsg += string(funcFieldVec[i]->name.str);
-      }
-      else
-      {
-        emsg = gwi.parseErrorText;
-      }
-
-      setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
-      return ER_INTERNAL_ERROR;
-    }
-
-    String str;
-    funcFieldVec[i]->print(&str, QT_ORDINARY);
-    sc->alias(string(str.c_ptr()));
-    sc->tableAlias(sc->tableAlias());
-    SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]));
-    uint32_t j = 0;
-
-    for (; j < gwi.returnedCols.size(); j++)
-    {
-      if (sc->sameColumn(gwi.returnedCols[j].get()))
-      {
-        SimpleColumn* field = dynamic_cast<SimpleColumn*>(gwi.returnedCols[j].get());
-
-        if (field && field->alias() == sc->alias())
-          break;
-      }
-    }
-
-    if (j == gwi.returnedCols.size())
-    {
-      gwi.returnedCols.push_back(srcp);
-      // XXX: SZ: deduplicate here?
-      gwi.columnMap.insert(
-          CalpontSelectExecutionPlan::ColumnMap::value_type(string(funcFieldVec[i]->field_name.str), srcp));
-
-      string fullname;
-      fullname = str.c_ptr();
-      TABLE_LIST* tmp = (funcFieldVec[i]->cached_table ? funcFieldVec[i]->cached_table : 0);
-      gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(),
-                                   sc->isColumnStore())] = make_pair(1, tmp);
-    }
-  }
-
-  SRCP minSc;  // min width projected column. for count(*) use
-
-  // Group by list. not valid for union main query
-  if (!unionSel)
-  {
-    gwi.clauseType = GROUP_BY;
-    Item* nonSupportItem = NULL;
-    ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
-
-    // check if window functions are in order by. InfiniDB process order by list if
-    // window functions are involved, either in order by or projection.
-    bool hasWindowFunc = gwi.hasWindowFunc;
-    gwi.hasWindowFunc = false;
-
-    for (; groupcol; groupcol = groupcol->next)
-    {
-      if ((*(groupcol->item))->type() == Item::WINDOW_FUNC_ITEM)
-        gwi.hasWindowFunc = true;
-    }
-
-    if (gwi.hasWindowFunc)
-    {
-      gwi.fatalParseError = true;
-      gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_WF_NOT_ALLOWED, "GROUP BY clause");
-      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-      return ER_CHECK_NOT_IMPLEMENTED;
-    }
-
-    gwi.hasWindowFunc = hasWindowFunc;
-    groupcol = static_cast<ORDER*>(select_lex.group_list.first);
-
-    gwi.disableWrapping = true;
-    for (; groupcol; groupcol = groupcol->next)
-    {
-      Item* groupItem = *(groupcol->item);
-
-      // @bug5993. Could be nested ref.
-      while (groupItem->type() == Item::REF_ITEM)
-        groupItem = (*((Item_ref*)groupItem)->ref);
-
-      if (groupItem->type() == Item::FUNC_ITEM)
-      {
-        Item_func* ifp = (Item_func*)groupItem;
-
-        // call buildFunctionColumn here mostly for finding out
-        // non-support column on GB list. Should be simplified.
-        ReturnedColumn* fc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
-
-        if (!fc || gwi.fatalParseError)
-        {
-          nonSupportItem = ifp;
-          break;
-        }
-
-        if (groupcol->in_field_list && groupcol->counter_used)
-        {
-          delete fc;
-          fc = gwi.returnedCols[groupcol->counter - 1].get();
-          SRCP srcp(fc->clone());
-
-          // check if no column parm
-          for (uint32_t i = 0; i < gwi.no_parm_func_list.size(); i++)
-          {
-            if (gwi.no_parm_func_list[i]->expressionId() == fc->expressionId())
-            {
-              gwi.no_parm_func_list.push_back(dynamic_cast<FunctionColumn*>(srcp.get()));
-              break;
-            }
-          }
-
-          srcp->orderPos(groupcol->counter - 1);
-          gwi.groupByCols.push_back(srcp);
-          continue;
-        }
-        else if (groupItem->is_explicit_name())  // alias
-        {
-          uint32_t i = 0;
-
-          for (; i < gwi.returnedCols.size(); i++)
-          {
-            if (string(groupItem->name.str) == gwi.returnedCols[i]->alias())
-            {
-              ReturnedColumn* rc = gwi.returnedCols[i]->clone();
-              rc->orderPos(i);
-              gwi.groupByCols.push_back(SRCP(rc));
-              delete fc;
-              break;
-            }
-          }
-
-          if (i == gwi.returnedCols.size())
-          {
-            nonSupportItem = groupItem;
-            break;
-          }
-        }
-        else
-        {
-          uint32_t i = 0;
-
-          for (; i < gwi.returnedCols.size(); i++)
-          {
-            if (fc->operator==(gwi.returnedCols[i].get()))
-            {
-              ReturnedColumn* rc = gwi.returnedCols[i]->clone();
-              rc->orderPos(i);
-              gwi.groupByCols.push_back(SRCP(rc));
-              delete fc;
-              break;
-            }
-          }
-
-          if (i == gwi.returnedCols.size())
-          {
-            gwi.groupByCols.push_back(SRCP(fc));
-            break;
-          }
-        }
-      }
-      else if (groupItem->type() == Item::FIELD_ITEM)
-      {
-        Item_field* ifp = (Item_field*)groupItem;
-        // this GB col could be an alias of F&E on the SELECT clause, not necessarily a field.
-        ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
-        SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
-
-        if (sc)
-        {
-          bool found = false;
-          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-          {
-            if (sc->sameColumn(gwi.returnedCols[j].get()))
-            {
-              sc->orderPos(j);
-              found = true;
-              break;
-            }
-          }
-          for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
-          {
-            if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
-            {
-              delete rc;
-              rc = gwi.returnedCols[j].get()->clone();
-              rc->orderPos(j);
-              break;
-            }
-          }
-        }
-        else
-        {
-          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-          {
-            if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
-            {
-              delete rc;
-              rc = gwi.returnedCols[j].get()->clone();
-              rc->orderPos(j);
-              break;
-            }
-          }
-        }
-
-        if (!rc)
-        {
-          nonSupportItem = ifp;
-          break;
-        }
-
-        SRCP srcp(rc);
-
-        // bug 3151
-        AggregateColumn* ac = dynamic_cast<AggregateColumn*>(rc);
-
-        if (ac)
-        {
-          nonSupportItem = ifp;
-          break;
-        }
-
-        gwi.groupByCols.push_back(srcp);
-        gwi.columnMap.insert(
-            CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), srcp));
-      }
-      // @bug5638. The group by column is constant but not counter, alias has to match a column
-      // on the select list
-      else if (!groupcol->counter_used &&
-               (groupItem->type() == Item::CONST_ITEM &&
-                (groupItem->cmp_type() == INT_RESULT || groupItem->cmp_type() == STRING_RESULT ||
-                 groupItem->cmp_type() == REAL_RESULT || groupItem->cmp_type() == DECIMAL_RESULT)))
-      {
-        ReturnedColumn* rc = 0;
-
-        for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-        {
-          if (groupItem->name.length && string(groupItem->name.str) == gwi.returnedCols[j].get()->alias())
-          {
-            rc = gwi.returnedCols[j].get()->clone();
-            rc->orderPos(j);
-            break;
-          }
-        }
-
-        if (!rc)
-        {
-          nonSupportItem = groupItem;
-          break;
-        }
-
-        gwi.groupByCols.push_back(SRCP(rc));
-      }
-      else if ((*(groupcol->item))->type() == Item::SUBSELECT_ITEM)
-      {
-        if (!groupcol->in_field_list || !groupItem->name.length)
-        {
-          nonSupportItem = groupItem;
-        }
-        else
-        {
-          uint32_t i = 0;
-
-          for (; i < gwi.returnedCols.size(); i++)
-          {
-            if (string(groupItem->name.str) == gwi.returnedCols[i]->alias())
-            {
-              ReturnedColumn* rc = gwi.returnedCols[i]->clone();
-              rc->orderPos(i);
-              gwi.groupByCols.push_back(SRCP(rc));
-              break;
-            }
-          }
-
-          if (i == gwi.returnedCols.size())
-          {
-            nonSupportItem = groupItem;
-          }
-        }
-      }
-      // @bug 3761.
-      else if (groupcol->counter_used)
-      {
-        if (gwi.returnedCols.size() <= (uint32_t)(groupcol->counter - 1))
-        {
-          nonSupportItem = groupItem;
-        }
-        else
-        {
-          gwi.groupByCols.push_back(SRCP(gwi.returnedCols[groupcol->counter - 1]->clone()));
-        }
-      }
-      else
-      {
-        nonSupportItem = groupItem;
-      }
-    }
-    gwi.disableWrapping = false;
-
-    // @bug 4756. Add internal groupby column for correlated join to the groupby list
-    if (gwi.aggOnSelect && !gwi.subGroupByCols.empty())
-      gwi.groupByCols.insert(gwi.groupByCols.end(), gwi.subGroupByCols.begin(), gwi.subGroupByCols.end());
-
-    // this is window func on SELECT becuase ORDER BY has not been processed
-    if (!gwi.windowFuncList.empty() && !gwi.subGroupByCols.empty())
-    {
-      for (uint32_t i = 0; i < gwi.windowFuncList.size(); i++)
-      {
-        if (gwi.windowFuncList[i]->hasWindowFunc())
-        {
-          vector<WindowFunctionColumn*> windowFunctions = gwi.windowFuncList[i]->windowfunctionColumnList();
-
-          for (uint32_t j = 0; j < windowFunctions.size(); j++)
-            windowFunctions[j]->addToPartition(gwi.subGroupByCols);
-        }
-      }
-    }
-
-    if (nonSupportItem)
-    {
-      if (gwi.parseErrorText.length() == 0)
-      {
-        Message::Args args;
-        if (nonSupportItem->name.length)
-          args.add("'" + string(nonSupportItem->name.str) + "'");
-        else
-          args.add("");
-        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
-      }
-      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-      return ER_CHECK_NOT_IMPLEMENTED;
-    }
-    if (withRollup)
-    {
-      SRCP rc(new RollupMarkColumn());
-      gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
-    }
-  }
-
   // ORDER BY processing
   {
     ORDER* ordercol = startOrderCol;
@@ -9048,7 +8022,1072 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       return rc;
     }
   }  // ORDER BY end
+  return 0;
+}
 
+/*@brief  Translates SELECT_LEX into CSEP                  */
+/***********************************************************
+ * DESCRIPTION:
+ *  This function takes SELECT_LEX and tries to produce
+ *  a corresponding CSEP out of it. It is made of parts that
+ *  process parts of the query, e.g. FROM, WHERE, SELECT,
+ *  HAVING, GROUP BY, ORDER BY. FROM, WHERE, LIMIT are processed
+ *  by corresponding methods. CS calls getSelectPlan()
+ *  recursively to process subqueries.
+ * ARGS
+ *  isUnion if true CS processes UNION unit now
+ *  isSelectHandlerTop removes offset at the top of SH query.
+ * RETURNS
+ *  error id as an int
+ ***********************************************************/
+int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
+                  bool isSelectHandlerTop, bool isSelectLexUnit, const std::vector<COND*>& condStack)
+{
+#ifdef DEBUG_WALK_COND
+  cerr << "getSelectPlan()" << endl;
+#endif
+  int rc = 0;
+
+  bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
+
+  ORDER* startOrderCol = nullptr; // single traverse point for all ORDER BY analyses.
+
+  {
+    SQL_I_List<ORDER> order_list = select_lex.order_list;
+    startOrderCol = static_cast<ORDER*>(order_list.first);
+    if (unionSel)
+    {
+      order_list = select_lex.master_unit()->global_parameters()->order_list;
+      startOrderCol = static_cast<ORDER*>(order_list.first);
+    }
+    idblog("startOrderCol " << startOrderCol);
+  }
+
+  if (unionSel && startOrderCol)
+  {
+    idblog("need to transform???");
+    FromSubQuery* fromSub = new FromSubQuery(gwi, select_lex);
+    string alias("___very_internal___");
+    fromSub->alias(alias);
+
+    CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, "___dummy_view_name___");
+        // @bug 3852. check return execplan
+    SCSEP plan = fromSub->transform();
+
+    if (!plan)
+    {
+      setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
+      CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
+      return ER_INTERNAL_ERROR;
+    }
+
+    gwi.derivedTbList.push_back(plan);
+    gwi.tbList.push_back(tn);
+    CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
+    gwi.tableMap[tan] = make_pair(0, nullptr);
+        // MCOL-2178 isUnion member only assigned, never used
+        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+
+  }
+  else
+  {
+
+    // rollup is currently supported
+    bool withRollup = select_lex.olap == ROLLUP_TYPE;
+
+    setExecutionParams(gwi, csep);
+
+    gwi.subSelectType = csep->subType();
+    uint32_t sessionID = csep->sessionID();
+    gwi.sessionid = sessionID;
+    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    csc->identity(CalpontSystemCatalog::FE);
+    csep->timeZone(gwi.timeZone);
+    gwi.csc = csc;
+
+    CalpontSelectExecutionPlan::SelectList derivedTbList;
+    // @bug 1796. Remember table order on the FROM list.
+    gwi.clauseType = FROM;
+    if ((rc = processFrom(isUnion, select_lex, gwi, csep, isSelectHandlerTop, isSelectLexUnit)))
+    {
+      return rc;
+    }
+
+    gwi.clauseType = WHERE;
+    if ((rc = processWhere(select_lex, gwi, csep, condStack)))
+    {
+      return rc;
+    }
+
+    gwi.clauseType = SELECT;
+    SELECT_LEX* oldSelectLex = gwi.select_lex; // XXX: SZ: should it be restored in case of error return?
+    gwi.select_lex = &select_lex;
+  #ifdef DEBUG_WALK_COND
+    {
+      cerr << "------------------- SELECT --------------------" << endl;
+      List_iterator_fast<Item> it(select_lex.item_list);
+      Item* item;
+
+      while ((item = it++))
+      {
+        debug_walk(item, 0);
+      }
+
+      cerr << "-----------------------------------------------\n" << endl;
+    }
+  #endif
+
+    // analyze SELECT and ORDER BY parts - do they have implicit GROUP BY induced by aggregates?
+    {
+      if (select_lex.group_list.first)
+      {
+        // we have an explicit GROUP BY.
+        gwi.implicitExplicitGroupBy = true;
+      }
+      else
+      {
+        // do we have an implicit GROUP BY?
+        List_iterator_fast<Item> it(select_lex.item_list);
+        Item* item;
+
+        while ((item = it++))
+        {
+          analyzeForImplicitGroupBy(item, gwi);
+        }
+        ORDER* ordercol = startOrderCol;
+
+        for (; ordercol; ordercol = ordercol->next)
+        {
+          analyzeForImplicitGroupBy(*(ordercol->item), gwi);
+        }
+      }
+    }
+    // populate returnedcolumnlist and columnmap
+    List_iterator_fast<Item> it(select_lex.item_list);
+    Item* item;
+    vector<Item_field*> funcFieldVec;
+
+    // empty rcWorkStack and ptWorkStack. They should all be empty by now.
+    clearStacks(gwi, false, true);
+
+    // indicate the starting pos of scalar returned column, because some join column
+    // has been inserted to the returned column list.
+    if (gwi.subQuery)
+    {
+      ScalarSub* scalar = dynamic_cast<ScalarSub*>(gwi.subQuery);
+
+      if (scalar)
+        scalar->returnedColPos(gwi.additionalRetCols.size());
+    }
+
+    CalpontSelectExecutionPlan::SelectList selectSubList;
+
+    while ((item = it++))
+    {
+      string itemAlias = (item->name.length ? item->name.str : "<NULL>");
+
+      // @bug 5916. Need to keep checking until getting concret item in case
+      // of nested view.
+      Item* baseItem = item;
+      while (item->type() == Item::REF_ITEM)
+      {
+        Item_ref* ref = (Item_ref*)item;
+        item = (*(ref->ref));
+      }
+
+      Item::Type itype = item->type();
+
+      switch (itype)
+      {
+        case Item::FIELD_ITEM:
+        {
+          Item_field* ifp = (Item_field*)item;
+          SimpleColumn* sc = NULL;
+
+          if (ifp->field_name.length && string(ifp->field_name.str) == "*")
+          {
+            collectAllCols(gwi, ifp);
+            break;
+          }
+          sc = buildSimpleColumn(ifp, gwi);
+
+          if (sc)
+          {
+            string fullname;
+            String str;
+            ifp->print(&str, QT_ORDINARY);
+            fullname = str.c_ptr();
+
+            if (!ifp->is_explicit_name())  // no alias
+            {
+              sc->alias(fullname);
+            }
+            else  // alias
+            {
+              if (!itemAlias.empty())
+                sc->alias(itemAlias);
+            }
+
+            // We need to look into GROUP BY columns to decide if we need to wrap a column.
+            ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
+
+            SRCP sprc(rc);
+  	  pushReturnedCol(gwi, baseItem, sprc);
+
+            gwi.columnMap.insert(
+                CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), sprc));
+            TABLE_LIST* tmp = 0;
+
+            if (ifp->cached_table)
+              tmp = ifp->cached_table;
+
+            gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(),
+                                         sc->isColumnStore())] = make_pair(1, tmp);
+          }
+          else
+          {
+            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+            delete sc;
+            return ER_INTERNAL_ERROR;
+          }
+
+          break;
+        }
+
+        // aggregate column
+        case Item::SUM_FUNC_ITEM:
+        {
+          ReturnedColumn* ac = buildAggregateColumn(item, gwi);
+
+          if (gwi.fatalParseError)
+          {
+            // e.g., non-support ref column
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            delete ac;
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+          // add this agg col to returnedColumnList
+          boost::shared_ptr<ReturnedColumn> spac(ac);
+  	pushReturnedCol(gwi, item, spac);
+          break;
+        }
+
+        case Item::FUNC_ITEM:
+        {
+          Item_func* ifp = static_cast<Item_func*>(item);
+
+          // @bug4383. error out non-support stored function
+          if (ifp->functype() == Item_func::FUNC_SP)
+          {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+          if (string(ifp->func_name()) == "xor")
+          {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+          uint16_t parseInfo = 0;
+          vector<Item_field*> tmpVec;
+          bool hasNonSupportItem = false;
+          parse_item(ifp, tmpVec, hasNonSupportItem, parseInfo, &gwi);
+
+          if (ifp->with_subquery() || string(ifp->func_name()) == string("<in_optimizer>") ||
+              ifp->functype() == Item_func::NOT_ALL_FUNC || parseInfo & SUB_BIT)
+          {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+          // if "IN" or "BETWEEN" are in the SELECT clause, build function column
+          string funcName = ifp->func_name();
+          ReturnedColumn* rc;
+          if (funcName == "in" || funcName == " IN " || funcName == "between")
+          {
+            rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem, true);
+          }
+          else
+          {
+            rc = buildFunctionColumn(ifp, gwi, hasNonSupportItem);
+          }
+
+          SRCP srcp(rc);
+
+          if (rc)
+          {
+            // MCOL-2178 CS has to process determenistic functions with constant arguments.
+            if (!hasNonSupportItem && ifp->const_item() && !(parseInfo & AF_BIT) && tmpVec.size() == 0)
+            {
+              srcp.reset(buildReturnedColumn(item, gwi, gwi.fatalParseError));
+  	    pushReturnedCol(gwi, item, srcp);
+
+              if (ifp->name.length)
+                srcp->alias(ifp->name.str);
+
+              continue;
+            }
+
+  	  pushReturnedCol(gwi, item, srcp);
+          }
+          else  // This was a vtable post-process block
+          {
+            hasNonSupportItem = false;
+            uint32_t before_size = funcFieldVec.size();
+            parse_item(ifp, funcFieldVec, hasNonSupportItem, parseInfo, &gwi);
+            uint32_t after_size = funcFieldVec.size();
+
+            // pushdown handler projection functions
+            // @bug3881. set_user_var can not be treated as constant function
+            // @bug5716. Try to avoid post process function for union query.
+            if (!hasNonSupportItem && (after_size - before_size) == 0 && !(parseInfo & AGG_BIT) &&
+                !(parseInfo & SUB_BIT))
+            {
+              ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, gwi);
+
+              SRCP srcp(cc);
+
+              if (ifp->name.length)
+                cc->alias(ifp->name.str);
+
+  	    pushReturnedCol(gwi, ifp, srcp);
+
+              // clear the error set by buildFunctionColumn
+              gwi.fatalParseError = false;
+              gwi.parseErrorText = "";
+              break;
+            }
+            else if (hasNonSupportItem || parseInfo & AGG_BIT || parseInfo & SUB_BIT ||
+                     (gwi.fatalParseError && gwi.subQuery))
+            {
+              if (gwi.parseErrorText.empty())
+              {
+                Message::Args args;
+                args.add(ifp->func_name());
+                gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
+              }
+
+              setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+              return ER_CHECK_NOT_IMPLEMENTED;
+            }
+            else if (gwi.subQuery && (isPredicateFunction(ifp, &gwi) || ifp->type() == Item::COND_ITEM))
+            {
+              gwi.fatalParseError = true;
+              gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
+              setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+              return ER_CHECK_NOT_IMPLEMENTED;
+            }
+
+            //@Bug 3030 Add error check for dml statement
+            if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+            {
+              if (after_size - before_size != 0)
+              {
+                gwi.parseErrorText = ifp->func_name();
+                return -1;
+              }
+            }
+            else
+            {
+              Message::Args args;
+              args.add(ifp->func_name());
+              gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORTED_FUNCTION, args);
+              setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+              return ER_CHECK_NOT_IMPLEMENTED;
+            }
+          }
+
+          break;
+        }  // End of FUNC_ITEM
+
+        // DRRTUY Replace the whole section with typeid() checks or use
+        // static_cast here
+        case Item::CONST_ITEM:
+        {
+          switch (item->cmp_type())
+
+          {
+            case INT_RESULT:
+            case STRING_RESULT:
+            case DECIMAL_RESULT:
+            case REAL_RESULT:
+            case TIME_RESULT:
+            {
+              if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+              {
+              }
+              else
+              {
+                // do not push the dummy column (mysql added) to returnedCol
+                if (item->name.length && string(item->name.str) == "Not_used")
+                  continue;
+
+                // @bug3509. Constant column is sent to ExeMgr now.
+                SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
+
+                if (item->name.length)
+                  srcp->alias(item->name.str);
+
+  	      pushReturnedCol(gwi, item, srcp);
+              }
+
+              break;
+            }
+            // MCOL-2178 This switch doesn't handl
+            // ROW_
+            default:
+            {
+              IDEBUG(cerr << "Warning unsupported cmp_type() in projection" << endl);
+              // noop
+            }
+          }
+          break;
+        }  // CONST_ITEM ends here
+
+        case Item::NULL_ITEM:
+        {
+          if (isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+          {
+          }
+          else
+          {
+            SRCP srcp(buildReturnedColumn(item, gwi, gwi.fatalParseError));
+  	  pushReturnedCol(gwi, item, srcp);
+
+            if (item->name.length)
+              srcp->alias(item->name.str);
+          }
+
+          break;
+        }
+
+        case Item::SUBSELECT_ITEM:
+        {
+          Item_subselect* sub = (Item_subselect*)item;
+
+          if (sub->substype() != Item_subselect::SINGLEROW_SUBS)
+          {
+            gwi.fatalParseError = true;
+            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_SELECT_SUB);
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+  #ifdef DEBUG_WALK_COND
+          cerr << "SELECT clause SUBSELECT Item: " << sub->substype() << endl;
+          JOIN* join = sub->get_select_lex()->join;
+
+          if (join)
+          {
+            Item_cond* cond = static_cast<Item_cond*>(join->conds);
+
+            if (cond)
+              cond->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+          }
+
+          cerr << "Finish SELECT clause subselect item traversing" << endl;
+  #endif
+          SelectSubQuery* selectSub = new SelectSubQuery(gwi, sub);
+          // selectSub->gwip(&gwi);
+          SCSEP ssub = selectSub->transform();
+
+          if (!ssub || gwi.fatalParseError)
+          {
+            if (gwi.parseErrorText.empty())
+              gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
+
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+          selectSubList.push_back(ssub);
+          SimpleColumn* rc = new SimpleColumn();
+          rc->colSource(rc->colSource() | SELECT_SUB);
+          rc->timeZone(gwi.timeZone);
+
+          if (sub->get_select_lex()->get_table_list())
+          {
+            rc->viewName(getViewName(sub->get_select_lex()->get_table_list()), lower_case_table_names);
+          }
+          if (sub->name.length)
+            rc->alias(sub->name.str);
+
+          gwi.returnedCols.push_back(SRCP(rc));
+
+          break;
+        }
+
+        case Item::COND_ITEM:
+        {
+          gwi.fatalParseError = true;
+          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_FILTER_COND_EXP);
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
+
+        case Item::EXPR_CACHE_ITEM:
+        {
+          printf("EXPR_CACHE_ITEM in getSelectPlan\n");
+          gwi.fatalParseError = true;
+          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_UNKNOWN_COL);
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
+
+        case Item::WINDOW_FUNC_ITEM:
+        {
+          SRCP srcp(buildWindowFunctionColumn(item, gwi, gwi.fatalParseError));
+
+          if (!srcp || gwi.fatalParseError)
+          {
+            if (gwi.parseErrorText.empty())
+              gwi.parseErrorText = "Unsupported Item in SELECT subquery.";
+
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+
+  	pushReturnedCol(gwi, item, srcp);
+          break;
+        }
+        case Item::TYPE_HOLDER:
+        {
+          if (!gwi.tbList.size())
+          {
+            gwi.parseErrorText = "subquery with VALUES";
+            gwi.fatalParseError = true;
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
+          }
+          else
+          {
+            std::cerr << "********** received TYPE_HOLDER *********" << std::endl;
+          }
+          break;
+        }
+
+        default:
+        {
+          break;
+        }
+      }
+    }
+
+    // @bug4388 normalize the project coltypes for union main select list
+    if (!csep->unionVec().empty())
+    {
+      unsigned int unionedTypeRc = 0;
+
+      for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
+      {
+        vector<CalpontSystemCatalog::ColType> coltypes;
+
+        for (uint32_t j = 0; j < csep->unionVec().size(); j++)
+        {
+          CalpontSelectExecutionPlan* unionCsep =
+              dynamic_cast<CalpontSelectExecutionPlan*>(csep->unionVec()[j].get());
+          coltypes.push_back(unionCsep->returnedCols()[i]->resultType());
+
+          // @bug5976. set hasAggregate true for the main column if
+          // one corresponding union column has aggregate
+          if (unionCsep->returnedCols()[i]->hasAggregate())
+            gwi.returnedCols[i]->hasAggregate(true);
+        }
+
+        gwi.returnedCols[i]->resultType(
+            CalpontSystemCatalog::ColType::convertUnionColType(coltypes, unionedTypeRc));
+
+        if (unionedTypeRc != 0)
+        {
+          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(unionedTypeRc);
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
+      }
+    }
+
+    // Having clause handling
+    gwi.clauseType = HAVING;
+    gwi.havingDespiteSelect = true;
+    clearStacks(gwi, false, true);
+    std::unique_ptr<ParseTree> havingFilter;
+
+    // clear fatalParseError that may be left from post process functions
+    gwi.fatalParseError = false;
+    gwi.parseErrorText = "";
+
+    gwi.disableWrapping = false;
+    gwi.havingDespiteSelect = true;
+    if (select_lex.having != 0)
+    {
+  #ifdef DEBUG_WALK_COND
+      cerr << "------------------- HAVING ---------------------" << endl;
+      select_lex.having->traverse_cond(debug_walk, &gwi, Item::POSTFIX);
+      cerr << "------------------------------------------------\n" << endl;
+  #endif
+      select_lex.having->traverse_cond(gp_walk, &gwi, Item::POSTFIX);
+
+      if (gwi.fatalParseError)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+        return ER_INTERNAL_ERROR;
+      }
+
+      ParseTree* ptp = 0;
+      ParseTree* rhs = 0;
+
+      // @bug 4215. some function filter will be in the rcWorkStack.
+      if (gwi.ptWorkStack.empty() && !gwi.rcWorkStack.empty())
+      {
+        gwi.ptWorkStack.push(new ParseTree(gwi.rcWorkStack.top()));
+        gwi.rcWorkStack.pop();
+      }
+
+      while (!gwi.ptWorkStack.empty())
+      {
+        havingFilter.reset(gwi.ptWorkStack.top());
+        gwi.ptWorkStack.pop();
+
+        if (gwi.ptWorkStack.empty())
+          break;
+
+        ptp = new ParseTree(new LogicOperator("and"));
+        ptp->left(havingFilter.release());
+        rhs = gwi.ptWorkStack.top();
+        gwi.ptWorkStack.pop();
+        ptp->right(rhs);
+        gwi.ptWorkStack.push(ptp);
+      }
+    }
+    gwi.havingDespiteSelect = false;
+    gwi.disableWrapping = false;
+
+    // MCOL-4617 If this is an IN subquery, then create the in-to-exists
+    // predicate and inject it into the csep
+    if (gwi.subQuery && gwi.subSelectType == CalpontSelectExecutionPlan::IN_SUBS && gwi.inSubQueryLHS &&
+        gwi.inSubQueryLHSItem)
+    {
+      // create the predicate
+      buildInToExistsFilter(gwi, select_lex);
+
+      if (gwi.fatalParseError)
+      {
+        setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+        return ER_INTERNAL_ERROR;
+      }
+
+      // now inject the created predicate
+      if (!gwi.ptWorkStack.empty())
+      {
+        ParseTree* inToExistsFilter = gwi.ptWorkStack.top();
+        gwi.ptWorkStack.pop();
+
+        if (havingFilter)
+        {
+          ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+          ptp->left(havingFilter.release());
+          ptp->right(inToExistsFilter);
+          havingFilter.reset(ptp);
+        }
+        else
+        {
+          if (csep->filters())
+          {
+            ParseTree* ptp = new ParseTree(new LogicOperator("and"));
+            ptp->left(csep->filters());
+            ptp->right(inToExistsFilter);
+            csep->filters(ptp);
+          }
+          else
+          {
+            csep->filters(inToExistsFilter);
+          }
+        }
+      }
+    }
+
+    // for post process expressions on the select list
+    // error out post process for union and sub select unit
+    if (isUnion || gwi.subSelectType != CalpontSelectExecutionPlan::MAIN_SELECT)
+    {
+      if (funcFieldVec.size() != 0 && !gwi.fatalParseError)
+      {
+        string emsg("Fatal parse error in vtable mode: Unsupported Items in union or sub select unit");
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
+    }
+
+    for (uint32_t i = 0; i < funcFieldVec.size(); i++)
+    {
+      SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+
+      if (!sc || gwi.fatalParseError)
+      {
+        string emsg;
+
+        if (gwi.parseErrorText.empty())
+        {
+          emsg = "un-recognized column";
+
+          if (funcFieldVec[i]->name.length)
+            emsg += string(funcFieldVec[i]->name.str);
+        }
+        else
+        {
+          emsg = gwi.parseErrorText;
+        }
+
+        setError(gwi.thd, ER_INTERNAL_ERROR, emsg, gwi);
+        return ER_INTERNAL_ERROR;
+      }
+
+      String str;
+      funcFieldVec[i]->print(&str, QT_ORDINARY);
+      sc->alias(string(str.c_ptr()));
+      sc->tableAlias(sc->tableAlias());
+      SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]));
+      uint32_t j = 0;
+
+      for (; j < gwi.returnedCols.size(); j++)
+      {
+        if (sc->sameColumn(gwi.returnedCols[j].get()))
+        {
+          SimpleColumn* field = dynamic_cast<SimpleColumn*>(gwi.returnedCols[j].get());
+
+          if (field && field->alias() == sc->alias())
+            break;
+        }
+      }
+
+      if (j == gwi.returnedCols.size())
+      {
+        gwi.returnedCols.push_back(srcp);
+        // XXX: SZ: deduplicate here?
+        gwi.columnMap.insert(
+            CalpontSelectExecutionPlan::ColumnMap::value_type(string(funcFieldVec[i]->field_name.str), srcp));
+
+        string fullname;
+        fullname = str.c_ptr();
+        TABLE_LIST* tmp = (funcFieldVec[i]->cached_table ? funcFieldVec[i]->cached_table : 0);
+        gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(),
+                                     sc->isColumnStore())] = make_pair(1, tmp);
+      }
+    }
+
+    SRCP minSc;  // min width projected column. for count(*) use
+
+    // Group by list. not valid for union main query
+    if (!unionSel)
+    {
+      gwi.clauseType = GROUP_BY;
+      Item* nonSupportItem = NULL;
+      ORDER* groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+      // check if window functions are in order by. InfiniDB process order by list if
+      // window functions are involved, either in order by or projection.
+      bool hasWindowFunc = gwi.hasWindowFunc;
+      gwi.hasWindowFunc = false;
+
+      for (; groupcol; groupcol = groupcol->next)
+      {
+        if ((*(groupcol->item))->type() == Item::WINDOW_FUNC_ITEM)
+          gwi.hasWindowFunc = true;
+      }
+
+      if (gwi.hasWindowFunc)
+      {
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_WF_NOT_ALLOWED, "GROUP BY clause");
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
+
+      gwi.hasWindowFunc = hasWindowFunc;
+      groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+      gwi.disableWrapping = true;
+      for (; groupcol; groupcol = groupcol->next)
+      {
+        Item* groupItem = *(groupcol->item);
+
+        // @bug5993. Could be nested ref.
+        while (groupItem->type() == Item::REF_ITEM)
+          groupItem = (*((Item_ref*)groupItem)->ref);
+
+        if (groupItem->type() == Item::FUNC_ITEM)
+        {
+          Item_func* ifp = (Item_func*)groupItem;
+
+          // call buildFunctionColumn here mostly for finding out
+          // non-support column on GB list. Should be simplified.
+          ReturnedColumn* fc = buildFunctionColumn(ifp, gwi, gwi.fatalParseError);
+
+          if (!fc || gwi.fatalParseError)
+          {
+            nonSupportItem = ifp;
+            break;
+          }
+
+          if (groupcol->in_field_list && groupcol->counter_used)
+          {
+            delete fc;
+            fc = gwi.returnedCols[groupcol->counter - 1].get();
+            SRCP srcp(fc->clone());
+
+            // check if no column parm
+            for (uint32_t i = 0; i < gwi.no_parm_func_list.size(); i++)
+            {
+              if (gwi.no_parm_func_list[i]->expressionId() == fc->expressionId())
+              {
+                gwi.no_parm_func_list.push_back(dynamic_cast<FunctionColumn*>(srcp.get()));
+                break;
+              }
+            }
+
+            srcp->orderPos(groupcol->counter - 1);
+            gwi.groupByCols.push_back(srcp);
+            continue;
+          }
+          else if (groupItem->is_explicit_name())  // alias
+          {
+            uint32_t i = 0;
+
+            for (; i < gwi.returnedCols.size(); i++)
+            {
+              if (string(groupItem->name.str) == gwi.returnedCols[i]->alias())
+              {
+                ReturnedColumn* rc = gwi.returnedCols[i]->clone();
+                rc->orderPos(i);
+                gwi.groupByCols.push_back(SRCP(rc));
+                delete fc;
+                break;
+              }
+            }
+
+            if (i == gwi.returnedCols.size())
+            {
+              nonSupportItem = groupItem;
+              break;
+            }
+          }
+          else
+          {
+            uint32_t i = 0;
+
+            for (; i < gwi.returnedCols.size(); i++)
+            {
+              if (fc->operator==(gwi.returnedCols[i].get()))
+              {
+                ReturnedColumn* rc = gwi.returnedCols[i]->clone();
+                rc->orderPos(i);
+                gwi.groupByCols.push_back(SRCP(rc));
+                delete fc;
+                break;
+              }
+            }
+
+            if (i == gwi.returnedCols.size())
+            {
+              gwi.groupByCols.push_back(SRCP(fc));
+              break;
+            }
+          }
+        }
+        else if (groupItem->type() == Item::FIELD_ITEM)
+        {
+          Item_field* ifp = (Item_field*)groupItem;
+          // this GB col could be an alias of F&E on the SELECT clause, not necessarily a field.
+          ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
+          SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
+
+          if (sc)
+          {
+            bool found = false;
+            for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
+            {
+              if (sc->sameColumn(gwi.returnedCols[j].get()))
+              {
+                sc->orderPos(j);
+                found = true;
+                break;
+              }
+            }
+            for (uint32_t j = 0; !found && j < gwi.returnedCols.size(); j++)
+            {
+              if (strcasecmp(sc->alias().c_str(), gwi.returnedCols[j]->alias().c_str()) == 0)
+              {
+                delete rc;
+                rc = gwi.returnedCols[j].get()->clone();
+                rc->orderPos(j);
+                break;
+              }
+            }
+          }
+          else
+          {
+            for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
+            {
+              if (ifp->name.length && string(ifp->name.str) == gwi.returnedCols[j].get()->alias())
+              {
+                delete rc;
+                rc = gwi.returnedCols[j].get()->clone();
+                rc->orderPos(j);
+                break;
+              }
+            }
+          }
+
+          if (!rc)
+          {
+            nonSupportItem = ifp;
+            break;
+          }
+
+          SRCP srcp(rc);
+
+          // bug 3151
+          AggregateColumn* ac = dynamic_cast<AggregateColumn*>(rc);
+
+          if (ac)
+          {
+            nonSupportItem = ifp;
+            break;
+          }
+
+          gwi.groupByCols.push_back(srcp);
+          gwi.columnMap.insert(
+              CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), srcp));
+        }
+        // @bug5638. The group by column is constant but not counter, alias has to match a column
+        // on the select list
+        else if (!groupcol->counter_used &&
+                 (groupItem->type() == Item::CONST_ITEM &&
+                  (groupItem->cmp_type() == INT_RESULT || groupItem->cmp_type() == STRING_RESULT ||
+                   groupItem->cmp_type() == REAL_RESULT || groupItem->cmp_type() == DECIMAL_RESULT)))
+        {
+          ReturnedColumn* rc = 0;
+
+          for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
+          {
+            if (groupItem->name.length && string(groupItem->name.str) == gwi.returnedCols[j].get()->alias())
+            {
+              rc = gwi.returnedCols[j].get()->clone();
+              rc->orderPos(j);
+              break;
+            }
+          }
+
+          if (!rc)
+          {
+            nonSupportItem = groupItem;
+            break;
+          }
+
+          gwi.groupByCols.push_back(SRCP(rc));
+        }
+        else if ((*(groupcol->item))->type() == Item::SUBSELECT_ITEM)
+        {
+          if (!groupcol->in_field_list || !groupItem->name.length)
+          {
+            nonSupportItem = groupItem;
+          }
+          else
+          {
+            uint32_t i = 0;
+
+            for (; i < gwi.returnedCols.size(); i++)
+            {
+              if (string(groupItem->name.str) == gwi.returnedCols[i]->alias())
+              {
+                ReturnedColumn* rc = gwi.returnedCols[i]->clone();
+                rc->orderPos(i);
+                gwi.groupByCols.push_back(SRCP(rc));
+                break;
+              }
+            }
+
+            if (i == gwi.returnedCols.size())
+            {
+              nonSupportItem = groupItem;
+            }
+          }
+        }
+        // @bug 3761.
+        else if (groupcol->counter_used)
+        {
+          if (gwi.returnedCols.size() <= (uint32_t)(groupcol->counter - 1))
+          {
+            nonSupportItem = groupItem;
+          }
+          else
+          {
+            gwi.groupByCols.push_back(SRCP(gwi.returnedCols[groupcol->counter - 1]->clone()));
+          }
+        }
+        else
+        {
+          nonSupportItem = groupItem;
+        }
+      }
+      gwi.disableWrapping = false;
+
+      // @bug 4756. Add internal groupby column for correlated join to the groupby list
+      if (gwi.aggOnSelect && !gwi.subGroupByCols.empty())
+        gwi.groupByCols.insert(gwi.groupByCols.end(), gwi.subGroupByCols.begin(), gwi.subGroupByCols.end());
+
+      // this is window func on SELECT becuase ORDER BY has not been processed
+      if (!gwi.windowFuncList.empty() && !gwi.subGroupByCols.empty())
+      {
+        for (uint32_t i = 0; i < gwi.windowFuncList.size(); i++)
+        {
+          if (gwi.windowFuncList[i]->hasWindowFunc())
+          {
+            vector<WindowFunctionColumn*> windowFunctions = gwi.windowFuncList[i]->windowfunctionColumnList();
+
+            for (uint32_t j = 0; j < windowFunctions.size(); j++)
+              windowFunctions[j]->addToPartition(gwi.subGroupByCols);
+          }
+        }
+      }
+
+      if (nonSupportItem)
+      {
+        if (gwi.parseErrorText.length() == 0)
+        {
+          Message::Args args;
+          if (nonSupportItem->name.length)
+            args.add("'" + string(nonSupportItem->name.str) + "'");
+          else
+            args.add("");
+          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, args);
+        }
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
+      if (withRollup)
+      {
+        SRCP rc(new RollupMarkColumn());
+        gwi.groupByCols.insert(gwi.groupByCols.end(), rc);
+      }
+    }
+
+  }
+
+  rc = processOrderBy(gwi, select_lex, csep, startOrderCol, csc, minSc, isUnion, unionSel, isSelectHandlerTop);
+  if (rc != 0)
+  {
+    return rc;
+  }
   if (select_lex.options & SELECT_DISTINCT)
     csep->distinct(true);
 
