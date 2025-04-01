@@ -1361,7 +1361,7 @@ class RowGroupStorage
   {
     messageqcpp::ByteStream bs;
     fRowGroupOut->setData(rgdata);
-    rgdata->serialize(bs, fRowGroupOut->getSizeWithStrings());
+    rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
     int errNo;
     if ((errNo = fDumper->write(makeRGFilename(rgid), (char*)bs.buf(), bs.length())) != 0)
