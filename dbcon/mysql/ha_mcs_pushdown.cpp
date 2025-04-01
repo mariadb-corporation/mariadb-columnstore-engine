@@ -773,7 +773,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
   // involves an order by or a limit clause.
   if (sel_lex && sel_unit &&
       (sel_unit->global_parameters()->limit_params.explicit_limit == true ||
-       sel_unit->global_parameters()->order_list.elements != 0))
+       (false && sel_unit->global_parameters()->order_list.elements != 0)))
   {
     return nullptr;
   }
