@@ -129,6 +129,10 @@ install_deps()
             yum -y install cmake
         fi
         if [ $OS = 'Rocky' ]; then
+            if [[ "$OS_VERSION" == "9" ]]; then
+                dnf install -y 'dnf-command(config-manager)'
+                dnf config-manager --set-enabled crb
+            fi
            yum -y groupinstall "Development Tools" && yum config-manager --set-enabled powertools
            yum install -y checkpolicy
         fi
