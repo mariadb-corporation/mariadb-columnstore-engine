@@ -405,7 +405,12 @@ class MCSProcessManager:
         return set(node_progs) == set(p['name'] for p in running_procs)
 
     @classmethod
-    def start_node(cls, is_primary: bool, use_sudo: bool = True, is_read_only: bool = False) -> None:
+    def start_node(
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        is_read_only: bool = False,
+    ) -> None:
         """Start mcs node processes.
 
         :param is_primary: is node primary or not, defaults to True
@@ -431,7 +436,10 @@ class MCSProcessManager:
                 cls._wait_for_workernodes()
             if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
                 cls._wait_for_controllernode()
-            if is_read_only and prog_name == MCSProgs.WRITE_ENGINE_SERVER.value:
+            if (
+                is_read_only and
+                prog_name == MCSProgs.WRITE_ENGINE_SERVER.value
+            ):
                 logging.debug('Node is in read-only mode, not starting WriteEngine')
                 continue
             if not cls.start(prog_name, is_primary, use_sudo):

@@ -542,6 +542,7 @@ def get_desired_nodes(config=DEFAULT_MCS_CONF_PATH):
 
 
 def get_read_only_nodes(root) -> list[str]:
+    """Get names of read-only nodes from config"""
     return [node.text for node in root.findall("./ReadOnlyNodes/Node")]
 
 
@@ -603,8 +604,8 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 )
 
     if dbroots and nc.is_read_only():
-        logger = logging.getLogger("dbroots")
-        logger.warning("Config contains dbroots %s for this read-only node, ignoring", dbroots)
+        logger = logging.getLogger('dbroots')
+        logger.warning(f'Config contains dbroots {dbroots} for this read-only node, ignoring')
         return []
 
     return dbroots
