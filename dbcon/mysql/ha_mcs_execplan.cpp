@@ -8063,10 +8063,25 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     idblog("startOrderCol " << startOrderCol);
   }
 
+  CalpontSelectExecutionPlan::SelectList selectSubList;
+
+  // rollup is currently supported
+  bool withRollup = select_lex.olap == ROLLUP_TYPE;
+
+  SRCP minSc;  // min width projected column. for count(*) use
+
+  std::unique_ptr<ParseTree> havingFilter;
+
+  SELECT_LEX* oldSelectLex = gwi.select_lex; // xxx: sz: should it be restored in case of error return?
+
+  uint32_t sessionID = csep->sessionID();
+
+  boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+
   if (unionSel && startOrderCol)
   {
     idblog("need to transform???");
-    FromSubQuery* fromSub = new FromSubQuery(gwi, select_lex);
+    FromSubQuery* fromSub = new FromSubQuery(gwi, &select_lex);
     string alias("___very_internal___");
     fromSub->alias(alias);
 
@@ -8092,15 +8107,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   else
   {
 
-    // rollup is currently supported
-    bool withRollup = select_lex.olap == ROLLUP_TYPE;
-
     setExecutionParams(gwi, csep);
 
     gwi.subSelectType = csep->subType();
-    uint32_t sessionID = csep->sessionID();
     gwi.sessionid = sessionID;
-    boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
     csc->identity(CalpontSystemCatalog::FE);
     csep->timeZone(gwi.timeZone);
     gwi.csc = csc;
@@ -8120,7 +8130,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
 
     gwi.clauseType = SELECT;
-    SELECT_LEX* oldSelectLex = gwi.select_lex; // XXX: SZ: should it be restored in case of error return?
     gwi.select_lex = &select_lex;
   #ifdef DEBUG_WALK_COND
     {
@@ -8179,8 +8188,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       if (scalar)
         scalar->returnedColPos(gwi.additionalRetCols.size());
     }
-
-    CalpontSelectExecutionPlan::SelectList selectSubList;
 
     while ((item = it++))
     {
@@ -8619,7 +8626,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     gwi.clauseType = HAVING;
     gwi.havingDespiteSelect = true;
     clearStacks(gwi, false, true);
-    std::unique_ptr<ParseTree> havingFilter;
 
     // clear fatalParseError that may be left from post process functions
     gwi.fatalParseError = false;
@@ -8783,8 +8789,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
                                      sc->isColumnStore())] = make_pair(1, tmp);
       }
     }
-
-    SRCP minSc;  // min width projected column. for count(*) use
 
     // Group by list. not valid for union main query
     if (!unionSel)
