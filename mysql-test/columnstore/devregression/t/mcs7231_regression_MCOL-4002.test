@@ -33,7 +33,7 @@ CREATE TABLE mcol4002(
 ) ENGINE=columnstore;
 
 --exec rm -f /tmp/mcol4002.txt
-SELECT * FROM lineitem LIMIT 100 INTO OUTFILE '/tmp/mcol4002.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"';
+SELECT * INTO OUTFILE '/tmp/mcol4002.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"' FROM lineitem LIMIT 100;
 
 #-- In the below, we are referring to a single insert as a DML
 

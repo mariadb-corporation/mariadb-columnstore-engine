@@ -18,9 +18,7 @@ l_shipinstruct CHAR (25),
 l_shipmode CHAR (10),
 l_comment VARCHAR (44)
 ) ENGINE=columnstore;
-SELECT * FROM lineitem LIMIT 100 INTO OUTFILE '/tmp/mcol4002.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"';
-Warnings:
-Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+SELECT * INTO OUTFILE '/tmp/mcol4002.txt' FIELDS TERMINATED BY ',' ENCLOSED BY '"' FROM lineitem LIMIT 100;
 START TRANSACTION;
 INSERT INTO mcol4002(l_comment) VALUES ('mcol4002');
 SELECT COUNT(*) FROM mcol4002;

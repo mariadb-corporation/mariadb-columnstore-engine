@@ -11,9 +11,7 @@ LOAD DATA LOCAL INFILE 'DATADIR/mcs88_100Krows.dat' INTO TABLE t1 FIELDS TERMINA
 SELECT COUNT(*) FROM t1;
 COUNT(*)
 100001
-SELECT col1, col2, col3 FROM t1 INTO OUTFILE 'DATADIR/mcs88_100Krows.dat' FIELDS TERMINATED BY '|';;
-Warnings:
-Warning	1287	'<select expression> INTO <destination>;' is deprecated and will be removed in a future release. Please use 'SELECT <select list> INTO <destination> FROM...' instead
+SELECT col1, col2, col3 INTO OUTFILE 'DATADIR/mcs88_100Krows.dat' FIELDS TERMINATED BY '|' FROM t1;;
 TRUNCATE t1;
 SELECT COUNT(*) FROM t1;
 COUNT(*)

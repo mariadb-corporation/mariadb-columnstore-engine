@@ -33,7 +33,7 @@ SELECT COUNT(*) FROM t1;
 # Export table to CSV
 --exec rm -f $DATADIR/mcs88_100Krows.dat
 --replace_result $DATADIR DATADIR
---eval SELECT col1, col2, col3 FROM t1 INTO OUTFILE '$DATADIR/mcs88_100Krows.dat' FIELDS TERMINATED BY '|';
+--eval SELECT col1, col2, col3 INTO OUTFILE '$DATADIR/mcs88_100Krows.dat' FIELDS TERMINATED BY '|' FROM t1;
 
 # Clear table data and re-import
 TRUNCATE t1;

@@ -9,15 +9,11 @@
 USE tpch1;
 #
 --exec rm -f /tmp/natcount.tbl
-select count(*) from nation into outfile '/tmp/natcount.tbl';
---exec rm -f /tmp/natcount.tbl
 select count(*) into outfile '/tmp/natcount.tbl' from nation;
 select count(*) from nation;
 --exec rm -f /var/lib/mysql/tpch1/nation.out
 --exec rm -f /var/lib/mysql/tpch1c/nation.out
-select count(*) from nation into outfile 'nation.out';
+select count(*) into outfile 'nation.out' from nation;
 --exec rm -f /var/lib/mysql/tpch1/nation.out
 --exec rm -f /var/lib/mysql/tpch1c/nation.out
-
 #
-
