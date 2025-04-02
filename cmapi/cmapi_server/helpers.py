@@ -542,7 +542,7 @@ def get_desired_nodes(config=DEFAULT_MCS_CONF_PATH):
 
 
 def get_read_only_nodes(root) -> list[str]:
-    """Get names of read-only nodes from config"""
+    """Get names of read only nodes from config"""
     return [node.text for node in root.findall('./ReadOnlyNodes/Node')]
 
 
