@@ -914,6 +914,7 @@ class ClusterController:
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
+        read_only = request_body.get('read_only', False)
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
@@ -921,9 +922,9 @@ class ClusterController:
         try:
             if not in_transaction:
                 with TransactionManager(extra_nodes=[node]):
-                    response = ClusterHandler.add_node(node, config)
+                    response = ClusterHandler.add_node(node, config, read_only)
             else:
-                response = ClusterHandler.add_node(node, config)
+                response = ClusterHandler.add_node(node, config, read_only)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
