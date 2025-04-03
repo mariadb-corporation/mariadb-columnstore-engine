@@ -68,7 +68,7 @@ int checkNotThere(WriteEngine::FID fid)
 {
   WriteEngine::FileOp fileOp;
 
-  return (fileOp.existsOIDDir(fid) ? -1 : 0);
+  return (fileOp.existsDefaultFile(fid) ? -1 : 0);
 }
 
 void usage()

@@ -37,7 +37,10 @@ Packages have bundled python interpreter and python dependencies.
 ## Get dependencies
 
 # get portable python
-wget -qO- https://cspkg.s3.amazonaws.com/python-dist-no-nis.tar.gz | tar xzf - -C ./
+wget -qO- https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst | tar --use-compress-program=unzstd -xf - -C ./ && \
+mv python pp && mv pp/install python && rm -rf pp
+
+There is a script dev_tools/activate that works like virtualenv activate (you can use it to work with portable Python like with virtualenv).
 
 # install python dependencies
 python/bin/pip3 install -t deps --only-binary :all -r requirements.txt

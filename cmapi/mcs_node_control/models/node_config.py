@@ -37,7 +37,7 @@ class NodeConfig:
     def get_current_config_root(
         self, config_filename: str = DEFAULT_MCS_CONF_PATH, upgrade=True
     ):
-        """Retrievs current configuration.
+        """Retrieves current configuration.
 
         Read the config and returns Element.
         TODO: pretty the same function in misc.py - review

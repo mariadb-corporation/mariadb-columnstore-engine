@@ -18,10 +18,10 @@ from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.certificate import CertificateManager
 
 
 TEST_API_KEY = 'somekey123'
-cert_filename = './cmapi_server/self-signed.crt'
 MCS_CONFIG_FILEPATH = '/etc/columnstore/Columnstore.xml'
 COPY_MCS_CONFIG_FILEPATH = './cmapi_server/test/original_Columnstore.xml'
 TEST_MCS_CONFIG_FILEPATH = './cmapi_server/test/CS-config-test.xml'
@@ -42,57 +42,6 @@ SYSTEMCTL = 'sudo systemctl'
 logging.basicConfig(level=logging.DEBUG)
 
 
-def create_self_signed_certificate():
-    key_filename = './cmapi_server/self-signed.key'
-
-    key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    with open(key_filename, "wb") as f:
-        f.write(key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()),
-        )
-
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u"Redwood City"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"MariaDB"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"mariadb.com"),
-    ])
-
-    basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
-
-    cert = x509.CertificateBuilder(
-    ).subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.utcnow()
-    ).not_valid_after(
-        datetime.utcnow() + timedelta(days=365)
-    ).add_extension(
-        basic_contraints,
-        False
-    ).add_extension(
-        x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),
-        critical=False
-    ).sign(key, hashes.SHA256(), default_backend())
-
-    with open(cert_filename, "wb") as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
-
-
 def run_detect_processes():
     cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
     d_name, d_path = helpers.get_dispatcher_name_and_path(cfg_parser)
@@ -101,8 +50,7 @@ def run_detect_processes():
 
 @contextmanager
 def run_server():
-    if not os.path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
 
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)

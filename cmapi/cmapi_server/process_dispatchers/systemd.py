@@ -64,7 +64,7 @@ class SystemdDispatcher(BaseDispatcher):
         ..Note:
             Not working with multiple services at a time.
         """
-        logging.debug(f'Checking "{service}" is running.')
+        logging.debug(f'Checking if "{service}" is running.')
         # TODO: remove conditions below when we'll drop CentOS 7 support
         cmd = 'show -p ActiveState --value'
         if cls.systemctl_version < 230:  # not supported --value in old version

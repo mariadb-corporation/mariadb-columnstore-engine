@@ -21,13 +21,13 @@ def handle_output(func):
             return_code = 0
         except CMAPIBasicError as err:
             typer.echo(err.message, err=True)
-            logger.error('Error while command execution', exc_info=True)
+            logger.error('Error during command execution', exc_info=True)
         except typer.BadParameter as err:
             logger.error('Bad command line parameter.')
             raise err
         except Exception:
             logger.error(
-                'Undefined error while command execution',
+                'Undefined error during command execution',
                 exc_info=True
             )
             typer.echo('Unknown error, check the log file.', err=True)

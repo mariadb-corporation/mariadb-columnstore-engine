@@ -6,18 +6,19 @@ import cherrypy
 import os.path
 from contextlib import contextmanager
 from ..agent_comm import AgentComm
+from cmapi_server import helpers, node_manipulation
 from cmapi_server.failover_agent import FailoverAgent
 from mcs_node_control.models.node_config import NodeConfig
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
-from cmapi_server.test.unittest_global import create_self_signed_certificate, cert_filename
-from cmapi_server import helpers, node_manipulation
+from cmapi_server.managers.certificate import CertificateManager
+
 
 config_filename = './cmapi_server/cmapi_server.conf'
 
+
 @contextmanager
 def start_server():
-    if not os.path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
 
     app = cherrypy.tree.mount(root = None, config = config_filename)
     app.config.update({

@@ -262,7 +262,7 @@ dispatcher.connect(
 
 
 def jsonify_error(status, message, traceback, version): \
-        # pylint: disable=unused-argument
+    # pylint: disable=unused-argument
     """JSONify all CherryPy error responses (created by raising the
     cherrypy.HTTPError exception)
     """

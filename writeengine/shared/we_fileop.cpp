@@ -496,7 +496,6 @@ bool FileOp::existsOIDDir(FID fid) const
   {
     return false;
   }
-
   return exists(fileName);
 }
 
@@ -1809,8 +1808,7 @@ void FileOp::initDbRootExtentMutexes()
 
     for (size_t i = 0; i < rootIds.size(); i++)
     {
-      m_DbRootAddExtentMutexes.emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(rootIds[i]),
+      m_DbRootAddExtentMutexes.emplace(std::piecewise_construct, std::forward_as_tuple(rootIds[i]),
                                        std::forward_as_tuple());
     }
   }
@@ -2225,7 +2223,6 @@ int FileOp::oid2DirName(FID fid, char* oidDirName) const
     return NO_ERROR;
   }
 
-
   if (oidDirName == nullptr)
   {
     return ERR_INTERNAL;
@@ -2250,6 +2247,26 @@ int FileOp::oid2DirName(FID fid, char* oidDirName) const
   return ERR_FILE_NOT_EXIST;
 }
 
+bool FileOp::existsDefaultFile(FID fid) const
+{
+  char dbDir[MAX_DB_DIR_LEVEL][MAX_DB_DIR_NAME_SIZE];
+  char fileName[FILE_NAME_SIZE];
+
+  RETURN_ON_ERROR((Convertor::oid2FileName(fid, fileName, dbDir, 0, 0)));
+  std::vector<std::string> dbRootPathList;
+  Config::getDBRootPathList(dbRootPathList);
+
+  for (unsigned i = 0; i < dbRootPathList.size(); i++)
+  {
+    std::stringstream stream;
+    stream << dbRootPathList[i].c_str() << "/" << fileName;
+    string fullFileName = stream.str();
+    if (IDBPolicy::exists(fullFileName.c_str()))
+      return true;
+  }
+
+  return false;
+}
 /***********************************************************
  * DESCRIPTION:
  *    Construct directory path for the specified fid (OID), DBRoot, and
@@ -2555,7 +2572,6 @@ bool FileOp::isDiskSpaceAvail(const std::string& fileName, int nBlocks) const
       //"; pctUsed: " << (((totalBlocks-freeBlocks)/totalBlocks)*100.0) <<
       //"; bAvail: "      << bSpaceAvail          << std::endl;
     }
-
   }
 
   return bSpaceAvail;

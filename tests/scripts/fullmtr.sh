@@ -1,3 +1,5 @@
+#!/bin/bash
+
 SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_MTR_SOURCE=$(realpath $SCRIPT_LOCATION/../../mysql-test/columnstore)
 INSTALLED_MTR_PATH='/usr/share/mysql/mysql-test'

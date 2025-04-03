@@ -170,23 +170,22 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
     name: 'publish ' + step_prefix,
     depends_on: [std.strReplace(step_prefix, ' latest', '')],
-    image: 'plugins/s3-sync',
+    image: 'amazon/aws-cli',
     when: {
       status: ['success', 'failure'],
     },
-    settings: {
-      bucket: 'cspkg',
-      access_key: {
+    environment: {
+      AWS_ACCESS_KEY_ID: {
         from_secret: 'aws_access_key_id',
       },
-      secret_key: {
+      AWS_SECRET_ACCESS_KEY: {
         from_secret: 'aws_secret_access_key',
       },
-      source: result,
-      // branchp has slash if not empty
-      target: branchp + eventp + '/' + server + '/' + arch + '/' + result,
-      delete: 'true',
     },
+    commands: [
+      'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --delete',
+      'echo "Data uploaded to: ' + publish_pkg_url + '"'
+    ],
   },
 
   local regression_tests = if (event == 'cron') then [

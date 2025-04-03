@@ -4,7 +4,7 @@ import sys
 
 import typer
 
-from cmapi_server.logging_management import dict_config, add_logging_level
+from cmapi_server.logging_management import dict_config, add_logging_level, enable_console_logging
 from mcs_cluster_tool import (
     cluster_app, cmapi_app, backup_commands, restore_commands
 )
@@ -38,10 +38,20 @@ def help_all():
     # Open the man page in interactive mode
     subprocess.run(['man', 'mcs'])
 
+@app.callback()
+def main(verbose: bool = typer.Option(False, '--verbose', '-v', help='Enable verbose logging to console')):
+    '''Add a -v option and setup logging in every subcommand'''
+    setup_logging(verbose)
+
+
+def setup_logging(verbose: bool = False) -> None:
+    add_logging_level('TRACE', 5)
+    dict_config(MCS_CLI_LOG_CONF_PATH)
+    if verbose:
+        enable_console_logging(logging.getLogger())
+
 
 if __name__ == '__main__':
-    add_logging_level('TRACE', 5)  #TODO: remove when stadalone mode added.
-    dict_config(MCS_CLI_LOG_CONF_PATH)
     logger = logging.getLogger('mcs_cli')
     # add separator between cli commands logging
     logger.debug(f'{"-":-^80}')

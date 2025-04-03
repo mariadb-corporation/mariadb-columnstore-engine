@@ -1,9 +1,64 @@
 DROP DATABASE IF EXISTS mcol5992;
 CREATE DATABASE mcol5992;
 USE mcol5992;
-CREATE TABLE `CS_LEG` (`ID` bigint(20) DEFAULT NULL, `sess_count` smallint(6) DEFAULT NULL) ENGINE=Columnstore;
-insert into CS_LEG(ID) values(1);
-select NULLIF(sess_count,0) from CS_LEG;
-NULLIF(sess_count,0)
+CREATE TABLE `CS_LEG` (
+ID BIGINT(20) DEFAULT NULL,
+bigint_col BIGINT(20) DEFAULT NULL,
+tinyint_col TINYINT DEFAULT NULL,
+smallint_col SMALLINT DEFAULT NULL,
+mediumint_col MEDIUMINT DEFAULT NULL,
+int_col INT DEFAULT NULL,
+float_col FLOAT DEFAULT NULL,
+double_col DOUBLE DEFAULT NULL,
+decimal_col DECIMAL(10,2) DEFAULT NULL,
+date_col DATE DEFAULT NULL,
+datetime_col DATETIME DEFAULT NULL,
+time_col TIME DEFAULT NULL,
+varchar_col VARCHAR(255) DEFAULT NULL,
+char_col CHAR(10) DEFAULT NULL,
+text_col TEXT DEFAULT NULL
+) ENGINE=Columnstore;
+INSERT INTO CS_LEG(ID) VALUES(1);
+SELECT NULLIF(bigint_col, 9999999999) FROM CS_LEG;
+NULLIF(bigint_col, 9999999999)
+NULL
+SELECT NULLIF(tinyint_col, 1) FROM CS_LEG;
+NULLIF(tinyint_col, 1)
+NULL
+SELECT NULLIF(smallint_col, 100) FROM CS_LEG;
+NULLIF(smallint_col, 100)
+NULL
+SELECT NULLIF(mediumint_col, 1000) FROM CS_LEG;
+NULLIF(mediumint_col, 1000)
+NULL
+SELECT NULLIF(int_col, 99999) FROM CS_LEG;
+NULLIF(int_col, 99999)
+NULL
+SELECT NULLIF(float_col, 1.1) FROM CS_LEG;
+NULLIF(float_col, 1.1)
+NULL
+SELECT NULLIF(double_col, 2.2) FROM CS_LEG;
+NULLIF(double_col, 2.2)
+NULL
+SELECT NULLIF(decimal_col, 123.45) FROM CS_LEG;
+NULLIF(decimal_col, 123.45)
+NULL
+SELECT NULLIF(date_col, '2025-01-01') FROM CS_LEG;
+NULLIF(date_col, '2025-01-01')
+NULL
+SELECT NULLIF(datetime_col, '2025-01-01 12:00:00') FROM CS_LEG;
+NULLIF(datetime_col, '2025-01-01 12:00:00')
+NULL
+SELECT NULLIF(time_col, '12:00:00') FROM CS_LEG;
+NULLIF(time_col, '12:00:00')
+NULL
+SELECT NULLIF(varchar_col, 'Test') FROM CS_LEG;
+NULLIF(varchar_col, 'Test')
+NULL
+SELECT NULLIF(char_col, 'Test') FROM CS_LEG;
+NULLIF(char_col, 'Test')
+NULL
+SELECT NULLIF(text_col, 'Test') FROM CS_LEG;
+NULLIF(text_col, 'Test')
 NULL
 DROP DATABASE mcol5992;

@@ -256,17 +256,12 @@ void TupleHavingStep::execute()
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
-  StepTeleStats sts;
-  sts.query_uuid = fQueryUuid;
-  sts.step_uuid = fStepUuid;
-
   try
   {
     more = fInputDL->next(fInputIterator, &rgDataIn);
     dlTimes.setFirstReadTime();
 
-    sts.msg_type = StepTeleStats::ST_START;
-    sts.total_units_of_work = 1;
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
     postStepStartTele(sts);
 
     if (!more && cancelled())
@@ -306,9 +301,7 @@ void TupleHavingStep::execute()
   fEndOfResult = true;
   fOutputDL->endOfInput();
 
-  sts.msg_type = StepTeleStats::ST_SUMMARY;
-  sts.total_units_of_work = sts.units_of_work_completed = 1;
-  sts.rows = fRowsReturned;
+  StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
   postStepSummaryTele(sts);
 
   dlTimes.setLastReadTime();
