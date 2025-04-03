@@ -1841,7 +1841,6 @@ static int columnstore_init_func(void* p)
   mcs_hton->commit = mcs_commit;
   mcs_hton->rollback = mcs_rollback;
   mcs_hton->close_connection = mcs_close_connection;
-  mcs_hton->create_group_by = create_columnstore_group_by_handler;
   mcs_hton->create_derived = create_columnstore_derived_handler;
   mcs_hton->create_select = create_columnstore_select_handler;
   mcs_hton->create_unit = create_columnstore_unit_handler;

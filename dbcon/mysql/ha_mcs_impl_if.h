@@ -167,7 +167,6 @@ struct gp_walk_info
   bool cs_vtable_is_update_with_derive;
   bool cs_vtable_impossible_where_on_union;
 
-  bool isGroupByHandler;
   long timeZone;
 
   // MCOL-4617 The below 2 fields are used for in-to-exists
@@ -219,7 +218,6 @@ struct gp_walk_info
    , inCaseStmt(false)
    , cs_vtable_is_update_with_derive(false)
    , cs_vtable_impossible_where_on_union(false)
-   , isGroupByHandler(false)
    , timeZone(timeZone_)
    , inSubQueryLHS(nullptr)
    , inSubQueryLHSItem(nullptr)
@@ -264,30 +262,6 @@ struct cal_table_info
   ext_cond_info* condInfo;
   execplan::SCSEP csep;
   bool moreRows;  // are there more rows to consume (b/c of limit)
-};
-
-struct cal_group_info
-{
-  cal_group_info()
-   : groupByFields(nullptr)
-   , groupByTables(nullptr)
-   , groupByWhere(nullptr)
-   , groupByGroup(nullptr)
-   , groupByOrder(nullptr)
-   , groupByHaving(nullptr)
-   , groupByDistinct(false)
-  {
-  }
-  ~cal_group_info() = default;
-
-  List<Item>* groupByFields;  // MCOL-1052 SELECT
-  TABLE_LIST* groupByTables;  // MCOL-1052 FROM
-  Item* groupByWhere;         // MCOL-1052 WHERE
-  ORDER* groupByGroup;        // MCOL-1052 GROUP BY
-  ORDER* groupByOrder;        // MCOL-1052 ORDER BY
-  Item* groupByHaving;        // MCOL-1052 HAVING
-  bool groupByDistinct;       // MCOL-1052 DISTINCT
-  std::vector<execplan::ParseTree*> pushedPts;
 };
 
 typedef std::tr1::unordered_map<TABLE*, cal_table_info> CalTableMap;
@@ -413,7 +387,6 @@ const std::string infinidb_err_msg =
 
 int cp_get_plan(THD* thd, execplan::SCSEP& csep);
 int cp_get_table_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_table_info& ti, long timeZone);
-int cp_get_group_plan(THD* thd, execplan::SCSEP& csep, cal_impl_if::cal_group_info& gi);
 int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, execplan::SCSEP& csep,
                         gp_walk_info& gwi);
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, execplan::SCSEP& csep,
@@ -421,8 +394,6 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, execpla
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false,
                   bool isSelectHandlerTop = false, bool isSelectLexUnit = false,
                   const std::vector<COND*>& condStack = std::vector<COND*>());
-int getGroupPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, cal_group_info& gi,
-                 bool isUnion = false);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
