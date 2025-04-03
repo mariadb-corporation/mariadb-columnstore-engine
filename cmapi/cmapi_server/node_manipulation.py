@@ -1016,6 +1016,9 @@ def _add_read_only_node(root, node) -> None:
     else:
         for n in read_only_nodes.findall("./Node"):
             if n.text == node:
+                logging.warning(
+                    f"_add_read_only_node(): node {node} already exists in ReadOnlyNodes"
+                )
                 return
 
     etree.SubElement(read_only_nodes, "Node").text = node
