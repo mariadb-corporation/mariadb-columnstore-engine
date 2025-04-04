@@ -7913,6 +7913,10 @@ static int processOrderBy(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep
         if ((*tb_iter).second.first == 1)
           continue;
 
+	if (!(*tb_iter).second.second)
+	{
+          continue;
+	}
         CalpontSystemCatalog::TableAliasName tan = (*tb_iter).first;
         CalpontSystemCatalog::TableName tn = make_table((*tb_iter).first.schema, (*tb_iter).first.table);
         SimpleColumn* sc = getSmallestColumn(csc, tn, tan, (*tb_iter).second.second->table, gwi);
@@ -8055,7 +8059,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   {
     SQL_I_List<ORDER> order_list = select_lex.order_list;
     startOrderCol = static_cast<ORDER*>(order_list.first);
-    if (unionSel)
+    if (unionSel && select_lex.master_unit())
     {
       order_list = select_lex.master_unit()->global_parameters()->order_list;
       startOrderCol = static_cast<ORDER*>(order_list.first);
@@ -8078,7 +8082,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
-  if (unionSel && startOrderCol)
+  idblog(STF(unionSel) << STF(startOrderCol) << STF(isSelectHandlerTop));
+  if (unionSel && startOrderCol && isSelectHandlerTop)
   {
     idblog("need to transform???");
     FromSubQuery* fromSub = new FromSubQuery(gwi, &select_lex);
@@ -8100,8 +8105,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     gwi.tbList.push_back(tn);
     CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
     gwi.tableMap[tan] = make_pair(0, nullptr);
-        // MCOL-2178 isUnion member only assigned, never used
-        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+
+    idblog("copying " << plan->returnedCols().size() << " columns to our csep");
+    for(uint32_t i = 0; i < plan->returnedCols().size();i++)
+    {
+      gwi.returnedCols.push_back(SRCP(plan->returnedCols()[i]->clone()));
+    }
+    idblog("copied");
 
   }
   else
@@ -9177,6 +9187,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->derivedTableList(gwi.derivedTbList);
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
+
+  idblog("csep for:" << STF(unionSel) << STF(startOrderCol) << STF(isSelectHandlerTop));
+  idblog("csep: " << csep->toString());
   return 0;
 }
 
@@ -9362,6 +9375,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   convertOuterJoinToInnerJoin(&select_lex.top_join_list, gwi.tableOnExprList, gwi.condList,
                               handler->tableOuterJoinMap);
 
+  idblog("about to call getSelectPlan");
   int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
   if (status > 0)
