@@ -229,7 +229,8 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   else
   {
     joiners[index].reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index][0],
-                                         largeSideKeys[index][0], jt, &jobstepThreadPool, resourceManager, numCores));
+                                         largeSideKeys[index][0], jt, &jobstepThreadPool, resourceManager,
+                                         numCores));
   }
 
   joiners[index]->setUniqueLimit(uniqueLimit);
@@ -314,18 +315,18 @@ void TupleHashJoinStep::startSmallRunners(uint index)
       {
         {
           oss << "PM join (" << index << ")" << endl;
-  #ifdef JLF_DEBUG
+#ifdef JLF_DEBUG
           cout << oss.str();
-  #endif
+#endif
           extendedInfo += oss.str();
         }
       }
       else if (joiners[index]->inUM())
       {
         oss << "UM join (" << index << ")" << endl;
-  #ifdef JLF_DEBUG
+#ifdef JLF_DEBUG
         cout << oss.str();
-  #endif
+#endif
         extendedInfo += oss.str();
       }
     }
@@ -337,7 +338,6 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   {
     boost::mutex::scoped_lock lk(*fStatsMutexPtr);
     fExtendedInfo += extendedInfo;
-    formatMiniStats(index);
   }
 }
 
@@ -950,9 +950,22 @@ void TupleHashJoinStep::hjRunner()
     // this clause starts the THJS join threads.
     startJoinThreads();
 
+
+  if (traceOn())
+  {
+    boost::mutex::scoped_lock lk(*fStatsMutexPtr);
+    formatMiniStats();
+
+    for (uint32_t i = 0; i < joiners.size(); ++i)
+    {
+      formatMiniStatsPerJoiner(i);
+    }
+  }
+
   if (fTableOID1 >= 3000)
   {
-    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, QueryTeleClient::timeNowms(), 1, 0);
+    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, QueryTeleClient::timeNowms(), 1,
+                      0);
     postStepSummaryTele(sts);
   }
 }
@@ -1226,7 +1239,7 @@ bool TupleHashJoinStep::deliverStringTableRowGroup() const
 }
 
 // Must hold the stats lock when calling this!
-void TupleHashJoinStep::formatMiniStats(uint32_t index)
+void TupleHashJoinStep::formatMiniStatsPerJoiner(uint32_t index)
 {
   ostringstream oss;
   oss << "HJS ";
@@ -1248,6 +1261,28 @@ void TupleHashJoinStep::formatMiniStats(uint32_t index)
       //		<< JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
       //		dlTimes are not timed in this step, using '--------' instead.
       << "-------- " << "-\n";
+  fMiniInfo += oss.str();
+}
+
+void TupleHashJoinStep::formatMiniStats()
+{
+  ostringstream oss;
+  oss << "HJS ";
+
+  oss << "UM ";
+
+  oss << alias() << " ";
+
+  if (fTableOID2 >= 3000)
+    oss << fTableOID2;
+  else
+    oss << "- ";
+
+  auto joinedRows =
+      std::accumulate(joinerRunnerInputMatchedStats.begin(), joinerRunnerInputMatchedStats.end(), 0ULL);
+  oss << " " << "- " << "- " << "- "
+      << "- "
+      << "-------- " << joinedRows << "\n";
   fMiniInfo += oss.str();
 }
 
@@ -1352,6 +1387,9 @@ void TupleHashJoinStep::startJoinThreads()
 
   /* Start join runners */
   joinRunners.reserve(joinThreadCount);
+  // Statistics collection
+  joinerRunnerInputRecordsStats.resize(joinThreadCount, 0);
+  joinerRunnerInputMatchedStats.resize(joinThreadCount, 0);
 
   for (i = 0; i < joinThreadCount; i++)
     joinRunners.push_back(jobstepThreadPool.invoke(JoinRunner(this, i)));
@@ -1361,6 +1399,7 @@ void TupleHashJoinStep::startJoinThreads()
 
   if (lastSmallOuterJoiner != (uint32_t)-1)
     finishSmallOuterJoin();
+
 
   outputDL->endOfInput();
 }
@@ -1518,6 +1557,7 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
     smallRGs[i].initRow(&smallRowTemplates[i]);
 
   grabSomeWork(&inputData);
+  std::cout << "joinRunnerFcn " << threadID << " has " << inputData.size() << " RGDatas" << std::endl;
 
   while (!inputData.empty() && !cancelled())
   {
@@ -1527,6 +1567,8 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
 
       if (local_inputRG.getRowCount() == 0)
         continue;
+
+      joinerRunnerInputRecordsStats[threadID] += local_inputRG.getRowCount();
 
       joinOneRG(threadID, joinedRowData, local_inputRG, local_outputRG, largeRow, joinFERow, joinedRow,
                 baseRow, joinMatches, smallRowTemplates, outputDL);
@@ -1614,7 +1656,7 @@ void TupleHashJoinStep::processFE2(RowGroup& input, RowGroup& output, Row& inRow
         output.incRowCount();
         outRow.nextRow();
 
-        if (output.getRowCount() == 8192)
+        if (output.getRowCount() == rowgroup::rgCommonSize)
         {
           results.push_back(result);
           result.reinit(output);
@@ -1788,7 +1830,7 @@ void TupleHashJoinStep::joinOneRG(
       /* TODO!!!  See TupleBPS for the fix for bug 3510! */
       applyMapping((*rgMappings)[smallSideCount], largeSideRow, &baseRow);
       baseRow.setRid(largeSideRow.getRelRid());
-      generateJoinResultSet(joinMatches, baseRow, *rgMappings, 0, joinOutput, joinedData, out,
+      generateJoinResultSet(threadID, joinMatches, baseRow, *rgMappings, 0, joinOutput, joinedData, out,
                             smallRowTemplates, joinedRow, outputDL);
     }
   }
@@ -1797,7 +1839,8 @@ void TupleHashJoinStep::joinOneRG(
     out.push_back(joinedData);
 }
 
-void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> >& joinerOutput, Row& baseRow,
+void TupleHashJoinStep::generateJoinResultSet(const uint32_t threadID,
+                                              const vector<vector<Row::Pointer> >& joinerOutput, Row& baseRow,
                                               const std::shared_ptr<std::shared_ptr<int[]>[]>& mappings,
                                               const uint32_t depth, RowGroup& l_outputRG, RGData& rgData,
                                               vector<RGData>& outputData,
@@ -1814,14 +1857,14 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
     {
       smallRow.setPointer(joinerOutput[depth][i]);
       applyMapping(mappings[depth], smallRow, &baseRow);
-      generateJoinResultSet(joinerOutput, baseRow, mappings, depth + 1, l_outputRG, rgData, outputData,
-                            smallRows, joinedRow, dlp);
+      generateJoinResultSet(threadID, joinerOutput, baseRow, mappings, depth + 1, l_outputRG, rgData,
+                            outputData, smallRows, joinedRow, dlp);
     }
   }
   else
   {
     // NB In case of OUTER JOIN this loop can produce a lot of RGDatas,
-    // so it is a must to periodically flush from this loop.   
+    // so it is a must to periodically flush from this loop.
     l_outputRG.getRow(l_outputRG.getRowCount(), &joinedRow);
     auto flushThreshold = outputDL->maxElements();
 
@@ -1834,6 +1877,7 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
         uint32_t dbRoot = l_outputRG.getDBRoot();
         uint64_t baseRid = l_outputRG.getBaseRid();
         outputData.push_back(rgData);
+        joinerRunnerInputMatchedStats[threadID] += rowgroup::rgCommonSize;
         // Count the memory
         if (UNLIKELY(outputData.size() > flushThreshold || !getMemory(l_outputRG.getSizeWithStrings())))
         {
@@ -1868,6 +1912,7 @@ void TupleHashJoinStep::generateJoinResultSet(const vector<vector<Row::Pointer> 
       applyMapping(mappings[depth], smallRow, &baseRow);
       copyRow(baseRow, &joinedRow);
     }
+    joinerRunnerInputMatchedStats[threadID] += l_outputRG.getRowCount();
   }
 }
 

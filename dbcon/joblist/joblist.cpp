@@ -421,25 +421,14 @@ void JobList::querySummary(bool extendedStats)
 
   try
   {
-    // bug3438, print subquery info prior to outer query
-    for (vector<SJLP>::iterator i = subqueryJoblists.begin(); i != subqueryJoblists.end(); i++)
-    {
-      i->get()->querySummary(extendedStats);
-      fStats += i->get()->queryStats();
-      fExtendedInfo += i->get()->extendedInfo();
-      fMiniInfo += i->get()->miniInfo();
-    }
 
-    JobStepVector::const_iterator qIter = fQuery.begin();
-    JobStepVector::const_iterator qEnd = fQuery.end();
-    JobStep* js;
 
     //
     //...Add up the I/O and msg counts for the query job steps
     //
-    while (qIter != qEnd)
+    for (auto iter = fQuery.rbegin(); iter != fQuery.rend(); ++iter)
     {
-      js = qIter->get();
+      auto* js = iter->get();
 
       fStats.fPhyIO += js->phyIOCount();
       fStats.fCacheIO += js->cacheIOCount();
@@ -488,19 +477,14 @@ void JobList::querySummary(bool extendedStats)
         fExtendedInfo += ei;
         fMiniInfo += js->miniInfo() + "\n";
       }
-
-      ++qIter;
     }
-
-    JobStepVector::const_iterator pIter = fProject.begin();
-    JobStepVector::const_iterator pEnd = fProject.end();
 
     //
     //...Add up the I/O and msg counts for the projection job steps
     //
-    while (pIter != pEnd)
+    for (auto iter = fProject.rbegin(); iter != fProject.rend(); ++iter)
     {
-      js = pIter->get();
+      auto* js = iter->get();
 
       fStats.fPhyIO += js->phyIOCount();
       fStats.fCacheIO += js->cacheIOCount();
@@ -527,7 +511,6 @@ void JobList::querySummary(bool extendedStats)
         skipCnt = (dynamic_cast<BatchPrimitive*>(js))->blksSkipped();
 
       fStats.fCPBlocksSkipped += skipCnt;
-      ++pIter;
     }
 
     if ((!fProject.empty()) && extendedStats)
@@ -536,7 +519,7 @@ void JobList::querySummary(bool extendedStats)
 
       while (dsi != fDeliveredTables.end())
       {
-        js = dynamic_cast<JobStep*>(dsi->second.get());
+        auto js = dynamic_cast<JobStep*>(dsi->second.get());
         string ei;
         int max = 0;
         ei = js->extendedInfo();
@@ -552,6 +535,14 @@ void JobList::querySummary(bool extendedStats)
 
         ++dsi;
       }
+    }
+    // bug3438, print subquery info prior to outer query
+    for (auto i = subqueryJoblists.rbegin(); i != subqueryJoblists.rend(); i++)
+    {
+      i->get()->querySummary(extendedStats);
+      fStats += i->get()->queryStats();
+      fExtendedInfo += i->get()->extendedInfo();
+      fMiniInfo += i->get()->miniInfo();
     }
   }
   catch (exception& ex)

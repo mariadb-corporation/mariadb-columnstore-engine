@@ -392,7 +392,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void errorLogging(const std::string& msg, int err) const;
   void startAdjoiningSteps();
 
-  void formatMiniStats(uint32_t index);
+  void formatMiniStatsPerJoiner(uint32_t index);
+  void formatMiniStats();
 
   RowGroupDL *largeDL, *outputDL;
   std::vector<RowGroupDL*> smallDLs;
@@ -538,7 +539,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   };
   void joinRunnerFcn(uint32_t index);
   void startJoinThreads();
-  void generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer>>& joinerOutput,
+  void generateJoinResultSet(const uint32_t threadID, const std::vector<std::vector<rowgroup::Row::Pointer>>& joinerOutput,
                              rowgroup::Row& baseRow,
                              const std::shared_ptr<std::shared_ptr<int[]>[]>& mappings, const uint32_t depth,
                              rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
@@ -639,6 +640,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void segregateJoiners();
   std::vector<std::shared_ptr<joiner::TupleJoiner>> tbpsJoiners;
   std::vector<std::shared_ptr<joiner::TupleJoiner>> djsJoiners;
+  std::vector<size_t> joinerRunnerInputRecordsStats;
+  std::vector<size_t> joinerRunnerInputMatchedStats;
   std::vector<int> djsJoinerMap;
   boost::scoped_array<ssize_t> memUsedByEachJoin;
   boost::mutex djsLock;

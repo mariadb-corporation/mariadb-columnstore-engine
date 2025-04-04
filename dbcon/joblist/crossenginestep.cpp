@@ -802,7 +802,7 @@ void CrossEngineStep::formatMiniStats()
   ostringstream oss;
   oss << "CES "
       << "UM "
-      << "- "
+      << tableAlias() << " "
       << "- "
       << "- "
       << "- "
