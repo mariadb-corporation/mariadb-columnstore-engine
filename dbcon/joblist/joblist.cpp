@@ -421,8 +421,6 @@ void JobList::querySummary(bool extendedStats)
 
   try
   {
-
-
     //
     //...Add up the I/O and msg counts for the query job steps
     //

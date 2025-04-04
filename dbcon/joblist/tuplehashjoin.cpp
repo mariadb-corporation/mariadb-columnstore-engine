@@ -1557,7 +1557,6 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
     smallRGs[i].initRow(&smallRowTemplates[i]);
 
   grabSomeWork(&inputData);
-  std::cout << "joinRunnerFcn " << threadID << " has " << inputData.size() << " RGDatas" << std::endl;
 
   while (!inputData.empty() && !cancelled())
   {
