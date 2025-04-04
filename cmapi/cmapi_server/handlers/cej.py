@@ -78,6 +78,25 @@ class CEJPasswordHandler():
             return secrets_json
 
     @classmethod
+    def is_password_encrypted(cls, passwd: str) -> bool:
+        """Check if password is encrypted.
+
+        :param passwd: CEJ password
+        :type passwd: str
+        :return: True if password is encrypted
+        :rtype: bool
+        """
+        # minimal length of encrypted password
+        if len(passwd) < (AES_IV_HEX_SIZE*2):
+            return False
+        try:
+            # Try converting the string to an integer with base 16
+            int(passwd, 16)
+        except ValueError:
+            return False
+        return True
+
+    @classmethod
     def decrypt_password(
         cls, enc_data: str, directory: str = MCS_DATA_PATH
     ) -> str:
@@ -91,7 +110,10 @@ class CEJPasswordHandler():
         :rtype: str
         """
         secrets_file_path = os.path.join(directory, MCS_SECRETS_FILENAME)
-        if not cls.secretsfile_exists(directory=directory):
+        if (
+            not cls.secretsfile_exists(directory=directory) or
+            not cls.is_password_encrypted(enc_data)
+        ):
             logging.warning('Unencrypted CrossEngineSupport password used.')
             return enc_data
 

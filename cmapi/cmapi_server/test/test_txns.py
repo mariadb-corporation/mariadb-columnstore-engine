@@ -131,7 +131,7 @@ class TestTransactions(unittest.TestCase):
                         mcs_config_filename,
                         cmapi_config_filename=cmapi_config_filename,
                         test_mode=True,
-                        nodes = result[2]
+                        nodes=result[2]
                     )
                     # not specifying nodes here to exercise the
                     # nodes = None path

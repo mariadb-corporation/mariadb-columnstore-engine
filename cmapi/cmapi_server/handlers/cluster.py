@@ -47,7 +47,7 @@ def toggle_cluster_state(
 
     switch_node_maintenance(maintainance_flag)
     update_revision_and_manager()
-    broadcast_new_config(config)
+    broadcast_new_config(config, distribute_secrets=True)
 
 
 class ClusterHandler():
