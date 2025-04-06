@@ -866,6 +866,8 @@ inline int64_t Row::getIntField(uint32_t colIndex) const
 
     case 8: return *((int64_t*)&data[offsets[colIndex]]);
 
+    case 16: return *((int128_t*)&data[offsets[colIndex]]);
+
     default: idbassert(0); throw std::logic_error("Row::getIntField(): bad length.");
   }
 }
