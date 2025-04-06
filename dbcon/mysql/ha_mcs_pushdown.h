@@ -32,7 +32,6 @@ enum mcs_handler_types_t
 {
   SELECT,
   DERIVED,
-  GROUP_BY,
   LEGACY
 };
 
