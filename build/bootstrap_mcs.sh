@@ -335,11 +335,13 @@ construct_cmake_flags(){
       if [[ $WITHOUT_COREDUMPS = true ]] ; then
           warn "Cores are not dumped"
       else
+            warn "Building with CoreDumps"
+            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+
             if [ -f /.dockerenv ] ; then
-                warn "Cannot build with CoreDumps inside Docker container"
+                warn "Build is executed in Docker, core dumps saving path /proc/sys/kernel/core_pattern will not be configured!"
             else
-                MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
-                warn "Building with CoreDumps: /proc/sys/kernel/core_pattern changed to ${REPORT_PATH}/core_%e.%p"
+                warn "/proc/sys/kernel/core_pattern changed to ${REPORT_PATH}/core_%e.%p"
                 echo "${REPORT_PATH}/core_%e.%p" > /proc/sys/kernel/core_pattern
             fi
       fi
