@@ -357,35 +357,42 @@ def broadcast_new_config(
         :raises CMAPIBasicError: If undefined error happened
         """
         url = f'https://{node}:8640/cmapi/{version}/node/config'
+        resp_json: dict = dict()
 
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.put(
                     url, headers=headers, json=body, ssl=False, timeout=120
                 ) as response:
+                    resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node "{node}" config put successfull.')
+                logging.info(f'Node {node} config put successfull.')
             except aiohttp.ClientResponseError as err:
+                # TODO: may be better to check if resp status is 422 cause
+                #       it's like a signal that cmapi server raised it in
+                #       most cases
+                error_msg = resp_json.get('error', resp_json)
                 message = (
-                    f'Node "{node}" config put failed with status: '
-                    f'"{err.status}" and message: {err.message}'
+                    f'Node {node} config put failed with status: '
+                    f'{err.status} and err message: {error_msg}'
                 )
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except aiohttp.ClientError as err:
+
                 message = (
-                        f'Node "{node}" config put failed with ClientError: '
+                        f'Node {node} config put failed with ClientError: '
                         f'{str(err)}'
                     )
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except asyncio.TimeoutError:
-                message = f'Node "{node}" config put failed by Timeout: '
+                message = f'Node {node} config put failed by Timeout: '
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except Exception as err:
                 message = (
-                    f'Node "{node}" config put failed by undefined exception: '
+                    f'Node {node} config put failed by undefined exception: '
                     f'{str(err)}'
                 )
                 logging.error(message)

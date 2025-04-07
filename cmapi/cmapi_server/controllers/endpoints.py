@@ -461,7 +461,7 @@ class ConfigController:
                         module_logger, func_name,
                         (
                             'Error while starting node. '
-                            f'Details: {err.message}.'
+                            f'Details: {err.message}'
                         ),
                         exc_info=False
                     )
