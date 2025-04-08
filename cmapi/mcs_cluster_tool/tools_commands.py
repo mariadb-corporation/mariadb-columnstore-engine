@@ -1,15 +1,19 @@
 import logging
 import os
+import secrets
+from datetime import datetime, timedelta
 
 import typer
 from typing_extensions import Annotated
 
 
 from cmapi_server.constants import (
-    MCS_DATA_PATH, MCS_SECRETS_FILENAME
+    MCS_DATA_PATH, MCS_SECRETS_FILENAME, REQUEST_TIMEOUT, TRANSACTION_TIMEOUT,
 )
+from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
+from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
 
 
@@ -113,3 +117,36 @@ def cspasswd(
             raise typer.Exit(code=1)
         typer.echo(f'Encoded password: {encoded_password}', color='green')
     raise typer.Exit(code=0)
+
+
+@handle_output
+def bootstrap_single_node(
+    key: Annotated[
+        str,
+        typer.Option(
+            '--api-key',
+            help='API key to set.',
+        )
+    ] = ''
+):
+    """Bootstrap a single node (localhost) Columnstore instance."""
+    node = 'localhost'
+    client = ClusterControllerClient(request_timeout=REQUEST_TIMEOUT)
+    if not key:
+        # Generate API key if not provided
+        key = secrets.token_urlsafe(32)
+    # handle_output decorator will catch, show and log errors
+    api_key_set_resp = client.set_api_key(key)
+    # if operation takes minutes, then it is better to raise by timeout
+    with TransactionManager(
+        timeout=TRANSACTION_TIMEOUT, handle_signals=True,
+        extra_nodes=[node]
+    ):
+        add_node_resp = client.add_node({'node': node})
+
+    result = {
+        'timestamp': str(datetime.now()),
+        'set_api_key_resp': api_key_set_resp,
+        'add_node_resp': add_node_resp,
+    }
+    return result

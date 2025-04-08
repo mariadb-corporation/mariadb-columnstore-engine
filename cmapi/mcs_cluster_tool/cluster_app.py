@@ -14,6 +14,7 @@ from typing_extensions import Annotated
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH, REQUEST_TIMEOUT
 )
+from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
     get_config_parser, get_current_key, get_version, build_url
@@ -21,7 +22,6 @@ from cmapi_server.helpers import (
 from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
 from mcs_node_control.models.node_config import NodeConfig
-from cmapi_server.controllers.api_clients import ClusterControllerClient
 
 
 logger = logging.getLogger('mcs_cli')

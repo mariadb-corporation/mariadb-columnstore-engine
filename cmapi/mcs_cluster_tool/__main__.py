@@ -47,6 +47,9 @@ app.command(
     'cspasswd', rich_help_panel='Tools commands',
     short_help='Encrypt a Columnstore plaintext password.'
 )(tools_commands.cspasswd)
+app.command(
+    'bootstrap-single-node', rich_help_panel='Tools commands',
+)(tools_commands.bootstrap_single_node)
 
 
 @app.command(
