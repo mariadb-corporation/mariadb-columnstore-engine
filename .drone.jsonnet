@@ -162,7 +162,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
   local get_sccache = 'echo getting sccache... && (apt update -y && apt install -y curl || yum install -y curl || true) ' +
-                      '&& curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
+                      '&& curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
                       '&& tar xzf sccache.tar.gz ' +
                       '&& install sccache*/sccache /usr/local/bin/ && echo sccache installed',
 
