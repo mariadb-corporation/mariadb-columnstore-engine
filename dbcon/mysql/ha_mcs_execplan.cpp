@@ -8090,7 +8090,8 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     string alias("___very_internal___");
     fromSub->alias(alias);
 
-    CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, "___dummy_view_name___");
+    string dummyView("___dummy_view_name___");
+    CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, dummyView);
         // @bug 3852. check return execplan
     SCSEP plan = fromSub->transform();
 
@@ -8109,9 +8110,20 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     idblog("copying " << plan->returnedCols().size() << " columns to our csep");
     for(uint32_t i = 0; i < plan->returnedCols().size();i++)
     {
-      gwi.returnedCols.push_back(SRCP(plan->returnedCols()[i]->clone()));
+      SRCP cloned(plan->returnedCols()[i]->clone());
+      SimpleColumn* sc = dynamic_cast<SimpleColumn*>(cloned.get());
+      if (sc)
+      {
+        sc->schemaName("");
+        sc->tableName(alias);
+        sc->tableAlias(alias);
+	sc->data("``.`"+alias+"`.`"+sc->columnName()+"'");
+      }
+      gwi.returnedCols.push_back(cloned);
     }
     idblog("copied");
+
+    csep->tableList(gwi.tbList);
 
   }
   else
