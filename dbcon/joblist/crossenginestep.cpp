@@ -20,7 +20,7 @@
 #define PREFER_MY_CONFIG_H
 #include "crossenginestep.h"
 #include <unistd.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -251,14 +251,10 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     case CalpontSystemCatalog::USMALLINT: rv = boost::any_cast<uint16_t>(anyVal); break;
 
     case CalpontSystemCatalog::MEDINT:
-    case CalpontSystemCatalog::INT:
-      rv = boost::any_cast<int32_t>(anyVal);
-      break;
+    case CalpontSystemCatalog::INT: rv = boost::any_cast<int32_t>(anyVal); break;
 
     case CalpontSystemCatalog::UMEDINT:
-    case CalpontSystemCatalog::UINT:
-      rv = boost::any_cast<uint32_t>(anyVal);
-      break;
+    case CalpontSystemCatalog::UINT: rv = boost::any_cast<uint32_t>(anyVal); break;
 
     case CalpontSystemCatalog::BIGINT: rv = boost::any_cast<long long>(anyVal); break;
 
@@ -304,7 +300,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     {
       if (nullFlag)
       {
-        rv = joblist::CHAR8NULL; // SZ: I hate that.
+        rv = joblist::CHAR8NULL;  // SZ: I hate that.
       }
       else
       {
@@ -389,7 +385,7 @@ void CrossEngineStep::execute()
     if (ret != 0)
       mysql->handleMySqlError(mysql->getError().c_str(), ret);
 
-    std::string query(makeQuery());
+    std::string query = makeQuery();
     fLogger->logMessage(logging::LOG_TYPE_INFO, "QUERY to foreign engine: " + query);
 
     if (traceOn())
@@ -429,11 +425,10 @@ void CrossEngineStep::execute()
         addRow(rgDataDelivered);
       }
     }
-
     else if (doFE1 && !doFE3)  // FE in WHERE clause only
     {
       std::shared_ptr<uint8_t[]> rgDataFe1;  // functions in where clause
-      Row rowFe1;                       // row for fe evaluation
+      Row rowFe1;                            // row for fe evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
       rowFe1.setData(rowgroup::Row::Pointer(rgDataFe1.get()));
@@ -480,11 +475,10 @@ void CrossEngineStep::execute()
         addRow(rgDataDelivered);
       }
     }
-
     else if (!doFE1 && doFE3)  // FE in SELECT clause only
     {
       std::shared_ptr<uint8_t[]> rgDataFe3;  // functions in select clause
-      Row rowFe3;                       // row for fe evaluation
+      Row rowFe3;                            // row for fe evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
       rowFe3.setData(rowgroup::Row::Pointer(rgDataFe3.get()));
@@ -501,17 +495,16 @@ void CrossEngineStep::execute()
         addRow(rgDataDelivered);
       }
     }
-
     else  // FE in SELECT clause, FE join and WHERE clause
     {
       std::shared_ptr<uint8_t[]> rgDataFe1;  // functions in where clause
-      Row rowFe1;                       // row for fe1 evaluation
+      Row rowFe1;                            // row for fe1 evaluation
       fRowGroupFe1.initRow(&rowFe1, true);
       rgDataFe1.reset(new uint8_t[rowFe1.getSize()]);
       rowFe1.setData(rowgroup::Row::Pointer(rgDataFe1.get()));
 
       std::shared_ptr<uint8_t[]> rgDataFe3;  // functions in select clause
-      Row rowFe3;                       // row for fe3 evaluation
+      Row rowFe3;                            // row for fe3 evaluation
       fRowGroupOut.initRow(&rowFe3, true);
       rgDataFe3.reset(new uint8_t[rowFe3.getSize()]);
       rowFe3.setData(rowgroup::Row::Pointer(rgDataFe3.get()));
@@ -562,7 +555,6 @@ void CrossEngineStep::execute()
       }
     }
 
-    // INSERT_ADAPTER(fOutputDL, rgDataDelivered);
     fOutputDL->insert(rgDataDelivered);
     fRowsRetrieved = mysql->getRowCount();
   }
@@ -801,8 +793,7 @@ void CrossEngineStep::formatMiniStats()
 {
   ostringstream oss;
   oss << "CES "
-      << "UM "
-      << tableAlias() << " "
+      << "UM " << tableAlias() << " "
       << "- "
       << "- "
       << "- "

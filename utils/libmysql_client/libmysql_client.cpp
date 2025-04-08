@@ -88,6 +88,15 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
     ret = -1;
   }
 
+  static const std::string extendNetTimeoutQuery  = "SET SESSION net_write_timeout = 3600";
+  if (mysql_real_query(fCon, extendNetTimeoutQuery.c_str(), extendNetTimeoutQuery.length()) != 0)
+  {
+    fErrStr = "fatal error setting net_write_timeout=3600 in libmysql_client lib";
+    ret = -1;
+    return ret;
+  }
+
+
   return ret;
 }
 
