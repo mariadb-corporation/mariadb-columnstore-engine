@@ -778,7 +778,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              },
              commands: [
                 get_sccache,
-                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh --build-type RelWithDebInfo --distro ' + platform + ' --sccache --build-packages --server-version ' + server,
+                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh --build-type RelWithDebInfo --distro ' + platform + ' --build-packages --sccache --server-version ' + server,
                 'sccache --show-stats',
              ],
            },
