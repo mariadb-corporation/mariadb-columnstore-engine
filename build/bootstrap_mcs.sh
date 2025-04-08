@@ -431,25 +431,6 @@ build_package() {
     echo "Building a package for $OS"
     echo "Build command: $command"
     eval "$command"
-
-    # Move engine and cmapi packages to one directory to make a repo
-    if [[ "$pkg_format" == "rpm" ]]; then
-      mv -v -t ./"$RESULT_DIR"/ ./*.${pkg_format}
-    else
-      mv -v -t ./"$RESULT_DIR"/ ../*.${pkg_format}
-    fi
-
-    # Create repository based on package format
-    if [ "$pkg_format" == "rpm" ]; then
-      createrepo ./"$RESULT_DIR"
-    else
-      dpkg-scanpackages "$RESULT_DIR" | gzip > ./"$RESULT_DIR"/Packages.gz
-    fi
-
-    # List storage manager binary
-    echo "Storage manager binary: "
-    #ls -la "/mdb/$BUILD_DIR/storage/columnstore/columnstore/storage-manager"
-    ls -la "$(dirname "${BASH_SOURCE[0]}")/../storage-manager"
  }
 
 build_binary()

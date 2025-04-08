@@ -239,11 +239,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   local dockerImage(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
   local installEngine(dockerImage, pkg_format) =
-    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
+    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt update && apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
                              else execInnerDocker('bash -c "yum install -y MariaDB-columnstore-engine MariaDB-test"', dockerImage),
 
   local installCmapi(dockerImage, pkg_format) =
-    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-columnstore-cmapi"', dockerImage)
+    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt update && apt install -y mariadb-columnstore-cmapi"', dockerImage)
                              else execInnerDocker('bash -c "yum install -y MariaDB-columnstore-cmapi"', dockerImage),
 
   local prepareTestStage(dockerImage, pkg_format, result, do_setup) = [
@@ -781,6 +781,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 get_sccache,
                 'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh --build-type RelWithDebInfo --distro ' + platform + ' --build-packages --sccache --server-version ' + server,
                 'sccache --show-stats',
+
+                // move engine and cmapi packages to one dir to make a repo
+                'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
+                if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
+                // list storage manager binary
+                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
            {
