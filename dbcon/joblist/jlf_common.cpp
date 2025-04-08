@@ -39,6 +39,24 @@ using namespace BRM;
 using namespace joblist;
 #include "mcs_decimal.h"
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace
 {
 // @brief Returns unique key for a column, table, or expresssion.
@@ -65,6 +83,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
   if (iter != jobInfo.keyInfo->tupleKeyMap.end())
     return iter->second;
 
+  idblog("not found, create");
   uint32_t newId = jobInfo.keyInfo->nextKey++;
   // cout << "new id: " << newId << " -- " << o << ", " << pi << ", " << nm << ", " << vw << ", " << sn << ",
   // " << subId << endl;
@@ -83,12 +102,14 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
 
   if (o != t)
   {
+  idblog("o != t");
     string name = cn;
 
     if (!ca.empty())  // has an alias
       name = ca;
     else if (ta.compare(0, 5, "$sub_") && ta.compare(0, 4, "$exp"))  // compare != 0
       name = ss + ta + "." + name;
+    idblog("key name " << name);
 
     jobInfo.keyInfo->tupleKeyToName.push_back(name);
     jobInfo.keyInfo->keyName.insert(make_pair(newId, cn));
@@ -118,6 +139,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
       name = "expression";
     }
 
+    idblog("key name " << name);
     jobInfo.keyInfo->tupleKeyToName.push_back(name);
     jobInfo.keyInfo->keyName.insert(make_pair(newId, tn));
   }
