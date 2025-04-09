@@ -8090,7 +8090,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     string alias("___very_internal___");
     fromSub->alias(alias);
 
-    string dummyView("___dummy_view_name___");
+    string dummyView(alias);
     CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, dummyView);
         // @bug 3852. check return execplan
     SCSEP plan = fromSub->transform();
@@ -8118,6 +8118,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         sc->tableName(alias);
         sc->tableAlias(alias);
 	sc->data("``.`"+alias+"`.`"+sc->columnName()+"'");
+	sc->oid(0);
       }
       gwi.returnedCols.push_back(cloned);
     }

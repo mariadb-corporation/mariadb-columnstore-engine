@@ -62,6 +62,24 @@ using namespace logging;
 #include "jlf_subquery.h"
 using namespace joblist;
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace
 {
 void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const long timeZone)
@@ -396,6 +414,7 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
   bool noFrom = (ef->sub()->tableList().size() == 0);
   bool exists = !ef->notExists();
 
+  idblog("do non correlated exists");
   if (!noFrom)
   {
     // Transformer sub to a scalar result set.
@@ -639,6 +658,7 @@ void doExistsFilter(const ParseTree* p, JobInfo& jobInfo)
   const ExistsFilter* ef = dynamic_cast<const ExistsFilter*>(p->data());
   idbassert(ef != NULL);
 
+  idblog("do exists filter " << p->toString());
   if (ef->correlated())
     doCorrelatedExists(ef, jobInfo);
   else
