@@ -80,6 +80,25 @@ using namespace joblist;
 // 'typeid'
 #endif
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
+
 namespace
 {
 // construct a pcolstep from column key
@@ -2411,6 +2430,7 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector& joinSteps, Job
       }
     }
 
+    idblog("joinedTables size " << joinedTables.size() << " tableInfoMap size " << tableInfoMap.size());
     // 1c. check again if all tables are joined after pulling in function joins.
     if (joinedTables.size() < tableInfoMap.size())
     {
@@ -4565,6 +4585,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
   // Create a step vector for each table in the from clause.
   TableInfoMap tableInfoMap;
 
+  idblog("jobInfo.tableList.size() " << jobInfo.tableList.size());
   for (uint64_t i = 0; i < jobInfo.tableList.size(); i++)
   {
     uint32_t tableUid = jobInfo.tableList[i];
@@ -4667,6 +4688,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
       // not correlated
       joinSteps.push_back(*it);
+      idblog("not correlated, tid1 " << tid1 << ", tid2 " << tid2);
       tableInfoMap[tid1].fJoinKeys.push_back(key1);
       tableInfoMap[tid2].fJoinKeys.push_back(key2);
 
@@ -4818,6 +4840,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
           if (jobInfo.returnColSet.find(c) == jobInfo.returnColSet.end())
           {
+		  idblog("subquery column is not found");
             tableInfoMap[tables[i]].fProjectCols.push_back(c);
             jobInfo.pjColList.push_back(getTupleInfo(c, jobInfo));
             jobInfo.returnColSet.insert(c);
@@ -4887,11 +4910,13 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
     it++;
   }
+  idblog("table info map size " << tableInfoMap.size());
 
   // @bug2634, delay isNull filter on outerjoin key
   // @bug5374, delay predicates for outerjoin
   outjoinPredicateAdjust(tableInfoMap, jobInfo);
 
+  idblog("table info map size 2 " << tableInfoMap.size());
   // @bug4021, make sure there is real column to scan
   for (auto it = tableInfoMap.begin(); it != tableInfoMap.end(); it++)
   {
@@ -4950,6 +4975,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
       *p = t;
     }
   }
+  idblog("table info map size 6 " << tableInfoMap.size());
 
   // @bug3767, error out scalar subquery with aggregation and correlated additional comparison.
   if (jobInfo.hasAggregation && (!jobInfo.correlateSteps.empty()))
@@ -4990,6 +5016,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     tableInfoMap[tid].fProjectCols.push_back((*it)->tupleId());
     it++;
   }
+  idblog("table info map size 5 " << tableInfoMap.size());
 
   for (auto j = jobInfo.pjColList.begin(); j != jobInfo.pjColList.end(); j++)
   {
@@ -5001,6 +5028,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     if (find(projectCols.begin(), projectCols.end(), j->key) == projectCols.end())
       projectCols.push_back(j->key);
   }
+  idblog("table info map size 4 " << tableInfoMap.size());
 
   JobStepVector& retExp = jobInfo.returnedExpressions;
 
@@ -5016,6 +5044,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
       tableInfoMap[exp->tableKeys()[i]].fColsInRetExp.push_back(exp->columnKeys()[i]);
     }
   }
+  idblog("table info map size 3 " << tableInfoMap.size());
 
   // reset all step vector
   querySteps.clear();

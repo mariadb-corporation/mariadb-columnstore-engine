@@ -99,6 +99,24 @@ using namespace rowgroup;
 // 'typeid'
 #endif
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace
 {
 using namespace joblist;
@@ -119,6 +137,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
   bool tokenOnly = false;
   TupleInfo ti;
 
+  idblog("projecting simple column " << sc->toString());
   if (!sc->schemaName().empty())
   {
     SJSTEP sjstep;

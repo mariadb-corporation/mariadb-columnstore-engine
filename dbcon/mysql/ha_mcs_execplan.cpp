@@ -8117,7 +8117,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         sc->schemaName("");
         sc->tableName(alias);
         sc->tableAlias(alias);
-	sc->data("``.`"+alias+"`.`"+sc->columnName()+"'");
+	string colAlias = "``.`"+alias+"`.`"+sc->columnName()+"'";
+	sc->alias(colAlias);
+	sc->data(colAlias);
 	sc->oid(0);
       }
       gwi.returnedCols.push_back(cloned);
