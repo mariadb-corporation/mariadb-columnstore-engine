@@ -425,6 +425,7 @@ SCSEP FromSubQuery::transform()
 
   // gwi for the sub query
   gp_walk_info gwi(fGwip.timeZone, fGwip.subQueriesChain);
+  gwi.tempDisableOrderBy = fDisableOrderBy;
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
   gwi.viewName = fGwip.viewName;

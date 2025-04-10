@@ -302,6 +302,7 @@ void SubQueryTransformer::updateCorrelateInfo()
   // put vtable into the table list to resolve correlated filters
   // Temp fix for @bug3932 until outer join has no dependency on table order.
   // Insert at [1], not to mess with OUTER join and hint(INFINIDB_ORDERED -- bug2317).
+  idblog("make table key in updateCorrelateInfo");
   fOutJobInfo->tableList.insert(
       fOutJobInfo->tableList.begin() + 1,
       makeTableKey(*fOutJobInfo, fVtable.tableOid(), fVtable.name(), fVtable.alias(), "", fVtable.view()));

@@ -126,8 +126,11 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
   if (sc == NULL)
     throw logic_error("projectSimpleColumn: sc is null");
 
+  idblog("projecting simple column " << sc->toString());
   CalpontSystemCatalog::OID oid = sc->oid();
+  idblog("getting table oid in project simple column");
   CalpontSystemCatalog::OID tbl_oid = tableOid(sc, jobInfo.csc);
+  idblog("tbl_oid " << tbl_oid);
   string alias(extractTableAlias(sc));
   string view(sc->viewName());
   CalpontSystemCatalog::OID dictOid = 0;
@@ -137,9 +140,9 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
   bool tokenOnly = false;
   TupleInfo ti;
 
-  idblog("projecting simple column " << sc->toString());
   if (!sc->schemaName().empty())
   {
+	  idblog("schema name is empty");
     SJSTEP sjstep;
 
     //      always tuples after release 3.0
@@ -227,6 +230,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
   }
   else  // must be vtable mode
   {
+	  idblog("schema name is not empty");
     oid = (tbl_oid + 1) + sc->colPosition();
     ct = jobInfo.vtableColTypes[UniqId(oid, alias, "", "")];
     ti = setTupleInfo(ct, oid, jobInfo, tbl_oid, sc, alias);
@@ -239,6 +243,7 @@ void projectSimpleColumn(const SimpleColumn* sc, JobStepVector& jsv, JobInfo& jo
     ti.scale = 8;
   }
 
+  idblog("ti oid " << ti.oid << ", ti key " << ti.key << ", ti tkey " << ti.tkey);
   jobInfo.pjColList.push_back(ti);
 }
 
@@ -1981,6 +1986,7 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
     else
       oid = 0;
 
+    idblog("calling make table key in makeJobSteps");
     uint32_t tableUid = makeTableKey(jobInfo, oid, it->table, it->alias, it->schema, it->view);
     jobInfo.tableList.push_back(tableUid);
   }

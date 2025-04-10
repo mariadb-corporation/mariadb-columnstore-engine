@@ -308,7 +308,7 @@ string CalpontSelectExecutionPlan::toString() const
   CalpontSelectExecutionPlan::ColumnMap::const_iterator iter;
 
   for (iter = columnMap().begin(); iter != columnMap().end(); iter++)
-    output << (*iter).first << " : " << (*iter).second << endl;
+    output << (*iter).first << " : {" << *(*iter).second << "}" << endl;
 
   output << "UUID: " << fUuid << endl;
   output << "QueryType: " << queryType() << endl;

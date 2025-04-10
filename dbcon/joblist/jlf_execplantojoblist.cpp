@@ -1017,6 +1017,7 @@ const JobStepVector doJoin(SimpleColumn* sc1, SimpleColumn* sc2, JobInfo& jobInf
   {
     JobStepVector jsv;
     jsv = doFilterExpression(sc1, sc2, jobInfo, sop);
+    idblog("make table key in doJoin");
     uint32_t t1 = makeTableKey(jobInfo, sc1);
     uint32_t t2 = makeTableKey(jobInfo, sc2);
     jobInfo.incompatibleJoinMap[t1] = t2;

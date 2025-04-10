@@ -64,6 +64,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
                       const string& cn, const string& ca, const string& tn, const string& ta,
                       const string& sn, const string& vw, uint32_t pi, uint64_t en, bool correlated = false)
 {
+	idblog("uniq tuple key: o " << o << ", t " << t << ", cn '" << cn << "', ca '" << ca << "', tn '" << tn << "', ta '" << ta << "', sn '" << sn << ", vw '" << vw << "', pi " << pi << ", en " << en << ", corr " << int(correlated));
   uint64_t subId = jobInfo.subId;
 
   if (correlated && jobInfo.pJobInfo)
@@ -181,6 +182,7 @@ TupleInfo setTupleInfo_(const CalpontSystemCatalog::ColType& ct, CalpontSystemCa
                         const string& tbl_alias, const string& vw_name, bool correlated = false,
                         uint32_t pc_id = 0, uint64_t engine = 0)
 {
+	idblog("set tuple info main: o " << col_oid << ", t " << tbl_oid << ", cn '" << col_name << "', ca '" << col_alias << "', tn '" << tbl_name << "', ta '" << tbl_alias << "', sn '" << sch_name << ", vw '" << vw_name << "', pi " << pc_id << ", en " << engine << ", corr " << int(correlated));
   // get the unique tupleOids for this column
   uint32_t tbl_key = uniqTupleKey(jobInfo, tbl_oid, tbl_oid, "", "", tbl_name, tbl_alias, sch_name, vw_name,
                                   0, engine, correlated);
@@ -365,11 +367,15 @@ bool isCharCol(const CalpontSystemCatalog::ColType& colType)
 CalpontSystemCatalog::OID tableOid(const SimpleColumn* sc, boost::shared_ptr<CalpontSystemCatalog> cat)
 {
   if (sc->schemaName().empty())
+  {
+	  idblog("returning VTABLE ID");
     return execplan::CNX_VTABLE_ID;
+  }
 
   if (sc->isColumnStore() == false)
     return 0;
 
+  idblog("table [" << sc->schemaName() << ">> <<" << sc->tableName() << ">>");
   CalpontSystemCatalog::ROPair p = cat->tableRID(make_table(sc->schemaName(), sc->tableName()));
   return p.objnum;
 }
@@ -390,6 +396,7 @@ uint32_t getTupleKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc, bool ad
     // setTupleInfo first if add is true, ok if already set.
     if (sc->schemaName().empty())
     {
+	    idblog("suspicious simple column: " << sc->toString());
       SimpleColumn tmp(*sc, jobInfo.sessionId);
       tmp.oid(tableOid(sc, jobInfo.csc) + 1 + sc->colPosition());
       key = getTupleKey(jobInfo, &tmp);  // sub-query should be there
@@ -521,6 +528,7 @@ uint32_t getTableKey(JobInfo& jobInfo, JobStep* js)
 uint32_t makeTableKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc)
 {
   CalpontSystemCatalog::OID o = tableOid(sc, jobInfo.csc);
+  idblog("make table key from simple column " << sc->toString());
   return uniqTupleKey(jobInfo, o, o, "", "", sc->tableName(), extractTableAlias(sc), sc->schemaName(),
                       sc->viewName(), 0, (sc->isColumnStore() ? 0 : 1),
                       ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0));
@@ -529,6 +537,7 @@ uint32_t makeTableKey(JobInfo& jobInfo, const execplan::SimpleColumn* sc)
 uint32_t makeTableKey(JobInfo& jobInfo, CalpontSystemCatalog::OID o, const string& tn, const string& ta,
                       const string& sn, const string& vn, uint64_t en)
 {
+  idblog("make table key from fields, view name '" << vn << "'");
   return uniqTupleKey(jobInfo, o, o, "", "", tn, ta, sn, vn, 0, en);
 }
 
@@ -566,6 +575,7 @@ TupleInfo setTupleInfo(const execplan::CalpontSystemCatalog::ColType& ct,
 {
   const PseudoColumn* pc = dynamic_cast<const execplan::PseudoColumn*>(sc);
   uint32_t pseudoType = (pc) ? pc->pseudoType() : execplan::PSEUDO_UNKNOWN;
+  idblog("set tuple info from simple column " << sc->toString());
   return setTupleInfo_(ct, col_oid, jobInfo, tbl_oid, sc->columnName(), sc->alias(), sc->schemaName(),
                        sc->tableName(), alias, sc->viewName(),
                        ((sc->joinInfo() & execplan::JOIN_CORRELATED) != 0), pseudoType,
@@ -587,11 +597,13 @@ TupleInfo setExpTupleInfo(const execplan::CalpontSystemCatalog::ColType& ct, uin
   if (!(ji->subAlias.empty()))
     expAlias += ji->subAlias;
 
+  idblog("set exp tuple info from fields");
   return setTupleInfo_(ct, expressionId, jobInfo, CNX_EXP_TABLE_ID, "", alias, "", "$exp", expAlias, "", cr);
 }
 
 TupleInfo setExpTupleInfo(const execplan::ReturnedColumn* rc, JobInfo& jobInfo)
 {
+  idblog("set exp tuple info from retcol");
   return setExpTupleInfo(rc->resultType(), rc->expressionId(), rc->alias(), jobInfo,
                          ((rc->joinInfo() & execplan::JOIN_CORRELATED) != 0));
 }

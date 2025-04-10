@@ -225,10 +225,15 @@ class FromSubQuery : public SubQuery
     fAlias = alias;
   }
   execplan::SCSEP transform();
+  void disableOrderBy()
+  {
+    fDisableOrderBy = true;
+  }
 
  private:
   SELECT_LEX* fFromSub;
   std::string fAlias;
+  bool fDisableOrderBy = false;
 };
 
 class SelectSubQuery : public SubQuery

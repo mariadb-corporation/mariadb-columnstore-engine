@@ -2591,6 +2591,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
           sc->tableAlias(gwi.tbList[i].alias);
           sc->viewName(viewName, lower_case_table_names);
+	  idblog("(4) view name set to " << sc->viewName());
           sc->resultType(ct);
           sc->timeZone(gwi.timeZone);
           break;
@@ -2674,6 +2675,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
           {
             sc->viewName(csep->derivedTbView());
           }
+	  idblog("view name is set to " << sc->viewName());
           sc->resultType(cols[j]->resultType());
           sc->hasAggregate(cols[j]->hasAggregate());
 
@@ -2787,6 +2789,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->colPosition(j);
         sc->tableAlias(csep->derivedTbAlias());
         sc->viewName(gwi.tbList[i].view);
+	idblog("(2) view name is set to " << sc->viewName());
         sc->resultType(cols[j]->resultType());
         sc->timeZone(gwi.timeZone);
 
@@ -2836,6 +2839,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->resultType(ct);
         sc->tableAlias(gwi.tbList[i].alias, lower_case_table_names);
         sc->viewName(viewName, lower_case_table_names);
+	idblog("(3) view name is set to " << sc->viewName());
         sc->timeZone(gwi.timeZone);
         srcp.reset(sc);
         gwi.returnedCols.push_back(srcp);
@@ -8056,6 +8060,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   ORDER* startOrderCol = nullptr; // single traverse point for all ORDER BY analyses.
 
+  if (!gwi.tempDisableOrderBy)
   {
     SQL_I_List<ORDER> order_list = select_lex.order_list;
     startOrderCol = static_cast<ORDER*>(order_list.first);
@@ -8066,6 +8071,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     }
     idblog("startOrderCol " << startOrderCol);
   }
+  gwi.tempDisableOrderBy = false;
 
   CalpontSelectExecutionPlan::SelectList selectSubList;
 
@@ -8079,6 +8085,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   SELECT_LEX* oldSelectLex = gwi.select_lex; // xxx: sz: should it be restored in case of error return?
 
   uint32_t sessionID = csep->sessionID();
+  gwi.sessionid = sessionID;
 
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
 
@@ -8089,8 +8096,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     FromSubQuery* fromSub = new FromSubQuery(gwi, &select_lex);
     string alias("___very_internal___");
     fromSub->alias(alias);
+    fromSub->disableOrderBy();
 
-    string dummyView(alias);
+    string dummyView("");
     CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, dummyView);
         // @bug 3852. check return execplan
     SCSEP plan = fromSub->transform();
@@ -8117,10 +8125,13 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
         sc->schemaName("");
         sc->tableName(alias);
         sc->tableAlias(alias);
-	string colAlias = "``.`"+alias+"`.`"+sc->columnName()+"'";
+	sc->colPosition(i);
+	string colAlias = "`"+alias+"`.`"+sc->columnName()+"`";
 	sc->alias(colAlias);
-	sc->data(colAlias);
+	sc->data("``."+colAlias);
 	sc->oid(0);
+	sc->viewName("");
+        gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), cloned));
       }
       gwi.returnedCols.push_back(cloned);
     }
@@ -8135,7 +8146,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     setExecutionParams(gwi, csep);
 
     gwi.subSelectType = csep->subType();
-    gwi.sessionid = sessionID;
     csc->identity(CalpontSystemCatalog::FE);
     csep->timeZone(gwi.timeZone);
     gwi.csc = csc;
@@ -9405,6 +9415,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 #endif
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
+  idblog("final csep: " << csep->toString());
 
   return 0;
 }

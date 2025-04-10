@@ -4911,6 +4911,9 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     it++;
   }
   idblog("table info map size " << tableInfoMap.size());
+  for (auto j = tableInfoMap.begin(); j != tableInfoMap.end(); j++) {
+	  idblog("  table info map key " << j->first);
+  }
 
   // @bug2634, delay isNull filter on outerjoin key
   // @bug5374, delay predicates for outerjoin
@@ -5018,11 +5021,18 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
   }
   idblog("table info map size 5 " << tableInfoMap.size());
 
+  for (auto j = tableInfoMap.begin(); j != tableInfoMap.end(); j++) {
+	  idblog("  table info map key " << j->first);
+  }
   for (auto j = jobInfo.pjColList.begin(); j != jobInfo.pjColList.end(); j++)
   {
     if (jobInfo.keyInfo->tupleKeyVec[j->tkey].fId == CNX_EXP_TABLE_ID)
+    {
+	    idblog("continue");
       continue;
+    }
 
+    idblog("implicitly adding " << j->tkey << " into tableInfoMap");
     vector<uint32_t>& projectCols = tableInfoMap[j->tkey].fProjectCols;
 
     if (find(projectCols.begin(), projectCols.end(), j->key) == projectCols.end())

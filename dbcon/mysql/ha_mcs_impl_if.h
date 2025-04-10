@@ -197,6 +197,9 @@ struct gp_walk_info
   // the chain using sorta kinda RAII.
   SubQuery** subQueriesChain;
 
+  // this flag temporarily disables introduction of query ORDER BY clause.
+  bool tempDisableOrderBy = false;
+
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
    : sessionid(0)
    , fatalParseError(false)
