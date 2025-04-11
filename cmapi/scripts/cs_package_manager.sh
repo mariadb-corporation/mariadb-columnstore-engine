@@ -6,7 +6,7 @@ enterprise_token=""
 dev_drone_key="" 
 jenkins_user="" 
 jenkins_pwd=""   
-cs_pkg_manager_version="3.9"
+cs_pkg_manager_version="3.10"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -34,12 +34,17 @@ Example:
 }
 
 print_download_help_text() {
+    if [ "$download_maxscale" == true ]; then
+        print_download_maxscale_help_text
+    fi
+
     echo "
 MariaDB Columnstore Package Manager - Download
 
 Usage: bash $0 download [enterprise|community] [version] [flags]
 
 Flags:
+    -m  | --maxscale            Download MaxScale packages
     -d  | --directory           Directory to download the files to [default: /tmp]
     -h  | --help                Help & documentation
 
@@ -49,6 +54,25 @@ Example:
     bash $0 download enterprise 10.6.14-9 --directory /root/mariadb-10.6.14-rpms/
     bash $0 download community 11.1.5
     "
+}
+
+print_download_maxscale_help_text() {
+    echo "
+MariaDB Columnstore Package Manager - Download MaxScale
+
+Usage: bash $0 download [enterprise|community] [version] [-m|--maxscale] [flags]
+
+Flags:
+    -d  | --directory           Directory to download the files to [default: /tmp]
+    -h  | --help                Help & documentation
+
+The download action will download the rpm/deb files for a specific version to a specified directory
+
+Example:
+    bash $0 download enterprise 25.01.1 maxscale --directory /root/maxscale-25.01.1-rpms/
+    bash $0 download community 24.02.4 maxscale
+    "
+    exit 0;
 }
 
 print_help_remove() {
@@ -995,8 +1019,9 @@ check_operating_system() {
     fi;
 
     distro_info=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
-    version_id_exact=$( grep 'VERSION_ID=' /etc/os-release | awk -F= '{gsub(/"/, "", $2); print $2}')
+    version_id_exact=$(awk -F= '/^VERSION_ID=/ { gsub(/"/, "", $2); print $2 }' /etc/os-release)
     version_id=$( echo "$version_id_exact" | awk -F. '{print $1}')
+    version_codename=$(awk -F= '/^VERSION_CODENAME=/ { gsub(/"/, "", $2); print $2 }' /etc/os-release)
 
     set_distro_based_on_distro_info
 }
@@ -1630,6 +1655,41 @@ quick_version_check() {
     fi
 }
 
+check_columnstore_install_dependencies() {
+
+    case $distro_info in
+        centos | rhel | rocky | almalinux )
+
+            package_list=("python3")
+
+            for package in "${package_list[@]}"; do
+                if ! yum install $package -y; then
+                    printf "\n[!] Failed to install dependancy: $package\n"
+                    printf "Please install manually and try again\n\n"
+                    exit 1;
+                fi
+            done
+            
+            ;;
+        ubuntu | debian )
+
+            package_list=("python3")
+
+            for package in "${package_list[@]}"; do
+                if ! apt install $package -y --quiet; then
+                    printf "\n[!] Failed to install dependancy: $package\n"
+                    printf "Please install manually and try again\n\n"
+                    exit 1;
+                fi
+            done
+       
+            ;;
+        *)  # unknown option
+            printf "\ncheck_columnstore_install_dependencies: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
+}
+
 print_install_variables() {
 
     echo "Distro: $distro_info"
@@ -1663,6 +1723,9 @@ enterprise_install() {
     if $enterprise_staging; then 
         url="https://dlm.mariadb.com/$enterprise_token/enterprise-release-helpers-staging/mariadb_es_repo_setup"
     fi
+
+    # Check for install dependancies
+    check_columnstore_install_dependencies
 
     # Download Repo setup script
     rm -rf mariadb_es_repo_setup
@@ -2469,6 +2532,7 @@ local_install() {
     check_no_mdb_installed
     process_cluster_variables
     echo "-----------------------------------------------"
+    check_columnstore_install_dependencies
     check_rpms_debs_exist
 
     case $distro_info in
@@ -3240,6 +3304,161 @@ prompt_user_for_os() {
     
 }
 
+# Seperated to allow re-use of the function for different path= variables
+maxscale_yum_minor_version_search() {
+    curl -s "$url_base$minor_link$path" > $dbm_tmp_file
+    package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep ".rpm" | grep -v $ignore | grep -i "maxscale-" | grep -v "-experimental" )
+    if [ ! -z "$package_links" ]; then
+        
+        at_least_one=true
+        maxscale_link="$(echo $package_links | cut -f 1 -d " ")"
+        maxscale_basename=$(basename $maxscale_link)
+        parsed_maxscale_version="${maxscale_basename#*maxscale-}"
+        parsed_maxscale_version="${parsed_maxscale_version#*enterprise-}"
+        parsed_maxscale_version=$(echo "$parsed_maxscale_version" | cut -d'.' -f1-3 | cut -d'-' -f1-2)
+        #echo "      maxscale_link: $maxscale_link"
+        printf "%-10s %-12s %-6s %-12s\n" "MaxScale:" "$parsed_maxscale_version" "File:" "$maxscale_basename";
+        return 0;
+    else
+        #echo " Failed for: $path"
+        return 1;
+    fi;
+}
+
+maxscale_apt_minor_version_search() {
+    #echo "searching: $url_base$minor_link$path"
+    curl -s "$url_base$minor_link$path" > $dbm_tmp_file
+    
+    maxscale_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $path | grep -v $ignore | grep $version_codename )
+    if [ ! -z "$maxscale_links" ]; then
+        at_least_one=true
+        maxscale_link="$(echo $maxscale_links | cut -f 1 -d " ")"
+        maxscale_basename=$(basename $maxscale_link)
+        parsed_maxscale_version="${maxscale_basename#*maxscale-}"
+        parsed_maxscale_version="${maxscale_basename#*maxscale_}"
+        parsed_maxscale_version="${parsed_maxscale_version#*enterprise_}"
+        parsed_maxscale_version=$(echo "$parsed_maxscale_version" | cut -d'.' -f1-3 | cut -d'~' -f1)
+        #echo "      maxscale_link: $maxscale_link"
+        printf "%-10s %-12s %-6s %-12s\n" "MaxScale:" "$parsed_maxscale_version" "File:" "$maxscale_basename";
+        return 0;
+    else
+        #echo " Failed for: $path"
+        return 1;
+    fi;
+}
+
+do_maxscale_check() {   
+    ignore="/login"
+    at_least_one=false
+    curl -s "$url_base$url_page" > $dbm_tmp_file
+    if [ $? -ne 0 ]; then
+        printf "\n[!] Failed to access $url_base$url_page\n\n"
+        exit 1  
+    fi
+    if grep -q "404 - Page Not Found" $dbm_tmp_file; then
+        printf "\n[!] 404 - Failed to access $url_base$url_page\n"
+        printf "Confirm your ES token works\n"
+        printf "See: https://customers.mariadb.com/downloads/token/ \n\n"
+        exit 1
+    fi
+    major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore | grep -v -x "$url_page" )
+    #echo $major_version_links
+    for major_link in ${major_version_links[@]}
+    do
+        #echo "Major: $major_link"
+        curl -s "$url_base$major_link" > $dbm_tmp_file
+        minor_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -vE "$ignore|-debug" | grep -v -x "$major_link" )
+        for minor_link in ${minor_version_links[@]}
+        do
+            if [ "$minor_link" != "$url_page" ]; then
+                #echo "     Minor: $minor_link"
+                case $distro_info in
+                centos | rhel | rocky | almalinux )
+
+                    local paths=(
+                        "/$distro_info/$version_id/$architecture/"
+                        "/yum/$distro_info/$version_id/$architecture/"
+                        "/rhel/$version_id/$architecture/"
+                    )
+
+                    for path in "${paths[@]}"; do
+                        if maxscale_yum_minor_version_search; then
+                            break
+                        fi
+                    done
+
+                    if ! $at_least_one; then
+                        echo "[!] No MaxScale packages found for: $distro_info $version_id $architecture  in $url_base$minor_link"
+                    fi
+                
+                    ;;
+                ubuntu | debian )
+
+                    local paths=(
+                        "/$distro_info/pool/main/m/maxscale-enterprise/"
+                        "/$distro_info/pool/main/m/maxscale/"
+                        "/apt/pool/main/m/maxscale"
+                    )
+
+                    for path in "${paths[@]}"; do
+                        if maxscale_apt_minor_version_search; then
+                            break
+                        fi
+                    done
+
+                    if ! $at_least_one; then
+                        echo "[!] No MaxScale packages found for: $distro_info $version_id $architecture  in $url_base$minor_link"
+                    fi                
+                    ;;
+                *)  # unknown option
+                    printf "\ndo_check: Not implemented for: $distro_info\n\n"
+                    exit 2;
+                esac
+            fi;
+        done
+    done
+
+}
+
+handle_check_maxscale() {
+
+    while [[ $# -gt 0 ]]; do
+        parameter="$1"
+
+        case $parameter in
+            maxscale | --maxscale )
+                check_maxscale=true
+                shift # past argument
+                ;;
+            *)  # unknown option
+                shift # past argument
+        esac
+    done
+
+    if [ "$check_maxscale" == true ]; then
+        url_base="https://dlm.mariadb.com"
+        case $repo in
+            enterprise )
+                check_set_es_token "$@" 
+                url_page="/browse/$enterprise_token/mariadb_maxscale_enterprise/"
+                do_maxscale_check
+                ;;
+            community )
+                url_page="/browse/mariadbmaxscale/"
+                do_maxscale_check
+                ;;
+            dev )
+                printf "Not implemented for: $repo\n"
+                exit 1;
+                ;;
+            *)  # unknown option
+                printf "Unknown repo: $repo\n"
+                exit 2;
+            esac
+        exit 1
+    fi; 
+}
+
 parse_check_additional_args() {
     if [ -z $2 ]; then
         printf "\n[!] Missing repository: enterprise, community\n\n"
@@ -3275,6 +3494,7 @@ do_check() {
         mac=true
         prompt_user_for_os
     fi
+    handle_check_maxscale "$@"
 
     echo "Repository: $repo"
     case $repo in
@@ -3297,7 +3517,7 @@ do_check() {
                 exit 1
             fi
        
-            major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore )
+            major_version_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep $url_page | grep -v $ignore | grep -v -x $url_page )
             #echo $major_version_links
             for major_link in ${major_version_links[@]}
             do
@@ -3312,10 +3532,10 @@ do_check() {
                         centos | rhel | rocky | almalinux )
                             path="rpm/rhel/$version_id/$architecture/rpms/"
                             curl -s "$url_base$minor_link$path" > $dbm_tmp_file
-                            package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | tail -1 )
+                            package_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "$path" | grep "columnstore-engine" | grep -v debug | sort -V | tail -1 )
                             if [ ! -z "$package_links" ]; then
-                                #echo "----------"
-                                #echo "$package_links"
+                                # echo "----------"
+                                # echo "$package_links"
                                 at_least_one=true
                                 mariadb_version="${package_links#*mariadb-enterprise-server/}"
                                 columnstore_version="${mariadb_version#*columnstore-engine-}"
@@ -3440,11 +3660,228 @@ do_check() {
     esac
 }
 
+do_local_apt_maxscale_download_loop() {
+    #echo "URL: $url${path}"
+    curl -s "${url}${path}" > $dbm_tmp_file 
+    #major_version_to_search="$(echo $version| cut -d'.' -f1-2)"
+    maxscale_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "maxscale-" | grep ".deb" | grep $version_codename )
+    if [ -n "$maxscale_links" ]; then
+        maxscale_link="$(echo $maxscale_links | cut -f 1 -d " ")"
+        return 0;
+    else
+        return 1;
+    fi
+}
+
+do_local_apt_maxscale_download() {
+
+    # Validate major version exists
+    url="${url_base}${url_page}${version}"
+    curl -s "${url}/" > $dbm_tmp_file 
+    if [ $? -ne 0 ]; then
+        printf "\n[!] Failed to access ${url}/\n\n"
+        exit 1  
+    fi
+    if grep -q "404 - Page Not Found" $dbm_tmp_file; then
+        printf "[!] 404 - Version: ${version} does not exist \n\n"
+        exit 1
+    fi
+
+    printf "Removing $(pwd)/*.rpm";
+    if rm -rf *.rpm; then
+        printf " ... Done\n"
+    else
+        printf " Failed to remove *.rpms in $(pwd)\n"
+        exit 1;
+    fi
+
+    local paths=(
+        "/$distro_info/pool/main/m/maxscale-enterprise/"
+        "/$distro_info/pool/main/m/maxscale/"
+        "/apt/pool/main/m/maxscale"
+    )
+
+    echo "Downloading DEBs"
+    for path in "${paths[@]}"; do
+        if do_local_apt_maxscale_download_loop; then
+            break
+        fi
+    done
+    
+    if [ -z "$maxscale_link" ]; then
+        printf "No DEB files found for MaxScale Version: $version   OS_CPU: $distro_info $architecture \n\n"
+        exit 1;
+    else
+        #echo "maxscale_link: $maxscale_link"
+        print_and_download "$maxscale_link"
+    fi
+}
+
+do_local_yum_maxscale_download_loop() {
+    #echo "URL: $url${path}"
+    curl -s "${url}${path}" > $dbm_tmp_file 
+    #major_version_to_search="$(echo $version| cut -d'.' -f1-2)"
+    maxscale_links=$($grep -oP 'href="\K[^"]+' $dbm_tmp_file | grep "maxscale-" | grep ".rpm"   )
+    if [ -n "$maxscale_links" ]; then
+        maxscale_link="$(echo $maxscale_links | cut -f 1 -d " ")"
+        return 0;
+    else
+        return 1;
+    fi
+}
+
+do_local_yum_maxscale_download() {
+    
+    # Validate major version exists
+    url="${url_base}${url_page}${version}"
+    curl -s "${url}/" > $dbm_tmp_file 
+    if [ $? -ne 0 ]; then
+        printf "\n[!] Failed to access ${url}/\n\n"
+        exit 1  
+    fi
+    if grep -q "404 - Page Not Found" $dbm_tmp_file; then
+        printf "[!] 404 - Version: ${version} does not exist \n\n"
+        exit 1
+    fi
+
+    printf "Removing $(pwd)/*.rpm";
+    if rm -rf *.rpm; then
+        printf " ... Done\n"
+    else
+        printf " Failed to remove *.rpms in $(pwd)\n"
+        exit 1;
+    fi
+
+    local paths=(
+        "/$distro_info/$version_id/$architecture/"
+        "/yum/$distro_info/$version_id/$architecture/"
+        "/rhel/$version_id/$architecture/"
+    )
+
+    echo "Downloading RPMs"
+    for path in "${paths[@]}"; do
+        if do_local_yum_maxscale_download_loop; then
+            break
+        fi
+    done
+    
+    if [ -z "$maxscale_link" ]; then
+        printf "[!] No RPM files found for MaxScale Version: $version   OS_CPU: $distro_info $architecture \n\n"
+        exit 1;
+    else
+        #echo "maxscale_link: $maxscale_link"
+        print_and_download "$maxscale_link"
+    fi
+
+}
+
+download_maxscale_enterprise() {
+
+    check_set_es_token "$@" 
+    quick_version_check
+    print_download_variables
+    echo "------------------------------------------------------------------"
+    
+    url_base="https://dlm.mariadb.com"
+    url_page="/browse/$enterprise_token/mariadb_maxscale_enterprise/"
+    dbm_tmp_file="mdb-tmp.html"
+
+    # Validate Enterprise Token Works
+    curl -s "${url_base}${url_page}/" > $dbm_tmp_file 
+    if [ $? -ne 0 ]; then
+        printf "\n[!] Failed to access ${url_base}${url_page}/\n\n"
+        exit 1  
+    fi
+    if grep -q "404 - Page Not Found" $dbm_tmp_file; then
+        printf "\n[!] 404 - Failed to access ${url_base}${url_page}/\n"
+        printf "Confirm your ES token works\n"
+        printf "See: https://customers.mariadb.com/downloads/token/ \n\n"
+        exit 1
+    fi
+
+    case $distro_info in
+        centos | rhel | rocky | almalinux )
+            do_local_yum_maxscale_download
+            ;;
+        ubuntu | debian )
+            do_local_apt_maxscale_download
+            ;;
+        *)  # unknown option
+            printf "\ndownload_enterprise: os & version not implemented: $distro_info\n"
+            exit 2;
+    esac
+
+    printf "Download Complete @ $download_directory \n\n"
+
+}
+
+download_maxscale_community() {
+
+    quick_version_check
+    print_download_variables
+    echo "------------------------------------------------------------------"
+    
+    url_base="https://dlm.mariadb.com"
+    url_page="/browse/mariadbmaxscale/"
+    dbm_tmp_file="mdb-tmp.html"
+
+    case $distro_info in
+        centos | rhel | rocky | almalinux )
+            do_local_yum_maxscale_download
+            ;;
+        ubuntu | debian )
+            do_local_apt_maxscale_download
+            ;;
+        *)  # unknown option
+            printf "\ndownload_community: os & version not implemented: $distro_info\n"
+            exit 2; 
+    esac
+
+}
+
+handle_download_maxscale() {
+    repo="$2"
+    version="$3"
+    
+    while [[ $# -gt 0 ]]; do
+        parameter="$1"
+
+        case $parameter in
+            maxscale | -m | --maxscale )
+                download_maxscale=true
+                shift # past argument
+                ;;
+            *)  # unknown option
+                shift # past argument
+        esac
+    done
+
+    if [ "$download_maxscale" == true ]; then
+        case $repo in
+            enterprise )
+                download_maxscale_enterprise
+                ;;
+            community )
+                download_maxscale_community
+                ;;
+            dev )
+                printf "Not implemented for: $repo\n"
+                exit 1;
+                ;;
+            *)  # unknown option
+                printf "Unknown repo: $repo\n"
+                exit 2;
+            esac
+        exit 1
+    fi; 
+}
+
 parse_download_additional_args() {
 
     download_directory="/tmp/mariadb_downloads"
     remove_debug=true
     download_all=false
+    download_maxscale=false
 
     while [[ $# -gt 0 ]]; do
         key="$1"
@@ -3473,6 +3910,10 @@ parse_download_additional_args() {
                 shift # past argument
                 shift # past value
                 ;;
+            maxscale | -m | --maxscale)
+                download_maxscale=true
+                shift # past argument
+                ;;
             help | -h | --help | -help)
                 print_download_help_text
                 exit 1;
@@ -3499,8 +3940,10 @@ print_download_variables() {
     fi
     echo "CPU: $architecture"
     echo "Package Manager: $package_manager"
-    echo "Include all MDB Packages: $download_all"
-    echo "Remove debug packages: $remove_debug"
+    if [ "$download_maxscale" == false ]; then
+        echo "Include all MDB Packages: $download_all"
+        echo "Remove debug packages: $remove_debug"
+    fi
     echo "Download Directory: $download_directory"
 }
 
@@ -3667,7 +4110,7 @@ do_local_apt_enterprise_download() {
     fi
 
     if [ ${#rpm_file_links[@]} -eq 0 ] || [ "${rpm_file_links[@]}" == "" ]; then
-        echo "No DEB files found for version: $version   OS_CPU: ${distro_short}_${arch}"
+        printf "[!] No DEB files found for version: $version   OS_CPU:  ${distro_short}_${arch} \n\n"
         rm -rf $dbm_tmp_file
         rm -rf ${dbm_tmp_file}_cmapi
         exit 1
@@ -3910,7 +4353,6 @@ create_download_directory() {
 
 do_download() {
 
-    
     check_operating_system
     check_cpu_architecture
     grep=$(which grep)
@@ -3922,6 +4364,7 @@ do_download() {
     check_package_managers
     parse_download_additional_args "$@"
     create_download_directory
+    handle_download_maxscale "$@"
 
     repo="$2"
     case $repo in
@@ -3982,6 +4425,10 @@ global_dependencies() {
         printf "\n[!] curl not found. Please install curl\n\n"
         exit 1; 
     fi   
+    if ! command -v cut &> /dev/null; then
+        printf "\n[!] cut not found. Please install cut\n\n"
+        exit 1; 
+    fi 
 }
 
 print_cs_pkg_mgr_version_info() {
