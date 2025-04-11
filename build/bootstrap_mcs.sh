@@ -97,25 +97,25 @@ disable_git_restore_frozen_revision() {
 install_deps() {
     message_split
 
-    RPM_BUILD_DEPS="dnf install -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
+    RPM_BUILD_DEPS="dnf install -q -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
-      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
+      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel pcre2-devel"
 
-    DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
+    DEB_BUILD_DEPS="apt-get -qq update && apt-get -qq -o Dpkg::Use-Pty=0 install build-essential automake libboost-all-dev \
       bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
       graphviz devscripts ccache equivs eatmydata curl"
 
     if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
-        command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
+        command="dnf install -q -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
       dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
       ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]; then
-        command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
+        command="dnf install -q -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
+      dnf install -q -y gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
         command="${DEB_BUILD_DEPS}"
@@ -205,7 +205,7 @@ modify_packaging() {
 
     #disable LTO for 22.04 for now
     if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
-        apt install -y lto-disabled-list &&
+        apt-get -qq -o Dpkg::Use-Pty=0 lto-disabled-list &&
             for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do
                 echo "$i any" >>/usr/share/lto-disabled-list/lto-disabled-list
             done &&
@@ -263,7 +263,7 @@ construct_cmake_flags() {
                     -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE \
                     -DPLUGIN_GSSAPI=NO"
 
-    if [[ $SKIP_UNIT_TESTS = true ]]; then
+    if [[ $SKIP_UNIT_TESTS = true && $BUILD_PACKAGES = false ]]; then
         warn "Unittests are not build"
 
     else
@@ -395,7 +395,7 @@ build_package() {
     if [[ $pkg_format == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS} && make -j\$(nproc) package"
     else
-        command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
+       command="mk-build-deps debian/control -t 'apt-get -qq -o Dpkg::Use-Pty=0 --no-install-recommends' -r -i && \
        CMAKEFLAGS='${MDB_CMAKE_FLAGS}' debian/autobake-deb.sh"
     fi
 
@@ -450,7 +450,7 @@ check_user_and_group() {
 run_unit_tests() {
     message_split
     if [[ $SKIP_UNIT_TESTS = true ]]; then
-        warn "Skipping unittests"
+        warn "Unittests will not be executed"
     else
         message "Running unittests"
         cd $MARIA_BUILD_PATH

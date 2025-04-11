@@ -71,33 +71,6 @@ local testRun(platform) =
   };
   platform_map[platform];
 
-local gcc_version = '11';
-
-local rockylinux8_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                               '&& dnf config-manager --set-enabled powertools ' +
-                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake ' +
-                               '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
-
-local rockylinux9_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                               '&& dnf config-manager --set-enabled crb ' +
-                               '&& dnf install -y gcc gcc-c++';
-
-local rockylinux_common_deps = ' && dnf install -y git lz4 lz4-devel cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel';
-
-local deb_deps = 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev';
-
-local testPreparation(platform) =
-  local platform_map = {
-    'rockylinux:8': rockylinux8_deps + rockylinux_common_deps,
-    'rockylinux:9': rockylinux9_deps + rockylinux_common_deps,
-    'debian:11': deb_deps,
-    'debian:12': deb_deps,
-    'ubuntu:20.04': deb_deps,
-    'ubuntu:22.04': deb_deps,
-    'ubuntu:24.04': deb_deps,
-
-  };
-  platform_map[platform];
 
 local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
@@ -272,6 +245,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     ],
   },
   _volumes:: {
+    lib: {
+          name: 'lib',
+          path: '/lib',
+    },
+    usr: {
+       name: 'usr',
+       path: '/usr',
+    },
     mdb: {
       name: 'mdb',
       path: '/mdb',
@@ -721,7 +702,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'build',
              depends_on: ['clone-mdb'],
              image: img,
-             volumes: [pipeline._volumes.mdb],
+             volumes: [pipeline._volumes.lib, pipeline._volumes.usr, pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
@@ -749,6 +730,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '--build-type RelWithDebInfo ' +
                           '--distro ' + platform + ' ' +
                           '--build-packages --sccache ' +
+                          '--skip-unit-tests ' +
                           '--server-version ' + server + ' | ' +
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
@@ -766,13 +748,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'unittests',
              depends_on: ['build'],
              image: img,
-             volumes: [pipeline._volumes.mdb],
+             volumes: [pipeline._volumes.lib, pipeline._volumes.usr, pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
              },
              commands: [
                'cd /mdb/' + builddir,
-               testPreparation(platform),
                testRun(platform),
              ],
            },
@@ -838,7 +819,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
-  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
+  volumes: [pipeline._volumes.lib { temp: {} }, pipeline._volumes.usr { temp: {} }, pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
     branch: [branch],
