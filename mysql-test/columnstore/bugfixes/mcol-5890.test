@@ -2,9 +2,9 @@
 
 # Setup: Create a test database
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5890;
-CREATE DATABASE MCOL5890;
-USE MCOL5890;
+DROP DATABASE IF EXISTS mcol5890;
+CREATE DATABASE mcol5890;
+USE mcol5890;
 --enable_warnings
 
 # Test 1: DROP TABLE IF EXISTS on a non-existent table should succeed silently
@@ -26,4 +26,4 @@ DROP TABLE IF EXISTS t1;
 SELECT * FROM t1;
 
 # Cleanup
-DROP DATABASE MCOL5890;
+DROP DATABASE mcol5890;
