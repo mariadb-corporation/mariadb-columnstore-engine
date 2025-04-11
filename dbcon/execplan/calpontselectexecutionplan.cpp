@@ -202,6 +202,16 @@ string CalpontSelectExecutionPlan::toString() const
   if (distinct())
     output << "DISTINCT ";
 
+  output << "(subselect " << fSubType;
+  if (fSubType != MAIN_SELECT)
+  {
+    output << ", derived table alias '" << fDerivedTbAlias << ", view '" << fDerivedTbView << "'";
+  }
+  output << ") ";
+
+  output << (fLocalQuery == GLOBAL_QUERY ? "GLOBAL " : "LOCAL ");
+  output << (fWithRollup ? "ROLLUP " : "");
+
   output << "limit: " << limitStart() << " - " << limitNum() << endl;
 
   switch (location())
@@ -258,6 +268,15 @@ string CalpontSelectExecutionPlan::toString() const
     }
   }
 
+  if (!fSubSelectList.empty())
+  {
+    output << "subselects:\n";
+    for(uint32_t i = 0; i < fSubSelectList.size(); i++)
+    {
+      output << "{" << *(fSubSelectList[i].get()) << "}\n";
+    }
+  }
+
   // Filters
   output << ">>Filters" << endl;
 
@@ -286,6 +305,8 @@ string CalpontSelectExecutionPlan::toString() const
 
   // Order by columns
   const CalpontSelectExecutionPlan::OrderByColumnList& obc = orderByCols();
+
+  output << (fHasOrderBy ? "has order by\n" : "");
 
   if (obc.size() > 0)
   {

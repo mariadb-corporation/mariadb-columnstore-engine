@@ -856,8 +856,8 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * parse tree is deleted. So this list should not be deleted
    * again in destructor.
    */
-  FilterTokenList fFilterTokenList;
-  FilterTokenList fHavingTokenList;
+  FilterTokenList fFilterTokenList; // not in toString()
+  FilterTokenList fHavingTokenList; // not in toString()
 
   /**
    * A tree of Filter objects
@@ -939,20 +939,20 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   SelectList fSelectSubList;
 
   // @bug3321, for string scan blocks
-  uint64_t fStringScanThreshold = ULONG_MAX;
+  uint64_t fStringScanThreshold = ULONG_MAX; // not in toString()
 
   // query type
   uint32_t fQueryType = SELECT;
 
-  uint32_t fPriority;
+  uint32_t fPriority; // not in toString()
   uint32_t fStringTableThreshold = 20;
 
   // for specific handlers processing, e.g. GROUP BY
-  bool fSpecHandlerProcessed = false;
-  uint32_t fOrderByThreads = 1;
+  bool fSpecHandlerProcessed = false; // not in toString()
+  uint32_t fOrderByThreads = 1; // not in toString()
 
   // Derived table involved in the query. For derived table optimization
-  std::vector<SCSEP> fSubSelectList;
+  std::vector<SCSEP> fSubSelectList; // not in toString()
 
   boost::uuids::uuid fUuid{};
 
