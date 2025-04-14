@@ -122,6 +122,10 @@ TupleHashJoinStep::TupleHashJoinStep(const JobInfo& jobInfo)
 
   if (numCores <= 0)
     numCores = 8;
+
+  // At least one to enable DJ.
+  joinerRunnerInputRecordsStats.resize(1, 0);
+  joinerRunnerInputMatchedStats.resize(1, 0);
 }
 
 TupleHashJoinStep::~TupleHashJoinStep()

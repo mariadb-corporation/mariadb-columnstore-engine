@@ -470,6 +470,8 @@ class TupleJoiner
     wasAborted_ = true;
   }
 
+  void initHashMaps(uint32_t& smallJoinColumn);
+  void clearHashMaps();
  private:
   typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
                                   allocators::CountingAllocator<std::pair<const int64_t, uint8_t*>>>
