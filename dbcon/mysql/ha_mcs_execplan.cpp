@@ -171,7 +171,10 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
   {
     Item* ith = gwi.processed[i].first;
 
-    bool same = ith->eq(from, false);
+    // made within MCOL-5776 produced bug MCOL-5932 so, the check of equal columns is disabled
+    // FIXME: enable the check of equal columns
+    //bool same = ith->eq(from, false);
+    bool same = false;
 
     if (same && ith->type() == Item::FUNC_ITEM)
     {
@@ -6012,7 +6015,7 @@ void gp_walk(const Item* item, void* arg)
         string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
         gwip->rcWorkStack.push(scp->clone());
-	boost::shared_ptr<SimpleColumn> scsp(scp);
+        boost::shared_ptr<SimpleColumn> scsp(scp);
         gwip->scsp = scsp;
 
         gwip->funcName.clear();
@@ -8034,8 +8037,9 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
             continue;
           }
-
-	  pushReturnedCol(gwi, item, srcp);
+          // FIXME: usage of pushReturnedCol instead of gwi.returnedCols.push_back(srcp) here
+          // made within MCOL-5776 produced bug MCOL-5932 so, the check of equal columns is disabled
+          pushReturnedCol(gwi, item, srcp);
         }
         else  // This was a vtable post-process block
         {

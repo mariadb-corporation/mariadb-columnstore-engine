@@ -1129,7 +1129,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             else
               it = pcv.insert(pcv.end(), srcp);
 
-            projectKeys.insert(projectKeys.begin() + std::distance(pcv.begin(), it), tupleKey);
+            auto placeToInsert = std::distance(pcv.begin(), it);
+            projectKeys.insert(projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()), tupleKey);
           }
           else if (doDistinct)  // @bug4250, move forward distinct column if necessary.
           {
@@ -1300,7 +1301,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         else
           it = pcv.insert(pcv.end(), srcp);
 
-        projectKeys.insert(projectKeys.begin() + std::distance(pcv.begin(), it), tupleKey);
+        auto placeToInsert = std::distance(pcv.begin(), it);
+        projectKeys.insert(projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()), tupleKey);
       }
       else if (doDistinct)  // @bug4250, move forward distinct column if necessary.
       {

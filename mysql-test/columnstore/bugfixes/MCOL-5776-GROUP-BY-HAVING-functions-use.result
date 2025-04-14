@@ -16,15 +16,6 @@ COUNT(y) OVER (PARTITION BY LEFT(y, 10))
 DROP TABLE t;
 CREATE TABLE t(ci1 integer, ci2 integer) engine=Columnstore;
 INSERT INTO t(ci1, ci2) VALUES (NULL, 1), (NULL, 2), (1,3), (1,4), (2,5), (2,6), (3,7), (3,8);
-SELECT ci1+ci2, ci1+ci2, SUM(ci2), AVG(ci2) FROM t GROUP BY ci1+ci2, ci1+ci2;
-ci1+ci2	ci1+ci2	SUM(ci2)	AVG(ci2)
-10	10	7	7.0000
-11	11	8	8.0000
-4	4	3	3.0000
-5	5	4	4.0000
-7	7	5	5.0000
-8	8	6	6.0000
-NULL	NULL	3	1.5000
 SELECT CONCAT(ci1,ci2), CONCAT(ci1,ci2), SUM(ci2), AVG(ci2) FROM t GROUP BY ci1;
 CONCAT(ci1,ci2)	CONCAT(ci1,ci2)	SUM(ci2)	AVG(ci2)
 14	14	7	3.5000
