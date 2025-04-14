@@ -23,42 +23,6 @@ local platforms_mtr = platforms.develop;
 
 local builddir = 'verylongdirnameforverystrangecpackbehavior';
 
-local cmakeflags = '-DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CONFIG=mysql_release ' +
-                   '-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ' +
-                   '-DPLUGIN_COLUMNSTORE=YES -DWITH_UNITTESTS=YES ' +
-                   '-DPLUGIN_MROONGA=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_TOKUDB=NO ' +
-                   '-DPLUGIN_CONNECT=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
-                   '-DPLUGIN_GSSAPI=NO -DPLUGIN_SPIDER=NO -DPLUGIN_OQGRAPH=NO -DPLUGIN_SPHINX=NO ' +
-                   '-DWITH_EMBEDDED_SERVER=NO -DWITH_WSREP=NO -DWITH_COREDUMPS=ON';
-
-local clang_version = '16';
-local gcc_version = '11';
-
-local clang_update_alternatives = 'update-alternatives --install /usr/bin/clang clang /usr/bin/clang-' + clang_version + ' 100 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-' + clang_version + ' && update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 ';
-
-
-local rpm_build_deps = 'install -y lz4 systemd-devel git make libaio-devel openssl-devel boost-devel bison ' +
-                       'snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool ' +
-                       'policycoreutils-devel rpm-build lsof iproute pam-devel perl-DBI cracklib-devel ' +
-                       'expect createrepo python3 ';
-
-local rockylinux8_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                               '&& dnf config-manager --set-enabled powertools ' +
-                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake lz4-devel ' +
-                               '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
-
-
-local rockylinux9_build_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                               '&& dnf config-manager --set-enabled crb ' +
-                               '&& dnf install -y pcre2-devel lz4-devel gcc gcc-c++';
-
-local debian11_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-local ubuntu20_04_deps = 'apt update && apt install -y gnupg wget && echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-' + clang_version + ' main" >>  /etc/apt/sources.list  && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && apt update && apt install -y clang-' + clang_version + ' && ' + clang_update_alternatives;
-
-local deb_build_deps = 'apt update --yes && apt install --yes --no-install-recommends build-essential devscripts git ccache equivs eatmydata libssl-dev && mk-build-deps debian/control -t "apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends" -r -i ';
-local turnon_clang = 'export CC=/usr/bin/clang; export CXX=/usr/bin/clang++ ';
-local bootstrap_deps = 'apt-get -y update && apt-get -y install build-essential automake libboost-all-dev bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest libsnappy-dev libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl ';
-
 local mtr_suite_list = 'basic,bugfixes';
 local mtr_full_set = 'basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly';
 
@@ -94,20 +58,6 @@ local upgrade_test_lists = {
   },
 };
 
-local platformMap(platform, arch) =
-  local platform_map = {
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux8 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf ' + rpm_build_deps + ' && cmake ' + cmakeflags + ' -DRPM=rockylinux9 && sleep $${BUILD_DELAY_SECONDS:-1s} && make -j$(nproc) package',
-    'debian:11': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + debian11_deps + ' && ' + turnon_clang + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bullseye' debian/autobake-deb.sh",
-    'debian:12': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=bookworm' debian/autobake-deb.sh",
-    'ubuntu:20.04': bootstrap_deps + ' && ' + deb_build_deps + ' && ' + ubuntu20_04_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=focal' debian/autobake-deb.sh",
-    'ubuntu:22.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
-    'ubuntu:24.04': bootstrap_deps + ' && ' + deb_build_deps + " && sleep $${BUILD_DELAY_SECONDS:-1s} && CMAKEFLAGS='" + cmakeflags + " -DDEB=jammy' debian/autobake-deb.sh",
-  };
-  local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-');
-  'export CLICOLOR_FORCE=1; ' + platform_map[platform] + ' | storage/columnstore/columnstore/build/ansi2txt.sh ' + result + '/build.log';
-
-
 local testRun(platform) =
   local platform_map = {
     'rockylinux:8': 'ctest3 -R columnstore: -j $(nproc) --output-on-failure',
@@ -121,16 +71,30 @@ local testRun(platform) =
   };
   platform_map[platform];
 
+local gcc_version = '11';
+
+local rockylinux8_deps = "dnf install -y 'dnf-command(config-manager)' " +
+                               '&& dnf config-manager --set-enabled powertools ' +
+                               '&& dnf install -y gcc-toolset-' + gcc_version + ' libarchive cmake ' +
+                               '&& . /opt/rh/gcc-toolset-' + gcc_version + '/enable ';
+
+local rockylinux9_deps = "dnf install -y 'dnf-command(config-manager)' " +
+                               '&& dnf config-manager --set-enabled crb ' +
+                               '&& dnf install -y gcc gcc-c++';
+
+local rockylinux_common_deps = ' && dnf install -y git lz4 lz4-devel cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel';
+
+local deb_deps = 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev';
 
 local testPreparation(platform) =
   local platform_map = {
-    'rockylinux:8': rockylinux8_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
-    'rockylinux:9': rockylinux9_build_deps + ' && dnf install -y git lz4 cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel',
-    'debian:11': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'debian:12': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'ubuntu:20.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'ubuntu:22.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
-    'ubuntu:24.04': 'apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev',
+    'rockylinux:8': rockylinux8_deps + rockylinux_common_deps,
+    'rockylinux:9': rockylinux9_deps + rockylinux_common_deps,
+    'debian:11': deb_deps,
+    'debian:12': deb_deps,
+    'ubuntu:20.04': deb_deps,
+    'ubuntu:22.04': deb_deps,
+    'ubuntu:24.04': deb_deps,
 
   };
   platform_map[platform];
@@ -161,9 +125,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local server_remote = if (std.endsWith(server, 'enterprise')) then 'https://github.com/mariadb-corporation/MariaDBEnterprise' else 'https://github.com/MariaDB/server',
 
   local sccache_arch = if (arch == 'amd64') then 'x86_64' else 'aarch64',
-  local get_sccache = 'curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.3.0/sccache-v0.3.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
+  local get_sccache = 'echo getting sccache... && (apt update -y && apt install -y curl || yum install -y curl || true) ' +
+                      '&& curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-' + sccache_arch + '-unknown-linux-musl.tar.gz ' +
                       '&& tar xzf sccache.tar.gz ' +
-                      '&& install sccache*/sccache /usr/local/bin/',
+                      '&& install sccache*/sccache /usr/local/bin/ && echo sccache installed',
 
   local pipeline = self,
 
@@ -238,11 +203,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   local dockerImage(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
   local installEngine(dockerImage, pkg_format) =
-    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
+    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt update && apt install -y mariadb-plugin-columnstore mariadb-test"', dockerImage)
                              else execInnerDocker('bash -c "yum install -y MariaDB-columnstore-engine MariaDB-test"', dockerImage),
 
   local installCmapi(dockerImage, pkg_format) =
-    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt install -y mariadb-columnstore-cmapi"', dockerImage)
+    if (pkg_format == 'deb') then execInnerDocker('bash -c "apt update && apt install -y mariadb-columnstore-cmapi"', dockerImage)
                              else execInnerDocker('bash -c "yum install -y MariaDB-columnstore-cmapi"', dockerImage),
 
   local prepareTestStage(dockerImage, pkg_format, result, do_setup) = [
@@ -770,41 +735,32 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                  from_secret: 'aws_secret_access_key',
                },
                SCCACHE_BUCKET: 'cs-sccache',
+               SCCACHE_REGION: 'us-east-1',
                SCCACHE_S3_USE_SSL: 'true',
                SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
                //SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
                //SCCACHE_LOG: 'debug',
              },
              commands: [
-               'cd /mdb/' + builddir,
-               'ls -la ../',
-               'mkdir ' + result,
-               "sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh",
-               if (std.startsWith(server, '10.6')) then "sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control",
-               // Remove Debian build flags that could prevent ColumnStore from building
-               "sed -i '/-DPLUGIN_COLUMNSTORE=NO/d' debian/rules",
-               // Disable dh_missing strict check for missing files
-               'sed -i s/--fail-missing/--list-missing/ debian/rules',
-               // Tweak debian packaging stuff
-               'for i in mariadb-plugin libmariadbd; do sed -i "/Package: $i.*/,/^$/d" debian/control; done',
-               "sed -i 's/Depends: galera.*/Depends:/' debian/control",
-               'for i in galera wsrep ha_sphinx embedded; do sed -i /$i/d debian/*.install; done',
-               // Install build dependencies for deb
-               if (pkg_format == 'deb') then "apt-cache madison liburing-dev | grep liburing-dev || sed 's/liburing-dev/libaio-dev/g' -i debian/control && sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules && sed '/-DWITH_URING=yes/d' -i debian/rules && apt-cache madison libpmem-dev | grep 'libpmem-dev' || sed '/libpmem-dev/d' -i debian/control && sed '/-DWITH_PMEM/d' -i debian/rules && sed '/libfmt-dev/d' -i debian/control",
-               // Change plugin_maturity level
-               // "sed -i 's/BETA/GAMMA/' storage/columnstore/CMakeLists.txt",
-               if (pkg_format == 'deb') then 'apt update -y && apt install -y curl' else if (platform == 'rockylinux:9') then 'yum install -y curl-minimal' else 'yum install -y curl',
-               get_sccache,
-               testPreparation(platform),
-               // disable LTO for 22.04 for now
-               if (platform == 'ubuntu:22.04' || platform == 'ubuntu:24.04') then 'apt install -y lto-disabled-list && for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do echo "$i any" >> /usr/share/lto-disabled-list/lto-disabled-list; done && grep mariadb /usr/share/lto-disabled-list/lto-disabled-list',
-               platformMap(platform, arch),
-               'sccache --show-stats',
-               // move engine and cmapi packages to one dir to make a repo
-               'mv -v -t ./%s/ %s/*.%s /drone/src/cmapi/%s/*.%s ' % [result, if (pkg_format == 'rpm') then '.' else '..', pkg_format, result, pkg_format],
-               if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-               // list storage manager binary
-               'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
+                'export CLICOLOR_FORCE=1',
+                get_sccache,
+                'mkdir /mdb/' + builddir + '/' + result,
+
+                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
+                                '--build-type RelWithDebInfo ' +
+                                '--distro ' + platform + ' ' +
+                                '--build-packages --sccache ' +
+                                '--server-version ' + server + '|' +
+                                '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
+                                '/mdb/' + builddir + '/' + result + '/build.log',
+                'sccache --show-stats',
+
+                // move engine and cmapi packages to one dir and make a repo
+                if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
+                else "mv -v -t ./" + result + "/ /mdb/*.deb /drone/src/cmapi/" + result + "/*.deb && dpkg-scanpackages " + result + " | gzip > ./" + result + "/Packages.gz",
+
+                // list storage manager binary
+                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
            {

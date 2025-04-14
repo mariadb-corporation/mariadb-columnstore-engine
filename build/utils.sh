@@ -1,53 +1,82 @@
-color_normal=$(tput sgr0)
-color_bold=$(tput bold)
-color_red="$color_bold$(tput setaf 1)"
-color_green="$color_bold$(tput setaf 2)"
-color_fawn=$(tput setaf 3); color_beige="$color_fawn"
-color_yellow="$color_bold$color_fawn"
-color_darkblue=$(tput setaf 4)
 
-color_blue="$color_bold$color_darkblue"
-color_purple=$(tput setaf 5); color_magenta="$color_purple"
-color_pink="$color_bold$color_purple"
-color_darkcyan=$(tput setaf 6)
-color_cyan="$color_bold$color_darkcyan"
-color_gray=$(tput setaf 7)
-color_darkgray="$color_bold"$(tput setaf 0)
-color_white="$color_bold$color_gray"
+if [[ -n "$TERM" && "$TERM" != "dumb" && $(command -v tput) ]]; then
+    TPUT_AVAILABLE=true
+else
+    TPUT_AVAILABLE=false
+fi
+
+if [[ $TPUT_AVAILABLE == true ]]; then
+    color_normal=$(tput sgr0)
+    color_bold=$(tput bold)
+    color_red="$color_bold$(tput setaf 1)"
+    color_green="$color_bold$(tput setaf 2)"
+    color_fawn=$(tput setaf 3); color_beige="$color_fawn"
+    color_yellow="$color_bold$color_fawn"
+    color_darkblue=$(tput setaf 4)
+
+    color_blue="$color_bold$color_darkblue"
+    color_purple=$(tput setaf 5); color_magenta="$color_purple"
+    color_pink="$color_bold$color_purple"
+    color_darkcyan=$(tput setaf 6)
+    color_cyan="$color_bold$color_darkcyan"
+    color_gray=$(tput setaf 7)
+    color_darkgray="$color_bold"$(tput setaf 0)
+    color_white="$color_bold$color_gray"
 
 
-if [[ $(tput colors) == '256' ]]; then
-     color_red=$(tput setaf 196)
-     color_yellow=$(tput setaf 228)
-     color_cyan=$(tput setaf 87)
-     color_green=$(tput setaf 156)
-     color_darkgray=$(tput setaf 59)
+    if [[ $(tput colors) == '256' ]]; then
+         color_red=$(tput setaf 196)
+         color_yellow=$(tput setaf 228)
+         color_cyan=$(tput setaf 87)
+         color_green=$(tput setaf 156)
+         color_darkgray=$(tput setaf 59)
+    fi
 fi
 
 message()
 {
-    echo $color_cyan ・ $@$color_normal
+    if [[ $TPUT_AVAILABLE == true ]]; then
+        echo $color_cyan ・ $@$color_normal
+    else
+        echo "$@"
+    fi
 }
 
 warn()
 {
-    echo $color_yellow ・ $@$color_normal
+    if [[ $TPUT_AVAILABLE == true ]]; then
+        echo $color_yellow ・ $@$color_normal
+    else
+        echo "$@"
+    fi
 }
 
 error()
 {
-    echo $color_red ・ $@$color_normal
+    if [[ $TPUT_AVAILABLE == true ]]; then
+        echo $color_red ・ $@$color_normal
+    else
+        echo "$@"
+    fi
 }
 
 message_split()
 {
-    echo $color_darkgray ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ $color_normal
+    if [[ $TPUT_AVAILABLE == true ]]; then
+        echo $color_darkgray ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ $color_normal
+    else
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    fi
 }
 
 message_splitted()
 {
     message_split
-    echo $color_green ・ $@$color_normal
+    if [[ $TPUT_AVAILABLE == true ]]; then
+        echo $color_green ・ $@$color_normal
+    else
+        echo "$@"
+    fi
     message_split
 }
 
@@ -57,11 +86,15 @@ colorify_array()
     PROMT=""
     for a in "$@"
     do
-        i=$((((i+1) % (123-106)) + 106))
-        if [[ $(tput colors) == '256' ]]; then
+        if [[ $TPUT_AVAILABLE == true ]]; then
+            i=$((((i+1) % (123-106)) + 106))
+            if [[ $(tput colors) == '256' ]]; then
                 PROMT="$PROMT $(tput setaf $i)$a$color_normal"
-        else
+            else
                 PROMT="$PROMT $a"
+            fi
+        else
+            PROMT="$PROMT $a"
         fi
     done
     echo $PROMT
@@ -91,7 +124,11 @@ function spinner
         line_num=$((line_num+1))
         if [[ $((line_num % freq)) = 0 ]]; then
             point_num=$(((point_num + 1) % len ))
-            echo -ne "\r${colored_points[point_num]}"
+            if [[ $TPUT_AVAILABLE == true ]]; then
+                echo -ne "\r${colored_points[point_num]}"
+            else
+                echo -ne "\r${points[point_num]}"
+            fi
         fi
     done;
     echo
@@ -129,7 +166,7 @@ detect_distro()
         OS=$(uname -s)
         OS_VERSION=$(uname -r)
     fi
-    OS=$(echo $OS | cut -f 1 -d " ")
+    OS=$(echo $OS | cut -f 1 -d " " | tr '[:upper:]' '[:lower:]')":"$OS_VERSION
     message "Detected $color_yellow$OS $OS_VERSION$color_normal"
 }
 

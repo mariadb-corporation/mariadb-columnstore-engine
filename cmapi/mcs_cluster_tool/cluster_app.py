@@ -7,7 +7,6 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-import pyotp
 import requests
 import typer
 from typing_extensions import Annotated

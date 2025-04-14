@@ -316,7 +316,7 @@ class CompareRule
   {
   }
 
-  bool less(rowgroup::Row::Pointer r1, rowgroup::Row::Pointer r2);
+  bool less(rowgroup::Row::Pointer r1, rowgroup::Row::Pointer r2) const;
 
   void compileRules(const std::vector<IdbSortSpec>&, const rowgroup::RowGroup&);
   void revertRules();

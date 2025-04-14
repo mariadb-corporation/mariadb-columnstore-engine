@@ -1,0 +1,36 @@
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5852;
+--enable_warnings
+
+CREATE DATABASE mcol_5852;
+USE mcol_5852;
+
+CREATE TABLE gc (
+    id INTEGER NOT NULL,
+    longtxt TEXT NOT NULL
+) ENGINE=ColumnStore;
+
+SET max_recursive_iterations=100000;
+INSERT INTO gc (
+    WITH RECURSIVE series AS (
+        SELECT 1 AS id, REPEAT('=', 1024) AS longtxt
+        UNION ALL
+        SELECT id + 1 AS id, longtxt FROM series WHERE id < 50000
+    ) SELECT id, longtxt FROM series);
+
+SET columnstore_um_mem_limit=64;
+--exec /usr/bin/mcsSetConfig RowAggregation AllowDiskBasedAggregation N
+--error 1815
+SELECT id, GROUP_CONCAT(longtxt) FROM gc GROUP BY 1 ORDER BY 1 LIMIT 10;
+
+SET columnstore_um_mem_limit=512;
+SELECT id, GROUP_CONCAT(longtxt) FROM gc GROUP BY 1 ORDER BY 1 LIMIT 10;
+
+SET columnstore_um_mem_limit=64;
+--exec /usr/bin/mcsSetConfig RowAggregation AllowDiskBasedAggregation Y
+SELECT id, GROUP_CONCAT(longtxt) FROM gc GROUP BY 1 ORDER BY 1 LIMIT 10;
+
+# cleanup
+DROP DATABASE mcol_5852;

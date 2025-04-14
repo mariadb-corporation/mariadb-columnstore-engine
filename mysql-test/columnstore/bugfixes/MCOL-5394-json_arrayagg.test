@@ -1,0 +1,82 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5394 ;
+--enable_warnings
+CREATE DATABASE mcol_5394 ;
+USE mcol_5394 ;
+
+CREATE TABLE t1 (a int, k int, b VARCHAR(10)) engine=columnstore;
+INSERT INTO t1 VALUES
+(1, 1, "alfa"),
+(1, 2, null),
+(2, 3, "doi"),
+(1, 4, "unu"),
+(3, 5, "trei"),
+(4, 6, null),
+(4, 7, null),
+(1, 8, "one");
+
+--sorted_result
+SELECT a, JSON_ARRAYAGG(b) FROM t1 GROUP BY a;
+--sorted_result
+SELECT JSON_ARRAYAGG(b) FROM t1;
+
+PREPARE p1 FROM "SELECT a, JSON_ARRAYAGG(b) FROM t1 GROUP BY a";
+--sorted_result
+EXECUTE p1;
+--sorted_result
+EXECUTE p1;
+deallocate prepare p1;
+
+PREPARE p3 FROM
+"SELECT SQL_BUFFER_RESULT  a, JSON_ARRAYAGG(b) FROM t1 GROUP BY a";
+--sorted_result
+EXECUTE p3;
+--sorted_result
+EXECUTE p3;
+deallocate prepare p3;
+
+PREPARE p4 FROM "SELECT JSON_ARRAYAGG(b) FROM t1";
+--sorted_result
+EXECUTE p4;
+--sorted_result
+EXECUTE p4;
+deallocate prepare p4;
+
+
+--sorted_result
+SELECT JSON_MERGE_PRESERVE(JSON_ARRAYAGG(b), '[true, false]') FROM t1;
+
+PREPARE p1 FROM
+"SELECT a, JSON_MERGE_PRESERVE(JSON_ARRAYAGG(b), '[true, false]') FROM t1 GROUP BY a";
+--sorted_result
+EXECUTE p1;
+--sorted_result
+EXECUTE p1;
+deallocate prepare p1;
+
+
+PREPARE p4 FROM
+"SELECT JSON_MERGE_PRESERVE(JSON_ARRAYAGG(b), '[true, false]') FROM t1";
+--sorted_result
+EXECUTE p4;
+--sorted_result
+EXECUTE p4;
+deallocate prepare p4;
+
+
+--sorted_result
+SELECT a, JSON_ARRAYAGG(b) as jarray
+FROM t1
+GROUP BY a
+HAVING jarray= JSON_ARRAY("trei");
+
+TRUNCATE TABLE t1;
+
+SELECT a, JSON_ARRAYAGG(b) FROM t1 GROUP BY a;
+SELECT JSON_ARRAYAGG(b) FROM t1;
+
+
+DROP TABLE t1;
+
+DROP DATABASE mcol_5394;

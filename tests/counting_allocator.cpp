@@ -32,7 +32,7 @@ struct TestClass
 {
   int value[1024];
 
-  TestClass(int val) : value(val)
+  TestClass(int val) : value{val}
   {
   }
 };

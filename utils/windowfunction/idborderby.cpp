@@ -526,11 +526,11 @@ int TimeCompare::operator()(IdbCompare* l, Row::Pointer r1, Row::Pointer r2)
   return ret;
 }
 
-bool CompareRule::less(Row::Pointer r1, Row::Pointer r2)
+bool CompareRule::less(Row::Pointer r1, Row::Pointer r2) const
 {
-  for (auto& compare : fCompares)
+  for (auto* compare : fCompares)
   {
-    int c = ((*compare)(fIdbCompare, r1, r2));
+    int c = (*compare)(fIdbCompare, r1, r2);
 
     if (c < 0)
       return true;

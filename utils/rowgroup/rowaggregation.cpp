@@ -35,7 +35,6 @@
 #include "mcs_basic_types.h"
 #include "resourcemanager.h"
 #include "groupconcat.h"
-#include "jsonarrayagg.h"
 
 #include "blocksize.h"
 #include "errorcodes.h"
@@ -537,6 +536,7 @@ RowAggregation::RowAggregation(const RowAggregation& rhs)
  , fRm(rhs.fRm)
  , fSessionMemLimit(rhs.fSessionMemLimit)
  , fRollupFlag(rhs.fRollupFlag)
+ , fGroupConcat(rhs.fGroupConcat)
 {
   fGroupByCols.assign(rhs.fGroupByCols.begin(), rhs.fGroupByCols.end());
   fFunctionCols.assign(rhs.fFunctionCols.begin(), rhs.fFunctionCols.end());
@@ -661,14 +661,17 @@ void RowAggregation::resetUDAF(RowUDAFFunctionCol* rowUDAF, uint64_t funcColsIdx
 //------------------------------------------------------------------------------
 void RowAggregation::initialize(bool hasGroupConcat)
 {
+  if (hasGroupConcat)
+  {
+    fRowGroupOut->setUseAggregateDataStore(true, fGroupConcat);
+  }
   // Calculate the length of the hashmap key.
   fAggMapKeyCount = fGroupByCols.size();
   bool disk_agg = fRm ? fRm->getAllowDiskAggregation() : false;
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
-        fun->fAggFunction == ROWAGG_JSON_ARRAY)
+    if (fun->fAggFunction == ROWAGG_UDAF)
     {
       allow_gen = false;
       break;
@@ -757,8 +760,7 @@ void RowAggregation::aggReset()
   bool allow_gen = true;
   for (auto& fun : fFunctionCols)
   {
-    if (fun->fAggFunction == ROWAGG_UDAF || fun->fAggFunction == ROWAGG_GROUP_CONCAT ||
-        fun->fAggFunction == ROWAGG_JSON_ARRAY)
+    if (fun->fAggFunction == ROWAGG_UDAF)
     {
       allow_gen = false;
       break;
@@ -1884,9 +1886,9 @@ void RowAggregation::mergeEntries(const Row& rowIn)
       case ROWAGG_DUP_AVG:
       case ROWAGG_DUP_STATS:
       case ROWAGG_DUP_UDAF:
-      case ROWAGG_CONSTANT:
+      case ROWAGG_CONSTANT: break;
       case ROWAGG_JSON_ARRAY:
-      case ROWAGG_GROUP_CONCAT: break;
+      case ROWAGG_GROUP_CONCAT: mergeGroupConcat(rowIn, colOut); break;
 
       case ROWAGG_UDAF: doUDAF(rowIn, colOut, colOut, colOut + 1, i); break;
 
@@ -2136,6 +2138,12 @@ void RowAggregation::mergeStatistics(const Row& rowIn, uint64_t colOut, uint64_t
   fRow.setLongDoubleField(fRow.getLongDoubleField(colAux) + rowIn.getLongDoubleField(colAux), colAux);
   fRow.setLongDoubleField(fRow.getLongDoubleField(colAux + 1) + rowIn.getLongDoubleField(colAux + 1),
                           colAux + 1);
+}
+
+void RowAggregation::mergeGroupConcat(const Row& rowIn, uint64_t colOut)
+{
+  auto* gccAg = fRow.getAggregateData(colOut);
+  gccAg->merge(rowIn, colOut);
 }
 
 void RowAggregation::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
@@ -2540,7 +2548,6 @@ RowAggregationUM::RowAggregationUM(const RowAggregationUM& rhs)
  , fExpression(rhs.fExpression)
  , fTotalMemUsage(rhs.fTotalMemUsage)
  , fConstantAggregate(rhs.fConstantAggregate)
- , fGroupConcat(rhs.fGroupConcat)
  , fLastMemUsage(rhs.fLastMemUsage)
 {
 }
@@ -2626,28 +2633,19 @@ void RowAggregationUM::attachGroupConcatAg()
 {
   if (fGroupConcat.size() > 0)
   {
-    uint8_t* data = fRow.getData();
-    uint64_t i = 0, j = 0;
+    uint64_t gc_idx = 0;
 
-    for (; i < fFunctionColGc.size(); i++)
+    for (uint64_t i = 0; i < fFunctionColGc.size(); i++)
     {
+      if (fFunctionColGc[i]->fAggFunction != ROWAGG_GROUP_CONCAT &&
+          fFunctionColGc[i]->fAggFunction != ROWAGG_JSON_ARRAY)
+      {
+        continue;
+      }
       int64_t colOut = fFunctionColGc[i]->fOutputColumnIndex;
-
-      if (fFunctionColGc[i]->fAggFunction == ROWAGG_GROUP_CONCAT)
-      {
-        // save the object's address in the result row
-        SP_GroupConcatAg gcc(new joblist::GroupConcatAgUM(fGroupConcat[j++]));
-        fGroupConcatAg.push_back(gcc);
-        *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
-      }
-
-      if (fFunctionColGc[i]->fAggFunction == ROWAGG_JSON_ARRAY)
-      {
-        // save the object's address in the result row
-        SP_GroupConcatAg gcc(new joblist::JsonArrayAggregatAgUM(fGroupConcat[j++]));
-        fGroupConcatAg.push_back(gcc);
-        *((GroupConcatAg**)(data + fRow.getOffset(colOut))) = gcc.get();
-      }
+      joblist::SP_GroupConcatAg gcc(new joblist::GroupConcatAg(
+          fGroupConcat[gc_idx++], fFunctionColGc[i]->fAggFunction == ROWAGG_JSON_ARRAY));
+      fRow.setAggregateData(gcc, colOut);
     }
   }
 }
@@ -2706,14 +2704,9 @@ void RowAggregationUM::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1
       }
 
       case ROWAGG_GROUP_CONCAT:
-      {
-        doGroupConcat(rowIn, colIn, colOut);
-        break;
-      }
-
       case ROWAGG_JSON_ARRAY:
       {
-        doJsonAgg(rowIn, colIn, colOut);
+        doGroupConcat(rowIn, colIn, colOut);
         break;
       }
 
@@ -2756,15 +2749,7 @@ void RowAggregationUM::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcsv1
 //------------------------------------------------------------------------------
 void RowAggregationUM::doGroupConcat(const Row& rowIn, int64_t, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
-  gccAg->processRow(rowIn);
-}
-
-void RowAggregationUM::doJsonAgg(const Row& rowIn, int64_t, int64_t o)
-{
-  uint8_t* data = fRow.getData();
-  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
+  auto* gccAg = fRow.getAggregateData(o);
   gccAg->processRow(rowIn);
 }
 
@@ -4158,30 +4143,17 @@ void RowAggregationUM::setGroupConcatString()
 
   for (uint64_t i = 0; i < fRowGroupOut->getRowCount(); i++, fRow.nextRow())
   {
-    for (uint64_t j = 0; j < fFunctionCols.size(); j++)
+    for (const auto& fcall : fFunctionCols)
     {
-      uint8_t* data = fRow.getData();
-
-      if (fFunctionCols[j]->fAggFunction == ROWAGG_GROUP_CONCAT)
+      if (fcall->fAggFunction != ROWAGG_GROUP_CONCAT && fcall->fAggFunction != ROWAGG_JSON_ARRAY)
       {
-        uint8_t* buff = data + fRow.getOffset(fFunctionCols[j]->fOutputColumnIndex);
-        uint8_t* gcString;
-        joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)buff);
-        gcString = gccAg->getResult();
-        utils::ConstString str((char*)gcString, gcString ? strlen((const char*)gcString) : 0);
-        fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
-        // gccAg->getResult(buff);
+        continue;
       }
 
-      if (fFunctionCols[j]->fAggFunction == ROWAGG_JSON_ARRAY)
-      {
-        uint8_t* buff = data + fRow.getOffset(fFunctionCols[j]->fOutputColumnIndex);
-        uint8_t* gcString;
-        joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)buff);
-        gcString = gccAg->getResult();
-        utils::ConstString str((char*)gcString, gcString ? strlen((char*)gcString) : 0);
-        fRow.setStringField(str, fFunctionCols[j]->fOutputColumnIndex);
-      }
+      auto* gccAg = fRow.getAggregateData(fcall->fOutputColumnIndex);
+      uint8_t* gcString = gccAg->getResult();
+      utils::ConstString str((char*)gcString, gcString ? strlen((const char*)gcString) : 0);
+      fRow.setStringField(str, fcall->fOutputColumnIndex);
     }
   }
 }
@@ -4306,14 +4278,9 @@ void RowAggregationUMP2::updateEntry(const Row& rowIn, std::vector<mcsv1sdk::mcs
       }
 
       case ROWAGG_GROUP_CONCAT:
-      {
-        doGroupConcat(rowIn, colIn, colOut);
-        break;
-      }
-
       case ROWAGG_JSON_ARRAY:
       {
-        doJsonAgg(rowIn, colIn, colOut);
+        doGroupConcat(rowIn, colIn, colOut);
         break;
       }
 
@@ -4537,15 +4504,7 @@ void RowAggregationUMP2::doStatistics(const Row& rowIn, int64_t colIn, int64_t c
 //------------------------------------------------------------------------------
 void RowAggregationUMP2::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
-  gccAg->merge(rowIn, i);
-}
-
-void RowAggregationUMP2::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
-{
-  uint8_t* data = fRow.getData();
-  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
+  auto* gccAg = fRow.getAggregateData(o);
   gccAg->merge(rowIn, i);
 }
 
@@ -4803,14 +4762,9 @@ void RowAggregationDistinct::updateEntry(const Row& rowIn, std::vector<mcsv1sdk:
       }
 
       case ROWAGG_GROUP_CONCAT:
-      {
-        doGroupConcat(rowIn, colIn, colOut);
-        break;
-      }
-
       case ROWAGG_JSON_ARRAY:
       {
-        doJsonAgg(rowIn, colIn, colOut);
+        doGroupConcat(rowIn, colIn, colOut);
         break;
       }
 
@@ -4943,17 +4897,10 @@ void RowAggregationSubDistinct::addRowGroup(const RowGroup* pRows,
 //------------------------------------------------------------------------------
 void RowAggregationSubDistinct::doGroupConcat(const Row& rowIn, int64_t i, int64_t o)
 {
-  uint8_t* data = fRow.getData();
-  joblist::GroupConcatAgUM* gccAg = *((joblist::GroupConcatAgUM**)(data + fRow.getOffset(o)));
+  auto* gccAg = fRow.getAggregateData(o);
   gccAg->merge(rowIn, i);
 }
 
-void RowAggregationSubDistinct::doJsonAgg(const Row& rowIn, int64_t i, int64_t o)
-{
-  uint8_t* data = fRow.getData();
-  joblist::JsonArrayAggregatAgUM* gccAg = *((joblist::JsonArrayAggregatAgUM**)(data + fRow.getOffset(o)));
-  gccAg->merge(rowIn, i);
-}
 //------------------------------------------------------------------------------
 // Constructor / destructor
 //------------------------------------------------------------------------------
@@ -5129,12 +5076,122 @@ void RowAggregationMultiDistinct::doDistinctAggregation_rowVec(
   fOrigFunctionCols = nullptr;
 }
 
-GroupConcatAg::GroupConcatAg(SP_GroupConcat& gcc) : fGroupConcat(gcc)
+void GroupConcat::serialize(messageqcpp::ByteStream& bs) const
 {
+  uint64_t size;
+
+  size = fGroupCols.size();
+  bs << size;
+  for (const auto& [k, v] : fGroupCols)
+  {
+    bs << k;
+    bs << v;
+  }
+  size = fOrderCols.size();
+  bs << size;
+  for (const auto& [k, v] : fOrderCols)
+  {
+    bs << k;
+    bs << static_cast<uint8_t>(v);
+  }
+  bs << fSeparator;
+  size = fConstCols.size();
+  bs << size;
+  for (const auto& [k, v] : fConstCols)
+  {
+    bs << k;
+    bs << v;
+  }
+  bs << static_cast<uint8_t>(fDistinct);
+  bs << fSize;
+  fRowGroup.serialize(bs);
+  size = fRowGroup.getColumnCount() * sizeof(int);
+  bs << size;
+  bs.append(reinterpret_cast<uint8_t*>(fMapping.get()), size);
+  size = fOrderCond.size();
+  bs << size;
+  for (const auto& [k, v] : fOrderCond)
+  {
+    bs << k;
+    bs << static_cast<uint8_t>(v);
+  }
+  bs << fTimeZone;
+  bs << id;
 }
 
-GroupConcatAg::~GroupConcatAg()
+void GroupConcat::deserialize(messageqcpp::ByteStream& bs)
 {
+  fGroupCols.clear();
+  fOrderCols.clear();
+  fConstCols.clear();
+  fOrderCond.clear();
+
+  RGDataSizeType size;
+  bs >> size;
+  fGroupCols.reserve(size);
+  for (RGDataSizeType i = 0; i < size; ++i)
+  {
+    uint32_t f, s;
+    bs >> f;
+    bs >> s;
+    fGroupCols.emplace_back(f, s);
+  }
+  bs >> size;
+  fOrderCols.reserve(size);
+  for (RGDataSizeType i = 0; i < size; ++i)
+  {
+    uint32_t f;
+    bs >> f;
+    uint8_t s;
+    bs >> s;
+    fOrderCond.emplace_back(f, static_cast<bool>(s));
+  }
+  bs >> fSeparator;
+  bs >> size;
+  fConstCols.reserve(size);
+  for (RGDataSizeType i = 0; i < size; ++i)
+  {
+    utils::NullString f;
+    bs >> f;
+    uint32_t s;
+    bs >> s;
+    fConstCols.emplace_back(f, s);
+  }
+  uint8_t tmp8;
+  bs >> tmp8;
+  fDistinct = tmp8;
+  bs >> fSize;
+  fRowGroup.deserialize(bs);
+  bs >> size;
+  idbassert(size % sizeof(int) == 0);
+  fMapping.reset(new int[size / 4]);
+  memcpy(fMapping.get(), bs.buf(), size);
+  bs.advance(size);
+  bs >> size;
+  fOrderCond.reserve(size);
+  for (RGDataSizeType i = 0; i < size; ++i)
+  {
+    int f;
+    bs >> f;
+    uint8_t s;
+    bs >> s;
+    fOrderCond.emplace_back(f, static_cast<bool>(s));
+  }
+  bs >> fTimeZone;
+  bs >> id;
+}
+
+RGDataSizeType GroupConcat::getDataSize() const
+{
+  RGDataSizeType size = 0;
+  size += fGroupCols.capacity() * 8;
+  size += fOrderCols.capacity() * 8;
+  size += fSeparator.capacity();
+  size += fConstCols.capacity() * (4 + sizeof(utils::NullString));
+  size += fRowGroup.getEmptySize();
+  size += fRowGroup.getColumnCount() * sizeof(int);
+  size += fOrderCols.capacity() * 8;
+  return size;
 }
 
 }  // namespace rowgroup

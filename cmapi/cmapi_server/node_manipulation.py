@@ -486,7 +486,7 @@ def is_master():
                           "AND COMMAND LIKE 'Slave%';\""
     )
 
-    ret = subprocess.run(cmd, stdout=subprocess.PIPE, shell = True)
+    ret = subprocess.run(cmd, stdout=subprocess.PIPE, shell=True)
     if ret.returncode == 0:
         response = ret.stdout.decode("utf-8").strip()
         # Primary will have no slave_threads

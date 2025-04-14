@@ -496,11 +496,12 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
                          msecs))
     return SBS(new ByteStream(0U));
 
-  // Read the number of the `long strings`.
+  // Read the number of the `long strings` that are deprecated, so it should be 0
   uint32_t longStringSize;
   if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&longStringSize), sizeof(longStringSize), timeout,
                          isTimeOut, stats, msecs))
     return SBS(new ByteStream(0U));
+  idbassert(longStringSize == 0);
 
   // Read the actual data of the `ByteStream`.
   SBS res(new ByteStream(msglen));
@@ -508,50 +509,6 @@ const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeO
     return SBS(new ByteStream(0U));
   res->advanceInputPtr(msglen);
 
-  std::vector<rowgroup::StringStoreBufSPType> longStrings;
-  try
-  {
-    for (uint32_t i = 0; i < longStringSize; ++i)
-    {
-      // Read `MemChunk`.
-      rowgroup::StringStore::MemChunk memChunk;
-      if (!readFixedSizeData(pfd, reinterpret_cast<uint8_t*>(&memChunk),
-                             sizeof(rowgroup::StringStore::MemChunk), timeout, isTimeOut, stats, msecs))
-        return SBS(new ByteStream(0U));
-
-      // Allocate new memory for the `long string`.
-      // TODO account this allocation also despite the fact BS allocations are insignificant
-      // compared with structs used by SQL operators. 
-      rowgroup::StringStoreBufSPType longString(
-          new uint8_t[sizeof(rowgroup::StringStore::MemChunk) + memChunk.currentSize]);
-
-      uint8_t* longStringData = longString.get();
-      // Initialize memchunk with `current size` and `capacity`.
-      auto* memChunkPointer = reinterpret_cast<rowgroup::StringStore::MemChunk*>(longStringData);
-      memChunkPointer->currentSize = memChunk.currentSize;
-      memChunkPointer->capacity = memChunk.capacity;
-
-      // Read the `long string`.
-      if (!readFixedSizeData(pfd, memChunkPointer->data, memChunkPointer->currentSize, timeout, isTimeOut,
-                             stats, msecs))
-        return SBS(new ByteStream(0U));
-
-      longStrings.push_back(longString);
-    }
-  }
-  catch (std::bad_alloc& exception)
-  {
-    logIoError("InetStreamSocket::read: error during read for 'long strings' - 'bad_alloc'", 0);
-    return SBS(new ByteStream(0U));
-  }
-  catch (std::exception& exception)
-  {
-    std::string errorMsg = "InetStreamSocket::read: error during read for 'long strings' ";
-    errorMsg += exception.what();
-    throw runtime_error(errorMsg);
-  }
-
-  res->setLongStrings(longStrings);
   return res;
 }
 
@@ -577,29 +534,18 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   if (msglen == 0)
     return;
 
-  const auto& longStrings = msg.getLongStrings();
   /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
      are at least 12 bytes before that for the magic & length fields */
   realBuf = (uint32_t*)msg.buf();
   realBuf -= 3;
   realBuf[0] = magic;
   realBuf[1] = msglen;
-  realBuf[2] = longStrings.size();
+  realBuf[2] = 0;
 
   try
   {
     auto bytesToWrite = sizeof(msglen) + sizeof(magic) + sizeof(uint32_t) + msglen;
     written(fSocketParms.sd(), (const uint8_t*)realBuf, bytesToWrite);
-
-    for (const auto& longString : longStrings)
-    {
-      const rowgroup::StringStore::MemChunk* memChunk =
-          reinterpret_cast<rowgroup::StringStore::MemChunk*>(longString.get());
-      const auto writeSize = memChunk->currentSize + sizeof(rowgroup::StringStore::MemChunk);
-      written(fSocketParms.sd(), (const uint8_t*)longString.get(), writeSize);
-      // For stats.
-      bytesToWrite += writeSize;
-    }
 
     if (stats)
       stats->dataSent(bytesToWrite);

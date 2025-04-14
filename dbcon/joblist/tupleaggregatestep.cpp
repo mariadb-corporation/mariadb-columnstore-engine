@@ -5632,7 +5632,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     {
       handleException(std::current_exception(), logging::tupleAggregateStepErr,
                       logging::ERR_AGGREGATION_TOO_BIG,
-                      "TupleAggregateStep::threadedAggregateRowGroups()[" + std::to_string(threadID) + "]");
+                      "TupleAggregateStep::threadedAggregateRowGroups()");
       fEndOfResult = true;
       fDoneAggregate = true;
     }

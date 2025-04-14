@@ -27,6 +27,10 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 .IP \(bu 2
 \fB\fCdbrm_restore\fR: Restore Columnstore DBRM data.
 .IP \(bu 2
+\fB\fCcskeys\fR: Generates a random AES encryption key and init vector and writes them to disk.
+.IP \(bu 2
+\fB\fCcspasswd\fR: Encrypt a Columnstore plaintext password using the encryption key in the key file.
+.IP \(bu 2
 \fB\fChelp\-all\fR: Show help for all commands in man page style.
 .IP \(bu 2
 \fB\fCstatus\fR: Get status information.
@@ -249,6 +253,61 @@ $ mcs dbrm_restore [OPTIONS]
 \fB\fC\-ssm, \-\-skip\-storage\-manager / \-no\-ssm, \-\-no\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.  [default: ssm]
 .IP \(bu 2
 \fB\fC\-li, \-\-list\fR: List backups.
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs cskeys\fR
+.PP
+This utility generates a random AES encryption key and init vector
+and writes them to disk. The data is written to the file \[aq]\&.secrets\[aq],
+in the specified directory. The key and init vector are used by
+the utility \[aq]cspasswd\[aq] to encrypt passwords used in Columnstore
+configuration files, as well as by Columnstore itself to decrypt the
+passwords.
+.PP
+WARNING: Re\-creating the file invalidates all existing encrypted
+passwords in the configuration files.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cskeys [OPTIONS] [DIRECTORY]
+.fi
+.RE
+.PP
+\fBArguments\fP:
+.RS
+.IP \(bu 2
+\fB\fC[DIRECTORY]\fR: The directory where to store the file in.  [default: /var/lib/columnstore]
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-u, \-\-user TEXT\fR: Designate the owner of the generated file.  [default: mysql]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs cspasswd\fR
+.PP
+Encrypt a Columnstore plaintext password using the encryption key in
+the key file.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cspasswd [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-password TEXT\fR: Password to encrypt/decrypt  [required]
+.IP \(bu 2
+\fB\fC\-\-decrypt\fR: Decrypt an encrypted password instead.
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE

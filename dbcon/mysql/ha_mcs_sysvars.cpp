@@ -78,9 +78,6 @@ static MYSQL_THDVAR_ENUM(select_handler, PLUGIN_VAR_RQCMDARG,
 static MYSQL_THDVAR_BOOL(derived_handler, PLUGIN_VAR_NOCMDARG, "Enable/Disable the MCS derived_handler", NULL,
                          NULL, 1);
 
-static MYSQL_THDVAR_BOOL(group_by_handler, PLUGIN_VAR_NOCMDARG, "Enable/Disable the MCS group_by_handler",
-                         NULL, NULL, 0);
-
 static MYSQL_THDVAR_BOOL(select_handler_in_stored_procedures, PLUGIN_VAR_NOCMDARG,
                          "Enable/Disable the MCS select_handler for Stored Procedures", NULL, NULL, 1);
 
@@ -229,7 +226,6 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(original_option_bits),
                                             MYSQL_SYSVAR(select_handler),
                                             MYSQL_SYSVAR(derived_handler),
-                                            MYSQL_SYSVAR(group_by_handler),
                                             MYSQL_SYSVAR(select_handler_in_stored_procedures),
                                             MYSQL_SYSVAR(orderby_threads),
                                             MYSQL_SYSVAR(decimal_scale),
@@ -332,15 +328,6 @@ bool get_derived_handler(THD* thd)
 void set_derived_handler(THD* thd, bool value)
 {
   THDVAR(thd, derived_handler) = value;
-}
-
-bool get_group_by_handler(THD* thd)
-{
-  return (thd == NULL) ? false : THDVAR(thd, group_by_handler);
-}
-void set_group_by_handler(THD* thd, bool value)
-{
-  THDVAR(thd, group_by_handler) = value;
 }
 
 bool get_select_handler_in_stored_procedures(THD* thd)

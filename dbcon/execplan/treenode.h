@@ -771,10 +771,10 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::UINT: return fResult.uintVal;
 
     case CalpontSystemCatalog::FLOAT:
-    case CalpontSystemCatalog::UFLOAT: return (uint64_t)fResult.floatVal;
+    case CalpontSystemCatalog::UFLOAT: return (uint64_t)std::llround(fResult.floatVal);
 
     case CalpontSystemCatalog::DOUBLE:
-    case CalpontSystemCatalog::UDOUBLE: return (uint64_t)fResult.doubleVal;
+    case CalpontSystemCatalog::UDOUBLE: return (uint64_t)std::llround(fResult.doubleVal);
 
     case CalpontSystemCatalog::LONGDOUBLE: return (uint64_t)fResult.longDoubleVal;
 

@@ -19,6 +19,7 @@ from cmapi_server.constants import (
 )
 from cmapi_server.controllers.error import APIError
 from cmapi_server.handlers.cej import CEJError
+from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
     cmapi_config_check, dequote, get_active_nodes, get_config_parser,
@@ -350,23 +351,28 @@ class ConfigController:
         # the config file or apply the changes
         is_test = request_body.get('test', False)
 
-        mandatory = [request_revision, request_manager, request_timeout]
+        mandatory = (request_revision, request_manager, request_timeout)
         if None in mandatory:
             raise_422_error(
                 module_logger, func_name, 'Mandatory attribute is missing.')
 
         request_mode = request_body.get('cluster_mode', None)
-        request_config = request_body.get('config', None)
+        xml_config = request_body.get('config', None)
+        sm_config = request_body.get('sm_config', None)
         mcs_config_filename = request_body.get(
             'mcs_config_filename', DEFAULT_MCS_CONF_PATH
         )
         sm_config_filename = request_body.get(
             'sm_config_filename', DEFAULT_SM_CONF_PATH
         )
+        secrets = request_body.get('secrets', None)
 
-        if request_mode is None and request_config is None:
+        operation_params = (request_mode, xml_config, secrets)
+        # if no operation to apply, return 422
+        if not any(operation_params):
             raise_422_error(
-                module_logger, func_name, 'Mandatory attribute is missing.'
+                module_logger, func_name,
+                'Mandatory attribute is missing.'
             )
 
         request_headers = cherrypy.request.headers
@@ -391,9 +397,11 @@ class ConfigController:
             )
         request_response = {'timestamp': str(datetime.now())}
 
+        if secrets:
+            #TODO: validate incoming secrets?
+            CEJPasswordHandler().save_secrets(secrets)
+
         node_config = NodeConfig()
-        xml_config = request_body.get('config', None)
-        sm_config = request_body.get('sm_config', None)
         if is_test:
             return request_response
         if request_mode is not None:
@@ -461,7 +469,7 @@ class ConfigController:
                         module_logger, func_name,
                         (
                             'Error while starting node. '
-                            f'Details: {err.message}.'
+                            f'Details: {err.message}'
                         ),
                         exc_info=False
                     )

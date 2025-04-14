@@ -75,9 +75,6 @@ void set_select_handler_mode(THD* thd, ulong value);
 bool get_derived_handler(THD* thd);
 void set_derived_handler(THD* thd, bool value);
 
-bool get_group_by_handler(THD* thd);
-void set_group_by_handler(THD* thd, bool value);
-
 bool get_select_handler_in_stored_procedures(THD* thd);
 void set_select_handler_in_stored_procedures(THD* thd, bool value);
 

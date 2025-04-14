@@ -50,16 +50,16 @@ class GroupConcatColumn : public AggregateColumn
   /**
    * Constructors
    */
-  GroupConcatColumn();
+  explicit GroupConcatColumn(bool isJsonArrayAgg = false);
 
-  explicit GroupConcatColumn(const uint32_t sessionID);
+  explicit GroupConcatColumn(const uint32_t sessionID, bool isJsonArrayAgg = false);
 
   GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  ~GroupConcatColumn() override;
+  ~GroupConcatColumn() override = default;
 
   /**
    * Overloaded stream operator
@@ -140,6 +140,7 @@ class GroupConcatColumn : public AggregateColumn
  private:
   std::vector<SRCP> fOrderCols;
   std::string fSeparator;
+  bool fIsJsonArrayAgg{false};
 };
 
 /**

@@ -178,20 +178,37 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
         if (ie.errorCode() == ERR_TABLE_NOT_IN_CATALOG)
         {
           Message::Args args;
-          Message message(1);
-          args.add("Table does not exist in ColumnStore.");
-          message.format(args);
-          result.result = DROP_TABLE_NOT_IN_CATALOG_ERROR;
-          result.message = message;
-          fSessionManager.rolledback(txnID);
-          return result;
+          args.add("Table ");
+          args.add(tableName.schema + "." + tableName.table);
+          args.add(" does not exist in ColumnStore.");
+
+          if (dropTableStmt->fIfExists)  // Check if "IF EXISTS" is specified
+          {
+            Message message(1);  // Informational log level
+            message.format(args);
+            result.result = NO_ERROR;  // Success, no error
+            result.message = message;
+            fSessionManager.committed(txnID);  // No action needed, commit
+            return result;
+          }
+          else
+          {
+            Message message(9);  // Error log level
+            message.format(args);
+            result.result = DROP_TABLE_NOT_IN_CATALOG_ERROR;
+            result.message = message;
+            fSessionManager.rolledback(txnID);
+            return result;
+          }
         }
         else
         {
           result.result = DROP_ERROR;
           Message::Args args;
           Message message(9);
-          args.add("Drop table failed due to ");
+          args.add("Drop table ");
+          args.add(tableName.schema + "." + tableName.table);
+          args.add(" failed due to ");
           args.add(ie.what());
           message.format(args);
           result.message = message;
@@ -517,8 +534,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
 
     if (rc != 0)
     {
-      cout << txnID.id << " rolledback transaction "
-           << " and valid is " << txnID.valid << endl;
+      cout << txnID.id << " rolledback transaction " << " and valid is " << txnID.valid << endl;
       fSessionManager.rolledback(txnID);
     }
     else

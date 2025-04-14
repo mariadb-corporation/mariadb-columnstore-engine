@@ -29,15 +29,14 @@ using namespace std;
 
 namespace ddlpackage
 {
-DropTableStatement::DropTableStatement(QualifiedName* qualifiedName, bool cascade)
- : fTableName(qualifiedName), fCascade(cascade)
+DropTableStatement::DropTableStatement(QualifiedName* qualifiedName, bool cascade, bool ifExists)
+ : fTableName(qualifiedName), fCascade(cascade), fIfExists(ifExists)
 {
 }
 
 ostream& DropTableStatement::put(ostream& os) const
 {
-  os << "Drop Table: " << *fTableName << " "
-     << "C=" << fCascade << endl;
+  os << "Drop Table: " << *fTableName << " " << "C=" << fCascade << endl;
   return os;
 }
 

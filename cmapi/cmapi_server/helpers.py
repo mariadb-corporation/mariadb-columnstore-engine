@@ -290,9 +290,10 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
-    timeout: Optional[int] = None
+    timeout: Optional[int] = None,
+    distribute_secrets: bool = False
 ) -> None:
-    """Send new config to nodes in async way.
+    """Send new config to nodes. Now in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
@@ -310,6 +311,8 @@ def broadcast_new_config(
     :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
                     releases. Could affect all logic of broadcacting new config
     :type timeout: Optional[int], optional
+    :param distribute_secrets: flag to distribute secrets to nodes
+    :type distribute_secrets: bool
     :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
@@ -338,6 +341,16 @@ def broadcast_new_config(
         'sm_config_filename': sm_config_filename,
         'sm_config': sm_config_text
     }
+
+    if distribute_secrets:
+        # TODO: do not restart cluster when put xml config only with
+        #       distribute secrets
+        if not CEJPasswordHandler.secretsfile_exists():
+            logging.debug('No .secrets file found so not distrinuting it.')
+        else:
+            secrets = CEJPasswordHandler.get_secrets_json()
+            body['secrets'] = secrets
+
     # TODO: remove test mode here and replace it by mock in tests
     if test_mode:
         body['test'] = True
@@ -357,35 +370,42 @@ def broadcast_new_config(
         :raises CMAPIBasicError: If undefined error happened
         """
         url = f'https://{node}:8640/cmapi/{version}/node/config'
+        resp_json: dict = dict()
 
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.put(
                     url, headers=headers, json=body, ssl=False, timeout=120
                 ) as response:
+                    resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node "{node}" config put successfull.')
+                logging.info(f'Node {node} config put successfull.')
             except aiohttp.ClientResponseError as err:
+                # TODO: may be better to check if resp status is 422 cause
+                #       it's like a signal that cmapi server raised it in
+                #       most cases
+                error_msg = resp_json.get('error', resp_json)
                 message = (
-                    f'Node "{node}" config put failed with status: '
-                    f'"{err.status}" and message: {err.message}'
+                    f'Node {node} config put failed with status: '
+                    f'{err.status} and err message: {error_msg}'
                 )
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except aiohttp.ClientError as err:
+
                 message = (
-                        f'Node "{node}" config put failed with ClientError: '
+                        f'Node {node} config put failed with ClientError: '
                         f'{str(err)}'
                     )
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except asyncio.TimeoutError:
-                message = f'Node "{node}" config put failed by Timeout: '
+                message = f'Node {node} config put failed by Timeout: '
                 logging.error(message)
                 raise CMAPIBasicError(message)
             except Exception as err:
                 message = (
-                    f'Node "{node}" config put failed by undefined exception: '
+                    f'Node {node} config put failed by undefined exception: '
                     f'{str(err)}'
                 )
                 logging.error(message)
@@ -767,6 +787,7 @@ def get_cej_info(config_root):
     :return: cej_host, cej_port, cej_username, cej_password
     :rtype: tuple
     """
+    #TODO: move this to cej.py?
     cej_node = config_root.find('./CrossEngineSupport')
     cej_host = cej_node.find('Host').text or '127.0.0.1'
     cej_port = cej_node.find('Port').text or '3306'
@@ -782,8 +803,26 @@ def get_cej_info(config_root):
             'Columnstore.xml has an empty CrossEngineSupport.Password tag'
         )
 
-    if CEJPasswordHandler.secretsfile_exists():
-        cej_password = CEJPasswordHandler.decrypt_password(cej_password)
+    if (
+        not CEJPasswordHandler.secretsfile_exists() and
+        CEJPasswordHandler.is_password_encrypted(cej_password)
+    ):
+        logging.error(
+            'CrossengineSupport password seems to be encrypted '
+            'but no .secrets file exist. May be it\'s eventually removed.'
+        )
+
+
+    if CEJPasswordHandler.secretsfile_exists() and cej_password:
+        if CEJPasswordHandler.is_password_encrypted(cej_password):
+            cej_password = CEJPasswordHandler.decrypt_password(cej_password)
+        else:
+            logging.error(
+                'CrossengineSupport password seems to be unencrypted but '
+                '.secrets file exist. May be .secrets file generated by '
+                'mistake or password left encrypted after using cskeys '
+                'utility.'
+            )
 
     return cej_host, cej_port, cej_username, cej_password
 
