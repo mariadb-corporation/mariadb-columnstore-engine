@@ -16,6 +16,11 @@ else
   MDB="/usr/bin/mysql"
 fi
 
+log_error() {
+  echo "Error: $1" >> ${tmpdir}/mysql_install.log
+  exit 1
+}
+
 # DELETE libcalmysql.so entries first as they are in ha_columnstore.so in 1.4.2 onwards
 $MDB 2> ${tmpdir}/mysql_install.log <<EOD
 DELETE FROM mysql.func WHERE dl='libcalmysql.so';
@@ -124,7 +129,26 @@ CREATE TABLE IF NOT EXISTS infinidb_querystats.priority
 insert ignore into infinidb_querystats.priority values ('High', 100),('Medium', 66), ('Low', 33);
 EOD
 
+if [ $? -ne 0 ]; then
+  log_error "Failed to execute main SQL commands."
+fi
+
 $MDB <@ENGINE_SUPPORTDIR@/calsetuserpriority.sql 2>/dev/null
+if [ $? -ne 0 ]; then
+  log_error "Failed to execute calsetuserpriority.sql."
+fi
+
 $MDB <@ENGINE_SUPPORTDIR@/calremoveuserpriority.sql 2>/dev/null
+if [ $? -ne 0 ]; then
+  log_error "Failed to execute calremoveuserpriority.sql."
+fi
+
 $MDB <@ENGINE_SUPPORTDIR@/calshowprocesslist.sql 2>/dev/null
+if [ $? -ne 0 ]; then
+  log_error "Failed to execute calshowprocesslist.sql."
+fi
+
 $MDB <@ENGINE_SUPPORTDIR@/columnstore_info.sql 2>/dev/null
+if [ $? -ne 0 ]; then
+  log_error "Failed to execute columnstore_info.sql."
+fi
