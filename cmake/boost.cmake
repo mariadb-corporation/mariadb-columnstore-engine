@@ -43,6 +43,8 @@ ExternalProject_Add(
     URL_HASH SHA256=3621533e820dcab1e8012afd583c0c73cf0f77694952b81352bf38c1488f9cb4
     CONFIGURE_COMMAND ./bootstrap.sh
     UPDATE_COMMAND ""
+    PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> patch -p1 -i
+                  ${CMAKE_SOURCE_DIR}/storage/columnstore/columnstore/cmake/boost.1.88.named_proxy.hpp.patch
     BUILD_COMMAND ./b2 -q ${_b2args}
     BUILD_IN_SOURCE TRUE
     INSTALL_COMMAND ./b2 -q install ${_b2args}

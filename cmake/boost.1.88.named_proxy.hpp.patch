@@ -1,0 +1,10 @@
++++ a/boost/interprocess/detail/named_proxy.hpp	2025-04-14 16:24:12.018395298 +0000
++++ b/boost/interprocess/detail/named_proxy.hpp	2025-04-14 16:24:12.018395298 +0000
+@@ -89,6 +89,7 @@
+       } BOOST_INTERPROCESS_CATCH_END
+    }
+
++   virtual ~CtorArgN() {}
+    private:
+    template<std::size_t ...IdxPack>
+    void construct(void *mem, true_, const index_tuple<IdxPack...>&)

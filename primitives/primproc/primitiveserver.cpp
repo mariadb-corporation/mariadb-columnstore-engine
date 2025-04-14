@@ -1555,14 +1555,9 @@ struct BPPHandler
     bs >> stepID;
     bs >> uniqueID;
 
-    boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
-    boost::mutex::scoped_lock scoped(bppLock);
-
-    bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
-
-    if (bppKeysIt != bppKeys.end())
+    boost::shared_ptr<BPPV> bppv = nullptr;
     {
-      boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+      boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
       boost::mutex::scoped_lock scoped(bppLock);
 
       bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);

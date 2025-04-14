@@ -72,10 +72,11 @@ set(CLANG_FLAGS
     -Wno-format-truncation
     -Wno-register
     -Wno-typedef-redefinition
+    -Wno-missing-template-arg-list-after-template-kw
 )
 
 set(GNU_FLAGS # suppressed warnings
-    -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-format-truncation -Wno-register -Wno-unused-variable
+    -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-format-truncation -Wno-register
 )
 # } end compiler specific flags
 
