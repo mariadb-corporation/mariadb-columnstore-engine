@@ -24,8 +24,7 @@
 #include <stdio.h>
 #include <iostream>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 

@@ -34,10 +34,11 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
+
+#include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+
 #include <pwd.h>
 
 #include "we_bulkstatus.h"

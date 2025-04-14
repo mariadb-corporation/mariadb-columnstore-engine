@@ -25,8 +25,6 @@
 #include <string>
 #include <set>
 #include <clocale>
-// #include "boost/filesystem/operations.hpp"
-// #include "boost/filesystem/path.hpp"
 using namespace std;
 
 #include "liboamcpp.h"

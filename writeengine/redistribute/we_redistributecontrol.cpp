@@ -36,8 +36,7 @@ using namespace std;
 #include "boost/scoped_array.hpp"
 #include "boost/thread.hpp"
 #include "boost/thread/mutex.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem.hpp"
 using namespace boost;
 
 #include "installdir.h"

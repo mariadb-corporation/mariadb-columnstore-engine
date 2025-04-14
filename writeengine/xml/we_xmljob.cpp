@@ -37,9 +37,7 @@
 #include "we_convertor.h"
 #include "dataconvert.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
-
+#include <boost/filesystem.hpp>
 #include <sys/time.h>
 
 using namespace std;

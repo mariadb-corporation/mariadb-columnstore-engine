@@ -40,8 +40,6 @@ using namespace oam;
 #include "distributedenginecomm.h"
 using namespace joblist;
 
-// #include "boost/filesystem/operations.hpp"
-// #include "boost/filesystem/path.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>

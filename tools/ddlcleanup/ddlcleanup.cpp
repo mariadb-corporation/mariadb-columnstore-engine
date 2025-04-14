@@ -26,8 +26,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <unistd.h>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+#include "boost/filesystem.hpp"
+
 using namespace std;
 
 #include "rwlock.h"

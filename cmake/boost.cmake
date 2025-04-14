@@ -1,4 +1,4 @@
-find_package(Boost 1.84.0 COMPONENTS chrono filesystem program_options regex system thread)
+find_package(Boost 1.88.0 COMPONENTS chrono filesystem program_options regex system thread)
 
 if(Boost_FOUND)
     add_custom_target(external_boost)
@@ -9,9 +9,6 @@ include(ExternalProject)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(_toolset "gcc")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
-        set(_extra "pch=off")
-    endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
     set(_toolset "clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
@@ -42,8 +39,8 @@ endforeach()
 ExternalProject_Add(
     external_boost
     PREFIX .boost
-    URL https://archives.boost.io/release/1.84.0/source/boost_1_84_0.tar.gz
-    URL_HASH SHA256=a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724
+    URL https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.gz
+    URL_HASH SHA256=3621533e820dcab1e8012afd583c0c73cf0f77694952b81352bf38c1488f9cb4
     CONFIGURE_COMMAND ./bootstrap.sh
     UPDATE_COMMAND ""
     BUILD_COMMAND ./b2 -q ${_b2args}

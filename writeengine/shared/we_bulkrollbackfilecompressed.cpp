@@ -24,7 +24,6 @@
 #include <sstream>
 #include <boost/scoped_array.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "we_define.h"
 #include "we_fileop.h"

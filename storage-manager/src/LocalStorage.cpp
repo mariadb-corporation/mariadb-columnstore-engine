@@ -94,7 +94,7 @@ inline void LocalStorage::addLatency()
 int LocalStorage::copy(const bf::path& source, const bf::path& dest)
 {
   boost::system::error_code err;
-  bf::copy_file(source, dest, bf::copy_option::fail_if_exists, err);
+  bf::copy_file(source, dest, bf::copy_options::none, err);
   if (err)
   {
     errno = err.value();
