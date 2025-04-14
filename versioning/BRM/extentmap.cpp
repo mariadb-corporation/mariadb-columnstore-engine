@@ -4542,7 +4542,7 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber, EmDbRootHWMInfo_v& 
            "There are no DBRoots for OID "
         << OID << " and PM " << pmNumber << endl;
     log(oss.str(), logging::LOG_TYPE_CRITICAL);
-    throw invalid_argument(oss.str());
+    // throw invalid_argument(oss.str());
   }
 
   grabEMEntryTable(READ);
