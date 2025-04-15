@@ -33,8 +33,7 @@ fi
 
 cd $SCRIPT_LOCATION
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-BRANCHES=($(git branch --list --no-color | grep "[^* ]+" -Eo))
-
+message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_cyan branch"
 cd - >/dev/null
 
 echo "Arguments received: $@"
@@ -47,7 +46,6 @@ optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure"
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
-optparse.define short=b long=branch desc="Choose git branch. For menu use -b \"\"" variable=BRANCH default=$CURRENT_BRANCH
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
@@ -94,28 +92,6 @@ disable_git_restore_frozen_revision() {
     cd $MDB_SOURCE_PATH
     git config submodule.storage/columnstore/columnstore.update none
     cd - >/dev/null
-}
-
-select_branch() {
-    cd $SCRIPT_LOCATION
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    BRANCHES=($(git branch --list --no-color | grep "[^* ]+" -Eo))
-
-    if [[ ! " ${BRANCHES[*]} " =~ " ${BRANCH} " ]]; then
-        if [[ $BRANCH = "" ]]; then
-            getChoice -q "Select your branch" -o BRANCHES
-            BRANCH=$selectedChoice
-        fi
-        if [[ $BRANCH != $CURRENT_BRANCH ]]; then
-            message "Selecting $BRANCH branch for Columnstore"
-            git checkout $BRANCH
-        fi
-
-        message "Turning off Columnstore submodule auto update via gitconfig"
-    fi
-
-    cd - >/dev/null
-    message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_cyan branch"
 }
 
 install_deps() {
@@ -674,7 +650,6 @@ construct_cmake_flags
 init_submodules
 
 if [[ $BUILD_PACKAGES = false ]]; then
-    select_branch
     stop_service
 
     if [[ $NO_CLEAN = false ]]; then
