@@ -31,6 +31,12 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+cd $SCRIPT_LOCATION
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCHES=($(git branch --list --no-color | grep "[^* ]+" -Eo))
+
+cd - >/dev/null
+
 echo "Arguments received: $@"
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
