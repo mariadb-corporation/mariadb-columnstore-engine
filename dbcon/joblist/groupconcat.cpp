@@ -22,7 +22,7 @@
 #include <iostream>
 // #define NDEBUG
 #include <cassert>
-#include <ranges>
+
 #include <string>
 #include "windowfunction/idborderby.h"
 using namespace std;
@@ -467,9 +467,9 @@ void GroupConcator::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRm = gcc->fRm;
   fSessionMemLimit = gcc->fSessionMemLimit;
 
-  for (const auto& str : views::keys(gcc->fConstCols))
+  for (const auto& str : gcc->fConstCols)
   {
-    fConstantLen += str.length();
+    fConstantLen += str.first.length();
   }
 }
 
@@ -714,7 +714,8 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
 bool GroupConcator::concatColIsNull(const rowgroup::Row& row)
 {
-  return ranges::any_of(fConcatColumns, [&](uint32_t idx) { return row.isNullValue(idx); });
+  return std::any_of(fConcatColumns.cbegin(), fConcatColumns.cend(),
+                     [&row](uint32_t idx) { return row.isNullValue(idx); });
 }
 
 int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
@@ -987,6 +988,7 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   fOrderByCond.resize(0);
 
+  fOrderByCond.reserve(gcc->fOrderCond.size());
   for (const auto& [idx, asc] : gcc->fOrderCond)
   {
     fOrderByCond.emplace_back(idx, asc);
@@ -994,9 +996,10 @@ void GroupConcatOrderBy::initialize(const rowgroup::SP_GroupConcat& gcc)
 
   fDistinct = gcc->fDistinct;
 
-  for (uint32_t x : views::values(gcc->fGroupCols))
+  fConcatColumns.reserve(fConcatColumns.size() + gcc->fGroupCols.size());
+  for (auto& x : gcc->fGroupCols)
   {
-    fConcatColumns.emplace_back(x);
+    fConcatColumns.emplace_back(x.second);
   }
 
   auto size = fRowGroup.getSizeWithStrings(fRowsPerRG);
@@ -1048,9 +1051,10 @@ void GroupConcatOrderBy::serialize(messageqcpp::ByteStream& bs) const
   {
     sz = fDistinctMap->size();
     bs << sz;
-    for (const auto& idx : views::values(*fDistinctMap))
+
+    for (const auto& idx : *fDistinctMap)
     {
-      bs << idx;
+      bs << idx.second;
     }
   }
   sz = fOrderByQueue->size();
@@ -1435,9 +1439,11 @@ void GroupConcatNoOrder::initialize(const rowgroup::SP_GroupConcat& gcc)
   fRowGroup.setUseOnlyLongString(true);
   fRowsPerRG = 128;
 
-  for (uint32_t colIdx : views::values(gcc->fGroupCols))
+  fConcatColumns.reserve(fConcatColumns.size() + gcc->fGroupCols.size());
+
+  for (auto& colIdx : gcc->fGroupCols)
   {
-    fConcatColumns.push_back(colIdx);
+    fConcatColumns.push_back(colIdx.second);
   }
 
   createNewRGData();

@@ -428,7 +428,7 @@ RGData::RGData(const RowGroup& rg, allocators::CountingAllocator<RGDataBufType>&
   if (rg.usesStringTable())
   {
     allocators::CountingAllocator<StringStoreBufType> ssAlloc = _alloc;
-    strings.reset(new StringStore(ssAlloc)); 
+    strings.reset(new StringStore(ssAlloc));
     strings->useOnlyLongStrings(rg.usesOnlyLongString());
   }
 
@@ -455,12 +455,12 @@ void RGData::reinit(const RowGroup& rg, uint32_t rowCount)
     if (alloc)
     {
       allocators::CountingAllocator<StringStoreBufType> ssAlloc = alloc.value();
-      strings.reset(new StringStore(ssAlloc)); 
+      strings.reset(new StringStore(ssAlloc));
       strings->useOnlyLongStrings(rg.usesOnlyLongString());
     }
     else
     {
-      strings.reset(new StringStore()); 
+      strings.reset(new StringStore());
     }
   }
   else
@@ -1368,7 +1368,7 @@ void RowGroup::deserialize(ByteStream& bs)
   charsets.insert(charsets.begin(), charsetNumbers.size(), nullptr);
 }
 
-void RowGroup::setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats)
+void RowGroup::setUseAggregateDataStore(bool b, boost::span<boost::shared_ptr<GroupConcat>> group_concats)
 {
   idbassert(!b || !group_concats.empty());
   if (useAggregateDataStore && !b)

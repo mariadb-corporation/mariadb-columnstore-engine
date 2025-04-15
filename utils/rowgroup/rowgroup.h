@@ -27,12 +27,13 @@
 
 #pragma once
 
-#include <span>
 #include <vector>
 #include <string>
 #include <stdexcept>
 // #define NDEBUG
 #include <cassert>
+
+#include <boost/core/span.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <boost/thread/mutex.hpp>
@@ -1103,7 +1104,7 @@ inline void Row::setStringField(const utils::ConstString& str, uint32_t colIndex
   }
   else
   {
-    // std::cout << "setStringField memcpy " << std::endl; 
+    // std::cout << "setStringField memcpy " << std::endl;
     uint8_t* buf = &data[offsets[colIndex]];
     memset(buf + length, 0,
            offsets[colIndex + 1] - (offsets[colIndex] + length));  // needed for memcmp in equals().
@@ -1640,7 +1641,7 @@ class RowGroup : public messageqcpp::Serializeable
   {
     return useOnlyLongStrings;
   }
-  void setUseAggregateDataStore(bool b, std::span<boost::shared_ptr<GroupConcat>> group_concats = {});
+  void setUseAggregateDataStore(bool b, boost::span<boost::shared_ptr<GroupConcat>> group_concats = {});
   bool usesAggregateDataStore() const
   {
     return useAggregateDataStore;
@@ -2314,7 +2315,7 @@ inline void RGData::getRow(uint32_t num, Row* row)
 {
   uint32_t incomingRowSize = row->getSize();
   idbassert(columnCount == row->getColumnCount() && rowSize == incomingRowSize);
-  
+
   row->setData(
       Row::Pointer(&rowData[RowGroup::getHeaderSize() + (num * incomingRowSize)], strings.get(),
                       userDataStore.get(), aggregateDataStore.get()));
