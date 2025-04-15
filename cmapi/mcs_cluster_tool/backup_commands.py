@@ -1,7 +1,7 @@
 """Typer application for backup Columnstore data."""
 import logging
 import sys
-from datetime import datetime
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
@@ -20,7 +20,7 @@ logger = logging.getLogger('mcs_cli')
 @handle_output
 def backup(
     bl: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-bl', '--backup-location',
             help=(
@@ -28,11 +28,12 @@ def backup(
                 'Consider write permissions of the scp user and the user running this script.\n'
                 'Mariadb-backup will use this location as a tmp dir for S3 and remote backups temporarily.\n'
                 'Example: /mnt/backups/'
-            )
+            ),
+            show_default=False
         )
-    ] = '/tmp/backups/',
+    ] = None,
     bd: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-bd', '--backup-destination',
             help=(
@@ -40,11 +41,12 @@ def backup(
                 'script is running on or another server - if Remote you need '
                 'to setup scp='
                 'Options: "Local" or "Remote"'
-            )
+            ),
+            show_default=False
         )
-    ] = 'Local',
+    ] = None,
     scp: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-scp',
             help=(
@@ -54,20 +56,20 @@ def backup(
                 'Example: "centos@10.14.51.62"'
             )
         )
-    ] = '',
+    ] = None,
     bb: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-bb', '--backup-bucket',
             help=(
                 'Only used if --storage=S3\n'
                 'Name of the bucket to store the columnstore backups.\n'
                 'Example: "s3://my-cs-backups"'
-            )
+            ),
         )
-    ] = '',
+    ] = None,
     url: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-url', '--endpoint-url',
             help=(
@@ -75,18 +77,19 @@ def backup(
                 'Example: "http://127.0.0.1:8000"'
             )
         )
-    ] = '',
+    ] = None,
     s: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-s', '--storage',
             help=(
                 'What storage topogoly is being used by Columnstore - found '
                 'in /etc/columnstore/storagemanager.cnf.\n'
                 'Options: "LocalStorage" or "S3"'
-            )
+            ),
+            show_default=False
         )
-    ] = 'LocalStorage',
+    ] = None,
     i: Annotated[
         str,
         typer.Option(
@@ -101,31 +104,32 @@ def backup(
         )
     ] = '',
     P: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             '-P', '--parallel',
             help=(
-                'Determines if columnstore data directories will have '
-                'multiple rsync running at the same time for different '
-                'subfolders to parallelize writes. '
-                'Ignored if "-c/--compress" argument not set.'
-            )
+                'Enables parallel rsync for faster backups, setting the '
+                'number of simultaneous rsync processes. With -c/--compress, '
+                'sets the number of compression threads.'
+            ),
+            show_default=False
         )
-    ] = 4,
+    ] = None,
     ha: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-ha/-no-ha', '--highavilability/--no-highavilability',
+            '-ha', '--highavilability',
             help=(
                 'Hint wether shared storage is attached @ below on all nodes '
                 'to see all data\n'
                 '   HA LocalStorage ( /var/lib/columnstore/dataX/ )\n'
                 '   HA S3           ( /var/lib/columnstore/storagemanager/ )'
-            )
+            ),
+            show_default=False
         )
-    ] = False,
+    ] = None,
     f: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-f', '--config-file',
             help=(
@@ -134,57 +138,63 @@ def backup(
             ),
             show_default=False
         )
-    ] = '',
+    ] = None,
     sbrm: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-sbrm/-no-sbrm', '--skip-save-brm/--no-skip-save-brm',
+            '-sbrm', '--skip-save-brm',
             help=(
                 'Skip saving brm prior to running a backup - '
                 'ideal for dirty backups.'
-            )
+            ),
+            show_default=False
         )
-    ] = False,
+    ] = None,
     spoll: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-spoll/-no-spoll', '--skip-polls/--no-skip-polls',
-            help='Skip sql checks confirming no write/cpimports running.'
+            '-spoll', '--skip-polls',
+            help='Skip sql checks confirming no write/cpimports running.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     slock: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-slock/-no-slock', '--skip-locks/--no-skip-locks',
-            help='Skip issuing write locks - ideal for dirty backups.'
+            '-slock', '--skip-locks',
+            help='Skip issuing write locks - ideal for dirty backups.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     smdb: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-smdb/-no-smdb', '--skip-mariadb-backup/--no-skip-mariadb-backup',
+            '-smdb', '--skip-mariadb-backup',
             help=(
                'Skip running a mariadb-backup for innodb data - ideal for '
                'incremental dirty backups.'
-            )
+            ),
+            show_default=False
         )
-    ] = False,
+    ] = None,
     sb: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-sb/-no-sb', '--skip-bucket-data/--no-skip-bucket-data',
-            help='Skip taking a copy of the columnstore data in the bucket.'
+            '-sb', '--skip-bucket-data',
+            help='Skip taking a copy of the columnstore data in the bucket.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     nb: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-nb', '--name-backup',
-            help='Define the name of the backup - default: $(date +%m-%d-%Y)'
+            help='Define the name of the backup - default: $(date +%m-%d-%Y)',
+            show_default=False
         )
-    ] = datetime.now().strftime('%m-%d-%Y'),
+    ] = None,
     m: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-m', '--mode',
             help=(
@@ -193,78 +203,86 @@ def backup(
                 'machine that has read-only mounts associated with '
                 'columnstore/mariadb\n'
             ),
-            hidden=True
+            hidden=True,
+            show_default='direct'
         )
-    ] = 'direct',
+    ] = None,
     c: Annotated[
-        str,
+        Optional[str],
         typer.Option(
             '-c', '--compress',
             help='Compress backup in X format - Options: [ pigz ].',
             show_default=False
         )
-    ] = '',
+    ] = None,
     q: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-q/-no-q', '--quiet/--no-quiet',
-            help='Silence verbose copy command outputs.'
+            '-q', '--quiet',
+            help='Silence verbose copy command outputs.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     nv_ssl: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-nv-ssl/-v-ssl','--no-verify-ssl/--verify-ssl',
-            help='Skips verifying ssl certs, useful for onpremise s3 storage.'
+            '-nv-ssl','--no-verify-ssl',
+            help='Skips verifying ssl certs, useful for onpremise s3 storage.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     pi: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             '-pi', '--poll-interval',
             help=(
                 'Number of seconds between poll checks for active writes & '
                 'cpimports.'
-            )
+            ),
+            show_default=False
         )
-    ] = 5,
+    ] = None,
     pmw: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             '-pmw', '--poll-max-wait',
             help=(
                 'Max number of minutes for polling checks for writes to wait '
                 'before exiting as a failed backup attempt.'
-            )
+            ),
+            show_default=False
         )
-    ] = 60,
+    ] = None,
     r: Annotated[
-        int,
+        Optional[int],
         typer.Option(
             '-r', '--retention-days',
             help=(
                 'Retain backups created within the last X days, '
                 'default 0 == keep all backups.'
-            )
+            ),
+            show_default=False
         )
-    ] = 0,
+    ] = None,
     aro: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
             '-aro', '--apply-retention-only',
             help=(
                 'Only apply retention policy to existing backups, '
                 'does not run a backup.'
-            )
+            ),
+            show_default=False
         )
-    ] = False,
-    list: Annotated[
-        bool,
+    ] = None,
+    li: Annotated[
+        Optional[bool],
         typer.Option(
             '-li', '--list',
-            help='List backups.'
+            help='List backups.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -341,26 +359,29 @@ def dbrm_backup(
         )
     ] = 'dbrm_backup',
     ssm: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-ssm/-no-ssm', '--skip-storage-manager/--no-skip-storage-manager',
-            help='Skip backing up storagemanager directory.'
+            '-ssm', '--skip-storage-manager',
+            help='Skip backing up storagemanager directory.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
     q: Annotated[
-        bool,
+        Optional[bool],
         typer.Option(
-            '-q/-no-q', '--quiet/--no-quiet',
-            help='Silence verbose copy command outputs.'
+            '-q', '--quiet',
+            help='Silence verbose copy command outputs.',
+            show_default=False
         )
-    ] = False,
-    list: Annotated[
-        bool,
+    ] = None,
+    li: Annotated[
+        Optional[bool],
         typer.Option(
             '-li', '--list',
-            help='List backups.'
+            help='List backups.',
+            show_default=False
         )
-    ] = False,
+    ] = None,
 ):
     """Columnstore DBRM Backup."""
 
