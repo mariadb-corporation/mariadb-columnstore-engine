@@ -9,3 +9,5 @@ mcs6203_windowFunctions_REGR_SXX : Disabled because of MCOL-5435
 mcs6204_windowFunctions_REGR_SXY : Disabled because of MCOL-5435
 mcs6205_windowFunctions_REGR_SYY : Disabled because of MCOL-5435
 mcs4011_autopilot_query_stats : Disabled because shows unstable response
+mcs4469_function_CNX_UNIX_TIMESTAMP_DS : Disabled because of MCOL-5961
+mcs4477_function_CNXasPP_UNIX_TIMESTAMP_DS : Disabled because of MCOL-5961
