@@ -24,7 +24,7 @@ namespace idbdatafile
 class NotImplementedYet : public std::logic_error
 {
  public:
-  NotImplementedYet(const std::string& s);
+  explicit NotImplementedYet(const std::string& s);
 };
 
 NotImplementedYet::NotImplementedYet(const std::string& s) : std::logic_error(s)

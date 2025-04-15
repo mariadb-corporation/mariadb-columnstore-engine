@@ -412,7 +412,7 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
 
       int64_t val2 = rop->getIntVal(row, isNull);
 
-      return numericCompare(val1, val2) && !isNull;
+      return !isNull && numericCompare(val1, val2);
     }
 
     case execplan::CalpontSystemCatalog::UBIGINT:

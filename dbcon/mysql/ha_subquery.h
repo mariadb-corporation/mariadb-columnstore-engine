@@ -26,7 +26,7 @@
 
 #pragma once
 
-//#undef LOG_INFO
+// #undef LOG_INFO
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_impl_if.h"
@@ -45,10 +45,10 @@ class SubQuery
  public:
   SubQuery(gp_walk_info& gwip) : fGwip(gwip), fCorrelated(false)
   {
+    next = *gwip.subQueriesChain;
+    *gwip.subQueriesChain = this;
   }
-  virtual ~SubQuery()
-  {
-  }
+  virtual ~SubQuery() = default;
   virtual gp_walk_info& gwip() const
   {
     return fGwip;
@@ -68,10 +68,27 @@ class SubQuery
   {
   }
 
+  SubQuery* next;
  protected:
   gp_walk_info& fGwip;
   bool fCorrelated;
 };
+
+struct SubQueryChainHolder
+{
+  SubQuery* chain;
+  SubQueryChainHolder () : chain(nullptr) { }
+  ~SubQueryChainHolder ()
+  {
+    while (chain)
+    {
+      SubQuery* next = chain->next;
+      delete chain;
+      chain = next;
+    }
+  }
+};
+
 
 /**
  * @brief A class to represent a generic WHERE clause subquery
@@ -79,7 +96,7 @@ class SubQuery
 class WhereSubQuery : public SubQuery
 {
  public:
-  WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSub(NULL), fFunc(NULL)
+  WhereSubQuery(gp_walk_info& gwip) : SubQuery(gwip), fSub(nullptr), fFunc(nullptr)
   {
   }
   WhereSubQuery(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func)
@@ -92,9 +109,7 @@ class WhereSubQuery : public SubQuery
   WhereSubQuery(gp_walk_info& gwip, Item_subselect* sub) : SubQuery(gwip), fSub(sub)
   {
   }  // for exists
-  virtual ~WhereSubQuery()
-  {
-  }
+  ~WhereSubQuery() override = default;
 
   /** Accessors and mutators */
   virtual Item_subselect* sub() const
@@ -131,8 +146,8 @@ class ScalarSub : public WhereSubQuery
   ScalarSub(gp_walk_info& gwip, Item_func* func);
   ScalarSub(gp_walk_info& gwip, const execplan::SRCP& column, Item_subselect* sub, Item_func* func);
   ScalarSub(const ScalarSub& rhs);
-  ~ScalarSub();
-  execplan::ParseTree* transform();
+  ~ScalarSub() override;
+  execplan::ParseTree* transform() override;
   execplan::ParseTree* transform_between();
   execplan::ParseTree* transform_in();
   execplan::ParseTree* buildParseTree(execplan::PredicateOperator* op);
@@ -158,10 +173,10 @@ class InSub : public WhereSubQuery
   InSub(gp_walk_info& gwip);
   InSub(gp_walk_info& gwip, Item_func* func);
   InSub(const InSub& rhs);
-  ~InSub();
-  execplan::ParseTree* transform();
-  void handleFunc(gp_walk_info* gwip, Item_func* func);
-  void handleNot();
+  ~InSub() override;
+  execplan::ParseTree* transform() override;
+  void handleFunc(gp_walk_info* gwip, Item_func* func) override;
+  void handleNot() override;
 };
 
 /**
@@ -172,9 +187,9 @@ class ExistsSub : public WhereSubQuery
  public:
   ExistsSub(gp_walk_info&);  // not complete. just for compile
   ExistsSub(gp_walk_info&, Item_subselect* sub);
-  ~ExistsSub();
-  execplan::ParseTree* transform();
-  void handleNot();
+  ~ExistsSub() override;
+  execplan::ParseTree* transform() override;
+  void handleNot() override;
 };
 
 /**
@@ -192,7 +207,7 @@ class FromSubQuery : public SubQuery
  public:
   FromSubQuery(gp_walk_info&);
   FromSubQuery(gp_walk_info&, SELECT_LEX* fromSub);
-  ~FromSubQuery();
+  ~FromSubQuery() override;
   const SELECT_LEX* fromSub() const
   {
     return fFromSub;
@@ -221,7 +236,7 @@ class SelectSubQuery : public SubQuery
  public:
   SelectSubQuery(gp_walk_info&);
   SelectSubQuery(gp_walk_info&, Item_subselect* sel);
-  ~SelectSubQuery();
+  ~SelectSubQuery() override;
   execplan::SCSEP transform();
   Item_subselect* selSub()
   {

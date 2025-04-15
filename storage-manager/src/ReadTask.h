@@ -24,13 +24,11 @@ namespace storagemanager
 class ReadTask : public PosixTask
 {
  public:
+  ReadTask() = delete;
   ReadTask(int sock, uint length);
-  virtual ~ReadTask();
+  ~ReadTask() override;
 
-  bool run();
-
- private:
-  ReadTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

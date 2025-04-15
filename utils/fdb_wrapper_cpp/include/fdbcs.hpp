@@ -21,6 +21,12 @@
 #include <iostream>
 #include <thread>
 #include <memory>
+#include <vector>
+#include <unordered_map>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/lexical_cast.hpp>
 
 // https://apple.github.io/foundationdb/api-c.html
 // We have to define `FDB_API_VERSION` before include `fdb_c.h` header.
@@ -44,6 +50,8 @@ class Transaction
   explicit Transaction(FDBTransaction* tnx);
   ~Transaction();
 
+  // Tries to atomically (during one transaction) swap keys.
+  bool swap(const ByteArray &key1, const ByteArray &key2);
   // Sets a given `key` and given `value`.
   void set(const ByteArray& key, const ByteArray& value) const;
   // Gets a `value` by the given `key`.
@@ -102,6 +110,104 @@ class DataBaseCreator
  public:
   // Creates a `FDBDataBase` from the given `clusterFilePath` (path to the cluster file).
   static std::shared_ptr<FDBDataBase> createDataBase(const std::string clusterFilePath);
+};
+
+using Block = std::pair<uint32_t, std::string>;
+using Key = std::string;
+using Keys = std::vector<Key>;
+// Maps a key to associated block.
+using KeyBlockMap = std::unordered_map<Key, Block>;
+using TreeLevelNumKeysMap = std::unordered_map<uint32_t, uint32_t>;
+
+// Represents an abstract class for key generators.
+class KeyGenerator
+{
+ public:
+  virtual ~KeyGenerator()
+  {
+  }
+  virtual Key generateKey() = 0;
+  virtual uint32_t getKeySize() = 0;
+};
+
+class BoostUIDKeyGenerator : public KeyGenerator
+{
+ public:
+  Key generateKey() override;
+  uint32_t getKeySize() override;
+};
+
+// This class represetns a machinery to handle a data `blob`.
+class BlobHandler
+{
+ public:
+  BlobHandler(std::shared_ptr<KeyGenerator> keyGen, uint32_t blockSizeInBytes = 100000)
+   : keyGen_(keyGen), blockSizeInBytes_(blockSizeInBytes)
+  {
+    // Block size in 100KB shows the best performance.
+    keySizeInBytes_ = keyGen_->getKeySize();
+    assert(keySizeInBytes_);
+    assert(blockSizeInBytes_);
+    assert((keySizeInBytes_ + keyBlockIdentifier.size()) <= blockSizeInBytes_);
+    numKeysInBlock_ = (blockSizeInBytes_ - keyBlockIdentifier.size()) / keySizeInBytes_;
+    assert(blockSizeInBytes_ > dataBlockIdentifier.size());
+    dataBlockSizeInBytes_ = (blockSizeInBytes_ - dataBlockIdentifier.size());
+  }
+
+  // Writes the given `blob` with given `key`.
+  // The semantic of this `write` is not atomic, it splits the data into multiple fdb transactions, if one of
+  // this transaction fails, we should call `removeBlob` to clear data which were written partially, and then
+  // try to `writeBlob` again.
+  bool writeBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key, const ByteArray& blob);
+
+  // This function:
+  // 1) Checks if blob with the same key exists if not, uses `writeBlob` function.
+  // 2) Creates a new tree with a new key.
+  // 3) Atomically (during one fdb transaction) swaps root nodes for the original tree and new tree.
+  // 4) Removes original tree.
+  bool writeOrUpdateBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key,
+                         const ByteArray& blob);
+
+  // Reads `blob` by the given `key`, on error returns false.
+  std::pair<bool, std::string> readBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key);
+
+  // Read blocks of the data based on the given `keys` starting from `index` position in keys vector
+  // and taking in account the max size of transaction.
+  // If `DataBlock` reached in a tree (leaf nodes), sets `dataBlockReached` flag to true.
+  std::pair<bool, std::vector<Block>> readBlocks(std::shared_ptr<FDBCS::FDBDataBase> database,
+                                                 const std::vector<ByteArray>& keys, uint32_t& index,
+                                                 bool& dataBlockReached);
+
+  // Removes a `blob` by the given `key`, on error returns false.
+  // The semantic of this `remove` is not atomic, it splits keys to remove into multiple fdb transactions, if
+  // one of this transaction fails, we should call `removeBlob` again to remove keys, which were not removed.
+  bool removeBlob(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key);
+
+  // Checks if key exis.
+  bool keyExists(std::shared_ptr<FDBCS::FDBDataBase> database, const ByteArray& key);
+
+ private:
+  size_t insertData(Block& block, const std::string& blob, const size_t offset);
+  void insertKey(Block& block, const std::string& value);
+  std::pair<bool, Keys> getKeysFromBlock(const Block& block);
+  Keys generateKeys(const uint32_t num);
+  bool isDataBlock(const Block& block);
+  bool commitKeys(std::shared_ptr<FDBCS::FDBDataBase> database, KeyBlockMap& keyBlockMap, const Keys& keys);
+  bool commitKey(std::shared_ptr<FDBCS::FDBDataBase> database, const Key& key, const ByteArray& value);
+  bool removeKeys(std::shared_ptr<FDBCS::FDBDataBase> database, const Keys& keys);
+  TreeLevelNumKeysMap computeNumKeysForEachTreeLevel(const int32_t treeLen, const uint32_t numBlocks);
+  inline float log(const uint32_t base, const uint32_t value);
+
+  std::shared_ptr<KeyGenerator> keyGen_;
+  uint32_t blockSizeInBytes_;
+  uint32_t keySizeInBytes_;
+  uint32_t numKeysInBlock_;
+  uint32_t dataBlockSizeInBytes_;
+  // FIXME: Doc says that 10MB is limit, currently taking in account `key` size and `value` size, but 10MB
+  // limit returns error on transaction.
+  const uint32_t maxTnxSize_{8192000};
+  const std::string keyBlockIdentifier{"K"};
+  const std::string dataBlockIdentifier{"D"};
 };
 
 bool setAPIVersion();

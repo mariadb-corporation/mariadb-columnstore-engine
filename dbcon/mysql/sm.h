@@ -60,14 +60,14 @@ const int SQL_NOT_FOUND = -1000;
 const int SQL_KILLED = -1001;
 const int CALPONT_INTERNAL_ERROR = -1007;
 
-//#if IDB_SM_DEBUG
-// extern std::ofstream smlog;
-//#define SMDEBUGLOG smlog
-//#else
+// #if IDB_SM_DEBUG
+//  extern std::ofstream smlog;
+// #define SMDEBUGLOG smlog
+// #else
 #define SMDEBUGLOG \
   if (false)       \
   std::cout
-//#endif
+// #endif
 extern const std::string DEFAULT_SAVE_PATH;
 
 typedef uint64_t tableid_t;
@@ -84,9 +84,7 @@ typedef struct Column
   Column() : tableID(-1)
   {
   }
-  ~Column()
-  {
-  }
+  ~Column() = default;
   int tableID;
   int colPos;
   int dataType;
@@ -132,17 +130,23 @@ struct Profiler
 struct cpsm_tplsch_t
 {
   cpsm_tplsch_t()
-   : tableid(0), rowsreturned(0), rowGroup(0), traceFlags(0), bandID(0), saveFlag(0), bandsReturned(0), ctp(0)
+   : tableid(0)
+   , rowsreturned(0)
+   , rowGroup(nullptr)
+   , traceFlags(0)
+   , bandID(0)
+   , saveFlag(0)
+   , bandsReturned(0)
+   , ctp(0)
   {
   }
   ~cpsm_tplsch_t()
   {
-    delete rowGroup;
   }
 
   tableid_t tableid;
   uint64_t rowsreturned;
-  rowgroup::RowGroup* rowGroup;
+  std::shared_ptr<rowgroup::RowGroup> rowGroup;
   messageqcpp::ByteStream bs;  // rowgroup bytestream. need to stay with the life span of rowgroup
   uint32_t traceFlags;
   // @bug 649
@@ -158,7 +162,7 @@ struct cpsm_tplsch_t
   {
     if (!rowGroup)
     {
-      rowGroup = new rowgroup::RowGroup();
+      rowGroup.reset(new rowgroup::RowGroup());
       rowGroup->deserialize(bs);
     }
     else
@@ -173,7 +177,7 @@ struct cpsm_tplsch_t
 
   uint16_t getStatus()
   {
-    idbassert(rowGroup != 0);
+    idbassert(rowGroup != nullptr);
     return rowGroup->getStatus();
   }
 
@@ -280,6 +284,7 @@ struct cpsm_tplh_t
   uint16_t saveFlag;
   int bandsInTable;
 };
+typedef std::shared_ptr<cpsm_tplh_t> sp_cpsm_tplh_t;
 
 struct cpsm_tid_t
 {
@@ -293,11 +298,11 @@ struct cpsm_tid_t
 extern status_t sm_init(uint32_t, cpsm_conhdl_t**, uint32_t columnstore_local_query = false);
 extern status_t sm_cleanup(cpsm_conhdl_t*);
 
-extern status_t tpl_open(tableid_t, cpsm_tplh_t*, cpsm_conhdl_t*);
+extern status_t tpl_open(tableid_t, sp_cpsm_tplh_t&, cpsm_conhdl_t*);
 extern status_t tpl_scan_open(tableid_t, sp_cpsm_tplsch_t&, cpsm_conhdl_t*);
-extern status_t tpl_scan_fetch(sp_cpsm_tplsch_t&, cpsm_conhdl_t*, int* k = 0);
+extern status_t tpl_scan_fetch(sp_cpsm_tplsch_t&, cpsm_conhdl_t*, int* k = nullptr);
 extern status_t tpl_scan_close(sp_cpsm_tplsch_t&);
-extern status_t tpl_close(cpsm_tplh_t*, cpsm_conhdl_t**, querystats::QueryStats& stats, bool ask_4_stats,
+extern status_t tpl_close(sp_cpsm_tplh_t&, cpsm_conhdl_t**, querystats::QueryStats& stats, bool ask_4_stats,
                           bool clear_scan_ctx = false);
 
 }  // namespace sm

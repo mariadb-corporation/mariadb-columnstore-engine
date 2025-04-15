@@ -79,6 +79,12 @@ class IDBDataFile;
 
 namespace BRM
 {
+#define EM_MAGIC_V1 0x76f78b1c
+#define EM_MAGIC_V2 0x76f78b1d
+#define EM_MAGIC_V3 0x76f78b1e
+#define EM_MAGIC_V4 0x76f78b1f
+#define EM_MAGIC_V5 0x76f78b20
+
 using PartitionNumberT = uint32_t;
 using DBRootT = uint16_t;
 using SegmentT = uint16_t;
@@ -156,8 +162,9 @@ struct EMCasualPartition_struct
     int64_t hiVal;
   };
   EXPORT EMCasualPartition_struct();
-  EXPORT EMCasualPartition_struct(const int64_t lo, const int64_t hi, const int32_t seqNum);
-  EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, const int32_t seqNum);
+  EXPORT EMCasualPartition_struct(int64_t lo, int64_t hi, int32_t seqNum);
+  EXPORT EMCasualPartition_struct(const int128_t bigLo, const int128_t bigHi, int32_t seqNum);
+  EXPORT EMCasualPartition_struct(int64_t lo, int64_t hi, int32_t seqNum, char status);
   EXPORT EMCasualPartition_struct(const EMCasualPartition_struct& em);
   EXPORT EMCasualPartition_struct& operator=(const EMCasualPartition_struct& em);
 };
@@ -182,6 +189,8 @@ struct EMEntry
   int16_t status;  // extent avail for query or not, or out of service
   EMPartition_t partition;
   EXPORT EMEntry();
+  EMEntry(const InlineLBIDRange& range, int fileID, uint32_t bOffset, HWM_t hwm, PartitionNumberT pNum,
+          uint16_t sNum, DBRootT dRoot, uint16_t cWid, int16_t s, EMPartition_t partition);
   EXPORT EMEntry(const EMEntry&);
   EXPORT EMEntry& operator=(const EMEntry&);
   EXPORT bool operator<(const EMEntry&) const;
@@ -255,12 +264,18 @@ class ExtentMapRBTreeImpl
 
   static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly = false);
 
+  static void refreshShmWithLock()
+  {
+    boost::mutex::scoped_lock lk(fInstanceMutex);
+    return refreshShm();
+  }
+
   static void refreshShm()
   {
     if (fInstance)
     {
       delete fInstance;
-      fInstance = NULL;
+      fInstance = nullptr;
     }
   }
 
@@ -304,15 +319,22 @@ class ExtentMapRBTreeImpl
 class FreeListImpl
 {
  public:
-  ~FreeListImpl(){};
+  ~FreeListImpl() = default;
 
   static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
+
+  static void refreshShmWithLock()
+  {
+    boost::mutex::scoped_lock lk(fInstanceMutex);
+    return refreshShm();
+  }
+
   static void refreshShm()
   {
     if (fInstance)
     {
       delete fInstance;
-      fInstance = NULL;
+      fInstance = nullptr;
     }
   }
 
@@ -364,7 +386,7 @@ class FreeListImpl
 class ExtentMapIndexImpl
 {
  public:
-  ~ExtentMapIndexImpl(){};
+  ~ExtentMapIndexImpl() = default;
 
   static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
   static void refreshShm()
@@ -482,7 +504,7 @@ class ExtentMap : public Undoable
 {
  public:
   EXPORT ExtentMap();
-  EXPORT ~ExtentMap();
+  EXPORT ~ExtentMap() override;
 
   /** @brief Loads the ExtentMap entries from a file
    *
@@ -987,9 +1009,9 @@ class ExtentMap : public Undoable
 
   EXPORT void setReadOnly();
 
-  EXPORT virtual void undoChanges();
+  EXPORT void undoChanges() override;
 
-  EXPORT virtual void confirmChanges();
+  EXPORT void confirmChanges() override;
 
   EXPORT int markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
   EXPORT int markInvalid(const std::vector<LBID_t>& lbids,

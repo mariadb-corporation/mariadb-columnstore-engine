@@ -15,15 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <unistd.h>
 #include <string>
 #include <iostream>
-#include <stdio.h>
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <signal.h>
+#include <csignal>
 
 using namespace std;
 
@@ -54,7 +48,7 @@ class ServiceStorageManager : public Service, public Opt
   void setupChildSignalHandlers();
 
  public:
-  ServiceStorageManager(const Opt& opt) : Service("StorageManager"), Opt(opt)
+  explicit ServiceStorageManager(const Opt& opt) : Service("StorageManager"), Opt(opt)
   {
   }
   void LogErrno() override
@@ -74,14 +68,14 @@ class ServiceStorageManager : public Service, public Opt
 
 bool signalCaught = false;
 
-void printCacheUsage(int sig)
+void printCacheUsage(int /*sig*/)
 {
   Cache::get()->validateCacheSize();
   cout << "Current cache size = " << Cache::get()->getCurrentCacheSize() << endl;
   cout << "Cache element count = " << Cache::get()->getCurrentCacheElementCount() << endl;
 }
 
-void printKPIs(int sig)
+void printKPIs(int /*sig*/)
 {
   IOCoordinator::get()->printKPIs();
   Cache::get()->printKPIs();
@@ -120,29 +114,29 @@ void ServiceStorageManager::setupChildSignalHandlers()
 
   sa.sa_handler = shutdownSM;
   for (int sig : shutdownSignals)
-    sigaction(sig, &sa, NULL);
+    sigaction(sig, &sa, nullptr);
 
   sa.sa_handler = coreSM;
   for (int sig : coreSignals)
-    sigaction(sig, &sa, NULL);
+    sigaction(sig, &sa, nullptr);
 
   sa.sa_handler = SIG_IGN;
-  sigaction(SIGPIPE, &sa, NULL);
+  sigaction(SIGPIPE, &sa, nullptr);
 
   sa.sa_handler = printCacheUsage;
-  sigaction(SIGUSR1, &sa, NULL);
+  sigaction(SIGUSR1, &sa, nullptr);
 
   sa.sa_handler = printKPIs;
-  sigaction(SIGUSR2, &sa, NULL);
+  sigaction(SIGUSR2, &sa, nullptr);
 }
 
 int ServiceStorageManager::Child()
 {
   SMLogging* logger = SMLogging::get();
-  IOCoordinator* ioc = NULL;
-  Cache* cache = NULL;
-  Synchronizer* sync = NULL;
-  Replicator* rep = NULL;
+  IOCoordinator* ioc = nullptr;
+  Cache* cache = nullptr;
+  Synchronizer* sync = nullptr;
+  Replicator* rep = nullptr;
 
   /* Instantiate objects to have them verify config settings before continuing */
   try

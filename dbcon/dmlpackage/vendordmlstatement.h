@@ -23,10 +23,11 @@
 /** @file */
 #pragma once
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 #include <bitset>
-#include <stdint.h>
+#include <cstdint>
 #include "dmlpkg.h"
 
 #define EXPORT
@@ -57,7 +58,7 @@ class VendorDMLStatement
   EXPORT VendorDMLStatement(std::string dmlstatement, int stmttype, std::string tName, std::string schema,
                             int rows, int columns, ColNameList& colNameList, TableValuesMap& tableValuesMap,
                             NullValuesBitset& nullValues, int sessionID);
- 
+
   /** @brief destructor
    */
   EXPORT ~VendorDMLStatement();
@@ -73,7 +74,7 @@ class VendorDMLStatement
    */
   inline void set_TableName(std::string value)
   {
-    fTableName = value;
+    fTableName = std::move(value);
   }
 
   /** @brief Get the schema name
@@ -87,7 +88,7 @@ class VendorDMLStatement
    */
   inline void set_SchemaName(std::string value)
   {
-    fSchema = value;
+    fSchema = std::move(value);
   }
 
   /** @brief Get the DML statVendorDMLStatement classement type
@@ -115,7 +116,7 @@ class VendorDMLStatement
    */
   inline void set_DMLStatement(std::string dmlStatement)
   {
-    fDMLStatement = dmlStatement;
+    fDMLStatement = std::move(dmlStatement);
   }
 
   /** @brief Get the number of rows
@@ -157,7 +158,7 @@ class VendorDMLStatement
    */
   inline void set_DataBuffer(std::string value)
   {
-    fDataBuffer = value;
+    fDataBuffer = std::move(value);
   }
   /** @brief Get the session ID
    */

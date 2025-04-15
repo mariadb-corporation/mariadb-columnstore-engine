@@ -68,6 +68,7 @@ using namespace oam;
 using namespace joblist;
 
 #include "atomicops.h"
+#include "threadnaming.h"
 
 namespace
 {
@@ -131,6 +132,7 @@ struct EngineCommRunner
   uint32_t connIndex;
   void operator()()
   {
+    utils::setThreadName("DECRunner");
     // cout << "Listening on client at 0x" << hex << (ptrdiff_t)client << dec << endl;
     try
     {

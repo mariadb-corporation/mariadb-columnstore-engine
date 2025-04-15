@@ -27,14 +27,14 @@ class PseudoCC : public ColumnCommand
 {
  public:
   PseudoCC();
-  virtual ~PseudoCC();
+  ~PseudoCC() override;
 
-  virtual SCommand duplicate();
-  virtual void createCommand(messageqcpp::ByteStream&);
-  virtual void resetCommand(messageqcpp::ByteStream&);
+  SCommand duplicate() override;
+  void createCommand(messageqcpp::ByteStream&) override;
+  void resetCommand(messageqcpp::ByteStream&) override;
 
  protected:
-  virtual void loadData();
+  void loadData() override;
 
  private:
   template <typename W>
@@ -102,7 +102,7 @@ template <typename W>
 void PseudoCC::loadSegmentNum()
 {
   uint16_t segNum;
-  rowgroup::getLocationFromRid(bpp->baseRid, NULL, &segNum, NULL, NULL);
+  rowgroup::getLocationFromRid(bpp->baseRid, nullptr, &segNum, nullptr, nullptr);
   loadSingleValue<W>(segNum);
 }
 
@@ -110,7 +110,7 @@ template <typename W>
 void PseudoCC::loadPartitionNum()
 {
   uint32_t partNum;
-  rowgroup::getLocationFromRid(bpp->baseRid, &partNum, NULL, NULL, NULL);
+  rowgroup::getLocationFromRid(bpp->baseRid, &partNum, nullptr, nullptr, nullptr);
   loadSingleValue<W>(partNum);
 }
 

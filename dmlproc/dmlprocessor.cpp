@@ -1316,7 +1316,10 @@ int DMLServer::start()
   }
 }
 
-DMLProcessor::DMLProcessor(messageqcpp::IOSocket ios, BRM::DBRM* aDbrm) : fIos(ios), fDbrm(aDbrm)
+DMLProcessor::DMLProcessor(messageqcpp::IOSocket ios, BRM::DBRM* aDbrm)
+  : fIos(ios)
+  , fDbrm(aDbrm)
+  , fConcurrentSupport(false)
 {
   csc = CalpontSystemCatalog::makeCalpontSystemCatalog();
   csc->identity(CalpontSystemCatalog::EC);

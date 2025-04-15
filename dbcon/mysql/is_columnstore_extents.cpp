@@ -187,7 +187,6 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
     if (schema_table_store_record(thd, table))
     {
-      delete emp;
       return 1;
     }
 
@@ -202,7 +201,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   BRM::OID_t cond_oid = 0;
   TABLE* table = tables->table;
 
-  BRM::DBRM::refreshShm();
+  BRM::DBRM::refreshShmWithLock();
   BRM::DBRM* emp = new BRM::DBRM();
 
   if (!emp || !emp->isDBRMReady())
@@ -289,7 +288,6 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       return 1;
   }
 
-  delete emp;
   return 0;
 }
 

@@ -268,12 +268,12 @@ class TupleJoiner
   /* ctor to use for numeric join */
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               uint32_t smallJoinColumn, uint32_t largeJoinColumn, joblist::JoinType jt,
-              threadpool::ThreadPool* jsThreadPool);
+              threadpool::ThreadPool* jsThreadPool, const uint64_t numCores);
 
   /* ctor to use for string & compound join */
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
-              joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool);
+              joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, const uint64_t numCores);
 
   ~TupleJoiner();
 

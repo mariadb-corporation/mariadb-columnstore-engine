@@ -1,0 +1,24 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5889;
+--enable_warnings
+CREATE DATABASE MCOL5889;
+USE MCOL5889;
+
+CREATE TABLE t1 (f1 DECIMAL, f2 BIGINT, f3 DOUBLE) ENGINE=columnstore;
+CREATE TABLE t2 (f1 DECIMAL, f2 INT, f3 DOUBLE) ENGINE=columnstore;
+INSERT INTO t1 VALUES (1, 2, 3), (2, 3, 4), (3, 4, 5);
+INSERT INTO t2 VALUES (4, 5, 6), (5, 6, 7), (6, 7, 8);
+
+--sorted_result
+SELECT f1, f2, f3, f2 * f3 FROM
+(
+  SELECT f1, f2, AVG(f3) f3 FROM
+  (
+    SELECT f1, f2, f3 FROM t1
+    UNION ALL
+    SELECT f1, f2, f3 FROM t2
+  ) U
+  GROUP BY f1
+) V;
+
+DROP DATABASE MCOL5889;

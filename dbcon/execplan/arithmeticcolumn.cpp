@@ -300,12 +300,12 @@ const string ArithmeticColumn::toString() const
   if (fAlias.length() > 0)
     oss << "Alias: " << fAlias << endl;
 
-  if (fExpression != 0)
-    fExpression->walk(walkfn, oss);
-
   oss << "expressionId=" << fExpressionId << endl;
   oss << "joinInfo=" << fJoinInfo << " returnAll=" << fReturnAll << " sequence#=" << fSequence << endl;
   oss << "resultType=" << colDataTypeToString(fResultType.colDataType) << "|" << fResultType.colWidth << endl;
+  if (fExpression != 0)
+    fExpression->walk(walkfn, oss);
+
   return oss.str();
 }
 

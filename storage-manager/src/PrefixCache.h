@@ -39,7 +39,8 @@ namespace storagemanager
 class PrefixCache : public boost::noncopyable
 {
  public:
-  PrefixCache(const boost::filesystem::path& prefix);
+  PrefixCache() = delete;
+  explicit PrefixCache(const boost::filesystem::path& prefix);
   virtual ~PrefixCache();
 
   // reading fcns
@@ -82,8 +83,6 @@ class PrefixCache : public boost::noncopyable
   void validateCacheSize();
 
  private:
-  PrefixCache();
-
   boost::filesystem::path cachePrefix;
   boost::filesystem::path journalPrefix;
   boost::filesystem::path firstDir;

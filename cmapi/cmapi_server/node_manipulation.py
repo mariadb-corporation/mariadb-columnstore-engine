@@ -61,7 +61,7 @@ def switch_node_maintenance(
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    rebalance_dbroots: bool = True
+    use_rebalance_dbroots: bool = True
 ):
     """Add node to a cluster.
 
@@ -86,8 +86,8 @@ def add_node(
     :type input_config_filename: str, optional
     :param output_config_filename: mcs output config path, defaults to None
     :type output_config_filename: Optional[str], optional
-    :param rebalance_dbroots: rebalance dbroots or not, defaults to True
-    :type rebalance_dbroots: bool, optional
+    :param use_rebalance_dbroots: rebalance dbroots or not, defaults to True
+    :type use_rebalance_dbroots: bool, optional
     """
     node_config = NodeConfig()
     c_root = node_config.get_current_config_root(input_config_filename)
@@ -100,7 +100,7 @@ def add_node(
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
-            if rebalance_dbroots:
+            if use_rebalance_dbroots:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
     except Exception:
@@ -116,24 +116,40 @@ def add_node(
             node_config.write_config(c_root, filename=output_config_filename)
 
 
-# deactivate_only is a bool that indicates whether the node is being removed completely from
-# the cluster, or whether it has gone offline and should still be monitored in case it comes back.
-# Note!  this does not pick a new primary node, use the move_primary_node() fcn to change that.
 def remove_node(
-    node, input_config_filename=DEFAULT_MCS_CONF_PATH,
-    output_config_filename=None, deactivate_only=False,
-    rebalance_dbroots = True, **kwargs
+    node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
+    output_config_filename: Optional[str] = None,
+    deactivate_only: bool = True,
+    use_rebalance_dbroots: bool = True, **kwargs
 ):
+    """Remove node from a cluster.
+
+    - Rebuild the PMS section w/o node
+    - Remove the DBRM_Worker entry
+    - Remove the WES entry
+    - Rebuild the "Module*" entries w/o node
+    - Update the list of active / inactive / desired nodes
+
+    :param node: node address or hostname
+    :type node: str
+    :param input_config_filename: mcs input config path,
+                                  defaults to DEFAULT_MCS_CONF_PATH
+    :type input_config_filename: str, optional
+    :param output_config_filename: mcs output config path, defaults to None
+    :type output_config_filename: Optional[str], optional
+    :param deactivate_only: indicates whether the node is being removed
+                            completely from the cluster, or whether it has gone
+                            offline and should still be monitored in case it
+                            comes back.
+                            Note!  this does not pick a new primary node,
+                            use the move_primary_node() fcn to change that.,
+                            defaults to True
+    :type deactivate_only: bool, optional
+    :param use_rebalance_dbroots: rebalance dbroots or not, defaults to True
+    :type use_rebalance_dbroots: bool, optional
+    """
     node_config = NodeConfig()
     c_root = node_config.get_current_config_root(input_config_filename)
-
-    '''
-        Rebuild the PMS section w/o node
-        Remove the DBRM_Worker entry
-        Remove the WES entry
-        Rebuild the "Module*" entries w/o node
-        Update the list of active / inactive / desired nodes
-    '''
 
     try:
         active_nodes = helpers.get_active_nodes(input_config_filename)
@@ -151,7 +167,7 @@ def remove_node(
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
 
-            if rebalance_dbroots:
+            if use_rebalance_dbroots:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
         else:

@@ -45,7 +45,7 @@ class Row : public DMLObject
 
   /** @brief dtor
    */
-  EXPORT ~Row();
+  EXPORT ~Row() override;
 
   /** @brief copy constructor
    */
@@ -55,13 +55,13 @@ class Row : public DMLObject
    *
    * @param bytestream the ByteStream to read from
    */
-  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  EXPORT int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief write a Row to a ByteStream
    *
    * @param bytestream the ByteStream to write to
    */
-  EXPORT int write(messageqcpp::ByteStream& bytestream);
+  EXPORT int write(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief get the list of columns in the row
    */

@@ -67,7 +67,7 @@ namespace execplan
  * immediately, causing all subsequent references to fail.  This only affects
  * 'leakcheck'.
  */
-//#define DESTROYSHMSEG
+// #define DESTROYSHMSEG
 
 class SessionManager
 {
@@ -94,7 +94,7 @@ class SessionManager
    * and no operation other than reset() should be performed on a
    * SessionManager instantiated with this.
    */
-  SessionManager(bool nolock);
+  explicit SessionManager(bool nolock);
 
   /** @brief Destructor
    *
@@ -211,4 +211,3 @@ class SessionManager
 };
 
 }  // namespace execplan
-

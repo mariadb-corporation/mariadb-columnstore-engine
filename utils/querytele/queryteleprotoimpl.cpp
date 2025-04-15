@@ -23,12 +23,15 @@ using namespace std;
 #define BOOST_DISABLE_ASSERTS
 #include <boost/thread.hpp>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-override"
 #include "thrift/transport/TSocket.h"
 #include "thrift/transport/TBufferTransports.h"
 namespace att = apache::thrift::transport;
 
 #include "thrift/protocol/TBinaryProtocol.h"
 namespace atp = apache::thrift::protocol;
+#pragma GCC diagnostic pop
 
 #include "atomicops.h"
 
@@ -92,8 +95,7 @@ string get_trace_file()
 void log_query(const querytele::QueryTele& qtdata)
 {
   ofstream trace(get_trace_file().c_str(), ios::out | ios::app);
-  trace << "Query," << qtdata.query_uuid << ","
-        << ",";  // skip step uuid
+  trace << "Query," << qtdata.query_uuid << "," << ",";  // skip step uuid
 
   if (qtdata.msg_type == querytele::QTType::QT_SUMMARY)
     trace << "SUMMARY,";

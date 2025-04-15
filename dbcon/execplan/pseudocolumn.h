@@ -62,7 +62,7 @@ class PseudoColumn : public SimpleColumn
    * Constructors
    */
   PseudoColumn();
-  PseudoColumn(const uint32_t pseudoType);
+  explicit PseudoColumn(const uint32_t pseudoType);
   PseudoColumn(const std::string& token, const uint32_t pseudoType, const uint32_t sessionID = 0);
   PseudoColumn(const std::string& schema, const std::string& table, const std::string& col,
                const uint32_t pseudoType, const uint32_t sessionID = 0);
@@ -74,13 +74,13 @@ class PseudoColumn : public SimpleColumn
   /**
    * Destructor
    */
-  virtual ~PseudoColumn();
+  ~PseudoColumn() override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual PseudoColumn* clone() const override
+  inline PseudoColumn* clone() const override
   {
     return new PseudoColumn(*this);
   }
@@ -106,17 +106,17 @@ class PseudoColumn : public SimpleColumn
   /**
    * The serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -130,7 +130,7 @@ class PseudoColumn : public SimpleColumn
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -141,7 +141,7 @@ class PseudoColumn : public SimpleColumn
 
   static uint32_t pseudoNameToType(std::string& name);
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   /**

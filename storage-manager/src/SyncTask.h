@@ -24,13 +24,11 @@ namespace storagemanager
 class SyncTask : public PosixTask
 {
  public:
+  SyncTask() = delete;
   SyncTask(int sock, uint length);
-  virtual ~SyncTask();
+  ~SyncTask() override;
 
-  bool run();
-
- private:
-  SyncTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

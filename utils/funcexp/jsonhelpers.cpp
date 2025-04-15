@@ -32,7 +32,7 @@ bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullSt
   int strLen = jsLen * 12 * jsCS->mbmaxlen / jsCS->mbminlen;
   char* buf = (char*)alloca(strLen);
   if ((strLen = json_escape(retCS, (const uchar*)rawJS, (const uchar*)rawJS + jsLen, jsCS, (uchar*)buf,
-                            (uchar*)buf + strLen)) > 0)
+                            (uchar*)buf + strLen)) >= 0)
   {
     buf[strLen] = '\0';
     ret.append(buf, strLen);

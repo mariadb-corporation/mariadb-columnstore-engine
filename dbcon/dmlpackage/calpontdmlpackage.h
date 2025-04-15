@@ -188,7 +188,7 @@ class CalpontDMLPackage
   {
     fTableName = tableName;
 
-    if (fTable != 0)
+    if (fTable != nullptr)
       fTable->set_TableName(tableName);
   }
 
@@ -207,7 +207,7 @@ class CalpontDMLPackage
   {
     fSchemaName = schemaName;
 
-    if (fTable != 0)
+    if (fTable != nullptr)
       fTable->set_SchemaName(schemaName);
   }
 

@@ -33,9 +33,9 @@ class WF_row_number : public WindowFunctionType
   }
 
   // pure virtual in base
-  void operator()(int64_t b, int64_t e, int64_t c);
-  WindowFunctionType* clone() const;
-  void resetData();
+  void operator()(int64_t b, int64_t e, int64_t c) override;
+  WindowFunctionType* clone() const override;
+  void resetData() override;
 
   static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
 
@@ -44,4 +44,3 @@ class WF_row_number : public WindowFunctionType
 };
 
 }  // namespace windowfunction
-

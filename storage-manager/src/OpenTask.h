@@ -24,13 +24,11 @@ namespace storagemanager
 class OpenTask : public PosixTask
 {
  public:
+  OpenTask() = delete;
   OpenTask(int sock, uint length);
-  virtual ~OpenTask();
+  ~OpenTask() override;
 
-  bool run();
-
- private:
-  OpenTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

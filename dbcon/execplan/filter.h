@@ -60,14 +60,14 @@ class Filter : public TreeNode
    * Constructors
    */
   Filter();
-  Filter(const std::string& sql);
+  explicit Filter(const std::string& sql);
   // not needed yet
   // Filter(const Filter& rhs);
 
   /**
    * Destructors
    */
-  virtual ~Filter();
+  ~Filter() override;
   /**
    * Accessor Methods
    */
@@ -75,15 +75,15 @@ class Filter : public TreeNode
   /**
    * Operations
    */
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
-  virtual const std::string data() const override
+  const std::string data() const override
   {
     return fData;
   }
-  virtual void data(const std::string data) override
+  void data(const std::string data) override
   {
     fData = data;
   }
@@ -92,7 +92,7 @@ class Filter : public TreeNode
    *
    * deep copy of this pointer and return the copy
    */
-  inline virtual Filter* clone() const override
+  inline Filter* clone() const override
   {
     return new Filter(*this);
   }
@@ -100,15 +100,15 @@ class Filter : public TreeNode
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return true iff every member of t is a duplicate copy of every member of this; false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -122,7 +122,7 @@ class Filter : public TreeNode
    * Do a deep, strict (as opposed to semantic) equivalence test.
    * @return false iff every member of t is a duplicate copy of every member of this; true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -133,9 +133,9 @@ class Filter : public TreeNode
 
   /** @brief test if this filter can be combined with the argument filter
    *  This is for operation combine optimization
-   *  @param f the filter that this fiter tries to combine with
+   *  @param f the filter that this filter tries to combine with
    *  @param op the operator that connects the two filters. if one or both of the
-   *  two filters is constantFilter, need to make sure operator is consistant.
+   *  two filters is constantFilter, need to make sure operator is consistent.
    *  @return a filter(constantfilter) if successfully combined. otherwise
    *     	 return NULL
    * For Oracle front end. Deprecated now.

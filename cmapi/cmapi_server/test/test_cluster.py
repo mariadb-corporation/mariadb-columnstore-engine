@@ -147,7 +147,7 @@ class ClusterModesetTestCase(BaseClusterTestCase):
         )
         error = resp.json()['error']
         self.assertEqual(resp.status_code, 422)
-        self.assertEqual(error, 'No master found in the cluster.')
+        self.assertEqual(error, 'There are no nodes in the cluster.')
 
     def test_add_node_and_set_readonly(self):
         payload = {'node': socket.gethostname()}

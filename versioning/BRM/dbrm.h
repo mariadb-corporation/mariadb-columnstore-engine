@@ -101,11 +101,11 @@ class DBRM
   EXPORT DBRM(bool noBRMFcns = false);
   EXPORT ~DBRM();
 
-  EXPORT static void refreshShm()
+  static void refreshShmWithLock()
   {
-    MasterSegmentTableImpl::refreshShm();
-    ExtentMapRBTreeImpl::refreshShm();
-    FreeListImpl::refreshShm();
+    MasterSegmentTableImpl::refreshShmWithLock();
+    ExtentMapRBTreeImpl::refreshShmWithLock();
+    FreeListImpl::refreshShmWithLock();
   }
 
   // @bug 1055+ - Added functions below for multiple files per OID enhancement.

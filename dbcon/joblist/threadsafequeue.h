@@ -28,8 +28,6 @@
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 
-
-
 namespace joblist
 {
 struct TSQSize_t
@@ -56,7 +54,7 @@ class ThreadSafeQueue
    *
    * @warning this class takes ownership of the passed-in pointers.
    */
-  ThreadSafeQueue(boost::mutex* pimplLock = 0, boost::condition* pimplCond = 0)
+  ThreadSafeQueue(boost::mutex* pimplLock = nullptr, boost::condition* pimplCond = nullptr)
    : fShutdown(false), bytes(0), zeroCount(0)
   {
     fPimplLock.reset(pimplLock);
@@ -113,7 +111,7 @@ class ThreadSafeQueue
    */
   T& front()
   {
-    if (fPimplLock == 0 || fPimplCond == 0)
+    if (fPimplLock == nullptr || fPimplCond == nullptr)
       throw std::runtime_error("TSQ: front(): no sync!");
 
     boost::mutex::scoped_lock lk(*fPimplLock);
@@ -140,7 +138,7 @@ class ThreadSafeQueue
   {
     TSQSize_t ret = {0, 0};
 
-    if (fPimplLock == 0 || fPimplCond == 0)
+    if (fPimplLock == nullptr || fPimplCond == nullptr)
       throw std::runtime_error("TSQ: push(): no sync!");
 
     if (fShutdown)
@@ -161,7 +159,7 @@ class ThreadSafeQueue
   {
     TSQSize_t ret = {0, 0};
 
-    if (fPimplLock == 0)
+    if (fPimplLock == nullptr)
       throw std::runtime_error("TSQ: pop(): no sync!");
 
     if (fShutdown)
@@ -213,7 +211,7 @@ class ThreadSafeQueue
     uint32_t curSize, workSize;
     TSQSize_t ret = {0, 0};
 
-    if (fPimplLock == 0)
+    if (fPimplLock == nullptr)
       throw std::runtime_error("TSQ: pop_some(): no sync!");
 
     t.clear();
@@ -268,7 +266,7 @@ class ThreadSafeQueue
    */
   bool empty() const
   {
-    if (fPimplLock == 0)
+    if (fPimplLock == nullptr)
       throw std::runtime_error("TSQ: empty(): no sync!");
 
     boost::mutex::scoped_lock lk(*fPimplLock);
@@ -281,7 +279,7 @@ class ThreadSafeQueue
   {
     TSQSize_t ret;
 
-    if (fPimplLock == 0)
+    if (fPimplLock == nullptr)
       throw std::runtime_error("TSQ: size(): no sync!");
 
     boost::mutex::scoped_lock lk(*fPimplLock);
@@ -298,15 +296,13 @@ class ThreadSafeQueue
   {
     fShutdown = true;
 
-    if (fPimplCond != 0)
+    if (fPimplCond != nullptr)
       fPimplCond->notify_all();
-
-    return;
   }
 
   void clear()
   {
-    if (fPimplLock == 0)
+    if (fPimplLock == nullptr)
       throw std::runtime_error("TSQ: clear(): no sync!");
 
     boost::mutex::scoped_lock lk(*fPimplLock);
@@ -315,7 +311,6 @@ class ThreadSafeQueue
       fImpl.pop();
 
     bytes = 0;
-    return;
   }
 
  private:
