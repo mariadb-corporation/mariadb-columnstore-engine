@@ -4,8 +4,8 @@
 # Variables
 enterprise_token=""
 dev_drone_key="" 
-jenkins_user="" 
-jenkins_pwd=""   
+ci_user="" 
+ci_pwd=""   
 cs_pkg_manager_version="3.10"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
@@ -706,12 +706,12 @@ Note: When deploying a cluster, --nodes required and run the same command on all
             "
 }
 
-print_jenkins_install_help_text() {
+print_ci_install_help_text() {
 
     echo "
-MariaDB Columnstore Package Manager - Jenkins Quick Cluster Install
+MariaDB Columnstore Package Manager - CI Quick Cluster Install
 
-Usage: bash $0 install jenkins [project]/[branch]/[git commit] --user [username] --password [password]
+Usage: bash $0 install ci [project]/[branch]/[git commit] --user [username] --password [password]
 
 Flags:
     -n  | --nodes               IP address (hostname -I) of nodes to be configured into a cluster, first value will be primary Example: 72.255.12.1,72.255.12.2,72.255.12.3
@@ -724,7 +724,7 @@ Flags:
     -h  | --help                Help Text
 
 Example:
-    bash $0 install jenkins ENTERPRISE/bb-10.6.14-9-cs-23.02.11-1/2d367136b3d3511ffeb53451de539d44db98ed91/ --user xxxxx --password xxxxxx
+    bash $0 install ci ENTERPRISE/bb-10.6.14-9-cs-23.02.11-1/2d367136b3d3511ffeb53451de539d44db98ed91/ --user xxxxx --password xxxxxx
 
 Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
             "
@@ -786,8 +786,8 @@ print_install_help_text() {
         dev )
             print_dev_install_help_text
             ;;
-        jenkins )
-            print_jenkins_install_help_text
+        ci )
+            print_ci_install_help_text
             ;;
         local )
             print_local_install_help_text
@@ -1436,17 +1436,17 @@ check_dev_build_exists() {
     fi;
 }
 
-check_jenkins_build_exists() {
+check_ci_build_exists() {
 
     # Use curl to check if the URL exists
-    http_status=$(curl -s -o /dev/null -w "%{http_code}" --user "$jenkins_user:$jenkins_pwd" "$jenkins_url")
+    http_status=$(curl -s -o /dev/null -w "%{http_code}" --user "$ci_user:$ci_pwd" "$ci_url")
 
     # Check if the HTTP status code is 200 (OK)
     if [ "$http_status" -eq 200 ]; then
         return 0
     else
         echo "URL does not exist or an error occurred:"
-        echo "$jenkins_url"
+        echo "$ci_url"
         exit 2
     fi
 }
@@ -2168,21 +2168,21 @@ EOF
 
 }
 
-do_jenkins_yum_install() {
+do_ci_yum_install() {
 
     # list packages
     grep_list="MariaDB-backup-*|MariaDB-client-*|MariaDB-columnstore-engine-*|MariaDB-common-*|MariaDB-server-*|MariaDB-shared-*|galera-enterprise-*|cmapi"
-    rpm_list=$(curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/ | grep -oP '(?<=href=").+?\.rpm' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
+    rpm_list=$(curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/ | grep -oP '(?<=href=").+?\.rpm' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
     
     if [ -z "$rpm_list" ]; then
         echo "No RPMs found"
-        echo "command:  curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/"
+        echo "command:  curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/"
         exit 2
     fi
 
     for rpm in $rpm_list; do
         echo "Downloading $rpm..."
-        if ! curl -s --user "$jenkins_user:$jenkins_pwd" -o "$rpm" "$jenkins_url/$os_package/$rpm"; then
+        if ! curl -s --user "$ci_user:$ci_pwd" -o "$rpm" "$ci_url/$os_package/$rpm"; then
             echo "Failed to download: $rpm"
             exit 2
         fi
@@ -2245,21 +2245,21 @@ do_jenkins_yum_install() {
     return
 }
 
-do_jenkins_apt_install() {
+do_ci_apt_install() {
     # list packages
     echo "++++++++++++++++++++++++++++++++++++++++++++"
     grep_list="mariadb-backup-*|mariadb-client-*|mariadb-plugin-columnstore-*|mariadb-common*|mariadb-server-*|mariadb-shared-*|galera-enterprise-*|cmapi|libmariadb3|mysql-common"
-    rpm_list=$(curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/ | grep -oP '(?<=href=").+?\.deb' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
+    rpm_list=$(curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/ | grep -oP '(?<=href=").+?\.deb' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
 
     if [ -z "$rpm_list" ]; then
         echo "No RPMs found"
-        echo "command:  curl -s -u $jenkins_user:$jenkins_pwd $jenkins_url/$os_package/"
+        echo "command:  curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/"
         exit 2
     fi
     
     for rpm in $rpm_list; do
         echo "Downloading $rpm..."
-        if ! curl -s --user "$jenkins_user:$jenkins_pwd" -o "$rpm" "$jenkins_url/$os_package/$rpm"; then
+        if ! curl -s --user "$ci_user:$ci_pwd" -o "$rpm" "$ci_url/$os_package/$rpm"; then
             echo "Failed to download: $rpm"
             exit 2
         fi
@@ -2301,7 +2301,7 @@ do_jenkins_apt_install() {
 
         if ! ls mariadb-columnstore-cmapi*.deb 1> /dev/null 2>&1; then
             echo "Error: No MariaDB-columnstore-cmapi RPMs were found."
-            echo "do_jenkins_apt_install:   aws s3 ls $s3_path/ "
+            echo "do_ci_apt_install:   aws s3 ls $s3_path/ "
             exit 1
         fi
     fi
@@ -2326,10 +2326,10 @@ do_jenkins_apt_install() {
 }
 
 
-jenkins_install() {
+ci_install() {
 
-    if [ -z $jenkins_user ]; then printf "Missing jenkins_user: \n"; exit; fi;
-    if [ -z $jenkins_pwd ]; then printf "Missing jenkins_pwd: \n"; exit; fi;
+    if [ -z $ci_user ]; then printf "Missing ci_user: \n"; exit; fi;
+    if [ -z $ci_pwd ]; then printf "Missing ci_pwd: \n"; exit; fi;
 
     product_branch_commit="$3"
     echo "Product/Branch/Commit: $product_branch_commit"
@@ -2338,29 +2338,29 @@ jenkins_install() {
     print_install_variables
     check_no_mdb_installed
 
-    # Construct URLs
-    jenkins_url="https://es-repo.mariadb.net/jenkins/${product_branch_commit}/"
-    echo "Jenkins URL: $jenkins_url"
+    # Construct URLs 
+    ci_url="https://es-repo.mariadb.net/jenkins/${product_branch_commit}/"
+    echo "CI URL: $ci_url"
     process_cluster_variables
     echo "###################################"
     
-    check_jenkins_build_exists
+    check_ci_build_exists
     
     if $CONFIGURE_CMAPI && [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
 
 
     case $distro_info in
         centos | rhel | rocky | almalinux )
-            jenkins_url="${jenkins_url}RPMS"
+            ci_url="${ci_url}RPMS"
             os_package="rhel-$version_id"
             if [ "$architecture" == "arm64" ]; then
                 os_package+="rhel-$version_id-arm"
             fi
-            do_jenkins_yum_install "$@" 
+            do_ci_yum_install "$@" 
             ;;
             
         ubuntu | debian )
-            jenkins_url="${jenkins_url}DEB"
+            ci_url="${ci_url}DEB"
 
             if [ "$distro_info" == "ubuntu" ]; then
                 version_formatted="${version_id_exact//.}"
@@ -2373,10 +2373,10 @@ jenkins_install() {
             if [ "$architecture" == "arm64" ]; then
                 os_package="${os_package}-arm"
             fi
-            do_jenkins_apt_install "$@" 
+            do_ci_apt_install "$@" 
             ;;
         *)  # unknown option
-            printf "\njenkins_install: os & version not implemented: $distro_info\n"
+            printf "\nci_install: os & version not implemented: $distro_info\n"
             exit 2;
     esac
 }
@@ -2576,9 +2576,9 @@ do_install() {
             # pull from dev repo - requires dev_drone_key
             dev_install "$@" ;
             ;;
-        jenkins ) 
-            # pull from jenkins repo - requires jenkins_user_name and jenkins_password
-            jenkins_install "$@" ;
+        ci ) 
+            # pull from ci repo - requires ci_user_name and ci_password
+            ci_install "$@" ;
             ;;
         local )
             # rpms/debs are already downloaded
