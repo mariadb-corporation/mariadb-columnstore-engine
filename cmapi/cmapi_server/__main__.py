@@ -36,7 +36,7 @@ def worker(app):
     repeatedly.
     """
     while True:
-        t = threading.Timer(5.0, clean_txn_by_timeout, app)
+        t = threading.Timer(5.0, clean_txn_by_timeout, args=(app,))
         t.start()
         t.join()
 
@@ -76,7 +76,7 @@ class TxnBackgroundThread(plugins.SimplePlugin):
         """Plugin entrypoint"""
 
         self.t = threading.Thread(
-            target=worker, name='TxnBackgroundThread', args=(self.app)
+            target=worker, name='TxnBackgroundThread', args=(self.app,)
         )
         self.t.daemon = True
         self.t.start()
