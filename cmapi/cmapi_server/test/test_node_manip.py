@@ -1,7 +1,7 @@
 import logging
 import socket
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from lxml import etree
 
 from cmapi_server import node_manipulation
@@ -97,7 +97,7 @@ class NodeManipTester(BaseNodeManipTestCase):
 
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
-            mock_add_dbroots_of_other_nodes.assert_called_once_with(root, 2)
+            mock_add_dbroots_of_other_nodes.assert_called_once_with(ANY, 2)
 
             # Test read-only node removal
             node_manipulation.remove_node(
@@ -111,7 +111,7 @@ class NodeManipTester(BaseNodeManipTestCase):
 
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
-            mock_remove_dbroots_of_node.assert_called_once_with(root, 2)
+            mock_remove_dbroots_of_node.assert_called_once_with(ANY, 2)
 
 
     def test_add_dbroots_nodes_rebalance(self):

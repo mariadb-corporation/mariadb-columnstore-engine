@@ -11,7 +11,6 @@ import os
 import socket
 import time
 from collections import namedtuple
-from functools import partial
 from random import random
 from shutil import copyfile
 from typing import Tuple, Optional
@@ -602,11 +601,6 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
-
-    if dbroots and nc.is_read_only():
-        logger = logging.getLogger('dbroots')
-        logger.warning(f'Config contains dbroots {dbroots} for this read-only node, ignoring')
-        return []
 
     return dbroots
 

@@ -398,7 +398,7 @@ def _remove_node(root, node):
     for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
         __remove_helper(n, node)
 
-    read_only_nodes = root.find("./ReadOnlyNodes")
+    read_only_nodes = root.find('./ReadOnlyNodes')
     if read_only_nodes is not None:
         __remove_helper(read_only_nodes, node)
 
@@ -1015,11 +1015,11 @@ def _add_WES(root, pm_num, node):
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
-def _add_read_only_node(root, node) -> None:
-    """Add node name to ReadOnlyNodes if it's not already there"""
-    read_only_nodes = root.find("./ReadOnlyNodes")
+def _add_read_only_node(root: etree.Element, node: str) -> None:
+    '''Add node name to ReadOnlyNodes if it is not already there'''
+    read_only_nodes = root.find('./ReadOnlyNodes')
     if read_only_nodes is None:
-        read_only_nodes = etree.SubElement(root, "ReadOnlyNodes")
+        read_only_nodes = etree.SubElement(root, 'ReadOnlyNodes')
     else:
         for n in read_only_nodes.findall("./Node"):
             if n.text == node:

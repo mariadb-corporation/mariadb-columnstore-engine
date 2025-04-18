@@ -567,11 +567,6 @@ has dbroot {subel.text}')
             for j in range(1, int(smc_node.find(f"./ModuleDBRootCount{i}-3").text) + 1):
                 dbroots.append(smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text)
 
-        # TODO not sure about it
-        if dbroots and self.is_read_only(root):
-            module_logger.warning("Config contains dbroots %s for this read-only node, ignoring", dbroots)
-            return []
-
         return dbroots
 
     def is_read_only(self, root=None) -> bool:
