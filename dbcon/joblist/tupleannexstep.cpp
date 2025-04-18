@@ -46,7 +46,6 @@ using namespace execplan;
 using namespace rowgroup;
 
 #include "hasher.h"
-#include "stlpoolallocator.h"
 #include "threadnaming.h"
 using namespace utils;
 
@@ -83,8 +82,8 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-using TNSDistinctMap_t =
-    std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >;
+using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq,
+                                            allocators::CountingAllocator<rowgroup::Row::Pointer> >;
 };  // namespace
 
 inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
@@ -574,12 +573,12 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
       dataVec.pop_back();
     }
   }
-  catch (const std::bad_alloc&)
+  catch (const logging::OutOfMemoryExcept&)
   {
     auto errorCode = ERR_TNS_DISTINCT_IS_TOO_BIG;
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeNoOrderByWithDistinct()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeNoOrderByWithDistinct()");
   }
   catch (...)
   {
@@ -612,88 +611,107 @@ void TupleAnnexStep::executeWithOrderBy()
   RGData rgDataOut;
   bool more = false;
 
-  try
+  for(;;)
   {
-    more = fInputDL->next(fInputIterator, &rgDataIn);
-
-    if (traceOn())
-      dlTimes.setFirstReadTime();
-
-    StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
-    postStepStartTele(sts);
-
-    while (more && !cancelled())
+    try
     {
-      fRowGroupIn.setData(&rgDataIn);
-      fRowGroupIn.getRow(0, &fRowIn);
+      more = fInputDL->next(fInputIterator, &rgDataIn);
 
-      for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
+      if (traceOn())
+        dlTimes.setFirstReadTime();
+
+      StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
+      postStepStartTele(sts);
+
+      while (more && !cancelled())
       {
-        fOrderBy->processRow(fRowIn);
-        fRowIn.nextRow();
+        fRowGroupIn.setData(&rgDataIn);
+        fRowGroupIn.getRow(0, &fRowIn);
+
+        for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
+        {
+          fOrderBy->processRow(fRowIn);
+          fRowIn.nextRow();
+        }
+
+        more = fInputDL->next(fInputIterator, &rgDataIn);
       }
 
-      more = fInputDL->next(fInputIterator, &rgDataIn);
-    }
-
-    fOrderBy->finalize();
-
-    if (!cancelled())
-    {
-      while (fOrderBy->getData(rgDataIn))
+      if (!isDiskBased())
       {
-        if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
-        {
-          rgDataOut = rgDataIn;
-          fRowGroupOut.setData(&rgDataOut);
-        }
-        else
-        {
-          fRowGroupIn.setData(&rgDataIn);
-          fRowGroupIn.getRow(0, &fRowIn);
+        fOrderBy->finalize();
 
-          rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-          fRowGroupOut.setData(&rgDataOut);
-          fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
-          fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
-          fRowGroupOut.getRow(0, &fRowOut);
-
-          for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
+        if (!cancelled())
+        {
+          while (fOrderBy->getData(rgDataIn))
           {
-            if (fConstant)
-              fConstant->fillInConstants(fRowIn, fRowOut);
+            if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
+            {
+              rgDataOut = rgDataIn;
+              fRowGroupOut.setData(&rgDataOut);
+            }
             else
-              copyRow(fRowIn, &fRowOut);
+            {
+              fRowGroupIn.setData(&rgDataIn);
+              fRowGroupIn.getRow(0, &fRowIn);
 
-            fRowGroupOut.incRowCount();
-            fRowOut.nextRow();
-            fRowIn.nextRow();
+              rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+              fRowGroupOut.setData(&rgDataOut);
+              fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+              fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
+              fRowGroupOut.getRow(0, &fRowOut);
+
+              for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
+              {
+                if (fConstant)
+                  fConstant->fillInConstants(fRowIn, fRowOut);
+                else
+                  copyRow(fRowIn, &fRowOut);
+
+                fRowGroupOut.incRowCount();
+                fRowOut.nextRow();
+                fRowIn.nextRow();
+              }
+            }
+
+            if (fRowGroupOut.getRowCount() > 0)
+            {
+              fRowsReturned += fRowGroupOut.getRowCount();
+              fOutputDL->insert(rgDataOut);
+
+              // release RGData memory
+              size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
+              fOrderBy->returnRGDataMemory2RM(rgDataSize);
+            }
           }
         }
-
-        if (fRowGroupOut.getRowCount() > 0)
-        {
-          fRowsReturned += fRowGroupOut.getRowCount();
-          fOutputDL->insert(rgDataOut);
-
-          // release RGData memory
-          size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
-          fOrderBy->returnRGDataMemory2RM(rgDataSize);
-        }
       }
     }
-  }
-  catch (const std::bad_alloc&)
-  {
-    auto errorCode = fOrderBy->getErrorCode();
-    auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderBy()");
-  }
-  catch (...)
-  {
-    handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderBy()");
+    catch (const logging::OutOfMemoryExcept&)
+    {
+      // if (!isDiskBased()) // if enabled
+      // {
+      convertToDiskBased();
+      // continue;
+      // }
+      // else
+      // {
+      //   auto errorCode = fOrderBy->getErrorCode();
+      //   auto newException = OutOfMemoryExcept(errorCode);
+      //   handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+      //                   logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeWithOrderBy()");
+      // }
+    }
+    catch (...)
+    {
+      handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                      "TupleAnnexStep::executeWithOrderBy()");
+    }
+
+    if (isDiskBased())
+    {
+      fOrderBy->flushCurrentToDisk();
+    }
   }
 
   while (more)
@@ -729,9 +747,11 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
 
-  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, fRm->getAllocator<ordering::OrderByRow>());
+  auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
+  auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
   std::unique_ptr<TNSDistinctMap_t> distinctMap(
-      new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), STLPoolAllocator<rowgroup::Row::Pointer>(fRm)));
+      new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), allocDistinct));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
 
@@ -765,8 +785,8 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::finalizeParallelOrderByDistinct()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::finalizeParallelOrderByDistinct()");
   }
   catch (...)
   {
@@ -964,8 +984,8 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::finalizeParallelOrderBy()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::finalizeParallelOrderBy()");
   }
   catch (...)
   {
@@ -1179,8 +1199,8 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeParallelOrderBy()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeParallelOrderBy()");
   }
   catch (...)
   {

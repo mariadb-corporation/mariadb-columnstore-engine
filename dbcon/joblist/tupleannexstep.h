@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <queue>
 #include <boost/thread/thread.hpp>
+#include <atomic>
 
 #include "jobstep.h"
 #include "limitedorderby.h"
@@ -114,6 +114,15 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
+  void convertToDiskBased()
+  {
+    fDiskBased.store(true, std::memory_order_relaxed);
+  }
+  bool isDiskBased() const
+  {
+    return fDiskBased.load(std::memory_order_relaxed);
+  }
+
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -173,6 +182,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   uint16_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
   joblist::ResourceManager* fRm;
+  std::atomic<bool> fDiskBased;
 };
 
 }  // namespace joblist

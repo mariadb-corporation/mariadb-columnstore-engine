@@ -51,6 +51,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   const std::string toString() const override;
 
   void finalize();
+  void flushCurrentToDisk() {}
 
  protected:
   uint64_t fStart;
