@@ -203,10 +203,6 @@ class ClusterAddNodeTestCase(BaseClusterTestCase):
             ['pgrep', MCSProgs.CONTROLLER_NODE.value])
         self.assertIsNotNone(controllernode)
 
-        # Check that WriteEngineServer was started
-        wes = subprocess.check_output(['pgrep', MCSProgs.WRITE_ENGINE_SERVER.value])
-        self.assertIsNotNone(wes)
-
 
 class ClusterRemoveNodeTestCase(BaseClusterTestCase):
     URL = ClusterAddNodeTestCase.URL

@@ -1,12 +1,13 @@
 import logging
 import socket
-
+import unittest
 from unittest.mock import patch
 from lxml import etree
 
 from cmapi_server import node_manipulation
 from cmapi_server.constants import MCS_DATA_PATH
 from cmapi_server.helpers import get_read_only_nodes
+from cmapi_server.node_manipulation import add_dbroots_of_other_nodes, remove_dbroots_of_node
 from cmapi_server.test.unittest_global import (
     tmp_mcs_config_filename, BaseNodeManipTestCase
 )
@@ -68,7 +69,9 @@ class NodeManipTester(BaseNodeManipTestCase):
 
         # Mock _rebalance_dbroots and _move_primary_node (only after the first node is added)
         with patch('cmapi_server.node_manipulation._rebalance_dbroots') as mock_rebalance_dbroots, \
-             patch('cmapi_server.node_manipulation._move_primary_node') as mock_move_primary_node:
+             patch('cmapi_server.node_manipulation._move_primary_node') as mock_move_primary_node, \
+             patch('cmapi_server.node_manipulation.add_dbroots_of_other_nodes') as mock_add_dbroots_of_other_nodes, \
+             patch('cmapi_server.node_manipulation.remove_dbroots_of_node') as mock_remove_dbroots_of_node:
 
             # Add a read-only node
             node_manipulation.add_node(
@@ -92,9 +95,9 @@ class NodeManipTester(BaseNodeManipTestCase):
             wes_node = root.find('./pm2_WriteEngineServer')
             self.assertIsNone(wes_node)
 
-            # Check that the dbroot related methods were not called
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
+            mock_add_dbroots_of_other_nodes.assert_called_once_with(root, 2)
 
             # Test read-only node removal
             node_manipulation.remove_node(
@@ -106,9 +109,9 @@ class NodeManipTester(BaseNodeManipTestCase):
             read_only_nodes = get_read_only_nodes(root)
             self.assertEqual(len(read_only_nodes), 0)
 
-            # Check that dbroot related methods were not called
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
+            mock_remove_dbroots_of_node.assert_called_once_with(root, 2)
 
 
     def test_add_dbroots_nodes_rebalance(self):
@@ -268,3 +271,59 @@ class NodeManipTester(BaseNodeManipTestCase):
             caught_it = True
 
         self.assertTrue(caught_it)
+
+
+class TestReadOnlyNodeDBRootsManip(unittest.TestCase):
+    our_module_idx = 2
+
+    def setUp(self):
+        # Mock initial XML structure (add two dbroots)
+        self.root = etree.Element('Columnstore')
+        etree.SubElement(self.root, 'SystemModuleConfig')
+        system_config = etree.SubElement(self.root, 'SystemConfig')
+        dbroot_count = etree.SubElement(system_config, 'DBRootCount')
+        dbroot_count.text = '2'
+        dbroot1 = etree.SubElement(system_config, 'DBRoot1')
+        dbroot1.text = '/data/dbroot1'
+        dbroot2 = etree.SubElement(system_config, 'DBRoot2')
+        dbroot2.text = '/data/dbroot2'
+
+    def test_add_dbroots_of_other_nodes(self):
+        '''add_dbroots_of_other_nodes must add dbroots of other nodes into mapping of the node.'''
+        add_dbroots_of_other_nodes(self.root, self.our_module_idx)
+
+        # Check that ModuleDBRootCount of the module was updated
+        module_count = self.root.find(f'./SystemModuleConfig/ModuleDBRootCount{self.our_module_idx}-3')
+        self.assertIsNotNone(module_count)
+        self.assertEqual(module_count.text, '2')
+
+        # Check that dbroots were added to ModuleDBRootID{module_num}-{i}-3
+        dbroot1 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot2 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-2-3')
+        self.assertIsNotNone(dbroot1)
+        self.assertIsNotNone(dbroot2)
+        self.assertEqual(dbroot1.text, '1')
+        self.assertEqual(dbroot2.text, '2')
+
+    def test_remove_dbroots_of_node(self):
+        '''Test that remove_dbroots_of_node correctly removes dbroots from the node's mapping'''
+        # Add dbroot association to the node
+        smc = self.root.find('./SystemModuleConfig')
+        dbroot1 = etree.SubElement(smc, f'ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot1.text = '1'
+        dbroot2 = etree.SubElement(smc, f'ModuleDBRootID{self.our_module_idx}-2-3')
+        dbroot2.text = '2'
+        # Add ModuleDBRootCount to the node
+        module_count = etree.SubElement(smc, f'ModuleDBRootCount{self.our_module_idx}-3')
+        module_count.text = '2'
+
+        remove_dbroots_of_node(self.root, self.our_module_idx)
+
+        # Check that ModuleDBRootCount was removed
+        module_count = self.root.find(f'./SystemModuleConfig/ModuleDBRootCount{self.our_module_idx}-3')
+        self.assertIsNone(module_count)
+        # Check that dbroot mappings of the module were removed
+        dbroot1 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-1-3')
+        dbroot2 = self.root.find(f'./SystemModuleConfig/ModuleDBRootID{self.our_module_idx}-2-3')
+        self.assertIsNone(dbroot1)
+        self.assertIsNone(dbroot2)
