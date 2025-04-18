@@ -1557,60 +1557,67 @@ struct BPPHandler
     bs >> stepID;
     bs >> uniqueID;
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
-    boost::mutex::scoped_lock scoped(bppLock);
-
-    bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
-
-    if (bppKeysIt != bppKeys.end())
+    boost::shared_ptr<BPPV> bppv = nullptr;
     {
-      bppKeys.erase(bppKeysIt);
-    }
+      boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+      boost::mutex::scoped_lock scoped(bppLock);
 
-    it = bppMap.find(uniqueID);
+      bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
 
-    if (it != bppMap.end())
-    {
-      boost::shared_ptr<BPPV> bppv = it->second;
-
-      if (bppv->joinDataReceived)
+      if (bppKeysIt != bppKeys.end())
       {
-        bppv->abort();
-        bppMap.erase(it);
+        bppKeys.erase(bppKeysIt);
+      }
+
+      it = bppMap.find(uniqueID);
+
+      if (it != bppMap.end())
+      {
+        bppv = it->second;
+
+        if (bppv->joinDataReceived)
+        {
+          bppMap.erase(it);
+        }
+        else
+        {
+          // MCOL-5. On ubuntu, a crash was happening. Checking
+          // joinDataReceived here fixes it.
+          // We're not ready for a destroy. Reschedule to wait
+          // for all joiners to arrive.
+          // TODO there might be no joiners if the query is canceled.
+          // The memory will leak.
+          // Rewind to the beginning of ByteStream buf b/c of the advance above.
+          bs.rewind();
+          return -1;
+        }
       }
       else
       {
-        // MCOL-5. On ubuntu, a crash was happening. Checking
-        // joinDataReceived here fixes it.
-        // We're not ready for a destroy. Reschedule to wait
-        // for all joiners to arrive.
-        // TODO there might be no joiners if the query is canceled.
-        // The memory will leak.
-        // Rewind to the beginning of ByteStream buf b/c of the advance above.
-        bs.rewind();
-        return -1;
+        if (posix_time::second_clock::universal_time() > dieTime)
+        {
+          cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
+              << endl;
+          // If for some reason there are jobs for this uniqueID that arrived later
+          // they won't leave PP thread pool staying there forever.
+        }
+        else
+        {
+          bs.rewind();
+          return -1;
+        }
       }
-    }
-    else
-    {
-      if (posix_time::second_clock::universal_time() > dieTime)
-      {
-        cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
-             << endl;
-        // If for some reason there are jobs for this uniqueID that arrived later
-        // they won't leave PP thread pool staying there forever.
-      }
-      else
-      {
-        bs.rewind();
-        return -1;
-      }
+
+      fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
+      fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(uniqueID);
+      lk.unlock();
+      deleteDJLock(uniqueID);
     }
 
-    fPrimitiveServerPtr->getProcessorThreadPool()->removeJobs(uniqueID);
-    fPrimitiveServerPtr->getOOBProcessorThreadPool()->removeJobs(uniqueID);
-    lk.unlock();
-    deleteDJLock(uniqueID);
+    if (bppv)
+    {
+      bppv->abort();
+    }    
     return 0;
   }
 
