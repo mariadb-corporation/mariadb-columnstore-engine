@@ -112,9 +112,7 @@ def add_node(
                     _rebalance_dbroots(c_root)
                     _move_primary_node(c_root)
                 else:
-                    logging.debug(
-                        'Node is read-only, skipping dbroots rebalancing.'
-                    )
+                    add_dbroots_of_other_nodes(c_root, pm_num)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -186,6 +184,9 @@ def remove_node(
             if use_rebalance_dbroots and not is_read_only:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
+
+            if is_read_only:
+                remove_dbroots_of_node(c_root, pm_num)
         else:
             # TODO:
             #   - IMO undefined behaviour here. Removing one single node
@@ -548,6 +549,19 @@ def unassign_dbroot1(root):
         i += 1
 
 
+def _get_existing_db_roots(root: etree.Element) -> list[int]:
+    '''Get all the existing dbroot IDs from the config file'''
+    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
+    # Going to scan from 1-99 instead
+    sysconf_node = root.find("./SystemConfig")
+    existing_dbroots = []
+    for num in range(1, 100):
+        node = sysconf_node.find(f"./DBRoot{num}")
+        if node is not None:
+            existing_dbroots.append(num)
+    return existing_dbroots
+
+
 def _rebalance_dbroots(root, test_mode=False):
     # TODO: add code to detect whether we are using shared storage or not.  If not, exit
     # without doing anything.
@@ -591,14 +605,7 @@ def _rebalance_dbroots(root, test_mode=False):
 
     current_mapping = get_current_dbroot_mapping(root)
     sysconf_node = root.find("./SystemConfig")
-
-    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
-    # Going to scan from 1-99 instead.
-    existing_dbroots = []
-    for num in range(1, 100):
-        node = sysconf_node.find(f"./DBRoot{num}")
-        if node is not None:
-            existing_dbroots.append(num)
+    existing_dbroots = _get_existing_db_roots(root)
 
     # assign the unassigned dbroots
     unassigned_dbroots = set(existing_dbroots) - set(current_mapping[0])
@@ -650,7 +657,7 @@ def _rebalance_dbroots(root, test_mode=False):
                         # timed out
                         # possible node is not ready, leave retry as-is
                         pass
-                    except Exception as e:
+                    except Exception:
                         retry = False
 
                 if not found_master:
@@ -986,7 +993,7 @@ def _add_Module_entries(root, node):
                 logging.info(f"_add_Module_entries(): hostname doesn't match, updating address to {new_ip_addr}")
                 smc_node.find(f"ModuleHostName{i}-1-3").text = new_ip_addr
             else:
-                logging.info(f"_add_Module_entries(): no update is necessary")
+                logging.info("_add_Module_entries(): no update is necessary")
                 return
 
         # if we find a matching hostname, update the ip addr
@@ -1174,3 +1181,51 @@ def _replace_localhost(root: etree.Element, node: str) -> bool:
 # New Exception types
 class NodeNotFoundException(Exception):
     pass
+
+
+def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
+    """Adds all the dbroots listed in the config to this (read-only) node"""
+    existing_dbroots = _get_existing_db_roots(root)
+    sysconf_node = root.find("./SystemModuleConfig")
+
+    # Write node's dbroot count
+    dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
+    if dbroot_count_node is not None:
+        sysconf_node.remove(dbroot_count_node)
+    dbroot_count_node = etree.SubElement(
+        sysconf_node, f"ModuleDBRootCount{module_num}-3"
+    )
+    dbroot_count_node.text = str(len(existing_dbroots))
+
+    # Remove existing dbroot IDs of this module if present
+    for i in range(1, 100):
+        dbroot_id_node = sysconf_node.find(f"./ModuleDBRootID{module_num}-{i}-3")
+        if dbroot_id_node is not None:
+            sysconf_node.remove(dbroot_id_node)
+
+    # Write new dbroot IDs to the module mapping
+    for i, dbroot_id in enumerate(existing_dbroots, start=1):
+        dbroot_id_node = etree.SubElement(
+            sysconf_node, f"ModuleDBRootID{module_num}-{i}-3"
+        )
+        dbroot_id_node.text = str(dbroot_id)
+
+    logging.info("Added %d dbroots to read-only node %d: %s", len(existing_dbroots), module_num, sorted(existing_dbroots))
+
+
+def remove_dbroots_of_node(root: etree.Element, module_num: int) -> None:
+    """Removes all the dbroots listed in the config from this (read-only) node"""
+    sysconf_node = root.find("./SystemModuleConfig")
+    dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
+    if dbroot_count_node is not None:
+        sysconf_node.remove(dbroot_count_node)
+    else:
+        logging.error(
+            f"ModuleDBRootCount{module_num}-3 not found in SystemModuleConfig"
+        )
+
+    # Remove existing dbroot IDs
+    for i in range(1, 100):
+        dbroot_id_node = sysconf_node.find(f"./ModuleDBRootID{module_num}-{i}-3")
+        if dbroot_id_node is not None:
+            sysconf_node.remove(dbroot_id_node)
