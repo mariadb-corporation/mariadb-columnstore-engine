@@ -611,106 +611,136 @@ void TupleAnnexStep::executeWithOrderBy()
   RGData rgDataOut;
   bool more = false;
 
-  for(;;)
+  try
   {
-    try
+    for (;;)
     {
-      more = fInputDL->next(fInputIterator, &rgDataIn);
-
-      if (traceOn())
-        dlTimes.setFirstReadTime();
-
-      StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
-      postStepStartTele(sts);
-
-      while (more && !cancelled())
+      try
       {
-        fRowGroupIn.setData(&rgDataIn);
-        fRowGroupIn.getRow(0, &fRowIn);
-
-        for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
-        {
-          fOrderBy->processRow(fRowIn);
-          fRowIn.nextRow();
-        }
-
         more = fInputDL->next(fInputIterator, &rgDataIn);
+
+        if (traceOn())
+          dlTimes.setFirstReadTime();
+
+        StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
+        postStepStartTele(sts);
+
+        while (more && !cancelled())
+        {
+          fRowGroupIn.setData(&rgDataIn);
+          fRowGroupIn.getRow(0, &fRowIn);
+
+          for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
+          {
+            fOrderBy->processRow(fRowIn);
+            fRowIn.nextRow();
+          }
+
+          more = fInputDL->next(fInputIterator, &rgDataIn);
+        }
+      }
+      catch (const logging::OutOfMemoryExcept&)
+      {
+        enableFlushToDisk();
+        incrementGenerationCounter();
+      }
+      catch (...)
+      {
+        handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                        "TupleAnnexStep::executeWithOrderBy()");
       }
 
-      if (!isDiskBased())
+      if (isFlushToDiskEnabled())
       {
-        fOrderBy->finalize();
+        fOrderBy->flushCurrentToDisk();
+        disableFlushToDisk();
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  catch (const logging::OutOfMemoryExcept&)
+  {
+    auto errorCode = fOrderBy->getErrorCode();
+    auto newException = OutOfMemoryExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeWithOrderBy()");
+  }
 
-        if (!cancelled())
+  // store avg RGData size
+  if (getGenerationCounter())
+  {
+    // assess RAM available, avg RGData size statistics and free enough memory
+    // return memory if needed
+    // create outputDLs or simplier atomic queues + readers threads
+    // call fOrderBy->diskBasedMergePhase()
+  }
+
+  // if (!isDiskBased())
+  {
+    // {
+    //   if (fUncommitedMemory > 0)
+    //   {
+    //     if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+    //     {
+    //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+    //       throw logging::OutOfMemoryExcept(fErrorCode);
+    //     }
+    //     fMemSize += fUncommitedMemory;
+    //     fUncommitedMemory = 0;
+    //   }
+    //   if (fRowGroup.getRowCount() > 0)
+    //     fDataQueue.push(fData);
+    // }
+    // replace with pushing the leftovers of LimitedOrderBy into the RGDATA queue
+    fOrderBy->brandNewFinalize();
+
+    if (!cancelled())
+    {
+      while (fOrderBy->getData(rgDataIn))
+      {
+        if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
         {
-          while (fOrderBy->getData(rgDataIn))
+          rgDataOut = rgDataIn;
+          fRowGroupOut.setData(&rgDataOut);
+        }
+        else  // TODO push this into finalize to populate next RGData rows
+        {
+          fRowGroupIn.setData(&rgDataIn);
+          fRowGroupIn.getRow(0, &fRowIn);
+
+          rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+          fRowGroupOut.setData(&rgDataOut);
+          fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+          fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
+          fRowGroupOut.getRow(0, &fRowOut);
+
+          for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
           {
-            if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
-            {
-              rgDataOut = rgDataIn;
-              fRowGroupOut.setData(&rgDataOut);
-            }
+            if (fConstant)
+              fConstant->fillInConstants(fRowIn, fRowOut);
             else
-            {
-              fRowGroupIn.setData(&rgDataIn);
-              fRowGroupIn.getRow(0, &fRowIn);
+              copyRow(fRowIn, &fRowOut);
 
-              rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-              fRowGroupOut.setData(&rgDataOut);
-              fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
-              fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
-              fRowGroupOut.getRow(0, &fRowOut);
-
-              for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
-              {
-                if (fConstant)
-                  fConstant->fillInConstants(fRowIn, fRowOut);
-                else
-                  copyRow(fRowIn, &fRowOut);
-
-                fRowGroupOut.incRowCount();
-                fRowOut.nextRow();
-                fRowIn.nextRow();
-              }
-            }
-
-            if (fRowGroupOut.getRowCount() > 0)
-            {
-              fRowsReturned += fRowGroupOut.getRowCount();
-              fOutputDL->insert(rgDataOut);
-
-              // release RGData memory
-              size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
-              fOrderBy->returnRGDataMemory2RM(rgDataSize);
-            }
+            fRowGroupOut.incRowCount();
+            fRowOut.nextRow();
+            fRowIn.nextRow();
           }
         }
-      }
-    }
-    catch (const logging::OutOfMemoryExcept&)
-    {
-      // if (!isDiskBased()) // if enabled
-      // {
-      convertToDiskBased();
-      // continue;
-      // }
-      // else
-      // {
-      //   auto errorCode = fOrderBy->getErrorCode();
-      //   auto newException = OutOfMemoryExcept(errorCode);
-      //   handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
-      //                   logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeWithOrderBy()");
-      // }
-    }
-    catch (...)
-    {
-      handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                      "TupleAnnexStep::executeWithOrderBy()");
-    }
 
-    if (isDiskBased())
-    {
-      fOrderBy->flushCurrentToDisk();
+        if (fRowGroupOut.getRowCount() > 0)
+        {
+          fRowsReturned += fRowGroupOut.getRowCount();
+          fOutputDL->insert(rgDataOut);
+
+          // release RGData memory
+          // TODO add some batching here to reduce atomic overhead.
+          size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
+          fOrderBy->returnRGDataMemory2RM(rgDataSize);
+        }
+      }
     }
   }
 
@@ -719,6 +749,8 @@ void TupleAnnexStep::executeWithOrderBy()
 
   // Bug 3136, let mini stats to be formatted if traceOn.
   fOutputDL->endOfInput();
+
+  // TODO clean existing leftover disk-based files.
 }
 
 /*

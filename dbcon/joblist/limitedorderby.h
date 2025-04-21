@@ -51,6 +51,8 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   const std::string toString() const override;
 
   void finalize();
+  void brandNewFinalize();
+  bool getNextRGData(RGData& data);
   void flushCurrentToDisk() {}
 
  protected:
@@ -58,6 +60,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   uint64_t fCount;
   uint64_t fUncommitedMemory;
   static const uint64_t fMaxUncommited;
+  uint64_t fOffsetInOrderedRowsQueue;
 };
 
 }  // namespace joblist

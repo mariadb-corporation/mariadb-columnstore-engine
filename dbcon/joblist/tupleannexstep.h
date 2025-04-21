@@ -114,15 +114,26 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  void convertToDiskBased()
+  void enableFlushToDisk()
   {
-    fDiskBased.store(true, std::memory_order_relaxed);
+    fFlushToDisk.store(true, std::memory_order_relaxed);
   }
-  bool isDiskBased() const
+  void disableFlushToDisk()
   {
-    return fDiskBased.load(std::memory_order_relaxed);
+    fFlushToDisk.store(false, std::memory_order_relaxed);
   }
-
+  bool isFlushToDiskEnabled() const
+  {
+    return fFlushToDisk.load(std::memory_order_relaxed);
+  }
+  void incrementGenerationCounter()
+  {
+    ++fGenerationCounter;
+  }
+  uint64_t getGenerationCounter() const
+  {
+    return fGenerationCounter;
+  }
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -182,7 +193,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   uint16_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
   joblist::ResourceManager* fRm;
-  std::atomic<bool> fDiskBased;
+  std::atomic<bool> fFlushToDisk {false};
+  uint64_t fGenerationCounter {0};
 };
 
 }  // namespace joblist
