@@ -52,7 +52,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
 
   void finalize();
   void brandNewFinalize();
-  bool getNextRGData(RGData& data);
+  bool getNextRGData(rowgroup::RGData& data);
   void flushCurrentToDisk() {}
 
  protected:
@@ -61,6 +61,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   uint64_t fUncommitedMemory;
   static const uint64_t fMaxUncommited;
   uint64_t fOffsetInOrderedRowsQueue;
+  uint64_t fRowsReturned;
 };
 
 }  // namespace joblist

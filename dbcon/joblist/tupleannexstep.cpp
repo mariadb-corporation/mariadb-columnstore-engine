@@ -186,7 +186,7 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     if (fOrderBy)
     {
       fOrderBy->distinct(fDistinct);
-      fOrderBy->initialize(rgIn, jobInfo);
+      fOrderBy->initialize(rgIn, jobInfo, true, false);
     }
   }
 
@@ -699,7 +699,7 @@ void TupleAnnexStep::executeWithOrderBy()
 
     if (!cancelled())
     {
-      while (fOrderBy->getData(rgDataIn))
+      while (fOrderBy->getNextRGData(rgDataIn))
       {
         if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
         {
@@ -738,7 +738,7 @@ void TupleAnnexStep::executeWithOrderBy()
           // release RGData memory
           // TODO add some batching here to reduce atomic overhead.
           size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
-          fOrderBy->returnRGDataMemory2RM(rgDataSize);
+          // fOrderBy->returnRGDataMemory2RM(rgDataSize);
         }
       }
     }
