@@ -736,7 +736,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                SCCACHE_BUCKET: 'cs-sccache',
                SCCACHE_REGION: 'us-east-1',
                SCCACHE_S3_USE_SSL: 'true',
-               SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
+               SCCACHE_S3_KEY_PREFIX: branch + server + arch + '${DRONE_PULL_REQUEST}',
                //SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
                //SCCACHE_LOG: 'debug',
              },
