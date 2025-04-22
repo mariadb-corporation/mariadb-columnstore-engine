@@ -86,7 +86,7 @@ INSTALL(FILES mcs_aws
 INSTALL(FILES mcs_gsutil
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
-INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh
+INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh scripts/columnstore_review.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
 INSTALL(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
