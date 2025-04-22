@@ -632,7 +632,7 @@ void TupleAnnexStep::executeWithOrderBy()
 
           for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
           {
-            fOrderBy->processRow(fRowIn);
+            fOrderBy->processRow_(fRowIn);
             fRowIn.nextRow();
           }
 
@@ -680,21 +680,6 @@ void TupleAnnexStep::executeWithOrderBy()
 
   // if (!isDiskBased())
   {
-    // {
-    //   if (fUncommitedMemory > 0)
-    //   {
-    //     if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
-    //     {
-    //       cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
-    //       throw logging::OutOfMemoryExcept(fErrorCode);
-    //     }
-    //     fMemSize += fUncommitedMemory;
-    //     fUncommitedMemory = 0;
-    //   }
-    //   if (fRowGroup.getRowCount() > 0)
-    //     fDataQueue.push(fData);
-    // }
-    // replace with pushing the leftovers of LimitedOrderBy into the RGDATA queue
     fOrderBy->brandNewFinalize();
 
     if (!cancelled())
@@ -737,7 +722,7 @@ void TupleAnnexStep::executeWithOrderBy()
 
           // release RGData memory
           // TODO add some batching here to reduce atomic overhead.
-          size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
+          // size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
           // fOrderBy->returnRGDataMemory2RM(rgDataSize);
         }
       }

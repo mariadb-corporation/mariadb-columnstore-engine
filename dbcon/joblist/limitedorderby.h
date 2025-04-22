@@ -43,6 +43,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&) override;
+  void processRow_(const rowgroup::Row&);
   uint64_t getKeyLength() const override;
   uint64_t getLimitCount() const
   {
@@ -61,7 +62,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   uint64_t fUncommitedMemory;
   static const uint64_t fMaxUncommited;
   uint64_t fOffsetInOrderedRowsQueue;
-  uint64_t fRowsReturned;
+  uint64_t fRowsReturned{0};
 };
 
 }  // namespace joblist
