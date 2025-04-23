@@ -22,6 +22,7 @@ set(execplan_LIB_SRCS
     functioncolumn.cpp
     groupconcatcolumn.cpp
     intervalcolumn.cpp
+    jsonarrayaggcolumn.cpp
     logicoperator.cpp
     mysqlexecutionplan.cpp
     objectidmanager.cpp

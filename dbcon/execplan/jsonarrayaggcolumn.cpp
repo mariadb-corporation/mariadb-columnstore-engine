@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -34,29 +34,29 @@ using namespace joblist;
 #include "arithmeticcolumn.h"
 #include "functioncolumn.h"
 #include "objectreader.h"
-#include "groupconcatcolumn.h"
+#include "jsonarrayaggcolumn.h"
 
 namespace execplan
 {
 /**
  * Constructors/Destructors
  */
-GroupConcatColumn::GroupConcatColumn() : AggregateColumn()
+JsonArrayAggColumn::JsonArrayAggColumn() : AggregateColumn()
 {
 }
 
-GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID) : AggregateColumn(sessionID)
+JsonArrayAggColumn::JsonArrayAggColumn(const uint32_t sessionID) : AggregateColumn(sessionID)
 {
 }
 
-GroupConcatColumn::GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID)
+JsonArrayAggColumn::JsonArrayAggColumn(const JsonArrayAggColumn& rhs, const uint32_t sessionID)
  : AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs))
  , fOrderCols(rhs.fOrderCols)
  , fSeparator(rhs.fSeparator)
 {
 }
 
-GroupConcatColumn::~GroupConcatColumn()
+JsonArrayAggColumn::~JsonArrayAggColumn()
 {
 }
 
@@ -64,38 +64,28 @@ GroupConcatColumn::~GroupConcatColumn()
  * Methods
  */
 
-const string GroupConcatColumn::toString() const
+const string JsonArrayAggColumn::toString() const
 {
   ostringstream output;
-  output << "GroupConcatColumn " << data() << endl;
+  output << "JsonArrayAggColumn " << data() << endl;
   output << AggregateColumn::toString() << endl;
-  output << "Group Concat Order Columns: " << endl;
+  output << "Json Array Order Columns: " << endl;
 
   for (uint32_t i = 0; i < fOrderCols.size(); i++)
   {
     output << *fOrderCols[i];
   }
 
-  output << "\nSeparator: " << fSeparator << endl;
   return output.str();
 }
 
-string GroupConcatColumn::toCppCode(IncludeSet& includes) const
-{
-  includes.insert("groupconcatcolumn.h");
-  stringstream ss;
-  ss << "GroupConcatColumn(" << sessionID() << ")";
-
-  return ss.str();
-}
-
-ostream& operator<<(ostream& output, const GroupConcatColumn& rhs)
+ostream& operator<<(ostream& output, const JsonArrayAggColumn& rhs)
 {
   output << rhs.toString();
   return output;
 }
 
-void GroupConcatColumn::serialize(messageqcpp::ByteStream& b) const
+void JsonArrayAggColumn::serialize(messageqcpp::ByteStream& b) const
 {
   b << (uint8_t)ObjectReader::GROUPCONCATCOLUMN;
   AggregateColumn::serialize(b);
@@ -109,7 +99,7 @@ void GroupConcatColumn::serialize(messageqcpp::ByteStream& b) const
   b << fSeparator;
 }
 
-void GroupConcatColumn::unserialize(messageqcpp::ByteStream& b)
+void JsonArrayAggColumn::unserialize(messageqcpp::ByteStream& b)
 {
   ObjectReader::checkType(b, ObjectReader::GROUPCONCATCOLUMN);
   AggregateColumn::unserialize(b);
@@ -129,7 +119,7 @@ void GroupConcatColumn::unserialize(messageqcpp::ByteStream& b)
   b >> fSeparator;
 }
 
-bool GroupConcatColumn::operator==(const GroupConcatColumn& t) const
+bool JsonArrayAggColumn::operator==(const JsonArrayAggColumn& t) const
 {
   const AggregateColumn *rc1, *rc2;
 
@@ -153,17 +143,14 @@ bool GroupConcatColumn::operator==(const GroupConcatColumn& t) const
       return false;
   }
 
-  if (fSeparator != t.fSeparator)
-    return false;
-
   return true;
 }
 
-bool GroupConcatColumn::operator==(const TreeNode* t) const
+bool JsonArrayAggColumn::operator==(const TreeNode* t) const
 {
-  const GroupConcatColumn* ac;
+  const JsonArrayAggColumn* ac;
 
-  ac = dynamic_cast<const GroupConcatColumn*>(t);
+  ac = dynamic_cast<const JsonArrayAggColumn*>(t);
 
   if (ac == NULL)
     return false;
@@ -171,14 +158,23 @@ bool GroupConcatColumn::operator==(const TreeNode* t) const
   return *this == *ac;
 }
 
-bool GroupConcatColumn::operator!=(const GroupConcatColumn& t) const
+bool JsonArrayAggColumn::operator!=(const JsonArrayAggColumn& t) const
 {
   return !(*this == t);
 }
 
-bool GroupConcatColumn::operator!=(const TreeNode* t) const
+bool JsonArrayAggColumn::operator!=(const TreeNode* t) const
 {
   return !(*this == t);
+}
+
+string JsonArrayAggColumn::toCppCode(IncludeSet& includes) const
+{
+  includes.insert("jsonarrayaggcolumn.h");
+  stringstream ss;
+  ss << "JsonArrayAggColumn(" << sessionID() << ")";
+
+  return ss.str();
 }
 
 }  // namespace execplan

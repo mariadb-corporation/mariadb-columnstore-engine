@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 InfiniDB, Inc.
+/* Copyright (C) 2022 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -15,11 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-/***********************************************************************
- *   $Id: groupconcatcolumn.h 9210 2013-01-21 14:10:42Z rdempsey $
- *
- *
- ***********************************************************************/
 /** @file */
 
 #pragma once
@@ -44,22 +39,22 @@ namespace execplan
  * This class is a specialization of class ReturnedColumn that
  * handles an aggregate function call (e.g., SUM, COUNT, MIN, MAX).
  */
-class GroupConcatColumn : public AggregateColumn
+class JsonArrayAggColumn : public AggregateColumn
 {
  public:
   /**
    * Constructors
    */
-  GroupConcatColumn();
+  JsonArrayAggColumn();
 
-  explicit GroupConcatColumn(const uint32_t sessionID);
+  explicit JsonArrayAggColumn(const uint32_t sessionID);
 
-  GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID = 0);
+  JsonArrayAggColumn(const JsonArrayAggColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  ~GroupConcatColumn() override;
+  ~JsonArrayAggColumn() override;
 
   /**
    * Overloaded stream operator
@@ -70,9 +65,9 @@ class GroupConcatColumn : public AggregateColumn
    *
    * deep copy of this pointer and return the copy
    */
-  GroupConcatColumn* clone() const override
+  JsonArrayAggColumn* clone() const override
   {
-    return new GroupConcatColumn(*this);
+    return new JsonArrayAggColumn(*this);
   }
 
   /**
@@ -116,7 +111,7 @@ class GroupConcatColumn : public AggregateColumn
    *         false otherwise
    */
   using AggregateColumn::operator==;
-  virtual bool operator==(const GroupConcatColumn& t) const;
+  virtual bool operator==(const JsonArrayAggColumn& t) const;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -133,9 +128,9 @@ class GroupConcatColumn : public AggregateColumn
    *         true otherwise
    */
   using AggregateColumn::operator!=;
-  virtual bool operator!=(const GroupConcatColumn& t) const;
+  virtual bool operator!=(const JsonArrayAggColumn& t) const;
 
-  string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;
@@ -145,6 +140,6 @@ class GroupConcatColumn : public AggregateColumn
 /**
  * stream operator
  */
-std::ostream& operator<<(std::ostream& os, const GroupConcatColumn& rhs);
+std::ostream& operator<<(std::ostream& os, const JsonArrayAggColumn& rhs);
 
 }  // namespace execplan

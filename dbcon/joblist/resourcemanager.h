@@ -156,7 +156,10 @@ class ResourceManager
     return getIntVal(fExeMgrStr, "ExecQueueSize", defaultEMExecQueueSize);
   }
 
-  bool getAllowDiskAggregation() const;
+  bool getAllowDiskAggregation() const
+  {
+    return fAllowedDiskAggregation;
+  }
 
   uint64_t getDECConnectionsPerQuery() const
   {
@@ -525,6 +528,7 @@ class ResourceManager
 
   bool isExeMgr;
   bool fUseHdfs;
+  bool fAllowedDiskAggregation{false};
   uint64_t fDECConnectionsPerQuery;
 };
 

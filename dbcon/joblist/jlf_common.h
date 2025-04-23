@@ -43,6 +43,7 @@
 #include "joblist.h"
 #include "jobstep.h"
 #include "groupconcat.h"
+#include "jsonarrayagg.h"
 #include "jl_logger.h"
 
 #include "resourcemanager.h"
