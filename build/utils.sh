@@ -1,3 +1,4 @@
+#!/bin/bash
 
 if [[ -n "$TERM" && "$TERM" != "dumb" && $(command -v tput) ]]; then
     TPUT_AVAILABLE=true

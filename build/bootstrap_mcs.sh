@@ -15,16 +15,15 @@ DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
 CONFIG_DIR=$RPM_CONFIG_DIR
 
 SCRIPT_LOCATION=$(dirname "$0")
-MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
+MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
 
 GCC_VERSION="11"
-BUILD_DIR="verylongdirnameforverystrangecpackbehavior"
 MDB_CMAKE_FLAGS=""
 
-source $SCRIPT_LOCATION/utils.sh
+source "$SCRIPT_LOCATION"/utils.sh
 
 if [ "$EUID" -ne 0 ]; then
     error "Please run script as root to install MariaDb to system paths"
@@ -60,7 +59,7 @@ optparse.define short=j long=parallel desc="Number of paralles for build" variab
 optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../MariaDBBuild
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
 optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
@@ -138,11 +137,11 @@ stop_service() {
 }
 
 check_service() {
-    if systemctl is-active --quiet $1; then
+    if systemctl is-active --quiet "$1"; then
         message "$1 $color_normal[$color_green OK $color_normal]"
     else
         message "$1 $color_normal[$color_red Fail $color_normal]"
-        service $1 status
+        service "$1" status
     fi
 }
 
@@ -182,7 +181,7 @@ clean_old_installation() {
     rm -rf /var/log/mariadb/columnstore/*
     rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf /etc/my.cnf.d/columnstore.cnf
     rm -rf /tmp/*
-    rm -rf $REPORT_PATH
+    rm -rf "$REPORT_PATH"
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
@@ -324,11 +323,11 @@ construct_cmake_flags() {
         if [[ $MCS_BUILD_TYPE = 'Debug' ]]; then
             error "Benchmarks will not be build in run in Debug build Mode"
             MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
-            $RUN_BENCHMARKS = false
+            RUN_BENCHMARKS=false
         elif [[ $OS != *"ubuntu"* && $OS != *"debian"* ]]; then
             error "Benchmarks are now avaliable only at Ubuntu or Debian"
             MAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
-            $RUN_BENCHMARKS = false
+            RUN_BENCHMARKS=false
         else
             message "Compile with microbenchmarks"
             MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=YES"
@@ -388,10 +387,6 @@ check_errorcode() {
 }
 
 build_package() {
-    modify_packaging
-    RESULT_DIR=$(echo "$OS" | sed 's/://g' | sed 's/\//-/g')
-    mkdir $RESULT_DIR
-
     if [[ $pkg_format == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS} && make -j\$(nproc) package"
     else
@@ -404,15 +399,14 @@ build_package() {
     eval "$command"
 
     check_errorcode
-
 }
 
 build_binary() {
-    MARIA_BUILD_PATH=$(realpath $MARIA_BUILD_PATH)
+    MARIA_BUILD_PATH=$(realpath "$MARIA_BUILD_PATH")
     message_split
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_cyan mode"
     message "Compiled artifacts will be written to $color_yellow$MARIA_BUILD_PATH$color_cyan"
-    mkdir -p $MARIA_BUILD_PATH
+    mkdir -p "$MARIA_BUILD_PATH"
 
     cd $MDB_SOURCE_PATH
 
@@ -423,27 +417,27 @@ build_binary() {
     fi
 
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} $MDB_CMAKE_FLAGS -S$MDB_SOURCE_PATH -B$MARIA_BUILD_PATH | spinner
+    ${CMAKE_BIN_NAME} "$MDB_CMAKE_FLAGS" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
 
-    ${CMAKE_BIN_NAME} --build $MARIA_BUILD_PATH -j $CPUS | onelinearizator &&
+    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
         message "Installing silently" &&
-        ${CMAKE_BIN_NAME} --install $MARIA_BUILD_PATH | spinner 30
+        ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
 
     check_errorcode
 }
 
 check_user_and_group() {
     user=$1
-    if [ -z "$(grep $user /etc/passwd)" ]; then
+    if [ -z "$(grep "$user" /etc/passwd)" ]; then
         message "Adding user $user into /etc/passwd"
-        useradd -r -U $user -d /var/lib/mysql
+        useradd -r -U "$user" -d /var/lib/mysql
     fi
 
-    if [ -z "$(grep $user /etc/group)" ]; then
-        GroupID = $(awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group)
+    if [ -z "$(grep "$user" /etc/group)" ]; then
+        GroupID=$(awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group)
         message "Adding group $user with id $GroupID"
-        groupadd -g $GroupID $user
+        groupadd -g "$GroupID" "$user"
     fi
 }
 
@@ -530,8 +524,8 @@ fix_config_files() {
 }
 
 make_dir() {
-    mkdir -p $1
-    chown mysql:mysql $1
+    mkdir -p "$1"
+    chown mysql:mysql "$1"
 }
 
 install() {
@@ -540,8 +534,8 @@ install() {
         message "Installing MariaDB"
         disable_plugins_for_bootstrap
 
-        make_dir $REPORT_PATH
-        chmod 777 $REPORT_PATH
+        make_dir "$REPORT_PATH"
+        chmod 777 "$REPORT_PATH"
 
         check_user_and_group mysql
         check_user_and_group syslog
@@ -562,17 +556,17 @@ install() {
 
         make_dir /etc/columnstore
 
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
 
-        cp $MDB_SOURCE_PATH/support-files/*.service /lib/systemd/system/
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
+        cp "$MDB_SOURCE_PATH"/support-files/*.service /lib/systemd/system/
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
         if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
             make_dir /usr/share/mysql
             make_dir /etc/mysql/
-            cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
-            cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
+            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
+            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start /etc/mysql/debian-start
             >/etc/mysql/debian.cnf
         fi
 
@@ -619,7 +613,7 @@ smoke() {
         message "Creating test database"
         mariadb -e "create database if not exists test;"
         message "Selecting magic numbers"
-        MAGIC=$(mysql -N test <$MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql)
+        MAGIC=$(mysql -N test <"$MDB_SOURCE_PATH"/storage/columnstore/columnstore/tests/scripts/smoke.sql)
         if [[ $MAGIC == '42' ]]; then
             message "Great answer correct!"
         else
@@ -633,7 +627,7 @@ generate_svgs() {
         message_split
         warn "Generating svgs with dependency graph to $REPORT_PATH"
         for f in $MDB_SOURCE_PATH/mariadb.dot.*; do
-            dot -Tsvg -o $REPORT_PATH/$(basename $f).svg $f
+            dot -Tsvg -o "$REPORT_PATH"/$(basename "$f").svg "$f"
         done
     fi
 }
@@ -665,6 +659,7 @@ if [[ $BUILD_PACKAGES = false ]]; then
         generate_svgs
     fi
 else
+    modify_packaging
     build_package
 fi
 

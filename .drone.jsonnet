@@ -742,8 +742,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              },
              commands: [
                 'export CLICOLOR_FORCE=1',
-                get_sccache,
                 'mkdir /mdb/' + builddir + '/' + result,
+                get_sccache,
 
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
                           '--build-type RelWithDebInfo ' +
