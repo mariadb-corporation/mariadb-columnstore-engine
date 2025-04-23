@@ -7,7 +7,6 @@ from lxml import etree
 
 from cmapi_server import node_manipulation
 from cmapi_server.constants import MCS_DATA_PATH
-from cmapi_server.helpers import get_read_only_nodes
 from cmapi_server.node_manipulation import add_dbroots_of_other_nodes, remove_dbroots_of_node
 from cmapi_server.test.unittest_global import BaseNodeManipTestCase, tmp_mcs_config_filename
 from mcs_node_control.models.node_config import NodeConfig

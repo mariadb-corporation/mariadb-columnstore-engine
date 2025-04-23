@@ -435,7 +435,6 @@ class ConfigController:
                     is_primary=node_config.is_primary_node(),
                     use_sudo=use_sudo,
                     timeout=request_timeout,
-                    is_read_only=node_config.is_read_only(),
                 )
             except CMAPIBasicError as err:
                 raise_422_error(
@@ -705,7 +704,6 @@ class ShutdownController:
                 is_primary=node_config.is_primary_node(),
                 use_sudo=use_sudo,
                 timeout=timeout,
-                is_read_only=node_config.is_read_only(),
             )
         except CMAPIBasicError as err:
             raise_422_error(
