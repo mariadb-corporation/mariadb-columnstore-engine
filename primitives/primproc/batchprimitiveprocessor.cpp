@@ -326,10 +326,11 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       typelessJoin.reset(new bool[joinerCount]);
       tlSmallSideKeyLengths.reset(new uint32_t[joinerCount]);
 
-      auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
+      // auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
       for (uint j = 0; j < joinerCount; ++j)
       {
-        storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
+        // storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
+        storedKeyAllocators.emplace_back(PoolAllocator(PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
       }
 
       joinNullValues.reset(new uint64_t[joinerCount]);
@@ -2289,34 +2290,34 @@ int BatchPrimitiveProcessor::operator()()
 
 void BatchPrimitiveProcessor::allocLargeBuffers()
 {
-  auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
+  // auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
   
   if (ot == ROW_GROUP && !outRowGroupData)
   {
     // outputRG.setUseStringTable(true);
-    outRowGroupData.reset(new RGData(outputRG, allocator));
+    // outRowGroupData.reset(new RGData(outputRG, allocator));
+    outRowGroupData.reset(new RGData(outputRG));
     outputRG.setData(outRowGroupData.get());
   }
 
   if (fe1 && !fe1Data)
   {
-    // fe1Input.setUseStringTable(true);
-    fe1Data.reset(new RGData(fe1Input, allocator));
-    // fe1Data.reset(new uint8_t[fe1Input.getMaxDataSize()]);
+    // fe1Data.reset(new RGData(fe1Input, allocator));
+    fe1Data.reset(new RGData(fe1Input));
     fe1Input.setData(fe1Data.get());
   }
 
   if (fe2 && !fe2Data)
   {
-    // fe2Output.setUseStringTable(true);
-    fe2Data.reset(new RGData(fe2Output, allocator));
+    // fe2Data.reset(new RGData(fe2Output, allocator));
+    fe2Data.reset(new RGData(fe2Output));
     fe2Output.setData(fe2Data.get());
   }
 
   if (getTupleJoinRowGroupData && !joinedRGMem)
   {
-    // joinedRG.setUseStringTable(true);
-    joinedRGMem.reset(new RGData(joinedRG, allocator));
+    // joinedRGMem.reset(new RGData(joinedRG, allocator));
+    joinedRGMem.reset(new RGData(joinedRG));
     joinedRG.setData(joinedRGMem.get());
   }
 }
