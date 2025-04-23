@@ -36,7 +36,7 @@ class MCSProcessManager:
     mcs_progs = {}
     mcs_version_info = None
     dispatcher_name = None
-    process_dispatcher = None
+    process_dispatcher: BaseDispatcher = None
 
     @classmethod
     def _get_prog_name(cls, name: str) -> str:
@@ -48,12 +48,13 @@ class MCSProcessManager:
         :rtype: str
         """
         if cls.dispatcher_name == 'systemd':
-            return ALL_MCS_PROGS[name].service_name
+            prog = MCSProgs[name]
+            return ALL_MCS_PROGS[prog].service_name
         return name
 
     @classmethod
     def _get_sorted_progs(
-        cls, is_primary: bool, reverse: bool = False
+        cls, is_primary: bool, reverse: bool = False, is_read_only: bool = False
     ) -> dict:
         """Get sorted services dict.
 
@@ -73,6 +74,13 @@ class MCSProcessManager:
                 for prog_name, prog_info in cls.mcs_progs.items()
                 if prog_name not in PRIMARY_PROGS
             }
+
+        if is_read_only:
+            logging.debug('Node is in read-only mode, skipping WriteEngine')
+            unsorted_progs.pop(
+                MCSProgs.WRITE_ENGINE_SERVER.value, None
+            )
+
         if reverse:
             # stop sequence builds using stop_priority property
             return dict(
@@ -421,7 +429,7 @@ class MCSProcessManager:
         :type is_read_only: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not started
         """
-        for prog_name in cls._get_sorted_progs(is_primary):
+        for prog_name in cls._get_sorted_progs(is_primary=is_primary, is_read_only=is_read_only):
             if (
                     cls.dispatcher_name == 'systemd'
                     and prog_name == MCSProgs.STORAGE_MANAGER.value
@@ -436,12 +444,6 @@ class MCSProcessManager:
                 cls._wait_for_workernodes()
             if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
                 cls._wait_for_controllernode()
-            if (
-                is_read_only and
-                prog_name == MCSProgs.WRITE_ENGINE_SERVER.value
-            ):
-                logging.debug('Node is in read-only mode, not starting WriteEngine')
-                continue
             if not cls.start(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not started properly.')
                 raise CMAPIBasicError(f'Error while starting "{prog_name}".')
@@ -470,7 +472,7 @@ class MCSProcessManager:
         # so use full available list of processes. Otherwise, it could cause
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
-        for prog_name in cls._get_sorted_progs(True, reverse=True):
+        for prog_name in cls._get_sorted_progs(is_primary=True, reverse=True):
             if not cls.stop(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not stopped properly.')
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
