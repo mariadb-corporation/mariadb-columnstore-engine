@@ -204,8 +204,11 @@ class TypelessDataStructure
   }
 };
 
-using RowPointersVec =
-    std::vector<rowgroup::Row::Pointer, allocators::CountingAllocator<rowgroup::Row::Pointer>>;
+
+// using RowPointersVec =
+//     std::vector<rowgroup::Row::Pointer, allocators::CountingAllocator<rowgroup::Row::Pointer>>;
+    using RowPointersVec =
+    std::vector<rowgroup::Row::Pointer>;
 using RowPointersVecUP = std::unique_ptr<RowPointersVec>;
 class TupleJoiner
 {
@@ -473,21 +476,38 @@ class TupleJoiner
   void initHashMaps(uint32_t& smallJoinColumn);
   void clearHashMaps();
  private:
+  // typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
+  //                                 allocators::CountingAllocator<std::pair<const int64_t, uint8_t*>>>
+  //     hash_t;
+  // typedef std::unordered_multimap<
+  //     int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
+  //     allocators::CountingAllocator<std::pair<const int64_t, rowgroup::Row::Pointer>>>
+  //     sthash_t;
+  // typedef std::unordered_multimap<
+  //     TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
+  //     allocators::CountingAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer>>>
+  //     typelesshash_t;
+  // // MCOL-1822 Add support for Long Double AVG/SUM small side
+  // typedef std::unordered_multimap<
+  //     long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
+  //     allocators::CountingAllocator<std::pair<const long double, rowgroup::Row::Pointer>>>
+  //     ldhash_t;
+
   typedef std::unordered_multimap<int64_t, uint8_t*, hasher, std::equal_to<int64_t>,
-                                  allocators::CountingAllocator<std::pair<const int64_t, uint8_t*>>>
+                                  utils::STLPoolAllocator<std::pair<const int64_t, uint8_t*>>>
       hash_t;
   typedef std::unordered_multimap<
       int64_t, rowgroup::Row::Pointer, hasher, std::equal_to<int64_t>,
-      allocators::CountingAllocator<std::pair<const int64_t, rowgroup::Row::Pointer>>>
+      utils::STLPoolAllocator<std::pair<const int64_t, rowgroup::Row::Pointer>>>
       sthash_t;
   typedef std::unordered_multimap<
       TypelessData, rowgroup::Row::Pointer, hasher, std::equal_to<TypelessData>,
-      allocators::CountingAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer>>>
+      utils::STLPoolAllocator<std::pair<const TypelessData, rowgroup::Row::Pointer>>>
       typelesshash_t;
   // MCOL-1822 Add support for Long Double AVG/SUM small side
   typedef std::unordered_multimap<
       long double, rowgroup::Row::Pointer, hasher, LongDoubleEq,
-      allocators::CountingAllocator<std::pair<const long double, rowgroup::Row::Pointer>>>
+      utils::STLPoolAllocator<std::pair<const long double, rowgroup::Row::Pointer>>>
       ldhash_t;
 
   typedef hash_t::iterator iterator;
@@ -573,6 +593,7 @@ class TupleJoiner
   bool _convertToDiskJoin;
   joblist::ResourceManager* resourceManager_ = nullptr;
   bool wasAborted_ = false;
+  void initRowsVector();
 };
 
 }  // namespace joiner

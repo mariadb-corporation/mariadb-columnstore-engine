@@ -83,7 +83,8 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, allocators::CountingAllocator<rowgroup::Row::Pointer> >;
+// using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, allocators::CountingAllocator<rowgroup::Row::Pointer> >;
+using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq >;
 };  // namespace
 
 inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
@@ -456,8 +457,9 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   Row rowSkip;
   bool more = false;
 
-  auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
-  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), alloc));
+  // auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
+  // std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), alloc));
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this)));
 
   rgDataOut.reinit(fRowGroupOut);
   fRowGroupOut.setData(&rgDataOut);
@@ -713,10 +715,11 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
 
-  auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
-  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
-  auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
-  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), allocDistinct));
+  // auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
+  // ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize);
+  // auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this)));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
 
@@ -910,8 +913,9 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   uint32_t rowSize = 0;
 
   rowgroup::RGData rgDataOut;
-  auto alloc = fRm->getAllocator<ordering::OrderByRow>();
-  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
+  // auto alloc = fRm->getAllocator<ordering::OrderByRow>();
+  // ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize);
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
   fRowGroupOut.setData(&rgDataOut);
   fRowGroupOut.resetRowGroup(0);

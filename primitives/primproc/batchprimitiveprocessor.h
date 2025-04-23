@@ -308,14 +308,23 @@ class BatchPrimitiveProcessor
   bool hasRowGroup;
 
   /* Rowgroups + join */
-  using TJoiner =
-      std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
-                              allocators::CountingAllocator<std::pair<const uint64_t, uint32_t>>>;
+  // using TJoiner =
+  //     std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
+  //                             allocators::CountingAllocator<std::pair<const uint64_t, uint32_t>>>;
 
-  using TLJoiner =
-      std::unordered_multimap<joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
-                              joiner::TupleJoiner::TypelessDataComparator,
-                              allocators::CountingAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;
+  using TJoiner = std::tr1::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
+                                       std::equal_to<uint64_t>,
+                                       utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>;
+ 
+  // using TLJoiner =
+  //     std::unordered_multimap<joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
+  //                             joiner::TupleJoiner::TypelessDataComparator,
+  //                             allocators::CountingAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;
+
+  using TLJoiner = std::tr1::unordered_multimap<
+      joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
+      joiner::TupleJoiner::TypelessDataComparator,
+      utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;                                             
 
   bool generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth = 0);
   /* generateJoinedRowGroup helper fcns & vars */

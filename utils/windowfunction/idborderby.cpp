@@ -775,14 +775,16 @@ void IdbOrderBy::initialize(const RowGroup& rg)
 
   // These two blocks contain structs with memory accounting.
   {
-    auto alloc = fRm->getAllocator<OrderByRow>();
-    fOrderByQueue.reset(new SortingPQ(rowgroup::rgCommonSize, alloc));
+    // auto alloc = fRm->getAllocator<OrderByRow>();
+    // fOrderByQueue.reset(new SortingPQ(rowgroup::rgCommonSize, alloc));
+    fOrderByQueue.reset(new SortingPQ());
   }
 
   if (fDistinct)
   {
-    auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
-    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength()), alloc));
+    // auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
+    // fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength()), alloc));
+    fDistinctMap.reset(new DistinctMap_t(10, Hasher(this, getKeyLength()), Eq(this, getKeyLength())));
   }
 }
 
