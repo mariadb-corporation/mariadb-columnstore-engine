@@ -702,7 +702,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'build',
              depends_on: ['clone-mdb'],
              image: img,
-             volumes: [pipeline._volumes.lib, pipeline._volumes.usr, pipeline._volumes.mdb],
+             volumes: [
+                { name: 'lib',    path: '/lib-tmp' },
+                { name: 'usr',    path: '/usr-tmp' },
+                pipeline._volumes.mdb
+             ],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
@@ -735,6 +739,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-stats',
+
+                'cp -a /usr/. /usr-tmp/',
+                'cp -a /lib/. /lib-tmp/',
 
                 // move engine and cmapi packages to one dir and make a repo
                 if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
