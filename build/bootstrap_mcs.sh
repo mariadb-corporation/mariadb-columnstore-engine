@@ -38,33 +38,34 @@ cd - >/dev/null
 echo "Arguments received: $@"
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../MariaDBBuild
-optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
-optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
-optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
+optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
-optparse.define short=F long=custom-cmake-flags desc="Add custom cmake flags" variable=CUSTOM_CMAKE_FLAGS
-optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
-optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
-optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
-optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
-optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
-optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
-optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
-optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
-optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
-optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
+optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
-optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
-optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
-optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
+optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
+optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
+optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
+optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
+optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../MariaDBBuild
+optparse.define short=O long=static desc="Build all with static libraries" variable=STATIC_BUILD default=false value=true
+optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
+optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
+optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
+optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
+optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
 
 source $(optparse.build)
 
@@ -284,6 +285,11 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-GNinja)
     fi
 
+    if [[ $STATIC_BUILD = true ]]; then
+        warn "Building all with static linkage"
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_STATIC_LIBRARIES:BOOL=ON)
+    fi
+
     if [[ $ASAN = true ]]; then
         warn "Building with Address Sanitizer "
         MDB_CMAKE_FLAGS+=(-DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
@@ -363,10 +369,10 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-DDEB=${CODENAME})
     fi
 
-    MDB_CMAKE_FLAGS+=($CUSTOM_CMAKE_FLAGS)
-
-    message "Building with flags"
-    newline_array "${MDB_CMAKE_FLAGS[@]}"
+    if [[ $PRINT_CMAKE_FLAGS = true ]]; then
+        message "Building with flags"
+        newline_array "${MDB_CMAKE_FLAGS[@]}"
+    fi
 }
 
 init_submodules() {

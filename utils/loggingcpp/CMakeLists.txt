@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 ########### next target ###############
@@ -18,7 +17,7 @@ ADD_CUSTOM_COMMAND(
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/messageids.h PROPERTIES GENERATED TRUE)
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/errorids.h PROPERTIES GENERATED TRUE)
 
-add_library(loggingcpp SHARED
+columnstore_library(loggingcpp 
     message.cpp
     messagelog.cpp
     logger.cpp
@@ -34,4 +33,3 @@ add_dependencies(loggingcpp external_boost)
 install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-engine)
-

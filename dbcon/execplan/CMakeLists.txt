@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_UDFSDK_INCLUDE} ${ENGINE_DATATYPES_INCLUDE})
 
 
@@ -46,7 +45,7 @@ set(execplan_LIB_SRCS
     windowfunctioncolumn.cpp
     udafcolumn.cpp)
 
-add_library(execplan SHARED ${execplan_LIB_SRCS})
+columnstore_library(execplan ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 

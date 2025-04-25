@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 
@@ -37,7 +36,7 @@ set(writeengine_LIB_SRCS
 
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
-add_library(writeengine SHARED ${writeengine_LIB_SRCS})
+columnstore_library(writeengine ${writeengine_LIB_SRCS})
 
 add_dependencies(writeengine loggingcpp)
 

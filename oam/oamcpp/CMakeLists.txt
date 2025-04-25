@@ -6,7 +6,7 @@ include_directories( ${ENGINE_COMMON_INCLUDES} )
 
 set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
-add_library(oamcpp SHARED ${oamcpp_LIB_SRCS})
+columnstore_library(oamcpp ${oamcpp_LIB_SRCS})
 
 add_dependencies(oamcpp loggingcpp)
 

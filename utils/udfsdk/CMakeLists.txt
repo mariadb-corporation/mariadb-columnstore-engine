@@ -1,5 +1,4 @@
 include_directories(${ENGINE_COMMON_INCLUDES} ../../dbcon/mysql)
-# ########## next target ###############
 
 set(udfsdk_LIB_SRCS
     udfsdk.cpp
@@ -13,7 +12,7 @@ set(udfsdk_LIB_SRCS
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
-add_library(udfsdk SHARED ${udfsdk_LIB_SRCS})
+columnstore_library(udfsdk ${udfsdk_LIB_SRCS})
 
 add_dependencies(udfsdk loggingcpp)
 

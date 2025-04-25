@@ -34,7 +34,7 @@ set(brm_LIB_SRCS
     vss.cpp
     ../../datatypes/mcs_datatype.cpp)
 
-add_library(brm SHARED ${brm_LIB_SRCS})
+columnstore_library(brm ${brm_LIB_SRCS})
 
 add_dependencies(brm loggingcpp)
 

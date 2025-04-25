@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} ../cloudio)
 
 ########### next target ###############
@@ -13,7 +12,7 @@ set(idbdatafile_LIB_SRCS
     PosixFileSystem.cpp
     UnbufferedFile.cpp)
 
-add_library(idbdatafile SHARED ${idbdatafile_LIB_SRCS})
+columnstore_library(idbdatafile ${idbdatafile_LIB_SRCS})
 
 target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS} boost_filesystem boost_system)
 

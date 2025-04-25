@@ -1,4 +1,3 @@
-
 INCLUDE_DIRECTORIES( ${ENGINE_COMMON_INCLUDES} )
 
 FIND_PACKAGE(BISON REQUIRED)
@@ -15,7 +14,7 @@ set_source_files_properties(dml-gram.cpp PROPERTIES COMPILE_FLAGS "-Wno-unused-b
 ########### next target ###############
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})  # to pick up flex/bison output
-ADD_LIBRARY(dmlpackage SHARED
+columnstore_library(dmlpackage 
     dml-scan.cpp
     dml-gram.cpp
     calpontdmlfactory.cpp
@@ -40,4 +39,3 @@ ADD_LIBRARY(dmlpackage SHARED
 add_dependencies(dmlpackage loggingcpp)
 
 INSTALL(TARGETS dmlpackage DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-

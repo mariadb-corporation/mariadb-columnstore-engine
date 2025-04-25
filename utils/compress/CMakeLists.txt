@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} ${SNAPPY_INCLUDE_DIR} )
 
 #hack for lz4 duplicate header
@@ -11,7 +10,7 @@ set(compress_LIB_SRCS
 
 add_definitions(-DNDEBUG)
 
-add_library(compress SHARED ${compress_LIB_SRCS})
+columnstore_library(compress ${compress_LIB_SRCS})
 add_dependencies(compress loggingcpp external_boost)
 
 target_link_libraries(compress ${SNAPPY_LIBRARIES})

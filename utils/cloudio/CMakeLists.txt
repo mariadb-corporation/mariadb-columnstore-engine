@@ -2,7 +2,7 @@ include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_SRC_DIR}/storage-manager/
 
 set(cloudio_LIB_SRCS SMComm.cpp SMDataFile.cpp SMFileFactory.cpp SMFileSystem.cpp SocketPool.cpp cloud_plugin.cpp ../../datatypes/mcs_datatype.cpp)
 
-add_library(cloudio SHARED ${cloudio_LIB_SRCS})
+columnstore_library(cloudio ${cloudio_LIB_SRCS})
 
 # IDBDataFile currently depends on cloudio, which is backward.
 # Once cloudio has been turned into a proper plugin for idbdatafile,
@@ -26,4 +26,3 @@ target_link_libraries(end_to_end_test ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS} clou
 #target_link_libraries(cloudio_component_test cloudio)
 # Copy end_to_end_test dataFile to binary directory
 FILE(COPY testData DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
-

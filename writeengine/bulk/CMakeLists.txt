@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES} ${S3API_DIR} )
 
 link_directories(${CMAKE_BINARY_DIR}/lib)
@@ -26,7 +25,7 @@ set(we_bulk_STAT_SRCS
     we_workers.cpp)
 
 ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
-add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
+columnstore_library(we_bulk ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
@@ -43,4 +42,3 @@ add_dependencies(cpimport.bin marias3)
 target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
 
 install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-

@@ -1,8 +1,5 @@
 include_directories(${ENGINE_COMMON_INCLUDES})
 
-# ########## next target ###############
-# func_decode_oracle.cpp
-
 set(funcexp_LIB_SRCS
     functor.cpp
     funcexp.cpp
@@ -145,7 +142,7 @@ set(funcexp_LIB_SRCS
     sql_crypt.cpp
 )
 
-add_library(funcexp SHARED ${funcexp_LIB_SRCS})
+columnstore_library(funcexp ${funcexp_LIB_SRCS})
 
 add_dependencies(funcexp loggingcpp)
 

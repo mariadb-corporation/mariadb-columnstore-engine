@@ -1,4 +1,3 @@
-
 include_directories( ${ENGINE_COMMON_INCLUDES}
                      ../../dbcon/mysql )
                      
@@ -8,7 +7,7 @@ set(regr_LIB_SRCS regr_avgx.cpp regr_avgy.cpp regr_count.cpp regr_slope.cpp regr
 
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
-add_library(regr SHARED ${regr_LIB_SRCS} )
+columnstore_library(regr ${regr_LIB_SRCS} )
 
 add_dependencies(regr loggingcpp)
 
@@ -18,7 +17,7 @@ install(TARGETS regr DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
-add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
+columnstore_library(regr_mysql ${regr_mysql_LIB_SRCS})
 add_dependencies(regr_mysql external_boost)
 
 install(TARGETS regr_mysql DESTINATION ${MARIADB_PLUGINDIR} COMPONENT columnstore-engine)
