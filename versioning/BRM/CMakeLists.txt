@@ -128,3 +128,7 @@ install(TARGETS mcs-load-brm-from-file DESTINATION ${ENGINE_BINDIR} COMPONENT co
 add_executable(mcs-shmem-locks shmem_locks.cpp)
 target_link_libraries(mcs-shmem-locks ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} boost_program_options)
 install(TARGETS mcs-shmem-locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+
+add_executable(mcs-oid-client oid-client.cpp)
+target_link_libraries(mcs-oid-client ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})
+install(TARGETS mcs-oid-client DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
