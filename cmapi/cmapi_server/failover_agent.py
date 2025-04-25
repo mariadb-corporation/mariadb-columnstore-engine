@@ -95,9 +95,7 @@ class FailoverAgent(AgentBase):
         try:
             # TODO: remove test_mode condition and add mock for testing
             if not test_mode:
-                MCSProcessManager.stop_node(
-                    is_primary=nc.is_primary_node(),
-                )
+                MCSProcessManager.stop_node(is_primary=nc.is_primary_node())
             logger.info(
                 'FA.enterStandbyMode(): successfully stopped node.'
             )
