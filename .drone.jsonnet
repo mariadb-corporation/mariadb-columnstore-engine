@@ -245,10 +245,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     ],
   },
   _volumes:: {
-    lib: {
-          name: 'lib',
-          path: '/lib',
-    },
     usr: {
        name: 'usr',
        path: '/usr',
@@ -702,11 +698,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'build',
              depends_on: ['clone-mdb'],
              image: img,
-             volumes: [
-                { name: 'lib',    path: '/lib-tmp' },
-                { name: 'usr',    path: '/usr-tmp' },
-                pipeline._volumes.mdb
-             ],
+             volumes: [pipeline._volumes.usr, pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
@@ -740,9 +732,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-stats',
 
-                'cp -a /usr/. /usr-tmp/',
-                'cp -a /lib/. /lib-tmp/',
-
                 // move engine and cmapi packages to one dir and make a repo
                 if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
                 else "mv -v -t ./" + result + "/ /mdb/*.deb /drone/src/cmapi/" + result + "/*.deb && dpkg-scanpackages " + result + " | gzip > ./" + result + "/Packages.gz",
@@ -755,11 +744,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'unittests',
              depends_on: ['build'],
              image: img,
-             volumes: [pipeline._volumes.lib, pipeline._volumes.usr, pipeline._volumes.mdb],
+             volumes: [pipeline._volumes.usr, pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
              },
              commands: [
+               'ln -sfn /usr/lib /lib',
                'cd /mdb/' + builddir,
                testRun(platform),
              ],
@@ -826,7 +816,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
-  volumes: [pipeline._volumes.lib { temp: {} }, pipeline._volumes.usr { temp: {} }, pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
+  volumes: [pipeline._volumes.usr { temp: {} }, pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
     branch: [branch],
