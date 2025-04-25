@@ -402,7 +402,8 @@ build_package() {
     echo "Building a package for $OS"
     echo "Build command: $command"
     eval "$command"
-
+    message "find / -name libexpat.so.1:" #TODO: remove
+    find / -name libexpat.so.1 #TODO: remove
     check_errorcode
 
 }
