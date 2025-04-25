@@ -101,6 +101,7 @@ struct Partitions {
 };
 bool operator <(const Partitions& a, const Partitions& b);
 bool operator ==(const Partitions& a, const Partitions& b);
+bool operator !=(const Partitions& a, const Partitions& b); // for GCC9
 
 /** The CalpontSystemCatalog class
  *

@@ -210,9 +210,7 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
 }
 
 SimpleColumn::SimpleColumn(const ReturnedColumn& rhs, const uint32_t sessionID)
- : ReturnedColumn(rhs, sessionID)
- , fData(rhs.data())
- , fisColumnStore(true)
+ : ReturnedColumn(rhs, sessionID), fData(rhs.data()), fisColumnStore(true)
 {
 }
 
@@ -270,7 +268,7 @@ const string SimpleColumn::toString() const
   ostringstream output;
 
   ostringstream ossps;
-  for (uint32_t i=0;i<fPartitions.fPartNames.size();i++)
+  for (uint32_t i = 0; i < fPartitions.fPartNames.size(); i++)
   {
     if (i > 0)
     {
@@ -283,15 +281,13 @@ const string SimpleColumn::toString() const
   // set in the plugin code.
   datatypes::Charset cs(fResultType.charsetNumber);
   output << "  s/t/ps/c/v/o/ct/TA/CA/RA/#/card/join/source/engine/colPos/cs/coll: " << schemaName() << delim
-         << tableName() << delim << ossps.str() << delim << columnName() << delim
-	 << viewName() << delim << oid() << delim
-         << colDataTypeToString(fResultType.colDataType) << delim << tableAlias() << delim << alias() << delim
-         << returnAll() << delim << sequence() << delim << cardinality() << delim << joinInfo() << delim
-         << colSource() << delim << (isColumnStore() ? "ColumnStore" : "ForeignEngine") << delim
-         << colPosition() << delim << cs.getCharset().cs_name.str << delim << cs.getCharset().coll_name.str
-         << " inputindex/outputindex: " << fInputIndex << delim << fOutputIndex
-	 << " eid " << fExpressionId
-	 << endl;
+         << tableName() << delim << ossps.str() << delim << columnName() << delim << viewName() << delim
+         << oid() << delim << colDataTypeToString(fResultType.colDataType) << delim << tableAlias() << delim
+         << alias() << delim << returnAll() << delim << sequence() << delim << cardinality() << delim
+         << joinInfo() << delim << colSource() << delim << (isColumnStore() ? "ColumnStore" : "ForeignEngine")
+         << delim << colPosition() << delim << cs.getCharset().cs_name.str << delim
+         << cs.getCharset().coll_name.str << " inputindex/outputindex: " << fInputIndex << delim
+         << fOutputIndex << " eid " << fExpressionId << endl;
 
   return output.str();
 }
@@ -301,7 +297,7 @@ string SimpleColumn::toCppCode(IncludeSet& includes) const
   includes.insert("simplecolumn.h");
   stringstream ss;
 
-  ss << "SimpleColumn(" << std::quoted(fData)  << ", SimpleColumn::ForTestPurposeWithoutOID{})";
+  ss << "SimpleColumn(" << std::quoted(fData) << ", SimpleColumn::ForTestPurposeWithoutOID{})";
 
   return ss.str();
 }

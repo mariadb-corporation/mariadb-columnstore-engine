@@ -6370,5 +6370,10 @@ bool operator ==(const Partitions& a, const Partitions& b)
   return true;
 }
 
+bool operator !=(const Partitions& a, const Partitions& b)
+{
+  return !(a == b);
+}
+
 }  // namespace execplan
 // vim:sw=4 ts=4:
