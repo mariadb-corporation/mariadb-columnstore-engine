@@ -1538,21 +1538,24 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      valIn = rowIn.getIntField(colIn);
+      break;
+    }
+    // According to SQL specification, the result must fit in int64_t, 
+    // therefore, the upper 8 bytes for data types >= 8 bytes are ignored
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      valIn = rowIn.getIntField(colIn);
-
+      valIn = rowIn.getIntField<8>(colIn);
       if ((fRowGroupIn.getScale())[colIn] != 0)
       {
-        valIn = rowIn.getIntField(colIn);
         valIn /= IDB_pow[fRowGroupIn.getScale()[colIn] - 1];
 
         if (valIn > 0)
           valIn += 5;
         else if (valIn < 0)
           valIn -= 5;
-
         valIn /= 10;
       }
 
