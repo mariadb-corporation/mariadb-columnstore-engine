@@ -15,6 +15,13 @@ select bit_or(c), bit_xor(c), bit_and(c) from t1;
 --disable_warnings
 DROP TABLE IF EXISTS t1;
 --enable_warnings
+create table t1(c decimal(18)) engine=columnstore;
+insert into t1(c) values (999999999999999999);
+select bit_or(c), bit_xor(c), bit_and(c) from t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
 
 --disable_warnings
 DROP DATABASE mcol_5386;
