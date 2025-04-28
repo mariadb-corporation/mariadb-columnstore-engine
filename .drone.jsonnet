@@ -245,10 +245,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     ],
   },
   _volumes:: {
-    usr: {
-       name: 'usr',
-       path: '/usr',
-    },
     mdb: {
       name: 'mdb',
       path: '/mdb',
@@ -698,7 +694,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'build',
              depends_on: ['clone-mdb'],
              image: img,
-             volumes: [pipeline._volumes.usr, pipeline._volumes.mdb],
+             volumes: [pipeline._volumes.mdb],
              environment: {
                DEBIAN_FRONTEND: 'noninteractive',
                DEB_BUILD_OPTIONS: 'parallel=4',
@@ -738,25 +734,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
                 // list storage manager binary
                 'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
-             ],
-           },
-           {
-             name: 'unittests',
-             depends_on: ['build'],
-             image: img,
-             volumes: [pipeline._volumes.usr, pipeline._volumes.mdb],
-             environment: {
-               DEBIAN_FRONTEND: 'noninteractive',
-             },
-             commands: [
-               'ln -sfn /usr/lib /lib',
-               'cd /mdb/' + builddir,
-               testRun(platform),
+
+                #run unittests
+                'cd /mdb/' + builddir,
+                testRun(platform),
              ],
            },
            {
              name: 'pkg',
-             depends_on: ['unittests'],
+             depends_on: ['build'],
              image: 'alpine/git',
              when: {
                status: ['success', 'failure'],
@@ -816,7 +802,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
-  volumes: [pipeline._volumes.usr { temp: {} }, pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
+  volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],
   trigger: {
     event: [event],
     branch: [branch],
