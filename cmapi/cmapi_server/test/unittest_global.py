@@ -2,21 +2,14 @@ import logging
 import os
 import unittest
 from contextlib import contextmanager
-from datetime import datetime, timedelta
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
 import cherrypy
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
-
 from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.logging_management import config_cmapi_server_logging
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
 
@@ -80,6 +73,7 @@ class BaseServerTestCase(unittest.TestCase):
             )
             copyfile(cmapi_config_filename, self.cmapi_config_filename)
             copyfile(TEST_MCS_CONFIG_FILEPATH, self.mcs_config_filename)
+            config_cmapi_server_logging()
             self.app = cherrypy.tree.mount(
                 root=None, config=self.cmapi_config_filename
             )
