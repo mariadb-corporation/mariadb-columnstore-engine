@@ -207,8 +207,6 @@ class TypelessDataStructure
 
 using RowPointersVec =
     std::vector<rowgroup::Row::Pointer, allocators::CountingAllocator<rowgroup::Row::Pointer>>;
-    // using RowPointersVec =
-    // std::vector<rowgroup::Row::Pointer>;
 using RowPointersVecUP = std::unique_ptr<RowPointersVec>;
 class TupleJoiner
 {

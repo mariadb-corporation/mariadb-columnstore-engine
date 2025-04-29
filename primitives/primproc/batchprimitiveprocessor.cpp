@@ -2287,34 +2287,29 @@ int BatchPrimitiveProcessor::operator()()
 
 void BatchPrimitiveProcessor::allocLargeBuffers()
 {
-  // auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
+  auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
 
   if (ot == ROW_GROUP && !outRowGroupData)
   {
-    // outputRG.setUseStringTable(true);
-    // outRowGroupData.reset(new RGData(outputRG, allocator));
-    outRowGroupData.reset(new RGData(outputRG));
+    outRowGroupData.reset(new RGData(outputRG, allocator));
     outputRG.setData(outRowGroupData.get());
   }
 
   if (fe1 && !fe1Data)
   {
-    // fe1Data.reset(new RGData(fe1Input, allocator));
-    fe1Data.reset(new RGData(fe1Input));
+    fe1Data.reset(new RGData(fe1Input, allocator));
     fe1Input.setData(fe1Data.get());
   }
 
   if (fe2 && !fe2Data)
   {
-    // fe2Data.reset(new RGData(fe2Output, allocator));
-    fe2Data.reset(new RGData(fe2Output));
+    fe2Data.reset(new RGData(fe2Output, allocator));
     fe2Output.setData(fe2Data.get());
   }
 
   if (getTupleJoinRowGroupData && !joinedRGMem)
   {
-    // joinedRGMem.reset(new RGData(joinedRG, allocator));
-    joinedRGMem.reset(new RGData(joinedRG));
+    joinedRGMem.reset(new RGData(joinedRG, allocator));
     joinedRG.setData(joinedRGMem.get());
   }
 }
