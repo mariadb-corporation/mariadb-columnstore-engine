@@ -331,7 +331,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       {
         storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false,
         true));
-        // storedKeyAllocators.emplace_back(PoolAllocator(PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
       }
 
       joinNullValues.reset(new uint64_t[joinerCount]);
