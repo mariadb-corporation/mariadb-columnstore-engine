@@ -15,7 +15,7 @@ from cmapi_server.helpers import (
     get_current_key, get_version, update_revision_and_manager,
 )
 from cmapi_server.node_manipulation import (
-    add_node, add_dbroot, remove_node, switch_node_maintenance, update_dbroots_of_readonly_nodes,
+    add_node, add_dbroot, remove_node, switch_node_maintenance,
 )
 from mcs_node_control.models.misc import get_dbrm_master
 from mcs_node_control.models.node_config import NodeConfig
@@ -181,6 +181,11 @@ class ClusterHandler():
                         host=node, input_config_filename=config,
                         output_config_filename=config
                     )
+                else:
+                    logger.debug(
+                        f'Node {node} is read-only, skipping dbroot addition'
+                    )
+
         except Exception as err:
             raise CMAPIBasicError('Error while adding node.') from err
 
@@ -223,8 +228,6 @@ class ClusterHandler():
                 node, input_config_filename=config,
                 output_config_filename=config
             )
-            with NodeConfig().modify_config(config) as root:
-                update_dbroots_of_readonly_nodes(root)
         except Exception as err:
             raise CMAPIBasicError('Error while removing node.') from err
 
