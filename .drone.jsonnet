@@ -685,7 +685,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
-  steps: [
+  steps: std.filter(function(step) step != null, [
            {
              name: 'submodules',
              image: 'alpine/git',
@@ -718,8 +718,36 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
            {
+             name: 'get-local-sccache',
+             depends_on: ['submodules'],
+             image: 'amazon/aws-cli',
+             volumes: [pipeline._volumes.mdb],
+             environment: {
+               AWS_ACCESS_KEY_ID: {
+                 from_secret: 'aws_access_key_id',
+               },
+               AWS_SECRET_ACCESS_KEY: {
+                 from_secret: 'aws_secret_access_key',
+               },
+             },
+             commands: [
+               'yum install -y tar zstd',
+               'mkdir -p /mdb/sccache',
+               'echo "Attempting to download SCCache archive from S3..."',
+               'if aws s3 cp s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ":", "-") + '/sccache.tar.zst /tmp/sccache.tar.zst; then',
+               '  echo "SCCache archive found. Extracting..."',
+               '  tar -I zstd -xf /tmp/sccache.tar.zst -C /mdb/sccache',
+               '  ls /mdb/sccache/ && mv /mdb/sccache/mdb/sccache /mdb/sccache_inner && rm -rf /mdb/sccache/ && mv /mdb/sccache_inner /mdb/sccache',  # TODO remove
+               '  echo "SCCache successfully downloaded and extracted."',
+               '  ls /mdb/sccache',
+               'else',
+               '  echo "SCCache archive not found on S3. Proceeding without it."',
+               'fi',
+             ],
+           },
+           {
              name: 'build',
-             depends_on: ['clone-mdb'],
+             depends_on: ['clone-mdb', 'get-local-sccache'],
              image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
@@ -733,19 +761,15 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                AWS_SECRET_ACCESS_KEY: {
                  from_secret: 'aws_secret_access_key',
                },
-               SCCACHE_DIR: '/tmp/sccache',   // local cache for sccache
+               SCCACHE_DIR: '/mdb/sccache',   // local cache for sccache
                SCCACHE_CACHE_SIZE: '20G',
-              // SCCACHE_BUCKET: 'cs-sccache',  // remote S3 cache in case we have a local miss
-              // SCCACHE_REGION: 'us-east-1',
-              // SCCACHE_S3_USE_SSL: 'true',
-              // SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
-               SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
-               SCCACHE_LOG: 'sccache_debug.txt',
+               // SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
+               // SCCACHE_LOG: 'sccache_debug.txt',
              },
              commands: [
                 'export CLICOLOR_FORCE=1',
                 get_sccache,
-		'mkdir -p /tmp/sccache',
+                'mkdir -p /mdb/sccache',
                 'mkdir /mdb/' + builddir + '/' + result,
 
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
@@ -757,12 +781,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-adv-stats',
 
-                // if this is a nightly build, archive local sccache dir and upload it to S3
-                'du -hs /tmp/sccache',
-                'time tar -I pzstd -cf sccache.tar.zst /tmp/sccache',
-                'time aws s3 cp sccache.tar.zst s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst',
-                'echo "Nightly build cache uploaded to: s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst"',
-
                 // move engine and cmapi packages to one dir and make a repo
                 if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
                 else "mv -v -t ./" + result + "/ /mdb/*.deb /drone/src/cmapi/" + result + "/*.deb && dpkg-scanpackages " + result + " | gzip > ./" + result + "/Packages.gz",
@@ -771,6 +789,30 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
+           // (if (event == 'cron') then {  // Publish cache only in the nightly builds)
+           (if (1 == 1) then {
+            name: 'publish-sccache',
+            depends_on: ['build'],
+            image: 'amazon/aws-cli',
+            volumes: [pipeline._volumes.mdb],
+            environment: {
+              AWS_ACCESS_KEY_ID: {
+                from_secret: 'aws_access_key_id',
+              },
+              AWS_SECRET_ACCESS_KEY: {
+                from_secret: 'aws_secret_access_key',
+              },
+            },
+            commands: [
+              'yum install -y tar zstd',
+              'du -hs /mdb/sccache',
+              'cd /mdb/sccache',
+              'time tar -I pzstd -cf ../sccache.tar.zst .',
+              'cd ..',
+              'time aws s3 cp sccache.tar.zst s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst',
+              'echo "Nightly build cache uploaded to: s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst"',
+            ],
+           } else null),
            {
              name: 'unittests',
              depends_on: ['build'],
@@ -813,7 +855,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'ls -l /drone/src/%s | grep columnstore' % result,
              ],
            },
-         ] +
+         ]) +
          [pipeline.cmapipython] + [pipeline.cmapibuild] +
          [pipeline.publish('cmapi build')] +
          [pipeline.publish()] +
