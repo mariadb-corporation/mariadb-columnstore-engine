@@ -911,9 +911,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   uint32_t rowSize = 0;
 
   rowgroup::RGData rgDataOut;
-  // auto alloc = fRm->getAllocator<ordering::OrderByRow>();
   ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, fRm->getAllocator<ordering::OrderByRow>());
-  // ordering::SortingPQ finalPQ(rowgroup::rgCommonSize);
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
   fRowGroupOut.setData(&rgDataOut);
   fRowGroupOut.resetRowGroup(0);
