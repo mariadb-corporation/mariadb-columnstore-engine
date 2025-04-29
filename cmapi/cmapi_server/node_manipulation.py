@@ -169,7 +169,7 @@ def remove_node(
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, node)
 
-            is_read_only = node in node_config.get_read_only_nodes(c_root)
+            is_read_only = node in helpers.get_read_only_nodes(c_root)
             if not is_read_only:
                 _remove_WES(c_root, pm_num)
 
