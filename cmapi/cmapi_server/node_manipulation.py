@@ -111,8 +111,8 @@ def add_node(
                 if not read_only:
                     _rebalance_dbroots(c_root)
                     _move_primary_node(c_root)
-
-            update_dbroots_of_readonly_nodes(c_root)
+                else:
+                    add_dbroots_of_other_nodes(c_root, pm_num)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -185,7 +185,8 @@ def remove_node(
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
 
-            update_dbroots_of_readonly_nodes(c_root)
+            if is_read_only:
+                remove_dbroots_of_node(c_root, pm_num)
         else:
             # TODO:
             #   - IMO undefined behaviour here. Removing one single node
@@ -259,7 +260,7 @@ def rebalance_dbroots(
 #
 # returns the id of the new dbroot on success
 # raises an exception on error
-def add_dbroot(input_config_filename = None, output_config_filename = None, host = None) -> int:
+def add_dbroot(input_config_filename = None, output_config_filename = None, host = None):
     node_config = NodeConfig()
     if input_config_filename is None:
         c_root = node_config.get_current_config_root()
@@ -1182,53 +1183,25 @@ class NodeNotFoundException(Exception):
     pass
 
 
-def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
-    """Get a mapping of PM module numbers to their IP addresses"""
-    module_num_to_addr = {}
-    smc_node = root.find("./SystemModuleConfig")
-    mod_count = int(smc_node.find("./ModuleCount3").text)
-    for i in range(1, mod_count + 1):
-        ip_addr = smc_node.find(f"./ModuleIPAddr{i}-1-3").text
-        module_num_to_addr[i] = ip_addr
-    return module_num_to_addr
-
-
-def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
-    """Read-only nodes do not have their own dbroots, but they must have all the dbroots of the other nodes
-    So this function sets list of dbroots of each read-only node to the list of all the dbroots in the cluster
-    """
-    nc = NodeConfig()
-    pm_num_to_addr = get_pm_module_num_to_addr_map(root)
-    for ro_node in nc.get_read_only_nodes(root):
-        # Get PM num by IP address
-        this_ip_pm_num = None
-        for pm_num, pm_addr in pm_num_to_addr.items():
-            if pm_addr == ro_node:
-                this_ip_pm_num = pm_num
-                break
-
-        if this_ip_pm_num is not None:
-            # Add dbroots of other nodes to this read-only node
-            add_dbroots_of_other_nodes(root, this_ip_pm_num)
-        else:  # This should not happen
-            err_msg = f"Could not find PM number for read-only node {ro_node}"
-            logging.error(err_msg)
-            raise NodeNotFoundException(err_msg)
-
-
 def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
     """Adds all the dbroots listed in the config to this (read-only) node"""
     existing_dbroots = _get_existing_db_roots(root)
     sysconf_node = root.find("./SystemModuleConfig")
 
-    # Remove existing dbroots from this module
-    remove_dbroots_of_node(root, module_num)
-
     # Write node's dbroot count
+    dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
+    if dbroot_count_node is not None:
+        sysconf_node.remove(dbroot_count_node)
     dbroot_count_node = etree.SubElement(
         sysconf_node, f"ModuleDBRootCount{module_num}-3"
     )
     dbroot_count_node.text = str(len(existing_dbroots))
+
+    # Remove existing dbroot IDs of this module if present
+    for i in range(1, 100):
+        dbroot_id_node = sysconf_node.find(f"./ModuleDBRootID{module_num}-{i}-3")
+        if dbroot_id_node is not None:
+            sysconf_node.remove(dbroot_id_node)
 
     # Write new dbroot IDs to the module mapping
     for i, dbroot_id in enumerate(existing_dbroots, start=1):
@@ -1246,6 +1219,10 @@ def remove_dbroots_of_node(root: etree.Element, module_num: int) -> None:
     dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
     if dbroot_count_node is not None:
         sysconf_node.remove(dbroot_count_node)
+    else:
+        logging.error(
+            f"ModuleDBRootCount{module_num}-3 not found in SystemModuleConfig"
+        )
 
     # Remove existing dbroot IDs
     for i in range(1, 100):

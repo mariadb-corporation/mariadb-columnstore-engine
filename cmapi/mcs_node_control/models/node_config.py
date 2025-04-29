@@ -1,5 +1,4 @@
 import configparser
-from contextlib import contextmanager
 import grp
 import logging
 import pwd
@@ -8,7 +7,6 @@ import socket
 from os import mkdir, replace, chown
 from pathlib import Path
 from shutil import copyfile
-from typing import Optional
 from xml.dom import minidom  # to pick up pretty printing functionality
 
 from lxml import etree
@@ -138,26 +136,6 @@ class NodeConfig:
         with open(tmp_filename, "w") as f:
             f.write(self.to_string(tree))
         replace(tmp_filename, filename)    # atomic replacement
-
-    @contextmanager
-    def modify_config(
-        self,
-        input_config_filename: str = DEFAULT_MCS_CONF_PATH,
-        output_config_filename: Optional[str] = None,
-        ):
-        """Context manager to modify the config file
-        If exception is raised, the config file is not modified and exception is re-raised
-        If output_config_filename is not provided, the input config file is modified
-        """
-        try:
-            c_root = self.get_current_config_root(input_config_filename)
-            yield c_root
-        except Exception as e:
-            logging.error(f"modify_config(): Caught exception: '{str(e)}', config file not modified")
-            raise
-        else:
-            output_config_filename = output_config_filename or input_config_filename
-            self.write_config(c_root, output_config_filename)
 
     def to_string(self, tree):
         # TODO: try to use lxml to do this to avoid the add'l dependency

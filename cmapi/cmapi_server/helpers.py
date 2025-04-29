@@ -378,7 +378,7 @@ def broadcast_new_config(
                 ) as response:
                     resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node {node} config put successful.')
+                logging.info(f'Node {node} config put successfull.')
             except aiohttp.ClientResponseError as err:
                 # TODO: may be better to check if resp status is 422 cause
                 #       it's like a signal that cmapi server raised it in
