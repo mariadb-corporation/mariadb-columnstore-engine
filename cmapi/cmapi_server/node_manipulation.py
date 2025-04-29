@@ -17,13 +17,11 @@ from lxml import etree
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH,
-    CMAPI_SINGLE_NODE_XML,
-    DEFAULT_MCS_CONF_PATH,
-    LOCALHOSTS,
+    CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
     MCS_DATA_PATH,
 )
 from mcs_node_control.models.node_config import NodeConfig
+
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
