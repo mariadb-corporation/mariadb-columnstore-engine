@@ -1,8 +1,7 @@
 import logging
 import socket
 import unittest
-from unittest.mock import ANY, patch
-
+from unittest.mock import patch, ANY
 from lxml import etree
 
 from cmapi_server import node_manipulation
