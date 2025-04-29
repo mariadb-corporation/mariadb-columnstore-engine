@@ -5,7 +5,7 @@ import logging
 import pwd
 import re
 import socket
-from os import chown, mkdir, replace
+from os import mkdir, replace, chown
 from pathlib import Path
 from shutil import copyfile
 from typing import Optional
@@ -14,14 +14,15 @@ from xml.dom import minidom  # to pick up pretty printing functionality
 from lxml import etree
 
 from cmapi_server.constants import (
-    DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH,
     MCS_MODULE_FILE_PATH,
 )
-
 # from cmapi_server.managers.process import MCSProcessManager
-from mcs_node_control.models.misc import get_dbroots_list, read_module_id
+from mcs_node_control.models.misc import (
+    read_module_id, get_dbroots_list
+)
 from mcs_node_control.models.network_ifaces import get_network_interfaces
+
 
 module_logger = logging.getLogger()
 
@@ -590,15 +591,11 @@ has dbroot {subel.text}')
 
         return dbroots
 
-    def get_read_only_nodes(self, root=None) -> list[str]:
-        """Get names of read only nodes from config"""
-        root = root or self.get_current_config_root()
-        return [node.text for node in root.findall('./ReadOnlyNodes/Node')]
-
     def is_read_only(self, root=None) -> bool:
         """Checks if this node is in read-only mode"""
+        from cmapi_server.helpers import get_read_only_nodes # Avoid circular import
 
         root = root or self.get_current_config_root()
-        read_only_nodes = set(self.get_read_only_nodes(root))
+        read_only_nodes = set(get_read_only_nodes(root))
         my_names = set(self.get_network_addresses_and_names())
         return bool(read_only_nodes.intersection(my_names))

@@ -11,7 +11,7 @@ from time import sleep
 import psutil
 
 from cmapi_server.constants import (
-    IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs
+    IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
@@ -126,8 +126,7 @@ class ContainerDispatcher(BaseDispatcher):
         :return: command with arguments if needed
         :rtype: str
         """
-        prog = MCSProgs(service)
-        service_info = ALL_MCS_PROGS[prog]
+        service_info = ALL_MCS_PROGS[service]
         command = os.path.join(MCS_INSTALL_BIN, service)
 
         if service_info.subcommand:
@@ -189,8 +188,7 @@ class ContainerDispatcher(BaseDispatcher):
             env=env_vars
         )
         # TODO: any other way to detect service finished its initialisation?
-        prog = MCSProgs(service)
-        sleep(ALL_MCS_PROGS[prog].delay)
+        sleep(ALL_MCS_PROGS[service].delay)
         logger.debug(f'Started "{service}".')
 
         if is_primary and service == 'DDLProc':

@@ -7,7 +7,7 @@ from time import sleep
 import psutil
 
 from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs, ProgInfo
+from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
 from cmapi_server.process_dispatchers.container import (
@@ -33,7 +33,7 @@ class MCSProcessManager:
     e.g. re/-start or stop systemd services, run executable.
     """
     CONTROLLER_MAX_RETRY = 30
-    mcs_progs: dict[str, ProgInfo] = {}
+    mcs_progs = {}
     mcs_version_info = None
     dispatcher_name = None
     process_dispatcher = None
@@ -48,7 +48,8 @@ class MCSProcessManager:
         :rtype: str
         """
         if cls.dispatcher_name == 'systemd':
-            return ALL_MCS_PROGS[name].service_name
+            prog = MCSProgs[name]
+            return ALL_MCS_PROGS[prog].service_name
         return name
 
     @classmethod
@@ -90,8 +91,7 @@ class MCSProcessManager:
         if cls.mcs_progs:
             logging.warning('Mcs ProcessHandler already detected processes.')
 
-        for prog, prog_info in ALL_MCS_PROGS.items():
-            prog_name = prog.value
+        for prog_name, prog_info in ALL_MCS_PROGS.items():
             if os.path.exists(os.path.join(MCS_INSTALL_BIN, prog_name)):
                 cls.mcs_progs[prog_name] = prog_info
 
@@ -453,6 +453,7 @@ class MCSProcessManager:
         is_primary: bool,
         use_sudo: bool = True,
         timeout: int = 10,
+        is_read_only: bool = False,
     ):
         """Stop mcs node processes.
 
@@ -462,6 +463,8 @@ class MCSProcessManager:
         :type use_sudo: bool, optional
         :param timeout: timeout for DMLProc gracefully stop using DBRM, seconds
         :type timeout: int
+        :param is_read_only: if true, doesn't stop WriteEngine
+        :type is_read_only: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not stopped
         """
         # Every time try to stop all processes no matter primary it or slave,
@@ -477,5 +480,5 @@ class MCSProcessManager:
     def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_only: bool = False):
         """TODO: For next releases."""
         if cls.get_running_mcs_procs():
-            cls.stop_node(is_primary, use_sudo)
+            cls.stop_node(is_primary, use_sudo, is_read_only)
         cls.start_node(is_primary, use_sudo, is_read_only)
