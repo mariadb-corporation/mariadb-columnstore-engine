@@ -77,17 +77,17 @@ class ProgInfo(NamedTuple):
 # on top level of process handling
 # mcs-storagemanager starts conditionally inside mcs-loadbrm, but should be
 # stopped using cmapi
-ALL_MCS_PROGS: dict[MCSProgs, ProgInfo] = {
+ALL_MCS_PROGS: dict[str, ProgInfo] = {
     # workernode starts on primary and non primary node with 1 or 2 added
     # to subcommand (DBRM_Worker1 - on primary, DBRM_Worker2 - non primary)
-    MCSProgs.STORAGE_MANAGER: ProgInfo(15, 'mcs-storagemanager', '', False, 1),
-    MCSProgs.WORKER_NODE: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
-    MCSProgs.CONTROLLER_NODE: ProgInfo(11, 'mcs-controllernode', 'fg', True),
-    MCSProgs.PRIM_PROC: ProgInfo(5, 'mcs-primproc', '', False, 1),
-    MCSProgs.EXE_MGR: ProgInfo(9, 'mcs-exemgr', '', False, 1),
-    MCSProgs.WRITE_ENGINE_SERVER: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
-    MCSProgs.DML_PROC: ProgInfo(3, 'mcs-dmlproc', '', False),
-    MCSProgs.DDL_PROC: ProgInfo(1, 'mcs-ddlproc', '', False),
+    MCSProgs.STORAGE_MANAGER.value: ProgInfo(15, 'mcs-storagemanager', '', False, 1),
+    MCSProgs.WORKER_NODE.value: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
+    MCSProgs.CONTROLLER_NODE.value: ProgInfo(11, 'mcs-controllernode', 'fg', True),
+    MCSProgs.PRIM_PROC.value: ProgInfo(5, 'mcs-primproc', '', False, 1),
+    MCSProgs.EXE_MGR.value: ProgInfo(9, 'mcs-exemgr', '', False, 1),
+    MCSProgs.WRITE_ENGINE_SERVER.value: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
+    MCSProgs.DML_PROC.value: ProgInfo(3, 'mcs-dmlproc', '', False),
+    MCSProgs.DDL_PROC.value: ProgInfo(1, 'mcs-ddlproc', '', False),
 }
 
 # constants for docker container dispatcher
