@@ -1,15 +1,18 @@
 import logging
 import socket
 import unittest
-from unittest.mock import patch
-
+from unittest.mock import patch, ANY
 from lxml import etree
 
 from cmapi_server import node_manipulation
 from cmapi_server.constants import MCS_DATA_PATH
-from cmapi_server.node_manipulation import add_dbroots_of_other_nodes, remove_dbroots_of_node, update_dbroots_of_readonly_nodes
-from cmapi_server.test.unittest_global import BaseNodeManipTestCase, tmp_mcs_config_filename
+from cmapi_server.helpers import get_read_only_nodes
+from cmapi_server.node_manipulation import add_dbroots_of_other_nodes, remove_dbroots_of_node
+from cmapi_server.test.unittest_global import (
+    tmp_mcs_config_filename, BaseNodeManipTestCase
+)
 from mcs_node_control.models.node_config import NodeConfig
+
 
 logging.basicConfig(level='DEBUG')
 
@@ -88,7 +91,7 @@ class NodeManipTester(BaseNodeManipTestCase):
             root = nc.get_current_config_root(self.tmp_files[1])
 
             # Check if read-only nodes section exists and is filled
-            read_only_nodes = nc.get_read_only_nodes(root)
+            read_only_nodes = get_read_only_nodes(root)
             self.assertEqual(len(read_only_nodes), 1)
             self.assertEqual(read_only_nodes[0], self.NEW_NODE_NAME)
 
@@ -108,12 +111,11 @@ class NodeManipTester(BaseNodeManipTestCase):
             # Test read-only node removal
             node_manipulation.remove_node(
                 self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
-                deactivate_only=False,
             )
 
             nc = NodeConfig()
             root = nc.get_current_config_root(self.tmp_files[2])
-            read_only_nodes = nc.get_read_only_nodes(root)
+            read_only_nodes = get_read_only_nodes(root)
             self.assertEqual(len(read_only_nodes), 0)
 
             mock_rebalance_dbroots.assert_not_called()
