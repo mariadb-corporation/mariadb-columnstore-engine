@@ -7,7 +7,7 @@ import socket
 from os import mkdir, replace, chown
 from pathlib import Path
 from shutil import copyfile
-from xml.dom import minidom  # to pick up pretty printing functionality
+from xml.dom import minidom   # to pick up pretty printing functionality
 
 from lxml import etree
 

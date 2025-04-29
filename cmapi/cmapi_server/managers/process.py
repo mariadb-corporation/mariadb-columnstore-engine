@@ -48,8 +48,7 @@ class MCSProcessManager:
         :rtype: str
         """
         if cls.dispatcher_name == 'systemd':
-            prog = MCSProgs[name]
-            return ALL_MCS_PROGS[prog].service_name
+            return ALL_MCS_PROGS[name].service_name
         return name
 
     @classmethod
