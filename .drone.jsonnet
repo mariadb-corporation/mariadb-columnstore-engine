@@ -733,16 +733,19 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                AWS_SECRET_ACCESS_KEY: {
                  from_secret: 'aws_secret_access_key',
                },
-               SCCACHE_BUCKET: 'cs-sccache',
-               SCCACHE_REGION: 'us-east-1',
-               SCCACHE_S3_USE_SSL: 'true',
-               SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
-               //SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
-               //SCCACHE_LOG: 'debug',
+               SCCACHE_DIR: '/tmp/sccache',   // local cache for sccache
+               SCCACHE_CACHE_SIZE: '20G',
+              // SCCACHE_BUCKET: 'cs-sccache',  // remote S3 cache in case we have a local miss
+              // SCCACHE_REGION: 'us-east-1',
+              // SCCACHE_S3_USE_SSL: 'true',
+              // SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + '${DRONE_PULL_REQUEST}',
+               SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
+               SCCACHE_LOG: 'sccache_debug.txt',
              },
              commands: [
                 'export CLICOLOR_FORCE=1',
                 get_sccache,
+		'mkdir -p /tmp/sccache',
                 'mkdir /mdb/' + builddir + '/' + result,
 
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
@@ -752,7 +755,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '--server-version ' + server + ' | ' +
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
-                'sccache --show-stats',
+                'sccache --show-adv-stats',
+
+                // if this is a nightly build, archive local sccache dir and upload it to S3
+                'du -hs /tmp/sccache',
+                'time tar -I pzstd -cf sccache.tar.zst /tmp/sccache',
+                'time aws s3 cp sccache.tar.zst s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst',
+                'echo "Nightly build cache uploaded to: s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ':', '-') + '/sccache.tar.zst"',
 
                 // move engine and cmapi packages to one dir and make a repo
                 if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
