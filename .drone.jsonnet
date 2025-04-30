@@ -134,7 +134,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
     name: 'publish ' + step_prefix,
-    depends_on: [std.strReplace(step_prefix, ' latest', '')],
+    depends_on: [std.strReplace(step_prefix, ' latest', ''), 'createrepo'],
     image: 'amazon/aws-cli',
     when: {
       status: ['success', 'failure'],
@@ -710,13 +710,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-stats',
-
-                // move engine and cmapi packages to one dir and make a repo
-                if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
-                else "mv -v -t ./" + result + "/ /mdb/*.deb /drone/src/cmapi/" + result + "/*.deb && dpkg-scanpackages " + result + " | gzip > ./" + result + "/Packages.gz",
-
-                // list storage manager binary
-                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
            {
@@ -732,8 +725,17 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
             },
            {
+             name: 'createrepo',
+             depends_on: ['build', 'cmapi build'],
+             image: img,
+             volumes: [pipeline._volumes.mdb],
+             commands: [
+                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --distro ' + platform,
+             ],
+           },
+           {
              name: 'unittests',
-             depends_on: ['build'],
+             depends_on: ['createrepo'],
              image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
@@ -774,7 +776,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
          ] +
-         [pipeline.cmapipython] + [pipeline.cmapibuild] +
          [pipeline.publish('cmapi build')] +
          [pipeline.publish()] +
          [
