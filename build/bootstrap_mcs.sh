@@ -317,6 +317,11 @@ construct_cmake_flags() {
 
     if [[ $SCCACHE = true ]]; then
         warn "Use sccache"
+        # If sccache works well, the build becomes an IO bound task instead of CPU bound
+        # It happens because most of the time is spent is hashing the input files
+        # So we can run more jobs in parallel
+        CPUS=$((CPUS * 3))
+        message "Adjusted the number of CPUs for parallel build to $CPUS (multiplied by 3 to reduce IO wait)"
         MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
     fi
 

@@ -718,6 +718,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
            {
+            // Get the copy of compile cache from the nightly build from S3
              name: 'get-local-sccache',
              depends_on: ['submodules'],
              image: 'amazon/aws-cli',
@@ -737,7 +738,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                'if aws s3 cp s3://cspkg/nightly-sccache/stable-23.10-' + server + '-' + arch + '-' + std.strReplace(platform, ":", "-") + '/sccache.tar.zst /tmp/sccache.tar.zst; then',
                '  echo "SCCache archive found. Extracting..."',
                '  tar -I zstd -xf /tmp/sccache.tar.zst -C /mdb/sccache',
-               '  ls /mdb/sccache/ && mv /mdb/sccache/mdb/sccache /mdb/sccache_inner && rm -rf /mdb/sccache/ && mv /mdb/sccache_inner /mdb/sccache',  # TODO remove
+
+                // TODO remove when all correct caches are uploaded
+               '  ls /mdb/sccache/; if [ -f /mdb/sccache/mdb ]; then mv /mdb/sccache/mdb/sccache /mdb/sccache_inner && rm -rf /mdb/sccache/ && mv /mdb/sccache_inner /mdb/sccache; fi',
+
                '  echo "SCCache successfully downloaded and extracted."',
                '  ls /mdb/sccache',
                'else',
