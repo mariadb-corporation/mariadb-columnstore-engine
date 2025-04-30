@@ -124,7 +124,7 @@ TEST_F(STLPoolAllocatorTest, ResourceManagerIntegration)
     using TestType = int8_t;
     using Allocator = STLPoolAllocator<TestType>;
 
-    joblist::ResourceManager rm(true, nullptr);
+    joblist::ResourceManager rm;
     // To set the memory allowance
     rm.setMemory(MemoryAllowance);
     Allocator alloc(&rm, 1024, 512);

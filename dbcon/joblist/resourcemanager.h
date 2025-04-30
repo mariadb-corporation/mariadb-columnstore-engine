@@ -119,8 +119,12 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  explicit ResourceManager(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  explicit ResourceManager(bool runningInExeMgr, config::Config* aConfig = nullptr);
   static ResourceManager* instance(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  
+  // For UT
+  explicit ResourceManager();
+  
   config::Config* getConfig()
   {
     return fConfig;
