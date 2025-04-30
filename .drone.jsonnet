@@ -578,49 +578,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
   },
-  cmapipython:: {
-    name: 'cmapi python',
-    depends_on: ['clone-mdb'],
-    image: img,
-    volumes: [pipeline._volumes.mdb],
-    environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst',
-      PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
-    },
-    commands: [
-      'cd cmapi',
-      '%s install -y wget zstd findutils gcc' % if (pkg_format == 'rpm') then 'yum install -y epel-release && yum makecache && yum ' else 'apt update && apt',
-      'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
-      'mv python pp && mv pp/install python',
-      'chown -R root:root python',
-      if (platform == 'rockylinux:9') then 'yum install -y libxcrypt-compat',
-      if (arch == 'arm64') then 'export CC=gcc',
-      'python/bin/pip3 install -t deps --only-binary :all -r requirements.txt',
-      './cleanup.sh',
-      'cp cmapi_server/cmapi_server.conf cmapi_server/cmapi_server.conf.default',
-    ],
-  },
-  cmapibuild:: {
-    name: 'cmapi build',
-    depends_on: ['cmapi python'],
-    image: img,
-    volumes: [pipeline._volumes.mdb],
-    environment: {
-      DEBIAN_FRONTEND: 'noninteractive',
-    },
-    commands: [
-      'cd cmapi',
-      if (platform == 'rockylinux:9') then 'dnf install -y yum-utils && dnf config-manager --set-enabled devel && dnf update -y',
-      if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils redhat-lsb-core' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev lsb-release',
-      './cleanup.sh',
-      'cmake -D' + std.asciiUpper(pkg_format) + '=1 -DSERVER_DIR=/mdb/' + builddir + ' . && make package',
-      'mkdir ./' + result,
-      'mv -v *.%s ./%s/' % [pkg_format, result],
-      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-      'mkdir /drone/src/' + result,
-      'yes | cp -vr ./%s /drone/src/' % result,
-    ],
-  },
   cmapitest:: {
     name: 'cmapi test',
     depends_on: ['publish cmapi build', 'smoke'],
@@ -762,6 +719,18 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                 'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
              ],
            },
+           {
+             name: 'cmapi build',
+             depends_on: ['clone-mdb'],
+             image: img,
+             volumes: [pipeline._volumes.mdb],
+             environment: {
+               DEBIAN_FRONTEND: 'noninteractive',
+             },
+             commands: [
+               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/build_cmapi.sh --distro ' + platform + ' --arch ' + arch,
+             ],
+            },
            {
              name: 'unittests',
              depends_on: ['build'],
