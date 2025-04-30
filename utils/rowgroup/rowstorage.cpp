@@ -2334,7 +2334,8 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         uint64_t hash = hashRow(prevRow, fLastKeyCol);
         auto [info, idx] = rowHashToIdx(hash);
         nextWhileLess(info, idx);
-        uint64_t curidx = -1;
+        constexpr uint64_t NOTFOUND_IDX = -1;
+        uint64_t curidx = NOTFOUND_IDX;
         while (info == fCurData->fInfo[idx])
         {
           auto& pos = fCurData->fHashes->get(idx);
@@ -2353,7 +2354,7 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
           next(info, idx);
         }
 
-        if (curidx == (uint64_t)-1)
+        if (curidx == NOTFOUND_IDX)
         {
           // nothing was found, go to the next row
           continue;
