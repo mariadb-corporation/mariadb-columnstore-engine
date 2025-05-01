@@ -242,7 +242,7 @@ void LimitedOrderBy::processRow_(const rowgroup::Row& row)
       fRowGroup.getRow(0, &fRow0);
     }
   }
-  else if (fOrderByCond.size() > 0 && invertedRule.less(row.getPointer(), orderedRowsQueue.top().fData))
+  else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), orderedRowsQueue.top().fData))
   {
     OrderByRow swapRow = orderedRowsQueue.top();
     row1.setData(swapRow.fData);
@@ -414,6 +414,7 @@ bool LimitedOrderBy::getNextRGData(RGData& data)
   {
     const OrderByRow& topRow = orderedRowsQueue.top();
     row1.setData(topRow.fData);
+    std::cout << "getNextRGData row " << row1.toString() << std::endl;
     copyRow(row1, &fRow0);
     fRowGroup.incRowCount();
     fRow0.nextRow(rSize);

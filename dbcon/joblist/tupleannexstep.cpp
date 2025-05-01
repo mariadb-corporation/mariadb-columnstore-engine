@@ -186,7 +186,7 @@ void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
     if (fOrderBy)
     {
       fOrderBy->distinct(fDistinct);
-      fOrderBy->initialize(rgIn, jobInfo, true, false);
+      fOrderBy->initialize(rgIn, jobInfo, false, false);
     }
   }
 
