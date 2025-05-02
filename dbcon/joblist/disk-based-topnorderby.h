@@ -21,19 +21,26 @@
 #include <string>
 #include <vector>
 
+#include "dumper.h"
 #include "elementtype.h"
+#include "resourcemanager.h"
 namespace joblist
 {
 
-class DiskBasedTopNOrderBy
+class DiskBasedTopNOrderBy : public rowgroup::RGDumper
 {
+  // std::string fTmpDir =
+  //     config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Aggregates);
+  // std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
  public:
-  DiskBasedTopNOrderBy() {}
-  ~DiskBasedTopNOrderBy() 
+  // TODO Parametrize compression, tmpdir and memory manager (can be temp)
+  DiskBasedTopNOrderBy(ResourceManager* rm)
+   : RGDumper(compress::getCompressInterfaceByName("LZ4"), std::make_unique<rowgroup::MemManager>(),
+              config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Sorting),
+              "Sorting", reinterpret_cast<std::uintptr_t>(this))
   {
-     // clean up left over files
   }
-
+  ~DiskBasedTopNOrderBy() = default;
 
   void incrementGenerationCounter()
   {
@@ -44,16 +51,30 @@ class DiskBasedTopNOrderBy
     return fGenerationCounter;
   }
 
-  bool isDiskBased() const { return fGenerationCounter > 0; }
+  bool isDiskBased() const
+  {
+    return fGenerationCounter > 0;
+  }
 
-  size_t getGenerationFilesNumber() const { return 0; }
-  std::vector<std::string> getGenerationFileNamesNextBatch(const size_t batchSize) { return {}; }
+  size_t getGenerationFilesNumber() const
+  {
+    return 0;
+  }
+  std::vector<std::string> getGenerationFileNamesNextBatch(const size_t batchSize)
+  {
+    return {};
+  }
 
-  void flushCurrentToDisk(const bool firstFlush) { incrementGenerationCounter(); }
-  void diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& dataLists) {}
+  void flushCurrentToDisk(const bool firstFlush)
+  {
+    incrementGenerationCounter();
+  }
+  void diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& dataLists)
+  {
+  }
 
-//  private:
-  uint64_t fGenerationCounter {0};
+  //  private:
+  uint64_t fGenerationCounter{0};
 };
 
-}
+}  // namespace joblist

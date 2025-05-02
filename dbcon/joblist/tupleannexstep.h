@@ -70,9 +70,9 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
 
   void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
 
-  void addOrderBy(LimitedOrderBy* lob)
+  void addOrderBy(ResourceManager* rm)
   {
-    fOrderBy = lob;
+    fOrderBy = std::make_unique<LimitedOrderBy>(rm);
   }
   void addConstant(TupleConstantStep* tcs)
   {
@@ -187,7 +187,7 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   bool fDistinct;
   bool fParallelOp;
 
-  LimitedOrderBy* fOrderBy;
+  std::unique_ptr<LimitedOrderBy> fOrderBy{nullptr};
   TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;

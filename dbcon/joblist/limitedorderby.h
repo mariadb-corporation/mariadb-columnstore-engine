@@ -25,6 +25,7 @@
 
 #include "disk-based-topnorderby.h"
 #include "../../utils/windowfunction/idborderby.h"
+#include "resourcemanager.h"
 #include "rowgroup.h"
 
 namespace joblist
@@ -39,7 +40,7 @@ struct JobInfo;
 class LimitedOrderBy : public ordering::IdbOrderBy, public DiskBasedTopNOrderBy
 {
  public:
-  LimitedOrderBy();
+  LimitedOrderBy(ResourceManager* rm = nullptr); // TODO remove default
   ~LimitedOrderBy() override;
   using ordering::IdbOrderBy::initialize;
   void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,

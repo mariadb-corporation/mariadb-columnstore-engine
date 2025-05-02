@@ -118,8 +118,7 @@ TupleAnnexStep::TupleAnnexStep(const JobInfo& jobInfo)
  , fEndOfResult(false)
  , fDistinct(false)
  , fParallelOp(false)
- , fOrderBy(NULL)
- , fConstant(NULL)
+ , fConstant(nullptr)
  , fFeInstance(funcexp::FuncExp::instance())
  , fJobList(jobInfo.jobListPtr)
  , fFinishedThreads(0)
@@ -146,10 +145,10 @@ TupleAnnexStep::~TupleAnnexStep()
     fRunnersList.clear();
   }
 
-  if (fOrderBy)
-    delete fOrderBy;
+  // if (fOrderBy)
+  //   delete fOrderBy;
 
-  fOrderBy = NULL;
+  // fOrderBy = NULL;
 
   if (fConstant)
     delete fConstant;

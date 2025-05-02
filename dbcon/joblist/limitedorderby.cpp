@@ -40,7 +40,8 @@ namespace joblist
 const uint64_t LimitedOrderBy::fMaxUncommited = 102400;  // 100KiB - make it configurable?
 
 // LimitedOrderBy class implementation
-LimitedOrderBy::LimitedOrderBy() : fStart(0), fCount(-1), fUncommitedMemory(0)
+LimitedOrderBy::LimitedOrderBy(ResourceManager* rm)
+ : DiskBasedTopNOrderBy(rm), fStart(0), fCount(-1), fUncommitedMemory(0)
 {
   fRule.fIdbCompare = this;
 }
@@ -109,13 +110,12 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
   if (fCount == 0)
     return;
 
-  std::cout << "LimitedOrderBy::processRow row " << row.toString() << std::endl; 
-  std::cout << "LimitedOrderBy::processRow fStart " << fStart << " fCount " << fCount << std::endl; 
+  std::cout << "LimitedOrderBy::processRow row " << row.toString() << std::endl;
+  std::cout << "LimitedOrderBy::processRow fStart " << fStart << " fCount " << fCount << std::endl;
   auto& orderedRowsQueue = getQueue();
   // if the row count is less than the limit
   if (orderedRowsQueue.size() < fStart + fCount)
   {
-
     copyRow(row, &fRow0);
     OrderByRow newRow(fRow0, fRule);
     orderedRowsQueue.push(newRow);
@@ -163,7 +163,7 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
     OrderByRow swapRow = orderedRowsQueue.top();
     row1.setData(swapRow.fData);
     std::cout << "LimitedOrderBy::processRow row2swap " << row1.toString() << std::endl;
-    std::cout <<"LimitedOrderBy::processRow new row 4 swaping " << row.toString() << std::endl;
+    std::cout << "LimitedOrderBy::processRow new row 4 swaping " << row.toString() << std::endl;
 
     copyRow(row, &row1);
 
@@ -178,7 +178,6 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
   }
 }
 
-
 void LimitedOrderBy::processRow_(const rowgroup::Row& row)
 {
   // check if this is a distinct row
@@ -189,13 +188,12 @@ void LimitedOrderBy::processRow_(const rowgroup::Row& row)
   if (fCount == 0)
     return;
 
-
   // TODO copy rules or replace ptrs to real instances in CompareRules
   // auto invertedRule = fRule;
   // invertedRule.revertRules();
 
-  std::cout << "LimitedOrderBy::processRow row " << row.toString() << std::endl; 
-  std::cout << "LimitedOrderBy::processRow fStart " << fStart << " fCount " << fCount << std::endl; 
+  std::cout << "LimitedOrderBy::processRow row " << row.toString() << std::endl;
+  std::cout << "LimitedOrderBy::processRow fStart " << fStart << " fCount " << fCount << std::endl;
   auto& orderedRowsQueue = getQueue();
   // if the row count is less than the limit
   if (orderedRowsQueue.size() < fStart + fCount)
@@ -247,7 +245,7 @@ void LimitedOrderBy::processRow_(const rowgroup::Row& row)
     OrderByRow swapRow = orderedRowsQueue.top();
     row1.setData(swapRow.fData);
     std::cout << "LimitedOrderBy::processRow row2swap " << row1.toString() << std::endl;
-    std::cout <<"LimitedOrderBy::processRow new row 4 swaping " << row.toString() << std::endl;
+    std::cout << "LimitedOrderBy::processRow new row 4 swaping " << row.toString() << std::endl;
 
     copyRow(row, &row1);
 
@@ -268,8 +266,8 @@ void LimitedOrderBy::processRow_(const rowgroup::Row& row)
 
 //   // Skip OFFSET
 //   uint64_t sqlOffset = fStart;
-//   std::cout << "brandNewFinalize offset " << sqlOffset << " orderedRowsQueue.size() " << orderedRowsQueue.size() << std::endl;
-//   while (sqlOffset > 0 && !orderedRowsQueue.empty())
+//   std::cout << "brandNewFinalize offset " << sqlOffset << " orderedRowsQueue.size() " <<
+//   orderedRowsQueue.size() << std::endl; while (sqlOffset > 0 && !orderedRowsQueue.empty())
 //   {
 //     auto r = orderedRowsQueue.top();
 //     row1.setData(r.fData);
@@ -283,7 +281,7 @@ void LimitedOrderBy::brandNewFinalize()
 {
   if (!isDiskBased())
   {
-    return finalize();    
+    return finalize();
   }
 
   // if disk-based
@@ -391,11 +389,9 @@ void LimitedOrderBy::brandNewFinalize()
 
     fDataQueue = tempQueue;
   }
-
-
 }
 
-/* 
+/*
  * The f() copies top element from an ordered queue into a row group. It
  * does this backwards to syncronise sorting orientation with the server.
  * The top row from the queue goes last into the returned set.
@@ -525,7 +521,8 @@ bool LimitedOrderBy::getNextRGData(RGData& data)
   // and the current sorted queue size.
   uint64_t rowsToRetrieve = std::min(fCount - fRowsReturned, fRowsPerRG);
   uint64_t rowsToRetrieveFromQueue = std::min(rowsToRetrieve, orderedRowsQueue.size());
-  std::cout << "getNextRGData rowsToRetrieve " << rowsToRetrieve << " orderedRowsQueue.size() " << orderedRowsQueue.size() << std::endl;
+  std::cout << "getNextRGData rowsToRetrieve " << rowsToRetrieve << " orderedRowsQueue.size() "
+            << orderedRowsQueue.size() << std::endl;
   std::cout << "getNextRGData rowsToRetrieveFromQueue " << rowsToRetrieveFromQueue << std::endl;
   for (; rowsToRetrieveFromQueue > thisRGRowNumber; ++thisRGRowNumber)
   {

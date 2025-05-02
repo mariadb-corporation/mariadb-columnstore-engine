@@ -24,20 +24,16 @@
 
 namespace common
 {
-  std::string errorString(int errNo)
-  {
-    char tmp[1024];
-    auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
-    return {buf};
-  }
+std::string errorString(int errNo)
+{
+  char tmp[1024];
+  auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
+  return {buf};
+}
 }  // namespace common
 
 namespace rowgroup
 {
-Dumper::Dumper(const compress::CompressInterface* comp, MemManager* mm) : fCompressor(comp), fMM(mm->clone())
-{
-}
-
 int Dumper::write(const std::string& fname, const char* buf, size_t sz)
 {
   if (sz == 0)
@@ -161,8 +157,8 @@ void Dumper::checkBuffer(size_t len)
 std::string RGDumper::makeRGFilename(uint64_t rgid, const uint16_t generation) const
 {
   char buf[PATH_MAX];
-  snprintf(buf, sizeof(buf), "%s/Sorting-p%u-t%ld-rg%lu-g%u", fTmpDir.c_str(), getpid(), fUniqId, rgid,
-           generation);
+  snprintf(buf, sizeof(buf), "%s/%s-p%u-t%ld-rg%lu-g%u", fOperationName.c_str(), fTmpDir.c_str(), getpid(),
+           fUniqId, rgid, generation);
   return buf;
 }
 

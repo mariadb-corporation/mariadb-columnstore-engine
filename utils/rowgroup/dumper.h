@@ -25,7 +25,7 @@
 
 namespace common
 {
-  std::string errorString(int errNo);
+std::string errorString(int errNo);
 }
 
 namespace rowgroup
@@ -34,8 +34,11 @@ namespace rowgroup
 class Dumper
 {
  public:
-  Dumper(const compress::CompressInterface* comp, MemManager* mm);
-
+   Dumper(const compress::CompressInterface* comp, MemManager* mm)
+   : fCompressor(comp), fMM(std::unique_ptr<MemManager>(mm)) {}
+  Dumper(const compress::CompressInterface* comp, std::unique_ptr<MemManager>& mm)
+   : fCompressor(comp), fMM(std::move(mm)) {}
+  ~Dumper() = default;
   int write(const std::string& fname, const char* buf, size_t sz);
   int read(const std::string& fname, std::vector<char>& buf);
   size_t size() const;
@@ -49,17 +52,25 @@ class Dumper
   std::vector<char> fTmpBuf;
 };
 
-class RGDumper: protected Dumper
+class RGDumper : protected Dumper
 {
  public:
-  RGDumper(const compress::CompressInterface* comp, MemManager* mm, const std::string& tmpDir, const uint64_t uniqId) : Dumper(comp, mm), fTmpDir(tmpDir) { }
-  void loadRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGroupOut, std::unique_ptr<RGData>& rgdata, bool unlinkDump = false);
+  RGDumper(const compress::CompressInterface* comp, std::unique_ptr<MemManager> mm, const std::string& tmpDir,
+           const std::string& operationName, const uint64_t uniqId)
+   : Dumper(comp, mm), fTmpDir(tmpDir), fOperationName(operationName)
+  {
+  }
+  ~RGDumper() = default;
+  void loadRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGroupOut,
+              std::unique_ptr<RGData>& rgdata, bool unlinkDump = false);
   void saveRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGroupOut, RGData* rgdata);
 
   std::string makeRGFilename(uint64_t rgid, const uint16_t generation) const;
-private:
+
+ private:
   std::string fTmpDir;
+  std::string fOperationName;
   uint64_t fUniqId;
 };
 
-}
+}  // namespace rowgroup

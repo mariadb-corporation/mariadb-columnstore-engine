@@ -22,6 +22,7 @@
 
 #include "resourcemanager.h"
 
+// TODO change namespace
 namespace rowgroup
 {
 /** @brief Some service wrapping around ResourceManager (or NoOP) */
