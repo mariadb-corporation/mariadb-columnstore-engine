@@ -28,10 +28,11 @@ namespace joblist
 class DiskBasedTopNOrderBy
 {
  public:
-  DiskBasedTopNOrderBy();
-  ~DiskBasedTopNOrderBy(
+  DiskBasedTopNOrderBy() {}
+  ~DiskBasedTopNOrderBy() 
+  {
      // clean up left over files
-  );
+  }
 
 
   void incrementGenerationCounter()

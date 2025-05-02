@@ -1,4 +1,4 @@
-/* Copyright (C) 2021-2022 MariaDB Corporation
+/* Copyright (C) 2021 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -23,6 +23,9 @@
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
+
+#include "dumper.h"
+#include "memmanager.h"
 #include "rowstorage.h"
 #include "robin_hood.h"
 
@@ -77,12 +80,12 @@ int readData(int fd, char* buf, size_t sz)
   return 0;
 }
 
-std::string errorString(int errNo)
-{
-  char tmp[1024];
-  auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
-  return {buf};
-}
+// std::string common::errorString(int errNo)
+// {
+//   char tmp[1024];
+//   auto* buf = strerror_r(errNo, tmp, sizeof(tmp));
+//   return {buf};
+// }
 
 size_t findFirstSetBit(const uint64_t mask)
 {
@@ -275,289 +278,6 @@ struct LRU : public LRUIface
   List fList;
 };
 
-/** @brief Some service wrapping around ResourceManager (or NoOP) */
-class MemManager
-{
- public:
-  MemManager()
-  {
-  }
-  virtual ~MemManager()
-  {
-    release(fMemUsed);
-  }
-
-  bool acquire(ssize_t amount)
-  {
-    if (UNLIKELY(-amount > fMemUsed))
-      amount = -fMemUsed;
-    return acquireImpl(amount);
-  }
-  void release(ssize_t amount = 0)
-  {
-    // in some cases it tries to release more memory than acquired, ie create
-    // new rowgroup, acquire maximum size (w/o strings), add some rows with
-    // strings and finally release the actual size of RG with strings
-    if (amount == 0 || amount > fMemUsed)
-      amount = fMemUsed;
-    releaseImpl(amount);
-  }
-
-  ssize_t getUsed() const
-  {
-    return fMemUsed;
-  }
-  virtual int64_t getFree() const
-  {
-    return std::numeric_limits<int64_t>::max();
-  }
-
-  virtual int64_t getConfigured() const
-  {
-    return std::numeric_limits<int64_t>::max();
-  }
-
-  virtual bool isStrict() const
-  {
-    return false;
-  }
-
-  virtual MemManager* clone() const
-  {
-    return new MemManager();
-  }
-
-  virtual joblist::ResourceManager* getResourceManaged()
-  {
-    return nullptr;
-  }
-  virtual boost::shared_ptr<int64_t> getSessionLimit()
-  {
-    return {};
-  }
-
- protected:
-  virtual bool acquireImpl(ssize_t amount)
-  {
-    fMemUsed += amount;
-    return true;
-  }
-  virtual void releaseImpl(ssize_t amount)
-  {
-    fMemUsed -= amount;
-  }
-  ssize_t fMemUsed{0};
-};
-
-class RMMemManager : public MemManager
-{
- public:
-  RMMemManager(joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sl, bool wait = true,
-               bool strict = true)
-   : fRm(rm), fSessLimit(std::move(sl)), fWait(wait), fStrict(strict)
-  {
-  }
-
-  ~RMMemManager() override
-  {
-    release(fMemUsed);
-    fMemUsed = 0;
-  }
-
-  int64_t getConfigured() const final
-  {
-    return fRm->getConfiguredUMMemLimit();
-  }
-
-  int64_t getFree() const final
-  {
-    return std::min(fRm->availableMemory(), *fSessLimit);
-  }
-
-  bool isStrict() const final
-  {
-    return fStrict;
-  }
-
-  MemManager* clone() const final
-  {
-    return new RMMemManager(fRm, fSessLimit, fWait, fStrict);
-  }
-
-  joblist::ResourceManager* getResourceManaged() override
-  {
-    return fRm;
-  }
-  boost::shared_ptr<int64_t> getSessionLimit() override
-  {
-    return fSessLimit;
-  }
-
- protected:
-  bool acquireImpl(ssize_t amount) final
-  {
-    if (amount)
-    {
-      if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
-      {
-        return false;
-      }
-      MemManager::acquireImpl(amount);
-    }
-    return true;
-  }
-
-  void releaseImpl(ssize_t amount) override
-  {
-    if (amount)
-    {
-      MemManager::releaseImpl(amount);
-      fRm->returnMemory(amount, fSessLimit);
-    }
-  }
-
- private:
-  joblist::ResourceManager* fRm = nullptr;
-  boost::shared_ptr<int64_t> fSessLimit;
-  const bool fWait;
-  const bool fStrict;
-};
-
-class Dumper
-{
- public:
-  Dumper(const compress::CompressInterface* comp, MemManager* mm) : fCompressor(comp), fMM(mm->clone())
-  {
-  }
-
-  int write(const std::string& fname, const char* buf, size_t sz)
-  {
-    if (sz == 0)
-      return 0;
-
-    int fd = open(fname.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (UNLIKELY(fd < 0))
-      return errno;
-
-    const char* tmpbuf;
-    if (fCompressor)
-    {
-      auto len = fCompressor->maxCompressedSize(sz);
-      checkBuffer(len);
-      fCompressor->compress(buf, sz, fTmpBuf.data(), &len);
-      tmpbuf = fTmpBuf.data();
-      sz = len;
-    }
-    else
-    {
-      tmpbuf = buf;
-    }
-
-    auto to_write = sz;
-    int ret = 0;
-    while (to_write > 0)
-    {
-      auto r = ::write(fd, tmpbuf + sz - to_write, to_write);
-      if (UNLIKELY(r < 0))
-      {
-        if (errno == EAGAIN)
-          continue;
-
-        ret = errno;
-        close(fd);
-        return ret;
-      }
-      assert(size_t(r) <= to_write);
-      to_write -= r;
-    }
-
-    close(fd);
-    return ret;
-  }
-
-  int read(const std::string& fname, std::vector<char>& buf)
-  {
-    int fd = open(fname.c_str(), O_RDONLY);
-    if (UNLIKELY(fd < 0))
-      return errno;
-
-    struct stat st
-    {
-    };
-    fstat(fd, &st);
-    size_t sz = st.st_size;
-    std::vector<char>* tmpbuf;
-    if (fCompressor)
-    {
-      tmpbuf = &fTmpBuf;
-      checkBuffer(sz);
-    }
-    else
-    {
-      tmpbuf = &buf;
-      buf.resize(sz);
-    }
-
-    auto to_read = sz;
-    int ret = 0;
-    while (to_read > 0)
-    {
-      auto r = ::read(fd, tmpbuf->data() + sz - to_read, to_read);
-      if (UNLIKELY(r < 0))
-      {
-        if (errno == EAGAIN)
-          continue;
-
-        ret = errno;
-        close(fd);
-        return ret;
-      }
-
-      assert(size_t(r) <= to_read);
-      to_read -= r;
-    }
-
-    if (fCompressor)
-    {
-      size_t len;
-      if (!fCompressor->getUncompressedSize(tmpbuf->data(), sz, &len))
-      {
-        ret = EPROTO;
-        close(fd);
-        return ret;
-      }
-
-      buf.resize(len);
-      fCompressor->uncompress(tmpbuf->data(), sz, buf.data(), &len);
-    }
-
-    close(fd);
-    return ret;
-  }
-
-  size_t size() const
-  {
-    return fTmpBuf.size();
-  }
-
- private:
-  void checkBuffer(size_t len)
-  {
-    if (fTmpBuf.size() < len)
-    {
-      size_t newtmpsz = (len + 8191) / 8192 * 8192;
-      std::vector<char> tmpvec(newtmpsz);
-      fMM->acquire(newtmpsz - fTmpBuf.size());
-      fTmpBuf.swap(tmpvec);
-    }
-  }
-
- private:
-  const compress::CompressInterface* fCompressor;
-  std::unique_ptr<MemManager> fMM;
-  std::vector<char> fTmpBuf;
-};
-
 /** @brief Storage for RGData with LRU-cache & memory management
  */
 class RowGroupStorage
@@ -718,7 +438,7 @@ class RowGroupStorage
         if (UNLIKELY(r < 0))
         {
           throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                       logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+                                       logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errno)),
                                    logging::ERR_DISKAGG_FILEIO_ERROR);
         }
       }
@@ -1117,7 +837,7 @@ class RowGroupStorage
     if (UNLIKELY(fd < 0))
     {
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errno)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     uint64_t sz = fRGDatas.size();
@@ -1131,7 +851,7 @@ class RowGroupStorage
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
@@ -1145,7 +865,7 @@ class RowGroupStorage
     if (fd < 0)
     {
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errno)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     uint64_t sz;
@@ -1157,7 +877,7 @@ class RowGroupStorage
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     fRGDatas.resize(sz);
@@ -1167,7 +887,7 @@ class RowGroupStorage
       close(fd);
       unlink(fname.c_str());
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
     close(fd);
@@ -1361,7 +1081,7 @@ class RowGroupStorage
     {
       unlink(fname.c_str());
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
 
@@ -1415,7 +1135,7 @@ class RowGroupStorage
     if ((errNo = fDumper->write(makeRGFilename(rgid), (char*)bs.buf(), bs.length())) != 0)
     {
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
   }
@@ -1604,7 +1324,7 @@ class RowPosHashStorage
     if ((errNo = fDumper->write(makeDumpName(), (char*)fPosHashes.data(), sz)) != 0)
     {
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
   }
@@ -1638,7 +1358,7 @@ class RowPosHashStorage
     if ((errNo = fDumper->read(makeDumpName(), data)) != 0)
     {
       throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
 
@@ -2233,7 +1953,7 @@ void RowAggStorage::dumpInternalData() const
   if (fd < 0)
   {
     throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errno)),
         logging::ERR_DISKAGG_FILEIO_ERROR);
   }
 
@@ -2242,7 +1962,7 @@ void RowAggStorage::dumpInternalData() const
   {
     close(fd);
     throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
         logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   close(fd);
@@ -2450,7 +2170,7 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, siz
   if (fd < 0)
   {
     throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
+        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errno)),
         logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   struct stat st
@@ -2464,7 +2184,7 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, siz
   {
     close(fd);
     throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
+        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, common::errorString(errNo)),
         logging::ERR_DISKAGG_FILEIO_ERROR);
   }
   close(fd);

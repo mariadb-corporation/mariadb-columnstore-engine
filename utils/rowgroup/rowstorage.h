@@ -17,13 +17,15 @@
 
 #pragma once
 
-#include "resourcemanager.h"
-#include "rowgroup.h"
-#include "idbcompress.h"
 #include <cstdint>
 #include <random>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include "idbcompress.h"
+#include "memmanager.h"
+#include "resourcemanager.h"
+#include "rowgroup.h"
 
 namespace rowgroup
 {
@@ -67,7 +69,7 @@ class RowAggStorage
 
   static uint16_t getMaxRows(bool enabledDiskAgg)
   {
-    return (enabledDiskAgg ? 8192 : 256);
+    return (enabledDiskAgg ? rowgroup::rgCommonSize : 256);
   }
 
   static size_t getBucketSize();
