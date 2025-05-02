@@ -604,12 +604,43 @@ void TupleAnnexStep::checkAndAllocateMemory4RGData(const rowgroup::RowGroup& row
   }
 }
 
+// RowGroupDL* dl1 = new RowGroupDL(1, jobInfo.fifoSize);
+std::vector<RowGroupDLSPtr> TupleAnnexStep::createInputDLs(const std::vector<std::string>& fileNames)
+{
+  std::vector<RowGroupDLSPtr> result;
+  for (size_t i = 0; i < fileNames.size(); ++i)
+  {
+    result.emplace_back(new RowGroupDL(1, 16)); // WIP hardcode
+  }
+  return result;
+}
+
+std::vector<uint64_t> TupleAnnexStep::startReaders(std::vector<RowGroupDLSPtr>& dataLists)
+{
+  std::vector<uint64_t> result(dataLists.size());
+  for (size_t i = 0; i < dataLists.size(); ++i)
+  {
+    result[i] = jobstepThreadPool.invoke([&dataLists, i]() { 
+      // open file 
+      // loop  
+        // read ByteStream
+        // make BS into RGData
+        // put into dataLists[i]
+      // close file
+      // emit empty RGData
+     });
+  }
+  return result;
+}
+
+
 void TupleAnnexStep::executeWithOrderBy()
 {
   utils::setThreadName("TNSwOrd");
   RGData rgDataIn;
   RGData rgDataOut;
   bool more = false;
+  bool flushToDisk = false;
 
   try
   {
@@ -632,7 +663,7 @@ void TupleAnnexStep::executeWithOrderBy()
 
           for (uint64_t i = 0; i < fRowGroupIn.getRowCount() && !cancelled(); ++i)
           {
-            fOrderBy->processRow_(fRowIn);
+            fOrderBy->processRow(fRowIn);
             fRowIn.nextRow();
           }
 
@@ -641,8 +672,7 @@ void TupleAnnexStep::executeWithOrderBy()
       }
       catch (const logging::OutOfMemoryExcept&)
       {
-        enableFlushToDisk();
-        incrementGenerationCounter();
+        flushToDisk = true;
       }
       catch (...)
       {
@@ -650,10 +680,11 @@ void TupleAnnexStep::executeWithOrderBy()
                         "TupleAnnexStep::executeWithOrderBy()");
       }
 
-      if (isFlushToDiskEnabled())
+      if (flushToDisk)
       {
-        fOrderBy->flushCurrentToDisk();
-        disableFlushToDisk();
+        bool firstFlush = true;
+        fOrderBy->flushCurrentToDisk(firstFlush);
+        flushToDisk = false;
       }
       else
       {
@@ -669,62 +700,69 @@ void TupleAnnexStep::executeWithOrderBy()
                     logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeWithOrderBy()");
   }
 
+  // can be disk-based with no or few files and some in-memory state
+
   // store avg RGData size
-  if (getGenerationCounter())
+  if (fOrderBy->isDiskBased())
   {
     // assess RAM available, avg RGData size statistics and free enough memory
     // return memory if needed
-    // create outputDLs or simplier atomic queues + readers threads
-    // call fOrderBy->diskBasedMergePhase()
+    size_t inputQueuesNumber = 2;
+    while (inputQueuesNumber < fOrderBy->getGenerationFilesNumber())
+    {
+      auto fileNames = fOrderBy->getGenerationFileNamesNextBatch(inputQueuesNumber);
+      auto inputDLs = createInputDLs(fileNames);
+      auto readers = startReaders(inputDLs);
+      // create outputDLs or simplier atomic queues + readers threads
+      fOrderBy->diskBasedMergePhaseIfNeeded(inputDLs);
+      jobstepThreadPool.join(readers);
+    }
   }
 
-  // if (!isDiskBased())
+  fOrderBy->brandNewFinalize();
+
+  if (!cancelled())
   {
-    fOrderBy->brandNewFinalize();
-
-    if (!cancelled())
+    while (fOrderBy->getData(rgDataIn))
     {
-      while (fOrderBy->getNextRGData(rgDataIn))
+      if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
       {
-        if (fConstant == NULL && fRowGroupOut.getColumnCount() == fRowGroupIn.getColumnCount())
+        rgDataOut = rgDataIn;
+        fRowGroupOut.setData(&rgDataOut);
+      }
+      else  // TODO push this into finalize to populate next RGData rows
+      {
+        fRowGroupIn.setData(&rgDataIn);
+        fRowGroupIn.getRow(0, &fRowIn);
+
+        rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
+        fRowGroupOut.setData(&rgDataOut);
+        fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
+        fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
+        fRowGroupOut.getRow(0, &fRowOut);
+
+        for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
         {
-          rgDataOut = rgDataIn;
-          fRowGroupOut.setData(&rgDataOut);
+          if (fConstant)
+            fConstant->fillInConstants(fRowIn, fRowOut);
+          else
+            copyRow(fRowIn, &fRowOut);
+
+          fRowGroupOut.incRowCount();
+          fRowOut.nextRow();
+          fRowIn.nextRow();
         }
-        else  // TODO push this into finalize to populate next RGData rows
-        {
-          fRowGroupIn.setData(&rgDataIn);
-          fRowGroupIn.getRow(0, &fRowIn);
+      }
 
-          rgDataOut.reinit(fRowGroupOut, fRowGroupIn.getRowCount());
-          fRowGroupOut.setData(&rgDataOut);
-          fRowGroupOut.resetRowGroup(fRowGroupIn.getBaseRid());
-          fRowGroupOut.setDBRoot(fRowGroupIn.getDBRoot());
-          fRowGroupOut.getRow(0, &fRowOut);
+      if (fRowGroupOut.getRowCount() > 0)
+      {
+        fRowsReturned += fRowGroupOut.getRowCount();
+        fOutputDL->insert(rgDataOut);
 
-          for (uint64_t i = 0; i < fRowGroupIn.getRowCount(); ++i)
-          {
-            if (fConstant)
-              fConstant->fillInConstants(fRowIn, fRowOut);
-            else
-              copyRow(fRowIn, &fRowOut);
-
-            fRowGroupOut.incRowCount();
-            fRowOut.nextRow();
-            fRowIn.nextRow();
-          }
-        }
-
-        if (fRowGroupOut.getRowCount() > 0)
-        {
-          fRowsReturned += fRowGroupOut.getRowCount();
-          fOutputDL->insert(rgDataOut);
-
-          // release RGData memory
-          // TODO add some batching here to reduce atomic overhead.
-          // size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
-          // fOrderBy->returnRGDataMemory2RM(rgDataSize);
-        }
+        // release RGData memory
+        // TODO add some batching here to reduce atomic overhead.
+        // size_t rgDataSize = fRowGroupOut.getSizeWithStrings() - fRowGroupOut.getHeaderSize();
+        // fOrderBy->returnRGDataMemory2RM(rgDataSize);
       }
     }
   }

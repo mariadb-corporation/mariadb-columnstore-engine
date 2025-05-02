@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2025 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -238,16 +239,7 @@ extern std::istream& operator>>(std::istream& in, TupleType& rhs);
 extern std::ostream& operator<<(std::ostream& out, const TupleType& rhs);
 }  // namespace joblist
 
-#ifndef NO_DATALISTS
-
-// #include "bandeddl.h"
-// #include "wsdl.h"
 #include "fifo.h"
-// #include "bucketdl.h"
-// #include "constantdatalist.h"
-// #include "swsdl.h"
-// #include "zdl.h"
-// #include "deliverywsdl.h"
 
 namespace joblist
 {
@@ -327,7 +319,8 @@ typedef DataList<StringElementType> StrDataList;
 // */
 // typedef BucketDL<TupleType> TupleBucketDataList;
 
-typedef FIFO<rowgroup::RGData> RowGroupDL;
+using RowGroupDL = FIFO<rowgroup::RGData>;
+using RowGroupDLSPtr = std::shared_ptr<RowGroupDL>;
 
 }  // namespace joblist
 

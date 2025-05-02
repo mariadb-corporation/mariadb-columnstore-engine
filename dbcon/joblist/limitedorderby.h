@@ -22,8 +22,10 @@
 #pragma once
 
 #include <string>
-#include "rowgroup.h"
+
+#include "disk-based-topnorderby.h"
 #include "../../utils/windowfunction/idborderby.h"
+#include "rowgroup.h"
 
 namespace joblist
 {
@@ -34,7 +36,7 @@ struct JobInfo;
 // This version is for subqueries, limit the result set to fit in memory,
 // use ORDER BY to make the results consistent.
 // The actual output are the first or last # of rows, which are NOT ordered.
-class LimitedOrderBy : public ordering::IdbOrderBy
+class LimitedOrderBy : public ordering::IdbOrderBy, public DiskBasedTopNOrderBy
 {
  public:
   LimitedOrderBy();
@@ -54,7 +56,7 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   void finalize();
   void brandNewFinalize();
   bool getNextRGData(rowgroup::RGData& data);
-  void flushCurrentToDisk() {}
+
 
  protected:
   uint64_t fStart;

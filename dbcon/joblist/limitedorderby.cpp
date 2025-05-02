@@ -262,21 +262,137 @@ void LimitedOrderBy::processRow_(const rowgroup::Row& row)
   }
 }
 
+// void LimitedOrderBy::brandNewFinalize()
+// {
+//   auto& orderedRowsQueue = getQueue();
+
+//   // Skip OFFSET
+//   uint64_t sqlOffset = fStart;
+//   std::cout << "brandNewFinalize offset " << sqlOffset << " orderedRowsQueue.size() " << orderedRowsQueue.size() << std::endl;
+//   while (sqlOffset > 0 && !orderedRowsQueue.empty())
+//   {
+//     auto r = orderedRowsQueue.top();
+//     row1.setData(r.fData);
+//     std::cout << "brandNewFinalize row " << row1.toString() << std::endl;
+//     orderedRowsQueue.pop();
+//     --sqlOffset;
+//   }
+// }
+
 void LimitedOrderBy::brandNewFinalize()
 {
+  if (!isDiskBased())
+  {
+    return finalize();    
+  }
+
+  // if disk-based
+  // here there are <= inputQueuesNumber files on disk
+  // and potentially some in-memory state
+  // need to merge this together to produce a result
+
+  if (fUncommitedMemory > 0)
+  {
+    if (!fRm->getMemory(fUncommitedMemory, fSessionMemLimit))
+    {
+      cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+      throw logging::OutOfMemoryExcept(fErrorCode);
+    }
+    fMemSize += fUncommitedMemory;
+    fUncommitedMemory = 0;
+  }
+
+  queue<RGData> tempQueue;
+  if (fRowGroup.getRowCount() > 0)
+    fDataQueue.push(fData);
+
   auto& orderedRowsQueue = getQueue();
 
-  // Skip OFFSET
-  uint64_t sqlOffset = fStart;
-  std::cout << "brandNewFinalize offset " << sqlOffset << " orderedRowsQueue.size() " << orderedRowsQueue.size() << std::endl;
-  while (sqlOffset > 0 && !orderedRowsQueue.empty())
+  if (orderedRowsQueue.size() > 0)
   {
-    auto r = orderedRowsQueue.top();
-    row1.setData(r.fData);
-    std::cout << "brandNewFinalize row " << row1.toString() << std::endl;
-    orderedRowsQueue.pop();
-    --sqlOffset;
+    // *DRRTUY Very memory intensive. CS needs to account active
+    // memory only and release memory if needed.
+    uint64_t memSizeInc = fRowGroup.getSizeWithStrings() - fRowGroup.getHeaderSize();
+
+    if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
+    {
+      cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+      throw logging::OutOfMemoryExcept(fErrorCode);
+    }
+    fMemSize += memSizeInc;
+
+    uint64_t offset = 0;
+    uint64_t i = 0;
+    // Reduce queue size by an offset value if it applicable.
+    uint64_t queueSizeWoOffset = orderedRowsQueue.size() > fStart ? orderedRowsQueue.size() - fStart : 0;
+    list<RGData> tempRGDataList;
+
+    if (fCount <= queueSizeWoOffset)
+    {
+      offset = fCount % fRowsPerRG;
+      if (!offset && fCount > 0)
+        offset = fRowsPerRG;
+    }
+    else
+    {
+      offset = queueSizeWoOffset % fRowsPerRG;
+      if (!offset && queueSizeWoOffset > 0)
+        offset = fRowsPerRG;
+    }
+
+    list<RGData>::iterator tempListIter = tempRGDataList.begin();
+
+    i = 0;
+    uint32_t rSize = fRow0.getSize();
+    uint64_t preLastRowNumb = fRowsPerRG - 1;
+    fData.reinit(fRowGroup, fRowsPerRG);
+    fRowGroup.setData(&fData);
+    fRowGroup.resetRowGroup(0);
+    // *DRRTUY This approach won't work with
+    // OFSET > fRowsPerRG
+    offset = offset != 0 ? offset - 1 : offset;
+    fRowGroup.getRow(offset, &fRow0);
+
+    while ((orderedRowsQueue.size() > fStart) && (i++ < fCount))
+    {
+      const OrderByRow& topRow = orderedRowsQueue.top();
+      row1.setData(topRow.fData);
+      copyRow(row1, &fRow0);
+      fRowGroup.incRowCount();
+      offset--;
+      fRow0.prevRow(rSize);
+      orderedRowsQueue.pop();
+
+      // if RG has fRowsPerRG rows
+      if (offset == (uint64_t)-1)
+      {
+        tempRGDataList.push_front(fData);
+
+        if (!fRm->getMemory(memSizeInc, fSessionMemLimit))
+        {
+          cerr << IDBErrorInfo::instance()->errorMsg(fErrorCode) << " @" << __FILE__ << ":" << __LINE__;
+          throw logging::OutOfMemoryExcept(fErrorCode);
+        }
+        fMemSize += memSizeInc;
+
+        fData.reinit(fRowGroup, fRowsPerRG);
+        fRowGroup.setData(&fData);
+        fRowGroup.resetRowGroup(0);  // ?
+        fRowGroup.getRow(preLastRowNumb, &fRow0);
+        offset = preLastRowNumb;
+      }
+    }
+    // Push the last/only group into the queue.
+    if (fRowGroup.getRowCount() > 0)
+      tempRGDataList.push_front(fData);
+
+    for (tempListIter = tempRGDataList.begin(); tempListIter != tempRGDataList.end(); tempListIter++)
+      tempQueue.push(*tempListIter);
+
+    fDataQueue = tempQueue;
   }
+
+
 }
 
 /* 
@@ -388,6 +504,7 @@ void LimitedOrderBy::finalize()
   }
 }
 
+// WIP UNUSED
 bool LimitedOrderBy::getNextRGData(RGData& data)
 {
   auto& orderedRowsQueue = getQueue();

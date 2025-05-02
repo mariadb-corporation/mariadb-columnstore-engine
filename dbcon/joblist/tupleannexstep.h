@@ -22,6 +22,7 @@
 
 #include <boost/thread/thread.hpp>
 #include <atomic>
+#include <memory>
 
 #include "jobstep.h"
 #include "limitedorderby.h"
@@ -114,26 +115,30 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
-  void enableFlushToDisk()
-  {
-    fFlushToDisk.store(true, std::memory_order_relaxed);
-  }
-  void disableFlushToDisk()
-  {
-    fFlushToDisk.store(false, std::memory_order_relaxed);
-  }
-  bool isFlushToDiskEnabled() const
-  {
-    return fFlushToDisk.load(std::memory_order_relaxed);
-  }
-  void incrementGenerationCounter()
-  {
-    ++fGenerationCounter;
-  }
-  uint64_t getGenerationCounter() const
-  {
-    return fGenerationCounter;
-  }
+
+  // void enableFlushToDisk()
+  // {
+  //   fFlushToDisk.store(true, std::memory_order_relaxed);
+  // }
+  // void disableFlushToDisk()
+  // {
+  //   fFlushToDisk.store(false, std::memory_order_relaxed);
+  // }
+  // bool isFlushToDiskEnabled() const
+  // {
+  //   return fFlushToDisk.load(std::memory_order_relaxed);
+  // }
+  // void incrementGenerationCounter()
+  // {
+  //   ++fGenerationCounter;
+  // }
+  // uint64_t getGenerationCounter() const
+  // {
+  //   return fGenerationCounter;
+  // }
+
+  std::vector<RowGroupDLSPtr> createInputDLs(const std::vector<std::string>& fileNames);
+  std::vector<uint64_t> startReaders(std::vector<RowGroupDLSPtr>& inputDLs);
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -193,8 +198,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   uint16_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
   joblist::ResourceManager* fRm;
-  std::atomic<bool> fFlushToDisk {false};
-  uint64_t fGenerationCounter {0};
+  // std::atomic<bool> fFlushToDisk {false};
+  // uint64_t fGenerationCounter {0};
 };
 
 }  // namespace joblist

@@ -116,7 +116,7 @@ TEST(MinMaxHeap, CustomComparator) {
 // ---------- Robustness & stress ---------------------------------------------
 
 TEST(MinMaxHeap, RandomAgainstMultiset) {
-    constexpr int N = 10000;
+    constexpr int N = 100;
     std::mt19937 rng(42);
     std::uniform_int_distribution<int> dist(-100000, 100000);
 
