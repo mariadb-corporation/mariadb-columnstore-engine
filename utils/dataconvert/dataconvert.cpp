@@ -241,6 +241,7 @@ void number_int_value(const string& data, cscDataType typeCode,
   string frnStr = "";
   size_t dp = valStr.find('.');
   int roundup = 0;
+  bool isNegative = valStr.find('-') != string::npos;
 
   if (dp != string::npos)
   {
@@ -262,13 +263,16 @@ void number_int_value(const string& data, cscDataType typeCode,
   }
 
   intVal = dataconvert::string_to_ll<T>(intStr, pushwarning);
-  //@Bug 3350 negative value round up.
-  intVal += intVal >= 0 ? roundup : -roundup;
-  bool dummy = false;
-  T frnVal = (frnStr.length() > 0) ? dataconvert::string_to_ll<T>(frnStr, dummy) : 0;
 
-  if (frnVal != 0)
-    pushwarning = true;
+  if (intVal == 0 && isNegative)
+  {
+    if (roundup == 1)
+      roundup = 0;
+  }
+  else
+  {
+    intVal += intVal >= 0 ? roundup : -roundup;
+  }
 
   switch (typeCode)
   {
@@ -595,11 +599,13 @@ uint64_t number_uint_value(const string& data, cscDataType typeCode,
 
   uint64_t uintVal = dataconvert::string_to_ull(intStr, pushwarning);
 
-  bool dummy = false;
-  uint64_t frnVal = (frnStr.length() > 0) ? dataconvert::string_to_ull(frnStr, dummy) : 0;
-
-  if (frnVal != 0)
-    pushwarning = true;
+  if (!frnStr.empty() && !noRoundup)
+  {
+    if (!frnStr.empty() && frnStr[0] >= '5')
+    {
+      uintVal += 1;
+    }
+  }
 
   switch (typeCode)
   {
