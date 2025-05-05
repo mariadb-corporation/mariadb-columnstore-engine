@@ -310,7 +310,7 @@ void WEClients::Setup()
   }
 }
 
-bool WEClients::isConectionReadonly(uint32_t connection)
+bool WEClients::isConnectionReadonly(uint32_t connection)
 {
   return fPmConnections[connection] == nullptr;
 }
