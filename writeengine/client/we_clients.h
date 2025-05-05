@@ -124,7 +124,7 @@ class WEClients
     return count;
   }
 
-  bool connectionIsReadonly(uint32_t connection);
+  bool isConnectionReadonly(uint32_t connection);
 
  private:
   WEClients(const WEClients& weClient);
