@@ -580,7 +580,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   cmapitest:: {
     name: 'cmapi test',
-    depends_on: ['publish cmapi build', 'smoke'],
+    depends_on: ['publish cmapi build'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -728,9 +728,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              name: 'createrepo',
              depends_on: ['build', 'cmapi build'],
              image: img,
+             when: {
+               status: ['success', 'failure'],
+             },
              volumes: [pipeline._volumes.mdb],
              commands: [
-                'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --distro ' + platform,
+               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --distro ' + platform,
              ],
            },
            {
