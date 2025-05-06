@@ -21,7 +21,7 @@ BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
 
 GCC_VERSION="11"
-MDB_CMAKE_FLAGS=""
+MDB_CMAKE_FLAGS=()
 
 source "$SCRIPT_LOCATION"/utils.sh
 
@@ -244,62 +244,64 @@ modify_packaging() {
 
 construct_cmake_flags() {
 
-    MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes \
-                    -DPLUGIN_COLUMNSTORE=YES \
-                    -DPLUGIN_MROONGA=NO \
-                    -DPLUGIN_ROCKSDB=NO \
-                    -DPLUGIN_TOKUDB=NO \
-                    -DPLUGIN_CONNECT=NO \
-                    -DPLUGIN_SPIDER=NO \
-                    -DPLUGIN_OQGRAPH=NO \
-                    -DPLUGIN_SPHINX=NO \
-                    -DWITH_EMBEDDED_SERVER=NO \
-                    -DBUILD_CONFIG=mysql_release \
-                    -DWITH_WSREP=NO \
-                    -DWITH_SSL=system \
-                    -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX \
-                    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-                    -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE \
-                    -DPLUGIN_GSSAPI=NO"
+    MDB_CMAKE_FLAGS=(
+        -DWITH_SYSTEMD=yes
+        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_MROONGA=NO
+        -DPLUGIN_ROCKSDB=NO
+        -DPLUGIN_TOKUDB=NO
+        -DPLUGIN_CONNECT=NO
+        -DPLUGIN_SPIDER=NO
+        -DPLUGIN_OQGRAPH=NO
+        -DPLUGIN_SPHINX=NO
+        -DWITH_EMBEDDED_SERVER=NO
+        -DBUILD_CONFIG=mysql_release
+        -DWITH_WSREP=NO
+        -DWITH_SSL=system
+        -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+        -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
+        -DPLUGIN_GSSAPI=NO
+    )
 
     if [[ $SKIP_UNIT_TESTS = true ]]; then
         warn "Unittests are not build"
 
     else
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
+        MDB_CMAKE_FLAGS+=(-DWITH_UNITTESTS=YES)
         message "Buiding with unittests"
     fi
 
     if [[ $DRAW_DEPS = true ]]; then
         warn "Generating dependendies graph to mariadb.dot"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} --graphviz=mariadb.dot"
+        MDB_CMAKE_FLAGS+=(--graphviz=mariadb.dot)
     fi
 
     if [[ $USE_NINJA = true ]]; then
         warn "Using Ninja instead of Makefiles"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
+        MDB_CMAKE_FLAGS+=(-GNinja)
     fi
 
     if [[ $ASAN = true ]]; then
         warn "Building with Address Sanitizer "
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $TSAN = true ]]; then
         warn "Building with Thread Sanitizer"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $UBSAN = true ]]; then
         warn "Building with UB Sanitizer"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
         warn "Cores are not dumped"
     else
         warn "Building with CoreDumps"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+        MDB_CMAKE_FLAGS+=(-DWITH_COREDUMPS=ON)
 
         if [ -f /.dockerenv ]; then
             warn "Build is executed in Docker, core dumps saving path /proc/sys/kernel/core_pattern will not be configured!"
@@ -311,35 +313,35 @@ construct_cmake_flags() {
 
     if [[ $MAKEFILE_VERBOSE = true ]]; then
         warn "Verbosing Makefile Commands"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
+        MDB_CMAKE_FLAGS+=(-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON)
     fi
 
     if [[ $SCCACHE = true ]]; then
         warn "Use sccache"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
     fi
 
     if [[ $RUN_BENCHMARKS = true ]]; then
         if [[ $MCS_BUILD_TYPE = 'Debug' ]]; then
             error "Benchmarks will not be build in run in Debug build Mode"
-            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=NO)
             RUN_BENCHMARKS=false
         elif [[ $OS != *"ubuntu"* && $OS != *"debian"* ]]; then
             error "Benchmarks are now avaliable only at Ubuntu or Debian"
-            MAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+            MAKE_FLAGS="${MDB_CMAKE_FLAGS[@]} -DWITH_MICROBENCHMARKS=NO"
             RUN_BENCHMARKS=false
         else
             message "Compile with microbenchmarks"
-            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=YES"
+            MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=YES)
         fi
     else
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+        MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=NO)
         message "Buiding without microbenchmarks"
     fi
 
     if [[ "$OS" == *"rocky"* ]]; then
         OS_VERSION=${OS//[^0-9]/}
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=rockylinux${OS_VERSION}"
+        MDB_CMAKE_FLAGS+=(-DRPM=rockylinux${OS_VERSION})
     elif [[ "$OS" == "debian:11" ]]; then
         CODENAME="bullseye"
     elif [[ "$OS" == "debian:12" ]]; then
@@ -356,12 +358,12 @@ construct_cmake_flags() {
     fi
 
     if [[ -n "$CODENAME" ]]; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=${CODENAME}"
+        MDB_CMAKE_FLAGS+=(-DDEB=${CODENAME})
     fi
 
     if [[ $PRINT_CMAKE_FLAGS = true ]]; then
         message "Building with flags"
-        newline_array ${MDB_CMAKE_FLAGS[@]}
+        newline_array "${MDB_CMAKE_FLAGS[@]}"
     fi
 }
 
@@ -388,10 +390,10 @@ check_errorcode() {
 
 build_package() {
     if [[ $pkg_format == "rpm" ]]; then
-        command="cmake ${MDB_CMAKE_FLAGS} && make -j\$(nproc) package"
+        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
-       CMAKEFLAGS='${MDB_CMAKE_FLAGS}' debian/autobake-deb.sh"
+       CMAKEFLAGS=\"${MDB_CMAKE_FLAGS[@]}\" debian/autobake-deb.sh"
     fi
 
     echo "Building a package for $OS"
@@ -417,7 +419,7 @@ build_binary() {
     fi
 
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} "$MDB_CMAKE_FLAGS" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
+    ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
 
     ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
