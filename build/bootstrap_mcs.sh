@@ -391,7 +391,7 @@ build_package() {
         command="cmake ${MDB_CMAKE_FLAGS} && make -j\$(nproc) package"
     else
         command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
-       CMAKEFLAGS='${MDB_CMAKE_FLAGS}' debian/autobake-deb.sh"
+       CMAKEFLAGS="${MDB_CMAKE_FLAGS} debian/autobake-deb.sh"
     fi
 
     echo "Building a package for $OS"
