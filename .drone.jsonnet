@@ -248,29 +248,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'docker stop ' + dockerImage + ' && docker rm ' + dockerImage + ' || echo "cleanup ' + stage + ' failure"',
   ],
 
-  regression(name, depends_on):: {
-    name: name,
-    depends_on: depends_on,
-    image: 'docker:git',
-    volumes: [pipeline._volumes.docker],
-    when: {
-      status: ['success', 'failure'],
-    },
-    [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
-    environment: {
-      REGRESSION_TIMEOUT: {
-        from_secret: 'regression_timeout',
-      },
-    },
-    commands: [
-      execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
-                      dockerImage("regresion")),
-      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
-                      dockerImage("regression"),
-                      "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-    ],
-  },
   _volumes:: {
     mdb: {
       name: 'mdb',
@@ -304,6 +281,24 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sleep 10',
       execInnerDocker('mariadb -e "insert into test.t1 values (2); select * from test.t1"', dockerImage("smoke")),
     ],
+  },
+  smokelog:: {
+    name: 'smokelog',
+    depends_on: ['smoke'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'echo "---------- start mariadb service logs ----------"',
+      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('smoke')),
+      'echo "---------- end mariadb service logs ----------"',
+      'echo',
+      'echo "---------- start columnstore debug log ----------"',
+      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('smoke')),
+      'echo "---------- end columnstore debug log ----------"'
+    ] + reportTestStage(dockerImage('smoke'), result, "smoke"),
+    when: {
+      status: ['success', 'failure'],
+    },
   },
   upgrade(version):: {
     name: 'upgrade-test from ' + version,
@@ -461,44 +456,28 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('/usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',dockerImage('regression')),
     ],
   },
-  smokelog:: {
-    name: 'smokelog',
-    depends_on: ['smoke'],
-    image: 'docker',
+  regression(name, depends_on):: {
+    name: name,
+    depends_on: depends_on,
+    image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    commands: [
-      'echo "---------- start mariadb service logs ----------"',
-      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('smoke')),
-      'echo "---------- end mariadb service logs ----------"',
-      'echo',
-      'echo "---------- start columnstore debug log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('smoke')),
-      'echo "---------- end columnstore debug log ----------"'
-    ] + reportTestStage(dockerImage('smoke'), result, "smoke"),
     when: {
       status: ['success', 'failure'],
     },
-  },
-  cmapilog:: {
-    name: 'cmapilog',
-    depends_on: ['cmapi test'],
-    image: 'docker',
-    volumes: [pipeline._volumes.docker],
-    commands: [
-      'echo "---------- start mariadb service logs ----------"',
-      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('cmapi')),
-      'echo "---------- end mariadb service logs ----------"',
-      'echo',
-      'echo "---------- start columnstore debug log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('cmapi')),
-      'echo "---------- end columnstore debug log ----------"',
-      'echo "---------- start cmapi log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi cmapi_server.log"', dockerImage('cmapi')),
-      'echo "---------- end cmapi log ----------"']
-      + reportTestStage(dockerImage('cmapi'), result, "cmapi"),
-    when: {
-      status: ['success', 'failure'],
+    [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
+    environment: {
+      REGRESSION_TIMEOUT: {
+        from_secret: 'regression_timeout',
+      },
     },
+    commands: [
+      execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
+                      dockerImage("regresion")),
+      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
+                      dockerImage("regression"),
+                      "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+    ],
   },
   regressionlog:: {
     name: 'regressionlog',
@@ -604,6 +583,27 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('bash -c "cd ' + cmapi_path + ' && python/bin/python3 run_tests.py"', dockerImage('cmapi')),
     ],
   },
+    cmapilog:: {
+      name: 'cmapilog',
+      depends_on: ['cmapi test'],
+      image: 'docker',
+      volumes: [pipeline._volumes.docker],
+      commands: [
+        'echo "---------- start mariadb service logs ----------"',
+        execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('cmapi')),
+        'echo "---------- end mariadb service logs ----------"',
+        'echo',
+        'echo "---------- start columnstore debug log ----------"',
+        execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('cmapi')),
+        'echo "---------- end columnstore debug log ----------"',
+        'echo "---------- start cmapi log ----------"',
+        execInnerDocker('cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi cmapi_server.log"', dockerImage('cmapi')),
+        'echo "---------- end cmapi log ----------"']
+        + reportTestStage(dockerImage('cmapi'), result, "cmapi"),
+      when: {
+        status: ['success', 'failure'],
+      },
+    },
   multi_node_mtr:: {
     name: 'mtr',
     depends_on: ['dockerhub'],
