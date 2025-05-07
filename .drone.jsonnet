@@ -148,8 +148,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
     commands: [
-      'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --delete',
-      'echo "Data uploaded to: ' + publish_pkg_url + '"'
+      '[ -z "$(ls -A "$result")" ] && echo Nothing to publish! && exit 1',
+
+      'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --only-show-errors',
+      'echo "Data uploaded to: ' + publish_pkg_url + '"',
+
+      'rm -rf ' + result + '/*'
     ],
   },
 
@@ -801,8 +805,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
-         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
-         (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
