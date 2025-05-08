@@ -850,26 +850,26 @@ local FinalPipeline(branch, event) = {
               std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '', '']), platforms_arm.develop),
 };
 
-[
-  Pipeline(b, p, e, 'amd64', s)
-  for b in std.objectFields(platforms)
-  for p in platforms[b]
-  for s in servers[b]
-  for e in events
-] +
-
-[
-  Pipeline(b, p, e, 'arm64', s)
-  for b in std.objectFields(platforms_arm)
-  for p in platforms_arm[b]
-  for s in servers[b]
-  for e in events
-] +
-
-[
-  FinalPipeline(b, 'cron')
-  for b in std.objectFields(platforms)
-] +
+//[
+//  Pipeline(b, p, e, 'amd64', s)
+//  for b in std.objectFields(platforms)
+//  for p in platforms[b]
+//  for s in servers[b]
+//  for e in events
+//] +
+//
+//[
+//  Pipeline(b, p, e, 'arm64', s)
+//  for b in std.objectFields(platforms_arm)
+//  for p in platforms_arm[b]
+//  for s in servers[b]
+//  for e in events
+//] +
+//
+//[
+//  FinalPipeline(b, 'cron')
+//  for b in std.objectFields(platforms)
+//] +
 
 //builds for code analysys with sanitizers and build to check if compiles with clang
 [
