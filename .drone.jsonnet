@@ -97,7 +97,12 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', customBootstrapParams='') = {
+local customBuildEnvCommandsMap = {
+  'latestClang': 'apt install -y clang && export CC=/usr/bin/clang && export CXX=/usr/bin/clang++',
+  '':'',
+};
+
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', customBootstrapParams='', customBuildEnvCommandsMapKey='') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -636,7 +641,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', 
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch, server, customBootstrapParams]),
+  name: std.join(' ', [branch, platform, event, arch, server, customBootstrapParams, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -699,7 +704,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', 
                 'export CLICOLOR_FORCE=1',
                 'mkdir /mdb/' + builddir + '/' + result,
                 get_sccache,
-
+                customBuildEnvCommandsMap[customBuildEnvCommandsMapKey],
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
                           '--build-type RelWithDebInfo ' +
                           '--distro ' + platform + ' ' +
@@ -841,8 +846,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise', '']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise', '', '']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '', '']), platforms_arm.develop),
 };
 
 [
@@ -866,9 +871,19 @@ local FinalPipeline(branch, event) = {
   for b in std.objectFields(platforms)
 ] +
 
+//builds for code analysys with sanitizers and build to check if compiles with clang
 [
-  Pipeline(any_branch, p, e, 'arm64', s, '--asan')
-  for p in ['debian:12', 'ubuntu:22.04']
-  for e in events
-  for s in servers.develop
+  Pipeline(any_branch, platform, triggeringEvent, 'amd64', server, customBootstrapParams)
+  for platform in ['ubuntu:24.04']
+  for triggeringEvent in events
+  for server in servers.develop
+  for customBootstrapParams in ['--asan', '--tsan', '--ubsan']
+]+
+
+//build with clang
+[
+  Pipeline(any_branch, platform, triggeringEvent, 'amd64', server, '', 'latestClang')
+  for platform in ['ubuntu:24.04']
+  for triggeringEvent in events
+  for server in servers.develop
 ]
