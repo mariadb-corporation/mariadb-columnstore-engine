@@ -54,6 +54,8 @@ class LimitedOrderBy : public ordering::IdbOrderBy, public DiskBasedTopNOrderBy
   }
   const std::string toString() const override;
 
+  void flushCurrentToDisk_(const bool firstFlush);
+  
   void finalize();
   void brandNewFinalize();
   bool getNextRGData(rowgroup::RGData& data);

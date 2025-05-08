@@ -27,6 +27,7 @@ set(joblist_LIB_SRCS
     jobstepassociation.cpp
     lbidlist.cpp
     limitedorderby.cpp
+    disk-based-topnorderby.cpp
     passthrucommand-jl.cpp
     passthrustep.cpp
     pcolscan.cpp

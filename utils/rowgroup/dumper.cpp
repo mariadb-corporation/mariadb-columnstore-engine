@@ -157,8 +157,8 @@ void Dumper::checkBuffer(size_t len)
 std::string RGDumper::makeRGFilename(uint64_t rgid, const uint16_t generation) const
 {
   char buf[PATH_MAX];
-  snprintf(buf, sizeof(buf), "%s/%s-p%u-t%ld-rg%lu-g%u", fOperationName.c_str(), fTmpDir.c_str(), getpid(),
-           fUniqId, rgid, generation);
+  snprintf(buf, sizeof(buf), "%s/p%u-t%ld-g%u-rg%lu", fTmpDir.c_str(), getpid(),
+           fUniqId, generation, rgid);
   return buf;
 }
 
@@ -204,6 +204,8 @@ void RGDumper::saveRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGr
   rgdata->serialize(bs, fRowGroupOut.getDataSize());
 
   int errNo;
+  auto name = makeRGFilename(rgid, generation);
+  std::cout << "RGDumper::saveRG  " << name << std::endl;
   if ((errNo = write(makeRGFilename(rgid, generation), (char*)bs.buf(), bs.length())) != 0)
   {
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,

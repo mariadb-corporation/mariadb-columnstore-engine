@@ -609,7 +609,7 @@ std::vector<RowGroupDLSPtr> TupleAnnexStep::createInputDLs(const std::vector<std
   std::vector<RowGroupDLSPtr> result;
   for (size_t i = 0; i < fileNames.size(); ++i)
   {
-    result.emplace_back(new RowGroupDL(1, 16)); // WIP hardcode
+    result.emplace_back(new RowGroupDL(1, 1));  // WIP hardcode
   }
   return result;
 }
@@ -619,19 +619,20 @@ std::vector<uint64_t> TupleAnnexStep::startReaders(std::vector<RowGroupDLSPtr>& 
   std::vector<uint64_t> result(dataLists.size());
   for (size_t i = 0; i < dataLists.size(); ++i)
   {
-    result[i] = jobstepThreadPool.invoke([&dataLists, i]() { 
-      // open file 
-      // loop  
-        // read ByteStream
-        // make BS into RGData
-        // put into dataLists[i]
-      // close file
-      // emit empty RGData
-     });
+    result[i] = jobstepThreadPool.invoke(
+        [&dataLists, i]()
+        {
+          // open file
+          // loop
+          // read ByteStream
+          // make BS into RGData
+          // put into dataLists[i]
+          // close file
+          // emit empty RGData
+        });
   }
   return result;
 }
-
 
 void TupleAnnexStep::executeWithOrderBy()
 {
@@ -666,7 +667,22 @@ void TupleAnnexStep::executeWithOrderBy()
             fRowIn.nextRow();
           }
 
+          // std::cout << "use_count " << rgDataIn.rowData.use_count() << " rgDataIn.rowData " << std::hex
+          //           << (uint64_t)rgDataIn.rowData.get() << std::dec << std::endl;
+          
           more = fInputDL->next(fInputIterator, &rgDataIn);
+          
+          // if (more)
+          // {
+          //   std::cout << "use_count " << rgDataIn.rowData.use_count() << " rgDataIn.rowData " << std::hex
+          //             << (uint64_t)rgDataIn.rowData.get() << std::dec << std::endl;
+          // }
+          // else
+          // {
+          //   std::cout << "use_count " << rgDataIn.rowData.use_count() << std::endl;
+          // }
+          // fOrderBy->fDataQueue.pop();
+          // std::cout << "use_count " << rgDataIn.rowData.use_count() << std::endl;
         }
       }
       catch (const logging::OutOfMemoryExcept&)
@@ -682,7 +698,8 @@ void TupleAnnexStep::executeWithOrderBy()
       if (flushToDisk)
       {
         bool firstFlush = true;
-        fOrderBy->flushCurrentToDisk(firstFlush);
+        std::cout << "disk-based flush" << std::endl;
+        fOrderBy->flushCurrentToDisk_(firstFlush);
         flushToDisk = false;
       }
       else
@@ -704,6 +721,7 @@ void TupleAnnexStep::executeWithOrderBy()
   // store avg RGData size
   if (fOrderBy->isDiskBased())
   {
+    std::cout << "disk-based is triggered" << std::endl;
     // assess RAM available, avg RGData size statistics and free enough memory
     // return memory if needed
     size_t inputQueuesNumber = 2;

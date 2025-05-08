@@ -60,18 +60,11 @@ class DiskBasedTopNOrderBy : public rowgroup::RGDumper
   {
     return 0;
   }
-  std::vector<std::string> getGenerationFileNamesNextBatch(const size_t batchSize)
-  {
-    return {};
-  }
+  std::vector<std::string> getGenerationFileNamesNextBatch(const size_t batchSize);
 
-  void flushCurrentToDisk(const bool firstFlush)
-  {
-    incrementGenerationCounter();
-  }
-  void diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& dataLists)
-  {
-  }
+  // The caller ensures lifetime of dl and rg
+  void flushCurrentToDisk(RowGroupDL& dl, rowgroup::RowGroup rg, const size_t numberOfRGs, const bool firstFlush);
+  void diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& dataLists);
 
   //  private:
   uint64_t fGenerationCounter{0};
