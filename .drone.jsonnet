@@ -16,8 +16,6 @@ local platforms_arm = {
 };
 
 local any_branch = '**';
-local platforms_custom = platforms.develop;
-local platforms_arm_custom = platforms_arm.develop;
 
 local platforms_mtr = platforms.develop;
 
@@ -99,7 +97,7 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', customBootstrapParams='') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -638,7 +636,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch, server]),
+  name: std.join(' ', [branch, platform, event, arch, server, customBootstrapParams]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -706,7 +704,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '--build-type RelWithDebInfo ' +
                           '--distro ' + platform + ' ' +
                           '--build-packages --sccache ' +
-                          '--server-version ' + server + ' | ' +
+                          '--server-version ' + server + ' ' +
+                          customBootstrapParams + ' | ' +
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-stats',
@@ -842,8 +841,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise', '']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '']), platforms_arm.develop),
 };
 
 [
@@ -853,6 +852,7 @@ local FinalPipeline(branch, event) = {
   for s in servers[b]
   for e in events
 ] +
+
 [
   Pipeline(b, p, e, 'arm64', s)
   for b in std.objectFields(platforms_arm)
@@ -867,10 +867,8 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, 'custom', 'amd64', '10.6-enterprise')
-  for p in platforms_custom
-] +
-[
-  Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
-  for p in platforms_arm_custom
+  Pipeline(any_branch, p, e, 'arm64', s, '--asan')
+  for p in ['debian:12', 'ubuntu:22.04']
+  for e in events
+  for s in servers.develop
 ]
