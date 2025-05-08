@@ -158,7 +158,7 @@ class BatchPrimitiveProcessor
     return touchedBlocks;
   }
 
-  void setError(const std::string& error, logging::ErrorCodeValues errorCode)
+  void setError(const std::string& /*error*/, logging::ErrorCodeValues /*errorCode*/)
   {
   }
 
@@ -203,7 +203,8 @@ class BatchPrimitiveProcessor
   void serializeStrings(messageqcpp::SBS& bs);
 
   void asyncLoadProjectColumns();
-  void writeErrorMsg(messageqcpp::SBS& bs, const std::string& error, uint16_t errCode, bool logIt = true, bool critical = true);
+  void writeErrorMsg(messageqcpp::SBS& bs, const std::string& error, uint16_t errCode, bool logIt = true,
+                     bool critical = true);
 
   BPSOutputType ot;
 
@@ -308,14 +309,14 @@ class BatchPrimitiveProcessor
   bool hasRowGroup;
 
   /* Rowgroups + join */
-  using TJoiner = std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher,
-                                       std::equal_to<uint64_t>,
-                                       utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>;
- 
-  using TLJoiner = std::unordered_multimap<
-      joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
-      joiner::TupleJoiner::TypelessDataComparator,
-      utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;                                             
+  using TJoiner =
+      std::unordered_multimap<uint64_t, uint32_t, joiner::TupleJoiner::hasher, std::equal_to<uint64_t>,
+                              utils::STLPoolAllocator<std::pair<const uint64_t, uint32_t>>>;
+
+  using TLJoiner =
+      std::unordered_multimap<joiner::TypelessData, uint32_t, joiner::TupleJoiner::TypelessDataHasher,
+                              joiner::TupleJoiner::TypelessDataComparator,
+                              utils::STLPoolAllocator<std::pair<const joiner::TypelessData, uint32_t>>>;
 
   bool generateJoinedRowGroup(rowgroup::Row& baseRow, const uint32_t depth = 0);
   /* generateJoinedRowGroup helper fcns & vars */

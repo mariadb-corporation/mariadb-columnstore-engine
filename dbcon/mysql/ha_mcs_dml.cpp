@@ -66,8 +66,8 @@ using namespace execplan;
 
 #include "resourcemanager.h"
 using namespace joblist;
-//#include "stopwatch.h"
-// using namespace logging;
+// #include "stopwatch.h"
+//  using namespace logging;
 
 #include "dbrm.h"
 
@@ -99,7 +99,6 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
   ci.nullValuesBitset.reset();
   NullString null;
 
-
   for (Field** field = table->field; *field; field++)
   {
     if ((*field)->is_null())
@@ -129,11 +128,12 @@ uint32_t buildValueList(TABLE* table, cal_connection_info& ci)
         // fetch different data type
         (*field)->val_str(&attribute, &attribute);
 
-//        if (attribute.length() == 0)
-//        {
-//          ci.tableValuesMap[columnPos].push_back(null);  // currently, empty string is treated as null.
-//        }
-//        else
+        //        if (attribute.length() == 0)
+        //        {
+        //          ci.tableValuesMap[columnPos].push_back(null);  // currently, empty string is treated as
+        //          null.
+        //        }
+        //        else
         {
           string val(attribute.ptr(), attribute.length());
           NullString nonNull(val);
@@ -579,7 +579,7 @@ int ha_mcs_impl_write_last_batch(TABLE* table, cal_connection_info& ci, bool abo
   return rc;
 }
 
-int ha_mcs_impl_write_row_(const uchar* buf, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
+int ha_mcs_impl_write_row_(const uchar* /*buf*/, TABLE* table, cal_connection_info& ci, ha_rows& rowsInserted)
 {
   int rc = 0;
   // timer.start( "buildValueList");
@@ -945,7 +945,7 @@ std::string ha_mcs_impl_cleartablelock(cal_impl_if::cal_connection_info& ci, uin
   return tableLockInfo;
 }
 
-int ha_mcs_impl_commit_(handlerton* hton, THD* thd, bool all, cal_connection_info& ci)
+int ha_mcs_impl_commit_(handlerton* /*hton*/, THD* thd, bool /*all*/, cal_connection_info& ci)
 {
   if (thd->slave_thread && !get_replication_slave(thd))
     return 0;
@@ -960,7 +960,7 @@ int ha_mcs_impl_commit_(handlerton* hton, THD* thd, bool all, cal_connection_inf
   return rc;
 }
 
-int ha_mcs_impl_rollback_(handlerton* hton, THD* thd, bool all, cal_connection_info& ci)
+int ha_mcs_impl_rollback_(handlerton* /*hton*/, THD* thd, bool /*all*/, cal_connection_info& ci)
 {
   int rc = 0;
 #ifdef INFINIDB_DEBUG
@@ -980,7 +980,7 @@ int ha_mcs_impl_rollback_(handlerton* hton, THD* thd, bool all, cal_connection_i
   return rc;
 }
 
-int ha_mcs_impl_close_connection_(handlerton* hton, THD* thd, cal_connection_info& ci)
+int ha_mcs_impl_close_connection_(handlerton* /*hton*/, THD* thd, cal_connection_info& ci)
 {
   int rc = 0;
 #ifdef INFINIDB_DEBUG
@@ -1001,4 +1001,3 @@ int ha_mcs_impl_close_connection_(handlerton* hton, THD* thd, cal_connection_inf
   // transaction. Under either situation, system catalog cache for this session should be removed
   return rc;
 }
-

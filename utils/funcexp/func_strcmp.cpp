@@ -40,7 +40,7 @@ using namespace funcexp;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& /*fp*/,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
@@ -49,7 +49,7 @@ CalpontSystemCatalog::ColType Func_strcmp::operationType(FunctionParm& fp,
 }
 
 int64_t Func_strcmp::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& type)
+                               execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
   const auto& str = fp[0]->data()->getStrVal(row, isNull);

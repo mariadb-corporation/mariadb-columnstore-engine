@@ -262,6 +262,7 @@ construct_cmake_flags() {
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
         -DPLUGIN_GSSAPI=NO
+        -DMYSQL_MAINTAINER_MODE=NO
     )
 
     if [[ $SKIP_UNIT_TESTS = true ]]; then

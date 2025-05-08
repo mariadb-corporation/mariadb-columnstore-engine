@@ -57,18 +57,8 @@ SlaveDBRMNode::SlaveDBRMNode() throw()
   locked[2] = false;
 }
 
-SlaveDBRMNode::SlaveDBRMNode(const SlaveDBRMNode& brm)
-{
-  throw logic_error("WorkerDBRMNode: Don't use the copy constructor.");
-}
-
 SlaveDBRMNode::~SlaveDBRMNode() throw()
 {
-}
-
-SlaveDBRMNode& SlaveDBRMNode::operator=(const SlaveDBRMNode& brm)
-{
-  throw logic_error("WorkerDBRMNode: Don't use the = operator.");
 }
 
 int SlaveDBRMNode::lookup(OID_t oid, LBIDRange_v& lbidList) throw()
@@ -713,7 +703,7 @@ int SlaveDBRMNode::beginVBCopy(VER_t transID, uint16_t vbOID, const LBIDRange_v&
   }
 }
 
-int SlaveDBRMNode::endVBCopy(VER_t transID, const LBIDRange_v& ranges) throw()
+int SlaveDBRMNode::endVBCopy(VER_t /*transID*/, const LBIDRange_v& ranges) throw()
 {
   LBIDRange_v::const_iterator it;
 

@@ -38,14 +38,14 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_ascii::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_ascii::operationType(FunctionParm& /*fp*/,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_ascii::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                              CalpontSystemCatalog::ColType& op_ct)
+                              CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto& str = parm[0]->data()->getStrVal(row, isNull);
 

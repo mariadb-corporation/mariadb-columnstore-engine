@@ -110,7 +110,6 @@ class ha_mcs_group_by_handler : public group_by_handler
 class ha_columnstore_derived_handler : public derived_handler
 {
  private:
-  COLUMNSTORE_SHARE* share;
   long time_zone;
 
  public:
@@ -138,7 +137,6 @@ class ha_columnstore_derived_handler : public derived_handler
 class ha_columnstore_select_handler : public select_handler
 {
  private:
-  COLUMNSTORE_SHARE* share;
   bool prepared;
   bool scan_ended;
   long time_zone;

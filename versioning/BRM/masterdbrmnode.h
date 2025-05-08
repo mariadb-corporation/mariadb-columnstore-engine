@@ -165,8 +165,8 @@ class MasterDBRMNode
     boost::thread* t;
   };
 
-  MasterDBRMNode(const MasterDBRMNode& m);
-  MasterDBRMNode& operator=(const MasterDBRMNode& m);
+  MasterDBRMNode(const MasterDBRMNode& m) = delete;
+  MasterDBRMNode& operator=(const MasterDBRMNode& m) = delete;
 
   void initMsgQueues(config::Config* config);
   void msgProcessor();

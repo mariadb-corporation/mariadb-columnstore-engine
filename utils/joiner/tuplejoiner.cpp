@@ -253,17 +253,6 @@ TupleJoiner::TupleJoiner()
 {
 }
 
-TupleJoiner::TupleJoiner(const TupleJoiner& j)
-{
-  throw runtime_error("TupleJoiner(TupleJoiner) shouldn't be called.");
-}
-
-TupleJoiner& TupleJoiner::operator=(const TupleJoiner& j)
-{
-  throw runtime_error("TupleJoiner::operator=() shouldn't be called.");
-  return *this;
-}
-
 TupleJoiner::~TupleJoiner()
 {
   smallNullMemory = RGData();

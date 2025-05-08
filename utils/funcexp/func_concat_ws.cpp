@@ -35,14 +35,14 @@ using namespace rowgroup;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_concat_ws::operationType(FunctionParm& fp,
-                                                            CalpontSystemCatalog::ColType& resultType)
+                                                            CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
 string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
-                                 CalpontSystemCatalog::ColType& type)
+                                 CalpontSystemCatalog::ColType& /*type*/)
 {
   string delim;
   stringValue(parm[0], row, isNull, delim);
@@ -51,7 +51,7 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 
     // TODO: I don't think we need wide chars here.
     // Concatenation works without see Server implementation.
-#if 0    
+#if 0
     wstring wstr;
     size_t strwclen = utf8::idb_mbstowcs(0, delim.c_str(), 0) + 1;
     wchar_t* wcbuf = new wchar_t[strwclen];
@@ -61,7 +61,7 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     for ( unsigned int id = 1 ; id < parm.size() ; id++)
     {
 		string tstr;
-        stringValue(parm[id], row, isNull, tstr); 
+        stringValue(parm[id], row, isNull, tstr);
         if (isNull)
         {
             isNull = false;
@@ -105,7 +105,7 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
       continue;
     }
 
-    if (!firstTime) // XXX: XXX: XXX: concatenation of empty strings will result in empty string.
+    if (!firstTime)  // XXX: XXX: XXX: concatenation of empty strings will result in empty string.
       str += delim;
     firstTime = false;
 
@@ -114,7 +114,8 @@ string Func_concat_ws::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     str += tmp;
   }
 
-  if (firstTime) {
+  if (firstTime)
+  {
     // all arguments are NULL.
     isNull = true;
     return str;

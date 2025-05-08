@@ -38,7 +38,7 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_add_time::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_add_time::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -244,7 +244,7 @@ int64_t Func_add_time::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 int64_t Func_add_time::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                     CalpontSystemCatalog::ColType& ct)
+                                     CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val1 = parm[0]->data()->getTimeIntVal(row, isNull);
 

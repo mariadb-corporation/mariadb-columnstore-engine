@@ -26,7 +26,7 @@ struct distinct_count_data
 };
 
 #define OUT_TYPE int64_t
-mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context, ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode distinct_count::init(mcsv1Context* context, ColumnDatum* /*colTypes*/)
 {
   context->setUserDataSize(sizeof(distinct_count_data));
   if (context->getParameterCount() != 1)

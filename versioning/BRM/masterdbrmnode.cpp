@@ -115,16 +115,6 @@ MasterDBRMNode::~MasterDBRMNode()
   finalCleanup();
 }
 
-MasterDBRMNode::MasterDBRMNode(const MasterDBRMNode& m)
-{
-  throw logic_error("Don't use the MasterDBRMNode copy constructor");
-}
-
-MasterDBRMNode& MasterDBRMNode::operator=(const MasterDBRMNode& m)
-{
-  throw logic_error("Don't use the MasterDBRMNode = operator");
-}
-
 void MasterDBRMNode::initMsgQueues(config::Config* config)
 {
   std::string methodName("MasterDBRMNode::initMsgQueues()");
@@ -1307,7 +1297,7 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket* sock)
   }
 }
 
-void MasterDBRMNode::doVerID(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doVerID(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   QueryContext context;
@@ -1329,7 +1319,7 @@ void MasterDBRMNode::doVerID(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doGetSystemCatalog(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doGetSystemCatalog(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
 
@@ -1403,7 +1393,7 @@ void MasterDBRMNode::doGetSystemCatalog(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doSysCatVerID(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doSysCatVerID(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   QueryContext context;
@@ -1708,7 +1698,7 @@ void MasterDBRMNode::doGetTxnID(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doSIDTIDMap(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doSIDTIDMap(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   int len, i;
@@ -1885,7 +1875,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doGetUniqueUint32(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doGetUniqueUint32(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   uint32_t ret;
@@ -1924,7 +1914,7 @@ void MasterDBRMNode::doGetUniqueUint32(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doGetUniqueUint64(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doGetUniqueUint64(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   uint64_t ret;
@@ -1963,7 +1953,7 @@ void MasterDBRMNode::doGetUniqueUint64(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doGetSystemState(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doGetSystemState(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   uint32_t ss = 0;
@@ -2092,7 +2082,7 @@ void MasterDBRMNode::doClearSystemState(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doSessionManagerReset(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doSessionManagerReset(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
 
@@ -2191,7 +2181,7 @@ void MasterDBRMNode::doReturnOIDs(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doOidmSize(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doOidmSize(ByteStream& /*msg*/, ThreadParams* p)
 {
   ByteStream reply;
   int ret;

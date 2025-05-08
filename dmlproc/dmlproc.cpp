@@ -25,8 +25,8 @@
 #include <string>
 #include <set>
 #include <clocale>
-//#include "boost/filesystem/operations.hpp"
-//#include "boost/filesystem/path.hpp"
+// #include "boost/filesystem/operations.hpp"
+// #include "boost/filesystem/path.hpp"
 using namespace std;
 
 #include "liboamcpp.h"
@@ -123,7 +123,7 @@ class ServiceDMLProc : public Service, public Opt
     return Service::Parent();
   }
 
-  void log(logging::LOG_TYPE type, const std::string& str)
+  void log(logging::LOG_TYPE /*type*/, const std::string& str)
   {
     LoggingID logid(23, 0, 0);
     Message::Args args;

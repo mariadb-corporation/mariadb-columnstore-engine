@@ -154,7 +154,7 @@ struct preFetchCond
   boost::condition cond;
   unsigned waiters;
 
-  preFetchCond(const uint64_t l)
+  preFetchCond(const uint64_t)
   {
     waiters = 0;
   }
@@ -825,7 +825,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
 struct AsynchLoader
 {
   AsynchLoader(uint64_t l, QueryContext v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount, bool trace,
-               uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
+               uint32_t /*sesID*/, boost::mutex* m, uint32_t* loaderCount,
                boost::shared_ptr<BPPSendThread> st,  // sendThread for abort upon exception.
                VSSCache* vCache)
    : lbid(l)
@@ -833,7 +833,6 @@ struct AsynchLoader
    , txn(t)
    , compType(ct)
    , LBIDTrace(trace)
-   , sessionID(sesID)
    , cacheCount(cCount)
    , readCount(rCount)
    , busyLoaders(loaderCount)
@@ -905,7 +904,6 @@ struct AsynchLoader
   uint32_t txn;
   int compType;
   bool LBIDTrace;
-  uint32_t sessionID;
   uint32_t* cacheCount;
   uint32_t* readCount;
   uint32_t* busyLoaders;
@@ -1596,8 +1594,8 @@ struct BPPHandler
       {
         if (posix_time::second_clock::universal_time() > dieTime)
         {
-          cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
-              << endl;
+          cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID
+               << " has been killed." << endl;
           // If for some reason there are jobs for this uniqueID that arrived later
           // they won't leave PP thread pool staying there forever.
         }
@@ -1617,7 +1615,7 @@ struct BPPHandler
     if (bppv)
     {
       bppv->abort();
-    }    
+    }
     return 0;
   }
 
@@ -1841,7 +1839,7 @@ struct ReadThread
     ios->write(buildCacheOpResp(0));
   }
 
-  void doCacheFlushCmd(SP_UM_IOSOCK ios, const ByteStream& bs)
+  void doCacheFlushCmd(SP_UM_IOSOCK ios, const ByteStream& /*bs*/)
   {
     for (int i = 0; i < fCacheCount; i++)
     {
@@ -2251,19 +2249,17 @@ struct ServerThread
 namespace primitiveprocessor
 {
 PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int processorWeight,
-                                 int processorQueueSize, bool rotatingDestination, uint32_t BRPBlocks,
+                                 int /*processorQueueSize*/, bool rotatingDestination, uint32_t BRPBlocks,
                                  int BRPThreads, int cacheCount, int maxBlocksPerRead, int readAheadBlocks,
-                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t smallSide)
+                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t /*smallSide*/)
  : fServerThreads(serverThreads)
  , fServerQueueSize(serverQueueSize)
  , fProcessorWeight(processorWeight)
- , fProcessorQueueSize(processorQueueSize)
  , fMaxBlocksPerRead(maxBlocksPerRead)
  , fReadAheadBlocks(readAheadBlocks)
  , fRotatingDestination(rotatingDestination)
  , fPTTrace(ptTrace)
  , fPrefetchThreshold(prefetch)
- , fPMSmallSide(smallSide)
 {
   fCacheCount = cacheCount;
   fServerpool.setMaxThreads(fServerThreads);

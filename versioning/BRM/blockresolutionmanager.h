@@ -107,8 +107,9 @@ class BlockResolutionManager
   EXPORT int saveState(std::string filename) throw();
 
  private:
-  explicit BlockResolutionManager(const BlockResolutionManager& brm);
-  BlockResolutionManager& operator=(const BlockResolutionManager& brm);
+  explicit BlockResolutionManager(const BlockResolutionManager&) = delete;
+  BlockResolutionManager& operator=(const BlockResolutionManager&) = delete;
+
   MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;

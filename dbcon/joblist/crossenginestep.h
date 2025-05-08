@@ -55,8 +55,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
  public:
   /** @brief CrossEngineStep constructor
    */
-  CrossEngineStep(const std::string& schema, const std::string& table,
-		  const execplan::Partitions& partitions,
+  CrossEngineStep(const std::string& schema, const std::string& table, const execplan::Partitions& partitions,
                   const std::string& alias, const JobInfo& jobInfo);
 
   /** @brief CrossEngineStep destructor
@@ -89,29 +88,29 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
     return 1;
   }
   void setBPP(JobStep* jobStep) override;
-  void setFirstStepType(PrimitiveStepType firstStepType) override
+  void setFirstStepType(PrimitiveStepType /*firstStepType*/) override
   {
   }
   void setIsProjectionOnly() override
   {
   }
-  void setLastTupleId(uint64_t id) override
+  void setLastTupleId(uint64_t /*id*/) override
   {
   }
-  void setOutputType(BPSOutputType outputType) override
+  void setOutputType(BPSOutputType /*outputType*/) override
   {
   }
-  void setProjectBPP(JobStep* jobStep1, JobStep* jobStep2) override;
+  void setProjectBPP(JobStep* /*jobStep1*/, JobStep* /*jobStep2*/) override;
   void setStepCount() override
   {
   }
-  void setSwallowRows(const bool swallowRows) override
+  void setSwallowRows(const bool /*swallowRows*/) override
   {
   }
   void setBppStep() override
   {
   }
-  void dec(DistributedEngineComm* dec) override
+  void dec(DistributedEngineComm* /*dec*/) override
   {
   }
   const OIDVector& getProjectOids() const override
@@ -146,7 +145,7 @@ class CrossEngineStep : public BatchPrimitive, public TupleDeliveryStep
   {
     return fAlias;
   }
-  void setJobInfo(const JobInfo* jobInfo) override
+  void setJobInfo(const JobInfo* /*jobInfo*/) override
   {
   }
   void setOutputRowGroup(const rowgroup::RowGroup&) override;

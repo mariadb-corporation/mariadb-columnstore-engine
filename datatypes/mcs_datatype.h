@@ -1020,16 +1020,16 @@ class TypeHandler
   virtual ~TypeHandler() = default;
 
   virtual const string& name() const = 0;
-  virtual const string print(const SystemCatalog::TypeAttributesStd& attr) const
+  virtual const string print(const SystemCatalog::TypeAttributesStd& /*attr*/) const
   {
     return name();
   }
   virtual code_t code() const = 0;
-  virtual bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const
+  virtual bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const
   {
     return false;
   }
-  virtual uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& attr) const
+  virtual uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& /*attr*/) const
   {
     return 30;
   }
@@ -1054,7 +1054,7 @@ class TypeHandler
   }
   virtual SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                                     const char* str, round_style_t& rf) const = 0;
-  virtual MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  virtual MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                                      const MinMaxInfo& b) const
   {
     return MinMaxInfo::widenSInt64(a, b);
@@ -1069,7 +1069,7 @@ class TypeHandler
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  virtual bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr,
+  virtual bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/,
                                    const MinMaxPartitionInfo& part, const SimpleValue& startVal,
                                    round_style_t rfMin, const SimpleValue& endVal, round_style_t rfMax) const
   {
@@ -1091,50 +1091,51 @@ class TypeHandlerBit : public TypeHandler
   {
     return SystemCatalog::BIT;
   }
-  size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
-                       ColBatchWriter& writer) const override
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
   {
     idbassert(0);  // QQ
     return 0;
   }
-  int storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const override
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
   {
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
-  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                  const MinMaxInfo& i) const override
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
   {
     idbassert(0);
     return "Error";
   }
 
-  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& name,
-                                          SystemCatalog::TypeHolderStd& ct,
-                                          const SimpleColumnParam& prm) const override
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
   {
     idbassert(0);
     return nullptr;
   }
-  SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
-                            const char* str, round_style_t& rf) const override
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
   {
     idbassert(0);
     return {};
   }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     // TODO: How to communicate with write engine?
     return {};
   }
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm, const std::string& str,
-                               bool& pushWarning) const override;
-  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     idbassert(0);
     return nullptr;
@@ -1158,7 +1159,7 @@ class TypeHandlerSInt8 : public TypeHandlerInt
   {
     return SystemCatalog::TINYINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1205,7 +1206,7 @@ class TypeHandlerSInt16 : public TypeHandlerInt
   {
     return SystemCatalog::SMALLINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1251,7 +1252,7 @@ class TypeHandlerSInt24 : public TypeHandlerInt
   {
     return SystemCatalog::MEDINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1300,7 +1301,7 @@ class TypeHandlerSInt32 : public TypeHandlerInt
   {
     return SystemCatalog::INT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1349,7 +1350,7 @@ class TypeHandlerSInt64 : public TypeHandlerInt
   {
     return SystemCatalog::BIGINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1395,7 +1396,7 @@ class TypeHandlerUInt8 : public TypeHandlerInt
   {
     return SystemCatalog::UTINYINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1428,7 +1429,7 @@ class TypeHandlerUInt8 : public TypeHandlerInt
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override;
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenUInt64(a, b);
@@ -1440,7 +1441,7 @@ class TypeHandlerUInt8 : public TypeHandlerInt
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1460,7 +1461,7 @@ class TypeHandlerUInt16 : public TypeHandlerInt
   {
     return SystemCatalog::USMALLINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1492,7 +1493,7 @@ class TypeHandlerUInt16 : public TypeHandlerInt
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override;
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenUInt64(a, b);
@@ -1504,7 +1505,7 @@ class TypeHandlerUInt16 : public TypeHandlerInt
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1524,7 +1525,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   {
     return SystemCatalog::UMEDINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1559,7 +1560,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override;
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenUInt64(a, b);
@@ -1571,7 +1572,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1591,7 +1592,7 @@ class TypeHandlerUInt32 : public TypeHandlerInt
   {
     return SystemCatalog::UINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1626,7 +1627,7 @@ class TypeHandlerUInt32 : public TypeHandlerInt
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override;
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenUInt64(a, b);
@@ -1638,7 +1639,7 @@ class TypeHandlerUInt32 : public TypeHandlerInt
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1658,7 +1659,7 @@ class TypeHandlerUInt64 : public TypeHandlerInt
   {
     return SystemCatalog::BIGINT;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -1690,7 +1691,7 @@ class TypeHandlerUInt64 : public TypeHandlerInt
   }
   SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
                             const char* str, round_style_t& rf) const override;
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenUInt64(a, b);
@@ -1702,7 +1703,7 @@ class TypeHandlerUInt64 : public TypeHandlerInt
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1763,11 +1764,11 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
   {
     return SystemCatalog::DECIMAL;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
-  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& attr) const override
+  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return 30;
   }
@@ -1792,7 +1793,7 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
   {
     return SimpleValueSInt64(std::numeric_limits<int64_t>::max());
   }
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenSInt64(a, b);
@@ -1809,7 +1810,7 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1829,11 +1830,11 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
   {
     return SystemCatalog::UDECIMAL;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
-  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& attr) const override
+  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return 30;
   }
@@ -1858,7 +1859,7 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
   {
     return SimpleValueUInt64(std::numeric_limits<uint64_t>::max());
   }
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenSInt64(a, b);
@@ -1875,7 +1876,7 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1895,11 +1896,11 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   {
     return SystemCatalog::DECIMAL;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
-  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& attr) const override
+  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return Decimal::MAXLENGTH16BYTES;
   }
@@ -1924,7 +1925,7 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   {
     return {std::numeric_limits<int64_t>::max(), datatypes::maxInt128, 0};
   }
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenSInt128(a, b);
@@ -1941,7 +1942,7 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -1961,11 +1962,11 @@ class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
   {
     return SystemCatalog::UDECIMAL;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
-  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& attr) const override
+  uint8_t PartitionValueCharLength(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return Decimal::MAXLENGTH16BYTES;
   }
@@ -1990,7 +1991,7 @@ class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
   {
     return SimpleValueSInt128(-1);
   }
-  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& attr, const MinMaxInfo& a,
+  MinMaxInfo widenMinMaxInfo(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxInfo& a,
                              const MinMaxInfo& b) const override
   {
     return MinMaxInfo::widenSInt128(a, b);
@@ -2007,7 +2008,7 @@ class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
-  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& attr, const MinMaxPartitionInfo& part,
+  bool isSuitablePartition(const SystemCatalog::TypeAttributesStd& /*attr*/, const MinMaxPartitionInfo& part,
                            const SimpleValue& startVal, round_style_t rfMin, const SimpleValue& endVal,
                            round_style_t rfMax) const override
   {
@@ -2027,12 +2028,12 @@ class TypeHandlerReal : public TypeHandler
   execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& name,
                                           SystemCatalog::TypeHolderStd& ct,
                                           const SimpleColumnParam& prm) const override;
-  SimpleValue toSimpleValue(const SessionParam& sp, const SystemCatalog::TypeAttributesStd& attr,
-                            const char* str, round_style_t& rf) const override
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
   {
     return {};  // QQ: real types were not handled in IDB_format()
   }
-  std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2163,25 +2164,25 @@ class TypeHandlerSLongDouble : public TypeHandlerReal
     return field->ColWriteBatchSLongDouble(buf, nullVal, writer);
   }
   int storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const override;
-  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                  const MinMaxInfo& i) const override
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
   {
     idbassert(0);
     return "Error";
   }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     // QQ: DDLPackageProcessor::getNullValueForType() did not handle LONGDOUBLE
     return {};
   }
-  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                               const ConvertFromStringParam& prm, const std::string& str,
-                               bool& pushWarning) const override
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override
   {
     throw logging::QueryDataExcept("convertColumnData: unknown column data type.", logging::dataTypeErr);
     return {};
   }
-  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     idbassert(0);
     return nullptr;
@@ -2328,7 +2329,7 @@ class TypeHandlerBlob : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2354,7 +2355,7 @@ class TypeHandlerText : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2374,22 +2375,22 @@ class TypeHandlerClob : public TypeHandlerStr
   {
     return SystemCatalog::CLOB;
   }
-  size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
-                       ColBatchWriter& writer) const override
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
   {
     idbassert(0);  // QQ
     return 0;
   }
-  int storeValueToField(rowgroup::Row& row, int pos, StoreField* f) const override
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
   {
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& v, const SystemCatalog::TypeAttributesStd& attr) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
-  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& attr) const override
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return {};  // QQ
   }
@@ -2422,7 +2423,7 @@ class TypeHandlerDate : public TypeHandlerTemporal
   {
     return SystemCatalog::DATE;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -2448,7 +2449,7 @@ class TypeHandlerDatetime : public TypeHandlerTemporal
   {
     return SystemCatalog::DATETIME;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -2474,7 +2475,7 @@ class TypeHandlerTime : public TypeHandlerTemporal
   {
     return SystemCatalog::TIME;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }
@@ -2500,7 +2501,7 @@ class TypeHandlerTimestamp : public TypeHandlerTemporal
   {
     return SystemCatalog::TIMESTAMP;
   }
-  bool CP_type(const SystemCatalog::TypeAttributesStd& attr) const override
+  bool CP_type(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return true;
   }

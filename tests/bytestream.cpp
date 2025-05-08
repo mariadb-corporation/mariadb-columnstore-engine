@@ -910,7 +910,7 @@ void setupSignalHandlers()
   sigaction(SIGPIPE, &ign, 0);
 }
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** /*argv*/)
 {
   setupSignalHandlers();
 

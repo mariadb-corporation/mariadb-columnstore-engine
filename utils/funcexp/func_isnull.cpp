@@ -38,7 +38,7 @@ using namespace rowgroup;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_isnull::operationType(FunctionParm& fp,
-                                                         CalpontSystemCatalog::ColType& resultType)
+                                                         CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type of idb_isnull should be the same as the argument type
   assert(fp.size() == 1);

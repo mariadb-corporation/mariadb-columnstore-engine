@@ -40,7 +40,7 @@
 #include "extentmap.h"
 #include "IDBPolicy.h"
 
-//#define BRM_VERBOSE 1
+// #define BRM_VERBOSE 1
 
 using namespace BRM;
 using namespace std;
@@ -57,42 +57,51 @@ const DBRootT dbroot = 1;
 
 struct Range
 {
-    LBID_t start, end, nextBlock;
-    VER_t txnID;
-    Range()
-    {
-        start = end = nextBlock = 0;
-        txnID = 0;
-    }
+  LBID_t start, end, nextBlock;
+  VER_t txnID;
+  Range()
+  {
+    start = end = nextBlock = 0;
+    txnID = 0;
+  }
 };
 
 struct EMEntries
 {
-    LBID_t LBIDstart;
-    uint32_t size;
-    OID_t OID;
-    uint32_t FBO;
-    uint32_t HWM;
-    uint32_t secondHWM;
-    int32_t txnID;
-    DBRootT dbroot;
-    PartitionNumberT partNum;
-    SegmentT segNum;
-    struct EMEntries* next;
-    EMEntries() : HWM(0), secondHWM(0), txnID(0), next(nullptr)
-    { }
-    EMEntries(const uint32_t aSize, const OID_t aOid, const uint32_t aFbo,
-        const LBID_t aLBIDStart, EMEntries* aNext)
-            : LBIDstart(aLBIDStart), size(aSize), OID(aOid), FBO(aFbo), HWM(0),
-              secondHWM(0), txnID(0), next(aNext)
-    { }
-    EMEntries(const uint32_t aSize, const OID_t aOid, const uint32_t aFbo,
-        const LBID_t aLBIDStart, EMEntries* aNext, const DBRootT aDbroot,
-        const PartitionNumberT aPartNum, const SegmentT aSegNum)
-            : LBIDstart(aLBIDStart), size(aSize), OID(aOid), FBO(aFbo), HWM(0),
-              secondHWM(0), txnID(0), dbroot(aDbroot), partNum(aPartNum),
-              segNum(aSegNum), next(aNext)
-   { }
+  LBID_t LBIDstart;
+  uint32_t size;
+  OID_t OID;
+  uint32_t FBO;
+  uint32_t HWM;
+  uint32_t secondHWM;
+  int32_t txnID;
+  DBRootT dbroot;
+  PartitionNumberT partNum;
+  SegmentT segNum;
+  struct EMEntries* next;
+  EMEntries() : HWM(0), secondHWM(0), txnID(0), next(nullptr)
+  {
+  }
+  EMEntries(const uint32_t aSize, const OID_t aOid, const uint32_t aFbo, const LBID_t aLBIDStart,
+            EMEntries* aNext)
+   : LBIDstart(aLBIDStart), size(aSize), OID(aOid), FBO(aFbo), HWM(0), secondHWM(0), txnID(0), next(aNext)
+  {
+  }
+  EMEntries(const uint32_t aSize, const OID_t aOid, const uint32_t aFbo, const LBID_t aLBIDStart,
+            EMEntries* aNext, const DBRootT aDbroot, const PartitionNumberT aPartNum, const SegmentT aSegNum)
+   : LBIDstart(aLBIDStart)
+   , size(aSize)
+   , OID(aOid)
+   , FBO(aFbo)
+   , HWM(0)
+   , secondHWM(0)
+   , txnID(0)
+   , dbroot(aDbroot)
+   , partNum(aPartNum)
+   , segNum(aSegNum)
+   , next(aNext)
+  {
+  }
 };
 /*
 static void* BRMRunner_2(void* arg)
@@ -226,10 +235,9 @@ static void* BRMRunner_1(void* arg)
         colWidth = colWidthsAvailable[randNumber % colWidthsAvailable.size()];
         partNum = randNumber % std::numeric_limits<PartitionNumberT>::max();
         segmentNum = randNumber % std::numeric_limits<SegmentT>::max();
-        colDataType = (execplan::CalpontSystemCatalog::ColDataType) (randNumber % (int)execplan::CalpontSystemCatalog::ColDataType::TIMESTAMP);
-#ifdef BRM_VERBOSE
-        cerr << "next op is " << op << endl;
-#endif
+        colDataType = (execplan::CalpontSystemCatalog::ColDataType) (randNumber %
+(int)execplan::CalpontSystemCatalog::ColDataType::TIMESTAMP); #ifdef BRM_VERBOSE cerr << "next op is " << op
+<< endl; #endif
 
         switch (op)
         {
@@ -993,398 +1001,392 @@ static void* BRMRunner_si(void* arg)
 }
 */
 
-static void* EMRunner(void* arg)
+static void* EMRunner([[maybe_unused]] void* arg)
 {
-    // keep track of LBID ranges allocated here and
-    // randomly allocate, lookup, delete, get/set HWM, and
-    // destroy the EM object.
+  // keep track of LBID ranges allocated here and
+  // randomly allocate, lookup, delete, get/set HWM, and
+  // destroy the EM object.
 
 #ifdef BRM_VERBOSE
-    uint64_t threadNum = (uint64_t)arg;
+  uint64_t threadNum = (uint64_t)arg;
 #endif
-    int op, listSize = 0;
-    uint32_t randstate;
-    struct EMEntries* head = NULL, *tmp;
-    struct timeval tv;
-    ExtentMap* em;
-    LBID_t lbid;
-    uint32_t colWidth;
-    PartitionNumberT partNum;
-    SegmentT segmentNum;
-    execplan::CalpontSystemCatalog::ColDataType colDataType;
+  int op, listSize = 0;
+  uint32_t randstate;
+  struct EMEntries *head = NULL, *tmp;
+  struct timeval tv;
+  ExtentMap* em;
+  LBID_t lbid;
+  uint32_t colWidth;
+  PartitionNumberT partNum;
+  SegmentT segmentNum;
+  execplan::CalpontSystemCatalog::ColDataType colDataType;
 
 #ifdef BRM_VERBOSE
-    cerr << "thread number " << threadNum << " started." << endl;
+  cerr << "thread number " << threadNum << " started." << endl;
 #endif
 
-    gettimeofday(&tv, NULL);
-    randstate = static_cast<uint32_t>(tv.tv_usec);
-    //pthread_mutex_lock(&pthreadMutex);
-    em = new ExtentMap();
-    //pthread_mutex_unlock(&pthreadMutex);
+  gettimeofday(&tv, NULL);
+  randstate = static_cast<uint32_t>(tv.tv_usec);
+  // pthread_mutex_lock(&pthreadMutex);
+  em = new ExtentMap();
+  // pthread_mutex_unlock(&pthreadMutex);
 
-    while (!threadStop)
+  while (!threadStop)
+  {
+    auto randNumber = rand_r(&randstate);
+    op = randNumber % 10;
+
+    colWidth = colWidthsAvailable[randNumber % colWidthsAvailable.size()];
+    partNum = randNumber % std::numeric_limits<PartitionNumberT>::max();
+    segmentNum = randNumber % std::numeric_limits<SegmentT>::max();
+    colDataType = (execplan::CalpontSystemCatalog::ColDataType)(
+        randNumber % (int)execplan::CalpontSystemCatalog::ColDataType::TIMESTAMP);
+#ifdef BRM_VERBOSE
+    cerr << "next op is " << op << endl;
+#endif
+
+    switch (op)
     {
-        auto randNumber = rand_r(&randstate);
-        op = randNumber % 10;
+      case 0:  // allocate space for a new file
+      {
+        vector<struct EMEntry> emEntriesVec;
+        struct EMEntries* newEm;
+        size_t numberOfExtents = randNumber % 4 + 1;
+        int OID;
+        uint32_t startBlockOffset;
 
-        colWidth = colWidthsAvailable[randNumber % colWidthsAvailable.size()];
-        partNum = randNumber % std::numeric_limits<PartitionNumberT>::max();
-        segmentNum = randNumber % std::numeric_limits<SegmentT>::max();
-        colDataType = (execplan::CalpontSystemCatalog::ColDataType) (randNumber % (int)execplan::CalpontSystemCatalog::ColDataType::TIMESTAMP);
-#ifdef BRM_VERBOSE
-        cerr << "next op is " << op << endl;
-#endif
+        pthread_mutex_lock(&pthreadMutex);
+        OID = oid++;
+        pthread_mutex_unlock(&pthreadMutex);
 
-        switch (op)
+        em->getExtents(OID, emEntriesVec, false, false, true);
+        size_t extentsNumberBefore = emEntriesVec.size();
+        int allocdsize;
+        for (size_t i = 0; i < numberOfExtents; ++i)
         {
-            case 0:   //allocate space for a new file
-            {
-                vector<struct EMEntry> emEntriesVec;
-                struct EMEntries* newEm;
-                size_t numberOfExtents = randNumber % 4 + 1;
-                int OID;
-                uint32_t startBlockOffset;
+          em->createColumnExtent_DBroot(OID, colWidth, dbroot, colDataType, partNum, segmentNum, lbid,
+                                        allocdsize, startBlockOffset);
+          em->confirmChanges();
 
-                pthread_mutex_lock(&pthreadMutex);
-                OID = oid++;
-                pthread_mutex_unlock(&pthreadMutex);
-
-                em->getExtents(OID, emEntriesVec, false, false, true);
-                size_t extentsNumberBefore = emEntriesVec.size();
-                int allocdsize;
-                for (size_t i = 0; i < numberOfExtents; ++i)
-                {
-                    em->createColumnExtent_DBroot(OID, colWidth, dbroot, colDataType,
-                        partNum, segmentNum, lbid, allocdsize, startBlockOffset);
-                    em->confirmChanges();
-
-                    newEm = new EMEntries(allocdsize, OID, startBlockOffset, lbid,
-                        head, dbroot, partNum, segmentNum);
-                    head = newEm;
-                    listSize++;
-                }
-
-                emEntriesVec.clear();
-                em->getExtents(OID, emEntriesVec, false, false, true);
-                size_t extentsNumberAfter = emEntriesVec.size();
-
-                CPPUNIT_ASSERT(extentsNumberBefore + numberOfExtents == extentsNumberAfter);
-
-#ifdef BRM_VERBOSE
-                cerr << "created new space for OID " << newEm->OID << endl;
-#endif
-                //em->checkConsistency();
-                break;
-            }
-/*
-            case 1:		//allocate space for an existing file
-            {
-                if (listSize == 0)
-                    break;
-
-                struct EMEntries* newEm, *tmp;
-                size_t size = rand_r(&randstate) % 10;
-                int fileRand = rand_r(&randstate) % listSize;
-                int i, lastExtent, blockEnd, oid;
-                int tmpHWM, entries, allocdSize;
-                uint32_t startBlockOffset;
-                lbids.clear();
-
-                for (i = 0, tmp = head; i < fileRand; i++)
-                    tmp = tmp->next;
-
-                oid = tmp->OID;
-
-                for (lastExtent = 0, tmp = head; tmp != NULL; tmp = tmp->next)
-                {
-                    if (tmp->OID != oid)
-                        continue;
-
-                    tmpHWM = tmp->HWM;
-                    blockEnd = tmp->FBO + tmp->size;
-
-                    if (lastExtent < blockEnd)
-                        lastExtent = blockEnd;
-                }
-
-                for (size_t i = 0; i < size; ++i)
-                {
-                    em->createColumnExtent_DBroot(oid, colWidth, dbroot, colDataType,
-                        partNum, segmentNum, lbid, allocdSize, startBlockOffset);
-                    em->confirmChanges();
-                    lbids.push_back(lbid);
-                }
-
-                //em->createExtent(size, oid, lbids, allocdSize);
-                //em->confirmChanges();
-
-                entries = size / em->getExtentSize();
-
-                if ((size % em->getExtentSize()) != 0)
-                    entries++;
-
-                CPPUNIT_ASSERT((uint32_t)entries == lbids.size());
-
-                for (i = 0; i < entries; i++)
-                {
-                    newEm = new EMEntries((i != entries) ? em->getExtentSize() : size % em->getExtentSize(),
-                       oid, lastExtent + (i * em->getExtentSize()),
-                       lbids[i], head, dbroot, partNum, segmentNum);
-                    newEm->HWM = tmpHWM;
-                    head = newEm;
-                    listSize++;
-                }
-
-#ifdef BRM_VERBOSE
-                cerr << "created another extent for OID " << newEm->OID << endl;
-#endif
-                em->checkConsistency();
-                break;
-            }
-*/
-
-            case 2:  			//delete an OID
-            {
-                if (listSize == 0)
-                    break;
-
-                struct EMEntries* tmp = nullptr, *prev = nullptr;
-                int fileRand = rand_r(&randstate) % listSize;
-                int i, oid;
-
-                for (i = 0, tmp = head; i < fileRand; i++)
-                    tmp = tmp->next;
-
-                oid = tmp->OID;
-
-                em->deleteOID(oid);
-                em->confirmChanges();
-
-                vector<struct EMEntry> emEntriesVec;
-                em->getExtents(oid, emEntriesVec, false, false, true);
-                CPPUNIT_ASSERT(emEntriesVec.empty());
-
-                for (tmp = head; tmp != NULL;)
-                {
-                    if (tmp->OID == oid)
-                    {
-                        if (tmp == head)
-                        {
-                            head = head->next;
-                            delete tmp;
-                            tmp = head;
-                        }
-                        else
-                        {
-                            prev->next = tmp->next;
-                            delete tmp;
-                            tmp = prev->next;
-                        }
-
-                        listSize--;
-                    }
-                    else
-                    {
-                        prev = tmp;
-                        tmp = tmp->next;
-                    }
-                }
-
-#ifdef BRM_VERBOSE
-                cerr << "deleted OID " << oid << endl;
-#endif
-                //em->checkConsistency();
-                break;
-            }
-
-            case 3:   //lookup by LBID
-            {
-                if (listSize == 0)
-                    break;
-
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, err, offset, oid;
-                struct EMEntries* tmp;
-                LBID_t target;
-                uint32_t fbo;
-                DBRootT localDbroot;
-                PartitionNumberT localPartNum;
-                SegmentT localSegmentNum;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                offset = rand_r(&randstate) % (tmp->size - 1);
-
-                target = tmp->LBIDstart + offset;
-                err = em->lookupLocal(target, oid, localDbroot, localPartNum, localSegmentNum, fbo);
-#ifdef BRM_VERBOSE
-                cerr << "looked up LBID " << target << " got oid " << oid << " fbo " << fbo << endl;
-                cerr << "   oid should be " << tmp->OID << " fbo should be " << offset + tmp->FBO << endl;
-                cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl;
-#endif
-                CPPUNIT_ASSERT(err == 0);
-                CPPUNIT_ASSERT(oid == tmp->OID);
-                CPPUNIT_ASSERT(fbo == offset + tmp->FBO);
-                //em->checkConsistency();
-                break;
-            }
-
-            case 4:   //lookup by OID, FBO
-            {
-                if (listSize == 0)
-                    break;
-
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, oid, err, offset;
-                struct EMEntries* tmp;
-                LBID_t lbid;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                offset = rand_r(&randstate) % (tmp->size - 1);
-                oid = tmp->OID;
-
-                err = em->lookupLocal(oid, tmp->partNum, tmp->segNum, offset + tmp->FBO, lbid);
-#ifdef BRM_VERBOSE
-                cerr << "looked up OID " << oid << " fbo " << offset + tmp->FBO <<
-                     " got lbid " << lbid << endl;
-                cerr << "  lbid should be " << tmp->LBIDstart + offset << endl;
-#endif
-                CPPUNIT_ASSERT(err == 0);
-                CPPUNIT_ASSERT(lbid == tmp->LBIDstart + offset);
-                //em->checkConsistency();
-                break;
-            }
-
-            case 5:		//getHWM
-            {
-                if (listSize == 0)
-                    break;
-
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, status;
-                struct EMEntries* tmp;
-                uint32_t hwm;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                hwm = em->getLocalHWM(tmp->OID, tmp->partNum, tmp->segNum, status);
-#ifdef BRM_VERBOSE_I
-                cerr << "stored HWM for OID " << tmp->OID << " is " << tmp->HWM
-                     << " BRM says it's " << hwm << endl;
-#endif
-                CPPUNIT_ASSERT(hwm == tmp->HWM);
-                //em->checkConsistency();
-                break;
-            }
-
-            case 6: 		//setHWM
-            {
-                if (listSize == 0)
-                    break;
-
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, hwm, oid;
-                struct EMEntries* tmp;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                oid = tmp->OID;
-                hwm = rand_r(&randstate) % (tmp->size - 1);
-                bool firstNode = true;
-                em->setLocalHWM(oid, tmp->partNum, tmp->segNum, hwm, firstNode);
-
-                em->confirmChanges();
-
-                tmp->HWM = hwm;
-
-#ifdef BRM_VERBOSE
-                cerr << "setHWM of OID " << oid << " to " << hwm << endl;
-#endif
-                //em->checkConsistency();
-                break;
-            }
-
-/*
-            case 7:			// renew this EM object
-            {
-                delete em;
-                em = new ExtentMap();
-#ifdef BRM_VERBOSE
-                cerr << "got a new EM instance" << endl;
-#endif
-                em->checkConsistency();
-                break;
-            }
-            case 8:			//getBulkInsertVars
-            {
-                if (listSize == 0)
-                    break;
-
-                HWM_t hwm;
-                VER_t txnID;
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, err, offset;
-                EMEntries* tmp;
-                LBID_t lbid;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                offset = rand_r(&randstate) % tmp->size;
-                lbid = tmp->LBIDstart + offset;
-                err = em->getBulkInsertVars(lbid, hwm, txnID);
-                CPPUNIT_ASSERT(err == 0);
-                CPPUNIT_ASSERT(hwm == tmp->secondHWM);
-                CPPUNIT_ASSERT(txnID == tmp->txnID);
-                break;
-            }
-
-            case 9:			//setBulkInsertVars
-            {
-                if (listSize == 0)
-                    break;
-
-                int entryRand = rand_r(&randstate) % listSize;
-                int i, err, offset;
-                EMEntries* tmp;
-
-                for (i = 0, tmp = head; i < entryRand; i++)
-                    tmp = tmp->next;
-
-                offset = rand_r(&randstate) % tmp->size;
-                tmp->secondHWM = rand_r(&randstate) % MAXINT;
-                tmp->txnID = rand_r(&randstate) % MAXINT;
-                err = em->setBulkInsertVars(tmp->LBIDstart + offset,
-                                            tmp->secondHWM, tmp->txnID);
-                em->confirmChanges();
-                CPPUNIT_ASSERT(err == 0);
-                break;
-            }
-*/
-            default:
-                break;
+          newEm = new EMEntries(allocdsize, OID, startBlockOffset, lbid, head, dbroot, partNum, segmentNum);
+          head = newEm;
+          listSize++;
         }
-    }
 
-    delete em;
+        emEntriesVec.clear();
+        em->getExtents(OID, emEntriesVec, false, false, true);
+        size_t extentsNumberAfter = emEntriesVec.size();
 
-    while (head != NULL)
-    {
-        tmp = head->next;
-        delete head;
-        head = tmp;
-    }
+        CPPUNIT_ASSERT(extentsNumberBefore + numberOfExtents == extentsNumberAfter);
 
 #ifdef BRM_VERBOSE
-    cerr << "thread " << threadNum << " exiting" << endl;
+        cerr << "created new space for OID " << newEm->OID << endl;
 #endif
-    return NULL;
+        // em->checkConsistency();
+        break;
+      }
+        /*
+                    case 1:		//allocate space for an existing file
+                    {
+                        if (listSize == 0)
+                            break;
+
+                        struct EMEntries* newEm, *tmp;
+                        size_t size = rand_r(&randstate) % 10;
+                        int fileRand = rand_r(&randstate) % listSize;
+                        int i, lastExtent, blockEnd, oid;
+                        int tmpHWM, entries, allocdSize;
+                        uint32_t startBlockOffset;
+                        lbids.clear();
+
+                        for (i = 0, tmp = head; i < fileRand; i++)
+                            tmp = tmp->next;
+
+                        oid = tmp->OID;
+
+                        for (lastExtent = 0, tmp = head; tmp != NULL; tmp = tmp->next)
+                        {
+                            if (tmp->OID != oid)
+                                continue;
+
+                            tmpHWM = tmp->HWM;
+                            blockEnd = tmp->FBO + tmp->size;
+
+                            if (lastExtent < blockEnd)
+                                lastExtent = blockEnd;
+                        }
+
+                        for (size_t i = 0; i < size; ++i)
+                        {
+                            em->createColumnExtent_DBroot(oid, colWidth, dbroot, colDataType,
+                                partNum, segmentNum, lbid, allocdSize, startBlockOffset);
+                            em->confirmChanges();
+                            lbids.push_back(lbid);
+                        }
+
+                        //em->createExtent(size, oid, lbids, allocdSize);
+                        //em->confirmChanges();
+
+                        entries = size / em->getExtentSize();
+
+                        if ((size % em->getExtentSize()) != 0)
+                            entries++;
+
+                        CPPUNIT_ASSERT((uint32_t)entries == lbids.size());
+
+                        for (i = 0; i < entries; i++)
+                        {
+                            newEm = new EMEntries((i != entries) ? em->getExtentSize() : size %
+        em->getExtentSize(), oid, lastExtent + (i * em->getExtentSize()), lbids[i], head, dbroot, partNum,
+        segmentNum); newEm->HWM = tmpHWM; head = newEm; listSize++;
+                        }
+
+        #ifdef BRM_VERBOSE
+                        cerr << "created another extent for OID " << newEm->OID << endl;
+        #endif
+                        em->checkConsistency();
+                        break;
+                    }
+        */
+
+      case 2:  // delete an OID
+      {
+        if (listSize == 0)
+          break;
+
+        struct EMEntries *tmp = nullptr, *prev = nullptr;
+        int fileRand = rand_r(&randstate) % listSize;
+        int i, oid;
+
+        for (i = 0, tmp = head; i < fileRand; i++)
+          tmp = tmp->next;
+
+        oid = tmp->OID;
+
+        em->deleteOID(oid);
+        em->confirmChanges();
+
+        vector<struct EMEntry> emEntriesVec;
+        em->getExtents(oid, emEntriesVec, false, false, true);
+        CPPUNIT_ASSERT(emEntriesVec.empty());
+
+        for (tmp = head; tmp != NULL;)
+        {
+          if (tmp->OID == oid)
+          {
+            if (tmp == head)
+            {
+              head = head->next;
+              delete tmp;
+              tmp = head;
+            }
+            else
+            {
+              prev->next = tmp->next;
+              delete tmp;
+              tmp = prev->next;
+            }
+
+            listSize--;
+          }
+          else
+          {
+            prev = tmp;
+            tmp = tmp->next;
+          }
+        }
+
+#ifdef BRM_VERBOSE
+        cerr << "deleted OID " << oid << endl;
+#endif
+        // em->checkConsistency();
+        break;
+      }
+
+      case 3:  // lookup by LBID
+      {
+        if (listSize == 0)
+          break;
+
+        int entryRand = rand_r(&randstate) % listSize;
+        int i, err, offset, oid;
+        struct EMEntries* tmp;
+        LBID_t target;
+        uint32_t fbo;
+        DBRootT localDbroot;
+        PartitionNumberT localPartNum;
+        SegmentT localSegmentNum;
+
+        for (i = 0, tmp = head; i < entryRand; i++)
+          tmp = tmp->next;
+
+        offset = rand_r(&randstate) % (tmp->size - 1);
+
+        target = tmp->LBIDstart + offset;
+        err = em->lookupLocal(target, oid, localDbroot, localPartNum, localSegmentNum, fbo);
+#ifdef BRM_VERBOSE
+        cerr << "looked up LBID " << target << " got oid " << oid << " fbo " << fbo << endl;
+        cerr << "   oid should be " << tmp->OID << " fbo should be " << offset + tmp->FBO << endl;
+        cerr << "op 3 fbo " << fbo << " offset + tmp->FBO " << offset + tmp->FBO << endl;
+#endif
+        CPPUNIT_ASSERT(err == 0);
+        CPPUNIT_ASSERT(oid == tmp->OID);
+        CPPUNIT_ASSERT(fbo == offset + tmp->FBO);
+        // em->checkConsistency();
+        break;
+      }
+
+      case 4:  // lookup by OID, FBO
+      {
+        if (listSize == 0)
+          break;
+
+        int entryRand = rand_r(&randstate) % listSize;
+        int i, oid, err, offset;
+        struct EMEntries* tmp;
+        LBID_t lbid;
+
+        for (i = 0, tmp = head; i < entryRand; i++)
+          tmp = tmp->next;
+
+        offset = rand_r(&randstate) % (tmp->size - 1);
+        oid = tmp->OID;
+
+        err = em->lookupLocal(oid, tmp->partNum, tmp->segNum, offset + tmp->FBO, lbid);
+#ifdef BRM_VERBOSE
+        cerr << "looked up OID " << oid << " fbo " << offset + tmp->FBO << " got lbid " << lbid << endl;
+        cerr << "  lbid should be " << tmp->LBIDstart + offset << endl;
+#endif
+        CPPUNIT_ASSERT(err == 0);
+        CPPUNIT_ASSERT(lbid == tmp->LBIDstart + offset);
+        // em->checkConsistency();
+        break;
+      }
+
+      case 5:  // getHWM
+      {
+        if (listSize == 0)
+          break;
+
+        int entryRand = rand_r(&randstate) % listSize;
+        int i, status;
+        struct EMEntries* tmp;
+        uint32_t hwm;
+
+        for (i = 0, tmp = head; i < entryRand; i++)
+          tmp = tmp->next;
+
+        hwm = em->getLocalHWM(tmp->OID, tmp->partNum, tmp->segNum, status);
+#ifdef BRM_VERBOSE_I
+        cerr << "stored HWM for OID " << tmp->OID << " is " << tmp->HWM << " BRM says it's " << hwm << endl;
+#endif
+        CPPUNIT_ASSERT(hwm == tmp->HWM);
+        // em->checkConsistency();
+        break;
+      }
+
+      case 6:  // setHWM
+      {
+        if (listSize == 0)
+          break;
+
+        int entryRand = rand_r(&randstate) % listSize;
+        int i, hwm, oid;
+        struct EMEntries* tmp;
+
+        for (i = 0, tmp = head; i < entryRand; i++)
+          tmp = tmp->next;
+
+        oid = tmp->OID;
+        hwm = rand_r(&randstate) % (tmp->size - 1);
+        bool firstNode = true;
+        em->setLocalHWM(oid, tmp->partNum, tmp->segNum, hwm, firstNode);
+
+        em->confirmChanges();
+
+        tmp->HWM = hwm;
+
+#ifdef BRM_VERBOSE
+        cerr << "setHWM of OID " << oid << " to " << hwm << endl;
+#endif
+        // em->checkConsistency();
+        break;
+      }
+
+        /*
+                    case 7:			// renew this EM object
+                    {
+                        delete em;
+                        em = new ExtentMap();
+        #ifdef BRM_VERBOSE
+                        cerr << "got a new EM instance" << endl;
+        #endif
+                        em->checkConsistency();
+                        break;
+                    }
+                    case 8:			//getBulkInsertVars
+                    {
+                        if (listSize == 0)
+                            break;
+
+                        HWM_t hwm;
+                        VER_t txnID;
+                        int entryRand = rand_r(&randstate) % listSize;
+                        int i, err, offset;
+                        EMEntries* tmp;
+                        LBID_t lbid;
+
+                        for (i = 0, tmp = head; i < entryRand; i++)
+                            tmp = tmp->next;
+
+                        offset = rand_r(&randstate) % tmp->size;
+                        lbid = tmp->LBIDstart + offset;
+                        err = em->getBulkInsertVars(lbid, hwm, txnID);
+                        CPPUNIT_ASSERT(err == 0);
+                        CPPUNIT_ASSERT(hwm == tmp->secondHWM);
+                        CPPUNIT_ASSERT(txnID == tmp->txnID);
+                        break;
+                    }
+
+                    case 9:			//setBulkInsertVars
+                    {
+                        if (listSize == 0)
+                            break;
+
+                        int entryRand = rand_r(&randstate) % listSize;
+                        int i, err, offset;
+                        EMEntries* tmp;
+
+                        for (i = 0, tmp = head; i < entryRand; i++)
+                            tmp = tmp->next;
+
+                        offset = rand_r(&randstate) % tmp->size;
+                        tmp->secondHWM = rand_r(&randstate) % MAXINT;
+                        tmp->txnID = rand_r(&randstate) % MAXINT;
+                        err = em->setBulkInsertVars(tmp->LBIDstart + offset,
+                                                    tmp->secondHWM, tmp->txnID);
+                        em->confirmChanges();
+                        CPPUNIT_ASSERT(err == 0);
+                        break;
+                    }
+        */
+      default: break;
+    }
+  }
+
+  delete em;
+
+  while (head != NULL)
+  {
+    tmp = head->next;
+    delete head;
+    head = tmp;
+  }
+
+#ifdef BRM_VERBOSE
+  cerr << "thread " << threadNum << " exiting" << endl;
+#endif
+  return NULL;
 }
 
 /*
@@ -1751,163 +1753,161 @@ static void* EMRunner_si(void* arg)
 }
 */
 
-
 class LongBRMTests : public CppUnit::TestFixture
 {
+  CPPUNIT_TEST_SUITE(LongBRMTests);
 
-    CPPUNIT_TEST_SUITE(LongBRMTests);
+  CPPUNIT_TEST(longEMTest_1);
+  // 	CPPUNIT_TEST(longEMTest_2);
+  //    CPPUNIT_TEST(longBRMTest_1);
+  //    CPPUNIT_TEST(longBRMTest_2);
 
-  	CPPUNIT_TEST(longEMTest_1);
-// 	CPPUNIT_TEST(longEMTest_2);
-//    CPPUNIT_TEST(longBRMTest_1);
-//    CPPUNIT_TEST(longBRMTest_2);
+  CPPUNIT_TEST_SUITE_END();
 
-    CPPUNIT_TEST_SUITE_END();
+ private:
+ public:
+  void longEMTest_1()
+  {
+    const int threadCount = 10;
+    int i;
+    pthread_t threads[threadCount];
 
-private:
-public:
-    void longEMTest_1()
+    cerr << endl
+         << "Multithreaded, multiple instance ExtentMap test.  "
+            "This runs for 5 minutes."
+         << endl;
+
+    threadStop = 0;
+    pthread_mutex_init(&pthreadMutex, nullptr);
+
+    for (i = 0; i < threadCount; i++)
     {
-        const int threadCount = 10;
-        int i;
-        pthread_t threads[threadCount];
+      if (pthread_create(&threads[i], NULL, EMRunner, reinterpret_cast<void*>(i + 1)) < 0)
+        throw logic_error("Error creating threads for the ExtentMap test");
 
-        cerr << endl << "Multithreaded, multiple instance ExtentMap test.  "
-             "This runs for 5 minutes." << endl;
-
-        threadStop = 0;
-        pthread_mutex_init(&pthreadMutex, nullptr);
-
-        for (i = 0; i < threadCount; i++)
-        {
-            if (pthread_create(&threads[i], NULL, EMRunner,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the ExtentMap test");
-
-            usleep(1000);
-        }
-
-        sleep(300);
-        threadStop = 1;
-
-        for (i = 0; i < threadCount; i++)
-        {
-            cerr << "Waiting for thread #" << i << endl;
-            pthread_join(threads[i], nullptr);
-        }
+      usleep(1000);
     }
 
-/*
-    void longEMTest_2()
+    sleep(300);
+    threadStop = 1;
+
+    for (i = 0; i < threadCount; i++)
     {
-        const int threadCount = 10;
-        int i;
-        pthread_t threads[threadCount];
-
-        cerr << endl << "Multithreaded, single instance ExtentMap test.  "
-             "This runs for 5 minutes." << endl;
-
-        threadStop = 0;
-        pthread_mutex_init(&pthreadMutex, NULL);
-
-        for (i = 0; i < threadCount; i++)
-        {
-            if (pthread_create(&threads[i], NULL, EMRunner_si,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the ExtentMap test");
-
-            usleep(1000);
-        }
-
-        sleep(60);
-        threadStop = 1;
-
-        for (i = 0; i < threadCount; i++)
-        {
-            cerr << "Waiting for thread #" << i << endl;
-            pthread_join(threads[i], NULL);
-        }
+      cerr << "Waiting for thread #" << i << endl;
+      pthread_join(threads[i], nullptr);
     }
-    void longBRMTest_1()
-    {
-        const int threadCount = 10;
-        int i;
-        pthread_t threads[threadCount];
+  }
 
-        cerr << endl << "Multithreaded, multiple instance DBRM test.  "
-             "This runs for 5 minutes." << endl;
+  /*
+      void longEMTest_2()
+      {
+          const int threadCount = 10;
+          int i;
+          pthread_t threads[threadCount];
 
-        threadStop = 0;
-        pthread_mutex_init(&pthreadMutex, NULL);
-        opCount = 0;
+          cerr << endl << "Multithreaded, single instance ExtentMap test.  "
+               "This runs for 5 minutes." << endl;
 
-        for (i = 0; i < threadCount; i++)
-        {
-            if (pthread_create(&threads[i], NULL, BRMRunner_1,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the DBRM test");
+          threadStop = 0;
+          pthread_mutex_init(&pthreadMutex, NULL);
 
-            usleep(1000);
-        }
+          for (i = 0; i < threadCount; i++)
+          {
+              if (pthread_create(&threads[i], NULL, EMRunner_si,
+                                 reinterpret_cast<void*>(i + 1)) < 0)
+                  throw logic_error("Error creating threads for the ExtentMap test");
 
-        sleep(300);
-        threadStop = 1;
+              usleep(1000);
+          }
 
-        for (i = 0; i < threadCount; i++)
-        {
-            cerr << "Waiting for thread #" << i << endl;
-            pthread_join(threads[i], NULL);
-        }
+          sleep(60);
+          threadStop = 1;
 
-        cerr << "opCount = " << opCount << endl;
-    }
-    void longBRMTest_2()
-    {
-        const int threadCount = 10;
-        int i;
-        pthread_t threads[threadCount];
+          for (i = 0; i < threadCount; i++)
+          {
+              cerr << "Waiting for thread #" << i << endl;
+              pthread_join(threads[i], NULL);
+          }
+      }
+      void longBRMTest_1()
+      {
+          const int threadCount = 10;
+          int i;
+          pthread_t threads[threadCount];
 
-        cerr << endl << "Multithreaded, single instance DBRM test.  "
-             "This runs for 5 minutes." << endl;
+          cerr << endl << "Multithreaded, multiple instance DBRM test.  "
+               "This runs for 5 minutes." << endl;
 
-        threadStop = 0;
-        pthread_mutex_init(&pthreadMutex, NULL);
-        opCount = 0;
+          threadStop = 0;
+          pthread_mutex_init(&pthreadMutex, NULL);
+          opCount = 0;
 
-        for (i = 0; i < threadCount; i++)
-        {
-            if (pthread_create(&threads[i], NULL, BRMRunner_si,
-                               reinterpret_cast<void*>(i + 1)) < 0)
-                throw logic_error("Error creating threads for the DBRM test");
+          for (i = 0; i < threadCount; i++)
+          {
+              if (pthread_create(&threads[i], NULL, BRMRunner_1,
+                                 reinterpret_cast<void*>(i + 1)) < 0)
+                  throw logic_error("Error creating threads for the DBRM test");
 
-            usleep(1000);
-        }
+              usleep(1000);
+          }
 
-        sleep(300);
-        threadStop = 1;
+          sleep(300);
+          threadStop = 1;
 
-        for (i = 0; i < threadCount; i++)
-        {
-            cerr << "Waiting for thread #" << i << endl;
-            pthread_join(threads[i], NULL);
-        }
+          for (i = 0; i < threadCount; i++)
+          {
+              cerr << "Waiting for thread #" << i << endl;
+              pthread_join(threads[i], NULL);
+          }
 
-        cerr << "opCount = " << opCount << endl;
-    }
-*/
+          cerr << "opCount = " << opCount << endl;
+      }
+      void longBRMTest_2()
+      {
+          const int threadCount = 10;
+          int i;
+          pthread_t threads[threadCount];
 
+          cerr << endl << "Multithreaded, single instance DBRM test.  "
+               "This runs for 5 minutes." << endl;
+
+          threadStop = 0;
+          pthread_mutex_init(&pthreadMutex, NULL);
+          opCount = 0;
+
+          for (i = 0; i < threadCount; i++)
+          {
+              if (pthread_create(&threads[i], NULL, BRMRunner_si,
+                                 reinterpret_cast<void*>(i + 1)) < 0)
+                  throw logic_error("Error creating threads for the DBRM test");
+
+              usleep(1000);
+          }
+
+          sleep(300);
+          threadStop = 1;
+
+          for (i = 0; i < threadCount; i++)
+          {
+              cerr << "Waiting for thread #" << i << endl;
+              pthread_join(threads[i], NULL);
+          }
+
+          cerr << "opCount = " << opCount << endl;
+      }
+  */
 };
-CPPUNIT_TEST_SUITE_REGISTRATION( LongBRMTests );
+CPPUNIT_TEST_SUITE_REGISTRATION(LongBRMTests);
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 
-int main( int argc, char** argv)
+int main(int /*argc*/, char** /*argv*/)
 {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    idbdatafile::IDBPolicy::configIDBPolicy();
-    bool wasSuccessful = runner.run( "", false );
-    return (wasSuccessful ? 0 : 1);
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest(registry.makeTest());
+  idbdatafile::IDBPolicy::configIDBPolicy();
+  bool wasSuccessful = runner.run("", false);
+  return (wasSuccessful ? 0 : 1);
 }

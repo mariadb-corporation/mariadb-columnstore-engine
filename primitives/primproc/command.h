@@ -57,7 +57,7 @@ class Command
   virtual void project(messageqcpp::SBS& bs) = 0;
   virtual void projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t columnPosition) = 0;
   virtual uint64_t getLBID() = 0;
-  virtual void getLBIDList(uint32_t loopCount, std::vector<int64_t>* out)
+  virtual void getLBIDList(uint32_t /*loopCount*/, std::vector<int64_t>* /*out*/)
   {
   }  // the default fcn returns 0 lbids
   virtual void nextLBID() = 0;

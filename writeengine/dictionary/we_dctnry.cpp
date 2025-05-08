@@ -49,7 +49,7 @@ using namespace BRM;
 #include "cacheutils.h"
 using namespace idbdatafile;
 #include "checks.h"
-#include "utils_utf8.h" // for utf8_truncate_point()
+#include "utils_utf8.h"  // for utf8_truncate_point()
 
 namespace
 {
@@ -764,8 +764,7 @@ int Dctnry::insertDctnry2(Signature& sig)
  *    failure    - it did not  write the header to block
  ******************************************************************************/
 int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, const int col, char* tokenBuf,
-                         long long& truncCount, const CHARSET_INFO* cs,
-                         const WriteEngine::ColType& weType)
+                         long long& truncCount, const CHARSET_INFO* cs, const WriteEngine::ColType& weType)
 {
 #ifdef PROFILE
   Stats::startParseEvent(WE_STATS_PARSE_DCT);
@@ -854,7 +853,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       }
       else
       {
-        const char* start = (const char*) curSig.signature;
+        const char* start = (const char*)curSig.signature;
         const char* end = (const char*)(curSig.signature + curSig.size);
         size_t numChars = cs->numchars(start, end);
         size_t maxCharLength = m_colWidth / cs->mbmaxlen;
@@ -868,7 +867,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
         }
       }
     }
-    else // cs->mbmaxlen == 1
+    else  // cs->mbmaxlen == 1
     {
       if (curSig.size > m_colWidth)
       {
@@ -1033,7 +1032,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
         }
       }
     }  // if next
-  }    // end while
+  }  // end while
 
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_PARSE_DCT);
@@ -1467,7 +1466,7 @@ IDBDataFile* Dctnry::openDctnryFile(bool useTmpSuffix)
 /*******************************************************************************
  * close dictionary file
  ******************************************************************************/
-void Dctnry::closeDctnryFile(bool doFlush, std::map<FID, FID>& oids)
+void Dctnry::closeDctnryFile(bool /*doFlush*/, std::map<FID, FID>& /*oids*/)
 {
   closeFile(m_dFile);
   m_dFile = NULL;

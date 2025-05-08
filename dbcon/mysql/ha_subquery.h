@@ -61,7 +61,7 @@ class SubQuery
   {
     fCorrelated = correlated;
   }
-  virtual void handleFunc(gp_walk_info* gwip, Item_func* func)
+  virtual void handleFunc(gp_walk_info* /*gwip*/, Item_func* /*func*/)
   {
   }
   virtual void handleNot()
@@ -69,6 +69,7 @@ class SubQuery
   }
 
   SubQuery* next;
+
  protected:
   gp_walk_info& fGwip;
   bool fCorrelated;
@@ -77,8 +78,10 @@ class SubQuery
 struct SubQueryChainHolder
 {
   SubQuery* chain;
-  SubQueryChainHolder () : chain(nullptr) { }
-  ~SubQueryChainHolder ()
+  SubQueryChainHolder() : chain(nullptr)
+  {
+  }
+  ~SubQueryChainHolder()
   {
     while (chain)
     {
@@ -88,7 +91,6 @@ struct SubQueryChainHolder
     }
   }
 };
-
 
 /**
  * @brief A class to represent a generic WHERE clause subquery

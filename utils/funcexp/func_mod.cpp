@@ -41,14 +41,14 @@ using namespace logging;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_mod::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_mod::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 IDB_Decimal Func_mod::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
-                                    CalpontSystemCatalog::ColType& operationColType)
+                                    CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   if (parm.size() < 2)
   {
@@ -115,7 +115,7 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
-                              CalpontSystemCatalog::ColType& operationColType)
+                              execplan::CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   if (parm.size() < 2)
   {
@@ -214,7 +214,7 @@ double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 long double Func_mod::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
-                                       CalpontSystemCatalog::ColType& operationColType)
+                                       CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   if (parm.size() < 2)
   {
@@ -313,7 +313,7 @@ long double Func_mod::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
 }
 
 int64_t Func_mod::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                            CalpontSystemCatalog::ColType& operationColType)
+                            CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   if (parm.size() < 2)
   {
@@ -406,7 +406,7 @@ int64_t Func_mod::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 uint64_t Func_mod::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
-                              CalpontSystemCatalog::ColType& operationColType)
+                              CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   if (parm.size() < 2)
   {

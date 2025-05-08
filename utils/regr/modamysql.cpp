@@ -20,9 +20,9 @@ inline bool isNumeric(int type, const char* attr)
     return true;
   }
   if (strncasecmp("NULL", attr, 4) == 0)
-    {
-      return true;
-    }
+  {
+    return true;
+  }
   return false;
 }
 
@@ -109,14 +109,13 @@ extern "C"
     delete data;
   }
 
-  void moda_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                  char* message __attribute__((unused)))
+  void moda_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     data->clear();
   }
 
-  void moda_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void moda_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL
     if (args->args[0] == 0)
@@ -155,7 +154,7 @@ extern "C"
     }
   }
 
-  void moda_remove(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void moda_remove(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL
     if (args->args[0] == 0)
@@ -193,22 +192,17 @@ extern "C"
     }
   }
 
-//char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
-  char* moda(UDF_INIT * initid, UDF_ARGS * args, char* result, ulong* res_length, char* is_null, char* error __attribute__((unused)))
+  // char* moda(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error __attribute__((unused)))
+  char* moda(UDF_INIT* initid, UDF_ARGS* args, char* /*result*/, ulong* res_length, char* /*is_null*/,
+             char* /*error*/)
   {
     struct moda_data* data = (struct moda_data*)initid->ptr;
     switch (args->arg_type[0])
     {
-      case INT_RESULT: 
-        moda<int64_t>(data->mapINT, data);
-        break;
-      case REAL_RESULT: 
-        moda<double>(data->mapREAL, data);
-        break;
+      case INT_RESULT: moda<int64_t>(data->mapINT, data); break;
+      case REAL_RESULT: moda<double>(data->mapREAL, data); break;
       case DECIMAL_RESULT:
-      case STRING_RESULT: 
-        moda<long double>(data->mapDECIMAL, data);
-        break;
+      case STRING_RESULT: moda<long double>(data->mapDECIMAL, data); break;
       default: return NULL;
     }
     *res_length = data->result.size();

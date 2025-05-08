@@ -41,7 +41,7 @@ using namespace dataconvert;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_floor::operationType(FunctionParm& fp,
-                                                        CalpontSystemCatalog::ColType& resultType)
+                                                        CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -224,8 +224,8 @@ uint64_t Func_floor::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
-      string str =
-          DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
+      string str = DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
+                                                   op_ct.getTimeZone());
 
       // strip off micro seconds
       str = str.substr(0, 14);
@@ -518,8 +518,8 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
 
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     {
-      string str =
-          DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull), op_ct.getTimeZone());
+      string str = DataConvert::timestampToString1(parm[0]->data()->getTimestampIntVal(row, isNull),
+                                                   op_ct.getTimeZone());
 
       // strip off micro seconds
       str = str.substr(0, 14);

@@ -237,11 +237,11 @@ class MCSAnalyzeTableExecutionPlan : public CalpontExecutionPlan
   void unserialize(messageqcpp::ByteStream& bs) override;
 
   // TODO: Why do we need this?
-  bool operator==(const CalpontExecutionPlan* t) const override
+  bool operator==(const CalpontExecutionPlan* /*t*/) const override
   {
     return false;
   }
-  bool operator!=(const CalpontExecutionPlan* t) const override
+  bool operator!=(const CalpontExecutionPlan* /*t*/) const override
   {
     return false;
   }

@@ -1000,8 +1000,8 @@ class DBRM
   size_t EMIndexShmemFree();
 
  private:
-  DBRM(const DBRM& brm);
-  DBRM& operator=(const DBRM& brm);
+  DBRM(const DBRM& brm) = delete;
+  DBRM& operator=(const DBRM& brm) = delete;
   int8_t send_recv(const messageqcpp::ByteStream& in, messageqcpp::ByteStream& out) throw();
 
   void deleteAISequence(uint32_t OID);  // called as part of deleteOID & deleteOIDs
@@ -1015,7 +1015,7 @@ class DBRM
   std::string masterName;
   boost::mutex mutex;
   config::Config* config;
-  bool fDebug;
+  [[maybe_unused]]bool fDebug;
 };
 
 }  // namespace BRM

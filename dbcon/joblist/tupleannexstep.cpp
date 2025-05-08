@@ -158,7 +158,7 @@ TupleAnnexStep::~TupleAnnexStep()
   fConstant = NULL;
 }
 
-void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
+void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& /*rg*/)
 {
   throw runtime_error("Disabled, use initialize() to set output RowGroup.");
 }

@@ -487,8 +487,8 @@ class TupleJoiner
   typedef ldhash_t::iterator ldIterator;
 
   TupleJoiner();
-  TupleJoiner(const TupleJoiner&);
-  TupleJoiner& operator=(const TupleJoiner&);
+  TupleJoiner(const TupleJoiner&) = delete;
+  TupleJoiner& operator=(const TupleJoiner&) = delete;
   void getBucketCount();
 
   rowgroup::RGData smallNullMemory;

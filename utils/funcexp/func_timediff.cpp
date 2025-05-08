@@ -101,7 +101,7 @@ bool treatIntAsDatetime(const std::string& text)
   return (text.length() > 8) || (text.length() >= 8 && !isNeg);
 }
 
-CalpontSystemCatalog::ColType Func_timediff::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_timediff::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

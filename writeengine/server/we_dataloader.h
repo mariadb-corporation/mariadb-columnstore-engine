@@ -37,7 +37,7 @@
 #include "we_simplesyslog.h"
 
 #include "we_observer.h"
-//#include "we_readthread.h"
+// #include "we_readthread.h"
 
 #include "we_cpifeederthread.h"
 
@@ -57,8 +57,8 @@ class WEDataLoader : public Observer
   virtual bool update(Subject* pSub);
 
  public:
-  bool setupCpimport();                                // fork the cpimport
-  void teardownCpimport(bool useStoredWaitPidStatus);  // @bug 4267
+  bool setupCpimport();                                  // fork the cpimport
+  void teardownCpimport(bool useStoredWaitPidStatus);    // @bug 4267
   void pushData2Cpimport(messageqcpp::ByteStream& Ibs);  // push data to cpimport from the queue
   void closeWritePipe();
   void str2Argv(std::string CmdLine, std::vector<char*>& V);
@@ -183,7 +183,6 @@ class WEDataLoader : public Observer
   pid_t fCh_pid;
   pid_t fThis_pid;
   pid_t fP_pid;
-  bool fCpIStarted;
   std::string fCmdLineStr;
   std::string fBrmRptFileName;
 

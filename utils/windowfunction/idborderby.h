@@ -171,10 +171,8 @@ class BigIntCompare : public Compare
 
 class WideDecimalCompare : public Compare
 {
-  int keyColumnOffset;
-
  public:
-  WideDecimalCompare(const IdbSortSpec& spec, int offset) : Compare(spec), keyColumnOffset(offset)
+  WideDecimalCompare(const IdbSortSpec& spec, int /*offset*/) : Compare(spec)
   {
   }
 

@@ -157,78 +157,78 @@ class Operator : public TreeNode
     fOp = op;
   }
   using TreeNode::evaluate;
-  virtual void evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual void evaluate(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
   }
 
   // The following methods should be pure virtual. Currently too many instanslization exists.
   using TreeNode::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& /*row*/, bool& isNull, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     isNull = isNull || fResult.strVal.isNull();
     return fResult.strVal;
   }
   using TreeNode::getIntVal;
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.intVal;
   }
   using TreeNode::getUintVal;
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual uint64_t getUintVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.uintVal;
   }
   using TreeNode::getFloatVal;
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual float getFloatVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.floatVal;
   }
   using TreeNode::getDoubleVal;
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual double getDoubleVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.doubleVal;
   }
   using TreeNode::getLongDoubleVal;
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual long double getLongDoubleVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.longDoubleVal;
   }
   using TreeNode::getDecimalVal;
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.decimalVal;
   }
   using TreeNode::getDateIntVal;
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int32_t getDateIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.intVal;
   }
   using TreeNode::getDatetimeIntVal;
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.intVal;
   }
   using TreeNode::getTimestampIntVal;
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.intVal;
   }
   using TreeNode::getTimeIntVal;
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual int64_t getTimeIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.intVal;
   }
   using TreeNode::getBoolVal;
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+  virtual bool getBoolVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ParseTree* /*lop*/, ParseTree* /*rop*/)
   {
     return fResult.boolVal;
   }
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedColumn* lop, ReturnedColumn* rop)
+  virtual bool getBoolVal(rowgroup::Row& /*row*/, bool& /*isNull*/, ReturnedColumn* /*lop*/, ReturnedColumn* /*rop*/)
   {
     return fResult.boolVal;
   }
 
-  virtual void setOpType(Type& l, Type& r)
+  virtual void setOpType(Type& /*l*/, Type& /*r*/)
   {
   }
   void operationType(const Type& ot) override

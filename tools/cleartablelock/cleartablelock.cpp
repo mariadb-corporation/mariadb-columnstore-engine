@@ -250,7 +250,7 @@ int createMsgQueClts(const std::vector<uint32_t>& pmList,
 //                 code is returned.
 //------------------------------------------------------------------------------
 int sendRequest(const std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient> >& msgQueClts,
-                const std::vector<uint32_t>& pmList, BRM::DBRM* brm, const BRM::TableLockInfo& tInfo,
+                const std::vector<uint32_t>& pmList, BRM::DBRM* /*brm*/, const BRM::TableLockInfo& tInfo,
                 const std::string& tblName, ClearTableLockThread::CLRTBLLOCK_MSGTYPE msgType,
                 std::string& errMsg)
 {
@@ -266,7 +266,7 @@ int sendRequest(const std::vector<boost::shared_ptr<messageqcpp::MessageQueueCli
     ClearTableLockStatus* pStatus = new ClearTableLockStatus(moduleID);
     statusVec.push_back(pStatus);
 
-    tg.create_thread(ClearTableLockThread(brm, msgQueClts[i].get(), tInfo, tblName, msgType, pStatus));
+    tg.create_thread(ClearTableLockThread(msgQueClts[i].get(), tInfo, tblName, msgType, pStatus));
   }
 
   // Wait for all the requests to complete

@@ -49,14 +49,14 @@ DictStepJL::DictStepJL(const pDictionaryStep& dict)
 
   hasEqFilter = dict.hasEqualityFilter;
 
-  if (hasEqFilter && dict.eqFilter.size()> USEEQFILTERTHRESHOLD)
+  if (hasEqFilter && dict.eqFilter.size() > USEEQFILTERTHRESHOLD)
   {
     eqOp = dict.tmpCOP;
     eqFilter = dict.eqFilter;
   }
   else
   {
-    hasEqFilter=false;
+    hasEqFilter = false;
     filterString = dict.fFilterString;
   }
   filterCount = dict.fFilterCount;
@@ -67,7 +67,7 @@ DictStepJL::~DictStepJL()
 {
 }
 
-void DictStepJL::setLBID(uint64_t token, uint32_t dbroot)
+void DictStepJL::setLBID(uint64_t /*token*/, uint32_t /*dbroot*/)
 {
   // 	lbid = token >> 10;  // the lbid is calculated on the PM
 }
@@ -94,7 +94,7 @@ void DictStepJL::createCommand(ByteStream& bs) const
   CommandJL::createCommand(bs);
 }
 
-void DictStepJL::runCommand(ByteStream& bs) const
+void DictStepJL::runCommand(ByteStream& /*bs*/) const
 {
 }
 
@@ -133,7 +133,8 @@ messageqcpp::ByteStream DictStepJL::reencodedFilterString() const
     for (uint32_t i = 0; i < filterCount; i++)
     {
       uint8_t roundFlag = 0;
-      int64_t encodedPrefix = encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), charsetNumber);
+      int64_t encodedPrefix =
+          encodeStringPrefix((unsigned char*)eqFilter[i].c_str(), eqFilter[i].size(), charsetNumber);
       bs << eqOp;
       bs << roundFlag;
       bs << encodedPrefix;

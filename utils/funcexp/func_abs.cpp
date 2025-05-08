@@ -37,7 +37,7 @@ using namespace rowgroup;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_abs::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

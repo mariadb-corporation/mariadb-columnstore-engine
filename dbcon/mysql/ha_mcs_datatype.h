@@ -360,7 +360,7 @@ class WriteBatchFieldMariaDB : public WriteBatchField
   }
 
   static void ColWriteBatchTextString(const String& value, const ColBatchWriter& ci,
-                                      const size_t colWidthInBytes)
+                                      const size_t /*colWidthInBytes*/)
   {
     std::string escape;
     escape.assign(value.ptr(), value.length());
@@ -376,7 +376,7 @@ class WriteBatchFieldMariaDB : public WriteBatchField
   }
 
   static void ColWriteBatchBlobString(const String& value, const ColBatchWriter& ci,
-                                      const size_t colWidthInBytes)
+                                      const size_t /*colWidthInBytes*/)
   {
     const char* ptr = value.ptr();
     for (uint32_t i = 0; i < value.length(); i++)
@@ -386,9 +386,9 @@ class WriteBatchFieldMariaDB : public WriteBatchField
     fprintf(ci.filePtr(), "%c", ci.delimiter());
   }
 
-  size_t ColWriteBatchString(const uchar* buf, bool nullVal, ColBatchWriter& ci,
+  size_t ColWriteBatchString(const uchar* /*buf*/, bool nullVal, ColBatchWriter& ci,
                              void (*printFuncPtr)(const String&, const ColBatchWriter&,
-                                                  const size_t colWidthInBytes)) const
+                                                  const size_t /*colWidthInBytes*/)) const
   {
     if (nullVal && (m_type.constraintType != CalpontSystemCatalog::NOTNULL_CONSTRAINT))
     {

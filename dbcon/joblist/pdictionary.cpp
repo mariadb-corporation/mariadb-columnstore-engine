@@ -160,7 +160,7 @@ const string pDictionaryStep::toString() const
   return oss.str();
 }
 
-void pDictionaryStep::appendFilter(const messageqcpp::ByteStream& filter, unsigned count)
+void pDictionaryStep::appendFilter(const messageqcpp::ByteStream& filter, unsigned /*count*/)
 {
   ByteStream bs(filter);  // need to preserve the input BS
   uint8_t* buf;

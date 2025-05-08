@@ -360,7 +360,7 @@ CompFileData* ChunkManager::getFileDataByName(const std::string& filename, const
 
 
 CompFileData* ChunkManager::getFileData_(const FileID& fileID, const string& filename, const char* mode,
-                                         int size, const CalpontSystemCatalog::ColDataType colDataType,
+                                         const int /*size*/, const CalpontSystemCatalog::ColDataType colDataType,
                                          int colWidth, bool useTmpSuffix, bool dctnry, bool isReadOnly) const
 {
   CompFileData* fileData = new CompFileData(fileID, fileID.fFid, colDataType, colWidth, isReadOnly);
@@ -433,7 +433,7 @@ CompFileData* ChunkManager::getFileData_(const FileID& fileID, const string& fil
 //------------------------------------------------------------------------------
 IDBDataFile* ChunkManager::createDctnryFile(const FID& fid, int64_t width, uint16_t root, uint32_t partition,
                                             uint16_t segment, const char* filename, const char* mode,
-                                            int size, BRM::LBID_t lbid)
+                                            const int /*size*/, BRM::LBID_t lbid)
 {
   FileID fileID(fid, root, partition, segment);
   CompFileData* fileData = new CompFileData(fileID, fid, CalpontSystemCatalog::VARCHAR, width);

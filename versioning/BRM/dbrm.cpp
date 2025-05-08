@@ -95,20 +95,10 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
 #endif
 }
 
-DBRM::DBRM(const DBRM& brm)
-{
-  throw logic_error("DBRM: Don't use the copy constructor.");
-}
-
 DBRM::~DBRM()
 {
   if (msgClient != NULL)
     MessageQueueClientPool::releaseInstance(msgClient);
-}
-
-DBRM& DBRM::operator=(const DBRM& brm)
-{
-  throw logic_error("DBRM: Don't use the = operator.");
 }
 
 int DBRM::saveState() throw()

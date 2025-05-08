@@ -37,7 +37,7 @@ using namespace joblist;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_right::operationType(FunctionParm& fp,
-                                                        CalpontSystemCatalog::ColType& resultType)
+                                                        CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

@@ -54,7 +54,7 @@ namespace funcexp
 // See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_ntoa::operationType(
-    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();  // input type
 }
@@ -135,7 +135,7 @@ double Func_inet_ntoa::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 // This is the get function that makes sense to use.
 //------------------------------------------------------------------------------
 std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getStrVal" << std::endl;
 
@@ -178,8 +178,8 @@ std::string Func_inet_ntoa::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
 // Return IP address as a boolean.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+bool Func_inet_ntoa::getBoolVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                                execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getBoolVal" << std::endl;
   bool bValue = false;
@@ -192,8 +192,9 @@ bool Func_inet_ntoa::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNu
 // Return IP address as a decimal value.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                                    execplan::CalpontSystemCatalog::ColType& op_ct)
+execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/,
+                                                    bool& isNull,
+                                                    execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	IDB_Decimal dValue = fp[0]->data()->getDecimalVal(row, isNull);
   execplan::IDB_Decimal dValue(joblist::NULL_INT64, 0, 0);
@@ -206,8 +207,8 @@ execplan::IDB_Decimal Func_inet_ntoa::getDecimalVal(rowgroup::Row& row, Function
 // Return IP address as a date.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getDateIntVal" << std::endl;
 
@@ -222,8 +223,8 @@ int32_t Func_inet_ntoa::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 // Return IP address as a date/time.
 // N/A so returning null.  See explanation at the top of this source file.
 //------------------------------------------------------------------------------
-int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                          execplan::CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                                          execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getDatetimeVal" << std::endl;
 
@@ -234,8 +235,8 @@ int64_t Func_inet_ntoa::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, 
   return iValue;
 }
 
-int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                           execplan::CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                                           execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getTimestampVal" << std::endl;
 
@@ -246,8 +247,8 @@ int64_t Func_inet_ntoa::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp,
   return iValue;
 }
 
-int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+int64_t Func_inet_ntoa::getTimeIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_ntoa::getTimeVal" << std::endl;
 

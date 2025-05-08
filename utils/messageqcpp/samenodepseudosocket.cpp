@@ -44,48 +44,48 @@ Socket* SameNodePseudoSocket::clone() const
   return nullptr;
 }
 
-SameNodePseudoSocket::SameNodePseudoSocket(const SameNodePseudoSocket& rhs)
+SameNodePseudoSocket::SameNodePseudoSocket(const SameNodePseudoSocket& /*rhs*/)
 {
 }
 
-SameNodePseudoSocket& SameNodePseudoSocket::operator=(const SameNodePseudoSocket& rhs)
+SameNodePseudoSocket& SameNodePseudoSocket::operator=(const SameNodePseudoSocket& /*rhs*/)
 {
   return *this;
 }
 
-const SBS SameNodePseudoSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats* stats) const
+const SBS SameNodePseudoSocket::read(const struct ::timespec* /*timeout*/, bool* /*isTimeOut*/, Stats* /*stats*/) const
 {
   return nullptr;
 }
 
 // This is the only working method of this class. It puts SBS directly into DEC queue.
-void SameNodePseudoSocket::write(SBS msg, Stats* stats)
+void SameNodePseudoSocket::write(SBS msg, Stats* /*stats*/)
 {
   dec_->addDataToOutput(msg);
 }
 
-void SameNodePseudoSocket::write(const ByteStream& msg, Stats* stats)
+void SameNodePseudoSocket::write(const ByteStream& /*msg*/, Stats* /*stats*/)
 {
 }
 
-void SameNodePseudoSocket::write_raw(const ByteStream& msg, Stats* stats) const
+void SameNodePseudoSocket::write_raw(const ByteStream& /*msg*/, Stats* /*stats*/) const
 {
 }
 
-void SameNodePseudoSocket::connect(const sockaddr* serv_addr)
+void SameNodePseudoSocket::connect(const sockaddr* /*serv_addr*/)
 {
 }
 
-void SameNodePseudoSocket::bind(const sockaddr* serv_addr)
+void SameNodePseudoSocket::bind(const sockaddr* /*serv_addr*/)
 {
 }
 
-const IOSocket SameNodePseudoSocket::accept(const struct timespec* timeout)
+const IOSocket SameNodePseudoSocket::accept(const struct timespec* /*timeout*/)
 {
   return IOSocket();
 }
 
-void SameNodePseudoSocket::listen(int backlog)
+void SameNodePseudoSocket::listen(int /*backlog*/)
 {
 }
 
@@ -99,17 +99,17 @@ const std::string SameNodePseudoSocket::addr2String() const
   return "";
 }
 
-bool SameNodePseudoSocket::isSameAddr(const Socket* rhs) const
+bool SameNodePseudoSocket::isSameAddr(const Socket* /*rhs*/) const
 {
   return false;
 }
 
-bool SameNodePseudoSocket::isSameAddr(const struct in_addr& ipv4Addr) const
+bool SameNodePseudoSocket::isSameAddr(const struct in_addr& /*ipv4Addr*/) const
 {
   return false;
 }
 
-int SameNodePseudoSocket::ping(const std::string& ipaddr, const struct timespec* timeout)
+int SameNodePseudoSocket::ping(const std::string& /*ipaddr*/, const struct timespec* /*timeout*/)
 {
   return 0;
 }

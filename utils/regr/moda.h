@@ -55,7 +55,7 @@ namespace mcsv1sdk
 template <class T>
 struct hasher
 {
-  explicit hasher(uint32_t cs_num)
+  explicit hasher(uint32_t /*cs_num*/)
   {
   }
 
@@ -72,7 +72,7 @@ struct hasher
 template <>
 struct hasher<long double>
 {
-  explicit hasher(uint32_t cs_num)
+  explicit hasher(uint32_t /*cs_num*/)
   {
   }
   inline size_t operator()(long double val) const
@@ -108,7 +108,7 @@ struct hasher<string>
 template <class T>
 struct comparator
 {
-  explicit comparator(uint32_t cs_num)
+  explicit comparator(uint32_t /*cs_num*/)
   {
   }
 
@@ -266,7 +266,7 @@ class Moda_impl_T : public mcsv1_UDAF
   mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
   // Dummy: not used
-  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length) override
+  mcsv1_UDAF::ReturnCode createUserData(UserData*& /*userData*/, int32_t& /*length*/) override
   {
     return mcsv1_UDAF::SUCCESS;
   }
@@ -289,7 +289,7 @@ class Moda_impl_T<string> : public mcsv1_UDAF
   mcsv1_UDAF::ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
   // Dummy: not used
-  mcsv1_UDAF::ReturnCode createUserData(UserData*& userData, int32_t& length) override
+  mcsv1_UDAF::ReturnCode createUserData(UserData*& /*userData*/, int32_t& /*length*/) override
   {
     return mcsv1_UDAF::SUCCESS;
   }

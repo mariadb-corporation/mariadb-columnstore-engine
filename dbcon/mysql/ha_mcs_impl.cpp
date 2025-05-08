@@ -132,7 +132,6 @@ using namespace funcexp;
 #include "ha_mcs_logging.h"
 #include "ha_subquery.h"
 
-
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
@@ -306,18 +305,18 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
   {
     // @bug 2244. Always log this msg for now, as we try to track down when/why we are
     //			losing socket connection with ExeMgr
-    //#ifdef INFINIDB_DEBUG
+    // #ifdef INFINIDB_DEBUG
     tpl_scan_fetch_LogException(ti, ci, &ex);
-    //#endif
+    // #endif
     sm_stat = sm::CALPONT_INTERNAL_ERROR;
   }
   catch (...)
   {
     // @bug 2244. Always log this msg for now, as we try to track down when/why we are
     //			losing socket connection with ExeMgr
-    //#ifdef INFINIDB_DEBUG
+    // #ifdef INFINIDB_DEBUG
     tpl_scan_fetch_LogException(ti, ci, 0);
-    //#endif
+    // #endif
     sm_stat = sm::CALPONT_INTERNAL_ERROR;
   }
 
@@ -763,7 +762,8 @@ vector<string> getOnUpdateTimestampColumns(string& schema, string& tableName, in
 
 uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& condStack)
 {
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -901,7 +901,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     while ((item = (Item_field*)field_it++))
     {
-
       string tmpTableName = bestTableName(item);
 
       //@Bug 5312 populate aliasname with tablename if it is empty
@@ -1225,7 +1224,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     dmlStatement.set_DMLStatementType(DML_UPDATE);
   else
     dmlStatement.set_DMLStatementType(DML_DELETE);
-
 
   UpdateSqlStatement updateStmt;
   //@Bug 2753. To make sure the momory is freed.
@@ -1638,7 +1636,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
             // cout << "doUpdateDelete start new DMLProc client for ctrl-c " <<  " for session " << sessionID
             // << endl;
             VendorDMLStatement cmdStmt("CTRL+C", DML_COMMAND, sessionID);
-	    std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
+            std::shared_ptr<CalpontDMLPackage> pDMLPackage(
+                CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
             pDMLPackage->set_TimeZone(timeZoneOffset);
             ByteStream bytestream;
             bytestream << static_cast<uint32_t>(sessionID);
@@ -1761,7 +1760,8 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     if (command != "")
     {
       VendorDMLStatement cmdStmt(command, DML_COMMAND, sessionID);
-      std::shared_ptr<CalpontDMLPackage> pDMLPackage(CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
+      std::shared_ptr<CalpontDMLPackage> pDMLPackage(
+          CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt));
       pDMLPackage->set_TimeZone(timeZoneOffset);
       pDMLPackage->setTableOid(ci->tableOid);
       ByteStream bytestream;
@@ -2047,7 +2047,8 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
   query.assign(idb_mysql_query_str(thd));
   caep->data(query);
 
-  if (!get_fe_conn_info_ptr()) {
+  if (!get_fe_conn_info_ptr())
+  {
     set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2110,7 +2111,8 @@ error:
   return ER_INTERNAL_ERROR;
 }
 
-int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked)
+int ha_mcs_impl_open([[maybe_unused]] const char* name, [[maybe_unused]] int mode,
+                     [[maybe_unused]] uint32_t test_if_locked)
 {
   IDEBUG(cout << "ha_mcs_impl_open: " << name << ", " << mode << ", " << test_if_locked << endl);
   Config::makeConfig();
@@ -2172,7 +2174,6 @@ int ha_mcs_impl_direct_update_delete_rows(bool execute, ha_rows* affected_rows,
     *affected_rows = ci->affectedRows;
   }
 
-
   return rc;
 }
 
@@ -2188,11 +2189,10 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   gwi.thd = thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
-      (isDMLStatement(thd->lex->sql_command) ||
-       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
+      (isDMLStatement(thd->lex->sql_command) || thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return 0;
 
-    // check whether the system is ready to process statement.
+  // check whether the system is ready to process statement.
   static DBRM dbrm(true);
   int bSystemQueryReady = dbrm.getSystemQueryReady();
 
@@ -2248,7 +2248,8 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2447,9 +2448,9 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
 
         ti.conn_hndl = hndl;
 
-	using namespace std::chrono_literals;
-	std::this_thread::sleep_for(100ms);
-	ntries --;
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(100ms);
+        ntries--;
 
         try
         {
@@ -2577,8 +2578,7 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone)
   THD* thd = current_thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
-      (isDMLStatement(thd->lex->sql_command) ||
-       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
+      (isDMLStatement(thd->lex->sql_command) || thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return HA_ERR_END_OF_FILE;
 
   if (isMCSTableUpdate(thd) || isMCSTableDelete(thd))
@@ -2589,7 +2589,8 @@ int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone)
   //    if (MIGR::infinidb_vtable.impossibleWhereOnUnion)
   //        return HA_ERR_END_OF_FILE;
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2660,8 +2661,7 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
   THD* thd = current_thd;
 
   if (thd->slave_thread && !get_replication_slave(thd) &&
-      (isDMLStatement(thd->lex->sql_command) ||
-       thd->lex->sql_command == SQLCOM_ALTER_TABLE))
+      (isDMLStatement(thd->lex->sql_command) || thd->lex->sql_command == SQLCOM_ALTER_TABLE))
     return 0;
 
   cal_connection_info* ci = nullptr;
@@ -2685,18 +2685,18 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
   if (thd->lex->analyze_stmt && ci->cal_conn_hndl && ci->cal_conn_hndl->exeMgr)
   {
     // The ANALYZE statement leaves ExeMgr hanging. This clears it up.
-    ci->cal_conn_hndl->exeMgr->read(); // Ignore the returned buffer
+    ci->cal_conn_hndl->exeMgr->read();  // Ignore the returned buffer
     ByteStream msg;
-    ByteStream::quadbyte qb = 1; // Tell PrimProc front session to eat all the rows
+    ByteStream::quadbyte qb = 1;  // Tell PrimProc front session to eat all the rows
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
     // This is the command to start sending return values. because we previously sent the swallow
     // rows command, there won't be anything useful coming back, but it needs this to flush internal queues.
-    qb = 5; // Read the result data.
+    qb = 5;  // Read the result data.
     msg.reset();
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
-    qb = 0; // End the query
+    qb = 0;  // End the query
     msg.reset();
     msg << qb;
     ci->cal_conn_hndl->exeMgr->write(msg);
@@ -2748,7 +2748,6 @@ int ha_mcs_impl_rnd_end(TABLE* table, bool is_pushdown_hand)
         ti.conn_hndl = hndl;
       else
         ci->cal_conn_hndl = hndl;
-
     }
     catch (IDBExcept& e)
     {
@@ -2796,7 +2795,8 @@ int ha_mcs_impl_create(const char* name, TABLE* table_arg, HA_CREATE_INFO* creat
 {
   THD* thd = current_thd;
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2840,7 +2840,8 @@ int ha_mcs_impl_delete_table(const char* name)
   if (!memcmp((uchar*)name, tmp_file_prefix, tmp_file_prefix_length))
     return 0;
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2905,7 +2906,8 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
     return ER_CHECK_NOT_IMPLEMENTED;
   }
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2958,7 +2960,8 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
 
 int ha_mcs_impl_update_row()
 {
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2974,7 +2977,8 @@ int ha_mcs_impl_update_row()
 
 int ha_mcs_impl_delete_row()
 {
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -2995,7 +2999,8 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
   if (thd->slave_thread && !get_replication_slave(thd))
     return;
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3122,7 +3127,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         ci->useXbit = false;
 
       //@bug 6122 Check how many columns have not null constraint. columnn with not null constraint will not
-      //show up in header.
+      // show up in header.
       unsigned int numberNotNull = 0;
 
       for (unsigned int j = 0; j < colrids.size(); j++)
@@ -3279,9 +3284,8 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         int execvErrno = errno;
 
         ostringstream oss;
-        oss << " : execvp error: cpimport.bin invocation failed; "
-            << "(errno-" << errno << "); " << strerror(execvErrno)
-            << "; Check file and try invoking locally.";
+        oss << " : execvp error: cpimport.bin invocation failed; " << "(errno-" << errno << "); "
+            << strerror(execvErrno) << "; Check file and try invoking locally.";
         cout << oss.str();
 
         setError(current_thd, ER_INTERNAL_ERROR, "Forking process cpimport failed.");
@@ -3300,7 +3304,6 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
       // Set read_set used for bulk insertion of Fields inheriting
       // from Field_blob|Field_varstring. Used in ColWriteBatchString()
       bitmap_set_all(table->read_set);
-
     }
     else
     {
@@ -3416,7 +3419,8 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
   std::string aTmpDir(startup::StartUp::tmpDir());
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3442,7 +3446,6 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
          ((thd->lex)->sql_command == SQLCOM_LOAD) || ((thd->lex)->sql_command == SQLCOM_INSERT_SELECT) ||
          ci->isCacheInsert))
     {
-
       if ((thd->killed > 0) && (ci->cpimport_pid > 0))  // handle CTRL-C
       {
         // cout << "sending ctrl-c to cpimport" << endl;
@@ -3521,12 +3524,9 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
         else
         {
           ostringstream oss;
-          oss << "End SQL statement with error, rc=" << rc
-              << ", aPid=" << aPid
-              << ", WIF=" << WIFEXITED(aStatus)
-              << ", WEXIT=" << WEXITSTATUS(aStatus);
-          ha_mcs_impl::log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG,
-                                tid2sid(thd->thread_id));
+          oss << "End SQL statement with error, rc=" << rc << ", aPid=" << aPid
+              << ", WIF=" << WIFEXITED(aStatus) << ", WEXIT=" << WEXITSTATUS(aStatus);
+          ha_mcs_impl::log_this(thd, oss.str().c_str(), logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
         }
 
         ci->columnTypes.clear();
@@ -3612,7 +3612,8 @@ int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 
 int ha_mcs_impl_commit(handlerton* hton, THD* thd, bool all)
 {
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3647,7 +3648,8 @@ int ha_mcs_impl_commit(handlerton* hton, THD* thd, bool all)
 
 int ha_mcs_impl_rollback(handlerton* hton, THD* thd, bool all)
 {
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3719,7 +3721,8 @@ int ha_mcs_impl_rename_table(const char* from, const char* to)
 {
   IDEBUG(cout << "ha_mcs_impl_rename_table: " << from << " => " << to << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3745,7 +3748,7 @@ int ha_mcs_impl_rename_table(const char* from, const char* to)
   return rc;
 }
 
-int ha_mcs_impl_delete_row(const uchar* buf)
+int ha_mcs_impl_delete_row(const uchar* /*buf*/)
 {
   IDEBUG(cout << "ha_mcs_impl_delete_row" << endl);
   return 0;
@@ -3753,8 +3756,7 @@ int ha_mcs_impl_delete_row(const uchar* buf)
 
 // this place is as good as any.
 ext_cond_info::ext_cond_info(long timeZone)
-  : chainHolder(new SubQueryChainHolder())
-  , gwi(timeZone, &chainHolder->chain)
+ : chainHolder(new SubQueryChainHolder()), gwi(timeZone, &chainHolder->chain)
 {
 }
 
@@ -3772,7 +3774,8 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
   alias.assign(table->alias.ptr(), table->alias.length());
   IDEBUG(cout << "ha_mcs_impl_cond_push: " << alias << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3883,7 +3886,8 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
   alias.assign(table->alias.ptr(), table->alias.length());
   IDEBUG(cout << "external_lock for " << alias << endl);
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -3997,7 +4001,7 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
 }
 
 // for sorting length exceeds blob limit. Just error out for now.
-int ha_mcs_impl_rnd_pos(uchar* buf, uchar* pos)
+int ha_mcs_impl_rnd_pos(uchar* /*buf*/, uchar* /*pos*/)
 {
   IDEBUG(cout << "ha_mcs_impl_rnd_pos" << endl);
   string emsg = logging::IDBErrorInfo::instance()->errorMsg(ERR_ORDERBY_TOO_BIG);
@@ -4072,7 +4076,8 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (!get_fe_conn_info_ptr()) {
+  if (!get_fe_conn_info_ptr())
+  {
     set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -4363,9 +4368,9 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
 
         ci->cal_conn_hndl = hndl;
 
-	using namespace std::chrono_literals;
-	std::this_thread::sleep_for(100ms);
-	ntries --;
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(100ms);
+        ntries--;
 
         try
         {
@@ -4493,7 +4498,8 @@ int ha_mcs_impl_select_next(uchar* buf, TABLE* table, long timeZone)
 
   int rc = HA_ERR_END_OF_FILE;
 
-  if (get_fe_conn_info_ptr() == nullptr) {
+  if (get_fe_conn_info_ptr() == nullptr)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
   }

@@ -24,9 +24,8 @@
 #error mcsconfig.h was included before idb_mysql.h
 #endif
 
-
-//#define INFINIDB_DEBUG
-//#define DEBUG_WALK_COND
+// #define INFINIDB_DEBUG
+// #define DEBUG_WALK_COND
 
 #define MYSQL_SERVER 1  // needed for definition of struct THD in mysql_priv.h
 #define USE_CALPONT_REGEX
@@ -56,14 +55,19 @@
 
 #include "sql_plugin.h"
 #include "sql_table.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "sql_select.h"
-#include "mysqld_error.h"
 #include "item_windowfunc.h"
+#include "rpl_rli.h"
+#pragma GCC diagnostic pop
+
+#include "mysqld_error.h"
 #include "sql_cte.h"
 #include "tztime.h"
 #include "derived_handler.h"
 #include "select_handler.h"
-#include "rpl_rli.h"
+
 #include "my_dbug.h"
 #include "sql_show.h"
 
@@ -101,4 +105,3 @@ inline char* idb_mysql_query_str(THD* thd)
 #endif
 }
 }  // namespace
-

@@ -41,7 +41,7 @@ using namespace funcexp;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_greatest::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_greatest::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
@@ -50,7 +50,7 @@ CalpontSystemCatalog::ColType Func_greatest::operationType(FunctionParm& fp,
 }
 
 int64_t Func_greatest::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType& op_ct)
+                                 execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double str = fp[0]->data()->getDoubleVal(row, isNull);
 
@@ -68,7 +68,7 @@ int64_t Func_greatest::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 }
 
 uint64_t Func_greatest::getUintVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double str = fp[0]->data()->getDoubleVal(row, isNull);
 
@@ -86,7 +86,7 @@ uint64_t Func_greatest::getUintVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 }
 
 double Func_greatest::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double str = fp[0]->data()->getDoubleVal(row, isNull);
 
@@ -104,7 +104,7 @@ double Func_greatest::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 }
 
 long double Func_greatest::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                            execplan::CalpontSystemCatalog::ColType& op_ct)
+                                            execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   long double str = fp[0]->data()->getLongDoubleVal(row, isNull);
 
@@ -122,7 +122,7 @@ long double Func_greatest::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp
 }
 
 std::string Func_greatest::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                     execplan::CalpontSystemCatalog::ColType& op_ct)
+                                     execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto& str = fp[0]->data()->getStrVal(row, isNull);
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
@@ -143,7 +143,7 @@ std::string Func_greatest::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool&
 }
 
 IDB_Decimal Func_greatest::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,
-                                         CalpontSystemCatalog::ColType& ct)
+                                         CalpontSystemCatalog::ColType& /*ct*/)
 {
   //	double str = fp[0]->data()->getDoubleVal(row, isNull);
   IDB_Decimal str = fp[0]->data()->getDecimalVal(row, isNull);
@@ -162,7 +162,7 @@ IDB_Decimal Func_greatest::getDecimalVal(Row& row, FunctionParm& fp, bool& isNul
 }
 
 int32_t Func_greatest::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                     execplan::CalpontSystemCatalog::ColType& ct)
+                                     execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   int32_t str = fp[0]->data()->getDateIntVal(row, isNull);
 
@@ -180,7 +180,7 @@ int32_t Func_greatest::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool&
 }
 
 int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                         execplan::CalpontSystemCatalog::ColType& ct)
+                                         execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t str = fp[0]->data()->getDatetimeIntVal(row, isNull);
 
@@ -198,7 +198,7 @@ int64_t Func_greatest::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, b
 }
 
 int64_t Func_greatest::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                          execplan::CalpontSystemCatalog::ColType& ct)
+                                          execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t str = fp[0]->data()->getTimestampIntVal(row, isNull);
 
@@ -216,7 +216,7 @@ int64_t Func_greatest::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, 
 }
 
 int64_t Func_greatest::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                     execplan::CalpontSystemCatalog::ColType& ct)
+                                     execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   // Strip off unused day
   int64_t greatestStr = fp[0]->data()->getTimeIntVal(row, isNull);

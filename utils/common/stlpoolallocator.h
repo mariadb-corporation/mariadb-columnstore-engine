@@ -38,7 +38,7 @@ namespace utils
 as the deleter. */
 struct BoostPoolDeallocator
 {
-  inline void operator()(void* ptr) {};
+  inline void operator()(void* /*ptr*/) {};
 };
 
 /* This is an STL-compliant wrapper for PoolAllocator + an optimization for containers
@@ -134,14 +134,14 @@ STLPoolAllocator<T>::~STLPoolAllocator()
 
 template <class T>
 typename STLPoolAllocator<T>::pointer STLPoolAllocator<T>::allocate(
-    typename STLPoolAllocator<T>::size_type s, typename STLPoolAllocator<T>::const_pointer hint)
+    typename STLPoolAllocator<T>::size_type s, typename STLPoolAllocator<T>::const_pointer /*hint*/)
 {
   return (pointer)pa->allocate(s * sizeof(T));
 }
 
 template <class T>
 void STLPoolAllocator<T>::deallocate(typename STLPoolAllocator<T>::pointer p,
-                                     typename STLPoolAllocator<T>::size_type n)
+                                     typename STLPoolAllocator<T>::size_type /*n*/)
 {
   pa->deallocate((void*)p);
 }

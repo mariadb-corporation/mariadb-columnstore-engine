@@ -14,7 +14,7 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_unquote::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& resultType)
+                                                               CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }

@@ -1008,7 +1008,7 @@ struct SubtractionOverflowCheck
 */
 struct NoOverflowCheck
 {
-  void operator()(const int128_t& x, const int128_t& y)
+  void operator()(const int128_t& /*x*/, const int128_t& /*y*/)
   {
   }
 };

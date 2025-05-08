@@ -21,7 +21,10 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "ha_maria.h"
+#pragma GCC diagnostic pop
 
 extern handlerton* mcs_hton;
 
@@ -98,7 +101,7 @@ class ha_mcs : public handler
     If all_parts is set, MySQL wants to know the flags for the combined
     index, up to and including 'part'.
   */
-  ulong index_flags(uint32_t inx, uint32_t part, bool all_parts) const override
+  ulong index_flags(uint32_t /*inx*/, uint32_t /*part*/, bool /*all_parts*/) const override
   {
     return 0;
   }

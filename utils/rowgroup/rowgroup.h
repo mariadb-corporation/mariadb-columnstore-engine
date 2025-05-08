@@ -41,7 +41,6 @@
 #include <cfloat>
 #include <execinfo.h>
 
-
 #include "countingallocator.h"
 #include "hasher.h"
 
@@ -301,7 +300,6 @@ class AggregateDataStore
 class RowGroup;
 class Row;
 
-
 /* TODO: OO the rowgroup data to the extent there's no measurable performance hit. */
 class RGData
 {
@@ -538,7 +536,7 @@ class Row
 
   inline void setDoubleField(double val, uint32_t colIndex);
   inline void setFloatField(float val, uint32_t colIndex);
-  inline void setDecimalField(double val, uint32_t colIndex) {};  // TODO: Do something here
+  inline void setDecimalField(double /*val*/, uint32_t /*colIndex*/) { }  // TODO: Do something here
   inline void setLongDoubleField(const long double& val, uint32_t colIndex);
   inline void setInt128Field(const int128_t& val, uint32_t colIndex);
 
@@ -947,7 +945,7 @@ inline void Row::setBinaryField<int128_t>(const int128_t* value, uint32_t colInd
 
 // This method !cannot! be applied to uint8_t* buffers.
 template <typename T>
-inline void Row::setBinaryField_offset(const T* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset(const T* value, uint32_t /*width*/, uint32_t offset)
 {
   *reinterpret_cast<T*>(&data[offset]) = *value;
 }
@@ -959,7 +957,7 @@ inline void Row::setBinaryField_offset<uint8_t>(const uint8_t* value, uint32_t w
 }
 
 template <>
-inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t width, uint32_t offset)
+inline void Row::setBinaryField_offset<int128_t>(const int128_t* value, uint32_t /*width*/, uint32_t offset)
 {
   datatypes::TSInt128::assignPtrPtr(&data[offset], value);
 }
@@ -993,6 +991,7 @@ inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM, const utils::Hash
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::BLOB:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       CHARSET_INFO* cs = getCharset(col);
       hM.add(cs, getConstString(col));
@@ -1019,6 +1018,7 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
     case datatypes::SystemCatalog::VARCHAR:
     case datatypes::SystemCatalog::BLOB:
     case datatypes::SystemCatalog::TEXT:
+    case datatypes::SystemCatalog::CLOB:
     {
       CHARSET_INFO* cs = getCharset(rowKeyColIdx);
       h.add(cs, getConstString(rowKeyColIdx));
@@ -1447,7 +1447,8 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
 {
   if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
                types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
-               types[srcIndex] == execplan::CalpontSystemCatalog::TEXT))
+               types[srcIndex] == execplan::CalpontSystemCatalog::TEXT ||
+               types[srcIndex] == execplan::CalpontSystemCatalog::CLOB))
   {
     out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
@@ -1926,7 +1927,8 @@ inline bool RowGroup::isLongString(uint32_t colIndex) const
           (getColumnWidth(colIndex) > 8 && types[colIndex] == execplan::CalpontSystemCatalog::CHAR) ||
           types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
           types[colIndex] == execplan::CalpontSystemCatalog::BLOB ||
-          types[colIndex] == execplan::CalpontSystemCatalog::TEXT);
+          types[colIndex] == execplan::CalpontSystemCatalog::TEXT ||
+          types[colIndex] == execplan::CalpontSystemCatalog::CLOB);
 }
 
 inline bool RowGroup::usesStringTable() const

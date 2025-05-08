@@ -106,8 +106,8 @@ inline bool FuncExp::evaluate(rowgroup::Row& row, execplan::ParseTree* filters)
   return (filters->getBoolVal(row, isNull));
 }
 
-inline void FuncExp::evaluate(rowgroup::RowGroup& rowgroup, execplan::ParseTree* filters)
-{
-}
+// inline void FuncExp::evaluate(rowgroup::RowGroup& /*rowgroup*/, execplan::ParseTree* /*filters*/)
+// {
+// }
 
 }  // namespace funcexp
