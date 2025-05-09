@@ -15,6 +15,12 @@ local platforms_arm = {
   'stable-23.10': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04', 'ubuntu:24.04'],
 };
 
+local customBuildEnvCommandsMap = {
+  'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
+  'clang-19': ['apt install -y clang-19', 'export CC=/usr/bin/clang-19', 'export CXX=/usr/bin/clang++-19'],
+};
+
+
 local any_branch = '**';
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
@@ -99,7 +105,7 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', customBuildEnvCommandsMapKey='') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -113,7 +119,8 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   local branchp = if (branch == '**') then '' else branch + '/',
   local brancht = if (branch == '**') then '' else branch + '-',
-  local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+  local platformKey = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+  local result = platformKey + if customBuildEnvCommandsMapKey != '' then '_' + customBuildEnvCommandsMapKey else '',
 
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
@@ -188,7 +195,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test001.sh',
   ],
 
-  local mdb_server_versions = upgrade_test_lists[result][arch],
+  local mdb_server_versions = upgrade_test_lists[platformKey][arch],
 
   local indexes(arr) = std.range(0, std.length(arr) - 1),
 
@@ -642,7 +649,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch, server]),
+  name: std.join(' ', [branch, platform, event, arch, server, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -704,8 +711,10 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              commands: [
                 'export CLICOLOR_FORCE=1',
                 'mkdir /mdb/' + builddir + '/' + result,
-                get_sccache,
-
+                get_sccache]
+              + (if (std.objectHas(customBuildEnvCommandsMap, customBuildEnvCommandsMapKey)) then
+                    customBuildEnvCommandsMap[customBuildEnvCommandsMapKey] else []) +
+              [
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
                           '--build-type RelWithDebInfo ' +
                           '--distro ' + platform + ' ' +
@@ -848,8 +857,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise', '']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '']), platforms_arm.develop),
 };
 
 [
@@ -879,4 +888,12 @@ local FinalPipeline(branch, event) = {
 [
   Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
   for p in platforms_arm_custom
+]
++
+[
+  Pipeline(any_branch, platform, triggeringEvent, 'amd64', server, buildenv)
+  for platform in ['ubuntu:24.04']
+  for buildenv in std.objectFields(customBuildEnvCommandsMap)
+  for triggeringEvent in events
+  for server in servers.develop
 ]
