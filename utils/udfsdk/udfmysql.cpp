@@ -426,4 +426,36 @@ extern "C"
   {
     return 0;
   }
+
+  // BLOOM_AGG connector stub
+    my_bool bloom_agg_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 1)
+    {
+      strcpy(message, "bloom_agg() requires one argument");
+      return 1;
+    }
+
+    return 0;
+  }
+
+    void bloom_agg_deinit(UDF_INIT* initid)
+  {
+  }
+
+    void bloom_agg_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                     char* message __attribute__((unused)))
+  {
+  }
+
+    void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  {
+  }
+
+    long long bloom_agg(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
+                    char* error __attribute__((unused)))
+  {
+    return 0;
+  }
+
 }
