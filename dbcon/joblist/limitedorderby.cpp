@@ -263,10 +263,14 @@ void LimitedOrderBy::flushCurrentToDisk_(const bool firstFlush)
   // orderedRowsQueue
   queue<RGData> tempQueue;
   fDataQueue.swap(tempQueue);
+
   if (fDistinctMap)
   {
     fDistinctMap->clear();
   }
+  
+  fRm->returnMemory(fMemSize);
+  fMemSize = 0;
 
   flushThread.join();
 }
