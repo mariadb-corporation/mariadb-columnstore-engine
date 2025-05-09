@@ -28,7 +28,7 @@
 #include <values.h>
 #endif
 #include <boost/thread.hpp>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 #include "dataconvert.h"
@@ -74,6 +74,7 @@ namespace BRM
 {
 DBRM::DBRM(bool noBRMinit) : fDebug(false)
 {
+  (void)fDebug;
   if (!noBRMinit)
   {
     mst.reset(new MasterSegmentTable());

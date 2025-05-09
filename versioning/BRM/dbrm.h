@@ -753,7 +753,7 @@ class DBRM
   /* SessionManager interface */
   EXPORT const QueryContext verID();
   EXPORT const QueryContext sysCatVerID();
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
   EXPORT const TxnID newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL = false);
   EXPORT void committed(BRM::TxnID& txnid);
@@ -1015,7 +1015,7 @@ class DBRM
   std::string masterName;
   boost::mutex mutex;
   config::Config* config;
-  [[maybe_unused]]bool fDebug;
+  bool fDebug;
 };
 
 }  // namespace BRM

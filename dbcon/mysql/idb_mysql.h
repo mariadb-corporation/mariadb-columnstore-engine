@@ -53,23 +53,21 @@
 #define DBUG_OFF 1
 #endif
 
-#include "sql_plugin.h"
-#include "sql_table.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "sql_plugin.h"
+#include "sql_table.h"
 #include "sql_select.h"
-#include "item_windowfunc.h"
-#include "rpl_rli.h"
-#pragma GCC diagnostic pop
-
 #include "mysqld_error.h"
+#include "item_windowfunc.h"
 #include "sql_cte.h"
 #include "tztime.h"
 #include "derived_handler.h"
 #include "select_handler.h"
-
+#include "rpl_rli.h"
 #include "my_dbug.h"
 #include "sql_show.h"
+#pragma GCC diagnostic pop
 
 // Now clean up the pollution as best we can...
 #include "mcsconfig_conflicting_defs_undef.h"

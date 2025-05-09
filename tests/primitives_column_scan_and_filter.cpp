@@ -97,7 +97,7 @@ class ColumnScanFilterTest : public ::testing::Test
     close(fd);
     return block;
   }
-  uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* block)
+  uint8_t* readBlockFromLiteralArray(const std::string& fileName, uint8_t* /*block*/)
   {
     if (fileName == std::string("col1block.cdf"))
       return &__col1block_cdf[0];
