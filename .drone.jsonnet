@@ -18,6 +18,11 @@ local platforms_arm = {
 local customBuildEnvCommandsMap = {
   'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
   'clang-19': ['apt install -y clang-19', 'export CC=/usr/bin/clang-19', 'export CXX=/usr/bin/clang++-19'],
+  'clang-20': ['apt install -y wget curl lsb-release software-properties-common gnupg',
+               'wget https://apt.llvm.org/llvm.sh',
+               'bash llvm.sh 20',
+               'export CC=/usr/bin/clang-20',
+               'export CXX=/usr/bin/clang++-20'],
 };
 
 
