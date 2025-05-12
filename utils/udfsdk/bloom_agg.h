@@ -69,17 +69,23 @@ using BloomFilter = std::vector<uint64_t>;
 
 struct BloomAggData : public mcsv1sdk::UserData 
 {
-   BloomAggData() {}
+   BloomAggData(size_t hashFuncCount, size_t bloomFilterSize) : hashFuncCount(hashFuncCount), 
+                                                                bloomFilterSize(bloomFilterSize) 
+   {
+      bloomFilter.resize(bloomFilterSize, 0);
+   }
 
    virtual ~BloomAggData() {}
 
-   virtual void serialize(messageqcpp::ByteStream& stream) const override;
-   virtual void unserialize(messageqcpp::ByteStream& stream) override;
+    void serialize(messageqcpp::ByteStream& stream) const override;
+    void unserialize(messageqcpp::ByteStream& stream) override;
 
    BloomFilter bloomFilter;
+   size_t hashFuncCount;
+   size_t bloomFilterSize;
 
 private:
-   BloomAggData(UserData&);
+   BloomAggData(UserData&) = delete;
 };
 
 class bloom_agg : public mcsv1_UDAF

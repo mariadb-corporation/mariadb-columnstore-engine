@@ -430,9 +430,9 @@ extern "C"
   // BLOOM_AGG connector stub
     my_bool bloom_agg_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 1)
+    if (args->arg_count != 3)
     {
-      strcpy(message, "bloom_agg() requires one argument");
+      strcpy(message, "bloom_agg() requires three arguments: hashFuncCount, bloomFilterSize, columnData");
       return 1;
     }
 

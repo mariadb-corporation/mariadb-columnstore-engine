@@ -18,102 +18,165 @@
 #include <sstream>
 #include <cstring>
 #include <typeinfo>
+#include <algorithm>
+#include <iostream>
 #include "bloom_agg.h"
 #include "bytestream.h"
 #include "objectreader.h"
+#include "xxhash.h"
 
 using namespace mcsv1sdk;
 
-struct BloomAggData;
-
 mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-  // if (context->getParameterCount() < 2)
-  // {
-  //   // The error message will be prepended with
-  //   // "The storage engine for the table doesn't support "
-  //   context->setErrorMessage("bloom_agg() with 0 arguments");
-  //   return mcsv1_UDAF::ERROR;
-  // }
+  if (context->getParameterCount() < 3)
+  {
+    context->setErrorMessage("bloom_agg() with less than 3 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
 
-  // if (context->getParameterCount() > 2)
-  // {
-  //   context->setErrorMessage("bloom_agg() with more than 1 argument");
-  //   return mcsv1_UDAF::ERROR;
-  // }
+  if (context->getParameterCount() > 3)
+  {
+    context->setErrorMessage("bloom_agg() with more than 3 arguments");
+    return mcsv1_UDAF::ERROR;
+  }
 
-  // if (!(isNumeric(colTypes[0].dataType)))
-  // {
-  //   // The error message will be prepended with
-  //   // "The storage engine for the table doesn't support "
-  //   context->setErrorMessage("bloom_agg() with non-numeric argument");
-  //   return mcsv1_UDAF::ERROR;
-  // }
-
-  // context->setUserDataSize(sizeof(BloomAggData));
-  // context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  // context->setColWidth(8);
-  // context->setScale(context->getScale() * 2);
-  // context->setPrecision(19);
-  // context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
+  context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
+  context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
 
-// TODO - implement reset
 mcsv1_UDAF::ReturnCode bloom_agg::reset(mcsv1Context* context)
 {
-  // struct bloom_agg_data* data = (struct bloom_agg_data*)context->getUserData()->data;
+  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
 
-  // if (data)
-  // {
-  //   data->scale = 0;
-  //   data->sumsq = 0;
-  // }
+  if (data)
+  {
+    std::fill(data->bloomFilter.begin(), data->bloomFilter.end(), 0);
+  }
 
   return mcsv1_UDAF::SUCCESS;
 }
 
-// TODO - implement nextValue
+static inline void addValueToBloomFilter(const void* val, BloomAggData& data)
+{
+  uint64_t blockIdxHash = XXH3_64bits(val, sizeof(val)) % data.bloomFilterSize;
+  
+  // Currently using hard-coded prime numbers for seed values
+  uint64_t valHash1 = XXH3_64bits_withSeed(&val, sizeof(val), 23);
+  uint64_t valHash2 = XXH3_64bits_withSeed(&val, sizeof(val), 31);
+
+  auto& block = data.bloomFilter[blockIdxHash];
+  
+  for (size_t i = 0; i < data.hashFuncCount; ++i) {
+    size_t bitIdx = (valHash1 + i * valHash2) % 64;
+    block |= (1 << (bitIdx % 64));
+  }
+}
+
 mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-  // struct bloom_agg_data* data = (struct bloom_agg_data*)context->getUserData()->data;
+  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
 
-  // if (context->isParamNull(0) || valsIn[0].columnData.empty())
-  // {
-  //   return mcsv1_UDAF::SUCCESS;
-  // }
+  if (context->isParamNull(0) || valsIn[0].columnData.empty())
+  {
+    return mcsv1_UDAF::SUCCESS;
+  }
+  
+  // For now only numeric (non floating point) types are supported
+  switch (valsIn[0].dataType)
+  {
+    case datatypes::SystemCatalog::TINYINT:
+    case datatypes::SystemCatalog::SMALLINT:
+    case datatypes::SystemCatalog::MEDINT:
+    case datatypes::SystemCatalog::INT:
+    case datatypes::SystemCatalog::BIGINT:
+    case datatypes::SystemCatalog::UTINYINT:
+    case datatypes::SystemCatalog::USMALLINT:
+    case datatypes::SystemCatalog::UMEDINT:
+    case datatypes::SystemCatalog::UINT:
+    case datatypes::SystemCatalog::UBIGINT:
+    {
+      auto intVal = convertAnyTo<uint64_t>(valsIn[0].columnData);
+      const void* val = static_cast<const void*>(&intVal);
+      addValueToBloomFilter(val, *data);
+      break;
+    }    
+  
+  default:
+    break;
+  }
 
-  // DATATYPE val = toDouble(valsIn[0]);
-
-  // data->sumsq += val * val;
   return mcsv1_UDAF::SUCCESS;
 }
 
-
-// TODO - implement subEvaluate
 mcsv1_UDAF::ReturnCode bloom_agg::subEvaluate(mcsv1Context* context, const UserData* userDataIn)
 {
-  // If we turn off UDAF_IGNORE_NULLS in init(), then NULLS may be sent here in cases of Joins.
-  // When a NULL value is sent here, userDataIn will be NULL, so check for NULLS.
-  // if (context->isParamNull(0))
-  // {
-  //   return mcsv1_UDAF::SUCCESS;
-  // }
+  if (context->isParamNull(0))
+  {
+    return mcsv1_UDAF::SUCCESS;
+  }
 
-  // struct bloom_agg_data* outData = (struct bloom_agg_data*)context->getUserData()->data;
+  struct BloomAggData* outData = (struct BloomAggData*)context->getUserData()->data;
+  struct BloomAggData* inData = (struct BloomAggData*)userDataIn->data;
 
-  // struct bloom_agg_data* inData = (struct bloom_agg_data*)userDataIn->data;
-
-  // outData->sumsq += inData->sumsq;
+  for (size_t i = 0; i < outData->bloomFilter.size(); ++i)
+  {
+    outData->bloomFilter[i] |= inData->bloomFilter[i];
+  }
 
   return mcsv1_UDAF::SUCCESS;
 }
 
-// TODO - implement evaluate
 mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-  // struct bloom_agg_data* data = (struct bloom_agg_data*)context->getUserData()->data;
-  // valOut = data->sumsq;
+  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
+  //valOut = data->bloomFilter;
+
+  // Convert bloom filter to a string
+  std::ostringstream oss;
+  for (const auto& val : data->bloomFilter)
+  {
+    oss << val << "";
+  }
+  std::string result = oss.str();
+
+  valOut = result;
+  
   return mcsv1_UDAF::SUCCESS;
+}
+
+mcsv1_UDAF::ReturnCode createUserData(UserData*& userdata, int32_t& length)
+{
+  userdata = new BloomAggData(3,32);
+  length = sizeof(BloomAggData);
+  return mcsv1_UDAF::SUCCESS;
+}
+
+// Override UserData methods
+void BloomAggData::serialize(messageqcpp::ByteStream& bs) const
+{
+  bs << static_cast<uint64_t>(bloomFilterSize);
+  bs << static_cast<uint64_t>(hashFuncCount);
+
+  for (const auto& val : bloomFilter)
+  {
+    bs << val;
+  }
+}
+
+void BloomAggData::unserialize(messageqcpp::ByteStream& bs)
+{
+  uint64_t size, hashCnt;
+  bs >> size;
+  bs >> hashCnt;
+  bloomFilter.resize(size);
+  bloomFilterSize = size;
+  hashFuncCount = hashCnt;
+  
+  for (auto& val : bloomFilter)
+  {
+    bs >> val;
+  }
 }
 
