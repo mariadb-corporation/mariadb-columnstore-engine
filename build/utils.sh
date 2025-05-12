@@ -420,7 +420,7 @@ function optparse.define(){
 
 # -----------------------------------------------------------------------------------------------------------------------------
 function optparse.build(){
-        local build_file="$(mktemp -t "optparse-XXXXXX.tmp")"
+        local build_file="$(mktemp "${TMPDIR:-/tmp}/optparse-XXXXXX")"
 
         # Building getopts header here
 

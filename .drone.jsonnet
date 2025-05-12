@@ -153,7 +153,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --only-show-errors',
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
 
-      'rm -rf ' + result + '/*'
+      'rm -rf ' + result + '/*',
     ],
   },
 
@@ -213,34 +213,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     if (pkg_format == 'deb') then execInnerDocker('bash -c "apt update && apt install -y mariadb-columnstore-cmapi"', dockerImage)
                              else execInnerDocker('bash -c "yum install -y MariaDB-columnstore-cmapi"', dockerImage),
 
-  local prepareTestStage(dockerImage, pkg_format, result, do_setup) = [
-    'apk add bash && bash core_dumps/docker-awaiter.sh ' + dockerImage,
-    if (pkg_format == 'deb')
-      then execInnerDocker('sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d', dockerImage),
-
-    'echo "Docker CGroups opts here"',
-    'ls -al /sys/fs/cgroup/cgroup.controllers || true ',
-    'ls -al /sys/fs/cgroup/ || true ',
-    'ls -al /sys/fs/cgroup/memory || true',
-    "docker ps --filter=name=" + dockerImage,
-
-    execInnerDocker('echo "Inner Docker CGroups opts here"', dockerImage),
-    execInnerDocker('ls -al /sys/fs/cgroup/cgroup.controllers || true', dockerImage),
-    execInnerDocker('ls -al /sys/fs/cgroup/ || true', dockerImage),
-    execInnerDocker('ls -al /sys/fs/cgroup/memory || true', dockerImage),
-
-
-    execInnerDocker('mkdir core', dockerImage),
-    execInnerDocker('chmod 777 core', dockerImage),
-    'docker cp core_dumps/. ' + dockerImage  +  ':/',
-    'docker cp build/utils.sh ' + dockerImage  +  ':/',
-    'docker cp setup-repo.sh ' + dockerImage  +  ':/',
-    if (do_setup) then execInnerDocker('/setup-repo.sh', dockerImage),
-    execInnerDocker(installRpmDeb(pkg_format,
-      "cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which",
-      "elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget"), dockerImage),
-    execInnerDocker('sysctl -w kernel.core_pattern="/core/%E_' + result + '_core_dump.%p"', dockerImage),
-  ],
+  local prepareTestStage(dockerImage, pkg_format, result, do_setup) =
+    ['sh -c "apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/prepare_test_stage.sh' +
+     ' --docker-image ' + dockerImage +
+     ' --pkg-format ' + pkg_format +
+     ' --result-path ' + result +
+     ' --do-setup ' + std.toString(do_setup) + '"'],
 
   local reportTestStage(dockerImage, result, stage) = [
     execInnerDocker('bash -c "/logs.sh ' + stage + '"', dockerImage),
@@ -266,11 +244,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'smoke',
     depends_on: ['publish pkg'],
     image: 'docker',
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       'docker run --memory 3g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name smoke$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
-      + prepareTestStage(dockerImage("smoke"), pkg_format, result, true) + [
-      installEngine(dockerImage("smoke"), pkg_format),
+      +  prepareTestStage(dockerImage("smoke"),pkg_format, result, true)
+       + [installEngine(dockerImage("smoke"), pkg_format),
       'sleep $${SMOKE_DELAY_SECONDS:-1s}',
       // start mariadb and mariadb-columnstore services and run simple query
       execInnerDocker('systemctl start mariadb', dockerImage("smoke")),
@@ -565,7 +543,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     name: 'cmapi test',
     depends_on: ['publish cmapi build'],
     image: 'docker:git',
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       PYTHONPATH: '/usr/share/columnstore/cmapi/deps',
     },
