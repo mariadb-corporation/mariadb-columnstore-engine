@@ -737,7 +737,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              },
              volumes: [pipeline._volumes.mdb],
              commands: [
-               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --distro ' + platform,
+               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --result ' + result,
              ],
            },
            {
