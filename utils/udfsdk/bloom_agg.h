@@ -77,8 +77,8 @@ struct BloomAggData : public mcsv1sdk::UserData
 
    virtual ~BloomAggData() {}
 
-    void serialize(messageqcpp::ByteStream& stream) const override;
-    void unserialize(messageqcpp::ByteStream& stream) override;
+   void serialize(messageqcpp::ByteStream& stream) const override;
+   void unserialize(messageqcpp::ByteStream& stream) override;
 
    BloomFilter bloomFilter;
    size_t hashFuncCount;
@@ -90,22 +90,24 @@ private:
 
 class bloom_agg : public mcsv1_UDAF
 {
- public:
+public:
 
-  bloom_agg() : mcsv1_UDAF(){};
-  ~bloom_agg() override = default;
+   bloom_agg() : mcsv1_UDAF(){};
+   ~bloom_agg() override = default;
 
-  ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
+   ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
-  ReturnCode reset(mcsv1Context* context) override;
+   ReturnCode reset(mcsv1Context* context) override;
 
-  ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
+   ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
 
-  ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) override;
+   ReturnCode subEvaluate(mcsv1Context* context, const UserData* userDataIn) override;
 
-  ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
+   ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
 
- protected:
+   ReturnCode createUserData(UserData*& data, int32_t& length) override;
+
+protected:
 };
 
 };  // namespace mcsv1sdk

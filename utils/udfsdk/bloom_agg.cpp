@@ -24,6 +24,7 @@
 #include "bytestream.h"
 #include "objectreader.h"
 #include "xxhash.h"
+#include "nullstring.h"
 
 using namespace mcsv1sdk;
 
@@ -42,13 +43,14 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
+  context->setColWidth(256);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode bloom_agg::reset(mcsv1Context* context)
 {
-  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
+  BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
   if (data)
   {
@@ -76,7 +78,7 @@ static inline void addValueToBloomFilter(const void* val, BloomAggData& data)
 
 mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
-  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
+  BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
   if (context->isParamNull(0) || valsIn[0].columnData.empty())
   {
@@ -117,8 +119,8 @@ mcsv1_UDAF::ReturnCode bloom_agg::subEvaluate(mcsv1Context* context, const UserD
     return mcsv1_UDAF::SUCCESS;
   }
 
-  struct BloomAggData* outData = (struct BloomAggData*)context->getUserData()->data;
-  struct BloomAggData* inData = (struct BloomAggData*)userDataIn->data;
+  BloomAggData* outData = static_cast<BloomAggData*>(context->getUserData());
+  const BloomAggData* inData = static_cast<const BloomAggData*>(userDataIn);
 
   for (size_t i = 0; i < outData->bloomFilter.size(); ++i)
   {
@@ -130,23 +132,22 @@ mcsv1_UDAF::ReturnCode bloom_agg::subEvaluate(mcsv1Context* context, const UserD
 
 mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::any& valOut)
 {
-  struct BloomAggData* data = (struct BloomAggData*)context->getUserData()->data;
-  //valOut = data->bloomFilter;
+  BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
   // Convert bloom filter to a string
   std::ostringstream oss;
   for (const auto& val : data->bloomFilter)
   {
-    oss << val << "";
+    oss << val;
   }
   std::string result = oss.str();
 
-  valOut = result;
-  
+  valOut = NullString(result);
+
   return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode createUserData(UserData*& userdata, int32_t& length)
+mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& length)
 {
   userdata = new BloomAggData(3,32);
   length = sizeof(BloomAggData);
