@@ -26,7 +26,18 @@
 #include "xxhash.h"
 #include "nullstring.h"
 
+// For testing purposes
+#include <bitset>
+
 using namespace mcsv1sdk;
+
+// To store and initialize the BloomAggData
+namespace 
+{
+  size_t gHashFuncCount = 0;
+  size_t gBloomFilterSize = 0;
+  bool gInitBloomFilter = true;
+}
 
 mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
@@ -43,7 +54,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(256);
+  context->setColWidth(2048);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -84,6 +95,17 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
   {
     return mcsv1_UDAF::SUCCESS;
   }
+
+  if (gInitBloomFilter)
+  {
+    gHashFuncCount = convertAnyTo<uint64_t>(valsIn[1].columnData);
+    gBloomFilterSize = convertAnyTo<uint64_t>(valsIn[2].columnData);
+    gInitBloomFilter = false;
+
+    data->bloomFilter.resize(gBloomFilterSize, 0);
+    data->hashFuncCount = gHashFuncCount;
+    data->bloomFilterSize = gBloomFilterSize;
+  }
   
   // For now only numeric (non floating point) types are supported
   switch (valsIn[0].dataType)
@@ -103,10 +125,28 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
       const void* val = static_cast<const void*>(&intVal);
       addValueToBloomFilter(val, *data);
       break;
-    }    
+    }
+    
+    // TODO: support DECIMAL type (only with scale = 0)
+    case datatypes::SystemCatalog::DECIMAL:
+    case datatypes::SystemCatalog::UDECIMAL:
+    {
+      break;
+    }
+
+    // TODO: Support Textual types
+    case datatypes::SystemCatalog::VARCHAR:
+    case datatypes::SystemCatalog::VARBINARY:
+    case datatypes::SystemCatalog::CLOB:
+    case datatypes::SystemCatalog::BLOB:
+    case datatypes::SystemCatalog::TEXT:
+    {
+      break;
+    }
   
   default:
-    break;
+    context->setErrorMessage("bloom_agg() does not support this datatype.");
+    return mcsv1_UDAF::ERROR;
   }
 
   return mcsv1_UDAF::SUCCESS;
@@ -135,13 +175,21 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
   BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
   // Convert bloom filter to a string
+  // std::ostringstream oss;
+  // for (const auto& val : data->bloomFilter)
+  // {
+  //   oss << val;
+  // }
+  // std::string result = oss.str();
+
+  // valOut = NullString(result);
+
   std::ostringstream oss;
   for (const auto& val : data->bloomFilter)
   {
-    oss << val;
+      oss << std::bitset<64>(val);  // prints 64 bits per block
   }
   std::string result = oss.str();
-
   valOut = NullString(result);
 
   return mcsv1_UDAF::SUCCESS;
@@ -149,7 +197,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 
 mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& length)
 {
-  userdata = new BloomAggData(3,32);
+  userdata = new BloomAggData;
   length = sizeof(BloomAggData);
   return mcsv1_UDAF::SUCCESS;
 }
