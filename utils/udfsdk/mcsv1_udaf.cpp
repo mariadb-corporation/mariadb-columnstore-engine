@@ -37,6 +37,7 @@ using namespace mcsv1sdk;
 #include "median.h"
 #include "avg_mode.h"
 #include "avgx.h"
+#include "bloom_agg.h"
 
 UDAF_MAP& UDAFMap::fm()
 {
@@ -62,6 +63,7 @@ UDAF_MAP& UDAFMap::getMap()
   //    fm["median"] = new median();
   fm["avg_mode"] = new avg_mode();
   fm["avgx"] = new avgx();
+  fm["bloom_agg"] = new bloom_agg();
 
   return fm;
 }
