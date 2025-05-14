@@ -119,7 +119,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
-  local branch_ref = if (branch == any_branch) then 'develop' else branch,
+  local branch_ref = if (branch == any_branch) then 'stable-23.10' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == '**') then '' else branch + '/',
@@ -896,7 +896,8 @@ local FinalPipeline(branch, event) = {
 ]
 +
 [
-  Pipeline(any_branch, platform, triggeringEvent, 'amd64', server, buildenv)
+  Pipeline(b, platform, triggeringEvent, 'amd64', server, buildenv)
+  for b in std.objectFields(platforms)
   for platform in ['ubuntu:24.04']
   for buildenv in std.objectFields(customBuildEnvCommandsMap)
   for triggeringEvent in events
