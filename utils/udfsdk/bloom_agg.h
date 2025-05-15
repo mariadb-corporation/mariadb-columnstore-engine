@@ -65,7 +65,7 @@
 
 namespace mcsv1sdk
 {
-using BloomFilter = std::vector<uint64_t>;
+using BloomFilter = std::vector<uint8_t>;
 
 struct BloomAggData : public mcsv1sdk::UserData 
 {
@@ -73,7 +73,7 @@ struct BloomAggData : public mcsv1sdk::UserData
    BloomAggData(size_t hashFuncCount, size_t bloomFilterSize) : hashFuncCount(hashFuncCount), 
                                                                 bloomFilterSize(bloomFilterSize) 
    {
-      bloomFilter.resize(bloomFilterSize, 0);
+      bloomFilter = BloomFilter(bloomFilterSize, 0);
    }
 
    virtual ~BloomAggData() {}
@@ -81,9 +81,9 @@ struct BloomAggData : public mcsv1sdk::UserData
    void serialize(messageqcpp::ByteStream& stream) const override;
    void unserialize(messageqcpp::ByteStream& stream) override;
 
-   BloomFilter bloomFilter = BloomFilter(64, 0);
-   size_t hashFuncCount = 1;
-   size_t bloomFilterSize = 64;
+   BloomFilter bloomFilter;
+   size_t hashFuncCount = 0;
+   size_t bloomFilterSize = 0;
 
 private:
    BloomAggData(UserData&) = delete;

@@ -436,6 +436,8 @@ extern "C"
       return 1;
     }
 
+    initid->max_length = static_cast<uint64_t>(*args->args[2])*10;
+
     return 0;
   }
 

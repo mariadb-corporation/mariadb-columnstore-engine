@@ -34,27 +34,19 @@ using namespace mcsv1sdk;
 // To store and initialize the BloomAggData
 namespace 
 {
-  size_t gHashFuncCount = 0;
-  size_t gBloomFilterSize = 0;
-  bool gInitBloomFilter = true;
+  uint64_t seed1 = 77557187;
+  uint64_t seed2 = 8012791231;
 }
 
 mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-  if (context->getParameterCount() < 3)
+  if (context->getParameterCount() != 3)
   {
-    context->setErrorMessage("bloom_agg() with less than 3 arguments");
-    return mcsv1_UDAF::ERROR;
-  }
-
-  if (context->getParameterCount() > 3)
-  {
-    context->setErrorMessage("bloom_agg() with more than 3 arguments");
+    context->setErrorMessage("bloom_agg() requires 3 arguments");
     return mcsv1_UDAF::ERROR;
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(2048);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -71,19 +63,19 @@ mcsv1_UDAF::ReturnCode bloom_agg::reset(mcsv1Context* context)
   return mcsv1_UDAF::SUCCESS;
 }
 
-static inline void addValueToBloomFilter(const void* val, BloomAggData& data)
+template<typename T>
+static inline void addValueToBloomFilter(const T& val, BloomAggData& data)
 {
-  uint64_t blockIdxHash = XXH3_64bits(val, sizeof(val)) % data.bloomFilterSize;
+  uint64_t blockIdxHash = XXH3_64bits(reinterpret_cast<const void*>(&val), sizeof(val)) % data.bloomFilterSize;
   
-  // Currently using hard-coded prime numbers for seed values
-  uint64_t valHash1 = XXH3_64bits_withSeed(&val, sizeof(val), 23);
-  uint64_t valHash2 = XXH3_64bits_withSeed(&val, sizeof(val), 31);
+  uint64_t valHash1 = XXH3_64bits_withSeed(reinterpret_cast<const void*>(&val), sizeof(val), seed1);
+  uint64_t valHash2 = XXH3_64bits_withSeed(reinterpret_cast<const void*>(&val), sizeof(val), seed2);
 
   auto& block = data.bloomFilter[blockIdxHash];
   
   for (size_t i = 0; i < data.hashFuncCount; ++i) {
-    size_t bitIdx = (valHash1 + i * valHash2) % 64;
-    block |= (1 << (bitIdx % 64));
+    size_t bitIdx = (valHash1 + i * valHash2) % 8;
+    block |= (1 << (bitIdx));
   }
 }
 
@@ -95,21 +87,11 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
   {
     return mcsv1_UDAF::SUCCESS;
   }
-
-  if (gInitBloomFilter)
-  {
-    gHashFuncCount = convertAnyTo<uint64_t>(valsIn[1].columnData);
-    gBloomFilterSize = convertAnyTo<uint64_t>(valsIn[2].columnData);
-    gInitBloomFilter = false;
-
-    data->bloomFilter.resize(gBloomFilterSize, 0);
-    data->hashFuncCount = gHashFuncCount;
-    data->bloomFilterSize = gBloomFilterSize;
-  }
   
   // For now only numeric (non floating point) types are supported
   switch (valsIn[0].dataType)
   {
+    // abs(val) if two values are same (even tho one is negative), the hash will be the same
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::SMALLINT:
     case datatypes::SystemCatalog::MEDINT:
@@ -122,8 +104,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
     case datatypes::SystemCatalog::UBIGINT:
     {
       auto intVal = convertAnyTo<uint64_t>(valsIn[0].columnData);
-      const void* val = static_cast<const void*>(&intVal);
-      addValueToBloomFilter(val, *data);
+      addValueToBloomFilter(intVal, *data);
       break;
     }
     
@@ -183,21 +164,23 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
   // std::string result = oss.str();
 
   // valOut = NullString(result);
-
+  
+  // Only for testing, use variant above after testing
   std::ostringstream oss;
   for (const auto& val : data->bloomFilter)
   {
-      oss << std::bitset<64>(val);  // prints 64 bits per block
+      oss << std::bitset<8>(val) << " ";  // prints 8 bits per block
   }
   std::string result = oss.str();
-  valOut = NullString(result);
+
+  valOut = utils::NullString(result);
 
   return mcsv1_UDAF::SUCCESS;
 }
 
 mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& length)
 {
-  userdata = new BloomAggData;
+  userdata = new BloomAggData(2, 2);
   length = sizeof(BloomAggData);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -210,7 +193,7 @@ void BloomAggData::serialize(messageqcpp::ByteStream& bs) const
 
   for (const auto& val : bloomFilter)
   {
-    bs << val;
+    bs << static_cast<uint8_t>(val);
   }
 }
 
