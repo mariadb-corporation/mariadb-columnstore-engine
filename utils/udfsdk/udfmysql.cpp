@@ -436,7 +436,7 @@ extern "C"
       return 1;
     }
 
-    initid->max_length = static_cast<uint64_t>(*args->args[2])*10;
+    initid->max_length = static_cast<uint64_t>(*args->args[2]);
 
     return 0;
   }
@@ -458,6 +458,39 @@ extern "C"
                     char* error __attribute__((unused)))
   {
     return 0;
+  }
+
+  // MCS_bloom_contains connector stub
+      my_bool mcs_bloom_contains_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 2)
+    {
+      strcpy(message, "bloom_contains() requires two arguments: bloom_agg, column");
+      return 1;
+    }
+
+    initid->max_length = 8;
+
+    return 0;
+  }
+
+    void mcs_bloom_contains_deinit(UDF_INIT* initid)
+  {
+  }
+
+    void mcs_bloom_contains_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                     char* message __attribute__((unused)))
+  {
+  }
+
+    void mcs_bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  {
+  }
+
+    long long mcs_bloom_contains(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
+                    char* error __attribute__((unused)))
+  {
+    return 999;
   }
 
 }

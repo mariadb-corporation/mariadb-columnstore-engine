@@ -47,6 +47,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
+  context->setColWidth(32);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -155,7 +156,9 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 {
   BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
-  // Convert bloom filter to a string
+  // Convert bloom filter to a binary string
+  std::string blob(data->bloomFilter.begin(), data->bloomFilter.end());
+  valOut = utils::NullString(blob);
   // std::ostringstream oss;
   // for (const auto& val : data->bloomFilter)
   // {
@@ -166,14 +169,14 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
   // valOut = NullString(result);
   
   // Only for testing, use variant above after testing
-  std::ostringstream oss;
-  for (const auto& val : data->bloomFilter)
-  {
-      oss << std::bitset<8>(val) << " ";  // prints 8 bits per block
-  }
-  std::string result = oss.str();
+  // std::ostringstream oss;
+  // for (const auto& val : data->bloomFilter)
+  // {
+  //     oss << std::bitset<8>(val) << " ";  // prints 8 bits per block
+  // }
+  // std::string result = oss.str();
 
-  valOut = utils::NullString(result);
+  // valOut = utils::NullString(result);
 
   return mcsv1_UDAF::SUCCESS;
 }
