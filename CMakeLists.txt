@@ -32,13 +32,11 @@ set(WITH_COLUMNSTORE_LZ4
     CACHE STRING "Build with lz4. Possible values are 'ON', 'OFF', 'AUTO' and default is 'AUTO'"
 )
 
-# the order of includes is important
+# order of includes is important
 include(check_compiler_flag)
 include(ExternalProject)
 include(CheckCXXSourceCompiles)
 include(packages)
-include(boost)
-include(thrift)
 include(dirs)
 include(includes)
 include(libs)
@@ -46,6 +44,9 @@ include(columnstore_version)
 include(configureEngine)
 include(compiler_flags)
 include(misc)
+include(boost)
+include(thrift)
+include(ColumnstoreLibrary)
 
 set(COMPONENTS
     dbcon/mysql
