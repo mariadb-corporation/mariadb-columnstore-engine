@@ -343,16 +343,17 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
 {
   SBS sbs;
 
-  idblog("conn index " << connIndex << ", ip addr " << client->addr2String());
+  idblog("conn index " << connIndex << ", other end " << client->otherEnd());
 
   try
   {
     while (Busy())
     {
       // TODO: This call blocks so setting Busy() in another thread doesn't work here...
+      idblog("receiving packet. conn index " << connIndex << ", other end " << client->otherEnd());
       sbs = client->read();
 
-      idblog("received packet. conn index " << connIndex << ", ip addr " << client->addr2String() << ", length " << sbs->length());
+      idblog("received packet. conn index " << connIndex << ", other end " << client->otherEnd() << ", length " << sbs->length());
       if (sbs->length() != 0)
       {
         // cout << "adding data to connIndex " << endl;
@@ -375,17 +376,20 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
   catch (std::exception& e)
   {
     cerr << "WEC Caught EXCEPTION: " << e.what() << endl;
+    idblog("exception " << e.what());
     goto Error;
   }
   catch (...)
   {
     cerr << "WEC Caught UNKNOWN EXCEPT" << endl;
+    idblog("unknown error ");
     goto Error;
   }
 
 Error:
   // error condition! push 0 length bs to messagequeuemap and
   // eventually let jobstep error out.
+  idblog("Error");
   boost::mutex::scoped_lock lk(fMlock);
 
   MessageQueueMap::iterator map_tok;
