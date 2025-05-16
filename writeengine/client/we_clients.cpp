@@ -343,6 +343,8 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
 {
   SBS sbs;
 
+  idblog("conn index " << connIndex << ", ip addr " << client->addr2String());
+
   try
   {
     while (Busy())
@@ -350,6 +352,7 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
       // TODO: This call blocks so setting Busy() in another thread doesn't work here...
       sbs = client->read();
 
+      idblog("received packet. conn index " << connIndex << ", ip addr " << client->addr2String() << ", length " << sbs->length());
       if (sbs->length() != 0)
       {
         // cout << "adding data to connIndex " << endl;
