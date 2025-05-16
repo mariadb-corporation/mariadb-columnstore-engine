@@ -45,7 +45,6 @@ class WECmdArgs
   void setSchemaAndTableFromJobFile(std::string& JobName);
   void setEnclByAndEscCharFromJobFile(std::string& JobName);
   void usage();
-  void usageMode3();
   bool checkForCornerCases();
   void checkForBulkLogDir(const std::string& BulkRoot);
 
@@ -76,11 +75,11 @@ class WECmdArgs
   {
     return fLocFile;
   }
-  int getReadBufSize()
+  int getReadBufSize() const
   {
     return fReadBufSize;
   }
-  int getMode()
+  int getMode() const
   {
     return fMode;
   }
@@ -88,36 +87,40 @@ class WECmdArgs
   {
     return fArgMode;
   }
-  bool isHelpMode()
+  bool isHelpMode() const
   {
     return fHelp;
   }
-  int getDebugLvl()
+  int getDebugLvl() const
   {
     return fDebugLvl;
   }
-  char getEnclChar()
+  char getEnclChar() const
   {
     return fEnclosedChar;
   }
-  char getEscChar()
+  char getEscChar() const
   {
     return fEscChar;
   }
-  char getDelimChar()
+  char getDelimChar() const
   {
     return fColDelim;
+  }
+  int getSkipRows() const
+  {
+    return fSkipRows;
   }
   ImportDataMode getImportDataMode() const
   {
     return fImportDataMode;
   }
-  bool getConsoleLog()
+  bool getConsoleLog() const
   {
     return fConsoleLog;
   }
 
-  bool isCpimportInvokeMode()
+  bool isCpimportInvokeMode() const
   {
     return (fBlockMode3) ? false : fCpiInvoke;
   }
@@ -125,11 +128,15 @@ class WECmdArgs
   {
     return fQuiteMode;
   }
-  void setJobId(std::string fJobId)
+  void setJobId(const std::string& fJobId)
   {
     this->fJobId = fJobId;
   }
-  void setLocFile(std::string fLocFile)
+  void setOrigJobId()
+  {
+    this->fOrigJobId = fJobId;
+  }
+  void setLocFile(const std::string& fLocFile)
   {
     this->fLocFile = fLocFile;
   }
@@ -141,7 +148,7 @@ class WECmdArgs
   {
     this->fArgMode = ArgMode;
   }
-  void setPmFile(std::string fPmFile)
+  void setPmFile(const std::string& fPmFile)
   {
     this->fPmFile = fPmFile;
   }
@@ -183,7 +190,7 @@ class WECmdArgs
   {
     fUUID = jobUUID;
   }
-  bool getConsoleOutput()
+  bool getConsoleOutput() const
   {
     return fConsoleOutput;
   }
@@ -194,7 +201,7 @@ class WECmdArgs
 
   bool getPmStatus(int Id);
   bool str2PmList(std::string& PmList, VecInts& V);
-  int getPmVecSize()
+  size_t getPmVecSize() const
   {
     return fPmVec.size();
   }
@@ -265,7 +272,7 @@ class WECmdArgs
   {
     return fErrorDir;
   }
-  void setErrorDir(std::string fErrorDir)
+  void setErrorDir(const std::string& fErrorDir)
   {
     this->fErrorDir = fErrorDir;
   }
@@ -316,6 +323,7 @@ class WECmdArgs
   char fColDelim;                  // column delimiter
   char fEnclosedChar;              // enclosed by char
   char fEscChar;                   // esc char
+  int fSkipRows;                   // skip header
   int fNoOfWriteThrds;             // No. of write threads
   bool fNullStrMode;               // set null string mode - treat null as null
   ImportDataMode fImportDataMode;  // Importing text or binary data

@@ -68,6 +68,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
  , fColDelim('|')
  , fEnclosedChar(0)
  , fEscChar(0)
+ , fSkipRows(0)
  , fNoOfWriteThrds(0)
  , fNullStrMode(false)
  , fImportDataMode(IMPORT_DATA_TEXT)
@@ -184,6 +185,11 @@ std::string WECmdArgs::getCpImportCmdLine()
 
   if (fEscChar != 0)
     aSS << " -C " << fEscChar;
+
+  if (fSkipRows)
+  {
+    aSS << " -O " << fSkipRows;
+  }
 
   if (fNullStrMode)
     aSS << " -n " << '1';
@@ -320,6 +326,12 @@ bool WECmdArgs::checkForCornerCases()
 {
   // BUG 4210
   this->checkJobIdCase();  // Need to do this before we go further
+
+  if (fSkipRows && fImportDataMode != IMPORT_DATA_TEXT)
+  {
+    cout << "Invalid option -O with binary file" << endl;
+    throw runtime_error("Invalid option -O with binary file");
+  }
 
   if (fMode == 0)
   {
@@ -549,6 +561,7 @@ void WECmdArgs::usage()
        << "\t-C\tEscape character used in conjunction with 'enclosed by'\n"
        << "\t\t\tcharacter, or as part of NULL escape sequence ('\\N');\n"
        << "\t\t\tdefault is '\\'\n"
+       << "\t-O\tNumber of header rows to skip.\n"
        << "\t-I\tImport binary data; how to treat NULL values:\n"
        << "\t\t\t1 - import NULL values\n"
        << "\t\t\t2 - saturate NULL values\n"
@@ -598,7 +611,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   if (argc > 0)
     fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
 
-  while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:L:")) != EOF)
+  while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:L:O:")) != EOF)
   {
     switch (aCh)
     {
@@ -831,6 +844,17 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       {
         fEscChar = optarg[0];
         // cout << "Escape Character  : " << optarg[0] << endl;
+        break;
+      }
+
+      case 'O':
+      {
+        int skipRows = atoi(optarg);
+        if (skipRows < 0)
+        {
+          throw runtime_error("Wrong number of rows to skip");
+        }
+        fSkipRows = skipRows;
         break;
       }
 
@@ -1543,9 +1567,7 @@ void WECmdArgs::setEnclByAndEscCharFromJobFile(std::string& JobName)
   if (fEnclosedChar == 0)  // check anything in Jobxml file
   {
     WEXmlgetter aXmlGetter(JobName);
-    vector<string> aSections;
-    aSections.push_back("BulkJob");
-    aSections.push_back("EnclosedByChar");
+    const vector<string> aSections{"BulkJob", "EnclosedByChar"};
 
     try
     {
@@ -1569,9 +1591,7 @@ void WECmdArgs::setEnclByAndEscCharFromJobFile(std::string& JobName)
   if (fEscChar == 0)  // check anything in Jobxml file
   {
     WEXmlgetter aXmlGetter(JobName);
-    vector<string> aSections;
-    aSections.push_back("BulkJob");
-    aSections.push_back("EscapeChar");
+    const vector<string> aSections{"BulkJob", "EscapeChar"};
 
     try
     {

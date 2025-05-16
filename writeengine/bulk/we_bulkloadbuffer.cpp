@@ -2047,8 +2047,8 @@ int BulkLoadBuffer::parseDictSection(ColumnInfo& columnInfo, int tokenPos, RID s
 }
 
 int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const char* input, size_t length,
-                                   size_t* parse_length, RID& totalReadRows, RID& correctTotalRows,
-                                   const boost::ptr_vector<ColumnInfo>& columnsInfo,
+                                   size_t* parse_length, size_t& skipRows, RID& totalReadRows,
+                                   RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
                                    unsigned int allowedErrCntThisCall)
 {
   boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
@@ -2119,7 +2119,7 @@ int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const ch
 
     if (fImportDataMode == IMPORT_DATA_TEXT)
     {
-      tokenize(columnsInfo, allowedErrCntThisCall);
+      tokenize(columnsInfo, allowedErrCntThisCall, skipRows);
     }
     else
     {
@@ -2150,8 +2150,9 @@ int BulkLoadBuffer::fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const ch
 // correctTotalRows (input/output) - total valid row count from tokenize()
 //   (cumulative)
 //------------------------------------------------------------------------------
-int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* handle, RID& totalReadRows,
-                                 RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
+int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* handle, size_t& skipRows,
+                                 RID& totalReadRows, RID& correctTotalRows,
+                                 const boost::ptr_vector<ColumnInfo>& columnsInfo,
                                  unsigned int allowedErrCntThisCall)
 {
   boost::mutex::scoped_lock lock(fSyncUpdatesBLB);
@@ -2164,10 +2165,10 @@ int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* hand
   {
     memcpy(fData, fOverflowBuf, fOverflowSize);
 
-    if (fOverflowBuf != NULL)
+    if (fOverflowBuf != nullptr)
     {
       delete[] fOverflowBuf;
-      fOverflowBuf = NULL;
+      fOverflowBuf = nullptr;
     }
   }
 
@@ -2219,7 +2220,7 @@ int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* hand
 
     if (fImportDataMode == IMPORT_DATA_TEXT)
     {
-      tokenize(columnsInfo, allowedErrCntThisCall);
+      tokenize(columnsInfo, allowedErrCntThisCall, skipRows);
     }
     else
     {
@@ -2276,7 +2277,7 @@ int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* hand
 // depending on whether the user has enabled the "enclosed by" feature.
 //------------------------------------------------------------------------------
 void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
-                              unsigned int allowedErrCntThisCall)
+                              unsigned int allowedErrCntThisCall, size_t& skipRows)
 {
   unsigned offset = 0;           // length of field
   unsigned curCol = 0;           // dest db column counter within a row
@@ -2334,6 +2335,15 @@ void BulkLoadBuffer::tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo,
   while (p < pEndOfData)
   {
     c = *p;
+    if (UNLIKELY(skipRows > 0))
+    {
+      if (c == NEWLINE_CHAR)
+      {
+        --skipRows;
+      }
+      ++p;
+      continue;
+    }
 
     // If we have stripped "enclosed" characters, then save raw data
     if (rawDataRowLength > 0)

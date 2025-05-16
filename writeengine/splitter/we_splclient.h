@@ -46,9 +46,7 @@ class WEColOORInfo  // Column Out-Of-Range Info
   WEColOORInfo() : fColNum(0), fColType(execplan::CalpontSystemCatalog::INT), fNoOfOORs(0)
   {
   }
-  ~WEColOORInfo()
-  {
-  }
+  ~WEColOORInfo() = default;
 
  public:
   int fColNum;
@@ -63,14 +61,12 @@ class WESdHandlerException : public std::exception
 {
  public:
   std::string fWhat;
-  WESdHandlerException(std::string& What) throw()
+  explicit WESdHandlerException(const std::string& What) noexcept
   {
     fWhat = What;
   }
-  virtual ~WESdHandlerException() throw()
-  {
-  }
-  virtual const char* what() const throw()
+  ~WESdHandlerException() noexcept override = default;
+  const char* what() const noexcept override
   {
     return fWhat.c_str();
   }
@@ -82,12 +78,10 @@ class WESdHandlerException : public std::exception
 class WESplClientRunner
 {
  public:
-  WESplClientRunner(WESplClient& Sc) : fOwner(Sc)
+  explicit WESplClientRunner(WESplClient& Sc) : fOwner(Sc)
   { /* ctor */
   }
-  virtual ~WESplClientRunner()
-  { /* dtor */
-  }
+  virtual ~WESplClientRunner() = default;
   void operator()();
 
  public:
@@ -389,9 +383,7 @@ class WESplClient
     WERowsUploadInfo() : fRowsRead(0), fRowsInserted(0)
     {
     }
-    ~WERowsUploadInfo()
-    {
-    }
+    ~WERowsUploadInfo() = default;
 
    public:
     int64_t fRowsRead;

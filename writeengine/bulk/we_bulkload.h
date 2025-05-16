@@ -132,6 +132,7 @@ class BulkLoad : public FileOp
   void setBulkLoadMode(BulkModeType bulkMode, const std::string& rptFileName);
   void setEnclosedByChar(char enChar);
   void setEscapeChar(char esChar);
+  void setSkipRows(size_t skipRows);
   void setKeepRbMetaFiles(bool keepMeta);
   void setMaxErrorCount(unsigned int maxErrors);
   void setNoOfParseThreads(int parseThreads);
@@ -212,6 +213,7 @@ class BulkLoad : public FileOp
   bool fNullStringMode;                          // Treat "NULL" as NULL value
   char fEnclosedByChar;                          // Char used to enclose column value
   char fEscapeChar;                              // Escape char within enclosed value
+  size_t fSkipRows;                              // Header rows to skip
   timeval fStartTime;                            // job start time
   timeval fEndTime;                              // job end time
   double fTotalTime;                             // elapsed time for current phase
@@ -416,6 +418,12 @@ inline void BulkLoad::setEscapeChar(char esChar)
 {
   fEscapeChar = esChar;
 }
+
+inline void BulkLoad::setSkipRows(size_t skipRows)
+{
+  fSkipRows = skipRows;
+}
+
 
 inline void BulkLoad::setImportDataMode(ImportDataMode importMode)
 {

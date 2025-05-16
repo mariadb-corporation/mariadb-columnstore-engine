@@ -767,7 +767,7 @@ void WESDHandler::setup()
     oss << "Running distributed import (mode ";
     oss << fRef.fCmdArgs.getMode() << ") on ";
 
-    if (fRef.fCmdArgs.getPmVecSize() == fPmCount)
+    if (fRef.fCmdArgs.getPmVecSize() == static_cast<size_t>(fPmCount))
       oss << "all PMs...";
     else
     {
@@ -2548,20 +2548,20 @@ void WESDHandler::exportJobFile(std::string& JobId, std::string& JobFileName)
 }
 
 //------------------------------------------------------------------------------
-bool WESDHandler::getConsoleLog()
+bool WESDHandler::getConsoleLog() const
 {
   return fRef.fCmdArgs.getConsoleLog();
 }
 //------------------------------------------------------------------------------
 
-char WESDHandler::getEnclChar()
+char WESDHandler::getEnclChar() const
 {
   return fRef.fCmdArgs.getEnclChar();
 }
 
 //------------------------------------------------------------------------------
 
-char WESDHandler::getEscChar()
+char WESDHandler::getEscChar() const
 {
   return fRef.fCmdArgs.getEscChar();
 }
@@ -2575,9 +2575,14 @@ int WESDHandler::getReadBufSize()
 
 //------------------------------------------------------------------------------
 
-char WESDHandler::getDelimChar()
+char WESDHandler::getDelimChar() const
 {
   return fRef.fCmdArgs.getDelimChar();
+}
+
+size_t WESDHandler::getSkipRows() const
+{
+  return fRef.fCmdArgs.getSkipRows();
 }
 
 //------------------------------------------------------------------------------

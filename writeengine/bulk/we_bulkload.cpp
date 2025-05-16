@@ -153,6 +153,7 @@ BulkLoad::BulkLoad()
  , fEnclosedByChar('\0')
  ,  // not enabled unless user overrides enclosed by char
  fEscapeChar('\0')
+ , fSkipRows(0)
  , fTotalTime(0.0)
  , fBulkMode(BULK_MODE_LOCAL)
  , fbTruncationAsError(false)

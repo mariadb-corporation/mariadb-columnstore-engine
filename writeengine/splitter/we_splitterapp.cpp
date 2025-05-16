@@ -64,7 +64,6 @@ WESplitterApp::WESplitterApp(WECmdArgs& CmdArgs) : fCmdArgs(CmdArgs), fDh(*this)
   fpSysLog = SimpleSysLog::instance();
   fpSysLog->setLoggingID(logging::LoggingID(SUBSYSTEM_ID_WE_SPLIT));
   setupSignalHandlers();
-  std::string err;
   fDh.setDebugLvl(fCmdArgs.getDebugLvl());
 
   fDh.check4CpiInvokeMode();
@@ -100,6 +99,7 @@ WESplitterApp::WESplitterApp(WECmdArgs& CmdArgs) : fCmdArgs(CmdArgs), fDh(*this)
       }
       catch (std::exception& ex)
       {
+        std::string err;
         // err = string("Error in constructing WESplitterApp") + ex.what();
         err = ex.what();  // cleaning up for BUG 4298
         logging::Message::Args errMsgArgs;
@@ -139,10 +139,10 @@ WESplitterApp::~WESplitterApp()
   // fDh.shutdown();
   usleep(1000);  // 1 millisec just checking
 
-  std::string aStr = "Calling WESplitterApp Destructor\n";
-
   if (fDh.getDebugLvl())
-    cout << aStr << endl;
+  {
+    cout << "Calling WESplitterApp Destructor" << endl;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -151,18 +151,18 @@ WESplitterApp::~WESplitterApp()
 
 void WESplitterApp::setupSignalHandlers()
 {
-  struct sigaction sa;
+  struct sigaction sa{};
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = WESplitterApp::onSigInterrupt;
-  sigaction(SIGINT, &sa, 0);
+  sigaction(SIGINT, &sa, nullptr);
   sa.sa_handler = WESplitterApp::onSigTerminate;
-  sigaction(SIGTERM, &sa, 0);
+  sigaction(SIGTERM, &sa, nullptr);
   sa.sa_handler = SIG_IGN;
-  sigaction(SIGPIPE, &sa, 0);
+  sigaction(SIGPIPE, &sa, nullptr);
   sa.sa_handler = WESplitterApp::onSigHup;
-  sigaction(SIGHUP, &sa, 0);
+  sigaction(SIGHUP, &sa, nullptr);
   sa.sa_handler = WESplitterApp::onSigInterrupt;
-  sigaction(SIGUSR1, &sa, 0);
+  sigaction(SIGUSR1, &sa, nullptr);
   /*
       signal(SIGPIPE, SIG_IGN);
       signal(SIGINT, WESplitterApp::onSigInterrupt);
@@ -515,7 +515,7 @@ void WESplitterApp::updateWithJobFile(int aIdx)
 int main(int argc, char** argv)
 {
   std::string err;
-  std::cin.sync_with_stdio(false);
+  std::istream::sync_with_stdio(false);
 
   try
   {
@@ -528,7 +528,7 @@ int main(int argc, char** argv)
       for (int idx = 0; idx < aTblCnt; idx++)
       {
         aWESplitterApp.fDh.reset();
-        aWESplitterApp.fContinue = true;
+        WriteEngine::WESplitterApp::fContinue = true;
         aWESplitterApp.updateWithJobFile(idx);
 
         try
@@ -541,10 +541,10 @@ int main(int argc, char** argv)
           err = ex.what();  // cleaning up for BUG 4298
           logging::Message::Args errMsgArgs;
           errMsgArgs.add(err);
-          aWESplitterApp.fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
+          WriteEngine::WESplitterApp::fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
           SPLTR_EXIT_STATUS = 1;
           aWESplitterApp.fDh.fLog.logMsg(err, WriteEngine::MSGLVL_ERROR);
-          aWESplitterApp.fContinue = false;
+          WriteEngine::WESplitterApp::fContinue = false;
           // throw runtime_error(err); BUG 4298
         }
 
