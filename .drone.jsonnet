@@ -732,5 +732,5 @@ local FinalPipeline(branch, event) = {
 
 
 [
-  Pipeline('stable-23.10', 'amd64', 'pull_request', 'amd64', '10.6-enterprise')
+  Pipeline('stable-23.10', 'arm64', 'pull_request', 'amd64', '10.6-enterprise')
 ]
