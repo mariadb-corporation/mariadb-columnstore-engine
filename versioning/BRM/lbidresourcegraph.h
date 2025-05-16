@@ -58,8 +58,8 @@ class LBIDResourceGraph
  private:
   uint64_t color;
 
-  LBIDResourceGraph(const LBIDResourceGraph&);
-  LBIDResourceGraph& operator=(const LBIDResourceGraph&);
+  LBIDResourceGraph(const LBIDResourceGraph&) = delete;
+  LBIDResourceGraph& operator=(const LBIDResourceGraph&) = delete;
 
   void connectResources(LBID_t start, LBID_t end, TransactionNode* txnNode);
   bool checkDeadlock(TransactionNode&);

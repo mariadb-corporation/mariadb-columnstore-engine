@@ -116,12 +116,7 @@ class WeightedThreadPool
     return fMaxThreadWeight;
   }
 
-  /** @brief register a functor to be called when a new thread
-   *  is created
-   */
-  void setThreadCreatedListener(const Functor_T& f);
-
-  /** @brief queue size accessor
+   /** @brief queue size accessor
    *
    */
   inline uint32_t getWaiting() const

@@ -78,29 +78,28 @@ class Func_Bool : public Func
     return execplan::IDB_Decimal(getIntVal(row, fp, isNull, op_ct), 0, 0);
   }
 
-  int32_t getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct) override
+  int32_t getDateIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& /*isNull*/,
+                        execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
+  {
+    return 0;
+  }
+
+  int64_t getDatetimeIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                            execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
   {
     isNull = true;
     return 0;
   }
 
-  int64_t getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                            execplan::CalpontSystemCatalog::ColType& op_ct) override
+  int64_t getTimestampIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                             execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
   {
     isNull = true;
     return 0;
   }
 
-  int64_t getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                             execplan::CalpontSystemCatalog::ColType& op_ct) override
-  {
-    isNull = true;
-    return 0;
-  }
-
-  int64_t getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct) override
+  int64_t getTimeIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                        execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
   {
     isNull = true;
     return 0;
@@ -237,14 +236,14 @@ class Func_Truth : public Func_Bool
   ~Func_Truth() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
-      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/) override
   {
     assert(fp.size() == 1);
     return fp[0]->data()->resultType();
   }
 
   bool getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                  execplan::CalpontSystemCatalog::ColType& op_ct) override
+                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
   {
     bool val = fp[0]->data()->getBoolVal(row, isNull);
 

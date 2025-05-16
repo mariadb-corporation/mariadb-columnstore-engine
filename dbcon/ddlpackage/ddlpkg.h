@@ -481,7 +481,7 @@ struct TableDef : public SchemaObject
    * ctor
    */
   TableDef(QualifiedName* name, ColumnDefList columns, TableConstraintDefList constraints,
-           int tableWithAutoinc)
+           int /*tableWithAutoinc*/)
    : fQualifiedName(name), fColumns(columns), fConstraints(constraints)
 
   {
@@ -1042,7 +1042,7 @@ struct ColumnDef : public SchemaObject
   /** @brief ColumnDef ctor.
    * ctor */
   ColumnDef(const char* name, ColumnType* type, ColumnConstraintList constraints,
-            ColumnDefaultValue* defaultValue = nullptr, const char* comment = nullptr)
+            ColumnDefaultValue* defaultValue = nullptr, const char* /*comment*/ = nullptr)
    : SchemaObject(name), fType(type), fConstraints(constraints), fDefaultValue(defaultValue)
   {
   }

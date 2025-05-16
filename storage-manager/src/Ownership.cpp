@@ -222,7 +222,7 @@ void Ownership::takeOwnership(const bf::path& p)
   auto it = ownedPrefixes.find(p);
   if (it != ownedPrefixes.end())
     return;
-  ownedPrefixes[p] = NULL;
+  ownedPrefixes[p] = false;
   s.unlock();
 
   bool okToTransfer = false;

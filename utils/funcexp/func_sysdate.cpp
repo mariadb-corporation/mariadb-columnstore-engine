@@ -42,14 +42,14 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_sysdate::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_sysdate::operationType(FunctionParm& /*fp*/,
                                                           CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-int64_t Func_sysdate::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                CalpontSystemCatalog::ColType& operationColType)
+int64_t Func_sysdate::getIntVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                                CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   struct tm tmp_tm;
   time_t now;
@@ -67,8 +67,8 @@ int64_t Func_sysdate::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& is
   return *(reinterpret_cast<uint64_t*>(&aDatetime));
 }
 
-string Func_sysdate::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                               CalpontSystemCatalog::ColType& operationColType)
+string Func_sysdate::getStrVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                               CalpontSystemCatalog::ColType& /*operationColType*/)
 {
   time_t now;
   now = time(NULL);

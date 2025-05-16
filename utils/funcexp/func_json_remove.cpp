@@ -15,13 +15,13 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_remove::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+                                                              CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& type)
+                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
 

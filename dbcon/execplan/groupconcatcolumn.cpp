@@ -50,7 +50,7 @@ GroupConcatColumn::GroupConcatColumn(const uint32_t sessionID, bool isJsonArrayA
 {
 }
 
-GroupConcatColumn::GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID)
+GroupConcatColumn::GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t /*sessionID*/)
  : AggregateColumn(dynamic_cast<const AggregateColumn&>(rhs))
  , fOrderCols(rhs.fOrderCols)
  , fSeparator(rhs.fSeparator)

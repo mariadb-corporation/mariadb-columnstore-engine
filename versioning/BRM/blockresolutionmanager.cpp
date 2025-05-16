@@ -61,18 +61,8 @@ BlockResolutionManager::BlockResolutionManager(bool ronly) throw()
   }
 }
 
-BlockResolutionManager::BlockResolutionManager(const BlockResolutionManager& brm)
-{
-  throw logic_error("BRM: Don't use the copy constructor.");
-}
-
 BlockResolutionManager::~BlockResolutionManager() throw()
 {
-}
-
-BlockResolutionManager& BlockResolutionManager::operator=(const BlockResolutionManager& brm)
-{
-  throw logic_error("BRM: Don't use the = operator.");
 }
 
 int BlockResolutionManager::loadExtentMap(const string& filename, bool fixFL)

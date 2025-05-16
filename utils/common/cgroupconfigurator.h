@@ -62,8 +62,7 @@ class CGroupConfigurator
   bool cGroupDefined;
   config::Config* config;
   uint64_t totalMemory = 0;
-  uint64_t totalSwap = 0;
-  const  uint64_t GIB = 1024ULL * 1024ULL * 1024ULL;
+  const uint64_t GIB = 1024ULL * 1024ULL * 1024ULL;
   bool printedWarning = false;
   enum CGroupVersions cGroupVersion_;
   unsigned int logCounter = 0;

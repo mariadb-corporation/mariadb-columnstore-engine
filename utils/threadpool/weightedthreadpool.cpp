@@ -90,11 +90,6 @@ void WeightedThreadPool::setMaxThreadWeight(size_t maxWeight)
   fMaxThreadWeight = maxWeight;
 }
 
-void WeightedThreadPool::setThreadCreatedListener(const Functor_T& f)
-{
-  //     fThreadCreated = f;
-}
-
 void WeightedThreadPool::stop()
 {
   boost::mutex::scoped_lock lock1(fMutex);

@@ -33,7 +33,7 @@
 #include <cerrno>
 
 #include <unistd.h>  //pipe() && fork()
-#include <wait.h>  //wait()
+#include <wait.h>    //wait()
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -166,7 +166,7 @@ void WEDataLoader::setupSignalHandlers()
 //------------------------------------------------------------------------------
 // handles on signal Terminate
 //------------------------------------------------------------------------------
-void WEDataLoader::onSigChild(int aInt)
+void WEDataLoader::onSigChild(int /*aInt*/)
 {
   std::string aStr = "Received SIGCHLD of terminated process..";
   cout << aStr << endl;
@@ -187,7 +187,7 @@ void WEDataLoader::onSigChild(int aInt)
  *
  **/
 
-bool WEDataLoader::update(Subject* pSub)
+bool WEDataLoader::update(Subject* /*pSub*/)
 {
   return true;
 }
@@ -232,8 +232,7 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     close(fFIFO[1]);  // close the WRITER of CHILD
 
     cout << "Child Process Info: PID = " << getpid() << " (fFIFO[0], fFIFO[1]) = (" << fFIFO[0] << ","
-         << fFIFO[1] << ")"
-         << " (StartFD, EndFD) = (" << aStartFD << "," << aEndFD << ")" << endl;
+         << fFIFO[1] << ")" << " (StartFD, EndFD) = (" << aStartFD << "," << aEndFD << ")" << endl;
 
     std::vector<char*> Cmds;
     // str2Argv(fCmdLineStr, Cmds);	// to avoid out-of-scope problem
@@ -282,8 +281,8 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     cout.flush();
     close(fFIFO[0]);  // will trigger an EOF on stdin
     ostringstream oss;
-    oss << getObjId() << " : execv error: cpimport.bin invocation failed; "
-        << "(errno-" << errno << "); " << strerror(execvErrno) << "; Check file and try invoking locally.";
+    oss << getObjId() << " : execv error: cpimport.bin invocation failed; " << "(errno-" << errno << "); "
+        << strerror(execvErrno) << "; Check file and try invoking locally.";
     logging::Message::Args errMsgArgs;
     errMsgArgs.add(oss.str());
     fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
@@ -913,7 +912,7 @@ void WEDataLoader::onReceiveData(ByteStream& Ibs)
  * @brief 	trigger when a EOD arrives.
  * @param	Incoming ByteStream; not relevent for now
  */
-void WEDataLoader::onReceiveEod(ByteStream& Ibs)
+void WEDataLoader::onReceiveEod(ByteStream& /*Ibs*/)
 {
   if (fpSysLog)
   {
@@ -1063,7 +1062,7 @@ void WEDataLoader::onReceiveMode(ByteStream& Ibs)
  * @param	Incoming ByteStream, not relevant for now
  */
 
-void WEDataLoader::onReceiveAck(ByteStream& Ibs)
+void WEDataLoader::onReceiveAck(ByteStream& /*Ibs*/)
 {
   // All is good
   // update the status
@@ -1074,7 +1073,7 @@ void WEDataLoader::onReceiveAck(ByteStream& Ibs)
  * @brief	Can make use to update the BRM
  * @param	Incoming ByteStream, not relevant for now
  */
-void WEDataLoader::onReceiveNak(ByteStream& Ibs)
+void WEDataLoader::onReceiveNak(ByteStream& /*Ibs*/)
 {
   // TODO - handle the problem
 }
@@ -1084,7 +1083,7 @@ void WEDataLoader::onReceiveNak(ByteStream& Ibs)
  * @brief	Can make use to update the BRM
  * @param	Incoming ByteStream, not relevant for now
  */
-void WEDataLoader::onReceiveError(ByteStream& Ibs)
+void WEDataLoader::onReceiveError(ByteStream& /*Ibs*/)
 {
   // TODO - handle the failure situation.
 }
@@ -1597,7 +1596,7 @@ void WEDataLoader::sendDataRequest()
 }
 
 //------------------------------------------------------------------------------
-void WEDataLoader::serialize(messageqcpp::ByteStream& b) const
+void WEDataLoader::serialize(messageqcpp::ByteStream& /*b*/) const
 {
   // TODO to be changed. left it here to understand how to implement
   /*
@@ -1612,7 +1611,7 @@ void WEDataLoader::serialize(messageqcpp::ByteStream& b) const
 
 //-----------------------------------------------------------------------------
 
-void WEDataLoader::unserialize(messageqcpp::ByteStream& b)
+void WEDataLoader::unserialize(messageqcpp::ByteStream& /*b*/)
 {
   // TODO to be changed. left it here to understand how to implement
   /*

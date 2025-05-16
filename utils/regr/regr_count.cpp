@@ -41,7 +41,7 @@ struct regr_count_data
   long long cnt;
 };
 
-mcsv1_UDAF::ReturnCode regr_count::init(mcsv1Context* context, ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode regr_count::init(mcsv1Context* context, ColumnDatum* /*colTypes*/)
 {
   if (context->getParameterCount() != 2)
   {

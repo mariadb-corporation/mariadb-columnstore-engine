@@ -753,7 +753,7 @@ class DBRM
   /* SessionManager interface */
   EXPORT const QueryContext verID();
   EXPORT const QueryContext sysCatVerID();
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
   EXPORT const TxnID newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL = false);
   EXPORT void committed(BRM::TxnID& txnid);
@@ -1000,8 +1000,8 @@ class DBRM
   size_t EMIndexShmemFree();
 
  private:
-  DBRM(const DBRM& brm);
-  DBRM& operator=(const DBRM& brm);
+  DBRM(const DBRM& brm) = delete;
+  DBRM& operator=(const DBRM& brm) = delete;
   int8_t send_recv(const messageqcpp::ByteStream& in, messageqcpp::ByteStream& out) throw();
 
   void deleteAISequence(uint32_t OID);  // called as part of deleteOID & deleteOIDs

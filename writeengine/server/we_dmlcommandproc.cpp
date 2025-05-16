@@ -415,8 +415,8 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
-                                                      false, false);
+                datavalue =
+                    colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), false, false);
               }
               catch (exception&)
               {
@@ -993,7 +993,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
         Column aColumn;
 
-        if ((i == ridList.size() - 1) && (tableAUXColOid > 3000)) // AUX column
+        if ((i == ridList.size() - 1) && (tableAUXColOid > 3000))  // AUX column
         {
           aColumn.colWidth = execplan::AUX_COL_WIDTH;
           aColumn.colDataType = execplan::AUX_COL_DATATYPE;
@@ -1034,8 +1034,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
     }
 
     //@Bug 5996 validate hwm before starts
-    rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting",
-                            tableAUXColOid > 3000);
+    rc =
+        validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Starting", tableAUXColOid > 3000);
 
     if (rc != 0)
     {
@@ -1346,8 +1346,8 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
               try
               {
-                datavalue = colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(),
-                                                      false, false);
+                datavalue =
+                    colType.convertColumnData(indata, pushWarning, insertPkg.get_TimeZone(), false, false);
               }
               catch (exception&)
               {
@@ -2046,7 +2046,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
               case execplan::CalpontSystemCatalog::BLOB:
                 bs >> valStr;
 
-                if (!valStr.isNull()) // null values do not require any padding or truncation.
+                if (!valStr.isNull())  // null values do not require any padding or truncation.
                 {
                   if (valStr.length() > (unsigned int)colType.colWidth)
                   {
@@ -2215,7 +2215,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
   return rc;
 }
 
-uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& err)
+uint8_t WE_DMLCommandProc::commitBatchAutoOn(messageqcpp::ByteStream& bs, std::string& /*err*/)
 {
   uint8_t rc = 0;
   // need to commit the versioned blocks, set hwm, update casual partition, send back to DMLProc to set them
@@ -2452,8 +2452,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwm(messageqcpp::ByteStream& bs, st
                                auxColDBRootExtentInfo.end());
   }
 
-  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending",
-                          hasAUXCol);
+  rc = validateColumnHWMs(ridList, systemCatalogPtr, colDBRootExtentInfo, "Ending", hasAUXCol);
 
   if (rc != 0)
   {
@@ -2675,7 +2674,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertHwmFlushChunks(uint32_t tblOid, int
   return rc;
 }
 
-uint8_t WE_DMLCommandProc::commitBatchAutoOff(messageqcpp::ByteStream& bs, std::string& err)
+uint8_t WE_DMLCommandProc::commitBatchAutoOff(messageqcpp::ByteStream& /*bs*/, std::string& /*err*/)
 {
   uint8_t rc = 0;
   // commit all versioned blocks, set hwm, update casual partition
@@ -2715,7 +2714,7 @@ uint8_t WE_DMLCommandProc::rollbackBatchAutoOn(messageqcpp::ByteStream& bs, std:
   return rc;
 }
 
-uint8_t WE_DMLCommandProc::rollbackBatchAutoOff(messageqcpp::ByteStream& bs, std::string& err)
+uint8_t WE_DMLCommandProc::rollbackBatchAutoOff(messageqcpp::ByteStream& /*bs*/, std::string& /*err*/)
 {
   uint8_t rc = 0;
   // Rollbacked all versioned blocks
@@ -3447,7 +3446,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 if (!value.isNull())
                 {
                   unsigned i = strlen(value.str());
-                  value.assign(value.safeString().substr(0, i)); // XXX: why???
+                  value.assign(value.safeString().substr(0, i));  // XXX: why???
                 }
                 break;
               }
@@ -3619,8 +3618,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 
             try
             {
-              datavalue =
-                  colType.convertColumnData(colType.defaultValue.safeString(""), pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(colType.defaultValue.safeString(""), pushWarn, timeZone,
+                                                    isNull, false, false);
             }
             catch (exception&)
             {
@@ -3652,7 +3651,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             try
             {
-              datavalue = colType.convertColumnData(value.safeString(""), pushWarn, timeZone, isNull, false, false);
+              datavalue =
+                  colType.convertColumnData(value.safeString(""), pushWarn, timeZone, isNull, false, false);
             }
             catch (exception&)
             {
@@ -3792,8 +3792,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
           {
             try
             {
-              datavalue =
-                  colType.convertColumnData(colType.defaultValue.safeString(), pushWarn, timeZone, isNull, false, false);
+              datavalue = colType.convertColumnData(colType.defaultValue.safeString(), pushWarn, timeZone,
+                                                    isNull, false, false);
             }
             catch (exception&)
             {
@@ -3908,7 +3908,7 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
 }
 
 uint8_t WE_DMLCommandProc::getWrittenLbids(messageqcpp::ByteStream& bs, std::string& err,
-                                           ByteStream::quadbyte& PMId)
+                                           ByteStream::quadbyte& /*PMId*/)
 {
   uint8_t rc = 0;
   uint32_t txnId;
@@ -4459,7 +4459,7 @@ uint8_t WE_DMLCommandProc::updateSyscolumnNextval(ByteStream& bs, std::string& e
   return rc;
 }
 
-uint8_t WE_DMLCommandProc::processPurgeFDCache(ByteStream& bs, std::string& err)
+uint8_t WE_DMLCommandProc::processPurgeFDCache(ByteStream& bs, std::string& /*err*/)
 {
   int rc = 0;
   uint32_t tableOid;

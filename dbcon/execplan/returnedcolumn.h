@@ -321,7 +321,7 @@ class ReturnedColumn : public TreeNode
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& tan)
+  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& /*tan*/)
   {
     return false;
   }

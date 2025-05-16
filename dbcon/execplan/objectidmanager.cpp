@@ -66,7 +66,7 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-//#define NDEBUG
+// #define NDEBUG
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -144,7 +144,7 @@ void ObjectIDManager::returnOID(int oid)
   returnOIDs(oid, oid);
 }
 
-void ObjectIDManager::returnOIDs(int start, int end)
+void ObjectIDManager::returnOIDs(int /*start*/, int /*end*/)
 {
   //@Bug 1412. Do not reuse oids for now.
   return;

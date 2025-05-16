@@ -469,7 +469,7 @@ class PrimitiveProcessor
 // Bit pattern representing NULL value for given column type/width
 // TBD Use TypeHandler
 template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-T getNullValue(uint8_t type)
+T getNullValue(uint8_t /*type*/)
 {
   return datatypes::Decimal128Null;
 }

@@ -258,7 +258,7 @@ inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
       return !isNull && strGE(cs, val, pm[1]->data()->getStrVal(row, isNull).safeString("")) &&
              strLE(cs, val, pm[2]->data()->getStrVal(row, isNull).safeString(""));
     }
-    break; // XXX: gcc falsely complains here.
+    break;  // XXX: gcc falsely complains here.
 
     default:
     {
@@ -330,7 +330,8 @@ CalpontSystemCatalog::ColType Func_between::operationType(FunctionParm& fp,
       if (cc)
       {
         Result result = cc->result();
-        result.intVal = dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), resultType.getTimeZone());
+        result.intVal =
+            dataconvert::DataConvert::timestampToInt(result.strVal.safeString(""), resultType.getTimeZone());
         cc->result(result);
       }
     }
@@ -362,7 +363,7 @@ bool Func_between::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull
 }
 
 CalpontSystemCatalog::ColType Func_notbetween::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   PredicateOperator* op = new PredicateOperator();
   CalpontSystemCatalog::ColType ct;

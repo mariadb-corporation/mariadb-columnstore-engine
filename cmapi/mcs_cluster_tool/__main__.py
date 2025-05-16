@@ -50,6 +50,12 @@ app.command(
 app.command(
     'bootstrap-single-node', rich_help_panel='Tools commands',
 )(tools_commands.bootstrap_single_node)
+app.command(
+    'review', rich_help_panel='Tools commands',
+    short_help=(
+        'Provides useful functions to review and troubleshoot the MCS cluster.'
+    )
+)(tools_commands.review)
 
 
 @app.command(

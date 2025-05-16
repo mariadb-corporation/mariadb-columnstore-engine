@@ -49,7 +49,7 @@ SessionManager::SessionManager()
   txnidFilename = conf->getConfig("SessionManager", "TxnIDFile");
 }
 
-SessionManager::SessionManager(bool nolock)
+SessionManager::SessionManager(bool /*nolock*/)
 {
   config::Config* conf;
   string stmp;

@@ -36,14 +36,14 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_period_add::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_period_add::operationType(FunctionParm& /*fp*/,
                                                              CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_period_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                   CalpontSystemCatalog::ColType& op_ct)
+                                   CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t period = parm[0]->data()->getIntVal(row, isNull);
 

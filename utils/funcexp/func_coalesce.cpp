@@ -39,14 +39,14 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_coalesce::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_coalesce::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_coalesce::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                 CalpontSystemCatalog::ColType& op_ct)
+                                 CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t val = 0;
 
@@ -68,7 +68,7 @@ int64_t Func_coalesce::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
 }
 
 string Func_coalesce::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                CalpontSystemCatalog::ColType& ct)
+                                CalpontSystemCatalog::ColType& /*ct*/)
 {
   string val;
 
@@ -90,7 +90,7 @@ string Func_coalesce::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& is
 }
 
 int32_t Func_coalesce::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                     CalpontSystemCatalog::ColType& ct)
+                                     CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val = 0;
 
@@ -112,7 +112,7 @@ int32_t Func_coalesce::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, boo
 }
 
 int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                         CalpontSystemCatalog::ColType& ct)
+                                         CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val = 0;
 
@@ -134,7 +134,7 @@ int64_t Func_coalesce::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm,
 }
 
 int64_t Func_coalesce::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                          CalpontSystemCatalog::ColType& ct)
+                                          CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val = 0;
 
@@ -156,7 +156,7 @@ int64_t Func_coalesce::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                     CalpontSystemCatalog::ColType& ct)
+                                     CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val = 0;
 
@@ -178,7 +178,7 @@ int64_t Func_coalesce::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
 }
 
 double Func_coalesce::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& ct)
+                                   execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   double d = 0.0;
 
@@ -200,7 +200,7 @@ double Func_coalesce::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool&
 }
 
 long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                            execplan::CalpontSystemCatalog::ColType& ct)
+                                            execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   long double d = 0.0;
 
@@ -222,7 +222,7 @@ long double Func_coalesce::getLongDoubleVal(rowgroup::Row& row, FunctionParm& pa
 }
 
 execplan::IDB_Decimal Func_coalesce::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                                   execplan::CalpontSystemCatalog::ColType& ct)
+                                                   execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   IDB_Decimal d;
 

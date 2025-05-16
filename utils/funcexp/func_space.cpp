@@ -26,14 +26,14 @@ using namespace rowgroup;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_space::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_space::operationType(FunctionParm& /*fp*/,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 std::string Func_space::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   CalpontSystemCatalog::ColDataType ct = fp[0]->data()->resultType().colDataType;
 

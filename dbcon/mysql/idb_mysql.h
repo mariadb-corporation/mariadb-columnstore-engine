@@ -24,9 +24,8 @@
 #error mcsconfig.h was included before idb_mysql.h
 #endif
 
-
-//#define INFINIDB_DEBUG
-//#define DEBUG_WALK_COND
+// #define INFINIDB_DEBUG
+// #define DEBUG_WALK_COND
 
 #define MYSQL_SERVER 1  // needed for definition of struct THD in mysql_priv.h
 #define USE_CALPONT_REGEX
@@ -54,6 +53,8 @@
 #define DBUG_OFF 1
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "sql_plugin.h"
 #include "sql_table.h"
 #include "sql_select.h"
@@ -66,6 +67,7 @@
 #include "rpl_rli.h"
 #include "my_dbug.h"
 #include "sql_show.h"
+#pragma GCC diagnostic pop
 
 // Now clean up the pollution as best we can...
 #include "mcsconfig_conflicting_defs_undef.h"
@@ -101,4 +103,3 @@ inline char* idb_mysql_query_str(THD* thd)
 #endif
 }
 }  // namespace
-

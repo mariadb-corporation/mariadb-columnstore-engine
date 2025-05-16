@@ -268,14 +268,14 @@ const char* convNumToStr(int64_t val, char* dst, int radix)
 }  // namespace helpers
 
 CalpontSystemCatalog::ColType Func_conv::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
 string Func_conv::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                            CalpontSystemCatalog::ColType& op_ct)
+                            CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto& res = parm[0]->data()->getStrVal(row, isNull);
   string str;

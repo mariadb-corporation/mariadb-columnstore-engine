@@ -13,6 +13,8 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 \fBOptions\fP:
 .RS
 .IP \(bu 2
+\fB\fC\-v, \-\-verbose\fR: Enable verbose logging to console
+.IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
 .PP
@@ -29,7 +31,11 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 .IP \(bu 2
 \fB\fCcskeys\fR: Generates a random AES encryption key and init vector and writes them to disk.
 .IP \(bu 2
-\fB\fCcspasswd\fR: Encrypt a Columnstore plaintext password using the encryption key in the key file.
+\fB\fCcspasswd\fR: Encrypt a Columnstore plaintext password.
+.IP \(bu 2
+\fB\fCbootstrap\-single\-node\fR: Bootstrap a single node (localhost)...
+.IP \(bu 2
+\fB\fCreview\fR: Provides useful functions to review and troubleshoot the MCS cluster.
 .IP \(bu 2
 \fB\fChelp\-all\fR: Show help for all commands in man page style.
 .IP \(bu 2
@@ -67,9 +73,9 @@ $ mcs backup [OPTIONS]
 \fB\fC\-bl, \-\-backup\-location TEXT\fR: What directory to store the backups on this machine or the target machine.
 Consider write permissions of the scp user and the user running this script.
 Mariadb\-backup will use this location as a tmp dir for S3 and remote backups temporarily.
-Example: /mnt/backups/  [default: /tmp/backups/]
+Example: /mnt/backups/
 .IP \(bu 2
-\fB\fC\-bd, \-\-backup\-destination TEXT\fR: Are the backups going to be stored on the same machine this script is running on or another server \- if Remote you need to setup scp=Options: \[dq]Local\[dq] or \[dq]Remote\[dq]  [default: Local]
+\fB\fC\-bd, \-\-backup\-destination TEXT\fR: Are the backups going to be stored on the same machine this script is running on or another server \- if Remote you need to setup scp=Options: \[dq]Local\[dq] or \[dq]Remote\[dq]
 .IP \(bu 2
 \fB\fC\-scp TEXT\fR: Used only if \-\-backup\-destination=\[dq]Remote\[dq]\&.
 The user/credentials that will be used to scp the backup files
@@ -83,41 +89,41 @@ Example: \[dq]s3://my\-cs\-backups\[dq]
 Example: \[dq]\[la]http://127.0.0.1:8000\[ra]\[dq]
 .IP \(bu 2
 \fB\fC\-s, \-\-storage TEXT\fR: What storage topogoly is being used by Columnstore \- found in /etc/columnstore/storagemanager.cnf.
-Options: \[dq]LocalStorage\[dq] or \[dq]S3\[dq]  [default: LocalStorage]
+Options: \[dq]LocalStorage\[dq] or \[dq]S3\[dq]
 .IP \(bu 2
 \fB\fC\-i, \-\-incremental TEXT\fR: Adds columnstore deltas to an existing full backup. Backup folder to apply increment could be a value or \[dq]auto\fImost\fPrecent\[dq] \- the incremental backup applies to last full backup.
 .IP \(bu 2
-\fB\fC\-P, \-\-parallel INTEGER\fR: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if \[dq]\-c/\-\-compress\[dq] argument not set.  [default: 4]
+\fB\fC\-P, \-\-parallel INTEGER\fR: Enables parallel rsync for faster backups, setting the number of simultaneous rsync processes. With \-c/\-\-compress, sets the number of compression threads.
 .IP \(bu 2
-\fB\fC\-ha, \-\-highavilability / \-no\-ha, \-\-no\-highavilability\fR: Hint wether shared storage is attached @ below on all nodes to see all data
+\fB\fC\-ha, \-\-highavilability\fR: Hint wether shared storage is attached @ below on all nodes to see all data
 HA LocalStorage ( /var/lib/columnstore/dataX/ )
-HA S3           ( /var/lib/columnstore/storagemanager/ )  [default: no\-ha]
+HA S3           ( /var/lib/columnstore/storagemanager/ )
 .IP \(bu 2
 \fB\fC\-f, \-\-config\-file TEXT\fR: Path to backup configuration file to load variables from \- relative or full path accepted.
 .IP \(bu 2
-\fB\fC\-sbrm, \-\-skip\-save\-brm / \-no\-sbrm, \-\-no\-skip\-save\-brm\fR: Skip saving brm prior to running a backup \- ideal for dirty backups.  [default: no\-sbrm]
+\fB\fC\-sbrm, \-\-skip\-save\-brm\fR: Skip saving brm prior to running a backup \- ideal for dirty backups.
 .IP \(bu 2
-\fB\fC\-spoll, \-\-skip\-polls / \-no\-spoll, \-\-no\-skip\-polls\fR: Skip sql checks confirming no write/cpimports running.  [default: no\-spoll]
+\fB\fC\-spoll, \-\-skip\-polls\fR: Skip sql checks confirming no write/cpimports running.
 .IP \(bu 2
-\fB\fC\-slock, \-\-skip\-locks / \-no\-slock, \-\-no\-skip\-locks\fR: Skip issuing write locks \- ideal for dirty backups.  [default: no\-slock]
+\fB\fC\-slock, \-\-skip\-locks\fR: Skip issuing write locks \- ideal for dirty backups.
 .IP \(bu 2
-\fB\fC\-smdb, \-\-skip\-mariadb\-backup / \-no\-smdb, \-\-no\-skip\-mariadb\-backup\fR: Skip running a mariadb\-backup for innodb data \- ideal for incremental dirty backups.  [default: no\-smdb]
+\fB\fC\-smdb, \-\-skip\-mariadb\-backup\fR: Skip running a mariadb\-backup for innodb data \- ideal for incremental dirty backups.
 .IP \(bu 2
-\fB\fC\-sb, \-\-skip\-bucket\-data / \-no\-sb, \-\-no\-skip\-bucket\-data\fR: Skip taking a copy of the columnstore data in the bucket.  [default: no\-sb]
+\fB\fC\-sb, \-\-skip\-bucket\-data\fR: Skip taking a copy of the columnstore data in the bucket.
 .IP \(bu 2
-\fB\fC\-nb, \-\-name\-backup TEXT\fR: Define the name of the backup \- default: $(date +%m\-%d\-%Y)  [default: 03\-20\-2025]
+\fB\fC\-nb, \-\-name\-backup TEXT\fR: Define the name of the backup \- default: $(date +%m\-%d\-%Y)
 .IP \(bu 2
 \fB\fC\-c, \-\-compress TEXT\fR: Compress backup in X format \- Options: [ pigz ].
 .IP \(bu 2
-\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+\fB\fC\-q, \-\-quiet\fR: Silence verbose copy command outputs.
 .IP \(bu 2
-\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl / \-v\-ssl, \-\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v\-ssl]
+\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.
 .IP \(bu 2
-\fB\fC\-pi, \-\-poll\-interval INTEGER\fR: Number of seconds between poll checks for active writes & cpimports.  [default: 5]
+\fB\fC\-pi, \-\-poll\-interval INTEGER\fR: Number of seconds between poll checks for active writes & cpimports.
 .IP \(bu 2
-\fB\fC\-pmw, \-\-poll\-max\-wait INTEGER\fR: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.  [default: 60]
+\fB\fC\-pmw, \-\-poll\-max\-wait INTEGER\fR: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.
 .IP \(bu 2
-\fB\fC\-r, \-\-retention\-days INTEGER\fR: Retain backups created within the last X days, default 0 == keep all backups.  [default: 0]
+\fB\fC\-r, \-\-retention\-days INTEGER\fR: Retain backups created within the last X days, default 0 == keep all backups.
 .IP \(bu 2
 \fB\fC\-aro, \-\-apply\-retention\-only\fR: Only apply retention policy to existing backups, does not run a backup.
 .IP \(bu 2
@@ -150,9 +156,9 @@ $ mcs dbrm_backup [OPTIONS]
 .IP \(bu 2
 \fB\fC\-nb, \-\-name\-backup TEXT\fR: Define the prefix of the backup \- default: dbrm\fIbackup+date +%Y%m%d\fP%H%M%S  [default: dbrm_backup]
 .IP \(bu 2
-\fB\fC\-ssm, \-\-skip\-storage\-manager / \-no\-ssm, \-\-no\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.  [default: no\-ssm]
+\fB\fC\-ssm, \-\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.
 .IP \(bu 2
-\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+\fB\fC\-q, \-\-quiet\fR: Silence verbose copy command outputs.
 .IP \(bu 2
 \fB\fC\-li, \-\-list\fR: List backups.
 .IP \(bu 2
@@ -207,21 +213,21 @@ Options: \[dq]LocalStorage\[dq] or \[dq]S3\[dq]  [default: LocalStorage]
 .IP \(bu 2
 \fB\fC\-P, \-\-parallel INTEGER\fR: Determines number of decompression and mdbstream threads. Ignored if \[dq]\-c/\-\-compress\[dq] argument not set.  [default: 4]
 .IP \(bu 2
-\fB\fC\-ha, \-\-highavilability / \-no\-ha, \-\-no\-highavilability\fR: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)  [default: no\-ha]
+\fB\fC\-ha, \-\-highavilability\fR: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)
 .IP \(bu 2
-\fB\fC\-cont, \-\-continue / \-no\-cont, \-\-no\-continue\fR: This acknowledges data in your \-\-new\fIbucket is ok to delete when restoring S3. When set to true skips the enforcement that new\fPbucket should be empty prior to starting a restore.  [default: no\-cont]
+\fB\fC\-cont, \-\-continue\fR: This acknowledges data in your \-\-new\fIbucket is ok to delete when restoring S3. When set to true skips the enforcement that new\fPbucket should be empty prior to starting a restore.
 .IP \(bu 2
 \fB\fC\-f, \-\-config\-file TEXT\fR: Path to backup configuration file to load variables from \- relative or full path accepted.
 .IP \(bu 2
-\fB\fC\-smdb, \-\-skip\-mariadb\-backup / \-no\-smdb, \-\-no\-skip\-mariadb\-backup\fR: Skip restoring mariadb server via mariadb\-backup \- ideal for only restoring columnstore.  [default: no\-smdb]
+\fB\fC\-smdb, \-\-skip\-mariadb\-backup\fR: Skip restoring mariadb server via mariadb\-backup \- ideal for only restoring columnstore.
 .IP \(bu 2
-\fB\fC\-sb, \-\-skip\-bucket\-data / \-no\-sb, \-\-no\-skip\-bucket\-data\fR: Skip restoring columnstore data in the bucket \- ideal if looking to only restore mariadb server.  [default: no\-sb]
+\fB\fC\-sb, \-\-skip\-bucket\-data\fR: Skip restoring columnstore data in the bucket \- ideal if looking to only restore mariadb server.
 .IP \(bu 2
 \fB\fC\-c, \-\-compress TEXT\fR: Hint that the backup is compressed in X format. Options: [ pigz ].
 .IP \(bu 2
-\fB\fC\-q, \-\-quiet / \-no\-q, \-\-no\-quiet\fR: Silence verbose copy command outputs.  [default: no\-q]
+\fB\fC\-q, \-\-quiet\fR: Silence verbose copy command outputs.
 .IP \(bu 2
-\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl / \-v\-ssl, \-\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v\-ssl]
+\fB\fC\-nv\-ssl, \-\-no\-verify\-ssl\fR: Skips verifying ssl certs, useful for onpremise s3 storage.
 .IP \(bu 2
 \fB\fC\-li, \-\-list\fR: List backups.
 .IP \(bu 2
@@ -248,9 +254,9 @@ $ mcs dbrm_restore [OPTIONS]
 .IP \(bu 2
 \fB\fC\-ns, \-\-no\-start\fR: Do not attempt columnstore startup post dbrm_restore.
 .IP \(bu 2
-\fB\fC\-sdbk, \-\-skip\-dbrm\-backup / \-no\-sdbk, \-\-no\-skip\-dbrm\-backup\fR: Skip backing up dbrms before restoring.  [default: sdbk]
+\fB\fC\-sdbk, \-\-skip\-dbrm\-backup\fR: Skip backing up dbrms before restoring.
 .IP \(bu 2
-\fB\fC\-ssm, \-\-skip\-storage\-manager / \-no\-ssm, \-\-no\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.  [default: ssm]
+\fB\fC\-ssm, \-\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.
 .IP \(bu 2
 \fB\fC\-li, \-\-list\fR: List backups.
 .IP \(bu 2
@@ -308,6 +314,89 @@ $ mcs cspasswd [OPTIONS]
 \fB\fC\-\-password TEXT\fR: Password to encrypt/decrypt  [required]
 .IP \(bu 2
 \fB\fC\-\-decrypt\fR: Decrypt an encrypted password instead.
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs bootstrap\-single\-node\fR
+.PP
+Bootstrap a single node (localhost) Columnstore instance.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs bootstrap\-single\-node [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-api\-key TEXT\fR: API key to set.
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs review\fR
+.PP
+This script performs various maintenance and diagnostic tasks for
+MariaDB ColumnStore, including log archiving, extent map backups,
+schema and table testing, directory and ownership checks, extent map
+validation, S3 storage comparison, process management, table
+synchronization, port availability checks, stack dumps, cleanup of
+rollback fragments, and graceful process termination.
+.PP
+If database is up, this script will connect as root@localhost via socket.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs review [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-version\fR: Only show the header with version information.
+.IP \(bu 2
+\fB\fC\-\-logs\fR: Create a compressed archive of logs for MariaDB Support Ticket
+.IP \(bu 2
+\fB\fC\-\-path\fR: Define the path for where to save files/tarballs and outputs of this script.
+.IP \(bu 2
+\fB\fC\-\-backupdbrm\fR: Takes a compressed backup of extent map files in dbrm directory.
+.IP \(bu 2
+\fB\fC\-\-testschema\fR: Creates a test schema, tables, imports, queries, drops schema.
+.IP \(bu 2
+\fB\fC\-\-testschemakeep\fR: creates a test schema, tables, imports, queries, does not drop.
+.IP \(bu 2
+\fB\fC\-\-ldlischema\fR: Using ldli, creates test schema, tables, imports, queries, drops schema.
+.IP \(bu 2
+\fB\fC\-\-ldlischemakeep\fR: Using ldli, creates test schema, tables, imports, queries, does not drop.
+.IP \(bu 2
+\fB\fC\-\-emptydirs\fR: Searches /var/lib/columnstore for empty directories.
+.IP \(bu 2
+\fB\fC\-\-notmysqldirs\fR: Searches /var/lib/columnstore for directories not owned by mysql.
+.IP \(bu 2
+\fB\fC\-\-emcheck\fR: Checks the extent map for orphaned and missing files.
+.IP \(bu 2
+\fB\fC\-\-s3check\fR: Checks the extent map against S3 storage.
+.IP \(bu 2
+\fB\fC\-\-pscs\fR: Adds the pscs command. pscs lists running columnstore processes.
+.IP \(bu 2
+\fB\fC\-\-schemasync\fR: Fix out\-of\-sync columnstore tables (CAL0009).
+.IP \(bu 2
+\fB\fC\-\-tmpdir\fR: Ensure owner of temporary dir after reboot (MCOL\-4866 & MCOL\-5242).
+.IP \(bu 2
+\fB\fC\-\-checkports\fR: Checks if ports needed by Columnstore are opened.
+.IP \(bu 2
+\fB\fC\-\-eustack\fR: Dumps the stack of Columnstore processes.
+.IP \(bu 2
+\fB\fC\-\-clearrollback\fR: Clear any rollback fragments from dbrm files.
+.IP \(bu 2
+\fB\fC\-\-killcolumnstore\fR: Stop columnstore processes gracefully, then kill remaining processes.
+.IP \(bu 2
+\fB\fC\-\-color TEXT\fR: print headers in color. Options:  prefix color with l for light.
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE

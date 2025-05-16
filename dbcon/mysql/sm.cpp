@@ -316,7 +316,7 @@ status_t tpl_open(tableid_t tableid, sp_cpsm_tplh_t& ntplh, cpsm_conhdl_t* conn_
   return STATUS_OK;
 }
 
-status_t tpl_scan_open(tableid_t tableid, sp_cpsm_tplsch_t& ntplsch, cpsm_conhdl_t* conn_hdl)
+status_t tpl_scan_open(tableid_t tableid, sp_cpsm_tplsch_t& ntplsch, cpsm_conhdl_t* /*conn_hdl*/)
 {
 #if IDB_SM_DEBUG
   SMDEBUGLOG << "tpl_scan_open: " << conn_hdl << " tableid: " << tableid << endl;
@@ -495,7 +495,6 @@ void cpsm_conhdl_t::write(ByteStream bs)
 
   if (sigFlag)
     throw runtime_error("Broken Pipe Error");
-
 }
 
-}
+}  // namespace sm

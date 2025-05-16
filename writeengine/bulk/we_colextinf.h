@@ -139,27 +139,27 @@ class ColExtInfBase
   ColExtInfBase() = default;
   virtual ~ColExtInfBase() = default;
 
-  virtual void addFirstEntry(RID lastInputRow, BRM::LBID_t lbid, bool bIsNewExtent)
+  virtual void addFirstEntry(RID /*lastInputRow*/, BRM::LBID_t /*lbid*/, bool /*bIsNewExtent*/)
   {
   }
 
-  virtual void addOrUpdateEntry(RID lastInputRow, int64_t minVal, int64_t maxVal, ColDataType colDataType,
-                                int width)
+  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int64_t /*minVal*/, int64_t /*maxVal*/, ColDataType /*colDataType*/,
+                                int /*width*/)
   {
   }
 
-  virtual void addOrUpdateEntry(RID lastInputRow, int128_t minVal, int128_t maxVal, ColDataType colDataType,
-                                int width)
+  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int128_t /*minVal*/, int128_t /*maxVal*/, ColDataType /*colDataType*/,
+                                int /*width*/)
   {
   }
 
-  virtual void getCPInfoForBRM(JobColumn column, BRMReporter& brmReporter)
+  virtual void getCPInfoForBRM(JobColumn /*column*/, BRMReporter& /*brmReporter*/)
   {
   }
-  virtual void print(const JobColumn& column)
+  virtual void print(const JobColumn& /*column*/)
   {
   }
-  virtual int updateEntryLbid(BRM::LBID_t startLbid)
+  virtual int updateEntryLbid(BRM::LBID_t /*startLbid*/)
   {
     return NO_ERROR;
   }

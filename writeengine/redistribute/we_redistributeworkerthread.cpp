@@ -1434,7 +1434,7 @@ void RedistributeWorkerThread::handleDataFinish(SBS& sbs, size_t& size)
   fIOSocket.write(fBs);
 }
 
-void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& size)
+void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& /*size*/)
 {
   size_t ack = 0;
   sbs.reset();
@@ -1446,7 +1446,7 @@ void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& size)
   fIOSocket.write(fBs);
 }
 
-void RedistributeWorkerThread::handleDataAbort(SBS& sbs, size_t& size)
+void RedistributeWorkerThread::handleDataAbort(SBS& sbs, size_t& /*size*/)
 {
   // close open file
   if (fNewFilePtr != NULL)

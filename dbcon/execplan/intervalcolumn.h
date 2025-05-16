@@ -122,12 +122,12 @@ class IntervalColumn : public ReturnedColumn
   int fIntervalType;
 
   // okay to be private for now.
-  bool operator==(const TreeNode* t) const override
+  bool operator==(const TreeNode* /*t*/) const override
   {
     return false;
   }
   bool operator==(const IntervalColumn& t) const;
-  bool operator!=(const TreeNode* t) const override
+  bool operator!=(const TreeNode* /*t*/) const override
   {
     return false;
   }

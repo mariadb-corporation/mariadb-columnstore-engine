@@ -78,7 +78,7 @@ FuncMap UDFSDK::UDFMap() const
  * OperationType() definition
  */
 CalpontSystemCatalog::ColType MCS_add::operationType(FunctionParm& fp,
-                                                     CalpontSystemCatalog::ColType& resultType)
+                                                     CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type of MCS_add is determined by the argument types
   assert(fp.size() == 2);
@@ -242,8 +242,8 @@ IDB_Decimal MCS_add::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
  * either not implement this API and an MCS5001 error will be thrown,
  * or throw a customized exception here.
  */
-int32_t MCS_add::getDateIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                               CalpontSystemCatalog::ColType& op_ct)
+int32_t MCS_add::getDateIntVal(Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                               CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   throw logic_error("Invalid API called for MCS_ADD");
 }
@@ -260,7 +260,7 @@ int64_t MCS_add::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
   return (int64_t)getDoubleVal(row, parm, isNull, op_ct);
 }
 
-bool MCS_add::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+bool MCS_add::getBoolVal(Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/, CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   return false;
 }
@@ -271,7 +271,7 @@ bool MCS_add::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSyst
  * OperationType() definition
  */
 CalpontSystemCatalog::ColType MCS_isnull::operationType(FunctionParm& fp,
-                                                        CalpontSystemCatalog::ColType& resultType)
+                                                        CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type of MCS_isnull should be the same as the argument type
   assert(fp.size() == 1);

@@ -22,7 +22,7 @@
 #include <fstream>
 #include <ctype.h>
 #include <string>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <map>
 #include <boost/scoped_ptr.hpp>
@@ -57,7 +57,7 @@ using namespace messageqcpp;
 using namespace BRM;
 using namespace oam;
 
-//#define PROFILE 1
+// #define PROFILE 1
 namespace dmlpackageprocessor
 {
 // StopWatch timer;
@@ -118,9 +118,9 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackageInternal(
   fWEClient->addQueue(uniqueId);
   execplan::CalpontSystemCatalog::ROPair roPair;
 
-  //#ifdef PROFILE
+  // #ifdef PROFILE
   //	StopWatch timer;
-  //#endif
+  // #endif
   try
   {
     LoggingID logid(DMLLoggingId, fSessionID, txnid.id);
@@ -903,7 +903,7 @@ bool UpdatePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
 }
 
 bool UpdatePackageProcessor::receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs,
-                                        std::map<unsigned, bool>& pmState, const uint32_t tableOid)
+                                        std::map<unsigned, bool>& pmState, const uint32_t /*tableOid*/)
 {
   // check how many message we need to receive
   uint32_t messagesNotReceived = 0;

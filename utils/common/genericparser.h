@@ -202,7 +202,7 @@ class Parser : public Tokenizer
     explicit DD2MM(Parser* p) : A(p), B(A::isNull() ? B() : SetSyntaxErrorOnNull<B>(p))
     {
     }
-    explicit DD2MM(const A& a, const B& b) : A(b), B(b)
+    explicit DD2MM(const A& /*a*/, const B& b) : A(b), B(b)
     {
     }
   };

@@ -16,9 +16,9 @@ inline bool isNumeric(int type, const char* attr)
     return true;
   }
   if (strncasecmp("NULL", attr, 4) == 0)
-    {
-      return true;
-    }
+  {
+    return true;
+  }
   return false;
 }
 
@@ -77,7 +77,7 @@ extern "C"
     int64_t cnt;
   };
 
-      my_bool regr_avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_avgx_data* data;
     if (args->arg_count != 2)
@@ -107,21 +107,19 @@ extern "C"
     return 0;
   }
 
-      void regr_avgx_deinit(UDF_INIT* initid)
+  void regr_avgx_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_avgx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                           char* message __attribute__((unused)))
+  void regr_avgx_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
     data->sumx = 0;
     data->cnt = 0;
   }
 
-      void regr_avgx_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                         char* message __attribute__((unused)))
+  void regr_avgx_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -134,8 +132,7 @@ extern "C"
     data->sumx += xval;
   }
 
-      double regr_avgx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                       char* error __attribute__((unused)))
+  double regr_avgx(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_avgx_data* data = (struct regr_avgx_data*)initid->ptr;
     double valOut = 0;
@@ -162,7 +159,7 @@ extern "C"
     int64_t cnt;
   };
 
-      my_bool regr_avgy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_avgy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_avgy_data* data;
     if (args->arg_count != 2)
@@ -193,21 +190,19 @@ extern "C"
     return 0;
   }
 
-      void regr_avgy_deinit(UDF_INIT* initid)
+  void regr_avgy_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_avgy_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                           char* message __attribute__((unused)))
+  void regr_avgy_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_avgy_data* data = (struct regr_avgy_data*)initid->ptr;
     data->sumy = 0;
     data->cnt = 0;
   }
 
-      void regr_avgy_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                         char* message __attribute__((unused)))
+  void regr_avgy_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -220,8 +215,7 @@ extern "C"
     data->sumy += yval;
   }
 
-      double regr_avgy(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                       char* error __attribute__((unused)))
+  double regr_avgy(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_avgy_data* data = (struct regr_avgy_data*)initid->ptr;
     double valOut = 0;
@@ -246,7 +240,7 @@ extern "C"
     int64_t cnt;
   };
 
-      my_bool regr_count_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_count_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_count_data* data;
     if (args->arg_count != 2)
@@ -266,20 +260,18 @@ extern "C"
     return 0;
   }
 
-      void regr_count_deinit(UDF_INIT* initid)
+  void regr_count_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_count_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                            char* message __attribute__((unused)))
+  void regr_count_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_count_data* data = (struct regr_count_data*)initid->ptr;
     data->cnt = 0;
   }
 
-      void regr_count_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                          char* message __attribute__((unused)))
+  void regr_count_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -290,8 +282,7 @@ extern "C"
     ++data->cnt;
   }
 
-      long long regr_count(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                           char* error __attribute__((unused)))
+  long long regr_count(UDF_INIT* initid, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     struct regr_count_data* data = (struct regr_count_data*)initid->ptr;
     return data->cnt;
@@ -311,7 +302,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool regr_slope_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_slope_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_slope_data* data;
     if (args->arg_count != 2)
@@ -343,13 +334,12 @@ extern "C"
     return 0;
   }
 
-      void regr_slope_deinit(UDF_INIT* initid)
+  void regr_slope_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_slope_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                            char* message __attribute__((unused)))
+  void regr_slope_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_slope_data* data = (struct regr_slope_data*)initid->ptr;
     data->cnt = 0;
@@ -359,8 +349,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void regr_slope_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                          char* message __attribute__((unused)))
+  void regr_slope_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -377,8 +366,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_slope(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                        char* error __attribute__((unused)))
+  double regr_slope(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_slope_data* data = (struct regr_slope_data*)initid->ptr;
     double N = data->cnt;
@@ -415,7 +403,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool regr_intercept_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_intercept_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_intercept_data* data;
     if (args->arg_count != 2)
@@ -446,13 +434,12 @@ extern "C"
     return 0;
   }
 
-      void regr_intercept_deinit(UDF_INIT* initid)
+  void regr_intercept_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_intercept_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                                char* message __attribute__((unused)))
+  void regr_intercept_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_intercept_data* data = (struct regr_intercept_data*)initid->ptr;
     data->cnt = 0;
@@ -462,8 +449,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void regr_intercept_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                              char* message __attribute__((unused)))
+  void regr_intercept_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -480,8 +466,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_intercept(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                            char* error __attribute__((unused)))
+  double regr_intercept(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_intercept_data* data = (struct regr_intercept_data*)initid->ptr;
     double N = data->cnt;
@@ -519,7 +504,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool regr_r2_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_r2_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_r2_data* data;
     if (args->arg_count != 2)
@@ -552,13 +537,12 @@ extern "C"
     return 0;
   }
 
-      void regr_r2_deinit(UDF_INIT* initid)
+  void regr_r2_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_r2_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                         char* message __attribute__((unused)))
+  void regr_r2_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_r2_data* data = (struct regr_r2_data*)initid->ptr;
     data->cnt = 0;
@@ -569,7 +553,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void regr_r2_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void regr_r2_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -587,8 +571,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_r2(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                     char* error __attribute__((unused)))
+  double regr_r2(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_r2_data* data = (struct regr_r2_data*)initid->ptr;
     double N = data->cnt;
@@ -641,7 +624,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool corr_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool corr_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct corr_data* data;
     if (args->arg_count != 2)
@@ -674,13 +657,12 @@ extern "C"
     return 0;
   }
 
-      void corr_deinit(UDF_INIT* initid)
+  void corr_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void corr_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                      char* message __attribute__((unused)))
+  void corr_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct corr_data* data = (struct corr_data*)initid->ptr;
     data->cnt = 0;
@@ -691,7 +673,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void corr_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void corr_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -709,8 +691,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double corr(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                  char* error __attribute__((unused)))
+  double corr(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct corr_data* data = (struct corr_data*)initid->ptr;
     double N = data->cnt;
@@ -760,7 +741,7 @@ extern "C"
     long double sumx2;  // sum of (x squared)
   };
 
-      my_bool regr_sxx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_sxx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_sxx_data* data;
     if (args->arg_count != 2)
@@ -789,13 +770,12 @@ extern "C"
     return 0;
   }
 
-      void regr_sxx_deinit(UDF_INIT* initid)
+  void regr_sxx_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_sxx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                          char* message __attribute__((unused)))
+  void regr_sxx_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_sxx_data* data = (struct regr_sxx_data*)initid->ptr;
     data->cnt = 0;
@@ -803,8 +783,7 @@ extern "C"
     data->sumx2 = 0.0;
   }
 
-      void regr_sxx_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                        char* message __attribute__((unused)))
+  void regr_sxx_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -818,8 +797,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_sxx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                      char* error __attribute__((unused)))
+  double regr_sxx(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_sxx_data* data = (struct regr_sxx_data*)initid->ptr;
     double N = data->cnt;
@@ -851,7 +829,7 @@ extern "C"
     long double sumy2;  // sum of (y squared)
   };
 
-      my_bool regr_syy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_syy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_syy_data* data;
     if (args->arg_count != 2)
@@ -880,13 +858,12 @@ extern "C"
     return 0;
   }
 
-      void regr_syy_deinit(UDF_INIT* initid)
+  void regr_syy_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_syy_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                          char* message __attribute__((unused)))
+  void regr_syy_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_syy_data* data = (struct regr_syy_data*)initid->ptr;
     data->cnt = 0;
@@ -894,8 +871,7 @@ extern "C"
     data->sumy2 = 0.0;
   }
 
-      void regr_syy_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                        char* message __attribute__((unused)))
+  void regr_syy_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -909,8 +885,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_syy(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                      char* error __attribute__((unused)))
+  double regr_syy(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_syy_data* data = (struct regr_syy_data*)initid->ptr;
     double N = data->cnt;
@@ -944,7 +919,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool regr_sxy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool regr_sxy_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct regr_sxy_data* data;
     if (args->arg_count != 2)
@@ -975,13 +950,12 @@ extern "C"
     return 0;
   }
 
-      void regr_sxy_deinit(UDF_INIT* initid)
+  void regr_sxy_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void regr_sxy_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                          char* message __attribute__((unused)))
+  void regr_sxy_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct regr_sxy_data* data = (struct regr_sxy_data*)initid->ptr;
     data->cnt = 0;
@@ -990,8 +964,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void regr_sxy_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                        char* message __attribute__((unused)))
+  void regr_sxy_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -1007,8 +980,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double regr_sxy(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                      char* error __attribute__((unused)))
+  double regr_sxy(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct regr_sxy_data* data = (struct regr_sxy_data*)initid->ptr;
     double N = data->cnt;
@@ -1041,7 +1013,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool covar_pop_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool covar_pop_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct covar_pop_data* data;
     if (args->arg_count != 2)
@@ -1072,13 +1044,12 @@ extern "C"
     return 0;
   }
 
-      void covar_pop_deinit(UDF_INIT* initid)
+  void covar_pop_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void covar_pop_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                           char* message __attribute__((unused)))
+  void covar_pop_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct covar_pop_data* data = (struct covar_pop_data*)initid->ptr;
     data->cnt = 0;
@@ -1087,8 +1058,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void covar_pop_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                         char* message __attribute__((unused)))
+  void covar_pop_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -1104,8 +1074,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double covar_pop(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                       char* error __attribute__((unused)))
+  double covar_pop(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct covar_pop_data* data = (struct covar_pop_data*)initid->ptr;
     double N = data->cnt;
@@ -1137,7 +1106,7 @@ extern "C"
     long double sumxy;  // sum of (x*y)
   };
 
-      my_bool covar_samp_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool covar_samp_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct covar_samp_data* data;
     if (args->arg_count != 2)
@@ -1168,13 +1137,12 @@ extern "C"
     return 0;
   }
 
-      void covar_samp_deinit(UDF_INIT* initid)
+  void covar_samp_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void covar_samp_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                            char* message __attribute__((unused)))
+  void covar_samp_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct covar_samp_data* data = (struct covar_samp_data*)initid->ptr;
     data->cnt = 0;
@@ -1183,8 +1151,7 @@ extern "C"
     data->sumxy = 0.0;
   }
 
-      void covar_samp_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                          char* message __attribute__((unused)))
+  void covar_samp_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // Test for NULL in x and y
     if (args->args[0] == 0 || args->args[1] == 0)
@@ -1200,8 +1167,7 @@ extern "C"
     ++data->cnt;
   }
 
-      double covar_samp(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                        char* error __attribute__((unused)))
+  double covar_samp(UDF_INIT* initid, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     struct covar_samp_data* data = (struct covar_samp_data*)initid->ptr;
     double N = data->cnt;

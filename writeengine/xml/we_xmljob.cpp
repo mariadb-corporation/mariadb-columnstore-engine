@@ -51,8 +51,7 @@ namespace WriteEngine
 // Constructor
 //------------------------------------------------------------------------------
 XMLJob::XMLJob()
- : fDebugLevel(DEBUG_0)
- , fDeleteTempFile(false)
+ : fDeleteTempFile(false)
  , fValidateColList(true)
  , fTimeZone(dataconvert::systemTimeZoneOffset())
 {
@@ -1182,7 +1181,7 @@ void XMLJob::validateAllColumnsHaveTags(const execplan::CalpontSystemCatalog::RI
 //------------------------------------------------------------------------------
 /* static */
 int XMLJob::genJobXMLFileName(const string& sXMLJobDir, const string& jobDir, const string& jobId,
-                              bool bTempFile, const string& schemaName, const string& tableName,
+                              bool bTempFile, const string& /*schemaName*/, const string& /*tableName*/,
                               boost::filesystem::path& xmlFilePath, string& errMsg,
                               const std::string& tableOIDStr)
 {

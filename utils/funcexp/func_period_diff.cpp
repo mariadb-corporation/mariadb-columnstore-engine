@@ -94,14 +94,14 @@ int64_t getArgSInt64Val(rowgroup::Row& row, TreeNode* exp, bool& isNull)
   return 0;
 }
 
-CalpontSystemCatalog::ColType Func_period_diff::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_period_diff::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_period_diff::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                    CalpontSystemCatalog::ColType& op_ct)
+                                    CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   uint64_t period1 = (uint64_t)getArgSInt64Val(row, parm[0]->data(), isNull);
 

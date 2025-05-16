@@ -41,6 +41,16 @@ inline int64_t atomicSubRef(std::atomic<int64_t>& ref, int64_t val)
 {
   return ref.fetch_sub(val, std::memory_order_relaxed);
 }
+
+inline void atomicStoreRef(std::atomic<int64_t>& ref, int64_t val)
+{
+  ref.store(val, std::memory_order_relaxed);
+}
+
+inline int64_t atomicLoadRef(const std::atomic<int64_t>& ref)
+{
+  return ref.load(std::memory_order_relaxed);
+}
 // Returns the resulting, incremented value
 template <typename T>
 inline T atomicInc(volatile T* mem)

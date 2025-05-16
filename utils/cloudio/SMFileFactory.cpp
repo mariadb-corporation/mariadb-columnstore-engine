@@ -27,7 +27,8 @@ using namespace std;
 
 namespace idbdatafile
 {
-IDBDataFile* SMFileFactory::open(const char* filename, const char* mode, unsigned opts, unsigned colWidth)
+IDBDataFile* SMFileFactory::open(const char* filename, const char* mode, unsigned /*opts*/,
+                                 unsigned /*colWidth*/)
 {
   // TODO, test whether this breaks anything.
   // if (opts & IDBDataFile::USE_TMPFILE)

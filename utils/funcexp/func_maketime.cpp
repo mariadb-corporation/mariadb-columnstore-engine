@@ -37,7 +37,7 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_maketime::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_maketime::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

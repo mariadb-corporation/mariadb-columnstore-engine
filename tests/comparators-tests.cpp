@@ -128,7 +128,7 @@ class FilterDriver : public CppUnit::TestFixture
   // then initialize RGData. After that it adds two numeric values (v1 < v2)and two NULL.
   // Then creates comparator structures and run a number of tests. v1 < v2
   void testComparatorWithDT(execplan::CalpontSystemCatalog::ColDataType cscDt, uint32_t width,
-                            bool generateRandValues, uint8_t precision)
+                            bool /*generateRandValues*/, uint8_t precision)
   {
     std::cout << std::endl << "------------------------------------------------------------" << std::endl;
     uint32_t oid = 3001;
@@ -432,7 +432,7 @@ class FilterDriver : public CppUnit::TestFixture
 
 CPPUNIT_TEST_SUITE_REGISTRATION(FilterDriver);
 
-int main(int argc, char** argv)
+int main(int, char**)
 {
   CppUnit::TextUi::TestRunner runner;
   CppUnit::TestFactoryRegistry& registry = CppUnit::TestFactoryRegistry::getRegistry();

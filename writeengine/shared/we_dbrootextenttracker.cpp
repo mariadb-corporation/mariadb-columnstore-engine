@@ -321,7 +321,7 @@ int DBRootExtentTracker::selectFirstSegFile(DBRootExtentInfo& dbRootExtent, bool
 // Mutex lock not needed in this function as it is only called from main thread
 // before processing threads are spawned.
 //------------------------------------------------------------------------------
-int DBRootExtentTracker::selectFirstSegFileForEmptyPM(std::string& errMsg)
+int DBRootExtentTracker::selectFirstSegFileForEmptyPM(std::string& /*errMsg*/)
 {
   fEmptyOrDisabledPM = true;
 

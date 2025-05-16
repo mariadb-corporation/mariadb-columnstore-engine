@@ -21,7 +21,11 @@
 #include <typeinfo>
 #include "columnstoreversion.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "ha_mcs_pushdown.h"
+#pragma GCC diagnostic pop
+
 #define NEED_CALPONT_EXTERNS
 #include "ha_mcs_impl.h"
 #include "is_columnstore.h"
@@ -34,7 +38,7 @@
 #define CACHE_PREFIX "#cache#"
 
 #ifdef HLINDEX_TEMPLATE /* it happens to be defined in the vector branch */
-#define HT(X) /* nothing */
+#define HT(X)           /* nothing */
 #else
 #define HT(X) X,
 #endif
@@ -91,7 +95,7 @@ static const uchar* mcs_get_key(const void* share, size_t* length, my_bool not_u
 }
 
 // This one is unused
-int mcs_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
+int mcs_discover(handlerton* /*hton*/, THD* thd, TABLE_SHARE* share)
 {
   DBUG_ENTER("mcs_discover");
   DBUG_PRINT("mcs_discover", ("db: '%s'  name: '%s'", share->db.str, share->table_name.str));
@@ -118,7 +122,7 @@ int mcs_discover(handlerton* hton, THD* thd, TABLE_SHARE* share)
 }
 
 // This f() is also unused
-int mcs_discover_existence(handlerton* hton, const char* db, const char* table_name)
+int mcs_discover_existence(handlerton* /*hton*/, const char* db, const char* table_name)
 {
   return ha_mcs_impl_discover_existence(db, table_name);
 }
@@ -203,7 +207,7 @@ const char** ha_mcs::bas_ext() const
   return ha_mcs_exts;
 }
 
-int ha_mcs::analyze(THD* thd, HA_CHECK_OPT* check_opt)
+int ha_mcs::analyze(THD* thd, HA_CHECK_OPT* /*check_opt*/)
 {
   DBUG_ENTER("ha_mcs::analyze");
 
@@ -342,7 +346,7 @@ int ha_mcs::write_row(const uchar* buf)
   DBUG_RETURN(rc);
 }
 
-void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
+void ha_mcs::start_bulk_insert(ha_rows rows, uint /*flags*/)
 {
   DBUG_ENTER("ha_mcs::start_bulk_insert");
   try
@@ -356,7 +360,7 @@ void ha_mcs::start_bulk_insert(ha_rows rows, uint flags)
   DBUG_VOID_RETURN;
 }
 
-void ha_mcs::start_bulk_insert_from_cache(ha_rows rows, uint flags)
+void ha_mcs::start_bulk_insert_from_cache(ha_rows rows, uint /*flags*/)
 {
   DBUG_ENTER("ha_mcs::start_bulk_insert_from_cache");
   try
@@ -399,7 +403,7 @@ int ha_mcs::end_bulk_insert()
 
     @see
 */
-int ha_mcs::update_row(const uchar* old_data, const uchar* new_data)
+int ha_mcs::update_row(const uchar* /*old_data*/, const uchar* /*new_data*/)
 {
   DBUG_ENTER("ha_mcs::update_row");
   int rc;
@@ -428,7 +432,7 @@ int ha_mcs::update_row(const uchar* old_data, const uchar* new_data)
     @see
       mysql_update()/mysql_delete
 */
-int ha_mcs::direct_update_rows_init(List<Item>* update_fields)
+int ha_mcs::direct_update_rows_init(List<Item>* /*update_fields*/)
 {
   DBUG_ENTER("ha_mcs::direct_update_rows_init");
   DBUG_RETURN(0);
@@ -508,7 +512,7 @@ int ha_mcs::direct_delete_rows(ha_rows* deleted_rows)
   sql_acl.cc, sql_udf.cc, sql_delete.cc, sql_insert.cc and sql_select.cc
 */
 
-int ha_mcs::delete_row(const uchar* buf)
+int ha_mcs::delete_row(const uchar* /*buf*/)
 {
   DBUG_ENTER("ha_mcs::delete_row");
   int rc;
@@ -531,8 +535,8 @@ int ha_mcs::delete_row(const uchar* buf)
   index.
 */
 
-int ha_mcs::index_read_map(uchar* buf, const uchar* key, key_part_map keypart_map __attribute__((unused)),
-                           enum ha_rkey_function find_flag __attribute__((unused)))
+int ha_mcs::index_read_map(uchar* /*buf*/, const uchar* /*key*/, key_part_map /*keypart_map*/,
+                           enum ha_rkey_function /*find_flag*/)
 {
   DBUG_ENTER("ha_mcs::index_read");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
@@ -543,7 +547,7 @@ int ha_mcs::index_read_map(uchar* buf, const uchar* key, key_part_map keypart_ma
   Used to read forward through the index.
 */
 
-int ha_mcs::index_next(uchar* buf)
+int ha_mcs::index_next(uchar* /*buf*/)
 {
   DBUG_ENTER("ha_mcs::index_next");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
@@ -554,7 +558,7 @@ int ha_mcs::index_next(uchar* buf)
   Used to read backwards through the index.
 */
 
-int ha_mcs::index_prev(uchar* buf)
+int ha_mcs::index_prev(uchar* /*buf*/)
 {
   DBUG_ENTER("ha_mcs::index_prev");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
@@ -570,7 +574,7 @@ int ha_mcs::index_prev(uchar* buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_mcs::index_first(uchar* buf)
+int ha_mcs::index_first(uchar* /*buf*/)
 {
   DBUG_ENTER("ha_mcs::index_first");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
@@ -586,7 +590,7 @@ int ha_mcs::index_first(uchar* buf)
     @see
   opt_range.cc, opt_sum.cc, sql_handler.cc and sql_select.cc
 */
-int ha_mcs::index_last(uchar* buf)
+int ha_mcs::index_last(uchar* /*buf*/)
 {
   DBUG_ENTER("ha_mcs::index_last");
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
@@ -703,7 +707,7 @@ int ha_mcs::rnd_next(uchar* buf)
 // allow for implementing blobs (is that the same as varbinary?). Perhaps using
 // lbid and offset as key would work, or something. We also need to add functionality
 // to retrieve records quickly by this "key"
-void ha_mcs::position(const uchar* record)
+void ha_mcs::position(const uchar* /*record*/)
 {
   DBUG_ENTER("ha_mcs::position");
   DBUG_VOID_RETURN;
@@ -776,7 +780,7 @@ int ha_mcs::rnd_pos(uchar* buf, uchar* pos)
   sql_select.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_show.cc, sql_table.cc,
   sql_union.cc and sql_update.cc
 */
-int ha_mcs::info(uint32_t flag)
+int ha_mcs::info(uint32_t /*flag*/)
 {
   DBUG_ENTER("ha_mcs::info");
   // @bug 1635. Raise this number magically fix the filesort crash issue. May need to twist
@@ -797,7 +801,7 @@ int ha_mcs::info(uint32_t flag)
     @see
   ha_innodb.cc
 */
-int ha_mcs::extra(enum ha_extra_function operation)
+int ha_mcs::extra([[maybe_unused]] enum ha_extra_function operation)
 {
   DBUG_ENTER("ha_mcs::extra");
 #ifdef INFINIDB_DEBUG
@@ -926,7 +930,7 @@ int ha_mcs::external_lock(THD* thd, int lock_type)
   get_lock_data() in lock.cc
 */
 
-THR_LOCK_DATA** ha_mcs::store_lock(THD* thd, THR_LOCK_DATA** to, enum thr_lock_type lock_type)
+THR_LOCK_DATA** ha_mcs::store_lock(THD* /*thd*/, THR_LOCK_DATA** to, enum thr_lock_type /*lock_type*/)
 {
   // if (lock_type != TL_IGNORE && lock.type == TL_UNLOCK)
   //  lock.type=lock_type;
@@ -1019,8 +1023,8 @@ int ha_mcs::rename_table(const char* from, const char* to)
   @see
   check_quick_keys() in opt_range.cc
 */
-ha_rows ha_mcs::records_in_range(uint32_t inx, const key_range* min_key, const key_range* max_key,
-                                 page_range* res)
+ha_rows ha_mcs::records_in_range(uint32_t /*inx*/, const key_range* /*min_key*/, const key_range* /*max_key*/,
+                                 page_range* /*res*/)
 {
   DBUG_ENTER("ha_mcs::records_in_range");
   DBUG_RETURN(10);  // low number to force index usage
@@ -1109,7 +1113,7 @@ int ha_mcs::reset()
   DBUG_RETURN(0);
 }
 
-int ha_mcs::repair(THD* thd, HA_CHECK_OPT* check_opt)
+int ha_mcs::repair(THD* /*thd*/, HA_CHECK_OPT* /*check_opt*/)
 {
   DBUG_ENTER("ha_mcs::repair");
   DBUG_ASSERT(!(int_table_flags & HA_CAN_REPAIR));
@@ -1347,7 +1351,8 @@ void ha_mcs_cache_share::close()
 
 static plugin_ref plugin_maria = NULL;
 
-ha_mcs_cache::ha_mcs_cache(handlerton* hton, TABLE_SHARE* table_arg, MEM_ROOT* mem_root)
+// FIXME First parameter is unused
+ha_mcs_cache::ha_mcs_cache(handlerton* /*hton*/, TABLE_SHARE* table_arg, MEM_ROOT* mem_root)
  : ha_mcs(mcs_hton, table_arg), isSysCatTable(false), isCacheDisabled(false)
 {
   if (table_arg && table_arg->db.str && !strcasecmp(table_arg->db.str, "calpontsys") &&
@@ -1857,7 +1862,7 @@ static int columnstore_init_func(void* p)
   DBUG_RETURN(0);
 }
 
-static int columnstore_done_func(void* p)
+static int columnstore_done_func(void* /*p*/)
 {
   DBUG_ENTER("columnstore_done_func");
 

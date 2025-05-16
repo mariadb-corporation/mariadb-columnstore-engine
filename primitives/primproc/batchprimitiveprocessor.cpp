@@ -329,7 +329,8 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
       for (uint j = 0; j < joinerCount; ++j)
       {
-        storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false, true));
+        storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false,
+        true));
       }
 
       joinNullValues.reset(new uint64_t[joinerCount]);
@@ -338,6 +339,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       hasJoinFEFilters = false;
       hasSmallOuterJoin = false;
       bool smallSideRGRecvd = false;
+      auto* resourceManager = &exemgr::globServiceExeMgr->getRm();
 
       for (i = 0; i < joinerCount; i++)
       {
@@ -361,17 +363,14 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 
         if (!typelessJoin[i])
         {
-          auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<TJoiner::value_type>();
-
           bs >> joinNullValues[i];
           bs >> largeSideKeyColumns[i];
           for (uint j = 0; j < processorThreads; ++j)
-            tJoiners[i][j].reset(new TJoiner(10, TupleJoiner::hasher(), allocator));
+          tJoiners[i][j].reset(new TJoiner(10, TupleJoiner::hasher(), std::equal_to<uint64_t>(),
+                                            utils::STLPoolAllocator<TJoiner::value_type>(resourceManager)));
         }
         else
         {
-          auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<TLJoiner::value_type>();
-
           deserializeVector<uint32_t>(bs, tlLargeSideKeyColumns[i]);
           bs >> tlSmallSideKeyLengths[i];
           bs >> tmp8;
@@ -393,7 +392,8 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
                                                             mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
             auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG, &tlLargeSideKeyColumns[i],
                                                                     mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
-            tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator, allocator));
+            tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator,
+                                               utils::STLPoolAllocator<TLJoiner::value_type>(resourceManager)));
           }
         }
       }
@@ -2288,32 +2288,27 @@ int BatchPrimitiveProcessor::operator()()
 void BatchPrimitiveProcessor::allocLargeBuffers()
 {
   auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
-  
+
   if (ot == ROW_GROUP && !outRowGroupData)
   {
-    // outputRG.setUseStringTable(true);
     outRowGroupData.reset(new RGData(outputRG, allocator));
     outputRG.setData(outRowGroupData.get());
   }
 
   if (fe1 && !fe1Data)
   {
-    // fe1Input.setUseStringTable(true);
     fe1Data.reset(new RGData(fe1Input, allocator));
-    // fe1Data.reset(new uint8_t[fe1Input.getMaxDataSize()]);
     fe1Input.setData(fe1Data.get());
   }
 
   if (fe2 && !fe2Data)
   {
-    // fe2Output.setUseStringTable(true);
     fe2Data.reset(new RGData(fe2Output, allocator));
     fe2Output.setData(fe2Data.get());
   }
 
   if (getTupleJoinRowGroupData && !joinedRGMem)
   {
-    // joinedRG.setUseStringTable(true);
     joinedRGMem.reset(new RGData(joinedRG, allocator));
     joinedRG.setData(joinedRGMem.get());
   }

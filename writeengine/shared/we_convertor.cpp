@@ -248,7 +248,7 @@ const std::string Convertor::int2Str(int val)
  ******************************************************************************/
 /* static */
 
-long long Convertor::convertDecimalString(const char* field, int fieldLength, int scale)
+long long Convertor::convertDecimalString(const char* field, int /*fieldLength*/, int scale)
 {
   long double dval = strtold(field, nullptr);
   long long ret = 0;

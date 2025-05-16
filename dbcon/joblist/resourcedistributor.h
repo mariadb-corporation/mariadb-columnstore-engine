@@ -132,7 +132,6 @@ class ResourceDistributor
   std::string fJob;
   std::string fIdentity;
   uint64_t fTotalResource;
-  uint64_t fResourceBlock;
   boost::mutex fResourceLock;
   boost::condition fResourceAvailable;
 

@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <ctime>
 
-//#define      SERIALIZE_DDL_DML_CPIMPORT    1
+// #define      SERIALIZE_DDL_DML_CPIMPORT    1
 #include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
@@ -313,7 +313,7 @@ struct CancellationThread
 PackageHandler::PackageHandler(const messageqcpp::IOSocket& ios,
                                boost::shared_ptr<messageqcpp::ByteStream> bs, uint8_t packageType,
                                joblist::DistributedEngineComm* ec, bool concurrentSupport,
-                               uint64_t maxDeleteRows, uint32_t sessionID,
+                               uint64_t /*maxDeleteRows*/, uint32_t sessionID,
                                execplan::CalpontSystemCatalog::SCN txnId, DBRM* aDbrm,
                                const QueryTeleClient& qtc,
                                boost::shared_ptr<execplan::CalpontSystemCatalog> csc)
@@ -322,7 +322,6 @@ PackageHandler::PackageHandler(const messageqcpp::IOSocket& ios,
  , fPackageType(packageType)
  , fEC(ec)
  , fConcurrentSupport(concurrentSupport)
- , fMaxDeleteRows(maxDeleteRows)
  , fSessionID(sessionID)
  , fTableOid(0)
  , fTxnid(txnId)
@@ -1317,9 +1316,7 @@ int DMLServer::start()
 }
 
 DMLProcessor::DMLProcessor(messageqcpp::IOSocket ios, BRM::DBRM* aDbrm)
-  : fIos(ios)
-  , fDbrm(aDbrm)
-  , fConcurrentSupport(false)
+ : fIos(ios), fDbrm(aDbrm), fConcurrentSupport(false)
 {
   csc = CalpontSystemCatalog::makeCalpontSystemCatalog();
   csc->identity(CalpontSystemCatalog::EC);

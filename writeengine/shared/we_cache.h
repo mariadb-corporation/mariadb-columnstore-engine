@@ -116,7 +116,7 @@ class Cache
   /**
    * @brief Get the cache key
    */
-  static CacheKey getCacheKey(const OID oid, const uint64_t lbid)
+  static CacheKey getCacheKey(const OID /*oid*/, const uint64_t lbid)
   {
     CacheKey key = lbid; /*Convertor::int2Str( oid ) + "|" + Convertor::int2Str(lbid)*/
     ;

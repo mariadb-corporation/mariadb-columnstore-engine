@@ -163,7 +163,7 @@ void RTSCommand::nextLBID()
     col->nextLBID();
 }
 
-void RTSCommand::prep(int8_t outputType, bool makeAbsRids)
+void RTSCommand::prep(int8_t /*outputType*/, bool /*makeAbsRids*/)
 {
   if (!passThru)
     col->prep(OT_BOTH, true);

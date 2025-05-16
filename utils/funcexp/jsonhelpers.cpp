@@ -25,7 +25,8 @@ int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const utils::NullString& st
   return 1;
 }
 
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS)
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js,
+                     const CHARSET_INFO* jsCS)
 {
   const int jsLen = js.length();
   const char* rawJS = js.str();
@@ -355,7 +356,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
 }
 
 bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
-                 const int* arrayCounter, bool exact)
+                 const int* /*arrayCounter*/, bool exact)
 {
   for (size_t curr = 0; curr < paths.size(); curr++)
   {
@@ -372,4 +373,3 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 }
 }  // namespace helpers
 }  // namespace funcexp
-

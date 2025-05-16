@@ -33,7 +33,7 @@ SMFileSystem::~SMFileSystem()
 {
 }
 
-int SMFileSystem::mkdir(const char* path)
+int SMFileSystem::mkdir(const char* /*path*/)
 {
   return 0;
 }
@@ -50,7 +50,7 @@ off64_t SMFileSystem::size(const char* filename) const
   return _stat.st_size;
 }
 
-off64_t SMFileSystem::compressedSize(const char* filename) const
+off64_t SMFileSystem::compressedSize(const char* /*filename*/) const
 {
   // Yikes, punting on this one.
   throw NotImplementedYet(__func__);

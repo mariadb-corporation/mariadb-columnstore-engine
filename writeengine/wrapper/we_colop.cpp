@@ -675,7 +675,7 @@ int ColumnOp::createColumn(Column& column, int colNo, int colWidth,
  *
  * @return
  */
-int ColumnOp::fillColumn(const TxnID& txnid, Column& column, Column& refCol, void* defaultVal, Dctnry* dctnry,
+int ColumnOp::fillColumn(const TxnID& /*txnid*/, Column& column, Column& refCol, void* defaultVal, Dctnry* dctnry,
                          ColumnOp* refColOp, const OID dictOid, const int dictColWidth,
                          const string defaultValStr, bool autoincrement)
 {

@@ -171,13 +171,11 @@ class PrimitiveServer
   int fServerThreads;
   int fServerQueueSize;
   int fProcessorWeight;
-  int fProcessorQueueSize;
   int fMaxBlocksPerRead;
   int fReadAheadBlocks;
   bool fRotatingDestination;
   bool fPTTrace;
   double fPrefetchThreshold;
-  uint64_t fPMSmallSide;
 };
 
 }  // namespace primitiveprocessor

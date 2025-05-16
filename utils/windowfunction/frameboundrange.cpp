@@ -193,7 +193,7 @@ void FrameBoundConstantRange<T>::getValue(ValueType<T>& v, int64_t i)
 }
 
 template <typename T>
-T FrameBoundConstantRange<T>::getValueByType(int64_t i)
+T FrameBoundConstantRange<T>::getValueByType(int64_t /*i*/)
 {
   T t;
   return t;

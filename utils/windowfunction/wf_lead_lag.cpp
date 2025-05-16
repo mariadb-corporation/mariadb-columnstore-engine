@@ -184,7 +184,7 @@ void WF_lead_lag<T>::parseParms(const std::vector<execplan::SRCP>& parms)
 }
 
 template <typename T>
-void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t c)
+void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t /*c*/)
 {
   uint64_t colIn = fFieldIndex[1];
   bool isNull = true;
