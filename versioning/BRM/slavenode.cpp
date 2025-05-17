@@ -84,7 +84,7 @@ class ServiceWorkerNode : public Service, public Opt
   }
 };
 
-void stop(int sig)
+void stop(int /*sig*/)
 {
   if (!die)
   {
@@ -94,7 +94,7 @@ void stop(int sig)
   }
 }
 
-void reset(int sig)
+void reset(int /*sig*/)
 {
   comm->reset();
 }
@@ -140,10 +140,14 @@ int ServiceWorkerNode::Child()
   }
 
   /* Start 4 threads to monitor write lock state */
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
+  monitorThreads.create_thread(
+      RWLockMonitor(&die, comm->getSlaveNode().getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
+  monitorThreads.create_thread(
+      RWLockMonitor(&die, comm->getSlaveNode().getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
+  monitorThreads.create_thread(
+      RWLockMonitor(&die, comm->getSlaveNode().getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
+  monitorThreads.create_thread(
+      RWLockMonitor(&die, comm->getSlaveNode().getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
   monitorThreads.create_thread(
       RWLockMonitor(&die, comm->getSlaveNode().getEMIndexLockStatus(), keys.KEYRANGE_EXTENTMAP_INDEX_BASE));
 

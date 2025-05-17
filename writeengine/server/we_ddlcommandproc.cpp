@@ -67,9 +67,7 @@ WE_DDLCommandProc::WE_DDLCommandProc()
   if (dbct.length() != 0)
     dbrootCnt = cf->uFromText(dbct);
 }
-WE_DDLCommandProc::WE_DDLCommandProc(const WE_DDLCommandProc& rhs)
-{
-}
+
 WE_DDLCommandProc::~WE_DDLCommandProc()
 {
 }
@@ -2366,9 +2364,9 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
   return rc;
 }
 
-uint8_t WE_DDLCommandProc::updateSystableEntryForSysColumn(int32_t sessionID, uint32_t txnID,
+uint8_t WE_DDLCommandProc::updateSystableEntryForSysColumn(int32_t /*sessionID*/, uint32_t txnID,
                                                            const DDLColumn& column, const std::string& value,
-                                                           const std::string& oldValue,
+                                                           const std::string& /*oldValue*/,
                                                            execplan::CalpontSystemCatalog::RIDList& roList,
                                                            std::string& err)
 {
@@ -2791,7 +2789,7 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
   return rc;
 }
 
-uint8_t WE_DDLCommandProc::updateSystableEntryForSysTable(int32_t sessionID, uint32_t txnID,
+uint8_t WE_DDLCommandProc::updateSystableEntryForSysTable(int32_t /*sessionID*/, uint32_t txnID,
                                                           const DDLColumn& column, const std::string& value,
                                                           const std::string& oldValue,
                                                           CalpontSystemCatalog::ROPair ropair,

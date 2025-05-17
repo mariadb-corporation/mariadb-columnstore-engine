@@ -237,7 +237,7 @@ const string WindowFunctionType::toString() const
 }
 
 template <typename T>
-void WindowFunctionType::getValue(uint64_t i, T& t, CDT* cdt)
+void WindowFunctionType::getValue(uint64_t /*i*/, T& /*t*/, CDT* /*cdt*/)
 {
 }
 
@@ -297,7 +297,7 @@ void WindowFunctionType::getValue<long double>(uint64_t i, long double& t, CDT* 
 }
 
 template <>
-void WindowFunctionType::getValue<utils::NullString>(uint64_t i, utils::NullString& t, CDT* cdt)
+void WindowFunctionType::getValue<utils::NullString>(uint64_t i, utils::NullString& t, CDT* /*cdt*/)
 {
   t = fRow.getStringField(i);
   // By not setting cdt, we let it default to the column's type
@@ -315,7 +315,7 @@ void WindowFunctionType::getValue<int128_t>(uint64_t i, int128_t& t, CDT* cdt)
 }
 
 template <typename T>
-void WindowFunctionType::setValue(uint64_t i, T& t)
+void WindowFunctionType::setValue(uint64_t /*i*/, T& /*t*/)
 {
 }
 
@@ -579,7 +579,7 @@ void WindowFunctionType::implicit2T<utils::NullString>(uint64_t i, utils::NullSt
 }
 
 template <typename T>
-void WindowFunctionType::getConstValue(ConstantColumn* cc, T& t, bool& b)
+void WindowFunctionType::getConstValue(ConstantColumn* /*cc*/, T& /*t*/, bool& /*b*/)
 {
 }
 

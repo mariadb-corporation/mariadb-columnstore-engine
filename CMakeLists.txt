@@ -250,7 +250,7 @@ IF (MASK_LONGDOUBLE)
 ENDIF()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition")
+    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition -Wno-cast-function-type-strict")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
 endif()
@@ -262,6 +262,7 @@ ENDIF()
 
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
+MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-format-truncation" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
 MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
 
 SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")

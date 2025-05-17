@@ -38,7 +38,7 @@ FilterCommandJL::~FilterCommandJL()
 {
 }
 
-void FilterCommandJL::setLBID(uint64_t rid, uint32_t dbroot)
+void FilterCommandJL::setLBID(uint64_t /*rid*/, uint32_t /*dbroot*/)
 {
 }
 
@@ -67,7 +67,7 @@ void FilterCommandJL::createCommand(ByteStream& bs) const
   CommandJL::createCommand(bs);
 }
 
-void FilterCommandJL::runCommand(ByteStream& bs) const
+void FilterCommandJL::runCommand(ByteStream& /*bs*/) const
 {
 }
 

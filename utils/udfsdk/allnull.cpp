@@ -26,7 +26,7 @@ struct allnull_data
 };
 
 #define OUT_TYPE int64_t
-mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context, ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode allnull::init(mcsv1Context* context, ColumnDatum* /*colTypes*/)
 {
   context->setUserDataSize(sizeof(allnull_data));
 
@@ -51,7 +51,7 @@ mcsv1_UDAF::ReturnCode allnull::reset(mcsv1Context* context)
   return mcsv1_UDAF::SUCCESS;
 }
 
-mcsv1_UDAF::ReturnCode allnull::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
+mcsv1_UDAF::ReturnCode allnull::nextValue(mcsv1Context* context, ColumnDatum* /*valsIn*/)
 {
   struct allnull_data* data = (struct allnull_data*)context->getUserData()->data;
 

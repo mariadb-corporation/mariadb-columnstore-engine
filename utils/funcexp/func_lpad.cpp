@@ -42,7 +42,7 @@ namespace funcexp
 const string Func_lpad::fPad = " ";
 
 CalpontSystemCatalog::ColType Func_lpad::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

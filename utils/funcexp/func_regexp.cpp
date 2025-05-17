@@ -24,8 +24,10 @@
 #include <cstdlib>
 #include <string>
 using namespace std;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "utils/pcre2/jpcre2.hpp"
+#pragma GCC diagnostic pop
 
 #include "functor_bool.h"
 #include "functor_str.h"
@@ -261,28 +263,28 @@ inline RegExpParams getEpressionAndPattern(rowgroup::Row& row, funcexp::Function
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_regexp_replace::operationType(FunctionParm& fp,
-                                                                 CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_regexp_replace::operationType(
+    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
 CalpontSystemCatalog::ColType Func_regexp_substr::operationType(FunctionParm& fp,
-                                                                CalpontSystemCatalog::ColType& resultType)
+                                                                CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
 CalpontSystemCatalog::ColType Func_regexp_instr::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& resultType)
+                                                               CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
-CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_regexp::operationType(FunctionParm& /*fp*/,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

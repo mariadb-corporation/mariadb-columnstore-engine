@@ -274,7 +274,7 @@ class ArithmeticColumn : public ReturnedColumn
  private:
   ParseTree* fExpression = nullptr;
   using TreeNode::evaluate;
-  void evaluate(rowgroup::Row& row)
+  void evaluate(rowgroup::Row& /*row*/)
   {
   }
 };

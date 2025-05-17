@@ -77,7 +77,7 @@ void addSubtractExecute(const Decimal& l, const Decimal& r, Decimal& result, Bin
 
 template <typename OpOverflowCheck, typename MultiplicationOverflowCheck>
 void divisionExecute(const Decimal& l, const Decimal& r, Decimal& result, OpOverflowCheck opOverflowCheck,
-                     MultiplicationOverflowCheck mulOverflowCheck)
+                     MultiplicationOverflowCheck /*mulOverflowCheck*/)
 {
   int128_t lValue = Decimal::isWideDecimalTypeByPrecision(l.precision) ? l.s128Value : l.value;
   int128_t rValue = Decimal::isWideDecimalTypeByPrecision(r.precision) ? r.s128Value : r.value;
@@ -109,7 +109,7 @@ void divisionExecute(const Decimal& l, const Decimal& r, Decimal& result, OpOver
 
 template <typename OpOverflowCheck, typename MultiplicationOverflowCheck>
 void multiplicationExecute(const Decimal& l, const Decimal& r, Decimal& result,
-                           OpOverflowCheck opOverflowCheck, MultiplicationOverflowCheck mulOverflowCheck)
+                           OpOverflowCheck opOverflowCheck, MultiplicationOverflowCheck /*mulOverflowCheck*/)
 {
   int128_t lValue = Decimal::isWideDecimalTypeByPrecision(l.precision) ? l.s128Value : l.value;
   int128_t rValue = Decimal::isWideDecimalTypeByPrecision(r.precision) ? r.s128Value : r.value;

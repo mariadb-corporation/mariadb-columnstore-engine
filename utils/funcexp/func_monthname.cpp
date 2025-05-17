@@ -36,7 +36,7 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_monthname::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_monthname::operationType(FunctionParm& /*fp*/,
                                                             CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -165,9 +165,7 @@ int64_t Func_monthname::getIntValInternal(rowgroup::Row& row, FunctionParm& parm
 
       break;
 
-    default:
-      isNull = true;
-      return -1;
+    default: isNull = true; return -1;
   }
 
   return -1;
@@ -179,8 +177,8 @@ int64_t Func_monthname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& 
   return getIntValInternal(row, parm, isNull, op_ct);
 }
 
-double Func_monthname::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                    execplan::CalpontSystemCatalog::ColType& op_ct)
+double Func_monthname::getDoubleVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                                    execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   return 0;
 }

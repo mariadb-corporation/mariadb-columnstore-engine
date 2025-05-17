@@ -35,8 +35,8 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_time::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_time::operationType(FunctionParm& /*fp*/,
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   CalpontSystemCatalog::ColType ct;
   ct.colDataType = CalpontSystemCatalog::VARCHAR;
@@ -160,7 +160,7 @@ int64_t Func_time::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
 }
 
 double Func_time::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   // convert time value to int followiing mysql. e.g. 23:34:34 => 233434
   int64_t datetimevalue = dataconvert::DataConvert::stringToDatetime(fp[0]->data()->getStrVal(row, isNull));

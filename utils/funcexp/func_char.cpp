@@ -79,7 +79,7 @@ inline size_t getChar(int32_t num, char*& buf)
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_char::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

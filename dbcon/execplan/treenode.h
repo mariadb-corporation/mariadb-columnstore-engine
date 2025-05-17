@@ -267,18 +267,18 @@ class TreeNode
   /***********************************************************************
    *                     F&E framework                                   *
    ***********************************************************************/
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull)
+  virtual const utils::NullString& getStrVal(rowgroup::Row& /*row*/, bool& isNull)
   {
     isNull = isNull ||
              fResult.strVal
                  .isNull();  // XXX: NullString returns isNull, we should remove that parameter altogether.
     return fResult.strVal;
   }
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.intVal;
   }
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull)
+  virtual uint64_t getUintVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.uintVal;
   }
@@ -294,43 +294,43 @@ class TreeNode
     int64_t val = getIntVal(row, isNull);
     return datatypes::TSInt64Null(val, isNull);
   }
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull)
+  virtual float getFloatVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.floatVal;
   }
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual double getDoubleVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.doubleVal;
   }
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull)
+  virtual long double getLongDoubleVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.longDoubleVal;
   }
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull)
+  virtual IDB_Decimal getDecimalVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.decimalVal;
   }
-  virtual bool getBoolVal(rowgroup::Row& row, bool& isNull)
+  virtual bool getBoolVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.boolVal;
   }
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int32_t getDateIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.intVal;
   }
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getDatetimeIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.intVal;
   }
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimestampIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.intVal;
   }
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull)
+  virtual int64_t getTimeIntVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
     return fResult.intVal;
   }
-  virtual void evaluate(rowgroup::Row& row, bool& isNull)
+  virtual void evaluate(rowgroup::Row& /*row*/, bool& /*isNull*/)
   {
   }
 

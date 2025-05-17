@@ -22,7 +22,7 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 #include <set>
@@ -384,7 +384,6 @@ void checkHavingClause(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
       }
     }
   }
-
 }
 
 void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs, const vector<AggregateColumn*>& aggs,
@@ -519,9 +518,9 @@ void checkGroupByCols(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
         // Not an aggregate column and not an expression of aggregation.
         if (dynamic_cast<AggregateColumn*>(orderByCols[i].get()) == NULL &&
             orderByCols[i]->aggColumnList().empty())
-	{
+        {
           csep->groupByCols().push_back(orderByCols[i]);
-	}
+        }
       }
     }
   }
@@ -1132,7 +1131,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
               it = pcv.insert(pcv.end(), srcp);
 
             auto placeToInsert = std::distance(pcv.begin(), it);
-            projectKeys.insert(projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()), tupleKey);
+            projectKeys.insert(
+                projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()),
+                tupleKey);
           }
           else if (doDistinct)  // @bug4250, move forward distinct column if necessary.
           {
@@ -1304,7 +1305,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           it = pcv.insert(pcv.end(), srcp);
 
         auto placeToInsert = std::distance(pcv.begin(), it);
-        projectKeys.insert(projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()), tupleKey);
+        projectKeys.insert(
+            projectKeys.begin() + std::min(placeToInsert, projectKeys.end() - projectKeys.begin()), tupleKey);
       }
       else if (doDistinct)  // @bug4250, move forward distinct column if necessary.
       {
@@ -1539,7 +1541,7 @@ void exceptionHandler(JobList* joblist, const JobInfo& jobInfo, const string& lo
 }
 
 void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVector& querySteps,
-                        JobStepVector& projectSteps, DeliveredTableMap& deliverySteps)
+                        JobStepVector& projectSteps, DeliveredTableMap& /*deliverySteps*/)
 {
   ParseTree* filters = csep->filters();
   jobInfo.deliveredCols = csep->returnedCols();
@@ -1966,7 +1968,8 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
     else
       oid = 0;
 
-    uint32_t tableUid = makeTableKey(jobInfo, oid, it->table, it->alias, it->schema, it->view, it->partitions);
+    uint32_t tableUid =
+        makeTableKey(jobInfo, oid, it->table, it->alias, it->schema, it->view, it->partitions);
     jobInfo.tableList.push_back(tableUid);
   }
 
@@ -2308,8 +2311,8 @@ namespace joblist
 {
 /* static */
 SJLP JobListFactory::makeJobList(CalpontExecutionPlan* cplan, ResourceManager* rm,
-                                 const PrimitiveServerThreadPools& primitiveServerThreadPools, bool tryTuple,
-                                 bool isExeMgr)
+                                 const PrimitiveServerThreadPools& primitiveServerThreadPools,
+                                 bool /*tryTuple*/, bool isExeMgr)
 {
   SJLP ret;
   string emsg;

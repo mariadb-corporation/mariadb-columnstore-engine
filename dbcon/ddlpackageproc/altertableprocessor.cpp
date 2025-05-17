@@ -1252,7 +1252,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
 }
 
 void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                     DDLResult& result, ddlpackage::AtaDropColumn& ataDropColumn,
+                                     DDLResult& /*result*/, ddlpackage::AtaDropColumn& ataDropColumn,
                                      ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
   // 1. Get the OIDs for the column
@@ -1650,10 +1650,11 @@ void AlterTableProcessor::dropColumns(uint32_t sessionID, execplan::CalpontSyste
   }
 }
 
-void AlterTableProcessor::addTableConstraint(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                             DDLResult& result,
+void AlterTableProcessor::addTableConstraint(uint32_t /*sessionID*/,
+                                             execplan::CalpontSystemCatalog::SCN /*txnID*/,
+                                             DDLResult& /*result*/,
                                              ddlpackage::AtaAddTableConstraint& ataAddTableConstraint,
-                                             ddlpackage::QualifiedName& fTableName)
+                                             ddlpackage::QualifiedName& /*fTableName*/)
 {
   /*TODO: Check if existing row satisfy the constraint.
   If not, the constraint will not be added. */
@@ -1683,7 +1684,7 @@ void AlterTableProcessor::addTableConstraint(uint32_t sessionID, execplan::Calpo
 }
 
 void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                           DDLResult& result,
+                                           DDLResult& /*result*/,
                                            ddlpackage::AtaSetColumnDefault& ataSetColumnDefault,
                                            ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
@@ -1772,7 +1773,7 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
     throw std::runtime_error(errorMsg);
 }
 void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                            DDLResult& result,
+                                            DDLResult& /*result*/,
                                             ddlpackage::AtaDropColumnDefault& ataDropColumnDefault,
                                             ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
@@ -1946,7 +1947,7 @@ void AlterTableProcessor::dropTableConstraint (uint32_t sessionID, execplan::Cal
 #endif
 
 void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                      DDLResult& result, ddlpackage::AtaRenameTable& ataRenameTable,
+                                      DDLResult& /*result*/, ddlpackage::AtaRenameTable& ataRenameTable,
                                       ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
   /*Steps:
@@ -2115,8 +2116,8 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
     throw std::runtime_error(errorMsg);
 }
 
-void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                       DDLResult& result, ddlpackage::AtaTableComment& ataTableComment,
+void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN /*txnID*/,
+                                       DDLResult& /*result*/, ddlpackage::AtaTableComment& ataTableComment,
                                        ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
   // Currently only process autoincrement values in table comments during alter
@@ -2329,7 +2330,7 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
 }
 
 void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSystemCatalog::SCN txnID,
-                                       DDLResult& result, ddlpackage::AtaRenameColumn& ataRenameColumn,
+                                       DDLResult& /*result*/, ddlpackage::AtaRenameColumn& ataRenameColumn,
                                        ddlpackage::QualifiedName& fTableName, const uint64_t uniqueId)
 {
   /*Steps:

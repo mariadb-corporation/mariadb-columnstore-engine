@@ -136,7 +136,7 @@ int64_t Func_truncate::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 uint64_t Func_truncate::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
-                                   CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   uint64_t val = parm[0]->data()->getUintVal(row, isNull);
 
@@ -205,8 +205,7 @@ double Func_truncate::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
 
       return x;
     }
-    default:
-      break;
+    default: break;
   }
   IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
 
@@ -667,7 +666,7 @@ string Func_truncate::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 }
 
 int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                          execplan::CalpontSystemCatalog::ColType& op_ct)
+                                          execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
@@ -679,11 +678,12 @@ int64_t Func_truncate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm
   }
   int64_t x = parm[0]->data()->getTimestampIntVal(row, isNull);
   int32_t m_x = x & 0xfffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
 
 int64_t Func_truncate::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                                      CalpontSystemCatalog::ColType& op_ct)
+                                         execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
@@ -695,11 +695,12 @@ int64_t Func_truncate::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isN
   }
   int64_t x = parm[0]->data()->getDatetimeIntVal(row, isNull);
   int32_t m_x = x & 0xfffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
 
 int64_t Func_truncate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+                                     execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
@@ -711,8 +712,8 @@ int64_t Func_truncate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, boo
   }
   int64_t x = parm[0]->data()->getTimeIntVal(row, isNull);
   int32_t m_x = x & 0xffffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
-
 
 }  // namespace funcexp

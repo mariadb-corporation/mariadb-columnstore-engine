@@ -32,7 +32,7 @@
 */
 namespace ha_mcs_impl
 {
-inline void log_this(THD* thd, const char* message, logging::LOG_TYPE log_type, unsigned sid)
+inline void log_this(THD* /*thd*/, const char* message, logging::LOG_TYPE log_type, unsigned sid)
 {
   // corresponds with dbcon in SubsystemID vector
   // in messagelog.cpp

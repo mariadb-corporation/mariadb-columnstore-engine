@@ -2221,7 +2221,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       // changes made here should also be made there and vice versa.
       if (hasUMJoin || !fBPP->pmSendsFinalResult())
       {
-        utils::setThreadName("BSPJoin");
+        utils::setThreadName("BPSJoin");
 
         data->joinedData = RGData(data->local_outputRG);
         data->local_outputRG.setData(&data->joinedData);

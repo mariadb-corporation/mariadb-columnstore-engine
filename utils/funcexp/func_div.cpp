@@ -38,14 +38,14 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                            CalpontSystemCatalog::ColType& op_ct)
+                            CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double val1 = parm[0]->data()->getDoubleVal(row, isNull);
   double val2 = parm[1]->data()->getDoubleVal(row, isNull);
@@ -58,7 +58,7 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
   // MCOL-179 InnoDB doesn't round or convert to int before dividing.
   return static_cast<int64_t>(val1 / val2);
 
-#if 0    
+#if 0
     int64_t int_val2 = (int64_t)(val2 > 0 ? val2 + 0.5 : val2 - 0.5);
 
     if (int_val2 == 0)
@@ -81,7 +81,7 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 }
 
 uint64_t Func_div::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                              CalpontSystemCatalog::ColType& op_ct)
+                              execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   uint64_t val1 = parm[0]->data()->getUintVal(row, isNull);
   uint64_t val2 = parm[1]->data()->getUintVal(row, isNull);

@@ -580,11 +580,11 @@ void SHA1::PadMessage()
   Message_Block[56] = (Length_High >> 24) & 0xFF;
   Message_Block[57] = (Length_High >> 16) & 0xFF;
   Message_Block[58] = (Length_High >> 8) & 0xFF;
-  Message_Block[59] = (Length_High)&0xFF;
+  Message_Block[59] = (Length_High) & 0xFF;
   Message_Block[60] = (Length_Low >> 24) & 0xFF;
   Message_Block[61] = (Length_Low >> 16) & 0xFF;
   Message_Block[62] = (Length_Low >> 8) & 0xFF;
-  Message_Block[63] = (Length_Low)&0xFF;
+  Message_Block[63] = (Length_Low) & 0xFF;
 
   ProcessMessageBlock();
 }
@@ -614,7 +614,7 @@ unsigned SHA1::CircularShift(int bits, unsigned word)
 
 /** Definition of class Func_sha */
 
-CalpontSystemCatalog::ColType Func_sha::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_sha::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

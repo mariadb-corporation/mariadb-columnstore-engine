@@ -35,8 +35,8 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_time_format::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_time_format::operationType(FunctionParm& /*fp*/,
+                                                              CalpontSystemCatalog::ColType& /*resultType*/)
 {
   CalpontSystemCatalog::ColType ct;
   ct.colDataType = CalpontSystemCatalog::VARCHAR;

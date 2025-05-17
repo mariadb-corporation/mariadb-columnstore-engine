@@ -124,9 +124,9 @@ class WriteEngineWrapper : public WEObj
    * @brief Build a index from an oid file (NOTE: this is write engine internal used function, just for test
    * purpose and not for generic use
    */
-  int buildIndex(const OID& colOid, const OID& treeOid, const OID& listOid,
-                 execplan::CalpontSystemCatalog::ColDataType colDataType, int width, int hwm, bool resetFile,
-                 uint64_t& totalRows, int maxRow = IDX_DEFAULT_READ_ROW)
+  int buildIndex(const OID& /*colOid*/, const OID& /*treeOid*/, const OID& /*listOid*/,
+                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/, bool /*resetFile*/,
+                 uint64_t& /*totalRows*/, int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
   {
     return -1;
   }
@@ -134,10 +134,10 @@ class WriteEngineWrapper : public WEObj
   /**
    * @brief Build a index from a file
    */
-  int buildIndex(const std::string& sourceFileName, const OID& treeOid, const OID& listOid,
-                 execplan::CalpontSystemCatalog::ColDataType colDataType, int width, int hwm, bool resetFile,
-                 uint64_t& totalRows, const std::string& indexName, Log* pLogger,
-                 int maxRow = IDX_DEFAULT_READ_ROW)
+  int buildIndex(const std::string& /*sourceFileName*/, const OID& /*treeOid*/, const OID& /*listOid*/,
+                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/, bool /*resetFile*/,
+                 uint64_t& /*totalRows*/, const std::string& /*indexName*/, Log* /*pLogger*/,
+                 int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
   {
     return -1;
   }
@@ -152,7 +152,7 @@ class WriteEngineWrapper : public WEObj
   /**
    * @brief Close a dictionary
    */
-  int closeDctnry(const TxnID& txnid, int i, bool realClose = true)
+  int closeDctnry(const TxnID& /*txnid*/, int i, bool realClose = true)
   {
     return m_dctnry[op(i)]->closeDctnry(realClose);
   }
@@ -220,7 +220,7 @@ class WriteEngineWrapper : public WEObj
    * @param treeOid index tree file object id
    * @param listOid index list file object id
    */
-  int createIndex(const TxnID& txnid, const OID& treeOid, const OID& listOid)
+  int createIndex(const TxnID& /*txnid*/, const OID& /*treeOid*/, const OID& /*listOid*/)
   {
     int rc = -1;
     return rc;
@@ -268,7 +268,7 @@ class WriteEngineWrapper : public WEObj
    * @brief Drop a column, include object ids for column data file
    * @param dataOid column datafile object id
    */
-  int dropColumn(const TxnID& txnid, const OID dataOid)
+  int dropColumn(const TxnID& /*txnid*/, const OID dataOid)
   {
     return m_colOp[0]->dropColumn((FID)dataOid);
   }
@@ -277,7 +277,7 @@ class WriteEngineWrapper : public WEObj
    * @brief Drop files
    * @param dataOids column and dictionary datafile object id
    */
-  int dropFiles(const TxnID& txnid, const std::vector<int32_t>& dataOids)
+  int dropFiles(const TxnID& /*txnid*/, const std::vector<int32_t>& dataOids)
   {
     return m_colOp[0]->dropFiles(dataOids);
   }
@@ -291,7 +291,7 @@ class WriteEngineWrapper : public WEObj
     return m_colOp[0]->dropPartitions(dataOids, partitions);
   }
 
-  int deleteOIDsFromExtentMap(const TxnID& txnid, const std::vector<int32_t>& dataOids)
+  int deleteOIDsFromExtentMap(const TxnID& /*txnid*/, const std::vector<int32_t>& dataOids)
   {
     return m_colOp[0]->deleteOIDsFromExtentMap(dataOids);
   }
@@ -301,7 +301,7 @@ class WriteEngineWrapper : public WEObj
    * @param treeOid index tree file object id
    * @param listOid index list file object id
    */
-  int dropIndex(const TxnID& txnid, const OID& treeOid, const OID& listOid)
+  int dropIndex(const TxnID& /*txnid*/, const OID& /*treeOid*/, const OID& /*listOid*/)
   {
     return -1;
   }
@@ -312,7 +312,7 @@ class WriteEngineWrapper : public WEObj
    * @param treeOid dictionary tree file object id
    * @param listOid index list file object id
    */
-  int dropDctnry(const TxnID& txnid, const OID& dctnryOid, const OID& treeOid, const OID& listOid)
+  int dropDctnry(const TxnID& /*txnid*/, const OID& dctnryOid, const OID& /*treeOid*/, const OID& /*listOid*/)
   {
     return m_dctnry[0]->dropDctnry(dctnryOid);
   }

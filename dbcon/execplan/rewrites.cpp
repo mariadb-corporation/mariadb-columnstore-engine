@@ -82,7 +82,7 @@ enum class ChildType
   Leave
 };
 
-void printTreeLevel(execplan::ParseTree* root, int level)
+void printTreeLevel([[maybe_unused]] execplan::ParseTree* root, [[maybe_unused]] int level)
 {
 #if debug_rewrites
   auto sep = std::string(level * 4, '-');
@@ -116,7 +116,8 @@ struct StackFrameWithSet
   bool orMet;
   bool andParent;
   CommonContainer localset;
-  StackFrameWithSet(execplan::ParseTree* node_, ParseTree::GoTo direction_, bool orMet_ = false, bool andParent_ = false)
+  StackFrameWithSet(execplan::ParseTree* node_, ParseTree::GoTo direction_, bool orMet_ = false,
+                    bool andParent_ = false)
    : node(node_), direction(direction_), orMet(orMet_), andParent(andParent_), localset({{}, {}})
   {
   }
@@ -274,8 +275,7 @@ void deleteOneNode(execplan::ParseTree** node)
 
 #if debug_rewrites
   std::cerr << "   Deleting: " << (*node)->data() << " " << boost::core::demangle(typeid(**node).name())
-            << " "
-            << "ptr: " << *node << std::endl;
+            << " " << "ptr: " << *node << std::endl;
 #endif
 
   delete *node;
@@ -397,7 +397,8 @@ void removeFromTreeIterative(execplan::ParseTree** root, const CommonContainer& 
 
 }  // namespace details
 
-void dumpTreeFiles(execplan::ParseTree* filters, const std::string& name, std::string dumpfolder = {})
+void dumpTreeFiles([[maybe_unused]] execplan::ParseTree* filters, [[maybe_unused]] const std::string& name,
+                   [[maybe_unused]] std::string dumpfolder = {})
 {
 #if debug_rewrites
   messageqcpp::ByteStream beforetree;
@@ -484,17 +485,18 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
   return left->data()->data() < right->data()->data();
 }
 
-
 bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit)
 {
   uint64_t maxLimit = 0;
-  auto walker = [](const execplan::ParseTree* node, void* maxLimit){
+  auto walker = [](const execplan::ParseTree* node, void* maxLimit)
+  {
     auto maybe_cf = dynamic_cast<ConstantFilter*>(node->data());
-    if (maybe_cf != nullptr && (maybe_cf->op()->op() == OpType::OP_OR || maybe_cf->op()->op() == OpType::OP_IN))
-      {
-        *((uint64_t*)maxLimit) = std::max(maybe_cf->filterList().size(), *((uint64_t*)maxLimit));
-      }
-    };
+    if (maybe_cf != nullptr &&
+        (maybe_cf->op()->op() == OpType::OP_OR || maybe_cf->op()->op() == OpType::OP_IN))
+    {
+      *((uint64_t*)maxLimit) = std::max(maybe_cf->filterList().size(), *((uint64_t*)maxLimit));
+    }
+  };
   tree->walk(walker, &maxLimit);
   return maxLimit <= limit;
 }

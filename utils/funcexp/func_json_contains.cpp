@@ -148,7 +148,7 @@ static bool checkContains(json_engine_t* jsEg, json_engine_t* valEg)
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_contains::operationType(FunctionParm& fp,
-                                                                CalpontSystemCatalog::ColType& resultType)
+                                                                CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -157,7 +157,7 @@ CalpontSystemCatalog::ColType Func_json_contains::operationType(FunctionParm& fp
  * getBoolVal API definition
  */
 bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& type)
+                                    CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS = false, isNullVal = false;
   const auto& js = fp[0]->data()->getStrVal(row, isNullJS);

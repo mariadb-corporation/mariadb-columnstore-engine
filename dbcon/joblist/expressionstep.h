@@ -76,7 +76,7 @@ class ExpressionStep : public JobStep
     return fViews.empty() ? "" : fViews.front();
   }
   using JobStep::partitions;
-  execplan::Partitions partitions() const
+  execplan::Partitions partitions() const override
   {
     return fPartitions;
   }

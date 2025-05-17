@@ -43,7 +43,7 @@ using namespace logging;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_char_length::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+                                                              CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }

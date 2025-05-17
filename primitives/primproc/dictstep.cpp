@@ -104,11 +104,11 @@ void DictStep::createCommand(ByteStream& bs)
   Command::createCommand(bs);
 }
 
-void DictStep::resetCommand(ByteStream& bs)
+void DictStep::resetCommand(ByteStream& /*bs*/)
 {
 }
 
-void DictStep::prep(int8_t outputType, bool makeAbsRids)
+void DictStep::prep(int8_t /*outputType*/, bool /*makeAbsRids*/)
 {
   // (at most there are 8192 tokens to fetch)
   bufferSize = sizeof(DictInput) + filterString.length() + (8192 * sizeof(OldGetSigParams));
@@ -188,14 +188,15 @@ void DictStep::copyResultToTmpSpace(OrderedToken* ot)
       pos += 1;
       len = *((uint16_t*)pos);
       pos += 2;
-      if (!isnull) {
+      if (!isnull)
+      {
         ns.assign(pos, len);
       }
       pos += len;
       ot[rid16].str = ns;
 
-      //if (rid64 & 0x8000000000000000LL)
-      //  ot[rid16].str = joblist::CPNULLSTRMARK;
+      // if (rid64 & 0x8000000000000000LL)
+      //   ot[rid16].str = joblist::CPNULLSTRMARK;
     }
   }
 }

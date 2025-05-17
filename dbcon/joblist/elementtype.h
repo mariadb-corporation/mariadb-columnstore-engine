@@ -170,7 +170,7 @@ struct RIDElementType
   RIDElementType();
   explicit RIDElementType(uint64_t f);
 
-  const char* getHashString(uint64_t mode, uint64_t* len) const
+  const char* getHashString(uint64_t /*mode*/, uint64_t* len) const
   {
     *len = 8;
     return (char*)&first;
@@ -211,7 +211,7 @@ struct TupleType
    * @note params mode and len are ignored here. they are carried
    * just to keep a consistent interface with the other element type
    */
-  const char* getHashString(uint64_t mode, uint64_t* len) const
+  const char* getHashString(uint64_t /*mode*/, uint64_t* /*len*/) const
   {
     return (char*)second;
   }
@@ -404,7 +404,6 @@ class AnyDataList
   AnyDataList(const AnyDataList& rhs) = delete;
   AnyDataList& operator=(const AnyDataList& rhs) = delete;
   boost::shared_ptr<RowGroupDL> fDatalist;
-  bool fDisown;
 };
 
 /** @brief type AnyDataListSPtr

@@ -40,8 +40,8 @@ using namespace oam;
 #include "distributedenginecomm.h"
 using namespace joblist;
 
-//#include "boost/filesystem/operations.hpp"
-//#include "boost/filesystem/path.hpp"
+// #include "boost/filesystem/operations.hpp"
+// #include "boost/filesystem/path.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
@@ -97,7 +97,7 @@ class ServiceDDLProc : public Service, public Opt
  protected:
   void setupChildSignalHandlers();
 
-  void log(logging::LOG_TYPE type, const std::string& str)
+  void log(logging::LOG_TYPE /*type*/, const std::string& str)
   {
     LoggingID logid(23, 0, 0);
     Message::Args args;

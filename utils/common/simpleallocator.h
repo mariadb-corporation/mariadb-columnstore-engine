@@ -164,7 +164,7 @@ class SimpleAllocator
 };
 
 // inlines
-inline void* SimplePool::allocate(size_t n, const void* dur)
+inline void* SimplePool::allocate(size_t n, const void* /*dur*/)
 {
   // make sure the block allocated is on unit boundary
   size_t unitCount = n / fUnitSize;

@@ -129,10 +129,6 @@ class WECmdArgs
   {
     this->fJobId = fJobId;
   }
-  void setOrigJobId(std::string fOrigJobId)
-  {
-    this->fOrigJobId = fJobId;
-  }
   void setLocFile(std::string fLocFile)
   {
     this->fLocFile = fLocFile;

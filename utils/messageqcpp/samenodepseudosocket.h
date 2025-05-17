@@ -41,11 +41,11 @@ class SameNodePseudoSocket : public Socket
   SameNodePseudoSocket(const SameNodePseudoSocket& rhs);
   virtual SameNodePseudoSocket& operator=(const SameNodePseudoSocket& rhs);
 
-  void connectionTimeout(const struct ::timespec* timeout) override
+  void connectionTimeout(const struct ::timespec* /*timeout*/) override
   {
   }
 
-  void syncProto(bool use) override
+  void syncProto(bool /*use*/) override
   {
   }
 
@@ -54,7 +54,7 @@ class SameNodePseudoSocket : public Socket
     return 1;
   }
 
-  inline void socketParms(const SocketParms& socket) override
+  inline void socketParms(const SocketParms& /*socket*/) override
   {
   }
 
@@ -92,7 +92,7 @@ inline bool SameNodePseudoSocket::isOpen() const
   return true;
 }
 
-inline void SameNodePseudoSocket::sa(const sockaddr* sa)
+inline void SameNodePseudoSocket::sa(const sockaddr* /*sa*/)
 {
 }
 

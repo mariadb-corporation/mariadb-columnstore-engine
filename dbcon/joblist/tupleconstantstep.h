@@ -180,10 +180,9 @@ class TupleConstantBooleanStep : public TupleConstantStep
   void fillInConstants() override
   {
   }
-  void constructContanstRow(const JobInfo& jobInfo) override
+  void constructContanstRow(const JobInfo& /*jobInfo*/) override
   {
   }
-
   // boolean value
   bool fValue;
 };

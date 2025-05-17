@@ -36,14 +36,14 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_crc32::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_crc32::operationType(FunctionParm& /*fp*/,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_crc32::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                              CalpontSystemCatalog::ColType& ct)
+                              CalpontSystemCatalog::ColType& /*ct*/)
 {
   unsigned crc;
   switch (parm.size())

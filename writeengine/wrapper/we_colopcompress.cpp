@@ -63,7 +63,7 @@ ColumnOpCompress0::~ColumnOpCompress0()
 IDBDataFile* ColumnOpCompress0::openFile(const Column& column, const uint16_t dbRoot,
                                          const uint32_t partition, const uint16_t segment,
                                          std::string& segFile, bool useTmpSuffix, const char* mode,
-                                         const int ioBuffSize, bool isReadOnly) const
+                                         const int /*ioBuffSize*/, bool /*isReadOnly*/) const
 {
   return FileOp::openFile(column.dataFile.fid, dbRoot, partition, segment, segFile, mode, column.colWidth,
                           useTmpSuffix);

@@ -281,7 +281,7 @@ void set_fe_conn_info_ptr(void* ptr, THD* thd)
   THDVAR(thd, fe_conn_info_ptr) = (uint64_t)(ptr);
 }
 
-ulonglong get_original_optimizer_flags(THD* thd)
+ulonglong get_original_optimizer_flags(THD* /*thd*/)
 {
   return THDVAR(current_thd, original_optimizer_flags);
 }

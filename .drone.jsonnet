@@ -15,6 +15,17 @@ local platforms_arm = {
   'stable-23.10': ['rockylinux:8', 'rockylinux:9', 'debian:11', 'debian:12', 'ubuntu:20.04', 'ubuntu:22.04', 'ubuntu:24.04'],
 };
 
+local customBuildEnvCommandsMap = {
+  'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
+  'clang-19': ['apt install -y clang-19', 'export CC=/usr/bin/clang-19', 'export CXX=/usr/bin/clang++-19'],
+  'clang-20': ['apt install -y wget curl lsb-release software-properties-common gnupg',
+               'wget https://apt.llvm.org/llvm.sh',
+               'bash llvm.sh 20',
+               'export CC=/usr/bin/clang-20',
+               'export CXX=/usr/bin/clang++-20'],
+};
+
+
 local any_branch = '**';
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
@@ -99,7 +110,7 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') = {
+local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise', customBuildEnvCommandsMapKey='') = {
   local pkg_format = if (std.split(platform, ':')[0] == 'rockylinux') then 'rpm' else 'deb',
   local init = if (pkg_format == 'rpm') then '/usr/lib/systemd/systemd' else 'systemd',
   local mtr_path = if (pkg_format == 'rpm') then '/usr/share/mysql-test' else '/usr/share/mysql/mysql-test',
@@ -108,12 +119,13 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
-  local branch_ref = if (branch == any_branch) then 'develop' else branch,
+  local branch_ref = if (branch == any_branch) then 'stable-23.10' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == '**') then '' else branch + '/',
   local brancht = if (branch == '**') then '' else branch + '-',
-  local result = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+  local platformKey = std.strReplace(std.strReplace(platform, ':', ''), '/', '-'),
+  local result = platformKey + if customBuildEnvCommandsMapKey != '' then '_' + customBuildEnvCommandsMapKey else '',
 
   local packages_url = 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server,
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
@@ -134,7 +146,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   publish(step_prefix='pkg', eventp=event + '/${DRONE_BUILD_NUMBER}'):: {
     name: 'publish ' + step_prefix,
-    depends_on: [std.strReplace(step_prefix, ' latest', '')],
+    depends_on: [std.strReplace(step_prefix, ' latest', ''), 'createrepo'],
     image: 'amazon/aws-cli',
     when: {
       status: ['success', 'failure'],
@@ -148,8 +160,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
     commands: [
-      'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --delete',
-      'echo "Data uploaded to: ' + publish_pkg_url + '"'
+      '[ -z "$(ls -A "' + result + '")" ] && echo Nothing to publish! && exit 1',
+
+      'aws s3 sync ' + result + ' s3://cspkg/' + branchp + eventp + '/' + server + '/' + arch + '/' + result + ' --only-show-errors',
+      'echo "Data uploaded to: ' + publish_pkg_url + '"',
+
+      'rm -rf ' + result + '/*'
     ],
   },
 
@@ -184,7 +200,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'test001.sh',
   ],
 
-  local mdb_server_versions = upgrade_test_lists[result][arch],
+  local mdb_server_versions = upgrade_test_lists[platformKey][arch],
 
   local indexes(arr) = std.range(0, std.length(arr) - 1),
 
@@ -248,29 +264,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     'docker stop ' + dockerImage + ' && docker rm ' + dockerImage + ' || echo "cleanup ' + stage + ' failure"',
   ],
 
-  regression(name, depends_on):: {
-    name: name,
-    depends_on: depends_on,
-    image: 'docker:git',
-    volumes: [pipeline._volumes.docker],
-    when: {
-      status: ['success', 'failure'],
-    },
-    [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
-    environment: {
-      REGRESSION_TIMEOUT: {
-        from_secret: 'regression_timeout',
-      },
-    },
-    commands: [
-      execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
-                      dockerImage("regresion")),
-      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
-                      dockerImage("regression"),
-                      "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-    ],
-  },
   _volumes:: {
     mdb: {
       name: 'mdb',
@@ -304,6 +297,24 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'sleep 10',
       execInnerDocker('mariadb -e "insert into test.t1 values (2); select * from test.t1"', dockerImage("smoke")),
     ],
+  },
+  smokelog:: {
+    name: 'smokelog',
+    depends_on: ['smoke'],
+    image: 'docker',
+    volumes: [pipeline._volumes.docker],
+    commands: [
+      'echo "---------- start mariadb service logs ----------"',
+      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('smoke')),
+      'echo "---------- end mariadb service logs ----------"',
+      'echo',
+      'echo "---------- start columnstore debug log ----------"',
+      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('smoke')),
+      'echo "---------- end columnstore debug log ----------"'
+    ] + reportTestStage(dockerImage('smoke'), result, "smoke"),
+    when: {
+      status: ['success', 'failure'],
+    },
   },
   upgrade(version):: {
     name: 'upgrade-test from ' + version,
@@ -433,7 +444,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'cd mariadb-columnstore-regression-test',
       'git rev-parse --abbrev-ref HEAD && git rev-parse HEAD',
       'cd ..',
-      'docker run --shm-size=500m --memory 10g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
+      'docker run --shm-size=500m --memory 12g --env OS=' + result + ' --env PACKAGES_URL=' + packages_url + ' --env DEBIAN_FRONTEND=noninteractive --env MCS_USE_S3_STORAGE=0 --name regression$${DRONE_BUILD_NUMBER} --ulimit core=-1 --privileged --detach ' + img + ' ' + init + ' --unit=basic.target']
       + prepareTestStage(dockerImage('regression'), pkg_format, result, true) + [
 
       'docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/',
@@ -461,44 +472,28 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('/usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester',dockerImage('regression')),
     ],
   },
-  smokelog:: {
-    name: 'smokelog',
-    depends_on: ['smoke'],
-    image: 'docker',
+  regression(name, depends_on):: {
+    name: name,
+    depends_on: depends_on,
+    image: 'docker:git',
     volumes: [pipeline._volumes.docker],
-    commands: [
-      'echo "---------- start mariadb service logs ----------"',
-      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('smoke')),
-      'echo "---------- end mariadb service logs ----------"',
-      'echo',
-      'echo "---------- start columnstore debug log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('smoke')),
-      'echo "---------- end columnstore debug log ----------"'
-    ] + reportTestStage(dockerImage('smoke'), result, "smoke"),
     when: {
       status: ['success', 'failure'],
     },
-  },
-  cmapilog:: {
-    name: 'cmapilog',
-    depends_on: ['cmapi test'],
-    image: 'docker',
-    volumes: [pipeline._volumes.docker],
-    commands: [
-      'echo "---------- start mariadb service logs ----------"',
-      execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('cmapi')),
-      'echo "---------- end mariadb service logs ----------"',
-      'echo',
-      'echo "---------- start columnstore debug log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('cmapi')),
-      'echo "---------- end columnstore debug log ----------"',
-      'echo "---------- start cmapi log ----------"',
-      execInnerDocker('cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi cmapi_server.log"', dockerImage('cmapi')),
-      'echo "---------- end cmapi log ----------"']
-      + reportTestStage(dockerImage('cmapi'), result, "cmapi"),
-    when: {
-      status: ['success', 'failure'],
+    [if (name != 'test000.sh' && name != 'test001.sh') then 'failure']: 'ignore',
+    environment: {
+      REGRESSION_TIMEOUT: {
+        from_secret: 'regression_timeout',
+      },
     },
+    commands: [
+      execInnerDocker("mkdir -p reg-logs", dockerImage("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
+                      dockerImage("regresion")),
+      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + ' || ./regression_logs.sh ' + name + '"',
+                      dockerImage("regression"),
+                      "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+    ],
   },
   regressionlog:: {
     name: 'regressionlog',
@@ -578,52 +573,9 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       },
     },
   },
-  cmapipython:: {
-    name: 'cmapi python',
-    depends_on: ['clone-mdb'],
-    image: img,
-    volumes: [pipeline._volumes.mdb],
-    environment: {
-      PYTHON_URL_AMD64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst',
-      PYTHON_URL_ARM64: 'https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst',
-    },
-    commands: [
-      'cd cmapi',
-      '%s install -y wget zstd findutils gcc' % if (pkg_format == 'rpm') then 'yum install -y epel-release && yum makecache && yum ' else 'apt update && apt',
-      'wget -qO- $${PYTHON_URL_' + std.asciiUpper(arch) + '} | tar --use-compress-program=unzstd -xf - -C ./',
-      'mv python pp && mv pp/install python',
-      'chown -R root:root python',
-      if (platform == 'rockylinux:9') then 'yum install -y libxcrypt-compat',
-      if (arch == 'arm64') then 'export CC=gcc',
-      'python/bin/pip3 install -t deps --only-binary :all -r requirements.txt',
-      './cleanup.sh',
-      'cp cmapi_server/cmapi_server.conf cmapi_server/cmapi_server.conf.default',
-    ],
-  },
-  cmapibuild:: {
-    name: 'cmapi build',
-    depends_on: ['cmapi python'],
-    image: img,
-    volumes: [pipeline._volumes.mdb],
-    environment: {
-      DEBIAN_FRONTEND: 'noninteractive',
-    },
-    commands: [
-      'cd cmapi',
-      if (platform == 'rockylinux:9') then 'dnf install -y yum-utils && dnf config-manager --set-enabled devel && dnf update -y',
-      if (pkg_format == 'rpm') then 'yum install -y cmake make rpm-build libarchive createrepo findutils redhat-lsb-core' else 'apt update && apt install --no-install-recommends -y cmake make dpkg-dev lsb-release',
-      './cleanup.sh',
-      'cmake -D' + std.asciiUpper(pkg_format) + '=1 -DSERVER_DIR=/mdb/' + builddir + ' . && make package',
-      'mkdir ./' + result,
-      'mv -v *.%s ./%s/' % [pkg_format, result],
-      if (pkg_format == 'rpm') then 'createrepo ./' + result else 'dpkg-scanpackages %s | gzip > ./%s/Packages.gz' % [result, result],
-      'mkdir /drone/src/' + result,
-      'yes | cp -vr ./%s /drone/src/' % result,
-    ],
-  },
   cmapitest:: {
     name: 'cmapi test',
-    depends_on: ['publish cmapi build', 'smoke'],
+    depends_on: ['publish cmapi build'],
     image: 'docker:git',
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -647,6 +599,27 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       execInnerDocker('bash -c "cd ' + cmapi_path + ' && python/bin/python3 run_tests.py"', dockerImage('cmapi')),
     ],
   },
+    cmapilog:: {
+      name: 'cmapilog',
+      depends_on: ['cmapi test'],
+      image: 'docker',
+      volumes: [pipeline._volumes.docker],
+      commands: [
+        'echo "---------- start mariadb service logs ----------"',
+        execInnerDocker('journalctl -u mariadb --no-pager || echo "mariadb service failure"', dockerImage('cmapi')),
+        'echo "---------- end mariadb service logs ----------"',
+        'echo',
+        'echo "---------- start columnstore debug log ----------"',
+        execInnerDocker('cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"', dockerImage('cmapi')),
+        'echo "---------- end columnstore debug log ----------"',
+        'echo "---------- start cmapi log ----------"',
+        execInnerDocker('cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi cmapi_server.log"', dockerImage('cmapi')),
+        'echo "---------- end cmapi log ----------"']
+        + reportTestStage(dockerImage('cmapi'), result, "cmapi"),
+      when: {
+        status: ['success', 'failure'],
+      },
+    },
   multi_node_mtr:: {
     name: 'mtr',
     depends_on: ['dockerhub'],
@@ -681,7 +654,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
 
   kind: 'pipeline',
   type: 'docker',
-  name: std.join(' ', [branch, platform, event, arch, server]),
+  name: std.join(' ', [branch, platform, event, arch, server, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -742,9 +715,11 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              },
              commands: [
                 'export CLICOLOR_FORCE=1',
-                get_sccache,
                 'mkdir /mdb/' + builddir + '/' + result,
-
+                get_sccache]
+              + (if (std.objectHas(customBuildEnvCommandsMap, customBuildEnvCommandsMapKey)) then
+                    customBuildEnvCommandsMap[customBuildEnvCommandsMapKey] else []) +
+              [
                 'bash -c "set -o pipefail && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/bootstrap_mcs.sh ' +
                           '--build-type RelWithDebInfo ' +
                           '--distro ' + platform + ' ' +
@@ -753,18 +728,35 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                           '/mdb/' + builddir + '/storage/columnstore/columnstore/build/ansi2txt.sh ' +
                           '/mdb/' + builddir + '/' + result + '/build.log"' ,
                 'sccache --show-stats',
-
-                // move engine and cmapi packages to one dir and make a repo
-                if (pkg_format == 'rpm') then "mv -v -t ./" + result + "/ /mdb/" + builddir + "/*.rpm /drone/src/cmapi/" + result + "/*.rpm && createrepo ./" + result
-                else "mv -v -t ./" + result + "/ /mdb/*.deb /drone/src/cmapi/" + result + "/*.deb && dpkg-scanpackages " + result + " | gzip > ./" + result + "/Packages.gz",
-
-                // list storage manager binary
-                'ls -la /mdb/' + builddir + '/storage/columnstore/columnstore/storage-manager',
+             ],
+           },
+           {
+             name: 'cmapi build',
+             depends_on: ['clone-mdb'],
+             image: img,
+             volumes: [pipeline._volumes.mdb],
+             environment: {
+               DEBIAN_FRONTEND: 'noninteractive',
+             },
+             commands: [
+               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/build_cmapi.sh --distro ' + platform + ' --arch ' + arch,
+             ],
+            },
+           {
+             name: 'createrepo',
+             depends_on: ['build', 'cmapi build'],
+             image: img,
+             when: {
+               status: ['success', 'failure'],
+             },
+             volumes: [pipeline._volumes.mdb],
+             commands: [
+               'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/createrepo.sh --result ' + result,
              ],
            },
            {
              name: 'unittests',
-             depends_on: ['build'],
+             depends_on: ['createrepo'],
              image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
@@ -805,7 +797,6 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
              ],
            },
          ] +
-         [pipeline.cmapipython] + [pipeline.cmapibuild] +
          [pipeline.publish('cmapi build')] +
          [pipeline.publish()] +
          [
@@ -828,8 +819,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
-         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
-         (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
+         (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
@@ -872,8 +862,8 @@ local FinalPipeline(branch, event) = {
       'failure',
     ],
   } + (if event == 'cron' then { cron: ['nightly-' + std.strReplace(branch, '.', '-')] } else {}),
-  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise']), platforms.develop) +
-              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise']), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(' ', [branch, p, event, 'amd64', '10.6-enterprise', '']), platforms.develop) +
+              std.map(function(p) std.join(' ', [branch, p, event, 'arm64', '10.6-enterprise', '']), platforms_arm.develop),
 };
 
 [
@@ -903,4 +893,13 @@ local FinalPipeline(branch, event) = {
 [
   Pipeline(any_branch, p, 'custom', 'arm64', '10.6-enterprise')
   for p in platforms_arm_custom
+]
++
+[
+  Pipeline(b, platform, triggeringEvent, 'amd64', server, buildenv)
+  for b in std.objectFields(platforms)
+  for platform in ['ubuntu:24.04']
+  for buildenv in std.objectFields(customBuildEnvCommandsMap)
+  for triggeringEvent in events
+  for server in servers.develop
 ]

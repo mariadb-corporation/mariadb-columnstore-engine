@@ -100,16 +100,16 @@ struct LitEval<'0', Cs...>
 };
 
 template <char... Cs>
-constexpr uint128_t operator"" _xxl()
+constexpr uint128_t operator""_xxl()
 {
   return LitEval<Cs...>::eval();
 }
 }  // namespace detail_xxl
 
 template <char... Cs>
-constexpr uint128_t operator"" _xxl()
+constexpr uint128_t operator""_xxl()
 {
-  return ::detail_xxl::operator"" _xxl<Cs...>();
+  return ::detail_xxl::operator""_xxl < Cs... > ();
 }
 
 namespace datatypes
@@ -1008,7 +1008,7 @@ struct SubtractionOverflowCheck
 */
 struct NoOverflowCheck
 {
-  void operator()(const int128_t& x, const int128_t& y)
+  void operator()(const int128_t& /*x*/, const int128_t& /*y*/)
   {
   }
 };

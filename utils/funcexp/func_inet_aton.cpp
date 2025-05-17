@@ -27,7 +27,7 @@
 #include "functioncolumn.h"
 #include "joblisttypes.h"
 #include "rowgroup.h"
-//#include <iostream> // included when debugging
+// #include <iostream> // included when debugging
 
 namespace funcexp
 {
@@ -36,7 +36,7 @@ namespace funcexp
 // See mcs_add in udfsdk.h for explanation of this function.
 //------------------------------------------------------------------------------
 execplan::CalpontSystemCatalog::ColType Func_inet_aton::operationType(
-    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();  // input type
 }
@@ -46,7 +46,7 @@ execplan::CalpontSystemCatalog::ColType Func_inet_aton::operationType(
 // SELECT ... WHERE inet_aton(ipstring) = 11111111 will call getIntVal()
 //------------------------------------------------------------------------------
 int64_t Func_inet_aton::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_aton::getIntVal" << std::endl;
 
@@ -70,7 +70,7 @@ int64_t Func_inet_aton::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 // SELECT ... WHERE inet_aton(ipstring) = '11111111' will call getDoubleVal()
 //------------------------------------------------------------------------------
 double Func_inet_aton::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                    execplan::CalpontSystemCatalog::ColType& op_ct)
+                                    execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_aton::getDoubleVal" << std::endl;
 
@@ -98,7 +98,7 @@ double Func_inet_aton::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& 
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 std::string Func_inet_aton::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   //	std::cout << "In Func_inet_aton::getStrVal" << std::endl;
 
@@ -122,7 +122,7 @@ std::string Func_inet_aton::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 bool Func_inet_aton::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+                                execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   bool bValue = false;
 
@@ -144,7 +144,7 @@ bool Func_inet_aton::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNu
 // SELECT ... WHERE inet_aton(ipstring) = 11111111. will call getDecimalVal()
 //------------------------------------------------------------------------------
 execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                                    execplan::CalpontSystemCatalog::ColType& op_ct)
+                                                    execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   execplan::CalpontSystemCatalog::ColType colType = fp[0]->data()->resultType();
 
@@ -182,7 +182,7 @@ execplan::IDB_Decimal Func_inet_aton::getDecimalVal(rowgroup::Row& row, Function
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t iValue = joblist::DATENULL;
 
@@ -206,7 +206,7 @@ int32_t Func_inet_aton::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 // Don't know if this function will ever be called.
 //------------------------------------------------------------------------------
 int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                          execplan::CalpontSystemCatalog::ColType& op_ct)
+                                          execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t iValue = joblist::DATETIMENULL;
 
@@ -224,7 +224,7 @@ int64_t Func_inet_aton::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, 
 }
 
 int64_t Func_inet_aton::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                           execplan::CalpontSystemCatalog::ColType& op_ct)
+                                           execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t iValue = joblist::TIMESTAMPNULL;
 
@@ -242,7 +242,7 @@ int64_t Func_inet_aton::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp,
 }
 
 int64_t Func_inet_aton::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t iValue = joblist::TIMENULL;
 

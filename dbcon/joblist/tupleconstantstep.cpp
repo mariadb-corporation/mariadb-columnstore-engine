@@ -18,7 +18,7 @@
 
 //  $Id: tupleconstantstep.cpp 9649 2013-06-25 16:08:05Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -90,7 +90,7 @@ TupleConstantStep::~TupleConstantStep()
 {
 }
 
-void TupleConstantStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
+void TupleConstantStep::setOutputRowGroup(const rowgroup::RowGroup& /*rg*/)
 {
   throw runtime_error("Disabled, use initialize() to set output RowGroup.");
 }
@@ -278,7 +278,7 @@ void TupleConstantStep::constructContanstRow(const JobInfo& jobInfo)
         break;
       }
     }  // switch
-  }    // for constant columns
+  }  // for constant columns
 }
 
 void TupleConstantStep::run()
@@ -567,22 +567,15 @@ void TupleConstantStep::printCalTrace()
 void TupleConstantStep::formatMiniStats()
 {
   ostringstream oss;
-  oss << "TCS "
-      << "UM "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- " << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-      << fRowsReturned << " ";
+  oss << "TCS " << "UM " << "- " << "- " << "- " << "- " << "- " << "- "
+      << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << fRowsReturned
+      << " ";
   fMiniInfo += oss.str();
 }
 
 // class TupleConstantOnlyStep
 TupleConstantOnlyStep::TupleConstantOnlyStep(const JobInfo& jobInfo)
-  : TupleConstantStep(jobInfo)
-  , fEmptySet(jobInfo.constantFalse)
+ : TupleConstantStep(jobInfo), fEmptySet(jobInfo.constantFalse)
 {
   //	fExtendedInfo = "TCOS: ";
 }
@@ -592,7 +585,7 @@ TupleConstantOnlyStep::~TupleConstantOnlyStep()
 }
 
 // void TupleConstantOnlyStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
-void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* rgIn)
+void TupleConstantOnlyStep::initialize(const JobInfo& jobInfo, const rowgroup::RowGroup* /*rgIn*/)
 {
   vector<uint32_t> oids;
   vector<uint32_t> keys;

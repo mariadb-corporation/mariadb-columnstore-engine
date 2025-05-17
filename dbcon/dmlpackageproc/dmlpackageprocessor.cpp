@@ -210,7 +210,7 @@ void DMLPackageProcessor::convertRidToColumn(uint64_t& rid, unsigned& dbRoot, un
                                              unsigned& segment, unsigned filesPerColumnPartition,
                                              unsigned extentsPerSegmentFile, unsigned extentRows,
                                              unsigned startDBRoot, unsigned dbrootCnt,
-                                             const unsigned startPartitionNum)
+                                             const unsigned /*startPartitionNum*/)
 {
   partition = rid / (filesPerColumnPartition * extentsPerSegmentFile * extentRows);
 
@@ -260,7 +260,7 @@ bool DMLPackageProcessor::validateVarbinaryVal(std::string& inStr)
   return invalid;
 }
 
-int DMLPackageProcessor::commitTransaction(uint64_t uniqueId, BRM::TxnID txnID)
+int DMLPackageProcessor::commitTransaction(uint64_t /*uniqueId*/, BRM::TxnID txnID)
 {
   int rc = fDbrm->vbCommit(txnID.id);
   return rc;
@@ -587,7 +587,7 @@ int DMLPackageProcessor::commitBatchAutoOnTransaction(uint64_t uniqueId, BRM::Tx
   return rc;
 }
 
-int DMLPackageProcessor::rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::TxnID txnID,
+int DMLPackageProcessor::rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::TxnID /*txnID*/,
                                                         uint32_t sessionID, const uint32_t tableOid,
                                                         std::string& errorMsg)
 {
@@ -720,7 +720,7 @@ int DMLPackageProcessor::rollBackBatchAutoOnTransaction(uint64_t uniqueId, BRM::
   return rc;
 }
 
-int DMLPackageProcessor::commitBatchAutoOffTransaction(uint64_t uniqueId, BRM::TxnID txnID,
+int DMLPackageProcessor::commitBatchAutoOffTransaction(uint64_t uniqueId, BRM::TxnID /*txnID*/,
                                                        const uint32_t tableOid, std::string& errorMsg)
 {
   std::vector<BRM::TableLockInfo> tableLocks;
@@ -853,7 +853,7 @@ int DMLPackageProcessor::rollBackBatchAutoOffTransaction(uint64_t uniqueId, BRM:
   return rc;
 }
 
-int DMLPackageProcessor::flushDataFiles(int rcIn, std::map<FID, FID>& columnOids, uint64_t uniqueId,
+int DMLPackageProcessor::flushDataFiles(int rcIn, std::map<FID, FID>& /*columnOids*/, uint64_t uniqueId,
                                         BRM::TxnID txnID, uint32_t tableOid)
 {
   // cout <<"in flushDataFiles" << endl;

@@ -184,7 +184,7 @@ class SimdFilterProcessor<
     return _mm_loadu_si128(reinterpret_cast<const SimdType*>(from));
   }
 
-  MCS_FORCE_INLINE MaskType cmpDummy(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpDummy(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
@@ -219,12 +219,12 @@ class SimdFilterProcessor<
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return _mm_set_epi64x(0xFFFFFFFFFFFFFFFFLL, 0xFFFFFFFFFFFFFFFFLL);  // ????
   }
@@ -261,17 +261,17 @@ class SimdFilterProcessor<
     _mm_storeu_si128(reinterpret_cast<SimdType*>(dst), x);
   }
 
-  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType y, SimdType mask) const
+  MCS_FORCE_INLINE SimdType blend(SimdType x, SimdType /*y*/, SimdType /*mask*/) const
   {
     return x;
   }
 
-  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType bwAnd(SimdType x, SimdType /*y*/) const
   {
     return x;
   }
 
-  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType y) const
+  MCS_FORCE_INLINE SimdType cmpGtSimdType(SimdType x, SimdType /*y*/) const
   {
     return x;
   }
@@ -364,12 +364,12 @@ class SimdFilterProcessor<
     return (MaskType)_mm_cmpneq_pd(x, y);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return _mm_set_epi64x(0xFFFFFFFFFFFFFFFFLL, 0xFFFFFFFFFFFFFFFFLL);
   }
@@ -525,12 +525,12 @@ class SimdFilterProcessor<
     return (MaskType)_mm_cmpneq_ps(x, y);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return _mm_set_epi64x(0xFFFFFFFFFFFFFFFFLL, 0xFFFFFFFFFFFFFFFFLL);
   }
@@ -678,12 +678,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi64(x, y) ^ loadValue(0xFFFFFFFFFFFFFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFFFFFFFFFFFFFF);
   }
@@ -823,12 +823,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi64(x, y) ^ loadValue(0xFFFFFFFFFFFFFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFFFFFFFFFFFFFF);
   }
@@ -976,12 +976,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi32(x, y) ^ loadValue(0xFFFFFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFF);
   }
@@ -1129,12 +1129,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi32(x, y) ^ loadValue(0xFFFFFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFFFFFF);
   }
@@ -1309,12 +1309,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi16(x, y) ^ loadValue(0xFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFF);
   }
@@ -1476,12 +1476,12 @@ class SimdFilterProcessor<VT, CHECK_T,
     return _mm_cmpeq_epi16(x, y) ^ loadValue(0xFFFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFFFF);
   }
@@ -1620,12 +1620,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi8(x, y) ^ loadValue(0xFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFF);
   }
@@ -1769,12 +1769,12 @@ class SimdFilterProcessor<
     return _mm_cmpeq_epi8(x, y) ^ loadValue(0xFF);
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return MaskType{0x0, 0x0};
   }
 
-  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MaskType cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return loadValue(0xFF);
   }

@@ -163,7 +163,7 @@
 		<MaxOpenFiles>2K</MaxOpenFiles>
 		<DecreaseOpenFilesCount>200</DecreaseOpenFilesCount>
 		<FDCacheTrace>0</FDCacheTrace>
-		<NumBlocksPct>50</NumBlocksPct>
+		<NumBlocksPct>20</NumBlocksPct>
 	</DBBC>
 	<Installation>
 		<ServerTypeInstall>2</ServerTypeInstall>
@@ -186,7 +186,7 @@
 		<MaxBuckets>128</MaxBuckets>
 		<MaxElems>128K</MaxElems>  <!-- 128 buckets * 128K * 16 = 256 MB -->
 		<PmMaxMemorySmallSide>1G</PmMaxMemorySmallSide>
-		<TotalUmMemory>25%</TotalUmMemory>
+		<TotalUmMemory>65%</TotalUmMemory>
 		<CPUniqueLimit>100</CPUniqueLimit>
 		<AllowDiskBasedJoin>N</AllowDiskBasedJoin>
 		<TempFileCompression>Y</TempFileCompression>

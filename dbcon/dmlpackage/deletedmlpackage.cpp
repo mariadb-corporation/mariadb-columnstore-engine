@@ -143,7 +143,7 @@ int DeleteDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 /**
  *
  */
-int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows)
+int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int /*columns*/, int rows)
 {
 #ifdef DML_PACKAGE_DEBUG
   // cout << "The data buffer received: " << buffer << endl;
@@ -200,8 +200,8 @@ int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
   return retval;
 }
 
-int DeleteDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap,
-                                           int columns, int rows, NullValuesBitset& nullValues)
+int DeleteDMLPackage::buildFromMysqlBuffer(ColNameList& /*colNameList*/, TableValuesMap& /*tableValuesMap*/,
+                                           int /*columns*/, int /*rows*/, NullValuesBitset& /*nullValues*/)
 {
   int retval = 1;
 

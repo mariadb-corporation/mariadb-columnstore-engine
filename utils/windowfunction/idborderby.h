@@ -36,7 +36,7 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "hasher.h"
-// #include "stlpoolallocator.h"
+#include "stlpoolallocator.h"
 
 // forward reference
 namespace joblist
@@ -171,10 +171,8 @@ class BigIntCompare : public Compare
 
 class WideDecimalCompare : public Compare
 {
-  int keyColumnOffset;
-
  public:
-  WideDecimalCompare(const IdbSortSpec& spec, int offset) : Compare(spec), keyColumnOffset(offset)
+  WideDecimalCompare(const IdbSortSpec& spec, int /*offset*/) : Compare(spec)
   {
   }
 
@@ -484,7 +482,7 @@ class IdbOrderBy : public IdbCompare
   };
 
   using DistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, Hasher, Eq,
-                                  allocators::CountingAllocator<rowgroup::Row::Pointer>>;
+                                  utils::STLPoolAllocator<rowgroup::Row::Pointer>>;
   boost::scoped_ptr<DistinctMap_t> fDistinctMap;
   rowgroup::Row row1, row2;  // scratch space for Hasher & Eq
 

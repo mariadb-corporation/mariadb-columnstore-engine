@@ -239,7 +239,7 @@ uint32_t WindowFunctionStep::nextBand(messageqcpp::ByteStream& bs)
   return rowCount;
 }
 
-void WindowFunctionStep::setOutputRowGroup(const RowGroup& rg)
+void WindowFunctionStep::setOutputRowGroup(const RowGroup& /*rg*/)
 {
   idbassert(0);
 }
@@ -1580,15 +1580,9 @@ void WindowFunctionStep::printCalTrace()
 void WindowFunctionStep::formatMiniStats()
 {
   ostringstream oss;
-  oss << "WFS "
-      << "UM "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- " << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-      << fRowsReturned << " ";
+  oss << "WFS " << "UM " << "- " << "- " << "- " << "- " << "- " << "- "
+      << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << fRowsReturned
+      << " ";
   fMiniInfo += oss.str();
 }
 

@@ -44,7 +44,7 @@ using namespace logging;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_find_in_set::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_find_in_set::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

@@ -335,7 +335,6 @@ class FunctionColumn : public ReturnedColumn
   funcexp::FunctionParm fFunctionParms;
   funcexp::Func* fFunctor;                   /// functor to execute this function
   funcexp::Func* fDynamicFunctor = nullptr;  // for rand encode decode
-  bool fFixed = false;
 };
 
 /**

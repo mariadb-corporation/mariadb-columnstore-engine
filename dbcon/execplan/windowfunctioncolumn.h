@@ -168,12 +168,12 @@ class WindowFunctionColumn : public ReturnedColumn
   WF_OrderBy fOrderBy;               /// order by clause
 
   // not support for window functions for now.
-  bool operator==(const TreeNode* t) const override
+  bool operator==(const TreeNode* /*t*/) const override
   {
     return false;
   }
   bool operator==(const WindowFunctionColumn& t) const;
-  bool operator!=(const TreeNode* t) const override
+  bool operator!=(const TreeNode* /*t*/) const override
   {
     return false;
   }

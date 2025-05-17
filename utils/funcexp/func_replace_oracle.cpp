@@ -30,8 +30,8 @@ using namespace joblist;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_replace_oracle::operationType(FunctionParm& fp,
-                                                                 CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_replace_oracle::operationType(
+    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -60,7 +60,7 @@ std::string Func_replace_oracle::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   const auto& ntostr = fp[2]->data()->getStrVal(row, isNull);
   if (ntostr.isNull())
     return "";
-  
+
   const auto& tostr = ntostr.unsafeStringRef();
 
   size_t toLen = tostr.length();

@@ -558,7 +558,7 @@ void JobList::querySummary(bool extendedStats)
 }
 
 // @bug 828. Added additional information to the graph at the end of execution
-void JobList::graph(uint32_t sessionID)
+void JobList::graph(uint32_t /*sessionID*/)
 {
   // Graphic view draw
   auto jsrname = jlf_graphics::generateDotFileName("jobstep_results.");

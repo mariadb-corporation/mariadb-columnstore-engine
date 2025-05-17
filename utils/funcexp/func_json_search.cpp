@@ -54,12 +54,12 @@ namespace funcexp
 {
 const static int wildOne = '_';
 const static int wildMany = '%';
-int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs)
+int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr,
+                                   const CHARSET_INFO* cs)
 {
   if (jsEg->value_type != JSON_VALUE_STRING || !jsEg->value_escaped)
     return cs->wildcmp((const char*)jsEg->value, (const char*)(jsEg->value + jsEg->value_len),
-                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape,
-                       wildOne, wildMany)
+                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape, wildOne, wildMany)
                ? 0
                : 1;
 
@@ -71,21 +71,18 @@ int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString&
                                 (uchar*)buf, (uchar*)(buf + strLen))) <= 0)
       return 0;
 
-    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne,
-                       wildMany)
-               ? 0
-               : 1;
+    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne, wildMany) ? 0 : 1;
   }
 }
 
 CalpontSystemCatalog::ColType Func_json_search::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+                                                              CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& type)
+                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string ret;
   bool isNullJS = false, isNullVal = false;

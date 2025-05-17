@@ -77,7 +77,7 @@ namespace funcexp
 //
 
 CalpontSystemCatalog::ColType Func_acos::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -205,7 +205,7 @@ double Func_acos::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 //
 
 CalpontSystemCatalog::ColType Func_asin::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -333,7 +333,7 @@ double Func_asin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 //
 
 CalpontSystemCatalog::ColType Func_atan::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -537,7 +537,7 @@ double Func_atan::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 //
 
 CalpontSystemCatalog::ColType Func_cos::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -665,7 +665,7 @@ double Func_cos::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
 //
 
 CalpontSystemCatalog::ColType Func_cot::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -847,7 +847,7 @@ double Func_cot::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
 //
 
 CalpontSystemCatalog::ColType Func_log::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1058,7 +1058,7 @@ double Func_log::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
 //
 
 CalpontSystemCatalog::ColType Func_log2::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1191,7 +1191,7 @@ double Func_log2::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 //
 
 CalpontSystemCatalog::ColType Func_log10::operationType(FunctionParm& fp,
-                                                        CalpontSystemCatalog::ColType& resultType)
+                                                        CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1325,7 +1325,7 @@ double Func_log10::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calp
 //
 
 CalpontSystemCatalog::ColType Func_sin::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1467,7 +1467,7 @@ double Func_sin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
 //
 
 CalpontSystemCatalog::ColType Func_sqrt::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1595,7 +1595,7 @@ double Func_sqrt::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
 //
 
 CalpontSystemCatalog::ColType Func_tan::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -1723,7 +1723,7 @@ double Func_tan::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
 //
 
 CalpontSystemCatalog::ColType Func_format::operationType(FunctionParm& fp,
-                                                         CalpontSystemCatalog::ColType& resultType)
+                                                         CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -2033,7 +2033,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 //
 
 CalpontSystemCatalog::ColType Func_radians::operationType(FunctionParm& fp,
-                                                          CalpontSystemCatalog::ColType& resultType)
+                                                          CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -2162,7 +2162,7 @@ double Func_radians::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Ca
 //
 
 CalpontSystemCatalog::ColType Func_degrees::operationType(FunctionParm& fp,
-                                                          CalpontSystemCatalog::ColType& resultType)
+                                                          CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

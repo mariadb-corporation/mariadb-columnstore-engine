@@ -495,8 +495,8 @@ template void number_int_value<int128_t>(const std::string& data, cscDataType ty
                                          bool& pushwarning, bool noRoundup, int128_t& intVal, bool* saturate);
 
 uint64_t number_uint_value(const string& data, cscDataType typeCode,
-                           const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
-                           bool noRoundup)
+                           const datatypes::SystemCatalog::TypeAttributesStd& /*ct*/, bool& pushwarning,
+                           bool /*noRoundup*/)
 {
   // copy of the original input
   string valStr(data);

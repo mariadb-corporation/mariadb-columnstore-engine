@@ -24,7 +24,10 @@
 #define TRUE (1)  /* Logical true */
 #define FALSE (0) /* Logical false */
 #endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <sql_base.h>
+#pragma GCC diagnostic pop
 
 // static HASH tz_names;
 // static HASH offset_tzs;

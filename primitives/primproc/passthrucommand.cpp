@@ -46,7 +46,7 @@ PassThruCommand::~PassThruCommand()
 {
 }
 
-void PassThruCommand::prep(int8_t outputType, bool makeAbsRids)
+void PassThruCommand::prep(int8_t /*outputType*/, bool /*makeAbsRids*/)
 {
   if (bpp->ot == ROW_GROUP)
   {
@@ -173,7 +173,7 @@ void PassThruCommand::createCommand(ByteStream& bs)
   Command::createCommand(bs);
 }
 
-void PassThruCommand::resetCommand(ByteStream& bs)
+void PassThruCommand::resetCommand(ByteStream& /*bs*/)
 {
 }
 

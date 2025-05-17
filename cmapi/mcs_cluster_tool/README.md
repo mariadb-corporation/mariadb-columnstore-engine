@@ -10,6 +10,7 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 
 **Options**:
 
+* `-v, --verbose`: Enable verbose logging to console
 * `--help`: Show this message and exit.
 
 **Commands**:
@@ -19,7 +20,9 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 * `restore`: Restore Columnstore (and/or MariaDB) data.
 * `dbrm_restore`: Restore Columnstore DBRM data.
 * `cskeys`: Generates a random AES encryption key and init vector and writes them to disk.
-* `cspasswd`: Encrypt a Columnstore plaintext password using the encryption key in the key file.
+* `cspasswd`: Encrypt a Columnstore plaintext password.
+* `bootstrap-single-node`: Bootstrap a single node (localhost)...
+* `review`: Provides useful functions to review and troubleshoot the MCS cluster.
 * `help-all`: Show help for all commands in man page style.
 * `status`: Get status information.
 * `stop`: Stop the Columnstore cluster.
@@ -45,8 +48,8 @@ $ mcs backup [OPTIONS]
 * `-bl, --backup-location TEXT`: What directory to store the backups on this machine or the target machine.
 Consider write permissions of the scp user and the user running this script.
 Mariadb-backup will use this location as a tmp dir for S3 and remote backups temporarily.
-Example: /mnt/backups/  [default: /tmp/backups/]
-* `-bd, --backup-destination TEXT`: Are the backups going to be stored on the same machine this script is running on or another server - if Remote you need to setup scp=Options: &quot;Local&quot; or &quot;Remote&quot;  [default: Local]
+Example: /mnt/backups/
+* `-bd, --backup-destination TEXT`: Are the backups going to be stored on the same machine this script is running on or another server - if Remote you need to setup scp=Options: &quot;Local&quot; or &quot;Remote&quot;
 * `-scp TEXT`: Used only if --backup-destination=&quot;Remote&quot;.
 The user/credentials that will be used to scp the backup files
 Example: &quot;centos@10.14.51.62&quot;
@@ -56,25 +59,25 @@ Example: &quot;s3://my-cs-backups&quot;
 * `-url, --endpoint-url TEXT`: Used by on premise S3 vendors.
 Example: &quot;http://127.0.0.1:8000&quot;
 * `-s, --storage TEXT`: What storage topogoly is being used by Columnstore - found in /etc/columnstore/storagemanager.cnf.
-Options: &quot;LocalStorage&quot; or &quot;S3&quot;  [default: LocalStorage]
+Options: &quot;LocalStorage&quot; or &quot;S3&quot;
 * `-i, --incremental TEXT`: Adds columnstore deltas to an existing full backup. Backup folder to apply increment could be a value or &quot;auto_most_recent&quot; - the incremental backup applies to last full backup.
-* `-P, --parallel INTEGER`: Determines if columnstore data directories will have multiple rsync running at the same time for different subfolders to parallelize writes. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
-* `-ha, --highavilability / -no-ha, --no-highavilability`: Hint wether shared storage is attached @ below on all nodes to see all data
+* `-P, --parallel INTEGER`: Enables parallel rsync for faster backups, setting the number of simultaneous rsync processes. With -c/--compress, sets the number of compression threads.
+* `-ha, --highavilability`: Hint wether shared storage is attached @ below on all nodes to see all data
 HA LocalStorage ( /var/lib/columnstore/dataX/ )
-HA S3           ( /var/lib/columnstore/storagemanager/ )  [default: no-ha]
+HA S3           ( /var/lib/columnstore/storagemanager/ )
 * `-f, --config-file TEXT`: Path to backup configuration file to load variables from - relative or full path accepted.
-* `-sbrm, --skip-save-brm / -no-sbrm, --no-skip-save-brm`: Skip saving brm prior to running a backup - ideal for dirty backups.  [default: no-sbrm]
-* `-spoll, --skip-polls / -no-spoll, --no-skip-polls`: Skip sql checks confirming no write/cpimports running.  [default: no-spoll]
-* `-slock, --skip-locks / -no-slock, --no-skip-locks`: Skip issuing write locks - ideal for dirty backups.  [default: no-slock]
-* `-smdb, --skip-mariadb-backup / -no-smdb, --no-skip-mariadb-backup`: Skip running a mariadb-backup for innodb data - ideal for incremental dirty backups.  [default: no-smdb]
-* `-sb, --skip-bucket-data / -no-sb, --no-skip-bucket-data`: Skip taking a copy of the columnstore data in the bucket.  [default: no-sb]
-* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)  [default: 03-20-2025]
+* `-sbrm, --skip-save-brm`: Skip saving brm prior to running a backup - ideal for dirty backups.
+* `-spoll, --skip-polls`: Skip sql checks confirming no write/cpimports running.
+* `-slock, --skip-locks`: Skip issuing write locks - ideal for dirty backups.
+* `-smdb, --skip-mariadb-backup`: Skip running a mariadb-backup for innodb data - ideal for incremental dirty backups.
+* `-sb, --skip-bucket-data`: Skip taking a copy of the columnstore data in the bucket.
+* `-nb, --name-backup TEXT`: Define the name of the backup - default: $(date +%m-%d-%Y)
 * `-c, --compress TEXT`: Compress backup in X format - Options: [ pigz ].
-* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
-* `-nv-ssl, --no-verify-ssl / -v-ssl, --verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v-ssl]
-* `-pi, --poll-interval INTEGER`: Number of seconds between poll checks for active writes &amp; cpimports.  [default: 5]
-* `-pmw, --poll-max-wait INTEGER`: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.  [default: 60]
-* `-r, --retention-days INTEGER`: Retain backups created within the last X days, default 0 == keep all backups.  [default: 0]
+* `-q, --quiet`: Silence verbose copy command outputs.
+* `-nv-ssl, --no-verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.
+* `-pi, --poll-interval INTEGER`: Number of seconds between poll checks for active writes &amp; cpimports.
+* `-pmw, --poll-max-wait INTEGER`: Max number of minutes for polling checks for writes to wait before exiting as a failed backup attempt.
+* `-r, --retention-days INTEGER`: Retain backups created within the last X days, default 0 == keep all backups.
 * `-aro, --apply-retention-only`: Only apply retention policy to existing backups, does not run a backup.
 * `-li, --list`: List backups.
 * `--help`: Show this message and exit.
@@ -96,8 +99,8 @@ $ mcs dbrm_backup [OPTIONS]
 * `-bl, --backup-location TEXT`: Path of where to save the dbrm backups on disk.  [default: /tmp/dbrm_backups]
 * `-m, --mode TEXT`: &quot;loop&quot; or &quot;once&quot; ; Determines if this script runs in a forever loop sleeping -i minutes or just once.  [default: once]
 * `-nb, --name-backup TEXT`: Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S  [default: dbrm_backup]
-* `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: no-ssm]
-* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
+* `-ssm, --skip-storage-manager`: Skip backing up storagemanager directory.
+* `-q, --quiet`: Silence verbose copy command outputs.
 * `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
@@ -133,14 +136,14 @@ Options: &quot;LocalStorage&quot; or &quot;S3&quot;  [default: LocalStorage]
 * `-nk, --new-key TEXT`: Defines the aws key to connect to the new_bucket.
 * `-ns, --new-secret TEXT`: Defines the aws secret of the aws key to connect to the new_bucket.
 * `-P, --parallel INTEGER`: Determines number of decompression and mdbstream threads. Ignored if &quot;-c/--compress&quot; argument not set.  [default: 4]
-* `-ha, --highavilability / -no-ha, --no-highavilability`: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)  [default: no-ha]
-* `-cont, --continue / -no-cont, --no-continue`: This acknowledges data in your --new_bucket is ok to delete when restoring S3. When set to true skips the enforcement that new_bucket should be empty prior to starting a restore.  [default: no-cont]
+* `-ha, --highavilability`: Flag for high available systems (meaning shared storage exists supporting the topology so that each node sees all data)
+* `-cont, --continue`: This acknowledges data in your --new_bucket is ok to delete when restoring S3. When set to true skips the enforcement that new_bucket should be empty prior to starting a restore.
 * `-f, --config-file TEXT`: Path to backup configuration file to load variables from - relative or full path accepted.
-* `-smdb, --skip-mariadb-backup / -no-smdb, --no-skip-mariadb-backup`: Skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore.  [default: no-smdb]
-* `-sb, --skip-bucket-data / -no-sb, --no-skip-bucket-data`: Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server.  [default: no-sb]
+* `-smdb, --skip-mariadb-backup`: Skip restoring mariadb server via mariadb-backup - ideal for only restoring columnstore.
+* `-sb, --skip-bucket-data`: Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server.
 * `-c, --compress TEXT`: Hint that the backup is compressed in X format. Options: [ pigz ].
-* `-q, --quiet / -no-q, --no-quiet`: Silence verbose copy command outputs.  [default: no-q]
-* `-nv-ssl, --no-verify-ssl / -v-ssl, --verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.  [default: v-ssl]
+* `-q, --quiet`: Silence verbose copy command outputs.
+* `-nv-ssl, --no-verify-ssl`: Skips verifying ssl certs, useful for onpremise s3 storage.
 * `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
@@ -159,8 +162,8 @@ $ mcs dbrm_restore [OPTIONS]
 * `-bl, --backup-location TEXT`: Path of where dbrm backups exist on disk.  [default: /tmp/dbrm_backups]
 * `-l, --load TEXT`: Name of the directory to restore from -bl
 * `-ns, --no-start`: Do not attempt columnstore startup post dbrm_restore.
-* `-sdbk, --skip-dbrm-backup / -no-sdbk, --no-skip-dbrm-backup`: Skip backing up dbrms before restoring.  [default: sdbk]
-* `-ssm, --skip-storage-manager / -no-ssm, --no-skip-storage-manager`: Skip backing up storagemanager directory.  [default: ssm]
+* `-sdbk, --skip-dbrm-backup`: Skip backing up dbrms before restoring.
+* `-ssm, --skip-storage-manager`: Skip backing up storagemanager directory.
 * `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
@@ -206,6 +209,62 @@ $ mcs cspasswd [OPTIONS]
 
 * `--password TEXT`: Password to encrypt/decrypt  [required]
 * `--decrypt`: Decrypt an encrypted password instead.
+* `--help`: Show this message and exit.
+
+## `mcs bootstrap-single-node`
+
+Bootstrap a single node (localhost) Columnstore instance.
+
+**Usage**:
+
+```console
+$ mcs bootstrap-single-node [OPTIONS]
+```
+
+**Options**:
+
+* `--api-key TEXT`: API key to set.
+* `--help`: Show this message and exit.
+
+## `mcs review`
+
+This script performs various maintenance and diagnostic tasks for
+MariaDB ColumnStore, including log archiving, extent map backups,
+schema and table testing, directory and ownership checks, extent map
+validation, S3 storage comparison, process management, table
+synchronization, port availability checks, stack dumps, cleanup of
+rollback fragments, and graceful process termination.
+
+If database is up, this script will connect as root@localhost via socket.
+
+**Usage**:
+
+```console
+$ mcs review [OPTIONS]
+```
+
+**Options**:
+
+* `--version`: Only show the header with version information.
+* `--logs`: Create a compressed archive of logs for MariaDB Support Ticket
+* `--path`: Define the path for where to save files/tarballs and outputs of this script.
+* `--backupdbrm`: Takes a compressed backup of extent map files in dbrm directory.
+* `--testschema`: Creates a test schema, tables, imports, queries, drops schema.
+* `--testschemakeep`: creates a test schema, tables, imports, queries, does not drop.
+* `--ldlischema`: Using ldli, creates test schema, tables, imports, queries, drops schema.
+* `--ldlischemakeep`: Using ldli, creates test schema, tables, imports, queries, does not drop.
+* `--emptydirs`: Searches /var/lib/columnstore for empty directories.
+* `--notmysqldirs`: Searches /var/lib/columnstore for directories not owned by mysql.
+* `--emcheck`: Checks the extent map for orphaned and missing files.
+* `--s3check`: Checks the extent map against S3 storage.
+* `--pscs`: Adds the pscs command. pscs lists running columnstore processes.
+* `--schemasync`: Fix out-of-sync columnstore tables (CAL0009).
+* `--tmpdir`: Ensure owner of temporary dir after reboot (MCOL-4866 &amp; MCOL-5242).
+* `--checkports`: Checks if ports needed by Columnstore are opened.
+* `--eustack`: Dumps the stack of Columnstore processes.
+* `--clearrollback`: Clear any rollback fragments from dbrm files.
+* `--killcolumnstore`: Stop columnstore processes gracefully, then kill remaining processes.
+* `--color TEXT`: print headers in color. Options:  prefix color with l for light.
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`

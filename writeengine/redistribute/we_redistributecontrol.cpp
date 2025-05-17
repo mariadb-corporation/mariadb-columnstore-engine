@@ -170,7 +170,7 @@ int RedistributeControl::handleUIMsg(messageqcpp::ByteStream& bs, messageqcpp::I
   return status;
 }
 
-int RedistributeControl::handleStartMsg(messageqcpp::ByteStream& bs, messageqcpp::IOSocket& so)
+int RedistributeControl::handleStartMsg(messageqcpp::ByteStream& bs, messageqcpp::IOSocket& /*so*/)
 {
   ostringstream oss;
   uint32_t status = getCurrentState();
@@ -236,7 +236,7 @@ int RedistributeControl::handleStartMsg(messageqcpp::ByteStream& bs, messageqcpp
   return status;
 }
 
-int RedistributeControl::handleStatusMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& so)
+int RedistributeControl::handleStatusMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& /*so*/)
 {
   ostringstream oss;
   uint32_t status = getCurrentState();
@@ -329,7 +329,7 @@ int RedistributeControl::handleStatusMsg(messageqcpp::ByteStream&, messageqcpp::
   return status;
 }
 
-int RedistributeControl::handleStopMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& so)
+int RedistributeControl::handleStopMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& /*so*/)
 {
   ostringstream oss;
   uint32_t status = getCurrentState();
@@ -353,7 +353,7 @@ int RedistributeControl::handleStopMsg(messageqcpp::ByteStream&, messageqcpp::IO
   return status;
 }
 
-int RedistributeControl::handleClearMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& so)
+int RedistributeControl::handleClearMsg(messageqcpp::ByteStream&, messageqcpp::IOSocket& /*so*/)
 {
   ostringstream oss;
   uint32_t status = getCurrentState();

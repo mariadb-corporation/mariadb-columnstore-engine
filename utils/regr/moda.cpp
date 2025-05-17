@@ -105,7 +105,7 @@ mcsv1_UDAF* moda::getImpl(mcsv1Context* context)
 
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
-      data->modaImpl = &moda_impl_string; 
+      data->modaImpl = &moda_impl_string;
       break;
 
     default: data->modaImpl = NULL;
@@ -367,9 +367,9 @@ void ModaData::serialize(messageqcpp::ByteStream& bs) const
     case execplan::CalpontSystemCatalog::FLOAT: serializeMap<float>(bs); break;
     case execplan::CalpontSystemCatalog::DOUBLE: serializeMap<double>(bs); break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: serializeMap<long double>(bs); break;
-    case execplan::CalpontSystemCatalog::CHAR: 
+    case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
-      serializeMap<string>(bs); break; 
+      serializeMap<string>(bs); break;
     default: throw std::runtime_error("ModaData::serialize with bad data type"); break;
   }
 }
@@ -505,7 +505,7 @@ void ModaData::cleanup()
  * String Specialization
 ************************************************************************************************/
 
-mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDatum* /*colTypes*/)
 {
   cs.setCharset(context->getCharsetNumber());
   return mcsv1_UDAF::SUCCESS;

@@ -223,7 +223,7 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
   return retval;
 }
 int UpdateDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap,
-                                           int columns, int rows, NullValuesBitset& nullValues)
+                                           int columns, int /*rows*/, NullValuesBitset& nullValues)
 {
   int retval = 1;
 

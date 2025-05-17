@@ -71,7 +71,7 @@ datatypes::TUInt64Null ConvertToBitOperand(const T& val)
 }
 
 static datatypes::TUInt64Null DecimalToBitOperand(Row& row, const execplan::SPTP& parm,
-                                                  const funcexp::Func& thisFunc)
+                                                  const funcexp::Func& /*thisFunc*/)
 {
   bool tmpIsNull = false;
   datatypes::Decimal d = parm->data()->getDecimalVal(row, tmpIsNull);
@@ -253,10 +253,9 @@ class Func_bitwise_null : public Func_BitOp
   Func_bitwise_null() : Func_BitOp("bitwise")
   {
   }
-  int64_t getIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                    CalpontSystemCatalog::ColType& operationColType) override
+  int64_t getIntVal(Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                    CalpontSystemCatalog::ColType& /*operationColType*/) override
   {
-    isNull = true;
     return 0;
   }
 };

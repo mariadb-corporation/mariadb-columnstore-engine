@@ -173,7 +173,7 @@ void pushReturnedCol(gp_walk_info& gwi, Item* from, SRCP rc)
 
     // made within MCOL-5776 produced bug MCOL-5932 so, the check of equal columns is disabled
     // FIXME: enable the check of equal columns
-    //bool same = ith->eq(from, false);
+    // bool same = ith->eq(from, false);
     bool same = false;
 
     if (same && ith->type() == Item::FUNC_ITEM)
@@ -326,7 +326,7 @@ static execplan::Partitions getPartitions(TABLE* table)
 
     partition_element* pe;
 
-    while ((pe = part_el_it++)) // this is how server does it.
+    while ((pe = part_el_it++))  // this is how server does it.
     {
       result.fPartNames.emplace_back(pe->partition_name);
     }
@@ -343,7 +343,7 @@ static execplan::Partitions getPartitions(TABLE_LIST* table)
 
     String* n;
 
-    while ((n = part_name_it++)) // this is how server does it.
+    while ((n = part_name_it++))  // this is how server does it.
     {
       std::string pn(n->ptr(), n->length());
       result.fPartNames.push_back(pn);
@@ -351,7 +351,6 @@ static execplan::Partitions getPartitions(TABLE_LIST* table)
   }
   return result;
 }
-
 
 CalpontSystemCatalog::TableAliasName makeTableAliasName_(TABLE_LIST* table)
 {
@@ -366,7 +365,6 @@ CalpontSystemCatalog::TableAliasName makeTableAliasName(TABLE_LIST* table)
   result.partitions = getPartitions(table);
   return result;
 }
-
 
 //@bug5228. need to escape backtick `
 string escapeBackTick(const char* str)
@@ -895,26 +893,16 @@ void debug_walk(const Item* item, void* arg)
           cerr << '=' << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::GE_FUNC:
-          cerr << ">="
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::GE_FUNC: cerr << ">=" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::LE_FUNC:
-          cerr << "<="
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::LE_FUNC: cerr << "<=" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::LT_FUNC: cerr << '<' << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::NE_FUNC:
-          cerr << "<>"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::NE_FUNC: cerr << "<>" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::NEG_FUNC:  // 45
-          cerr << "unary minus"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "unary minus" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::IN_FUNC:  // 16
@@ -923,8 +911,7 @@ void debug_walk(const Item* item, void* arg)
           if (inp->negated)
             cerr << "not ";
 
-          cerr << "in"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "in" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::BETWEEN:
@@ -933,44 +920,32 @@ void debug_walk(const Item* item, void* arg)
           if (inp->negated)
             cerr << "not ";
 
-          cerr << "between"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "between" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::ISNULL_FUNC:  // 10
-          cerr << "is null"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "is null" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::ISNOTNULL_FUNC:  // 11
-          cerr << "is not null"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "is not null" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::NOT_ALL_FUNC:
-          cerr << "not_all"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::NOT_ALL_FUNC: cerr << "not_all" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::NOT_FUNC:
-          cerr << "not_func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::NOT_FUNC: cerr << "not_func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::TRIG_COND_FUNC:
-          cerr << "trig_cond_func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "trig_cond_func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::ISNOTNULLTEST_FUNC:
-          cerr << "isnotnulltest_func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "isnotnulltest_func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::MULT_EQUAL_FUNC:
         {
-          cerr << "mult_equal_func:"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "mult_equal_func:" << " (" << ifp->functype() << ")" << endl;
           Item_equal* item_eq = (Item_equal*)ifp;
           Item_equal_fields_iterator it(*item_eq);
           Item* item;
@@ -984,165 +959,107 @@ void debug_walk(const Item* item, void* arg)
           break;
         }
 
-        case Item_func::EQUAL_FUNC:
-          cerr << "equal func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::EQUAL_FUNC: cerr << "equal func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::FT_FUNC:
-          cerr << "ft func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::FT_FUNC: cerr << "ft func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::LIKE_FUNC:
-          cerr << "like func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::LIKE_FUNC: cerr << "like func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::COND_AND_FUNC:
-          cerr << "cond and func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "cond and func" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::COND_OR_FUNC:
-          cerr << "cond or func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::COND_OR_FUNC: cerr << "cond or func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::XOR_FUNC:
-          cerr << "xor func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::XOR_FUNC: cerr << "xor func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::INTERVAL_FUNC:
-          cerr << "interval func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "interval func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_EQUALS_FUNC:
-          cerr << "sp equals func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp equals func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_DISJOINT_FUNC:
-          cerr << "sp disjoint func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp disjoint func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_INTERSECTS_FUNC:
-          cerr << "sp intersects func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp intersects func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_TOUCHES_FUNC:
-          cerr << "sp touches func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp touches func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_CROSSES_FUNC:
-          cerr << "sp crosses func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp crosses func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_WITHIN_FUNC:
-          cerr << "sp within func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp within func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_CONTAINS_FUNC:
-          cerr << "sp contains func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp contains func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_OVERLAPS_FUNC:
-          cerr << "sp overlaps func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp overlaps func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_STARTPOINT:
-          cerr << "sp startpoint func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp startpoint func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_ENDPOINT:
-          cerr << "sp endpoint func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp endpoint func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_EXTERIORRING:
-          cerr << "sp exteriorring func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp exteriorring func" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::SP_POINTN:
-          cerr << "sp pointn func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::SP_POINTN: cerr << "sp pointn func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::SP_GEOMETRYN:
-          cerr << "sp geometryn func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp geometryn func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_INTERIORRINGN:
-          cerr << "sp exteriorringn func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp exteriorringn func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::SP_RELATE_FUNC:
-          cerr << "sp relate func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "sp relate func" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::NOW_FUNC:
-          cerr << "now func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::NOW_FUNC: cerr << "now func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::SUSERVAR_FUNC:
-          cerr << "suservar func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "suservar func" << " (" << ifp->functype() << ")" << endl;
           break;
 
         case Item_func::GUSERVAR_FUNC:
-          cerr << "guservar func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "guservar func" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::COLLATE_FUNC:
-          cerr << "collate func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::COLLATE_FUNC: cerr << "collate func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::EXTRACT_FUNC:
-          cerr << "extract func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::EXTRACT_FUNC: cerr << "extract func" << " (" << ifp->functype() << ")" << endl; break;
 
         case Item_func::CHAR_TYPECAST_FUNC:
-          cerr << "char typecast func"
-               << " (" << ifp->functype() << ")" << endl;
+          cerr << "char typecast func" << " (" << ifp->functype() << ")" << endl;
           break;
 
-        case Item_func::FUNC_SP:
-          cerr << "func sp func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::FUNC_SP: cerr << "func sp func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::UDF_FUNC:
-          cerr << "udf func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::UDF_FUNC: cerr << "udf func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::GSYSVAR_FUNC:
-          cerr << "gsysvar func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::GSYSVAR_FUNC: cerr << "gsysvar func" << " (" << ifp->functype() << ")" << endl; break;
 
-        case Item_func::DYNCOL_FUNC:
-          cerr << "dyncol func"
-               << " (" << ifp->functype() << ")" << endl;
-          break;
+        case Item_func::DYNCOL_FUNC: cerr << "dyncol func" << " (" << ifp->functype() << ")" << endl; break;
 
         default: cerr << "type=" << ifp->functype() << endl; break;
       }
@@ -2622,7 +2539,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
 
           sc->tableAlias(gwi.tbList[i].alias);
           sc->viewName(viewName, lower_case_table_names);
-	  sc->partitions(gwi.tbList[i].partitions);
+          sc->partitions(gwi.tbList[i].partitions);
           sc->resultType(ct);
           sc->timeZone(gwi.timeZone);
           break;
@@ -2708,7 +2625,7 @@ SimpleColumn* buildSimpleColFromDerivedTable(gp_walk_info& gwi, Item_field* ifp)
           }
           sc->resultType(cols[j]->resultType());
           sc->hasAggregate(cols[j]->hasAggregate());
-	  // XXX partitions???
+          // XXX partitions???
 
           if (col)
             sc->isColumnStore(col->isColumnStore());
@@ -2820,7 +2737,7 @@ void collectAllCols(gp_walk_info& gwi, Item_field* ifp)
         sc->colPosition(j);
         sc->tableAlias(csep->derivedTbAlias());
         sc->viewName(gwi.tbList[i].view);
-	sc->partitions(gwi.tbList[i].partitions);
+        sc->partitions(gwi.tbList[i].partitions);
         sc->resultType(cols[j]->resultType());
         sc->timeZone(gwi.timeZone);
 
@@ -3008,7 +2925,7 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
   ci->expressionId = 0;
 }
 
-void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
+void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& /*gwi*/)
 {
   setError(thd, errcode, errmsg);
 }
@@ -3213,7 +3130,7 @@ SimpleColumn* getSmallestColumn(boost::shared_ptr<CalpontSystemCatalog> csc,
         sc->columnName(rc->alias());
         sc->sequence(0);
         sc->tableAlias(tan.alias);
-	sc->partitions(tan.partitions);
+        sc->partitions(tan.partitions);
         sc->timeZone(gwi.timeZone);
         sc->derivedTable(csep->derivedTbAlias());
         sc->derivedRefCol(rc);
@@ -3665,7 +3582,7 @@ static ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_w
   return rc;
 }
 
-ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool /*isRefItem*/)
 {
   ReturnedColumn* rc = NULL;
 
@@ -3861,7 +3778,7 @@ ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupp
 }
 
 // parse the boolean fields to string "true" or "false"
-ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& /*nonSupport*/)
 {
   ConstantColumn* cc = NULL;
 
@@ -4700,7 +4617,8 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
 
     // A few functions use a different collation than that found in
     // the base ifp class
-    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" || funcName == "regexp_instr")
+    if (funcName == "locate" || funcName == "find_in_set" || funcName == "strcmp" ||
+        funcName == "regexp_instr")
     {
       DTCollation dt;
       ifp->Type_std_attributes::agg_arg_charsets_for_comparison(dt, ifp->func_name_cstring(),
@@ -5073,7 +4991,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
 
   // view name
   sc->viewName(getViewName(ifp->cached_table), lower_case_table_names);
-  //sc->partitions(...); // XXX how???
+  // sc->partitions(...); // XXX how???
   sc->alias(ifp->name.str);
 
   sc->isColumnStore(prm.columnStore());
@@ -5108,7 +5026,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   return sc;
 }
 
-ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport)
+ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& /*nonSupport*/)
 {
   ParseTree* pt = 0;
 #ifdef DEBUG_WALK_COND
@@ -7176,12 +7094,12 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         CalpontSystemCatalog::TableAliasName tn =
             make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore,
                            lower_case_table_names);
-	execplan::Partitions parts = getPartitions(table_ptr);
-	tn.partitions = parts;
+        execplan::Partitions parts = getPartitions(table_ptr);
+        tn.partitions = parts;
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable(
             table_ptr->db.str, table_name, table_ptr->alias.str, columnStore, lower_case_table_names);
-	tan.partitions = parts;
+        tan.partitions = parts;
         gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
         cerr << tn << endl;
@@ -7609,7 +7527,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
  *  error id as an int
  ***********************************************************/
 int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, bool unionSel, bool isUnion,
-                          bool isSelectHandlerTop)
+                          bool /*isSelectHandlerTop*/)
 {
   // LIMIT processing part
   uint64_t limitNum = std::numeric_limits<uint64_t>::max();
@@ -9278,7 +9196,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   csep->columnMap(gwi->columnMap);
   CalpontSelectExecutionPlan::TableList tblist;
   tblist.push_back(make_aliastable(table->s->db.str, table->s->table_name.str, table->alias.c_ptr(), true,
-			  lower_case_table_names));
+                                   lower_case_table_names));
   csep->tableList(tblist);
 
   // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
@@ -9291,7 +9209,7 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
   return 0;
 }
 
-int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi)
+int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, SCSEP& csep, gp_walk_info& gwi)
 {
   SELECT_LEX& select_lex = *handler->select;
   int status = getSelectPlan(gwi, select_lex, csep, false);
@@ -9311,7 +9229,7 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* thd, SCSEP
   return 0;
 }
 
-int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCSEP& csep, gp_walk_info& gwi,
                        bool isSelectLexUnit)
 {
   SELECT_LEX& select_lex = handler->select_lex ? *handler->select_lex : *handler->lex_unit->first_select();

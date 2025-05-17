@@ -35,14 +35,14 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_unix_timestamp::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_unix_timestamp::operationType(FunctionParm& /*fp*/,
                                                                  CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                       CalpontSystemCatalog::ColType& ct)
+                                       CalpontSystemCatalog::ColType& /*ct*/)
 {
   int64_t val = parm[0]->data()->getIntVal(row, isNull);
 

@@ -144,7 +144,7 @@ void IDBLogger::logFSop2(IDBFileSystem::Types type, const char* op, const char* 
   writeLog(logmsg.str());
 }
 
-string IDBLogger::get_backtrace(int to_skip, int num_to_show)
+string IDBLogger::get_backtrace([[maybe_unused]] int to_skip, [[maybe_unused]] int num_to_show)
 {
   string retval;
 #if !defined(_MSC_VER) && !defined(SKIP_UNWIND)

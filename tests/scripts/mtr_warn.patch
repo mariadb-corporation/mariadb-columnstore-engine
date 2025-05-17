@@ -1,0 +1,22 @@
+diff --git a/mysql-test/include/mtr_warnings.sql b/mysql-test/include/mtr_warnings.sql
+index 82c7aa8cd75..26fd2ee3bc5 100644
+--- a/mtr_warnings.sql
++++ b/mtr_warnings.sql
+@@ -13,7 +13,7 @@
+ -- along with this program; if not, write to the Free Software Foundation,
+ -- 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335  USA
+
+-delimiter ||;
++delimiter ||
+
+ use mtr||
+
+@@ -271,7 +271,7 @@ BEGIN
+   IF @num_warnings > 0 THEN
+     SELECT line
+         FROM error_log WHERE suspicious=1;
+-    --SELECT * FROM test_suppressions;
++    -- SELECT * FROM test_suppressions;
+     -- Return 2 -> check failed
+     SELECT 2 INTO result;
+   ELSE

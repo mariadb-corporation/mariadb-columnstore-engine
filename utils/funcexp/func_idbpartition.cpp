@@ -43,8 +43,8 @@ using namespace logging;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& /*fp*/,
+                                                               CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // all integer
   CalpontSystemCatalog::ColType ct;
@@ -54,7 +54,7 @@ CalpontSystemCatalog::ColType Func_idbpartition::operationType(FunctionParm& fp,
 }
 
 string Func_idbpartition::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
-                                    CalpontSystemCatalog::ColType& ct)
+                                    CalpontSystemCatalog::ColType& /*ct*/)
 {
   LogicalPartition part(parm[0]->data()->getIntVal(row, isNull), parm[1]->data()->getIntVal(row, isNull),
                         parm[2]->data()->getIntVal(row, isNull));

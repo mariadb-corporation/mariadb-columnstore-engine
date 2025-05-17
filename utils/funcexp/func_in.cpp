@@ -297,7 +297,7 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_in::operationType(FunctionParm& fp,
-                                                     CalpontSystemCatalog::ColType& resultType)
+                                                     CalpontSystemCatalog::ColType& /*resultType*/)
 {
   PredicateOperator op;
   CalpontSystemCatalog::ColType ct;
@@ -371,7 +371,7 @@ bool Func_in::getBoolVal(rowgroup::Row& row, FunctionParm& pm, bool& isNull,
 }
 
 CalpontSystemCatalog::ColType Func_notin::operationType(FunctionParm& fp,
-                                                        CalpontSystemCatalog::ColType& resultType)
+                                                        CalpontSystemCatalog::ColType& /*resultType*/)
 {
   PredicateOperator* op = new PredicateOperator();
   CalpontSystemCatalog::ColType ct;
