@@ -50,6 +50,7 @@ set(FLAGS_ALL
     -fsigned-char
     -msse4.2
     -DHAVE_CONFIG_H
+    -DBOOST_BIND_GLOBAL_PLACEHOLDERS
 )
 
 set(FLAGS_RELEASE -g -O3 -DDBUG_OFF)

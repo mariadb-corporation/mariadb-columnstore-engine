@@ -1,3 +1,5 @@
+find_package(Boost 1.84.0 COMPONENTS chrono filesystem program_options regex system thread)
+
 find_package(BISON)
 if(NOT BISON_FOUND)
     message_once(CS_NO_BISON "bison not found!")
