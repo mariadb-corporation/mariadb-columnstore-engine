@@ -1808,7 +1808,7 @@ static handler* ha_mcs_cache_create_handler(handlerton* hton, TABLE_SHARE* table
   return new (mem_root) ha_mcs_cache(hton, table, mem_root);
 }
 
-bool get_innodb_queries_uses_mcs(THD* thd);
+bool get_innodb_queries_uses_mcs();
 
 /******************************************************************************
  ha_mcs Plugin code
@@ -1860,7 +1860,7 @@ static int columnstore_init_func(void* p)
   mcs_hton->create_unit = create_columnstore_unit_handler;
   mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
-  if (get_innodb_queries_uses_mcs(current_thd))
+  if (get_innodb_queries_uses_mcs())
   {
     auto* innodb_hton = plugin_hton(plugin_innodb);
     int error = innodb_hton == nullptr;  // Engine must exists!
