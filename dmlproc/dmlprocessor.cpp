@@ -1402,7 +1402,10 @@ void DMLProcessor::operator()()
       messageqcpp::ByteStream::byte status = 255;
       messageqcpp::ByteStream::octbyte rowCount = 0;
 
-      if (fDbrm->getSystemState(stateFlags) >
+      int rr = fDbrm->getSystemState(stateFlags);
+      idblog("called from DMLProcessor::operator(), returned " << rr);
+
+      if (rr >
           0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
       {
         messageqcpp::ByteStream results;
