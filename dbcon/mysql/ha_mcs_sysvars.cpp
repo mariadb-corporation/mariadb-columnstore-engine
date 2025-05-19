@@ -220,6 +220,9 @@ static MYSQL_THDVAR_ULONG(max_allowed_in_values, PLUGIN_VAR_RQCMDARG,
                           "The maximum length of the entries in the IN query clause.", NULL, NULL, 6000, 1,
                           ~0U, 1);
 
+static MYSQL_THDVAR_BOOL(innodb_queries_uses_mcs, PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
+                         "Direct all InnoDB-only queries into MCS via Select Handler.", NULL, NULL, 0);
+
 st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(fe_conn_info_ptr),
                                             MYSQL_SYSVAR(original_optimizer_flags),
@@ -260,6 +263,7 @@ st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
                                             MYSQL_SYSVAR(s3_region),
                                             MYSQL_SYSVAR(pron),
                                             MYSQL_SYSVAR(max_allowed_in_values),
+                                            MYSQL_SYSVAR(innodb_queries_uses_mcs),
                                             NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
@@ -654,4 +658,14 @@ ulong get_max_allowed_in_values(THD* thd)
 void set_max_allowed_in_values(THD* thd, ulong value)
 {
   THDVAR(thd, max_allowed_in_values) = value;
+}
+
+bool get_innodb_queries_uses_mcs(THD* thd)
+{
+  return THDVAR(thd, innodb_queries_uses_mcs);
+}
+
+void set_innodb_queries_uses_mcs(THD* thd, bool value)
+{
+  THDVAR(thd, innodb_queries_uses_mcs) = value;
 }

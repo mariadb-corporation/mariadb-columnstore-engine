@@ -1808,6 +1808,8 @@ static handler* ha_mcs_cache_create_handler(handlerton* hton, TABLE_SHARE* table
   return new (mem_root) ha_mcs_cache(hton, table, mem_root);
 }
 
+bool get_innodb_queries_uses_mcs(THD* thd);
+
 /******************************************************************************
  ha_mcs Plugin code
 ******************************************************************************/
@@ -1858,16 +1860,17 @@ static int columnstore_init_func(void* p)
   mcs_hton->create_unit = create_columnstore_unit_handler;
   mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
-{
-  auto* innodb_hton = plugin_hton(plugin_innodb);
-  int error = innodb_hton == nullptr;  // Engine must exists!
-  if (error)
+  if (get_innodb_queries_uses_mcs(current_thd))
   {
-    my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
+    auto* innodb_hton = plugin_hton(plugin_innodb);
+    int error = innodb_hton == nullptr;  // Engine must exists!
+    if (error)
+    {
+      my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
+    }
+    innodb_hton->create_select = create_columnstore_select_handler;
+    innodb_hton->create_unit = create_columnstore_unit_handler;
   }
-  innodb_hton->create_select = create_columnstore_select_handler;
-  innodb_hton->create_unit = create_columnstore_unit_handler;
-}
 
 #ifdef HAVE_PSI_INTERFACE
   uint count = sizeof(all_mutexes) / sizeof(all_mutexes[0]);
