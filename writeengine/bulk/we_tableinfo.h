@@ -27,7 +27,10 @@
 #include <vector>
 
 #include <boost/thread/mutex.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/ptr_container/ptr_vector.hpp>
+#pragma GCC diagnostic pop
 #include <boost/uuid/uuid.hpp>
 
 #include <libmarias3/marias3.h>
