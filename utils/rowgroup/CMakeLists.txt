@@ -10,7 +10,7 @@ set(rowgroup_LIB_SRCS rowaggregation.cpp rowgroup.cpp rowstorage.cpp)
 
 add_library(rowgroup SHARED ${rowgroup_LIB_SRCS})
 
-add_dependencies(rowgroup loggingcpp)
+add_dependencies(rowgroup loggingcpp external_boost)
 
 target_link_libraries(rowgroup ${NETSNMP_LIBRARIES} funcexp)
 

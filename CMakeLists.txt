@@ -37,6 +37,8 @@ include(check_compiler_flag)
 include(ExternalProject)
 include(CheckCXXSourceCompiles)
 include(packages)
+include(boost)
+include(thrift)
 include(dirs)
 include(includes)
 include(libs)
@@ -44,8 +46,6 @@ include(columnstore_version)
 include(configureEngine)
 include(compiler_flags)
 include(misc)
-include(boost)
-include(thrift)
 
 set(COMPONENTS
     dbcon/mysql
