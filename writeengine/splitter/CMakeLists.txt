@@ -26,4 +26,5 @@ columnstore_link(
     batchloader
     threadpool
     marias3
+    program_options
 )

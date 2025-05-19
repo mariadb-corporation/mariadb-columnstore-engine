@@ -29,6 +29,8 @@
 #include <exception>
 #include <stdexcept>
 #include <cerrno>
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 using namespace std;
 
 #include <boost/uuid/uuid.hpp>
@@ -83,6 +85,92 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
   try
   {
     appTestFunction();
+    fOptions = std::make_unique<po::options_description>();
+#define DECLARE_INT_ARG(name, stor, min, max, desc) \
+    (name,\
+      po::value<int>(&stor)\
+        ->notifier(bind(&WECmdArgs::checkIntArg, name, min, max, placeholders::_1)),\
+      desc)
+
+    namespace ph = placeholders;
+    fOptions->add_options()
+      ("help,h", "Print this message.")
+      DECLARE_INT_ARG("read-buffer,b", fIOReadBufSize, 1, INT_MAX, "Number of read buffers.")
+      DECLARE_INT_ARG("read-buffer-size,c", fReadBufSize, 1, INT_MAX,
+        "Application read buffer size (in bytes)")
+      DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
+      ("verbose,v", po::value<string>())
+      DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
+          "Maximum number of allowable error per table per PM")
+      ("file-path,f", po::value<string>(&fPmFilePath),
+        "Data file directory path. Default is current working directory.\n"
+        "\tIn Mode 1, represents the local input file path.\n"
+        "\tIn Mode 2, represents the PM based input file path.\n"
+        "\tIn Mode 3, represents the local input file path.")
+      DECLARE_INT_ARG("mode,m", fArgMode, 0, 3,
+        "\t1 - rows will be loaded in a distributed manner acress PMs.\n"
+        "\t2 - PM based input files loaded into their respective PM.\n"
+        "\t3 - input files will be loaded on the local PM.")
+      ("filename,l", po::value<string>(&fPmFile),
+        "Name of import file to be loaded, relative to 'file-path'")
+      DECLARE_INT_ARG("batch-quantity,q", fBatchQty, 1, INT_MAX,
+        "Batch quantity, Number of rows distributed per batch in Mode 1")
+      ("console-log,i", po::bool_switch(&fConsoleLog),
+        "Print extended info to console in Mode 3.")
+      ("job-id,j", po::value<string>(),
+        "Job ID. In simple usage, default is the table OID unless a fully qualified input "
+        "file name is given.")
+      ("null-strings,n", po::value(&fNullStrMode)->implicit_value(true),
+        "NullOption (0-treat the string NULL as data (default);\n"
+        "1-treat the string NULL as a NULL value)")
+      ("xml-job-path,p", po::value<string>(&fJobPath), "Path for the XML job description file.")
+      DECLARE_INT_ARG("readers,r", fNoOfReadThrds, 1, INT_MAX, "Number of readers.")
+      ("separator,s", po::value<string>(), "Delimiter between column values.")
+      DECLARE_INT_ARG("io-buffer-size,B", fSetBufSize, 1, INT_MAX,
+        "I/O library read buffer size (in bytes)")
+      DECLARE_INT_ARG("writers,w", fNoOfWriteThrds, 1, INT_MAX, "Number of parsers.")
+      ("enclosed-by,E", po::value<char>(&fEnclosedChar),
+        "Enclosed by character if field values are enclosed.")
+      ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),
+        "Escape character used in conjunction with 'enclosed-by'"
+        "character, or as a part of NULL escape sequence ('\\N');\n"
+        "default is '\\'")
+      ("headers,O",
+        po::value<int>(&fSkipRows)->implicit_value(1)
+          ->notifier(bind(&WECmdArgs::checkIntArg, "headers,O", 0, INT_MAX, placeholders::_1)),
+        "Number of header rows to skip.")
+      ("binary-mode,I", po::value<int>(),
+        "Import binary data; how to treat NULL values:\n"
+        "\t1 - import NULL values\n"
+        "\t2 - saturate NULL values\n")
+      ("pm,P", po::value<vector<unsigned int>>(&fPmVec),
+        "List of PMs ex: -P 1,2,3. Default is all PMs.")
+      ("truncation-as-error,S", po::bool_switch(&fbTruncationAsError),
+        "Treat string truncations as errors.")
+      ("tz,T", po::value<string>(),
+        "Timezone used for TIMESTAMP datatype. Possible values:\n"
+        "\t\"SYSTEM\" (default)\n"
+        "\tOffset in the form +/-HH:MM")
+      ("s3-key,y", po::value<string>(&fS3Key),
+        "S3 Authentication Key (for S3 imports)")
+      ("s3-secret,K", po::value<string>(&fS3Secret),
+        "S3 Authentication Secret (for S3 imports)")
+      ("s3-bucket,t", po::value<string>(&fS3Bucket),
+        "S3 Bucket (for S3 imports)")
+      ("s3-hostname,H", po::value<string>(&fS3Host),
+        "S3 Hostname (for S3 imports, Amazon's S3 default)")
+      ("s3-region,g", po::value<string>(&fS3Region),
+        "S3 Region (for S3 imports)")
+      ("errors-dir,L", po::value<string>(&fErrorDir)->default_value(MCSLOGDIR),
+        "Directory for the output .err and .bad files")
+      ("username,U", po::value<string>(&fUsername), "Username of the files owner.")
+      ("dbname", po::value<string>(), "Name of the database to load")
+      ("table", po::value<string>(), "Name of table to load")
+      ("load-file", po::value<string>(),
+        "Optional input file name in current directory, "
+        "unless a fully qualified name is given. If not given, input read from STDIN.");
+
+#undef DECLARE_INT_ARG
     parseCmdLineArgs(argc, argv);
   }
   catch (std::exception& exp)
@@ -92,6 +180,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
     throw(runtime_error(exceptMsg));
   }
 }
+
+WECmdArgs::~WECmdArgs() = default;
 
 //----------------------------------------------------------------------
 
@@ -106,6 +196,16 @@ void WECmdArgs::appTestFunction()
 
   // testing ends
   return;
+}
+
+void WECmdArgs::checkIntArg(const std::string& name, long min, long max, int value)
+{
+  if (value < min || value > max)
+  {
+    ostringstream oss;
+    oss << "Argument " << name << " is out of range [" << min << ", " << max << "]";
+    throw runtime_error(oss.str());
+  }
 }
 
 //----------------------------------------------------------------------
@@ -534,53 +634,7 @@ void WECmdArgs::usage()
   cout << "\t\t\tunless a fully qualified name is given.\n";
   cout << "\t\t\tIf not given, input read from STDIN.\n";
 
-  cout << "\n\nOptions:\n"
-       << "\t-b\tNumber of read buffers\n"
-       << "\t-c\tApplication read buffer size(in bytes)\n"
-       << "\t-d\tPrint different level(1-3) debug message\n"
-       << "\t-e\tMax number of allowable error per table per PM\n"
-       << "\t-f\tData file directory path.\n"
-       << "\t\t\tDefault is current working directory.\n"
-       << "\t\t\tIn Mode 1, -f represents the local input file path.\n"
-       << "\t\t\tIn Mode 2, -f represents the PM based input file path.\n"
-       << "\t\t\tIn Mode 3, -f represents the local input file path.\n"
-       << "\t-l\tName of import file to be loaded, relative to -f path,\n"
-       << "\t-h\tPrint this message.\n"
-       << "\t-q\tBatch Quantity, Number of rows distributed per batch in Mode 1\n"
-       << "\t-i\tPrint extended info to console in Mode 3.\n"
-       << "\t-j\tJob ID. In simple usage, default is the table OID.\n"
-       << "\t\t\tunless a fully qualified input file name is given.\n"
-       << "\t-n\tNullOption (0-treat the string NULL as data (default);\n"
-       << "\t\t\t1-treat the string NULL as a NULL value)\n"
-       << "\t-p\tPath for XML job description file.\n"
-       << "\t-r\tNumber of readers.\n"
-       << "\t-s\t'c' is the delimiter between column values.\n"
-       << "\t-B\tI/O library read buffer size (in bytes)\n"
-       << "\t-w\tNumber of parsers.\n"
-       << "\t-E\tEnclosed by character if field values are enclosed.\n"
-       << "\t-C\tEscape character used in conjunction with 'enclosed by'\n"
-       << "\t\t\tcharacter, or as part of NULL escape sequence ('\\N');\n"
-       << "\t\t\tdefault is '\\'\n"
-       << "\t-O\tNumber of header rows to skip.\n"
-       << "\t-I\tImport binary data; how to treat NULL values:\n"
-       << "\t\t\t1 - import NULL values\n"
-       << "\t\t\t2 - saturate NULL values\n"
-       << "\t-P\tList of PMs ex: -P 1,2,3. Default is all PMs.\n"
-       << "\t-S\tTreat string truncations as errors.\n"
-       << "\t-m\tmode\n"
-       << "\t\t\t1 - rows will be loaded in a distributed manner across PMs.\n"
-       << "\t\t\t2 - PM based input files loaded onto their respective PM.\n"
-       << "\t\t\t3 - input files will be loaded on the local PM.\n"
-       << "\t-T\tTimezone used for TIMESTAMP datatype.\n"
-       << "\t\tPossible values: \"SYSTEM\" (default)\n"
-       << "\t\t               : Offset in the form +/-HH:MM\n"
-       << "\t-y\tS3 Authentication Key (for S3 imports)\n"
-       << "\t-K\tS3 Authentication Secret (for S3 imports)\n"
-       << "\t-t\tS3 Bucket (for S3 imports)\n"
-       << "\t-H\tS3 Hostname (for S3 imports, Amazon's S3 default)\n"
-       << "\t-g\tS3 Region (for S3 imports)\n"
-       << "\t-L\tDirectory for the output .err and .bad files.\n"
-       << "\t\tDefault is " << string(MCSLOGDIR);
+  cout << "\n\n" << (*fOptions) << endl;
 
   cout << "\nExample1: Traditional usage\n"
        << "\tcpimport -j 1234";
@@ -604,386 +658,107 @@ void WECmdArgs::usage()
 
 void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 {
-  int aCh;
   std::string importPath;
   bool aJobType = false;
 
   if (argc > 0)
     fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
 
-  while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:L:O:")) != EOF)
+  po::positional_options_description pos_opt;
+  pos_opt.add("dbname", 1)
+    .add("table", 1)
+    .add("load-file", 1);
+
+  po::variables_map vm;
+  po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
+
+  if (vm.contains("help"))
   {
-    switch (aCh)
+    fHelp = true;
+    usage();
+    return;
+  }
+  if (vm.contains("separator"))
+  {
+    auto value = vm["separator"].as<std::string>();
+    if (value == "\\t")
     {
-      case 'm':
+      fColDelim = '\t';
+      if (fDebugLvl)
       {
-        fArgMode = atoi(optarg);
-
-        // cout << "Mode level set to " << fMode << endl;
-        if ((fArgMode > -1) && (fArgMode <= 3))
-        {
-        }
-        else
-          throw runtime_error("Wrong Mode level");
-
-        break;
+        cout << "Column delimiter : \\t" << endl;
       }
-
-      case 'B':
+    }
+    else
+    {
+      fColDelim = value[0];
+      if (fDebugLvl)
       {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -B is invalid or out of range");
-
-        fSetBufSize = lValue;
-        break;
-      }
-
-      case 'b':
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -b is invalid or out of range");
-
-        fIOReadBufSize = lValue;
-        break;
-      }
-
-      case 'e':
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 0) || (lValue > INT_MAX))
-          throw runtime_error("Option -e is invalid or out of range");
-
-        fMaxErrors = lValue;
-        break;
-      }
-
-      case 'i':
-      {
-        fConsoleLog = true;
-        break;
-      }
-
-      case 'c':
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -c is invalid or out of range");
-
-        fReadBufSize = lValue;
-        break;
-      }
-
-      case 'j':  // -j: jobID
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 0) || (lValue > INT_MAX))
-          throw runtime_error("Option -j is invalid or out of range");
-
-        fJobId = optarg;
-        fOrigJobId = fJobId;  // in case if we need to split it.
-
-        if (0 == fJobId.length())
-          throw runtime_error("Wrong JobID Value");
-
-        aJobType = true;
-        break;
-      }
-
-      case 'v':  // verbose
-      {
-        string aVerbLen = optarg;
-        fVerbose = aVerbLen.length();
-        fDebugLvl = fVerbose;
-        break;
-      }
-
-      case 'd':  // -d debug
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -d is invalid or out of range");
-
-        fDebugLvl = lValue;
-
-        if (fDebugLvl > 0 && fDebugLvl <= 3)
-        {
-          cout << "\nDebug level set to " << fDebugLvl << endl;
-        }
-        else
-        {
-          throw runtime_error("Wrong Debug level");
-        }
-
-        break;
-      }
-
-      case 'r':  // -r: num read threads
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -r is invalid or out of range");
-
-        fNoOfReadThrds = lValue;
-        break;
-      }
-
-      case 'w':  // -w: num parse threads
-      {
-        errno = 0;
-        long lValue = strtol(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > INT_MAX))
-          throw runtime_error("Option -w is invalid or out of range");
-
-        fNoOfWriteThrds = lValue;
-        break;
-      }
-
-      case 's':  // -s: column delimiter
-      {
-        if (!strcmp(optarg, "\\t"))
-        {
-          fColDelim = '\t';
-
-          if (fDebugLvl)
-            cout << "Column delimiter : "
-                 << "\\t" << endl;
-        }
-        else
-        {
-          fColDelim = optarg[0];
-
-          if (fDebugLvl)
-            cout << "Column delimiter : " << fColDelim << endl;
-        }
-
-        break;
-      }
-
-      case 'l':  // -l: if JobId (-j), it can be input file
-      {
-        fPmFile = optarg;
-
-        if (0 == fPmFile.length())
-          throw runtime_error("Wrong local filename");
-
-        break;
-      }
-
-      case 'f':  // -f: import file path
-      {
-        fPmFilePath = optarg;
-        break;
-      }
-
-      case 'n':  // -n: treat "NULL" as null
-      {
-        // default is 0, ie it is equal to not giving this option
-        int nullStringMode = atoi(optarg);
-
-        if ((nullStringMode != 0) && (nullStringMode != 1))
-        {
-          throw(runtime_error("Invalid NULL option; value can be 0 or 1"));
-        }
-
-        if (nullStringMode)
-          fNullStrMode = true;
-        else
-          fNullStrMode = false;  // This is default
-
-        break;
-      }
-
-      case 'P':  // -p: list of PM's
-      {
-        try
-        {
-          std::string aPmList = optarg;
-
-          if (!str2PmList(aPmList, fPmVec))
-            throw(runtime_error("PM list is wrong"));
-        }
-        catch (runtime_error& ex)
-        {
-          throw(ex);
-        }
-
-        break;
-      }
-
-      case 'p':
-      {
-        fJobPath = optarg;
-        break;
-      }
-
-      case 'E':  // -E: enclosed by char
-      {
-        fEnclosedChar = optarg[0];
-        // cout << "Enclosed by Character : " << optarg[0] << endl;
-        break;
-      }
-
-      case 'C':  // -C: enclosed escape char
-      {
-        fEscChar = optarg[0];
-        // cout << "Escape Character  : " << optarg[0] << endl;
-        break;
-      }
-
-      case 'O':
-      {
-        int skipRows = atoi(optarg);
-        if (skipRows < 0)
-        {
-          throw runtime_error("Wrong number of rows to skip");
-        }
-        fSkipRows = skipRows;
-        break;
-      }
-
-      case 'h':  // -h: help
-      {
-        // usage(); // will exit(1) here
-        fHelp = true;
-        break;
-      }
-
-      case 'I':  // -I: binary mode (null handling)
-      {
-        // default is text mode, unless -I option is specified
-        int binaryMode = atoi(optarg);
-
-        if (binaryMode == 1)
-        {
-          fImportDataMode = IMPORT_DATA_BIN_ACCEPT_NULL;
-        }
-        else if (binaryMode == 2)
-        {
-          fImportDataMode = IMPORT_DATA_BIN_SAT_NULL;
-        }
-        else
-        {
-          throw(runtime_error("Invalid Binary mode; value can be 1 or 2"));
-        }
-
-        break;
-      }
-
-      case 'S':  // -S: Treat string truncations as errors
-      {
-        setTruncationAsError(true);
-        // cout << "TruncationAsError  : true" << endl;
-        break;
-      }
-
-      case 'T':
-      {
-        std::string timeZone = optarg;
-        long offset;
-
-        if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
-        {
-          throw(runtime_error("Value for option -T is invalid"));
-        }
-
-        fTimeZone = timeZone;
-        break;
-      }
-
-      case 'q':  // -q: batch quantity - default value is 10000
-      {
-        errno = 0;
-        long long lValue = strtoll(optarg, 0, 10);
-
-        if ((errno != 0) || (lValue < 1) || (lValue > UINT_MAX))
-          throw runtime_error("Option -q is invalid or out of range");
-
-        fBatchQty = lValue;
-
-        if (fBatchQty < 10000)
-          fBatchQty = 10000;
-        else if (fBatchQty > 100000)
-          fBatchQty = 10000;
-
-        break;
-      }
-
-      case 'N':  //-N no console output
-      {
-        fConsoleOutput = false;
-        break;
-      }
-
-      case 'y':  //-y S3 Key
-      {
-        fS3Key = optarg;
-        break;
-      }
-
-      case 'K':  //-K S3 Secret
-      {
-        fS3Secret = optarg;
-        break;
-      }
-
-      case 'H':  //-H S3 Host
-      {
-        fS3Host = optarg;
-        break;
-      }
-
-      case 't':  //-t S3 bucket
-      {
-        fS3Bucket = optarg;
-        break;
-      }
-
-      case 'g':  //-g S3 Region
-      {
-        fS3Region = optarg;
-        break;
-      }
-
-      case 'U':  //-U username of the files owner
-      {
-        fUsername = optarg;
-        break;
-      }
-
-      case 'L':  // -L set the output location of .bad/.err files
-      {
-        fErrorDir = optarg;
-        break;
-      }
-
-      default:
-      {
-        std::string aErr = std::string("Unknown command line option ") + std::to_string(aCh);
-        // cout << "Unknown command line option " << aCh << endl;
-        throw(runtime_error(aErr));
+        cout << "Column delimiter : " << fColDelim << endl;
       }
     }
   }
+  if (vm.contains("binary-mode"))
+  {
+    int value = vm["binary-mode"].as<int>();
+    if (value == 1)
+    {
+      fImportDataMode = IMPORT_DATA_BIN_ACCEPT_NULL;
+    }
+    else if (value == 2)
+    {
+      fImportDataMode = IMPORT_DATA_BIN_SAT_NULL;
+    }
+    else
+    {
+      throw runtime_error("Invalid Binary mode; value can be 1 or 2");
+    }
+  }
+  if (vm.contains("tz"))
+  {
+    auto tz = vm["tz"].as<std::string>();
+    long offset;
+    if (tz != "SYSTEM" && dataconvert::timeZoneToOffset(tz.c_str(), tz.size(), &offset))
+    {
+      throw runtime_error("Value for option --tz/-T is invalid");
+    }
+    fTimeZone = tz;
+  }
+  if (vm.contains("job-id"))
+  {
+    errno = 0;
+    string optarg = vm["job-id"].as<std::string>();
+    long lValue = strtol(optarg.c_str(), nullptr, 10);
+    if (errno != 0 || lValue < 0 || lValue > INT_MAX)
+    {
+      throw runtime_error("Option --job-id/-j is invalid or outof range");
+    }
+    fJobId = optarg;
+    fOrigJobId = fJobId;
 
-  if (fHelp)
-    usage();  // BUG 4210
+    if (0 == fJobId.length())
+    {
+      throw runtime_error("Wrong JobID Value");
+    }
+
+    aJobType = true;
+  }
+  if (vm.contains("verbose"))
+  {
+    string optarg = vm["verbose"].as<std::string>();
+    fVerbose = fDebugLvl = optarg.length();
+  }
+  if (vm.contains("batch-quantity"))
+  {
+    if (fBatchQty < 10000)
+    {
+      fBatchQty = 10000;
+    }
+    else if (fBatchQty > 100000)
+    {
+      fBatchQty = 10000;
+    }
+  }
 
   if (fArgMode != -1)
     fMode = fArgMode;  // BUG 4210
@@ -1000,26 +775,23 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (0 == fArgMode)
       throw runtime_error("Incompatible mode and option types");
 
-    if (optind < argc)
+    if (vm.contains("dbname"))
     {
-      fSchema = argv[optind];  // 1st pos parm
-      optind++;
+      fSchema = vm["dbname"].as<string>();
 
-      if (optind < argc)
-      {
-        fTable = argv[optind];  // 2nd pos parm
-        optind++;
-      }
-      else
+
+      if (!vm.contains("table"))
       {
         // if schema is there, table name should be there
         throw runtime_error("No table name specified with schema.");
       }
 
-      if (optind < argc)  // see if input file name is given
+      fTable = vm["table"].as<string>();  // 2nd pos parm
+
+      if (vm.contains("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
-        fLocFile = argv[optind];
+        fLocFile = vm["load-file"].as<string>();
 
         if ((fLocFile.at(0) != '/') && (fLocFile != "STDIN"))
         {
@@ -1098,7 +870,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   // 1. no positional parameters	- Mode 0 & stdin
   // 2. Two positional parameters (schema and table names) - Mode 1/2, stdin
   // 3. Three positional parameters (schema, table, and import file name)
-  else if (optind < argc)  // see if db schema name is given
+  else if (vm.contains("dbname"))  // see if db schema name is given
   {
     if (fArgMode == 0)
     {
@@ -1112,13 +884,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       }
       else
       {
-        fLocFile = argv[optind];
-        optind++;
+        fLocFile = vm["dbname"].as<string>();
       }
 
-      if (optind < argc)  // dest filename provided
+      if (vm.contains("table"))  // dest filename provided
       {
-        fPmFile = argv[optind];
+        fPmFile = vm["table"].as<string>();
 
         if ((fPmFile.at(0) != '/') && (fS3Key.empty()))
         {
@@ -1168,19 +939,16 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       */
     }
     else
-      fSchema = argv[optind];  // 1st pos parm
+      fSchema = vm["dbname"].as<string>();  // 1st pos parm
 
-    optind++;
-
-    if (optind < argc)  // see if table name is given
+    if (vm.contains("table"))  // see if table name is given
     {
-      fTable = argv[optind];  // 2nd pos parm
-      optind++;
+      fTable = vm["table"].as<string>();  // 2nd pos parm
 
-      if (optind < argc)  // see if input file name is given
+      if (vm.contains("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
-        fLocFile = argv[optind];
+        fLocFile = vm["load-file"].as<string>();
 
         // BUG 4379 if -f option given we need to use that path,
         // over riding bug 4231. look at the code below

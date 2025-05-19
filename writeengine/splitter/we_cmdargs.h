@@ -28,13 +28,18 @@
 #include "we_xmlgetter.h"
 #include "we_type.h"
 
+namespace boost::program_options
+{
+class options_description;
+}
+
 namespace WriteEngine
 {
 class WECmdArgs
 {
  public:
   WECmdArgs(int argc, char** argv);
-  virtual ~WECmdArgs() = default;
+  virtual ~WECmdArgs();
 
   typedef std::vector<unsigned int> VecInts;
   typedef std::vector<std::string> VecArgs;
@@ -280,6 +285,8 @@ class WECmdArgs
   std::string PrepMode2ListOfFiles(std::string& FileName);  // Bug 4342
   void getColumnList(std::set<std::string>& columnList) const;
 
+ private:
+  static void checkIntArg(const std::string& name, long min, long max, int value);
  private:  // variables for SplitterApp
   VecArgs fVecArgs;
   VecInts fPmVec;
@@ -312,7 +319,7 @@ class WECmdArgs
   std::string fS3Host;      // S3 Host
   std::string fS3Region;    // S3 Region
 
-  unsigned int fBatchQty;  // No. of batch Qty.
+  int fBatchQty;           // No. of batch Qty.
   int fNoOfReadThrds;      // No. of read buffers
   // std::string fConfig;	// config filename
   int fDebugLvl;                   // Debug level
@@ -339,6 +346,7 @@ class WECmdArgs
   std::string fTimeZone;  // Timezone to use for TIMESTAMP datatype
   std::string fUsername;  // Username of the data files owner
   std::string fErrorDir;
+  std::unique_ptr<boost::program_options::options_description> fOptions;
 };
 //----------------------------------------------------------------------
 
