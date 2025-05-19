@@ -888,6 +888,8 @@ void ReadThreadFactory::CreateReadThread(ThreadPool& Tp, IOSocket& Ios, BRM::DBR
 
   aBs.peek(msgId);
 
+  idblog("msgId " << int(msgId));
+
   switch (msgId)
   {
     case WE_SVR_DDL_KEEPALIVE:
