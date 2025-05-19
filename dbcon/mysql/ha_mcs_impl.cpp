@@ -4126,33 +4126,33 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   bool localQuery = (get_local_query(thd) > 0 ? true : false);
 
   {
-      ci->stats.reset();  // reset query stats
-      ci->stats.setStartTime();
-      if (thd->main_security_ctx.user)
-      {
-        ci->stats.fUser = thd->main_security_ctx.user;
-      }
-      else
-      {
-        ci->stats.fUser = "";
-      }
+    ci->stats.reset();  // reset query stats
+    ci->stats.setStartTime();
+    if (thd->main_security_ctx.user)
+    {
+      ci->stats.fUser = thd->main_security_ctx.user;
+    }
+    else
+    {
+      ci->stats.fUser = "";
+    }
 
-      if (thd->main_security_ctx.host)
-        ci->stats.fHost = thd->main_security_ctx.host;
-      else if (thd->main_security_ctx.host_or_ip)
-        ci->stats.fHost = thd->main_security_ctx.host_or_ip;
-      else
-        ci->stats.fHost = "unknown";
+    if (thd->main_security_ctx.host)
+      ci->stats.fHost = thd->main_security_ctx.host;
+    else if (thd->main_security_ctx.host_or_ip)
+      ci->stats.fHost = thd->main_security_ctx.host_or_ip;
+    else
+      ci->stats.fHost = "unknown";
 
-      try
-      {
-        ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
-      }
-      catch (std::exception& e)
-      {
-        string msg = string("Columnstore User Priority - ") + e.what();
-        ci->warningMsg = msg;
-      }
+    try
+    {
+      ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser);
+    }
+    catch (std::exception& e)
+    {
+      string msg = string("Columnstore User Priority - ") + e.what();
+      ci->warningMsg = msg;
+    }
 
     // if the previous query has error, re-establish the connection
     if (ci->queryState != 0)
