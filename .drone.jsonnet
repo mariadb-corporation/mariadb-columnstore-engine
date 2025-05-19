@@ -34,6 +34,21 @@ local customEnvCommands(envkey, builddir) =
   (if (std.objectHas(customEnvCommandsMap, envkey))
    then customEnvCommandsMap[envkey] + updateAlternatives[envkey] else []);
 
+
+local customBootstrapParamsForExisitingPipelines(envkey) =
+  local customBootstrapMap = {
+    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+  };
+  (if (std.objectHas(customBootstrapMap, envkey))
+   then customBootstrapMap[envkey] else "");
+
+local customBootstrapParamsForAdditionalPipelinesMap = {
+  ASAN: "--asan",
+  TSAN: "--tsan",
+  UBSAN: "--ubsan",
+};
+
+
 local any_branch = "**";
 local platforms_custom = platforms.develop;
 local platforms_arm_custom = platforms_arm.develop;
@@ -112,7 +127,7 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBuildEnvCommandsMapKey="") = {
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local init = if (pkg_format == "rpm") then "/usr/lib/systemd/systemd" else "systemd",
   local mtr_path = if (pkg_format == "rpm") then "/usr/share/mysql-test" else "/usr/share/mysql/mysql-test",
@@ -662,7 +677,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
   kind: "pipeline",
   type: "docker",
-  name: std.join(" ", [branch, platform, event, arch, server, customBuildEnvCommandsMapKey]),
+  name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParams, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
   // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
@@ -732,7 +747,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
                          "--build-packages --sccache " +
-                         "--server-version " + server + " | " +
+                         "--server-version " + server +
+                         customBootstrapParams +
+                         customBootstrapParamsForExisitingPipelines(result) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
                          "/mdb/" + builddir + "/" + result + '/build.log"',
                          "sccache --show-stats",
@@ -870,8 +887,8 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", ""]), platforms.develop) +
-              std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", ""]), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms.develop) +
+              std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
 [
@@ -904,7 +921,7 @@ local FinalPipeline(branch, event) = {
 ]
 +
 [
-  Pipeline(b, platform, triggeringEvent, a, server, buildenv)
+  Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
   for a in ["amd64"]
   for b in std.objectFields(platforms)
   for platform in ["ubuntu:24.04"]

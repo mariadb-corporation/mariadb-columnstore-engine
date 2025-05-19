@@ -56,7 +56,6 @@ optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=D
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../MariaDBBuild
@@ -65,6 +64,7 @@ optparse.define short=r long=restart-services variable=RESTART_SERVICES default=
 optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
+optparse.define short=F long=custom-cmake-flags desc="Add custom cmake flags" variable=CUSTOM_CMAKE_FLAGS
 
 source $(optparse.build)
 
@@ -363,10 +363,10 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-DDEB=${CODENAME})
     fi
 
-    if [[ $PRINT_CMAKE_FLAGS = true ]]; then
-        message "Building with flags"
-        newline_array "${MDB_CMAKE_FLAGS[@]}"
-    fi
+    MDB_CMAKE_FLAGS+=($CUSTOM_CMAKE_FLAGS)
+
+    message "Building with flags"
+    newline_array "${MDB_CMAKE_FLAGS[@]}"
 }
 
 init_submodules() {
