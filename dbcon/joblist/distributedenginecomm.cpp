@@ -303,6 +303,7 @@ int32_t DistributedEngineComm::Setup()
 
     try
     {
+	    idblog("trying to connect to PMS" << connectionId << ", " << cl->otherEnd() << ", address " << cl->addr2String());
       if (cl->connect())
       {
         newClients.push_back(cl);
