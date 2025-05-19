@@ -6,27 +6,33 @@ local servers = {
 };
 
 local platforms = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:11", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:11", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local platforms_arm = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:11", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:11", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
-local customBuildEnvCommandsMap = {
+local customEnvCommandsMap = {
   // 'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
-  // 'clang-19': ['apt install -y clang-19', 'export CC=/usr/bin/clang-19', 'export CXX=/usr/bin/clang++-19'],
   "clang-20": [
     "apt install -y wget curl lsb-release software-properties-common gnupg",
     "wget https://apt.llvm.org/llvm.sh",
     "bash llvm.sh 20",
-    "export CC=/usr/bin/clang-20",
-    "export CXX=/usr/bin/clang++-20",
+    "export CC=/usr/bin/clang",
+    "export CXX=/usr/bin/clang++",
   ],
 };
 
+local customEnvCommands(envkey, builddir) =
+  local updateAlternatives = {
+    "clang-20": ["bash /mdb/" + builddir +
+                 "/storage/columnstore/columnstore/build/update-clang-version.sh 20 100"],
+  };
+  (if (std.objectHas(customEnvCommandsMap, envkey))
+   then customEnvCommandsMap[envkey] + updateAlternatives[envkey] else []);
 
 local any_branch = "**";
 local platforms_custom = platforms.develop;
@@ -48,10 +54,7 @@ local upgrade_test_lists = {
     arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
     amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
   },
-  debian11: {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.5-2", "10.6.7-3", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-  },
+
   debian12: {
     arm64: [],
     amd64: [],
@@ -75,7 +78,6 @@ local testRun(platform) =
   local platform_map = {
     "rockylinux:8": "ctest3 -R columnstore: -j $(nproc) --output-on-failure",
     "rockylinux:9": "ctest3 -R columnstore: -j $(nproc) --output-on-failure",
-    "debian:11": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
     "debian:12": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
     "ubuntu:20.04": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
     "ubuntu:22.04": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
@@ -103,12 +105,10 @@ local testPreparation(platform) =
   local platform_map = {
     "rockylinux:8": rockylinux8_deps + rockylinux_common_deps,
     "rockylinux:9": rockylinux9_deps + rockylinux_common_deps,
-    "debian:11": deb_deps,
     "debian:12": deb_deps,
     "ubuntu:20.04": deb_deps,
     "ubuntu:22.04": deb_deps,
     "ubuntu:24.04": deb_deps,
-
   };
   platform_map[platform];
 
@@ -726,8 +726,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          "mkdir /mdb/" + builddir + "/" + result,
                          get_sccache,
                        ]
-                       + (if (std.objectHas(customBuildEnvCommandsMap, customBuildEnvCommandsMapKey)) then
-                            customBuildEnvCommandsMap[customBuildEnvCommandsMapKey] else []) +
+                       + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
                          'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
                          "--build-type RelWithDebInfo " +
@@ -906,10 +905,10 @@ local FinalPipeline(branch, event) = {
 +
 [
   Pipeline(b, platform, triggeringEvent, a, server, buildenv)
-  for a in ["amd64", "arm64"]
+  for a in ["amd64"]
   for b in std.objectFields(platforms)
   for platform in ["ubuntu:24.04"]
-  for buildenv in std.objectFields(customBuildEnvCommandsMap)
+  for buildenv in std.objectFields(customEnvCommandsMap)
   for triggeringEvent in events
   for server in servers.develop
 ]

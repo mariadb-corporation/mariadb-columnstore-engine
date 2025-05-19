@@ -19,6 +19,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 endif()
 
 set(INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/.boost/boost-lib)
+set(BOOST_ROOT "${INSTALL_LOCATION}")
 set(Boost_INCLUDE_DIRS "${INSTALL_LOCATION}/include")
 set(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 link_directories("${Boost_LIBRARY_DIRS}")
