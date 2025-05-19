@@ -1961,7 +1961,6 @@ void MasterDBRMNode::doGetSystemState(ByteStream& /*msg*/, ThreadParams* p)
 
   try
   {
-	  idblog("calling from doGetSystemState()");
     sm.getSystemState(ss);
     err = ERR_OK;
     reply << err;
