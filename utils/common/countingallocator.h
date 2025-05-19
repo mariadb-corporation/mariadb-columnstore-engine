@@ -40,6 +40,8 @@ const constexpr int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;
 // Higher values demonstrate slower response to memory limit violations.
 const constexpr int64_t CheckPointStepSize = 100 * 1024;
 
+const constexpr int64_t DeallocateCheckPointStepSize = 100 * 1024 * 1024;
+
 // Custom Allocator that tracks allocated memory using an atomic counter
 template <typename T>
 class CountingAllocator
@@ -138,7 +140,7 @@ class CountingAllocator
     int64_t sizeChangeWDirection =
         (currentLocalMemoryUsage_ >= lastMemoryLimitCheckpoint_) ? -sizeToDeallocate : sizeToDeallocate;
     int64_t diffSinceLastCheckPoint = int_distance(currentLocalMemoryUsage_, lastMemoryLimitCheckpoint_);
-    bool needsCheckpoint = needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, checkPointStepSize_);
+    bool needsCheckpoint = needCheckPoint(sizeChangeWDirection, diffSinceLastCheckPoint, DeallocateCheckPointStepSize);
 
     // Now safe to delete
     ::operator delete(ptr);
