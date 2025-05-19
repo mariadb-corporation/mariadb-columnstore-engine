@@ -3479,6 +3479,7 @@ int DBRM::getSystemReady() throw()
 {
   uint32_t stateFlags;
 
+  idblog("calling from getSystemReday");
   if (getSystemState(stateFlags) < 0)
   {
     return -1;
@@ -3491,6 +3492,7 @@ int DBRM::getSystemQueryReady() throw()
 {
   uint32_t stateFlags;
 
+  idblog("calling from getSystemQueryReday");
   if (getSystemState(stateFlags) < 0)
   {
     return -1;
