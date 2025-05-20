@@ -246,6 +246,7 @@ const SBS MessageQueueClient::read(const struct timespec* timeout, bool* isTimeO
 {
   if (!fClientSock.isOpen())
   {
+	  idblog("socket is not open, addr " << addr2String());
     fClientSock.open();
 
     try
@@ -254,6 +255,7 @@ const SBS MessageQueueClient::read(const struct timespec* timeout, bool* isTimeO
     }
     catch (...)
     {
+	    idblog("cannot connect");
       fClientSock.close();
       throw;
     }
