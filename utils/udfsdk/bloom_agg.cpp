@@ -31,13 +31,6 @@
 
 using namespace mcsv1sdk;
 
-// To store and initialize the BloomAggData
-namespace 
-{
-  uint64_t seed1 = 77557187;
-  uint64_t seed2 = 8012791231;
-}
-
 mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
   if (context->getParameterCount() != 3)
@@ -62,22 +55,6 @@ mcsv1_UDAF::ReturnCode bloom_agg::reset(mcsv1Context* context)
   }
 
   return mcsv1_UDAF::SUCCESS;
-}
-
-template<typename T>
-static inline void addValueToBloomFilter(const T& val, BloomAggData& data)
-{
-  uint64_t blockIdxHash = XXH3_64bits(reinterpret_cast<const void*>(&val), sizeof(val)) % data.bloomFilterSize;
-  
-  uint64_t valHash1 = XXH3_64bits_withSeed(reinterpret_cast<const void*>(&val), sizeof(val), seed1);
-  uint64_t valHash2 = XXH3_64bits_withSeed(reinterpret_cast<const void*>(&val), sizeof(val), seed2);
-
-  auto& block = data.bloomFilter[blockIdxHash];
-  
-  for (size_t i = 0; i < data.hashFuncCount; ++i) {
-    size_t bitIdx = (valHash1 + i * valHash2) % 8;
-    block |= (1 << (bitIdx));
-  }
 }
 
 mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
@@ -156,27 +133,8 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 {
   BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
-  // Convert bloom filter to a binary string
   std::string blob(data->bloomFilter.begin(), data->bloomFilter.end());
   valOut = utils::NullString(blob);
-  // std::ostringstream oss;
-  // for (const auto& val : data->bloomFilter)
-  // {
-  //   oss << val;
-  // }
-  // std::string result = oss.str();
-
-  // valOut = NullString(result);
-  
-  // Only for testing, use variant above after testing
-  // std::ostringstream oss;
-  // for (const auto& val : data->bloomFilter)
-  // {
-  //     oss << std::bitset<8>(val) << " ";  // prints 8 bits per block
-  // }
-  // std::string result = oss.str();
-
-  // valOut = utils::NullString(result);
 
   return mcsv1_UDAF::SUCCESS;
 }

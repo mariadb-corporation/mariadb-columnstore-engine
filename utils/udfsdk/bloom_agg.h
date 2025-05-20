@@ -15,41 +15,6 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-/***********************************************************************
- *   $Id$
- *
- *   mcsv1_UDAF.h
- ***********************************************************************/
-
-/**
- * Columnstore interface for writing a User Defined Aggregate
- * Functions (UDAF) and User Defined Analytic Functions (UDAnF)
- * or a function that can act as either - UDA(n)F
- *
- * The basic steps are:
- *
- * 1. Create a the UDA(n)F function interface in some .h file.
- * 2. Create the UDF function implementation in some .cpp file
- * 3. Create the connector stub (MariaDB UDAF definition) for
- * this UDF function.
- * 4. build the dynamic library using all of the source.
- * 5  Put the library in $COLUMNSTORE_INSTALL/lib of
- * all modules
- * 6. restart the Columnstore system.
- * 7. notify mysqld about the new function:
- *
- *    CREATE AGGREGATE FUNCTION ssq returns REAL soname
- *    'libudf_mysql.so';
- *
- * The UDAF function will run distributed in the Columnstore
- * engine. UDAnF do not run distributed.
- *
- * UDAF is User Defined Aggregate Function.
- * UDAnF is User Defined Analytic Function.
- * UDA(n)F is an acronym for a function that could be either. It
- * is also used to describe the interface that is used for
- * either.
- */
 #pragma once
 
 #include <cstdlib>
