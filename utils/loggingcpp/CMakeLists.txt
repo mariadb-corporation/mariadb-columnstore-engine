@@ -1,23 +1,26 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-########### next target ###############
-ADD_CUSTOM_COMMAND(
+# ########## next target ###############
+add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/messageids.h
-    COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/genMsgId.pl < ${CMAKE_CURRENT_SOURCE_DIR}/MessageFile.txt > messageids-temp.h
+    COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/genMsgId.pl < ${CMAKE_CURRENT_SOURCE_DIR}/MessageFile.txt >
+            messageids-temp.h
     COMMAND ${CMAKE_COMMAND} -E copy_if_different messageids-temp.h messageids.h
     DEPENDS genMsgId.pl
-    )
-ADD_CUSTOM_COMMAND(
+)
+add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
-    COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/genErrId.pl < ${CMAKE_CURRENT_SOURCE_DIR}/ErrorMessage.txt > errorids-temp.h
+    COMMAND perl ${CMAKE_CURRENT_SOURCE_DIR}/genErrId.pl < ${CMAKE_CURRENT_SOURCE_DIR}/ErrorMessage.txt >
+            errorids-temp.h
     COMMAND ${CMAKE_COMMAND} -E copy_if_different errorids-temp.h errorids.h
     DEPENDS genErrId.pl
-     )
+)
 
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/messageids.h PROPERTIES GENERATED TRUE)
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/errorids.h PROPERTIES GENERATED TRUE)
 
-columnstore_library(loggingcpp 
+columnstore_library(
+    loggingcpp
     message.cpp
     messagelog.cpp
     logger.cpp
@@ -30,6 +33,14 @@ columnstore_library(loggingcpp
 )
 add_dependencies(loggingcpp external_boost)
 
-install(TARGETS loggingcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS loggingcpp
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)
 
-install(FILES MessageFile.txt ErrorMessage.txt DESTINATION ${ENGINE_SYSCONFDIR}/columnstore COMPONENT columnstore-engine)
+install(
+    FILES MessageFile.txt ErrorMessage.txt
+    DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
+    COMPONENT columnstore-engine
+)

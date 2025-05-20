@@ -1,7 +1,6 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-
-########### next target ###############
+# ########## next target ###############
 
 set(dmlpackageproc_LIB_SRCS
     deletepackageprocessor.cpp
@@ -10,7 +9,8 @@ set(dmlpackageproc_LIB_SRCS
     updatepackageprocessor.cpp
     commandpackageprocessor.cpp
     autoincrementdata.cpp
-    tablelockdata.cpp)
+    tablelockdata.cpp
+)
 
 columnstore_library(dmlpackageproc ${dmlpackageproc_LIB_SRCS})
 
@@ -18,4 +18,8 @@ add_dependencies(dmlpackageproc loggingcpp)
 
 target_link_libraries(dmlpackageproc ${NETSNMP_LIBRARIES})
 
-install(TARGETS dmlpackageproc DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS dmlpackageproc
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

@@ -1,8 +1,6 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(rgprint_SRCS rgprint.cpp)
 
@@ -10,5 +8,8 @@ add_executable(rgprint ${rgprint_SRCS})
 
 target_link_libraries(rgprint ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})
 
-install(TARGETS rgprint DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+install(
+    TARGETS rgprint
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

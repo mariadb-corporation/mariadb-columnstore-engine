@@ -1,8 +1,8 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ${S3API_DIR} )
+include_directories(${ENGINE_COMMON_INCLUDES} ${S3API_DIR})
 
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
-########### next target ###############
+# ########## next target ###############
 
 set(we_bulk_STAT_SRCS
     we_brmreporter.cpp
@@ -22,23 +22,36 @@ set(we_bulk_STAT_SRCS
     we_extentstripealloc.cpp
     we_tableinfo.cpp
     we_tempxmlgendata.cpp
-    we_workers.cpp)
+    we_workers.cpp
+)
 
-ADD_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
+add_definitions(-D_FILE_OFFSET_BITS=64)
 columnstore_library(we_bulk ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
 target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
 
-REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
+remove_definitions(-D_FILE_OFFSET_BITS=64)
 
-########### next target ###############
+# ########## next target ###############
 
 set(cpimport.bin_SRCS cpimport.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
 add_dependencies(cpimport.bin marias3)
-target_link_libraries(cpimport.bin ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} ${S3API_DEPS} we_bulk we_xml)
+target_link_libraries(
+    cpimport.bin
+    ${ENGINE_LDFLAGS}
+    ${NETSNMP_LIBRARIES}
+    ${ENGINE_WRITE_LIBS}
+    ${S3API_DEPS}
+    we_bulk
+    we_xml
+)
 
-install(TARGETS cpimport.bin DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS cpimport.bin
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

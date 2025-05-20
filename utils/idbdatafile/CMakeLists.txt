@@ -1,6 +1,6 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ../cloudio)
+include_directories(${ENGINE_COMMON_INCLUDES} ../cloudio)
 
-########### next target ###############
+# ########## next target ###############
 
 set(idbdatafile_LIB_SRCS
     BufferedFile.cpp
@@ -10,7 +10,8 @@ set(idbdatafile_LIB_SRCS
     IDBLogger.cpp
     IDBPolicy.cpp
     PosixFileSystem.cpp
-    UnbufferedFile.cpp)
+    UnbufferedFile.cpp
+)
 
 columnstore_library(idbdatafile ${idbdatafile_LIB_SRCS})
 
@@ -18,4 +19,8 @@ target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS} boost_
 
 target_compile_definitions(idbdatafile PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 
-install(TARGETS idbdatafile DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS idbdatafile
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

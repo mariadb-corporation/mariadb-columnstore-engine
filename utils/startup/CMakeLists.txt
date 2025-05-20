@@ -1,8 +1,8 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-ADD_DEFINITIONS(-fPIC -DPIC)
+add_definitions(-fPIC -DPIC)
 
 columnstore_library(idbboot installdir.cpp)
 add_dependencies(idbboot external_boost)
 
-INSTALL(TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})
+install(TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})

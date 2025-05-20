@@ -1,23 +1,27 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+# ########## next target ###############
 
-
-########### next target ###############
-
-set(DMLProc_SRCS
-    dmlproc.cpp
-    dmlprocessor.cpp
-    dmlresultbuffer.cpp
-    batchinsertprocessor.cpp
-    ../utils/common/crashtrace.cpp)
+set(DMLProc_SRCS dmlproc.cpp dmlprocessor.cpp dmlresultbuffer.cpp batchinsertprocessor.cpp
+                 ../utils/common/crashtrace.cpp
+)
 
 add_executable(DMLProc ${DMLProc_SRCS})
 
 add_dependencies(DMLProc loggingcpp)
 
-target_link_libraries(DMLProc ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${NETSNMP_LIBRARIES} threadpool ddlcleanuputil batchloader)
+target_link_libraries(
+    DMLProc
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_WRITE_LIBS}
+    ${NETSNMP_LIBRARIES}
+    threadpool
+    ddlcleanuputil
+    batchloader
+)
 
-install(TARGETS DMLProc DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-
+install(
+    TARGETS DMLProc
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

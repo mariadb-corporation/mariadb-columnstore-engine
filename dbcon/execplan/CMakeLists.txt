@@ -1,7 +1,6 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_UDFSDK_INCLUDE} ${ENGINE_DATATYPES_INCLUDE})
+include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_UTILS_UDFSDK_INCLUDE} ${ENGINE_DATATYPES_INCLUDE})
 
-
-########### next target ###############
+# ########## next target ###############
 
 set(execplan_LIB_SRCS
     calpontsystemcatalog.cpp
@@ -43,7 +42,8 @@ set(execplan_LIB_SRCS
     treenodeimpl.cpp
     vendorexecutionplan.cpp
     windowfunctioncolumn.cpp
-    udafcolumn.cpp)
+    udafcolumn.cpp
+)
 
 columnstore_library(execplan ${execplan_LIB_SRCS})
 
@@ -51,4 +51,8 @@ add_dependencies(execplan loggingcpp)
 
 target_link_libraries(execplan messageqcpp ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB} pron)
 
-install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS execplan
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

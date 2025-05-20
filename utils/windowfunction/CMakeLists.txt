@@ -1,7 +1,6 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-
-########### next target ###############
+# ########## next target ###############
 
 set(windowfunction_LIB_SRCS
     framebound.cpp
@@ -21,10 +20,15 @@ set(windowfunction_LIB_SRCS
     wf_row_number.cpp
     wf_stats.cpp
     wf_sum_avg.cpp
-    wf_udaf.cpp)
+    wf_udaf.cpp
+)
 
 columnstore_library(windowfunction ${windowfunction_LIB_SRCS})
 
 add_dependencies(windowfunction loggingcpp)
 
-install(TARGETS windowfunction DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS windowfunction
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

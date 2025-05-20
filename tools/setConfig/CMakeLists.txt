@@ -1,7 +1,6 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-########### next target ###############
+# ########## next target ###############
 
 set(setConfig_SRCS main.cpp)
 
@@ -9,5 +8,8 @@ add_executable(mcsSetConfig ${setConfig_SRCS})
 
 target_link_libraries(mcsSetConfig ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
 
-install(TARGETS mcsSetConfig DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+install(
+    TARGETS mcsSetConfig
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)
