@@ -26,7 +26,7 @@ set(we_bulk_STAT_SRCS
 )
 
 add_definitions(-D_FILE_OFFSET_BITS=64)
-columnstore_library(we_bulk ${we_bulk_STAT_SRCS})
+add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
