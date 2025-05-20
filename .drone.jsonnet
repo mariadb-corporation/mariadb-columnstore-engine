@@ -181,6 +181,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       "aws s3 sync " + result + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
+      "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'",
 
       "rm -rf " + result + "/*",
     ],
@@ -748,8 +749,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          "--distro " + platform + " " +
                          "--build-packages --sccache " +
                          "--server-version " + server +
-                         customBootstrapParams +
-                         customBootstrapParamsForExisitingPipelines(result) + " | " +
+                         " " + customBootstrapParams +
+                         " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
                          "/mdb/" + builddir + "/" + result + '/build.log"',
                          "sccache --show-stats",
@@ -824,19 +825,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          ] +
          [pipeline.publish("cmapi build")] +
          [pipeline.publish()] +
-         [
-           {
-             name: "publish pkg url",
-             depends_on: ["publish pkg"],
-             image: "alpine/git",
-             commands: [
-               "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'",
-               "echo 'for installation run:'",
-               "echo 'export OS=" + result + "'",
-               "echo 'export PACKAGES_URL=" + packages_url + "'",
-             ],
-           },
-         ] +
          (if (event == "cron") then [pipeline.publish("pkg latest", "latest")] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
