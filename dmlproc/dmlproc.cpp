@@ -202,6 +202,7 @@ class CleanUpThread
 // This function rolls back any active transactions in case of an abnormal shutdown.
 void rollbackAll(DBRM* dbrm)
 {
+	idblog("rolling back all");
   Oam oam;
 
   // Log a message in info.log
@@ -592,6 +593,7 @@ int ServiceDMLProc::Child()
   //@Bug 1627
   try
   {
+	  idblog("rollback in Child() call");
     rollbackAll(&dbrm);  // Rollback any
   }
   catch (std::exception& e)

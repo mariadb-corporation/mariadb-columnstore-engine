@@ -132,6 +132,7 @@ struct CancellationThread
 
       if (bRollback)
       {
+	      idblog("starting rollback in cancellation thread");
         RollbackTransactionProcessor rollbackProcessor(fDbrm);
         SessionManager sessionManager;
         uint64_t uniqueId = fDbrm->getUnique64();
