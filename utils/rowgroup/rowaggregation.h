@@ -345,8 +345,7 @@ struct GroupConcat : public messageqcpp::Serializeable
 
   GroupConcat() = default;
   GroupConcat(joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sessLimit)
-      : fRm(rm)
-      , fSessionMemLimit(sessLimit)
+   : fRm(rm), fSessionMemLimit(sessLimit)
   {
   }
 
@@ -424,8 +423,6 @@ class RowAggregation : public messageqcpp::Serializeable
   {
     return fRollupFlag;
   }
-
-  bool hasRollup() const { return fRollupFlag; }
 
   /** @brief Define content of data to be joined
    *
