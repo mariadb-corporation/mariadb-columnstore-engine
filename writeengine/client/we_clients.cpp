@@ -367,6 +367,7 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
         }
 
         cerr << "WEC got 0 byte message for object " << this << endl;
+	idblog("0 byte message");
         goto Error;
       }
     }

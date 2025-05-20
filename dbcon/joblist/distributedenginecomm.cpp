@@ -314,6 +314,7 @@ int32_t DistributedEngineComm::Setup()
       }
       else
       {
+	      idblog("cannot connecti to PMS" << connectionId);
         throw runtime_error("Connection refused from PMS" + std::to_string(connectionId));
       }
     }
