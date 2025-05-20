@@ -1,9 +1,7 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
-#    func_decode_oracle.cpp
+# ########## next target ###############
+# func_decode_oracle.cpp
 
 set(funcexp_LIB_SRCS
     functor.cpp
@@ -144,13 +142,17 @@ set(funcexp_LIB_SRCS
     func_year.cpp
     func_yearweek.cpp
     jsonhelpers.cpp
-    sql_crypt.cpp)
+    sql_crypt.cpp
+)
 
 add_library(funcexp SHARED ${funcexp_LIB_SRCS})
 
 add_dependencies(funcexp loggingcpp)
 
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES} pron pcre2-8)
+target_link_libraries(funcexp ${NETSNMP_LIBRARIES} pron pcre2-8 ${MARIADB_STRING_LIBS})
 
-install(TARGETS funcexp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
+install(
+    TARGETS funcexp
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

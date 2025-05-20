@@ -1,443 +1,86 @@
-if (CMAKE_VERSION VERSION_LESS 3.13.0)
-  MESSAGE_ONCE(CS_CMAKE "ColumnStore needs cmake >= 3.13")
-  RETURN()
-ENDIF()
+cmake_minimum_required(VERSION 3.13)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+project(Columnstore)
 
-PROJECT(Columnstore)
-INCLUDE (CheckCXXSourceCompiles)
-
-# MariaDB server adds this flags by default for Debug builds, and this makes our external projects
-# ABI incompatible with debug STL containers
-STRING(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-STRING(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-
-
-FOREACH(p CMP0135)
-  IF(POLICY ${p})
-    CMAKE_POLICY(SET ${p} NEW)
-  ENDIF()
-ENDFOREACH()
-
-IF(NOT INSTALL_LAYOUT)
-    IF(NOT CMAKE_BUILD_TYPE)
-        SET(CMAKE_BUILD_TYPE RELWITHDEBINFO CACHE STRING
-            "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel" FORCE)
-    ENDIF(NOT CMAKE_BUILD_TYPE)
-    SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-ENDIF()
-
-if(SERVER_BUILD_DIR)
-    if (NOT IS_ABSOLUTE ${SERVER_BUILD_DIR})
-      set(SERVER_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${SERVER_BUILD_DIR})
+foreach(p CMP0135 CMP0077)
+    if(POLICY ${p})
+        cmake_policy(SET ${p} NEW)
     endif()
-    if(NOT EXISTS ${SERVER_BUILD_DIR}/CMakeCache.txt)
-        message(FATAL_ERROR "SERVER_BUILD_DIR parameter supplied but CMakeCache.txt not found in ${SERVER_BUILD_DIR}")
-    endif()
-    load_cache("${SERVER_BUILD_DIR}" READ_WITH_PREFIX SERVER_ MySQL_SOURCE_DIR MySQL_BINARY_DIR CMAKE_BUILD_TYPE CMAKE_INSTALL_PREFIX)
+endforeach()
 
-    set(SERVER_BUILD_INCLUDE_DIR "${SERVER_MySQL_BINARY_DIR}/include" CACHE PATH "Location of server build include folder" FORCE)
-    set(SERVER_SOURCE_ROOT_DIR "${SERVER_MySQL_SOURCE_DIR}" CACHE PATH "Location of the server source folder" FORCE)
-    set(CMAKE_INSTALL_PREFIX "${SERVER_CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation prefix" FORCE)
-    set(CMAKE_BUILD_TYPE ${SERVER_CMAKE_BUILD_TYPE} CACHE STRING "Build configuration type" FORCE)
-endif()
+set(PACKAGE columnstore)
+set(PACKAGE_NAME columnstore)
+set(PACKAGE_TARNAME columnstore)
+set(PACKAGE_BUGREPORT support@mariadb.com)
+set(PACKAGE_URL "")
+set(PACKAGE_STRING columnstore-${PACKAGE_VERSION})
 
-SET_PROPERTY(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_CURRENT_BINARY_DIR}/external)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-INCLUDE(check_compiler_flag)
-INCLUDE(ExternalProject)
-INCLUDE(CheckCXXSourceCompiles)
+set(CMAKE_CXX_EXTENSIONS FALSE)
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 
-FIND_PACKAGE(Boost 1.81.0 COMPONENTS chrono filesystem program_options regex system thread)
+# take a note, that install scripts are and services configurations are located oam/install_scripts/CMakeLists.txt
 
-IF (NOT Boost_FOUND OR Boost_VERSION VERSION_GREATER 1.76.99)
-  MY_CHECK_CXX_COMPILER_FLAG("-std=c++20")
-ENDIF()
+set(WITH_COLUMNSTORE_LZ4
+    AUTO
+    CACHE STRING "Build with lz4. Possible values are 'ON', 'OFF', 'AUTO' and default is 'AUTO'"
+)
 
-IF (have_CXX__std_c__20)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-ELSE()
-  MY_CHECK_CXX_COMPILER_FLAG("-std=c++2a")
-  IF (have_CXX__std_c__2a)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
-  ELSE()
-    MESSAGE_ONCE(CS_NO_CXX20 "C++ Compiler does not understand -std=c++20")
-    return()
-  ENDIF()
-ENDIF()
+# the order of includes is important
+include(check_compiler_flag)
+include(ExternalProject)
+include(CheckCXXSourceCompiles)
+include(packages)
+include(boost)
+include(thrift)
+include(dirs)
+include(includes)
+include(libs)
+include(columnstore_version)
+include(configureEngine)
+include(compiler_flags)
+include(misc)
 
-# There is an inconsistency b/w default char signedness at ARM and x86.
-# This flag explicitly sets char as signed.
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
+set(COMPONENTS
+    dbcon/mysql
+    utils
+    oam/oamcpp
+    dbcon/execplan
+    dbcon/joblist
+    versioning
+    oam
+    writeengine/wrapper
+    writeengine/client
+    writeengine/xml
+    writeengine/redistribute
+    dbcon/ddlpackage
+    dbcon/ddlpackageproc
+    dbcon/dmlpackage
+    dbcon/dmlpackageproc
+    ddlproc
+    dmlproc
+    oamapps
+    primitives
+    tools
+    writeengine/server
+    writeengine/bulk
+    writeengine/splitter
+    storage-manager
+    datatypes
+    tests
+)
 
-UNSET(CMAKE_CXX_STANDARD)
-SET(CMAKE_CXX_EXTENSIONS FALSE)
-SET(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-SET(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/obj)
-SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-SET(WITH_COLUMNSTORE_LZ4 AUTO CACHE STRING "Build with lz4. Possible values are 'ON', 'OFF', 'AUTO' and default is 'AUTO'")
+foreach(component ${COMPONENTS})
+    add_subdirectory(${component})
+endforeach()
 
-SET (ENGINE_SYSCONFDIR "/etc")
-SET (ENGINE_DATADIR    "/var/lib/columnstore")
-SET (ENGINE_LOGDIR    "/var/log/mariadb/columnstore")
-
-IF (INSTALL_LAYOUT)
-    # We are building from MariaDB server submodule if this is set
-    SET(MARIADB_PLUGINDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_PLUGINDIR}")
-    IF (INSTALL_SYSCONF2DIR)
-        SET(MARIADB_MYCNFDIR "${INSTALL_SYSCONF2DIR}")
-    ELSE ()
-        SET(MARIADB_MYCNFDIR "/etc/mysql")
-    ENDIF ()
-    SET(ENGINE_LIBDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIBDIR}")
-    SET(ENGINE_BINDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}")
-    SET(ENGINE_INCDIR "${CMAKE_INSTALL_PREFIX}/include")
-    SET(ENGINE_MANDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_MANDIR}")
-    SET(ENGINE_SBINDIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_SBINDIR}")
-    SET(ENGINE_SUPPORTDIR "${CMAKE_INSTALL_PREFIX}/share/columnstore")
-ELSE ()
-    IF (RPM)
-        SET(MARIADB_PLUGINDIR "/usr/lib64/mysql/plugin")
-        SET(MARIADB_MYCNFDIR  "/etc/my.cnf.d")
-        SET (ENGINE_LIBDIR     "/usr/lib64")
-        SET (ENGINE_BINDIR     "/usr/bin")
-        SET (ENGINE_INCDIR     "/usr/include")
-        SET (ENGINE_MANDIR     "/usr/share/man")
-        SET (ENGINE_SBINDIR    "/usr/sbin")
-        SET (ENGINE_SUPPORTDIR "/usr/share/columnstore")
-    ELSEIF (DEB)
-        SET(MARIADB_PLUGINDIR "/usr/lib/mysql/plugin")
-        SET(MARIADB_MYCNFDIR  "/etc/mysql/conf.d")
-        SET (ENGINE_LIBDIR     "/usr/lib")
-        SET (ENGINE_BINDIR     "/usr/bin")
-        SET (ENGINE_INCDIR     "/usr/include")
-        SET (ENGINE_MANDIR     "/usr/share/man")
-        SET (ENGINE_SBINDIR    "/usr/sbin")
-        SET (ENGINE_SUPPORTDIR "/usr/share/columnstore")
-    ELSE ()
-        # TODO: prefix should probably apply here
-        SET(MARIADB_PLUGINDIR  "/usr/local/lib/mysql/plugin")
-        SET(MARIADB_MYCNFDIR   "/etc/mysql")
-        SET (ENGINE_LIBDIR     "/usr/local/lib")
-        SET (ENGINE_BINDIR     "/usr/local/bin")
-        SET (ENGINE_INCDIR     "/usr/local/include")
-        SET (ENGINE_MANDIR     "/usr/local/man")
-        SET (ENGINE_SBINDIR    "/usr/local/sbin")
-        SET (ENGINE_SUPPORTDIR "/usr/local/share/columnstore")
-    ENDIF ()
-ENDIF ()
-
-SET (ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-
-INCLUDE(columnstore_version)
-INCLUDE(misc)
-INCLUDE(boost)
-INCLUDE(thrift)
-
-FIND_PACKAGE(BISON)
-IF (NOT BISON_FOUND)
-    MESSAGE_ONCE(CS_NO_BISON "bison not found!")
-    return()
-ENDIF()
-
-check_cxx_source_compiles("#include <filesystem>\n void main(){}" HAS_STD_FILESYSTEM)
-check_cxx_source_compiles("#include <experimental/filesystem>\n void main(){}" HAS_STD_EXPERIMENTAL_FILESYSTEM)
-
-SET (PACKAGE columnstore)
-SET (PACKAGE_NAME columnstore)
-SET (PACKAGE_TARNAME columnstore)
-SET (PACKAGE_BUGREPORT support@mariadb.com)
-SET (PACKAGE_URL "")
-
-SET (PACKAGE_STRING columnstore-${PACKAGE_VERSION})
-
-INCLUDE (configureEngine)
-
-FIND_PROGRAM(LEX_EXECUTABLE flex DOC "path to the flex executable")
-if(NOT LEX_EXECUTABLE)
-    FIND_PROGRAM(LEX_EXECUTABLE lex DOC "path to the lex executable")
-    if(NOT LEX_EXECUTABLE)
-        MESSAGE_ONCE(CS_NO_LEX "flex/lex not found!")
-        return()
-    endif()
-endif()
-
-FIND_PACKAGE(LibXml2)
-
-if (NOT LIBXML2_FOUND)
-    MESSAGE_ONCE(CS_NO_LIBXML "Could not find a usable libxml2 development environment!")
-    return()
-endif()
-
-find_package(Snappy)
-if (NOT SNAPPY_FOUND)
-    MESSAGE_ONCE(CS_NO_SNAPPY "Snappy not found please install snappy-devel for CentOS/RedHat or libsnappy-dev for Ubuntu/Debian")
-    return()
-endif()
-
-FIND_PACKAGE(CURL)
-if (NOT CURL_FOUND)
-    MESSAGE_ONCE(CS_NO_CURL "libcurl development headers not found")
-    return()
-endif()
-
-FIND_PROGRAM(AWK_EXECUTABLE awk DOC "path to the awk executable")
-if(NOT AWK_EXECUTABLE)
-    MESSAGE_ONCE(CS_NO_AWK "awk not found!")
-    return()
-endif()
-
-SET(HAVE_LZ4 0 CACHE INTERNAL "")
-IF (WITH_COLUMNSTORE_LZ4 STREQUAL "ON" OR WITH_COLUMNSTORE_LZ4 STREQUAL "AUTO")
-    FIND_PACKAGE(LZ4)
-    IF (NOT LZ4_FOUND)
-        IF (WITH_COLUMNSTORE_LZ4 STREQUAL "AUTO")
-            MESSAGE_ONCE(CS_LZ4 "LZ4 not found, building without LZ4")
-        ELSE()
-            MESSAGE(FATAL_ERROR "LZ4 not found.")
-        ENDIF()
-    ELSE()
-        MESSAGE_ONCE(CS_LZ4 "Building with LZ4")
-        SET(HAVE_LZ4 1 CACHE INTERNAL "")
-    ENDIF()
-ELSE()
-  MESSAGE_ONCE(CS_LZ4 "Building without LZ4")
-ENDIF()
-
-IF (NOT INSTALL_LAYOUT)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-g -O3 -fno-omit-frame-pointer -fno-strict-aliasing -Wall -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DDBUG_OFF -DHAVE_CONFIG_H" RELEASE RELWITHDEBINFO MINSIZEREL)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-ggdb3 -fno-omit-frame-pointer -fno-tree-vectorize -D_GLIBCXX_ASSERTIONS -DSAFE_MUTEX -DSAFEMALLOC -DENABLED_DEBUG_SYNC -O0 -Wall -D_DEBUG -DHAVE_CONFIG_H" DEBUG)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-msse4.2" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-DBOOST_BIND_GLOBAL_PLACEHOLDERS" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-
-    # enable security hardening features, like most distributions do
-    # in our benchmarks that costs about ~1% of performance, depending on the load
-    IF(CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6")
-      SET(security_default OFF)
-    ELSE()
-      SET(security_default ON)
-    ENDIF()
-    OPTION(SECURITY_HARDENED "Use security-enhancing compiler features (stack protector, relro, etc)" ${security_default})
-    OPTION(SECURITY_HARDENED_NEW "Use new security-enhancing compilier features" OFF)
-    IF(SECURITY_HARDENED AND NOT WITH_ASAN AND NOT WITH_UBSAN AND NOT WITH_TSAN AND NOT WITH_GPROF)
-      # security-enhancing flags
-      MY_CHECK_AND_SET_COMPILER_FLAG("-pie -fPIC")
-      MY_CHECK_AND_SET_COMPILER_FLAG("-Wl,-z,relro,-z,now")
-      MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector --param=ssp-buffer-size=4")
-      MY_CHECK_AND_SET_COMPILER_FLAG("-D_FORTIFY_SOURCE=2" RELEASE RELWITHDEBINFO)
-      MY_CHECK_AND_SET_COMPILER_FLAG("-fexceptions")
-      IF(SECURITY_HARDENED_NEW)
-        MY_CHECK_AND_SET_COMPILER_FLAG("-mcet -fcf-protection")
-        MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-protector-strong")
-        MY_CHECK_AND_SET_COMPILER_FLAG("-fstack-clash-protection")
-      ENDIF()
-    ENDIF()
-ELSE ()
-    # Remove visibility flag for now as it breaks Ubuntu 18.05 and we need to
-    # fix our libraries anyway
-    STRING(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-msse4.2" RELEASE RELWITHDEBINFO MINSIZEREL DEBUG)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-D_DEBUG -O0" DEBUG)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-vla" DEBUG)
-ENDIF()
-
-IF (MASK_LONGDOUBLE)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-DMASK_LONGDOUBLE")
-ENDIF()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-enum-enum-conversion -Wno-register -Wno-typedef-redefinition -Wno-cast-function-type-strict")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-register")
-endif()
-
-IF (WITH_COLUMNSTORE_ASAN)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-U_FORTIFY_SOURCE" DEBUG RELWITHDEBINFO)
-    MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fsanitize-address-use-after-scope -fPIC")
-ENDIF()
-
-MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-copy" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-deprecated-declarations" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-MY_CHECK_AND_SET_COMPILER_FLAG("-Wno-format-truncation" DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
-MY_CHECK_AND_SET_COMPILER_FLAG("-Werror -Wall -Wextra")
-
-SET (ENGINE_LDFLAGS    "-Wl,--no-as-needed -Wl,--add-needed")
-SET (ENGINE_DT_LIB datatypes)
-SET (ENGINE_COMMON_LIBS     messageqcpp loggingcpp configcpp idbboot boost_thread xml2 pthread rt ${ENGINE_DT_LIB})
-SET (ENGINE_OAM_LIBS        oamcpp)
-SET (ENGINE_BRM_LIBS        brm idbdatafile cacheutils rwlock ${ENGINE_OAM_LIBS} ${ENGINE_COMMON_LIBS})
-SET (PLUGIN_EXEC_LIBS       execplan windowfunction joiner rowgroup funcexp udfsdk regr dataconvert common compress querytele threadpool ${ENGINE_BRM_LIBS})
-SET (ENGINE_EXEC_LIBS       joblist querystats libmysql_client ${PLUGIN_EXEC_LIBS})
-SET (PLUGIN_WRITE_LIBS      ddlpackageproc ddlpackage dmlpackageproc dmlpackage writeengine writeengineclient idbdatafile cacheutils)
-SET (ENGINE_WRITE_LIBS      ${PLUGIN_WRITE_LIBS} ${ENGINE_EXEC_LIBS})
-
-IF (NOT INSTALL_LAYOUT)
-    SET (LIBMARIADB_BININC_DIR ${SERVER_BUILD_DIR}/libmariadb/include)
-    SET (LIBMARIADB_SRCINC_DIR ${SERVER_SOURCE_ROOT_DIR}/libmariadb/include)
-ELSE()
-    SET (LIBMARIADB_BININC_DIR ${CMAKE_BINARY_DIR}/libmariadb/include)
-    SET (LIBMARIADB_SRCINC_DIR ${CMAKE_SOURCE_DIR}/libmariadb/include)
-ENDIF()
-
-SET (ENGINE_COMMON_LDFLAGS  "")
-
-IF (SERVER_BUILD_INCLUDE_DIR)
-  IF (NOT IS_ABSOLUTE ${SERVER_BUILD_INCLUDE_DIR})
-    SET (SERVER_BUILD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${SERVER_BUILD_INCLUDE_DIR})
-  ENDIF()
-ELSEIF (INSTALL_LAYOUT)
-    SET (SERVER_BUILD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
-ELSE()
-    SET (SERVER_BUILD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/../include)
-ENDIF()
-
-IF (SERVER_SOURCE_ROOT_DIR)
-  IF (NOT IS_ABSOLUTE ${SERVER_SOURCE_ROOT_DIR})
-    SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_BINARY_DIR}/${SERVER_SOURCE_ROOT_DIR})
-  ENDIF()
-ELSEIF (INSTALL_LAYOUT)
-    SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_SOURCE_DIR})
-ELSE()
-    SET (SERVER_SOURCE_ROOT_DIR ${CMAKE_BINARY_DIR}/..)
-ENDIF()
-
-IF (NOT SERVER_BUILD_DIR)
-    SET (SERVER_BUILD_DIR ${SERVER_SOURCE_ROOT_DIR})
-ENDIF()
-
-MESSAGE_ONCE(SERVER_BUILD_INCLUDE_DIR "SERVER_BUILD_INCLUDE_DIR = ${SERVER_BUILD_INCLUDE_DIR}")
-MESSAGE_ONCE(SERVER_SOURCE_ROOT_DIR "SERVER_SOURCE_ROOT_DIR = ${SERVER_SOURCE_ROOT_DIR}")
-
-IF (INSTALL_LAYOUT)
-    SET (MARIADB_CLIENT_LIBS libmariadb)
-ELSE()
-    SET (MARIADB_CLIENT_LIBS    -L${SERVER_BUILD_INCLUDE_DIR}/../libmariadb/libmariadb/ libmariadb.so)
-ENDIF()
-
-IF (INSTALL_LAYOUT)
-    SET (MARIADB_STRING_LIBS dbug strings mysys)
-ELSE()
-    SET (MARIADB_STRING_LIBS -L${SERVER_BUILD_INCLUDE_DIR}/../mysys/ libmysys.a -L${SERVER_BUILD_INCLUDE_DIR}/../strings/ libstrings.a -L${SERVER_BUILD_INCLUDE_DIR}/../dbug/ libdbug.a)
-ENDIF()
-
-#SET (ENGINE_UTILS_BOOSTIDB_INCLUDE    "{CMAKE_CURRENT_SOURCE_DIR}/utils/boost_idb")
-SET (ENGINE_UTILS_MESSAGEQCPP_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/messageqcpp")
-SET (ENGINE_WE_SHARED_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/shared")
-SET (ENGINE_UTILS_IDBDATAFILE_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/idbdatafile")
-SET (ENGINE_UTILS_LOGGINGCPP_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/loggingcpp" "${CMAKE_CURRENT_BINARY_DIR}/utils/loggingcpp")
-SET (ENGINE_UTILS_CONFIGCPP_INCLUDE   "${CMAKE_CURRENT_SOURCE_DIR}/utils/configcpp")
-SET (ENGINE_UTILS_COMPRESS_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/compress")
-SET (ENGINE_VERSIONING_BRM_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/versioning/BRM")
-SET (ENGINE_UTILS_ROWGROUP_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/rowgroup")
-SET (ENGINE_UTILS_COMMON_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/common")
-SET (ENGINE_UTILS_DATACONVERT_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/dataconvert")
-SET (ENGINE_UTILS_RWLOCK_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/rwlock")
-SET (ENGINE_UTILS_FUNCEXP_INCLUDE     "${CMAKE_CURRENT_SOURCE_DIR}/utils/funcexp")
-SET (ENGINE_UTILS_INCLUDE             "${CMAKE_CURRENT_SOURCE_DIR}/utils")
-SET (ENGINE_OAM_OAMCPP_INCLUDE        "${CMAKE_CURRENT_SOURCE_DIR}/oam/oamcpp")
-SET (ENGINE_DBCON_DDLPKGPROC_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/ddlpackageproc")
-SET (ENGINE_DBCON_DDLPKG_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/ddlpackage")
-SET (ENGINE_DBCON_EXECPLAN_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/execplan")
-SET (ENGINE_UTILS_STARTUP_INCLUDE     "${CMAKE_CURRENT_SOURCE_DIR}/utils/startup")
-SET (ENGINE_DBCON_JOBLIST_INCLUDE     "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/joblist")
-SET (ENGINE_WE_WRAPPER_INCLUDE        "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/wrapper")
-SET (ENGINE_WE_SERVER_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/server")
-SET (ENGINE_DBCON_DMLPKG_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/dmlpackage")
-SET (ENGINE_WE_CLIENT_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/client")
-SET (ENGINE_DBCON_DMLPKGPROC_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/dbcon/dmlpackageproc")
-SET (ENGINE_UTILS_CACHEUTILS_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/cacheutils")
-SET (ENGINE_UTILS_MYSQLCL_INCLUDE     "${CMAKE_CURRENT_SOURCE_DIR}/utils/mysqlcl_idb")
-SET (ENGINE_UTILS_QUERYTELE_INCLUDE   "${CMAKE_CURRENT_SOURCE_DIR}/utils/querytele")
-SET (ENGINE_UTILS_JOINER_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/joiner")
-SET (ENGINE_UTILS_THREADPOOL_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/threadpool")
-SET (ENGINE_UTILS_BATCHLDR_INCLUDE    "${CMAKE_CURRENT_SOURCE_DIR}/utils/batchloader")
-SET (ENGINE_UTILS_DDLCLEANUP_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/ddlcleanup")
-SET (ENGINE_UTILS_QUERYSTATS_INCLUDE  "${CMAKE_CURRENT_SOURCE_DIR}/utils/querystats")
-SET (ENGINE_UTILS_LIBMYSQL_CL_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/utils/libmysql_client")
-SET (ENGINE_WE_CONFIGCPP_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/writeengine/xml")
-SET (ENGINE_DATATYPES_INCLUDE         "${CMAKE_CURRENT_SOURCE_DIR}/datatypes")
-SET (ENGINE_BLOCKCACHE_INCLUDE        "${CMAKE_CURRENT_SOURCE_DIR}/primitives/blockcache")
-SET (ENGINE_PRIMPROC_INCLUDE          "${CMAKE_CURRENT_SOURCE_DIR}/primitives/primproc")
-SET (ENGINE_SERVER_SQL_INCLUDE        "${SERVER_SOURCE_ROOT_DIR}/sql")
-SET (ENGINE_SERVER_INCLUDE_INCLUDE    "${SERVER_SOURCE_ROOT_DIR}/include")
-IF (PCRE_INCLUDES)
-    SET (ENGINE_SERVER_PCRE_INCLUDE       "${PCRE_INCLUDES}")
-ELSE ()
-    SET (ENGINE_SERVER_PCRE_INCLUDE       "${SERVER_BUILD_INCLUDE_DIR}/../pcre")
-ENDIF ()
-SET (ENGINE_SERVER_WSREP_INCLUDE      "${SERVER_SOURCE_ROOT_DIR}/wsrep-lib/include")
-SET (ENGINE_SERVER_WSREP_API_INCLUDE  "${SERVER_SOURCE_ROOT_DIR}/wsrep-lib/wsrep-API/v26/")
-SET (ENGINE_UTILS_UDFSDK_INCLUDE      "${CMAKE_CURRENT_SOURCE_DIR}/utils/udfsdk")
-
-SET (ENGINE_DEFAULT_INCLUDES ${CMAKE_CURRENT_BINARY_DIR} "." "../" "../../" ${SERVER_BUILD_INCLUDE_DIR})
-
-SET (ENGINE_COMMON_INCLUDES  ${ENGINE_DEFAULT_INCLUDES} ${Boost_INCLUDE_DIRS} ${LIBXML2_INCLUDE_DIR} ${ENGINE_UTILS_MESSAGEQCPP_INCLUDE} ${ENGINE_WE_SHARED_INCLUDE} ${ENGINE_UTILS_IDBDATAFILE_INCLUDE} ${ENGINE_UTILS_LOGGINGCPP_INCLUDE} ${ENGINE_UTILS_CONFIGCPP_INCLUDE} ${ENGINE_UTILS_COMPRESS_INCLUDE} ${ENGINE_VERSIONING_BRM_INCLUDE} ${ENGINE_UTILS_ROWGROUP_INCLUDE} ${ENGINE_UTILS_COMMON_INCLUDE} ${ENGINE_UTILS_DATACONVERT_INCLUDE} ${ENGINE_UTILS_RWLOCK_INCLUDE} ${ENGINE_UTILS_FUNCEXP_INCLUDE} ${ENGINE_OAMAPPS_ALARMMANAGER_INCLUDE} ${ENGINE_UTILS_INCLUDE} ${ENGINE_OAM_OAMCPP_INCLUDE} ${ENGINE_DBCON_DDLPKGPROC_INCLUDE} ${ENGINE_DBCON_DDLPKG_INCLUDE} ${ENGINE_DBCON_EXECPLAN_INCLUDE} ${ENGINE_UTILS_STARTUP_INCLUDE} ${ENGINE_DBCON_JOBLIST_INCLUDE} ${ENGINE_WE_WRAPPER_INCLUDE} ${ENGINE_WE_SERVER_INCLUDE} ${ENGINE_DBCON_DMLPKG_INCLUDE} ${ENGINE_WE_CLIENT_INCLUDE} ${ENGINE_DBCON_DMLPKGPROC_INCLUDE} ${ENGINE_UTILS_CACHEUTILS_INCLUDE} ${ENGINE_UTILS_MYSQLCL_INCLUDE} ${ENGINE_UTILS_QUERYTELE_INCLUDE} ${ENGINE_UTILS_THRIFT_INCLUDE} ${ENGINE_UTILS_JOINER_INCLUDE} ${ENGINE_UTILS_THREADPOOL_INCLUDE} ${ENGINE_UTILS_BATCHLDR_INCLUDE} ${ENGINE_UTILS_DDLCLEANUP_INCLUDE} ${ENGINE_UTILS_QUERYSTATS_INCLUDE} ${ENGINE_WE_CONFIGCPP_INCLUDE} ${ENGINE_SERVER_SQL_INCLUDE} ${ENGINE_SERVER_INCLUDE_INCLUDE} ${ENGINE_SERVER_PCRE_INCLUDE} ${ENGINE_SERVER_WSREP_API_INCLUDE} ${ENGINE_SERVER_WSREP_INCLUDE} ${ENGINE_UTILS_UDFSDK_INCLUDE} ${ENGINE_UTILS_LIBMYSQL_CL_INCLUDE} ${ENGINE_DATATYPES_INCLUDE})
-
-ADD_SUBDIRECTORY(dbcon/mysql)
-IF(NOT TARGET columnstore)
-  RETURN()
-ENDIF()
-
-SET (SHMEM_FILE_GLOB "MCS-shm-")
-
-ADD_SUBDIRECTORY(utils)
-ADD_SUBDIRECTORY(oam/oamcpp)
-ADD_SUBDIRECTORY(dbcon/execplan)
-ADD_SUBDIRECTORY(dbcon/joblist)
-ADD_SUBDIRECTORY(versioning)
-ADD_SUBDIRECTORY(oam)
-ADD_SUBDIRECTORY(writeengine/wrapper)
-ADD_SUBDIRECTORY(writeengine/client)
-ADD_SUBDIRECTORY(writeengine/xml)
-ADD_SUBDIRECTORY(writeengine/redistribute)
-ADD_SUBDIRECTORY(dbcon/ddlpackage)
-ADD_SUBDIRECTORY(dbcon/ddlpackageproc)
-ADD_SUBDIRECTORY(dbcon/dmlpackage)
-ADD_SUBDIRECTORY(dbcon/dmlpackageproc)
-ADD_SUBDIRECTORY(ddlproc)
-ADD_SUBDIRECTORY(dmlproc)
-ADD_SUBDIRECTORY(oamapps)
-ADD_SUBDIRECTORY(primitives)
-ADD_SUBDIRECTORY(tools)
-ADD_SUBDIRECTORY(writeengine/server)
-ADD_SUBDIRECTORY(writeengine/bulk)
-ADD_SUBDIRECTORY(writeengine/splitter)
-ADD_SUBDIRECTORY(storage-manager)
-ADD_SUBDIRECTORY(datatypes)
-ADD_SUBDIRECTORY(tests)
-
-find_package(Git QUIET)
-
-IF (GIT_FOUND AND EXISTS ${ENGINE_SRC_DIR}/.git)
-    exec_program("git"
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ARGS "describe --match=NeVeRmAtCh --always --dirty"
-        OUTPUT_VARIABLE GIT_VERSION)
-ELSE ()
-    SET(GIT_VERSION "source")
-ENDIF ()
-
-# releasenum is used by external scripts for various tasks. Leave it alone.
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
-
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine DESTINATION ${ENGINE_SUPPORTDIR} COMPONENT columnstore-engine)
-
-IF (INSTALL_LAYOUT)
-    # Do this or when MariaDB builds us we don't have GenError which is required for these
-    ADD_DEPENDENCIES(udf_mysql GenError)
-    ADD_DEPENDENCIES(funcexp GenError)
-    ADD_DEPENDENCIES(oamcpp GenError)
-    ADD_DEPENDENCIES(regr_mysql GenError)
-ELSE ()
-    # MariaDB has its own packaging routines
-    INCLUDE(cpackEngineRPM)
-    INCLUDE(cpackEngineDEB)
-ENDIF ()
+add_dependencies(udf_mysql GenError)
+add_dependencies(funcexp GenError)
+add_dependencies(oamcpp GenError)
+add_dependencies(regr_mysql GenError)
