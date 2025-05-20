@@ -49,7 +49,7 @@ columnstore_library(execplan ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 
-target_link_libraries(execplan messageqcpp ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB} pron)
+target_link_libraries(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron)
 
 install(
     TARGETS execplan

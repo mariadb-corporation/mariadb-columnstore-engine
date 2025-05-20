@@ -37,8 +37,14 @@ string(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG
 string(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
 # } end hacks
 
+if(WITH_COLUMNSTORE_ASAN)
+    set(WERROR_FLAG)
+else()
+    set(WERROR_FLAG -Werror)
+endif()
+
 # Maintainer flags, works when build is done via bootstrap_mcs.sh {
-set(COLUMNSTORE_MAINTAINER_FLAGS -Werror)
+set(COLUMNSTORE_MAINTAINER_FLAGS ${WERROR_FLAG})
 # } end Maintainer flags
 
 # Release, Debug and common flags {
