@@ -1478,9 +1478,13 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
   }
 
   // MCOL-1495 Remove fCatalogMap entries CS won't use anymore.
+  idblog("just before systemCatalogPtr reset");
   systemCatalogPtr.reset(); // ??? XXX ???
+  idblog("right after systemCatalogPtr reset");
   CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId);
+  idblog("right after removing sessionId");
   CalpontSystemCatalog::removeCalpontSystemCatalog(sessionId | 0x80000000);
+  idblog("right after removing local sessionId");
   return rc;
 }
 
