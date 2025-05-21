@@ -434,6 +434,9 @@ build_binary() {
         message "Installing silently" &&
         ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
 
+    message "Adding symbol link to compile_commands.json to the source root"
+    ln -sf "$MARIA_BUILD_PATH/compile_commands.json" "$MDB_SOURCE_PATH"
+
     check_errorcode
 }
 
