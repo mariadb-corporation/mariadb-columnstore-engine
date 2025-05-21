@@ -1895,6 +1895,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
   boost::shared_ptr<CalpontSystemCatalog> instance;
   CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
 
+  idblog("creating syscat for session ID " << sessionID);
   if (sessionID == 0)
   {
     if (it == fCatalogMap.end())
@@ -1937,6 +1938,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
   boost::mutex::scoped_lock lock(map_mutex);
+  idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << "syscat instance");
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
   fCatalogMap.erase(sessionID);
   /*
