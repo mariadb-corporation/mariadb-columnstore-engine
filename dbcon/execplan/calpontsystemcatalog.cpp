@@ -765,6 +765,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
     txnID.valid = true;
   }
 
+  idblog("Query context");
   BRM::QueryContext verID, oldVerID;
   verID = fSessionManager->verID();
   oldTxnID = csep.txnID();
@@ -1938,7 +1939,7 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
   boost::mutex::scoped_lock lock(map_mutex);
-  idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << "syscat instance");
+  idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << " syscat instance");
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
   fCatalogMap.erase(sessionID);
   /*
