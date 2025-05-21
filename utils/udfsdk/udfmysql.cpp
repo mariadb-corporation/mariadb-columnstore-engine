@@ -5,6 +5,12 @@
 using namespace std;
 
 #include "idb_mysql.h"
+#include "bloom_funcs.h"
+using namespace bloom_funcs;
+
+// Debugging purposes
+#include <fstream>
+#include <bitset>
 
 namespace
 {
@@ -26,6 +32,21 @@ inline double cvtArgToDouble(int t, const char* v)
 
   return d;
 }
+
+
+static inline void logBloomFilter(auto& bloomFilter)
+{
+  std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+  
+  log << "Bloom filter: \n";
+  for (const auto& v : bloomFilter)
+  {
+    log << std::bitset<8>(v);
+  }
+  log << "\n\n";
+
+}
+
 }  // namespace
 
 /****************************************************************************
@@ -438,11 +459,22 @@ extern "C"
 
     initid->max_length = static_cast<uint64_t>(*args->args[2]);
 
+    size_t hashFuncCount = static_cast<size_t>(*args->args[1]);
+    size_t bloomFilterSize = static_cast<size_t>(*args->args[2]);
+
+    auto* data = new BloomData(hashFuncCount);
+    data->bloomFilter.resize(bloomFilterSize, 0);
+
+    initid->ptr = (char*)data;
+
+    logBloomFilter(data->bloomFilter);
+
     return 0;
   }
 
     void bloom_agg_deinit(UDF_INIT* initid)
   {
+    free(initid->ptr);
   }
 
     void bloom_agg_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
@@ -452,45 +484,76 @@ extern "C"
 
     void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
+    struct BloomData* data = (struct BloomData*)initid->ptr;
+    auto val = static_cast<uint64_t>(*args->args[0]);
+
+    addValueToBloomFilter(val, *data);
   }
 
-    long long bloom_agg(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                    char* error __attribute__((unused)))
+    char* bloom_agg(UDF_INIT *initid __attribute__((unused)),
+               UDF_ARGS *args, char *result, unsigned long *length,
+               char *is_null, char *error __attribute__((unused)))
   {
-    return 0;
+    struct BloomData* data = (struct BloomData*)initid->ptr;
+
+    if (data->bloomFilter.empty()) 
+    {
+      *is_null = 1;
+      return result;
+    }
+
+    logBloomFilter(data->bloomFilter);
+
+    *is_null = 0;
+    *length = data->bloomFilter.size();
+
+    memcpy(result, data->bloomFilter.data(), *length);
+    return result;
   }
 
   // MCS_bloom_contains connector stub
       my_bool mcs_bloom_contains_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 2)
+    if (args->arg_count != 3)
     {
-      strcpy(message, "bloom_contains() requires two arguments: bloom_agg, column");
+      strcpy(message, "bloom_contains() requires two arguments: bloom_agg, column, number of hash functions");
       return 1;
     }
 
     initid->max_length = 8;
 
+    
+
     return 0;
   }
 
-    void mcs_bloom_contains_deinit(UDF_INIT* initid)
+    void bloom_contains_deinit(UDF_INIT* initid)
   {
   }
 
-    void mcs_bloom_contains_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+    void bloom_contains_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
                      char* message __attribute__((unused)))
   {
   }
 
-    void mcs_bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
-  {
-  }
+  //   void mcs_bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  // {
+  // }
 
-    long long mcs_bloom_contains(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
+    long long bloom_contains(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                     char* error __attribute__((unused)))
   {
-    return 999;
+    const char* rawData = args->args[0];
+    unsigned long rawDataSize = args->lengths[0];
+    std::vector<uint8_t> bloomFilter(reinterpret_cast<const uint8_t*>(rawData),
+                            reinterpret_cast<const uint8_t*>(rawData) + rawDataSize);
+
+    auto val = static_cast<uint64_t>(*args->args[1]);
+    auto hashFuncCount = static_cast<size_t>(*args->args[2]);
+
+    logBloomFilter(bloomFilter);
+
+    return bloomFilterContains(val, bloomFilter, hashFuncCount);
   }
 
 }

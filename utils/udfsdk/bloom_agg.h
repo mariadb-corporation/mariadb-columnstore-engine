@@ -20,11 +20,8 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
 
 #include "mcsv1_udaf.h"
-#include "calpontsystemcatalog.h"
-#include "windowfunctioncolumn.h"
 
 #define EXPORT
 
@@ -35,8 +32,7 @@ using BloomFilter = std::vector<uint8_t>;
 struct BloomAggData : public mcsv1sdk::UserData 
 {
    BloomAggData() = default;
-   BloomAggData(size_t hashFuncCount, size_t bloomFilterSize) : hashFuncCount(hashFuncCount), 
-                                                                bloomFilterSize(bloomFilterSize) 
+   BloomAggData(size_t hashFuncCount, size_t bloomFilterSize) : fHashFuncCount(hashFuncCount) 
    {
       bloomFilter = BloomFilter(bloomFilterSize, 0);
    }
@@ -46,9 +42,8 @@ struct BloomAggData : public mcsv1sdk::UserData
    void serialize(messageqcpp::ByteStream& stream) const override;
    void unserialize(messageqcpp::ByteStream& stream) override;
 
-   BloomFilter bloomFilter;
-   size_t hashFuncCount = 0;
-   size_t bloomFilterSize = 0;
+   BloomFilter bloomFilter = BloomFilter();
+   size_t fHashFuncCount = 0;
 
 private:
    BloomAggData(UserData&) = delete;

@@ -20,14 +20,13 @@
 #include <typeinfo>
 #include <algorithm>
 #include <iostream>
-#include "bloom_agg.h"
 #include "bytestream.h"
 #include "objectreader.h"
-#include "xxhash.h"
 #include "nullstring.h"
+#include "bloom_agg.h"
 
-// For testing purposes
-#include <bitset>
+#include "bloom_funcs.h"
+using namespace bloom_funcs;
 
 using namespace mcsv1sdk;
 
@@ -149,8 +148,8 @@ mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& l
 // Override UserData methods
 void BloomAggData::serialize(messageqcpp::ByteStream& bs) const
 {
-  bs << static_cast<uint64_t>(bloomFilterSize);
-  bs << static_cast<uint64_t>(hashFuncCount);
+  bs << static_cast<uint64_t>(bloomFilter.size());
+  bs << static_cast<uint64_t>(fHashFuncCount);
 
   for (const auto& val : bloomFilter)
   {
@@ -164,8 +163,7 @@ void BloomAggData::unserialize(messageqcpp::ByteStream& bs)
   bs >> size;
   bs >> hashCnt;
   bloomFilter.resize(size);
-  bloomFilterSize = size;
-  hashFuncCount = hashCnt;
+  fHashFuncCount = hashCnt;
   
   for (auto& val : bloomFilter)
   {

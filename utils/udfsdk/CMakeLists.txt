@@ -14,7 +14,7 @@ add_dependencies(udfsdk loggingcpp)
 
 install(TARGETS udfsdk DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
-set(udf_mysql_LIB_SRCS udfmysql.cpp)
+set(udf_mysql_LIB_SRCS udfmysql.cpp xxhash.c)
 
 add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
 

@@ -12,7 +12,7 @@ class MCS_bloom_contains : public funcexp::Func
   /*
    * Constructor. Pass the function name to the base constructor.
    */
-  MCS_bloom_contains() : Func("mcs_bloom_contains")
+  MCS_bloom_contains() : Func("bloom_contains")
   {
   }
 
