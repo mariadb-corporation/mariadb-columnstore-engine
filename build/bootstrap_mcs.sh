@@ -298,6 +298,8 @@ construct_cmake_flags() {
     if [[ $TSAN = true ]]; then
         warn "Building with Thread Sanitizer"
         MDB_CMAKE_FLAGS+=(-DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+        message "Setting vm.mmap_rnd_bits=30 for TSAN support"
+        sysctl vm.mmap_rnd_bits=30
     fi
 
     if [[ $UBSAN = true ]]; then
