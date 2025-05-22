@@ -6,13 +6,13 @@
 
 set -o pipefail
 
+export CLICOLOR_FORCE=1 #cmake output
+
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-RPM_CONFIG_DIR="/etc/my.cnf.d"
-DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
-CONFIG_DIR=$RPM_CONFIG_DIR
+CONFIG_DIR="/etc/my.cnf.d"
 
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
@@ -39,7 +39,7 @@ echo "Arguments received: $@"
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../MariaDBBuild
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH")
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
@@ -57,7 +57,6 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
 optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -82,10 +81,6 @@ fi
 pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
     pkg_format="rpm"
-fi
-
-if [[ $pkg_format = "deb" ]]; then
-    CONFIG_DIR=$DEB_CONFIG_DIR
 fi
 
 disable_git_restore_frozen_revision() {
@@ -199,10 +194,6 @@ modify_packaging() {
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
     fi
 
-    if [[ "$MARIADB_SERVER_VERSION" == 10.6* ]]; then
-        sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control
-    fi
-
     #disable LTO for 22.04 for now
     if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
         apt install -y lto-disabled-list &&
@@ -246,25 +237,25 @@ modify_packaging() {
 construct_cmake_flags() {
 
     MDB_CMAKE_FLAGS=(
-        -DWITH_SYSTEMD=yes
-        -DPLUGIN_COLUMNSTORE=YES
-        -DPLUGIN_MROONGA=NO
-        -DPLUGIN_ROCKSDB=NO
-        -DPLUGIN_TOKUDB=NO
-        -DPLUGIN_CONNECT=NO
-        -DPLUGIN_SPIDER=NO
-        -DPLUGIN_OQGRAPH=NO
-        -DPLUGIN_SPHINX=NO
-        -DWITH_EMBEDDED_SERVER=NO
         -DBUILD_CONFIG=mysql_release
-        -DWITH_WSREP=NO
-        -DWITH_SSL=system
-        -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
-        -DPLUGIN_GSSAPI=NO
-        -DMYSQL_MAINTAINER_MODE=NO
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+        -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
         -DCOLUMNSTORE_MAINTAINER=YES
+        -DMYSQL_MAINTAINER_MODE=NO
+        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_CONNECT=NO
+        -DPLUGIN_GSSAPI=NO
+        -DPLUGIN_MROONGA=NO
+        -DPLUGIN_OQGRAPH=NO
+        -DPLUGIN_ROCKSDB=NO
+        -DPLUGIN_SPHINX=NO
+        -DPLUGIN_SPIDER=NO
+        -DPLUGIN_TOKUDB=NO
+        -DWITH_EMBEDDED_SERVER=NO
+        -DWITH_SSL=system
+        -DWITH_SYSTEMD=yes
+        -DWITH_WSREP=NO
     )
 
     if [[ $SKIP_UNIT_TESTS = true ]]; then
@@ -424,8 +415,8 @@ build_binary() {
 
     if [[ $FORCE_CMAKE_CONFIG = true ]]; then
         warn "Erasing cmake cache"
-        rm -f "$MDB_SOURCE_PATH/CMakeCache.txt"
-        rm -rf "$MDB_SOURCE_PATH/CMakeFiles"
+        rm -f "$MARIA_BUILD_PATH/CMakeCache.txt"
+        rm -rf "$MARIA_BUILD_PATH/CMakeFiles"
     fi
 
     message "Configuring cmake silently"
@@ -436,10 +427,10 @@ build_binary() {
         message "Installing silently" &&
         ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
 
+    check_errorcode
+
     message "Adding symbol link to compile_commands.json to the source root"
     ln -sf "$MARIA_BUILD_PATH/compile_commands.json" "$MDB_SOURCE_PATH"
-
-    check_errorcode
 }
 
 check_user_and_group() {
@@ -474,7 +465,7 @@ run_microbenchmarks_tests() {
         warn "Skipping microbenchmarks"
     else
         message "Runnning microbenchmarks"
-        cd $MDB_SOURCE_PATH
+        cd $MARIA_BUILD_PATH
         ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
         cd - >/dev/null
     fi
