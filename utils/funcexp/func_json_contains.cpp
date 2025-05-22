@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 #include "rowgroup.h"
 using namespace execplan;
 using namespace rowgroup;
@@ -160,6 +161,11 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                     CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS = false, isNullVal = false;
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT], valEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+#endif
+
   const auto& js = fp[0]->data()->getStrVal(row, isNullJS);
   const auto& val = fp[1]->data()->getStrVal(row, isNullVal);
   if (isNullJS || isNullVal)
@@ -182,10 +188,17 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   }
 
   json_engine_t jsEg;
+#if MYSQL_VERSION_ID >= 120100
+  initJsonArray(&jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   if (fp.size() > 2)
   {
+#if MYSQL_VERSION_ID >= 120100
+    initJsonArray(&path.p.steps, sizeof(json_path_step_t), &p_steps);
+#endif
+
     if (!path.parsed && parseJSPath(path, row, fp[2], false))
       goto error;
 
@@ -194,6 +207,9 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   }
 
   json_engine_t valEg;
+#if MYSQL_VERSION_ID >= 120100
+  initJsonArray(&valEg.stack, sizeof(int), &valEg_stack);
+#endif
   initJSEngine(valEg, getCharset(fp[1]), arg2Val);
 
   if (json_read_value(&jsEg) || json_read_value(&valEg))

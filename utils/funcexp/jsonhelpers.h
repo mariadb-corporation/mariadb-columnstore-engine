@@ -55,6 +55,10 @@ using IntType = int;
 using IntType = uint;
 #endif
 
+#if MYSQL_VERSION_ID >= 120100
+void initJsonArray(MEM_ROOT_DYNAMIC_ARRAY *mem_root_array, size_t size, void *buffer);
+#endif
+
 /*
   Compatible with json_find_path function in json_lib
   before 10.9: uint* array_counters
@@ -63,8 +67,18 @@ using IntType = uint;
 inline static int locateJSPath(json_engine_t& jsEg, JSONPath& path, int* jsErr = nullptr)
 {
   IntType arrayCounters[JSON_DEPTH_LIMIT];
+
+#if MYSQL_VERSION_ID >= 120100
+  MEM_ROOT_DYNAMIC_ARRAY array;
+
+  initJsonArray(&array, sizeof(int), &arrayCounters);
+
+  path.currStep = reinterpret_cast<json_path_step_t*>(path.p.steps.buffer);
+  if (json_find_path(&jsEg, &path.p, &path.currStep, &array))
+#else
   path.currStep = path.p.steps;
   if (json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
+#endif
   {
     if (jsErr && jsEg.s.error)
       *jsErr = 1;
@@ -90,6 +104,9 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
 inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const utils::NullString& js)
 {
   json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end());
+#if MYSQL_VERSION_ID >= 120100
+  memset(jsEg.stack.buffer, 0, JSON_DEPTH_LIMIT*jsEg.stack.size_of_element);
+#endif
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);

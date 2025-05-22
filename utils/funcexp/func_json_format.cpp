@@ -47,7 +47,15 @@ string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   }
 
   json_engine_t jsEg;
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack [JSON_DEPTH_LIMIT];
+
+  initJsonArray(&jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
+
   initJSEngine(jsEg, getCharset(fp[0]), js);
+
   string ret;
   if (doFormat(&jsEg, ret, fmt, tabSize))
   {

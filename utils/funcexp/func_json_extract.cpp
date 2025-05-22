@@ -36,11 +36,28 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   const size_t argSize = fp.size();
   string tmp;
 
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT], savJSEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+
+  initJsonArray(&p.steps, sizeof(json_path_step_t), &p_steps);
+  initJsonArray(&jsEg.stack, sizeof(int), &jsEg_stack);
+  initJsonArray(&savJSEg.stack, sizeof(int), &savJSEg_stack);
+#endif
+
   initJSPaths(paths, fp, 1, 1);
+  vector<vector<json_path_step_t>> p_steps_arr(paths.size(), vector<json_path_step_t>(32));
 
   for (size_t i = 1; i < argSize; i++)
   {
     JSONPath& path = paths[i - 1];
+
+#if MYSQL_VERSION_ID >= 120100
+     mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i-1],
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
     path.p.types_used = JSON_PATH_KEY_NULL;
     if (!path.parsed && parseJSPath(path, row, fp[i]))
       return 1;
@@ -71,8 +88,14 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
+#if MYSQL_VERSION_ID >= 120100
+    json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx));
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+        json_skip_array_and_count(&jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+#else
+   if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+#endif
       return 1;
 #endif
 

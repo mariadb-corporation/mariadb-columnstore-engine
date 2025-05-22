@@ -29,6 +29,12 @@ string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   json_engine_t jsEg;
   string result;
 
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+
+  initJsonArray(&jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
+
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   if (json_read_value(&jsEg))

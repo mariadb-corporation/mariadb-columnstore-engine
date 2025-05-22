@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -61,10 +62,22 @@ string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   IntType keySize = 0;
   string ret;
   json_engine_t jsEg;
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+
+   initJsonArray(&jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
   initJSEngine(jsEg, getCharset(fp[0]), js);
+
 
   if (fp.size() > 1)
   {
+#if MYSQL_VERSION_ID >= 120100
+    initJsonArray(&path.p.steps, sizeof(json_path_step_t), &p_steps);
+#endif
+
     if (!path.parsed && parseJSPath(path, row, fp[1], false))
       goto error;
 

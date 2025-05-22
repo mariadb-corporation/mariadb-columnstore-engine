@@ -335,7 +335,11 @@ int cmpPartJSPath(const json_path_step_t* a, const json_path_step_t* aEnd, const
 
 int cmpJSPath(const json_path_t* a, const json_path_t* b, enum json_value_types vt, const int* arraySize)
 {
+#if MYSQL_VERSION_ID >= 120100
+  return cmpPartJSPath((reinterpret_cast<json_path_step_t*>(a->steps.buffer)) + 1, NULL, (reinterpret_cast<json_path_step_t*>(b->steps.buffer)) + 1, NULL, vt, arraySize);
+#else
   return cmpPartJSPath(a->steps + 1, a->last_step, b->steps + 1, b->last_step, vt, arraySize);
+#endif
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards)
@@ -371,5 +375,16 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
   }
   return false;
 }
+
+#if MYSQL_VERSION_ID >= 120100
+void initJsonArray(MEM_ROOT_DYNAMIC_ARRAY *mem_root_array, size_t size, void *buffer)
+{
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              mem_root_array, size, buffer,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+  return;
+}
+#endif
+
 }  // namespace helpers
 }  // namespace funcexp
