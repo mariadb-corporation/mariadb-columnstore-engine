@@ -761,10 +761,11 @@ int main()
 find_package(Git QUIET)
 
 if(GIT_FOUND AND EXISTS ${ENGINE_SRC_DIR}/.git)
-    exec_program(
-        "git" ${CMAKE_CURRENT_SOURCE_DIR}
-        ARGS "describe --match=NeVeRmAtCh --always --dirty"
+    execute_process(
+        COMMAND git describe --match=NeVeRmAtCh --always --dirty
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else()
     set(GIT_VERSION "source")
