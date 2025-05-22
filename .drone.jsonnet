@@ -43,7 +43,7 @@ local customEnvCommands(envkey, builddir) =
 
 local customBootstrapParamsForExisitingPipelines(envkey) =
   local customBootstrapMap = {
-    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES -DWITH_ASAN=ON -WITH_COLLUMNSTORE_ASAN=ON'",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
