@@ -57,7 +57,6 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
 optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
@@ -193,10 +192,6 @@ modify_packaging() {
 
     if [[ $pkg_format == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
-    fi
-
-    if [[ "$MARIADB_SERVER_VERSION" == 10.6* ]]; then
-        sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control
     fi
 
     #disable LTO for 22.04 for now

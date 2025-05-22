@@ -746,7 +746,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
                          "--build-packages --sccache " +
-                         "--server-version " + server +
                          " " + customBootstrapParams +
                          " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
