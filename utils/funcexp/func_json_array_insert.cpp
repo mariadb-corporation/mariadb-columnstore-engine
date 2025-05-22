@@ -1,6 +1,8 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
+#include "my_sys.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -29,11 +31,9 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
-  json_engine_t jsEg;
   std::string retJS;
-  retJS.reserve(js.length() + 8);
 
-  initJSPaths(paths, fp, 1, 2);
+  retJS.reserve(js.length() + 8);
 
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
@@ -43,19 +43,34 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
     JSONPath& path = paths[j];
     if (!path.parsed)
     {
-      if (parseJSPath(path, row, fp[i]) || path.p.last_step - 1 < path.p.steps ||
+#if MYSQL_VERSION_ID >= 120200
+      json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&path.p.steps, path.p.last_step_idx)),
+      *initial_step= reinterpret_cast<json_path_step_t*>(path.p.steps.buffer);
+#endif
+#if MYSQL_VERSION_ID >= 120200
+      if (parseJSPath(path, row, fp[i]) || (last_step - 1) < initial_step ||
+          last_step->type != JSON_PATH_ARRAY)
+#else
+       if (parseJSPath(path, row, fp[i]) || path.p.last_step - 1 < path.p.steps ||
           path.p.last_step->type != JSON_PATH_ARRAY)
+#endif
       {
         if (path.p.s.error == 0)
           path.p.s.error = SHOULD_END_WITH_ARRAY;
         goto error;
       }
+#if MYSQL_VERSION_ID >= 120200
+      path.p.last_step_idx--;
+#else
       path.p.last_step--;
+#endif
     }
 
     initJSEngine(jsEg, cs, tmpJS);
 
+#if MYSQL_VERSION_ID < 120100
     path.currStep = path.p.steps;
+#endif
 
     int jsErr = 0;
     if (locateJSPath(jsEg, path, &jsErr))
@@ -82,7 +97,13 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
     while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
     {
       DBUG_ASSERT(jsEg.state == JST_VALUE);
+#if MYSQL_VERSION_ID >= 120200
+      if (itemSize == ((reinterpret_cast<json_path_step_t*>
+                        (mem_root_dynamic_array_get_val(&path.p.steps,
+                                                        path.p.last_step_idx)))[1].n_item))
+#else
       if (itemSize == path.p.last_step[1].n_item)
+#endif
       {
         itemPos = (const char*)jsEg.s.c_str;
         break;

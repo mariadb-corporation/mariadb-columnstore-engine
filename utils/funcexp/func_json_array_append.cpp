@@ -28,14 +28,10 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
     return "";
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
-
-  json_engine_t jsEg;
   const uchar* arrEnd;
   size_t strRestLen;
   std::string retJS;
   retJS.reserve(js.length() + padding);
-
-  initJSPaths(paths, fp, 1, 2);
 
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)

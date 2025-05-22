@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 #include "rowgroup.h"
 using namespace execplan;
 using namespace rowgroup;
@@ -160,6 +161,7 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                     CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS = false, isNullVal = false;
+
   const auto& js = fp[0]->data()->getStrVal(row, isNullJS);
   const auto& val = fp[1]->data()->getStrVal(row, isNullVal);
   if (isNullJS || isNullVal)
@@ -181,7 +183,6 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
     arg2Parsed = arg2Const;
   }
 
-  json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   if (fp.size() > 2)
@@ -193,7 +194,6 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
       goto error;
   }
 
-  json_engine_t valEg;
   initJSEngine(valEg, getCharset(fp[1]), arg2Val);
 
   if (json_read_value(&jsEg) || json_read_value(&valEg))

@@ -60,7 +60,7 @@ std::string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
 
   IntType keySize = 0;
   std::string ret;
-  json_engine_t jsEg;
+
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   if (fp.size() > 1)

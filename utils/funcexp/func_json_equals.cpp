@@ -56,13 +56,22 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   const string_view js2 = js2_ns.unsafeStringRef();
 
   bool result = false;
+
+#if MYSQL_VERSION_ID >= 120200
+  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0]), NULL, &jsEg, &array))
+#else
   if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0])))
+#endif
   {
     isNull = true;
     return result;
   }
 
+#if MYSQL_VERSION_ID >= 120200
+  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1]), NULL, &jsEg, &array))
+#else
   if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1])))
+#endif
   {
     isNull = true;
     return result;

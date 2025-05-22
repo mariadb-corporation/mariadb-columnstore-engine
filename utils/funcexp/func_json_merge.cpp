@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -223,8 +224,6 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
 
   const CHARSET_INFO* js1CS = getCharset(fp[0]);
 
-  json_engine_t jsEg1, jsEg2;
-
   utils::NullString tmpJS(js);
   std::string retJS;
 
@@ -234,10 +233,10 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     if (isNull)
       goto error;
 
-    initJSEngine(jsEg1, js1CS, tmpJS);
+    initJSEngine(jsEg, js1CS, tmpJS);
     initJSEngine(jsEg2, getCharset(fp[i]), js2);
 
-    if (doMerge(retJS, &jsEg1, &jsEg2))
+    if (doMerge(retJS, &jsEg, &jsEg2))
       goto error;
 
     // tmpJS save the merge result for next loop
@@ -245,9 +244,9 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     retJS.clear();
   }
 
-  initJSEngine(jsEg1, js1CS, tmpJS);
+  initJSEngine(jsEg, js1CS, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
+  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;
