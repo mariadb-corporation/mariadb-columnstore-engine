@@ -12,13 +12,10 @@ USE json_remove_db;
 --echo # ----------------------------------------------------------------------
 CREATE TABLE t1(j TEXT, p TEXT) ENGINE = columnstore;
 
-INSERT INTO
-    t1
-VALUES
-    ('["a", ["b", "c"], "d"]', '$[0]'),
-    ('["a", ["b", "c"], "d"]', '$[1]'),
-    ('["a", ["b", "c"], "d"]', '$[1][0]'),
-    ('["a", ["b", "c"], "d"]', '$[0]');
+INSERT INTO t1 VALUES ('["a", ["b", "c"], "d"]', '$[0]');
+INSERT INTO t1 VALUES ('["a", ["b", "c"], "d"]', '$[1]');
+INSERT INTO t1 VALUES ('["a", ["b", "c"], "d"]', '$[1][0]');
+INSERT INTO t1 VALUES ('["a", ["b", "c"], "d"]', '$[0]');
 
 SELECT
     j AS json,
@@ -29,14 +26,11 @@ FROM
 
 CREATE TABLE t2(j TEXT, p TEXT) ENGINE = columnstore;
 
-INSERT INTO
-    t2
-VALUES
-    ('{"a": 1, "b": [2, 3]}', '$.a'),
-    ('{"a": 1, "b": [2, 3]}', '$.a[0]'),
-    ('{"a": 1, "b": [2, 3]}', '$.b'),
-    ('{"a": 1, "b": [2, 3]}', '$.b[0]'),
-    ('{"a": 1, "b": [2, 3]}', '$.b[1]');
+INSERT INTO t2 VALUES ('{"a": 1, "b": [2, 3]}', '$.a');
+INSERT INTO t2 VALUES ('{"a": 1, "b": [2, 3]}', '$.a[0]');
+INSERT INTO t2 VALUES ('{"a": 1, "b": [2, 3]}', '$.b');
+INSERT INTO t2 VALUES ('{"a": 1, "b": [2, 3]}', '$.b[0]');
+INSERT INTO t2 VALUES ('{"a": 1, "b": [2, 3]}', '$.b[1]');
 
 SELECT
     j AS json,

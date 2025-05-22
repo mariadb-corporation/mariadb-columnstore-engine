@@ -46,8 +46,8 @@ string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
   }
 
-  json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
+
   string ret;
   if (doFormat(&jsEg, ret, fmt, tabSize))
   {

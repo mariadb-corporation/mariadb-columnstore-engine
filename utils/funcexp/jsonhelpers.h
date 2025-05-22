@@ -63,8 +63,18 @@ using IntType = uint;
 inline static int locateJSPath(json_engine_t& jsEg, JSONPath& path, int* jsErr = nullptr)
 {
   IntType arrayCounters[JSON_DEPTH_LIMIT];
+
+#if MYSQL_VERSION_ID >= 120100
+  MEM_ROOT_DYNAMIC_ARRAY array;
+
+  initJsonArray(NULL, &array, sizeof(int), &arrayCounters, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+
+  path.currStep = reinterpret_cast<json_path_step_t*>(path.p.steps.buffer);
+  if (json_find_path(&jsEg, &path.p, &path.currStep, &array))
+#else
   path.currStep = path.p.steps;
   if (json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
+#endif
   {
     if (jsErr && jsEg.s.error)
       *jsErr = 1;

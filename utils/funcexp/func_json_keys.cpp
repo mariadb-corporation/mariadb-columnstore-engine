@@ -60,8 +60,10 @@ string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 
   IntType keySize = 0;
   string ret;
-  json_engine_t jsEg;
+
   initJSEngine(jsEg, getCharset(fp[0]), js);
+
+  init_json_path_array(path_inited, path);
 
   if (fp.size() > 1)
   {

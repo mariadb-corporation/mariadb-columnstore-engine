@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 #include "jsonhelpers.h"
 using namespace execplan;
 
@@ -30,6 +31,7 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   int strLen;
 
   const CHARSET_INFO* cs = type.getCharset();
+
   initJSEngine(jsEg, cs, js);
 
   json_read_value(&jsEg);

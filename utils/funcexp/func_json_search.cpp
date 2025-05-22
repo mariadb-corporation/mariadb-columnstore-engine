@@ -20,12 +20,20 @@ namespace
 static bool appendJSPath(string& ret, const json_path_t* p)
 {
   const json_path_step_t* c;
-
+#if MYSQL_VERSION_ID >= 120100
+  const json_path_step_t* last_step= (const json_path_step_t*)
+                                           (mem_root_dynamic_array_get_val((MEM_ROOT_DYNAMIC_ARRAY*)&p->steps,
+                                                                            (size_t)p->last_step_idx));
+#endif
   try
   {
     ret.append("\"$");
 
+#if MYSQL_VERSION_ID >= 120100
+    for (c = reinterpret_cast<json_path_step_t*>(p->steps.buffer)+1; c <= last_step; c++)
+#else
     for (c = p->steps + 1; c <= p->last_step; c++)
+#endif
     {
       if (c->type & JSON_PATH_KEY)
       {
@@ -144,9 +152,12 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   initJSPaths(paths, fp, 4, 1);
 
+  init_json_multipath_array(path_inited, paths, p_steps_arr);
+
   for (size_t i = 4; i < fp.size(); i++)
   {
     JSONPath& path = paths[i - 4];
+
     if (!path.parsed)
     {
       if (parseJSPath(path, row, fp[i]))
@@ -162,8 +173,13 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
+#if MYSQL_VERSION_ID >= 120100
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&jsEg, arrayCounter + p.last_step_idx))
+#else
+        if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+#endif
       goto error;
 #endif
 
@@ -180,7 +196,11 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
         if (pathFound == 1)
         {
           savPath = p;
+#if MYSQL_VERSION_ID >= 120100
+          mem_root_dynamic_array_copy_values(&savPath.steps, &p.steps);
+#else
           savPath.last_step = savPath.steps + (p.last_step - p.steps);
+#endif
         }
         else
         {

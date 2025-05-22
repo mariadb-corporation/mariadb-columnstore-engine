@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -73,18 +74,25 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
   if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)sjsp.str(), (const uchar*)sjsp.end()))
     return true;
 
-  JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()),
-                   reinterpret_cast<const uchar*>(js.end()));
 
+  JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()),
+                   reinterpret_cast<const uchar*>(js.end()), je_stack);
+#if MYSQL_VERSION_ID >= 120100
+  currStep = reinterpret_cast<json_path_step_t*>(p.steps.buffer);
+#else
   currStep = p.steps;
+#endif
 
   do
   {
     if (error)
       return true;
-
-    IntType arrayCounters[JSON_DEPTH_LIMIT];
+#if MYSQL_VERSION_ID >= 120100
+    if (json_find_path(&je, &p, &currStep, &array))
+#else
+    int arrayCounters[JSON_DEPTH_LIMIT];
     if (json_find_path(&je, &p, &currStep, arrayCounters))
+#endif
       return true;
 
     if (json_read_value(&je))

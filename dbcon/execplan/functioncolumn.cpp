@@ -354,25 +354,50 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
     fFunctor = fDynamicFunctor = new Func_json_contains();
 
   if (dynamic_cast<Func_json_array_append*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_array_append(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_array_append();
+#endif
 
   if (dynamic_cast<Func_json_array_insert*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_array_insert(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_array_insert();
+#endif
 
   if (auto f = dynamic_cast<Func_json_insert*>(fFunctor))
     fFunctor = fDynamicFunctor = new Func_json_insert(f->getMode());
 
   if (dynamic_cast<Func_json_remove*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_remove(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_remove();
+#endif
 
   if (dynamic_cast<Func_json_contains_path*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_contains_path(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_contains_path();
+#endif
 
   if (dynamic_cast<Func_json_search*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_search(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_search();
+#endif
 
   if (dynamic_cast<Func_json_extract*>(fFunctor))
+#if MYSQL_VERSION_ID >= 120100
+    fFunctor = fDynamicFunctor = new Func_json_extract(fFunctionParms.size());
+#else
     fFunctor = fDynamicFunctor = new Func_json_extract();
+#endif
+
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const

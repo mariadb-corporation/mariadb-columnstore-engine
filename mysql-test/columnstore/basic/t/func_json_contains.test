@@ -1,8 +1,8 @@
 --source ../include/have_columnstore.inc
 --disable_warnings
 DROP DATABASE IF EXISTS json_contains_db;
-
 --enable_warnings
+
 CREATE DATABASE json_contains_db;
 
 USE json_contains_db;
@@ -10,18 +10,16 @@ USE json_contains_db;
 --echo # ----------------------------------------------------------------------
 --echo # Test of JSON_CONTAINS function.
 --echo # ----------------------------------------------------------------------
+
 CREATE TABLE t1(j LONGTEXT, v LONGTEXT, p LONGTEXT) ENGINE = columnstore;
 
-INSERT INTO
-    t1
-VALUES
-    ('{"k1":123, "k2":345}', '123', '$.k1'),
-    ('', '', '$'),
-    ('null', 'null', '$'),
-    ('"10"', '"10"', '$'),
-    ('"10"', '10', '$'),
-    ('10.1', '10', '$'),
-    ('10.0', '10', '$');
+INSERT INTO t1 VALUES ('{"k1":123, "k2":345}', '123', '$.k1');
+INSERT INTO t1 VALUES ('', '', '$');
+INSERT INTO t1 VALUES ('null', 'null', '$');
+INSERT INTO t1 VALUES ('"10"', '"10"', '$');
+INSERT INTO t1 VALUES ('"10"', '10', '$');
+INSERT INTO t1 VALUES ('10.1', '10', '$');
+INSERT INTO t1 VALUES ('10.0', '10', '$');
 
 SELECT
     j AS json,
@@ -33,28 +31,22 @@ FROM
 
 CREATE TABLE t2(j LONGTEXT, v LONGTEXT) ENGINE = columnstore;
 
-INSERT INTO
-    t2
-VALUES
-    ('"you"', '"you"'),
-    ('"youth"', '"you"'),
-    ('[1]', '1'),
-    ('[2, 1]', '1'),
-    ('[2, [2, 3], 1]', '1'),
-    ('[4, [2, 3], 1]', '2'),
-    ('[2, 1]', '[1, 2]'),
-    ('[2, 1]', '[1, 0, 2]'),
-    ('[2, 0, 3, 1]', '[1, 2]'),
-    ('{"b":[1,2], "a":1}', '{"a":1, "b":2}'),
-    ('{"a":1}', '{}'),
-    ('[1, {"a":1}]', '{}'),
-    ('[1, {"a":1}]', '{"a":1}'),
-    ('[{"abc":"def", "def":"abc"}]', '["foo","bar"]'),
-    (
-        '[{"abc":"def", "def":"abc"}, "bar"]',
-        '["bar", {}]'
-    ),
-    ('[{"a":"b"},{"c":"d"}]', '{"c":"d"}');
+INSERT INTO t2 VALUES ('"you"', '"you"');
+INSERT INTO t2 VALUES ('"youth"', '"you"');
+INSERT INTO t2 VALUES ('[1]', '1');
+INSERT INTO t2 VALUES ('[2, 1]', '1');
+INSERT INTO t2 VALUES ('[2, [2, 3], 1]', '1');
+INSERT INTO t2 VALUES ('[4, [2, 3], 1]', '2');
+INSERT INTO t2 VALUES ('[2, 1]', '[1, 2]');
+INSERT INTO t2 VALUES ('[2, 1]', '[1, 0, 2]');
+INSERT INTO t2 VALUES ('[2, 0, 3, 1]', '[1, 2]');
+INSERT INTO t2 VALUES ('{"b":[1,2], "a":1}', '{"a":1, "b":2}');
+INSERT INTO t2 VALUES ('{"a":1}', '{}');
+INSERT INTO t2 VALUES ('[1, {"a":1}]', '{}');
+INSERT INTO t2 VALUES ('[1, {"a":1}]', '{"a":1}');
+INSERT INTO t2 VALUES ('[{"abc":"def", "def":"abc"}]', '["foo","bar"]');
+INSERT INTO t2 VALUES ('[{"abc":"def", "def":"abc"}, "bar"]', '["bar", {}]');
+INSERT INTO t2 VALUES ('[{"a":"b"},{"c":"d"}]', '{"c":"d"}');
 
 SELECT
     j AS json,
@@ -64,7 +56,5 @@ FROM
     t2;
 
 DROP TABLE t2;
-
 DROP TABLE t1;
-
 DROP DATABASE json_contains_db;

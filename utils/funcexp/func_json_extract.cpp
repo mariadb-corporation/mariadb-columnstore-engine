@@ -38,6 +38,8 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 
   initJSPaths(paths, fp, 1, 1);
 
+  init_json_multipath_array(path_inited, paths, p_steps_arr);
+
   for (size_t i = 1; i < argSize; i++)
   {
     JSONPath& path = paths[i - 1];
@@ -71,8 +73,14 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
+#if MYSQL_VERSION_ID >= 120100
+    json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx));
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+        json_skip_array_and_count(&jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+#else
+   if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+#endif
       return 1;
 #endif
 
