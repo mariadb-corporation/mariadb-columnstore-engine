@@ -534,7 +534,7 @@ extern "C"
     auto* data = new BloomData(hashFuncCount);
     data->bloomFilter = bloomFilter;
 
-    logBloomFilter(data->bloomFilter);
+    //logBloomFilter(data->bloomFilter);
 
     initid->ptr = (char*)data;
 
@@ -577,6 +577,67 @@ extern "C"
     //logBloomFilter(data->bloomFilter);
 
     return bloomFilterContains(val, data->bloomFilter, data->fHashFuncCount);
+  }
+
+   // BLOOM_AND connector stub
+    my_bool bloom_and_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 2)
+    {
+      strcpy(message, "bloom_agg() requires two arguments");
+      return 1;
+    }
+
+    if (args->lengths[0] != args->lengths[1])
+    {
+      strcpy(message, "bloom_agg() arguments are of different lengths");
+      return 1;
+    }
+
+    initid->max_length = args->lengths[0];
+
+    return 0;
+  }
+
+    void bloom_and_deinit(UDF_INIT* initid)
+  {
+  }
+
+    void bloom_and_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+                     char* message __attribute__((unused)))
+  {
+  }
+
+    void bloom_and_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  {
+  }
+
+    char* bloom_and(UDF_INIT *initid __attribute__((unused)),
+               UDF_ARGS *args, char *result, unsigned long *length,
+               char *is_null, char *error __attribute__((unused)))
+  {
+    if (args->lengths[0] != args->lengths[1] || args->lengths[0] == 0 || args->lengths[1] == 0)
+    {
+      *is_null = 1;
+      return result;
+    }
+
+    //logBloomFilter(data->bloomFilter);
+
+    *is_null = 0;
+    *length = args->lengths[0];
+
+    const uint8_t* a = reinterpret_cast<const uint8_t*>(args->args[0]);
+    const uint8_t* b = reinterpret_cast<const uint8_t*>(args->args[1]);
+    uint8_t* out = reinterpret_cast<uint8_t*>(result);
+
+    for (unsigned long i = 0; i < *length; ++i)
+    {
+        out[i] = a[i] & b[i];
+    }
+
+    //memcpy(result, data->bloomFilter.data(), *length);
+    return result;
   }
 
 }

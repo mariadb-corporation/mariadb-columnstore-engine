@@ -82,7 +82,7 @@ int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Ca
         bloomFilter.push_back(c);
     }
 
-    logBloomFilter(bloomFilter);
+    //logBloomFilter(bloomFilter);
 
     int64_t result = 0;
     switch(parm[1]->data()->resultType().colDataType)
