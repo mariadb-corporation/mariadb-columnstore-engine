@@ -60,7 +60,7 @@ std::string Func_left::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   if (isNull || trimLength <= 0)
     return "";
 
-  size_t trimLengthPositive = static_cast<size_t>(trimLength);  // now we are sure it is positive
+  size_t trimLengthPositive = trimLength;  // now we are sure it is positive
   size_t charPos;
 
   if ((binLen <= trimLengthPositive) || (binLen <= (charPos = cs->charpos(pos, end, trimLengthPositive))))

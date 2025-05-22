@@ -720,12 +720,12 @@ inline int64_t TreeNode::getIntVal()
     case CalpontSystemCatalog::UINT: return fResult.uintVal;
 
     case CalpontSystemCatalog::FLOAT:
-    case CalpontSystemCatalog::UFLOAT: return (int64_t)fResult.floatVal;
+    case CalpontSystemCatalog::UFLOAT: return (int64_t)std::llround(fResult.floatVal);
 
     case CalpontSystemCatalog::DOUBLE:
-    case CalpontSystemCatalog::UDOUBLE: return (int64_t)fResult.doubleVal;
+    case CalpontSystemCatalog::UDOUBLE: return (int64_t)std::llround(fResult.doubleVal);
 
-    case CalpontSystemCatalog::LONGDOUBLE: return (int64_t)fResult.longDoubleVal;
+    case CalpontSystemCatalog::LONGDOUBLE: return (int64_t)std::llround(fResult.longDoubleVal);
 
     case CalpontSystemCatalog::DECIMAL:
     case CalpontSystemCatalog::UDECIMAL: return fResult.decimalVal.toSInt64Round();
@@ -776,7 +776,7 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::DOUBLE:
     case CalpontSystemCatalog::UDOUBLE: return (uint64_t)std::llround(fResult.doubleVal);
 
-    case CalpontSystemCatalog::LONGDOUBLE: return (uint64_t)fResult.longDoubleVal;
+    case CalpontSystemCatalog::LONGDOUBLE: return (uint64_t)std::llround(fResult.longDoubleVal);
 
     case CalpontSystemCatalog::DECIMAL:
     case CalpontSystemCatalog::UDECIMAL: return fResult.decimalVal.toUInt64Round();
