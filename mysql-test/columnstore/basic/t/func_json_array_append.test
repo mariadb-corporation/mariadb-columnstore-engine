@@ -1,8 +1,8 @@
 --source ../include/have_columnstore.inc
 --disable_warnings
 DROP DATABASE IF EXISTS json_array_append_db;
-
 --enable_warnings
+
 CREATE DATABASE json_array_append_db;
 
 USE json_array_append_db;
@@ -10,37 +10,19 @@ USE json_array_append_db;
 --echo # ----------------------------------------------------------------------
 --echo # Test of JSON_ARRAY_APPEND function.
 --echo # ----------------------------------------------------------------------
+
 CREATE TABLE t1(a TEXT, p TEXT, v TEXT) ENGINE = COLUMNSTORE;
 
-INSERT INTO
-    t1
-VALUES
-    ('[1,2,3]', '$[0]', 2),
-    ('[1,2,3]', '$[0]', 1.2),
-    ('[1,2,3]', '$[0]', 'key1'),
-    ('[1,2,3]', '$[0]', TRUE),
-    ('[1,2,3]', '$[0]', false),
-    ('[1,2,3]', '$[0]', NULL),
-    (
-        '{"a": "foo", "b": "bar", "c": "wibble" }',
-        '$.b',
-        4
-    ),
-    (
-        '{"a": "foo", "b": "bar", "c": "wibble" }',
-        '$.c',
-        'grape'
-    ),
-    (
-        '{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}',
-        '$.b',
-        4
-    ),
-    (
-        '{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}',
-        '$.c',
-        'grape'
-    );
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', 2);
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', 1.2);
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', 'key1');
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', TRUE);
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', false);
+INSERT INTO t1 VALUES ('[1,2,3]', '$[0]', NULL);
+INSERT INTO t1 VALUES ('{"a": "foo", "b": "bar", "c": "wibble" }', '$.b', 4);
+INSERT INTO t1 VALUES ('{"a": "foo", "b": "bar", "c": "wibble" }', '$.c', 'grape');
+INSERT INTO t1 VALUES ('{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}', '$.b', 4);
+INSERT INTO t1 VALUES ('{"a": "foo", "b": [1,2,3], "c": ["apple","pear"]}', '$.c', 'grape');
 
 SELECT
     a AS arrary,
@@ -53,10 +35,7 @@ FROM
 --echo # NULL args
 CREATE TABLE t2(a TEXT) ENGINE = COLUMNSTORE;
 
-INSERT INTO
-    t2
-VALUES
-    ('[1,2,3]');
+INSERT INTO t2 VALUES ('[1,2,3]');
 
 SELECT
     JSON_ARRAY_APPEND(a, NULL, JSON_COMPACT(1)),
@@ -66,10 +45,7 @@ FROM
 
 TRUNCATE t2;
 
-INSERT INTO
-    t2
-VALUES
-    ('$.b');
+INSERT INTO t2 VALUES ('$.b');
 
 SELECT
     JSON_ARRAY_APPEND(NULL, a, JSON_COMPACT(1)),
@@ -79,10 +55,7 @@ FROM
 
 TRUNCATE t2;
 
-INSERT INTO
-    t2
-VALUES
-    ('$**[0]');
+INSERT INTO t2 VALUES ('$**[0]');
 
 --echo error ER_INVALID_JSON_PATH_WILDCARD
 SELECT
@@ -91,7 +64,5 @@ FROM
     t2;
 
 DROP TABLE t2;
-
 DROP TABLE t1;
-
 DROP DATABASE json_array_append_db;

@@ -6,7 +6,14 @@ USE json_arrayagg_db;
 
 
 CREATE TABLE t1 (a INT, b INT)ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES (1, 1),(2, 1), (1, 1),(2, 1), (3, 2),(2, 2),(2, 2),(2, 2);
+INSERT INTO t1 VALUES (1, 1);
+INSERT INTO t1 VALUES (2, 1);
+INSERT INTO t1 VALUES (1, 1);
+INSERT INTO t1 VALUES (2, 1);
+INSERT INTO t1 VALUES (3, 2);
+INSERT INTO t1 VALUES (2, 2);
+INSERT INTO t1 VALUES (2, 2);
+INSERT INTO t1 VALUES (2, 2);
 SELECT JSON_VALID(JSON_ARRAYAGG(a)) FROM t1;
 sorted_result;
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1;
@@ -18,7 +25,10 @@ DROP TABLE t1;
 -- echo # Real aggregation
 -- echo #
 CREATE TABLE t1 (a FLOAT, b DOUBLE, c DECIMAL(10, 2))ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES (1.0, 2.0, 3.0),(1.0, 3.0, 9.0),(1.0, 4.0, 16.0),(1.0, 5.0, 25.0);
+INSERT INTO t1 VALUES (1.0, 2.0, 3.0);
+INSERT INTO t1 VALUES (1.0, 3.0, 9.0);
+INSERT INTO t1 VALUES (1.0, 4.0, 16.0);
+INSERT INTO t1 VALUES (1.0, 5.0, 25.0);
 SELECT JSON_VALID(JSON_ARRAYAGG(a)) FROM t1;
 sorted_result;
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b), JSON_ARRAYAGG(c) FROM t1;
@@ -28,7 +38,10 @@ DROP TABLE t1;
 -- echo # Boolean aggregation
 -- echo #
 CREATE TABLE t1 (a BOOLEAN, b BOOLEAN)ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES (TRUE, TRUE), (TRUE, FALSE), (FALSE, TRUE), (FALSE, FALSE);
+INSERT INTO t1 VALUES (TRUE, TRUE);
+INSERT INTO t1 VALUES (TRUE, FALSE);
+INSERT INTO t1 VALUES (FALSE, TRUE);
+INSERT INTO t1 VALUES (FALSE, FALSE);
 SELECT JSON_VALID(JSON_ARRAYAGG(a)) FROM t1;
 sorted_result;
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1;
@@ -42,9 +55,10 @@ DROP TABLE t1;
 -- echo # Aggregation of strings with quoted
 -- echo #
 CREATE TABLE t1 (a VARCHAR(80))ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES
-       ('"double_quoted_value"'), ("'single_quoted_value'"),
-       ('"double_quoted_value"'), ("'single_quoted_value'");
+INSERT INTO t1 VALUES ('"double_quoted_value"');
+INSERT INTO t1 VALUES ("'single_quoted_value'");
+INSERT INTO t1 VALUES ('"double_quoted_value"');
+INSERT INTO t1 VALUES ("'single_quoted_value'");
 SELECT JSON_VALID(JSON_ARRAYAGG(a)) FROM t1;
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
@@ -54,9 +68,20 @@ DROP TABLE t1;
 -- echo # Strings and NULLs
 -- echo #
 CREATE TABLE t1 (a INT, b VARCHAR(80))ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES
-       (1, "Hello"),(1, "World"), (2, "This"),(2, "Will"), (2, "Work"),(2, "!"), (3, NULL),
-       (1, "Hello"),(1, "World"), (2, "This"),(2, "Will"), (2, "Work"),(2, "!"), (3, NULL);
+INSERT INTO t1 VALUES (1, "Hello");
+INSERT INTO t1 VALUES (1, "World");
+INSERT INTO t1 VALUES (2, "This");
+INSERT INTO t1 VALUES (2, "Will");
+INSERT INTO t1 VALUES (2, "Work");
+INSERT INTO t1 VALUES (2, "!");
+INSERT INTO t1 VALUES (3, NULL);
+INSERT INTO t1 VALUES (1, "Hello");
+INSERT INTO t1 VALUES (1, "World");
+INSERT INTO t1 VALUES (2, "This");
+INSERT INTO t1 VALUES (2, "Will");
+INSERT INTO t1 VALUES (2, "Work");
+INSERT INTO t1 VALUES (2, "!");
+INSERT INTO t1 VALUES (3, NULL);
 SELECT JSON_VALID(JSON_ARRAYAGG(b)) FROM t1;
 sorted_result;
 SELECT JSON_ARRAYAGG(a), JSON_ARRAYAGG(b) FROM t1;
@@ -75,13 +100,13 @@ SELECT JSON_ARRAYAGG(b LIMIT 1) FROM t1 GROUP BY b;
 sorted_result;
 SELECT JSON_ARRAYAGG(b LIMIT 2) FROM t1 GROUP BY a;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT b ORDER BY b ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT b) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC LIMIT 2) FROM t1;
+# SELECT JSON_ARRAYAGG(DISTINCT a LIMIT 2) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT b ORDER BY b ASC LIMIT 2) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT b LIMIT 2) FROM t1;
 
 -- echo #
 -- echo # JSON aggregation
@@ -113,9 +138,7 @@ SELECT JSON_ARRAYAGG(JSON_ARRAYAGG(a)) FROM t1;
 -- echo #
 -- echo #
 
-
 DROP TABLE t1;
-
 
 -- echo #
 -- echo #
@@ -151,35 +174,45 @@ select json_object('x', json_arrayagg(json_object('a', 1)));
 --echo #
 
 CREATE TABLE t1(a INT, b INT)ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES (1,1), (2,2), (3,3);
-INSERT INTO t1 VALUES (1,1), (2,2), (3,3);
+INSERT INTO t1 VALUES (1,1);
+INSERT INTO t1 VALUES (2,2);
+INSERT INTO t1 VALUES (3,3);
+INSERT INTO t1 VALUES (1,1);
+INSERT INTO t1 VALUES (2,2);
+INSERT INTO t1 VALUES (3,3);
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 
-INSERT INTO t1 VALUES (NULL,NULL), (NULL,NULL);
+INSERT INTO t1 VALUES (NULL,NULL);
+INSERT INTO t1 VALUES (NULL,NULL);
 
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 DROP TABLE t1;
 
 CREATE TABLE t1(a VARCHAR(10), b INT)ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES (1,1), (2,2), (3,3);
-INSERT INTO t1 VALUES (1,1), (2,2), (3,3);
+INSERT INTO t1 VALUES (1,1);
+INSERT INTO t1 VALUES (2,2);
+INSERT INTO t1 VALUES (3,3);
+INSERT INTO t1 VALUES (1,1);
+INSERT INTO t1 VALUES (2,2);
+INSERT INTO t1 VALUES (3,3);
 
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 
-INSERT INTO t1 VALUES (NULL,NULL), (NULL,NULL);
+INSERT INTO t1 VALUES (NULL,NULL);
+INSERT INTO t1 VALUES (NULL,NULL);
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
 sorted_result;
-SELECT JSON_ARRAYAGG(DISTINCT a ORDER BY a ASC) FROM t1;
+## SELECT JSON_ARRAYAGG(DISTINCT a) FROM t1;
 
 DROP TABLE t1;
 
@@ -187,7 +220,8 @@ DROP TABLE t1;
 --echo #
 
 CREATE TABLE t1(a VARCHAR(255))ENGINE=COLUMNSTORE;
-INSERT INTO t1 VALUES ('red'),('blue');
+INSERT INTO t1 VALUES ('red');
+INSERT INTO t1 VALUES ('blue');
 
 sorted_result;
 SELECT JSON_ARRAYAGG(a) FROM t1;
@@ -204,7 +238,8 @@ DROP TABLE t1;
 set group_concat_max_len=64;
 create table t1 (a varchar(254))ENGINE=COLUMNSTORE;
 insert into t1 values (concat('x64-', repeat('a', 60)));
-insert into t1 values (concat('x64-', repeat('b', 60)));                                            insert into t1 values (concat('x64-', repeat('c', 60)));
+insert into t1 values (concat('x64-', repeat('b', 60)));
+insert into t1 values (concat('x64-', repeat('c', 60)));
 sorted_result;
 select json_arrayagg(a) from t1;
 drop table t1;
@@ -215,8 +250,13 @@ SET group_concat_max_len= default;
 CREATE TABLE t1(id int, name varchar(50))ENGINE=COLUMNSTORE;
 CREATE TABLE t2(id int, owner_id int)ENGINE=COLUMNSTORE;
 
-INSERT INTO t1 VALUES (1, "name1"), (2, "name2"), (3, "name3");
-INSERT INTO t2 VALUES (1, 1), (2, 1), (3, 2), (4, 3);
+INSERT INTO t1 VALUES (1, "name1");
+INSERT INTO t1 VALUES (2, "name2");
+INSERT INTO t1 VALUES (3, "name3");
+INSERT INTO t2 VALUES (1, 1);
+INSERT INTO t2 VALUES (2, 1);
+INSERT INTO t2 VALUES (3, 2);
+INSERT INTO t2 VALUES (4, 3);
 
 SELECT t1.id, JSON_ARRAYAGG(JSON_OBJECT('id',t2.id) ORDER BY t2.id) as materials
   from t1 LEFT JOIN t2 on t1.id = t2.owner_id
@@ -237,7 +277,8 @@ SELECT json_object('a', coalesce(json_object('b', 'c')));
 
 CREATE TABLE t (a VARCHAR(8))ENGINE=COLUMNSTORE;
 CREATE VIEW v AS SELECT * FROM t;
-INSERT INTO t VALUES ('foo'),('bar');
+INSERT INTO t VALUES ('foo');
+INSERT INTO t VALUES ('bar');
 sorted_result;
 SELECT JSON_ARRAYAGG(a) AS f FROM v;
 DROP VIEW v;

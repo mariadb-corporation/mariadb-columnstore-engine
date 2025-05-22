@@ -30,14 +30,10 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   const bool isInsertMode = mode == INSERT || mode == SET;
   const bool isReplaceMode = mode == REPLACE || mode == SET;
 
-  json_engine_t jsEg;
-
   int jsErr = 0;
   json_string_t keyName;
   const CHARSET_INFO* cs = getCharset(fp[0]);
   json_string_set_cs(&keyName, cs);
-
-  initJSPaths(paths, fp, 1, 2);
 
   // Save the result of each merge and the result of the final merge separately
   std::string retJS;
@@ -56,14 +52,27 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       if (parseJSPath(path, row, fp[i], false))
         goto error;
 
+#if MYSQL_VERSION_ID >= 120200
+      path.p.last_step_idx--;
+#else
       path.p.last_step--;
+#endif
     }
 
     initJSEngine(jsEg, cs, tmpJS);
+
+#if MYSQL_VERSION_ID >= 120200
+    if (path.p.last_step_idx < 0)
+#else
     if (path.p.last_step < path.p.steps)
+#endif
       goto v_found;
 
+#if MYSQL_VERSION_ID >= 120200
+    if (path.p.last_step_idx >= 0 && locateJSPath(jsEg, path, &jsErr))
+#else
     if (path.p.last_step >= path.p.steps && locateJSPath(jsEg, path, &jsErr))
+#endif
     {
       if (jsErr)
         goto error;
@@ -73,7 +82,23 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     if (json_read_value(&jsEg))
       goto error;
 
+#if MYSQL_VERSION_ID >= 120200
+    if (path.p.last_step_idx < 0)
+    {
+      lastStep= (reinterpret_cast<json_path_step_t*>
+                        (mem_root_dynamic_array_get_val(&path.p.steps,
+                             0))) + path.p.last_step_idx + 1;
+    }
+    else
+    {
+      lastStep= (reinterpret_cast<json_path_step_t*>
+                        (mem_root_dynamic_array_get_val(&path.p.steps,
+                             path.p.last_step_idx))) + 1;
+    }
+#else
     lastStep = path.p.last_step + 1;
+#endif
+
     if (lastStep->type & JSON_PATH_ARRAY)
     {
       IntType itemSize = 0;

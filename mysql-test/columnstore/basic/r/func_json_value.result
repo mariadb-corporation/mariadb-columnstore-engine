@@ -5,15 +5,17 @@ USE json_value_db;
 # Test of JSON_VALUE function.
 # ----------------------------------------------------------------------
 CREATE TABLE t1(s TEXT, p TEXT) ENGINE = columnstore;
-INSERT INTO t1 VALUES('{"key1":123}', '$.key2'),
-('{"key1":123}', '$.key1'),
-('{"key1":[1,2,3]}', '$.key1'),
-('{"key1": [1,2,3], "key1":123}', '$.key1'),
-('{ "x": [0,1], "y": "[0,1]", "z": "Mon\\\"t\\\"y" }','$.z'),
-('{"\\"key1":123}', '$."\\"key1"'),
-('{"\\"key1\\"":123}', '$."\\"key1\\""'),
-('{"key 1":123}', '$."key 1"');
-SELECT s as json_text, p as path, JSON_VALUE(s, p) as json_value, JSON_QUERY(s, p) as json_query
+INSERT INTO t1 VALUES ('{"key1":123}', '$.key2');
+INSERT INTO t1 VALUES ('{"key1":123}', '$.key1');
+INSERT INTO t1 VALUES ('{"key1":[1,2,3]}', '$.key1');
+INSERT INTO t1 VALUES ('{"key1": [1,2,3], "key1":123}', '$.key1');
+INSERT INTO t1 VALUES ('{ "x": [0,1], "y": "[0,1]", "z": "Mon\\\"t\\\"y" }', '$.z');
+INSERT INTO t1 VALUES ('{"\\"key1":123}', '$."\\"key1"');
+INSERT INTO t1 VALUES ('{"\\"key1\\"":123}', '$."\\"key1\\""');
+INSERT INTO t1 VALUES ('{"key 1":123}', '$."key 1"');
+SELECT s AS json_text, p AS path,
+JSON_VALUE(s, p) AS json_value,
+JSON_QUERY(s, p) AS json_query
 FROM t1;
 json_text	path	json_value	json_query
 {"key1":123}	$.key2	NULL	NULL
@@ -25,9 +27,9 @@ json_text	path	json_value	json_query
 {"\"key1\"":123}	$."\"key1\""	123	NULL
 {"key 1":123}	$."key 1"	123	NULL
 CREATE TABLE t2(s TEXT) ENGINE = columnstore;
-INSERT INTO t2 VALUES('{"key1":123, "key2":{"key3":"value3"}}'),
-('{"key1":123, "key3":[1,2,3]}'),
-('{"key1":123, "key2":"[1]"}');
+INSERT INTO t2 VALUES ('{"key1":123, "key2":{"key3":"value3"}}');
+INSERT INTO t2 VALUES ('{"key1":123, "key3":[1,2,3]}');
+INSERT INTO t2 VALUES ('{"key1":123, "key2":"[1]"}');
 SELECT s as json_text, '$.key1' , JSON_VALUE(s, '$.key1') as json_value, JSON_QUERY(s, '$.key1') as json_query
 FROM t2;
 json_text	$.key1	json_value	json_query
@@ -49,7 +51,15 @@ json_text	$.key3	json_value	json_query
 DROP TABLE t2;
 DROP TABLE t1;
 CREATE TABLE zu (hu TEXT) ENGINE = COLUMNSTORE;
-INSERT INTO zu(hu) VALUES ('{}'), (NULL), ('{ "": "huh", "10001" : "10001", "10002" : "10001", "10003" : "10001", "10004" : "10001", "10005" : "10001", "10006" : "10001", "10007" : "10001", "10008" : "10001", "10009" : "10001", "10010" : "10001", "10011" : "10001", "10012" : "10001", "10013" : "10001", "10014" : "10001", "10015" : "10001", "10016" : "10001", "10017" : "10001", "10018" : "10001", "10019" : "10001", "10020" : "10001", "buga" : ""}');
+INSERT INTO zu(hu) VALUES ('{}');
+INSERT INTO zu(hu) VALUES (NULL);
+INSERT INTO zu(hu) VALUES (
+'{ "": "huh", "10001" : "10001", "10002" : "10001", "10003" : "10001", "10004" : "10001",
+     "10005" : "10001", "10006" : "10001", "10007" : "10001", "10008" : "10001", "10009" : "10001",
+     "10010" : "10001", "10011" : "10001", "10012" : "10001", "10013" : "10001", "10014" : "10001",
+     "10015" : "10001", "10016" : "10001", "10017" : "10001", "10018" : "10001", "10019" : "10001",
+     "10020" : "10001", "buga" : "" }'
+);
 INSERT INTO zu(hu) SELECT hu FROM zu;
 INSERT INTO zu(hu) SELECT hu FROM zu;
 INSERT INTO zu(hu) SELECT hu FROM zu;

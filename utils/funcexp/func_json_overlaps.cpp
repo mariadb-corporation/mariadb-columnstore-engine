@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 #include "rowgroup.h"
 using namespace execplan;
 using namespace rowgroup;
@@ -279,20 +280,20 @@ bool Func_json_overlaps::getBoolVal(Row& row, FunctionParm& fp, bool& /*isNull*/
                                     CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS1 = false, isNullJS2 = false;
+
   const auto js1 = fp[0]->data()->getStrVal(row, isNullJS1);
   const auto js2 = fp[1]->data()->getStrVal(row, isNullJS2);
   if (isNullJS1 || isNullJS2)
     return false;
 
-  json_engine_t jsEg1, jsEg2;
-  initJSEngine(jsEg1, getCharset(fp[0]), js1);
+  initJSEngine(jsEg, getCharset(fp[0]), js1);
   initJSEngine(jsEg2, getCharset(fp[1]), js2);
 
-  if (json_read_value(&jsEg1) || json_read_value(&jsEg2))
+  if (json_read_value(&jsEg) || json_read_value(&jsEg2))
     return false;
 
-  bool result = checkOverlaps(&jsEg1, &jsEg2, false);
-  if (unlikely(jsEg1.s.error || jsEg2.s.error))
+  bool result = checkOverlaps(&jsEg, &jsEg2, false);
+  if (unlikely(jsEg.s.error || jsEg2.s.error))
     return false;
 
   return result;

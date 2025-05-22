@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -275,8 +276,7 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
 
   isNull = false;
 
-  json_engine_t jsEg1, jsEg2;
-  jsEg1.s.error = jsEg2.s.error = 0;
+  jsEg.s.error = jsEg2.s.error = 0;
 
   utils::NullString tmpJS(js);
   std::string retJS;
@@ -304,8 +304,8 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
       goto next;
     }
 
-    initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
-    if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))
+    initJSEngine(jsEg, getCharset(fp[0]), tmpJS);
+    if (doMergePatch(retJS, &jsEg, &jsEg2, isEmpty))
     {
       goto error;
     }
@@ -321,9 +321,9 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
   if (hasNullArg)
     goto error;
 
-  initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
+  initJSEngine(jsEg, getCharset(fp[0]), tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg1, retJS, Func_json_format::LOOSE))
+  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
     goto error;
   isNull = false;
   return retJS;
