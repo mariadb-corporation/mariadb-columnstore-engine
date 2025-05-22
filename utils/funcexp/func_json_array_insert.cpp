@@ -1,6 +1,8 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
+#include "my_sys.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -30,10 +32,16 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
   json_engine_t jsEg;
+  int jsEg_stack[JSON_DEPTH_LIMIT];
   string retJS;
   retJS.reserve(js.length() + 8);
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
 
   initJSPaths(paths, fp, 1, 2);
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
 
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
@@ -43,19 +51,23 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     JSONPath& path = paths[j];
     if (!path.parsed)
     {
-      if (parseJSPath(path, row, fp[i]) || path.p.last_step - 1 < path.p.steps ||
-          path.p.last_step->type != JSON_PATH_ARRAY)
+      mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+      json_path_step_t *last_step= (json_path_step_t*)(mem_root_dynamic_array_get_val(&path.p.steps, path.p.last_step_idx)),
+      *initial_step= (json_path_step_t*)path.p.steps.buffer;
+      if (parseJSPath(path, row, fp[i]) || (last_step - 1) < initial_step ||
+          last_step->type != JSON_PATH_ARRAY)
       {
         if (path.p.s.error == 0)
           path.p.s.error = SHOULD_END_WITH_ARRAY;
         goto error;
       }
-      path.p.last_step--;
+      path.p.last_step_idx--;
     }
 
     initJSEngine(jsEg, cs, tmpJS);
 
-    path.currStep = path.p.steps;
 
     int jsErr = 0;
     if (locateJSPath(jsEg, path, &jsErr))
@@ -82,7 +94,9 @@ string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
     {
       DBUG_ASSERT(jsEg.state == JST_VALUE);
-      if (itemSize == path.p.last_step[1].n_item)
+      if (itemSize == (((json_path_step_t*)
+                        (mem_root_dynamic_array_get_val(&path.p.steps,
+                                                        path.p.last_step_idx)))[1].n_item))
       {
         itemPos = (const char*)jsEg.s.c_str;
         break;

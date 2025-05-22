@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -28,8 +29,12 @@ int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   int depth = 0, currDepth = 0;
   bool incDepth = true;
+  int jsEg_stack[JSON_DEPTH_LIMIT];
 
   json_engine_t jsEg;
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   do

@@ -63,8 +63,14 @@ using IntType = uint;
 inline static int locateJSPath(json_engine_t& jsEg, JSONPath& path, int* jsErr = nullptr)
 {
   IntType arrayCounters[JSON_DEPTH_LIMIT];
-  path.currStep = path.p.steps;
-  if (json_find_path(&jsEg, &path.p, &path.currStep, arrayCounters))
+  MEM_ROOT_DYNAMIC_ARRAY array;
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &array, sizeof(int), &arrayCounters,
+                              JSON_DEPTH_DEFAULT, 0, MYF(0));
+
+  path.currStep = (json_path_step_t*)path.p.steps.buffer;
+  if (json_find_path(&jsEg, &path.p, &path.currStep, &array))
   {
     if (jsErr && jsEg.s.error)
       *jsErr = 1;
@@ -90,6 +96,7 @@ inline const CHARSET_INFO* getCharset(execplan::SPTP& parm)
 inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const utils::NullString& js)
 {
   json_scan_start(&jsEg, jsCS, (const uchar*)js.str(), (const uchar*)js.end());
+  memset(jsEg.stack.buffer, 0, JSON_DEPTH_LIMIT*jsEg.stack.size_of_element);
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);

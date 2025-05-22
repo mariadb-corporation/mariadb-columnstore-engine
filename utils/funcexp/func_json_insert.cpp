@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -29,6 +30,8 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   const bool isInsertMode = mode == INSERT || mode == SET;
   const bool isReplaceMode = mode == REPLACE || mode == SET;
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+  int jsEg_stack[JSON_DEPTH_LIMIT];
 
   json_engine_t jsEg;
 
@@ -46,8 +49,15 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   {
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
+    json_path_step_t *curr_last_step= nullptr;
 
     JSONPath& path = paths[j];
+
+    memset(&p_steps[0], 0, sizeof(p_steps));
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+
     const json_path_step_t* lastStep;
     const char* valEnd;
 
@@ -56,14 +66,21 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       if (parseJSPath(path, row, fp[i], false))
         goto error;
 
-      path.p.last_step--;
+      path.p.last_step_idx--;
     }
 
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
     initJSEngine(jsEg, cs, tmpJS);
-    if (path.p.last_step < path.p.steps)
+
+    if (((json_path_step_t*)(mem_root_dynamic_array_get_val(&path.p.steps,
+                             path.p.last_step_idx))) < (json_path_step_t*)(path.p.steps.buffer))
       goto v_found;
 
-    if (path.p.last_step >= path.p.steps && locateJSPath(jsEg, path, &jsErr))
+    curr_last_step= (json_path_step_t*)(mem_root_dynamic_array_get_val(&path.p.steps,
+                             path.p.last_step_idx));
+    if (curr_last_step >= (json_path_step_t*)(path.p.steps.buffer) && locateJSPath(jsEg, path, &jsErr))
     {
       if (jsErr)
         goto error;
@@ -73,7 +90,7 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (json_read_value(&jsEg))
       goto error;
 
-    lastStep = path.p.last_step + 1;
+    lastStep = curr_last_step + 1;
     if (lastStep->type & JSON_PATH_ARRAY)
     {
       IntType itemSize = 0;

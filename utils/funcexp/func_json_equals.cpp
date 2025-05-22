@@ -27,8 +27,19 @@ CalpontSystemCatalog::ColType Func_json_equals::operationType(FunctionParm& fp,
 bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                   CalpontSystemCatalog::ColType& /*type*/)
 {
+  json_engine_t je;
+  MEM_ROOT_DYNAMIC_ARRAY array;
+  int je_stack[JSON_DEPTH_LIMIT], buffer_array[JSON_DEPTH_LIMIT];
+
   // auto release the DYNAMIC_STRING
   using DynamicString = unique_ptr<DYNAMIC_STRING, decltype(&dynstr_free)>;
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &je.stack, sizeof(int), &je_stack,
+                              JSON_DEPTH_DEFAULT, 0, MYF(0));
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &array, sizeof(int), &buffer_array,
+                              JSON_DEPTH_DEFAULT, 0, MYF(0));
 
   DynamicString str1{new DYNAMIC_STRING(), dynstr_free};
   if (init_dynamic_string(str1.get(), NULL, 0, 0))
@@ -56,13 +67,16 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   const string_view js2 = js2_ns.unsafeStringRef();
 
   bool result = false;
-  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0])))
+  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0]), NULL, &je, &array))
   {
     isNull = true;
     return result;
   }
 
-  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1])))
+  memset(je_stack, 0, sizeof(je_stack));
+  memset(buffer_array, 0, sizeof(buffer_array));
+
+  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1]), NULL, &je, &array))
   {
     isNull = true;
     return result;

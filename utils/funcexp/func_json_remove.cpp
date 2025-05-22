@@ -28,7 +28,14 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   if (isNull)
     return "";
 
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+
   json_engine_t jsEg;
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+
 
   int jsErr = 0;
   json_string_t keyName;
@@ -43,19 +50,27 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   {
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
+    json_path_step_t *curr_last_step= nullptr;
 
     JSONPath& path = paths[j];
     const json_path_step_t* lastStep;
     const char *remStart = nullptr, *remEnd = nullptr;
     IntType itemSize = 0;
 
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), p_steps,
+                              JSON_DEPTH_DEFAULT, 0, MYF(0));
+
     if (!path.parsed)
     {
       if (parseJSPath(path, row, fp[i], false))
         goto error;
 
-      path.p.last_step--;
-      if (path.p.last_step < path.p.steps)
+      path.p.last_step_idx--;
+      curr_last_step= (json_path_step_t*)
+                                    (mem_root_dynamic_array_get_val(&path.p.steps,
+                                                                    path.p.last_step_idx));
+      if (curr_last_step < (json_path_step_t*)(path.p.steps.buffer))
       {
         path.p.s.error = TRIVIAL_PATH_NOT_ALLOWED;
         goto error;
@@ -64,7 +79,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
     initJSEngine(jsEg, cs, tmpJS);
 
-    if (path.p.last_step < path.p.steps)
+    if (curr_last_step < (json_path_step_t*)(path.p.steps.buffer))
       goto v_found;
 
     if (locateJSPath(jsEg, path, &jsErr) && jsErr)
@@ -73,7 +88,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (json_read_value(&jsEg))
       goto error;
 
-    lastStep = path.p.last_step + 1;
+    lastStep = curr_last_step + 1;
     if (lastStep->type & JSON_PATH_ARRAY)
     {
       if (jsEg.value_type != JSON_VALUE_ARRAY)

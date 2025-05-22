@@ -15,17 +15,20 @@ using namespace joblist;
 #include "jsonhelpers.h"
 using namespace funcexp::helpers;
 
+#include "my_sys.h"
+
 namespace
 {
-static bool appendJSPath(string& ret, const json_path_t* p)
+static bool appendJSPath(string& ret, json_path_t* p)
 {
   const json_path_step_t* c;
+  json_path_step_t *last_step= (json_path_step_t*)(mem_root_dynamic_array_get_val(&p->steps, p->last_step_idx));
 
   try
   {
     ret.append("\"$");
 
-    for (c = p->steps + 1; c <= p->last_step; c++)
+    for (c = ((json_path_step_t*)(p->steps.buffer)) + 1; c <= last_step; c++)
     {
       if (c->type & JSON_PATH_KEY)
       {
@@ -133,7 +136,9 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   }
 
   json_engine_t jsEg;
+  int jsEg_stack[JSON_DEPTH_LIMIT];
   json_path_t p, savPath;
+  json_path_step_t savPath_steps[JSON_DEPTH_LIMIT], p_steps[JSON_DEPTH_LIMIT];
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
 #ifdef MYSQL_GE_1009
@@ -143,12 +148,23 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   int pathFound = 0;
 
   initJSPaths(paths, fp, 4, 1);
+  vector<vector<json_path_step_t>> p_steps_arr(paths.size(), vector<json_path_step_t>(32));
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &savPath.steps, sizeof(json_path_step_t), &savPath_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
 
   for (size_t i = 4; i < fp.size(); i++)
   {
     JSONPath& path = paths[i - 4];
     if (!path.parsed)
     {
+      mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i-4],
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
       if (parseJSPath(path, row, fp[i]))
         goto error;
 #ifdef MYSQL_GE_1009
@@ -157,13 +173,17 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
   }
 
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+
   json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #ifdef MYSQL_GE_1009
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+        json_skip_array_and_count(&jsEg, arrayCounter + (((json_path_step_t*)(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx))) - (json_path_step_t*)p.steps.buffer)))
       goto error;
 #endif
 
@@ -180,7 +200,6 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
         if (pathFound == 1)
         {
           savPath = p;
-          savPath.last_step = savPath.steps + (p.last_step - p.steps);
         }
         else
         {

@@ -28,7 +28,11 @@ string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
 
   json_engine_t jsEg;
   string result;
+  int jsEg_stack[JSON_DEPTH_LIMIT];
 
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   if (json_read_value(&jsEg))
