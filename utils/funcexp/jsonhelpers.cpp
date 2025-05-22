@@ -335,7 +335,17 @@ int cmpPartJSPath(const json_path_step_t* a, const json_path_step_t* aEnd, const
 
 int cmpJSPath(const json_path_t* a, const json_path_t* b, enum json_value_types vt, const int* arraySize)
 {
+#if MYSQL_VERSION_ID >= 120100
+  json_path_step_t *a_last_step= reinterpret_cast<json_path_step_t*>
+                                   (mem_root_dynamic_array_get_val((MEM_ROOT_DYNAMIC_ARRAY*)&a->steps, (size_t)a->last_step_idx));
+  json_path_step_t *b_last_step= reinterpret_cast<json_path_step_t*>
+                                   (mem_root_dynamic_array_get_val((MEM_ROOT_DYNAMIC_ARRAY*)&b->steps, (size_t)b->last_step_idx));
+  return cmpPartJSPath((reinterpret_cast<json_path_step_t*>(a->steps.buffer)) + 1, a_last_step,
+                       (reinterpret_cast<json_path_step_t*>(b->steps.buffer)) + 1, b_last_step,
+                       vt, arraySize);
+#else
   return cmpPartJSPath(a->steps + 1, a->last_step, b->steps + 1, b->last_step, vt, arraySize);
+#endif
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards)
@@ -371,5 +381,6 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
   }
   return false;
 }
+
 }  // namespace helpers
 }  // namespace funcexp

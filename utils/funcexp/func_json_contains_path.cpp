@@ -17,7 +17,7 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
-    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
+    FunctionParm& fp, [[maybe_unused]] CalpontSystemCatalog::ColType& resultType)
 {
   return fp[0]->data()->resultType();
 }
@@ -26,7 +26,7 @@ CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
  * getBoolVal API definition
  */
 bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                         CalpontSystemCatalog::ColType& /*type*/)
+                                         [[maybe_unused]] CalpontSystemCatalog::ColType& type)
 {
   const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
@@ -62,6 +62,15 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
   }
 
   initJSPaths(paths, fp, 2, 1);
+
+#if MYSQL_VERSION_ID >= 120100
+  for (size_t i=0; i<paths.size(); i++)
+  {
+    JSONPath& path = paths[i];
+    initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i]);
+  }
+#endif
+
   if (paths.size() == 0)
     hasFound.assign(argSize, false);
 
@@ -84,6 +93,15 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
 
   json_engine_t jsEg;
   json_path_t p;
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+
+  initJsonArray(NULL, &p.steps, sizeof(json_path_step_t), &p_steps);
+  initJsonArray(NULL, &jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
+
   json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)js.data(), (const uchar*)js.data() + js.size(),
                       &p);
 
@@ -99,12 +117,20 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
   while (json_get_path_next(&jsEg, &p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
+#if MYSQL_VERSION_ID >= 120100
+    json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>
+                                  (mem_root_dynamic_array_get_val(&p.steps,
+                                                                  p.last_step_idx));
+    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&jsEg, arrayCounters + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+#else
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounters + (p.last_step - p.steps)))
     {
       result = true;
       break;
     }
+#endif
 #endif
 
     for (int restSize = argSize, curr = 0; restSize > 0; restSize--, curr++)

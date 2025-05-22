@@ -25,10 +25,26 @@ CalpontSystemCatalog::ColType Func_json_valid::operationType(FunctionParm& fp,
 bool Func_json_valid::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                  CalpontSystemCatalog::ColType& /*type*/)
 {
+  int result= 0;
+#if MYSQL_VERSION_ID >= 120100
+  json_engine_t je;
+  int je_stack[JSON_DEPTH_LIMIT];
+  initJsonArray(NULL, &je.stack, sizeof(int), &je_stack);
+#endif
+
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
-  return json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]));
+#if MYSQL_VERSION_ID >= 120100
+  result= json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]), &je);
+#else
+  result= json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]));
+#endif
+
+if (result == 0)
+  return 1;
+else
+  return 0;
 }
 }  // namespace funcexp

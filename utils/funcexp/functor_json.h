@@ -27,15 +27,64 @@ struct JSONPath
   json_path_step_t* currStep;
 };
 
+class Func_json_no_multipath
+{
+  protected:
+    JSONPath path;
+#if MYSQL_VERSION_ID >= 120100
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+#endif
+
+public:
+  Func_json_no_multipath()
+  {
+#if MYSQL_VERSION_ID >= 120100
+    initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps[0]);
+#endif
+  }
+};
+
+class Func_json_multipath
+{
+  protected:
+  std::vector<JSONPath> paths;
+#if MYSQL_VERSION_ID >= 120100
+  std::vector<std::vector<json_path_step_t>> p_steps_arr;
+#endif
+
+  public:
+  Func_json_multipath()
+  {
+#if MYSQL_VERSION_ID >= 120100
+    p_steps_arr = std::vector<std::vector<json_path_step_t>>(paths.size(), std::vector<json_path_step_t>(JSON_DEPTH_LIMIT));
+    for (size_t i=0; i<paths.size(); i++)
+    {
+      JSONPath curr_path= paths[i];
+      initJsonArray(NULL, &curr_path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i][0]);
+    }
+#endif
+  }
+  Func_json_multipath(size_t number_of_args)
+  {
+#if MYSQL_VERSION_ID >= 120100
+    p_steps_arr = std::vector<std::vector<json_path_step_t>>(number_of_args, std::vector<json_path_step_t>(JSON_DEPTH_LIMIT));
+#endif
+  }
+  ~Func_json_multipath() {}
+};
+
 class JSONEgWrapper : public json_engine_t
 {
  public:
-  JSONEgWrapper(CHARSET_INFO* cs, const uchar* str, const uchar* end)
+  JSONEgWrapper(CHARSET_INFO* cs, const uchar* str, const uchar* end, int *buffer)
   {
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM,
+                                &this->stack, sizeof(int), buffer,
+                                JSON_DEPTH_DEFAULT, JSON_DEPTH_INC, MYF(0));
     json_scan_start(this, cs, str, end);
   }
   JSONEgWrapper(const std::string& str, CHARSET_INFO* cs)
-   : JSONEgWrapper(cs, (const uchar*)str.data(), (const uchar*)str.data() + str.size())
+   : JSONEgWrapper(cs, (const uchar*)str.data(), (const uchar*)str.data() + str.size(), NULL)
   {
   }
   bool checkAndGetScalar(std::string& ret, int* error);
@@ -88,15 +137,11 @@ class Func_json_depth : public Func_Int
 
 /** @brief Func_json_length class
  */
-class Func_json_length : public Func_Int
+class Func_json_length : public Func_Int, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_length() : Func_Int("json_length")
-  {
-  }
+  Func_json_length() : Func_Int("json_length"), Func_json_no_multipath()
+  {}
   ~Func_json_length() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -192,13 +237,10 @@ class Func_json_array : public Func_Str
 };
 /** @brief Func_json_keys class
  */
-class Func_json_keys : public Func_Str
+class Func_json_keys : public Func_Str, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_keys() : Func_Str("json_keys")
+  Func_json_keys() : Func_Str("json_keys"), Func_json_no_multipath()
   {
   }
   ~Func_json_keys() override = default;
@@ -211,15 +253,11 @@ class Func_json_keys : public Func_Str
 };
 /** @brief Func_json_exists class
  */
-class Func_json_exists : public Func_Bool
+class Func_json_exists : public Func_Bool, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_exists() : Func_Bool("json_exists")
-  {
-  }
+  Func_json_exists() : Func_Bool("json_exists"), Func_json_no_multipath()
+  {}
   ~Func_json_exists() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -231,15 +269,11 @@ class Func_json_exists : public Func_Bool
 
 /** @brief Func_json_quote class
  */
-class Func_json_quote : public Func_Str
+class Func_json_quote : public Func_Str, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_quote() : Func_Str("json_quote")
-  {
-  }
+  Func_json_quote() : Func_Str("json_quote"), Func_json_no_multipath()
+  {}
   ~Func_json_quote() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -251,15 +285,11 @@ class Func_json_quote : public Func_Str
 
 /** @brief Func_json_unquote class
  */
-class Func_json_unquote : public Func_Str
+class Func_json_unquote : public Func_Str, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_unquote() : Func_Str("json_unquote")
-  {
-  }
+  Func_json_unquote() : Func_Str("json_unquote"), Func_json_no_multipath()
+  {}
   ~Func_json_unquote() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -331,8 +361,7 @@ class Func_json_merge_patch : public Func_Str
 {
  public:
   Func_json_merge_patch() : Func_Str("json_merge_patch")
-  {
-  }
+  {}
   ~Func_json_merge_patch() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -377,18 +406,17 @@ class Func_json_query : public Func_Str
 };
 /** @brief Func_json_contains class
  */
-class Func_json_contains : public Func_Bool
+class Func_json_contains : public Func_Bool, public Func_json_no_multipath
 {
  protected:
-  JSONPath path;
   bool arg2Const;
   bool arg2Parsed;  // argument 2 is a constant or has been parsed
   utils::NullString arg2Val;
 
  public:
-  Func_json_contains() : Func_Bool("json_contains"), arg2Const(false), arg2Parsed(false), arg2Val("")
-  {
-  }
+  Func_json_contains() : Func_Bool("json_contains"), arg2Const(false),
+                         arg2Parsed(false), arg2Val("")
+  {}
   ~Func_json_contains() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -399,15 +427,14 @@ class Func_json_contains : public Func_Bool
 };
 /** @brief Func_json_array_append class
  */
-class Func_json_array_append : public Func_Str
+class Func_json_array_append : public Func_Str, public Func_json_multipath
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
-  Func_json_array_append() : Func_Str("json_array_append")
-  {
-  }
+  Func_json_array_append() : Func_Str("json_array_append"), Func_json_multipath()
+  {}
+  Func_json_array_append(size_t number_of_args) : Func_Str("json_array_append"),
+                                                  Func_json_multipath(number_of_args)
+  {}
   ~Func_json_array_append() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -421,15 +448,13 @@ class Func_json_array_append : public Func_Str
 };
 /** @brief Func_json_array_insert class
  */
-class Func_json_array_insert : public Func_Str
+class Func_json_array_insert : public Func_Str, public Func_json_multipath
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
-  Func_json_array_insert() : Func_Str("json_array_insert")
-  {
-  }
+  Func_json_array_insert() : Func_Str("json_array_insert"), Func_json_multipath()
+  {}
+  Func_json_array_insert(size_t number_of_args) : Func_Str("json_array_insert"), Func_json_multipath(number_of_args)
+  {}
   ~Func_json_array_insert() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -441,7 +466,7 @@ class Func_json_array_insert : public Func_Str
 
 /** @brief Func_json_insert class
  */
-class Func_json_insert : public Func_Str
+class Func_json_insert : public Func_json_multipath, public Func_Str
 {
  public:
   enum MODE
@@ -454,13 +479,25 @@ class Func_json_insert : public Func_Str
 
  protected:
   MODE mode;
-  std::vector<JSONPath> paths;
 
  public:
   Func_json_insert() : Func_Str("json_insert"), mode(INSERT)
-  {
-  }
+  {}
+  Func_json_insert(size_t number_of_args) : Func_json_multipath(number_of_args),
+                                            Func_Str("json_insert"), mode(INSERT)
+  {}
   explicit Func_json_insert(MODE m) : mode(m)
+  {
+    assert(m != NONE);
+    switch (m)
+    {
+      case INSERT: Func_Str::Func::funcName("json_insert"); break;
+      case REPLACE: Func_Str::Func::funcName("json_replace"); break;
+      case SET: Func_Str::Func::funcName("json_set"); break;
+      default: break;
+    }
+  }
+  explicit Func_json_insert(size_t number_of_args, MODE m) : Func_json_multipath(number_of_args), mode(m)
   {
     assert(m != NONE);
     switch (m)
@@ -486,15 +523,13 @@ class Func_json_insert : public Func_Str
 };
 /** @brief Func_json_remove class
  */
-class Func_json_remove : public Func_Str
+class Func_json_remove : public Func_Str, public Func_json_multipath
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
-  Func_json_remove() : Func_Str("json_remove")
-  {
-  }
+  Func_json_remove() : Func_Str("json_remove"), Func_json_multipath()
+  {}
+  Func_json_remove(size_t number_of_args) : Func_Str("json_remove"), Func_json_multipath(number_of_args)
+  {}
   ~Func_json_remove() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -506,10 +541,9 @@ class Func_json_remove : public Func_Str
 
 /** @brief Func_json_contains_path class
  */
-class Func_json_contains_path : public Func_Bool
+class Func_json_contains_path : public Func_json_multipath, public Func_Bool
 {
  protected:
-  std::vector<JSONPath> paths;
   std::vector<bool> hasFound;
   bool isModeOne;
   bool isModeConst;
@@ -518,8 +552,11 @@ class Func_json_contains_path : public Func_Bool
  public:
   Func_json_contains_path()
    : Func_Bool("json_contains_path"), isModeOne(false), isModeConst(false), isModeParsed(false)
-  {
-  }
+  {}
+  Func_json_contains_path(size_t number_of_args)
+   : Func_json_multipath(number_of_args), Func_Bool("json_contains_path"),
+     isModeOne(false), isModeConst(false), isModeParsed(false)
+  {}
   ~Func_json_contains_path() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -531,15 +568,11 @@ class Func_json_contains_path : public Func_Bool
 
 /** @brief Func_json_overlaps class
  */
-class Func_json_overlaps : public Func_Bool
+class Func_json_overlaps : public Func_Bool, public Func_json_no_multipath
 {
- protected:
-  JSONPath path;
-
  public:
-  Func_json_overlaps() : Func_Bool("json_overlaps")
-  {
-  }
+  Func_json_overlaps() : Func_Bool("json_overlaps"), Func_json_no_multipath()
+  {}
   ~Func_json_overlaps() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -550,10 +583,9 @@ class Func_json_overlaps : public Func_Bool
 };
 /** @brief Func_json_search class
  */
-class Func_json_search : public Func_Str
+class Func_json_search : public Func_json_multipath, public Func_Str
 {
  protected:
-  std::vector<JSONPath> paths;
   bool isModeParsed;
   bool isModeConst;
   bool isModeOne;
@@ -562,8 +594,11 @@ class Func_json_search : public Func_Str
  public:
   Func_json_search()
    : Func_Str("json_search"), isModeParsed(false), isModeConst(false), isModeOne(false), escape('\\')
-  {
-  }
+  {}
+  Func_json_search(size_t number_of_args)
+   : Func_json_multipath(number_of_args), Func_Str("json_search"),
+     isModeParsed(false), isModeConst(false), isModeOne(false), escape('\\')
+  {}
   ~Func_json_search() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -577,15 +612,13 @@ class Func_json_search : public Func_Str
 };
 /** @brief Func_json_extract_string class
  */
-class Func_json_extract : public Func_Str
+class Func_json_extract : public Func_Str, public Func_json_multipath
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
   Func_json_extract() : Func_Str("json_extract")
-  {
-  }
+  {}
+  Func_json_extract(size_t number_of_args) : Func_Str("json_extract"), Func_json_multipath(number_of_args)
+  {}
   ~Func_json_extract() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(

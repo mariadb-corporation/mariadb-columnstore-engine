@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -30,12 +31,20 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   const bool isInsertMode = mode == INSERT || mode == SET;
   const bool isReplaceMode = mode == REPLACE || mode == SET;
 
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+#endif
+
   json_engine_t jsEg;
 
   int jsErr = 0;
   json_string_t keyName;
   const CHARSET_INFO* cs = getCharset(fp[0]);
   json_string_set_cs(&keyName, cs);
+
+#if MYSQL_VERSION_ID >= 120100
+    initJsonArray(NULL, &jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
 
   initJSPaths(paths, fp, 1, 2);
 
@@ -46,8 +55,12 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   {
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
-
     JSONPath& path = paths[j];
+
+#if MYSQL_VERSION_ID >= 120100
+    json_path_step_t *curr_last_step= nullptr;
+#endif
+
     const json_path_step_t* lastStep;
     const char* valEnd;
 
@@ -56,14 +69,29 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
       if (parseJSPath(path, row, fp[i], false))
         goto error;
 
+#if MYSQL_VERSION_ID >= 120100
+      path.p.last_step_idx--;
+#else
       path.p.last_step--;
+#endif
     }
-
     initJSEngine(jsEg, cs, tmpJS);
+
+#if MYSQL_VERSION_ID >= 120100
+    if ((reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&path.p.steps,
+                             path.p.last_step_idx))) < reinterpret_cast<json_path_step_t*>(path.p.steps.buffer))
+#else
     if (path.p.last_step < path.p.steps)
+#endif
       goto v_found;
 
+#if MYSQL_VERSION_ID >= 120100
+    curr_last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&path.p.steps,
+                             path.p.last_step_idx));
+    if (curr_last_step >= reinterpret_cast<json_path_step_t*>(path.p.steps.buffer) && locateJSPath(jsEg, path, &jsErr))
+#else
     if (path.p.last_step >= path.p.steps && locateJSPath(jsEg, path, &jsErr))
+#endif
     {
       if (jsErr)
         goto error;
@@ -73,7 +101,12 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     if (json_read_value(&jsEg))
       goto error;
 
+#if MYSQL_VERSION_ID >= 120100
+    lastStep = curr_last_step + 1;
+#else
     lastStep = path.p.last_step + 1;
+#endif
+
     if (lastStep->type & JSON_PATH_ARRAY)
     {
       IntType itemSize = 0;

@@ -27,6 +27,16 @@ CalpontSystemCatalog::ColType Func_json_equals::operationType(FunctionParm& fp,
 bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
                                   CalpontSystemCatalog::ColType& /*type*/)
 {
+#if MYSQL_VERSION_ID >= 120100
+  json_engine_t je;
+  MEM_ROOT_DYNAMIC_ARRAY array;
+  int je_stack[JSON_DEPTH_LIMIT];
+  struct json_norm_value *buffer_array[JSON_DEPTH_LIMIT];
+
+  initJsonArray(NULL, &je.stack, sizeof(int), &je_stack);
+  initJsonArray(NULL, &array, sizeof(struct json_norm_value*), buffer_array);
+#endif
+
   // auto release the DYNAMIC_STRING
   using DynamicString = unique_ptr<DYNAMIC_STRING, decltype(&dynstr_free)>;
 
@@ -56,13 +66,22 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   const string_view js2 = js2_ns.unsafeStringRef();
 
   bool result = false;
+
+#if MYSQL_VERSION_ID >= 120100
+  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0]), NULL, &je, &array))
+#else
   if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0])))
+#endif
   {
     isNull = true;
     return result;
   }
 
+#if MYSQL_VERSION_ID >= 120100
+  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1]), NULL, &je, &array))
+#else
   if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1])))
+#endif
   {
     isNull = true;
     return result;

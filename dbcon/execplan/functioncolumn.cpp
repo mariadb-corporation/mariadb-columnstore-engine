@@ -354,25 +354,25 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
     fFunctor = fDynamicFunctor = new Func_json_contains();
 
   if (dynamic_cast<Func_json_array_append*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_append();
+    fFunctor = fDynamicFunctor = new Func_json_array_append(fFunctionParms.size());
 
   if (dynamic_cast<Func_json_array_insert*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_insert();
+    fFunctor = fDynamicFunctor = new Func_json_array_insert(fFunctionParms.size());
 
   if (auto f = dynamic_cast<Func_json_insert*>(fFunctor))
     fFunctor = fDynamicFunctor = new Func_json_insert(f->getMode());
 
   if (dynamic_cast<Func_json_remove*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_remove();
+    fFunctor = fDynamicFunctor = new Func_json_remove(fFunctionParms.size());
 
   if (dynamic_cast<Func_json_contains_path*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_contains_path();
+    fFunctor = fDynamicFunctor = new Func_json_contains_path(fFunctionParms.size());
 
   if (dynamic_cast<Func_json_search*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_search();
+    fFunctor = fDynamicFunctor = new Func_json_search(fFunctionParms.size());
 
   if (dynamic_cast<Func_json_extract*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_extract();
+    fFunctor = fDynamicFunctor = new Func_json_extract(fFunctionParms.size());
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const

@@ -61,8 +61,14 @@ string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   IntType keySize = 0;
   string ret;
   json_engine_t jsEg;
-  initJSEngine(jsEg, getCharset(fp[0]), js);
 
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  memset(&jsEg_stack[0], 0, sizeof(jsEg_stack));
+  initJsonArray(NULL, &jsEg.stack, sizeof(int), &jsEg_stack);
+#endif
+
+  initJSEngine(jsEg, getCharset(fp[0]), js);
   if (fp.size() > 1)
   {
     if (!path.parsed && parseJSPath(path, row, fp[1], false))
