@@ -135,6 +135,5 @@ int64_t bloom_contains::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& is
 
 bool bloom_contains::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  isNull = true;
-  return false;
+  return bloom_contains::getIntVal(row, parm, isNull, op_ct) > 0 ? true : false;
 }
