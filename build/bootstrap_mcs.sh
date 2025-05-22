@@ -6,13 +6,13 @@
 
 set -o pipefail
 
+export CLICOLOR_FORCE=1 #cmake output
+
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-RPM_CONFIG_DIR="/etc/my.cnf.d"
-DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
-CONFIG_DIR=$RPM_CONFIG_DIR
+CONFIG_DIR="/etc/my.cnf.d"
 
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
@@ -82,10 +82,6 @@ fi
 pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
     pkg_format="rpm"
-fi
-
-if [[ $pkg_format = "deb" ]]; then
-    CONFIG_DIR=$DEB_CONFIG_DIR
 fi
 
 disable_git_restore_frozen_revision() {

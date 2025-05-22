@@ -737,7 +737,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                //SCCACHE_LOG: 'debug',
              },
              commands: [
-                         "export CLICOLOR_FORCE=1",
                          "mkdir /mdb/" + builddir + "/" + result,
                          get_sccache,
                        ]
