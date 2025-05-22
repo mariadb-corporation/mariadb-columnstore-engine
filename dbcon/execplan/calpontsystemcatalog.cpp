@@ -3172,6 +3172,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
+  idblog("getting system data for columnRIDs");
   getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
 
   vector<ColumnResult*>::const_iterator it;
