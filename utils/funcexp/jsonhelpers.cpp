@@ -356,7 +356,7 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
 }
 
 bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
-                 const int* /*arrayCounter*/, bool exact)
+                 [[maybe_unused]] const int* arrayCounter, bool exact)
 {
   for (size_t curr = 0; curr < paths.size(); curr++)
   {

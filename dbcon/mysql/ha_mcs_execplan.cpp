@@ -328,7 +328,12 @@ static execplan::Partitions getPartitions(TABLE* table)
 
     while ((pe = part_el_it++))  // this is how server does it.
     {
-      result.fPartNames.emplace_back(pe->partition_name);
+      // TODO: partition names are not just strings in
+      #if MYSQL_VERSION_ID >= 110501
+        result.fPartNames.emplace_back(pe->partition_name.str);
+      #else
+        result.fPartNames.emplace_back(pe->partition_name);
+      #endif
     }
   }
   return result;
