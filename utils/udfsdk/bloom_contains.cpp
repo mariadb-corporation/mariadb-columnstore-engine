@@ -13,10 +13,35 @@ using namespace udfsdk;
 #include "bloom_funcs.h"
 using namespace bloom_funcs;
 
-CalpontSystemCatalog::ColType MCS_bloom_contains::operationType(FunctionParm& fp,
+
+// Only for debugging
+#include <bitset>
+#include <fstream>
+
+static inline void logBloomFilter(auto& bloomFilter)
+{
+  std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+  
+  log << "UDF Bloom filter: \n";
+  for (const auto& v : bloomFilter)
+  {
+    log << std::bitset<8>(v);
+  }
+  log << "\n\n";
+
+}
+
+template<typename T>
+static inline void lg(T data)
+{
+  std::ofstream log("/tmp/bc.log", std::ios::app);
+  log << data << "\n";
+}
+
+CalpontSystemCatalog::ColType bloom_contains::operationType(FunctionParm& fp,
                                                      CalpontSystemCatalog::ColType& resultType)
 {
-  //assert(fp.size() == 3);
+  assert(fp.size() == 3);
   CalpontSystemCatalog::ColType rt;
   //idbassert(fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::VARBINARY);
 
@@ -26,26 +51,25 @@ CalpontSystemCatalog::ColType MCS_bloom_contains::operationType(FunctionParm& fp
   return rt;
 }
 
-double MCS_bloom_contains::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+double bloom_contains::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
   isNull = true;
   return 0;
 }
 
-long double MCS_bloom_contains::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
+long double bloom_contains::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                       CalpontSystemCatalog::ColType& op_ct)
 {
   return getDoubleVal(row, parm, isNull, op_ct);
 }
 
-float MCS_bloom_contains::getFloatVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+float bloom_contains::getFloatVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  return (float)MCS_bloom_contains::getDoubleVal(row, parm, isNull, op_ct);
+  return (float)bloom_contains::getDoubleVal(row, parm, isNull, op_ct);
 }
 
-int64_t MCS_bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-    // For some reason the isNull parameter is True
     utils::NullString bloomFilterStr = parm[0]->data()->getStrVal(row, isNull);
     if (isNull)
     {
@@ -57,6 +81,8 @@ int64_t MCS_bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull
     {
         bloomFilter.push_back(c);
     }
+
+    logBloomFilter(bloomFilter);
 
     int64_t result = 0;
     switch(parm[1]->data()->resultType().colDataType)
@@ -81,33 +107,33 @@ int64_t MCS_bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull
     return result;
 }
 
-string MCS_bloom_contains::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+string bloom_contains::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  return MCS_bloom_contains::getIntVal(row, parm, isNull, op_ct) ? "1" : "0";
+  return bloom_contains::getIntVal(row, parm, isNull, op_ct) ? "1" : "0";
 }
 
-IDB_Decimal MCS_bloom_contains::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
+IDB_Decimal bloom_contains::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
                                    CalpontSystemCatalog::ColType& op_ct)
 {
   IDB_Decimal dec;
-  dec.value = MCS_bloom_contains::getIntVal(row, parm, isNull, op_ct);
+  dec.value = bloom_contains::getIntVal(row, parm, isNull, op_ct);
   dec.scale = 0;
   return dec;
 }
 
-int32_t MCS_bloom_contains::getDateIntVal(Row& row, FunctionParm& parm, bool& isNull,
+int32_t bloom_contains::getDateIntVal(Row& row, FunctionParm& parm, bool& isNull,
                                CalpontSystemCatalog::ColType& op_ct)
 {
   throw logic_error("Invalid API called for BLOOM_CONTAINS");
 }
 
-int64_t MCS_bloom_contains::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
+int64_t bloom_contains::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
                                    CalpontSystemCatalog::ColType& op_ct)
 {
-  return (int64_t)MCS_bloom_contains::getDoubleVal(row, parm, isNull, op_ct);
+  return (int64_t)bloom_contains::getDoubleVal(row, parm, isNull, op_ct);
 }
 
-bool MCS_bloom_contains::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+bool bloom_contains::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
   isNull = true;
   return false;

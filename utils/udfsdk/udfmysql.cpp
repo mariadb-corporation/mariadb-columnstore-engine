@@ -38,7 +38,7 @@ static inline void logBloomFilter(auto& bloomFilter)
 {
   std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
   
-  log << "Bloom filter: \n";
+  log << "STUB Bloom filter: \n";
   for (const auto& v : bloomFilter)
   {
     log << std::bitset<8>(v);
@@ -467,7 +467,7 @@ extern "C"
 
     initid->ptr = (char*)data;
 
-    logBloomFilter(data->bloomFilter);
+    //logBloomFilter(data->bloomFilter);
 
     return 0;
   }
@@ -502,7 +502,7 @@ extern "C"
       return result;
     }
 
-    logBloomFilter(data->bloomFilter);
+    //logBloomFilter(data->bloomFilter);
 
     *is_null = 0;
     *length = data->bloomFilter.size();
@@ -512,7 +512,7 @@ extern "C"
   }
 
   // MCS_bloom_contains connector stub
-      my_bool mcs_bloom_contains_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+      my_bool bloom_contains_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 3)
     {
@@ -522,13 +522,28 @@ extern "C"
 
     initid->max_length = 8;
 
-    
+    const char* rawData = args->args[0];
+    unsigned long rawDataSize = args->lengths[0];
+    std::vector<uint8_t> bloomFilter(reinterpret_cast<const uint8_t*>(rawData),
+                            reinterpret_cast<const uint8_t*>(rawData) + rawDataSize);
+
+    //auto hashFuncCount = static_cast<size_t>(*args->args[2]);
+    // auto hashFuncCount = std::strtoull(args->args[2], nullptr, 10);
+    auto hashFuncCount = *reinterpret_cast<const uint64_t*>(args->args[2]);
+
+    auto* data = new BloomData(hashFuncCount);
+    data->bloomFilter = bloomFilter;
+
+    logBloomFilter(data->bloomFilter);
+
+    initid->ptr = (char*)data;
 
     return 0;
   }
 
     void bloom_contains_deinit(UDF_INIT* initid)
   {
+    free(initid->ptr);
   }
 
     void bloom_contains_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
@@ -536,24 +551,32 @@ extern "C"
   {
   }
 
-  //   void mcs_bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
-  // {
-  // }
+    void bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  {
+  }
 
     long long bloom_contains(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
                     char* error __attribute__((unused)))
   {
-    const char* rawData = args->args[0];
-    unsigned long rawDataSize = args->lengths[0];
-    std::vector<uint8_t> bloomFilter(reinterpret_cast<const uint8_t*>(rawData),
-                            reinterpret_cast<const uint8_t*>(rawData) + rawDataSize);
+    struct BloomData* data = (struct BloomData*)initid->ptr;
 
-    auto val = static_cast<uint64_t>(*args->args[1]);
-    auto hashFuncCount = static_cast<size_t>(*args->args[2]);
+    if (data->bloomFilter.empty()) 
+    {
+      *is_null = 1;
+      return 0;
+    }
+    
+    *is_null = 0;
 
-    logBloomFilter(bloomFilter);
+    // auto val = static_cast<uint64_t>(*args->args[1]);
+    auto val = *reinterpret_cast<const uint64_t*>(args->args[1]);
 
-    return bloomFilterContains(val, bloomFilter, hashFuncCount);
+    // std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+    // log << "Value: " << val << "\n";
+
+    //logBloomFilter(data->bloomFilter);
+
+    return bloomFilterContains(val, data->bloomFilter, data->fHashFuncCount);
   }
 
 }

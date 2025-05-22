@@ -6,20 +6,20 @@
 namespace udfsdk
 {
 
-class MCS_bloom_contains : public funcexp::Func
+class bloom_contains : public funcexp::Func
 {
  public:
   /*
    * Constructor. Pass the function name to the base constructor.
    */
-  MCS_bloom_contains() : Func("bloom_contains")
+  bloom_contains() : Func("bloom_contains")
   {
   }
 
   /*
    * Destructor. MCS_add does not need to do anything here to clean up.
    */
-  ~MCS_bloom_contains() override = default;
+  ~bloom_contains() override = default;
 
   /**
    * Decide on the function's operation type

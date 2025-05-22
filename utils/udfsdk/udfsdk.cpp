@@ -68,7 +68,7 @@ FuncMap UDFSDK::UDFMap() const
   // the function names passed to the interface is always in lower case.
   fm["mcs_add"] = new MCS_add();
   fm["mcs_isnull"] = new MCS_isnull();
-  fm["mcs_bloom_contains"] = new MCS_bloom_contains();
+  fm["bloom_contains"] = new bloom_contains();
 
   return fm;
 }

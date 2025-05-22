@@ -18,7 +18,7 @@ struct BloomData
 
   }
 
-  std::vector<uint8_t> bloomFilter = std::vector<uint8_t>();;
+  std::vector<uint8_t> bloomFilter = std::vector<uint8_t>();
   size_t fHashFuncCount;
 };
 
@@ -39,9 +39,9 @@ inline void addValueToBloomFilter(const T& val, Data& data)
 }
 
 template<typename T>
-inline bool bloomFilterContains(const T& val, const std::vector<uint8_t>& bloomFilter, const size_t hashFuncCount)
+inline int64_t bloomFilterContains(const T& val, const std::vector<uint8_t>& bloomFilter, const size_t hashFuncCount)
 {
-    if (bloomFilter.empty()) return false;
+    if (bloomFilter.empty()) return 0;
 
     uint64_t blockIdxHash = XXH3_64bits(reinterpret_cast<const void*>(&val), sizeof(val)) % bloomFilter.size();
 
@@ -53,11 +53,11 @@ inline bool bloomFilterContains(const T& val, const std::vector<uint8_t>& bloomF
     for (size_t i = 0; i < hashFuncCount; ++i) {
         size_t bitIdx = (valHash1 + i * valHash2) % 8;
         if ((block & (1 << bitIdx)) == 0) {
-            return false;
+            return 0;
         }
     }
 
-    return true;
+    return 1;
 }
 
 
