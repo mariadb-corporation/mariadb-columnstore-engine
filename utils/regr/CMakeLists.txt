@@ -23,21 +23,11 @@ add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 columnstore_library(regr ${regr_LIB_SRCS})
 columnstore_link(regr PRIVATE loggingcpp)
 
-install(
-    TARGETS regr
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
-
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
 add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
 add_dependencies(regr_mysql external_boost)
 
-install(
-    TARGETS regr_mysql
-    DESTINATION ${MARIADB_PLUGINDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_install_target(regr_mysql ${MARIADB_PLUGINDIR})
 
 set_target_properties(regr_mysql PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)

@@ -30,7 +30,7 @@ add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
 
 add_dependencies(we_bulk loggingcpp)
 
-target_link_libraries(we_bulk ${NETSNMP_LIBRARIES})
+columnstore_link(we_bulk ${NETSNMP_LIBRARIES})
 
 remove_definitions(-D_FILE_OFFSET_BITS=64)
 
@@ -38,9 +38,9 @@ remove_definitions(-D_FILE_OFFSET_BITS=64)
 
 set(cpimport.bin_SRCS cpimport.cpp)
 
-add_executable(cpimport.bin ${cpimport.bin_SRCS})
+columnstore_executable(cpimport.bin ${cpimport.bin_SRCS})
 add_dependencies(cpimport.bin marias3)
-target_link_libraries(
+columnstore_link(
     cpimport.bin
     ${ENGINE_LDFLAGS}
     ${NETSNMP_LIBRARIES}
@@ -48,10 +48,4 @@ target_link_libraries(
     ${S3API_DEPS}
     we_bulk
     we_xml
-)
-
-install(
-    TARGETS cpimport.bin
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
 )

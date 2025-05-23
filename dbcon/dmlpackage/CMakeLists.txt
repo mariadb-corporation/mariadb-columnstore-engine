@@ -42,9 +42,3 @@ columnstore_library(
 )
 
 add_dependencies(dmlpackage loggingcpp)
-
-install(
-    TARGETS dmlpackage
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)

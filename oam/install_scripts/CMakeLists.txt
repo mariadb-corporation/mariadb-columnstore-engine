@@ -131,49 +131,37 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcssavebrm.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslog.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslog" @ONLY)
 
-install(
-    PROGRAMS columnstore-post-install
-             columnstore-pre-uninstall
-             columnstore_run.sh
-             post-mysql-install
-             post-mysqld-install
-             columnstoreSyslogSetup.sh
-             mcs-stop-controllernode.sh
-             mcs-loadbrm.py
-             mcs-savebrm.py
-             mariadb-columnstore-start.sh
-             mariadb-columnstore-stop.sh
-             loop_process_starter.sh
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_install_program(columnstore-post-install ${ENGINE_BINDIR})
+columnstore_install_program(columnstore-pre-uninstall ${ENGINE_BINDIR})
+columnstore_install_program(columnstore_run.sh ${ENGINE_BINDIR})
+columnstore_install_program(post-mysql-install ${ENGINE_BINDIR})
+columnstore_install_program(post-mysqld-install ${ENGINE_BINDIR})
+columnstore_install_program(columnstoreSyslogSetup.sh ${ENGINE_BINDIR})
+columnstore_install_program(mcs-stop-controllernode.sh ${ENGINE_BINDIR})
+columnstore_install_program(mcs-loadbrm.py ${ENGINE_BINDIR})
+columnstore_install_program(mcs-savebrm.py ${ENGINE_BINDIR})
+columnstore_install_program(mariadb-columnstore-start.sh ${ENGINE_BINDIR})
+columnstore_install_program(mariadb-columnstore-stop.sh ${ENGINE_BINDIR})
+columnstore_install_program(loop_process_starter.sh ${ENGINE_BINDIR})
 
-install(
-    FILES mariadb-columnstore.service
-          columnstoreAlias
-          columnstoreSyslog
-          columnstoreSyslog7
-          columnstoreSyslog-ng
-          columnstoreLogRotate
-          myCnf-include-args.text
-          myCnf-exclude-args.text
-          mcs-workernode.service
-          mcs-controllernode.service
-          mcs-primproc.service
-          mcs-writeengineserver.service
-          mcs-dmlproc.service
-          mcs-ddlproc.service
-          mcs-loadbrm.service
-          mcs-storagemanager.service
-    DESTINATION ${ENGINE_SUPPORTDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_install_file(mariadb-columnstore.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(columnstoreAlias ${ENGINE_SUPPORTDIR})
+columnstore_install_file(columnstoreSyslog ${ENGINE_SUPPORTDIR})
+columnstore_install_file(columnstoreSyslog7 ${ENGINE_SUPPORTDIR})
+columnstore_install_file(columnstoreSyslog-ng ${ENGINE_SUPPORTDIR})
+columnstore_install_file(columnstoreLogRotate ${ENGINE_SUPPORTDIR})
+columnstore_install_file(myCnf-include-args.text ${ENGINE_SUPPORTDIR})
+columnstore_install_file(myCnf-exclude-args.text ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-workernode.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-controllernode.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-primproc.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-writeengineserver.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-dmlproc.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-ddlproc.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-loadbrm.service ${ENGINE_SUPPORTDIR})
+columnstore_install_file(mcs-storagemanager.service ${ENGINE_SUPPORTDIR})
 
-install(
-    FILES module
-    DESTINATION ${ENGINE_DATADIR}/local
-    COMPONENT columnstore-engine
-)
+columnstore_install_file(module ${ENGINE_DATADIR}/local)
 
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_FOUND)

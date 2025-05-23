@@ -19,8 +19,4 @@ set(udf_mysql_LIB_SRCS udfmysql.cpp)
 
 add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
 
-install(
-    TARGETS udf_mysql
-    DESTINATION ${MARIADB_PLUGINDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_install_target(udf_mysql ${MARIADB_PLUGINDIR})

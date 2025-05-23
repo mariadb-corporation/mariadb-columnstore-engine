@@ -26,7 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stack>
 #include <vector>
-
+#include "basic/string_utils.h"
 #include "idb_mysql.h"
 #include "ha_mcs_sysvars.h"
 
@@ -35,6 +35,8 @@
 struct st_ha_create_information;
 class ha_columnstore_select_handler;
 class ha_columnstore_derived_handler;
+
+#include "basic/string_utils.h"
 
 #include "configcpp.h"
 #include "idberrorinfo.h"
@@ -117,7 +119,8 @@ struct gp_walk_info
   std::vector<execplan::ReturnedColumn*> localCols;
   std::stack<execplan::ReturnedColumn*> rcWorkStack;
   std::stack<execplan::ParseTree*> ptWorkStack;
-  boost::shared_ptr<execplan::SimpleColumn> scsp; // while defined as SSCP, it is used as SRCP, nothing specific to SimpleColumn is used in use sites.
+  boost::shared_ptr<execplan::SimpleColumn> scsp;  // while defined as SSCP, it is used as SRCP, nothing
+                                                   // specific to SimpleColumn is used in use sites.
   uint32_t sessionid;
   bool fatalParseError;
   std::string parseErrorText;
@@ -227,7 +230,6 @@ struct gp_walk_info
   {
   }
   ~gp_walk_info();
-
 };
 
 struct SubQueryChainHolder;
@@ -237,7 +239,7 @@ struct ext_cond_info
   // circular dependency on header inclusion with ha_subquery.h.
   boost::shared_ptr<SubQueryChainHolder> chainHolder;
   gp_walk_info gwi;
-  ext_cond_info(long timeZone); // needs knowledge on SubQueryChainHolder, will be defined elsewhere
+  ext_cond_info(long timeZone);  // needs knowledge on SubQueryChainHolder, will be defined elsewhere
 };
 
 struct cal_table_info

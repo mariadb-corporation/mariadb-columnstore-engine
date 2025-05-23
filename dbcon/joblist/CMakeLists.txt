@@ -70,18 +70,7 @@ target_include_directories(
 )
 add_dependencies(joblist loggingcpp)
 
-install(
-    TARGETS joblist
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
-
 if(WITH_ORDERBY_UT)
-    add_executable(job_orderby_tests orderby-tests.cpp)
-    target_link_libraries(job_orderby_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    install(
-        TARGETS job_orderby_tests
-        DESTINATION ${ENGINE_BINDIR}
-        COMPONENT columnstore-engine
-    )
+    columnstore_executable(job_orderby_tests orderby-tests.cpp)
+    columnstore_link(job_orderby_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
 endif()

@@ -30,82 +30,80 @@ if(WITH_UNITTESTS)
     add_executable(rowgroup_tests rowgroup-tests.cpp)
     target_compile_options(rowgroup_tests PRIVATE -Wno-sign-compare)
     add_dependencies(rowgroup_tests googletest)
-    target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rowgroup_tests TEST_PREFIX columnstore:)
 
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
-    target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
     add_dependencies(mcs_decimal_tests googletest)
-    target_link_libraries(mcs_decimal_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(mcs_decimal_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET mcs_decimal_tests TEST_PREFIX columnstore:)
 
     add_executable(dataconvert_tests dataconvert-tests.cpp)
     add_dependencies(dataconvert_tests googletest)
-    target_link_libraries(dataconvert_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(dataconvert_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET dataconvert_tests TEST_PREFIX columnstore:)
 
     add_executable(rebuild_em_tests rebuild-em-tests.cpp)
     add_dependencies(rebuild_em_tests googletest)
-    target_link_libraries(rebuild_em_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_WRITE_LIBS})
+    columnstore_link(rebuild_em_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_WRITE_LIBS})
     gtest_add_tests(TARGET rebuild_em_tests TEST_PREFIX columnstore:)
 
     add_executable(compression_tests compression-tests.cpp)
     add_dependencies(compression_tests googletest)
-    target_link_libraries(compression_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_WRITE_LIBS})
+    columnstore_link(compression_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_WRITE_LIBS})
     gtest_add_tests(TARGET compression_tests TEST_PREFIX columnstore:)
 
     add_executable(column_scan_filter_tests primitives_column_scan_and_filter.cpp)
     target_compile_options(column_scan_filter_tests PRIVATE -Wno-error -Wno-sign-compare)
     add_dependencies(column_scan_filter_tests googletest)
-    target_link_libraries(
-        column_scan_filter_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc
-    )
+    columnstore_link(column_scan_filter_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET column_scan_filter_tests TEST_PREFIX columnstore:)
 
     add_executable(simd_processors simd_processors.cpp)
     target_compile_options(simd_processors PRIVATE -Wno-error)
     add_dependencies(simd_processors googletest)
-    target_link_libraries(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    columnstore_link(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
 
     add_executable(fair_threadpool_test fair_threadpool.cpp)
     add_dependencies(fair_threadpool_test googletest)
-    target_link_libraries(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    columnstore_link(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET fair_threadpool_test TEST_PREFIX columnstore:)
 
     add_executable(counting_allocator counting_allocator.cpp)
     target_compile_options(counting_allocator PRIVATE -Wno-sign-compare)
     add_dependencies(counting_allocator googletest)
-    target_link_libraries(counting_allocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    columnstore_link(counting_allocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET counting_allocator TEST_PREFIX columnstore:)
 
     add_executable(poolallocator poolallocator.cpp)
     target_compile_options(poolallocator PRIVATE -Wno-sign-compare)
     add_dependencies(poolallocator googletest)
-    target_link_libraries(poolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    columnstore_link(poolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET poolallocator TEST_PREFIX columnstore:)
 
     add_executable(stlpoolallocator stlpoolallocator.cpp)
     target_compile_options(stlpoolallocator PRIVATE -Wno-sign-compare)
     add_dependencies(stlpoolallocator googletest)
-    target_link_libraries(stlpoolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    columnstore_link(stlpoolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET stlpoolallocator TEST_PREFIX columnstore:)
 
     add_executable(comparators_tests comparators-tests.cpp)
-    target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    columnstore_link(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
     add_executable(bytestream bytestream.cpp)
-    target_link_libraries(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:bytestream COMMAND bytestream)
 
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
-    target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    columnstore_link(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 endif()
@@ -116,7 +114,7 @@ if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     target_include_directories(
         primitives_scan_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE}
     )
-    target_link_libraries(
+    columnstore_link(
         primitives_scan_bench
         ${ENGINE_LDFLAGS}
         ${ENGINE_WRITE_LIBS}

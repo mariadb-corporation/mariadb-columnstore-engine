@@ -38,6 +38,8 @@ using namespace boost::algorithm;
 #include "calpontselectexecutionplan.h"
 #include "columnresult.h"
 
+#include "basic/string_utils.h"
+
 #include "joblisttypes.h"
 
 #define DATACONVERT_DLLEXPORT

@@ -71,6 +71,8 @@ if(COMMAND mysql_add_plugin)
         CONFIG
         columnstore.cnf
     )
+    add_to_debian_install_file(${MARIADB_MYCNFDIR}/columnstore.cnf)
+
 else()
     message("Adding plugin via CMake")
     add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
@@ -80,7 +82,7 @@ else()
     add_dependencies(ha_columnstore marias3)
     add_definitions(-DMYSQL_DYNAMIC_PLUGIN -DPLUGIN_COLUMNSTORE_VERSION="${PACKAGE_VERSION}")
 
-    target_link_libraries(
+    columnstore_link(
         ha_columnstore
         ${S3API_DEPS}
         ${ENGINE_LDFLAGS}
@@ -90,31 +92,19 @@ else()
         threadpool
     )
 
-    install(
-        TARGETS ha_columnstore
-        DESTINATION ${MARIADB_PLUGINDIR}
-        COMPONENT columnstore-engine
-    )
+    columnstore_install_target(ha_columnstore ${MARIADB_PLUGINDIR})
 
     # define this dummy target for standalone builds (ie, when mysql_add_plugin doesn't exist)
     add_custom_target(columnstore DEPENDS ha_columnstore)
-    install(
-        FILES columnstore.cnf
-        DESTINATION ${MARIADB_MYCNFDIR}
-        COMPONENT columnstore-engine
-    )
+    columnstore_install_file(columnstore.cnf ${MARIADB_MYCNFDIR})
 endif()
 
 if(TARGET columnstore)
-    install(
-        FILES syscatalog_mysql.sql dumpcat_mysql.sql calsetuserpriority.sql calremoveuserpriority.sql
-              calshowprocesslist.sql columnstore_info.sql
-        DESTINATION ${ENGINE_SUPPORTDIR}
-        COMPONENT columnstore-engine
-    )
-    install(
-        PROGRAMS install_mcs_mysql.sh
-        DESTINATION ${ENGINE_SBINDIR}
-        COMPONENT columnstore-engine
-    )
+    columnstore_install_file(syscatalog_mysql.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_file(dumpcat_mysql.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_file(calsetuserpriority.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_file(calremoveuserpriority.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_file(calshowprocesslist.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_file(columnstore_info.sql ${ENGINE_SUPPORTDIR})
+    columnstore_install_program(install_mcs_mysql.sh ${ENGINE_SBINDIR})
 endif()

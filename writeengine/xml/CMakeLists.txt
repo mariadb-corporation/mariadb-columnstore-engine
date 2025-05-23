@@ -9,5 +9,3 @@ add_definitions(-D_FILE_OFFSET_BITS=64)
 add_library(we_xml STATIC ${we_xml_STAT_SRCS})
 
 add_dependencies(we_xml loggingcpp)
-
-install(TARGETS we_xml DESTINATION ${ENGINE_LIBDIR})

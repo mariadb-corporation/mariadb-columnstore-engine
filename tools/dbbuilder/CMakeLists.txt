@@ -4,12 +4,6 @@ include_directories(${ENGINE_COMMON_INCLUDES})
 
 set(dbbuilder_SRCS dbbuilder.cpp systemcatalog.cpp)
 
-add_executable(dbbuilder ${dbbuilder_SRCS})
+columnstore_executable(dbbuilder ${dbbuilder_SRCS})
 
-target_link_libraries(dbbuilder ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})
-
-install(
-    TARGETS dbbuilder
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(dbbuilder ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})

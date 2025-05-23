@@ -26,6 +26,7 @@
 #include <stdexcept>
 using namespace std;
 
+#include "basic/string_utils.h"
 #include <boost/algorithm/string.hpp>
 
 #include "mcsconfig.h"
@@ -202,7 +203,11 @@ int main(int argc, char* argv[])
             (iter->second).second = true;
             isUpgrade = true;
           }
-          messageHandler("", std::string("Upgrade flag is ") + std::to_string(isUpgrade) + std::string(" after checking upgrade candidate OID ") + oam.itoa(iter->first) + std::string(" "), false);
+          messageHandler("",
+                         std::string("Upgrade flag is ") + std::to_string(isUpgrade) +
+                             std::string(" after checking upgrade candidate OID ") + oam.itoa(iter->first) +
+                             std::string(" "),
+                         false);
         }
 
         if (!isUpgrade)

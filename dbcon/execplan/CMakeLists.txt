@@ -49,10 +49,4 @@ columnstore_library(execplan ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 
-target_link_libraries(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron)
-
-install(
-    TARGETS execplan
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron)

@@ -16,12 +16,6 @@ set(common_LIB_SRCS
 
 columnstore_library(common ${common_LIB_SRCS})
 
-target_link_libraries(common boost_filesystem configcpp loggingcpp messageqcpp)
+columnstore_link(common boost_filesystem configcpp loggingcpp messageqcpp)
 
 add_dependencies(common loggingcpp)
-
-install(
-    TARGETS common
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)

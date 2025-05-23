@@ -13,13 +13,6 @@ set(dbbc_STAT_SRCS
     stats.cpp
     fsutils.cpp
 )
-
-# libdbbc_a_CXXFLAGS = $(march_flags) $(AM_CXXFLAGS)
-
-add_library(dbbc STATIC ${dbbc_STAT_SRCS})
-
-add_dependencies(dbbc loggingcpp)
-
-target_link_libraries(dbbc ${NETSNMP_LIBRARIES})
-
-install(TARGETS dbbc DESTINATION ${ENGINE_LIBDIR})
+set(COLUMNSTORE_STATIC_LIBRARIES YES)
+columnstore_library(dbbc ${dbbc_STAT_SRCS})
+columnstore_link(dbbc ${NETSNMP_LIBRARIES} loggingcpp)

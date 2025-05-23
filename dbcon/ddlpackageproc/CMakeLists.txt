@@ -16,10 +16,4 @@ columnstore_library(ddlpackageproc ${ddlpackageproc_LIB_SRCS})
 
 add_dependencies(ddlpackageproc loggingcpp)
 
-target_link_libraries(ddlpackageproc ${NETSNMP_LIBRARIES})
-
-install(
-    TARGETS ddlpackageproc
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(ddlpackageproc ${NETSNMP_LIBRARIES})
