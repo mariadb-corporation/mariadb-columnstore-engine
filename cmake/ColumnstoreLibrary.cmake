@@ -88,7 +88,6 @@ macro(columnstore_library libname)
     else()
         columnstore_shared_library(${libname} ${ARGN})
     endif()
-
 endmacro()
 
 macro(columnstore_link libname)
