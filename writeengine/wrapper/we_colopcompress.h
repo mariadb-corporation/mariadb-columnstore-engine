@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "we_colop.h"
 #include "we_chunkmanager.h"
@@ -45,35 +45,35 @@ class ColumnOpCompress0 : public ColumnOp
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~ColumnOpCompress0();
+  EXPORT ~ColumnOpCompress0() override;
 
   /**
    * @brief virtual method in ColumnOp
    */
   IDBDataFile* openFile(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                         std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const;
+                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  bool abbreviatedExtent(IDBDataFile* pFile, int colWidth) const;
+  bool abbreviatedExtent(IDBDataFile* pFile, int colWidth) const override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  int blocksInFile(IDBDataFile* pFile) const;
+  int blocksInFile(IDBDataFile* pFile) const override;
 
  protected:
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo) override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  int saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo);
+  int saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo) override;
 
  private:
 };
@@ -85,47 +85,47 @@ class ColumnOpCompress1 : public ColumnOp
   /**
    * @brief Constructor
    */
-  EXPORT ColumnOpCompress1(uint32_t compressionType, Log* logger = 0);
+  EXPORT ColumnOpCompress1(uint32_t compressionType, Log* logger = nullptr);
 
   /**
    * @brief Default Destructor
    */
-  EXPORT virtual ~ColumnOpCompress1();
+  EXPORT ~ColumnOpCompress1() override;
 
   /**
    * @brief virtual method in FileOp
    */
-  EXPORT int flushFile(int rc, std::map<FID, FID>& columnOids);
+  EXPORT int flushFile(int rc, std::map<FID, FID>& columnOids) override;
 
   /**
    * @brief virtual method in FileOp
    */
   int expandAbbrevColumnExtent(IDBDataFile* pFile, uint16_t dbRoot, const uint8_t* emptyVal, int width,
-                               execplan::CalpontSystemCatalog::ColDataType colDataType);
+                               execplan::CalpontSystemCatalog::ColDataType colDataType) override;
 
   /**
    * @brief virtual method in ColumnOp
    */
   IDBDataFile* openFile(const Column& column, uint16_t dbRoot, uint32_t partition, uint16_t segment,
                         std::string& segFile, bool useTmpSuffix, const char* mode = "r+b",
-                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const;
+                        int ioBuffSize = DEFAULT_BUFSIZ, bool isReadOnly = false) const override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  bool abbreviatedExtent(IDBDataFile* pFile, int colWidth) const;
+  bool abbreviatedExtent(IDBDataFile* pFile, int colWidth) const override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  int blocksInFile(IDBDataFile* pFile) const;
+  int blocksInFile(IDBDataFile* pFile) const override;
 
   //   void chunkManager(ChunkManager* cm);
 
   /**
    * @brief virtual method in FileOp
    */
-  void setTransId(const TxnID& transId)
+  void setTransId(const TxnID& transId) override
   {
     ColumnOp::setTransId(transId);
 
@@ -133,12 +133,12 @@ class ColumnOpCompress1 : public ColumnOp
       m_chunkManager->setTransId(transId);
   }
 
-  void setBulkFlag(bool isBulkLoad)
+  void setBulkFlag(bool isBulkLoad) override
   {
     m_chunkManager->setBulkFlag(isBulkLoad);
   };
 
-  void setFixFlag(bool isFix)
+  void setFixFlag(bool isFix) override
   {
     m_chunkManager->setFixFlag(isFix);
   };
@@ -147,22 +147,22 @@ class ColumnOpCompress1 : public ColumnOp
   /**
    * @brief virtual method in FileOp
    */
-  int updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid);
+  int updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid) override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  void closeColumnFile(Column& column) const;
+  void closeColumnFile(Column& column) const override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo);
+  int readBlock(IDBDataFile* pFile, unsigned char* readBuf, const uint64_t fbo) override;
 
   /**
    * @brief virtual method in ColumnOp
    */
-  int saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo);
+  int saveBlock(IDBDataFile* pFile, const unsigned char* writeBuf, const uint64_t fbo) override;
 
   /**
    * @brief Set the IsInsert flag in the ChunkManager.

@@ -54,19 +54,19 @@ class ColumnBufferCompressed : public ColumnBuffer
 
   /** @brief default Destructor
    */
-  virtual ~ColumnBufferCompressed();
+  ~ColumnBufferCompressed() override;
 
   /** @brief Final flushing of data and headers prior to closing the file.
    * @param bTruncFile is file to be truncated
    * @return NO_ERROR or success
    */
-  virtual int finishFile(bool bTruncFile);
+  int finishFile(bool bTruncFile) override;
 
   /** @brief Reset the ColBuf to-be-compressed buffer prior to importing the
    * next extent.
    * @param startFileOffset Byte offset where next extent chunk will start
    */
-  virtual int resetToBeCompressedColBuf(long long& startFileOffset);
+  int resetToBeCompressedColBuf(long long& startFileOffset) override;
 
   /** @brief file mutator
    *
@@ -74,7 +74,7 @@ class ColumnBufferCompressed : public ColumnBuffer
    * @param startHwm Starting HWM for cFile
    * @param hdrs     Headers with ptr information.
    */
-  virtual int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs);
+  int setDbFile(IDBDataFile* const cFile, HWM startHwm, const char* hdrs) override;
 
   /** @brief Write data to FILE
    *
@@ -83,7 +83,7 @@ class ColumnBufferCompressed : public ColumnBuffer
    * @param fillUpWEmpties The flag to fill the buffer with empty magic
    *                       values up to the block boundary.
    */
-  virtual int writeToFile(int startOffset, int writeSize, bool fillUpWEmpties = false);
+  int writeToFile(int startOffset, int writeSize, bool fillUpWEmpties = false) override;
 
  private:
   // Disable copy constructor and assignment operator by declaring and

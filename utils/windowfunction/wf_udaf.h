@@ -55,18 +55,18 @@ class WF_udaf : public WindowFunctionType
   }
   WF_udaf(WF_udaf& rhs);
   // pure virtual in base
-  void operator()(int64_t b, int64_t e, int64_t c);
-  WindowFunctionType* clone() const;
-  void resetData();
-  void parseParms(const std::vector<execplan::SRCP>&);
-  virtual bool dropValues(int64_t, int64_t);
+  void operator()(int64_t b, int64_t e, int64_t c) override;
+  WindowFunctionType* clone() const override;
+  void resetData() override;
+  void parseParms(const std::vector<execplan::SRCP>&) override;
+  bool dropValues(int64_t, int64_t) override;
 
   mcsv1sdk::mcsv1Context& getContext()
   {
     return fUDAFContext;
   }
 
-  bool getInterrupted()
+  bool getInterrupted() const
   {
     return bInterrupted;
   }
@@ -76,7 +76,7 @@ class WF_udaf : public WindowFunctionType
     return &bInterrupted;
   }
 
-  bool getDistinct()
+  bool getDistinct() const
   {
     return fDistinct;
   }
@@ -107,4 +107,3 @@ class WF_udaf : public WindowFunctionType
 };
 
 }  // namespace windowfunction
-

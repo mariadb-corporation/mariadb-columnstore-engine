@@ -42,7 +42,13 @@
 namespace rwlock
 {
 const std::array<const std::string, 7> RWLockNames = {{
-    "all", "VSS", "ExtentMap", "FreeList", "VBBM", "CopyLocks", "ExtentMapIndex",
+    "all",
+    "VSS",
+    "ExtentMap",
+    "FreeList",
+    "VBBM",
+    "CopyLocks",
+    "ExtentMapIndex",
 }};
 
 /// the layout of the shmseg
@@ -70,7 +76,9 @@ struct LockState
 class RWLockShmImpl
 {
  public:
-  static RWLockShmImpl* makeRWLockShmImpl(int key, bool* excl = 0);
+  ~RWLockShmImpl() = delete;
+
+  static RWLockShmImpl* makeRWLockShmImpl(int key, bool* excl = nullptr);
 
   boost::interprocess::shared_memory_object fStateShm;
   boost::interprocess::mapped_region fRegion;
@@ -83,7 +91,6 @@ class RWLockShmImpl
 
  private:
   explicit RWLockShmImpl(int key, bool excl = false);
-  ~RWLockShmImpl();
   RWLockShmImpl(const RWLockShmImpl& rhs);
   RWLockShmImpl& operator=(const RWLockShmImpl& rhs);
   std::string fKeyString;
@@ -92,7 +99,7 @@ class RWLockShmImpl
 class not_excl : public std::exception
 {
  public:
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "not_excl";
   }
@@ -101,7 +108,7 @@ class not_excl : public std::exception
 class wouldblock : public std::exception
 {
  public:
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "wouldblock";
   }
@@ -143,7 +150,7 @@ class RWLock
    * this is not the first instance, it will throw not_excl.  The intent
    * is similar to the IPC_EXCL flag in the sem/shm implementations.
    */
-  EXPORT explicit RWLock(int key, bool* excl = 0);
+  EXPORT explicit RWLock(int key, bool* excl = nullptr);
 
   EXPORT ~RWLock();
 
@@ -184,7 +191,7 @@ class RWLock
    * a non-NULL LockState struct.  This is a specialization for supporting
    * the RWLockMonitor class.
    */
-  EXPORT bool timed_write_lock(const struct timespec& ts, struct LockState* state = 0);
+  EXPORT bool timed_write_lock(const struct timespec& ts, struct LockState* state = nullptr);
 
   /** @brief Release a write lock.
    *
@@ -262,4 +269,3 @@ class RWLock
 }  // namespace rwlock
 
 #undef EXPORT
-

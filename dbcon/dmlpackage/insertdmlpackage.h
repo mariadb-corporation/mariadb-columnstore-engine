@@ -53,19 +53,19 @@ class InsertDMLPackage : public CalpontDMLPackage
 
   /** @brief dtor
    */
-  EXPORT virtual ~InsertDMLPackage();
+  EXPORT ~InsertDMLPackage() override;
 
   /** @brief write a InsertDMLPackage to a ByteStream
    *
    *  @param bytestream the ByteStream to write to
    */
-  EXPORT int write(messageqcpp::ByteStream& bytestream);
+  EXPORT int write(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief read InsertDMLPackage from bytestream
    *
    * @param bytestream the ByteStream to read from
    */
-  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  EXPORT int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief read InsertDMLPackage metadata from bytestream
    *
@@ -85,7 +85,7 @@ class InsertDMLPackage : public CalpontDMLPackage
    * @param columns the number of columns in the buffer
    * @param rows the number of rows in the buffer
    */
-  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
+  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows) override;
 
   /** @brief build a InsertDMLPackage from MySQL buffer
    *
@@ -95,13 +95,13 @@ class InsertDMLPackage : public CalpontDMLPackage
    * @param rows  number of rows to be touched
    */
   EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns,
-                                  int rows, NullValuesBitset& nullValues);
+                                  int rows, NullValuesBitset& nullValues) override;
 
   /** @brief build a InsertDMLPackage from a InsertSqlStatement
    *
    * @param sqlStmt the InsertSqlStatement
    */
-  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement) override;
 
   /** @brief Dump the InsertDMLPackage for debugging purposes
    */

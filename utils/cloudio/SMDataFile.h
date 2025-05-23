@@ -27,19 +27,19 @@ namespace idbdatafile
 class SMDataFile : public IDBDataFile
 {
  public:
-  virtual ~SMDataFile();
+  ~SMDataFile() override;
 
-  ssize_t pread(void* ptr, off64_t offset, size_t count);
-  ssize_t read(void* ptr, size_t count);
-  ssize_t write(const void* ptr, size_t count);
-  int seek(off64_t offset, int whence);
-  int truncate(off64_t length);
-  int fallocate(int mode, off64_t offset, off64_t length);
-  off64_t size();
-  off64_t tell();
-  int flush();
-  time_t mtime();
-  int close();
+  ssize_t pread(void* ptr, off64_t offset, size_t count) override;
+  ssize_t read(void* ptr, size_t count) override;
+  ssize_t write(const void* ptr, size_t count) override;
+  int seek(off64_t offset, int whence) override;
+  int truncate(off64_t length) override;
+  int fallocate(int mode, off64_t offset, off64_t length) override;
+  off64_t size() override;
+  off64_t tell() override;
+  int flush() override;
+  time_t mtime() override;
+  int close() override;
 
   // for testing only
   SMDataFile(const char* fname, int openmode, size_t fake_size);

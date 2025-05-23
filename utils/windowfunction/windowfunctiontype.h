@@ -109,14 +109,14 @@ class WindowFunctionType
 {
  public:
   // @brief WindowFunctionType constructor
-  WindowFunctionType(int id = 0, const std::string& name = "")
+  explicit WindowFunctionType(int id = 0, const std::string& name = "")
    : fFunctionId(id), fFunctionName(name), fFrameUnit(0){};
 
   // use default copy construct
   // WindowFunctionType(const WindowFunctionType&);
 
   // @brief WindowFunctionType destructor
-  virtual ~WindowFunctionType(){};
+  virtual ~WindowFunctionType() = default;
 
   // @brief virtual operator(begin, end, current, data, row)
   virtual void operator()(int64_t, int64_t, int64_t) = 0;
@@ -216,7 +216,7 @@ class WindowFunctionType
 
   // utility methods
   template <typename T>
-  void getValue(uint64_t, T&, CDT* cdt = NULL);
+  void getValue(uint64_t, T&, CDT* cdt = nullptr);
   template <typename T>
   void setValue(int, int64_t, int64_t, int64_t, T* = NULL);
   template <typename T>
@@ -303,4 +303,3 @@ class WindowFunctionType
 extern std::map<int, std::string> colType2String;
 
 }  // namespace windowfunction
-

@@ -176,15 +176,15 @@ class SimpleScalarTransformer : public SubQueryTransformer
   /** @brief SimpleScalarTransformer constructor
    *  @param SubQueryTransformer
    */
-  SimpleScalarTransformer(const SubQueryTransformer& rhs);
+  explicit SimpleScalarTransformer(const SubQueryTransformer& rhs);
 
   /** @brief SimpleScalarTransformer destructor
    */
-  virtual ~SimpleScalarTransformer();
+  ~SimpleScalarTransformer() override;
 
   /** @brief virtual void run method
    */
-  void run();
+  void run() override;
 
   /** @brief virtual get scalar result
    *  @param jobInfo
@@ -222,4 +222,3 @@ class SimpleScalarTransformer : public SubQueryTransformer
 };
 
 }  // namespace joblist
-

@@ -34,16 +34,16 @@ namespace joblist
 class FilterCommandJL : public CommandJL
 {
  public:
-  FilterCommandJL(const FilterStep&);
-  virtual ~FilterCommandJL();
+  explicit FilterCommandJL(const FilterStep&);
+  ~FilterCommandJL() override;
 
-  void setLBID(uint64_t rid, uint32_t dbroot);
-  uint8_t getTableColumnType();
-  CommandType getCommandType();
-  std::string toString();
-  void createCommand(messageqcpp::ByteStream& bs) const;
-  void runCommand(messageqcpp::ByteStream& bs) const;
-  uint16_t getWidth();
+  void setLBID(uint64_t rid, uint32_t dbroot) override;
+  uint8_t getTableColumnType() override;
+  CommandType getCommandType() override;
+  std::string toString() override;
+  void createCommand(messageqcpp::ByteStream& bs) const override;
+  void runCommand(messageqcpp::ByteStream& bs) const override;
+  uint16_t getWidth() override;
   uint8_t getBOP() const
   {
     return fBOP;

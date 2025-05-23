@@ -217,10 +217,10 @@ class JobList
 class TupleJobList : public JobList
 {
  public:
-  TupleJobList(bool isEM = false);
-  virtual ~TupleJobList();
+  explicit TupleJobList(bool isEM = false);
+  ~TupleJobList() override;
 
-  EXPORT uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&);
+  EXPORT uint32_t projectTable(execplan::CalpontSystemCatalog::OID, messageqcpp::ByteStream&) override;
   EXPORT const rowgroup::RowGroup& getOutputRowGroup() const;
   TupleDeliveryStep* getDeliveryStep()
   {
@@ -231,7 +231,7 @@ class TupleJobList : public JobList
     return fQuery;
   }
   void setDeliveryFlag(bool f);
-  void abort();
+  void abort() override;
 
   /** Does some light validation on the final joblist
    *
@@ -239,7 +239,7 @@ class TupleJobList : public JobList
    * there's one and only one projection step, and that its fake table OID is 100.
    * @note The fake OID check is disabled atm because it's not always 100 although it's supposed to be.
    */
-  EXPORT void validate() const;
+  EXPORT void validate() const override;
 
  private:
   // defaults okay
@@ -255,4 +255,3 @@ typedef boost::shared_ptr<TupleJobList> STJLP;
 }  // namespace joblist
 
 #undef EXPORT
-

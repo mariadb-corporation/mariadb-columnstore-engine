@@ -60,14 +60,14 @@ void set_original_query(THD* thd, char* query);
 mcs_compression_type_t get_compression_type(THD* thd);
 void set_compression_type(THD* thd, ulong value);
 
-void* get_fe_conn_info_ptr(THD* thd = NULL);
-void set_fe_conn_info_ptr(void* ptr, THD* thd = NULL);
+void* get_fe_conn_info_ptr(THD* thd = nullptr);
+void set_fe_conn_info_ptr(void* ptr, THD* thd = nullptr);
 
-ulonglong get_original_optimizer_flags(THD* thd = NULL);
-void set_original_optimizer_flags(ulonglong ptr, THD* thd = NULL);
+ulonglong get_original_optimizer_flags(THD* thd = nullptr);
+void set_original_optimizer_flags(ulonglong ptr, THD* thd = nullptr);
 
-ulonglong get_original_option_bits(THD* thd = NULL);
-void set_original_option_bits(ulonglong value, THD* thd = NULL);
+ulonglong get_original_option_bits(THD* thd = nullptr);
+void set_original_option_bits(ulonglong value, THD* thd = nullptr);
 
 mcs_select_handler_mode_t get_select_handler_mode(THD* thd);
 void set_select_handler_mode(THD* thd, ulong value);

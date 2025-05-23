@@ -73,15 +73,14 @@ const int32_t CNX_EXP_TABLE_ID = 999;
 
 struct TupleInfo
 {
-  TupleInfo(uint32_t w = 0, uint32_t o = 0, uint32_t k = -1, uint32_t t = -1, uint32_t s = 0, uint32_t p = 0,
-            execplan::CalpontSystemCatalog::ColDataType dt = execplan::CalpontSystemCatalog::BIT,
-            uint32_t csn = 8)
+  explicit TupleInfo(uint32_t w = 0, uint32_t o = 0, uint32_t k = -1, uint32_t t = -1, uint32_t s = 0,
+                     uint32_t p = 0,
+                     execplan::CalpontSystemCatalog::ColDataType dt = execplan::CalpontSystemCatalog::BIT,
+                     uint32_t csn = 8)
    : width(w), oid(o), key(k), tkey(t), scale(s), precision(p), dtype(dt), csNum(csn)
   {
   }
-  ~TupleInfo()
-  {
-  }
+  ~TupleInfo() = default;
 
   uint32_t width;
   uint32_t oid;
@@ -146,7 +145,7 @@ struct UniqId
    : fId(i), fTable(t), fSchema(s), fView(v), fPseudo(pi), fSubId(l)
   {
   }
-  UniqId(const execplan::SimpleColumn* sc);
+  explicit UniqId(const execplan::SimpleColumn* sc);
   UniqId(int o, const execplan::SimpleColumn* sc);
 
   std::string toString() const;
@@ -193,7 +192,7 @@ struct TupleKeyInfo
 //------------------------------------------------------------------------------
 struct JobInfo
 {
-  JobInfo(ResourceManager* r)
+  explicit JobInfo(ResourceManager* r)
    : rm(r)
    , sessionId(0)
    , txnId(0)
@@ -204,7 +203,7 @@ struct JobInfo
    , fifoSize(rm->getJlFifoSize())
    , logger(new Logger())
    , traceFlags(0)
-   , projectingTableOID(0)
+   , projectingTableOID(nullptr)
    , isExeMgr(false)
    , trace(false)
    , tryTuples(false)
@@ -219,7 +218,7 @@ struct JobInfo
    , subLevel(0)
    , subNum(0)
    , subId(0)
-   , pJobInfo(NULL)
+   , pJobInfo(nullptr)
    , constantFalse(false)
    , cntStarPos(-1)
    , stringScanThreshold(1)

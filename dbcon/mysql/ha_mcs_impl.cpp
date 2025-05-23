@@ -19,6 +19,8 @@
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <string>
 #include <iostream>
 #include <stack>
@@ -129,6 +131,7 @@ using namespace funcexp;
 #include "statistics.h"
 #include "ha_mcs_logging.h"
 #include "ha_subquery.h"
+
 
 namespace cal_impl_if
 {
@@ -2352,8 +2355,18 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
     ByteStream msg;
     ByteStream emsgBs;
 
+    int ntries = 10;
+
+    // XXX: MCOL-5396: unable to reach this code.
     while (true)
     {
+      string emsg;
+      if (ntries < 0)
+      {
+        emsg = "Lost connection to ExeMgr. Please contact your administrator";
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        return ER_INTERNAL_ERROR;
+      }
       try
       {
         ByteStream::quadbyte qb = 4;
@@ -2371,7 +2384,6 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
         emsgBs.restart();
         msg = hndl->exeMgr->read();
         emsgBs = hndl->exeMgr->read();
-        string emsg;
 
         if (msg.length() == 0 || emsgBs.length() == 0)
         {
@@ -2436,6 +2448,10 @@ int ha_mcs::impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack)
         hndl->csc = csc;
 
         ti.conn_hndl = hndl;
+
+	using namespace chrono_literals;
+	std::this_thread::sleep_for(100ms);
+	ntries --;
 
         try
         {
@@ -4239,8 +4255,18 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
     ByteStream msg;
     ByteStream emsgBs;
 
+    int ntries = 10;
+
+    // XXX: MCOL-5396: unable to reach this code.
     while (true)
     {
+      string emsg;
+      if (ntries < 0)
+      {
+        emsg = "Lost connection to ExeMgr. Please contact your administrator";
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        return ER_INTERNAL_ERROR;
+      }
       try
       {
         ByteStream::quadbyte qb = 4;
@@ -4258,7 +4284,6 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
         emsgBs.restart();
         msg = hndl->exeMgr->read();
         emsgBs = hndl->exeMgr->read();
-        string emsg;
 
         if (msg.length() == 0 || emsgBs.length() == 0)
         {
@@ -4325,6 +4350,11 @@ int ha_mcs_impl_group_by_init(mcs_handler_info* handler_info, TABLE* table)
         ci->cal_conn_hndl = hndl;
         ci->cal_conn_hndl_st.pop();
         ci->cal_conn_hndl_st.push(ci->cal_conn_hndl);
+
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(100ms);
+	ntries --;
+
         try
         {
           hndl->connect();
@@ -4943,8 +4973,23 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
     ByteStream msg;
     ByteStream emsgBs;
 
+    int ntries = 10;
+
+    // The issue is MCOL-5396.
+    // The delay below is used to trigger old infinite loop condition and
+    // prove that mitigation works. While it looks like unused code, it is
+    // important enough to have it just in case.
+    // using namespace std::chrono_literals;
+    // std::this_thread::sleep_for(10000ms); // shut PrimProc down now.
     while (true)
     {
+      string emsg;
+      if (ntries < 0)
+      {
+        emsg = "Lost connection to ExeMgr. Please contact your administrator";
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        return ER_INTERNAL_ERROR;
+      }
       try
       {
         ByteStream::quadbyte qb = 4;
@@ -4962,7 +5007,6 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
         emsgBs.restart();
         msg = hndl->exeMgr->read();
         emsgBs = hndl->exeMgr->read();
-        string emsg;
 
         if (msg.length() == 0 || emsgBs.length() == 0)
         {
@@ -5029,6 +5073,10 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
         hndl->csc = csc;
 
         ci->cal_conn_hndl = hndl;
+
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(100ms);
+	ntries --;
 
         try
         {

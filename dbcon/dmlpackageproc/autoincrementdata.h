@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -48,4 +48,3 @@ class AutoincrementData
   OIDNextValue fOidNextValueMap;
   boost::mutex fOIDnextvalLock;
 };
-

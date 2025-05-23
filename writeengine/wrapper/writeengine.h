@@ -20,7 +20,7 @@
 /** @file */
 
 #pragma once
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 // the header file for fd
@@ -66,10 +66,8 @@ struct TxnLBIDRec
   std::vector<BRM::LBID_t> m_LBIDs;
   std::vector<execplan::CalpontSystemCatalog::ColDataType> m_ColDataTypes;
 
-  TxnLBIDRec(){};
-  ~TxnLBIDRec()
-  {
-  }
+  TxnLBIDRec() = default;
+  ~TxnLBIDRec() = default;
   void AddLBID(BRM::LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType& colDataType)
   {
     if (m_LBIDSet.insert(lbid).second)
@@ -92,7 +90,7 @@ struct ColSplitMaxMinInfo
   ColSplitMaxMinInfo(execplan::CalpontSystemCatalog::ColDataType colDataType, int colWidth)
    : fSplitMaxMinInfo{ExtCPInfo(colDataType, colWidth), ExtCPInfo(colDataType, colWidth)}
   {
-    fSplitMaxMinInfoPtrs[0] = fSplitMaxMinInfoPtrs[1] = NULL;  // disable by default.
+    fSplitMaxMinInfoPtrs[0] = fSplitMaxMinInfoPtrs[1] = nullptr;  // disable by default.
   }
 };
 
@@ -246,8 +244,7 @@ class WriteEngineWrapper : public WEObj
    */
   EXPORT int deleteRow(const TxnID& txnid, const std::vector<CSCTypesList>& colExtentsColType,
                        std::vector<ColStructList>& colExtentsStruct, std::vector<void*>& colOldValueList,
-                       std::vector<RIDList>& ridLists, const int32_t tableOid,
-                       bool hasAUXCol = false);
+                       std::vector<RIDList>& ridLists, const int32_t tableOid, bool hasAUXCol = false);
 
   /**
    * @brief Delete a list of rows from a table
@@ -702,7 +699,7 @@ class WriteEngineWrapper : public WEObj
   int writeColumnRec(const TxnID& txnid, const CSCTypesList& cscColTypes, const ColStructList& colStructList,
                      ColValueList& colValueList, RID* rowIdArray, const ColStructList& newColStructList,
                      ColValueList& newColValueList, const int32_t tableOid, bool useTmpSuffix,
-                     bool versioning = true, ColSplitMaxMinInfoList* maxMins = NULL);
+                     bool versioning = true, ColSplitMaxMinInfoList* maxMins = nullptr);
 
   int writeColumnRecBinary(const TxnID& txnid, const ColStructList& colStructList,
                            std::vector<uint64_t>& colValueList, RID* rowIdArray,
@@ -714,14 +711,14 @@ class WriteEngineWrapper : public WEObj
                            const ColStructList& colStructList, const ColValueList& colValueList,
                            std::vector<void*>& colOldValueList, const RIDList& ridList,
                            const int32_t tableOid, bool convertStructFlag = true,
-                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = NULL,
+                           ColTupleList::size_type nRows = 0, std::vector<ExtCPInfo*>* cpInfos = nullptr,
                            bool hasAUXCol = false);
 
   // For update column from column to use
   int writeColumnRecords(const TxnID& txnid, const CSCTypesList& cscColTypeList,
                          std::vector<ColStruct>& colStructList, ColValueList& colValueList,
                          const RIDList& ridLists, const int32_t tableOid, bool versioning = true,
-                         std::vector<ExtCPInfo*>* cpInfos = NULL);
+                         std::vector<ExtCPInfo*>* cpInfos = nullptr);
 
   /**
    * @brief util method to convert rowid to a column file
@@ -738,7 +735,7 @@ class WriteEngineWrapper : public WEObj
   // txn so that we don't waste time marking the same extent as invalid. This
   // list should be trimmed if it gets too big.
   int AddLBIDtoList(const TxnID txnid, const ColStruct& colStruct, const int fbo,
-                    ExtCPInfo* cpInfo = NULL  // provide CPInfo pointer if you want max/min updated.
+                    ExtCPInfo* cpInfo = nullptr  // provide CPInfo pointer if you want max/min updated.
   );
 
   // Get CPInfo for given starting LBID and column description structure.

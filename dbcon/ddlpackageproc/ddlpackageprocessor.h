@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -49,7 +49,7 @@
 
 #define EXPORT
 
-//#define IDB_DDL_DEBUG
+// #define IDB_DDL_DEBUG
 namespace ddlpackageprocessor
 {
 #define SUMMARY_INFO(message)          \
@@ -206,8 +206,8 @@ class DDLPackageProcessor
   struct NJLSysDataList
   {
     NJLSysDataVector sysDataVec;
-    EXPORT NJLSysDataList(){};
-    EXPORT ~NJLSysDataList();
+    EXPORT NJLSysDataList() = default;
+    EXPORT ~NJLSysDataList() = default;
     NJLSysDataVector::const_iterator begin()
     {
       return sysDataVec.begin();

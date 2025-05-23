@@ -27,7 +27,7 @@ class UnbufferedFileFactory : public FileFactoryBase
 {
  public:
   /* virtual */
-  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth);
+  IDBDataFile* open(const char* fname, const char* mode, unsigned opts, unsigned colWidth) override;
 };
 
 inline IDBDataFile* UnbufferedFileFactory::open(const char* fname, const char* mode, unsigned opts,

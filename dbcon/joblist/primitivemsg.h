@@ -35,7 +35,6 @@
 
 #pragma pack(push, 1)
 
-
 // from blocksize.h
 const int32_t DATA_BLOCK_SIZE = BLOCK_SIZE;
 
@@ -65,7 +64,7 @@ using utils::ConstString;
 class StringComparator : public datatypes::Charset
 {
  public:
-  StringComparator(const Charset& cs) : Charset(cs)
+  explicit StringComparator(const Charset& cs) : Charset(cs)
   {
   }
   bool op(int* error, uint8_t COP, const ConstString& str1, const ConstString& str2) const
@@ -74,7 +73,8 @@ class StringComparator : public datatypes::Charset
       return like(COP & COMPARE_NOT, str1, str2);
 
     if (COP == COMPARE_NULLEQ)
-      return str1.isNull() == str2.isNull(); // XXX: TODO: I do not know the logic here, so it is temporary solution.
+      return str1.isNull() ==
+             str2.isNull();  // XXX: TODO: I do not know the logic here, so it is temporary solution.
 
     int cmp = strnncollsp(str1, str2);
 
@@ -335,7 +335,7 @@ struct ColRequestHeaderDataType : public datatypes::Charset
   ColRequestHeaderDataType() : Charset(my_charset_bin), CompType(0), DataSize(0), DataType(0)
   {
   }
-  ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType& rhs)
+  explicit ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType& rhs)
    : Charset(rhs.charsetNumber)
    , CompType(rhs.compressionType)
    , DataSize(rhs.colWidth)
@@ -633,7 +633,7 @@ struct TokenByScanResultHeader
   uint16_t Pad1;
   uint32_t CacheIO;     // I/O count from buffer cache
   uint32_t PhysicalIO;  // Physical I/O count from disk
-};                      // what follows is NVALS Tokens or DataValues.
+};  // what follows is NVALS Tokens or DataValues.
 
 //      DICT_SIGNATURE
 
@@ -888,6 +888,5 @@ struct LbidAtVer
   uint64_t LBID;
   uint32_t Ver;
 };
-
 
 #pragma pack(pop)

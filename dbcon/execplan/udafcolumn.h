@@ -48,25 +48,25 @@ class UDAFColumn : public AggregateColumn
    */
   UDAFColumn();
 
-  UDAFColumn(const uint32_t sessionID);
+  explicit UDAFColumn(const uint32_t sessionID);
 
   UDAFColumn(const UDAFColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  virtual ~UDAFColumn();
+  ~UDAFColumn() override;
 
   /**
    * Overloaded stream operator
    */
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  virtual UDAFColumn* clone() const override
+  UDAFColumn* clone() const override
   {
     return new UDAFColumn(*this);
   }
@@ -82,8 +82,8 @@ class UDAFColumn : public AggregateColumn
   /**
    * Serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -91,7 +91,7 @@ class UDAFColumn : public AggregateColumn
    * @return true iff every member of t is a duplicate copy of every member of this;
    *         false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -108,7 +108,7 @@ class UDAFColumn : public AggregateColumn
    * @return false iff every member of t is a duplicate copy of every member of this;
    *         true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -119,7 +119,7 @@ class UDAFColumn : public AggregateColumn
   using AggregateColumn::operator!=;
   virtual bool operator!=(const UDAFColumn& t) const;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   mcsv1sdk::mcsv1Context context;

@@ -66,7 +66,7 @@ class BulkLoad : public FileOp
   /**
    * @brief BulkLoad destructor
    */
-  EXPORT ~BulkLoad();
+  EXPORT ~BulkLoad() override;
 
   /**
    * @brief Load job information
@@ -523,12 +523,12 @@ inline void BulkLoad::setUsername(const std::string& username)
 
 inline void BulkLoad::startTimer()
 {
-  gettimeofday(&fStartTime, 0);
+  gettimeofday(&fStartTime, nullptr);
 }
 
 inline void BulkLoad::stopTimer()
 {
-  gettimeofday(&fEndTime, 0);
+  gettimeofday(&fEndTime, nullptr);
   fTotalTime = (fEndTime.tv_sec + (fEndTime.tv_usec / 1000000.0)) -
                (fStartTime.tv_sec + (fStartTime.tv_usec / 1000000.0));
 }

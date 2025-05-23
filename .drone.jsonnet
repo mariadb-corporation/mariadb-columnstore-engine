@@ -352,7 +352,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   upgrade(version):: {
     name: 'upgrade-test from ' + version,
-    depends_on: ['smoke'],
+    depends_on: ['regressionlog'],
     image: 'docker',
     failure: 'ignore',
     volumes: [pipeline._volumes.docker],
@@ -844,11 +844,19 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                status: ['success', 'failure'],
              },
              volumes: [pipeline._volumes.mdb],
+             environment: {
+               SERVER_REF: '${SERVER_REF:-' + server + '}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
+             },
              commands: [
                'cd /mdb/' + builddir,
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
+               'echo "serverBranch: $$SERVER_REF" >> buildinfo.txt',
+               'echo "serverRepo: $$SERVER_REMOTE" >> buildinfo.txt',
+               'echo "engineBranch: $DRONE_SOURCE_BRANCH" >> buildinfo.txt',
+               'echo "engineRepo: https://github.com/$DRONE_REPO" >> buildinfo.txt',
                'mv buildinfo.txt ./%s/' % result,
                'yes | cp -vr ./%s/. /drone/src/%s/' % [result, result],
                'ls -l /drone/src/' + result,
@@ -880,14 +888,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
+         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],

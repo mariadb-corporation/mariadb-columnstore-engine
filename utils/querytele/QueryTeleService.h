@@ -9,15 +9,12 @@
 #include <thrift/TDispatchProcessor.h>
 #include "querytele_types.h"
 
-
 namespace querytele
 {
 class QueryTeleServiceIf
 {
  public:
-  virtual ~QueryTeleServiceIf()
-  {
-  }
+  virtual ~QueryTeleServiceIf() = default;
   virtual void postQuery(const QueryTele& query) = 0;
   virtual void postStep(const StepTele& query) = 0;
   virtual void postImport(const ImportTele& query) = 0;
@@ -28,9 +25,7 @@ class QueryTeleServiceIfFactory
  public:
   typedef QueryTeleServiceIf Handler;
 
-  virtual ~QueryTeleServiceIfFactory()
-  {
-  }
+  virtual ~QueryTeleServiceIfFactory() = default;
 
   virtual QueryTeleServiceIf* getHandler(const ::apache::thrift::TConnectionInfo& connInfo) = 0;
   virtual void releaseHandler(QueryTeleServiceIf* /* handler */) = 0;
@@ -39,18 +34,17 @@ class QueryTeleServiceIfFactory
 class QueryTeleServiceIfSingletonFactory : virtual public QueryTeleServiceIfFactory
 {
  public:
-  QueryTeleServiceIfSingletonFactory(const std::shared_ptr<QueryTeleServiceIf>& iface) : iface_(iface)
+  explicit QueryTeleServiceIfSingletonFactory(const std::shared_ptr<QueryTeleServiceIf>& iface)
+   : iface_(iface)
   {
   }
-  virtual ~QueryTeleServiceIfSingletonFactory()
-  {
-  }
+  ~QueryTeleServiceIfSingletonFactory() override = default;
 
-  virtual QueryTeleServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&)
+  QueryTeleServiceIf* getHandler(const ::apache::thrift::TConnectionInfo&) override
   {
     return iface_.get();
   }
-  virtual void releaseHandler(QueryTeleServiceIf* /* handler */)
+  void releaseHandler(QueryTeleServiceIf* /* handler */) override
   {
   }
 
@@ -61,18 +55,16 @@ class QueryTeleServiceIfSingletonFactory : virtual public QueryTeleServiceIfFact
 class QueryTeleServiceNull : virtual public QueryTeleServiceIf
 {
  public:
-  virtual ~QueryTeleServiceNull()
-  {
-  }
-  void postQuery(const QueryTele& /* query */)
+  ~QueryTeleServiceNull() override = default;
+  void postQuery(const QueryTele& /* query */) override
   {
     return;
   }
-  void postStep(const StepTele& /* query */)
+  void postStep(const StepTele& /* query */) override
   {
     return;
   }
-  void postImport(const ImportTele& /* query */)
+  void postImport(const ImportTele& /* query */) override
   {
     return;
   }
@@ -89,13 +81,9 @@ typedef struct _QueryTeleService_postQuery_args__isset
 class QueryTeleService_postQuery_args
 {
  public:
-  QueryTeleService_postQuery_args()
-  {
-  }
+  QueryTeleService_postQuery_args() = default;
 
-  virtual ~QueryTeleService_postQuery_args() throw()
-  {
-  }
+  virtual ~QueryTeleService_postQuery_args() throw() = default;
 
   QueryTele query;
 
@@ -127,9 +115,7 @@ class QueryTeleService_postQuery_args
 class QueryTeleService_postQuery_pargs
 {
  public:
-  virtual ~QueryTeleService_postQuery_pargs() throw()
-  {
-  }
+  virtual ~QueryTeleService_postQuery_pargs() throw() = default;
 
   const QueryTele* query;
 
@@ -139,13 +125,9 @@ class QueryTeleService_postQuery_pargs
 class QueryTeleService_postQuery_result
 {
  public:
-  QueryTeleService_postQuery_result()
-  {
-  }
+  QueryTeleService_postQuery_result() = default;
 
-  virtual ~QueryTeleService_postQuery_result() throw()
-  {
-  }
+  virtual ~QueryTeleService_postQuery_result() throw() = default;
 
   bool operator==(const QueryTeleService_postQuery_result& /* rhs */) const
   {
@@ -165,9 +147,7 @@ class QueryTeleService_postQuery_result
 class QueryTeleService_postQuery_presult
 {
  public:
-  virtual ~QueryTeleService_postQuery_presult() throw()
-  {
-  }
+  virtual ~QueryTeleService_postQuery_presult() throw() = default;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 };
@@ -183,13 +163,9 @@ typedef struct _QueryTeleService_postStep_args__isset
 class QueryTeleService_postStep_args
 {
  public:
-  QueryTeleService_postStep_args()
-  {
-  }
+  QueryTeleService_postStep_args() = default;
 
-  virtual ~QueryTeleService_postStep_args() throw()
-  {
-  }
+  virtual ~QueryTeleService_postStep_args() throw() = default;
 
   StepTele query;
 
@@ -221,9 +197,7 @@ class QueryTeleService_postStep_args
 class QueryTeleService_postStep_pargs
 {
  public:
-  virtual ~QueryTeleService_postStep_pargs() throw()
-  {
-  }
+  virtual ~QueryTeleService_postStep_pargs() throw() = default;
 
   const StepTele* query;
 
@@ -233,13 +207,9 @@ class QueryTeleService_postStep_pargs
 class QueryTeleService_postStep_result
 {
  public:
-  QueryTeleService_postStep_result()
-  {
-  }
+  QueryTeleService_postStep_result() = default;
 
-  virtual ~QueryTeleService_postStep_result() throw()
-  {
-  }
+  virtual ~QueryTeleService_postStep_result() throw() = default;
 
   bool operator==(const QueryTeleService_postStep_result& /* rhs */) const
   {
@@ -259,9 +229,7 @@ class QueryTeleService_postStep_result
 class QueryTeleService_postStep_presult
 {
  public:
-  virtual ~QueryTeleService_postStep_presult() throw()
-  {
-  }
+  virtual ~QueryTeleService_postStep_presult() throw() = default;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 };
@@ -277,13 +245,9 @@ typedef struct _QueryTeleService_postImport_args__isset
 class QueryTeleService_postImport_args
 {
  public:
-  QueryTeleService_postImport_args()
-  {
-  }
+  QueryTeleService_postImport_args() = default;
 
-  virtual ~QueryTeleService_postImport_args() throw()
-  {
-  }
+  virtual ~QueryTeleService_postImport_args() throw() = default;
 
   ImportTele query;
 
@@ -315,9 +279,7 @@ class QueryTeleService_postImport_args
 class QueryTeleService_postImport_pargs
 {
  public:
-  virtual ~QueryTeleService_postImport_pargs() throw()
-  {
-  }
+  virtual ~QueryTeleService_postImport_pargs() throw() = default;
 
   const ImportTele* query;
 
@@ -327,13 +289,9 @@ class QueryTeleService_postImport_pargs
 class QueryTeleService_postImport_result
 {
  public:
-  QueryTeleService_postImport_result()
-  {
-  }
+  QueryTeleService_postImport_result() = default;
 
-  virtual ~QueryTeleService_postImport_result() throw()
-  {
-  }
+  virtual ~QueryTeleService_postImport_result() throw() = default;
 
   bool operator==(const QueryTeleService_postImport_result& /* rhs */) const
   {
@@ -353,9 +311,7 @@ class QueryTeleService_postImport_result
 class QueryTeleService_postImport_presult
 {
  public:
-  virtual ~QueryTeleService_postImport_presult() throw()
-  {
-  }
+  virtual ~QueryTeleService_postImport_presult() throw() = default;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 };
@@ -363,7 +319,7 @@ class QueryTeleService_postImport_presult
 class QueryTeleServiceClient : virtual public QueryTeleServiceIf
 {
  public:
-  QueryTeleServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot)
+  explicit QueryTeleServiceClient(std::shared_ptr< ::apache::thrift::protocol::TProtocol> prot)
    : piprot_(prot), poprot_(prot)
   {
     iprot_ = prot.get();
@@ -384,13 +340,13 @@ class QueryTeleServiceClient : virtual public QueryTeleServiceIf
   {
     return poprot_;
   }
-  void postQuery(const QueryTele& query);
+  void postQuery(const QueryTele& query) override;
   void send_postQuery(const QueryTele& query);
   void recv_postQuery();
-  void postStep(const StepTele& query);
+  void postStep(const StepTele& query) override;
   void send_postStep(const StepTele& query);
   void recv_postStep();
-  void postImport(const ImportTele& query);
+  void postImport(const ImportTele& query) override;
   void send_postImport(const ImportTele& query);
   void recv_postImport();
 
@@ -405,9 +361,9 @@ class QueryTeleServiceProcessor : public ::apache::thrift::TDispatchProcessor
 {
  protected:
   std::shared_ptr<QueryTeleServiceIf> iface_;
-  virtual bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot,
-                            ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname,
-                            int32_t seqid, void* callContext);
+  bool dispatchCall(::apache::thrift::protocol::TProtocol* iprot,
+                    ::apache::thrift::protocol::TProtocol* oprot, const std::string& fname, int32_t seqid,
+                    void* callContext) override;
 
  private:
   typedef void (QueryTeleServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*,
@@ -422,28 +378,27 @@ class QueryTeleServiceProcessor : public ::apache::thrift::TDispatchProcessor
                           ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
 
  public:
-  QueryTeleServiceProcessor(std::shared_ptr<QueryTeleServiceIf> iface) : iface_(iface)
+  explicit QueryTeleServiceProcessor(std::shared_ptr<QueryTeleServiceIf> iface) : iface_(iface)
   {
     processMap_["postQuery"] = &QueryTeleServiceProcessor::process_postQuery;
     processMap_["postStep"] = &QueryTeleServiceProcessor::process_postStep;
     processMap_["postImport"] = &QueryTeleServiceProcessor::process_postImport;
   }
 
-  virtual ~QueryTeleServiceProcessor()
-  {
-  }
+  ~QueryTeleServiceProcessor() override = default;
 };
 
 class QueryTeleServiceProcessorFactory : public ::apache::thrift::TProcessorFactory
 {
  public:
-  QueryTeleServiceProcessorFactory(const ::std::shared_ptr<QueryTeleServiceIfFactory>& handlerFactory)
+  explicit QueryTeleServiceProcessorFactory(
+      const ::std::shared_ptr<QueryTeleServiceIfFactory>& handlerFactory)
    : handlerFactory_(handlerFactory)
   {
   }
 
   ::std::shared_ptr< ::apache::thrift::TProcessor> getProcessor(
-      const ::apache::thrift::TConnectionInfo& connInfo);
+      const ::apache::thrift::TConnectionInfo& connInfo) override;
 
  protected:
   ::std::shared_ptr<QueryTeleServiceIfFactory> handlerFactory_;
@@ -452,25 +407,22 @@ class QueryTeleServiceProcessorFactory : public ::apache::thrift::TProcessorFact
 class QueryTeleServiceMultiface : virtual public QueryTeleServiceIf
 {
  public:
-  QueryTeleServiceMultiface(std::vector<std::shared_ptr<QueryTeleServiceIf> >& ifaces) : ifaces_(ifaces)
+  explicit QueryTeleServiceMultiface(std::vector<std::shared_ptr<QueryTeleServiceIf> >& ifaces)
+   : ifaces_(ifaces)
   {
   }
-  virtual ~QueryTeleServiceMultiface()
-  {
-  }
+  ~QueryTeleServiceMultiface() override = default;
 
  protected:
   std::vector<std::shared_ptr<QueryTeleServiceIf> > ifaces_;
-  QueryTeleServiceMultiface()
-  {
-  }
+  QueryTeleServiceMultiface() = default;
   void add(std::shared_ptr<QueryTeleServiceIf> iface)
   {
     ifaces_.push_back(iface);
   }
 
  public:
-  void postQuery(const QueryTele& query)
+  void postQuery(const QueryTele& query) override
   {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -483,7 +435,7 @@ class QueryTeleServiceMultiface : virtual public QueryTeleServiceIf
     ifaces_[i]->postQuery(query);
   }
 
-  void postStep(const StepTele& query)
+  void postStep(const StepTele& query) override
   {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -496,7 +448,7 @@ class QueryTeleServiceMultiface : virtual public QueryTeleServiceIf
     ifaces_[i]->postStep(query);
   }
 
-  void postImport(const ImportTele& query)
+  void postImport(const ImportTele& query) override
   {
     size_t sz = ifaces_.size();
     size_t i = 0;

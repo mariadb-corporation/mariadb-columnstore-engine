@@ -36,7 +36,7 @@
 #include "shmkeys.h"
 #include "brmtypes.h"
 
-//#define SM_DEBUG
+// #define SM_DEBUG
 
 namespace execplan
 {
@@ -132,7 +132,7 @@ class SessionMonitor
     {
       txnCount = 0;
       verID = 0;
-      activeTxns = NULL;
+      activeTxns = nullptr;
     };
   };
   typedef struct SessionMonitorData_struct SessionMonitorData_t;

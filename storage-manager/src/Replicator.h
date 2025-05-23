@@ -17,11 +17,11 @@
 
 #pragma once
 
-//#include "ThreadPool.h"
+// #include "ThreadPool.h"
 #include "MetadataFile.h"
 #include <boost/filesystem.hpp>
 #include <sys/types.h>
-#include <stdint.h>
+#include <cstdint>
 
 #define JOURNAL_ENTRY_HEADER_SIZE 16
 

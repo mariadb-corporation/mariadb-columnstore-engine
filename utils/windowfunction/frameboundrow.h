@@ -32,24 +32,24 @@ class FrameBoundRow : public FrameBound
   /** @brief FrameBoundRow constructor
    *  @param  t, frame type
    */
-  FrameBoundRow(int t = 0) : FrameBound(t){};
+  explicit FrameBoundRow(int t = 0) : FrameBound(t){};
 
   /** @brief FrameBoundRow destructor
    */
-  virtual ~FrameBoundRow(){};
+  ~FrameBoundRow() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
     return new FrameBoundRow(*this);
   }
 
   /** @brief virtual void getBound
    */
-  int64_t getBound(int64_t, int64_t, int64_t);
+  int64_t getBound(int64_t, int64_t, int64_t) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
 };
@@ -64,24 +64,24 @@ class FrameBoundConstantRow : public FrameBoundRow
    *  @param  t, frame type
    *  @param  c, constant value.  !! caller need to check NULL or negative value !!
    */
-  FrameBoundConstantRow(int t = 0, int c = 0) : FrameBoundRow(t), fOffset(c){};
+  explicit FrameBoundConstantRow(int t = 0, int c = 0) : FrameBoundRow(t), fOffset(c){};
 
   /** @brief FrameBoundConstantRow destructor
    */
-  virtual ~FrameBoundConstantRow(){};
+  ~FrameBoundConstantRow() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
     return new FrameBoundConstantRow(*this);
   }
 
   /** @brief virtual void getBound
    */
-  int64_t getBound(int64_t, int64_t, int64_t);
+  int64_t getBound(int64_t, int64_t, int64_t) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
  protected:
   // constant offset
@@ -98,25 +98,25 @@ class FrameBoundExpressionRow : public FrameBoundConstantRow
   /** @brief FrameBoundExpressionRow constructor
    *  @param  t, frame type
    */
-  FrameBoundExpressionRow(int t, uint64_t id = -1, int idx = -1)
+  explicit FrameBoundExpressionRow(int t, uint64_t id = -1, int idx = -1)
    : FrameBoundConstantRow(t), fExprTupleId(id), fExprIdx(idx){};
 
   /** @brief FrameBoundExpressionRow destructor
    */
-  virtual ~FrameBoundExpressionRow(){};
+  ~FrameBoundExpressionRow() override = default;
 
   /** @brief clone
    */
-  virtual FrameBound* clone()
+  FrameBound* clone() override
   {
     return new FrameBoundExpressionRow<T>(*this);
   }
 
   /** @brief virtual void getBound
    */
-  int64_t getBound(int64_t, int64_t, int64_t);
+  int64_t getBound(int64_t, int64_t, int64_t) override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
   void setExprTupleId(int id)
   {
@@ -145,4 +145,3 @@ class FrameBoundExpressionRow : public FrameBoundConstantRow
 };
 
 }  // namespace windowfunction
-

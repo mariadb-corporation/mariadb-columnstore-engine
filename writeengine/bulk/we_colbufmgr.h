@@ -260,9 +260,9 @@ class ColumnBufferManagerDctnry : public ColumnBufferManager
 {
  public:
   ColumnBufferManagerDctnry(ColumnInfo* pColInfo, int colWidth, Log* logger, int compressionType);
-  virtual ~ColumnBufferManagerDctnry();
+  ~ColumnBufferManagerDctnry() override;
 
-  virtual int rowsExtentCheck(int nRows, int& nRows2);
+  int rowsExtentCheck(int nRows, int& nRows2) override;
   using ColumnBufferManager::writeToFileExtentCheck;
   virtual int writeToFileExtentCheck(uint32_t startOffset, uint32_t writeSize);
 };

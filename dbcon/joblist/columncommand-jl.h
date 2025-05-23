@@ -40,18 +40,17 @@ namespace joblist
 class ColumnCommandJL : public CommandJL
 {
  public:
-  ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID,
-                  bool hasAuxCol_, const std::vector<BRM::EMEntry>& extentsAux_,
-                  execplan::CalpontSystemCatalog::OID oidAux);
-  ColumnCommandJL(const pColStep&);
+  ColumnCommandJL(const pColScanStep&, std::vector<BRM::LBID_t> lastLBID, bool hasAuxCol_,
+                  const std::vector<BRM::EMEntry>& extentsAux_, execplan::CalpontSystemCatalog::OID oidAux);
+  explicit ColumnCommandJL(const pColStep&);
   ColumnCommandJL(const ColumnCommandJL&, const DictStepJL&);
-  virtual ~ColumnCommandJL();
+  ~ColumnCommandJL() override;
 
-  virtual void createCommand(messageqcpp::ByteStream& bs) const override;
-  virtual void runCommand(messageqcpp::ByteStream& bs) const override;
+  void createCommand(messageqcpp::ByteStream& bs) const override;
+  void runCommand(messageqcpp::ByteStream& bs) const override;
   void setLBID(uint64_t rid, uint32_t dbroot) override;
   uint8_t getTableColumnType() override;
-  virtual std::string toString() override;
+  std::string toString() override;
   uint16_t getWidth() override;
   CommandType getCommandType() override
   {

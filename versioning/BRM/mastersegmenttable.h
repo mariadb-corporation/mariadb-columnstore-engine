@@ -61,6 +61,12 @@ class MasterSegmentTableImpl
   ~MasterSegmentTableImpl(){};
   static MasterSegmentTableImpl* makeMasterSegmentTableImpl(int key, int size);
 
+  static void refreshShmWithLock()
+  {
+    boost::mutex::scoped_lock lk(fInstanceMutex);
+    return refreshShm();
+  }
+
   static void refreshShm()
   {
     if (fInstance)

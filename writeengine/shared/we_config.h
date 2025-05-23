@@ -30,7 +30,7 @@
 
 #include "we_obj.h"
 
-//#define SHARED_NOTHING_DEMO_2
+// #define SHARED_NOTHING_DEMO_2
 
 #define EXPORT
 
@@ -44,16 +44,12 @@ class Config
   /**
    * @brief Constructor
    */
-  Config()
-  {
-  }
+  Config() = default;
 
   /**
    * @brief Default Destructor
    */
-  ~Config()
-  {
-  }
+  ~Config() = default;
 
   /**
    * @brief Get DB root (for local PM)
@@ -187,7 +183,7 @@ class Config
   static boost::mutex m_bulkRoot_lk;  // mutex for m_bulkRoot sync
 #endif
   static int m_WaitPeriod;                    // secs to wait for transaction
-  static unsigned m_FilesPerColumnPartition;  //# seg files per partition
+  static unsigned m_FilesPerColumnPartition;  // # seg files per partition
   static unsigned m_ExtentsPerSegmentFile;    // # extents per segment file
   static int m_BulkProcessPriority;           // cpimport.bin proc priority
   static std::string m_BulkRollbackDir;       // bulk rollback meta data dir

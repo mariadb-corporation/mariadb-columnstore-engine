@@ -46,7 +46,7 @@ class DropTableProcessor : public DDLPackageProcessor
    *
    *  @param dropTableStmt the drop table statement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropTableStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropTableStmt) override;
 };
 
 /** @brief specialization of a DDLPacakageProcessor
@@ -66,7 +66,7 @@ class TruncTableProcessor : public DDLPackageProcessor
    *
    *  @param truncTableStmt the truncate table statement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* truncTableStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* truncTableStmt) override;
 };
 
 }  // namespace ddlpackageprocessor

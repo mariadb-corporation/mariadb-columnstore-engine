@@ -1,3 +1,19 @@
+set(WITH_THRIFT "auto" CACHE STRING
+  "Which Thrift to use (possible values are 'bundled', 'system', or 'auto')")
+
+if(WITH_THRIFT STREQUAL "system" OR WITH_THRIFT STREQUAL "auto")
+  FIND_PACKAGE(Thrift)
+
+  if (Thrift_FOUND)
+    add_custom_target(external_thrift)
+    set(THRIFT_INCLUDE_DIR "${THRIFT_INCLUDE_DIR}")
+    set(THRIFT_LIBRARY "${THRIFT_LIBRARIES}")
+    return()
+  elseif(WITH_THRIFT STREQUAL "system")
+    message(FATAL_ERROR "System Thrift requested but not found!")
+  endif()
+endif()
+
 include(ExternalProject)
 
 set(INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/external/thrift)

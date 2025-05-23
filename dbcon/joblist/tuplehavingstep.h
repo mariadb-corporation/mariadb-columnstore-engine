@@ -39,36 +39,36 @@ class TupleHavingStep : public ExpressionStep, public TupleDeliveryStep
  public:
   /** @brief TupleHavingStep constructor
    */
-  TupleHavingStep(const JobInfo& jobInfo);
+  explicit TupleHavingStep(const JobInfo& jobInfo);
 
   /** @brief TupleHavingStep destructor
    */
-  ~TupleHavingStep();
+  ~TupleHavingStep() override;
 
   /** @brief virtual void Run method
    */
-  void run();
-  void join();
+  void run() override;
+  void join() override;
 
-  const std::string toString() const;
+  const std::string toString() const override;
 
   /** @brief TupleJobStep's pure virtual methods
    */
-  const rowgroup::RowGroup& getOutputRowGroup() const;
-  void setOutputRowGroup(const rowgroup::RowGroup&);
+  const rowgroup::RowGroup& getOutputRowGroup() const override;
+  void setOutputRowGroup(const rowgroup::RowGroup&) override;
 
   /** @brief TupleDeliveryStep's pure virtual methods
    */
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
 
   void initialize(const rowgroup::RowGroup& rgIn, const JobInfo& jobInfo);
   using ExpressionStep::expressionFilter;
-  void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo);
+  void expressionFilter(const execplan::ParseTree* filter, JobInfo& jobInfo) override;
 
-  virtual bool stringTableFriendly()
+  bool stringTableFriendly() override
   {
     return true;
   }
@@ -93,7 +93,7 @@ class TupleHavingStep : public ExpressionStep, public TupleDeliveryStep
   class Runner
   {
    public:
-    Runner(TupleHavingStep* step) : fStep(step)
+    explicit Runner(TupleHavingStep* step) : fStep(step)
     {
     }
     void operator()()
@@ -114,4 +114,3 @@ class TupleHavingStep : public ExpressionStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-
