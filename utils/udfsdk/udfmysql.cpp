@@ -457,10 +457,10 @@ extern "C"
       return 1;
     }
 
-    initid->max_length = static_cast<uint64_t>(*args->args[2]);
+    initid->max_length = *reinterpret_cast<const uint64_t*>(args->args[2]);
 
-    size_t hashFuncCount = static_cast<size_t>(*args->args[1]);
-    size_t bloomFilterSize = static_cast<size_t>(*args->args[2]);
+    size_t hashFuncCount = *reinterpret_cast<const size_t*>(args->args[1]);;
+    size_t bloomFilterSize = *reinterpret_cast<size_t*>(args->args[2]);
 
     auto* data = new BloomData(hashFuncCount);
     data->bloomFilter.resize(bloomFilterSize, 0);
@@ -485,7 +485,7 @@ extern "C"
     void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     struct BloomData* data = (struct BloomData*)initid->ptr;
-    auto val = static_cast<uint64_t>(*args->args[0]);
+    auto val = *reinterpret_cast<const uint64_t*>(args->args[0]);;
 
     addValueToBloomFilter(val, *data);
   }

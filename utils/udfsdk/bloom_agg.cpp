@@ -39,7 +39,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(32);
+  context->setColWidth(65531);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -140,7 +140,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 
 mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& length)
 {
-  userdata = new BloomAggData(2, 2);
+  userdata = new BloomAggData(7, 21547);
   length = sizeof(BloomAggData);
   return mcsv1_UDAF::SUCCESS;
 }

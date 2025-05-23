@@ -99,7 +99,7 @@ string bloom_and::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontS
     result[i] = static_cast<char>(static_cast<uint8_t>(strBloomFilter1[i]) & static_cast<uint8_t>(strBloomFilter2[i]));
   }
 
-  lg(result);
+  //lg(result);
 
   return result;
 }
