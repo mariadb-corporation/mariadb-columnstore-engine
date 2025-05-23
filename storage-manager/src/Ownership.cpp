@@ -20,7 +20,7 @@
 #include "Cache.h"
 #include "Synchronizer.h"
 #include "KVStorageInitializer.h"
-#include "KVPrefixes.hpp"
+#include "KVPrefixes.h"
 #include "fdbcs.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>

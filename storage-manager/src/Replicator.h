@@ -43,13 +43,14 @@ class Replicator
     LOCAL_ONLY = 0x1,
     NO_LOCAL = 0x2
   };
-
   int addJournalEntry(const boost::filesystem::path& filename, const uint8_t* data, off_t offset,
                       size_t length);
   int newObject(const boost::filesystem::path& filename, const uint8_t* data, off_t offset, size_t length);
   int newNullObject(const boost::filesystem::path& filename, size_t length);
 
   int remove(const boost::filesystem::path& file, Flags flags = NONE);
+  int removeJournal(const boost::filesystem::path &file);
+  int removeJournalSize(const boost::filesystem::path &file);
 
   int updateMetadata(MetadataFile& meta);
 

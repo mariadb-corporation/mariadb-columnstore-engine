@@ -16,14 +16,19 @@
    MA 02110-1301, USA. */
 
 #pragma once
+#include <string>
+#include <cstdint>
 
 namespace storagemanager
 {
 enum class KVPrefixId
 {
   SM_OWNERSHIP = 0,
-  SM_META
+  SM_META,
+  SM_JOURNAL
 };
 
 extern const char* KVPrefixes[];
+
+std::string getJournalName(const std::string &key);
 }  // namespace storagemanager
