@@ -143,13 +143,12 @@ set(funcexp_LIB_SRCS
 )
 
 columnstore_library(funcexp ${funcexp_LIB_SRCS})
-
-add_dependencies(funcexp loggingcpp)
-
-target_link_libraries(funcexp ${NETSNMP_LIBRARIES} pron pcre2-8 ${MARIADB_STRING_LIBS})
-
-install(
-    TARGETS funcexp
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
+columnstore_link(
+    funcexp
+    PRIVATE
+    pcre2-8
+    pron
+    loggingcpp
+    ${MARIADB_STRING_LIBS}
+    ${NETSNMP_LIBRARIES}
 )

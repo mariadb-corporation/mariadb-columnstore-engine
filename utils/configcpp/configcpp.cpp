@@ -25,8 +25,6 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include <fstream>
-#include <vector>
 #include <string>
 using namespace std;
 
@@ -36,30 +34,19 @@ using namespace std;
 using namespace boost;
 namespace fs = boost::filesystem;
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdlib.h>
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-#include <cstring>
-//#define NDEBUG
 #include <cassert>
-#include <atomic>
+#include <cstring>
+#include <errno.h>
+#include <fcntl.h>
+#include <libxml/parser.h>
+#include <libxml/xmlmemory.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "configcpp.h"
-
-#include "exceptclasses.h"
-#include "installdir.h"
-#include <tr1/unordered_map>
-
-#include "bytestream.h"
 
 namespace config
 {
@@ -457,44 +444,6 @@ void Config::write(const string& configFile) const
   else
   {
     writeConfig(configFile);
-  }
-}
-
-void Config::writeConfigFile(messageqcpp::ByteStream msg) const
-{
-  struct flock fl;
-  int fd;
-
-  // get config file name being udated
-  string fileName;
-  msg >> fileName;
-
-  fl.l_type = F_WRLCK;  // write lock
-  fl.l_whence = SEEK_SET;
-  fl.l_start = 0;
-  fl.l_len = 0;
-  fl.l_pid = getpid();
-
-  // lock file if it exists
-  if ((fd = open(fileName.c_str(), O_WRONLY)) >= 0)
-  {
-    if (fcntl(fd, F_SETLKW, &fl) == -1)
-      throw runtime_error("Config::write: file lock error " + fileName);
-
-    ofstream out(fileName.c_str());
-    out << msg;
-
-    fl.l_type = F_UNLCK;  // unlock
-
-    if (fcntl(fd, F_SETLK, &fl) == -1)
-      throw runtime_error("Config::write: file unlock error " + fileName);
-
-    close(fd);
-  }
-  else
-  {
-    ofstream out(fileName.c_str());
-    out << msg;
   }
 }
 

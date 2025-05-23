@@ -1,7 +1,5 @@
 include_directories(${ENGINE_COMMON_INCLUDES})
 
-# ########## next target ###############
-
 set(messageqcpp_LIB_SRCS
     messagequeue.cpp
     messagequeuepool.cpp
@@ -14,8 +12,5 @@ set(messageqcpp_LIB_SRCS
     bytestreampool.cpp
 )
 
-add_library(messageqcpp STATIC ${messageqcpp_LIB_SRCS})
-
-add_dependencies(messageqcpp loggingcpp)
-
-# We don't isntall static library install(TARGETS messageqcpp DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+columnstore_library(messageqcpp ${messageqcpp_LIB_SRCS})
+columnstore_link(messageqcpp PUBLIC loggingcpp)

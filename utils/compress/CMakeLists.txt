@@ -11,19 +11,10 @@ set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES "${dirs}")
 
 set(compress_LIB_SRCS idbcompress.cpp)
 
-add_definitions(-DNDEBUG)
-
 columnstore_library(compress ${compress_LIB_SRCS})
-add_dependencies(compress loggingcpp external_boost)
+columnstore_link(compress PRIVATE loggingcpp boost_filesystem ${SNAPPY_LIBRARIES})
 
-target_link_libraries(compress ${SNAPPY_LIBRARIES})
 if(HAVE_LZ4)
     message_once(STATUS "LINK WITH LZ4")
-    target_link_libraries(compress ${LZ4_LIBRARIES})
+    columnstore_link(compress PRIVATE ${LZ4_LIBRARIES})
 endif()
-
-install(
-    TARGETS compress
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
