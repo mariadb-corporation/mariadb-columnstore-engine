@@ -42,7 +42,7 @@ namespace funcexp
 {
 // need my_tz_find in dataconvert
 
-CalpontSystemCatalog::ColType Func_convert_tz::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_convert_tz::operationType(FunctionParm& /*fp*/,
                                                              CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -55,7 +55,7 @@ int64_t Func_convert_tz::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& par
 }
 
 int64_t Func_convert_tz::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                   CalpontSystemCatalog::ColType& op_ct)
+                                   CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   messageqcpp::ByteStream bs;
   bool bFromTz = false;

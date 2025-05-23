@@ -52,43 +52,43 @@ struct lconv* convData = localeconv();
 namespace funcexp
 {
 // Why isn't "return resultType" the base default behavior?
-CalpontSystemCatalog::ColType Func_cast_signed::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_signed::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_unsigned::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_unsigned::operationType(FunctionParm& /*fp*/,
                                                                 CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_char::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_char::operationType(FunctionParm& /*fp*/,
                                                             CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_date::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_date::operationType(FunctionParm& /*fp*/,
                                                             CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_datetime::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_datetime::operationType(FunctionParm& /*fp*/,
                                                                 CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_decimal::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_decimal::operationType(FunctionParm& /*fp*/,
                                                                CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
-CalpontSystemCatalog::ColType Func_cast_double::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_cast_double::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

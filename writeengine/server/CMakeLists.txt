@@ -1,8 +1,6 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(WriteEngineServer_SRCS
     we_server.cpp
@@ -16,13 +14,19 @@ set(WriteEngineServer_SRCS
     we_cpifeederthread.cpp
     we_getfilesizes.cpp
     ../../utils/common/crashtrace.cpp
-    ../../datatypes/mcs_datatype.cpp)
+    ../../datatypes/mcs_datatype.cpp
+)
 
 add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
 add_dependencies(WriteEngineServer loggingcpp)
 
-target_link_libraries(WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute)
+target_link_libraries(
+    WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute
+)
 
-install(TARGETS WriteEngineServer DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+install(
+    TARGETS WriteEngineServer
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

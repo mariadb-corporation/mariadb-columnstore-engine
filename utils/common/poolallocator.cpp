@@ -54,7 +54,6 @@ void PoolAllocator::deallocateAll()
 void PoolAllocator::newBlock()
 {
   capacityRemaining = allocSize;
-
   if (!tmpSpace || mem.size() == 0)
   {
     if (alloc)

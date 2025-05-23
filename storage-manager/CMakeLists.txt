@@ -43,32 +43,42 @@ set(storagemanager_SRCS
 
 option(SM_TRACE "Enable some tracing output" OFF)
 option(SM_LOG_TO_STDERR "Make the logging system also print to stderr" OFF)
-if (SM_TRACE)
+if(SM_TRACE)
     add_definitions(-DSM_TRACE)
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_definitions(-DDEBUG -Werror -Wall)
     set(S3_CONFIGURE_OPT --enable-debug)
 endif()
 
-if (SM_LOG_TO_STDERR)
+if(SM_LOG_TO_STDERR)
     add_definitions(-DDEBUG)
 endif()
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf.in" "${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf" @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf.in" "${CMAKE_CURRENT_SOURCE_DIR}/storagemanager.cnf" @ONLY
+)
 
 # get linkage right
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
-
-
 add_library(storagemanager SHARED ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3 external_boost)
 
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-target_link_libraries(storagemanager boost_chrono boost_system boost_thread boost_filesystem boost_regex pthread ${S3API_DEPS})
+target_link_libraries(
+    storagemanager
+    boost_chrono
+    boost_system
+    boost_thread
+    boost_filesystem
+    boost_regex
+    pthread
+    ${S3API_DEPS}
+)
+target_include_directories(storagemanager PRIVATE ${Boost_INCLUDE_DIRS})
 
 add_executable(StorageManager src/main.cpp)
 target_link_libraries(StorageManager storagemanager)
@@ -88,73 +98,59 @@ target_link_libraries(testS3Connection storagemanager)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
 add_custom_command(
-    TARGET unit_tests PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-        ${CMAKE_CURRENT_BINARY_DIR}/test_data
+    TARGET unit_tests
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/test_data
 )
 add_custom_command(
-    TARGET unit_tests POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_CURRENT_SOURCE_DIR}/test_data
-                ${CMAKE_CURRENT_BINARY_DIR}/test_data
+    TARGET unit_tests
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/test_data
+            ${CMAKE_CURRENT_BINARY_DIR}/test_data
 )
 
-# The includes and lib linkages required to link against cloudio ...
-# pretty crazy.  When lib dependencies are eventually config'd right,
-# change this to only include and link against cloudio.
+# The includes and lib linkages required to link against cloudio ... pretty crazy.  When lib dependencies are eventually
+# config'd right, change this to only include and link against cloudio.
 include_directories(${ENGINE_SRC_DIR}/utils/cloudio ${ENGINE_COMMON_INCLUDES})
 add_executable(smcat src/smcat.cpp)
-target_link_libraries(smcat storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
+target_link_libraries(smcat storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 add_executable(smput src/smput.cpp)
-target_link_libraries(smput storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
+target_link_libraries(smput storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 add_executable(smls src/smls.cpp)
-target_link_libraries(smls storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
+target_link_libraries(smls storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 add_executable(smrm src/smrm.cpp)
-target_link_libraries(smrm storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
+target_link_libraries(smrm storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 add_executable(smps src/smps.cpp)
-target_link_libraries(smps storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
-
+target_link_libraries(smps storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
 
 add_executable(smkill src/smkill.cpp)
-target_link_libraries(smkill storagemanager cloudio
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_EXEC_LIBS}
-)
-install(TARGETS storagemanager
-    LIBRARY DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
+target_link_libraries(smkill storagemanager cloudio ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})
+install(TARGETS storagemanager LIBRARY DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+
+install(
+    TARGETS StorageManager
+            smcat
+            smkill
+            smps
+            smput
+            smls
+            smrm
+            testS3Connection
+    RUNTIME DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine
 )
 
-install(TARGETS StorageManager smcat smkill smps smput smls smrm testS3Connection
-    RUNTIME DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
-)
-
-install(FILES storagemanager.cnf
+install(
+    FILES storagemanager.cnf
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
     COMPONENT columnstore-engine
 )
 
-install(FILES storagemanager.cnf
+install(
+    FILES storagemanager.cnf
     RENAME storagemanager.cnf.example
     DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
     COMPONENT columnstore-engine

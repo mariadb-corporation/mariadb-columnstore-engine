@@ -45,24 +45,27 @@ using namespace dataconvert;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_ceil::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 inline int64_t ceilDateTime(Row& row, FunctionParm& parm, bool& isNull)
 {
-  // the following is to handle the case of ceil(datetime), the last 20 bits are the miliseconds, the -1 is to make sure it could round up
+  // the following is to handle the case of ceil(datetime), the last 20 bits are the miliseconds, the -1 is to
+  // make sure it could round up
   return parm[0]->data()->getDatetimeIntVal(row, isNull) + 0xffffe;
 }
 inline int64_t ceilTimeStamp(Row& row, FunctionParm& parm, bool& isNull)
 {
-  // the following is to handle the case of ceil(timestamp), the last 20 bits are the miliseconds, the -1 is to make sure it could round up
+  // the following is to handle the case of ceil(timestamp), the last 20 bits are the miliseconds, the -1 is
+  // to make sure it could round up
   return parm[0]->data()->getTimestampIntVal(row, isNull) + 0xffffe;
 }
 inline int64_t ceilTime(Row& row, FunctionParm& parm, bool& isNull)
 {
-  // the following is to handle the case of ceil(time), the last 24 bits are the miliseconds, the -1 is to make sure it could round up
+  // the following is to handle the case of ceil(time), the last 24 bits are the miliseconds, the -1 is to
+  // make sure it could round up
   return parm[0]->data()->getTimeIntVal(row, isNull) + 0xfffffe;
 }
 

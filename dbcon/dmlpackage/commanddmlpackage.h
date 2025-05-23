@@ -66,7 +66,7 @@ class CommandDMLPackage : public CalpontDMLPackage
    * @param columns the number of columns in the buffer
    * @param rows the number of rows in the buffer
    */
-  inline int buildFromBuffer(std::string& buffer, int columns = 0, int rows = 0) override
+  inline int buildFromBuffer(std::string& /*buffer*/, int /*columns*/ = 0, int /*rows*/ = 0) override
   {
     return 1;
   };
@@ -80,8 +80,8 @@ class CommandDMLPackage : public CalpontDMLPackage
    * @param colNameList, tableValuesMap
    * @param rows the number of rows in the buffer
    */
-  int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns, int rows,
-                           NullValuesBitset& nullValues) override
+  int buildFromMysqlBuffer(ColNameList& /*colNameList*/, TableValuesMap& /*tableValuesMap*/, int /*columns*/, int /*rows*/,
+                           NullValuesBitset& /*nullValues*/) override
   {
     return 1;
   };

@@ -79,7 +79,7 @@ uint32_t ctrlc = 0;
 // Signal handler to catch Control-C signal to terminate the process
 // while waiting for a shutdown or suspend action
 //------------------------------------------------------------------------------
-void handleControlC(int i)
+void handleControlC(int /*i*/)
 {
   std::cout << "Received Control-C to terminate the command..." << std::endl;
   ctrlc = 1;

@@ -295,7 +295,7 @@ void WESplClient::write(const messageqcpp::ByteStream& Msg)
   }
 }
 //------------------------------------------------------------------------------
-void WESplClient::read(messageqcpp::SBS& Sbs)
+void WESplClient::read(messageqcpp::SBS& /*Sbs*/)
 {
   // read from the WEServerMsgQueue
   // if Key is needed give that constant here

@@ -93,7 +93,7 @@ void added_a_pm(int)
   std::cout << "Total UM memory available: " << num << std::endl;
 }
 
-void printTotalUmMemory(int sig)
+void printTotalUmMemory(int /*sig*/)
 {
   int64_t num = globServiceExeMgr->getRm().availableMemory();
   std::cout << "Total UM memory available: " << num << std::endl;

@@ -142,8 +142,8 @@ int noVB = 0;
 BPPMap bppMap;
 boost::mutex bppLock;
 
-boost::mutex djMutex;                      // lock for djLock, lol.
-std::map<uint64_t, shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
+boost::mutex djMutex;                             // lock for djLock, lol.
+std::map<uint64_t, boost::shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
 volatile int32_t asyncCounter;
 const int asyncMax = 20;  // current number of asynchronous loads
@@ -154,7 +154,7 @@ struct preFetchCond
   boost::condition cond;
   unsigned waiters;
 
-  preFetchCond(const uint64_t l)
+  preFetchCond(const uint64_t)
   {
     waiters = 0;
   }
@@ -825,7 +825,7 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
 struct AsynchLoader
 {
   AsynchLoader(uint64_t l, QueryContext v, uint32_t t, int ct, uint32_t* cCount, uint32_t* rCount, bool trace,
-               uint32_t sesID, boost::mutex* m, uint32_t* loaderCount,
+               uint32_t /*sesID*/, boost::mutex* m, uint32_t* loaderCount,
                boost::shared_ptr<BPPSendThread> st,  // sendThread for abort upon exception.
                VSSCache* vCache)
    : lbid(l)
@@ -833,7 +833,6 @@ struct AsynchLoader
    , txn(t)
    , compType(ct)
    , LBIDTrace(trace)
-   , sessionID(sesID)
    , cacheCount(cCount)
    , readCount(rCount)
    , busyLoaders(loaderCount)
@@ -905,7 +904,6 @@ struct AsynchLoader
   uint32_t txn;
   int compType;
   bool LBIDTrace;
-  uint32_t sessionID;
   uint32_t* cacheCount;
   uint32_t* readCount;
   uint32_t* busyLoaders;
@@ -1432,7 +1430,7 @@ struct BPPHandler
       return SBPPV();
   }
 
-  inline shared_mutex& getDJLock(uint32_t uniqueID)
+  inline boost::shared_mutex& getDJLock(uint32_t uniqueID)
   {
     boost::mutex::scoped_lock lk(djMutex);
     auto it = djLock.find(uniqueID);
@@ -1440,7 +1438,7 @@ struct BPPHandler
       return *it->second;
     else
     {
-      auto ret = djLock.insert(make_pair(uniqueID, new shared_mutex())).first;
+      auto ret = djLock.insert(make_pair(uniqueID, new boost::shared_mutex())).first;
       return *ret->second;
     }
   }
@@ -1472,7 +1470,7 @@ struct BPPHandler
 
     if (bppv)
     {
-      shared_lock<shared_mutex> lk(getDJLock(uniqueID));
+      boost::shared_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
       bppv->get()[0]->addToJoiner(bs);
       return 0;
     }
@@ -1515,7 +1513,7 @@ struct BPPHandler
       }
     }
 
-    boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+    boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
     for (i = 0; i < bppv->get().size(); i++)
     {
       err = bppv->get()[i]->endOfJoiner();
@@ -1559,7 +1557,7 @@ struct BPPHandler
 
     boost::shared_ptr<BPPV> bppv = nullptr;
     {
-      boost::unique_lock<shared_mutex> lk(getDJLock(uniqueID));
+      boost::unique_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
       boost::mutex::scoped_lock scoped(bppLock);
 
       bppKeysIt = std::find(bppKeys.begin(), bppKeys.end(), uniqueID);
@@ -1596,8 +1594,8 @@ struct BPPHandler
       {
         if (posix_time::second_clock::universal_time() > dieTime)
         {
-          cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID << " has been killed."
-              << endl;
+          cout << "destroyBPP: job for id " << uniqueID << " and sessionID " << sessionID
+               << " has been killed." << endl;
           // If for some reason there are jobs for this uniqueID that arrived later
           // they won't leave PP thread pool staying there forever.
         }
@@ -1617,7 +1615,7 @@ struct BPPHandler
     if (bppv)
     {
       bppv->abort();
-    }    
+    }
     return 0;
   }
 
@@ -1841,7 +1839,7 @@ struct ReadThread
     ios->write(buildCacheOpResp(0));
   }
 
-  void doCacheFlushCmd(SP_UM_IOSOCK ios, const ByteStream& bs)
+  void doCacheFlushCmd(SP_UM_IOSOCK ios, const ByteStream& /*bs*/)
   {
     for (int i = 0; i < fCacheCount; i++)
     {
@@ -2251,19 +2249,17 @@ struct ServerThread
 namespace primitiveprocessor
 {
 PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int processorWeight,
-                                 int processorQueueSize, bool rotatingDestination, uint32_t BRPBlocks,
+                                 int /*processorQueueSize*/, bool rotatingDestination, uint32_t BRPBlocks,
                                  int BRPThreads, int cacheCount, int maxBlocksPerRead, int readAheadBlocks,
-                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t smallSide)
+                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t /*smallSide*/)
  : fServerThreads(serverThreads)
  , fServerQueueSize(serverQueueSize)
  , fProcessorWeight(processorWeight)
- , fProcessorQueueSize(processorQueueSize)
  , fMaxBlocksPerRead(maxBlocksPerRead)
  , fReadAheadBlocks(readAheadBlocks)
  , fRotatingDestination(rotatingDestination)
  , fPTTrace(ptTrace)
  , fPrefetchThreshold(prefetch)
- , fPMSmallSide(smallSide)
 {
   fCacheCount = cacheCount;
   fServerpool.setMaxThreads(fServerThreads);

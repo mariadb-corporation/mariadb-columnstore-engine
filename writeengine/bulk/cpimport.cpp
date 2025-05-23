@@ -125,10 +125,8 @@ void printUsage()
   cout << "    Positional parameters:" << endl
        << "        dbName    Name of database to load" << endl
        << "        tblName   Name of table to load" << endl
-       << "        loadFile  Optional input file name in current directory, "
-       << "unless a fully" << endl
-       << "                  qualified name is given.  If not given, "
-       << "input read from stdin." << endl
+       << "        loadFile  Optional input file name in current directory, " << "unless a fully" << endl
+       << "                  qualified name is given.  If not given, " << "input read from stdin." << endl
        << endl;
 
   cout << "    Options:" << endl
@@ -158,8 +156,7 @@ void printUsage()
        << "        -w Number of parsers" << endl
        << "        -B I/O library read buffer size (in bytes)" << endl
        << "        -E Enclosed by character if field values are enclosed" << endl
-       << "        -C Escape character used in conjunction with 'enclosed by' "
-       << "character," << endl
+       << "        -C Escape character used in conjunction with 'enclosed by' " << "character," << endl
        << "           or as part of NULL escape sequence ('\\N'); default is '\\'" << endl
        << "        -I Binary import; binaryOpt 1-import NULL values" << endl
        << "                                    2-saturate NULL values" << endl
@@ -191,7 +188,7 @@ void printUsage()
 //------------------------------------------------------------------------------
 // Signal handler to catch SIGTERM signal to terminate the process
 //------------------------------------------------------------------------------
-void handleSigTerm(int i)
+void handleSigTerm(int /*i*/)
 {
   BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGTERM to terminate the process..." << std::endl;
@@ -201,7 +198,7 @@ void handleSigTerm(int i)
 //------------------------------------------------------------------------------
 // Signal handler to catch Control-C signal to terminate the process
 //------------------------------------------------------------------------------
-void handleControlC(int i)
+void handleControlC(int /*i*/)
 {
   BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   if (!BulkLoad::disableConsoleOutput())
@@ -213,7 +210,7 @@ void handleControlC(int i)
 //------------------------------------------------------------------------------
 // Signal handler to catch SIGTERM signal to terminate the process
 //------------------------------------------------------------------------------
-void handleSigSegv(int i)
+void handleSigSegv(int /*i*/)
 {
   BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGSEGV to terminate the process..." << std::endl;
@@ -223,7 +220,7 @@ void handleSigSegv(int i)
 //------------------------------------------------------------------------------
 // Signal handler to catch SIGTERM signal to terminate the process
 //------------------------------------------------------------------------------
-void handleSigAbrt(int i)
+void handleSigAbrt(int /*i*/)
 {
   BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGABRT to terminate the process..." << std::endl;
@@ -308,7 +305,6 @@ void setupSignalHandlers()
   memset(&act, 0, sizeof(act));
   act.sa_handler = handleSigAbrt;
   sigaction(SIGABRT, &act, 0);
-
 }
 
 //------------------------------------------------------------------------------
@@ -523,8 +519,7 @@ void parseCmdLineArgs(int argc, char** argv, BulkLoad& curJob, std::string& sJob
           delim = '\t';
 
           if (!BulkLoad::disableConsoleOutput())
-            cout << "Column delimiter : "
-                 << "\\t" << endl;
+            cout << "Column delimiter : " << "\\t" << endl;
         }
         else
         {
@@ -903,15 +898,15 @@ void getTableOID(const std::string& xmlGenSchema, const std::string& xmlGenTable
   catch (std::exception& ex)
   {
     std::ostringstream oss;
-    oss << "Unable to set default JobID; "
-        << "Error getting OID for table " << tbl.schema << '.' << tbl.table << ": " << ex.what();
+    oss << "Unable to set default JobID; " << "Error getting OID for table " << tbl.schema << '.' << tbl.table
+        << ": " << ex.what();
     startupError(oss.str(), false);
   }
   catch (...)
   {
     std::ostringstream oss;
-    oss << "Unable to set default JobID; "
-        << "Unknown error getting OID for table " << tbl.schema << '.' << tbl.table;
+    oss << "Unable to set default JobID; " << "Unknown error getting OID for table " << tbl.schema << '.'
+        << tbl.table;
     startupError(oss.str(), false);
   }
 

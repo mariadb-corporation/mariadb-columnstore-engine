@@ -77,7 +77,7 @@ bf::path Ownership::get(const bf::path& p, bool getOwnership)
   bf::path::const_iterator pit;
   int i, levels;
 
-  normalizedPath.normalize();
+  normalizedPath.lexically_normal();
   // cerr << "Ownership::get() param = " << normalizedPath.string() << endl;
   if (prefixDepth > 0)
   {
@@ -222,7 +222,7 @@ void Ownership::takeOwnership(const bf::path& p)
   auto it = ownedPrefixes.find(p);
   if (it != ownedPrefixes.end())
     return;
-  ownedPrefixes[p] = NULL;
+  ownedPrefixes[p] = false;
   s.unlock();
 
   bool okToTransfer = false;

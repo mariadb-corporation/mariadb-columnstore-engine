@@ -105,7 +105,7 @@ class DataList
   {
     return 0;
   }
-  virtual bool totalDiskIoTime(uint64_t& w, uint64_t& r)
+  virtual bool totalDiskIoTime(uint64_t& /*w*/, uint64_t& /*r*/)
   {
     return false;
   }

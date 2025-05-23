@@ -144,7 +144,7 @@ LBIDList::~LBIDList()
 #endif
 }
 
-void LBIDList::Dump(long Index, int Count) const
+void LBIDList::Dump(long /*Index*/, int /*Count*/) const
 {
   LBIDRange LBIDR;
 
@@ -422,8 +422,8 @@ void LBIDList::UpdateMinMax(T min, T max, int64_t lbid, bool dictScan,
 #ifdef DEBUG
 
       if (IS_VERBOSE)
-        cout << "UpdateMinMax() new Mn/Mx " << mmp->min << "/" << mmp->max << " "
-             << " lbid " << lbid << " seq " << mmp->seq << " valid " << mmp->isValid << endl;
+        cout << "UpdateMinMax() new Mn/Mx " << mmp->min << "/" << mmp->max << " " << " lbid " << lbid
+             << " seq " << mmp->seq << " valid " << mmp->isValid << endl;
 
 #endif
       return;
@@ -929,4 +929,3 @@ template bool LBIDList::checkRangeOverlap<int64_t>(int64_t min, int64_t max, int
                                                    const execplan::CalpontSystemCatalog::ColType& type);
 
 }  // namespace joblist
-

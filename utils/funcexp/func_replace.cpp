@@ -37,7 +37,7 @@ using namespace joblist;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_replace::operationType(FunctionParm& fp,
-                                                          CalpontSystemCatalog::ColType& resultType)
+                                                          CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -78,7 +78,7 @@ std::string Func_replace::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& 
   {
     // Count the number of fromstr in strend so we can reserve buffer space.
     size_t count = 0;
-    while ( string::npos != (pos = str.find(fromstr, pos)))
+    while (string::npos != (pos = str.find(fromstr, pos)))
     {
       ++count;
       pos += fromLen;

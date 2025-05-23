@@ -184,7 +184,7 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
 // predicate against the given range.  This function is used for estimating an individual operation such as
 // col1 = 2.
 template <class T>
-float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value, char op, uint8_t lcf,
+float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value, char op, uint8_t /*lcf*/,
                                      uint32_t distinctValues, char cpStatus,
                                      const execplan::CalpontSystemCatalog::ColType& ct)
 {
@@ -263,7 +263,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
 float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry, const messageqcpp::ByteStream* bs,
                                             const uint16_t NOPS,
                                             const execplan::CalpontSystemCatalog::ColType& ct,
-                                            const uint8_t BOP, const uint32_t& rowsInExtent)
+                                            const uint8_t BOP, const uint32_t& /*rowsInExtent*/)
 {
   bool bIsUnsigned = datatypes::isUnsigned(ct.colDataType);
   float factor = 1.0;
@@ -500,8 +500,8 @@ float RowEstimator::estimateRowReturnFactor(const BRM::EMEntry& emEntry, const m
 // This function returns the estimated row count for the entire TupleBPS.  It samples the last 20
 // (configurable) extents to calculate the estimate.
 uint64_t RowEstimator::estimateRows(const vector<ColumnCommandJL*>& cpColVec,
-                                    const std::vector<bool>& scanFlags, BRM::DBRM& dbrm,
-                                    const execplan::CalpontSystemCatalog::OID oid)
+                                    const std::vector<bool>& scanFlags, BRM::DBRM& /*dbrm*/,
+                                    const execplan::CalpontSystemCatalog::OID /*oid*/)
 
 {
 #if ROW_EST_DEBUG

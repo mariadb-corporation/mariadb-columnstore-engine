@@ -29,7 +29,7 @@ using namespace ordering;
 
 namespace windowfunction
 {
-int64_t FrameBound::getBound(int64_t b, int64_t e, int64_t c)
+int64_t FrameBound::getBound(int64_t b, int64_t e, int64_t /*c*/)
 {
   if (fBoundType == WF__UNBOUNDED_PRECEDING)
     return b;

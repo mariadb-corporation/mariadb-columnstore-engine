@@ -51,7 +51,7 @@ int ColumnBuffer::finishFile(bool /*bTruncFile*/)
   return NO_ERROR;
 }
 
-int ColumnBuffer::resetToBeCompressedColBuf(long long& startFileOffset)
+int ColumnBuffer::resetToBeCompressedColBuf(long long& /*startFileOffset*/)
 {
   return NO_ERROR;
 }

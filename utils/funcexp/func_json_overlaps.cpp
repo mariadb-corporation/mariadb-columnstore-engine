@@ -267,7 +267,7 @@ bool checkOverlaps(json_engine_t* jsEg1, json_engine_t* jsEg2, bool compareWhole
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_overlaps::operationType(FunctionParm& fp,
-                                                                CalpontSystemCatalog::ColType& resultType)
+                                                                CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -275,8 +275,8 @@ CalpontSystemCatalog::ColType Func_json_overlaps::operationType(FunctionParm& fp
 /**
  * getBoolVal API definition
  */
-bool Func_json_overlaps::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& type)
+bool Func_json_overlaps::getBoolVal(Row& row, FunctionParm& fp, bool& /*isNull*/,
+                                    CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS1 = false, isNullJS2 = false;
   const auto js1 = fp[0]->data()->getStrVal(row, isNullJS1);

@@ -169,9 +169,8 @@ void BulkRollbackFile::truncateSegmentFile(OID columnOID, uint32_t dbRoot, uint3
   {
     WErrorCodes ec;
     std::ostringstream oss;
-    oss << "Error truncating column extents from DB for"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << ec.errorString(rc);
+    oss << "Error truncating column extents from DB for" << ": OID-" << columnOID << "; DbRoot-" << dbRoot
+        << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -264,9 +263,8 @@ void BulkRollbackFile::reInitTruncColumnExtent(OID columnOID, uint32_t dbRoot, u
   {
     WErrorCodes ec;
     std::ostringstream oss;
-    oss << "Error rolling back HWM column extent from DB for"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << ec.errorString(rc);
+    oss << "Error rolling back HWM column extent from DB for" << ": OID-" << columnOID << "; DbRoot-"
+        << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -364,9 +362,9 @@ void BulkRollbackFile::reInitTruncDctnryExtent(OID dStoreOID, uint32_t dbRoot, u
   {
     WErrorCodes ec;
     std::ostringstream oss;
-    oss << "Error rolling back HWM dictionary store extent from DB for"
-        << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << ec.errorString(rc);
+    oss << "Error rolling back HWM dictionary store extent from DB for" << ": OID-" << dStoreOID
+        << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; "
+        << ec.errorString(rc);
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -399,8 +397,8 @@ void BulkRollbackFile::reInitTruncDctnryExtent(OID dStoreOID, uint32_t dbRoot, u
 // class can override this functionality, and return true or false depending
 // on whether the HWM chunk was modified and backed up to disk.
 //------------------------------------------------------------------------------
-bool BulkRollbackFile::doWeReInitExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum,
-                                        uint32_t segNum) const
+bool BulkRollbackFile::doWeReInitExtent(OID /*columnOID*/, uint32_t /*dbRoot*/, uint32_t /*partNum*/,
+                                        uint32_t /*segNum*/) const
 {
   return true;
 }

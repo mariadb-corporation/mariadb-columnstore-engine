@@ -36,7 +36,7 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_dayname::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_dayname::operationType(FunctionParm& /*fp*/,
                                                           CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -97,7 +97,8 @@ int64_t Func_dayname::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& is
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::TEXT:
     case CalpontSystemCatalog::VARCHAR:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
+      val =
+          dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull).safeString(""));
 
       if (val == -1)
       {

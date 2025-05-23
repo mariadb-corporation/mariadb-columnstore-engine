@@ -20,7 +20,6 @@
 #include <sstream>
 #include <boost/scoped_array.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "we_define.h"
 #include "we_fileop.h"
@@ -98,15 +97,15 @@ void BulkRollbackFileCompressedHdfs::truncateSegmentFile(OID columnOID, uint32_t
 void BulkRollbackFileCompressedHdfs::reInitTruncColumnExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum,
                                                              uint32_t segNum, long long startOffsetBlk,
                                                              int nBlocks,
-                                                             CalpontSystemCatalog::ColDataType colType,
-                                                             uint32_t colWidth, bool restoreHwmChk)
+                                                             CalpontSystemCatalog::ColDataType /*colType*/,
+                                                             uint32_t /*colWidth*/, bool /*restoreHwmChk*/)
 {
   long long startOffset = startOffsetBlk * BYTE_PER_BLOCK;
 
   std::ostringstream msgText;
-  msgText << "Reinit HWM compressed column extent in HDFS db file"
-          << ": dbRoot-" << dbRoot << "; part#-" << partNum << "; seg#-" << segNum << "; rawOffset(bytes)-"
-          << startOffset << "; rawFreeBlks-" << nBlocks;
+  msgText << "Reinit HWM compressed column extent in HDFS db file" << ": dbRoot-" << dbRoot << "; part#-"
+          << partNum << "; seg#-" << segNum << "; rawOffset(bytes)-" << startOffset << "; rawFreeBlks-"
+          << nBlocks;
   fMgr->logAMessage(logging::LOG_TYPE_INFO, logging::M0075, columnOID, msgText.str());
 
   restoreFromBackup("column", columnOID, dbRoot, partNum, segNum);
@@ -146,8 +145,8 @@ void BulkRollbackFileCompressedHdfs::reInitTruncDctnryExtent(OID dStoreOID, uint
 // Let ConfirmHdfsDbFile later determine when/if/how to restore from any
 // existing backup file.
 //------------------------------------------------------------------------------
-bool BulkRollbackFileCompressedHdfs::doWeReInitExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum,
-                                                      uint32_t segNum) const
+bool BulkRollbackFileCompressedHdfs::doWeReInitExtent(OID /*columnOID*/, uint32_t /*dbRoot*/,
+                                                      uint32_t /*partNum*/, uint32_t /*segNum*/) const
 {
   return true;
 }

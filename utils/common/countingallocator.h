@@ -22,7 +22,10 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdlib>
+
 #include "atomicops.h"
+#include "errorids.h"
+#include "outofmemoryexcept.h"
 
 namespace allocators
 {
@@ -32,12 +35,13 @@ namespace allocators
 // It is supposed to recv a ptr to an atomic from a singleton entity, e.g. ResourceManager.
 // NB The atomic provides an upper hard limit for the memory usage and not the usage counter.
 // The allocator's model counts allocated size locally and to sync allocated size difference
-// every CheckPointStepSize(100MB by default) both allocating and deallocating.
+// every CheckPointStepSize both allocating and deallocating.
 // When a sync op hits MemoryLimitLowerBound trying to allocate more memory, it throws.
 // SQL operators or TBPS runtime must catch the exception and act acordingly.
 
-const constexpr int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;  // WIP
-const constexpr int64_t CheckPointStepSize = 100 * 1024 * 1024;     // WIP
+const constexpr int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;
+// Higher values demonstrate slower response to memory limit violations.
+const constexpr int64_t CheckPointStepSize = 100 * 1024;
 
 // Custom Allocator that tracks allocated memory using an atomic counter
 template <typename T>
@@ -79,10 +83,10 @@ class CountingAllocator
       if (currentGlobalMemoryLimit < memoryLimitLowerBound_)
       {
         atomicops::atomicAddRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
-        throw std::bad_alloc();
+        throw logging::OutOfMemoryExcept(logging::ERR_OUT_OF_MEMORY);
       }
       lastMemoryLimitCheckpoint_ += lastMemoryLimitCheckpointDiff;
-    }
+    } 
 
     currentLocalMemoryUsage_ += sizeChange;
   }

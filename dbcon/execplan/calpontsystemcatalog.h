@@ -1010,7 +1010,7 @@ const CalpontSystemCatalog::TableAliasName make_aliasview(const std::string& s, 
                                                           const bool fisColumnStore = true,
                                                           int lower_case_table_names = 0);
 
-inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::ColType& ct)
+inline bool isNull(int128_t val, const execplan::CalpontSystemCatalog::ColType& /*ct*/)
 {
   return datatypes::Decimal::isWideDecimalNullValue(val);
 }

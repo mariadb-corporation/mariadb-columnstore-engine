@@ -322,8 +322,8 @@ drop_table_statement:
 	;
 
 opt_if_exists:
-	IDB_IF EXISTS {$$ = NULL;}
-	| {$$ = NULL;}
+	IDB_IF EXISTS {$$ = true;}
+	| {$$ = true;}
 	;
 
 drop_index_statement:

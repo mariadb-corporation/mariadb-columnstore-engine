@@ -55,7 +55,7 @@ void octet2hex(char* to, const char* str, uint32_t len)
   *to = '\0';
 }
 
-CalpontSystemCatalog::ColType Func_hex::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_hex::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -79,7 +79,7 @@ string Func_hex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
     case CalpontSystemCatalog::TIME:
     {
       const auto& arg = parm[0]->data()->getStrVal(row, isNull);
-      scoped_array<char> hexPtr(new char[arg.length() * 2 + 1]); // XXX: code now the same as for BLOB.
+      scoped_array<char> hexPtr(new char[arg.length() * 2 + 1]);  // XXX: code now the same as for BLOB.
       octet2hex(hexPtr.get(), arg.str(), arg.length());
       return string(hexPtr.get(), arg.length() * 2);
     }

@@ -51,7 +51,7 @@ using namespace joblist;
 namespace windowfunction
 {
 template <typename T_IN, typename T_OUT>
-inline void WF_sum_avg<T_IN, T_OUT>::checkSumLimit(const T_IN& val, const T_OUT& sum)
+inline void WF_sum_avg<T_IN, T_OUT>::checkSumLimit(const T_IN& /*val*/, const T_OUT& /*sum*/)
 {
 }
 
@@ -63,8 +63,8 @@ inline void WF_sum_avg<int128_t, int128_t>::checkSumLimit(const int128_t& val, c
 }
 
 template <>
-inline void WF_sum_avg<long double, long double>::checkSumLimit(const long double& val,
-                                                                const long double& sum)
+inline void WF_sum_avg<long double, long double>::checkSumLimit(const long double& /*val*/,
+                                                                const long double& /*sum*/)
 {
 }
 
@@ -138,7 +138,7 @@ int128_t WF_sum_avg<T_IN, T_OUT>::calculateAvg(const int128_t& sum, const uint64
 
 template <typename T_IN, typename T_OUT>
 inline long double WF_sum_avg<T_IN, T_OUT>::calculateAvg(const long double& sum, const uint64_t count,
-                                                         const int scale)
+                                                         const int /*scale*/)
 {
   return sum / count;
 }

@@ -55,7 +55,7 @@ extern "C"
   /**
    * MCS_ADD connector stub
    */
-      my_bool mcs_add_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_add_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 2)
     {
@@ -66,11 +66,11 @@ extern "C"
     return 0;
   }
 
-      void mcs_add_deinit(UDF_INIT* initid)
+  void mcs_add_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      double mcs_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  double mcs_add(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*is_null*/, char* /*error*/)
   {
     double op1, op2;
 
@@ -84,7 +84,7 @@ extern "C"
    * MCS_ISNULL connector stub
    */
 
-      my_bool mcs_isnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_isnull_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -95,11 +95,11 @@ extern "C"
     return 0;
   }
 
-      void mcs_isnull_deinit(UDF_INIT* initid)
+  void mcs_isnull_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long mcs_isnull(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcs_isnull(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     return 0;
   }
@@ -113,7 +113,7 @@ extern "C"
     ulonglong totalNulls;
   };
 
-      my_bool allnull_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool allnull_init(UDF_INIT* initid, UDF_ARGS* /*args*/, char* message)
   {
     struct allnull_data* data;
     //	if (args->arg_count != 1)
@@ -136,27 +136,25 @@ extern "C"
     return 0;
   }
 
-      void allnull_deinit(UDF_INIT* initid)
+  void allnull_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      long long allnull(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                        char* error __attribute__((unused)))
+  long long allnull(UDF_INIT* initid, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     struct allnull_data* data = (struct allnull_data*)initid->ptr;
     return data->totalQuantity > 0 && data->totalNulls == data->totalQuantity;
   }
 
-      void allnull_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                         char* message __attribute__((unused)))
+  void allnull_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct allnull_data* data = (struct allnull_data*)initid->ptr;
     data->totalQuantity = 0;
     data->totalNulls = 0;
   }
 
-      void allnull_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void allnull_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     struct allnull_data* data = (struct allnull_data*)initid->ptr;
     const char* word = args->args[0];
@@ -176,7 +174,7 @@ extern "C"
     double sumsq;
   };
 
-      my_bool ssq_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool ssq_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct ssq_data* data;
 
@@ -198,27 +196,25 @@ extern "C"
     return 0;
   }
 
-      void ssq_deinit(UDF_INIT* initid)
+  void ssq_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void ssq_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                     char* message __attribute__((unused)))
+  void ssq_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct ssq_data* data = (struct ssq_data*)initid->ptr;
     data->sumsq = 0;
   }
 
-      void ssq_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void ssq_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     struct ssq_data* data = (struct ssq_data*)initid->ptr;
     double val = cvtArgToDouble(args->arg_type[0], args->args[0]);
     data->sumsq = val * val;
   }
 
-      long long ssq(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                    char* error __attribute__((unused)))
+  long long ssq(UDF_INIT* initid, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     struct ssq_data* data = (struct ssq_data*)initid->ptr;
     return data->sumsq;
@@ -229,7 +225,7 @@ extern "C"
   /**
    * MEDIAN connector stub
    */
-      my_bool median_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool median_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -250,27 +246,25 @@ extern "C"
     return 0;
   }
 
-      void median_deinit(UDF_INIT* initid)
+  void median_deinit(UDF_INIT* /*initid*/)
   {
     //	free(initid->ptr);
   }
 
-      void median_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                        char* message __attribute__((unused)))
+  void median_clear(UDF_INIT* /*initid*/, char* /*is_null*/, char* /*message*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	data->sumsq = 0;
   }
 
-      void median_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void median_add(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*message*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	double val = cvtArgToDouble(args->arg_type[0], args->args[0]);
     //	data->sumsq = val*val;
   }
 
-      long long median(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                       char* error __attribute__((unused)))
+  long long median(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	return data->sumsq;
@@ -280,7 +274,7 @@ extern "C"
   /**
    * avg_mode connector stub
    */
-      my_bool avg_mode_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool avg_mode_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -301,28 +295,25 @@ extern "C"
     return 0;
   }
 
-      void avg_mode_deinit(UDF_INIT* initid)
+  void avg_mode_deinit(UDF_INIT* /*initid*/)
   {
     //	free(initid->ptr);
   }
 
-      void avg_mode_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                          char* message __attribute__((unused)))
+  void avg_mode_clear(UDF_INIT* /*initid*/, char* /*is_null*/, char* /*message*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	data->sumsq = 0;
   }
 
-      void avg_mode_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                        char* message __attribute__((unused)))
+  void avg_mode_add(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*message*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	double val = cvtArgToDouble(args->arg_type[0], args->args[0]);
     //	data->sumsq = val*val;
   }
 
-      long long avg_mode(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                         char* error __attribute__((unused)))
+  long long avg_mode(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     //	struct ssq_data* data = (struct ssq_data*)initid->ptr;
     //	return data->sumsq;
@@ -342,7 +333,7 @@ extern "C"
     int64_t cnt;
   };
 
-      my_bool avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool avgx_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     struct avgx_data* data;
     if (args->arg_count != 1)
@@ -363,20 +354,19 @@ extern "C"
     return 0;
   }
 
-      void avgx_deinit(UDF_INIT* initid)
+  void avgx_deinit(UDF_INIT* initid)
   {
     free(initid->ptr);
   }
 
-      void avgx_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                      char* message __attribute__((unused)))
+  void avgx_clear(UDF_INIT* initid, char* /*is_null*/, char* /*message*/)
   {
     struct avgx_data* data = (struct avgx_data*)initid->ptr;
     data->sumx = 0;
     data->cnt = 0;
   }
 
-      void avgx_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+  void avgx_add(UDF_INIT* initid, UDF_ARGS* args, char* /*is_null*/, char* /*message*/)
   {
     // TODO test for NULL in x and y
     struct avgx_data* data = (struct avgx_data*)initid->ptr;
@@ -385,17 +375,16 @@ extern "C"
     data->sumx += xval;
   }
 
-      long long avgx(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                     char* error __attribute__((unused)))
+  long long avgx(UDF_INIT* initid, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     struct avgx_data* data = (struct avgx_data*)initid->ptr;
     return data->sumx / data->cnt;
   }
 
-/**
- * distinct_count connector stub
- */
-      my_bool distinct_count_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  /**
+   * distinct_count connector stub
+   */
+  my_bool distinct_count_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -406,23 +395,20 @@ extern "C"
     return 0;
   }
 
-      void distinct_count_deinit(UDF_INIT* initid)
+  void distinct_count_deinit(UDF_INIT* /*initid*/)
   {
     //	free(initid->ptr);
   }
 
-      void distinct_count_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
-                                char* message __attribute__((unused)))
+  void distinct_count_clear(UDF_INIT* /*initid*/, char* /*is_null*/, char* /*message*/)
   {
   }
 
-      void distinct_count_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null,
-                              char* message __attribute__((unused)))
+  void distinct_count_add(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*message*/)
   {
   }
 
-      long long distinct_count(UDF_INIT* initid, UDF_ARGS* args __attribute__((unused)), char* is_null,
-                               char* error __attribute__((unused)))
+  long long distinct_count(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     return 0;
   }

@@ -181,7 +181,7 @@ WriteEngineWrapper::~WriteEngineWrapper()
  *    NO_ERROR if success
  *    others if something wrong in the checking process
  ***********************************************************/
-int WriteEngineWrapper::checkValid(const TxnID& txnid, const ColStructList& colStructList,
+int WriteEngineWrapper::checkValid(const TxnID& /*txnid*/, const ColStructList& colStructList,
                                    const ColValueList& colValueList, const RIDList& ridList) const
 {
   ColTupleList curTupleList;
@@ -343,7 +343,7 @@ bool updateRangeCheckForInvalidity(ExtCPInfo* maxMin, InternalType value, Intern
  * both arrays are present (update).
  */
 void WriteEngineWrapper::updateMaxMinRange(const size_t totalNewRow, const size_t totalOldRow,
-                                           const execplan::CalpontSystemCatalog::ColType& cscColType,
+                                           const execplan::CalpontSystemCatalog::ColType& /*cscColType*/,
                                            const ColType colType, const void* valArrayVoid,
                                            const void* oldValArrayVoid, ExtCPInfo* maxMin,
                                            bool canStartWithInvalidRange)
@@ -1105,7 +1105,7 @@ inline void allocateValArray(void*& valArray, ColTupleList::size_type totalRow, 
   }
 }
 
-int WriteEngineWrapper::deleteBadRows(const TxnID& txnid, ColStructList& colStructs, RIDList& ridList,
+int WriteEngineWrapper::deleteBadRows(const TxnID& /*txnid*/, ColStructList& colStructs, RIDList& ridList,
                                       DctnryStructList& dctnryStructList)
 {
   /*  Need to scan all files including dictionary store files to check whether there is any bad chunks
@@ -1218,7 +1218,7 @@ static void log_this(const char *message,
 
 /** @brief Determine whether we may update a column's ranges (by type) and return nullptr if we can't */
 static ExtCPInfo* getCPInfoToUpdateForUpdatableType(const ColStruct& colStruct, ExtCPInfo* currentCPInfo,
-                                                    OpType optype)
+                                                    OpType /*optype*/)
 {
   if (colStruct.tokenFlag)
   {
@@ -6108,7 +6108,7 @@ int WriteEngineWrapper::tokenize(const TxnID& txnid, DctnryStruct& dctnryStruct,
  *    ERR_FILE_EXIST if file exists
  *    ERR_FILE_CREATE if something wrong in creating the file
  ***********************************************************/
-int WriteEngineWrapper::createDctnry(const TxnID& txnid, const OID& dctnryOid, int colWidth, uint16_t dbRoot,
+int WriteEngineWrapper::createDctnry(const TxnID& /*txnid*/, const OID& dctnryOid, int colWidth, uint16_t dbRoot,
                                      uint32_t partiotion, uint16_t segment, int compressionType)
 {
   BRM::LBID_t startLbid;
@@ -6198,7 +6198,7 @@ int WriteEngineWrapper::bulkRollback(OID tableOid, uint64_t lockID, const std::s
   return rc;
 }
 
-int WriteEngineWrapper::rollbackCommon(const TxnID& txnid, int sessionId)
+int WriteEngineWrapper::rollbackCommon(const TxnID& txnid, int /*sessionId*/)
 {
   // Remove the unwanted tmp files and recover compressed chunks.
   string prefix;
@@ -6588,7 +6588,7 @@ void WriteEngineWrapper::AddDictToList(const TxnID txnid, std::vector<BRM::LBID_
 }
 
 // Get CPInfo for given starting LBID and column description structure.
-int WriteEngineWrapper::GetLBIDRange(const BRM::LBID_t startingLBID, const ColStruct& colStruct,
+int WriteEngineWrapper::GetLBIDRange(const BRM::LBID_t startingLBID, const ColStruct& /*colStruct*/,
                                      ExtCPInfo& cpInfo)
 {
   int rtn;

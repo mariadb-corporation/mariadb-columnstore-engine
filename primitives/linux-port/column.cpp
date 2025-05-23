@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <sstream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <cmath>
 #include <functional>
@@ -174,7 +174,7 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
 }
 
 inline bool colCompareStr(const ColRequestHeaderDataType& type, uint8_t COP, const utils::ConstString& val1,
-                          const utils::ConstString& val2, const bool printOut = false)
+                          const utils::ConstString& val2, const bool /*printOut*/ = false)
 {
   int error = 0;
   bool rc = primitives::StringComparator(type).op(&error, COP, val1, val2);
@@ -283,8 +283,8 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<COL_WIDTH == sizeof(int32_t) && KIND == KIND_FLOAT && !IS_NULL, T1>::type* =
               nullptr>
-inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
+inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t /*rf*/,
+                                  const ColRequestHeaderDataType& /*typeHolder*/, T1 /*nullValue*/)
 {
   float dVal1 = *((float*)&columnValue);
   float dVal2 = *((float*)&filterValue);
@@ -294,8 +294,8 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<COL_WIDTH == sizeof(int64_t) && KIND == KIND_FLOAT && !IS_NULL, T1>::type* =
               nullptr>
-inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
+inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t /*rf*/,
+                                  const ColRequestHeaderDataType& /*typeHolder*/, T1 /*nullValue*/)
 {
   double dVal1 = *((double*)&columnValue);
   double dVal2 = *((double*)&filterValue);
@@ -346,7 +346,7 @@ inline bool isNullValue(const T val, const T NULL_VALUE)
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
+                                  const ColRequestHeaderDataType& /*typeHolder*/, T1 nullValue)
 {
   const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
 
@@ -375,7 +375,7 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<KIND == KIND_UNSIGNED && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
+                                  const ColRequestHeaderDataType& /*typeHolder*/, T1 nullValue)
 {
   const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
 
@@ -394,7 +394,7 @@ inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, u
 template <ENUM_KIND KIND, int COL_WIDTH, bool IS_NULL, typename T1, typename T2,
           typename std::enable_if<KIND == KIND_DEFAULT && !IS_NULL, T1>::type* = nullptr>
 inline bool colCompareDispatcherT(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
-                                  const ColRequestHeaderDataType& typeHolder, T1 nullValue)
+                                  const ColRequestHeaderDataType& /*typeHolder*/, T1 nullValue)
 {
   const bool isVal2Null = isNullValue<KIND, T2>(filterValue, (T2)nullValue);
 
@@ -428,7 +428,7 @@ inline bool colCompare(T1 columnValue, T2 filterValue, uint8_t cop, uint8_t rf,
 // Bit pattern representing EMPTY value for given column type/width
 // TBD Use typeHandler
 template <typename T, typename std::enable_if<sizeof(T) == sizeof(int128_t), T>::type* = nullptr>
-T getEmptyValue(uint8_t type)
+T getEmptyValue(uint8_t /*type*/)
 {
   return datatypes::Decimal128Empty;
 }
@@ -526,7 +526,8 @@ T getEmptyValue(uint8_t type)
 //
 
 template <bool IS_NULL, typename T, typename FT, typename std::enable_if<IS_NULL == true, T>::type* = nullptr>
-inline bool noneValuesInArray(const T curValue, const FT* filterValues, const uint32_t filterCount)
+inline bool noneValuesInArray(const T /*curValue*/, const FT* /*filterValues*/,
+                              const uint32_t /*filterCount*/)
 {
   // ignore NULLs in the array and in the column data
   return false;
@@ -546,7 +547,7 @@ inline bool noneValuesInArray(const T curValue, const FT* filterValues, const ui
 }
 
 template <bool IS_NULL, typename T, typename ST, typename std::enable_if<IS_NULL == true, T>::type* = nullptr>
-inline bool noneValuesInSet(const T curValue, const ST* filterSet)
+inline bool noneValuesInSet(const T /*curValue*/, const ST* /*filterSet*/)
 {
   // bug 1920: ignore NULLs in the set and in the column data
   return false;
@@ -589,9 +590,8 @@ inline bool matchingColValue(
     {
       auto filterValue = filterValues[0];
       // This can be future optimized checking if a filterValue is NULL or not
-      bool cmp =
-          colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0], filterRFs[0], typeHolder,
-                                               NULL_VALUE);
+      bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[0], filterRFs[0],
+                                                      typeHolder, NULL_VALUE);
       return cmp;
     }
 
@@ -604,8 +604,7 @@ inline bool matchingColValue(
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+                                                        filterRFs[argIndex], typeHolder, NULL_VALUE);
 
         // Short-circuit the filter evaluation - true || ... == true
         if (cmp == true)
@@ -625,8 +624,7 @@ inline bool matchingColValue(
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+                                                        filterRFs[argIndex], typeHolder, NULL_VALUE);
 
         // Short-circuit the filter evaluation - false && ... = false
         if (cmp == false)
@@ -648,8 +646,7 @@ inline bool matchingColValue(
         // This can be future optimized checking if a filterValues are NULLs or not before the higher level
         // loop.
         bool cmp = colCompare<KIND, COL_WIDTH, IS_NULL>(curValue, filterValue, filterCOPs[argIndex],
-                                                        filterRFs[argIndex], typeHolder,
-                                                        NULL_VALUE);
+                                                        filterRFs[argIndex], typeHolder, NULL_VALUE);
         result ^= cmp;
       }
 
@@ -694,7 +691,8 @@ template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND == KIND_TEXT,
 inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* in)
 {
   constexpr int COL_WIDTH = sizeof(T);
-  const T DUMMY_NULL_VALUE = ~curValue; // it SHALL NOT be equal to curValue, other constraints do not matter.
+  const T DUMMY_NULL_VALUE =
+      ~curValue;  // it SHALL NOT be equal to curValue, other constraints do not matter.
   if (colCompare<KIND_TEXT, COL_WIDTH>(Min, curValue, COMPARE_GT, false, in->colType, DUMMY_NULL_VALUE))
     Min = curValue;
 
@@ -703,7 +701,7 @@ inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* 
 }
 
 template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND != KIND_TEXT, T>::type* = nullptr>
-inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* in)
+inline void updateMinMax(T& Min, T& Max, const T curValue, NewColRequestHeader* /*in*/)
 {
   if (Min > curValue)
     Min = curValue;
@@ -723,20 +721,20 @@ T getInitialMin(NewColRequestHeader* in)
 }
 
 template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND != KIND_TEXT, T>::type* = nullptr>
-T getInitialMin(NewColRequestHeader* in)
+T getInitialMin(NewColRequestHeader* /*in*/)
 {
   return datatypes::numeric_limits<T>::max();
 }
 
 template <ENUM_KIND KIND, typename T,
           typename std::enable_if<KIND != KIND_TEXT && KIND != KIND_UNSIGNED, T>::type* = nullptr>
-T getInitialMax(NewColRequestHeader* in)
+T getInitialMax(NewColRequestHeader* /*in*/)
 {
   return datatypes::numeric_limits<T>::min();
 }
 
 template <ENUM_KIND KIND, typename T, typename std::enable_if<KIND == KIND_UNSIGNED, T>::type* = nullptr>
-T getInitialMax(NewColRequestHeader* in)
+T getInitialMax(NewColRequestHeader* /*in*/)
 {
   return 0;
 }
@@ -900,8 +898,8 @@ inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty
 // This happens if in->NVALS > 0(HAS_INPUT_RIDS is set).
 template <typename T, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
-inline void vectUpdateMinMax(const bool validMinMax, const bool isNonNullOrEmpty, T& Min, T& Max, T curValue,
-                             NewColRequestHeader* in)
+inline void vectUpdateMinMax(const bool /*validMinMax*/, const bool /*isNonNullOrEmpty*/, T& /*Min*/,
+                             T& /*Max*/, T /*curValue*/, NewColRequestHeader* /*in*/)
 {
   //
 }
@@ -910,7 +908,8 @@ template <typename T, bool HAS_INPUT_RIDS,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
 void vectWriteColValuesLoopRIDAsignment(primitives::RIDType* ridDstArray, ColResultHeader* out,
                                         const primitives::RIDType calculatedRID,
-                                        const primitives::RIDType* ridSrcArray, const uint32_t srcRIDIdx)
+                                        const primitives::RIDType* /*ridSrcArray*/,
+                                        const uint32_t /*srcRIDIdx*/)
 {
   *ridDstArray = calculatedRID;
   out->RidFlags |= (1 << (calculatedRID >> 9));  // set the (row/512)'th bit
@@ -919,7 +918,7 @@ void vectWriteColValuesLoopRIDAsignment(primitives::RIDType* ridDstArray, ColRes
 template <typename T, bool HAS_INPUT_RIDS,
           typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
 void vectWriteColValuesLoopRIDAsignment(primitives::RIDType* ridDstArray, ColResultHeader* out,
-                                        const primitives::RIDType calculatedRID,
+                                        const primitives::RIDType /*calculatedRID*/,
                                         const primitives::RIDType* ridSrcArray, const uint32_t srcRIDIdx)
 {
   *ridDstArray = ridSrcArray[srcRIDIdx];
@@ -933,18 +932,19 @@ template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INP
           typename std::enable_if<OUTPUT_TYPE&(OT_TOKEN | OT_DATAVALUE) && !(OUTPUT_TYPE & OT_RID),
                                   T>::type* = nullptr>
 inline uint16_t vectWriteColValues(
-    VT& simdProcessor,                               // SIMD processor
-    const typename VT::MaskType writeMask,           // SIMD intrinsics bitmask for values to write
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    const bool validMinMax,                          // The flag to update Min/Max for a block or not
-    const primitives::RIDType ridOffset,             // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                                  // Typed SIMD vector from the input block
-    char* dstArray,                                  // the actual char dst array ptr to start writing values
-    T& Min, T& Max,                                  // Min/Max of the extent
-    NewColRequestHeader* in,                         // Proto message
-    ColResultHeader* out,                            // Proto message
-    primitives::RIDType* ridDstArray,                // The actual dst arrray ptr to start writing RIDs
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    VT& /*simdProcessor*/,                               // SIMD processor
+    const typename VT::MaskType writeMask,               // SIMD intrinsics bitmask for values to write
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    const bool /*validMinMax*/,                          // The flag to update Min/Max for a block or not
+    const primitives::RIDType /*ridOffset*/,             // The first RID value of the dataVecTPtr
+    T* dataVecTPtr,                                      // Typed SIMD vector from the input block
+    char* dstArray,                        // the actual char dst array ptr to start writing values
+    T& /*Min*/, T& /*Max*/,                // Min/Max of the extent
+    NewColRequestHeader* /*in*/,           // Proto message
+    ColResultHeader* /*out*/,              // Proto message
+    primitives::RIDType* /*ridDstArray*/,  // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* /*ridSrcArray*/)  // The actual src array ptr to read RIDs
 {
   constexpr const uint16_t FilterMaskStep = VT::FilterMaskStep;
   T* tmpDstVecTPtr = reinterpret_cast<T*>(dstArray);
@@ -966,18 +966,19 @@ inline uint16_t vectWriteColValues(
 template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<OUTPUT_TYPE & OT_RID && !(OUTPUT_TYPE & OT_TOKEN), T>::type* = nullptr>
 inline uint16_t vectWriteColValues(
-    VT& simdProcessor,                               // SIMD processor
-    const typename VT::MaskType writeMask,           // SIMD intrinsics bitmask for values to write
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    const bool validMinMax,                          // The flag to update Min/Max for a block or not
-    const primitives::RIDType ridOffset,             // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                                  // Typed SIMD vector from the input block
-    char* dstArray,                                  // the actual char dst array ptr to start writing values
-    T& Min, T& Max,                                  // Min/Max of the extent
-    NewColRequestHeader* in,                         // Proto message
-    ColResultHeader* out,                            // Proto message
-    primitives::RIDType* ridDstArray,                // The actual dst arrray ptr to start writing RIDs
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    VT& /*simdProcessor*/,                               // SIMD processor
+    const typename VT::MaskType /*writeMask*/,           // SIMD intrinsics bitmask for values to write
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    const bool /*validMinMax*/,                          // The flag to update Min/Max for a block or not
+    const primitives::RIDType /*ridOffset*/,             // The first RID value of the dataVecTPtr
+    T* /*dataVecTPtr*/,                                  // Typed SIMD vector from the input block
+    char* /*dstArray*/,                    // the actual char dst array ptr to start writing values
+    T& /*Min*/, T& /*Max*/,                // Min/Max of the extent
+    NewColRequestHeader* /*in*/,           // Proto message
+    ColResultHeader* /*out*/,              // Proto message
+    primitives::RIDType* /*ridDstArray*/,  // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* /*ridSrcArray*/)  // The actual src array ptr to read RIDs
 {
   return 0;
 }
@@ -986,18 +987,19 @@ inline uint16_t vectWriteColValues(
 template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<OUTPUT_TYPE == OT_BOTH, T>::type* = nullptr>
 inline uint16_t vectWriteColValues(
-    VT& simdProcessor,                               // SIMD processor
-    const typename VT::MaskType writeMask,           // SIMD intrinsics bitmask for values to write
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    const bool validMinMax,                          // The flag to update Min/Max for a block or not
-    const primitives::RIDType ridOffset,             // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                                  // Typed SIMD vector from the input block
-    char* dstArray,                                  // the actual char dst array ptr to start writing values
-    T& Min, T& Max,                                  // Min/Max of the extent
-    NewColRequestHeader* in,                         // Proto message
-    ColResultHeader* out,                            // Proto message
-    primitives::RIDType* ridDstArray,                // The actual dst arrray ptr to start writing RIDs
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    VT& /*simdProcessor*/,                               // SIMD processor
+    const typename VT::MaskType writeMask,               // SIMD intrinsics bitmask for values to write
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    const bool /*validMinMax*/,                          // The flag to update Min/Max for a block or not
+    const primitives::RIDType ridOffset,                 // The first RID value of the dataVecTPtr
+    T* dataVecTPtr,                                      // Typed SIMD vector from the input block
+    char* dstArray,                    // the actual char dst array ptr to start writing values
+    T& /*Min*/, T& /*Max*/,            // Min/Max of the extent
+    NewColRequestHeader* /*in*/,       // Proto message
+    ColResultHeader* out,              // Proto message
+    primitives::RIDType* ridDstArray,  // The actual dst arrray ptr to start writing RIDs
+    primitives::RIDType* ridSrcArray)  // The actual src array ptr to read RIDs
 {
   constexpr const uint16_t FilterMaskStep = VT::FilterMaskStep;
   T* tmpDstVecTPtr = reinterpret_cast<T*>(dstArray);
@@ -1026,18 +1028,19 @@ template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INP
           typename std::enable_if<!(OUTPUT_TYPE & (OT_TOKEN | OT_DATAVALUE)) && OUTPUT_TYPE & OT_RID,
                                   T>::type* = nullptr>
 inline uint16_t vectWriteRIDValues(
-    VT& processor,                          // SIMD processor
-    const uint16_t valuesWritten,           // The number of values written to in certain SFINAE cases
-    const bool validMinMax,                 // The flag to update Min/Max for a block or not
+    VT& /*processor*/,                      // SIMD processor
+    const uint16_t /*valuesWritten*/,       // The number of values written to in certain SFINAE cases
+    const bool /*validMinMax*/,             // The flag to update Min/Max for a block or not
     const primitives::RIDType ridOffset,    // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                         // Typed SIMD vector from the input block
+    T* /*dataVecTPtr*/,                     // Typed SIMD vector from the input block
     primitives::RIDType* ridDstArray,       // The actual dst arrray ptr to start writing RIDs
     const typename VT::MaskType writeMask,  // SIMD intrinsics bitmask for values to write
-    T& Min, T& Max,                         // Min/Max of the extent
-    NewColRequestHeader* in,                // Proto message
+    T& /*Min*/, T& /*Max*/,                 // Min/Max of the extent
+    NewColRequestHeader* /*in*/,            // Proto message
     ColResultHeader* out,                   // Proto message
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    primitives::RIDType* ridSrcArray)                    // The actual src array ptr to read RIDs
 {
   constexpr const uint16_t FilterMaskStep = VT::FilterMaskStep;
   primitives::RIDType* origRIDDstArray = ridDstArray;
@@ -1062,18 +1065,19 @@ inline uint16_t vectWriteRIDValues(
 template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INPUT_RIDS,
           typename std::enable_if<OUTPUT_TYPE == OT_BOTH, T>::type* = nullptr>
 inline uint16_t vectWriteRIDValues(
-    VT& processor,                          // SIMD processor
-    const uint16_t valuesWritten,           // The number of values written to in certain SFINAE cases
-    const bool validMinMax,                 // The flag to update Min/Max for a block or not
-    const primitives::RIDType ridOffset,    // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                         // Typed SIMD vector from the input block
-    primitives::RIDType* ridDstArray,       // The actual dst arrray ptr to start writing RIDs
-    const typename VT::MaskType writeMask,  // SIMD intrinsics bitmask for values to write
-    T& Min, T& Max,                         // Min/Max of the extent
-    NewColRequestHeader* in,                // Proto message
-    ColResultHeader* out,                   // Proto message
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    VT& /*processor*/,                          // SIMD processor
+    const uint16_t valuesWritten,               // The number of values written to in certain SFINAE cases
+    const bool /*validMinMax*/,                 // The flag to update Min/Max for a block or not
+    const primitives::RIDType /*ridOffset*/,    // The first RID value of the dataVecTPtr
+    T* /*dataVecTPtr*/,                         // Typed SIMD vector from the input block
+    primitives::RIDType* /*ridDstArray*/,       // The actual dst arrray ptr to start writing RIDs
+    const typename VT::MaskType /*writeMask*/,  // SIMD intrinsics bitmask for values to write
+    T& /*Min*/, T& /*Max*/,                     // Min/Max of the extent
+    NewColRequestHeader* /*in*/,                // Proto message
+    ColResultHeader* /*out*/,                   // Proto message
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    primitives::RIDType* /*ridSrcArray*/)                // The actual src array ptr to read RIDs
 {
   return valuesWritten;
 }
@@ -1083,18 +1087,19 @@ template <typename T, typename VT, int OUTPUT_TYPE, ENUM_KIND KIND, bool HAS_INP
           typename std::enable_if<OUTPUT_TYPE&(OT_TOKEN | OT_DATAVALUE) && !(OUTPUT_TYPE & OT_RID),
                                   T>::type* = nullptr>
 inline uint16_t vectWriteRIDValues(
-    VT& processor,                          // SIMD processor
-    const uint16_t valuesWritten,           // The number of values written to in certain SFINAE cases
-    const bool validMinMax,                 // The flag to update Min/Max for a block or not
-    const primitives::RIDType ridOffset,    // The first RID value of the dataVecTPtr
-    T* dataVecTPtr,                         // Typed SIMD vector from the input block
-    primitives::RIDType* ridDstArray,       // The actual dst arrray ptr to start writing RIDs
-    const typename VT::MaskType writeMask,  // SIMD intrinsics bitmask for values to write
-    T& Min, T& Max,                         // Min/Max of the extent
-    NewColRequestHeader* in,                // Proto message
-    ColResultHeader* out,                   // Proto message
-    const typename VT::MaskType nonNullOrEmptyMask,  // SIMD intrinsics inverce bitmask for NULL/EMPTY values
-    primitives::RIDType* ridSrcArray)                // The actual src array ptr to read RIDs
+    VT& /*processor*/,                          // SIMD processor
+    const uint16_t valuesWritten,               // The number of values written to in certain SFINAE cases
+    const bool /*validMinMax*/,                 // The flag to update Min/Max for a block or not
+    const primitives::RIDType /*ridOffset*/,    // The first RID value of the dataVecTPtr
+    T* /*dataVecTPtr*/,                         // Typed SIMD vector from the input block
+    primitives::RIDType* /*ridDstArray*/,       // The actual dst arrray ptr to start writing RIDs
+    const typename VT::MaskType /*writeMask*/,  // SIMD intrinsics bitmask for values to write
+    T& /*Min*/, T& /*Max*/,                     // Min/Max of the extent
+    NewColRequestHeader* /*in*/,                // Proto message
+    ColResultHeader* /*out*/,                   // Proto message
+    const typename VT::MaskType /*nonNullOrEmptyMask*/,  // SIMD intrinsics inverce bitmask for NULL/EMPTY
+                                                         // values
+    primitives::RIDType* /*ridSrcArray*/)                // The actual src array ptr to read RIDs
 {
   return valuesWritten;
 }
@@ -1113,9 +1118,9 @@ void scalarFiltering_(
     const uint8_t* filterCOPs,  //   comparison operation
     const FT* filterValues,     //   value to compare to
     const uint8_t* filterRFs,
-    const ColRequestHeaderDataType& typeHolder,  // TypeHolder to use collation-aware ops for char/text.
-    const T* srcArray,                           // Input array
-    const uint32_t srcSize,                      // ... and its size
+    const ColRequestHeaderDataType& /*typeHolder*/,  // TypeHolder to use collation-aware ops for char/text.
+    const T* srcArray,                               // Input array
+    const uint32_t srcSize,                          // ... and its size
     const uint16_t* ridArray,   // Optional array of indexes into srcArray, that defines the read order
     const uint16_t ridSize,     // ... and its size
     const uint32_t initialRID,  // The input block idx to start scanning/filter at.
@@ -1224,8 +1229,8 @@ void scalarFiltering(
 
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == false, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
-                                      const primitives::RIDType* ridArray, const uint16_t iter)
+inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* /*origSrcArray*/,
+                                      const primitives::RIDType* /*ridArray*/, const uint16_t /*iter*/)
 {
   return {processor.loadFrom(reinterpret_cast<const char*>(srcArray))};
 }
@@ -1234,8 +1239,8 @@ inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T*
 // TODO Move the logic into simd namespace class methods and use intrinsics
 template <typename VT, typename SIMD_WRAPPER_TYPE, bool HAS_INPUT_RIDS, typename T,
           typename std::enable_if<HAS_INPUT_RIDS == true, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T* origSrcArray,
-                                      const primitives::RIDType* ridArray, const uint16_t iter)
+inline SIMD_WRAPPER_TYPE simdDataLoad(VT& /*processor*/, const T* /*srcArray*/, const T* origSrcArray,
+                                      const primitives::RIDType* ridArray, const uint16_t /*iter*/)
 {
   constexpr const uint16_t WIDTH = sizeof(T);
   constexpr const uint16_t VECTOR_SIZE = VT::vecByteSize / WIDTH;
@@ -1252,7 +1257,7 @@ inline SIMD_WRAPPER_TYPE simdDataLoad(VT& processor, const T* srcArray, const T*
 
 template <ENUM_KIND KIND, typename VT, typename SIMD_WRAPPER_TYPE, typename T,
           typename std::enable_if<KIND != KIND_TEXT, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType& type, VT& processor,
+inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType& /*type*/, VT& /*processor*/,
                                                  typename VT::SimdType& dataVector)
 {
   return {dataVector};
@@ -1260,7 +1265,7 @@ inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType&
 
 template <ENUM_KIND KIND, typename VT, typename SIMD_WRAPPER_TYPE, typename T,
           typename std::enable_if<KIND == KIND_TEXT, T>::type* = nullptr>
-inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType& type, VT& processor,
+inline SIMD_WRAPPER_TYPE simdSwapedOrderDataLoad(const ColRequestHeaderDataType& type, VT& /*processor*/,
                                                  typename VT::SimdType& dataVector)
 {
   constexpr const uint16_t WIDTH = sizeof(T);
@@ -1311,7 +1316,7 @@ void vectorizedTextUpdateMinMax(const bool validMinMax, const typename VT::MaskT
 }
 
 template <typename T, typename VT, typename SimdType>
-void extractMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, T& min, T& max)
+void extractMinMax(VT& /*simdProcessor*/, SimdType simdMin, SimdType simdMax, T& min, T& max)
 {
   constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
   T* simdMinVec = reinterpret_cast<T*>(&simdMin);
@@ -1321,7 +1326,7 @@ void extractMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, T& min
 }
 
 template <typename T, typename VT, typename SimdType>
-void extractTextMinMax(VT& simdProcessor, SimdType simdMin, SimdType simdMax, SimdType weightsMin,
+void extractTextMinMax(VT& /*simdProcessor*/, SimdType simdMin, SimdType simdMax, SimdType weightsMin,
                        SimdType weightsMax, T& min, T& max)
 {
   constexpr const uint16_t size = VT::vecByteSize / sizeof(T);
@@ -1891,7 +1896,7 @@ template <typename T, typename std::enable_if<sizeof(T) == sizeof(int8_t) || siz
                                               T>::type* = nullptr>  // gcc >= 5
 #else
                                                   sizeof(T) == sizeof(int128_t),
-                                              T>::type*>                     // gcc 4.8.5
+                                              T>::type*>  // gcc 4.8.5
 #endif
 #else
                                                   sizeof(T) == sizeof(int128_t),
@@ -1928,7 +1933,7 @@ template <typename T,
 #if ___GNUC__ >= 5
           typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>  // gcc >= 5
 #else
-          typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type*>   // gcc 4.8.5
+          typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type*>  // gcc 4.8.5
 #endif
 #else
           typename std::enable_if<sizeof(T) <= sizeof(int64_t), T>::type* = nullptr>

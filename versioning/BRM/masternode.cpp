@@ -83,7 +83,7 @@ class ServiceControllerNode : public Service, public Opt
   }
 };
 
-void stop(int num)
+void stop(int /*num*/)
 {
 #ifdef BRM_VERBOSE
   std::cerr << "stopping..." << std::endl;
@@ -94,7 +94,7 @@ void stop(int num)
     m->stop();
 }
 
-void restart(int num)
+void restart(int /*num*/)
 {
 #ifdef BRM_VERBOSE
   std::cerr << "stopping this instance..." << std::endl;

@@ -419,7 +419,6 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
           p = nvp;
         }
 
-
         if (d < -datatypes::INT128MAXPRECISION)
         {
           decimal.s128Value = 0;
@@ -749,51 +748,63 @@ string Func_round::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 }
 
 int64_t Func_round::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                                      CalpontSystemCatalog::ColType& op_ct)
+                                      CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
-  int64_t x = parm[0]->data()->getDatetimeIntVal(row, isNull) + (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s - 1] : 0) + (s == 0 ? 48576 : 0); // 48576 = 0xfffff - 1000000;
+  int64_t x =
+      parm[0]->data()->getDatetimeIntVal(row, isNull) +
+      (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s - 1] : 0) +
+      (s == 0 ? 48576 : 0);  // 48576 = 0xfffff - 1000000;
   int32_t m_x = x & 0xfffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
 
 int64_t Func_round::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+                                       execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
-  int64_t x = parm[0]->data()->getTimestampIntVal(row, isNull) + (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s - 1] : 0) + (s == 0 ? 48576 : 0); // 48576 = 0xfffff - 1000000;
+  int64_t x =
+      parm[0]->data()->getTimestampIntVal(row, isNull) +
+      (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s - 1] : 0) +
+      (s == 0 ? 48576 : 0);  // 48576 = 0xfffff - 1000000;
   int32_t m_x = x & 0xfffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
 
 int64_t Func_round::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t s = parm.size() > 1 ? parm[1]->data()->getIntVal(row, isNull) : 0;
   if (isNull)
     return 0;
   s = (s > MAX_MICROSECOND_PRECISION) ? MAX_MICROSECOND_PRECISION : s;
-  if (s < 0) 
+  if (s < 0)
   {
     s = 0;
   }
-  int64_t x = parm[0]->data()->getTimeIntVal(row, isNull) + (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - 1 - s] : 0) + (s == 0 ? 15777215 : 0); // 15777215 = 0xffffff - 1000000;
+  int64_t x =
+      parm[0]->data()->getTimeIntVal(row, isNull) +
+      (s <= MAX_MICROSECOND_PRECISION - 1 ? 5 * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - 1 - s] : 0) +
+      (s == 0 ? 15777215 : 0);  // 15777215 = 0xffffff - 1000000;
   int32_t m_x = x & 0xffffff;
-  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] * helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
+  return (x ^ m_x) | (m_x / helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s] *
+                      helpers::powerOf10_c[MAX_MICROSECOND_PRECISION - s]);
 }
 
 }  // namespace funcexp

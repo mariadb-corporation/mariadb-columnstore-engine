@@ -53,7 +53,7 @@
 2012	ERR_EXTENT_DISK_SPACE	Not able to add extent; adding extent would exceed max file system disk usage. %1%
 2013	ERR_NON_NUMERIC_DATA	Not able to convert the input data; Data value %1% does not match data type.
 2014	ERR_JOBLIST	Error in making/executing job steps in DML
-2015	ERR_ORDERBY_TOO_BIG	Sorting length exceeded. Session variable max_length_for_sort_data needs to be set higher.
+2015	ERR_ORDERBY_TOO_BIG	Memory limit is exceeded running ORDER BY.
 2016	ERR_NON_SUPPORT_GROUP_BY	Non supported item %1% on the GROUP BY list.
 2017	ERR_IN_DELIVERY	ExeMgr failed to deliver result set to connector.
 2018	ERR_LIMIT_TOO_BIG	Not enough memory to process the LIMIT.  Consider raising TotalUmMemory or reducing memory usage.
@@ -111,6 +111,7 @@
 2061	ERR_NOT_SUPPORTED_GROUPBY_ORDERBY_EXPRESSION	%1% is not in GROUP BY clause, not a column or an expression that contains function.
 
 2063	ERR_TNS_DISTINCT_IS_TOO_BIG	DISTINCT memory limit is exceeded whilst running TNS step.
+2064	ERR_OUT_OF_MEMORY	Out of memory.
 
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.

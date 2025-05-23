@@ -66,11 +66,11 @@ ostream& operator<<(ostream& out, const ElementType& rhs)
 
 static ostream& writeRid(std::ostream& out, const uint64_t& rhs)
 {
-  out.write((const char*) (&rhs), sizeof(rhs));
+  out.write((const char*)(&rhs), sizeof(rhs));
   return out;
 }
 
-std::istream& operator >>(std::istream& in, utils::NullString& ns)
+std::istream& operator>>(std::istream& in, utils::NullString& ns)
 {
   uint8_t isNull;
   in.read((char*)(&isNull), sizeof(isNull));
@@ -89,7 +89,7 @@ std::istream& operator >>(std::istream& in, utils::NullString& ns)
   return in;
 }
 
-std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
+std::ostream& operator<<(std::ostream& out, const utils::NullString& ns)
 {
   uint8_t isNull = ns.isNull();
   out.write((char*)(&isNull), sizeof(isNull));
@@ -103,8 +103,8 @@ std::ostream& operator <<(std::ostream& out, const utils::NullString& ns)
   return out;
 }
 
-// XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented mine's, with
-// slightly different types.
+// XXX: somewhat hacky. there's an operator with unknown/unneccessarily complex semantics, so I invented
+// mine's, with slightly different types.
 static istream& readRid(std::istream& in, uint64_t& rhs)
 {
   in.read((char*)(&rhs), sizeof(rhs));
@@ -173,12 +173,12 @@ ostream& operator<<(ostream& os, const RIDElementType& dl)
   return os;
 }
 
-istream& operator>>(istream& is, TupleType& dl)
+istream& operator>>(istream& /*is*/, TupleType& /*dl*/)
 {
   throw std::logic_error("TupleType >> not implemented");
 }
 
-ostream& operator<<(ostream& os, const TupleType& dl)
+ostream& operator<<(ostream& /*os*/, const TupleType& /*dl*/)
 {
   throw std::logic_error("TupleType << not implemented");
 }

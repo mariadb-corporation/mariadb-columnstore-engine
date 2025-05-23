@@ -167,9 +167,11 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   uint64_t blockedInsertWriteCount;
   uint64_t blockedNextReadCount;
 
-  FIFO& operator=(const FIFO&);
-  FIFO(const FIFO&);
-  FIFO();
+  FIFO& operator=(const FIFO&) = delete;
+  FIFO(const FIFO&) = delete;
+  FIFO& operator=(FIFO&&) = delete;
+  FIFO(FIFO&&) = delete;
+  FIFO() = delete;
 
   void signalPs();
   bool swapBuffers(bool waitIfBlocked = true);
@@ -205,24 +207,6 @@ FIFO<element_t>::FIFO(uint32_t con, uint32_t max) : DataListImpl<std::vector<ele
   cDone = con;
 
   blockedInsertWriteCount = blockedNextReadCount = 0;
-}
-
-template <typename element_t>
-FIFO<element_t>::FIFO()
-{
-  throw std::logic_error("don't use FIFO()");
-}
-
-template <typename element_t>
-FIFO<element_t>::FIFO(const FIFO<element_t>& f)
-{
-  throw std::logic_error("don't use FIFO(FIFO &)");
-}
-
-template <typename element_t>
-FIFO<element_t>& FIFO<element_t>::operator=(const FIFO<element_t>& f)
-{
-  throw std::logic_error("don't use FIFO:: =");
 }
 
 template <typename element_t>

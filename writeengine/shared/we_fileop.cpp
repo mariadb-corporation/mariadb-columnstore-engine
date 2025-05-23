@@ -114,7 +114,7 @@ void FileOp::closeFile(IDBDataFile* pFile) const
  * RETURN:
  *    NO_ERROR if success, otherwise if fail
  ***********************************************************/
-int FileOp::createDir(const char* dirName, mode_t mode) const
+int FileOp::createDir(const char* dirName, mode_t /*mode*/) const
 {
   boost::mutex::scoped_lock lk(m_mkdirMutex);
   int rc = IDBPolicy::mkdir(dirName);
@@ -378,7 +378,7 @@ int FileOp::deleteFiles(const std::vector<int32_t>& fids) const
  *    NO_ERROR if success
  *    ERR_DM_CONVERT_OID if error occurs converting OID to file name
  ***********************************************************/
-int FileOp::deletePartitions(const std::vector<OID>& fids,
+int FileOp::deletePartitions(const std::vector<OID>& /*fids*/,
                              const std::vector<BRM::PartitionInfo>& partitions) const
 {
   char tempFileName[FILE_NAME_SIZE];
@@ -578,9 +578,9 @@ int FileOp::extendFile(OID oid, const uint8_t* emptyVal, int width,
     if (isDebug(DEBUG_1) && getLogger())
     {
       std::ostringstream oss;
-      oss << "Opening existing column file (extendFile)"
-          << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment
-          << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
+      oss << "Opening existing column file (extendFile)" << ": OID-" << oid << "; DBRoot-" << dbRoot
+          << "; part-" << partition << "; seg-" << segment << "; LBID-" << startLbid << "; hwm-" << hwm
+          << "; file-" << segFile;
       getLogger()->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
@@ -637,9 +637,9 @@ int FileOp::extendFile(OID oid, const uint8_t* emptyVal, int width,
           if (getLogger())
           {
             std::ostringstream oss;
-            oss << "FileOp::extendFile: error padding partial compressed extent for "
-                << "column OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-"
-                << segment << "; hwm-" << hwm << " " << failedTask.c_str();
+            oss << "FileOp::extendFile: error padding partial compressed extent for " << "column OID-" << oid
+                << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment << "; hwm-" << hwm
+                << " " << failedTask.c_str();
             getLogger()->logMsg(oss.str(), rc, MSGLVL_CRITICAL);
           }
 
@@ -690,9 +690,9 @@ int FileOp::extendFile(OID oid, const uint8_t* emptyVal, int width,
           if (getLogger())
           {
             std::ostringstream oss;
-            oss << "FileOp::extendFile: error padding partial uncompressed extent for "
-                << "column OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-"
-                << segment << "; hwm-" << hwm;
+            oss << "FileOp::extendFile: error padding partial uncompressed extent for " << "column OID-"
+                << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment << "; hwm-"
+                << hwm;
             getLogger()->logMsg(oss.str(), rc, MSGLVL_CRITICAL);
           }
 
@@ -723,9 +723,8 @@ int FileOp::extendFile(OID oid, const uint8_t* emptyVal, int width,
     if (isDebug(DEBUG_1) && getLogger())
     {
       std::ostringstream oss;
-      oss << "Opening new column file"
-          << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment
-          << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
+      oss << "Opening new column file" << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition
+          << "; seg-" << segment << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
       getLogger()->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
@@ -818,9 +817,9 @@ int FileOp::addExtentExactFile(OID oid, const uint8_t* emptyVal, int width, int&
     if (isDebug(DEBUG_1) && getLogger())
     {
       std::ostringstream oss;
-      oss << "Opening existing column file"
-          << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment
-          << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
+      oss << "Opening existing column file" << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-"
+          << partition << "; seg-" << segment << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-"
+          << segFile;
       getLogger()->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
@@ -848,9 +847,8 @@ int FileOp::addExtentExactFile(OID oid, const uint8_t* emptyVal, int width, int&
     if (isDebug(DEBUG_1) && getLogger())
     {
       std::ostringstream oss;
-      oss << "Opening new column file"
-          << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment
-          << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
+      oss << "Opening new column file" << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition
+          << "; seg-" << segment << "; LBID-" << startLbid << "; hwm-" << hwm << "; file-" << segFile;
       getLogger()->logMsg(oss.str(), MSGLVL_INFO2);
     }
 
@@ -1290,9 +1288,9 @@ int FileOp::fillCompColumnExtentEmptyChunks(OID oid, int colWidth, const uint8_t
     if (getLogger())
     {
       std::ostringstream oss;
-      oss << "Converting abbreviated partial extent to full extent for"
-          << ": OID-" << oid << "; DBRoot-" << dbRoot << "; part-" << partition << "; seg-" << segment
-          << "; file-" << segFile << "; wid-" << colWidth << "; oldBlkCnt-" << blkCount << "; newBlkCnt-"
+      oss << "Converting abbreviated partial extent to full extent for" << ": OID-" << oid << "; DBRoot-"
+          << dbRoot << "; part-" << partition << "; seg-" << segment << "; file-" << segFile << "; wid-"
+          << colWidth << "; oldBlkCnt-" << blkCount << "; newBlkCnt-"
           << ((ROWS_PER_EXTENT * colWidth) / BYTE_PER_BLOCK);
       getLogger()->logMsg(oss.str(), MSGLVL_INFO2);
     }
@@ -1652,7 +1650,7 @@ int FileOp::writeHeaders(IDBDataFile* pFile, const char* controlHdr, const char*
  *    else returns NO_ERROR.
  ***********************************************************/
 int FileOp::initDctnryExtent(IDBDataFile* pFile, uint16_t dbRoot, int nBlocks, unsigned char* blockHdrInit,
-                             int blockHdrInitSize, bool bExpandExtent, bool bOptExtension, int64_t lbid)
+                             int blockHdrInitSize, bool /*bExpandExtent*/, bool bOptExtension, int64_t lbid)
 {
   // @bug5769 Don't initialize extents or truncate db files on HDFS
   if (idbdatafile::IDBPolicy::useHdfs())
@@ -2628,17 +2626,17 @@ void FileOp::setBulkFlag(bool isBulkLoad)
   m_isBulk = isBulkLoad;
 }
 
-int FileOp::flushFile(int rc, std::map<FID, FID>& oids)
+int FileOp::flushFile(int /*rc*/, std::map<FID, FID>& /*oids*/)
 {
   return NO_ERROR;
 }
 
-int FileOp::updateColumnExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
+int FileOp::updateColumnExtent(IDBDataFile* /*pFile*/, int /*nBlocks*/, int64_t /*lbid*/)
 {
   return NO_ERROR;
 }
 
-int FileOp::updateDctnryExtent(IDBDataFile* pFile, int nBlocks, int64_t lbid)
+int FileOp::updateDctnryExtent(IDBDataFile* /*pFile*/, int /*nBlocks*/, int64_t /*lbid*/)
 {
   return NO_ERROR;
 }

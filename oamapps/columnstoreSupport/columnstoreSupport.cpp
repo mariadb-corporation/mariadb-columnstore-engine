@@ -255,11 +255,11 @@ void* reportThread(string* reporttype)
       boost::filesystem::path configFile =
           std::string(MCSSYSCONFDIR) + std::string("/columnstore/Columnstore.xml");
       boost::filesystem::copy_file(configFile, "./Columnstore.xml",
-                                   boost::filesystem::copy_option::overwrite_if_exists);
+                                   boost::filesystem::copy_options::overwrite_existing);
       boost::filesystem::path SMconfigFile =
           std::string(MCSSYSCONFDIR) + std::string("/columnstore/storagemanager.cnf");
       boost::filesystem::copy_file(SMconfigFile, "./storagemanager.cnf",
-                                   boost::filesystem::copy_option::overwrite_if_exists);
+                                   boost::filesystem::copy_options::overwrite_existing);
       system("sed -i 's/.*aws_access_key_id.*/aws_access_key_id={PRIVATE}/' ./storagemanager.cnf");
       system("sed -i 's/.*aws_secret_access_key.*/aws_secret_access_key={PRIVATE}/' ./storagemanager.cnf");
       fclose(pOutputFile);
@@ -857,7 +857,7 @@ int main(int argc, char* argv[])
 
     boost::filesystem::path configFile = std::string(MCSMYCNFDIR) + "/columnstore.cnf";
     boost::filesystem::copy_file(configFile, "./columnstore.cnf",
-                                 boost::filesystem::copy_option::overwrite_if_exists);
+                                 boost::filesystem::copy_options::overwrite_existing);
   }
 
   int wait = 0;

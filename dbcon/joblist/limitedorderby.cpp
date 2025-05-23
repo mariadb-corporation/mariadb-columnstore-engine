@@ -18,7 +18,7 @@
 //  $Id: limitedorderby.cpp 9581 2013-05-31 13:46:14Z pleblanc $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <string>
 using namespace std;
@@ -196,7 +196,7 @@ void LimitedOrderBy::finalize()
     fDataQueue.push(fData);
 
   auto& orderByQueue = getQueue();
-  
+
   if (orderByQueue.size() > 0)
   {
     // *DRRTUY Very memory intensive. CS needs to account active

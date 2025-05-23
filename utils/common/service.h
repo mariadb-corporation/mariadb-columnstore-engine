@@ -33,7 +33,7 @@ class Service
   // The pipe to send messages from the child to the parent
   Pipe m_pipe;
 
-  static void common_signal_handler_CHLD(int sig)
+  static void common_signal_handler_CHLD(int /*sig*/)
   {
   }
 

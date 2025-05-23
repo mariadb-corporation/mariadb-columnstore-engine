@@ -1,8 +1,6 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(writeengine_LIB_SRCS
     writeengine.cpp
@@ -33,14 +31,19 @@ set(writeengine_LIB_SRCS
     ../xml/we_xmlop.cpp
     ../xml/we_xmljob.cpp
     ../xml/we_xmlgendata.cpp
-    ../xml/we_xmlgenproc.cpp)
+    ../xml/we_xmlgenproc.cpp
+)
 
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
-add_library(writeengine SHARED ${writeengine_LIB_SRCS})
+columnstore_library(writeengine ${writeengine_LIB_SRCS})
 
 add_dependencies(writeengine loggingcpp)
 
 target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
 
-install(TARGETS writeengine DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+install(
+    TARGETS writeengine
+    DESTINATION ${ENGINE_LIBDIR}
+    COMPONENT columnstore-engine
+)

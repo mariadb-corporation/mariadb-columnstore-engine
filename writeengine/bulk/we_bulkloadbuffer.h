@@ -26,7 +26,10 @@
 #include "string"
 #include "vector"
 #include "boost/thread/mutex.hpp"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "boost/ptr_container/ptr_vector.hpp"
+#pragma GCC diagnostic pop
 #include "we_columninfo.h"
 #include "calpontsystemcatalog.h"
 #include "dataconvert.h"

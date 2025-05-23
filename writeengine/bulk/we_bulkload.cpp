@@ -34,10 +34,11 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
+
+#include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
+
 #include <pwd.h>
 
 #include "we_bulkstatus.h"
@@ -902,7 +903,7 @@ int BulkLoad::preProcessAutoInc(const std::string& fullTableName, ColumnInfo* co
 //    NO_ERROR if success
 //    other if fail
 //------------------------------------------------------------------------------
-int BulkLoad::preProcessHwmLbid(const ColumnInfo* info, int minWidth, uint32_t partition, uint16_t segment,
+int BulkLoad::preProcessHwmLbid(const ColumnInfo* info, int /*minWidth*/, uint32_t partition, uint16_t segment,
                                 HWM& hwm,                   // input/output
                                 BRM::LBID_t& lbid,          // output
                                 bool& bSkippedToNewExtent)  // output

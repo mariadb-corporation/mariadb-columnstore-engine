@@ -46,7 +46,7 @@ void Func_encode::hash_password(ulong* result, const char* password, uint passwo
   result[1] = nr2 & (((ulong)1L << 31) - 1L);
 }
 
-CalpontSystemCatalog::ColType Func_encode::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_encode::operationType(FunctionParm& /*fp*/,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

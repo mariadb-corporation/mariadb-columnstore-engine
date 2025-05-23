@@ -2,13 +2,17 @@
 from typing import Optional, Union
 
 
-def cook_sh_arg(arg_name: str, value: Union[str, int, bool]) -> Optional[str]:
+def cook_sh_arg(
+        arg_name: str, value: Union[str, int, bool], separator: str = ' '
+) -> Optional[str]:
     """Convert argument and and value from function locals to bash argument.
 
     :param arg_name: function argument name
     :type arg_name: str
     :param value: function argument value
     :type value: Union[str, int, bool]
+    :param separator: separator between argument and value
+    :type separator: str
     :return: bash argument string or None
     :rtype: Optional[str]
     """
@@ -31,4 +35,4 @@ def cook_sh_arg(arg_name: str, value: Union[str, int, bool]) -> Optional[str]:
             return None
         # if True value presented just pass only arg name without value
         value = ''
-    return f'-{arg_name} {value}' if value else f'-{arg_name}'
+    return f'-{arg_name}{separator}{value}' if value else f'-{arg_name}'

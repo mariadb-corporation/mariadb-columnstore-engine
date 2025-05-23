@@ -143,17 +143,16 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   retJS.swap(tmp);
 
   return 0;
-
 }
 
 CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& resultType)
+                                                               CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& type)
+                                    CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -164,8 +163,8 @@ string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
   return "";
 }
 
-int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                     execplan::CalpontSystemCatalog::ColType& type)
+int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
+                                     execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -190,8 +189,8 @@ int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool&
   return ret;
 }
 
-double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& type)
+double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -217,7 +216,7 @@ double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, boo
 }
 
 execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                                       execplan::CalpontSystemCatalog::ColType& type)
+                                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   json_value_types valType;
   string retJS;

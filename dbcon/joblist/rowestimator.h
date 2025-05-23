@@ -47,14 +47,7 @@ class RowEstimator
  public:
   /** @brief ctor
    */
-  RowEstimator()
-   : fExtentsToSample(20)
-   , fIntDistinctAdjust(1)
-   , fDecDistinctAdjust(1)
-   , fChar1DistinctAdjust(1)
-   , fChar2Thru7DistinctAdjust(1)
-   , fDictDistinctAdjust(1)
-   , fDateDistinctAdjust(1)
+  RowEstimator() : fExtentsToSample(20)
   {
   }
 
@@ -132,12 +125,6 @@ class RowEstimator
 
   // Configurables read from Columnstore.xml - future.
   uint32_t fExtentsToSample;
-  uint32_t fIntDistinctAdjust;
-  uint32_t fDecDistinctAdjust;
-  uint32_t fChar1DistinctAdjust;
-  uint32_t fChar2Thru7DistinctAdjust;
-  uint32_t fDictDistinctAdjust;
-  uint32_t fDateDistinctAdjust;
 
   static const uint32_t fRowsPerExtent = 8192 * 1024;
   static const uint32_t fBlockSize = 8192;  // Block size in bytes.

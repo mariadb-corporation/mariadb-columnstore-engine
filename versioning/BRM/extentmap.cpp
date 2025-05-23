@@ -812,7 +812,7 @@ int ExtentMap::markInvalid(const vector<LBID_t>& lbids,
 // TODO MCOL-641 Not adding support here since this function appears to be unused anywhere.
 
 int ExtentMap::setMaxMin(const LBID_t lbid, const int64_t max, const int64_t min, const int32_t seqNum,
-                         bool firstNode)
+                         bool /*firstNode*/)
 {
 #ifdef BRM_INFO
 
@@ -884,7 +884,7 @@ int ExtentMap::setMaxMin(const LBID_t lbid, const int64_t max, const int64_t min
 
 // @bug 1970.  Added updateExtentsMaxMin function.
 // @note - The key passed in the map must the the first LBID in the extent.
-void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool firstNode, bool useLock)
+void ExtentMap::setExtentsMaxMin(const CPMaxMinMap_t& cpMap, bool /*firstNode*/, bool useLock)
 {
   CPMaxMinMap_t::const_iterator it;
 
@@ -1580,7 +1580,6 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
   cout << "Expected EM entries:" << emNumElements << endl;
   cout << "Expected free list entries:" << flNumElements << endl;
 
-
   if (nbytes != (2 * sizeof(uint32_t)))
   {
     log_errno("ExtentMap::loadVersion4or5(): read ");
@@ -1700,7 +1699,7 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
   fEMRBTreeShminfo->currentSize = (emNumElements * EM_RB_TREE_NODE_SIZE) + EM_RB_TREE_EMPTY_SIZE;
 }
 
-void ExtentMap::load(const string& filename, bool fixFL)
+void ExtentMap::load(const string& filename, bool /*fixFL*/)
 {
 #ifdef BRM_INFO
 
@@ -4783,8 +4782,8 @@ HWM_t ExtentMap::getLocalHWM(int OID, uint32_t partitionNum, uint16_t segmentNum
 // (per segment file).
 // Used for dictionary or column OIDs to set the HWM for specific segment file.
 //------------------------------------------------------------------------------
-void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum, uint16_t segmentNum, HWM_t newHWM, bool firstNode,
-                            bool uselock)
+void ExtentMap::setLocalHWM(int OID, uint32_t partitionNum, uint16_t segmentNum, HWM_t newHWM,
+                            bool /*firstNode*/, bool uselock)
 {
 #ifdef BRM_INFO
 
@@ -4945,7 +4944,7 @@ void ExtentMap::bulkUpdateDBRoot(const vector<BulkUpdateDBRootArg>& args)
   }
 }
 
-void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries, bool sorted, bool notFoundErr,
+void ExtentMap::getExtents(int OID, vector<struct EMEntry>& entries, bool sorted, bool /*notFoundErr*/,
                            bool incOutOfService)
 {
 #ifdef BRM_INFO

@@ -36,7 +36,7 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_time_to_sec::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_time_to_sec::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

@@ -1368,7 +1368,7 @@ void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOu
 // Note: NULL value check must be done on UM & PM
 //       UM may receive NULL values, too.
 //------------------------------------------------------------------------------
-void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int funcType)
+void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int /*funcType*/)
 {
   datatypes::SystemCatalog::ColDataType colDataType = rowIn.getColType(colIn);
   long double valIn = 0;
@@ -2569,7 +2569,7 @@ void RowAggregationUM::endOfInput()
 //------------------------------------------------------------------------------
 // Initilalize the Group Concat data
 //------------------------------------------------------------------------------
-void RowAggregationUM::initialize(bool hasGroupConcat)
+void RowAggregationUM::initialize(bool /*hasGroupConcat*/)
 {
   if (fGroupConcat.size() > 0)
     fFunctionColGc = fFunctionCols;
@@ -4540,7 +4540,7 @@ void RowAggregationUMP2::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut
 // rowUDAF(in)  - pointer to the RowUDAFFunctionCol for this UDAF instance
 // rgContextColl(in) - ptr to a vector that brings UDAF contextx in
 //------------------------------------------------------------------------------
-void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t colOut, int64_t colAux,
+void RowAggregationUMP2::doUDAF(const Row& rowIn, int64_t colIn, int64_t /*colOut*/, int64_t colAux,
                                 uint64_t& funcColsIdx, std::vector<mcsv1sdk::mcsv1Context>* rgContextColl)
 {
   static_any::any valOut;

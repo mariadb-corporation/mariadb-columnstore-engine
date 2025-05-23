@@ -17,7 +17,7 @@
 
 //  $Id: tuplehavingstep.cpp 9709 2013-07-20 06:08:46Z xlou $
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <sstream>
 #include <iomanip>
@@ -73,7 +73,7 @@ TupleHavingStep::~TupleHavingStep()
 {
 }
 
-void TupleHavingStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
+void TupleHavingStep::setOutputRowGroup(const rowgroup::RowGroup& /*rg*/)
 {
   throw runtime_error("Disabled, use initialize() to set output RowGroup.");
 }

@@ -177,7 +177,7 @@ long long timeGet(uint64_t time, IntervalColumn::interval_type unit)
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_extract::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_extract::operationType(FunctionParm& /*fp*/,
                                                           CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

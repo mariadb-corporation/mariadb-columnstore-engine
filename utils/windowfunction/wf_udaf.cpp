@@ -53,9 +53,9 @@ using namespace joblist;
 
 namespace windowfunction
 {
-boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int ct,
+boost::shared_ptr<WindowFunctionType> WF_udaf::makeFunction(int id, const string& name, int /*ct*/,
                                                             mcsv1sdk::mcsv1Context& context,
-                                                            WindowFunctionColumn* wc)
+                                                            WindowFunctionColumn* /*wc*/)
 {
   boost::shared_ptr<WindowFunctionType> func;
 

@@ -6,25 +6,24 @@
 
 set -o pipefail
 
+export CLICOLOR_FORCE=1 #cmake output
+
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-RPM_CONFIG_DIR="/etc/my.cnf.d"
-DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
-CONFIG_DIR=$RPM_CONFIG_DIR
+CONFIG_DIR="/etc/my.cnf.d"
 
 SCRIPT_LOCATION=$(dirname "$0")
-MDB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../..)
+MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
 
 GCC_VERSION="11"
-BUILD_DIR="verylongdirnameforverystrangecpackbehavior"
-MDB_CMAKE_FLAGS=""
+MDB_CMAKE_FLAGS=()
 
-source $SCRIPT_LOCATION/utils.sh
+source "$SCRIPT_LOCATION"/utils.sh
 
 if [ "$EUID" -ne 0 ]; then
     error "Please run script as root to install MariaDb to system paths"
@@ -39,33 +38,33 @@ cd - >/dev/null
 echo "Arguments received: $@"
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
-optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
+optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH")
+optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
+optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
-optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
-optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
-optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
-optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
-optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
-optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
-optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
-optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
-optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
-optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
-optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
-optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
-optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
-optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=F long=show-build-flags desc="Print CMake flags, while build" variable=PRINT_CMAKE_FLAGS default=false value=true
-optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
+optparse.define short=F long=custom-cmake-flags desc="Add custom cmake flags" variable=CUSTOM_CMAKE_FLAGS
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$MDB_SOURCE_PATH/../MariaDBBuild
+optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
+optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
+optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
+optparse.define short=O long=static desc="Build all with static libraries" variable=STATIC_BUILD default=false value=true
+optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
+optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
 optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
-optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
-optparse.define short=R long=server-version desc="MariaDB server version" variable=MARIADB_SERVER_VERSION
+optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
+optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
+optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
+optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
+optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
+optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 
 source $(optparse.build)
 
@@ -82,10 +81,6 @@ fi
 pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
     pkg_format="rpm"
-fi
-
-if [[ $pkg_format = "deb" ]]; then
-    CONFIG_DIR=$DEB_CONFIG_DIR
 fi
 
 disable_git_restore_frozen_revision() {
@@ -138,11 +133,11 @@ stop_service() {
 }
 
 check_service() {
-    if systemctl is-active --quiet $1; then
+    if systemctl is-active --quiet "$1"; then
         message "$1 $color_normal[$color_green OK $color_normal]"
     else
         message "$1 $color_normal[$color_red Fail $color_normal]"
-        service $1 status
+        service "$1" status
     fi
 }
 
@@ -182,7 +177,7 @@ clean_old_installation() {
     rm -rf /var/log/mariadb/columnstore/*
     rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf /etc/my.cnf.d/columnstore.cnf
     rm -rf /tmp/*
-    rm -rf $REPORT_PATH
+    rm -rf "$REPORT_PATH"
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
@@ -197,10 +192,6 @@ modify_packaging() {
 
     if [[ $pkg_format == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
-    fi
-
-    if [[ "$MARIADB_SERVER_VERSION" == 10.6* ]]; then
-        sed -i 's/mariadb-server/mariadb-server-10.6/' storage/columnstore/columnstore/debian/control
     fi
 
     #disable LTO for 22.04 for now
@@ -245,62 +236,73 @@ modify_packaging() {
 
 construct_cmake_flags() {
 
-    MDB_CMAKE_FLAGS="-DWITH_SYSTEMD=yes \
-                    -DPLUGIN_COLUMNSTORE=YES \
-                    -DPLUGIN_MROONGA=NO \
-                    -DPLUGIN_ROCKSDB=NO \
-                    -DPLUGIN_TOKUDB=NO \
-                    -DPLUGIN_CONNECT=NO \
-                    -DPLUGIN_SPIDER=NO \
-                    -DPLUGIN_OQGRAPH=NO \
-                    -DPLUGIN_SPHINX=NO \
-                    -DWITH_EMBEDDED_SERVER=NO \
-                    -DBUILD_CONFIG=mysql_release \
-                    -DWITH_WSREP=NO \
-                    -DWITH_SSL=system \
-                    -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX \
-                    -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-                    -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE \
-                    -DPLUGIN_GSSAPI=NO"
+    MDB_CMAKE_FLAGS=(
+        -DBUILD_CONFIG=mysql_release
+        -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+        -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
+        -DCOLUMNSTORE_MAINTAINER=YES
+        -DMYSQL_MAINTAINER_MODE=NO
+        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_CONNECT=NO
+        -DPLUGIN_GSSAPI=NO
+        -DPLUGIN_MROONGA=NO
+        -DPLUGIN_OQGRAPH=NO
+        -DPLUGIN_ROCKSDB=NO
+        -DPLUGIN_SPHINX=NO
+        -DPLUGIN_SPIDER=NO
+        -DPLUGIN_TOKUDB=NO
+        -DWITH_EMBEDDED_SERVER=NO
+        -DWITH_SSL=system
+        -DWITH_SYSTEMD=yes
+        -DWITH_WSREP=NO
+    )
 
     if [[ $SKIP_UNIT_TESTS = true ]]; then
         warn "Unittests are not build"
 
     else
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UNITTESTS=YES"
+        MDB_CMAKE_FLAGS+=(-DWITH_UNITTESTS=YES)
         message "Buiding with unittests"
     fi
 
     if [[ $DRAW_DEPS = true ]]; then
         warn "Generating dependendies graph to mariadb.dot"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} --graphviz=mariadb.dot"
+        MDB_CMAKE_FLAGS+=(--graphviz=mariadb.dot)
     fi
 
     if [[ $USE_NINJA = true ]]; then
         warn "Using Ninja instead of Makefiles"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -GNinja"
+        MDB_CMAKE_FLAGS+=(-GNinja)
+    fi
+
+    if [[ $STATIC_BUILD = true ]]; then
+        warn "Building all with static linkage"
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_STATIC_LIBRARIES:BOOL=ON)
     fi
 
     if [[ $ASAN = true ]]; then
         warn "Building with Address Sanitizer "
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $TSAN = true ]]; then
         warn "Building with Thread Sanitizer"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_TSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+        message "Setting vm.mmap_rnd_bits=30 for TSAN support"
+        sysctl vm.mmap_rnd_bits=30
     fi
 
     if [[ $UBSAN = true ]]; then
         warn "Building with UB Sanitizer"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH}"
+        MDB_CMAKE_FLAGS+=(-DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
         warn "Cores are not dumped"
     else
         warn "Building with CoreDumps"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_COREDUMPS=ON"
+        MDB_CMAKE_FLAGS+=(-DWITH_COREDUMPS=ON)
 
         if [ -f /.dockerenv ]; then
             warn "Build is executed in Docker, core dumps saving path /proc/sys/kernel/core_pattern will not be configured!"
@@ -312,35 +314,35 @@ construct_cmake_flags() {
 
     if [[ $MAKEFILE_VERBOSE = true ]]; then
         warn "Verbosing Makefile Commands"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
+        MDB_CMAKE_FLAGS+=(-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON)
     fi
 
     if [[ $SCCACHE = true ]]; then
         warn "Use sccache"
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
+        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
     fi
 
     if [[ $RUN_BENCHMARKS = true ]]; then
         if [[ $MCS_BUILD_TYPE = 'Debug' ]]; then
             error "Benchmarks will not be build in run in Debug build Mode"
-            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
-            $RUN_BENCHMARKS = false
+            MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=NO)
+            RUN_BENCHMARKS=false
         elif [[ $OS != *"ubuntu"* && $OS != *"debian"* ]]; then
             error "Benchmarks are now avaliable only at Ubuntu or Debian"
-            MAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
-            $RUN_BENCHMARKS = false
+            MAKE_FLAGS="${MDB_CMAKE_FLAGS[@]} -DWITH_MICROBENCHMARKS=NO"
+            RUN_BENCHMARKS=false
         else
             message "Compile with microbenchmarks"
-            MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=YES"
+            MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=YES)
         fi
     else
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DWITH_MICROBENCHMARKS=NO"
+        MDB_CMAKE_FLAGS+=(-DWITH_MICROBENCHMARKS=NO)
         message "Buiding without microbenchmarks"
     fi
 
     if [[ "$OS" == *"rocky"* ]]; then
         OS_VERSION=${OS//[^0-9]/}
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DRPM=rockylinux${OS_VERSION}"
+        MDB_CMAKE_FLAGS+=(-DRPM=rockylinux${OS_VERSION})
     elif [[ "$OS" == "debian:11" ]]; then
         CODENAME="bullseye"
     elif [[ "$OS" == "debian:12" ]]; then
@@ -357,13 +359,13 @@ construct_cmake_flags() {
     fi
 
     if [[ -n "$CODENAME" ]]; then
-        MDB_CMAKE_FLAGS="${MDB_CMAKE_FLAGS} -DDEB=${CODENAME}"
+        MDB_CMAKE_FLAGS+=(-DDEB=${CODENAME})
     fi
 
-    if [[ $PRINT_CMAKE_FLAGS = true ]]; then
-        message "Building with flags"
-        newline_array ${MDB_CMAKE_FLAGS[@]}
-    fi
+    MDB_CMAKE_FLAGS+=($CUSTOM_CMAKE_FLAGS)
+
+    message "Building with flags"
+    newline_array "${MDB_CMAKE_FLAGS[@]}"
 }
 
 init_submodules() {
@@ -388,15 +390,11 @@ check_errorcode() {
 }
 
 build_package() {
-    modify_packaging
-    RESULT_DIR=$(echo "$OS" | sed 's/://g' | sed 's/\//-/g')
-    mkdir $RESULT_DIR
-
     if [[ $pkg_format == "rpm" ]]; then
-        command="cmake ${MDB_CMAKE_FLAGS} && make -j\$(nproc) package"
+        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
-       CMAKEFLAGS='${MDB_CMAKE_FLAGS}' debian/autobake-deb.sh"
+       CMAKEFLAGS=\"${MDB_CMAKE_FLAGS[@]}\" debian/autobake-deb.sh"
     fi
 
     echo "Building a package for $OS"
@@ -404,46 +402,48 @@ build_package() {
     eval "$command"
 
     check_errorcode
-
 }
 
 build_binary() {
-    MARIA_BUILD_PATH=$(realpath $MARIA_BUILD_PATH)
+    MARIA_BUILD_PATH=$(realpath "$MARIA_BUILD_PATH")
     message_split
     message "Building sources in $color_yellow$MCS_BUILD_TYPE$color_cyan mode"
     message "Compiled artifacts will be written to $color_yellow$MARIA_BUILD_PATH$color_cyan"
-    mkdir -p $MARIA_BUILD_PATH
+    mkdir -p "$MARIA_BUILD_PATH"
 
     cd $MDB_SOURCE_PATH
 
     if [[ $FORCE_CMAKE_CONFIG = true ]]; then
         warn "Erasing cmake cache"
-        rm -f "$MDB_SOURCE_PATH/CMakeCache.txt"
-        rm -rf "$MDB_SOURCE_PATH/CMakeFiles"
+        rm -f "$MARIA_BUILD_PATH/CMakeCache.txt"
+        rm -rf "$MARIA_BUILD_PATH/CMakeFiles"
     fi
 
     message "Configuring cmake silently"
-    ${CMAKE_BIN_NAME} $MDB_CMAKE_FLAGS -S$MDB_SOURCE_PATH -B$MARIA_BUILD_PATH | spinner
+    ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
 
-    ${CMAKE_BIN_NAME} --build $MARIA_BUILD_PATH -j $CPUS | onelinearizator &&
+    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
         message "Installing silently" &&
-        ${CMAKE_BIN_NAME} --install $MARIA_BUILD_PATH | spinner 30
+        ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
 
     check_errorcode
+
+    message "Adding symbol link to compile_commands.json to the source root"
+    ln -sf "$MARIA_BUILD_PATH/compile_commands.json" "$MDB_SOURCE_PATH"
 }
 
 check_user_and_group() {
     user=$1
-    if [ -z "$(grep $user /etc/passwd)" ]; then
+    if [ -z "$(grep "$user" /etc/passwd)" ]; then
         message "Adding user $user into /etc/passwd"
-        useradd -r -U $user -d /var/lib/mysql
+        useradd -r -U "$user" -d /var/lib/mysql
     fi
 
-    if [ -z "$(grep $user /etc/group)" ]; then
-        GroupID = $(awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group)
+    if [ -z "$(grep "$user" /etc/group)" ]; then
+        GroupID=$(awk -F: '{uid[$3]=1}END{for(x=100; x<=999; x++) {if(uid[x] != ""){}else{print x; exit;}}}' /etc/group)
         message "Adding group $user with id $GroupID"
-        groupadd -g $GroupID $user
+        groupadd -g "$GroupID" "$user"
     fi
 }
 
@@ -465,7 +465,7 @@ run_microbenchmarks_tests() {
         warn "Skipping microbenchmarks"
     else
         message "Runnning microbenchmarks"
-        cd $MDB_SOURCE_PATH
+        cd $MARIA_BUILD_PATH
         ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
         cd - >/dev/null
     fi
@@ -530,8 +530,8 @@ fix_config_files() {
 }
 
 make_dir() {
-    mkdir -p $1
-    chown mysql:mysql $1
+    mkdir -p "$1"
+    chown mysql:mysql "$1"
 }
 
 install() {
@@ -540,8 +540,8 @@ install() {
         message "Installing MariaDB"
         disable_plugins_for_bootstrap
 
-        make_dir $REPORT_PATH
-        chmod 777 $REPORT_PATH
+        make_dir "$REPORT_PATH"
+        chmod 777 "$REPORT_PATH"
 
         check_user_and_group mysql
         check_user_and_group syslog
@@ -562,17 +562,17 @@ install() {
 
         make_dir /etc/columnstore
 
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
 
-        cp $MDB_SOURCE_PATH/support-files/*.service /lib/systemd/system/
-        cp $MDB_SOURCE_PATH/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
+        cp "$MDB_SOURCE_PATH"/support-files/*.service /lib/systemd/system/
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
         if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
             make_dir /usr/share/mysql
             make_dir /etc/mysql/
-            cp $MDB_SOURCE_PATH/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
-            cp $MDB_SOURCE_PATH/debian/additions/debian-start /etc/mysql/debian-start
+            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
+            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start /etc/mysql/debian-start
             >/etc/mysql/debian.cnf
         fi
 
@@ -619,7 +619,7 @@ smoke() {
         message "Creating test database"
         mariadb -e "create database if not exists test;"
         message "Selecting magic numbers"
-        MAGIC=$(mysql -N test <$MDB_SOURCE_PATH/storage/columnstore/columnstore/tests/scripts/smoke.sql)
+        MAGIC=$(mysql -N test <"$MDB_SOURCE_PATH"/storage/columnstore/columnstore/tests/scripts/smoke.sql)
         if [[ $MAGIC == '42' ]]; then
             message "Great answer correct!"
         else
@@ -633,7 +633,7 @@ generate_svgs() {
         message_split
         warn "Generating svgs with dependency graph to $REPORT_PATH"
         for f in $MDB_SOURCE_PATH/mariadb.dot.*; do
-            dot -Tsvg -o $REPORT_PATH/$(basename $f).svg $f
+            dot -Tsvg -o "$REPORT_PATH"/$(basename "$f").svg "$f"
         done
     fi
 }
@@ -665,6 +665,7 @@ if [[ $BUILD_PACKAGES = false ]]; then
         generate_svgs
     fi
 else
+    modify_packaging
     build_package
 fi
 

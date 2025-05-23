@@ -238,7 +238,8 @@ uint32_t QueryStats::userPriority(string _host, const string _user)
   if (!fPriority.empty())
     return fPriorityLevel;
 
-  ResourceManager rm;
+  bool runningInExeMgr = false;
+  ResourceManager rm(runningInExeMgr);
   fPriorityLevel = DEFAULT_USER_PRIORITY_LEVEL;
   fPriority = DEFAULT_USER_PRIORITY;
 

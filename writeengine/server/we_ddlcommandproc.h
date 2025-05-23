@@ -32,7 +32,6 @@
 
 #define EXPORT
 
-
 namespace WriteEngine
 {
 struct DDLColumn;
@@ -47,7 +46,7 @@ class WE_DDLCommandProc
     TRUNCATE_LOG
   };
   WE_DDLCommandProc();
-  WE_DDLCommandProc(const WE_DDLCommandProc& rhs);
+  WE_DDLCommandProc(const WE_DDLCommandProc& rhs) = delete;
   ~WE_DDLCommandProc();
   /** @brief Update SYSCOLUMN nextval column for the columnoid with nextVal.
    *
@@ -115,23 +114,14 @@ class WE_DDLCommandProc
     rid = relRidInThisExtent + numExtentsInThisSegPart * extentRows;
   }
 
-private:
-uint8_t updateSystableEntryForSysTable(int32_t sessionID,
-                                       uint32_t txnID,
-                                       const DDLColumn& column,
-                                       const std::string& value,
-                                       const std::string& oldValue,
-                                       execplan::CalpontSystemCatalog::ROPair ropair,
-                                       std::string& err);
+ private:
+  uint8_t updateSystableEntryForSysTable(int32_t sessionID, uint32_t txnID, const DDLColumn& column,
+                                         const std::string& value, const std::string& oldValue,
+                                         execplan::CalpontSystemCatalog::ROPair ropair, std::string& err);
 
-uint8_t updateSystableEntryForSysColumn(int32_t sessionID,
-                                        uint32_t txnID,
-                                        const DDLColumn& column,
-                                        const std::string& value,
-                                        const std::string& oldValue,
-                                        execplan::CalpontSystemCatalog::RIDList& roList,
-                                        std::string& err);
-
+  uint8_t updateSystableEntryForSysColumn(int32_t sessionID, uint32_t txnID, const DDLColumn& column,
+                                          const std::string& value, const std::string& oldValue,
+                                          execplan::CalpontSystemCatalog::RIDList& roList, std::string& err);
 
  private:
   WriteEngineWrapper fWEWrapper;

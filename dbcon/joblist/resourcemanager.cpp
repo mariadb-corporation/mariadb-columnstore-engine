@@ -244,6 +244,17 @@ ResourceManager::ResourceManager(bool runningInExeMgr, config::Config* aConfig)
   }
 }
 
+// For UT
+ResourceManager::ResourceManager()
+ : fExeMgrStr("ForUT")
+ , fHJUmMaxMemorySmallSideDistributor(
+       fHashJoinStr, "UmMaxMemorySmallSide",
+       1024*1024,
+       1024*1024, 0)
+ , fHJPmMaxMemorySmallSideSessionMap(1024*1024)
+{
+}
+
 int ResourceManager::getEmPriority() const
 {
   int temp = getIntVal(fExeMgrStr, "Priority", defaultEMPriority);

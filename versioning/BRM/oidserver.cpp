@@ -722,7 +722,9 @@ int OIDServer::allocOIDs(int num)
   return bestMatchBegin;
 }
 
-void OIDServer::returnOIDs(int start, int end) const
+
+// FIXME: Not implemented
+void OIDServer::returnOIDs(int /*start*/, int /*end*/) const
 {
   //@Bug 1412. Do not reuse oids for now.
   /*	struct FEntry freelist[FreeListEntries];

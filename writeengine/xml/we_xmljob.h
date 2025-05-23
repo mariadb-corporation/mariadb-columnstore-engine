@@ -142,7 +142,6 @@ class XMLJob : public XMLOp
 
   Job fJob;  // current job xml
 
-  DebugLevel fDebugLevel;      // internal use debug level
   bool fDeleteTempFile;        // delete tmp jobfile in destructor
   std::string fJobFileName;    // job file name
   JobColList fDefaultColumns;  // temporary list of default cols

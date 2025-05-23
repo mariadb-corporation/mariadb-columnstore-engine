@@ -301,7 +301,7 @@ void Synchronizer::periodicSync()
   }
 }
 
-void Synchronizer::syncNow(const bf::path& prefix)
+void Synchronizer::syncNow(const bf::path& /*prefix*/)
 {
   boost::unique_lock<boost::mutex> lock(mutex);
 

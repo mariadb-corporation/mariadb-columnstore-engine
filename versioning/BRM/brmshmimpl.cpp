@@ -343,7 +343,7 @@ int BRMManagedShmImpl::grow(off_t newSize)
 }
 
 // Dummy method that has no references in the code.
-int BRMManagedShmImpl::clear(unsigned newKey, off_t newSize)
+int BRMManagedShmImpl::clear(unsigned /*newKey*/, off_t /*newSize*/)
 {
   return 0;
 }
@@ -471,7 +471,7 @@ int32_t BRMManagedShmImplRBTree::grow(unsigned key, off_t incSize)
 }
 
 // Dummy method that has no references in the code.
-int BRMManagedShmImplRBTree::clear(unsigned newKey, off_t newSize)
+int BRMManagedShmImplRBTree::clear(unsigned /*newKey*/, off_t /*newSize*/)
 {
   return 0;
 }

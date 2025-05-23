@@ -59,14 +59,14 @@ inline string cleanup(char* to)
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_unhex::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_unhex::operationType(FunctionParm& /*fp*/,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 string Func_unhex::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                             CalpontSystemCatalog::ColType& op_ct)
+                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto& nfrom = parm[0]->data()->getStrVal(row, isNull);
 

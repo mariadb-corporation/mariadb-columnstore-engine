@@ -119,8 +119,12 @@ class ResourceManager
   /** @brief ctor
    *
    */
-  explicit ResourceManager(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  explicit ResourceManager(bool runningInExeMgr, config::Config* aConfig = nullptr);
   static ResourceManager* instance(bool runningInExeMgr = false, config::Config* aConfig = nullptr);
+  
+  // For UT
+  explicit ResourceManager();
+  
   config::Config* getConfig()
   {
     return fConfig;
@@ -333,9 +337,14 @@ class ResourceManager
   }
   inline int64_t availableMemory() const
   {
-    return totalUmMemLimit.load(std::memory_order_relaxed);
+    return atomicops::atomicLoadRef(totalUmMemLimit);
   }
 
+  inline void setMemory(int64_t amount) 
+  {
+    atomicops::atomicStoreRef(totalUmMemLimit, amount);
+  }
+  
   /* old HJ mem interface, used by HashJoin */
   uint64_t getHjPmMaxMemorySmallSide(uint32_t sessionID)
   {

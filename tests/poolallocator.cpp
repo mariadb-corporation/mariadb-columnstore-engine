@@ -202,7 +202,7 @@ TEST(PoolAllocatorTest, MultithreadedAllocationWithLock)
 
 static const constexpr int64_t MemoryAllowance = 1 * 1024 * 1024;
 
-// Test Fixture for AtomicCounterAllocator
+// Test Fixture for CounterAllocator
 class PoolallocatorTest : public ::testing::Test
 {
  protected:
@@ -226,30 +226,30 @@ class PoolallocatorTest : public ::testing::Test
 // Тест для проверки учёта потребления памяти в PoolAllocator.
 TEST_F(PoolallocatorTest, AllocationWithAccounting)
 {
-  int bufSize = 512;
+  int bufSize1 = 512;
   const unsigned CUSTOM_SIZE = 1024;
   PoolAllocator pa(allocator, CUSTOM_SIZE, false, true);
   EXPECT_EQ(pa.getWindowSize(), CUSTOM_SIZE);
   EXPECT_EQ(pa.getMemUsage(), 0ULL);
-  auto* ptr = pa.allocate(bufSize);
+  auto* ptr = pa.allocate(bufSize1);
 
   EXPECT_NE(ptr, nullptr);
-  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize);
+  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize1);
   EXPECT_LE(allocatedMemory.load(), MemoryAllowance - CUSTOM_SIZE);
   pa.deallocate(ptr);
   // B/c this PoolAllocator frees memory only when it's destroyed.
-  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize);
+  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize1);
   EXPECT_LE(allocatedMemory.load(), MemoryAllowance - CUSTOM_SIZE);
 
-  bufSize = 64536;
-  auto* ptr1 = pa.allocate(bufSize);
+  int bufSize2 = 64536;
+  auto* ptr1 = pa.allocate(bufSize2);
 
   EXPECT_NE(ptr1, nullptr);
-  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize);
+  EXPECT_LE(allocatedMemory.load(), MemoryAllowance - bufSize2 - CUSTOM_SIZE);
 
   pa.deallocate(ptr1);
   EXPECT_LE(allocatedMemory.load(), MemoryAllowance - CUSTOM_SIZE);
-  EXPECT_GE(allocatedMemory.load(), MemoryAllowance - bufSize);
+  EXPECT_GE(allocatedMemory.load(), MemoryAllowance - bufSize2);
 }
 
 TEST_F(PoolallocatorTest, MultithreadedAccountedAllocationWithLock)

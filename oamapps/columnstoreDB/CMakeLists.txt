@@ -1,14 +1,15 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(columnstoreDBWrite_SRCS columnstoreDB.cpp)
 
 add_executable(columnstoreDBWrite ${columnstoreDBWrite_SRCS})
 
-target_link_libraries(columnstoreDBWrite ${ENGINE_LDFLAGS} ncurses  ${ENGINE_EXEC_LIBS})
+target_link_libraries(columnstoreDBWrite ${ENGINE_LDFLAGS} ncurses ${ENGINE_EXEC_LIBS})
 
-install(TARGETS columnstoreDBWrite DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
+install(
+    TARGETS columnstoreDBWrite
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

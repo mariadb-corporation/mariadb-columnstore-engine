@@ -2414,7 +2414,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                 throw IDBExcept(emsg, ERR_NOT_GROUPBY_EXPRESSION);
               }
             }  // else
-          }    // switch
+          }  // switch
         }
       }
 
@@ -5342,7 +5342,7 @@ void TupleAggregateStep::aggregateRowGroups()
   }
 }
 
-void TupleAggregateStep::threadedAggregateFinalize(uint32_t threadID)
+void TupleAggregateStep::threadedAggregateFinalize(uint32_t /*threadID*/)
 {
   for (uint32_t i = 0; i < fNumOfBuckets; ++i)
   {
@@ -5631,8 +5631,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
     catch (...)
     {
       handleException(std::current_exception(), logging::tupleAggregateStepErr,
-                      logging::ERR_AGGREGATION_TOO_BIG,
-                      "TupleAggregateStep::threadedAggregateRowGroups()");
+                      logging::ERR_AGGREGATION_TOO_BIG, "TupleAggregateStep::threadedAggregateRowGroups()");
       fEndOfResult = true;
       fDoneAggregate = true;
     }
@@ -6030,15 +6029,9 @@ void TupleAggregateStep::printCalTrace()
 void TupleAggregateStep::formatMiniStats()
 {
   ostringstream oss;
-  oss << "TAS "
-      << "UM "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- "
-      << "- " << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " "
-      << fRowsReturned << " ";
+  oss << "TAS " << "UM " << "- " << "- " << "- " << "- " << "- " << "- "
+      << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime()) << " " << fRowsReturned
+      << " ";
   fMiniInfo += oss.str();
 }
 
