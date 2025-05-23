@@ -12,7 +12,10 @@ INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
 CTEST_BIN_NAME=ctest
-CONFIG_DIR="/etc/my.cnf.d"
+
+RPM_CONFIG_DIR="/etc/my.cnf.d"
+DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
+CONFIG_DIR=$RPM_CONFIG_DIR
 
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
@@ -126,7 +129,6 @@ install_deps() {
     message "Installing dependencies for $OS"
     eval "$command"
 }
-
 stop_service() {
     message_split
     message "Stopping MariaDB services"
@@ -178,15 +180,12 @@ clean_old_installation() {
     rm -rf /var/lib/columnstore/local/
     rm -rf /var/lib/columnstore/storagemanager/*
     rm -rf /var/log/mariadb/columnstore/*
-    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf /etc/my.cnf.d/columnstore.cnf
     rm -rf /tmp/*
     rm -rf "$REPORT_PATH"
     rm -rf /var/lib/mysql
     rm -rf /var/run/mysqld
     rm -rf $DATA_DIR
-    rm -rf /etc/mysql
-    rm -rf /etc/my.cnf.d/columnstore.cnf
-    rm -rf /etc/mysql/mariadb.conf.d/columnstore.cnf
+    rm -rf $CONFIG_DIR
 }
 
 modify_packaging() {
@@ -400,7 +399,7 @@ generate_svgs() {
     if [[ $DRAW_DEPS = true ]]; then
         message_split
         warn "Generating svgs with dependency graph to $DEP_GRAPH_PATH"
-        for f in "$DEP_GRAPH_PATH".*; do
+        for f in $(ls "$DEP_GRAPH_PATH".* | grep -v ".svg"); do
             dot -Tsvg -o "$f.svg" "$f"
         done
     fi
@@ -496,8 +495,7 @@ disable_plugins_for_bootstrap() {
 }
 
 enable_columnstore_back() {
-    echo plugin-load-add=ha_columnstore.so >>$CONFIG_DIR/columnstore.cnf
-    sed -i '/\[mysqld\]/a\plugin-load-add=ha_columnstore.so' $CONFIG_DIR/columnstore.cnf
+    cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf $CONFIG_DIR
 }
 
 fix_config_files() {
@@ -570,12 +568,10 @@ install() {
         echo "[client-server]
     socket=/run/mysqld/mysqld.sock" >$CONFIG_DIR/socket.cnf
 
-        mv $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_1.so || mv $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so /tmp/ha_columnstore_2.so
         make_dir /var/lib/mysql
 
         message "Running mysql_install_db"
         sudo -u mysql mysql_install_db --rpm --user=mysql >/dev/null
-        mv /tmp/ha_columnstore_1.so $INSTALL_PREFIX/lib/mysql/plugin/ha_columnstore.so || mv /tmp/ha_columnstore_2.so $INSTALL_PREFIX/lib64/mysql/plugin/ha_columnstore.so
 
         enable_columnstore_back
 
@@ -584,7 +580,6 @@ install() {
         cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
         cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
 
-        cp "$MDB_SOURCE_PATH"/support-files/*.service /lib/systemd/system/
         cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
         if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
@@ -597,15 +592,9 @@ install() {
 
         fix_config_files
 
-        make_dir /etc/my.cnf.d
-        if [ -d "/etc/mysql/mariadb.conf.d/" ]; then
-            message "Copying configs from /etc/mysql/mariadb.conf.d/ to /etc/my.cnf.d"
-            cp -rp /etc/mysql/mariadb.conf.d/* /etc/my.cnf.d
-        fi
-
-        if [ -d "/etc/mysql/conf.d/" ]; then
-            message "Copying configs from /etc/mysql/conf.d/ to /etc/my.cnf.d"
-            cp -rp /etc/mysql/conf.d/* /etc/my.cnf.d
+        if [ -d "$DEBCONFIG_DIR" ]; then
+            message "Copying configs from $DEBCONFIG_DIR to $CONFIG_DIR"
+            cp -rp "$DEBCONFIG_DIR"/* "$CONFIG_DIR"
         fi
 
         make_dir /var/lib/columnstore/data1
