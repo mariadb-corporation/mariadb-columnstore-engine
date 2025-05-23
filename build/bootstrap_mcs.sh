@@ -107,7 +107,7 @@ install_deps() {
         [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
     then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
+      dnf install -y pcre2-devel gcc gcc-c++ libasan curl-minimal && ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
         command="${DEB_BUILD_DEPS}"
