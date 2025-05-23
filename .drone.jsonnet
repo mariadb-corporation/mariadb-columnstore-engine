@@ -43,7 +43,7 @@ local customEnvCommands(envkey, builddir) =
 
 local customBootstrapParamsForExisitingPipelines(envkey) =
   local customBootstrapMap = {
-    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES -DWITH_ASAN=ON -WITH_COLLUMNSTORE_ASAN=ON'",
+    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
@@ -658,7 +658,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                        + get_sccache
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
-                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
+                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh -A " +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
                          "--build-packages --install-deps --sccache " +
