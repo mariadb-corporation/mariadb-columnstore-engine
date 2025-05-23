@@ -58,7 +58,7 @@ class InetStreamSocket : public Socket
   /** dtor
    *
    */
-  virtual ~InetStreamSocket();
+  ~InetStreamSocket() override;
 
   /** copy ctor
    *
@@ -68,37 +68,37 @@ class InetStreamSocket : public Socket
   /** assign op
    *
    */
-  virtual InetStreamSocket& operator=(const InetStreamSocket& rhs);
+  InetStreamSocket& operator=(const InetStreamSocket& rhs);
 
   /** fSocket mutator
    *
    */
-  inline virtual void socketParms(const SocketParms& socket);
+  inline void socketParms(const SocketParms& socket) override;
 
   /** fSocket accessor
    *
    */
-  inline virtual const SocketParms socketParms() const;
+  inline const SocketParms socketParms() const override;
 
   /** sockaddr mutator
    *
    */
-  inline virtual void sa(const sockaddr* sa);
+  inline void sa(const sockaddr* sa) override;
 
   /** call socket() to get a sd
    *
    */
-  virtual void open();
+  void open() override;
 
   /** close the sd
    *
    */
-  virtual void close();
+  void close() override;
 
   /** test if this socket is open
    *
    */
-  inline virtual bool isOpen() const;
+  inline bool isOpen() const override;
 
   /** read a message from the socket
    *
@@ -114,44 +114,44 @@ class InetStreamSocket : public Socket
    * The behavior will be unpredictable and possibly fatal.
    * @note A fix is being reviewed but this is low-priority.
    */
-  virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
-                         Stats* stats = NULL) const;
+  const SBS read(const struct timespec* timeout = nullptr, bool* isTimeOut = nullptr,
+                 Stats* stats = nullptr) const override;
 
   /** write a message to the socket
    *
    * write a message to the socket
    */
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
-  virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
+  void write(const ByteStream& msg, Stats* stats = nullptr) override;
+  void write_raw(const ByteStream& msg, Stats* stats = nullptr) const override;
 
   /** this version of write takes ownership of the bytestream
    */
-  virtual void write(SBS msg, Stats* stats = NULL);
+  void write(SBS msg, Stats* stats = nullptr) override;
 
   /** bind to a port
    *
    */
-  virtual void bind(const sockaddr* serv_addr);
+  void bind(const sockaddr* serv_addr) override;
 
   /** listen for connections
    *
    */
-  virtual void listen(int backlog = 5);
+  void listen(int backlog = 5) override;
 
   /** return an (accepted) IOSocket ready for I/O
    *
    */
-  virtual const IOSocket accept(const struct timespec* timeout = 0);
+  const IOSocket accept(const struct timespec* timeout = nullptr) override;
 
   /** connect to a server socket
    *
    */
-  virtual void connect(const sockaddr* serv_addr);
+  void connect(const sockaddr* serv_addr) override;
 
   /** dynamically allocate a copy of this object
    *
    */
-  virtual Socket* clone() const;
+  Socket* clone() const override;
 
   /** get a string rep of the object
    *
@@ -161,7 +161,7 @@ class InetStreamSocket : public Socket
   /** set the connection timeout (in ms)
    *
    */
-  virtual void connectionTimeout(const struct ::timespec* timeout)
+  void connectionTimeout(const struct ::timespec* timeout) override
   {
     if (timeout)
       fConnectionTimeout = *timeout;
@@ -170,12 +170,12 @@ class InetStreamSocket : public Socket
   /** set the connection protocol to be synchronous
    *
    */
-  virtual void syncProto(bool use)
+  void syncProto(bool use) override
   {
     fSyncProto = use;
   }
 
-  int getConnectionNum() const
+  int getConnectionNum() const override
   {
     return fSocketParms.sd();
   }
@@ -189,25 +189,25 @@ class InetStreamSocket : public Socket
   /** return the address as a string
    *
    */
-  virtual const std::string addr2String() const;
+  const std::string addr2String() const override;
 
   /** compare 2 addresses
    *
    */
-  virtual bool isSameAddr(const Socket* rhs) const;
-  virtual bool isSameAddr(const struct in_addr& ipv4Addr) const;
+  bool isSameAddr(const Socket* rhs) const override;
+  bool isSameAddr(const struct in_addr& ipv4Addr) const override;
 
   /** ping an ip address
    *
    */
-  EXPORT static int ping(const std::string& ipaddr, const struct timespec* timeout = 0);
+  EXPORT static int ping(const std::string& ipaddr, const struct timespec* timeout = nullptr);
 
   // Check if we are still connected
-  virtual bool isConnected() const;
+  bool isConnected() const override;
 
   // Check if the socket still has data pending
 
-  virtual bool hasData() const;
+  bool hasData() const override;
 
   /*
    * allow test suite access to private data for OOB test
@@ -231,9 +231,9 @@ class InetStreamSocket : public Socket
    */
   virtual bool readToMagic(long msecs, bool* isTimeOut, Stats* stats) const;
 
-  void do_write(const ByteStream& msg, uint32_t magic, Stats* stats = NULL) const;
+  void do_write(const ByteStream& msg, uint32_t magic, Stats* stats = nullptr) const;
   ssize_t written(int fd, const uint8_t* ptr, size_t nbytes) const;
-  bool readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, const size_t numberOfBytes,
+  bool readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, size_t numberOfBytes,
                          const struct ::timespec* timeout, bool* isTimeOut, Stats* stats, int64_t msec) const;
 
   SocketParms fSocketParms;  /// The socket parms

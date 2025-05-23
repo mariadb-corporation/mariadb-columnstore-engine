@@ -25,14 +25,13 @@ namespace storagemanager
 class ListDirectoryTask : public PosixTask
 {
  public:
+  ListDirectoryTask() = delete;
   ListDirectoryTask(int sock, uint length);
-  virtual ~ListDirectoryTask();
+  ~ListDirectoryTask() override;
 
-  bool run();
+  bool run() override;
 
  private:
-  ListDirectoryTask();
-
   bool writeString(uint8_t* buf, int* offset, int size, const std::string& str);
 };
 

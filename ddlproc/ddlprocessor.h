@@ -35,6 +35,7 @@ namespace ddlprocessor
 class DDLProcessor
 {
  public:
+  DDLProcessor() = delete;
   /** @brief ctor
    *
    * @param packageMaxThreads the maximum number of threads to process ddl packages
@@ -75,12 +76,7 @@ class DDLProcessor
     fPackageWorkQueueSize = workQueueSize;
   }
 
- protected:
  private:
-  /** @brief ctor
-   */
-  DDLProcessor();
-
   /** @brief the thread pool for processing ddl packages
    */
   threadpool::ThreadPool fDdlPackagepool;
@@ -93,6 +89,7 @@ class DDLProcessor
   WriteEngine::WEClients* fWEClient;
   uint32_t fPMCount;
   querytele::QueryTeleClient fQtc;
+  uint32_t debugLevel{0};
 };
 
 }  // namespace ddlprocessor

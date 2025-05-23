@@ -144,7 +144,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   local socket_path = if (pkg_format == 'rpm') then '/var/lib/mysql/mysql.sock' else '/run/mysqld/mysqld.sock',
   local config_path_prefix = if (pkg_format == 'rpm') then '/etc/my.cnf.d/' else '/etc/mysql/mariadb.conf.d/50-',
   local img = if (platform == 'rockylinux:8') then platform else 'detravi/' + std.strReplace(platform, '/', '-'),
-  local regression_ref = if (branch == any_branch) then 'develop' else branch,
+  local branch_ref = if (branch == any_branch) then 'develop' else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == '**') then '' else branch + '/',
@@ -352,7 +352,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
   },
   upgrade(version):: {
     name: 'upgrade-test from ' + version,
-    depends_on: ['smoke'],
+    depends_on: ['regressionlog'],
     image: 'docker',
     failure: 'ignore',
     volumes: [pipeline._volumes.docker],
@@ -461,7 +461,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       REGRESSION_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
-      REGRESSION_REF_AUX: regression_ref,
+      REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
       // compute branch.
@@ -578,8 +578,22 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     depends_on: ['publish pkg', 'publish cmapi build'],
     //failure: 'ignore',
     image: 'alpine/git',
+    environment: {
+      DOCKER_BRANCH_REF: '${DRONE_SOURCE_BRANCH}',
+      DOCKER_REF_AUX: branch_ref,
+    },
     commands: [
-      'git clone --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
+      // compute branch.
+      'echo "$$DOCKER_REF"',
+      'echo "$$DOCKER_BRANCH_REF"',
+      // if DOCKER_REF is empty, try to see whether docker repository has a branch named as one we PR.
+      'export DOCKER_REF=$${DOCKER_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/$$DOCKER_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'echo "$$DOCKER_REF"',
+      // DOCKER_REF can be empty if there is no appropriate branch in docker repository.
+      // assign what is appropriate by default.
+      'export DOCKER_REF=$${DOCKER_REF:-$$DOCKER_REF_AUX}',
+      'echo "$$DOCKER_REF"',
+      'git clone --branch $$DOCKER_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker',
       'touch docker/.secrets',
     ],
   },
@@ -590,10 +604,12 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
     image: 'plugins/docker',
     environment: {
       VERSION: container_version,
-      MCS_REPO: 'columnstore',
       DEV: 'true',
+      MCS_REPO: 'columnstore',
       // branchp has slash if not empty
       MCS_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
+      FDB_REPO: 'foundationdb',
+      FDB_BASEURL: 'https://cspkg.s3.amazonaws.com/FoundationDB/' + arch + '/' + result + '/',
       CMAPI_REPO: 'cmapi',
       CMAPI_BASEURL: 'https://cspkg.s3.amazonaws.com/' + branchp + event + '/${DRONE_BUILD_NUMBER}/' + server + '/' + arch + '/' + result + '/',
     },
@@ -601,7 +617,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       repo: 'mariadb/enterprise-columnstore-dev',
       context: 'docker',
       dockerfile: 'docker/Dockerfile',
-      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV'],
+      build_args_from_env: ['VERSION', 'MCS_REPO', 'MCS_BASEURL', 'CMAPI_REPO', 'CMAPI_BASEURL', 'DEV', 'FDB_REPO', 'FDB_BASEURL'],
       tags: container_tags,
       username: {
         from_secret: 'dockerhub_user',
@@ -708,7 +724,7 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
       'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
       // delay for manual debugging on live instance
       'sleep $${COMPOSE_DELAY_SECONDS:-1s}',
-      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+      'docker exec -t mcs1 bash -c "cd ' + mtr_path + ' && ./mtr --skip-test=' + "'.*parquet.*|.*fdb_api.*'" + ' --extern socket=' + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
     ],
   },
 
@@ -828,11 +844,19 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
                status: ['success', 'failure'],
              },
              volumes: [pipeline._volumes.mdb],
+             environment: {
+               SERVER_REF: '${SERVER_REF:-' + server + '}',
+               SERVER_REMOTE: '${SERVER_REMOTE:-' + server_remote + '}',
+             },
              commands: [
                'cd /mdb/' + builddir,
                'echo "engine: $DRONE_COMMIT" > buildinfo.txt',
                'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt',
                'echo "buildNo: $DRONE_BUILD_NUMBER" >> buildinfo.txt',
+               'echo "serverBranch: $$SERVER_REF" >> buildinfo.txt',
+               'echo "serverRepo: $$SERVER_REMOTE" >> buildinfo.txt',
+               'echo "engineBranch: $DRONE_SOURCE_BRANCH" >> buildinfo.txt',
+               'echo "engineRepo: https://github.com/$DRONE_REPO" >> buildinfo.txt',
                'mv buildinfo.txt ./%s/' % result,
                'yes | cp -vr ./%s/. /drone/src/%s/' % [result, result],
                'ls -l /drone/src/' + result,
@@ -864,14 +888,14 @@ local Pipeline(branch, platform, event, arch='amd64', server='10.6-enterprise') 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish('cmapilog')] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish('mtr')] + [pipeline.mtrlog] + [pipeline.publish('mtrlog')]) +
          (if (event == 'cron' && platform == 'rockylinux:8' && arch == 'amd64') then [pipeline.publish('mtr latest', 'latest')] else []) +
          [pipeline.prepare_regression] +
          [pipeline.regression(regression_tests[i], [if (i == 0) then 'prepare regression' else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish('regressionlog')] +
+         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish('upgradelog')]) +
          (if (event == 'cron') then [pipeline.publish('regressionlog latest', 'latest')] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: '/var/run/docker.sock' } }],

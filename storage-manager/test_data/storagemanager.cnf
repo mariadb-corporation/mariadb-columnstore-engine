@@ -25,6 +25,7 @@ metadata_path = ${HOME}/sm-unittest/metadata
 journal_path = ${HOME}/sm-unittest/journal
 max_concurrent_downloads = 20
 max_concurrent_uploads = 20
+fdb_cluster_file_path = /etc/foundationdb/fdb.cluster
 
 # This is the depth of the common prefix that all files managed by SM have
 # Ex: /usr/local/mariadb/columnstore/data1, and 

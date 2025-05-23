@@ -45,6 +45,7 @@ class ByteStreamTestSuite;
 namespace messageqcpp
 {
 typedef boost::shared_ptr<ByteStream> SBS;
+using BSSizeType = uint64_t;
 
 /**
  * @brief A class to marshall bytes as a stream
@@ -76,11 +77,11 @@ class ByteStream : public Serializeable
   /**
    *	default ctor
    */
-  EXPORT explicit ByteStream(uint32_t initSize = 8192);  // multiples of pagesize are best
+  EXPORT explicit ByteStream(BSSizeType initSize = 8192);  // multiples of pagesize are best
   /**
    *	ctor with a uint8_t array and len initializer
    */
-  inline ByteStream(const uint8_t* bp, const uint32_t len);
+  inline ByteStream(const uint8_t* bp, BSSizeType len);
   /**
    *	copy ctor
    */
@@ -97,40 +98,40 @@ class ByteStream : public Serializeable
   /**
    *	dtor
    */
-  inline virtual ~ByteStream();
+  inline ~ByteStream() override;
 
   /**
    *	push a int8_t onto the end of the stream
    */
-  EXPORT ByteStream& operator<<(const int8_t b);
+  EXPORT ByteStream& operator<<(int8_t b);
   /**
    *	push a uint8_t onto the end of the stream
    */
-  EXPORT ByteStream& operator<<(const uint8_t b);
+  EXPORT ByteStream& operator<<(uint8_t b);
   /**
    *	push a int16_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const int16_t d);
+  EXPORT ByteStream& operator<<(int16_t d);
   /**
    *	push a uint16_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const uint16_t d);
+  EXPORT ByteStream& operator<<(uint16_t d);
   /**
    *	push a int32_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const int32_t q);
+  EXPORT ByteStream& operator<<(int32_t q);
   /**
    *	push a uint32_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const uint32_t q);
+  EXPORT ByteStream& operator<<(uint32_t q);
   /**
    *	push an int64_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const int64_t o);
+  EXPORT ByteStream& operator<<(int64_t o);
   /**
    *	push an uint64_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const uint64_t o);
+  EXPORT ByteStream& operator<<(uint64_t o);
   /**
    *  push an int128_t onto the end of the stream. The byte order is whatever the native byte order is.
    */
@@ -144,17 +145,17 @@ class ByteStream : public Serializeable
    *  push a float onto the end of the stream. The byte order is
    *  whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const float f);
+  EXPORT ByteStream& operator<<(float f);
   /**
    *  push a double onto the end of the stream. The byte order is
    *  whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const double d);
+  EXPORT ByteStream& operator<<(double d);
   /**
    *  push a long double onto the end of the stream. The byte
    *  order is whatever the native byte order is.
    */
-  EXPORT ByteStream& operator<<(const long double d);
+  EXPORT ByteStream& operator<<(long double d);
   /**
    * push a std::string onto the end of the stream.
    */
@@ -337,12 +338,12 @@ class ByteStream : public Serializeable
   /**
    *	load the stream from an array. Clears out any previous data.
    */
-  EXPORT void load(const uint8_t* bp, uint32_t len);
+  EXPORT void load(const uint8_t* bp, BSSizeType len);
 
   /**
    *	append bytes to the end of the stream.
    */
-  EXPORT void append(const uint8_t* bp, uint32_t len);
+  EXPORT void append(const uint8_t* bp, BSSizeType len);
 
   /**
    * equality check on buffer contents.
@@ -378,19 +379,19 @@ class ByteStream : public Serializeable
    *	advance the output ptr without having to extract bytes
    * @warning be careful advancing near 4GB!
    */
-  inline void advance(uint32_t amt);
+  inline void advance(BSSizeType amt);
 
   /**
    *	returns the length of the queue (in bytes)
    * @warning do not attempt to make a ByteStream bigger than 4GB!
    */
-  inline uint32_t length() const;
+  inline BSSizeType length() const;
   inline bool empty() const;
 
   /**
    *	returns the length of the queue, including header overhead (in bytes)
    */
-  inline uint32_t lengthWithHdrOverhead() const;
+  inline BSSizeType lengthWithHdrOverhead() const;
 
   /**
    *	clears the stream. Releases any current stream and sets all pointers to 0. The state of the object
@@ -422,25 +423,25 @@ class ByteStream : public Serializeable
   /**
    * Get the allocated size of the buffer.
    */
-  inline uint32_t getBufferSize() const;
+  inline BSSizeType getBufferSize() const;
 
   /**
    * Serializeable interface
    */
-  EXPORT void serialize(ByteStream& bs) const;
+  EXPORT void serialize(ByteStream& bs) const override;
 
   /**
    * Serializeable interface
    */
-  EXPORT void deserialize(ByteStream& bs);
+  EXPORT void deserialize(ByteStream& bs) override;
 
   /**
    *	memory allocation chunk size
    */
-  EXPORT static const uint32_t BlockSize = 4096;
+  EXPORT static const BSSizeType BlockSize = 4096;
 
   /** size of the space we want in front of the data */
-  EXPORT static const uint32_t ISSOverhead =
+  EXPORT static const BSSizeType ISSOverhead =
       3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
 
   // Methods to get and set `long strings`.
@@ -454,11 +455,11 @@ class ByteStream : public Serializeable
   /**
    *	pushes one uint8_t onto the end of the stream
    */
-  void add(const uint8_t b);
+  void add(uint8_t b);
   /**
    *	adds another BlockSize bytes to the internal buffer
    */
-  void growBuf(uint32_t toSize = 0);
+  void growBuf(BSSizeType toSize = 0);
   /**
    *	handles member copying from one ByteStream to another
    */
@@ -476,9 +477,8 @@ class ByteStream : public Serializeable
   uint8_t* fBuf;        /// the start of the allocated buffer
   uint8_t* fCurInPtr;   // the point in fBuf where data is inserted next
   uint8_t* fCurOutPtr;  // the point in fBuf where data is extracted from next
-  uint32_t fMaxLen;     // how big fBuf is currently
-  // Stores `long strings`.
-    std::vector<std::shared_ptr<uint8_t[]>> longStrings;
+  BSSizeType fMaxLen;   // how big fBuf is currently
+  std::vector<std::shared_ptr<uint8_t[]>> longStrings;  // Stores `long strings`.
 };
 
 template <int W, typename T = void>
@@ -527,7 +527,7 @@ static const uint8_t BS_BLOB = 9;
 static const uint8_t BS_SERIALIZABLE = 10;
 static const uint8_t BS_UUID = 11;
 
-inline ByteStream::ByteStream(const uint8_t* bp, const uint32_t len) : fBuf(0), fMaxLen(0)
+inline ByteStream::ByteStream(const uint8_t* bp, BSSizeType len) : fBuf(nullptr), fMaxLen(0)
 {
   load(bp, len);
 }
@@ -544,15 +544,15 @@ inline uint8_t* ByteStream::buf()
 {
   return fCurOutPtr;
 }
-inline uint32_t ByteStream::length() const
+inline BSSizeType ByteStream::length() const
 {
-  return (uint32_t)(fCurInPtr - fCurOutPtr);
+  return static_cast<BSSizeType>(fCurInPtr - fCurOutPtr);
 }
 inline bool ByteStream::empty() const
 {
   return (length() == 0);
 }
-inline uint32_t ByteStream::lengthWithHdrOverhead() const
+inline BSSizeType ByteStream::lengthWithHdrOverhead() const
 {
   return (length() + ISSOverhead);
 }
@@ -560,7 +560,7 @@ inline void ByteStream::reset()
 {
   delete[] fBuf;
   fMaxLen = 0;
-  fCurInPtr = fCurOutPtr = fBuf = 0;
+  fCurInPtr = fCurOutPtr = fBuf = nullptr;
 }
 inline void ByteStream::restart()
 {
@@ -570,7 +570,7 @@ inline void ByteStream::rewind()
 {
   fCurOutPtr = fBuf + ISSOverhead;
 }
-inline void ByteStream::advance(uint32_t adv)
+inline void ByteStream::advance(BSSizeType adv)
 {
   // fCurOutPtr is always >= fBuf, so fCurOutPtr - fBuf is >= 0, and this difference is always <= 32 bits
   // there is an edge condition not detected here: if fCurOutPtr - fBuf is nearly 4GB and you try to
@@ -619,7 +619,7 @@ inline ByteStream& ByteStream::operator=(const SBS& rhs)
   return *this;
 }
 
-inline uint32_t ByteStream::getBufferSize() const
+inline BSSizeType ByteStream::getBufferSize() const
 {
   return fMaxLen;
 }
@@ -669,7 +669,6 @@ void deserializeVector(ByteStream& bs, std::vector<T>& v)
   }
 }
 
-
 template <typename T>
 void serializeInlineVector(ByteStream& bs, const std::vector<T>& v)
 {
@@ -702,7 +701,6 @@ void deserializeInlineVector(ByteStream& bs, std::vector<T>& v)
     bs.advance(sizeof(T) * size);
   }
 }
-
 
 inline void deserializeVector(ByteStream& bs, std::vector<int64_t>& v)
 {
@@ -738,12 +736,6 @@ void deserializeSet(ByteStream& bs, std::set<T>& s)
     s.insert(tmp);
   }
 }
-/*
-template<>
-struct ByteStream::_ByteStreamType<1, ByteStream::byte>>
-{
-    typedef ByteStream::byte type;
-}*/
 
 }  // namespace messageqcpp
 

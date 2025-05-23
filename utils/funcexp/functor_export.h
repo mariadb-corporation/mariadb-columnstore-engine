@@ -38,31 +38,29 @@ class Func_rand : public Func
   Func_rand() : Func("rand"), fSeed1(0), fSeed2(0), fSeedSet(false)
   {
   }
-  virtual ~Func_rand()
-  {
-  }
+  ~Func_rand() override = default;
 
   double getRand();
-  execplan::CalpontSystemCatalog::ColType operationType(FunctionParm& fp,
-                                                        execplan::CalpontSystemCatalog::ColType& resultType);
+  execplan::CalpontSystemCatalog::ColType operationType(
+      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override;
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct)
+                    execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return ((int64_t)getDoubleVal(row, fp, isNull, op_ct));
   }
 
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                      execplan::CalpontSystemCatalog::ColType& op_ct);
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
   long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return (long double)getDoubleVal(row, fp, isNull, op_ct);
   }
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                        execplan::CalpontSystemCatalog::ColType& op_ct)
+                        execplan::CalpontSystemCatalog::ColType& op_ct) override
   {
     return doubleToString(getDoubleVal(row, fp, isNull, op_ct));
   }

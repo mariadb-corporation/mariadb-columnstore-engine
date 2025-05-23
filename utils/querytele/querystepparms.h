@@ -27,9 +27,7 @@ class QueryStepParms
   explicit QueryStepParms(StepTeleStats::StepType st = StepTeleStats::T_INVALID) : stepType(st)
   {
   }
-  ~QueryStepParms()
-  {
-  }
+  ~QueryStepParms() = default;
 
   StepTeleStats::StepType stepType;
 

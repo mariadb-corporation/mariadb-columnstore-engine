@@ -20,6 +20,9 @@
 #include "SMLogging.h"
 #include "Utilities.h"
 #include "Cache.h"
+#include "KVStorageInitializer.h"
+#include "KVPrefixes.h"
+#include "fdbcs.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -121,9 +124,8 @@ void Replicator::printKPIs() const
 int Replicator::newObject(const boost::filesystem::path& filename, const uint8_t* data, off_t offset,
                           size_t length)
 {
+  const string objectFilename = msCachePath + "/" + filename.string();
   int fd, err;
-  string objectFilename = msCachePath + "/" + filename.string();
-
   OPEN(objectFilename.c_str(), O_WRONLY | O_CREAT);
   size_t count = 0;
   while (count < length)
@@ -215,54 +217,48 @@ ssize_t Replicator::_write(int fd, const void* data, size_t length)
    Benefits would be data integrity, and possibly add'l parallelism.  The downside is of course, a higher
    number of IO ops for the same operation.
 */
+
 int Replicator::addJournalEntry(const boost::filesystem::path& filename, const uint8_t* data, off_t offset,
                                 size_t length)
 {
-  int fd, err;
   uint64_t offlen[] = {(uint64_t)offset, length};
-  size_t count = 0;
-  int version = 1;
-  int l_errno;
-  char errbuf[80];
-  bool bHeaderChanged = false;
-  string headerRollback = "";
-  string journalFilename = msJournalPath + "/" + filename.string() + ".journal";
+  const int version = 1;
+  const auto journalName = getJournalName(msJournalPath + "/" + filename.string() + ".journal");
+  const auto journalSizeName = getJournalName(msJournalPath + "/" + filename.string() + "_size" + ".journal");
   boost::filesystem::path firstDir = *((filename).begin());
-  uint64_t thisEntryMaxOffset = (offset + length - 1);
+  const uint64_t thisEntryMaxOffset = (offset + length - 1);
+  string dataStr;
+  size_t dataStrOffset = 0;
 
-  uint64_t currentMaxOffset = 0;
-  bool exists = boost::filesystem::exists(journalFilename);
-  OPEN(journalFilename.c_str(), (exists ? O_RDWR : O_WRONLY | O_CREAT))
-
-  if (!exists)
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+  FDBCS::BlobHandler journalHandler(keyGen);
+  auto resultPair = journalHandler.readBlob(kvStorage, journalName);
+  const std::string& journalData = resultPair.second;
+  const bool journalExists = resultPair.first;
+  if (!journalExists)
   {
-    bHeaderChanged = true;
     // create new journal file with header
     string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version %
                      thisEntryMaxOffset)
                         .str();
-    err = _write(fd, header.c_str(), header.length() + 1);
-    l_errno = errno;
-    repHeaderDataWritten += (header.length() + 1);
-    if ((uint)err != (header.length() + 1))
-    {
-      // return the error because the header for this entry on a new journal file failed
-      mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Writing journal header failed (%s).",
-                    strerror_r(l_errno, errbuf, 80));
-      errno = l_errno;
-      return err;
-    }
-    Cache::get()->newJournalEntry(firstDir, header.length() + 1);
+    const size_t headerLength = header.length();
+    dataStr.resize(headerLength + 1 + JOURNAL_ENTRY_HEADER_SIZE + length);
+    std::memcpy(&dataStr[dataStrOffset], header.c_str(), headerLength);
+    // Specifies the end of the header.
+    dataStr[headerLength] = 0;
+    dataStrOffset = headerLength + 1;
+    repHeaderDataWritten += headerLength + 1;
+    Cache::get()->newJournalEntry(firstDir, headerLength + 1);
     ++replicatorJournalsCreated;
   }
   else
   {
-    // read the existing header and check if max_offset needs to be updated
     size_t tmp;
     std::shared_ptr<char[]> headertxt;
     try
     {
-      headertxt = seekToEndOfHeader1(fd, &tmp);
+      headertxt = seekToEndOfHeader1_(journalData, &tmp);
     }
     catch (std::runtime_error& e)
     {
@@ -278,7 +274,6 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
     }
     stringstream ss;
     ss << headertxt.get();
-    headerRollback = headertxt.get();
     boost::property_tree::ptree header;
     try
     {
@@ -297,164 +292,61 @@ int Replicator::addJournalEntry(const boost::filesystem::path& filename, const u
       return -1;
     }
     assert(header.get<int>("version") == 1);
-    uint64_t currentMaxOffset = header.get<uint64_t>("max_offset");
+    const uint64_t currentMaxOffset = header.get<uint64_t>("max_offset");
+    dataStr.resize(journalData.size() + JOURNAL_ENTRY_HEADER_SIZE + length);
+    size_t journalOffset = 0;
+
     if (thisEntryMaxOffset > currentMaxOffset)
     {
-      bHeaderChanged = true;
       string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version %
                        thisEntryMaxOffset)
                           .str();
-      err = _pwrite(fd, header.c_str(), header.length() + 1, 0);
-      l_errno = errno;
-      repHeaderDataWritten += (header.length() + 1);
-      if ((uint)err != (header.length() + 1))
-      {
-        // only the header was possibly changed rollback attempt
-        mpLogger->log(LOG_CRIT,
-                      "Replicator::addJournalEntry: Updating journal header failed. "
-                      "Attempting to rollback and continue.");
-        int rollbackErr = _pwrite(fd, headerRollback.c_str(), headerRollback.length() + 1, 0);
-        if ((uint)rollbackErr == (headerRollback.length() + 1))
-          mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header success.");
-        else
-          mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed!");
-        errno = l_errno;
-        if (err < 0)
-          return err;
-        else
-          return 0;
-      }
+      const size_t headerLenght = header.length();
+      std::memcpy(&dataStr[0], header.c_str(), headerLenght);
+      dataStr[headerLenght] = 0;
+      dataStrOffset = headerLenght + 1;
+      journalOffset = headerLenght + 1;
+      repHeaderDataWritten += headerLenght + 1;
     }
+
+    std::memcpy(&dataStr[dataStrOffset], &journalData[journalOffset], journalData.size() - journalOffset);
+    dataStrOffset = journalData.size();
   }
 
-  off_t entryHeaderOffset = ::lseek(fd, 0, SEEK_END);
-
-  err = _write(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE);
-  l_errno = errno;
+  std::memcpy(&dataStr[dataStrOffset], offlen, JOURNAL_ENTRY_HEADER_SIZE);
+  dataStrOffset += JOURNAL_ENTRY_HEADER_SIZE;
   repHeaderDataWritten += JOURNAL_ENTRY_HEADER_SIZE;
-  if (err != JOURNAL_ENTRY_HEADER_SIZE)
+  std::memcpy(&dataStr[dataStrOffset], data, length);
+  dataStrOffset += length;
+  assert(dataStr.size() == dataStrOffset);
+
+  if (journalExists && !journalHandler.removeBlob(kvStorage, journalName))
   {
-    // this entry failed so if the header was updated roll it back
-    if (bHeaderChanged)
-    {
-      mpLogger->log(LOG_CRIT,
-                    "Replicator::addJournalEntry: write journal entry header failed. Attempting to rollback "
-                    "and continue.");
-      // attempt to rollback top level header
-      int rollbackErr = _pwrite(fd, headerRollback.c_str(), headerRollback.length() + 1, 0);
-      if ((uint)rollbackErr != (headerRollback.length() + 1))
-      {
-        mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed! (%s)",
-                      strerror_r(errno, errbuf, 80));
-        errno = l_errno;
-        if (err < 0)
-          return err;
-        else
-          return 0;
-      }
-    }
-    int rollbackErr = ::ftruncate(fd, entryHeaderOffset);
-    if (rollbackErr != 0)
-    {
-      mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Truncate to previous EOF failed! (%s)",
-                    strerror_r(errno, errbuf, 80));
-      errno = l_errno;
-      if (err < 0)
-        return err;
-      else
-        return 0;
-    }
-    l_errno = errno;
-    return err;
-  }
-  while (count < length)
-  {
-    err = _write(fd, &data[count], length - count);
-    if (err < 0)
-    {
-      l_errno = errno;
-      /* XXXBEN: Attempt to update entry header with the partial write and write it.
-         IF the write fails to update entry header report an error to IOC and logging.
-         */
-      if (count > 0)  // return what was successfully written
-      {
-        mpLogger->log(LOG_CRIT,
-                      "Replicator::addJournalEntry: Got '%s' writing a journal entry. "
-                      "Attempting to update and continue.",
-                      strerror_r(l_errno, errbuf, 80));
-        // Update the file header max_offset if necessary and possible
-        thisEntryMaxOffset = (offset + count - 1);
-        if (thisEntryMaxOffset > currentMaxOffset)
-        {
-          string header = (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version %
-                           thisEntryMaxOffset)
-                              .str();
-          int rollbackErr = _pwrite(fd, header.c_str(), header.length() + 1, 0);
-          if ((uint)rollbackErr != (header.length() + 1))
-          {
-            mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Update of journal header failed! (%s)",
-                          strerror_r(errno, errbuf, 80));
-            errno = l_errno;
-            return err;
-          }
-        }
-        // Update the journal entry header
-        offlen[1] = count;
-        int rollbackErr = _pwrite(fd, offlen, JOURNAL_ENTRY_HEADER_SIZE, entryHeaderOffset);
-        if ((uint)rollbackErr != JOURNAL_ENTRY_HEADER_SIZE)
-        {
-          mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Update of journal entry header failed! (%s)",
-                        strerror_r(errno, errbuf, 80));
-          errno = l_errno;
-          return err;
-        }
-        // return back what we did write
-        mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Partial write success.");
-        repUserDataWritten += count;
-        return count;
-      }
-      else
-      {
-        // If the header was changed rollback and reset EOF
-        // Like this never happened
-        // Currently since this returns the err from the first write. IOC returns -1 and writeTask returns an
-        // error So system is likely broken in some way
-        if (bHeaderChanged)
-        {
-          mpLogger->log(LOG_CRIT,
-                        "Replicator::addJournalEntry: write journal entry failed (%s). "
-                        "Attempting to rollback and continue.",
-                        strerror_r(l_errno, errbuf, 80));
-          // attempt to rollback top level header
-          string header =
-              (boost::format("{ \"version\" : \"%03i\", \"max_offset\" : \"%011u\" }") % version % 0).str();
-          int rollbackErr = _pwrite(fd, header.c_str(), header.length() + 1, 0);
-          if ((uint)rollbackErr != (header.length() + 1))
-          {
-            mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Rollback of journal header failed (%s)!",
-                          strerror_r(errno, errbuf, 80));
-            errno = l_errno;
-            return err;
-          }
-        }
-        int rollbackErr = ::ftruncate(fd, entryHeaderOffset);
-        if (rollbackErr != 0)
-        {
-          mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Remove entry header failed (%s)!",
-                        strerror_r(errno, errbuf, 80));
-          errno = l_errno;
-          return err;
-        }
-        mpLogger->log(LOG_CRIT, "Replicator::addJournalEntry: Write failed. Journal file restored.");
-        errno = l_errno;
-        return err;
-      }
-    }
-    count += err;
+    mpLogger->log(LOG_CRIT, "Cannot remove journal blob.");
+    errno = EIO;
+    return -1;
   }
 
-  repUserDataWritten += count;
-  return count;
+  if (!journalHandler.writeBlob(kvStorage, journalName, dataStr))
+  {
+    mpLogger->log(LOG_CRIT, "Cannot write journal blob.");
+    errno = EIO;
+    return -1;
+  }
+
+  {
+    auto tnx = kvStorage->createTransaction();
+    tnx->set(journalSizeName, std::to_string(dataStr.size()));
+    if (!tnx->commit())
+    {
+      mpLogger->log(LOG_CRIT, "Cannot write journal size.");
+      errno = EIO;
+      return -1;
+    }
+  }
+
+  repUserDataWritten += length;
+  return length;
 }
 
 int Replicator::remove(const boost::filesystem::path& filename, Flags flags)
@@ -483,6 +375,27 @@ int Replicator::remove(const boost::filesystem::path& filename, Flags flags)
   }
   return ret;
 }
+
+int Replicator::removeJournal(const boost::filesystem::path& filename)
+{
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto keyGen = std::make_shared<FDBCS::BoostUIDKeyGenerator>();
+  FDBCS::BlobHandler journalHandler(keyGen);
+  if (!journalHandler.removeBlob(kvStorage, filename.string()))
+  {
+    return -1;
+  }
+  return 0;
+}
+
+int Replicator::removeJournalSize(const boost::filesystem::path& filename)
+{
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto tnx = kvStorage->createTransaction();
+  tnx->remove(filename.string());
+  return tnx->commit();
+}
+
 
 int Replicator::updateMetadata(MetadataFile& meta)
 {

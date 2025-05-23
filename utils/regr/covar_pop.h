@@ -50,19 +50,19 @@ class covar_pop : public mcsv1_UDAF
  public:
   // Defaults OK
   covar_pop() : mcsv1_UDAF(){};
-  virtual ~covar_pop(){};
+  ~covar_pop() override = default;
 
-  virtual ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes);
+  ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
 
-  virtual ReturnCode reset(mcsv1Context* context);
+  ReturnCode reset(mcsv1Context* context) override;
 
-  virtual ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn);
+  ReturnCode nextValue(mcsv1Context* context, ColumnDatum* valsIn) override;
 
-  virtual ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn);
+  ReturnCode subEvaluate(mcsv1Context* context, const UserData* valIn) override;
 
-  virtual ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut);
+  ReturnCode evaluate(mcsv1Context* context, static_any::any& valOut) override;
 
-  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped) override;
 
  protected:
 };

@@ -17,6 +17,8 @@
 
 #include "PrefixCache.h"
 #include "Cache.h"
+#include "KVPrefixes.h"
+#include "KVStorageInitializer.h"
 #include "Config.h"
 #include "Downloader.h"
 #include "Synchronizer.h"
@@ -137,15 +139,24 @@ void PrefixCache::populate()
     const bf::path& p = dir->path();
     if (bf::is_regular_file(p))
     {
-      lru.push_back(p.filename().string());
+      auto fileName = p.filename().string();
+      if (m_lru.find(fileName) != m_lru.end())
+      {
+        logger->log(LOG_WARNING, "Cache: found a duplicate in the cache '%s'", p.string().c_str());
+        ++dir;
+        continue;
+      }
+      lru.push_back(fileName);
       auto last = lru.end();
       m_lru.insert(--last);
       currentCacheSize += bf::file_size(*dir);
       newObjects.push_back(p.filename().string());
     }
     else if (p != cachePrefix / downloader->getTmpPath())
+    {
       logger->log(LOG_WARNING, "Cache: found something in the cache that does not belong '%s'",
                   p.string().c_str());
+    }
     ++dir;
   }
   sync->newObjects(firstDir, newObjects);
@@ -471,7 +482,6 @@ void PrefixCache::_makeSpace(size_t size)
     if (!bf::exists(cachePrefix / *it))
       logger->log(LOG_WARNING, "PrefixCache::makeSpace(): doesn't exist, %s/%s", cachePrefix.string().c_str(),
                   ((string)(*it)).c_str());
-    assert(bf::exists(cachePrefix / *it));
     /*
         tell Synchronizer that this key will be evicted
         delete the file
@@ -567,7 +577,8 @@ void PrefixCache::rename(const string& oldKey, const string& newKey, ssize_t siz
 int PrefixCache::ifExistsThenDelete(const string& key)
 {
   bf::path cachedPath = cachePrefix / key;
-  bf::path journalPath = journalPrefix / (key + ".journal");
+  const auto journalName = getJournalName((journalPrefix / (key + ".journal")).string());
+  const auto journalSizeName = getJournalName((journalPrefix / (key + "_size.journal")).string());
 
   boost::unique_lock<boost::mutex> s(lru_mutex);
   bool objectExists = false;
@@ -585,16 +596,18 @@ int PrefixCache::ifExistsThenDelete(const string& key)
     else  // let makeSpace() delete it if it's already in progress
       return 0;
   }
-  bool journalExists = bf::exists(journalPath);
-  // assert(objectExists == bf::exists(cachedPath));
+  auto kvStorage = KVStorageInitializer::getStorageInstance();
+  auto tnx = kvStorage->createTransaction();
+  auto journalResult = tnx->get(journalName);
+  auto journalSizeResult = tnx->get(journalSizeName);
 
+  bool journalExists = journalSizeResult.first;
   size_t objectSize = (objectExists ? bf::file_size(cachedPath) : 0);
-  // size_t objectSize = (objectExists ? MetadataFile::getLengthFromKey(key) : 0);
-  size_t journalSize = (journalExists ? bf::file_size(journalPath) : 0);
+  size_t journalSize = 0;
+  if (journalExists)
+    journalSize = std::atoi(journalSizeResult.second.c_str());
+
   currentCacheSize -= (objectSize + journalSize);
-
-  // assert(!objectExists || objectSize == bf::file_size(cachedPath));
-
   return (objectExists ? 1 : 0) | (journalExists ? 2 : 0);
 }
 

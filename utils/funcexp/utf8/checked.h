@@ -42,10 +42,10 @@ class invalid_code_point : public exception
   uint32_t cp;
 
  public:
-  invalid_code_point(uint32_t cp) : cp(cp)
+  explicit invalid_code_point(uint32_t cp) : cp(cp)
   {
   }
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "Invalid code point";
   }
@@ -60,10 +60,10 @@ class invalid_utf8 : public exception
   uint8_t u8;
 
  public:
-  invalid_utf8(uint8_t u) : u8(u)
+  explicit invalid_utf8(uint8_t u) : u8(u)
   {
   }
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "Invalid UTF-8";
   }
@@ -78,10 +78,10 @@ class invalid_utf16 : public exception
   uint16_t u16;
 
  public:
-  invalid_utf16(uint16_t u) : u16(u)
+  explicit invalid_utf16(uint16_t u) : u16(u)
   {
   }
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "Invalid UTF-16";
   }
@@ -94,7 +94,7 @@ class invalid_utf16 : public exception
 class not_enough_room : public exception
 {
  public:
-  virtual const char* what() const throw()
+  const char* what() const noexcept override
   {
     return "Not enough space";
   }
@@ -336,9 +336,7 @@ class iterator : public std::iterator<std::bidirectional_iterator_tag, uint32_t>
   octet_iterator range_end;
 
  public:
-  iterator()
-  {
-  }
+  iterator() = default;
   explicit iterator(const octet_iterator& octet_it, const octet_iterator& range_start,
                     const octet_iterator& range_end)
    : it(octet_it), range_start(range_start), range_end(range_end)

@@ -82,3 +82,10 @@ MCS_INSTALL_BIN = '/usr/bin'
 IFLAG = os.path.join(MCS_ETC_PATH, 'container-initialized')
 LIBJEMALLOC_DEFAULT_PATH = os.path.join(MCS_DATA_PATH, 'libjemalloc.so.2')
 MCS_LOG_PATH = '/var/log/mariadb/columnstore'
+
+
+# client constants
+CMAPI_PORT = 8640  #TODO: use it in all places
+CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
+REQUEST_TIMEOUT: float = 30.0
+TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes

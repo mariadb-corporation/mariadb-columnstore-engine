@@ -54,14 +54,12 @@ class WindowFunctionColumn : public ReturnedColumn
 {
  public:
   WindowFunctionColumn();
-  WindowFunctionColumn(const std::string& functionName, const uint32_t sessionID = 0);
+  explicit WindowFunctionColumn(const std::string& functionName, const uint32_t sessionID = 0);
   WindowFunctionColumn(const std::string& functionName, const std::vector<SRCP>& functionParms,
                        const std::vector<SRCP>& partitions, WF_OrderBy& orderby,
                        const uint32_t sessionID = 0);
   WindowFunctionColumn(const WindowFunctionColumn& rhs, const uint32_t sessionID = 0);
-  virtual ~WindowFunctionColumn()
-  {
-  }
+  ~WindowFunctionColumn() override = default;
 
   /** get function name */
   inline const std::string& functionName() const
@@ -112,7 +110,7 @@ class WindowFunctionColumn : public ReturnedColumn
   }
 
   /** make a clone of this window function */
-  inline virtual WindowFunctionColumn* clone() const override
+  inline WindowFunctionColumn* clone() const override
   {
     return new WindowFunctionColumn(*this);
   }
@@ -122,22 +120,22 @@ class WindowFunctionColumn : public ReturnedColumn
   /** output the function for debug purpose */
   const std::string toString() const override;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
   /**
    * The serialization interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   // util function for connector to use.
   void addToPartition(std::vector<SRCP>& groupByList);
 
   using ReturnedColumn::hasAggregate;
-  virtual bool hasAggregate() override
+  bool hasAggregate() override
   {
     return false;
   }
-  virtual bool hasWindowFunc() override;
+  bool hasWindowFunc() override;
   void adjustResultType();
 
   // UDAnF support
@@ -170,12 +168,12 @@ class WindowFunctionColumn : public ReturnedColumn
   WF_OrderBy fOrderBy;               /// order by clause
 
   // not support for window functions for now.
-  virtual bool operator==(const TreeNode* t) const override
+  bool operator==(const TreeNode* t) const override
   {
     return false;
   }
   bool operator==(const WindowFunctionColumn& t) const;
-  virtual bool operator!=(const TreeNode* t) const override
+  bool operator!=(const TreeNode* t) const override
   {
     return false;
   }
@@ -190,7 +188,7 @@ class WindowFunctionColumn : public ReturnedColumn
    ***********************************************************/
  public:
   using TreeNode::getStrVal;
-  virtual const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
+  const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override
   {
     bool localIsNull = false;
     evaluate(row, localIsNull);
@@ -198,57 +196,57 @@ class WindowFunctionColumn : public ReturnedColumn
     return localIsNull ? fResult.strVal.dropString() : TreeNode::getStrVal(fTimeZone);
   }
 
-  virtual int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getIntVal();
   }
 
-  virtual uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
+  uint64_t getUintVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getUintVal();
   }
 
-  virtual float getFloatVal(rowgroup::Row& row, bool& isNull) override
+  float getFloatVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getFloatVal();
   }
 
-  virtual double getDoubleVal(rowgroup::Row& row, bool& isNull) override
+  double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDoubleVal();
   }
 
-  virtual long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
+  long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getLongDoubleVal();
   }
 
-  virtual IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
+  IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDecimalVal();
   }
-  virtual int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
+  int32_t getDateIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDateIntVal();
   }
-  virtual int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getDatetimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getDatetimeIntVal();
   }
-  virtual int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimestampIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimestampIntVal();
   }
-  virtual int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
+  int64_t getTimeIntVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
     return TreeNode::getTimeIntVal();

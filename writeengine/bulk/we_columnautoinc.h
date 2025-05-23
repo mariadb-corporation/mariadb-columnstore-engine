@@ -97,9 +97,9 @@ class ColumnAutoIncJob : public ColumnAutoInc
 {
  public:
   explicit ColumnAutoIncJob(Log* logger);
-  virtual ~ColumnAutoIncJob();
+  ~ColumnAutoIncJob() override;
 
-  virtual int reserveNextRange(uint32_t autoIncCount, uint64_t& nextValue);
+  int reserveNextRange(uint32_t autoIncCount, uint64_t& nextValue) override;
 };
 
 //------------------------------------------------------------------------------
@@ -115,9 +115,9 @@ class ColumnAutoIncIncremental : public ColumnAutoInc
 {
  public:
   explicit ColumnAutoIncIncremental(Log* logger);
-  virtual ~ColumnAutoIncIncremental();
+  ~ColumnAutoIncIncremental() override;
 
-  virtual int reserveNextRange(uint32_t autoIncCount, uint64_t& nextValue);
+  int reserveNextRange(uint32_t autoIncCount, uint64_t& nextValue) override;
 };
 
 }  // namespace WriteEngine

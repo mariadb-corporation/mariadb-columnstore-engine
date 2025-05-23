@@ -53,19 +53,19 @@ class UpdateDMLPackage : public CalpontDMLPackage
 
   /** @brief dtor
    */
-  EXPORT virtual ~UpdateDMLPackage();
+  EXPORT ~UpdateDMLPackage() override;
 
   /** @brief write a UpdateDMLPackage to a ByteStream
    *
    * @param bytestream the ByteStream to write to
    */
-  EXPORT int write(messageqcpp::ByteStream& bytestream);
+  EXPORT int write(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief read a UpdateDMLPackage from a ByteStream
    *
    * @param bytestream the ByteStream to read from
    */
-  EXPORT int read(messageqcpp::ByteStream& bytestream);
+  EXPORT int read(messageqcpp::ByteStream& bytestream) override;
 
   /** @brief build a UpdateDMLPackage from a string buffer
    *
@@ -73,13 +73,13 @@ class UpdateDMLPackage : public CalpontDMLPackage
    * @param columns the number of columns in the buffer
    * @param rows the number of rows in the buffer
    */
-  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows);
+  EXPORT int buildFromBuffer(std::string& buffer, int columns, int rows) override;
 
   /** @brief build a UpdateDMLPackage from a parsed UpdateSqlStatement
    *
    * @param sqlStatement the parsed UpdateSqlStatement
    */
-  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement);
+  EXPORT int buildFromSqlStatement(SqlStatement& sqlStatement) override;
 
   /** @brief build a InsertDMLPackage from MySQL buffer
    *
@@ -87,7 +87,7 @@ class UpdateDMLPackage : public CalpontDMLPackage
    * @param rows the number of rows in the buffer
    */
   EXPORT int buildFromMysqlBuffer(ColNameList& colNameList, TableValuesMap& tableValuesMap, int columns,
-                                  int rows, NullValuesBitset& nullValues);
+                                  int rows, NullValuesBitset& nullValues) override;
   void buildUpdateFromMysqlBuffer(UpdateSqlStatement& updateStmt);
 
  protected:

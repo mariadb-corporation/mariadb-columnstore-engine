@@ -109,11 +109,11 @@ long long dateGet(uint64_t time, IntervalColumn::interval_type unit, bool dateTy
 
 long long timeGet(uint64_t time, IntervalColumn::interval_type unit)
 {
-  int32_t hour = 0, min = 0, sec = 0, msec = 0, day = 0;
+  int64_t hour = 0, min = 0, sec = 0, msec = 0, day = 0;
 
-  min = (int32_t)((time >> 32) & 0xff);
-  sec = (int32_t)((time >> 24) & 0xff);
-  msec = (int32_t)((time & 0xfffff));
+  min = (int64_t)((time >> 32) & 0xff);
+  sec = (int64_t)((time >> 24) & 0xff);
+  msec = (int64_t)((time & 0xfffff));
 
   // If negative, mask so it doesn't turn positive
   int64_t mask = 0;

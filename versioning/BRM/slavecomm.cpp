@@ -400,8 +400,7 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
 
   if (printOnly)
   {
-    cout << "createStripeColumnExtents().  "
-         << "DBRoot=" << dbRoot << "; Part#=" << partitionNum << endl;
+    cout << "createStripeColumnExtents().  " << "DBRoot=" << dbRoot << "; Part#=" << partitionNum << endl;
 
     for (uint32_t i = 0; i < cols.size(); i++)
       cout << "StripeColExt arg " << i + 1 << ": oid=" << cols[i].oid << " width=" << cols[i].width << endl;
@@ -2183,6 +2182,9 @@ void SlaveComm::saveDelta()
 {
   try
   {
+    // !!!
+    // !!! Reducing BS size type from 64bit down to 32 and potentially loosing data.
+    // !!!
     const uint32_t deltaLen = delta.length();
     const uint32_t bufferSize = sizeof(deltaLen) + deltaLen;
     std::unique_ptr<char[]> buffer(new char[bufferSize]);

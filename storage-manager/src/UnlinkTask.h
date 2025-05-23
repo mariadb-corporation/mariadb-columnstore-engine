@@ -24,13 +24,11 @@ namespace storagemanager
 class UnlinkTask : public PosixTask
 {
  public:
+  UnlinkTask() = delete;
   UnlinkTask(int sock, uint length);
-  virtual ~UnlinkTask();
+  ~UnlinkTask() override;
 
-  bool run();
-
- private:
-  UnlinkTask();
+  bool run() override;
 };
 
 }  // namespace storagemanager

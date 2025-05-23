@@ -28,7 +28,7 @@
 #define __STDC_FORMAT_MACROS
 #endif
 
-#include <inttypes.h>
+#include <cinttypes>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -40,9 +40,7 @@
 #ifndef ULONGLONG_MAX
 #define ULONGLONG_MAX ulonglong_max
 #endif
-namespace funcexp
-{
-namespace helpers
+namespace funcexp::helpers
 {
 // 10 ** i
 const int64_t powerOf10_c[] = {1ll,
@@ -125,7 +123,7 @@ inline uint32_t calc_mysql_daynr(uint32_t year, uint32_t month, uint32_t day)
   int y = year;
   long delsum;
 
-  if (!dataconvert::isDateValid(day, month, year))
+  if (!dataconvert::isDateValid(day, month, year) || (day == 0 && month == 0 && year == 0))
     return 0;
 
   delsum = (long)(365 * y + 31 * ((int)month - 1) + (int)day);
@@ -204,10 +202,13 @@ inline void get_date_from_mysql_daynr(long daynr, dataconvert::DateTime& dateTim
 //   else:
 //       0 = Monday, 1 = Tuesday, ..., 6 = Sunday
 // This is a mirror of calc_weekday, at a later date we should use sql_time.h
-inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst)
+inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst, bool& isNull)
 {
-  if (!dataconvert::isDateValid(day, month, year))
+  if (!dataconvert::isDateValid(day, month, year) || (day == 0 && month == 0 && year == 0))
+  {
+    isNull = true;
     return 0;
+  }
 
   uint32_t daynr = calc_mysql_daynr(year, month, day);
   return ((int)((daynr + 5L + (sundayFirst ? 1L : 0L)) % 7));
@@ -239,7 +240,7 @@ inline int16_t convert_mysql_mode_to_modeflags(int16_t mode)
 //
 // This is a mirror of calc_week, at a later date we should use sql_time.h
 inline uint32_t calc_mysql_week(uint32_t year, uint32_t month, uint32_t day, int16_t modeflags,
-                                uint32_t* weekyear = 0)
+                                uint32_t* weekyear = nullptr)
 {
   // need to make sure that the date is valid
   if (!dataconvert::isDateValid(day, month, year))
@@ -252,7 +253,8 @@ inline uint32_t calc_mysql_week(uint32_t year, uint32_t month, uint32_t day, int
   bool week_year = modeflags & WEEK_NO_ZERO;
   bool first_weekday = modeflags & WEEK_GT_THREE_DAYS;
 
-  uint32_t weekday = calc_mysql_weekday(year, 1, 1, !monday_first);
+  bool isNullDummy = false;
+  uint32_t weekday = calc_mysql_weekday(year, 1, 1, !monday_first, isNullDummy);
 
   if (weekyear)
   {
@@ -264,7 +266,7 @@ inline uint32_t calc_mysql_week(uint32_t year, uint32_t month, uint32_t day, int
     if (!week_year && ((first_weekday && weekday != 0) || (!first_weekday && weekday >= 4)))
       return 0;
 
-    week_year = 1;
+    week_year = true;
 
     if (weekyear)
     {
@@ -351,17 +353,17 @@ inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long* 
 
   days -= l_sign * calc_mysql_daynr(year2, month2, day2);
 
-  microseconds = ((long long)days * (long)(86400) + (long long)(hour1 * 3600L + min1 * 60L + sec1) -
+  microseconds = (int128_t(days) * (86400) + (long long)(hour1 * 3600L + min1 * 60L + sec1) -
                   l_sign * (long long)(hour2 * 3600L + min2 * 60L + sec2)) *
                      (long long)(1000000) +
                  (long long)msec1 - l_sign * (long long)msec2;
 
-  neg = 0;
+  neg = false;
 
   if (microseconds < 0)
   {
     microseconds = -microseconds;
-    neg = 1;
+    neg = true;
   }
 
   *seconds_out = microseconds / 1000000L;
@@ -481,7 +483,7 @@ inline int getNumbers(const std::string& expr, int64_t* array, execplan::OpType 
   if (funcType == execplan::OP_SUB)
     funcNeg = -1;
 
-  if (expr.size() == 0)
+  if (expr.empty())
     return 0;
 
   // @bug 4703 reworked this code to avoid use of incrementally
@@ -492,10 +494,8 @@ inline int getNumbers(const std::string& expr, int64_t* array, execplan::OpType 
   int64_t number = 0;
   int neg = 1;
 
-  for (unsigned int i = 0; i < expr.size(); i++)
+  for (auto value : expr)
   {
-    char value = expr[i];
-
     if ((value >= '0' && value <= '9'))
     {
       foundNumber = true;
@@ -549,7 +549,7 @@ inline int getNumbers(const std::string& expr, int* array, execplan::OpType func
   if (funcType == execplan::OP_SUB)
     funcNeg = -1;
 
-  if (expr.size() == 0)
+  if (expr.empty())
     return 0;
 
   // @bug 4703 reworked this code to avoid use of incrementally
@@ -560,10 +560,8 @@ inline int getNumbers(const std::string& expr, int* array, execplan::OpType func
   int number = 0;
   int neg = 1;
 
-  for (unsigned int i = 0; i < expr.size(); i++)
+  for (char value : expr)
   {
-    char value = expr[i];
-
     if ((value >= '0' && value <= '9'))
     {
       foundNumber = true;
@@ -610,56 +608,51 @@ inline int getNumbers(const std::string& expr, int* array, execplan::OpType func
 
 inline int dayOfWeek(std::string day)  // Sunday = 0
 {
-  int value = -1;
   boost::to_lower(day);
 
   if (day == "sunday" || day == "sun")
   {
-    value = 0;
+    return 0;
   }
   else if (day == "monday" || day == "mon")
   {
-    value = 1;
+    return 1;
   }
   else if (day == "tuesday" || day == "tue")
   {
-    value = 2;
+    return 2;
   }
   else if (day == "wednesday" || day == "wed")
   {
-    value = 3;
+    return 3;
   }
   else if (day == "thursday" || day == "thu")
   {
-    value = 4;
+    return 4;
   }
   else if (day == "friday" || day == "fri")
   {
-    value = 5;
+    return 5;
   }
   else if (day == "saturday" || day == "sat")
   {
-    value = 6;
-  }
-  else
-  {
-    value = -1;
+    return 6;
   }
 
-  return value;
+  return -1;
 }
 
 inline string intToString(int64_t i)
 {
   char buf[32];
-  snprintf(buf, 32, "%" PRId64 "", i);
+  snprintf(buf, sizeof(buf), "%" PRId64 "", i);
   return buf;
 }
 
 inline string uintToString(uint64_t i)
 {
   char buf[32];
-  snprintf(buf, 32, "%" PRIu64 "", i);
+  snprintf(buf, sizeof(buf), "%" PRIu64 "", i);
   return buf;
 }
 
@@ -668,7 +661,7 @@ inline string doubleToString(double d)
   // double's can be *really* long to print out.  Max mysql
   // is e308 so allow for 308 + 36 decimal places minimum.
   char buf[384];
-  snprintf(buf, 384, "%f", d);
+  snprintf(buf, sizeof(buf), "%f", d);
   return buf;
 }
 
@@ -677,15 +670,14 @@ inline string longDoubleToString(long double ld)
   // long double's can be *really* long to print out.  Max mysql
   // is e308 so allow for 308 + 36 decimal places minimum.
   char buf[384];
-  snprintf(buf, 384, "%Lf", ld);
+  snprintf(buf, sizeof(buf), "%Lf", ld);
   return buf;
 }
 
 uint64_t dateAdd(uint64_t time, const std::string& expr, execplan::IntervalColumn::interval_type unit,
                  bool dateType, execplan::OpType funcType);
-const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&);
+const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&, bool& isNull);
 const std::string timediff(int64_t, int64_t, bool isDateTime = true);
 const char* convNumToStr(int64_t, char*, int);
 
-}  // namespace helpers
-}  // namespace funcexp
+}  // namespace funcexp::helpers

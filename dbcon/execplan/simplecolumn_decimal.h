@@ -54,35 +54,33 @@ class SimpleColumn_Decimal : public SimpleColumn
  public:
   /** Constructors */
   SimpleColumn_Decimal();
-  SimpleColumn_Decimal(const std::string& token, const uint32_t sessionID = 0);
+  explicit SimpleColumn_Decimal(const std::string& token, const uint32_t sessionID = 0);
   SimpleColumn_Decimal(const std::string& schema, const std::string& table, const std::string& col,
                        const bool isColumnStore, const uint32_t sessionID = 0);
-  SimpleColumn_Decimal(const SimpleColumn& rhs, const uint32_t sessionID = 0);
+  explicit SimpleColumn_Decimal(const SimpleColumn& rhs, const uint32_t sessionID = 0);
 
   /** Destructor */
-  virtual ~SimpleColumn_Decimal()
-  {
-  }
+  ~SimpleColumn_Decimal() override = default;
 
-  inline virtual SimpleColumn_Decimal* clone() const override
+  inline SimpleColumn_Decimal* clone() const override
   {
     return new SimpleColumn_Decimal<len>(*this);
   }
 
   /** Evaluate methods */
-  virtual inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
-  virtual inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
-  virtual inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
-  virtual inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
-  virtual inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
-  virtual inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override;
+  inline const utils::NullString& getStrVal(rowgroup::Row& row, bool& isNull) override;
+  inline int64_t getIntVal(rowgroup::Row& row, bool& isNull) override;
+  inline float getFloatVal(rowgroup::Row& row, bool& isNull) override;
+  inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
+  inline IDB_Decimal getDecimalVal(rowgroup::Row& row, bool& isNull) override;
 
   /** The serialize interface */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
   uint64_t fNullVal;
 
-  virtual std::string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   void setNullVal();

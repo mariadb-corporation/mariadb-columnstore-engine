@@ -33,7 +33,7 @@ namespace ddlpackageprocessor
  * for interacting with the Write Engine
  * to process create table ddl statements.
  */
-class MarkPartitionProcessor : public DDLPackageProcessor
+class MarkPartitionProcessor : public DDLPackageProcessor, FormatStatementString
 {
  public:
   MarkPartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
@@ -46,7 +46,7 @@ class MarkPartitionProcessor : public DDLPackageProcessor
    *
    * @param createTableStmt the CreateTableStatement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* MarkPartitionStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* MarkPartitionStmt) override;
 };
 
 }  // namespace ddlpackageprocessor

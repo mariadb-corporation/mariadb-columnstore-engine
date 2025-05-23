@@ -43,15 +43,11 @@ enum WF_FRAME
 
 struct WF_Boundary
 {
-  WF_Boundary()
+  WF_Boundary() = default;
+  explicit WF_Boundary(WF_FRAME frame) : fFrame(frame)
   {
   }
-  WF_Boundary(WF_FRAME frame) : fFrame(frame)
-  {
-  }
-  ~WF_Boundary()
-  {
-  }
+  ~WF_Boundary() = default;
   const std::string toString() const;
   void serialize(messageqcpp::ByteStream&) const;
   void unserialize(messageqcpp::ByteStream&);
@@ -67,9 +63,7 @@ struct WF_Frame
     fStart.fFrame = WF_UNBOUNDED_PRECEDING;
     fEnd.fFrame = WF_UNBOUNDED_FOLLOWING;
   }
-  ~WF_Frame()
-  {
-  }
+  ~WF_Frame() = default;
   const std::string toString() const;
   void serialize(messageqcpp::ByteStream&) const;
   void unserialize(messageqcpp::ByteStream&);
@@ -83,13 +77,11 @@ struct WF_Frame
  */
 struct WF_OrderBy
 {
-  WF_OrderBy()
+  WF_OrderBy() = default;
+  explicit WF_OrderBy(std::vector<SRCP> orders) : fOrders(orders)
   {
   }
-  WF_OrderBy(std::vector<SRCP> orders) : fOrders(orders)
-  {
-  }
-  ~WF_OrderBy(){};
+  ~WF_OrderBy() = default;
   const std::string toString() const;
   void serialize(messageqcpp::ByteStream&) const;
   void unserialize(messageqcpp::ByteStream&);

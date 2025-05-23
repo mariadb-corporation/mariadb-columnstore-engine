@@ -332,7 +332,8 @@ enum DDL_SERIAL_TYPE
   DDL_TRUNC_TABLE_STATEMENT,
   DDL_MARK_PARTITION_STATEMENT,
   DDL_RESTORE_PARTITION_STATEMENT,
-  DDL_DROP_PARTITION_STATEMENT
+  DDL_DROP_PARTITION_STATEMENT,
+  DDL_DEBUG_STATEMENT
 };
 
 /** @brief An abstract base for TableDef, ColumnDef, ...
@@ -348,11 +349,9 @@ enum DDL_SERIAL_TYPE
  */
 struct SchemaObject
 {
-  virtual ~SchemaObject()
-  {
-  }
+  virtual ~SchemaObject() = default;
 
-  SchemaObject(std::string name) : fName(name)
+  explicit SchemaObject(std::string name) : fName(name)
   {
   }
 
@@ -417,9 +416,7 @@ struct SqlStatement
  */
 struct SqlStatementList
 {
-  SqlStatementList()
-  {
-  }
+  SqlStatementList() = default;
 
   SqlStatement* operator[](int i) const
   {
@@ -451,17 +448,13 @@ struct QualifiedName
   /** @brief Serialize to ByteStream */
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-  QualifiedName()
-  {
-  }
+  QualifiedName() = default;
 
-  EXPORT QualifiedName(const char* name);
+  EXPORT explicit QualifiedName(const char* name);
   EXPORT QualifiedName(const char* name, const char* schema);
   EXPORT QualifiedName(const char* name, const char* schema, const char* catalog);
 
-  virtual ~QualifiedName()
-  {
-  }
+  virtual ~QualifiedName() = default;
 
   std::string fCatalog;
   std::string fName;
@@ -478,7 +471,7 @@ struct TableDef : public SchemaObject
   /** @brief Serialize to ByteStream */
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-  TableDef() : fQualifiedName(0)
+  TableDef() : fQualifiedName(nullptr)
   {
   }
 
@@ -494,7 +487,7 @@ struct TableDef : public SchemaObject
   {
   }
 
-  EXPORT virtual ~TableDef();
+  EXPORT ~TableDef() override;
 
   QualifiedName* fQualifiedName;
 
@@ -511,22 +504,22 @@ struct TableDef : public SchemaObject
 struct CreateTableStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
   EXPORT CreateTableStatement();
 
   /** @brief You can't have a CreateTableStatement without a
       table defintion */
-  EXPORT CreateTableStatement(TableDef* tableDef);
+  EXPORT explicit CreateTableStatement(TableDef* tableDef);
 
-  EXPORT virtual ~CreateTableStatement();
+  EXPORT ~CreateTableStatement() override;
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
   std::string schemaName() const
   {
@@ -560,13 +553,9 @@ struct AlterTableAction
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs) = 0;
 
   /** @brief Ctor for deserialization */
-  AlterTableAction()
-  {
-  }
+  AlterTableAction() = default;
 
-  virtual ~AlterTableAction()
-  {
-  }
+  virtual ~AlterTableAction() = default;
 
   /** @brief QualifiedName of the focal table for this
       statement. */
@@ -581,24 +570,24 @@ struct AlterTableAction
 struct AtaAddColumn : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaAddColumn() : fColumnDef(0)
+  AtaAddColumn() : fColumnDef(nullptr)
   {
   }
 
   /** @brief You can't add a column without specifying a column
       definition. */
-  AtaAddColumn(ColumnDef* columnDef);
+  explicit AtaAddColumn(ColumnDef* columnDef);
 
-  virtual ~AtaAddColumn();
+  ~AtaAddColumn() override;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   /** @brief The focal column definition. */
   ColumnDef* fColumnDef;
@@ -610,22 +599,20 @@ struct AtaAddColumn : public AlterTableAction
 struct AtaAddColumns : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaAddColumns()
-  {
-  }
+  AtaAddColumns() = default;
 
-  AtaAddColumns(TableElementList* tableElements);
+  explicit AtaAddColumns(TableElementList* tableElements);
 
-  virtual ~AtaAddColumns();
+  ~AtaAddColumns() override;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   ColumnDefList fColumns;
 };
@@ -636,22 +623,20 @@ struct AtaAddColumns : public AlterTableAction
 struct AtaDropColumns : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaDropColumns()
-  {
-  }
+  AtaDropColumns() = default;
 
-  EXPORT AtaDropColumns(ColumnNameList* tableElements);
+  EXPORT explicit AtaDropColumns(ColumnNameList* tableElements);
 
-  EXPORT virtual ~AtaDropColumns();
+  EXPORT ~AtaDropColumns() override;
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
   ColumnNameList fColumns;
 };
@@ -661,22 +646,22 @@ struct AtaDropColumns : public AlterTableAction
 struct AtaAddTableConstraint : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaAddTableConstraint() : fTableConstraint(0)
+  AtaAddTableConstraint() : fTableConstraint(nullptr)
   {
   }
 
-  AtaAddTableConstraint(TableConstraintDef* tableConstraint);
+  explicit AtaAddTableConstraint(TableConstraintDef* tableConstraint);
 
-  virtual ~AtaAddTableConstraint();
+  ~AtaAddTableConstraint() override;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   TableConstraintDef* fTableConstraint;
 };
@@ -686,25 +671,21 @@ struct AtaAddTableConstraint : public AlterTableAction
 struct AtaDropColumn : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaDropColumn()
-  {
-  }
+  AtaDropColumn() = default;
 
   /** @brief Ctor for parser construction */
   EXPORT AtaDropColumn(std::string columnName, DDL_REFERENTIAL_ACTION dropBehavior);
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaDropColumn()
-  {
-  }
+  ~AtaDropColumn() override = default;
   std::string fColumnName;
   DDL_REFERENTIAL_ACTION fDropBehavior;
 };
@@ -714,19 +695,19 @@ struct AtaDropColumn : public AlterTableAction
 struct AtaSetColumnDefault : AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
-  AtaSetColumnDefault() : fDefaultValue(0)
+  AtaSetColumnDefault() : fDefaultValue(nullptr)
   {
   }
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaSetColumnDefault();
+  ~AtaSetColumnDefault() override;
 
   AtaSetColumnDefault(const char* colName, ColumnDefaultValue* defaultValue);
 
@@ -738,25 +719,21 @@ struct AtaSetColumnDefault : AlterTableAction
 struct AtaDropColumnDefault : AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaDropColumnDefault()
-  {
-  }
+  AtaDropColumnDefault() = default;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaDropColumnDefault()
-  {
-  }
+  ~AtaDropColumnDefault() override = default;
 
   /** @brief Ctor for parser construction */
-  AtaDropColumnDefault(const char* colName);
+  explicit AtaDropColumnDefault(const char* colName);
 
   std::string fColumnName;
 };
@@ -765,22 +742,18 @@ struct AtaDropColumnDefault : AlterTableAction
 struct AtaDropTableConstraint : AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaDropTableConstraint()
-  {
-  }
+  AtaDropTableConstraint() = default;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaDropTableConstraint()
-  {
-  }
+  ~AtaDropTableConstraint() override = default;
 
   AtaDropTableConstraint(const char* constraintName, DDL_REFERENTIAL_ACTION dropBehavior);
 
@@ -792,21 +765,21 @@ struct AtaDropTableConstraint : AlterTableAction
 struct AtaRenameTable : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaRenameTable() : fQualifiedName(0)
+  AtaRenameTable() : fQualifiedName(nullptr)
   {
   }
-  AtaRenameTable(QualifiedName* qualifiedName);
+  explicit AtaRenameTable(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaRenameTable();
+  ~AtaRenameTable() override;
 
   QualifiedName* fQualifiedName;
 };
@@ -815,21 +788,21 @@ struct AtaRenameTable : public AlterTableAction
 struct AtaTableComment : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
   AtaTableComment() : fTableComment("")
   {
   }
-  AtaTableComment(const char* tableComment);
+  explicit AtaTableComment(const char* tableComment);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaTableComment();
+  ~AtaTableComment() override;
 
   std::string fTableComment;
 };
@@ -838,13 +811,13 @@ struct AtaTableComment : public AlterTableAction
 struct AtaModifyColumnType : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaModifyColumnType() : fColumnType(0)
+  AtaModifyColumnType() : fColumnType(nullptr)
   {
   }
 
@@ -853,12 +826,12 @@ struct AtaModifyColumnType : public AlterTableAction
   {
   }
 
-  AtaModifyColumnType(QualifiedName* qualifiedName);
+  explicit AtaModifyColumnType(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaModifyColumnType();
+  ~AtaModifyColumnType() override;
 
   ColumnType* fColumnType;
 
@@ -869,28 +842,28 @@ struct AtaModifyColumnType : public AlterTableAction
 struct AtaRenameColumn : public AlterTableAction
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  AtaRenameColumn() : fNewType(0), fDefaultValue(0)
+  AtaRenameColumn() : fNewType(nullptr), fDefaultValue(nullptr)
   {
   }
 
-  AtaRenameColumn(const char* name, const char* newName, ColumnType* newType, const char* comment = NULL)
+  AtaRenameColumn(const char* name, const char* newName, ColumnType* newType, const char* comment = nullptr)
    : fName(name), fNewName(newName), fNewType(newType)
   {
     if (comment)
       fComment = comment;
 
-    fDefaultValue = 0;
+    fDefaultValue = nullptr;
   }
 
   AtaRenameColumn(const char* name, const char* newName, ColumnType* newType,
                   ColumnConstraintList* constraint_list, ColumnDefaultValue* defaultValue,
-                  const char* comment = NULL)
+                  const char* comment = nullptr)
    : fName(name), fNewName(newName), fNewType(newType), fDefaultValue(defaultValue)
   {
     if (constraint_list)
@@ -905,12 +878,12 @@ struct AtaRenameColumn : public AlterTableAction
       fComment = comment;
   }
 
-  AtaRenameColumn(QualifiedName* qualifiedName);
+  explicit AtaRenameColumn(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~AtaRenameColumn();
+  ~AtaRenameColumn() override;
 
   std::string fName;     ///< current column name
   std::string fNewName;  ///< new column name
@@ -934,7 +907,7 @@ struct ColumnType
   EXPORT int serialize(messageqcpp::ByteStream& bs);
 
   /** @brief For deserialization. */
-  ColumnType() : fCharset(NULL), fCollate(NULL), fCharsetNum(0), fExplicitLength(false)
+  ColumnType() : fCharset(nullptr), fCollate(nullptr), fCharsetNum(0), fExplicitLength(false)
   {
   }
 
@@ -950,9 +923,7 @@ struct ColumnType
 
   EXPORT ColumnType(int type);
 
-  virtual ~ColumnType()
-  {
-  }
+  virtual ~ColumnType() = default;
 
   /** @brief Type code from DDL_DATATYPES */
   int fType;
@@ -1002,19 +973,15 @@ struct ColumnConstraintDef : public SchemaObject
   /** @brief Serialize to ByteStream */
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-  ColumnConstraintDef()
-  {
-  }
+  ColumnConstraintDef() = default;
 
   /** @brief Constructs as check constraint. */
-  EXPORT ColumnConstraintDef(const char* check);
+  EXPORT explicit ColumnConstraintDef(const char* check);
 
   /** @brief Constructs as other constraint. */
-  EXPORT ColumnConstraintDef(DDL_CONSTRAINTS type);
+  EXPORT explicit ColumnConstraintDef(DDL_CONSTRAINTS type);
 
-  virtual ~ColumnConstraintDef()
-  {
-  }
+  ~ColumnConstraintDef() override = default;
 
   /** @brief Whether deferrable. */
   bool fDeferrable;
@@ -1038,15 +1005,11 @@ struct ColumnDefaultValue
   /** @brief Serialize to ByteStream */
   virtual int serialize(messageqcpp::ByteStream& bs);
 
-  ColumnDefaultValue()
-  {
-  }
+  ColumnDefaultValue() = default;
 
-  ColumnDefaultValue(const char* value);
+  explicit ColumnDefaultValue(const char* value);
 
-  virtual ~ColumnDefaultValue()
-  {
-  }
+  virtual ~ColumnDefaultValue() = default;
 
   /** @brief Is NULL the default value? */
   bool fNull;
@@ -1066,20 +1029,20 @@ struct ColumnDef : public SchemaObject
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
   /** @brief For deserialization. */
-  ColumnDef() : fType(0)
+  ColumnDef() : fType(nullptr)
   {
   }
 
-  EXPORT virtual ~ColumnDef();
+  EXPORT ~ColumnDef() override;
 
   /** @brief Parser ctor. */
   EXPORT ColumnDef(const char* name, ColumnType* type, ColumnConstraintList* constraint_list,
-                   ColumnDefaultValue* defaultValue, const char* comment = NULL);
+                   ColumnDefaultValue* defaultValue, const char* comment = nullptr);
 
   /** @brief ColumnDef ctor.
    * ctor */
   ColumnDef(const char* name, ColumnType* type, ColumnConstraintList constraints,
-            ColumnDefaultValue* defaultValue = NULL, const char* comment = NULL)
+            ColumnDefaultValue* defaultValue = nullptr, const char* comment = nullptr)
    : SchemaObject(name), fType(type), fConstraints(constraints), fDefaultValue(defaultValue)
   {
   }
@@ -1113,14 +1076,12 @@ struct TableConstraintDef : public SchemaObject
 
   TableConstraintDef();
 
-  TableConstraintDef(DDL_CONSTRAINTS cType);
+  explicit TableConstraintDef(DDL_CONSTRAINTS cType);
 
   /** @brief Dump to stdout. */
   virtual std::ostream& put(std::ostream& os) const;
 
-  virtual ~TableConstraintDef()
-  {
-  }
+  ~TableConstraintDef() override = default;
   //		std::string fName;
   DDL_CONSTRAINTS fConstraintType;
 };
@@ -1130,28 +1091,26 @@ struct TableConstraintDef : public SchemaObject
 struct TableUniqueConstraintDef : public TableConstraintDef
 {
   /** @brief Return DDL_SERIAL code */
-  virtual DDL_SERIAL_TYPE getSerialType()
+  DDL_SERIAL_TYPE getSerialType() override
   {
     return DDL_TABLE_UNIQUE_CONSTRAINT_DEF;
   }
 
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   TableUniqueConstraintDef() : TableConstraintDef(DDL_UNIQUE)
   {
   }
 
-  TableUniqueConstraintDef(ColumnNameList* columns);
-  virtual ~TableUniqueConstraintDef()
-  {
-  }
+  explicit TableUniqueConstraintDef(ColumnNameList* columns);
+  ~TableUniqueConstraintDef() override = default;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   ColumnNameList fColumnNameList;
 };
@@ -1161,29 +1120,27 @@ struct TableUniqueConstraintDef : public TableConstraintDef
 struct TablePrimaryKeyConstraintDef : public TableConstraintDef
 {
   /** @brief Return DDL_SERIAL code */
-  virtual DDL_SERIAL_TYPE getSerialType()
+  DDL_SERIAL_TYPE getSerialType() override
   {
     return DDL_TABLE_PRIMARY_CONSTRAINT_DEF;
   }
 
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   TablePrimaryKeyConstraintDef() : TableConstraintDef(DDL_PRIMARY_KEY)
   {
   }
 
-  EXPORT TablePrimaryKeyConstraintDef(ColumnNameList* columns);
+  EXPORT explicit TablePrimaryKeyConstraintDef(ColumnNameList* columns);
 
-  virtual ~TablePrimaryKeyConstraintDef()
-  {
-  }
+  ~TablePrimaryKeyConstraintDef() override = default;
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
   ColumnNameList fColumnNameList;
 };
@@ -1193,9 +1150,7 @@ struct TablePrimaryKeyConstraintDef : public TableConstraintDef
  */
 struct ReferentialAction
 {
-  virtual ~ReferentialAction()
-  {
-  }
+  virtual ~ReferentialAction() = default;
 
   /** @brief Deserialize from ByteStream */
   virtual int unserialize(messageqcpp::ByteStream& bs);
@@ -1212,18 +1167,19 @@ struct ReferentialAction
 struct TableReferencesConstraintDef : public TableConstraintDef
 {
   /** @brief Return DDL_SERIAL code */
-  virtual DDL_SERIAL_TYPE getSerialType()
+  DDL_SERIAL_TYPE getSerialType() override
   {
     return DDL_TABLE_REFERENCES_CONSTRAINT_DEF;
   }
 
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
-  TableReferencesConstraintDef() : TableConstraintDef(DDL_REFERENCES), fTableName(0), fRefAction(0)
+  TableReferencesConstraintDef()
+   : TableConstraintDef(DDL_REFERENCES), fTableName(nullptr), fRefAction(nullptr)
   {
   }
 
@@ -1231,10 +1187,10 @@ struct TableReferencesConstraintDef : public TableConstraintDef
                                ColumnNameList* foreignColumns, DDL_MATCH_TYPE matchType,
                                ReferentialAction* refAction);
 
-  virtual ~TableReferencesConstraintDef();
+  ~TableReferencesConstraintDef() override;
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
   ColumnNameList fColumns;
   QualifiedName* fTableName;
@@ -1248,29 +1204,27 @@ struct TableReferencesConstraintDef : public TableConstraintDef
 struct TableCheckConstraintDef : public TableConstraintDef
 {
   /** @brief Return DDL_SERIAL code */
-  virtual DDL_SERIAL_TYPE getSerialType()
+  DDL_SERIAL_TYPE getSerialType() override
   {
     return DDL_TABLE_CHECK_CONSTRAINT_DEF;
   }
 
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   TableCheckConstraintDef() : TableConstraintDef(DDL_CHECK)
   {
   }
 
-  TableCheckConstraintDef(const char* check);
+  explicit TableCheckConstraintDef(const char* check);
 
   /** @brief Dump to stdout. */
-  virtual std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~TableCheckConstraintDef()
-  {
-  }
+  ~TableCheckConstraintDef() override = default;
   std::string fCheck;
 };
 
@@ -1283,22 +1237,22 @@ struct TableCheckConstraintDef : public TableConstraintDef
 struct AlterTableStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
-  AlterTableStatement() : fTableName(0)
+  AlterTableStatement() : fTableName(nullptr)
   {
   }
 
   EXPORT AlterTableStatement(QualifiedName* qName, AlterTableActionList* ataList);
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
   /** @brief Delete members. */
-  EXPORT virtual ~AlterTableStatement();
+  EXPORT ~AlterTableStatement() override;
 
   std::string schemaName() const
   {
@@ -1319,8 +1273,10 @@ struct AlterTableStatement : public SqlStatement
 
   QualifiedName* fTableName;
   AlterTableActionList fActions;
+
  private:
   long fTimeZone;
+
  public:
 };
 
@@ -1338,18 +1294,14 @@ struct ConstraintAttributes
   /** @brief Serialize to ByteStream */
   virtual int serialize(messageqcpp::ByteStream& bs);
 
-  ConstraintAttributes()
-  {
-  }
+  ConstraintAttributes() = default;
 
   ConstraintAttributes(DDL_CONSTRAINT_ATTRIBUTES checkTime, bool deferrable)
    : fCheckTime(checkTime), fDeferrable(deferrable)
   {
   }
 
-  virtual ~ConstraintAttributes()
-  {
-  }
+  virtual ~ConstraintAttributes() = default;
 
   DDL_CONSTRAINT_ATTRIBUTES fCheckTime;
   bool fDeferrable;
@@ -1363,19 +1315,19 @@ struct ConstraintAttributes
 struct CreateIndexStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
   CreateIndexStatement();
   CreateIndexStatement(QualifiedName* qualifiedName1, QualifiedName* qualifiedName2,
                        ColumnNameList* columnNames, bool unique);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~CreateIndexStatement();
+  ~CreateIndexStatement() override;
 
   QualifiedName* fIndexName;
   QualifiedName* fTableName;
@@ -1388,20 +1340,20 @@ struct CreateIndexStatement : public SqlStatement
 struct DropIndexStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  virtual int unserialize(messageqcpp::ByteStream& bs);
+  int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  virtual int serialize(messageqcpp::ByteStream& bs);
+  int serialize(messageqcpp::ByteStream& bs) override;
 
-  DropIndexStatement() : fIndexName(0)
+  DropIndexStatement() : fIndexName(nullptr)
   {
   }
-  DropIndexStatement(QualifiedName* qualifiedName);
+  explicit DropIndexStatement(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  std::ostream& put(std::ostream& os) const;
+  std::ostream& put(std::ostream& os) const override;
 
-  virtual ~DropIndexStatement();
+  ~DropIndexStatement() override;
 
   QualifiedName* fIndexName;
 };
@@ -1411,20 +1363,20 @@ struct DropIndexStatement : public SqlStatement
 struct DropTableStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
-  DropTableStatement() : fTableName(0)
+  DropTableStatement() : fTableName(nullptr)
   {
   }
   EXPORT DropTableStatement(QualifiedName* qualifiedName, bool cascade);
 
   /** @brief Dump to stdout. */
-  EXPORT std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
-  virtual ~DropTableStatement()
+  ~DropTableStatement() override
   {
     delete fTableName;
   }
@@ -1441,9 +1393,9 @@ struct DropTableStatement : public SqlStatement
   bool fCascade;
 };
 
-/** @brief TruncTableStatement represents the drop table operation
+/** @brief DebugStatement
  */
-struct TruncTableStatement : public SqlStatement
+struct DebugDDLStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
   EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
@@ -1451,15 +1403,39 @@ struct TruncTableStatement : public SqlStatement
   /** @brief Serialize to ByteStream */
   EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
 
-  TruncTableStatement() : fTableName(0)
-  {
-  }
-  EXPORT TruncTableStatement(QualifiedName* qualifiedName);
+  DebugDDLStatement(uint32_t debugLevel);
+
+  EXPORT DebugDDLStatement();
 
   /** @brief Dump to stdout. */
   EXPORT std::ostream& put(std::ostream& os) const;
 
-  virtual ~TruncTableStatement()
+  virtual ~DebugDDLStatement()
+  {
+  }
+
+  uint32_t fDebugLevel;
+};
+
+/** @brief TruncTableStatement represents the drop table operation
+ */
+struct TruncTableStatement : public SqlStatement
+{
+  /** @brief Deserialize from ByteStream */
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
+
+  /** @brief Serialize to ByteStream */
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
+
+  TruncTableStatement() : fTableName(nullptr)
+  {
+  }
+  EXPORT explicit TruncTableStatement(QualifiedName* qualifiedName);
+
+  /** @brief Dump to stdout. */
+  EXPORT std::ostream& put(std::ostream& os) const override;
+
+  ~TruncTableStatement() override
   {
     delete fTableName;
   }
@@ -1481,23 +1457,23 @@ struct TruncTableStatement : public SqlStatement
 struct MarkPartitionStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  MarkPartitionStatement() : fTableName(0)
+  MarkPartitionStatement() : fTableName(nullptr)
   {
   }
 
   /** @brief You can't have a CreateTableStatement without a table defintion */
-  EXPORT MarkPartitionStatement(QualifiedName* qualifiedName);
+  EXPORT explicit MarkPartitionStatement(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
-  virtual ~MarkPartitionStatement()
+  ~MarkPartitionStatement() override
   {
     delete fTableName;
   }
@@ -1512,22 +1488,22 @@ struct MarkPartitionStatement : public SqlStatement
 struct RestorePartitionStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  RestorePartitionStatement() : fTableName(0)
+  RestorePartitionStatement() : fTableName(nullptr)
   {
   }
 
-  EXPORT RestorePartitionStatement(QualifiedName* qualifiedName);
+  EXPORT explicit RestorePartitionStatement(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
-  virtual ~RestorePartitionStatement()
+  ~RestorePartitionStatement() override
   {
     delete fTableName;
   }
@@ -1542,22 +1518,22 @@ struct RestorePartitionStatement : public SqlStatement
 struct DropPartitionStatement : public SqlStatement
 {
   /** @brief Deserialize from ByteStream */
-  EXPORT virtual int unserialize(messageqcpp::ByteStream& bs);
+  EXPORT int unserialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Serialize to ByteStream */
-  EXPORT virtual int serialize(messageqcpp::ByteStream& bs);
+  EXPORT int serialize(messageqcpp::ByteStream& bs) override;
 
   /** @brief Ctor for deserialization */
-  DropPartitionStatement() : fTableName(0)
+  DropPartitionStatement() : fTableName(nullptr)
   {
   }
 
-  EXPORT DropPartitionStatement(QualifiedName* qualifiedName);
+  EXPORT explicit DropPartitionStatement(QualifiedName* qualifiedName);
 
   /** @brief Dump to stdout. */
-  EXPORT virtual std::ostream& put(std::ostream& os) const;
+  EXPORT std::ostream& put(std::ostream& os) const override;
 
-  virtual ~DropPartitionStatement()
+  ~DropPartitionStatement() override
   {
     delete fTableName;
   }

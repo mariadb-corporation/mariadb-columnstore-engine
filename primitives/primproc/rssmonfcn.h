@@ -30,7 +30,7 @@ class RssMonFcn : public utils::MonitorProcMem
   {
   }
 
-  void operator()() const;
+  void operator()() const override;
 };
 
-} // namespace
+}  // namespace exemgr

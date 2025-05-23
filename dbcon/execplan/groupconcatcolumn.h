@@ -52,25 +52,25 @@ class GroupConcatColumn : public AggregateColumn
    */
   GroupConcatColumn();
 
-  GroupConcatColumn(const uint32_t sessionID);
+  explicit GroupConcatColumn(const uint32_t sessionID);
 
   GroupConcatColumn(const GroupConcatColumn& rhs, const uint32_t sessionID = 0);
 
   /**
    * Destructors
    */
-  virtual ~GroupConcatColumn();
+  ~GroupConcatColumn() override;
 
   /**
    * Overloaded stream operator
    */
-  virtual const std::string toString() const override;
+  const std::string toString() const override;
 
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy
    */
-  virtual GroupConcatColumn* clone() const override
+  GroupConcatColumn* clone() const override
   {
     return new GroupConcatColumn(*this);
   }
@@ -98,8 +98,8 @@ class GroupConcatColumn : public AggregateColumn
   /**
    * Serialize interface
    */
-  virtual void serialize(messageqcpp::ByteStream&) const override;
-  virtual void unserialize(messageqcpp::ByteStream&) override;
+  void serialize(messageqcpp::ByteStream&) const override;
+  void unserialize(messageqcpp::ByteStream&) override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -107,7 +107,7 @@ class GroupConcatColumn : public AggregateColumn
    * @return true iff every member of t is a duplicate copy of every member of this;
    *         false otherwise
    */
-  virtual bool operator==(const TreeNode* t) const override;
+  bool operator==(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -124,7 +124,7 @@ class GroupConcatColumn : public AggregateColumn
    * @return false iff every member of t is a duplicate copy of every member of this;
    *         true otherwise
    */
-  virtual bool operator!=(const TreeNode* t) const override;
+  bool operator!=(const TreeNode* t) const override;
 
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *
@@ -135,7 +135,7 @@ class GroupConcatColumn : public AggregateColumn
   using AggregateColumn::operator!=;
   virtual bool operator!=(const GroupConcatColumn& t) const;
 
-  virtual string toCppCode(IncludeSet& includes) const override;
+  string toCppCode(IncludeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;

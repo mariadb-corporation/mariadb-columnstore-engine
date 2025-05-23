@@ -224,7 +224,7 @@ class TableInfo : public WeUIDGID
 
   /** @brief Default destructor
    */
-  ~TableInfo();
+  ~TableInfo() override;
 
   /** @brief Acquire the DB table lock for this table
    */

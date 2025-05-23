@@ -37,7 +37,7 @@ S3_DBROOT1_BRM_PATH = 'data1/systemFiles/dbrm/BRM_saves_current'
 USER = '@DEFAULT_USER@'
 GROUP = '@DEFAULT_GROUP@'
 MINUTE = 60
-HALF_A_MINUTE = 30
+FIVE_SECS = 5
 UNREASONABLE_DELAY = 600
 LOCALHOST = '127.0.0.1'
 API_VERSION = '0.4.0'
@@ -76,7 +76,7 @@ def cmapi_available(host=LOCALHOST):
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
     try:
-        with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+        with urlopen(request, context=ctx, timeout=FIVE_SECS) as req:
             _ = req.read().decode('utf-8')
     except HTTPError as exc:
         if exc.code == 404:
@@ -165,7 +165,7 @@ def is_node_primary(conf_root):
 
         success = False
         try:
-            with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+            with urlopen(request, context=ctx, timeout=FIVE_SECS) as req:
                 response = req.read()
             success = True
         except HTTPError as exc:

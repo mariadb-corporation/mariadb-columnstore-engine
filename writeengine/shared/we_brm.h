@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -380,7 +381,7 @@ class BRMWrapper : public WEObj
    * @brief Commit the transaction
    */
   EXPORT int commit(const BRM::VER_t transID);
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
 
   /**
@@ -474,6 +475,8 @@ class BRMWrapper : public WEObj
   static IDBDataFile* m_curVBFile;
 
   BRM::DBRM* blockRsltnMgrPtr;
+
+  EXPORT static std::atomic<bool> finishReported;
 };
 
 //------------------------------------------------------------------------------
@@ -486,10 +489,9 @@ inline BRMWrapper::BRMWrapper()
 
 inline BRMWrapper::~BRMWrapper()
 {
-  if (blockRsltnMgrPtr)
-    delete blockRsltnMgrPtr;
+  delete blockRsltnMgrPtr;
 
-  blockRsltnMgrPtr = 0;
+  blockRsltnMgrPtr = nullptr;
 }
 
 inline BRM::DBRM* BRMWrapper::getDbrmObject()

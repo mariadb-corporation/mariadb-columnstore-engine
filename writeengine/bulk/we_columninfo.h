@@ -184,7 +184,7 @@ class ColumnInfo : public WeUIDGID
 
   /** @brief Destructor
    */
-  virtual ~ColumnInfo();
+  ~ColumnInfo() override;
 
   /** @brief Returns last input Row num in current "logical" extent; used
    *  to track min/max value per extent, as the data is parsed.   0-based
@@ -205,7 +205,8 @@ class ColumnInfo : public WeUIDGID
    *  returns the assigned tokens (tokenBuf) to be stored in the
    *  corresponding column token file.
    */
-  int updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow, char* tokenBuf);
+  int updateDctnryStoreParquet(std::shared_ptr<arrow::Array> columnData, int tokenPos, const int totalRow,
+                               char* tokenBuf);
 
   /** @brief Update dictionary method.
    *  Parses and stores specified strings into the store file, and

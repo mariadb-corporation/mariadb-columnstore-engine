@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.9
+# Version: 3.13
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,26 +26,26 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.9"
+mcs_bk_manager_version="3.13"
 start=$(date +%s)
 action=$1
 
 print_action_help_text() {
     echo "
-    MariaDB Columnstore Backup Manager
-    
-    Actions:
+MariaDB Columnstore Backup Manager
 
-        backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
-        restore                 Restore a backup taken with this script
-        dbrm_backup             Quick hot backup of internal columnstore metadata only - only use under support recommendation
-        dbrm_restore            Restore internal columnstore metadata from dbrm_backup - only use under support recommendation
+Actions:
 
-    Documentation:
-        bash $0 <action> help
+    backup                  Full & Incremental columnstore backup with additional flags to augment the backup taken
+    restore                 Restore a backup taken with this script
+    dbrm_backup             Quick hot backup of internal columnstore metadata only - only use under support recommendation
+    dbrm_restore            Restore internal columnstore metadata from dbrm_backup - only use under support recommendation
 
-    Example:
-        bash $0 backup help
+Documentation:
+    bash $0 <action> help
+
+Example:
+    bash $0 backup help
     "
 }
 
@@ -170,6 +170,9 @@ load_default_backup_variables() {
     rsync_flags=" -av";
     poll_interval=5
     poll_max_wait=60;
+    list_backups=false
+    retention_file_lock_name=".delete-lock"
+    apply_retention_only=false
 
     # Compression Variables
     compress_format=""
@@ -275,7 +278,7 @@ parse_backup_variables() {
                 skip_locks=true
                 shift # past argument
                 ;;
-            -smdb | --skip-mariadb-backup)
+            -smdb |  --skip-mariadb-backup)
                 skip_mdb=true
                 shift # past argument
                 ;;
@@ -320,6 +323,14 @@ parse_backup_variables() {
                 retention_days="$2"
                 shift # past argument
                 shift # past value
+                ;;
+            -aro| --apply-retention-only)
+                apply_retention_only=true
+                shift # past argument
+                ;;
+            -li | --list)
+                list_backups=true
+                shift # past argument
                 ;;
             -h|--help|-help|help)
                 print_backup_help_text;
@@ -366,14 +377,17 @@ print_backup_help_text() {
         -c     | --compress               Compress backup in X format - Options: [ pigz ]
         -nb    | --name-backup            Define the name of the backup - default: date +%m-%d-%Y
         -r     | --retention-days         Retain backups created within the last X days, the rest are deleted, default 0 = keep all backups
+        -aro   | --apply-retention-only   Only apply retention policy to existing backups, does not run a backup
+        -li    | --list                   List all backups available in the backup location
         -ha    | --highavilability        Hint wether shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ ) 
 
         Local Storage Examples:
-            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage
-            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage -P 8
-            ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage --incremental auto_most_recent
+            ./$0 backup -bl /tmp/backups/ 
+            ./$0 backup -bl /tmp/backups/ -P 8
+            ./$0 backup -bl /tmp/backups/ --incremental auto_most_recent
+            ./$0 backup -bl /tmp/backups/ --list
             ./$0 backup -bl /tmp/backups/ -bd Remote -scp root@172.31.6.163 -s LocalStorage
 
         S3 Examples:  
@@ -661,7 +675,7 @@ validation_prechecks_for_backup() {
             printf " - Columnstore is OFFLINE \n"; 
             export columnstore_online=false; 
         else 
-            printf " - Columnstore is ONLINE - safer if offline \n"; 
+            printf " - Columnstore is ONLINE - safer if offline (but not required to be offline) \n"; 
             export columnstore_online=true; 
         fi
     fi;
@@ -791,7 +805,26 @@ auto_select_most_recent_backup_for_incremental() {
 
     printf " - Searching for most recent backup ...."
     if [ $storage == "LocalStorage" ]; then 
-        most_recent_backup=$(ls -td  "${backup_location}"* 2>/dev/null | head -n 1)
+         
+        # Example: find /mnt/backups/ -mindepth 1 -maxdepth 1 -type d ! -exec test -f "{}/.auto-delete-via-retention" \; -printf "%T@ %p\n" | sort -nr | awk '{print $2}' | head -n 1
+        if [ -f "${backup_location}${retention_file_lock_name}-$pm" ] ; then
+            handle_early_exit_on_backup "\n[!!!] ${backup_location}${retention_file_lock_name}-$pm exists. are multiple backups running or was there an error? Manually resolve before retrying\n" true
+        fi
+
+        # Primary node is in the middle of applying retention policy, distorting the most recent backup
+        if [ -f "${backup_location}${retention_file_lock_name}-pm1" ] ; then
+            most_recent_backup="$(head -n1 "${backup_location}${retention_file_lock_name}-pm1" | awk '{print $2}')"
+        else
+            most_recent_backup=$(find "$backup_location" -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | sort -nr | awk '{print $2}' | head -n 1)
+        fi
+
+        # Debug messaging to understand the most recent backup modified times
+        if ! $quiet; then
+            echo ""
+            find "$backup_location" -mindepth 1 -maxdepth 1 -type d -printf "%T@ %p\n" | sort -nr 
+        fi
+
+        # If no backup found, exit
         if [[ -z "$most_recent_backup" ]]; then
             handle_early_exit_on_backup "\n[!!!] No backup found to increment in '$backup_location', please run a full backup or define a folder that exists --incremental <folder>\n" true
         else 
@@ -844,55 +877,124 @@ auto_select_most_recent_backup_for_incremental() {
 
 apply_backup_retention_policy() {
     
-    if [ $retention_days -eq 0 ]; then
+    if [ "$retention_days" -eq 0 ]; then
         printf " - Skipping Backup Rentention Policy\n"
         return 0;
     fi
 
-    printf " - Applying Backup Rentention Policy...."
-    if [ $storage == "LocalStorage" ]; then
-        # example: find /tmp/backups/ -mindepth 1 -maxdepth 1 -type d -name "*" -amin +0
-        find "$backup_location" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec rm -r {} \;
+    # PM1 is in charge of deleting the backup 
+    # Rest of the nodes should wait for the delete to be over if it finds the lock file
+    applying_retention_start=$(date +%s)
+    printf "\nApplying Backup Rentention Policy\n"
+    if [ "$pm" == "pm1" ] || [ -n "${PM_FORCE_DELETE-}" ] ; then 
+    
+        retention_file_lock_name="${retention_file_lock_name}-$pm"
         
-    elif [ $storage == "S3" ]; then 
+        if [ $storage == "LocalStorage" ]; then
+            
+            # Create a lock file to prevent other PMs from deleting backups
+            touch "${backup_location}${retention_file_lock_name}"
+            echo "most_recent_backup: $most_recent_backup" >> "${backup_location}${retention_file_lock_name}"
+            printf " - Created: ${backup_location}${retention_file_lock_name}\n"
 
-        current_date=$(date +%s)
-        backups=$(s3ls $backup_bucket)
-       
-        while IFS= read -r line; do
+            # example1: find /mnt/backups/ -mindepth 1 -maxdepth 1 -type d -name "*" -mmin +10 -exec echo "{}" \;
+            # example2: find /mnt/backups/ -mindepth 1 -maxdepth 1 -type d -name "*" -mmin +10 -exec sh -c 'printf " - Deleting: {} \n" && echo "{}" >> "/mnt/backups/.delete-lock-pm1" && rm -rf "{}"' \;
+            # find "$backup_location" -mindepth 1 -maxdepth 1 -type d -name "*" -mmin +$retention_days -exec sh -c 'printf " - Deleting: {} \n" && echo "{}" >> "'"${backup_location}${retention_file_lock_name}"'" && rm -rf "{}"' \;
+            find "$backup_location" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec sh -c 'printf " - Deleting: {} \n" && echo "{}" >> "'"${backup_location}${retention_file_lock_name}"'" && rm -rf "{}"' \;
+            
+            # Cleanup the lock file
+            rm "${backup_location}${retention_file_lock_name}"
+            printf " - Deleted: ${backup_location}${retention_file_lock_name}\n"
 
-            delete_backup=false
-            folder=$(echo "$line" | awk '{print substr($2, 1, length($2)-1)}')
-            date_time=$(s3ls "${backup_bucket}/${folder}/restore --recursive" |  awk '{print $1,$2}')
-       
-            if [[ -n "$date_time" ]]; then
+        elif [ $storage == "S3" ]; then 
 
-                # Parse the date
-                backup_date=$(date -d "$date_time" +%s)
-                
-                # Calculate the difference in days
-                days_diff=$(( (current_date - backup_date) / (60*60*24) ))    
-                # echo "line: $line"
-                # echo "date_time: $date_time"
-                # echo "backup_date: $backup_date"
-                # echo "days_diff: $days_diff"
+            # Create a lock file to prevent other PMs from deleting backups
+            echo "most_recent_backup: $most_recent_backup" >> "${retention_file_lock_name}"
+            s3cp "${retention_file_lock_name}" "${backup_bucket}/${retention_file_lock_name}"
 
-                if [ $days_diff -gt "$retention_days" ]; then
+            current_date=$(date +%s)
+            backups=$(s3ls $backup_bucket)
+        
+            while IFS= read -r line; do
+
+                delete_backup=false
+                folder=$(echo "$line" | awk '{print substr($2, 1, length($2)-1)}')
+                date_time=$(s3ls "${backup_bucket}/${folder}/restore --recursive" |  awk '{print $1,$2}')
+        
+                if [[ -n "$date_time" ]]; then
+
+                    # Parse the date
+                    backup_date=$(date -d "$date_time" +%s)
+                    
+                    # Calculate the difference in days
+                    days_diff=$(( (current_date - backup_date) / (60*60*24) ))    
+                    # echo "line: $line"
+                    # echo "date_time: $date_time"
+                    # echo "backup_date: $backup_date"
+                    # echo "days_diff: $days_diff"
+
+                    if [ $days_diff -gt "$retention_days" ]; then
+                        delete_backup=true
+                    fi
+                else
                     delete_backup=true
                 fi
-            else
-                delete_backup=true
-            fi
+                
+                if $delete_backup; then
+                    echo "${backup_bucket}/${folder}" >> "${retention_file_lock_name}"
+                    s3cp "${retention_file_lock_name}" "${backup_bucket}/${retention_file_lock_name}"
+                    s3rm "${backup_bucket}/${folder}"
+                    #printf "\n   - Deleting: ${backup_bucket}/${folder}"
+                fi
+                printf "."
+            done <<< "$backups"
 
-            if $delete_backup; then
-                s3rm "${backup_bucket}/${folder}"
-                #echo "Deleting ${backup_bucket}/${folder}"
-            fi
-            printf "."
+            # Cleanup the lock file
+            s3rm "${backup_bucket}/${retention_file_lock_name}"
+        fi
+        
+        applying_retention_end=$(date +%s)
+        printf "Done $(human_readable_time $((applying_retention_end-applying_retention_start))) \n" 
+    else
 
-        done <<< "$backups"
+        local retry_limit=2160
+        local retry_counter=0
+        local retry_sleep_interval=5
+        if [ $storage == "LocalStorage" ]; then
+            
+            if [ -f "${backup_location}${retention_file_lock_name}-pm1" ]; then
+                printf " - Waiting for PM1 to finish deleting backups (max: $retry_limit intervals of $retry_sleep_interval sec ) ... \n"
+            fi;
+            while [ -f "${backup_location}${retention_file_lock_name}-pm1" ]; do
+                
+                if [ -f "${backup_location}${retention_file_lock_name}-pm1" ]; then
+                    printf " - Waiting on PM1 to finish deleting %s \n" "$(tail -n 1 "${backup_location}${retention_file_lock_name}-pm1" 2>/dev/null )"
+                fi;
+                
+                if [ $retry_counter -ge $retry_limit ]; then
+                    handle_early_exit_on_backup "\n [!] PM1 lock file still exists after $retry_limit sec, deleting backups via retention policy might have failed or taking too long, please investigate, exiting\n" true
+                fi
+                sleep $retry_sleep_interval
+                ((retry_counter++))
+            done
+        elif [ $storage == "S3" ]; then 
+            if [[ $(s3ls "${backup_bucket}/${retention_file_lock_name}")  ]]; then
+                printf " - Waiting for PM1 to finish deleting backups (max: $retry_limit intervals of $retry_sleep_interval sec ) ... \n"
+            fi;
+            while [[ $(s3ls "${backup_bucket}/${retention_file_lock_name}")  ]]; do
+                if [[ $(s3ls "${backup_bucket}/${retention_file_lock_name}")  ]]; then
+                    printf " - Waiting on PM1 to finish deleting %s \n" "$( s3cp "${backup_bucket}/${retention_file_lock_name}" "-" | tail -n 1 2>/dev/null )"
+                fi;
+                if [ $retry_counter -ge $retry_limit ]; then
+                    handle_early_exit_on_backup "\n [!] PM1 lock file still exists after $retry_limit sec, deleting backups via retention policy might have failed or taking too long, please investigate, exiting\n" true
+                fi
+                sleep $retry_sleep_interval
+                ((retry_counter++))
+            done
+        fi
+        applying_retention_end=$(date +%s)
+        printf "Done $(human_readable_time $((applying_retention_end-applying_retention_start))) \n" 
     fi
-    printf " Done\n"
 
 }
 
@@ -989,41 +1091,53 @@ issue_write_locks()
 }
 
 poll_check_no_active_sql_writes() {
-    printf " - Polling For Active Writes ...                      "
+    poll_active_sql_writes_start=$(date +%s)
+    printf " - Polling for active Writes ...                      "
     query="SELECT COUNT(*) FROM information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"
     attempts=0
     no_writes=false
     while [ "$attempts" -lt "$max_poll_attempts" ]; do
         active_writes=$( mariadb -s -N -e "$query" )
+        if [ "$?" -ne 0 ]; then
+            handle_early_exit_on_backup "\n$active_writes\n[X] Failed to poll for active writes\n" true
+        fi
+
         if [ "$active_writes" -le 0 ]; then
-            printf "Done\n"
+            poll_active_sql_writes_end=$(date +%s)
+            printf "Done $(human_readable_time $((poll_active_sql_writes_start-poll_active_sql_writes_end))) \n" 
             no_writes=true
             break
         else
-            # extra_info=$( mariadb -e "SELECT * FROM information_schema.processlist where user != 'root' AND command = 'Query' AND info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' " )
-            # echo "Active write operations detected: $active_writes"
-            # echo "$extra_info"
-            printf "."
-            if ! $quiet; then printf "\nActive write operations detected: $active_writes"; fi;
+            
+            if ! $quiet; then 
+                printf "\nActive write operations detected: $active_writes\n"; 
+                mariadb -e "select ID,USER,TIME,LEFT(INFO, 50) from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"
+            else 
+                printf "."
+            fi;
             sleep "$poll_interval"
             ((attempts++))
         fi
     done
 
     if ! $no_writes; then
+        mariadb -e "select ID,USER,TIME,INFO from information_schema.processlist where user != 'root' AND command = 'Query' AND ( info LIKE '%INSERT%' OR info LIKE '%UPDATE%' OR info LIKE '%DELETE%' OR info LIKE '%LOAD DATA%');"   
         handle_early_exit_on_backup "\n[X] Exceeded poll_max_wait: $poll_max_wait minutes\nActive write operations detected: $active_writes \n" true
     fi;
+    
 }
 
 poll_check_no_active_cpimports() {
-    printf " - Polling For Active cpimports ...                   "
+    poll_active_cpimports_start=$(date +%s)
+    printf " - Polling for active cpimports ...                   "
     attempts=0
     no_cpimports=false
     if ! $columnstore_online ; then printf "Skip since offline\n"; return ; fi;
     while [ "$attempts" -lt "$max_poll_attempts" ]; do
         active_cpimports=$(viewtablelock 2>/dev/null )
         if [[ "$active_cpimports" == *"No tables are locked"* ]]; then
-            printf "Done\n"
+            poll_active_cpimports_end=$(date +%s)
+            printf "Done $(human_readable_time $((poll_active_cpimports_end-poll_active_cpimports_start))) \n" 
             no_cpimports=true
             break
         else 
@@ -1349,7 +1463,39 @@ deepParallelRsync() {
     wait
 }
 
-run_backup() {   
+human_readable_time() {
+    local total_seconds=$1
+    local days=$((total_seconds / 86400))
+    local hours=$(( (total_seconds % 86400) / 3600 ))
+    local minutes=$(( (total_seconds % 3600) / 60 ))
+    local seconds=$(( total_seconds % 60 ))
+
+    local output=""
+
+    # Special case for 0 seconds
+    if (( total_seconds == 0 )); then
+        printf "<1 sec"
+        return
+    fi
+
+    if (( days > 0 )); then
+        output+=" ${days} days"
+    fi
+    if (( hours > 0 )); then
+        output+=" ${hours} hours"
+    fi
+    if (( minutes > 0 )); then
+        output+=" ${minutes} min"
+    fi
+    if (( seconds > 0 || total_seconds == 0 )); then
+        output+=" ${seconds} sec"
+    fi
+
+    printf "${output}" | xargs
+}
+
+run_backup() {  
+    backup_start=$(date +%s) 
     if [ $storage == "LocalStorage" ]; then 
         if [ $backup_destination == "Local" ]; then
 
@@ -1374,6 +1520,7 @@ run_backup() {
             printf " Done\n"   
             
             # Backup Columnstore data
+            columnstore_backup_start=$(date +%s)
             i=1
             while [ $i -le $DBROOT_COUNT ]; do
                 if [[ $ASSIGNED_DBROOT == "$i" || $HA == true ]]; then 
@@ -1384,15 +1531,19 @@ run_backup() {
                     elif $parrallel_rsync ; then 
                         printf " - Parallel Rsync CS Data$i...       \n"
                         initiate_rsyncs $i
-                        printf " Done\n"      
+                        columnstore_backup_end=$(date +%s)
+                        printf " Done $(human_readable_time $((columnstore_backup_end-columnstore_backup_start))) \n"       
                     else
                         printf " - Syncing Columnstore Data$i...      "
                         eval "rsync $additional_rysnc_flags /var/lib/columnstore/data$i/* $backup_location$today/data$i/ $xtra_cmd_args";
-                        printf " Done\n"  
+                        columnstore_backup_end=$(date +%s)
+                        printf " Done $(human_readable_time $((columnstore_backup_end-columnstore_backup_start))) \n" 
+
                     fi;
                 fi
                 ((i++))
             done
+            
 
             # Backup MariaDB data
             if [ $ASSIGNED_DBROOT == "1" ]; then
@@ -1410,6 +1561,7 @@ run_backup() {
                 fi
 
                 # Run mariadb-backup
+                mariadb_backup_start=$(date +%s)
                 if ! $skip_mdb; then
                     if [[ -n "$compress_format" ]]; then
                         printf " - Compressing MariaDB Data...       "
@@ -1417,9 +1569,11 @@ run_backup() {
                         case $compress_format in
                             pigz)
                                 # Handle Cloud 
-                                if !  mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $mbd_prefix 2>> $logfile; then
+                                mariadb_backup_start=$(date +%s)
+                                if !  mariabackup --user=root --backup --slave-info --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $mbd_prefix 2>> $logfile; then
                                     handle_early_exit_on_backup "\nFailed  mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $mbd_prefix 2>> $logfile \n"
                                 fi
+                                mariadb_backup_end=$(date +%s)
                                 printf " Done @ $mbd_prefix\n"
                                 ;;
                             *)  # unknown option
@@ -1427,7 +1581,12 @@ run_backup() {
                         esac
                     else
                         printf " - Copying MariaDB Data...           "
-                        if eval "mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root $xtra_cmd_args" ; then printf " Done \n"; else printf "\n Failed: mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root\n"; handle_early_exit_on_backup; fi
+                        if eval "mariadb-backup --backup --slave-info --target-dir=$backup_location$today/mysql --user=root $xtra_cmd_args" ; then  
+                            mariadb_backup_end=$(date +%s)
+                            printf " Done $(human_readable_time $((mariadb_backup_end-mariadb_backup_start))) \n" 
+                        else 
+                            handle_early_exit_on_backup "\n Failed: mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root\n"; 
+                        fi
                     fi
                 else 
                     echo "[!] Skipping mariadb-backup"
@@ -1460,8 +1619,23 @@ run_backup() {
                 else
                     compress_paths+=" $MARIADB_SERVER_CONFIGS_PATH/*"
                 fi
+
+                # Backup mariadb server replication details
+                slave_status=$(mariadb -e "show slave status\G" 2>/dev/null)
+                if [[ $? -eq 0 ]]; then
+                    if [[ -n "$slave_status" ]]; then
+                        if [[ -z "$compress_format" ]]; then
+                            mariadb -e "show slave status\G" | grep -E "Master_Host|Master_User|Master_Port|Gtid_IO_Pos" > $backup_location$today/configs/mysql/$pm/replication_details.txt
+                        else
+                            mariadb -e "show slave status\G" | grep -E "Master_Host|Master_User|Master_Port|Gtid_IO_Pos" > replication_details.txt
+                            compress_paths+=" replication_details.txt"
+                        fi
+                    fi
+                else
+                    handle_early_exit_on_backup "[!] - Failed to execute the MariaDB command:   mariadb -e 'show slave status\G' \n"
+                fi
             fi
-            
+
             # Handle compression for Columnstore Data & Configs
             if [[ -n "$compress_format" ]]; then
                 cs_prefix="$backup_location$today/$split_file_cs_prefix.$compress_format"
@@ -1469,9 +1643,31 @@ run_backup() {
                 case $compress_format in
                     pigz) 
                         printf " - Compressing CS Data & Configs...  "
+                        columnstore_backup_start=$(date +%s)
                         if ! eval "tar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $cs_prefix 2>> $logfile"; then
                             handle_early_exit_on_backup "[!] - Compression Failed \ntar cf - $compress_paths 2>>$logfile | pigz -p $PARALLEL_THREADS -c > $cs_prefix 2>> $logfile \n"
                         fi
+                        columnstore_backup_end=$(date +%s)
+
+                        # Create summary info for list backup
+                        get_latest_em_from_dbrm_directory "$DBRM_PATH"
+                        em_file_name=$(basename "$em_file_full_path")
+                        version_prefix=${em_file_name::-3}
+                        journal_file=$(ls -la "${subdir_dbrms}/BRM_saves_journal" 2>/dev/null | awk 'NR==1 {print $5}' )
+                        vbbm_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vbbm" 2>/dev/null | awk 'NR==1 {print $5}' )
+                        vss_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vss" 2>/dev/null | awk 'NR==1 {print $5}' )
+                        echo "em_file_created: $em_file_created" >> $backup_location$today/backup_summary_info.txt
+                        echo "em_file_name: $em_file_name" >> $backup_location$today/backup_summary_info.txt
+                        echo "em_file_size: $em_file_size" >> $backup_location$today/backup_summary_info.txt
+                        echo "journal_file: $journal_file" >> $backup_location$today/backup_summary_info.txt
+                        echo "vbbm_file: $vbbm_file" >> $backup_location$today/backup_summary_info.txt
+                        echo "vss_file: $vss_file" >> $backup_location$today/backup_summary_info.txt                        
+                        echo "compression: $compress_format" >> $backup_location$today/backup_summary_info.txt                        
+
+                        if [ -f replication_details.txt ]; then 
+                            rm -rf replication_details.txt; 
+                        fi
+
                         printf " Done @ $cs_prefix\n"
                         ;;
                     *)  # unknown option
@@ -1488,7 +1684,7 @@ run_backup() {
                 extra_flags=""
                 if [[ -n "$compress_format" ]]; then extra_flags+=" -c $compress_format"; fi; 
                 if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
-                echo "./$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT -m $mode $extra_flags --quiet" > $backup_location$today/restore.job
+                echo "$0 restore -l $today -bl $backup_location -bd $backup_destination -s $storage --dbroots $DBROOT_COUNT -m $mode $extra_flags --quiet" > $backup_location$today/restore.job
             fi
 
             final_message+=" @ $backup_location$today"
@@ -1641,12 +1837,12 @@ run_backup() {
                         pigz)
                             # Handle Cloud 
                             if [ $cloud == "gcp" ]; then
-                                if ! mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="gsutil cp - ${mbd_prefix}_\$FILE 2>$logfile" - chunk 2>$logfile; then
+                                if ! mariabackup --user=root --backup --slave-info --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="gsutil cp - ${mbd_prefix}_\$FILE 2>$logfile" - chunk 2>$logfile; then
                                     handle_early_exit_on_backup "\nFailed mariadb-backup --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter=\"gsutil cp - ${mbd_prefix}_\$FILE 2>$logfile\" - chunk 2>$logfile \n"
                                 fi
                                 
                             elif [ $cloud == "aws" ]; then
-                                if ! mariabackup --user=root --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="aws s3 cp - ${mbd_prefix}_\$FILE 2>$logfile 1>&2" - chunk 2>$logfile; then
+                                if ! mariabackup --user=root --backup --slave-info --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter="aws s3 cp - ${mbd_prefix}_\$FILE 2>$logfile 1>&2" - chunk 2>$logfile; then
                                     handle_early_exit_on_backup "\nFailed mariadb-backup --backup --stream xbstream --parallel $PARALLEL_THREADS --ftwrl-wait-timeout=$timeout --ftwrl-wait-threshold=999999 --extra-lsndir=/tmp/checkpoint_out 2>>$logfile | pigz -p $PARALLEL_THREADS 2>> $logfile | split -d -a 5 -b 250M --filter=\"aws s3 cp - ${mbd_prefix}_\$FILE 2>$logfile 1>&2\" - chunk 2>$logfile\n"
                                 fi
                             fi
@@ -1661,7 +1857,7 @@ run_backup() {
                     printf " - Syncing MariaDB data ... \n"
                     rm -rf $backup_location$today/mysql
                     if mkdir -p $backup_location$today/mysql ; then
-                        if eval "mariabackup --user=root --backup --target-dir=$backup_location$today/mysql/ $xtra_cmd_args"; then
+                        if eval "mariabackup --user=root --backup --slave-info --target-dir=$backup_location$today/mysql/ $xtra_cmd_args"; then
                             printf "   + mariadb-backup @ $backup_location$today/mysql/ \n"
                         else
                             handle_early_exit_on_backup "\nFailed mariadb-backup --backup --target-dir=$backup_location$today/mysql --user=root\n" true
@@ -1687,6 +1883,22 @@ run_backup() {
             else
                 compress_paths+="$MARIADB_SERVER_CONFIGS_PATH"
             fi
+
+            # Backup mariadb server replication details
+            slave_status=$(mariadb -e "show slave status\G" 2>/dev/null)
+            if [[ $? -eq 0 ]]; then
+                if [[ -n "$slave_status" ]]; then
+                    mariadb -e "show slave status\G" | grep -E "Master_Host|Master_User|Master_Port|Gtid_IO_Pos" > replication_details.txt
+                    if [[ -z "$compress_format" ]]; then
+                        s3cp replication_details.txt $backup_bucket/$today/configs/mysql/$pm/replication_details.txt
+                    else    
+                        compress_paths+=" replication_details.txt"
+                    fi
+                fi
+            else
+                handle_early_exit_on_backup "[!] - Failed to execute the MariaDB command:   mariadb -e 'show slave status\G' \n"
+            fi
+
         fi
 
         # Handles streaming the compressed columnstore local files
@@ -1706,6 +1918,12 @@ run_backup() {
                             handle_early_exit_on_backup "[!] - Compression/Split/Upload Failed \n"
                         fi
                     fi
+                    
+                    # Cleanup temp files
+                    if [ -f replication_details.txt ]; then
+                        rm -rf replication_details.txt
+                    fi
+
                     printf " Done @ $cs_prefix\n"
                     ;;
                 *)  # unknown option
@@ -1734,7 +1952,7 @@ run_backup() {
             if $skip_mdb; then extra_flags+=" --skip-mariadb-backup"; fi; 
             if $skip_bucket_data; then extra_flags+=" --skip-bucket-data"; fi; 
             if [ -n "$s3_url" ];  then extra_flags+=" -url $s3_url"; fi;
-            echo "./$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
+            echo "$0 restore -l $today -s $storage -bb $backup_bucket -dbs $DBROOT_COUNT -m $mode -nb $protocol://$bucket $extra_flags --quiet --continue"  > restoreS3.job
             s3cp restoreS3.job $backup_bucket/$today/restoreS3.job
             rm -rf restoreS3.job
         fi
@@ -1744,8 +1962,52 @@ run_backup() {
     
     clear_read_lock
     end=$(date +%s)
-    runtime=$((end-start))
-    printf "\nRuntime: $runtime\n"
+    total_runtime=$((end - start))
+    other=$total_runtime
+    
+    printf "\nRuntime Summary\n"
+    echo "--------------------"
+    if [[ -n "$applying_retention_end" && $applying_retention_end -ne 0 ]]; then
+        applying_retention_time=$((applying_retention_end - applying_retention_start))
+        printf "%-20s %-15s\n" "Applying Retention:" "$(human_readable_time $applying_retention_time)"
+        other=$((other - applying_retention_time))
+    fi
+
+    if [[ -n "$poll_active_sql_writes_end" && $poll_active_sql_writes_end -ne 0 ]]; then
+        poll_sql_writes_time=$((poll_active_sql_writes_end - poll_active_sql_writes_start))
+        printf "%-20s %-15s\n" "Polling SQL Writes:" "$(human_readable_time $poll_sql_writes_time)"
+        other=$((other - poll_sql_writes_time))
+    fi
+        
+    if [[ -n "$poll_active_cpimports_end" && $poll_active_cpimports_end -ne 0 ]]; then
+        poll_cpimports_time=$((poll_active_cpimports_end - poll_active_cpimports_start))
+        printf "%-20s %-15s\n" "Polling cpimports:" "$(human_readable_time $poll_cpimports_time)"
+        other=$((other - poll_cpimports_time)) 
+    fi
+
+    if [[ -n "$columnstore_backup_end" && $columnstore_backup_end -ne 0 ]]; then
+        columnstore_backup_time=$((columnstore_backup_end - columnstore_backup_start))
+        printf "%-20s %-15s\n" "Columnstore Backup:" "$(human_readable_time $columnstore_backup_time)"
+        other=$((other - columnstore_backup_time))  
+    fi
+
+    if [[ -n "$mariadb_backup_end" && $mariadb_backup_end -ne 0 ]]; then
+        mariadb_backup_time=$((mariadb_backup_end - mariadb_backup_start))
+        printf "%-20s %-15s\n" "MariaDB Backup:" "$(human_readable_time $mariadb_backup_time)" 
+        other=$((other - mariadb_backup_time))  
+    fi
+
+    if (( other < 0 )); then
+        printf "%-20s %-15s\n" "Other:" "N/A (invalid data)"
+    else
+        if [ $other -gt 0 ]; then
+            printf "%-20s %-15s\n" "Other:" "<$(human_readable_time $other)"
+        else
+            printf "%-20s %-15s\n" "Other:" "<1 sec"
+        fi
+    fi
+
+    printf "\nTotal Runtime: $(human_readable_time $((end-start))) \n"
     printf "$final_message\n\n"
 }
 
@@ -1842,6 +2104,7 @@ load_default_restore_variables() {
     xtra_s3_args=""
     xtra_cmd_args=""
     rsync_flags=" -av";
+    list_backups=false
 }
 
 parse_restore_variables() {
@@ -1966,6 +2229,10 @@ parse_restore_variables() {
                 no_verify_ssl=true 
                 shift # past argument
                 ;;
+            -li | --list)
+                list_backups=true
+                shift # past argument
+                ;;
             -h|--help|-help|help)
                 print_restore_help_text;
                 exit 1;
@@ -2009,7 +2276,7 @@ print_restore_help_text()
         -sb  | --skip-bucket-data       Skip restoring columnstore data in the bucket - ideal if looking to only restore mariadb server
         -q   | --quiet                  Silence verbose copy command outputs
         -c   | --compress               Hint that the backup is compressed in X format - Options: [ pigz ]
-        -P   | --parallel               Number of parallel decompression and mbstream threads to run
+        -li  | --list                   List available backups in the backup location
         -ha  | --highavilability        Hint for if shared storage is attached @ below on all nodes to see all data
                                             HA LocalStorage ( /var/lib/columnstore/dataX/ )
                                             HA S3           ( /var/lib/columnstore/storagemanager/ )  
@@ -2044,8 +2311,7 @@ print_restore_variables()
     if [[ -n "$compress_format" ]]; then
         echo "Compression:        true"
         echo "Compression Format: $compress_format";
-        echo "Decompression Threads:" "$PARALLEL_THREADS";
-    else
+    else 
         echo "Compression:        false"
     fi
     if [ $storage == "LocalStorage" ]; then 
@@ -2135,7 +2401,7 @@ validation_prechecks_for_restore() {
     esac
 
     if eval $cmapi_installed_command ; then
-        if ! sudo mcs cmapi is-ready ; then 
+        if ! sudo mcs cmapi is-ready &> /dev/null ; then 
             printf " - Columnstore Management API Status .. Offline\n"; 
         else 
             handle_early_exit_on_restore "\n[X] Cmapi is ONLINE - please turn off \n\n"; 
@@ -2329,7 +2595,7 @@ validation_prechecks_for_restore() {
                 fi
             fi;
         else 
-             handle_early_exit_on_restore " Failed to list backup contents...\n$check5\n"
+            handle_early_exit_on_restore " Failed to list backup contents...\n$check5\n"
         fi;
     fi;
 
@@ -2710,10 +2976,12 @@ run_restore()
             if [ $DBROOT_COUNT -gt 1 ]; then  echo -e  "[!!] Check Replicas to manually configure mariadb replication"; fi
             echo -e  "systemctl start mariadb "
             echo -e  "systemctl start mariadb-columnstore-cmapi "
-            echo -e  "mcs cluster start \n\n"
+            echo -e  "mcs cluster start"
+            echo -e  "mariadb -e \"show variables like '%gtid_current_pos%';\"\n\n"
         else
             echo -e  "[!!] Check this replica to manually configure mariadb replication after primary node is ready"
             echo -e  "Example:"
+            echo -e  "mariadb -e \"SET GLOBAL gtid_slave_pos =  '0-1-14'\""
             echo -e  "mariadb -e \"stop slave;CHANGE MASTER TO MASTER_HOST='\$pm1' , MASTER_USER='repuser' , MASTER_PASSWORD='aBcd123%123%aBc' , MASTER_USE_GTID = slave_pos;start slave;show slave status\G\""
             echo -e  "mariadb -e  \"show slave status\G\" | grep  \"Slave_\" \n"
         fi
@@ -2724,7 +2992,7 @@ load_default_dbrm_variables() {
      # Default variables
     backup_base_name="dbrm_backup"
     backup_interval_minutes=90
-    retention_days=7
+    retention_days=0
     backup_location=/tmp/dbrm_backups
     STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
@@ -2747,6 +3015,7 @@ load_default_dbrm_restore_variables() {
     backup_folder_to_restore=""
     skip_dbrm_backup=false
     skip_storage_manager=false
+    list_dbrm_backups=false
 
     dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then 
@@ -2761,18 +3030,21 @@ print_dbrm_backup_help_text() {
         -m   | --mode                  ['loop','once']; Determines if this script runs in a forever loop sleeping -i minutes or just once 
         -i   | --interval              Number of minutes to sleep when --mode loop 
         -r   | --retention-days        Retain dbrm backups created within the last X days, the rest are deleted
-        -p   | --path                  path of where to save the dbrm backups on disk
-        -nb  | --name-backup           custom name to prefex dbrm backups with
+        -bl  | --backup-location       Path of where to save the dbrm backups on disk
+        -nb  | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
         -ssm | --skip-storage-manager  skip backing up storagemanager directory
+        -li  | --list                  List available dbrm backups in the backup location
 
-        Default: ./$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups
+        Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
         Examples:
-            ./$0 dbrm_backup --mode loop --interval 90 --retention-days 7 --path /mnt/dbrm_backups
-            ./$0 dbrm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
+            ./$0 dbrm_backup --list
+            ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups 
+            ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode once -nb my-one-off-backup-before-upgrade
+            ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode loop --interval 90
             
         Cron Example:
-        */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+        */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --backup-location /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
     ";
 }
 
@@ -2780,17 +3052,19 @@ print_dbrm_restore_help_text() {
     echo "
     Columnstore DBRM Restore
 
-        -p   | --path                  path of where to save the dbrm backups on disk
-        -d   | --directory             date or directory chose to restore from
-        -ns  | --no-start              do not attempt columnstore startup post dbrm_restore
-        -sdbk| --skip-dbrm-backup      skip backing up dbrms brefore restoring
-        -ssm | --skip-storage-manager  skip restoring storagemanager directory
+        -bl  | --backup-location       Path of where the dbrm backups exist on disk
+        -l   | --load                  Name of the directory to restore from -bl
+        -ns  | --no-start              Do not attempt columnstore startup post dbrm_restore
+        -sdbk| --skip-dbrm-backup      Skip backing up dbrms brefore restoring
+        -ssm | --skip-storage-manager  Skip restoring storagemanager directory
+        -li  | --list                  List available dbrm backups in the backup location
 
-        Default: ./$0 dbrm_restore --path /tmp/dbrm_backups 
+        Default: ./$0 dbrm_restore --backup-location /tmp/dbrm_backups 
 
         Examples:
-            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842    
-            ./$0 dbrm_restore --path /tmp/dbrm_backups --directory dbrm_backup_20240318_172842 --no-start
+            ./$0 dbrm_restore --list
+            ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842    
+            ./$0 dbrm_restore --backup-location /tmp/dbrm_backups --load dbrm_backup_20240318_172842 --no-start
     ";
 }
 
@@ -2813,7 +3087,7 @@ parse_dbrms_variables() {
                 shift # past argument
                 shift # past value
                 ;;
-            -p|--path)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
@@ -2836,13 +3110,13 @@ parse_dbrms_variables() {
                 quiet=true
                 shift # past argument
                 ;;
+            -li | --list)
+                list_dbrm_backups=true
+                shift # past argument
+                ;;
             -h|--help|-help|help)
                 print_dbrm_backup_help_text;
                 exit 1;
-                ;;
-            "list")
-                list_dbrm_backups=true
-                shift # past argument
                 ;;
             *)  # unknown option
                 printf "\nunknown flag: $1\n"
@@ -2861,12 +3135,12 @@ parse_dbrm_restore_variables() {
             dbrm_restore)
                 shift # past argument
                 ;;
-            -p|--path)
+            -bl|--backup-location)
                 backup_location="$2"
                 shift # past argument
                 shift # past value
                 ;;
-            -d|--directory)
+            -l|--load)
                 backup_folder_to_restore="$2"
                 shift # past argument
                 shift # past value
@@ -2881,6 +3155,10 @@ parse_dbrm_restore_variables() {
                 ;;
             -ssm|--skip-storage-manager)
                 skip_storage_manager=true
+                shift # past argument
+                ;;
+            -li | --list)
+                list_dbrm_backups=true
                 shift # past argument
                 ;;
             -h|--help|-help|help)
@@ -2956,14 +3234,14 @@ validation_prechecks_before_listing_restore_options() {
 
     # confirm backup directory exists
     if [ ! -d $backup_location ]; then
-        printf "[!!] Backups Directory does NOT exist --path $backup_location \n"
+        printf "[!!] Backups Directory does NOT exist --backup-location $backup_location \n"
         printf "ls -la $backup_location\n\n"
         exit 1;
     fi
     
     # Check if backup directory is empty
     if [ -z "$(find "$backup_location" -mindepth 1 | head )" ]; then
-        printf "[!!] Backups Directory is empty --path $backup_location \n"
+        printf "[!!] Backups Directory is empty --backup-location $backup_location \n"
         printf "ls -la $backup_location\n\n"
         exit 1
     fi
@@ -2990,7 +3268,7 @@ validation_prechecks_for_dbrm_restore() {
     fi
 
     if [ ! -d "${backup_location}/${backup_folder_to_restore_dbrms}" ]; then 
-        printf "[!] \$backup_folder_to_restore: Path of backup to restore does Not exist\n"
+        printf "[!] --load: Path of backup to restore does NOT exist\n"
         printf "Path: ${backup_location}/${backup_folder_to_restore_dbrms}\n\n"
         exit 2;
     else   
@@ -3098,14 +3376,7 @@ process_dbrm_backup() {
     load_default_dbrm_variables
     parse_dbrms_variables "$@";
 
-    if $list_dbrm_backups; then
-        validation_prechecks_before_listing_restore_options
-        printf "\nExisting DBRM Backups\n";
-        list_restore_options_from_backups "$@"
-        echo "--------------------------------------------------------------------------"
-        printf "Restore with ./$0 dbrm_restore --path $backup_location --directory <backup_folder_from_above>\n\n"
-        exit 0;
-    fi;
+    handle_list_dbrm_backups
 
     if ! $quiet ; then
 
@@ -3249,13 +3520,13 @@ shutdown_columnstore_mariadb_cmapi() {
 # Input
 # $1 - directory to search
 # Output
-# subdir_dbrms
-# latest_em_file
-# em_file_size
-# em_file_created
-# em_file_full_path
-# storagemanager_dir_exists
-get_latest_em_from_directory() {
+#   subdir_dbrms
+#   latest_em_file
+#   em_file_size
+#   em_file_created
+#   em_file_full_path
+#   storagemanager_dir_exists
+get_latest_em_from_dbrm_directory() {
     
     subdir_dbrms=""
     latest_em_file=""
@@ -3298,7 +3569,7 @@ get_latest_em_from_directory() {
         fi        
     else
         subdir_dbrms="$1"
-        latest_em_file=$(find "${subdir_dbrms}" -maxdepth 1 -type f -name "BRM_saves*_em" -exec ls -lat {} + | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1)
+        latest_em_file=$(find "${subdir_dbrms}" -maxdepth 1 -type f -name "BRM_saves*_em" -exec ls -lat {} + 2>/dev/null | awk 'NR==1 {printf "%-12s %-4s %-2s %-5s %s\n", $5, $6, $7, $8, $9}'| head -n 1)
         em_file_size=$(echo "$latest_em_file" | awk '{print $1}' )
         em_file_created=$(echo "$latest_em_file" | awk '{print $2,$3,$4}' )
         em_file_full_path=$(echo $latest_em_file | awk '{print $NF}' )
@@ -3307,13 +3578,96 @@ get_latest_em_from_directory() {
 
 list_restore_options_from_backups() {
 
+    if [ $storage == "S3" ]; then 
+        echo " Not implemented" ; exit 1;
+    else 
+        
+        if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then
+            echo "--------------------------------------------------------------------------"
+            echo "Retention Policy: $retention_days days"
+        fi;
+        echo "--------------------------------------------------------------------------"
+        printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "Options" "EM-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size" "Backup Days Old"
+
+        # Iterate over subdirectories
+        for subdir in "${backup_location}"/*; do
+            
+            if [ -f "${subdir}/cs-localfiles.tar.pigz" ]; then
+                em_file_created=$( date -r "$subdir" +"%b %d %H:%M" )
+
+                # parse from ${subdir}/backup_summary_info.txt
+                if [ -f "${subdir}/backup_summary_info.txt" ]; then
+                    em_file_created="$(grep -m 1 "em_file_created" "${subdir}/backup_summary_info.txt" | awk -F': ' '{print $2}')"
+                    em_file_name="$(grep -m 1 "em_file_name" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                    em_file_size="$(grep -m 1 "em_file_size" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                    journal_file="$(grep -m 1 "journal_file" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                    vbbm_file="$(grep -m 1 "vbbm_file" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                    vss_file="$(grep -m 1 "vss_file" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                    compression="$(grep -m 1 "compression" "${subdir}/backup_summary_info.txt" | awk '{print $2}')"
+                else
+                    em_file_created="N/A"
+                    em_file_size="N/A"
+                    em_file_name="N/A"
+                    journal_file="N/A"
+                    vbbm_file="N/A"
+                    vss_file="N/A"
+                    compression="N/A"
+                fi   
+
+                file_age=$(($(date +%s) - $(date -r "$subdir" +%s)))
+                file_age_days=$((file_age / 86400))
+                will_delete="$(find "$subdir" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec echo {} \;)"
+                if [ -n "$will_delete" ]; then
+                    file_age_days="$file_age_days (Will Delete)"
+                fi
+
+                printf "%-35s %-9s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "$(basename "$subdir")" "$compression" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file" "$file_age_days"
+                continue
+            fi
+            
+            get_latest_em_from_dbrm_directory "$subdir/data1/systemFiles/dbrm/"
+               
+            if [ -f "${subdir_dbrms}/BRM_saves_journal" ]; then
+                em_file_name=$(basename "$em_file_full_path")
+                version_prefix=${em_file_name::-3}
+                journal_file=$(ls -la "${subdir_dbrms}/BRM_saves_journal" 2>/dev/null | awk 'NR==1 {print $5}' )
+                vbbm_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vbbm" 2>/dev/null | awk 'NR==1 {print $5}' )
+                vss_file=$(ls -la "${subdir_dbrms}/${version_prefix}_vss" 2>/dev/null | awk 'NR==1 {print $5}' )
+
+                file_age=$(($(date +%s) - $(date -r "$subdir" +%s)))
+                file_age_days=$((file_age / 86400))
+
+                # Check if the backup will be deleted given the retention policy defined
+                if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then 
+                    # file_age_days=$((file_age / 60));  will_delete="$(find "$subdir" -mindepth 1 -maxdepth 1 -type d -name "*" -mmin +$retention_days -exec echo {} \;)"
+                    will_delete="$(find "$subdir" -mindepth 1 -maxdepth 1 -type d -name "*" -mtime +$retention_days -exec echo {} \;)"
+
+                    if [ -n "$will_delete" ]; then
+                        file_age_days="$file_age_days (Will Delete)"
+                    fi
+                fi;
+
+                printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file" "$file_age_days"
+            fi
+        done
+    fi
+
+
+}
+
+list_dbrm_restore_options_from_backups() {
+
+    if [ -n "$retention_days" ] && [ $retention_days -ne 0 ]; then
+        echo "--------------------------------------------------------------------------"
+        echo "Retention Policy: $retention_days days"
+    fi;
     echo "--------------------------------------------------------------------------"
-    printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "Options" "Last-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size"
+    printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "Options" "EM-Updated" "Extent Map" "EM-Size" "Journal-Size" "VBBM-Size" "VSS-Size"
 
     # Iterate over subdirectories
     for subdir in "${backup_location}"/*; do
 
-        get_latest_em_from_directory "$subdir"
+        get_latest_em_from_dbrm_directory "$subdir"
 
         if [ -f "${subdir_dbrms}/BRM_saves_journal" ]; then
             em_file_name=$(basename "$em_file_full_path")
@@ -3324,11 +3678,39 @@ list_restore_options_from_backups() {
             if [ $storagemanager_dir_exists == false ]; then
                 vss_file+=" (No Storagemanager Dir)"
             fi; 
+            
             printf "%-45s %-13s %-15s %-12s %-12s %-10s %-10s\n" "$(basename "$subdir")" "$em_file_created" "$em_file_name" "$em_file_size" "$journal_file" "$vbbm_file" "$vss_file"
         fi
     done
 
 
+}
+
+# $1 message
+dynamic_list_dbrm_backups() {
+
+    validation_prechecks_before_listing_restore_options
+    printf "$1";
+    list_dbrm_restore_options_from_backups "$@"
+    echo "--------------------------------------------------------------------------"
+    printf "Restore with ./$0 dbrm_restore --backup-location $backup_location --load <backup_folder_from_above>\n\n"
+}
+
+handle_list_dbrm_backups () {
+    
+    if $list_dbrm_backups; then
+        dynamic_list_dbrm_backups "\nExisting DBRM Backups\n"
+        exit 0
+    fi;
+
+} 
+
+handle_empty_dbrm_restore_folder() { 
+
+    if [ -z "$backup_folder_to_restore" ]; then
+        dynamic_list_dbrm_backups "[!] Pick Option [Required]\n"
+        exit 1
+    fi;
 }
 
 process_dbrm_restore() {
@@ -3346,26 +3728,15 @@ process_dbrm_restore() {
     printf "Backup to Restore:    $backup_folder_to_restore \n\n"
 
     validation_prechecks_before_listing_restore_options
-
-    # Display restore options 
-    if [ -z "$backup_folder_to_restore" ]; then
-        printf "[!] Pick Option\n"
-        list_restore_options_from_backups "$@"
-        printf "\nExample: \n"
-        printf " --directory dbrm_backup_20240103_183536 \n\n"
-        printf "Define which backup to restore via flag --directory \n"
-        echo "Rerun:    $0 $@ --directory xxxxxxx" 
-        echo ""
-        exit 1;
-    fi;
-    
+    handle_list_dbrm_backups
+    handle_empty_dbrm_restore_folder
     validation_prechecks_for_dbrm_restore
     shutdown_columnstore_mariadb_cmapi
 
     # Take an automated backup
     if [[ $skip_dbrm_backup == false ]]; then
         printf " - Saving a DBRM backup before restoring ... \n"
-        if ! process_dbrm_backup -p $backup_location -r 9999 -nb dbrms_before_restore_backup --quiet ; then 
+        if ! process_dbrm_backup -bl $backup_location -r 0 -nb dbrms_before_restore_backup --quiet ; then 
             echo "[!!] Failed to take a DBRM backup before restoring"
             echo "exiting ..."
             exit 1;
@@ -3373,7 +3744,7 @@ process_dbrm_restore() {
     fi;
 
     # Detect newest date _em from the set, if smaller than the current one throw a warning
-    get_latest_em_from_directory "${backup_location}/${backup_folder_to_restore}"
+    get_latest_em_from_dbrm_directory "${backup_location}/${backup_folder_to_restore}"
     if [ ! -f $em_file_full_path ]; then 
         echo "[!] Failed to parse _em file: $em_file_full_path doesnt exist"
         exit 1;
@@ -3661,7 +4032,59 @@ manually_run_loadbrm_and_savebrm() {
     clearShm 
     printf "Done\n"
     sleep 2
+}
 
+# $1 - message
+dynamic_list_backups() {
+
+    validation_prechecks_before_listing_restore_options
+    printf "$1";
+    list_restore_options_from_backups "$@"
+    echo "--------------------------------------------------------------------------"
+    printf "Restore with ./$0 restore --backup-location $backup_location --load <backup_folder_from_above>\n\n"
+}
+
+
+
+handle_list_backups () {
+
+    if $list_backups ; then
+        dynamic_list_backups "\nExisting Backups\n"
+        exit 0
+    fi;
+}
+
+handle_empty_restore_folder() {   
+
+    if [ -z "$load_date" ]; then
+        dynamic_list_backups "\n[!] Pick Option [Required]\n"
+        exit 1
+    fi;
+}
+
+handle_apply_retention_only() {
+
+    if $apply_retention_only; then
+        s1=20
+        s2=20
+        printf "\nApplying Retention Only Variables\n"
+        echo "--------------------------------------------------------------------------"
+        if [ -n "$config_file" ] && [ -f "$config_file" ]; then
+            printf "%-${s1}s %-${s2}s\n" "Configuration File:" "$config_file";
+        fi
+        echo "--------------------------------------------------------------------------"
+        printf "%-${s1}s  %-${s2}s\n" "Backup Location:" "$backup_location";
+        printf "%-${s1}s  %-${s2}s\n" "Timestamp:" "$(date +%m-%d-%Y-%H:%M:%S)";
+        printf "%-${s1}s  %-${s2}s\n" "Retention:" "$retention_days";
+        echo "--------------------------------------------------------------------------"
+        
+        if [ $retention_days -eq 0 ]; then
+            printf "\n[!] Are you sure retention should be set to 0?\n"
+        fi;
+
+        apply_backup_retention_policy
+        exit 0
+    fi;
 }
 
 
@@ -3669,10 +4092,12 @@ process_backup()
 {   
     load_default_backup_variables;
     parse_backup_variables "$@";
+    handle_list_backups "$@"
+    handle_apply_retention_only "$@"
     print_backup_variables;
     check_for_dependancies "backup";
     validation_prechecks_for_backup;
-    apply_backup_retention_policy
+    apply_backup_retention_policy;
     issue_write_locks;
     run_save_brm;
     run_backup;
@@ -3682,16 +4107,27 @@ process_restore()
 {
     load_default_restore_variables;
     parse_restore_variables "$@";
+    handle_list_backups "$@"
+    handle_empty_restore_folder "$@"
     print_restore_variables;
     check_for_dependancies "restore";
     validation_prechecks_for_restore;
     run_restore;
 }
 
+global_dependencies() {
+    if ! command -v curl &> /dev/null; then
+        printf "\n[!] curl not found. Please install curl\n\n"
+        exit 1; 
+    fi   
+}
+
 print_mcs_bk_mgr_version_info() {
     echo "MariaDB Columnstore Backup Manager"
     echo "Version: $mcs_bk_manager_version"
 }
+
+global_dependencies
 
 case "$action" in
     'help' | '--help' | '-help' | '-h') 	

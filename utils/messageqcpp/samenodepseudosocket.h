@@ -33,56 +33,56 @@ class SameNodePseudoSocket : public Socket
 {
  public:
   explicit SameNodePseudoSocket(joblist::DistributedEngineComm* exeMgrDecPtr);
-  virtual ~SameNodePseudoSocket();
-  virtual void write(SBS msg, Stats* stats = NULL);
+  ~SameNodePseudoSocket() override;
+  void write(SBS msg, Stats* stats = nullptr) override;
 
  private:
-  virtual void bind(const sockaddr* serv_addr);
+  void bind(const sockaddr* serv_addr) override;
   SameNodePseudoSocket(const SameNodePseudoSocket& rhs);
   virtual SameNodePseudoSocket& operator=(const SameNodePseudoSocket& rhs);
 
-  virtual void connectionTimeout(const struct ::timespec* timeout)
+  void connectionTimeout(const struct ::timespec* timeout) override
   {
   }
 
-  virtual void syncProto(bool use)
+  void syncProto(bool use) override
   {
   }
 
-  int getConnectionNum() const
+  int getConnectionNum() const override
   {
     return 1;
   }
 
-  inline virtual void socketParms(const SocketParms& socket)
+  inline void socketParms(const SocketParms& socket) override
   {
   }
 
-  inline virtual const SocketParms socketParms() const
+  inline const SocketParms socketParms() const override
   {
     return SocketParms();
   }
 
   // all these virtual methods are to stay inaccessable.
-  inline virtual void sa(const sockaddr* sa);
-  virtual void open();
-  virtual void close();
-  inline virtual bool isOpen() const;
-  virtual const SBS read(const struct timespec* timeout = 0, bool* isTimeOut = NULL,
-                         Stats* stats = NULL) const;
-  virtual void write(const ByteStream& msg, Stats* stats = NULL);
-  virtual void write_raw(const ByteStream& msg, Stats* stats = NULL) const;
-  virtual void listen(int backlog = 5);
-  virtual const IOSocket accept(const struct timespec* timeout = 0);
-  virtual void connect(const sockaddr* serv_addr);
-  virtual Socket* clone() const;
+  inline void sa(const sockaddr* sa) override;
+  void open() override;
+  void close() override;
+  inline bool isOpen() const override;
+  const SBS read(const struct timespec* timeout = nullptr, bool* isTimeOut = nullptr,
+                 Stats* stats = nullptr) const override;
+  void write(const ByteStream& msg, Stats* stats = nullptr) override;
+  void write_raw(const ByteStream& msg, Stats* stats = nullptr) const override;
+  void listen(int backlog = 5) override;
+  const IOSocket accept(const struct timespec* timeout = nullptr) override;
+  void connect(const sockaddr* serv_addr) override;
+  Socket* clone() const override;
   virtual const std::string toString() const;
-  virtual const std::string addr2String() const;
-  virtual bool isSameAddr(const Socket* rhs) const;
-  virtual bool isSameAddr(const struct in_addr& ipv4Addr) const;
-  static int ping(const std::string& ipaddr, const struct timespec* timeout = 0);
-  virtual bool isConnected() const;
-  virtual bool hasData() const;
+  const std::string addr2String() const override;
+  bool isSameAddr(const Socket* rhs) const override;
+  bool isSameAddr(const struct in_addr& ipv4Addr) const override;
+  static int ping(const std::string& ipaddr, const struct timespec* timeout = nullptr);
+  bool isConnected() const override;
+  bool hasData() const override;
 
   joblist::DistributedEngineComm* dec_ = nullptr;
 };

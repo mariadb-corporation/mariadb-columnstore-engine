@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -35,9 +35,7 @@ class ActiveStatementCounter
   {
   }
 
-  virtual ~ActiveStatementCounter()
-  {
-  }
+  virtual ~ActiveStatementCounter() = default;
 
   void incr(bool& counted);
   void decr(bool& counted);
@@ -61,4 +59,3 @@ class ActiveStatementCounter
   boost::condition condvar;
   BRM::VSS fVss;
 };
-

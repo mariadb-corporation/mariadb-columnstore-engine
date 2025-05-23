@@ -48,6 +48,7 @@ SET(CMAPI_DIR "${SHARE_DIR}/cmapi")
 SET(SYSTEMD_UNIT_DIR "/usr/lib/systemd/system")
 SET(SYSTEMD_ENGINE_UNIT_NAME "mariadb-columnstore")
 SET(CMAPI_CONF_FILEPATH "${ETC_DIR}/cmapi_server.conf")
+SET(MAN_DIR "/usr/share/man/man1")
 
 STRING(TOLOWER ${CPACK_PACKAGE_NAME} SYSTEMD_UNIT_NAME)
 
@@ -65,7 +66,8 @@ INSTALL(DIRECTORY python deps mcs_node_control failover cmapi_server engine_file
             DESTINATION ${CMAPI_DIR}
             USE_SOURCE_PERMISSIONS
             PATTERN "test" EXCLUDE
-            PATTERN "cmapi_server.conf" EXCLUDE)
+            PATTERN "cmapi_server.conf" EXCLUDE
+            PATTERN "README" EXCLUDE)
 INSTALL(FILES LICENSE.GPL2 VERSION
             DESTINATION ${CMAPI_DIR})
 INSTALL(FILES check_ready.sh
@@ -87,6 +89,7 @@ INSTALL(FILES mcs_gsutil
 INSTALL(FILES scripts/mcs_backup_manager.sh scripts/cs_package_manager.sh
             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             DESTINATION ${BIN_DIR})
+INSTALL(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
 
 OPTION(RPM "Build an RPM" OFF)
 IF(RPM)
@@ -132,13 +135,13 @@ IF(RPM)
     SET(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAPI_CONF_FILEPATH}")
 
     SET(CPACK_RPM_PACKAGE_OBSOLETES "mariadb-columnstore-cmapi")
-    SET(CPACK_RPM_PACKAGE_REQUIRES "curl")
+    SET(CPACK_RPM_PACKAGE_REQUIRES "curl, foundationdb-server")
     STRING(REPLACE "-" "_" SERVER_VERSION ${SERVER_VERSION})
     get_linux_lsb_release_information()
 
     STRING(REGEX MATCH "^." OS_VERSION_MAJOR "${LSB_RELEASE_VERSION_SHORT}")
     MESSAGE(STATUS ${OS_VERSION_MAJOR})
-    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma")
+    IF (LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma|RedHatEnterprise")
         SET(OS_NAME_SHORT "el")
         IF (OS_VERSION_MAJOR MATCHES "9")
 	    SET(CPACK_RPM_PACKAGE_REQUIRES "libxcrypt-compat")
@@ -174,7 +177,7 @@ IF(DEB)
     SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/prerm;${CMAKE_CURRENT_SOURCE_DIR}/postinst;${CMAKE_CURRENT_SOURCE_DIR}/conffiles")
 
     SET(CPACK_DEBIAN_PACKAGE_REPLACES "mariadb-columnstore-cmapi")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl, foundationdb-server")
     STRING(REPLACE "-" "." SERVER_VERSION ${SERVER_VERSION})
     SET(PATCHLEVEL "+maria")
     get_linux_lsb_release_information()

@@ -76,13 +76,6 @@ def backup(
             )
         )
     ] = '',
-    nv_ssl: Annotated[
-        bool,
-        typer.Option(
-            '-nv-ssl/-v-ssl','--no-verify-ssl/--verify-ssl',
-            help='Skips verifying ssl certs, useful for onpremise s3 storage.'
-        )
-    ] = False,
     s: Annotated[
         str,
         typer.Option(
@@ -102,11 +95,23 @@ def backup(
                 'Adds columnstore deltas to an existing full backup. '
                 'Backup folder to apply increment could be a value or '
                 '"auto_most_recent" - the incremental backup applies to '
-                'last full backup.'   
+                'last full backup.'
             ),
             show_default=False
         )
     ] = '',
+    P: Annotated[
+        int,
+        typer.Option(
+            '-P', '--parallel',
+            help=(
+                'Determines if columnstore data directories will have '
+                'multiple rsync running at the same time for different '
+                'subfolders to parallelize writes. '
+                'Ignored if "-c/--compress" argument not set.'
+            )
+        )
+    ] = 4,
     ha: Annotated[
         bool,
         typer.Option(
@@ -123,7 +128,10 @@ def backup(
         str,
         typer.Option(
             '-f', '--config-file',
-            help='Path to backup configuration file to load variables from.',
+            help=(
+                'Path to backup configuration file to load variables from - '
+                'relative or full path accepted.'
+            ),
             show_default=False
         )
     ] = '',
@@ -168,53 +176,6 @@ def backup(
             help='Skip taking a copy of the columnstore data in the bucket.'
         )
     ] = False,
-    pi: Annotated[
-        int,
-        typer.Option(
-            '-pi', '--poll-interval',
-            help=(
-                'Number of seconds between poll checks for active writes & '
-                'cpimports.'
-            )
-        )
-    ] = 5,
-    pmw: Annotated[
-        int,
-        typer.Option(
-            '-pmw', '--poll-max-wait',
-            help=(
-                'Max number of minutes for polling checks for writes to wait '
-                'before exiting as a failed backup attempt.'
-            )
-        )
-    ] = 60,
-    q: Annotated[
-        bool,
-        typer.Option(
-            '-q/-no-q', '--quiet/--no-quiet',
-            help='Silence verbose copy command outputs.'
-        )
-    ] = False,
-    c: Annotated[
-        str,
-        typer.Option(
-            '-c', '--compress',
-            help='Compress backup in X format - Options: [ pigz ].',
-            show_default=False
-        )
-    ] = '',
-    P: Annotated[
-        int,
-        typer.Option(
-            '-P', '--parallel',
-            help=(
-                'Determines if columnstore data directories will have '
-                'multiple rsync running at the same time for different '
-                'subfolders to parallelize writes. '
-                'Ignored if "-c/--compress" argument not set.'
-            )
-        )
-    ] = 4,
     nb: Annotated[
         str,
         typer.Option(
@@ -235,6 +196,48 @@ def backup(
             hidden=True
         )
     ] = 'direct',
+    c: Annotated[
+        str,
+        typer.Option(
+            '-c', '--compress',
+            help='Compress backup in X format - Options: [ pigz ].',
+            show_default=False
+        )
+    ] = '',
+    q: Annotated[
+        bool,
+        typer.Option(
+            '-q/-no-q', '--quiet/--no-quiet',
+            help='Silence verbose copy command outputs.'
+        )
+    ] = False,
+    nv_ssl: Annotated[
+        bool,
+        typer.Option(
+            '-nv-ssl/-v-ssl','--no-verify-ssl/--verify-ssl',
+            help='Skips verifying ssl certs, useful for onpremise s3 storage.'
+        )
+    ] = False,
+    pi: Annotated[
+        int,
+        typer.Option(
+            '-pi', '--poll-interval',
+            help=(
+                'Number of seconds between poll checks for active writes & '
+                'cpimports.'
+            )
+        )
+    ] = 5,
+    pmw: Annotated[
+        int,
+        typer.Option(
+            '-pmw', '--poll-max-wait',
+            help=(
+                'Max number of minutes for polling checks for writes to wait '
+                'before exiting as a failed backup attempt.'
+            )
+        )
+    ] = 60,
     r: Annotated[
         int,
         typer.Option(
@@ -245,6 +248,23 @@ def backup(
             )
         )
     ] = 0,
+    aro: Annotated[
+        bool,
+        typer.Option(
+            '-aro', '--apply-retention-only',
+            help=(
+                'Only apply retention policy to existing backups, '
+                'does not run a backup.'
+            )
+        )
+    ] = False,
+    list: Annotated[
+        bool,
+        typer.Option(
+            '-li', '--list',
+            help='List backups.'
+        )
+    ] = False,
 ):
     """Backup Columnstore and/or MariDB data."""
 
@@ -276,16 +296,6 @@ def backup(
 
 @handle_output
 def dbrm_backup(
-    m: Annotated[
-        str,
-        typer.Option(
-            '-m', '--mode',
-            help=(
-                '"loop" or "once" ; Determines if this script runs in a '
-                'forever loop sleeping -i minutes or just once.'
-            ),
-        )
-    ] = 'once',
     i: Annotated[
         int,
         typer.Option(
@@ -303,27 +313,33 @@ def dbrm_backup(
             )
         )
     ] = 7,
-    p: Annotated[
+    bl: Annotated[
         str,
         typer.Option(
-            '-p', '--path',
+            '-bl', '--backup-location',
             help='Path of where to save the dbrm backups on disk.'
         )
     ] = '/tmp/dbrm_backups',
+    m: Annotated[
+        str,
+        typer.Option(
+            '-m', '--mode',
+            help=(
+                '"loop" or "once" ; Determines if this script runs in a '
+                'forever loop sleeping -i minutes or just once.'
+            ),
+        )
+    ] = 'once',
     nb: Annotated[
         str,
         typer.Option(
             '-nb', '--name-backup',
-            help='Custom name to prefex dbrm backups with.'
+            help=(
+                'Define the prefix of the backup - '
+                'default: dbrm_backup+date +%Y%m%d_%H%M%S'
+            )
         )
     ] = 'dbrm_backup',
-    q: Annotated[
-        bool,
-        typer.Option(
-            '-q/-no-q', '--quiet/--no-quiet',
-            help='Silence verbose copy command outputs.'
-        )
-    ] = False,
     ssm: Annotated[
         bool,
         typer.Option(
@@ -331,17 +347,32 @@ def dbrm_backup(
             help='Skip backing up storagemanager directory.'
         )
     ] = False,
+    q: Annotated[
+        bool,
+        typer.Option(
+            '-q/-no-q', '--quiet/--no-quiet',
+            help='Silence verbose copy command outputs.'
+        )
+    ] = False,
+    list: Annotated[
+        bool,
+        typer.Option(
+            '-li', '--list',
+            help='List backups.'
+        )
+    ] = False,
 ):
     """Columnstore DBRM Backup."""
 
-    # Default: ./$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups
+    # Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
     #     Examples:
-    #         ./$0 dbrm_backup --mode loop --interval 90 --retention-days 7 --path /mnt/dbrm_backups
-    #         ./$0 dbrm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
+    #         ./$0 dbrm_backup --backup-location /mnt/columnstore/dbrm_backups
+    #         ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode once -nb my-one-off-backup-before-upgrade
+    #         ./$0 dbrm_backup --retention-days 7 --backup-location /mnt/dbrm_backups --mode loop --interval 90brm_backup --mode once --retention-days 7 --path /mnt/dbrm_backups -nb my-one-off-backup
 
     #     Cron Example:
-    #     */60 */3 * * * root  bash /root/$0 dbrm_backup -m once --retention-days 7 --path /tmp/dbrm_backups  >> /tmp/dbrm_backups/cs_backup.log  2>&1
+    #         */60 */3 * * * root bash /root/$0 dbrm_backup -m once --retention-days 7 --backup-location /tmp/dbrm_backups >> /tmp/dbrm_backups/cs_backup.log 2>&1
     arguments = []
     for arg_name, value in locals().items():
         sh_arg = cook_sh_arg(arg_name, value)

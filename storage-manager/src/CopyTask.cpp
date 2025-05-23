@@ -54,10 +54,10 @@ bool CopyTask::run()
 
   success = read(buf, getLength());
   check_error("CopyTask read", false);
-  copy_cmd* cmd = (copy_cmd*)buf;
+  auto* cmd = (copy_cmd*)buf;
   string filename1(cmd->file1.filename,
                    cmd->file1.flen);  // need to copy this in case it's not null terminated
-  f_name* filename2 = (f_name*)&buf[sizeof(copy_cmd) + cmd->file1.flen];
+  auto* filename2 = (f_name*)&buf[sizeof(copy_cmd) + cmd->file1.flen];
 
 #ifdef SM_TRACE
   logger->log(LOG_DEBUG, "copy %s to %s.", filename1.c_str(), filename2->filename);
@@ -80,7 +80,7 @@ bool CopyTask::run()
     return true;
   }
 
-  sm_response* resp = (sm_response*)buf;
+  auto* resp = (sm_response*)buf;
   resp->returnCode = 0;
   return write(*resp, 0);
 }

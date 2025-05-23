@@ -46,20 +46,20 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   /**
    * @param
    */
-  TupleHashJoinStep(const JobInfo& jobInfo);
-  virtual ~TupleHashJoinStep();
+  explicit TupleHashJoinStep(const JobInfo& jobInfo);
+  ~TupleHashJoinStep() override;
 
   void setLargeSideBPS(BatchPrimitive*);
   void setLargeSideStepsOut(const std::vector<SJSTEP>& largeSideSteps);
   void setSmallSideStepsOut(const std::vector<SJSTEP>& smallSideSteps);
 
   /* mandatory JobStep interface */
-  void run();
-  void join();
-  const std::string toString() const;
+  void run() override;
+  void join() override;
+  const std::string toString() const override;
 
   /* These tableOID accessors can go away soon */
-  execplan::CalpontSystemCatalog::OID tableOid() const
+  execplan::CalpontSystemCatalog::OID tableOid() const override
   {
     return fTableOID2;
   }
@@ -74,8 +74,10 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void tableOid1(execplan::CalpontSystemCatalog::OID tableOid1)
   {
     fTableOID1 = tableOid1;
-    if (fTableOID1 < 3000)
+    if (fTableOID1 >= 1000 && fTableOID1 < 3000)
+    {
       numCores = 1;  // syscat query, no need for more than 1 thread
+    }
   }
   void tableOid2(execplan::CalpontSystemCatalog::OID tableOid2)
   {
@@ -176,7 +178,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
     fCorrelatedSide = c;
   }
   using JobStep::tupleId;
-  uint64_t tupleId() const
+  uint64_t tupleId() const override
   {
     return fTupleId2;
   }
@@ -199,22 +201,22 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   void addSmallSideRG(const std::vector<rowgroup::RowGroup>& rgs, const std::vector<std::string>& tableNames);
   void addJoinKeyIndex(const std::vector<JoinType>& jt, const std::vector<bool>& typeless,
-                       const std::vector<std::vector<uint32_t> >& smallkeys,
-                       const std::vector<std::vector<uint32_t> >& largekeys);
+                       const std::vector<std::vector<uint32_t>>& smallkeys,
+                       const std::vector<std::vector<uint32_t>>& largekeys);
 
   void configSmallSideRG(const std::vector<rowgroup::RowGroup>& rgs,
                          const std::vector<std::string>& tableNames);
   void configLargeSideRG(const rowgroup::RowGroup& rg);
 
   void configJoinKeyIndex(const std::vector<JoinType>& jt, const std::vector<bool>& typeless,
-                          const std::vector<std::vector<uint32_t> >& smallkeys,
-                          const std::vector<std::vector<uint32_t> >& largekeys);
+                          const std::vector<std::vector<uint32_t>>& smallkeys,
+                          const std::vector<std::vector<uint32_t>>& largekeys);
 
-  void setOutputRowGroup(const rowgroup::RowGroup& rg);
+  void setOutputRowGroup(const rowgroup::RowGroup& rg) override;
 
-  uint32_t nextBand(messageqcpp::ByteStream& bs);
+  uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
-  const rowgroup::RowGroup& getOutputRowGroup() const
+  const rowgroup::RowGroup& getOutputRowGroup() const override
   {
     return outputRG;
   }
@@ -234,11 +236,11 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   {
     return smallSideKeys[0][0];
   }
-  const std::vector<std::vector<uint32_t> >& getSmallKeys() const
+  const std::vector<std::vector<uint32_t>>& getSmallKeys() const
   {
     return smallSideKeys;
   }
-  const std::vector<std::vector<uint32_t> >& getLargeKeys() const
+  const std::vector<std::vector<uint32_t>>& getLargeKeys() const
   {
     return largeSideKeys;
   }
@@ -309,17 +311,17 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void addFcnExpGroup2(const boost::shared_ptr<execplan::ParseTree>& fe);
   bool hasFcnExpGroup2()
   {
-    return (fe2 != NULL);
+    return (fe2 != nullptr);
   }
 
   /* Functions & Expressions in select and groupby clause */
-  void setFcnExpGroup3(const std::vector<execplan::SRCP>& fe);
-  void setFE23Output(const rowgroup::RowGroup& rg);
+  void setFcnExpGroup3(const std::vector<execplan::SRCP>& fe) override;
+  void setFE23Output(const rowgroup::RowGroup& rg) override;
 
   /* result rowgroup */
-  const rowgroup::RowGroup& getDeliveredRowGroup() const;
-  void deliverStringTableRowGroup(bool b);
-  bool deliverStringTableRowGroup() const;
+  const rowgroup::RowGroup& getDeliveredRowGroup() const override;
+  void deliverStringTableRowGroup(bool b) override;
+  bool deliverStringTableRowGroup() const override;
 
   // joinId
   void joinId(int64_t id)
@@ -341,7 +343,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   boost::shared_ptr<funcexp::FuncExpWrapper> getJoinFilter(uint32_t index) const;
   void setJoinFilterInputRG(const rowgroup::RowGroup& rg);
 
-  virtual bool stringTableFriendly()
+  bool stringTableFriendly() override
   {
     return true;
   }
@@ -365,7 +367,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
     fFunctionJoinInfo = fji;
   }
 
-  void abort();
+  void abort() override;
   void returnMemory()
   {
     if (fMemSizeForOutputRG > 0)
@@ -434,8 +436,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   int fCorrelatedSide;
 
   std::vector<bool> typelessJoin;  // the size of the vector is # of small side
-  std::vector<std::vector<uint32_t> > largeSideKeys;
-  std::vector<std::vector<uint32_t> > smallSideKeys;
+  std::vector<std::vector<uint32_t>> largeSideKeys;
+  std::vector<std::vector<uint32_t>> smallSideKeys;
 
   ResourceManager* resourceManager;
   uint64_t fMemSizeForOutputRG;
@@ -448,8 +450,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
       return *j1 < *j2;
     }
   };
-  std::vector<std::shared_ptr<joiner::TupleJoiner> > joiners;
-  boost::scoped_array<std::vector<rowgroup::RGData> > rgData;
+  std::vector<std::shared_ptr<joiner::TupleJoiner>> joiners;
+  boost::scoped_array<std::vector<rowgroup::RGData>> rgData;
   TupleBPS* largeBPS;
   rowgroup::RowGroup largeRG, outputRG;
   std::vector<rowgroup::RowGroup> smallRGs;
@@ -460,7 +462,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   struct HJRunner
   {
-    HJRunner(TupleHashJoinStep* hj) : HJ(hj)
+    explicit HJRunner(TupleHashJoinStep* hj) : HJ(hj)
     {
     }
     void operator()()
@@ -511,7 +513,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   /* Semi-join support */
   std::vector<int> feIndexes;
-  std::vector<boost::shared_ptr<funcexp::FuncExpWrapper> > fe;
+  std::vector<boost::shared_ptr<funcexp::FuncExpWrapper>> fe;
   rowgroup::RowGroup joinFilterRG;
 
   /* Casual Partitioning forwarding */
@@ -534,10 +536,10 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   };
   void joinRunnerFcn(uint32_t index);
   void startJoinThreads();
-  void generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer> >& joinerOutput,
+  void generateJoinResultSet(const std::vector<std::vector<rowgroup::Row::Pointer>>& joinerOutput,
                              rowgroup::Row& baseRow,
-                             const std::shared_ptr<std::shared_ptr<int[]>[] >& mappings,
-                             const uint32_t depth, rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
+                             const std::shared_ptr<std::shared_ptr<int[]>[]>& mappings, const uint32_t depth,
+                             rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
                              std::vector<rowgroup::RGData>& outputData,
                              const std::shared_ptr<rowgroup::Row[]>& smallRows, rowgroup::Row& joinedRow,
                              RowGroupDL* outputDL);
@@ -549,12 +551,12 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void joinOneRG(uint32_t threadID, std::vector<rowgroup::RGData>& out, rowgroup::RowGroup& inputRG,
                  rowgroup::RowGroup& joinOutput, rowgroup::Row& largeSideRow, rowgroup::Row& joinFERow,
                  rowgroup::Row& joinedRow, rowgroup::Row& baseRow,
-                 std::vector<std::vector<rowgroup::Row::Pointer> >& joinMatches,
+                 std::vector<std::vector<rowgroup::Row::Pointer>>& joinMatches,
                  std::shared_ptr<rowgroup::Row[]>& smallRowTemplates, RowGroupDL* outputDL,
-                 std::vector<std::shared_ptr<joiner::TupleJoiner> >* joiners = NULL,
-                 std::shared_ptr<std::shared_ptr<int[]>[] >* rgMappings = NULL,
-                 std::shared_ptr<std::shared_ptr<int[]>[] >* feMappings = NULL,
-                 boost::scoped_array<boost::scoped_array<uint8_t>>* smallNullMem = NULL);
+                 std::vector<std::shared_ptr<joiner::TupleJoiner>>* joiners = nullptr,
+                 std::shared_ptr<std::shared_ptr<int[]>[]>* rgMappings = nullptr,
+                 std::shared_ptr<std::shared_ptr<int[]>[]>* feMappings = nullptr,
+                 boost::scoped_array<boost::scoped_array<uint8_t>>* smallNullMem = nullptr);
   void finishSmallOuterJoin();
   void makeDupList(const rowgroup::RowGroup& rg);
   void processDupList(uint32_t threadID, rowgroup::RowGroup& ingrp, std::vector<rowgroup::RGData>* rowData);
@@ -564,10 +566,10 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   std::shared_ptr<std::shared_ptr<int[]>[]> columnMappings, fergMappings;
   std::shared_ptr<int[]> fe2Mapping;
   uint32_t joinThreadCount;
-  boost::scoped_array<boost::scoped_array<uint8_t> > smallNullMemory;
+  boost::scoped_array<boost::scoped_array<uint8_t>> smallNullMemory;
   uint64_t outputIt;
   bool moreInput;
-  std::vector<std::pair<uint32_t, uint32_t> > dupList;
+  std::vector<std::pair<uint32_t, uint32_t>> dupList;
   boost::scoped_array<rowgroup::Row> dupRows;
   std::vector<std::string> smallTableNames;
   bool isExeMgr;
@@ -585,7 +587,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   /* Disk-based join support */
   std::vector<std::shared_ptr<DiskJoinStep>> djs;
-  boost::scoped_array<boost::shared_ptr<RowGroupDL> > fifos;
+  boost::scoped_array<boost::shared_ptr<RowGroupDL>> fifos;
   void djsReaderFcn(int index);
   uint64_t djsReader;  // thread handle from thread pool
   struct DJSReader
@@ -606,7 +608,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void djsRelayFcn();
   struct DJSRelay
   {
-    DJSRelay(TupleHashJoinStep* hj) : HJ(hj)
+    explicit DJSRelay(TupleHashJoinStep* hj) : HJ(hj)
     {
     }
     void operator()()
@@ -633,8 +635,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   bool ownsOutputDL;
 
   void segregateJoiners();
-  std::vector<std::shared_ptr<joiner::TupleJoiner> > tbpsJoiners;
-  std::vector<std::shared_ptr<joiner::TupleJoiner> > djsJoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner>> tbpsJoiners;
+  std::vector<std::shared_ptr<joiner::TupleJoiner>> djsJoiners;
   std::vector<int> djsJoinerMap;
   boost::scoped_array<ssize_t> memUsedByEachJoin;
   boost::mutex djsLock;
@@ -653,4 +655,3 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 };
 
 }  // namespace joblist
-

@@ -1,0 +1,40 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL4942;
+--enable_warnings
+CREATE DATABASE MCOL4942;
+USE MCOL4942;
+CREATE TABLE t1col (id INT) ENGINE=Columnstore;
+
+SELECT * FROM
+
+(
+
+	SELECT ID
+
+	FROM
+
+	(
+
+		SELECT 1 ID
+
+		FROM 
+
+		t1col
+
+	) V
+
+	UNION ALL
+
+	SELECT ID
+
+	FROM
+
+	(
+
+		SELECT NULL ID WHERE 1111=2222
+
+	) V
+
+) U;
+
+DROP DATABASE MCOL4942;

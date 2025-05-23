@@ -33,10 +33,9 @@ if (WITH_UNITTESTS)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rowgroup_tests TEST_PREFIX columnstore:)
 
-
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
-    target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
+    target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
@@ -79,6 +78,10 @@ if (WITH_UNITTESTS)
     add_executable(comparators_tests comparators-tests.cpp)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
+
+    add_executable(bytestream bytestream.cpp)
+    target_link_libraries(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+    add_test(NAME columnstore:bytestream COMMAND bytestream)
 
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)

@@ -33,7 +33,7 @@ namespace ddlpackageprocessor
  * for interacting with the Write Engine to process
  * drop table ddl statements.
  */
-class RestorePartitionProcessor : public DDLPackageProcessor
+class RestorePartitionProcessor : public DDLPackageProcessor, FormatStatementString
 {
  public:
   RestorePartitionProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
@@ -46,7 +46,7 @@ class RestorePartitionProcessor : public DDLPackageProcessor
    *
    *  @param dropTableStmt the drop table statement
    */
-  DDLResult processPackageInternal(ddlpackage::SqlStatement* RestorePartitionStmt);
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* RestorePartitionStmt) override;
 };
 }  // namespace ddlpackageprocessor
 

@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
-#include <stdint.h>
+#include <cstdint>
 
 #include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -49,7 +49,7 @@
 
 #define EXPORT
 
-//#define IDB_DDL_DEBUG
+// #define IDB_DDL_DEBUG
 namespace ddlpackageprocessor
 {
 #define SUMMARY_INFO(message)          \
@@ -206,8 +206,8 @@ class DDLPackageProcessor
   struct NJLSysDataList
   {
     NJLSysDataVector sysDataVec;
-    EXPORT NJLSysDataList(){};
-    EXPORT ~NJLSysDataList();
+    EXPORT NJLSysDataList() = default;
+    EXPORT ~NJLSysDataList() = default;
     NJLSysDataVector::const_iterator begin()
     {
       return sysDataVec.begin();
@@ -862,6 +862,32 @@ bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&)
   std::istringstream iss(s);
   return !(iss >> f >> t).fail();
 }
+
+class FormatStatementString
+{
+ public:
+  FormatStatementString() = default;
+  ~FormatStatementString() = default;
+
+  std::string formatStatementString(const std::string& cmd, const std::string& schema,
+                                    const std::string& table,
+                                    const std::set<BRM::LogicalPartition>& partitions)
+  {
+    std::ostringstream stmt;
+    stmt << cmd << "(" << schema << "," << table << ",";
+
+    // There must be at least one partition to drop.
+    for (auto& p : partitions)
+    {
+      stmt << p << ",";
+    }
+
+    auto res = stmt.str();
+    res.back() = ')';
+
+    return res;
+  }
+};
 
 }  // namespace ddlpackageprocessor
 

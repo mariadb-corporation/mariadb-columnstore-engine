@@ -87,16 +87,16 @@ extern BPPMap bppMap;
 void prefetchBlocks(uint64_t lbid, const int compType, uint32_t* rCount);
 void prefetchExtent(uint64_t lbid, uint32_t ver, uint32_t txn, uint32_t* rCount);
 void loadBlock(uint64_t lbid, BRM::QueryContext q, uint32_t txn, int compType, void* bufferPtr,
-               bool* pWasBlockInCache, uint32_t* rCount = NULL, bool LBIDTrace = false,
-               uint32_t sessionID = 0, bool doPrefetch = true, VSSCache* vssCache = NULL);
+               bool* pWasBlockInCache, uint32_t* rCount = nullptr, bool LBIDTrace = false,
+               uint32_t sessionID = 0, bool doPrefetch = true, VSSCache* vssCache = nullptr);
 void loadBlockAsync(uint64_t lbid, const BRM::QueryContext& q, uint32_t txn, int CompType, uint32_t* cCount,
                     uint32_t* rCount, bool LBIDTrace, uint32_t sessionID, boost::mutex* m,
                     uint32_t* busyLoaders, boost::shared_ptr<BPPSendThread> sendThread,
-                    VSSCache* vssCache = 0);
+                    VSSCache* vssCache = nullptr);
 uint32_t loadBlocks(BRM::LBID_t* lbids, BRM::QueryContext q, BRM::VER_t txn, int compType,
                     uint8_t** bufferPtrs, uint32_t* rCount, bool LBIDTrace, uint32_t sessionID,
                     uint32_t blockCount, bool* wasVersioned, bool doPrefetch = true,
-                    VSSCache* vssCache = NULL);
+                    VSSCache* vssCache = nullptr);
 uint32_t cacheNum(uint64_t lbid);
 void buildFileName(BRM::OID_t oid, char* fileName);
 
