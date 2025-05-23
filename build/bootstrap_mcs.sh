@@ -39,7 +39,7 @@ echo "Arguments received: $@"
 message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default="$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH")
+optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
@@ -47,6 +47,7 @@ optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" 
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
 optparse.define short=F long=custom-cmake-flags desc="Add custom cmake flags" variable=CUSTOM_CMAKE_FLAGS
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
+optparse.define short=g long=alien desc="Turn off maintainer mode (ex. -Werror)" variable=MAINTAINER_MODE default=true value=false
 optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
 optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
@@ -88,6 +89,8 @@ disable_git_restore_frozen_revision() {
     git config submodule.storage/columnstore/columnstore.update none
     cd - >/dev/null
 }
+
+DEP_GRAPH_PATH="$MARIA_BUILD_PATH/dependency_graph/mariadb.dot"
 
 install_deps() {
     message_split
@@ -241,7 +244,6 @@ construct_cmake_flags() {
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-        -DCOLUMNSTORE_MAINTAINER=YES
         -DMYSQL_MAINTAINER_MODE=NO
         -DPLUGIN_COLUMNSTORE=YES
         -DPLUGIN_CONNECT=NO
@@ -258,9 +260,14 @@ construct_cmake_flags() {
         -DWITH_WSREP=NO
     )
 
+    if [[ MAINTAINER_MODE = true ]]; then
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
+    else
+        warn "Maintainer mode is disabled, be careful, alien"
+    fi
+
     if [[ $SKIP_UNIT_TESTS = true ]]; then
         warn "Unittests are not build"
-
     else
         MDB_CMAKE_FLAGS+=(-DWITH_UNITTESTS=YES)
         message "Buiding with unittests"
@@ -268,7 +275,7 @@ construct_cmake_flags() {
 
     if [[ $DRAW_DEPS = true ]]; then
         warn "Generating dependendies graph to mariadb.dot"
-        MDB_CMAKE_FLAGS+=(--graphviz=mariadb.dot)
+        MDB_CMAKE_FLAGS+=(--graphviz=$DEP_GRAPH_PATH)
     fi
 
     if [[ $USE_NINJA = true ]]; then
@@ -389,6 +396,16 @@ check_errorcode() {
     cd - >/dev/null
 }
 
+generate_svgs() {
+    if [[ $DRAW_DEPS = true ]]; then
+        message_split
+        warn "Generating svgs with dependency graph to $DEP_GRAPH_PATH"
+        for f in "$DEP_GRAPH_PATH".*; do
+            dot -Tsvg -o "$f.svg" "$f"
+        done
+    fi
+}
+
 build_package() {
     if [[ $pkg_format == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
@@ -422,6 +439,8 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
+
+    generate_svgs
 
     ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
         message "Installing silently" &&
@@ -628,16 +647,6 @@ smoke() {
     fi
 }
 
-generate_svgs() {
-    if [[ $DRAW_DEPS = true ]]; then
-        message_split
-        warn "Generating svgs with dependency graph to $REPORT_PATH"
-        for f in $MDB_SOURCE_PATH/mariadb.dot.*; do
-            dot -Tsvg -o "$REPORT_PATH"/$(basename "$f").svg "$f"
-        done
-    fi
-}
-
 if [[ $INSTALL_DEPS = true || $BUILD_PACKAGES = true ]]; then
     install_deps
 fi
@@ -662,7 +671,6 @@ if [[ $BUILD_PACKAGES = false ]]; then
     if [[ $RESTART_SERVICES = true ]]; then
         start_service
         smoke
-        generate_svgs
     fi
 else
     modify_packaging
