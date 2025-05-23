@@ -88,6 +88,11 @@ macro(columnstore_library libname)
     else()
         columnstore_shared_library(${libname} ${ARGN})
     endif()
+
+endmacro()
+
+macro(columnstore_link libname)
+    target_link_libraries(${libname} ${ARGN})
 endmacro()
 
 macro(columnstore_mysql_plugin_library libname)
