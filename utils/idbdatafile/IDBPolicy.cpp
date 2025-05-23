@@ -19,7 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/thread/thread.hpp>
 
 #include "configcpp.h"  // for Config

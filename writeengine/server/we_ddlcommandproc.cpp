@@ -19,8 +19,7 @@
 // $Id: we_ddlcommandproc.cpp 3082 2011-09-26 22:00:38Z chao $
 
 #include <unistd.h>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/scoped_ptr.hpp"
 using namespace std;
 

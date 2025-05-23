@@ -77,7 +77,13 @@ bf::path Ownership::get(const bf::path& p, bool getOwnership)
   bf::path::const_iterator pit;
   int i, levels;
 
+#if BOOST_VERSION >= 106000
+  // available since 1.60.0 released 2015-12-17
   normalizedPath.lexically_normal();
+#else
+  // removed in 1.85.0 release 2024-04-15
+  normalizedPath.normalize();
+#endif
   // cerr << "Ownership::get() param = " << normalizedPath.string() << endl;
   if (prefixDepth > 0)
   {

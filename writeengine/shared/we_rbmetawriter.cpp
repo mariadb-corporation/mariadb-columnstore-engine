@@ -26,7 +26,6 @@
 #include <sstream>
 #include <unistd.h>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "we_config.h"
 #include "we_convertor.h"

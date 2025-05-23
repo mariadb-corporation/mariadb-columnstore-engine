@@ -30,7 +30,6 @@
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "we_bulkrollbackmgr.h"
 
