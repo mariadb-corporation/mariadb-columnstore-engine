@@ -1925,10 +1925,17 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 
   if (it == fCatalogMap.end())
   {
+#if 0
     instance.reset(new CalpontSystemCatalog());
     instance->sessionID(sessionID);
     instance->fExeMgr->setSessionId(sessionID);
     fCatalogMap[sessionID] = instance;
+#else
+    fCatalogMap[sessionID] = instance;
+    fCatalogMap[sessionID].reset(new CalpontSystemCatalog());
+    fCatalogMap[sessionID]->sessionID(sessionID);
+    fCatalogMap[sessionID]->fExeMgr->setSessionId(sessionID);
+#endif
     return instance;
   }
 
