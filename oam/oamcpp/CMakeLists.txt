@@ -4,8 +4,6 @@ include_directories(${ENGINE_COMMON_INCLUDES})
 
 set(oamcpp_LIB_SRCS liboamcpp.cpp oamcache.cpp)
 
-set(COLUMNSTORE_STATIC_LIBRARIES YES)
-
 columnstore_library(oamcpp ${oamcpp_LIB_SRCS})
 columnstore_link(oamcpp loggingcpp)
 
