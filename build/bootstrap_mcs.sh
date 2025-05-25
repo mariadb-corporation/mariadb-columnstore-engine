@@ -409,17 +409,16 @@ build_package() {
     if [[ $pkg_format == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
+        export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
         export DH_BUILD_DDEBS="1"
         export BUILDPACKAGE_FLAGS="-b"
-        prereq="cd /tmp && ${CMAKE_BIN_NAME} \"${MDB_CMAKE_FLAGS[@]}\" -S\"$MDB_SOURCE_PATH\" -B\"$MARIA_BUILD_PATH\" && cd -"
         command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
        CMAKEFLAGS=\"${MDB_CMAKE_FLAGS[@]}\" debian/autobake-deb.sh"
     fi
 
     echo "Building a package for $OS"
     echo "Build command: $command"
-    # eval "$prereq"
     eval "$command"
 
     check_errorcode
@@ -641,7 +640,7 @@ smoke() {
     fi
 }
 
-if [[ $INSTALL_DEPS = true || $BUILD_PACKAGES = true ]]; then
+if [[ $INSTALL_DEPS = true ]]; then
     install_deps
 fi
 
