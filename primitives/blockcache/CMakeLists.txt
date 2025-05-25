@@ -13,6 +13,5 @@ set(dbbc_STAT_SRCS
     stats.cpp
     fsutils.cpp
 )
-set(COLUMNSTORE_STATIC_LIBRARIES YES)
-columnstore_library(dbbc ${dbbc_STAT_SRCS})
+columnstore_static_library(dbbc ${dbbc_STAT_SRCS})
 columnstore_link(dbbc ${NETSNMP_LIBRARIES} loggingcpp)

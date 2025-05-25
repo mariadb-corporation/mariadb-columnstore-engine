@@ -8,8 +8,6 @@ set(DMLProc_SRCS dmlproc.cpp dmlprocessor.cpp dmlresultbuffer.cpp batchinsertpro
 
 columnstore_executable(DMLProc ${DMLProc_SRCS})
 
-add_dependencies(DMLProc loggingcpp)
-
 columnstore_link(
     DMLProc
     ${ENGINE_LDFLAGS}
@@ -18,4 +16,5 @@ columnstore_link(
     threadpool
     ddlcleanuputil
     batchloader
+    loggingcpp
 )

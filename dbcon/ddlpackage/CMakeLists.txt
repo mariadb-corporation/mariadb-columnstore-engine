@@ -42,4 +42,4 @@ columnstore_library(
     ${FLEX_ddl_scan_OUTPUTS}
 )
 
-add_dependencies(ddlpackage loggingcpp)
+columnstore_link(ddlpackage loggingcpp)

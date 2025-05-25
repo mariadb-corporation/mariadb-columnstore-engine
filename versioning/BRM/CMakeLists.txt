@@ -34,8 +34,7 @@ set(brm_LIB_SRCS
 )
 
 columnstore_library(brm ${brm_LIB_SRCS})
-
-add_dependencies(brm loggingcpp)
+columnstore_link(brm loggingcpp)
 
 # ########## next target ###############
 

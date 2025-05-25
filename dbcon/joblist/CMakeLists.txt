@@ -57,8 +57,8 @@ set(joblist_LIB_SRCS
 
 # ########## next target ###############
 
-add_library(joblist_server STATIC ${joblist_LIB_SRCS})
-add_dependencies(joblist_server loggingcpp)
+columnstore_static_library(joblist_server ${joblist_LIB_SRCS})
+columnstore_link(joblist_server loggingcpp)
 
 # ########## next target ###############
 
@@ -68,7 +68,7 @@ columnstore_library(joblist ${joblist_LIB_SRCS})
 target_include_directories(
     joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR} ${LIBMARIADB_BININC_DIR} ${LIBMARIADB_SRCINC_DIR}
 )
-add_dependencies(joblist loggingcpp)
+columnstore_link(joblist loggingcpp)
 
 if(WITH_ORDERBY_UT)
     columnstore_executable(job_orderby_tests orderby-tests.cpp)

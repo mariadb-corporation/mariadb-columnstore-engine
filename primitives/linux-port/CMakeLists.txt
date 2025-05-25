@@ -4,6 +4,5 @@ include_directories(${ENGINE_COMMON_INCLUDES} ../blockcache ../primproc)
 
 set(processor_STAT_SRCS primitiveprocessor.cpp dictionary.cpp column.cpp)
 
-add_library(processor STATIC ${processor_STAT_SRCS})
-add_dependencies(processor loggingcpp)
-columnstore_link(processor ${NETSNMP_LIBRARIES})
+columnstore_static_library(processor ${processor_STAT_SRCS})
+columnstore_link(processor ${NETSNMP_LIBRARIES} loggingcpp)

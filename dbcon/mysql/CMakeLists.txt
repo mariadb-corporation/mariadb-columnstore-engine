@@ -72,14 +72,13 @@ if(COMMAND mysql_add_plugin)
         columnstore.cnf
     )
     add_to_debian_install_file(${MARIADB_MYCNFDIR}/columnstore.cnf)
+    add_to_debian_install_file("${MARIADB_PLUGINDIR}/ha_columnstore.so")
 
 else()
     message("Adding plugin via CMake")
-    add_library(ha_columnstore SHARED ${libcalmysql_SRCS})
+    columnstore_shared_library(ha_columnstore ${libcalmysql_SRCS})
     set_target_properties(ha_columnstore PROPERTIES PREFIX "")
 
-    add_dependencies(ha_columnstore loggingcpp)
-    add_dependencies(ha_columnstore marias3)
     add_definitions(-DMYSQL_DYNAMIC_PLUGIN -DPLUGIN_COLUMNSTORE_VERSION="${PACKAGE_VERSION}")
 
     columnstore_link(
@@ -90,10 +89,9 @@ else()
         ${NETSNMP_LIBRARIES}
         ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a
         threadpool
+        loggingcpp
+        marias3
     )
-
-    columnstore_install_target(ha_columnstore ${MARIADB_PLUGINDIR})
-
     # define this dummy target for standalone builds (ie, when mysql_add_plugin doesn't exist)
     add_custom_target(columnstore DEPENDS ha_columnstore)
     columnstore_install_file(columnstore.cnf ${MARIADB_MYCNFDIR})

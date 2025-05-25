@@ -15,7 +15,4 @@ set(common_LIB_SRCS
 )
 
 columnstore_library(common ${common_LIB_SRCS})
-
 columnstore_link(common boost_filesystem configcpp loggingcpp messageqcpp)
-
-add_dependencies(common loggingcpp)

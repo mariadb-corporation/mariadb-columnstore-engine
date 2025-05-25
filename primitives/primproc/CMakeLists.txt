@@ -27,7 +27,6 @@ set(PrimProc_SRCS
 
 columnstore_executable(PrimProc ${PrimProc_SRCS})
 
-add_dependencies(PrimProc loggingcpp)
 target_include_directories(PrimProc PRIVATE ${Boost_INCLUDE_DIRS})
 columnstore_link(
     PrimProc
@@ -38,4 +37,5 @@ columnstore_link(
     cacheutils
     dbbc
     processor
+    loggingcpp
 )

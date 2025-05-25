@@ -41,4 +41,4 @@ columnstore_library(
     ${FLEX_dml_scan_OUTPUTS}
 )
 
-add_dependencies(dmlpackage loggingcpp)
+columnstore_link(dmlpackage loggingcpp)

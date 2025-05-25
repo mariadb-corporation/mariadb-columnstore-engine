@@ -6,6 +6,4 @@ set(batchloader_LIB_SRCS batchloader.cpp)
 
 columnstore_library(batchloader ${batchloader_LIB_SRCS})
 
-add_dependencies(batchloader loggingcpp)
-
-columnstore_link(batchloader ${NETSNMP_LIBRARIES})
+columnstore_link(batchloader ${NETSNMP_LIBRARIES} loggingcpp)

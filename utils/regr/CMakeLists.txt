@@ -25,9 +25,7 @@ columnstore_link(regr PRIVATE loggingcpp)
 
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
-add_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
+columnstore_mysql_plugin_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
 add_dependencies(regr_mysql external_boost)
-
-columnstore_install_target(regr_mysql ${MARIADB_PLUGINDIR})
 
 set_target_properties(regr_mysql PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)

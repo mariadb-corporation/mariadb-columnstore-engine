@@ -46,7 +46,4 @@ set(execplan_LIB_SRCS
 )
 
 columnstore_library(execplan ${execplan_LIB_SRCS})
-
-add_dependencies(execplan loggingcpp)
-
-columnstore_link(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron)
+columnstore_link(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron loggingcpp)

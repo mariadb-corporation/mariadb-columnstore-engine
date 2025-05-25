@@ -51,6 +51,7 @@ set(COLUMNSTORE_MAINTAINER_FLAGS ${WERROR_FLAG})
 set(FLAGS_ALL
     -Wall
     -Wextra
+    -ggdb3
     -fno-omit-frame-pointer
     -fno-strict-aliasing
     -fsigned-char
@@ -59,9 +60,9 @@ set(FLAGS_ALL
     -DBOOST_BIND_GLOBAL_PLACEHOLDERS
 )
 
-set(FLAGS_RELEASE -g -O3 -DDBUG_OFF)
+set(FLAGS_RELEASE -O3 -DDBUG_OFF)
 
-set(FLAGS_DEBUG -ggdb3 -O0 -D_DEBUG)
+set(FLAGS_DEBUG -O0 -D_DEBUG)
 # } end Release, Debug and common flags
 
 # linker flags {

@@ -185,5 +185,5 @@ versioning/BRM/brmshmimpl.h
 versioning/BRM/shmkeys.cpp
 obj/
 build/build
-
+debian/mariadb-plugin-columnstore.install
 

@@ -26,11 +26,9 @@ set(we_bulk_STAT_SRCS
 )
 
 add_definitions(-D_FILE_OFFSET_BITS=64)
-add_library(we_bulk STATIC ${we_bulk_STAT_SRCS})
 
-add_dependencies(we_bulk loggingcpp)
-
-columnstore_link(we_bulk ${NETSNMP_LIBRARIES})
+columnstore_static_library(we_bulk ${we_bulk_STAT_SRCS})
+columnstore_link(we_bulk ${NETSNMP_LIBRARIES} loggingcpp)
 
 remove_definitions(-D_FILE_OFFSET_BITS=64)
 

@@ -16,7 +16,4 @@ columnstore_link(udfsdk PRIVATE loggingcpp)
 # Do anyone use it?
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 set(udf_mysql_LIB_SRCS udfmysql.cpp)
-
-add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
-
-columnstore_install_target(udf_mysql ${MARIADB_PLUGINDIR})
+columnstore_mysql_plugin_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
