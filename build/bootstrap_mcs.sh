@@ -506,6 +506,7 @@ build_package() {
 
     echo "Building a package for $OS"
     echo "Build command: $command"
+    # eval "$prereq"
     eval "$command"
 
     check_errorcode
