@@ -1107,8 +1107,14 @@ bool Row::equals(const Row& r2, uint32_t lastCol) const
     cscDataType columnType = getColType(col);
     if (UNLIKELY(typeHasCollation(columnType)))
     {
+      auto c1 = getConstString(col);
+      auto c2 = r2.getConstString(col);
+      if (c1.isNull() != c2.isNull())
+      {
+        return false;
+      }
       datatypes::Charset cs(getCharset(col));
-      if (cs.strnncollsp(getConstString(col), r2.getConstString(col)))
+      if (cs.strnncollsp(c1, c2))
       {
         return false;
       }

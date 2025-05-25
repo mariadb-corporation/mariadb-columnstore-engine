@@ -38,6 +38,7 @@ usr/bin/mcs-stop-controllernode.sh
 usr/bin/mcs-load-brm-from-file
 usr/bin/mcs-load-em
 usr/bin/mcs-shmem-locks
+usr/bin/mcs-oid-client
 usr/bin/mcsGetConfig
 usr/bin/mcsSetConfig
 usr/bin/mycnfUpgrade

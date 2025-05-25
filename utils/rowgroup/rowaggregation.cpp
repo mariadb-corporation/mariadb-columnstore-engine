@@ -955,6 +955,10 @@ void RowAggregation::initMapData(const Row& rowIn)
 
         break;
       }
+      case execplan::CalpontSystemCatalog::VARBINARY:
+      case execplan::CalpontSystemCatalog::BLOB:
+        fRow.setStringField(rowIn.getConstString(colIn), colOut);
+        break;
 
       case execplan::CalpontSystemCatalog::DOUBLE:
       case execplan::CalpontSystemCatalog::UDOUBLE:
@@ -1306,6 +1310,8 @@ void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOu
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CLOB:
+    case execplan::CalpontSystemCatalog::BLOB:
     {
       auto valIn = rowIn.getStringField(colIn);
       fRow.setStringField(valIn, colOut);
@@ -1345,12 +1351,6 @@ void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOu
       break;
     }
 
-    case execplan::CalpontSystemCatalog::CLOB:
-    case execplan::CalpontSystemCatalog::BLOB:
-    {
-      fRow.setVarBinaryField(rowIn.getVarBinaryField(colIn), rowIn.getVarBinaryLength(colIn), colOut);
-      break;
-    }
     default:
     {
       idbassert_s(0, "unknown data type in doSelectSome()");

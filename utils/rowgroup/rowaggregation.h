@@ -345,8 +345,7 @@ struct GroupConcat : public messageqcpp::Serializeable
 
   GroupConcat() = default;
   GroupConcat(joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sessLimit)
-      : fRm(rm)
-      , fSessionMemLimit(sessLimit)
+   : fRm(rm), fSessionMemLimit(sessLimit)
   {
   }
 

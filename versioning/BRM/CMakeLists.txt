@@ -182,3 +182,16 @@ install(
     DESTINATION ${ENGINE_BINDIR}
     COMPONENT columnstore-engine
 )
+
+add_executable(mcs-oid-client oid-client.cpp)
+target_link_libraries(
+    mcs-oid-client
+    ${ENGINE_LDFLAGS}
+    ${ENGINE_WRITE_LIBS}
+    boost_program_options
+)
+
+install(TARGETS mcs-oid-client 
+    DESTINATION ${ENGINE_BINDIR}
+    COMPONENT columnstore-engine
+)

@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <vector>
 #include <tr1/unordered_set>
+#include "joblisttypes.h"
 
 #define POSIX_REGEX
 
@@ -68,6 +69,7 @@ enum ColumnFilterMode
                             // COMPARE_EQ)
   NONE_OF_VALUES_IN_ARRAY,  // NONE of the values in the small set represented by an array (BOP_AND + all
                             // COMPARE_NE)
+  ALWAYS_FALSE,             // comparison is always false
 };
 
 // TBD Test if avalance makes lookup in the hash maps based on this hashers faster.
@@ -482,15 +484,17 @@ T getNullValue(uint8_t type)
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE: return joblist::DOUBLENULL;
 
-    case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::DATE:
     case execplan::CalpontSystemCatalog::DATETIME:
     case execplan::CalpontSystemCatalog::TIMESTAMP:
     case execplan::CalpontSystemCatalog::TIME:
     case execplan::CalpontSystemCatalog::VARBINARY:
     case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT: return joblist::CHAR8NULL;
+
+    // VARCHARs with width >= 8 are stored as dictionaries (used TypeHandlerVarchar::getNullValueForType as a reference)
+    case execplan::CalpontSystemCatalog::VARCHAR: return joblist::UBIGINTNULL;
 
     case execplan::CalpontSystemCatalog::UBIGINT: return joblist::UBIGINTNULL;
 
@@ -578,7 +582,6 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
   using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
                                        typename datatypes::make_unsigned<T>::type>::type;
   const uint32_t WIDTH = sizeof(T);  // Sizeof of the column to be filtered
-
   boost::shared_ptr<ParsedColumnFilter> ret;  // Place for building the value to return
   if (filterCount == 0)
     return ret;
@@ -612,28 +615,35 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
     ret->prestored_rfs[argIndex] = args->rf;
 
     auto colDataType = (execplan::CalpontSystemCatalog::ColDataType)colType;
-    bool isNullEqCmp = false;
+    bool isFilterValueNull = false;
+
     if (datatypes::isUnsigned(colDataType))
     {
       const auto nullValue = getNullValue<UT>(colDataType);
       const UT* filterValue = reinterpret_cast<const UT*>(args->val);
-      isNullEqCmp =
-          (args->COP == COMPARE_EQ && memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0) ? true : false;
+      isFilterValueNull = memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0;
       ret->storeFilterArg(argIndex, filterValue);
     }
     else
     {
       const auto nullValue = getNullValue<T>(colDataType);
       const T* filterValue = reinterpret_cast<const T*>(args->val);
-      isNullEqCmp =
-          (args->COP == COMPARE_EQ && memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0) ? true : false;
+      isFilterValueNull = memcmp(filterValue, &nullValue, sizeof(nullValue)) == 0;
       ret->storeFilterArg(argIndex, filterValue);
+    }
+
+    // Check if the filter is [NOT] LIKE NULL -- such filters don't match any values
+    if ((args->COP == COMPARE_LIKE || args->COP == COMPARE_NLIKE) && isFilterValueNull)
+    {
+      ret->columnFilterMode = ALWAYS_FALSE;
+      goto skipConversion;
     }
 
     // IS NULL filtering expression is translated into COMPARE_EQ + NULL magic in the filter.
     // This if replaces an operation id once to avoid additional branching in the main loop
     // of vectorizedFiltering_ in column.cpp.
     // It would be cleaner to place in into EM though.
+    bool isNullEqCmp = (isFilterValueNull && args->COP == COMPARE_EQ);
     ret->prestored_cops[argIndex] = (isNullEqCmp) ? COMPARE_NULLEQ : args->COP;
   }
 

@@ -562,6 +562,9 @@ class Row
   inline void setBinaryField(const T* value, uint32_t colIndex);
   template <typename T>
   inline void setBinaryField_offset(const T* value, uint32_t width, uint32_t colIndex);
+  // XXX: TODO: I'd deprecate these two functions in favor of get/setStringField.
+  // getSetStringField properly support binary data of up to 4G bytes
+  // and also provide perfomant interface through use of ConstString.
   // support VARBINARY
   // Add 2-byte length at the CHARSET_INFO*beginning of the field.  nullptr and zero length field are
   // treated the same, could use one of the length bit to distinguish these two cases.

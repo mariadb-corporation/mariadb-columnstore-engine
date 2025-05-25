@@ -2247,7 +2247,8 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     idbassert(ifp->argument_count() == 1);
     ParseTree* ptp = 0;
-    if (((Item_func*)(ifp->arguments()[0]))->functype() == Item_func::EQUAL_FUNC)
+    Item_func* argfp = dynamic_cast<Item_func*>(ifp->arguments()[0]);
+    if (argfp && argfp->functype() == Item_func::EQUAL_FUNC)
     {
       // negate it in place
       // Note that an EQUAL_FUNC ( a <=> b) was converted to
@@ -3306,6 +3307,11 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
           // because many textual types in server have type_handler_blob
           // (and variants) as their type.
           ct.colDataType = CalpontSystemCatalog::BLOB;
+          const Item_result_field* irf = dynamic_cast<const Item_result_field*>(item);
+          if (irf && irf->result_field && !irf->result_field->binary())
+          {
+            ct.colDataType = CalpontSystemCatalog::TEXT;
+          }
         }
       }
 
@@ -4581,6 +4587,13 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
       ct.colDataType = CalpontSystemCatalog::TIME;
       ct.colWidth = 8;
       fc->resultType(ct);
+    }
+    if (funcName == "last_day")
+    {
+        CalpontSystemCatalog::ColType ct;
+        ct.colDataType = CalpontSystemCatalog::DATE;
+        ct.colWidth = 4;
+        fc->resultType(ct);
     }
 
 #if 0
