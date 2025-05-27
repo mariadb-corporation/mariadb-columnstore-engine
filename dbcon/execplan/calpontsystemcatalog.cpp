@@ -1894,7 +1894,12 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 {
   boost::mutex::scoped_lock lock(map_mutex);
   boost::shared_ptr<CalpontSystemCatalog> instance;
-  CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
+  //CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
+  auto it = fCatalogMap.begin();
+  while (it != fCatalogMap.end() && it->first != sessionID)
+  {
+    it++;
+  }
 
   idblog("creating syscat for session ID " << sessionID);
   if (sessionID == 0)
@@ -1902,7 +1907,8 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
     if (it == fCatalogMap.end())
     {
       instance.reset(new CalpontSystemCatalog());
-      fCatalogMap[0] = instance;
+      //fCatalogMap[0] = instance;
+      fCatalogMap.push_back(std::make_pair(sessionID, instance));
       return instance;
     }
 
@@ -1925,11 +1931,12 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 
   if (it == fCatalogMap.end())
   {
-#if 0
+#if 01
     instance.reset(new CalpontSystemCatalog());
     instance->sessionID(sessionID);
     instance->fExeMgr->setSessionId(sessionID);
-    fCatalogMap[sessionID] = instance;
+    //fCatalogMap[sessionID] = instance;
+    fCatalogMap.push_back(std::make_pair(sessionID, instance));
 #else
     fCatalogMap[sessionID] = instance;
     fCatalogMap[sessionID].reset(new CalpontSystemCatalog());
@@ -1946,9 +1953,18 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
   boost::mutex::scoped_lock lock(map_mutex);
-  idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << " syscat instance");
+  //idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << " syscat instance");
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
-  fCatalogMap.erase(sessionID);
+  //fCatalogMap.erase(sessionID);
+
+  for (auto i = fCatalogMap.begin(); i != fCatalogMap.end(); i++)
+  {
+    if (i->first == sessionID)
+    {
+      fCatalogMap.erase(i);
+      break;
+    }
+  }
   /*
       CatalogMap::iterator it = fCatalogMap.find(sessionID);
       if (it != fCatalogMap.end())
