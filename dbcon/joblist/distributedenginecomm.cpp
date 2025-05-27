@@ -1094,6 +1094,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     if (!client->isAvailable())
       return 0;
 
+    idblog("locking connection " << connectionId);
     std::lock_guard lk(*(fWlock[connectionId]));
     client->write(bs, NULL, senderStats);
   }
