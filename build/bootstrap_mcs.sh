@@ -19,6 +19,7 @@ CONFIG_DIR=$RPM_CONFIG_DIR
 
 SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
+COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
@@ -104,7 +105,7 @@ install_deps() {
       cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
 
     DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
-      bison cmake libncurses5-dev libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
+      bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
       graphviz devscripts ccache equivs eatmydata curl"
@@ -426,6 +427,14 @@ build_package() {
     check_errorcode
 }
 
+check_debian_install_file() {
+    message "checking debian/mariadb-plugin-columnstore.install"
+    message_split
+    python3 $COLUMSNTORE_SOURCE_PATH/build/debian_install_file_compare.py \
+        ${COLUMSNTORE_SOURCE_PATH}/debian/mariadb-plugin-columnstore.install \
+        $MARIA_BUILD_PATH/mariadb-plugin-columnstore.install.generated
+}
+
 build_binary() {
     MARIA_BUILD_PATH=$(realpath "$MARIA_BUILD_PATH")
     message_split
@@ -444,7 +453,7 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
-
+    check_debian_install_file
     generate_svgs
 
     ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&

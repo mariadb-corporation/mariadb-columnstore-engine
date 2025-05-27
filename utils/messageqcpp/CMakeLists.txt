@@ -12,16 +12,5 @@ set(messageqcpp_LIB_SRCS
     socketparms.cpp
 )
 
-columnstore_library(messageqcpp ${messageqcpp_LIB_SRCS})
+columnstore_static_library(messageqcpp ${messageqcpp_LIB_SRCS})
 columnstore_link(messageqcpp PUBLIC loggingcpp compress)
-
-columnstore_executable(messagequeue_test tdriver.cpp)
-columnstore_link(
-    messagequeue_test
-    messageqcpp
-    ${ENGINE_LDFLAGS}
-    ${ENGINE_WRITE_LIBS}
-    ${CPPUNIT_LIBRARIES}
-    cppunit
-    boost_thread
-)
