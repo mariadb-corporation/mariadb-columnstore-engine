@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
+#include <tuple>
 #include <vector>
 
 #include <sys/sysinfo.h>
@@ -282,7 +283,7 @@ int main(int argc, char* argv[])
     USER = p;
 
   string cmd = "chown " + USER + ":" + USER + " " + mycnfFile;
-  system(cmd.c_str());
+  std::ignore = std::system(cmd.c_str());
 
   exit(0);
 }

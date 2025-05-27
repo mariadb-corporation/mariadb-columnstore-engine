@@ -74,13 +74,11 @@ message "Columnstore will be built from $color_yellow$COLUMNSTORE_BRANCH$color_c
 cd $MDB_SOURCE_PATH
 MARIADB_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 message "MariaDB will be built from $color_yellow$MARIADB_BRANCH$color_cyan branch"
+cd - >/dev/null
 
 if [[ ${BRANCH_NAME_TO_OUTDIR} = true ]]; then
     MARIA_BUILD_PATH="${MARIA_BUILD_PATH}_${MARIADB_BRANCH}_${COLUMNSTORE_BRANCH}"
 fi
-
-message "Build output to $color_yellow$MARIA_BUILD_PATH$color_normal"
-cd - >/dev/null
 
 if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
     getChoice -q "Select your Build Type" -o BUILD_TYPE_OPTIONS
