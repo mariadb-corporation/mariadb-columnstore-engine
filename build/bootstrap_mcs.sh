@@ -406,6 +406,8 @@ generate_svgs() {
 }
 
 build_package() {
+    cd $MDB_SOURCE_PATH
+
     if [[ $pkg_format == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else

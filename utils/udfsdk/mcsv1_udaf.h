@@ -129,7 +129,8 @@ class mcsv1Context;
 
 struct UserData
 {
-  UserData() : size(0), data(nullptr){};
+  UserData() : size(0), data(nullptr) {};
+  UserData(UserData&) = delete;
   explicit UserData(size_t sz)
   {
     size = sz;
@@ -174,10 +175,6 @@ struct UserData
   // The default data store. You may or may not wish to use these fields.
   uint32_t size;
   uint8_t* data;
-
- private:
-  // For now, copy construction is unwanted
-  UserData(UserData&);
 };
 
 // Flags to define the type and limitations of a UDA(n)F
@@ -446,7 +443,7 @@ struct ColumnDatum
   std::string alias;                                     // Only filled in for init()
   uint32_t charsetNumber;                                // For string collations
   ColumnDatum()
-   : dataType(execplan::CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1), charsetNumber(8){};
+   : dataType(execplan::CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1), charsetNumber(8) {};
 };
 
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or

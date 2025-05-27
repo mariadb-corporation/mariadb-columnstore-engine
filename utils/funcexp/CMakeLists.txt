@@ -149,6 +149,7 @@ columnstore_link(
     pcre2-8
     pron
     loggingcpp
+    dataconvert
     ${MARIADB_STRING_LIBS}
     ${NETSNMP_LIBRARIES}
 )

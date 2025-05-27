@@ -15,4 +15,4 @@ set(common_LIB_SRCS
 )
 
 columnstore_library(common ${common_LIB_SRCS})
-columnstore_link(common boost_filesystem configcpp loggingcpp messageqcpp)
+columnstore_link(common boost_filesystem configcpp loggingcpp messageqcpp ${MARIADB_STRING_LIBS})

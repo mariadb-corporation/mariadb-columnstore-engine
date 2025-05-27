@@ -625,6 +625,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              image: img,
              volumes: [pipeline._volumes.mdb],
              environment: {
+               DEBIAN_FRONTEND: "noninteractive",
                AWS_ACCESS_KEY_ID: {
                  from_secret: "aws_access_key_id",
                },
