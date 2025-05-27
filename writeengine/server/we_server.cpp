@@ -278,6 +278,7 @@ int ServiceWriteEngine::Child()
   ThreadPool tp(mt, qs);
 
   cout << "WriteEngineServer is ready" << endl;
+  idblog("WriteEngineServer is ready (look for PID)");
   NotifyServiceStarted();
 
   BRM::DBRM dbrm;
