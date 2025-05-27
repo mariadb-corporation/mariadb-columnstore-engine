@@ -21,6 +21,8 @@ SCRIPT_LOCATION=$(dirname "$0")
 MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 
+DEFAULT_MARIA_BUILD_PATH=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
+
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
 DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
 
@@ -29,21 +31,10 @@ MDB_CMAKE_FLAGS=()
 
 source "$SCRIPT_LOCATION"/utils.sh
 
-if [ "$EUID" -ne 0 ]; then
-    error "Please run script as root to install MariaDb to system paths"
-    exit 1
-fi
-
-cd $SCRIPT_LOCATION
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-message "Columnstore will be built from $color_yellow$CURRENT_BRANCH$color_cyan branch"
-cd - >/dev/null
-
 echo "Arguments received: $@"
-message "Building Mariadb Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
 optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
-optparse.define short=a long=build-path variable=MARIA_BUILD_PATH default=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
+optparse.define short=a long=build-path desc="Path for build output" variable=MARIA_BUILD_PATH default=$DEFAULT_MARIA_BUILD_PATH
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
@@ -69,9 +60,27 @@ optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=f
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
 optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
+optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
 
 source $(optparse.build)
+
+message "Building MariaDB Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
+
+cd $COLUMSNTORE_SOURCE_PATH
+COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+message "Columnstore will be built from $color_yellow$COLUMNSTORE_BRANCH$color_cyan branch"
+
+cd $MDB_SOURCE_PATH
+MARIADB_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+message "MariaDB will be built from $color_yellow$MARIADB_BRANCH$color_cyan branch"
+
+if [[ ${BRANCH_NAME_TO_OUTDIR} = true ]]; then
+    MARIA_BUILD_PATH="${MARIA_BUILD_PATH}_${MARIADB_BRANCH}_${COLUMNSTORE_BRANCH}"
+fi
+
+message "Build output to $color_yellow$MARIA_BUILD_PATH$color_normal"
+cd - >/dev/null
 
 if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
     getChoice -q "Select your Build Type" -o BUILD_TYPE_OPTIONS
@@ -260,8 +269,9 @@ construct_cmake_flags() {
         -DWITH_WSREP=NO
     )
 
-    if [[ MAINTAINER_MODE = true ]]; then
+    if [[ $MAINTAINER_MODE = true ]]; then
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
+        message "Columnstore mainteiner mode on"
     else
         warn "Maintainer mode is disabled, be careful, alien"
     fi
@@ -568,6 +578,12 @@ make_dir() {
 
 install() {
     if [[ $RECOMPILE_ONLY = false ]]; then
+
+        if [ "$EUID" -ne 0 ]; then
+            error "Please run script as root to install MariaDb to system paths"
+            exit 1
+        fi
+
         message_split
         message "Installing MariaDB"
         disable_plugins_for_bootstrap
