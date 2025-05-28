@@ -1094,8 +1094,9 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     if (!client->isAvailable())
       return 0;
 
-    idblog("locking connection " << connectionId);
+    idblog("locking connection " << connectionId << " to send " << bs.length() << "bytes");
     std::lock_guard lk(*(fWlock[connectionId]));
+    idblog("locked connection " << connectionId);
     client->write(bs, NULL, senderStats);
   }
   catch (...)
@@ -1136,6 +1137,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       else
         throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
     }
+    idblog("bs length after write " << bs.length());
 
     // Connection was established.
     return 1;
