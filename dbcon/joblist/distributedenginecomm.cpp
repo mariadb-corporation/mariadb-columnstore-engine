@@ -1173,6 +1173,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     alarmMgr.sendAlarmReport(alarmItem.c_str(), oam::CONN_FAILURE, SET);
     */
   }
+  idblog("bs length after write " << bs->length());
   return 0;
 }
 
