@@ -34,7 +34,7 @@ set(brm_LIB_SRCS
 )
 
 columnstore_library(brm ${brm_LIB_SRCS})
-columnstore_link(brm loggingcpp datatypes)
+columnstore_link(brm loggingcpp datatypes oamcpp boost_thread messageqcpp)
 
 # ########## next target ###############
 

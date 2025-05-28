@@ -64,7 +64,7 @@ configure_file(
 link_directories(${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/../lib)
 
-columnstore_library(storagemanager SHARED ${storagemanager_SRCS})
+columnstore_library(storagemanager ${storagemanager_SRCS})
 add_dependencies(storagemanager marias3 external_boost)
 
 target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)

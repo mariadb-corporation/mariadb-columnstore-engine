@@ -25,7 +25,7 @@
 #include <iostream>
 #include <memory>
 #include "exceptclasses.h"
-#include "conststring.h"
+#include "basic/conststring.h"
 #include "mcs_datatype_basic.h"
 
 namespace utils

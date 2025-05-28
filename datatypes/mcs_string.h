@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "conststring.h"
-#include "collation.h"  // class Charset
+#include "basic/conststring.h"
+#include "basic/collation.h"  // class Charset
 
 namespace datatypes
 {
