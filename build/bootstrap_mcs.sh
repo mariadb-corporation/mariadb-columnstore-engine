@@ -431,7 +431,7 @@ build_package() {
     cd $MDB_SOURCE_PATH
 
     if [[ $pkg_format == "rpm" ]]; then
-        command="cmake -V ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
+        command="cmake -v ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
