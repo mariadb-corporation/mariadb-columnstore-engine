@@ -6,4 +6,4 @@ set(dbbuilder_SRCS dbbuilder.cpp systemcatalog.cpp)
 
 columnstore_executable(dbbuilder ${dbbuilder_SRCS})
 
-columnstore_link(dbbuilder ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})
+columnstore_link(dbbuilder ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})

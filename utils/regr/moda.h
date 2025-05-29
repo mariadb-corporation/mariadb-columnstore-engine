@@ -45,7 +45,7 @@
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
 #include "hasher.h"
-#include "basic/collation.h"
+#include "mariadb_charset/collation.h"
 
 #define EXPORT
 

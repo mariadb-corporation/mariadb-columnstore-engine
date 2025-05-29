@@ -19,12 +19,6 @@
 
 #pragma once
 
-#if !defined(__GNUC__) || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
-#ifndef __builtin_expect
-#define __builtin_expect(x, expected_value) (x)
-#endif
-#endif
-
 #ifndef LIKELY
 #define LIKELY(x) __builtin_expect((x), 1)
 #define UNLIKELY(x) __builtin_expect((x), 0)

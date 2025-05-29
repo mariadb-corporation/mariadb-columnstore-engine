@@ -49,7 +49,7 @@
 #undef max
 
 #include "mcs_datatype.h"
-#include "basic/collation.h"  // CHARSET_INFO, class Charset
+#include "mariadb_charset/collation.h"  // CHARSET_INFO, class Charset
 #include "nullstring.h"
 
 class ExecPlanTest;

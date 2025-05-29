@@ -78,7 +78,7 @@
 #include "dbrm.h"
 
 #include "mariadb_my_sys.h"
-#include "statistics.h"
+#include "statistics_manager/statistics.h"
 #include "serviceexemgr.h"
 #include "sqlfrontsessionthread.h"
 

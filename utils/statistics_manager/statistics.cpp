@@ -116,9 +116,8 @@ void StatisticsManager::analyzeSample(bool traceOn)
     // MCV statistics.
     std::vector<pair<uint64_t, uint32_t>> mcvList(columnMCV.begin(), columnMCV.end());
     std::sort(mcvList.begin(), mcvList.end(),
-              [](const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b) {
-                return a.second > b.second;
-              });
+              [](const std::pair<uint64_t, uint32_t>& a, const std::pair<uint64_t, uint32_t>& b)
+              { return a.second > b.second; });
 
     // 200 buckets as Microsoft does.
     const auto mcvSize = std::min(columnMCV.size(), static_cast<uint64_t>(200));

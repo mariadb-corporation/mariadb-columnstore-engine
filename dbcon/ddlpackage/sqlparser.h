@@ -27,7 +27,7 @@
  */
 
 #include <stdexcept>
-#include "basic/collation.h"  // CHARSET_INFO
+#include "mariadb_charset/collation.h"  // CHARSET_INFO
 #include "ddlpkg.h"
 #include "mariadb_my_sys.h"  // myf, MYF()
 

@@ -40,7 +40,7 @@
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "nullstring.h"
-#include "basic/collation.h"  // For CHARSET_INFO struct
+#include "mariadb_charset/collation.h"  // For CHARSET_INFO struct
 
 #undef EXPORT
 #undef DELETE

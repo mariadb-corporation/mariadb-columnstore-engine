@@ -19,7 +19,6 @@ columnstore_executable(cpimport ${cpimport_SRCS})
 columnstore_link(
     cpimport
     ${ENGINE_LDFLAGS}
-    ${NETSNMP_LIBRARIES}
     ${ENGINE_WRITE_LIBS}
     batchloader
     threadpool

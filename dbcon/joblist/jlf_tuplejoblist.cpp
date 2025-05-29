@@ -71,7 +71,7 @@ using namespace dataconvert;
 #include "jlf_tuplejoblist.h"
 using namespace joblist;
 
-#include "statistics.h"
+#include "statistics_manager/statistics.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push

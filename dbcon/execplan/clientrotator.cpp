@@ -47,8 +47,6 @@ using namespace logging;
 
 #include "clientrotator.h"
 
-//#include "idb_mysql.h"
-
 /** Debug macro */
 #ifdef INFINIDB_DEBUG
 #define IDEBUG(x) \

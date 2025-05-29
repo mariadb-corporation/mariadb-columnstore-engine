@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <new>
+
 #include "branchpred.h"
 
 namespace utils

@@ -14,4 +14,4 @@ set(dbbc_STAT_SRCS
     fsutils.cpp
 )
 columnstore_static_library(dbbc ${dbbc_STAT_SRCS})
-columnstore_link(dbbc ${NETSNMP_LIBRARIES} loggingcpp)
+columnstore_link(dbbc loggingcpp)

@@ -6,4 +6,4 @@ set(rgprint_SRCS rgprint.cpp)
 
 columnstore_executable(rgprint ${rgprint_SRCS})
 
-columnstore_link(rgprint ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})
+columnstore_link(rgprint ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})
