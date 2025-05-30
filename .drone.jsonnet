@@ -127,6 +127,10 @@ local testPreparation(platform) =
   };
   platform_map[platform];
 
+local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link + "\\e]8;;\\e\\\\'";
+local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
+      make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
+
 local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local init = if (pkg_format == "rpm") then "/usr/lib/systemd/systemd" else "systemd",
@@ -182,7 +186,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       "aws s3 sync " + result + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
-
+      make_clickable_link(publish_pkg_url),
       "rm -rf " + result + "/*",
     ],
   },
@@ -606,8 +610,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SERVER_REMOTE: "${SERVER_REMOTE:-" + server_remote + "}",
                SERVER_SHA: "${SERVER_SHA:-" + server + "}",
              },
-             commands: [
-               "echo $$SERVER_REF",
+             commands: echo_running_on +
+             [
+              "echo $$SERVER_REF",
                "echo $$SERVER_REMOTE",
                "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
@@ -648,7 +653,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                        ]
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
-                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
+                        'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
                          "--build-packages --sccache " +
@@ -728,19 +733,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          ] +
          [pipeline.publish("cmapi build")] +
          [pipeline.publish()] +
-         [
-           {
-             name: "publish pkg url",
-             depends_on: ["publish pkg"],
-             image: "alpine/git",
-             commands: [
-               "echo -e '\\e]8;;" + publish_pkg_url + "\\e\\\\" + publish_pkg_url + "\\e]8;;\\e\\\\'",
-               "echo 'for installation run:'",
-               "echo 'export OS=" + result + "'",
-               "echo 'export PACKAGES_URL=" + packages_url + "'",
-             ],
-           },
-         ] +
          (if (event == "cron") then [pipeline.publish("pkg latest", "latest")] else []) +
          [pipeline.smoke] +
          [pipeline.smokelog] +
