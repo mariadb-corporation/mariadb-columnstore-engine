@@ -49,7 +49,7 @@ static const int TRIVIAL_PATH_NOT_ALLOWED = 3;
 
 bool findKeyInObject(json_engine_t* jsEg, json_string_t* key);
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
 using IntType = int;
 #else
 using IntType = uint;

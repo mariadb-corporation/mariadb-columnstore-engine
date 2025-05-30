@@ -1830,14 +1830,14 @@ static int columnstore_init_func(void* p)
 
   LEX_CSTRING name = {STRING_WITH_LEN("INNODB")};
   auto* plugin_innodb = ha_resolve_by_name(0, &name, 0);
-#ifdef MYSQL_GE_1009
-  if (!plugin_innodb || (*plugin_innodb)->state != PLUGIN_IS_READY) 
+#if !defined(DBUG_OFF) || MYSQL_VERSION_ID >= 100900
+  if (!plugin_innodb || (*plugin_innodb)->state != PLUGIN_IS_READY)
 #else
-  if (!plugin_innodb || plugin_innodb->state != PLUGIN_IS_READY) 
+  if (!plugin_innodb || plugin_innodb->state != PLUGIN_IS_READY)
 #endif
   {
     DBUG_RETURN(HA_ERR_RETRY_INIT);
-  } 
+  }
 
   strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version) - 1);
   cs_version[sizeof(cs_version) - 1] = 0;

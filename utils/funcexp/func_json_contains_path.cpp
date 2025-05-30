@@ -34,7 +34,7 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
 
   const string_view js = js_ns.unsafeStringRef();
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   int arrayCounters[JSON_DEPTH_LIMIT];
   bool hasNegPath = false;
 #endif
@@ -76,7 +76,7 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
         isNull = true;
         return false;
       }
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
       hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
 #endif
     }
@@ -98,7 +98,7 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounters + (p.last_step - p.steps)))
     {
@@ -110,7 +110,7 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
     for (int restSize = argSize, curr = 0; restSize > 0; restSize--, curr++)
     {
       JSONPath& path = paths[curr];
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
       int cmp = cmpJSPath(&path.p, &p, jsEg.value_type, arrayCounters);
 #else
       int cmp = cmpJSPath(&path.p, &p, jsEg.value_type);

@@ -136,7 +136,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   json_path_t p, savPath;
   const CHARSET_INFO* cs = getCharset(fp[0]);
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   int arrayCounter[JSON_DEPTH_LIMIT];
   bool hasNegPath = 0;
 #endif
@@ -151,7 +151,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     {
       if (parseJSPath(path, row, fp[i]))
         goto error;
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
       hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
 #endif
     }
@@ -161,7 +161,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
       goto error;
@@ -169,7 +169,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
     if (json_value_scalar(&jsEg))
     {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
       bool isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter);
 #else
       bool isMatch = matchJSPath(paths, &p, jsEg.value_type);

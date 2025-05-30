@@ -13,7 +13,7 @@ int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const utils::NullString& st
 
   if (!err)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     bool support = (path->types_used & (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD | JSON_PATH_ARRAY_RANGE)) == 0;
 #else
     bool support = (path->types_used & (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD)) == 0;
@@ -252,7 +252,7 @@ int cmpPartJSPath(const json_path_step_t* a, const json_path_step_t* aEnd, const
     {
       if (b->type & JSON_PATH_ARRAY)
       {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
         int ret = 0, corrected_n_item_a = 0;
         if (arraySize)
           corrected_n_item_a = a->n_item < 0 ? arraySize[b - tmpB] + a->n_item : a->n_item;
@@ -360,7 +360,7 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 {
   for (size_t curr = 0; curr < paths.size(); curr++)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     int cmp = cmpJSPath(&paths[curr].p, p, valType, arrayCounter);
 #else
     int cmp = cmpJSPath(&paths[curr].p, p, valType);

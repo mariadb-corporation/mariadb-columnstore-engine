@@ -29,7 +29,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   bool mayMulVal;
   int wildcards;
   bool isMatch;
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   int arrayCounter[JSON_DEPTH_LIMIT];
   bool hasNegPath = false;
 #endif
@@ -45,12 +45,12 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     if (!path.parsed && parseJSPath(path, row, fp[i]))
       return 1;
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
 #endif
   }
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD | JSON_PATH_ARRAY_RANGE);
 #else
   wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD);
@@ -70,13 +70,13 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
       return 1;
 #endif
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter, false);
 #else
     isMatch = matchJSPath(paths, &p, jsEg.value_type, nullptr, false);
