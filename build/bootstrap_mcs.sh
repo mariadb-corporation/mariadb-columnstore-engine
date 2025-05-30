@@ -101,13 +101,13 @@ install_deps() {
 
     if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
-      dnf install -y gcc-toolset-${GCC_VERSION} gcc-toolset-${GCC_VERSION}-libasan-devel libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
+      dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
       ${RPM_BUILD_DEPS}"
     elif
         [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
     then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ libasan curl-minimal && ${RPM_BUILD_DEPS}"
+      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
         command="${DEB_BUILD_DEPS}"
@@ -467,7 +467,7 @@ build_package() {
     cd $MDB_SOURCE_PATH
 
     if [[ $pkg_format == "rpm" ]]; then
-        command="cmake --trace-expand ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
+        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
