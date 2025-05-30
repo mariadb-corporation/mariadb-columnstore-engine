@@ -477,7 +477,27 @@ build_binary() {
     check_debian_install_file
     generate_svgs
 
-    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
+    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator || exit 1
+    THREAD_STACK_SIZE="20M"
+
+    SYSTEMD_SERVICE_DIR="$MARIA_BUILD_PATH/support-files"
+    MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+    COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+    if [[ $ASAN = true ]]; then
+        #if grep -q thread_stack $COLUMNSTORE_CONFIG; then
+        #    warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
+        #else
+        #    echo "thread_stack = ${THREAD_STACK_SIZE}" >>$COLUMNSTORE_CONFIG
+        #    message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
+        #fi
+
+        if grep -q ASAN $MDB_SERVICE_FILE; then
+            warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
+        else
+            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
+            message "ASAN options were added to $MDB_SERVICE_FILE"
+        fi
+    fi
         message "Installing silently" &&
         ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
 
