@@ -34,11 +34,11 @@ echo "Reporting test stage: ${STAGE} executed in ${CONTAINER_NAME} container"
 if [[ "${CONTAINER_NAME}" == *smoke* ]] || [[ "${CONTAINER_NAME}" == *mtr* ]] || [[ "${CONTAINER_NAME}" == *cmapi* ]]; then
     # common logs for smoke, mtr, cmapi
     echo "---------- start mariadb service logs ----------"
-    execInnerDocker 'journalctl -u mariadb --no-pager || echo "mariadb service failure"' "$CONTAINER_NAME"
+    execInnerDocker "$CONTAINER_NAME" 'journalctl -u mariadb --no-pager || echo "mariadb service failure"'
     echo "---------- end mariadb service logs ----------"
     echo
     echo "---------- start columnstore debug log ----------"
-    execInnerDocker 'cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"' "$CONTAINER_NAME"
+    execInnerDocker "$CONTAINER_NAME" 'cat /var/log/mariadb/columnstore/debug.log || echo "missing columnstore debug.log"'
     echo "---------- end columnstore debug log ----------"
 
     if [[ "${CONTAINER_NAME}" == *mtr* ]]; then
@@ -49,7 +49,7 @@ if [[ "${CONTAINER_NAME}" == *smoke* ]] || [[ "${CONTAINER_NAME}" == *mtr* ]] ||
     if [[ "${CONTAINER_NAME}" == *cmapi* ]]; then
         echo
         echo "---------- start cmapi log ----------"
-        execInnerDocker 'cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi_server.log"' "$CONTAINER_NAME"
+        execInnerDocker "$CONTAINER_NAME" 'cat /var/log/mariadb/columnstore/cmapi_server.log || echo "missing cmapi_server.log"'
         echo "---------- end cmapi log ----------"
     fi
 
@@ -59,16 +59,14 @@ elif [[ "${CONTAINER_NAME}" == *upgrade* ]]; then
 
 elif [[ "${CONTAINER_NAME}" == *regression* ]]; then
     echo "---------- start columnstore regression short report ----------"
-    execInnerDocker 'cat go.log || echo "missing go.log"' "$CONTAINER_NAME" '--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log || echo "missing go.log"'
     echo "---------- end columnstore regression short report ----------"
     echo
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "/drone/src/${RESULT}/" || echo "missing regression logs"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs.tgz"
 
-    execInnerDocker 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/' "$CONTAINER_NAME"
-    execInnerDocker 'tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore || echo "failed to grab regression results"' \
-                   "$CONTAINER_NAME" \
-                   '--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest'
+    execInnerDocker "$CONTAINER_NAME" 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore || echo "failed to grab regression results"'
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs2.tgz"
     docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "/drone/src/${RESULT}/" || echo "missing regressionQueries.tgz"
 
@@ -77,13 +75,13 @@ else
     exit 1
 fi
 
-execInnerDocker "/logs.sh ${STAGE}"                             "$CONTAINER_NAME"
-execInnerDocker "/core_dump_check.sh core /core/ ${STAGE}"      "$CONTAINER_NAME"
+execInnerDocker "$CONTAINER_NAME" "/logs.sh ${STAGE}"
+execInnerDocker "$CONTAINER_NAME" "/core_dump_check.sh core /core/ ${STAGE}"
 
-docker cp "${CONTAINER_NAME}:/core/"      "/drone/src/${RESULT}/"
+docker cp "${CONTAINER_NAME}:/core/" "/drone/src/${RESULT}/"
 docker cp "${CONTAINER_NAME}:/unit_logs/" "/drone/src/${RESULT}/"
 
-execInnerDocker "/core_dump_drop.sh core"                        "$CONTAINER_NAME"
+execInnerDocker "$CONTAINER_NAME" "/core_dump_drop.sh core"
 echo "Saved artifacts:"
 ls -R "/drone/src/${RESULT}/"
 echo "Done reporting ${STAGE}"

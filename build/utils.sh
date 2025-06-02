@@ -490,57 +490,89 @@ EOF
 }
 
 function retry_eval() {
+  if [ "$#" -lt 2 ]; then
+    error "Usage: retry_eval <max_retries> <command...>"
+    return 1
+  fi
+
   local max_retries=$1
-  local command=$2
+  shift # Remove max_retries from arguments
   local attempt=1
   local initial_delay=1
 
   while [ "$attempt" -le "$max_retries" ]; do
     message_split
-    message "Attempt $attempt of $max_retries: $command"
-    if eval "$command"; then
-      message "Command '$command' done"
+    message "Attempt $attempt of $max_retries: $*"
+    if eval "$@"; then
+      message "Command '$@' done"
       message_split
       return 0
     fi
     if [ "$attempt" -lt "$max_retries" ]; then
       delay=$((initial_delay * 2 ** (attempt - 1)))
-      message "Retrying command '$command' in $delay seconds..."
+      warn "Retrying command "$@" in $delay seconds..."
       message_split
       sleep "$delay"
     fi
     ((attempt++))
   done
 
-  error "Max retries reached for command: $command"
+  error "Max retries reached for command: $*"
   message_split
   exit 13
 }
 
 function execInnerDocker() {
-  local cmd_str="$1"
-  local img="$2"
-  local flags="${3:-}"
+  local container_name=$1
+  shift 1 # Remove first arg (container_name)
 
-  docker exec $flags -t "$img" bash -c "$cmd_str"
+  docker exec -t "$container_name" bash -c "$@"
   local dockerCommandExitCode=$?
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
-    error "Command \"$cmd_str\" failed in container \"$img\""
+    error "Command \"${cmd[@]}\" failed in container \"$container_name\""
     exit $dockerCommandExitCode
   fi
 }
 
-function execInnerDockerWithRetry() {
-  local cmd_str="$1"
-  local img="$2"
-  local flags="${3:-}"
+function change_ubuntu_mirror() {
+  local region="$1"
+  message "Changing Ubuntu mirror to $region"
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list 2>/dev/null || true
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+  cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null | grep archive || true
+  message_split
+}
 
-  docker exec $flags -t "$img" bash -c " $(declare -f retry_eval); retry_eval 5 '$cmd_str'"
-  local dockerCommandExitCode=$?
+function execInnerDockerWithRetry() {
+  local container_name=$1
+  shift 1 # Remove first three args (container_name, max_retries, retry_delay)
+
+  local cmd=("$@")
+  local attempt=1
+  local dockerCommandExitCode=0
+
+  local docker_funcs=$(declare -f retry_eval color_normal color_cyan color_yellow color_red error warn message message_split)
+
+  # Build the full command to execute in docker
+  local full_command="$docker_funcs; retry_eval 5 \"${cmd[*]}\""
+
+  # Execute the command in docker
+  docker exec -t "$container_name" bash -c "$full_command"
+  dockerCommandExitCode=$?
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
-    error "Command \"$cmd_str\" failed in container \"$img\""
-    exit $dockerCommandExitCode
+    error "Command \"${cmd[*]}\" failed in container \"$container_name\" after $max_retries attempts"
+    return $dockerCommandExitCode
   fi
+
+  return 0
+}
+
+change_ubuntu_mirror_in_docker() {
+  local container_name=$1
+  local region=$2
+  local docker_funcs=$(declare -f color_normal color_cyan color_yellow color_red error warn message message_split change_ubuntu_mirror)
+
+  execInnerDocker "$container_name" "$docker_funcs; change_ubuntu_mirror ${region}"
 }

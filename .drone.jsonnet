@@ -15,10 +15,16 @@ local platforms_arm = {
   "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
+local rewrite_ubuntu_mirror = @"sed -i 's|//\\(us\\.\\)\\?archive\\.ubuntu\\.com|//us.archive.ubuntu.com|g' /etc/apt/sources.list || true; " +
+                              @"sed -i 's|//\\(us\\.\\)\\?archive\\.ubuntu\\.com|//us.archive.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources || true; " +
+                              "cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list | grep archive || true; ";
+
 local customEnvCommandsMap = {
   // 'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
   "clang-20": [
-    "apt install -y wget curl lsb-release software-properties-common gnupg",
+    rewrite_ubuntu_mirror,
+    "apt-get clean && apt-get update",
+    "apt-get install -y wget curl lsb-release software-properties-common gnupg",
     "wget https://apt.llvm.org/llvm.sh",
     "bash llvm.sh 20",
     "export CC=/usr/bin/clang",
@@ -114,7 +120,7 @@ local rockylinux9_deps = "dnf install -y 'dnf-command(config-manager)' " +
 
 local rockylinux_common_deps = " && dnf install -y git lz4 lz4-devel cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel";
 
-local deb_deps = "apt update && apt install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev";
+local deb_deps = rewrite_ubuntu_mirror + "apt-get clean && apt-get update && apt-get install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev";
 
 local testPreparation(platform) =
   local platform_map = {
@@ -158,10 +164,12 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local server_remote = if (std.endsWith(server, "enterprise")) then "https://github.com/mariadb-corporation/MariaDBEnterprise" else "https://github.com/MariaDB/server",
 
   local sccache_arch = if (arch == "amd64") then "x86_64" else "aarch64",
-  local get_sccache = "echo getting sccache... && (apt update -y && apt install -y curl || yum install -y curl || true) " +
-                      "&& curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-" + sccache_arch + "-unknown-linux-musl.tar.gz " +
-                      "&& tar xzf sccache.tar.gz " +
-                      "&& install sccache*/sccache /usr/local/bin/ && echo sccache installed",
+  local get_sccache = ["echo getting sccache...",
+                      rewrite_ubuntu_mirror,
+                      "(apt-get clean && apt-get update -y && apt-get install -y curl || yum install -y curl || true)",
+                      "curl -L -o sccache.tar.gz https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-" + sccache_arch + "-unknown-linux-musl.tar.gz &&",
+                      "tar xzf sccache.tar.gz",
+                      "install sccache*/sccache /usr/local/bin/ && echo sccache installed"],
 
   local pipeline = self,
 
@@ -235,7 +243,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local getContainerName(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
 
   local installCmapi(containerName, pkg_format) =
-    if (pkg_format == "deb") then execInnerDocker('bash -c "apt update -y && apt install -y mariadb-columnstore-cmapi"', containerName)
+    if (pkg_format == "deb") then execInnerDocker('bash -c "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"', containerName)
     else execInnerDocker('bash -c "yum update -y && yum install -y MariaDB-columnstore-cmapi"', containerName),
 
   local prepareTestStage(containerName, result, do_setup) =
@@ -646,8 +654,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              },
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
-                         get_sccache,
                        ]
+                       + get_sccache
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +

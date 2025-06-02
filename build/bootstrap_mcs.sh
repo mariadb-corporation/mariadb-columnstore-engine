@@ -67,6 +67,21 @@ source $(optparse.build)
 
 message "Building MariaDB Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
+if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
+    getChoice -q "Select your Build Type" -o BUILD_TYPE_OPTIONS
+    MCS_BUILD_TYPE=$selectedChoice
+fi
+
+if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
+    echo "OS is empty, trying to detect..."
+    detect_distro
+fi
+
+pkg_format="deb"
+if [[ "$OS" == *"rocky"* ]]; then
+    pkg_format="rpm"
+fi
+
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
         return
@@ -95,7 +110,6 @@ install_deps() {
       dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
-        prereq="apt-get clean && rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin"
         command="${DEB_BUILD_DEPS}"
     else
         echo "Unsupported OS: $OS"
@@ -103,8 +117,12 @@ install_deps() {
     fi
 
     if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
+        if [ -f /.dockerenv ]; then
+            change_ubuntu_mirror us
+        fi
         command="${command} lto-disabled-list"
     fi
+
     eval "$prereq"
     message "Installing dependencies for $OS"
     retry_eval 5 "$command"
@@ -123,21 +141,6 @@ cd - >/dev/null
 
 if [[ ${BRANCH_NAME_TO_OUTDIR} = true ]]; then
     MARIA_BUILD_PATH="${MARIA_BUILD_PATH}_${MARIADB_BRANCH}_${COLUMNSTORE_BRANCH}"
-fi
-
-if [[ ! " ${BUILD_TYPE_OPTIONS[*]} " =~ " ${MCS_BUILD_TYPE} " ]]; then
-    getChoice -q "Select your Build Type" -o BUILD_TYPE_OPTIONS
-    MCS_BUILD_TYPE=$selectedChoice
-fi
-
-if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
-    echo "OS is empty, trying to detect..."
-    detect_distro
-fi
-
-pkg_format="deb"
-if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
 fi
 
 disable_git_restore_frozen_revision() {

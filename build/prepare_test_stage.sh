@@ -67,7 +67,6 @@ start_container() {
     docker run "${docker_run_args[@]}"
     sleep 5
 
-    apk add bash
     bash "$COLUMNSTORE_SOURCE_PATH"/core_dumps/docker-awaiter.sh "$CONTAINER_NAME"
 
     if ! docker ps -q --filter "name=${CONTAINER_NAME}" | grep -q .; then
@@ -79,7 +78,7 @@ start_container() {
 start_container
 
 if [[ "$RESULT" != *rocky* ]]; then
-    execInnerDocker 'sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d' "$CONTAINER_NAME"
+    execInnerDocker "$CONTAINER_NAME" 'sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d'
 fi
 
 #list_cgroups
@@ -88,39 +87,39 @@ ls -al /sys/fs/cgroup/cgroup.controllers || true
 ls -al /sys/fs/cgroup/ || true
 ls -al /sys/fs/cgroup/memory || true
 
-execInnerDocker 'echo Inner Docker CGroups opts here' "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/cgroup.controllers || true' "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/ || true' "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/memory || true' "$CONTAINER_NAME"
+execInnerDocker "$CONTAINER_NAME" 'echo Inner Docker CGroups opts here'
+execInnerDocker "$CONTAINER_NAME" 'ls -al /sys/fs/cgroup/cgroup.controllers || true'
+execInnerDocker "$CONTAINER_NAME" 'ls -al /sys/fs/cgroup/ || true'
+execInnerDocker "$CONTAINER_NAME" 'ls -al /sys/fs/cgroup/memory || true'
 
 # Prepare core dump directory inside container
-execInnerDocker 'mkdir -p core && chmod 777 core' "$CONTAINER_NAME"
+execInnerDocker "$CONTAINER_NAME" 'mkdir -p core && chmod 777 core'
 docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
 docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
 docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
 
 if [[ "$DO_SETUP" == "true" ]]; then
-    execInnerDocker '/setup-repo.sh' "$CONTAINER_NAME"
+    execInnerDocker "$CONTAINER_NAME" '/setup-repo.sh'
 fi
 
 # install deps
 if [[ "$RESULT" == *rocky* ]]; then
     # sudo bypass
-    execInnerDocker "printf '%s\n' '#!/bin/sh' 'exec \"\$@\"' > /usr/bin/sudo && chmod +x /usr/bin/sudo" "$CONTAINER_NAME"
-    execInnerDockerWithRetry 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which' "$CONTAINER_NAME"
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
 else
-    execInnerDockerWithRetry 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget' "$CONTAINER_NAME"
+    change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
 fi
 
 # Configure core dump naming pattern
-execInnerDocker 'sysctl -w kernel.core_pattern="/core/%E_${RESULT}_core_dump.%p"' "$CONTAINER_NAME"
+execInnerDocker "$CONTAINER_NAME" 'sysctl -w kernel.core_pattern="/core/%E_${RESULT}_core_dump.%p"'
 
 #Install columnstore in container
 echo "Installing columnstore..."
 if [[ "$RESULT" == *rocky* ]]; then
-    execInnerDockerWithRetry 'yum install -y MariaDB-columnstore-engine MariaDB-test' "$CONTAINER_NAME"
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
 else
-    execInnerDockerWithRetry 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test' "$CONTAINER_NAME"
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test'
 fi
 
 sleep 5
