@@ -4,6 +4,7 @@
 
 SET sql_mode=ORACLE;
 SET default_storage_engine=ColumnStore;
+SET character_set_server = "utf8mb4";
 
 EXPLAIN EXTENDED SELECT 'a'||'b'||'c';
 EXPLAIN EXTENDED SELECT CONCAT('a'||'b'||'c');
