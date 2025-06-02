@@ -58,10 +58,10 @@ else
 fi
 
 if [[ $(compgen -G "./${RESULT}/*.rpm") ]]; then
-  dnf install -q -y createrepo
+  retry_eval 5 "dnf install -q -y createrepo"
   createrepo "./${RESULT}"
 else
-  apt update && apt install -y dpkg-dev
+  retry_eval 5 "apt update && apt install -y dpkg-dev"
   dpkg-scanpackages "${RESULT}" | gzip >"./${RESULT}/Packages.gz"
 fi
 

@@ -18,8 +18,8 @@ source $(optparse.build)
 echo "Arguments received: $@"
 
 if [ "$EUID" -ne 0 ]; then
-    error "Please run script as root"
-    exit 1
+  error "Please run script as root"
+  exit 1
 fi
 
 if [[ -z "${OS:-}" || -z "${ARCH:-}" ]]; then
@@ -27,14 +27,13 @@ if [[ -z "${OS:-}" || -z "${ARCH:-}" ]]; then
   exit 1
 fi
 
-
 pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
+  pkg_format="rpm"
 fi
 
 if [[ "$ARCH" == "arm64" ]]; then
-  export CC=gcc                     #TODO: what it is for?
+  export CC=gcc #TODO: what it is for?
 fi
 
 on_exit() {
@@ -52,24 +51,23 @@ install_deps() {
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
 
   if [[ "$OS" == "rockylinux:9" ]]; then
-     dnf install -q -y libxcrypt-compat yum-utils
-     dnf config-manager --set-enabled devel && dnf update -q -y  #to make redhat-lsb-core available for rocky 9
+    retry_eval 5 "dnf install -q -y libxcrypt-compat yum-utils"
+    retry_eval 5 "dnf config-manager --set-enabled devel && dnf update -q -y" #to make redhat-lsb-core available for rocky 9
   fi
 
   if [[ "$pkg_format" == "rpm" ]]; then
-    dnf update -q -y && dnf install -q -y epel-release wget zstd findutils gcc cmake make rpm-build redhat-lsb-core libarchive
+    retry_eval 5 "dnf update -q -y && dnf install -q -y epel-release wget zstd findutils gcc cmake make rpm-build redhat-lsb-core libarchive"
   else
-    apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release
+    retry_eval 5 "apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release"
   fi
 
-
   if [ "$ARCH" == "amd64" ]; then
-      PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
+    PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
   elif [ "$ARCH" == "arm64" ]; then
-      PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst"
+    PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst"
   else
-      echo "Unsupported architecture: $ARCH"
-      exit 1
+    echo "Unsupported architecture: $ARCH"
+    exit 1
   fi
 
   rm -rf python pp

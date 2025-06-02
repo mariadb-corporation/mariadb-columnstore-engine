@@ -11,10 +11,10 @@ source "$SCRIPT_LOCATION"/utils.sh
 echo "Arguments received: $@"
 
 optparse.define short=c long=container-name desc="Name of the Docker container to run tests in" variable=CONTAINER_NAME
-optparse.define short=i long=docker-image      desc="Docker image name to start container from" variable=DOCKER_IMAGE
-optparse.define short=r long=result-path       desc="Name suffix used in core dump file path"   variable=RESULT
-optparse.define short=s long=do-setup          desc="Run setup-repo.sh inside the container"    variable=DO_SETUP
-optparse.define short=u long=packages-url      desc="Packages url"                              variable=PACKAGES_URL
+optparse.define short=i long=docker-image desc="Docker image name to start container from" variable=DOCKER_IMAGE
+optparse.define short=r long=result-path desc="Name suffix used in core dump file path" variable=RESULT
+optparse.define short=s long=do-setup desc="Run setup-repo.sh inside the container" variable=DO_SETUP
+optparse.define short=u long=packages-url desc="Packages url" variable=PACKAGES_URL
 source $(optparse.build)
 
 if [[ "$EUID" -ne 0 ]]; then
@@ -23,8 +23,8 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 if [[ -z "${CONTAINER_NAME:-}" || -z "${DOCKER_IMAGE:-}" || -z "${RESULT:-}" || -z "${DO_SETUP:-}" || -z "${PACKAGES_URL:-}" ]]; then
-  echo "Please provide --container-name, --docker-image, --result-path, --packages-url and --do-setup parameters, e.g. ./prepare_test_stage.sh --container-name smoke11212 --docker-image detravi/ubuntu:24.04 --result-path ubuntu24.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/91/10.6-enterprise --do-setup true"
-  exit 1
+    echo "Please provide --container-name, --docker-image, --result-path, --packages-url and --do-setup parameters, e.g. ./prepare_test_stage.sh --container-name smoke11212 --docker-image detravi/ubuntu:24.04 --result-path ubuntu24.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/91/10.6-enterprise --do-setup true"
+    exit 1
 fi
 
 start_container() {
@@ -48,21 +48,21 @@ start_container() {
     )
 
     if [[ "$CONTAINER_NAME" == *smoke* ]]; then
-        docker_run_args+=( --memory 3g )
+        docker_run_args+=(--memory 3g)
     elif [[ "$CONTAINER_NAME" == *mtr* ]]; then
-        docker_run_args+=( --shm-size=500m --memory 8g --env MYSQL_TEST_DIR="$MTR_PATH" )
+        docker_run_args+=(--shm-size=500m --memory 8g --env MYSQL_TEST_DIR="$MTR_PATH")
     elif [[ "$CONTAINER_NAME" == *cmapi* ]]; then
-        docker_run_args+=( --env PYTHONPATH="${PYTHONPATH}" )
+        docker_run_args+=(--env PYTHONPATH="${PYTHONPATH}")
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
-        docker_run_args+=( --env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup:ro )
+        docker_run_args+=(--env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup:ro)
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
-        docker_run_args+=( --shm-size=500m --memory 12g )
+        docker_run_args+=(--shm-size=500m --memory 12g)
     else
         echo "Unknown container type: $CONTAINER_NAME"
         exit 1
     fi
 
-    docker_run_args+=( "$DOCKER_IMAGE" "$SYSTEMD_PATH" --unit=basic.target )
+    docker_run_args+=("$DOCKER_IMAGE" "$SYSTEMD_PATH" --unit=basic.target)
 
     docker run "${docker_run_args[@]}"
     sleep 5
@@ -85,31 +85,31 @@ fi
 #list_cgroups
 echo "Docker CGroups opts here"
 ls -al /sys/fs/cgroup/cgroup.controllers || true
-ls -al /sys/fs/cgroup/       || true
+ls -al /sys/fs/cgroup/ || true
 ls -al /sys/fs/cgroup/memory || true
 
-execInnerDocker 'echo Inner Docker CGroups opts here'                            "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/cgroup.controllers || true'               "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/ || true'                                 "$CONTAINER_NAME"
-execInnerDocker 'ls -al /sys/fs/cgroup/memory || true'                           "$CONTAINER_NAME"
+execInnerDocker 'echo Inner Docker CGroups opts here' "$CONTAINER_NAME"
+execInnerDocker 'ls -al /sys/fs/cgroup/cgroup.controllers || true' "$CONTAINER_NAME"
+execInnerDocker 'ls -al /sys/fs/cgroup/ || true' "$CONTAINER_NAME"
+execInnerDocker 'ls -al /sys/fs/cgroup/memory || true' "$CONTAINER_NAME"
 
 # Prepare core dump directory inside container
-execInnerDocker 'mkdir -p core && chmod 777 core'           "$CONTAINER_NAME"
-docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/.           "$CONTAINER_NAME":/
-docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh         "$CONTAINER_NAME":/
-docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh          "$CONTAINER_NAME":/
+execInnerDocker 'mkdir -p core && chmod 777 core' "$CONTAINER_NAME"
+docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
+docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
+docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
 
 if [[ "$DO_SETUP" == "true" ]]; then
-    execInnerDocker '/setup-repo.sh'                   "$CONTAINER_NAME"
+    execInnerDocker '/setup-repo.sh' "$CONTAINER_NAME"
 fi
 
 # install deps
 if [[ "$RESULT" == *rocky* ]]; then
-    execInnerDocker 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'                   "$CONTAINER_NAME"
     # sudo bypass
     execInnerDocker "printf '%s\n' '#!/bin/sh' 'exec \"\$@\"' > /usr/bin/sudo && chmod +x /usr/bin/sudo" "$CONTAINER_NAME"
+    execInnerDockerWithRetry 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which' "$CONTAINER_NAME"
 else
-    execInnerDocker 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget' "$CONTAINER_NAME"
+    execInnerDockerWithRetry 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget' "$CONTAINER_NAME"
 fi
 
 # Configure core dump naming pattern
@@ -118,9 +118,9 @@ execInnerDocker 'sysctl -w kernel.core_pattern="/core/%E_${RESULT}_core_dump.%p"
 #Install columnstore in container
 echo "Installing columnstore..."
 if [[ "$RESULT" == *rocky* ]]; then
-    execInnerDocker 'yum install -y MariaDB-columnstore-engine MariaDB-test' "$CONTAINER_NAME"
+    execInnerDockerWithRetry 'yum install -y MariaDB-columnstore-engine MariaDB-test' "$CONTAINER_NAME"
 else
-    execInnerDocker 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test' "$CONTAINER_NAME"
+    execInnerDockerWithRetry 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test' "$CONTAINER_NAME"
 fi
 
 sleep 5

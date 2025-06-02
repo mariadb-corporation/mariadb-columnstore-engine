@@ -67,6 +67,51 @@ source $(optparse.build)
 
 message "Building MariaDB Server from $color_yellow$MDB_SOURCE_PATH$color_normal"
 
+install_deps() {
+    if [[ $INSTALL_DEPS = false ]]; then
+        return
+    fi
+    message_split
+    prereq=""
+    RPM_BUILD_DEPS="dnf install -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
+      snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
+      rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
+      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
+
+    DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
+      bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
+      libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
+      libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
+      graphviz devscripts ccache equivs eatmydata curl"
+
+    if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
+        command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
+      dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
+      ${RPM_BUILD_DEPS}"
+    elif
+        [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
+    then
+        command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
+      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
+
+    elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
+        prereq="apt-get clean && rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin"
+        command="${DEB_BUILD_DEPS}"
+    else
+        echo "Unsupported OS: $OS"
+        exit 17
+    fi
+
+    if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
+        command="${command} lto-disabled-list"
+    fi
+    eval "$prereq"
+    message "Installing dependencies for $OS"
+    retry_eval 5 "$command"
+}
+
+install_deps
+
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 message "Columnstore will be built from $color_yellow$COLUMNSTORE_BRANCH$color_cyan branch"
@@ -103,40 +148,6 @@ disable_git_restore_frozen_revision() {
 
 DEP_GRAPH_PATH="$MARIA_BUILD_PATH/dependency_graph/mariadb.dot"
 
-install_deps() {
-    message_split
-
-    RPM_BUILD_DEPS="dnf install -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
-      snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
-      rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
-      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
-
-    DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
-      bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
-      libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
-      libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
-      graphviz devscripts ccache equivs eatmydata curl"
-
-    if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
-        command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
-      dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
-      ${RPM_BUILD_DEPS}"
-
-    elif [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]; then
-        command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
-
-    elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
-        command="${DEB_BUILD_DEPS}"
-
-    else
-        echo "Unsupported OS: $OS"
-        exit 17
-    fi
-
-    message "Installing dependencies for $OS"
-    eval "$command"
-}
 stop_service() {
     message_split
     message "Stopping MariaDB services"
@@ -206,10 +217,9 @@ modify_packaging() {
 
     #disable LTO for 22.04 for now
     if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
-        apt install -y lto-disabled-list &&
-            for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do
-                echo "$i any" >>/usr/share/lto-disabled-list/lto-disabled-list
-            done &&
+        for i in mariadb-plugin-columnstore mariadb-server mariadb-server-core mariadb mariadb-10.6; do
+            echo "$i any" >>/usr/share/lto-disabled-list/lto-disabled-list
+        done &&
             grep mariadb /usr/share/lto-disabled-list/lto-disabled-list
     fi
 
@@ -269,7 +279,7 @@ construct_cmake_flags() {
 
     if [[ $MAINTAINER_MODE = true ]]; then
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
-        message "Columnstore mainteiner mode on"
+        message "Columnstore maintainer mode on"
     else
         warn "Maintainer mode is disabled, be careful, alien"
     fi
@@ -664,10 +674,6 @@ smoke() {
         fi
     fi
 }
-
-if [[ $INSTALL_DEPS = true ]]; then
-    install_deps
-fi
 
 if [[ $DO_NOT_FREEZE_REVISION = false ]]; then
     disable_git_restore_frozen_revision
