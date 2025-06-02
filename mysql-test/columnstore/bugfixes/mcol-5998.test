@@ -1,0 +1,135 @@
+-- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
+-- disable_warnings
+DROP DATABASE IF EXISTS `mcol_5998`;
+-- enable_warnings
+CREATE DATABASE `mcol_5998`;
+USE `mcol_5998`;
+
+#
+# Enable cross engine join
+# Configure user and password in Columnstore.xml file
+#
+
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+if (!$MCS_MCSSETCONFIG)
+{
+  let $MCS_MCSSETCONFIG=`mcsSetConfig`;
+}
+
+
+--exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+#
+# Create corresponding in the server
+#
+--disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+--enable_warnings
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
+
+--exec echo "columnstore_innodb_queries_use_mcs = ON" >> /etc/my.cnf.d/columnstore.cnf
+# Restart server to apply configuration change
+
+--shutdown_server
+--source include/wait_until_disconnected.inc
+--enable_reconnect
+# Write file to make mysql-test-run.pl start up the server again
+--source include/wait_until_connected_again.inc
+
+show variables like 'columnstore_innodb_queries_use_mcs';
+
+CREATE TABLE test_cs (a INT, b VARCHAR(100)) ENGINE=Columnstore;
+INSERT INTO test_cs VALUES
+    (1, 'Test1'),
+    (2, 'Test2'),
+    (3, 'Test3'),
+    (4, 'Test4');
+INSERT INTO test_cs VALUES
+    (5, NULL);
+
+CREATE TABLE test_innodb (a INT, b VARCHAR(100));
+INSERT INTO test_innodb VALUES
+    (1, 'innodb1'),
+    (2, 'innodb2'),
+    (3, 'innodb3'),
+    (5, 'innodb5');
+
+SELECT * FROM test_cs;
+SELECT * FROM test_innodb;
+
+SELECT
+    cs.a              AS cs_a,
+    cs.b              AS cs_b,
+    idb.b              AS idb_b
+FROM
+    test_cs AS cs
+INNER JOIN
+    test_innodb AS idb
+    ON cs.a = idb.a
+ORDER BY cs.a;
+
+SELECT
+    cs.a               AS cs_a,
+    cs.b               AS cs_b,
+    idb.b               AS idb_b
+FROM
+    test_cs AS cs
+LEFT JOIN
+    test_innodb AS idb
+    ON cs.a = idb.a
+ORDER BY cs.a;
+
+SELECT
+    cs.a               AS cs_a,
+    cs.b               AS cs_b,
+    idb.a               AS idb_a,
+    idb.b               AS idb_b
+FROM
+    test_cs AS cs
+RIGHT JOIN
+    test_innodb AS idb
+    ON cs.a = idb.a
+ORDER BY idb.a;
+
+SELECT
+    cs.b                            AS cs_b,
+    COUNT(idb.a)                     AS matching_innodb_count
+FROM
+    test_cs AS cs
+LEFT JOIN
+    test_innodb AS idb
+    ON cs.a = idb.a
+GROUP BY
+    cs.b
+ORDER BY
+    cs.b;
+
+SELECT
+    idb.*
+FROM
+    test_innodb AS idb
+WHERE
+    idb.a IN (SELECT cs.a FROM test_cs AS cs WHERE cs.a IS NOT NULL)
+ORDER BY idb.a;
+
+UPDATE
+    test_innodb AS idb
+INNER JOIN
+    test_cs AS cs
+    ON idb.a = cs.a
+SET
+    idb.b = CONCAT('X_', idb.b);
+
+SELECT * FROM test_innodb ORDER BY a;
+
+# Cleanup
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE `mcol_5998`;
+
