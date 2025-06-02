@@ -12,47 +12,47 @@ class SystemdTest(BaseProcessDispatcherCase):
     def test_systemd_status_start(self):
         os.system(f'{SYSTEMCTL} stop {DDL_SERVICE}')
         self.assertFalse(
-            SystemdDispatcher.is_service_running(DDL_SERVICE)
+            SystemdDispatcher.is_service_running(service=DDL_SERVICE, use_sudo=False)
         )
-        self.assertTrue(SystemdDispatcher.start(DDL_SERVICE))
+        self.assertTrue(SystemdDispatcher.start(service=DDL_SERVICE, use_sudo=False))
 
         os.system(f'{SYSTEMCTL} stop {CONTROLLERNODE_SERVICE}')
         self.assertFalse(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
-        result = SystemdDispatcher.start(CONTROLLERNODE_SERVICE)
+        result = SystemdDispatcher.start(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         self.assertTrue(result)
         self.assertTrue(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
 
     def test_systemd_status_stop(self):
         os.system(f'{SYSTEMCTL} start {CONTROLLERNODE_SERVICE}')
         self.assertTrue(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
-        self.assertTrue(SystemdDispatcher.stop(CONTROLLERNODE_SERVICE))
+        self.assertTrue(SystemdDispatcher.stop(service=CONTROLLERNODE_SERVICE, use_sudo=False))
         self.assertFalse(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
 
     def test_systemd_status_restart(self):
         os.system(f'{SYSTEMCTL} start {CONTROLLERNODE_SERVICE}')
         self.assertTrue(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
-        self.assertTrue(SystemdDispatcher.restart(CONTROLLERNODE_SERVICE))
+        self.assertTrue(SystemdDispatcher.restart(service=CONTROLLERNODE_SERVICE, use_sudo=False))
         self.assertTrue(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
 
         os.system(f'{SYSTEMCTL} stop {CONTROLLERNODE_SERVICE}')
         self.assertFalse(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
-        self.assertTrue(SystemdDispatcher.restart(CONTROLLERNODE_SERVICE))
+        self.assertTrue(SystemdDispatcher.restart(service=CONTROLLERNODE_SERVICE, use_sudo=False))
         self.assertTrue(
-            SystemdDispatcher.is_service_running(CONTROLLERNODE_SERVICE)
+            SystemdDispatcher.is_service_running(service=CONTROLLERNODE_SERVICE, use_sudo=False)
         )
 
 
@@ -68,7 +68,7 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
         for prog in MCSProcessManager._get_sorted_progs(True, True).values():
             serv_name = self.get_systemd_serv_name(prog.service_name)
             os.system(f'{SYSTEMCTL} stop {serv_name}')
-        self.assertIsNone(MCSProcessManager.start_node(True))
+        self.assertIsNone(MCSProcessManager.start_node(is_primary=True, use_sudo=False))
 
         for prog in MCSProcessManager.mcs_progs.values():
             serv_name = self.get_systemd_serv_name(prog.service_name)
@@ -76,16 +76,16 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
                 continue
             self.assertTrue(
                 MCSProcessManager.process_dispatcher.is_service_running(
-                    serv_name
+                    service=serv_name, use_sudo=False
                 )
             )
 
-        self.assertIsNone(MCSProcessManager.stop_node(is_primary=True))
+        self.assertIsNone(MCSProcessManager.stop_node(is_primary=True, use_sudo=False))
         for prog in MCSProcessManager.mcs_progs.values():
             serv_name = self.get_systemd_serv_name(prog.service_name)
             self.assertFalse(
                 MCSProcessManager.process_dispatcher.is_service_running(
-                    serv_name
+                    service=serv_name, use_sudo=False
                 )
             )
         self.assertEqual(len(MCSProcessManager.get_running_mcs_procs()), 0)
@@ -103,7 +103,7 @@ class MCSProcessManagerTest(BaseProcessDispatcherCase):
             serv_name = self.get_systemd_serv_name(prog.service_name)
             self.assertTrue(
                 MCSProcessManager.process_dispatcher.is_service_running(
-                    serv_name
+                    service=serv_name, use_sudo=False
                 )
             )
         self.assertEqual(
