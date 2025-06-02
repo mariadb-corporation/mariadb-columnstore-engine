@@ -36,7 +36,7 @@ tmp_cmapi_config_filename = './cmapi_server/test/tmp.conf'
 DDL_SERVICE = 'mcs-ddlproc'
 CONTROLLERNODE_SERVICE = 'mcs-controllernode.service'
 UNKNOWN_SERVICE = 'unknown_service'
-SYSTEMCTL = 'sudo systemctl'
+SYSTEMCTL = 'systemctl'
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -180,9 +180,9 @@ class BaseProcessDispatcherCase(unittest.TestCase):
         if (MCSProcessManager.get_running_mcs_procs() !=0) == cls.node_started:
             return super().tearDownClass()
         if cls.node_started:
-            MCSProcessManager.start_node(is_primary=True)
+            MCSProcessManager.start_node(is_primary=True, use_sudo=False)
         else:
-            MCSProcessManager.stop_node(is_primary=True)
+            MCSProcessManager.stop_node(is_primary=True, use_sudo=False)
         return super().tearDownClass()
 
     def setUp(self) -> None:
