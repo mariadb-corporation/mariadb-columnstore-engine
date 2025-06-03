@@ -748,6 +748,8 @@ class ExtentMapController:
                 ret = subprocess.run(args, stdout=subprocess.PIPE)
                 if ret.returncode != 0:
                     module_logger.warning(f"{func_name} got error code {ret.returncode} from smcat, retrying")
+                    stderr = ret.stderr
+                    module_logger.warning(f"{func_name} smcat stderr: {stderr}")
                     time.sleep(1)
                     retry_count += 1
                     continue
@@ -767,6 +769,8 @@ class ExtentMapController:
                 ret = subprocess.run(args, stdout=subprocess.PIPE)
                 if ret.returncode != 0:
                     module_logger.warning(f"{func_name} got error code {ret.returncode} from smcat, retrying")
+                    stderr = ret.stderr
+                    module_logger.warning(f"{func_name} smcat stderr: {stderr}")
                     time.sleep(1)
                     retry_count += 1
                     continue
