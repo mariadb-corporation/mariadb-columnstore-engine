@@ -20,6 +20,7 @@
 #include <typeinfo>
 #include <algorithm>
 #include <iostream>
+#include <execution>
 #include "bytestream.h"
 #include "objectreader.h"
 #include "nullstring.h"
@@ -39,7 +40,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(65000);
+  //context->setColWidth(65000);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -50,7 +51,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::reset(mcsv1Context* context)
 
   if (data)
   {
-    std::fill(data->bloomFilter.begin(), data->bloomFilter.end(), 0);
+    std::fill(std::execution::par_unseq, data->bloomFilter.begin(), data->bloomFilter.end(), 0);
   }
 
   return mcsv1_UDAF::SUCCESS;
@@ -128,10 +129,12 @@ mcsv1_UDAF::ReturnCode bloom_agg::subEvaluate(mcsv1Context* context, const UserD
   BloomAggData* outData = static_cast<BloomAggData*>(context->getUserData());
   const BloomAggData* inData = static_cast<const BloomAggData*>(userDataIn);
 
-  for (size_t i = 0; i < outData->bloomFilter.size(); ++i)
-  {
-    outData->bloomFilter[i] |= inData->bloomFilter[i];
-  }
+  std::transform(
+      std::execution::par_unseq,
+      outData->bloomFilter.begin(), outData->bloomFilter.end(),
+      inData->bloomFilter.begin(), outData->bloomFilter.begin(),
+      std::bit_or<>()
+  );
 
   return mcsv1_UDAF::SUCCESS;
 }
@@ -140,8 +143,13 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 {
   BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
-  std::string blob(data->bloomFilter.begin(), data->bloomFilter.end());
-  valOut = utils::NullString(blob);
+  valOut = utils::NullString(
+      reinterpret_cast<const char*>(data->bloomFilter.data()),
+      data->bloomFilter.size()
+  );
+
+  // std::string blob(data->bloomFilter.begin(), data->bloomFilter.end());
+  // valOut = utils::NullString(blob);
 
   return mcsv1_UDAF::SUCCESS;
 }
