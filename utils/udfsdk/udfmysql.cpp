@@ -33,6 +33,12 @@ inline double cvtArgToDouble(int t, const char* v)
   return d;
 }
 
+template<typename T>
+static inline void lg(T data)
+{
+  std::ofstream log("/tmp/bc_udf.log", std::ios::app);
+  log << data << "\n";
+}
 
 static inline void logBloomFilter(auto& bloomFilter)
 {
@@ -457,10 +463,10 @@ extern "C"
       return 1;
     }
 
-    initid->max_length = *reinterpret_cast<const uint64_t*>(args->args[2]);
+    initid->max_length = *reinterpret_cast<const uint64_t*>(args->args[1]);
 
-    size_t hashFuncCount = *reinterpret_cast<const size_t*>(args->args[1]);;
-    size_t bloomFilterSize = *reinterpret_cast<size_t*>(args->args[2]);
+    size_t hashFuncCount = *reinterpret_cast<const size_t*>(args->args[2]);;
+    size_t bloomFilterSize = *reinterpret_cast<size_t*>(args->args[1]);
 
     auto* data = new BloomData(hashFuncCount);
     data->bloomFilter.resize(bloomFilterSize, 0);
@@ -516,16 +522,27 @@ extern "C"
   {
     if (args->arg_count != 3)
     {
-      strcpy(message, "bloom_contains() requires two arguments: bloom_agg, column, number of hash functions");
+      strcpy(message, "bloom_contains() requires three arguments: bloom_agg, column, number of hash functions");
       return 1;
     }
 
     initid->max_length = 8;
 
+    
     const char* rawData = args->args[0];
     unsigned long rawDataSize = args->lengths[0];
+    lg("before constructing bloom filter");
+    lg("rawData pointer: " + std::to_string(reinterpret_cast<uintptr_t>(rawData)));
+    lg("rawDataSize: " + std::to_string(rawDataSize));
+    if (!rawData || rawDataSize == 0) {
+        strcpy(message, "bloom_contains(): Invalid bloom filter data");
+        return 1;
+    }
     std::vector<uint8_t> bloomFilter(reinterpret_cast<const uint8_t*>(rawData),
                             reinterpret_cast<const uint8_t*>(rawData) + rawDataSize);
+
+
+    lg("after constructing bloom filter");
 
     //auto hashFuncCount = static_cast<size_t>(*args->args[2]);
     // auto hashFuncCount = std::strtoull(args->args[2], nullptr, 10);
@@ -571,8 +588,8 @@ extern "C"
     // auto val = static_cast<uint64_t>(*args->args[1]);
     auto val = *reinterpret_cast<const uint64_t*>(args->args[1]);
 
-    // std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
-    // log << "Value: " << val << "\n";
+    std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+    log << "Value: " << val << "\n";
 
     //logBloomFilter(data->bloomFilter);
 

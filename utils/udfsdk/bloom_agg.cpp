@@ -39,7 +39,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(65531);
+  context->setColWidth(65000);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -64,6 +64,14 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
   {
     return mcsv1_UDAF::SUCCESS;
   }
+
+  if (!data->isInitialized)
+  {
+    data->initialize(convertAnyTo<uint64_t>(valsIn[1].columnData), convertAnyTo<uint64_t>(valsIn[2].columnData));
+  }
+
+  //std::ofstream log("/tmp/bagg.log", std::ios::app);
+  //log << convertAnyTo<uint64_t>(valsIn[1].columnData) << "\n";
   
   // For now only numeric (non floating point) types are supported
   switch (valsIn[0].dataType)
@@ -140,7 +148,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 
 mcsv1_UDAF::ReturnCode bloom_agg::createUserData(UserData*& userdata, int32_t& length)
 {
-  userdata = new BloomAggData(7, 21547);
+  userdata = new BloomAggData();
   length = sizeof(BloomAggData);
   return mcsv1_UDAF::SUCCESS;
 }

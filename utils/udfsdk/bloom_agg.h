@@ -31,10 +31,17 @@ using BloomFilter = std::vector<uint8_t>;
 
 struct BloomAggData : public mcsv1sdk::UserData 
 {
-   BloomAggData() = default;
-   BloomAggData(size_t hashFuncCount, size_t bloomFilterSize) : fHashFuncCount(hashFuncCount) 
+   BloomAggData(size_t hashFuncCount = 0, size_t bloomFilterSize = 200000)
+    : bloomFilter(bloomFilterSize, 0),
+      fHashFuncCount(hashFuncCount),
+      isInitialized(false)
+   {}
+
+   void initialize(size_t bloomFilterSize, size_t hashFuncCount)
    {
-      bloomFilter = BloomFilter(bloomFilterSize, 0);
+      fHashFuncCount = hashFuncCount;
+      bloomFilter.resize(bloomFilterSize);
+      isInitialized = true;
    }
 
    virtual ~BloomAggData() {}
@@ -42,8 +49,9 @@ struct BloomAggData : public mcsv1sdk::UserData
    void serialize(messageqcpp::ByteStream& stream) const override;
    void unserialize(messageqcpp::ByteStream& stream) override;
 
-   BloomFilter bloomFilter = BloomFilter();
-   size_t fHashFuncCount = 0;
+   BloomFilter bloomFilter;
+   size_t fHashFuncCount;
+   bool isInitialized = false;
 
 private:
    BloomAggData(UserData&) = delete;

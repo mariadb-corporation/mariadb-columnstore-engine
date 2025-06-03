@@ -41,9 +41,10 @@ static inline void lg(T data)
 CalpontSystemCatalog::ColType bloom_contains::operationType(FunctionParm& fp,
                                                      CalpontSystemCatalog::ColType& resultType)
 {
-  assert(fp.size() == 3);
+  //assert(fp.size() == 3);
   CalpontSystemCatalog::ColType rt;
   //idbassert(fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::VARBINARY);
+  lg(fp[1]->data()->getIntVal());
 
   rt.colDataType = execplan::CalpontSystemCatalog::INT;
   rt.colWidth = 8;
@@ -99,6 +100,7 @@ int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Ca
         case CalpontSystemCatalog::UBIGINT:
         {
             auto val = parm[1]->data()->getIntVal();
+            //lg(val);
             result = bloomFilterContains(val, bloomFilter, parm[2]->data()->getIntVal());
         }
         default: break;
@@ -109,7 +111,7 @@ int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Ca
 
 string bloom_contains::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  return bloom_contains::getIntVal(row, parm, isNull, op_ct) ? "1" : "0";
+  return bloom_contains::getIntVal(row, parm, isNull, op_ct) ? string("1") : string("0");
 }
 
 IDB_Decimal bloom_contains::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
