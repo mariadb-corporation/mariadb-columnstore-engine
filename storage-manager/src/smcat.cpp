@@ -44,6 +44,7 @@ bool SMOnline()
   int err = ::connect(clientSocket, (const struct sockaddr*)&addr, sizeof(addr));
   if (err >= 0)
   {
+	  cerr << "unable to connect to clientSocket\n";
     ::close(clientSocket);
     return true;
   }
