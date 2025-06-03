@@ -530,7 +530,7 @@ function execInnerDocker() {
   local dockerCommandExitCode=$?
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
-    error "Command \"${cmd[@]}\" failed in container \"$container_name\""
+    error "Command \"$@\" failed in container \"$container_name\""
     exit $dockerCommandExitCode
   fi
 }
@@ -545,8 +545,9 @@ function change_ubuntu_mirror() {
 }
 
 function execInnerDockerWithRetry() {
+  local max_retries=5
   local container_name=$1
-  shift 1 # Remove first three args (container_name, max_retries, retry_delay)
+  shift 1
 
   local cmd=("$@")
   local attempt=1
@@ -555,7 +556,7 @@ function execInnerDockerWithRetry() {
   local docker_funcs=$(declare -f retry_eval color_normal color_cyan color_yellow color_red error warn message message_split)
 
   # Build the full command to execute in docker
-  local full_command="$docker_funcs; retry_eval 5 \"${cmd[*]}\""
+  local full_command="$docker_funcs; retry_eval $max_retries \"${cmd[*]}\""
 
   # Execute the command in docker
   docker exec -t "$container_name" bash -c "$full_command"
