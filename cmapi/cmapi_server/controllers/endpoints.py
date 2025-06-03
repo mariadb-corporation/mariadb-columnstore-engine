@@ -750,6 +750,7 @@ class ExtentMapController:
                     module_logger.warning(f"{func_name} got error code {ret.returncode} from smcat, retrying")
                     stderr = ret.stderr
                     module_logger.warning(f"{func_name} smcat stderr: {stderr}")
+                    module_logger.warning(f"{func_name} smcat: {args}")
                     time.sleep(1)
                     retry_count += 1
                     continue
