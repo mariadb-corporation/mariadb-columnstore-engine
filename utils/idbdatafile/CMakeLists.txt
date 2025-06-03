@@ -14,13 +14,4 @@ set(idbdatafile_LIB_SRCS
 )
 
 columnstore_library(idbdatafile ${idbdatafile_LIB_SRCS})
-
-target_link_libraries(idbdatafile ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS} boost_filesystem boost_system)
-
-target_compile_definitions(idbdatafile PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-
-install(
-    TARGETS idbdatafile
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(idbdatafile PRIVATE ${NETSNMP_LIBRARIES} ${ENGINE_OAM_LIBS} boost_filesystem boost_system)

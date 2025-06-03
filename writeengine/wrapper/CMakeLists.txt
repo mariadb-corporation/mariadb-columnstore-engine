@@ -40,10 +40,4 @@ columnstore_library(writeengine ${writeengine_LIB_SRCS})
 
 add_dependencies(writeengine loggingcpp)
 
-target_link_libraries(writeengine ${NETSNMP_LIBRARIES})
-
-install(
-    TARGETS writeengine
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(writeengine ${NETSNMP_LIBRARIES})

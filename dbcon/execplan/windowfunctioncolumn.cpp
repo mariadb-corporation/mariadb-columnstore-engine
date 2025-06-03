@@ -27,9 +27,12 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
+#include "basic/string_utils.h"
 
 #include <boost/tokenizer.hpp>
 using namespace boost;
+
+#include "basic/string_utils.h"
 
 #include "bytestream.h"
 #include "windowfunctioncolumn.h"
@@ -398,23 +401,32 @@ void WindowFunctionColumn::adjustResultType()
 {
   if ((fResultType.colDataType == CalpontSystemCatalog::DECIMAL ||
        fResultType.colDataType == CalpontSystemCatalog::UDECIMAL) &&
-      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT(*)") &&
-      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "ROW_NUMBER") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "RANK") &&
-      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENT_RANK") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "DENSE_RANK") &&
-      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "CUME_DIST") && !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "NTILE") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "COUNT(*)") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "ROW_NUMBER") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "RANK") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENT_RANK") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "DENSE_RANK") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "CUME_DIST") &&
+      !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "NTILE") &&
       !datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENTILE") && !fFunctionParms.empty() &&
       fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DOUBLE)
     fResultType = fFunctionParms[0]->resultType();
 
-  if ((datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LEAD") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAG") ||
-       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MIN") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MAX") ||
-       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "FIRST_VALUE") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAST_VALUE") ||
+  if ((datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LEAD") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAG") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MIN") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "MAX") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "FIRST_VALUE") ||
+       datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "LAST_VALUE") ||
        datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "NTH_VALUE")) &&
       !fFunctionParms.empty())
     fResultType = fFunctionParms[0]->resultType();
 
-  if (datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "SUM") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG") ||
-      datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG_DISTINCT") || datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENTILE"))
+  if (datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "SUM") ||
+      datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG") ||
+      datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "AVG_DISTINCT") ||
+      datatypes::ASCIIStringCaseInsensetiveEquals(fFunctionName, "PERCENTILE"))
   {
     if (fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
         fFunctionParms[0]->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
@@ -531,7 +543,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
             fResult.strVal.assign(str.unsafeStringRef());
 
           // stringColVal is padded with '\0' to colWidth so can't use str.length()
-          //if (strlen(fResult.strVal.str()) == 0)
+          // if (strlen(fResult.strVal.str()) == 0)
           //  isNull = true;
 
           break;

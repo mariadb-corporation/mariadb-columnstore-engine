@@ -17,16 +17,10 @@ set(WriteEngineServer_SRCS
     ../../datatypes/mcs_datatype.cpp
 )
 
-add_executable(WriteEngineServer ${WriteEngineServer_SRCS})
+columnstore_executable(WriteEngineServer ${WriteEngineServer_SRCS})
 
 add_dependencies(WriteEngineServer loggingcpp)
 
-target_link_libraries(
+columnstore_link(
     WriteEngineServer ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute
-)
-
-install(
-    TARGETS WriteEngineServer
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
 )

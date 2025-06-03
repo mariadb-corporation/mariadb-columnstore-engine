@@ -25,7 +25,7 @@
 #include <string>
 #include <sstream>
 using namespace std;
-
+#include "basic/string_utils.h"
 
 #include "bytestream.h"
 #include "collation.h"
@@ -138,8 +138,9 @@ string PseudoColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("pseudocolumn.h");
   stringstream ss;
-  ss << "PseudoColumn(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", " << fisColumnStore << ", " << std::quoted(fColumnName)
-     << ", " << fPseudoType << ", " << sessionID() << ")";
+  ss << "PseudoColumn(" << std::quoted(fSchemaName) << ", " << std::quoted(fTableName) << ", "
+     << fisColumnStore << ", " << std::quoted(fColumnName) << ", " << fPseudoType << ", " << sessionID()
+     << ")";
 
   return ss.str();
 }

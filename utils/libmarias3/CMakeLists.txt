@@ -15,10 +15,10 @@ set(S3_SOURCES
     ${S3API_DIR}/src/assume_role.c
 )
 
-add_library(marias3 SHARED ${S3_SOURCES})
-
-target_link_libraries(marias3 curl m)
+columnstore_shared_library(marias3 ${S3_SOURCES})
+columnstore_link(marias3 curl m)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${S3API_DIR})
+
 add_definitions(-D_GNU_SOURCE)
 
 set(S3API_DEPS

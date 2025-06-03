@@ -1808,6 +1808,8 @@ static handler* ha_mcs_cache_create_handler(handlerton* hton, TABLE_SHARE* table
   return new (mem_root) ha_mcs_cache(hton, table, mem_root);
 }
 
+bool get_innodb_queries_uses_mcs();
+
 /******************************************************************************
  ha_mcs Plugin code
 ******************************************************************************/
@@ -1825,6 +1827,14 @@ static int columnstore_init_func(void* p)
 
   fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(),
           columnstore_release.c_str());
+
+  LEX_CSTRING name = {STRING_WITH_LEN("INNODB")};
+  auto* plugin_innodb = ha_resolve_by_name(0, &name, 0);
+  if (!plugin_innodb || plugin_state(plugin_innodb) != PLUGIN_IS_READY)
+
+  {
+    DBUG_RETURN(HA_ERR_RETRY_INIT);
+  }
 
   strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version) - 1);
   cs_version[sizeof(cs_version) - 1] = 0;
@@ -1850,6 +1860,18 @@ static int columnstore_init_func(void* p)
   mcs_hton->create_select = create_columnstore_select_handler;
   mcs_hton->create_unit = create_columnstore_unit_handler;
   mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
+
+  if (get_innodb_queries_uses_mcs())
+  {
+    auto* innodb_hton = plugin_hton(plugin_innodb);
+    int error = innodb_hton == nullptr;  // Engine must exists!
+    if (error)
+    {
+      my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
+    }
+    innodb_hton->create_select = create_columnstore_select_handler;
+    innodb_hton->create_unit = create_columnstore_unit_handler;
+  }
 
 #ifdef HAVE_PSI_INTERFACE
   uint count = sizeof(all_mutexes) / sizeof(all_mutexes[0]);

@@ -10,12 +10,6 @@ columnstore_library(writeengineredistribute ${writeengineredistribute_LIB_SRCS})
 
 add_dependencies(writeengineredistribute loggingcpp)
 
-target_link_libraries(writeengineredistribute ${NETSNMP_LIBRARIES})
+columnstore_link(writeengineredistribute ${NETSNMP_LIBRARIES})
 
 target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-
-install(
-    TARGETS writeengineredistribute
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)

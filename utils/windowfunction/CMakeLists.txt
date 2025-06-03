@@ -25,10 +25,4 @@ set(windowfunction_LIB_SRCS
 
 columnstore_library(windowfunction ${windowfunction_LIB_SRCS})
 
-add_dependencies(windowfunction loggingcpp)
-
-install(
-    TARGETS windowfunction
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(windowfunction loggingcpp)

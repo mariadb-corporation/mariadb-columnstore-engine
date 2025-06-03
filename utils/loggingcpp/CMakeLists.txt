@@ -31,16 +31,8 @@ columnstore_library(
     ${CMAKE_CURRENT_BINARY_DIR}/messageids.h
     ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
 )
-add_dependencies(loggingcpp external_boost)
 
-install(
-    TARGETS loggingcpp
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(loggingcpp configcpp boost_filesystem)
 
-install(
-    FILES MessageFile.txt ErrorMessage.txt
-    DESTINATION ${ENGINE_SYSCONFDIR}/columnstore
-    COMPONENT columnstore-engine
-)
+columnstore_install_file(MessageFile.txt ${ENGINE_SYSCONFDIR}/columnstore)
+columnstore_install_file(ErrorMessage.txt ${ENGINE_SYSCONFDIR}/columnstore)

@@ -14,7 +14,6 @@ if(NOT LEX_EXECUTABLE)
 endif()
 
 find_package(LibXml2)
-
 if(NOT LIBXML2_FOUND)
     message_once(CS_NO_LIBXML "Could not find a usable libxml2 development environment!")
     return()

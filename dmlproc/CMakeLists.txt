@@ -6,11 +6,9 @@ set(DMLProc_SRCS dmlproc.cpp dmlprocessor.cpp dmlresultbuffer.cpp batchinsertpro
                  ../utils/common/crashtrace.cpp
 )
 
-add_executable(DMLProc ${DMLProc_SRCS})
+columnstore_executable(DMLProc ${DMLProc_SRCS})
 
-add_dependencies(DMLProc loggingcpp)
-
-target_link_libraries(
+columnstore_link(
     DMLProc
     ${ENGINE_LDFLAGS}
     ${ENGINE_WRITE_LIBS}
@@ -18,10 +16,5 @@ target_link_libraries(
     threadpool
     ddlcleanuputil
     batchloader
-)
-
-install(
-    TARGETS DMLProc
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
+    loggingcpp
 )

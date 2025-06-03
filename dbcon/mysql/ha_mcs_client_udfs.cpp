@@ -45,6 +45,7 @@ using namespace logging;
 
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
+#include "basic/string_utils.h"
 
 extern "C"
 {

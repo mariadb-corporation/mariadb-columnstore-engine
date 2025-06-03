@@ -10,24 +10,10 @@ set(udfsdk_LIB_SRCS
     distinct_count.cpp
 )
 
-add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
-
 columnstore_library(udfsdk ${udfsdk_LIB_SRCS})
+columnstore_link(udfsdk PRIVATE loggingcpp)
 
-add_dependencies(udfsdk loggingcpp)
-
-install(
-    TARGETS udfsdk
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
-
+# Do anyone use it?
+add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 set(udf_mysql_LIB_SRCS udfmysql.cpp)
-
-add_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
-
-install(
-    TARGETS udf_mysql
-    DESTINATION ${MARIADB_PLUGINDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_mysql_plugin_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})

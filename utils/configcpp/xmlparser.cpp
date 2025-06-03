@@ -19,7 +19,9 @@
  * $Id$
  *
  ******************************************************************************************/
-#include "mcsconfig.h"
+// #include "mcsconfig.h"
+
+#include "basic/string_utils.h"
 
 #include <string>
 #include <stdexcept>
@@ -27,7 +29,6 @@
 #include <libxml/parser.h>
 #include <vector>
 
-#include "collation.h"
 using namespace std;
 
 #include "xmlparser.h"

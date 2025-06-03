@@ -418,9 +418,23 @@ function optparse.define(){
         optparse_process="${optparse_process}#NL#TB#TB${shortname})#NL#TB#TB#TB${variable}=\"$val\";;"
 }
 
+function execInnerDocker() {
+    local cmd_str="$1"
+    local img="$2"
+    local flags="${3:-}"
+
+    docker exec $flags -t "$img" bash -c "$cmd_str"
+    local dockerCommandExitCode=$?
+
+    if [[ $dockerCommandExitCode -ne 0 ]]; then
+        echo "Command \"$cmd_str\" failed in container \"$img\""
+        exit $dockerCommandExitCode
+    fi
+}
+
 # -----------------------------------------------------------------------------------------------------------------------------
 function optparse.build(){
-        local build_file="$(mktemp -t "optparse-XXXXXX.tmp")"
+        local build_file="$(mktemp "${TMPDIR:-/tmp}/optparse-XXXXXX")"
 
         # Building getopts header here
 

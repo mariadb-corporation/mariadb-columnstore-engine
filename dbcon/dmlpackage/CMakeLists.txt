@@ -41,10 +41,4 @@ columnstore_library(
     ${FLEX_dml_scan_OUTPUTS}
 )
 
-add_dependencies(dmlpackage loggingcpp)
-
-install(
-    TARGETS dmlpackage
-    DESTINATION ${ENGINE_LIBDIR}
-    COMPONENT columnstore-engine
-)
+columnstore_link(dmlpackage loggingcpp)

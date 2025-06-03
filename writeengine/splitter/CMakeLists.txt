@@ -14,11 +14,11 @@ set(cpimport_SRCS
     we_xmlgetter.cpp
 )
 
-add_executable(cpimport ${cpimport_SRCS})
+columnstore_executable(cpimport ${cpimport_SRCS})
 
 add_dependencies(cpimport loggingcpp)
 
-target_link_libraries(
+columnstore_link(
     cpimport
     ${ENGINE_LDFLAGS}
     ${NETSNMP_LIBRARIES}
@@ -26,10 +26,4 @@ target_link_libraries(
     batchloader
     threadpool
     marias3
-)
-
-install(
-    TARGETS cpimport
-    DESTINATION ${ENGINE_BINDIR}
-    COMPONENT columnstore-engine
 )
