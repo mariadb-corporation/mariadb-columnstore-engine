@@ -1,11 +1,9 @@
-
-include_directories( ${ENGINE_COMMON_INCLUDES} )
+include_directories(${ENGINE_COMMON_INCLUDES})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/shmkeys.cpp" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/brmshmimpl.h" @ONLY)
 
-
-########### next target ###############
+# ########## next target ###############
 
 set(brm_LIB_SRCS
     autoincrementmanager.cpp
@@ -32,99 +30,87 @@ set(brm_LIB_SRCS
     undoable.cpp
     vbbm.cpp
     vss.cpp
-    ../../datatypes/mcs_datatype.cpp)
+    ../../datatypes/mcs_datatype.cpp
+)
 
-add_library(brm SHARED ${brm_LIB_SRCS})
+columnstore_library(brm ${brm_LIB_SRCS})
+columnstore_link(brm loggingcpp datatypes)
 
-add_dependencies(brm loggingcpp)
-
-install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
 
-add_executable(controllernode ${controllernode_SRCS})
+columnstore_executable(controllernode ${controllernode_SRCS})
+columnstore_link(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
-target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} )
-
-install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(workernode_SRCS slavenode.cpp ../../utils/common/crashtrace.cpp)
 
-add_executable(workernode ${workernode_SRCS})
+columnstore_executable(workernode ${workernode_SRCS})
+columnstore_link(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
-target_link_libraries(workernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS workernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(dbrmctl_SRCS dbrmctl.cpp)
 
-add_executable(dbrmctl ${dbrmctl_SRCS})
+columnstore_executable(dbrmctl ${dbrmctl_SRCS})
+columnstore_link(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
-target_link_libraries(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
-
-install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(reset_locks_SRCS reset_locks.cpp)
 
-add_executable(reset_locks ${reset_locks_SRCS})
+columnstore_executable(reset_locks ${reset_locks_SRCS})
+columnstore_link(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-target_link_libraries(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(rollback_SRCS rollback.cpp)
 
-add_executable(rollback ${rollback_SRCS})
+columnstore_executable(rollback ${rollback_SRCS})
+columnstore_link(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-target_link_libraries(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS rollback DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(save_brm_SRCS save_brm.cpp)
 
-add_executable(save_brm ${save_brm_SRCS})
+columnstore_executable(save_brm ${save_brm_SRCS})
+columnstore_link(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-target_link_libraries(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS save_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(load_brm_SRCS load_brm.cpp)
 
-add_executable(load_brm ${load_brm_SRCS})
+columnstore_executable(load_brm ${load_brm_SRCS})
+columnstore_link(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
-target_link_libraries(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
+columnstore_executable(mcs-load-em load_em.cpp)
+columnstore_link(
+    mcs-load-em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES}
+)
 
-install(TARGETS load_brm DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+columnstore_executable(mcs-load-brm-from-file load_brm_from_file.cpp)
+columnstore_link(
+    mcs-load-brm-from-file
+    ${ENGINE_LDFLAGS}
+    ${MARIADB_CLIENT_LIBS}
+    ${ENGINE_OAM_LIBS}
+    ${ENGINE_EXEC_LIBS}
+    ${NETSNMP_LIBRARIES}
+    boost_program_options
+)
 
-add_executable(mcs-load-em load_em.cpp)
-target_link_libraries(mcs-load-em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-install(TARGETS mcs-load-em DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+columnstore_executable(mcs-shmem-locks shmem_locks.cpp)
+columnstore_link(
+    mcs-shmem-locks
+    ${ENGINE_LDFLAGS}
+    ${MARIADB_CLIENT_LIBS}
+    ${ENGINE_OAM_LIBS}
+    ${ENGINE_EXEC_LIBS}
+    ${NETSNMP_LIBRARIES}
+    boost_program_options
+)
 
-add_executable(mcs-load-brm-from-file load_brm_from_file.cpp)
-target_link_libraries(mcs-load-brm-from-file ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} boost_program_options)
-install(TARGETS mcs-load-brm-from-file DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-add_executable(mcs-shmem-locks shmem_locks.cpp)
-target_link_libraries(mcs-shmem-locks ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES} boost_program_options)
-install(TARGETS mcs-shmem-locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
+columnstore_executable(mcs-oid-client oid-client.cpp)
+columnstore_link(mcs-oid-client ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} boost_program_options)

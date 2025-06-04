@@ -119,7 +119,7 @@ JoinPartition::JoinPartition(const RowGroup& lRG, const RowGroup& sRG, const vec
 }
 
 /* Ctor used by JoinPartition on expansion, creates JP's in filemode */
-JoinPartition::JoinPartition(const JoinPartition& jp, bool splitMode, uint32_t currentPartitionTreeDepth)
+JoinPartition::JoinPartition(const JoinPartition& jp, bool /*splitMode*/, uint32_t currentPartitionTreeDepth)
  : smallRG(jp.smallRG)
  , largeRG(jp.largeRG)
  , smallKeyCols(jp.smallKeyCols)

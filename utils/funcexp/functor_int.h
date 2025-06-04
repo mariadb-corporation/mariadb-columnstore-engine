@@ -73,7 +73,7 @@ class Func_BitOp : public Func_Int
   {
   }
   execplan::CalpontSystemCatalog::ColType operationType(
-      FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType) override
+      FunctionParm& /*fp*/, execplan::CalpontSystemCatalog::ColType& resultType) override
   {
     return resultType;
   }
@@ -89,8 +89,8 @@ class Func_BitOp : public Func_Int
                     Func_Int& return_uint64_from_sint64_sint64,
                     Func_Int& return_uint64_from_generic_generic) const;
 
-  int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                    execplan::CalpontSystemCatalog::ColType& op_ct) override
+  int64_t getIntVal(rowgroup::Row& /*row*/, FunctionParm& /*fp*/, bool& isNull,
+                    execplan::CalpontSystemCatalog::ColType& /*op_ct*/) override
   {
     isNull = true;
     return 0;

@@ -153,6 +153,7 @@ oam/install_scripts/mcs-workernode.service
 oam/install_scripts/mcs-writeengineserver.service
 oam/install_scripts/mcs-loadbrm.py
 oam/install_scripts/mcs-savebrm.py
+oam/install_scripts/mcssavebrm.py
 oam/install_scripts/mcs-storagemanager.service
 oam/install_scripts/mcs_module_installer.sh
 oam/install_scripts/slave-rep-columnstore.sh
@@ -185,5 +186,4 @@ versioning/BRM/brmshmimpl.h
 versioning/BRM/shmkeys.cpp
 obj/
 build/build
-
 

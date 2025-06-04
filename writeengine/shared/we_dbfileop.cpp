@@ -304,7 +304,7 @@ int DbFileOp::writeDBFileNoVBCache(CommBlock& cb, const unsigned char* writeBuf,
  *    Core function for writing data w/o using VB cache
  *    (bulk load dictionary store inserts)
  ***********************************************************/
-int DbFileOp::writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int fbo,
+int DbFileOp::writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int /*fbo*/,
                                    const int numOfBlock)
 {
 #ifdef PROFILE

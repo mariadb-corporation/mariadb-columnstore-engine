@@ -56,14 +56,14 @@ double Func_rand::getRand()
   return (((double)fSeed1) / (double)maxValue);
 }
 
-CalpontSystemCatalog::ColType Func_rand::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_rand::operationType(FunctionParm& /*fp*/,
                                                        CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 double Func_rand::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                               execplan::CalpontSystemCatalog::ColType& op_ct)
+                               execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   // NOTE: this function needs to use 32bit ints otherwise it will break for negative values
   uint32_t seedParm = 0;

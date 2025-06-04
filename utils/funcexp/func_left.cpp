@@ -36,7 +36,7 @@ using namespace joblist;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_left::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
@@ -48,20 +48,22 @@ std::string Func_left::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
   CHARSET_INFO* cs = type.getCharset();
   // The original string
   const auto& src = fp[0]->data()->getStrVal(row, isNull);
-  if (isNull || src.length() < 1) // null or empty string.
+  if (isNull || src.length() < 1)  // null or empty string.
     return "";
   // binLen represents the number of bytes in src
   size_t binLen = src.length();
   const char* pos = src.str();
   const char* end = pos + binLen;
 
-  size_t trimLength = fp[1]->data()->getUintVal(row, isNull);
+  // Negative trim length values are legal, but they don't make any real sense
+  int64_t trimLength = fp[1]->data()->getIntVal(row, isNull);
   if (isNull || trimLength <= 0)
     return "";
 
+  size_t trimLengthPositive = trimLength;  // now we are sure it is positive
   size_t charPos;
 
-  if ((binLen <= trimLength) || (binLen <= (charPos = cs->charpos(pos, end, trimLength))))
+  if ((binLen <= trimLengthPositive) || (binLen <= (charPos = cs->charpos(pos, end, trimLengthPositive))))
   {
     return src.safeString("");
   }

@@ -24,7 +24,7 @@
 #include <cerrno>
 #include <string>
 #include <map>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <algorithm>
 #include <unistd.h>
@@ -92,7 +92,7 @@ struct fileInfoCompare  // lt operator
 
     return false;
   }  // operator
-};   // struct
+};  // struct
 
 typedef std::map<File, IDBDataFile*, fileInfoCompare> FileOpenMap;
 
@@ -563,7 +563,7 @@ int BRMWrapper::getBrmRc(bool reset)
 
 #define MAX_VERSION_BUFFER_SIZE 1024
 
-int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, const OID sourceOid, IDBDataFile* pTargetFile,
+int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, const OID /*sourceOid*/, IDBDataFile* pTargetFile,
                             const OID targetOid, const std::vector<uint32_t>& fboList,
                             const BRM::VBRange& freeList, size_t& nBlocksProcessed, DbFileOp* pFileOp,
                             const size_t fboCurrentOffset)
@@ -713,7 +713,7 @@ int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, const OID sourceOid, IDBDa
 }
 
 int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, IDBDataFile* pTargetFile, const uint64_t sourceFbo,
-                            const uint64_t targetFbo, DbFileOp* fileOp, const Column& column)
+                            const uint64_t targetFbo, DbFileOp* fileOp, const Column& /*column*/)
 {
   size_t rwSize;
   unsigned char buf[BYTE_PER_BLOCK];
@@ -731,14 +731,14 @@ int BRMWrapper::copyVBBlock(IDBDataFile* pSourceFile, IDBDataFile* pTargetFile, 
     return NO_ERROR;
 }
 
-uint8_t BRMWrapper::newCpimportJob(uint32_t &jobId)
+uint8_t BRMWrapper::newCpimportJob(uint32_t& jobId)
 {
   return blockRsltnMgrPtr->newCpimportJob(jobId);
 }
 
 void BRMWrapper::finishCpimportJob(uint32_t jobId)
 {
-  if (finishReported.exchange(true)) // get old and set to true; if old is true, do nothing.
+  if (finishReported.exchange(true))  // get old and set to true; if old is true, do nothing.
   {
     return;
   }
@@ -1423,7 +1423,7 @@ cleanup:
   return rc;
 }
 
-int BRMWrapper::rollBackVersion(const VER_t transID, int sessionId)
+int BRMWrapper::rollBackVersion(const VER_t transID, int /*sessionId*/)
 {
   std::vector<LBID_t> lbidList;
   std::vector<LBIDRange> lbidRangeList;

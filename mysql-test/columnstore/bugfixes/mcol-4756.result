@@ -1,0 +1,9 @@
+DROP DATABASE IF EXISTS `mcol_4756`;
+CREATE DATABASE `mcol_4756`;
+USE `mcol_4756`;
+CREATE TABLE `manu_test` (id tinyint unsigned NOT NULL, test tinyint default null) ENGINE=Columnstore DEFAULT CHARSET=utf8;
+INSERT INTO `manu_test` (`id`, `test`) VALUES (1,0), (2,1), (3,null);
+SELECT id, test FROM manu_test HAVING NOT(test);
+id	test
+1	0
+DROP DATABASE `mcol_4756`;

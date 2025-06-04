@@ -1192,7 +1192,7 @@ std::shared_ptr<char[]> seekToEndOfHeader1(int fd, size_t* _bytesRead)
   throw runtime_error("seekToEndOfHeader1: did not find the end of the header");
 }
 
-int IOCoordinator::mergeJournal(int objFD, int journalFD, uint8_t* buf, off_t offset, size_t* len) const
+int IOCoordinator::mergeJournal(int /*objFD*/, int /*journalFD*/, uint8_t* /*buf*/, off_t /*offset*/, size_t* /*len*/) const
 {
   throw runtime_error("IOCoordinator::mergeJournal(int, int, etc) is not implemented yet.");
 }

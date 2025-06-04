@@ -12,13 +12,6 @@
 #include "functor_int.h"
 #include "functor_str.h"
 
-// Check if mariadb version >= 10.9
-#if MYSQL_VERSION_ID >= 100900
-#ifndef MYSQL_GE_1009
-#define MYSQL_GE_1009
-#endif
-#endif
-
 namespace funcexp
 {
 // The json_path_t wrapper include some flags

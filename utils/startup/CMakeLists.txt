@@ -1,11 +1,5 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-ADD_DEFINITIONS(-fPIC -DPIC)
-
-add_library(idbboot STATIC installdir.cpp)
+set(idbboot_LIB_SRCS installdir.cpp)
+columnstore_static_library(idbboot ${idbboot_LIB_SRCS})
 add_dependencies(idbboot external_boost)
-
-INSTALL(TARGETS idbboot DESTINATION ${ENGINE_LIBDIR})
-
-

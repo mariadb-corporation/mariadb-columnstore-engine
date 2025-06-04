@@ -70,11 +70,11 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 
   int error = 0;
 
-  if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)sjsp.str(),
-                                                     (const uchar*)sjsp.end()))
+  if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)sjsp.str(), (const uchar*)sjsp.end()))
     return true;
 
-  JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()), reinterpret_cast<const uchar*>(js.end()));
+  JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()),
+                   reinterpret_cast<const uchar*>(js.end()));
 
   currStep = p.steps;
 
@@ -96,7 +96,7 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 }
 
 CalpontSystemCatalog::ColType Func_json_value::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -115,11 +115,10 @@ class JSONPathWrapperValue : public JSONPathWrapper
   {
     return je->checkAndGetScalar(res, error);
   }
-
 };
 
 string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& type)
+                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string ret;
   JSONPathWrapperValue pw;

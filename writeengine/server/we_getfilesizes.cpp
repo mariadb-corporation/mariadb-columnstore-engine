@@ -263,7 +263,7 @@ struct ColumnThread
 //------------------------------------------------------------------------------
 // Get file size from file name in bytestream object
 //------------------------------------------------------------------------------
-int WE_GetFileSizes::processFileName(messageqcpp::ByteStream& bs, std::string& errMsg, int key)
+int WE_GetFileSizes::processFileName(messageqcpp::ByteStream& bs, std::string& errMsg, int /*key*/)
 {
   uint8_t rc = 0;
   off_t fileSize = 0;

@@ -1,7 +1,9 @@
 import logging
 import os
 import secrets
-from datetime import datetime, timedelta
+import sys
+from datetime import datetime
+from typing import Optional
 
 import typer
 from typing_extensions import Annotated
@@ -14,7 +16,11 @@ from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.process_dispatchers.base import BaseDispatcher
+from mcs_cluster_tool.constants import MCS_COLUMNSTORE_REVIEW_SH
 from mcs_cluster_tool.decorators import handle_output
+from mcs_cluster_tool.helpers import cook_sh_arg
+
 
 
 logger = logging.getLogger('mcs_cli')
@@ -150,3 +156,227 @@ def bootstrap_single_node(
         'add_node_resp': add_node_resp,
     }
     return result
+
+
+@handle_output
+def review(
+    _version: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--version',
+            help='Only show the header with version information.',
+            show_default=False
+        )
+    ] = None,
+    _logs: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--logs',
+            help=(
+                'Create a compressed archive of logs for MariaDB Support '
+                'Ticket'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _path: Annotated[
+        Optional[str],
+        typer.Option(
+            '--path',
+            help=(
+                'Define the path for where to save files/tarballs and outputs '
+                'of this script.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _backupdbrm: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--backupdbrm',
+            help=(
+                'Takes a compressed backup of extent map files in dbrm '
+                'directory.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _testschema: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--testschema',
+            help=(
+                'Creates a test schema, tables, imports, queries, drops '
+                'schema.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _testschemakeep: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--testschemakeep',
+            help=(
+                'Creates a test schema, tables, imports, queries, does not '
+                'drop.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _ldlischema: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--ldlischema',
+            help=(
+                'Using ldli, creates test schema, tables, imports, queries, '
+                'drops schema.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _ldlischemakeep: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--ldlischemakeep',
+            help=(
+                'Using ldli, creates test schema, tables, imports, queries, '
+                'does not drop.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _emptydirs: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--emptydirs',
+            help='Searches /var/lib/columnstore for empty directories.',
+            show_default=False
+        )
+    ] = None,
+    _notmysqldirs: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--notmysqldirs',
+            help=(
+                'Searches /var/lib/columnstore for directories not owned by '
+                'mysql.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _emcheck: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--emcheck',
+            help='Checks the extent map for orphaned and missing files.',
+            show_default=False
+        )
+    ] = None,
+    _s3check: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--s3check',
+            help='Checks the extent map against S3 storage.',
+            show_default=False
+        )
+    ] = None,
+    _pscs: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--pscs',
+            help=(
+                'Adds the pscs command. pscs lists running columnstore '
+                'processes.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _schemasync: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--schemasync',
+            help='Fix out-of-sync columnstore tables (CAL0009).',
+            show_default=False
+        )
+    ] = None,
+    _tmpdir: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--tmpdir',
+            help=(
+                'Ensure owner of temporary dir after reboot (MCOL-4866 & '
+                'MCOL-5242).'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _checkports: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--checkports',
+            help='Checks if ports needed by Columnstore are opened.',
+            show_default=False
+        )
+    ] = None,
+    _eustack: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--eustack',
+            help='Dumps the stack of Columnstore processes.',
+            show_default=False
+        )
+    ] = None,
+    _clearrollback: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--clearrollback',
+            help='Clear any rollback fragments from dbrm files.',
+            show_default=False
+        )
+    ] = None,
+    _killcolumnstore: Annotated[
+        Optional[bool],
+        typer.Option(
+            '--killcolumnstore',
+            help=(
+                'Stop columnstore processes gracefully, then kill remaining '
+                'processes.'
+            ),
+            show_default=False
+        )
+    ] = None,
+    _color: Annotated[
+        Optional[str],
+        typer.Option(
+            '--color',
+            help=(
+                'print headers in color. Options: [none,red,blue,green,yellow,'
+                'magenta,cyan, none] prefix color with l for light.'
+            ),
+            show_default=False
+        )
+    ] = None,
+):
+    """
+    This script performs various maintenance and diagnostic tasks for
+    MariaDB ColumnStore, including log archiving, extent map backups,
+    schema and table testing, directory and ownership checks, extent map
+    validation, S3 storage comparison, process management, table
+    synchronization, port availability checks, stack dumps, cleanup of
+    rollback fragments, and graceful process termination.
+
+    If database is up, this script will connect as root@localhost via socket.
+    """
+
+    arguments = []
+    for arg_name, value in locals().items():
+        sh_arg = cook_sh_arg(arg_name, value, separator='=')
+        if sh_arg is None:
+            continue
+        # columnstore_review.sh accepts only --arg=value format
+        arguments.append(sh_arg)
+    cmd = f'{MCS_COLUMNSTORE_REVIEW_SH} {" ".join(arguments)}'
+    success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
+    if not success:
+        raise typer.Exit(code=1)
+    raise typer.Exit(code=0)

@@ -29,14 +29,14 @@ class BaseClusterTestCase(BaseServerTestCase):
     def tearDownClass(cls) -> None:
         copyfile(COPY_MCS_CONFIG_FILEPATH, MCS_CONFIG_FILEPATH)
         os.remove(os.path.abspath(COPY_MCS_CONFIG_FILEPATH))
-        MCSProcessManager.stop_node(is_primary=True)
-        MCSProcessManager.start_node(is_primary=True)
+        MCSProcessManager.stop_node(is_primary=True, use_sudo=False)
+        MCSProcessManager.start_node(is_primary=True, use_sudo=False)
         return super().tearDownClass()
 
     def setUp(self) -> None:
         copyfile(TEST_MCS_CONFIG_FILEPATH, MCS_CONFIG_FILEPATH)
-        MCSProcessManager.stop_node(is_primary=True)
-        MCSProcessManager.start_node(is_primary=True)
+        MCSProcessManager.stop_node(is_primary=True, use_sudo=False)
+        MCSProcessManager.start_node(is_primary=True, use_sudo=False)
         return super().setUp()
 
 

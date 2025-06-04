@@ -214,7 +214,6 @@ class PackageHandler
   messageqcpp::ByteStream::quadbyte fPackageType;
   joblist::DistributedEngineComm* fEC;
   bool fConcurrentSupport;
-  uint64_t fMaxDeleteRows;
   uint32_t fSessionID;
   uint32_t fTableOid;
   execplan::CalpontSystemCatalog::SCN fTxnid;
@@ -330,7 +329,7 @@ class RollbackTransactionProcessor : public dmlpackageprocessor::DMLPackageProce
    *
    * @param cpackage the UpdateDMLPackage to process
    */
-  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage)
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& /*cpackage*/)
   {
     DMLResult result;
     result.result = NO_ERROR;

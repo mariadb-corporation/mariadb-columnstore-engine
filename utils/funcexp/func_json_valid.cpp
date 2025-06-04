@@ -14,7 +14,7 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_valid::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -23,7 +23,7 @@ CalpontSystemCatalog::ColType Func_json_valid::operationType(FunctionParm& fp,
  * getBoolVal API definition
  */
 bool Func_json_valid::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                 CalpontSystemCatalog::ColType& type)
+                                 CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)

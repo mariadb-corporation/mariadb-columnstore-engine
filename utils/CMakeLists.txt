@@ -1,5 +1,4 @@
-
-#add_subdirectory(boost_idb)
+# add_subdirectory(boost_idb)
 add_subdirectory(startup)
 add_subdirectory(common)
 add_subdirectory(configcpp)

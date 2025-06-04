@@ -193,19 +193,19 @@ void FilterCommand::createCommand(ByteStream& bs)
   Command::createCommand(bs);
 }
 
-void FilterCommand::resetCommand(ByteStream& bs)
+void FilterCommand::resetCommand(ByteStream& /*bs*/)
 {
 }
 
-void FilterCommand::prep(int8_t outputType, bool absRids)
+void FilterCommand::prep(int8_t /*outputType*/, bool /*absRids*/)
 {
 }
 
-void FilterCommand::project(messageqcpp::SBS& bs)
+void FilterCommand::project(messageqcpp::SBS& /*bs*/)
 {
 }
 
-void FilterCommand::projectIntoRowGroup(rowgroup::RowGroup& rg, uint32_t col)
+void FilterCommand::projectIntoRowGroup(rowgroup::RowGroup& /*rg*/, uint32_t /*col*/)
 {
 }
 

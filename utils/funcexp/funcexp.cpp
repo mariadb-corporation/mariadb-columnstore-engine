@@ -163,7 +163,7 @@ FuncExp::FuncExp()
   fFuncMap["json_merge_preserve"] = new Func_json_merge();
   fFuncMap["json_normalize"] = new Func_json_normalize();
   fFuncMap["json_object"] = new Func_json_object();
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   fFuncMap["json_overlaps"] = new Func_json_overlaps();
 #endif
   fFuncMap["json_query"] = new Func_json_query();
@@ -218,7 +218,7 @@ FuncExp::FuncExp()
   fFuncMap["regexp"] = new Func_regexp();
   fFuncMap["regexp_instr"] = new Func_regexp_instr();
   fFuncMap["regexp_replace"] = new Func_regexp_replace();
-  fFuncMap["regexp_substr"] = new Func_regexp_substr();                  // dlh
+  fFuncMap["regexp_substr"] = new Func_regexp_substr();    // dlh
   fFuncMap["repeat"] = new Func_repeat();                  // dlh
   fFuncMap["replace"] = new Func_replace();                // dlh
   fFuncMap["replace_oracle"] = new Func_replace_oracle();  // dlh

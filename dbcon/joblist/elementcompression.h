@@ -83,74 +83,74 @@ class ElementCompression
   //
   template <typename DestType>
   static void compress(std::vector<ElementType>& vIn, std::vector<DestType>& vOut);
-  static void compress(std::vector<ElementType>& vIn, std::vector<CompElement32RidOnly>& vOut)
+  static void compress(std::vector<ElementType>& /*vIn*/, std::vector<CompElement32RidOnly>& /*vOut*/)
   {
     throw std::logic_error("Compression of ElementType to 32RidOnly not supported");
   }
 
-  static void compress(std::vector<StringElementType>& vIn, std::vector<CompElement64Rid32Val>& vOut)
+  static void compress(std::vector<StringElementType>& /*vIn*/, std::vector<CompElement64Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of StringElementType to 64/32 not supported");
   }
-  static void compress(std::vector<StringElementType>& vIn, std::vector<CompElement32Rid64Val>& vOut)
+  static void compress(std::vector<StringElementType>& /*vIn*/, std::vector<CompElement32Rid64Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of StringElementType to 32/64 not supported");
   }
-  static void compress(std::vector<StringElementType>& vIn, std::vector<CompElement32Rid32Val>& vOut)
+  static void compress(std::vector<StringElementType>& /*vIn*/, std::vector<CompElement32Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of StringElementType to 32/32 not supported");
   }
-  static void compress(std::vector<StringElementType>& vIn, std::vector<CompElement32RidOnly>& vOut)
+  static void compress(std::vector<StringElementType>& /*vIn*/, std::vector<CompElement32RidOnly>& /*vOut*/)
   {
     throw std::logic_error("Compression of StringElementType to 32RidOnly not supported");
   }
 
-  static void compress(std::vector<DoubleElementType>& vIn, std::vector<CompElement64Rid32Val>& vOut)
+  static void compress(std::vector<DoubleElementType>& /*vIn*/, std::vector<CompElement64Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of DoubleElementType to 64/32 not supported");
   }
-  static void compress(std::vector<DoubleElementType>& vIn, std::vector<CompElement32Rid64Val>& vOut)
+  static void compress(std::vector<DoubleElementType>& /*vIn*/, std::vector<CompElement32Rid64Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of DoubleElementType to 32/64 not supported");
   }
-  static void compress(std::vector<DoubleElementType>& vIn, std::vector<CompElement32Rid32Val>& vOut)
+  static void compress(std::vector<DoubleElementType>& /*vIn*/, std::vector<CompElement32Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of DoubleElementType to 32/32 not supported");
   }
-  static void compress(std::vector<DoubleElementType>& vIn, std::vector<CompElement32RidOnly>& vOut)
+  static void compress(std::vector<DoubleElementType>& /*vIn*/, std::vector<CompElement32RidOnly>& /*vOut*/)
   {
     throw std::logic_error("Compression of DoubleElementType to 32RidOnly not supported");
   }
 
-  static void compress(std::vector<RIDElementType>& vIn, std::vector<CompElement64Rid32Val>& vOut)
+  static void compress(std::vector<RIDElementType>& /*vIn*/, std::vector<CompElement64Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of RIDElementType to 64/32 not supported");
   }
-  static void compress(std::vector<RIDElementType>& vIn, std::vector<CompElement32Rid64Val>& vOut)
+  static void compress(std::vector<RIDElementType>& /*vIn*/, std::vector<CompElement32Rid64Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of RIDElementType to 32/64 not supported");
   }
-  static void compress(std::vector<RIDElementType>& vIn, std::vector<CompElement32Rid32Val>& vOut)
+  static void compress(std::vector<RIDElementType>& /*vIn*/, std::vector<CompElement32Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of RIDElementType to 32/32 not supported");
   }
-  static void compress(std::vector<RIDElementType>& vIn, std::vector<CompElement32RidOnly>& vOut);
+  static void compress(std::vector<RIDElementType>& /*vIn*/, std::vector<CompElement32RidOnly>& /*vOut*/);
 
-  static void compress(std::vector<TupleType>& vIn, std::vector<CompElement64Rid32Val>& vOut)
+  static void compress(std::vector<TupleType>& /*vIn*/, std::vector<CompElement64Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of TupleType to 64/32 not supported");
   }
-  static void compress(std::vector<TupleType>& vIn, std::vector<CompElement32Rid64Val>& vOut)
+  static void compress(std::vector<TupleType>& /*vIn*/, std::vector<CompElement32Rid64Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of TupleType to 32/64 not supported");
   }
-  static void compress(std::vector<TupleType>& vIn, std::vector<CompElement32Rid32Val>& vOut)
+  static void compress(std::vector<TupleType>& /*vIn*/, std::vector<CompElement32Rid32Val>& /*vOut*/)
   {
     throw std::logic_error("Compression of TupleType to 32/32 not supported");
   }
-  static void compress(std::vector<TupleType>& vIn, std::vector<CompElement32RidOnly>& vOut)
+  static void compress(std::vector<TupleType>& /*vIn*/, std::vector<CompElement32RidOnly>& /*vOut*/)
   {
-    throw std::logic_error("Compression of TupleType to 32/32 not supported");
+    throw std::logic_error("Compression of TupleType to 32RidOnly not supported");
   }
 
   //
@@ -158,72 +158,72 @@ class ElementCompression
   //
   template <typename SrcType>
   static void expand(std::vector<SrcType>& vIn, ElementType* vOut);
-  static void expand(std::vector<CompElement32RidOnly>& vIn, ElementType* vOut)
+  static void expand(std::vector<CompElement32RidOnly>& /*vIn*/, ElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to ElementType from 32RidOnly not supported");
   }
 
-  static void expand(std::vector<CompElement64Rid32Val>& vIn, StringElementType* vOut)
+  static void expand(std::vector<CompElement64Rid32Val>& /*vIn*/, StringElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to StringElementType from 64/32 not supported");
   }
-  static void expand(std::vector<CompElement32Rid64Val>& vIn, StringElementType* vOut)
+  static void expand(std::vector<CompElement32Rid64Val>& /*vIn*/, StringElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to StringElementType from 32/64 not supported");
   }
-  static void expand(std::vector<CompElement32Rid32Val>& vIn, StringElementType* vOut)
+  static void expand(std::vector<CompElement32Rid32Val>& /*vIn*/, StringElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to StringElementType from 32/32 not supported");
   }
-  static void expand(std::vector<CompElement32RidOnly>& vIn, StringElementType* vOut)
+  static void expand(std::vector<CompElement32RidOnly>& /*vIn*/, StringElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to StringElementType from 32RidOnly not supported");
   }
 
-  static void expand(std::vector<CompElement64Rid32Val>& vIn, DoubleElementType* vOut)
+  static void expand(std::vector<CompElement64Rid32Val>& /*vIn*/, DoubleElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to DoubleElementType from 64/32 not supported");
   }
-  static void expand(std::vector<CompElement32Rid64Val>& vIn, DoubleElementType* vOut)
+  static void expand(std::vector<CompElement32Rid64Val>& /*vIn*/, DoubleElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to DoubleElementType from 32/64 not supported");
   }
-  static void expand(std::vector<CompElement32Rid32Val>& vIn, DoubleElementType* vOut)
+  static void expand(std::vector<CompElement32Rid32Val>& /*vIn*/, DoubleElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to DoubleElementType from 32/32 not supported");
   }
-  static void expand(std::vector<CompElement32RidOnly>& vIn, DoubleElementType* vOut)
+  static void expand(std::vector<CompElement32RidOnly>& /*vIn*/, DoubleElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to DoubleElementType from 32RidOnly not supported");
   }
 
-  static void expand(std::vector<CompElement64Rid32Val>& vIn, RIDElementType* vOut)
+  static void expand(std::vector<CompElement64Rid32Val>& /*vIn*/, RIDElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to RIDElementType from 64/32 not supported");
   }
-  static void expand(std::vector<CompElement32Rid64Val>& vIn, RIDElementType* vOut)
+  static void expand(std::vector<CompElement32Rid64Val>& /*vIn*/, RIDElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to RIDElementType from 32/64 not supported");
   }
-  static void expand(std::vector<CompElement32Rid32Val>& vIn, RIDElementType* vOut)
+  static void expand(std::vector<CompElement32Rid32Val>& /*vIn*/, RIDElementType* /*vOut*/)
   {
     throw std::logic_error("Expansion to RIDElementType from 32/32 not supported");
   }
-  static void expand(std::vector<CompElement32RidOnly>& vIn, RIDElementType* vOut);
+  static void expand(std::vector<CompElement32RidOnly>& /*vIn*/, RIDElementType* /*vOut*/);
 
-  static void expand(std::vector<CompElement64Rid32Val>& vIn, TupleType* vOut)
+  static void expand(std::vector<CompElement64Rid32Val>& /*vIn*/, TupleType* /*vOut*/)
   {
     throw std::logic_error("Expansion to TupleType from 64/32 not supported");
   }
-  static void expand(std::vector<CompElement32Rid64Val>& vIn, TupleType* vOut)
+  static void expand(std::vector<CompElement32Rid64Val>& /*vIn*/, TupleType* /*vOut*/)
   {
     throw std::logic_error("Expansion to TupleType from 32/64 not supported");
   }
-  static void expand(std::vector<CompElement32Rid32Val>& vIn, TupleType* vOut)
+  static void expand(std::vector<CompElement32Rid32Val>& /*vIn*/, TupleType* /*vOut*/)
   {
     throw std::logic_error("Expansion to TupleType from 32/32 not supported");
   }
-  static void expand(std::vector<CompElement32RidOnly>& vIn, TupleType* vOut)
+  static void expand(std::vector<CompElement32RidOnly>& /*vIn*/, TupleType* /*vOut*/)
   {
     throw std::logic_error("Expansion to TupleType from 32/32 not supported");
   }
@@ -232,13 +232,13 @@ class ElementCompression
   //...Utilities to write a single element with a compressed 32 bit RID.
   //
   static void writeWith32Rid(const ElementType& e, std::fstream& fFile);
-  static void writeWith32Rid(const DoubleElementType& e, std::fstream& fFile)
+  static void writeWith32Rid(const DoubleElementType& /*e*/, std::fstream& /*fFile*/)
   {
     throw std::logic_error("Compress/Write of 32 RID DoubleElementType not supported");
   }
   static void writeWith32Rid(const StringElementType& e, std::fstream& fFile);
   static void writeWith32Rid(const RIDElementType& e, std::fstream& fFile);
-  static void writeWith32Rid(const TupleType& e, std::fstream& fFile)
+  static void writeWith32Rid(const TupleType& /*e*/, std::fstream& /*fFile*/)
   {
     throw std::logic_error("Compress/Write of 32 RID TupleType not supported");
   }
@@ -247,13 +247,13 @@ class ElementCompression
   //...Utilities to read a single element with a compressed 32 bit RID.
   //
   static void readWith32Rid(ElementType& e, std::fstream& fFile);
-  static void readWith32Rid(DoubleElementType& e, std::fstream& fFile)
+  static void readWith32Rid(DoubleElementType& /*e*/, std::fstream& /*fFile*/)
   {
     throw std::logic_error("Read/Expand of 32 RID DoubleElementType not supported");
   }
   static void readWith32Rid(StringElementType& e, std::fstream& fFile);
   static void readWith32Rid(RIDElementType& e, std::fstream& fFile);
-  static void readWith32Rid(TupleType& e, std::fstream& fFile)
+  static void readWith32Rid(TupleType& /*e*/, std::fstream& /*fFile*/)
   {
     throw std::logic_error("Read/Expand of 32 RID TupleType not supported");
   }
@@ -404,7 +404,6 @@ template <typename SrcType>
     fFile.read(d, dlen);
     e.second.assign((const uint8_t*)d, dlen);
   }
-
 }
 
 /* static */ inline void ElementCompression::readWith32Rid(RIDElementType& e, std::fstream& fFile)

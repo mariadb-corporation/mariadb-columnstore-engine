@@ -62,7 +62,7 @@ DMLParser::~DMLParser()
 
 void DMLParser::setDebug(bool debug)
 {
-  fDebug = true;
+  fDebug = debug;
 }
 
 int DMLParser::parse(const char* dmltext)

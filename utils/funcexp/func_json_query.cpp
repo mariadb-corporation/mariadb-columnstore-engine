@@ -18,7 +18,6 @@ class QueryJSONPathWrapper : public JSONPathWrapper
   {
     return je->checkAndGetComplexVal(res, error);
   }
-
 };
 
 bool JSONEgWrapper::checkAndGetComplexVal(string& ret, int* error)
@@ -43,13 +42,13 @@ bool JSONEgWrapper::checkAndGetComplexVal(string& ret, int* error)
 }
 
 CalpontSystemCatalog::ColType Func_json_query::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_query::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& type)
+                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string ret;
   QueryJSONPathWrapper qpw;

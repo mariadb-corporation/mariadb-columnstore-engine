@@ -19,8 +19,7 @@
 // $Id: we_ddlcommandproc.cpp 3082 2011-09-26 22:00:38Z chao $
 
 #include <unistd.h>
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/scoped_ptr.hpp"
 using namespace std;
 
@@ -67,9 +66,7 @@ WE_DDLCommandProc::WE_DDLCommandProc()
   if (dbct.length() != 0)
     dbrootCnt = cf->uFromText(dbct);
 }
-WE_DDLCommandProc::WE_DDLCommandProc(const WE_DDLCommandProc& rhs)
-{
-}
+
 WE_DDLCommandProc::~WE_DDLCommandProc()
 {
 }
@@ -2366,9 +2363,9 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
   return rc;
 }
 
-uint8_t WE_DDLCommandProc::updateSystableEntryForSysColumn(int32_t sessionID, uint32_t txnID,
+uint8_t WE_DDLCommandProc::updateSystableEntryForSysColumn(int32_t /*sessionID*/, uint32_t txnID,
                                                            const DDLColumn& column, const std::string& value,
-                                                           const std::string& oldValue,
+                                                           const std::string& /*oldValue*/,
                                                            execplan::CalpontSystemCatalog::RIDList& roList,
                                                            std::string& err)
 {
@@ -2791,7 +2788,7 @@ uint8_t WE_DDLCommandProc::updateSystableAuto(ByteStream& bs, std::string& err)
   return rc;
 }
 
-uint8_t WE_DDLCommandProc::updateSystableEntryForSysTable(int32_t sessionID, uint32_t txnID,
+uint8_t WE_DDLCommandProc::updateSystableEntryForSysTable(int32_t /*sessionID*/, uint32_t txnID,
                                                           const DDLColumn& column, const std::string& value,
                                                           const std::string& oldValue,
                                                           CalpontSystemCatalog::ROPair ropair,

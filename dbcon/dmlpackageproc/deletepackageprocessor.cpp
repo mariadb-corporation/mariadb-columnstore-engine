@@ -801,7 +801,7 @@ bool DeletePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
 }
 
 bool DeletePackageProcessor::receiveAll(DMLResult& result, const uint64_t uniqueId, std::vector<int>& fPMs,
-                                        std::map<unsigned, bool>& pmStateDel, const uint32_t tableOid)
+                                        std::map<unsigned, bool>& pmStateDel, const uint32_t /*tableOid*/)
 {
   // check how many message we need to receive
   uint32_t messagesNotReceived = 0;

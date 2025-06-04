@@ -33,8 +33,8 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_sign::operationType(FunctionParm& fp,
-                                                       CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_sign::operationType(FunctionParm& /*fp*/,
+                                                       CalpontSystemCatalog::ColType& /*resultType*/)
 {
   CalpontSystemCatalog::ColType ct;
   ct.colDataType = CalpontSystemCatalog::BIGINT;
@@ -43,7 +43,7 @@ CalpontSystemCatalog::ColType Func_sign::operationType(FunctionParm& fp,
 }
 
 int64_t Func_sign::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                             CalpontSystemCatalog::ColType& op_ct)
+                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double val = parm[0]->data()->getDoubleVal(row, isNull);
 

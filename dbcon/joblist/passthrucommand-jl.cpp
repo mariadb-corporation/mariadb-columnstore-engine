@@ -76,7 +76,7 @@ PassThruCommandJL::~PassThruCommandJL()
 {
 }
 
-void PassThruCommandJL::setLBID(uint64_t l, uint32_t dbroot)
+void PassThruCommandJL::setLBID(uint64_t /*l*/, uint32_t /*dbroot*/)
 {
 }
 
@@ -87,7 +87,7 @@ void PassThruCommandJL::createCommand(ByteStream& bs) const
   CommandJL::createCommand(bs);
 }
 
-void PassThruCommandJL::runCommand(ByteStream& bs) const
+void PassThruCommandJL::runCommand(ByteStream& /*bs*/) const
 {
 }
 

@@ -129,7 +129,8 @@ class mcsv1Context;
 
 struct UserData
 {
-  UserData() : size(0), data(nullptr){};
+  UserData() : size(0), data(nullptr) {};
+  UserData(UserData&) = delete;
   explicit UserData(size_t sz)
   {
     size = sz;
@@ -174,10 +175,6 @@ struct UserData
   // The default data store. You may or may not wish to use these fields.
   uint32_t size;
   uint8_t* data;
-
- private:
-  // For now, copy construction is unwanted
-  UserData(UserData&);
 };
 
 // Flags to define the type and limitations of a UDA(n)F
@@ -446,7 +443,7 @@ struct ColumnDatum
   std::string alias;                                     // Only filled in for init()
   uint32_t charsetNumber;                                // For string collations
   ColumnDatum()
-   : dataType(execplan::CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1), charsetNumber(8){};
+   : dataType(execplan::CalpontSystemCatalog::UNDEFINED), scale(0), precision(-1), charsetNumber(8) {};
 };
 
 // Override mcsv1_UDAF to build your User Defined Aggregate (UDAF) and/or
@@ -601,7 +598,10 @@ class mcsv1_UDAF
    * dropValue() will not be called for unbounded/current row type
    * frames, as those are already optimized.
    */
-  virtual ReturnCode dropValue(mcsv1Context* context, ColumnDatum* valsDropped);
+  virtual ReturnCode dropValue(mcsv1Context* /*context*/, ColumnDatum* /*valsDropped*/)
+  {
+    return NOT_IMPLEMENTED;
+  }
 
   /**
    * createUserData()
@@ -623,7 +623,7 @@ class mcsv1_UDAF
    * create.
    *
    */
-  virtual ReturnCode createUserData(UserData*& userdata, int32_t& length);
+  virtual ReturnCode createUserData(UserData*& userData, int32_t& length);
 
  protected:
   double toDouble(ColumnDatum& datum) const
@@ -996,11 +996,6 @@ inline void mcsv1Context::setCharsetNumber(uint32_t csNum)
 inline uint32_t mcsv1Context::getCharsetNumber()
 {
   return fCharsetNumber;
-}
-
-inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::dropValue(mcsv1Context* context, ColumnDatum* valsDropped)
-{
-  return NOT_IMPLEMENTED;
 }
 
 inline mcsv1_UDAF::ReturnCode mcsv1_UDAF::createUserData(UserData*& userData, int32_t& length)

@@ -41,7 +41,7 @@ using namespace funcexp;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_least::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_least::operationType(FunctionParm& /*fp*/,
                                                         CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
@@ -50,7 +50,7 @@ CalpontSystemCatalog::ColType Func_least::operationType(FunctionParm& fp,
 }
 
 int64_t Func_least::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                              execplan::CalpontSystemCatalog::ColType& op_ct)
+                              execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double str = fp[0]->data()->getDoubleVal(row, isNull);
 
@@ -68,7 +68,7 @@ int64_t Func_least::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull
 }
 
 double Func_least::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                execplan::CalpontSystemCatalog::ColType& op_ct)
+                                execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   double str = fp[0]->data()->getDoubleVal(row, isNull);
 
@@ -86,7 +86,7 @@ double Func_least::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNu
 }
 
 long double Func_least::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                         execplan::CalpontSystemCatalog::ColType& op_ct)
+                                         execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   long double str = fp[0]->data()->getLongDoubleVal(row, isNull);
 
@@ -104,7 +104,7 @@ long double Func_least::getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, b
 }
 
 std::string Func_least::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   auto leastStr = fp[0]->data()->getStrVal(row, isNull);
   CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
@@ -123,7 +123,7 @@ std::string Func_least::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 }
 
 IDB_Decimal Func_least::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,
-                                      CalpontSystemCatalog::ColType& ct)
+                                      CalpontSystemCatalog::ColType& /*ct*/)
 {
   IDB_Decimal str = fp[0]->data()->getDecimalVal(row, isNull);
 
@@ -141,7 +141,7 @@ IDB_Decimal Func_least::getDecimalVal(Row& row, FunctionParm& fp, bool& isNull,
 }
 
 int32_t Func_least::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int32_t str = fp[0]->data()->getDateIntVal(row, isNull);
 
@@ -159,7 +159,7 @@ int32_t Func_least::getDateIntVal(rowgroup::Row& row, FunctionParm& fp, bool& is
 }
 
 int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& op_ct)
+                                      execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t str = fp[0]->data()->getDatetimeIntVal(row, isNull);
 
@@ -177,7 +177,7 @@ int64_t Func_least::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool
 }
 
 int64_t Func_least::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& op_ct)
+                                       execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t str = fp[0]->data()->getTimestampIntVal(row, isNull);
 
@@ -195,7 +195,7 @@ int64_t Func_least::getTimestampIntVal(rowgroup::Row& row, FunctionParm& fp, boo
 }
 
 int64_t Func_least::getTimeIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& op_ct)
+                                  execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   // Strip off unused day
   int64_t leastStr = fp[0]->data()->getTimeIntVal(row, isNull);

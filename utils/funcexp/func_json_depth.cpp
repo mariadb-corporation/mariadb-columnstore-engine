@@ -14,13 +14,13 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_depth::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& op_ct)
+                                   execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)

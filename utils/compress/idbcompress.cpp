@@ -602,10 +602,9 @@ size_t CompressInterfaceLZ4::maxCompressedSize(size_t uncompSize) const
   return (LZ4_COMPRESSBOUND(uncompSize) + HEADER_SIZE);
 }
 
-bool CompressInterfaceLZ4::getUncompressedSize(char* in, size_t inLen, size_t* outLen) const
+bool CompressInterfaceLZ4::getUncompressedSize(char* /*in*/, size_t /*inLen*/, size_t* /*outLen*/) const
 {
   // LZ4 does not have such function.
-  idbassert(false);
   return false;
 }
 

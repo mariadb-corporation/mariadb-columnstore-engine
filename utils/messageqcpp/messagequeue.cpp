@@ -81,7 +81,7 @@ struct sockaddr* hostnameResolver(const std::string& dnOrIp, const uint16_t port
   return sockAddrPtr;
 }
 
-void MessageQueueServer::setup(size_t blocksize, int backlog, bool syncProto)
+void MessageQueueServer::setup(size_t /*blocksize*/, int backlog, bool syncProto)
 {
   string thisEndPortStr;
 

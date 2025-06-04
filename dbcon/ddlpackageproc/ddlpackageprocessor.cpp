@@ -21,7 +21,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -1144,7 +1144,7 @@ DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackage(SqlStatement*
   return result;
 }
 
-DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackageInternal(SqlStatement* sqlStmt)
+DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackageInternal(SqlStatement* /*sqlStmt*/)
 {
   // This should not be called.
   DDLPackageProcessor::DDLResult result;
@@ -1383,7 +1383,7 @@ int DDLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
   return rc;
 }
 
-int DDLPackageProcessor::commitTransaction(uint64_t uniqueId, BRM::TxnID txnID)
+int DDLPackageProcessor::commitTransaction(uint64_t /*uniqueId*/, BRM::TxnID txnID)
 {
   int rc = fDbrm->vbCommit(txnID.id);
   return rc;

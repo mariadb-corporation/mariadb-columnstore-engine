@@ -95,11 +95,8 @@ class fileBlockRequestQueue
   uint32_t readersWaiting;
 
  private:
-  // do not implement
-  fileBlockRequestQueue(const fileBlockRequestQueue& Q)
-  {
-  }
-  const fileBlockRequestQueue& operator=(const fileBlockRequestQueue& Q);
+  fileBlockRequestQueue(const fileBlockRequestQueue&) = delete;
+  const fileBlockRequestQueue& operator=(const fileBlockRequestQueue&) = delete;
 
   /**
    * @brief pointer to the next request to be popped from the queue

@@ -39,7 +39,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -123,10 +123,9 @@ void setupSignalHandlers()
   sigaddset(&sigset, SIGPIPE);
   sigaddset(&sigset, SIGUSR2);
   sigprocmask(SIG_BLOCK, &sigset, 0);
-
 }
 
-int8_t setupCwd(Config* cf)
+int8_t setupCwd(Config* /*cf*/)
 {
   string workdir = startup::StartUp::tmpDir();
 
@@ -648,7 +647,6 @@ int ServicePrimProc::Child()
 
   if ((strVal == "n") || (strVal == "N"))
     directIOFlag = 0;
-
 
   IDBPolicy::configIDBPolicy();
 

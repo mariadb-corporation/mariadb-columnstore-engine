@@ -32,8 +32,7 @@ using namespace std;
 #include "boost/scoped_ptr.hpp"
 #include "boost/scoped_array.hpp"
 #include "boost/thread/mutex.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem.hpp"
 using namespace boost;
 
 #include "installdir.h"
@@ -1434,7 +1433,7 @@ void RedistributeWorkerThread::handleDataFinish(SBS& sbs, size_t& size)
   fIOSocket.write(fBs);
 }
 
-void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& size)
+void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& /*size*/)
 {
   size_t ack = 0;
   sbs.reset();
@@ -1446,7 +1445,7 @@ void RedistributeWorkerThread::handleDataCommit(SBS& sbs, size_t& size)
   fIOSocket.write(fBs);
 }
 
-void RedistributeWorkerThread::handleDataAbort(SBS& sbs, size_t& size)
+void RedistributeWorkerThread::handleDataAbort(SBS& sbs, size_t& /*size*/)
 {
   // close open file
   if (fNewFilePtr != NULL)

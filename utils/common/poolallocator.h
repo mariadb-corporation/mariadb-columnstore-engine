@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <unistd.h>
 #include <stdint.h>
 #include <optional>
@@ -34,7 +35,6 @@
 
 #include <boost/smart_ptr/allocate_shared_array.hpp>
 
-#include <atomic>
 
 #include "countingallocator.h"
 

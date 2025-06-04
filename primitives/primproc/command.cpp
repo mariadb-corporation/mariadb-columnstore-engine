@@ -39,7 +39,7 @@ void Command::createCommand(ByteStream& bs)
   bs >> stepUuid;
 }
 
-void Command::resetCommand(ByteStream& bs){};
+void Command::resetCommand(ByteStream& /*bs*/) {};
 
 void Command::setMakeAbsRids(bool)
 {

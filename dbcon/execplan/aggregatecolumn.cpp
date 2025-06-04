@@ -587,7 +587,16 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
       break;
 
     case CalpontSystemCatalog::VARBINARY:
-    case CalpontSystemCatalog::BLOB: isNull = true; break;
+    case CalpontSystemCatalog::BLOB:
+      {
+        auto const str = row.getConstString(fInputIndex);
+        fResult.strVal.dropString();
+        if (!str.isNull())
+          fResult.strVal.assign((const uint8_t*)str.str(), str.length());
+
+        isNull = isNull || fResult.strVal.isNull();
+      }
+      break;
 
     default:  // treat as int64
       if (row.equals<8>(BIGINTNULL, fInputIndex))

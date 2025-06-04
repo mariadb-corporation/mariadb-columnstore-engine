@@ -41,7 +41,7 @@ using namespace logging;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_to_days::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_to_days::operationType(FunctionParm& /*fp*/,
                                                           CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

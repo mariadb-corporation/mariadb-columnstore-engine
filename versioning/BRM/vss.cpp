@@ -1127,7 +1127,7 @@ void VSS::clear()
 }
 
 // read lock
-int VSS::checkConsistency(const VBBM& vbbm, ExtentMap& em) const
+int VSS::checkConsistency(const VBBM& vbbm, ExtentMap& /*em*/) const
 {
   /*
   1. Every valid entry in the VSS has an entry either in the VBBM or in the

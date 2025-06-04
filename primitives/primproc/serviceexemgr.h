@@ -94,7 +94,7 @@ class Opt
   }
 };
 
-  void printTotalUmMemory(int sig);
+void printTotalUmMemory(int sig);
 
 class ServiceExeMgr : public Service, public Opt
 {
@@ -102,7 +102,7 @@ class ServiceExeMgr : public Service, public Opt
   using ThreadCntPerSessionMap_t = std::map<uint32_t, uint32_t>;
 
  protected:
-  void log(logging::LOG_TYPE type, const std::string& str)
+  void log(logging::LOG_TYPE type, const std::string& /*str*/)
   {
     logging::LoggingID logid(16);
     logging::Message::Args args;
@@ -113,40 +113,43 @@ class ServiceExeMgr : public Service, public Opt
     logger.logMessage(type, message, logid);
   }
 
-  public:
-    ServiceExeMgr(const Opt& opt, joblist::ResourceManager* rm) : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16)), rm_(rm)
-    { }
-    void LogErrno() override
-    {
-      log(logging::LOG_TYPE_CRITICAL, std::string(strerror(errno)));
-    }
-    void ParentLogChildMessage(const std::string& str) override
-    {
-      log(logging::LOG_TYPE_INFO, str);
-    }
-    int Child() override;
-    int Run()
-    {
-      return m_fg ? Child() : RunForking();
-    }
-    static const constexpr unsigned logDefaultMsg = logging::M0000;
-    static const constexpr unsigned logDbProfStartStatement = logging::M0028;
-    static const constexpr unsigned logDbProfEndStatement = logging::M0029;
-    static const constexpr unsigned logStartSql = logging::M0041;
-    static const constexpr unsigned logEndSql = logging::M0042;
-    static const constexpr unsigned logRssTooBig = logging::M0044;
-    static const constexpr unsigned logDbProfQueryStats = logging::M0047;
-    static const constexpr unsigned logExeMgrExcpt = logging::M0055;
-    // If any flags other than the table mode flags are set, produce output to screeen
-    static const constexpr uint32_t flagsWantOutput = (0xffffffff & ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
-      ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
-    logging::Logger& getLogger()
-    {
-      return msgLog_;
-    }
-    void updateSessionMap(const size_t pct)
-    {
-      std::lock_guard<std::mutex> lk(sessionMemMapMutex_);
+ public:
+  ServiceExeMgr(const Opt& opt, joblist::ResourceManager* rm)
+   : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16)), rm_(rm)
+  {
+  }
+  void LogErrno() override
+  {
+    log(logging::LOG_TYPE_CRITICAL, std::string(strerror(errno)));
+  }
+  void ParentLogChildMessage(const std::string& str) override
+  {
+    log(logging::LOG_TYPE_INFO, str);
+  }
+  int Child() override;
+  int Run()
+  {
+    return m_fg ? Child() : RunForking();
+  }
+  static const constexpr unsigned logDefaultMsg = logging::M0000;
+  static const constexpr unsigned logDbProfStartStatement = logging::M0028;
+  static const constexpr unsigned logDbProfEndStatement = logging::M0029;
+  static const constexpr unsigned logStartSql = logging::M0041;
+  static const constexpr unsigned logEndSql = logging::M0042;
+  static const constexpr unsigned logRssTooBig = logging::M0044;
+  static const constexpr unsigned logDbProfQueryStats = logging::M0047;
+  static const constexpr unsigned logExeMgrExcpt = logging::M0055;
+  // If any flags other than the table mode flags are set, produce output to screeen
+  static const constexpr uint32_t flagsWantOutput =
+      (0xffffffff & ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_AUTOSWITCH &
+       ~execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF);
+  logging::Logger& getLogger()
+  {
+    return msgLog_;
+  }
+  void updateSessionMap(const size_t pct)
+  {
+    std::lock_guard<std::mutex> lk(sessionMemMapMutex_);
 
     for (auto mapIter = sessionMemMap_.begin(); mapIter != sessionMemMap_.end(); ++mapIter)
     {

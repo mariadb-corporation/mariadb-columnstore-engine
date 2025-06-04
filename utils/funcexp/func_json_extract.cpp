@@ -29,7 +29,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   bool mayMulVal;
   int wildcards;
   bool isMatch;
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   int arrayCounter[JSON_DEPTH_LIMIT];
   bool hasNegPath = false;
 #endif
@@ -45,12 +45,12 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     if (!path.parsed && parseJSPath(path, row, fp[i]))
       return 1;
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
 #endif
   }
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
   wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD | JSON_PATH_ARRAY_RANGE);
 #else
   wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD);
@@ -70,13 +70,13 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
         json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
       return 1;
 #endif
 
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter, false);
 #else
     isMatch = matchJSPath(paths, &p, jsEg.value_type, nullptr, false);
@@ -143,17 +143,16 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   retJS.swap(tmp);
 
   return 0;
-
 }
 
 CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& resultType)
+                                                               CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& type)
+                                    CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -164,8 +163,8 @@ string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
   return "";
 }
 
-int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                     execplan::CalpontSystemCatalog::ColType& type)
+int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
+                                     execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -190,8 +189,8 @@ int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool&
   return ret;
 }
 
-double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& type)
+double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string retJS;
   json_value_types valType;
@@ -217,7 +216,7 @@ double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, boo
 }
 
 execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                                       execplan::CalpontSystemCatalog::ColType& type)
+                                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   json_value_types valType;
   string retJS;

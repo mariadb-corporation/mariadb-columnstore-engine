@@ -166,7 +166,7 @@ uint64_t makedate(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_makedate::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_makedate::operationType(FunctionParm& /*fp*/,
                                                            CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

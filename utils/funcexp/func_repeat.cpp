@@ -38,7 +38,7 @@ using namespace joblist;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& /*fp*/,
                                                          CalpontSystemCatalog::ColType& resultType)
 {
   // operation type is not used by this functor
@@ -47,7 +47,7 @@ CalpontSystemCatalog::ColType Func_repeat::operationType(FunctionParm& fp,
 }
 
 std::string Func_repeat::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& type)
+                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   string str;
 

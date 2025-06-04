@@ -83,7 +83,8 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, allocators::CountingAllocator<rowgroup::Row::Pointer> >;
+using TNSDistinctMap_t =
+    std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >;
 };  // namespace
 
 inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
@@ -157,14 +158,14 @@ TupleAnnexStep::~TupleAnnexStep()
   fConstant = NULL;
 }
 
-void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& rg)
+void TupleAnnexStep::setOutputRowGroup(const rowgroup::RowGroup& /*rg*/)
 {
   throw runtime_error("Disabled, use initialize() to set output RowGroup.");
 }
 
 void TupleAnnexStep::initialize(const RowGroup& rgIn, const JobInfo& jobInfo)
 {
-  // Initialize ResourceManager to acount memory usage. 
+  // Initialize ResourceManager to acount memory usage.
   fRm = jobInfo.rm;
   // Initialize structures used by separate workers
   uint64_t id = 1;
@@ -456,8 +457,8 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   Row rowSkip;
   bool more = false;
 
-  auto alloc = fRm->getAllocator<rowgroup::Row::Pointer>();
-  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), alloc));
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(
+      new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), STLPoolAllocator<rowgroup::Row::Pointer>(fRm)));
 
   rgDataOut.reinit(fRowGroupOut);
   fRowGroupOut.setData(&rgDataOut);
@@ -573,6 +574,13 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
       dataVec.pop_back();
     }
   }
+  catch (const std::bad_alloc&)
+  {
+    auto errorCode = ERR_TNS_DISTINCT_IS_TOO_BIG;
+    auto newException = IDBExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeNoOrderByWithDistinct()");
+  }
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
@@ -588,12 +596,13 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
 
 void TupleAnnexStep::checkAndAllocateMemory4RGData(const rowgroup::RowGroup& rowGroup)
 {
-    uint64_t size = rowGroup.getSizeWithStrings() - rowGroup.getHeaderSize();
-    if (!fRm->getMemory(size, false))
-    {
-        cerr << IDBErrorInfo::instance()->errorMsg(ERR_TNS_DISTINCT_IS_TOO_BIG) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(ERR_TNS_DISTINCT_IS_TOO_BIG);
-    }
+  uint64_t size = rowGroup.getSizeWithStrings() - rowGroup.getHeaderSize();
+  if (!fRm->getMemory(size, false))
+  {
+    cerr << IDBErrorInfo::instance()->errorMsg(ERR_TNS_DISTINCT_IS_TOO_BIG) << " @" << __FILE__ << ":"
+         << __LINE__;
+    throw IDBExcept(ERR_TNS_DISTINCT_IS_TOO_BIG);
+  }
 }
 
 void TupleAnnexStep::executeWithOrderBy()
@@ -674,6 +683,13 @@ void TupleAnnexStep::executeWithOrderBy()
       }
     }
   }
+  catch (const std::bad_alloc&)
+  {
+    auto errorCode = fOrderBy->getErrorCode();
+    auto newException = IDBExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeWithOrderBy()");
+  }
   catch (...)
   {
     handleException(std::current_exception(), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
@@ -713,10 +729,9 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   // Calculate offset here
   fRowGroupOut.getRow(0, &fRowOut);
 
-  auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
-  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
-  auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
-  std::unique_ptr<TNSDistinctMap_t> distinctMap(new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), allocDistinct));
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, fRm->getAllocator<ordering::OrderByRow>());
+  std::unique_ptr<TNSDistinctMap_t> distinctMap(
+      new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), STLPoolAllocator<rowgroup::Row::Pointer>(fRm)));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
 
@@ -745,6 +760,13 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
         currentPQ.pop();
       }
     }
+  }
+  catch (const std::bad_alloc&)
+  {
+    auto errorCode = fOrderBy->getErrorCode();
+    auto newException = IDBExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::finalizeParallelOrderByDistinct()");
   }
   catch (...)
   {
@@ -910,8 +932,7 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   uint32_t rowSize = 0;
 
   rowgroup::RGData rgDataOut;
-  auto alloc = fRm->getAllocator<ordering::OrderByRow>();
-  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, alloc);
+  ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, fRm->getAllocator<ordering::OrderByRow>());
   rgDataOut.reinit(fRowGroupOut, rowgroup::rgCommonSize);
   fRowGroupOut.setData(&rgDataOut);
   fRowGroupOut.resetRowGroup(0);
@@ -938,6 +959,13 @@ void TupleAnnexStep::finalizeParallelOrderBy()
         currentPQ.pop();
       }
     }
+  }
+  catch (const std::bad_alloc&)
+  {
+    auto errorCode = fOrderBy->getErrorCode();
+    auto newException = IDBExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::finalizeParallelOrderBy()");
   }
   catch (...)
   {
@@ -1146,6 +1174,13 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
       if (more)
         dlOffset++;
     }
+  }
+  catch (const std::bad_alloc&)
+  {
+    auto errorCode = fOrderBy->getErrorCode();
+    auto newException = IDBExcept(errorCode);
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
+                    "TupleAnnexStep::executeParallelOrderBy()");
   }
   catch (...)
   {

@@ -38,7 +38,11 @@
 
 #include "we_tableinfo.h"
 #include "brmtypes.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "boost/ptr_container/ptr_vector.hpp"
+#pragma GCC diagnostic pop
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
@@ -187,19 +191,19 @@ class BulkLoad : public FileOp
   int fNumOfParser;  // total number of parser
   char fColDelim;    // delimits col values within a row
 
-  int fNoOfBuffers;                                // Number of read buffers
-  int fBufferSize;                                 // Read buffer size
-  int fFileVbufSize;                               // Internal file system buffer size
-  long long fMaxErrors;                            // Max allowable errors per job
-  std::string fAlternateImportDir;                 // Alternate bulk import directory
-  std::string fErrorDir;                           // Opt. where error records record
-  std::string fProcessName;                        // Application process name
+  int fNoOfBuffers;                                           // Number of read buffers
+  int fBufferSize;                                            // Read buffer size
+  int fFileVbufSize;                                          // Internal file system buffer size
+  long long fMaxErrors;                                       // Max allowable errors per job
+  std::string fAlternateImportDir;                            // Alternate bulk import directory
+  std::string fErrorDir;                                      // Opt. where error records record
+  std::string fProcessName;                                   // Application process name
   static std::vector<std::shared_ptr<TableInfo>> fTableInfo;  // Vector of Table information
-  int fNoOfParseThreads;                           // Number of parse threads
-  int fNoOfReadThreads;                            // Number of read threads
-  boost::thread_group fReadThreads;                // Read thread group
-  boost::thread_group fParseThreads;               // Parse thread group
-  boost::mutex fReadMutex;                         // Manages table selection by each
+  int fNoOfParseThreads;                                      // Number of parse threads
+  int fNoOfReadThreads;                                       // Number of read threads
+  boost::thread_group fReadThreads;                           // Read thread group
+  boost::thread_group fParseThreads;                          // Parse thread group
+  boost::mutex fReadMutex;                                    // Manages table selection by each
   //   read thread
   boost::mutex fParseMutex;  // Manages table/buffer/column
   //   selection by each parsing thread

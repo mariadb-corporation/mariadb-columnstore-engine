@@ -42,7 +42,6 @@ class ByteStream;
 
 }
 
-
 namespace config
 {
 /** @brief a config file I/F class
@@ -55,7 +54,6 @@ namespace config
 class Config
 {
  public:
-
   /** @brief Config factory method
    *
    * Creates a singleton Config object
@@ -96,8 +94,7 @@ class Config
    * @param name the param name whose value is to be returned
    * @param values the values in the section are returned in this vector
    */
-  void getConfig(const std::string& section, const std::string& name,
-                        std::vector<std::string>& values);
+  void getConfig(const std::string& section, const std::string& name, std::vector<std::string>& values);
 
   /** @brief set name's value in section
    *
@@ -131,13 +128,6 @@ class Config
    * config filename.
    */
   void write(const std::string& fileName) const;
-
-  /** @brief write a stream copy of config file to disk
-   *
-   * write a stream copy of config file to disk. used to distributed mass updates to system nodes
-   *
-   */
-  void writeConfigFile(messageqcpp::ByteStream msg) const;
 
   /** @brief return the name of this config file
    *
@@ -256,11 +246,9 @@ class Config
 
   static Config& globConfigInstance();
 
-
   Config(const Config& rhs);
   Config& operator=(const Config& rhs);
   Config(const std::string& configFile);
-
 
   xmlDocPtr fDoc;
   const std::string fConfigFile;
@@ -272,11 +260,8 @@ class Config
    *
    */
   void checkAndReloadConfig();
-
 };
-
 
 }  // namespace config
 
 #undef EXPORT
-

@@ -42,7 +42,7 @@ namespace
 using namespace funcexp;
 
 dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                  CalpontSystemCatalog::ColType& ct, long timeZone)
+                                  CalpontSystemCatalog::ColType& /*ct*/, long timeZone)
 {
   TimeExtractor extractor;
   dataconvert::DateTime dateTime;
@@ -176,7 +176,7 @@ dataconvert::DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& 
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_str_to_date::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_str_to_date::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;

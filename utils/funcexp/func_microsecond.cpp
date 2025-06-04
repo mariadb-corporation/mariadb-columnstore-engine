@@ -36,14 +36,14 @@ using namespace execplan;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_microsecond::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_microsecond::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
 }
 
 int64_t Func_microsecond::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                    CalpontSystemCatalog::ColType& op_ct)
+                                    CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   int64_t val = 0;
   uint32_t microSecond = 0;

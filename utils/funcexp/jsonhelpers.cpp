@@ -13,7 +13,7 @@ int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const utils::NullString& st
 
   if (!err)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     bool support = (path->types_used & (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD | JSON_PATH_ARRAY_RANGE)) == 0;
 #else
     bool support = (path->types_used & (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD)) == 0;
@@ -25,12 +25,13 @@ int setupJSPath(json_path_t* path, CHARSET_INFO* cs, const utils::NullString& st
   return 1;
 }
 
-bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js, const CHARSET_INFO* jsCS)
+bool appendEscapedJS(string& ret, const CHARSET_INFO* retCS, const utils::NullString& js,
+                     const CHARSET_INFO* jsCS)
 {
   const int jsLen = js.length();
   const char* rawJS = js.str();
   int strLen = jsLen * 12 * jsCS->mbmaxlen / jsCS->mbminlen;
-  char* buf = (char*)alloca(strLen);
+  char* buf = (char*)alloca(strLen + 1);
   if ((strLen = json_escape(retCS, (const uchar*)rawJS, (const uchar*)rawJS + jsLen, jsCS, (uchar*)buf,
                             (uchar*)buf + strLen)) >= 0)
   {
@@ -251,7 +252,7 @@ int cmpPartJSPath(const json_path_step_t* a, const json_path_step_t* aEnd, const
     {
       if (b->type & JSON_PATH_ARRAY)
       {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
         int ret = 0, corrected_n_item_a = 0;
         if (arraySize)
           corrected_n_item_a = a->n_item < 0 ? arraySize[b - tmpB] + a->n_item : a->n_item;
@@ -355,11 +356,11 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
 }
 
 bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
-                 const int* arrayCounter, bool exact)
+                 [[maybe_unused]] const int* arrayCounter, bool exact)
 {
   for (size_t curr = 0; curr < paths.size(); curr++)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 100900
     int cmp = cmpJSPath(&paths[curr].p, p, valType, arrayCounter);
 #else
     int cmp = cmpJSPath(&paths[curr].p, p, valType);
@@ -372,4 +373,3 @@ bool matchJSPath(const vector<funcexp::JSONPath>& paths, const json_path_t* p, j
 }
 }  // namespace helpers
 }  // namespace funcexp
-

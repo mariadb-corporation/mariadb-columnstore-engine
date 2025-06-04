@@ -462,8 +462,8 @@ class SlaveDBRMNode
   EXPORT const std::atomic<bool>* getVSSLockStatus();
 
  private:
-  explicit SlaveDBRMNode(const SlaveDBRMNode& brm);
-  SlaveDBRMNode& operator=(const SlaveDBRMNode& brm);
+  explicit SlaveDBRMNode(const SlaveDBRMNode& brm) = delete;
+  SlaveDBRMNode& operator=(const SlaveDBRMNode& brm) = delete;
   int lookup(OID_t oid, LBIDRange_v& lbidList) throw();
 
   MasterSegmentTable mst;

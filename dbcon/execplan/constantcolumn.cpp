@@ -349,12 +349,10 @@ void RollupMarkColumn::unserialize(messageqcpp::ByteStream& b)
   b >> (uint8_t&)fResult.decimalVal.precision;
 }
 static utils::NullString ns;
-const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& row, bool& isNull)
+const utils::NullString& RollupMarkColumn::getStrVal(rowgroup::Row& /*row*/, bool& /*isNull*/)
 {
   return ns;
 }
-
-
 
 bool ConstantColumn::operator==(const ConstantColumn& t) const
 {

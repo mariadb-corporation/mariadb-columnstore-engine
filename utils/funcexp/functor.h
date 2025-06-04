@@ -88,7 +88,7 @@ class Func
     throw logging::IDBExcept(oss.str(), logging::ERR_DATATYPE_NOT_SUPPORT);
   }
 
-  virtual bool fix(execplan::FunctionColumn& col) const
+  virtual bool fix(execplan::FunctionColumn& /*col*/) const
   {
     return false;
   }

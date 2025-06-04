@@ -1,4 +1,3 @@
-
 add_subdirectory(dbbuilder)
 add_subdirectory(editem)
 add_subdirectory(dbloadxml)

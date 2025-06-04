@@ -45,6 +45,7 @@ using namespace logging;
 
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
+#include "basic/string_utils.h"
 
 extern "C"
 {
@@ -114,8 +115,8 @@ extern "C"
     return 0;
   }
 
-  const char* mcssetparms(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                          char* is_null, char* error)
+  const char* mcssetparms(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                          char* /*is_null*/, char* /*error*/)
   {
     char parameter[MAXSTRINGLENGTH];
     char valuestr[MAXSTRINGLENGTH];
@@ -188,7 +189,7 @@ extern "C"
     return setparms_init(initid, args, message, "MCSSETPARMS");
   }
 
-  void mcssetparms_deinit(UDF_INIT* initid)
+  void mcssetparms_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -203,7 +204,7 @@ extern "C"
     return setparms_init(initid, args, message, "CALSETPARMS");
   }
 
-  void calsetparms_deinit(UDF_INIT* initid)
+  void calsetparms_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -221,8 +222,8 @@ extern "C"
     return 0;
   }
 
-  const char* mcsgetstats(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                          char* is_null, char* error)
+  const char* mcsgetstats(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* length,
+                          char* is_null, char* /*error*/)
   {
     if (get_fe_conn_info_ptr() == NULL)
     {
@@ -253,7 +254,7 @@ extern "C"
     return getstats_init(initid, args, message, "MCSGETSTATS");
   }
 
-  void mcsgetstats_deinit(UDF_INIT* initid)
+  void mcsgetstats_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -268,11 +269,11 @@ extern "C"
     return getstats_init(initid, args, message, "CALGETSTATS");
   }
 
-  void calgetstats_deinit(UDF_INIT* initid)
+  void calgetstats_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  my_bool settrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool settrace_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 1 || args->arg_type[0] != INT_RESULT)
     {
@@ -283,7 +284,7 @@ extern "C"
     return 0;
   }
 
-  long long mcssettrace(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcssettrace(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*is_null*/, char* /*error*/)
   {
     if (get_fe_conn_info_ptr() == NULL)
     {
@@ -306,7 +307,7 @@ extern "C"
     return settrace_init(initid, args, message, "MCSSETTRACE");
   }
 
-  void mcssettrace_deinit(UDF_INIT* initid)
+  void mcssettrace_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -320,12 +321,12 @@ extern "C"
     return settrace_init(initid, args, message, "CALSETTRACE");
   }
 
-  void calsettrace_deinit(UDF_INIT* initid)
+  void calsettrace_deinit(UDF_INIT* /*initid*/)
   {
   }
 
   // Return 1 if system is ready for reads or 0 if not.
-  long long mcssystemready(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcssystemready(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     long long rtn = 0;
     Oam oam;
@@ -346,17 +347,17 @@ extern "C"
     return rtn;
   }
 
-  my_bool mcssystemready_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcssystemready_init(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*message*/)
   {
     return 0;
   }
 
-  void mcssystemready_deinit(UDF_INIT* initid)
+  void mcssystemready_deinit(UDF_INIT* /*initid*/)
   {
   }
 
   // Return non-zero if system is read only; 0 if writeable
-  long long mcssystemreadonly(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcssystemreadonly(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     long long rtn = 0;
     DBRM dbrm(true);
@@ -382,17 +383,17 @@ extern "C"
     return rtn;
   }
 
-  my_bool mcssystemreadonly_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcssystemreadonly_init(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*message*/)
   {
     return 0;
   }
 
-  void mcssystemreadonly_deinit(UDF_INIT* initid)
+  void mcssystemreadonly_deinit(UDF_INIT* /*initid*/)
   {
   }
 
   // Return non-zero if this is the primary UM; 0 if not primary
-  long long mcssystemprimary(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcssystemprimary(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     long long rtn = 0;
     Oam oam;
@@ -424,12 +425,12 @@ extern "C"
     return rtn;
   }
 
-  my_bool mcssystemprimary_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcssystemprimary_init(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*message*/)
   {
     return 0;
   }
 
-  void mcssystemprimary_deinit(UDF_INIT* initid)
+  void mcssystemprimary_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -467,8 +468,8 @@ extern "C"
     return viewtablelock_init(initid, args, message, "MCSVIEWTABLELOCK");
   }
 
-  const char* mcsviewtablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                               char* is_null, char* error)
+  const char* mcsviewtablelock(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                               char* /*is_null*/, char* /*error*/)
   {
     THD* thd = current_thd;
 
@@ -522,7 +523,7 @@ extern "C"
     return result;
   }
 
-  void mcsviewtablelock_deinit(UDF_INIT* initid)
+  void mcsviewtablelock_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -537,7 +538,7 @@ extern "C"
     return mcsviewtablelock(initid, args, result, length, is_null, error);
   }
 
-  void calviewtablelock_deinit(UDF_INIT* initid)
+  void calviewtablelock_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -570,7 +571,8 @@ extern "C"
     return 0;
   }
 
-  const char* mcs_set_ddldebug_level(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length)
+  const char* mcs_set_ddldebug_level(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result,
+                                     unsigned long* length)
   {
     uint32_t level = *reinterpret_cast<uint32_t*>(args->args[0]);
     std::unique_ptr<ddlpackage::DebugDDLStatement> stmt =
@@ -626,7 +628,7 @@ extern "C"
     return result;
   }
 
-  void mcs_set_ddldebug_level_deinit(UDF_INIT* initid)
+  void mcs_set_ddldebug_level_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -635,8 +637,8 @@ extern "C"
     return cleartablelock_init(initid, args, message, "MCSCLEARTABLELOCK");
   }
 
-  const char* mcscleartablelock(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                char* is_null, char* error)
+  const char* mcscleartablelock(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                                char* /*is_null*/, char* /*error*/)
   {
     if (get_fe_conn_info_ptr() == NULL)
     {
@@ -662,7 +664,7 @@ extern "C"
     return result;
   }
 
-  void mcscleartablelock_deinit(UDF_INIT* initid)
+  void mcscleartablelock_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -677,7 +679,7 @@ extern "C"
     return mcscleartablelock(initid, args, result, length, is_null, error);
   }
 
-  void calcleartablelock_deinit(UDF_INIT* initid)
+  void calcleartablelock_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -715,7 +717,7 @@ extern "C"
     return lastinsertid_init(initid, args, message, "MCSLASTINSERTID");
   }
 
-  long long mcslastinsertid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcslastinsertid(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*is_null*/, char* /*error*/)
   {
     THD* thd = current_thd;
 
@@ -775,7 +777,7 @@ extern "C"
     return (nextVal - 1);
   }
 
-  void mcslastinsertid_deinit(UDF_INIT* initid)
+  void mcslastinsertid_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -789,11 +791,11 @@ extern "C"
     return mcslastinsertid(initid, args, is_null, error);
   }
 
-  void callastinsertid_deinit(UDF_INIT* initid)
+  void callastinsertid_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  my_bool flushcache_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool flushcache_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
     {
@@ -804,11 +806,11 @@ extern "C"
     return 0;
   }
 
-  void mcsflushcache_deinit(UDF_INIT* initid)
+  void mcsflushcache_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  long long mcsflushcache(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcsflushcache(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     return static_cast<long long>(cacheutils::flushPrimProcCache());
   }
@@ -818,7 +820,7 @@ extern "C"
     return flushcache_init(initid, args, message, "MCSFLUSHCACHE");
   }
 
-  void calflushcache_deinit(UDF_INIT* initid)
+  void calflushcache_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -837,8 +839,8 @@ extern "C"
   // mysqld will call this with only 766 bytes available in result no matter what we asked for in
   // calgettrace_init()
   // if we return a pointer that is not result, mysqld will take our pointer and use it, freeing up result
-  const char* mcsgettrace(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                          char* is_null, char* error)
+  const char* mcsgettrace(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*result*/, unsigned long* length,
+                          char* is_null, char* /*error*/)
   {
     const std::string* msgp;
     int flags = 0;
@@ -881,7 +883,7 @@ extern "C"
     return msgp->c_str();
   }
 
-  my_bool gettrace_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool gettrace_init(UDF_INIT* initid, UDF_ARGS* /*args*/, char* /*message*/, const char* /*funcname*/)
   {
 #if 0
 
@@ -903,7 +905,7 @@ extern "C"
     return gettrace_init(initid, args, message, "MCSGETTRACE");
   }
 
-  void mcsgettrace_deinit(UDF_INIT* initid)
+  void mcsgettrace_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -918,11 +920,11 @@ extern "C"
     return gettrace_init(initid, args, message, "CALGETTRACE");
   }
 
-  void calgettrace_deinit(UDF_INIT* initid)
+  void calgettrace_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  my_bool getversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool getversion_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
     {
@@ -933,8 +935,8 @@ extern "C"
     return 0;
   }
 
-  const char* mcsgetversion(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                            char* is_null, char* error)
+  const char* mcsgetversion(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* length,
+                            char* /*is_null*/, char* /*error*/)
   {
     std::string version(columnstore_version);
     *length = version.size();
@@ -947,7 +949,7 @@ extern "C"
     return getversion_init(initid, args, message, "MCSGETVERSION");
   }
 
-  void mcsgetversion_deinit(UDF_INIT* initid)
+  void mcsgetversion_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -962,11 +964,11 @@ extern "C"
     return getversion_init(initid, args, message, "CALGETVERSION");
   }
 
-  void calgetversion_deinit(UDF_INIT* initid)
+  void calgetversion_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  my_bool getsqlcount_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool getsqlcount_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
     {
@@ -977,8 +979,8 @@ extern "C"
     return 0;
   }
 
-  const char* mcsgetsqlcount(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                             char* is_null, char* error)
+  const char* mcsgetsqlcount(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* length,
+                             char* /*is_null*/, char* /*error*/)
   {
     if (get_fe_conn_info_ptr() == NULL)
     {
@@ -1024,7 +1026,7 @@ extern "C"
     return getstats_init(initid, args, message, "MCSGETSQLCOUNT");
   }
 
-  void mcsgetsqlcount_deinit(UDF_INIT* initid)
+  void mcsgetsqlcount_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -1039,17 +1041,17 @@ extern "C"
     return getstats_init(initid, args, message, "CALGETSQLCOUNT");
   }
 
-  void calgetsqlcount_deinit(UDF_INIT* initid)
+  void calgetsqlcount_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  long long mcs_emindex_size(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcs_emindex_size(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     DBRM dbrm;
     return dbrm.EMIndexShmemSize();
   }
 
-  my_bool mcs_emindex_size_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_emindex_size_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
     {
@@ -1060,17 +1062,17 @@ extern "C"
     return 0;
   }
 
-  void mcs_emindex_size_deinit(UDF_INIT* initid)
+  void mcs_emindex_size_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-  long long mcs_emindex_free(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long mcs_emindex_free(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
   {
     DBRM dbrm;
     return dbrm.EMIndexShmemFree();
   }
 
-  my_bool mcs_emindex_free_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_emindex_free_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
     {
@@ -1081,7 +1083,7 @@ extern "C"
     return 0;
   }
 
-  void mcs_emindex_free_deinit(UDF_INIT* initid)
+  void mcs_emindex_free_deinit(UDF_INIT* /*initid*/)
   {
   }
 

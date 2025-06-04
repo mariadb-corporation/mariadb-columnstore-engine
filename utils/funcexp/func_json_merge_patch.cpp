@@ -260,14 +260,14 @@ int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_merge_patch::operationType(FunctionParm& fp,
-                                                                   CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_json_merge_patch::operationType(
+    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                        execplan::CalpontSystemCatalog::ColType& type)
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   // JSON_MERGE_PATCH return NULL if any argument is NULL
   bool isEmpty = false, hasNullArg = false;

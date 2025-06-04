@@ -310,11 +310,11 @@ struct ConstantAggData
   {
   }
 
-  ConstantAggData(utils::NullString v, RowAggFunctionType f, bool n) : fConstValue(v), fOp(f)
+  ConstantAggData(utils::NullString v, RowAggFunctionType f, bool /*n*/) : fConstValue(v), fOp(f)
   {
   }
 
-  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f, bool n)
+  ConstantAggData(utils::NullString v, std::string u, RowAggFunctionType f, bool /*n*/)
    : fConstValue(v), fUDAFName(u), fOp(f)
   {
   }
@@ -345,8 +345,7 @@ struct GroupConcat : public messageqcpp::Serializeable
 
   GroupConcat() = default;
   GroupConcat(joblist::ResourceManager* rm, boost::shared_ptr<int64_t> sessLimit)
-      : fRm(rm)
-      , fSessionMemLimit(sessLimit)
+   : fRm(rm), fSessionMemLimit(sessLimit)
   {
   }
 
@@ -848,7 +847,7 @@ class RowAggregationUMP2 : public RowAggregationUM
   void doBitOp(const Row&, int64_t, int64_t, int) override;
   void doUDAF(const Row&, int64_t, int64_t, int64_t, uint64_t& funcColsIdx,
               std::vector<mcsv1sdk::mcsv1Context>* rgContextColl = nullptr) override;
-  bool countSpecial(const RowGroup* pRG) override
+  bool countSpecial(const RowGroup* /*pRG*/) override
   {
     return false;
   }

@@ -1,6 +1,6 @@
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
-//#include <cmath>
+// #include <cmath>
 #include <iostream>
 #include <sstream>
 using namespace std;
@@ -54,7 +54,8 @@ void bailout(char* error, const string& funcName)
 
 int64_t idblocalpm()
 {
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
@@ -79,7 +80,7 @@ extern "C"
   /**
    * IDBDBROOT
    */
-      my_bool idbdbroot_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbdbroot_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -90,11 +91,11 @@ extern "C"
     return 0;
   }
 
-      void idbdbroot_deinit(UDF_INIT* initid)
+  void idbdbroot_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbdbroot(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbdbroot(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbdbroot");
     return 0;
@@ -104,7 +105,7 @@ extern "C"
    * IDBPM
    */
 
-      my_bool idbpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbpm_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -115,11 +116,11 @@ extern "C"
     return 0;
   }
 
-      void idbpm_deinit(UDF_INIT* initid)
+  void idbpm_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbpm(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbpm");
     return 0;
@@ -129,7 +130,7 @@ extern "C"
    * IDBEXTENTRELATIVERID
    */
 
-      my_bool idbextentrelativerid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbextentrelativerid_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -140,11 +141,11 @@ extern "C"
     return 0;
   }
 
-      void idbextentrelativerid_deinit(UDF_INIT* initid)
+  void idbextentrelativerid_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbextentrelativerid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbextentrelativerid(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbextentrelativerid");
     return 0;
@@ -154,7 +155,7 @@ extern "C"
    * IDBBLOCKID
    */
 
-      my_bool idbblockid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbblockid_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -165,11 +166,11 @@ extern "C"
     return 0;
   }
 
-      void idbblockid_deinit(UDF_INIT* initid)
+  void idbblockid_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbblockid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbblockid(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbblockid");
     return 0;
@@ -179,7 +180,7 @@ extern "C"
    * IDBEXTENTID
    */
 
-      my_bool idbextentid_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbextentid_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -190,11 +191,11 @@ extern "C"
     return 0;
   }
 
-      void idbextentid_deinit(UDF_INIT* initid)
+  void idbextentid_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbextentid(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbextentid(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbextentid");
     return 0;
@@ -204,7 +205,7 @@ extern "C"
    * IDBSEGMENT
    */
 
-      my_bool idbsegment_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbsegment_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -215,11 +216,11 @@ extern "C"
     return 0;
   }
 
-      void idbsegment_deinit(UDF_INIT* initid)
+  void idbsegment_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbsegment(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbsegment(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbsegment");
     return 0;
@@ -229,7 +230,7 @@ extern "C"
    * IDBSEGMENTDIR
    */
 
-      my_bool idbsegmentdir_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbsegmentdir_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -240,11 +241,11 @@ extern "C"
     return 0;
   }
 
-      void idbsegmentdir_deinit(UDF_INIT* initid)
+  void idbsegmentdir_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idbsegmentdir(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idbsegmentdir(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* error)
   {
     bailout(error, "idbsegmentdir");
     return 0;
@@ -254,7 +255,7 @@ extern "C"
    * IDBPARTITION
    */
 
-      my_bool idbpartition_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbpartition_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -265,12 +266,12 @@ extern "C"
     return 0;
   }
 
-      void idbpartition_deinit(UDF_INIT* initid)
+  void idbpartition_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      const char* idbpartition(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                               char* is_null, char* error)
+  const char* idbpartition(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* /*length*/,
+                           char* /*is_null*/, char* error)
   {
     bailout(error, "idbpartition");
     return result;
@@ -280,7 +281,7 @@ extern "C"
    * IDBEXTENTMIN
    */
 
-      my_bool idbextentmin_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbextentmin_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -292,12 +293,12 @@ extern "C"
     return 0;
   }
 
-      void idbextentmin_deinit(UDF_INIT* initid)
+  void idbextentmin_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      const char* idbextentmin(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                               char* is_null, char* error)
+  const char* idbextentmin(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* /*length*/,
+                           char* /*is_null*/, char* error)
   {
     bailout(error, "idbextentmin");
     return result;
@@ -307,7 +308,7 @@ extern "C"
    * IDBEXTENTMAX
    */
 
-      my_bool idbextentmax_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idbextentmax_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 1)
     {
@@ -319,12 +320,12 @@ extern "C"
     return 0;
   }
 
-      void idbextentmax_deinit(UDF_INIT* initid)
+  void idbextentmax_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      const char* idbextentmax(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                               char* is_null, char* error)
+  const char* idbextentmax(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* result, unsigned long* /*length*/,
+                           char* /*is_null*/, char* error)
   {
     bailout(error, "idbextentmax");
     return result;
@@ -334,7 +335,7 @@ extern "C"
    * IDBLOCALPM
    */
 
-      my_bool idblocalpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool idblocalpm_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count != 0)
     {
@@ -346,11 +347,11 @@ extern "C"
     return 0;
   }
 
-      void idblocalpm_deinit(UDF_INIT* initid)
+  void idblocalpm_deinit(UDF_INIT* /*initid*/)
   {
   }
 
-      long long idblocalpm(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* error)
+  long long idblocalpm(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* is_null, char* /*error*/)
   {
     longlong localpm = idblocalpm();
 
@@ -378,10 +379,11 @@ uint32_t isPseudoColumn(string funcName)
   return execplan::PseudoColumn::pseudoNameToType(funcName);
 }
 
-execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& nonSupport,
+execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool& /*nonSupport*/,
                                             uint32_t pseudoType)
 {
-  if (get_fe_conn_info_ptr() == NULL) {
+  if (get_fe_conn_info_ptr() == NULL)
+  {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }

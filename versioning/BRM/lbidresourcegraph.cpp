@@ -35,11 +35,6 @@ LBIDResourceGraph::LBIDResourceGraph() : color(0)
 {
 }
 
-LBIDResourceGraph::LBIDResourceGraph(const LBIDResourceGraph& r)
-{
-  throw logic_error("Don't do that");
-}
-
 LBIDResourceGraph::~LBIDResourceGraph()
 {
   std::map<VER_t, TransactionNode*>::iterator tnit;
@@ -69,12 +64,6 @@ LBIDResourceGraph::~LBIDResourceGraph()
     resources.erase(rit++);
   }
 }
-
-LBIDResourceGraph& LBIDResourceGraph::operator=(const LBIDResourceGraph& r)
-{
-  throw logic_error("Don't do that");
-}
-
 void LBIDResourceGraph::connectResources(LBID_t start, LBID_t end, TransactionNode* txnNode)
 {
   vector<ResourceNode*> intersection, reserveList;

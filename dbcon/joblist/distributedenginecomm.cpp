@@ -1053,7 +1053,7 @@ void DistributedEngineComm::pushToTheLocalQueueAndNotifyRecv(const messageqcpp::
 // SBS is cleared when it is sent to PP at the same host. This fact forces any
 // code uses ::writeToClient to send to a local node in the last turn.
 int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_t senderUniqueID,
-                                         bool doInterleaving)
+                                         bool /*doInterleaving*/)
 {
   MessageQueueMap::iterator it;
   // Keep mqe's stats from being freed early

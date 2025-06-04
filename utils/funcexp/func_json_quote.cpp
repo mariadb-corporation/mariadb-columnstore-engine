@@ -20,13 +20,13 @@ using namespace funcexp::helpers;
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_quote::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                       execplan::CalpontSystemCatalog::ColType& type)
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull || !isCharType(fp[0]->data()->resultType().colDataType))

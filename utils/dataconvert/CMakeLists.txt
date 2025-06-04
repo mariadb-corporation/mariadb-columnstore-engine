@@ -1,13 +1,8 @@
+include_directories(${ENGINE_COMMON_INCLUDES})
 
-include_directories( ${ENGINE_COMMON_INCLUDES} )
-
-
-########### next target ###############
+# ########## next target ###############
 
 set(dataconvert_LIB_SRCS dataconvert.cpp)
 
-add_library(dataconvert SHARED ${dataconvert_LIB_SRCS})
-
-add_dependencies(dataconvert loggingcpp)
-
-install(TARGETS dataconvert DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
+columnstore_library(dataconvert ${dataconvert_LIB_SRCS})
+columnstore_link(dataconvert PUBLIC loggingcpp datatypes)

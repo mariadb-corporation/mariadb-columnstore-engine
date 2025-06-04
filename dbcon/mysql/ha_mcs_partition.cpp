@@ -546,7 +546,7 @@ extern "C"
    * CalShowPartitions
    */
 
-  my_bool calshowpartitions_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool calshowpartitions_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     if (args->arg_count < 2 || args->arg_count > 3 || args->arg_type[0] != STRING_RESULT ||
         args->arg_type[1] != STRING_RESULT || (args->arg_count == 3 && args->arg_type[2] != STRING_RESULT))
@@ -573,7 +573,7 @@ extern "C"
   }
 
   const char* calshowpartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                char* is_null, char* error)
+                                char* /*is_null*/, char* /*error*/)
   {
     BRM::DBRM::refreshShmWithLock();
     DBRM em;
@@ -735,8 +735,8 @@ extern "C"
     return 0;
   }
 
-  const char* caldisablepartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                   char* is_null, char* error)
+  const char* caldisablepartitions(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                                   char* /*is_null*/, char* /*error*/)
   {
     CalpontSystemCatalog::TableName tableName;
     set<LogicalPartition> partitionNums;
@@ -772,7 +772,7 @@ extern "C"
     return result;
   }
 
-  void caldisablepartitions_deinit(UDF_INIT* initid)
+  void caldisablepartitions_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -814,8 +814,8 @@ extern "C"
     return 0;
   }
 
-  const char* calenablepartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                  char* is_null, char* error)
+  const char* calenablepartitions(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                                  char* /*is_null*/, char* /*error*/)
   {
     CalpontSystemCatalog::TableName tableName;
     string errMsg;
@@ -851,7 +851,7 @@ extern "C"
     return result;
   }
 
-  void calenablepartitions_deinit(UDF_INIT* initid)
+  void calenablepartitions_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -893,8 +893,8 @@ extern "C"
     return 0;
   }
 
-  const char* caldroppartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                char* is_null, char* error)
+  const char* caldroppartitions(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, unsigned long* length,
+                                char* /*is_null*/, char* /*error*/)
   {
     CalpontSystemCatalog::TableName tableName;
     string errMsg;
@@ -930,7 +930,7 @@ extern "C"
     return result;
   }
 
-  void caldroppartitions_deinit(UDF_INIT* initid)
+  void caldroppartitions_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -938,7 +938,7 @@ extern "C"
    * CalDropPartitionsByValue
    */
 
-  void caldroppartitionsbyvalue_deinit(UDF_INIT* initid)
+  void caldroppartitionsbyvalue_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -979,8 +979,8 @@ extern "C"
     return 0;
   }
 
-  const char* caldroppartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                       char* is_null, char* error)
+  const char* caldroppartitionsbyvalue(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result,
+                                       unsigned long* length, char* /*is_null*/, char* /*error*/)
   {
     string msg;
     CalpontSystemCatalog::TableName tableName;
@@ -1005,7 +1005,7 @@ extern "C"
    * CalDisablePartitionsByValue
    */
 
-  void caldisablepartitionsbyvalue_deinit(UDF_INIT* initid)
+  void caldisablepartitionsbyvalue_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -1042,8 +1042,8 @@ extern "C"
     return 0;
   }
 
-  const char* caldisablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result,
-                                          unsigned long* length, char* is_null, char* error)
+  const char* caldisablepartitionsbyvalue(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result,
+                                          unsigned long* length, char* /*is_null*/, char* /*error*/)
   {
     string msg;
     set<LogicalPartition> partSet;
@@ -1067,7 +1067,7 @@ extern "C"
   /**
    * CalEnablePartitionsByValue
    */
-  void calenablepartitionsbyvalue_deinit(UDF_INIT* initid)
+  void calenablepartitionsbyvalue_deinit(UDF_INIT* /*initid*/)
   {
   }
 
@@ -1104,8 +1104,8 @@ extern "C"
     return 0;
   }
 
-  const char* calenablepartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result,
-                                         unsigned long* length, char* is_null, char* error)
+  const char* calenablepartitionsbyvalue(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result,
+                                         unsigned long* length, char* /*is_null*/, char* /*error*/)
   {
     string msg;
     set<LogicalPartition> partSet;
@@ -1168,7 +1168,7 @@ extern "C"
   }
 
   const char* calshowpartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
-                                       char* is_null, char* error)
+                                       char* /*is_null*/, char* /*error*/)
   {
     BRM::DBRM::refreshShmWithLock();
     DBRM em;

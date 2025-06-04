@@ -46,18 +46,18 @@ bool checkKeyInList(const string& res, const uchar* key, const int keyLen)
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_keys::operationType(FunctionParm& fp,
-                                                            CalpontSystemCatalog::ColType& resultType)
+                                                            CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType& type)
+                                 execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
-  
+
   IntType keySize = 0;
   string ret;
   json_engine_t jsEg;

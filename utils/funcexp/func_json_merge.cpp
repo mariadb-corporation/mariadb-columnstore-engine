@@ -209,13 +209,13 @@ int doMerge(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2)
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_json_merge::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+                                                             CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& type)
+                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)

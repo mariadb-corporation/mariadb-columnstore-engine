@@ -163,7 +163,6 @@ class md5
   uint4 m_Count[2];
   uchar m_Buffer[64];
   uchar m_Digest[16];
-  uchar m_Finalized;
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -495,14 +494,14 @@ void md5::Decode(uint4* dest, uchar* src, uint4 nLength)
 namespace funcexp
 {
 CalpontSystemCatalog::ColType Func_md5::operationType(FunctionParm& fp,
-                                                      CalpontSystemCatalog::ColType& resultType)
+                                                      CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();
 }
 
 string Func_md5::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                           CalpontSystemCatalog::ColType& op_ct)
+                           CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   const auto& arg = parm[0]->data()->getStrVal(row, isNull);
   if (arg.isNull())
@@ -515,4 +514,3 @@ string Func_md5::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
 }
 
 }  // namespace funcexp
-

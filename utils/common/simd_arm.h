@@ -298,7 +298,7 @@ class SimdFilterProcessor<
     return vld1q_s32(reinterpret_cast<const int32_t*>(from));
   }
 
-  MCS_FORCE_INLINE MT cmpDummy(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpDummy(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0xFFFFFFFF);
   }
@@ -333,12 +333,12 @@ class SimdFilterProcessor<
     return cmpDummy(x, y);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0xFFFFFFFF);
   }
@@ -470,12 +470,12 @@ class SimdFilterProcessor<
     return vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(cmpEq(x, y))));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0xFFFFFFFFFFFFFFFF);
   }
@@ -618,12 +618,12 @@ class SimdFilterProcessor<
     return vmvnq_u32(vceqq_f32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0xFFFFFFFF);
   }
@@ -762,12 +762,12 @@ class SimdFilterProcessor<
     return vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(cmpEq(x, y))));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0xFFFFFFFFFFFFFFFF);
   }
@@ -911,12 +911,12 @@ class SimdFilterProcessor<
     return vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(vceqq_u64(x, y))));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u64(0xFFFFFFFFFFFFFFFF);
   }
@@ -1047,12 +1047,12 @@ class SimdFilterProcessor<
     return vmvnq_u32(vceqq_s32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0xFFFFFFFF);
   }
@@ -1180,7 +1180,7 @@ class SimdFilterProcessor<
     return vmvnq_u32(vceqq_u32(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0);
   }
@@ -1188,7 +1188,7 @@ class SimdFilterProcessor<
   {
     return vminvq_u32(x);
   }
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u32(0xFFFFFFFF);
   }
@@ -1321,12 +1321,12 @@ class SimdFilterProcessor<
     return vmvnq_u16(cmpEq(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u16(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u16(0xFFFF);
   }
@@ -1458,12 +1458,12 @@ class SimdFilterProcessor<
     return vmvnq_u16(vceqq_u16(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u16(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u16(0xFFFF);
   }
@@ -1591,12 +1591,12 @@ class SimdFilterProcessor<
     return vmvnq_u8(vceqq_s8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u8(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u8(0xff);
   }
@@ -1728,12 +1728,12 @@ class SimdFilterProcessor<
     return vmvnq_u8(vceqq_u8(x, y));
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysFalse(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u8(0);
   }
 
-  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType x, SimdType y)
+  MCS_FORCE_INLINE MT cmpAlwaysTrue(SimdType /*x*/, SimdType /*y*/)
   {
     return vdupq_n_u8(0xff);
   }

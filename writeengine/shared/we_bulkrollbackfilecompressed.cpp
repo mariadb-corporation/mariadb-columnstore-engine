@@ -24,7 +24,6 @@
 #include <sstream>
 #include <boost/scoped_array.hpp>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/convenience.hpp>
 
 #include "we_define.h"
 #include "we_fileop.h"
@@ -103,9 +102,8 @@ void BulkRollbackFileCompressed::truncateSegmentFile(OID columnOID, uint32_t dbR
   if (rc != NO_ERROR)
   {
     std::ostringstream oss;
-    oss << "Error reading compressed column ptr headers from DB for"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << errMsg;
+    oss << "Error reading compressed column ptr headers from DB for" << ": OID-" << columnOID << "; DbRoot-"
+        << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << errMsg;
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -121,9 +119,8 @@ void BulkRollbackFileCompressed::truncateSegmentFile(OID columnOID, uint32_t dbR
   if (!fCompressor)
   {
     std::ostringstream oss;
-    oss << "Error, wrong compression type for segment file"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << ";";
+    oss << "Error, wrong compression type for segment file" << ": OID-" << columnOID << "; DbRoot-" << dbRoot
+        << "; partition-" << partNum << "; segment-" << segNum << ";";
     throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
   }
 
@@ -159,9 +156,8 @@ void BulkRollbackFileCompressed::truncateSegmentFile(OID columnOID, uint32_t dbR
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error writing compressed column headers to DB for"
-          << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; " << ec.errorString(rc);
+      oss << "Error writing compressed column headers to DB for" << ": OID-" << columnOID << "; DbRoot-"
+          << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -174,9 +170,8 @@ void BulkRollbackFileCompressed::truncateSegmentFile(OID columnOID, uint32_t dbR
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error truncating compressed column extents from DB for"
-          << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; " << ec.errorString(rc);
+      oss << "Error truncating compressed column extents from DB for" << ": OID-" << columnOID << "; DbRoot-"
+          << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -211,9 +206,9 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
   long long startOffset = startOffsetBlk * BYTE_PER_BLOCK;
 
   std::ostringstream msgText1;
-  msgText1 << "Reinit HWM compressed column extent in db file"
-           << ": dbRoot-" << dbRoot << "; part#-" << partNum << "; seg#-" << segNum << "; rawOffset(bytes)-"
-           << startOffset << "; rawFreeBlks-" << nBlocks;
+  msgText1 << "Reinit HWM compressed column extent in db file" << ": dbRoot-" << dbRoot << "; part#-"
+           << partNum << "; seg#-" << segNum << "; rawOffset(bytes)-" << startOffset << "; rawFreeBlks-"
+           << nBlocks;
   fMgr->logAMessage(logging::LOG_TYPE_INFO, logging::M0075, columnOID, msgText1.str());
 
   std::string segFile;
@@ -239,9 +234,8 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
   if (rc != NO_ERROR)
   {
     std::ostringstream oss;
-    oss << "Error reading compressed column ptr headers from DB for"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << errMsg;
+    oss << "Error reading compressed column ptr headers from DB for" << ": OID-" << columnOID << "; DbRoot-"
+        << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << errMsg;
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -257,9 +251,8 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
   if (!fCompressor)
   {
     std::ostringstream oss;
-    oss << "Error, wrong compression type for segment file"
-        << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << ";";
+    oss << "Error, wrong compression type for segment file" << ": OID-" << columnOID << "; DbRoot-" << dbRoot
+        << "; partition-" << partNum << "; segment-" << segNum << ";";
     throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
   }
 
@@ -279,9 +272,9 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
       if (rc != NO_ERROR)
       {
         std::ostringstream oss;
-        oss << "Error restoring HWM chunk for"
-            << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-            << segNum << "; blkoff-" << blockOffset << "; " << errMsg;
+        oss << "Error restoring HWM chunk for" << ": OID-" << columnOID << "; DbRoot-" << dbRoot
+            << "; partition-" << partNum << "; segment-" << segNum << "; blkoff-" << blockOffset << "; "
+            << errMsg;
 
         fDbFile.closeFile(pFile);
         throw WeException(oss.str(), rc);
@@ -392,9 +385,8 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error writing compressed column headers to DB for"
-          << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; " << ec.errorString(rc);
+      oss << "Error writing compressed column headers to DB for" << ": OID-" << columnOID << "; DbRoot-"
+          << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -407,9 +399,8 @@ void BulkRollbackFileCompressed::reInitTruncColumnExtent(OID columnOID, uint32_t
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error truncating compressed column extents from DB for"
-          << ": OID-" << columnOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; " << ec.errorString(rc);
+      oss << "Error truncating compressed column extents from DB for" << ": OID-" << columnOID << "; DbRoot-"
+          << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -510,9 +501,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
   if (rc != NO_ERROR)
   {
     std::ostringstream oss;
-    oss << "Error reading compressed dctnry ptr headers from DB for"
-        << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << "; " << errMsg;
+    oss << "Error reading compressed dctnry ptr headers from DB for" << ": OID-" << dStoreOID << "; DbRoot-"
+        << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << errMsg;
 
     fDbFile.closeFile(pFile);
     throw WeException(oss.str(), rc);
@@ -528,9 +518,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
   if (!fCompressor)
   {
     std::ostringstream oss;
-    oss << "Error, wrong compression type for segment file"
-        << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-        << segNum << ";";
+    oss << "Error, wrong compression type for segment file" << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot
+        << "; partition-" << partNum << "; segment-" << segNum << ";";
     throw WeException(oss.str(), ERR_COMP_WRONG_COMP_TYPE);
   }
 
@@ -547,8 +536,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
     if (rc == ERR_FILE_NOT_EXIST)
     {
       std::ostringstream msgText3;
-      msgText3 << "No restore needed to Compressed dictionary file"
-               << ": dbRoot-" << dbRoot << "; part#-" << partNum << "; seg#-" << segNum;
+      msgText3 << "No restore needed to Compressed dictionary file" << ": dbRoot-" << dbRoot << "; part#-"
+               << partNum << "; seg#-" << segNum;
       fMgr->logAMessage(logging::LOG_TYPE_INFO, logging::M0075, dStoreOID, msgText3.str());
 
       fDbFile.closeFile(pFile);
@@ -558,9 +547,9 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
     if (rc != NO_ERROR)
     {
       std::ostringstream oss;
-      oss << "Error restoring HWM chunk for"
-          << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; blkoff-" << blockOffset << "; " << errMsg;
+      oss << "Error restoring HWM chunk for" << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot
+          << "; partition-" << partNum << "; segment-" << segNum << "; blkoff-" << blockOffset << "; "
+          << errMsg;
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -590,8 +579,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
     if (bAbbreviatedExtent)  // log adjusted nBlock count for abbrev extent
       msgText2 << "; rawFreeBlks-" << nBlocks << " (abbrev)";
 
-    msgText2 << "; restoredChunk-" << restoredChunkLen << " bytes"
-             << "; truncated to " << fileSizeBytes << " bytes";
+    msgText2 << "; restoredChunk-" << restoredChunkLen << " bytes" << "; truncated to " << fileSizeBytes
+             << " bytes";
     fMgr->logAMessage(logging::LOG_TYPE_INFO, logging::M0075, dStoreOID, msgText2.str());
 
     // Initialize the remainder of the extent after the HWM chunk
@@ -653,9 +642,8 @@ void BulkRollbackFileCompressed::reInitTruncDctnryExtent(OID dStoreOID, uint32_t
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error writing compressed dictionary headers to DB for"
-          << ": OID-" << dStoreOID << "; DbRoot-" << dbRoot << "; partition-" << partNum << "; segment-"
-          << segNum << "; " << ec.errorString(rc);
+      oss << "Error writing compressed dictionary headers to DB for" << ": OID-" << dStoreOID << "; DbRoot-"
+          << dbRoot << "; partition-" << partNum << "; segment-" << segNum << "; " << ec.errorString(rc);
 
       fDbFile.closeFile(pFile);
       throw WeException(oss.str(), rc);
@@ -838,8 +826,8 @@ int BulkRollbackFileCompressed::restoreHWMChunk(IDBDataFile* pFile, OID columnOI
   {
     WErrorCodes ec;
     std::ostringstream oss;
-    oss << "Error setting column file offset"
-        << "; offset-" << fileOffsetByteForRestoredChunk << "; " << ec.errorString(rc);
+    oss << "Error setting column file offset" << "; offset-" << fileOffsetByteForRestoredChunk << "; "
+        << ec.errorString(rc);
     errMsg = oss.str();
 
     delete backupFile;
@@ -877,9 +865,8 @@ int BulkRollbackFileCompressed::restoreHWMChunk(IDBDataFile* pFile, OID columnOI
     {
       WErrorCodes ec;
       std::ostringstream oss;
-      oss << "Error writing to column file"
-          << "; offset-" << fileOffsetByteForRestoredChunk << "; bytes-" << restoredChunkLen << "; "
-          << ec.errorString(rc);
+      oss << "Error writing to column file" << "; offset-" << fileOffsetByteForRestoredChunk << "; bytes-"
+          << restoredChunkLen << "; " << ec.errorString(rc);
       errMsg = oss.str();
 
       delete backupFile;
@@ -898,7 +885,7 @@ int BulkRollbackFileCompressed::restoreHWMChunk(IDBDataFile* pFile, OID columnOI
 // the backup file is not found, we assume that it's because one was not created
 // and thus not needed.
 //------------------------------------------------------------------------------
-bool BulkRollbackFileCompressed::doWeReInitExtent(OID columnOID, uint32_t dbRoot, uint32_t partNum,
+bool BulkRollbackFileCompressed::doWeReInitExtent(OID columnOID, uint32_t /*dbRoot*/, uint32_t partNum,
                                                   uint32_t segNum) const
 {
   std::ostringstream oss;

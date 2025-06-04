@@ -37,7 +37,7 @@ using namespace dataconvert;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_from_days::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_from_days::operationType(FunctionParm& /*fp*/,
                                                             CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -62,7 +62,7 @@ int32_t Func_from_days::getDateIntVal(rowgroup::Row& row, FunctionParm& parm, bo
 }
 
 int64_t Func_from_days::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                          CalpontSystemCatalog::ColType& ct)
+                                          CalpontSystemCatalog::ColType& /*ct*/)
 {
   double val1 = parm[0]->data()->getDoubleVal(row, isNull);
   int64_t daynr = (int64_t)(val1 > 0 ? val1 + 0.5 : val1 - 0.5);

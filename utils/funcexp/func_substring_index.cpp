@@ -36,8 +36,8 @@ using namespace joblist;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_substring_index::operationType(FunctionParm& fp,
-                                                                  CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_substring_index::operationType(
+    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type is not used by this functor
   return fp[0]->data()->resultType();

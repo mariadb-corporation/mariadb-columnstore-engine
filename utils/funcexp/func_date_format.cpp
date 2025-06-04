@@ -59,13 +59,9 @@ const string IDB_date_format(const DateTime& dt, const string& format, bool& isN
 
       switch (format[i])
       {
-        case 'M':
-          oss << helpers::monthFullNames[dt.month];
-          break;
+        case 'M': oss << helpers::monthFullNames[dt.month]; break;
 
-        case 'b':
-          oss << helpers::monthAbNames[dt.month].c_str();
-          break;
+        case 'b': oss << helpers::monthAbNames[dt.month].c_str(); break;
 
         case 'W':
           weekday = helpers::calc_mysql_weekday(dt.year, dt.month, dt.day, false, isNull);
@@ -83,9 +79,7 @@ const string IDB_date_format(const DateTime& dt, const string& format, bool& isN
           oss << helpers::weekdayAbNames[weekday];
           break;
 
-        case 'D':
-          oss << helpers::dayOfMonth[dt.day].c_str();
-          break;
+        case 'D': oss << helpers::dayOfMonth[dt.day].c_str(); break;
 
         case 'Y':
           sprintf(buf, "%04d", dt.year);
@@ -227,8 +221,8 @@ const string IDB_date_format(const DateTime& dt, const string& format, bool& isN
 }
 }  // namespace helpers
 
-CalpontSystemCatalog::ColType Func_date_format::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+CalpontSystemCatalog::ColType Func_date_format::operationType(FunctionParm& /*fp*/,
+                                                              CalpontSystemCatalog::ColType& /*resultType*/)
 {
   CalpontSystemCatalog::ColType ct;
   ct.colDataType = CalpontSystemCatalog::VARCHAR;

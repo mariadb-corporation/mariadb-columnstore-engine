@@ -32,10 +32,10 @@
 //------------------------------------------------------------------------------
 // ClearTableLockThread constructor
 //------------------------------------------------------------------------------
-ClearTableLockThread::ClearTableLockThread(BRM::DBRM* brm, messageqcpp::MessageQueueClient* clt,
+ClearTableLockThread::ClearTableLockThread(messageqcpp::MessageQueueClient* clt,
                                            const BRM::TableLockInfo& tInfo, const std::string& tblName,
                                            CLRTBLLOCK_MSGTYPE msgType, ClearTableLockStatus* pStatus)
- : fTableLockInfo(tInfo), fBrm(brm), fClt(clt), fTblName(tblName), fMsgType(msgType), fStatus(pStatus)
+ : fTableLockInfo(tInfo), fClt(clt), fTblName(tblName), fMsgType(msgType), fStatus(pStatus)
 {
 }
 

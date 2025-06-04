@@ -1,0 +1,18 @@
+DROP DATABASE IF EXISTS mcol_5670;
+CREATE DATABASE mcol_5670;
+USE mcol_5670;
+create table my_colstore_tab(`yyyymmdd` date DEFAULT NULL) engine=COLUMNSTORE;
+insert into my_colstore_tab values(date('2024-03-18'));
+insert into my_colstore_tab values(date(date('2024-03-18')-interval 1 year));
+select day(s.yyyymmdd) as OK_1, last_day(s.yyyymmdd) as OK_2, day(last_day(s.yyyymmdd)) as OK_3 from my_colstore_tab s;
+OK_1	OK_2	OK_3
+18	2024-03-31	31
+18	2023-03-31	31
+create table my_colstore_tab2(`yyyymmdd` datetime DEFAULT NULL) engine=COLUMNSTORE;
+insert into my_colstore_tab2 values('2024-03-18 13:40:31');
+insert into my_colstore_tab2 values('2024-03-18 13:40:31'-interval 1 year);
+select day(s.yyyymmdd) as OK_1, last_day(s.yyyymmdd) as OK_2, day(last_day(s.yyyymmdd)) as OK_3 from my_colstore_tab2 s;
+OK_1	OK_2	OK_3
+18	2024-03-31	31
+18	2023-03-31	31
+DROP DATABASE mcol_5670;

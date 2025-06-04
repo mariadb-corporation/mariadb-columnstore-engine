@@ -25,8 +25,8 @@
 #include <stack>
 #include <iterator>
 #include <algorithm>
-//#define NDEBUG
-//#include <cassert>
+// #define NDEBUG
+// #include <cassert>
 #include <vector>
 #include <set>
 #include <map>
@@ -300,7 +300,7 @@ void constructJoinedRowGroup(RowGroup& rg, set<uint32_t>& tableSet, TableInfoMap
   rg = tmpRg;
 }
 
-void updateExp2Cols(JobStepVector& expSteps, TableInfoMap& tableInfoMap, JobInfo& jobInfo)
+void updateExp2Cols(JobStepVector& expSteps, TableInfoMap& tableInfoMap, JobInfo& /*jobInfo*/)
 {
   for (JobStepVector::iterator it = expSteps.begin(); it != expSteps.end(); it++)
   {
@@ -817,7 +817,8 @@ void addExpresssionStepsToBps(TableInfoMap::iterator& mit, SJSTEP& sjsp, JobInfo
     }
     else
     {
-      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions, mit->second.fAlias, jobInfo));
+      sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions,
+                                     mit->second.fAlias, jobInfo));
 
       bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
     }
@@ -1003,8 +1004,8 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
           }
           else
           {
-            sjsp.reset(
-                new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions, mit->second.fAlias, jobInfo));
+            sjsp.reset(new CrossEngineStep(mit->second.fSchema, mit->second.fName, mit->second.fPartitions,
+                                           mit->second.fAlias, jobInfo));
             bps = dynamic_cast<CrossEngineStep*>(sjsp.get());
           }
         }
@@ -3407,8 +3408,9 @@ SP_JoinInfo joinToLargeTable(uint32_t large, TableInfoMap& tableInfoMap, JobInfo
         {
           if ((jointypes[i] & SEMI) || (jointypes[i] & ANTI) || (jointypes[i] & SCALAR))
           {
-            uint32_t tid = getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias,
-                                       smallSides[i]->fSchema, smallSides[i]->fView, smallSides[i]->fPartitions);
+            uint32_t tid =
+                getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias, smallSides[i]->fSchema,
+                            smallSides[i]->fView, smallSides[i]->fPartitions);
             correlateTables[tid] = i;
             correlateCompare[tid] = NULL;
           }
@@ -4173,8 +4175,9 @@ void joinTablesInOrder(uint32_t largest, JobStepVector& joinSteps, TableInfoMap&
       {
         if ((jointypes[i] & SEMI) || (jointypes[i] & ANTI) || (jointypes[i] & SCALAR))
         {
-          uint32_t tid = getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias,
-                                     smallSides[i]->fSchema, smallSides[i]->fView, smallSides[i]->fPartitions);
+          uint32_t tid =
+              getTableKey(jobInfo, smallSides[i]->fTableOid, smallSides[i]->fAlias, smallSides[i]->fSchema,
+                          smallSides[i]->fView, smallSides[i]->fPartitions);
           correlateTables[tid] = i;
           correlateCompare[tid] = NULL;
         }
@@ -4413,7 +4416,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
     const boost::shared_ptr<TupleKeyInfo>& keyInfo = jobInfo.keyInfo;
     cout << "query steps:" << endl;
 
-    for (const auto& step: querySteps)
+    for (const auto& step : querySteps)
     {
       auto* thjs = dynamic_cast<TupleHashJoinStep*>(step.get());
 
@@ -4436,7 +4439,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
     cout << "project steps:" << endl;
 
-    for (const auto& prStep: projectSteps)
+    for (const auto& prStep : projectSteps)
     {
       cout << typeid(prStep.get()).name() << ": " << prStep->oid() << " " << prStep->tupleId() << " "
            << getTableKey(jobInfo, prStep->tupleId()) << endl;
@@ -4444,7 +4447,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
     cout << "delivery steps:" << endl;
 
-    for (const auto& [_, value]: deliverySteps)
+    for (const auto& [_, value] : deliverySteps)
     {
       cout << typeid(value.get()).name() << endl;
     }
@@ -4606,7 +4609,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 
   // Make sure each query step has an output DL
   // This is necessary for toString() method on most steps
-  for (auto& step: steps)
+  for (auto& step : steps)
   {
     // if (dynamic_cast<OrDelimiter*>(it->get()))
     //	continue;
@@ -4798,7 +4801,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
       bool tableInOuterQuery = false;
       set<uint32_t> tableSet;  // involved unique tables
 
-      for (unsigned int table: tables)
+      for (unsigned int table : tables)
       {
         if (find(jobInfo.tableList.begin(), jobInfo.tableList.end(), table) != jobInfo.tableList.end())
           tableSet.insert(table);
@@ -5039,7 +5042,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
   joinTables(joinSteps, tableInfoMap, jobInfo, joinOrder, overrideLargeSideEstimate);
 
   // 3. put the steps together
-  for (uint32_t i: joinOrder)
+  for (uint32_t i : joinOrder)
     querySteps.insert(querySteps.end(), tableInfoMap[i].fQuerySteps.begin(),
                       tableInfoMap[i].fQuerySteps.end());
 

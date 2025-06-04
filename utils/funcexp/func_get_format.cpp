@@ -53,7 +53,7 @@ string known_date_time_formats[5][4] = {{"USA", "%m.%d.%Y", "%Y-%m-%d %H.%i.%s",
 
 string know_types[3] = {"DATE", "DATETIME", "TIME"};
 
-CalpontSystemCatalog::ColType Func_get_format::operationType(FunctionParm& fp,
+CalpontSystemCatalog::ColType Func_get_format::operationType(FunctionParm& /*fp*/,
                                                              CalpontSystemCatalog::ColType& resultType)
 {
   return resultType;
@@ -98,9 +98,7 @@ string Func_get_format::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& 
       {
         case 0: return known_date_time_formats[i][2]; break;
 
-        default:
-          isNull = true;
-          return "";
+        default: isNull = true; return "";
       }
     }
   }

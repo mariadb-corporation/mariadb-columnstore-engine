@@ -266,7 +266,7 @@ class Hasher64_r
     return h;
   }
 
-  inline uint64_t finalize(uint64_t h, uint64_t len) const
+  inline uint64_t finalize(uint64_t h, uint64_t /*len*/) const
   {
     h ^= h >> r;
     h *= m;

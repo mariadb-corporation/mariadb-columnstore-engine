@@ -104,7 +104,7 @@ class ClearTableLockThread
    *  @param msgType Message to process
    *  @param pStatus Status object used to track this bulkload rollback req
    */
-  ClearTableLockThread(BRM::DBRM* brm, messageqcpp::MessageQueueClient* clt, const BRM::TableLockInfo& tInfo,
+  ClearTableLockThread(messageqcpp::MessageQueueClient* clt, const BRM::TableLockInfo& tInfo,
                        const std::string& tblName, CLRTBLLOCK_MSGTYPE msgType, ClearTableLockStatus* pStatus);
 
   /** @brief Entry point for thread execution
@@ -121,7 +121,6 @@ class ClearTableLockThread
   }
 
   BRM::TableLockInfo fTableLockInfo;      // Initial table lock information
-  BRM::DBRM* fBrm;                        // Handle to DBRM
   messageqcpp::MessageQueueClient* fClt;  // Msg queue client to send/rcv msgs
   std::string fTblName;                   // Name of relevant table
   CLRTBLLOCK_MSGTYPE fMsgType;            // Msg type to process
