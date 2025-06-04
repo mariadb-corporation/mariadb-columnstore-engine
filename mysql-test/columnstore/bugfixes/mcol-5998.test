@@ -36,12 +36,8 @@ FLUSH PRIVILEGES;
 
 --exec echo "columnstore_innodb_queries_use_mcs = ON" >> /etc/my.cnf.d/columnstore.cnf
 # Restart server to apply configuration change
-
---shutdown_server
---source include/wait_until_disconnected.inc
---enable_reconnect
-# Write file to make mysql-test-run.pl start up the server again
---source include/wait_until_connected_again.inc
+--let $shutdown_timeout= 60
+--source include/restart_mysqld.inc
 
 show variables like 'columnstore_innodb_queries_use_mcs';
 
