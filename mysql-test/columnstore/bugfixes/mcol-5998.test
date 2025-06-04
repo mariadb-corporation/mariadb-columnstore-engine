@@ -34,9 +34,9 @@ CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
 
---exec echo "columnstore_innodb_queries_use_mcs = ON" >> /etc/my.cnf.d/columnstore.cnf
+--exec printf "\ncolumnstore_innodb_queries_use_mcs = ON\n" >> /etc/my.cnf.d/columnstore.cnf
 # Restart server to apply configuration change
---let $shutdown_timeout= 60
+--let $shutdown_timeout= 1260
 --source include/restart_mysqld.inc
 
 show variables like 'columnstore_innodb_queries_use_mcs';
