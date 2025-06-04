@@ -42,13 +42,14 @@ static inline void lg(T data)
 
 static inline void logBloomFilter(auto& bloomFilter)
 {
-  std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+  std::ofstream log("/tmp/bloom_udfmysql.log", std::ios::app);
   
   log << "STUB Bloom filter: \n";
   for (const auto& v : bloomFilter)
   {
     log << std::bitset<8>(v);
   }
+  log << "\n" << "bloom filter size: " << bloomFilter.size() << "\n";
   log << "\n\n";
 
 }
@@ -459,21 +460,27 @@ extern "C"
   {
     if (args->arg_count != 3)
     {
-      strcpy(message, "bloom_agg() requires three arguments: hashFuncCount, bloomFilterSize, columnData");
+      strcpy(message, "bloom_agg() requires 3 arguments: max_elem_count, false pos rate, column");
       return 1;
     }
 
-    initid->max_length = *reinterpret_cast<const uint64_t*>(args->args[1]);
+    // lg("max elem and fp rate: ");
+    // lg(*reinterpret_cast<uint64_t*>(args->args[0]));
+    // lg(*reinterpret_cast<uint64_t*>(args->args[1]));
+    
+    auto* data = new BloomData(
+      *reinterpret_cast<uint64_t*>(args->args[0]),
+      *reinterpret_cast<uint64_t*>(args->args[1])
+    );
 
-    size_t hashFuncCount = *reinterpret_cast<const size_t*>(args->args[2]);;
-    size_t bloomFilterSize = *reinterpret_cast<size_t*>(args->args[1]);
+    lg("Hash func count: ");
+    lg(data->fHashFuncCount);
 
-    auto* data = new BloomData(hashFuncCount);
-    data->bloomFilter.resize(bloomFilterSize, 0);
-
+    
     initid->ptr = (char*)data;
-
-    //logBloomFilter(data->bloomFilter);
+    
+    logBloomFilter(data->bloomFilter);
+    initid->max_length = data->bloomFilter.size();
 
     return 0;
   }
@@ -491,7 +498,7 @@ extern "C"
     void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
   {
     struct BloomData* data = (struct BloomData*)initid->ptr;
-    auto val = *reinterpret_cast<const uint64_t*>(args->args[0]);;
+    auto val = *reinterpret_cast<const uint64_t*>(args->args[2]);;
 
     addValueToBloomFilter(val, *data);
   }
@@ -522,18 +529,17 @@ extern "C"
   {
     if (args->arg_count != 3)
     {
-      strcpy(message, "bloom_contains() requires three arguments: bloom_agg, column, number of hash functions");
+      strcpy(message, "bloom_contains() requires three arguments: bloom_agg, column, max_element_count");
       return 1;
     }
 
     initid->max_length = 8;
-
     
     const char* rawData = args->args[0];
     unsigned long rawDataSize = args->lengths[0];
-    lg("before constructing bloom filter");
-    lg("rawData pointer: " + std::to_string(reinterpret_cast<uintptr_t>(rawData)));
-    lg("rawDataSize: " + std::to_string(rawDataSize));
+    // lg("before constructing bloom filter");
+    // lg("rawData pointer: " + std::to_string(reinterpret_cast<uintptr_t>(rawData)));
+    // lg("rawDataSize: " + std::to_string(rawDataSize));
     if (!rawData || rawDataSize == 0) {
         strcpy(message, "bloom_contains(): Invalid bloom filter data");
         return 1;
@@ -542,14 +548,13 @@ extern "C"
                             reinterpret_cast<const uint8_t*>(rawData) + rawDataSize);
 
 
-    lg("after constructing bloom filter");
+    // lg("after constructing bloom filter");
 
-    //auto hashFuncCount = static_cast<size_t>(*args->args[2]);
-    // auto hashFuncCount = std::strtoull(args->args[2], nullptr, 10);
-    auto hashFuncCount = *reinterpret_cast<const uint64_t*>(args->args[2]);
+    auto maxElemCount = *reinterpret_cast<const uint64_t*>(args->args[2]);
 
-    auto* data = new BloomData(hashFuncCount);
+    auto* data = new BloomData();
     data->bloomFilter = bloomFilter;
+    data->fHashFuncCount = getHashFuncCount(maxElemCount, bloomFilter.size() * blockSize);
 
     //logBloomFilter(data->bloomFilter);
 
@@ -588,8 +593,8 @@ extern "C"
     // auto val = static_cast<uint64_t>(*args->args[1]);
     auto val = *reinterpret_cast<const uint64_t*>(args->args[1]);
 
-    std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
-    log << "Value: " << val << "\n";
+    // std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
+    // log << "Value: " << val << "\n";
 
     //logBloomFilter(data->bloomFilter);
 
@@ -648,6 +653,7 @@ extern "C"
     const uint8_t* b = reinterpret_cast<const uint8_t*>(args->args[1]);
     uint8_t* out = reinterpret_cast<uint8_t*>(result);
 
+    // TODO: optimize this
     for (unsigned long i = 0; i < *length; ++i)
     {
         out[i] = a[i] & b[i];

@@ -31,16 +31,34 @@ using namespace bloom_funcs;
 
 using namespace mcsv1sdk;
 
+// Only for debugging
+#include <bitset>
+#include <fstream>
+
+static inline void logBloomFilter(auto& bloomFilter)
+{
+  std::ofstream log("/tmp/bloom_agglog", std::ios::app);
+  
+  log << "UDF Bloom filter: \n";
+  for (const auto& v : bloomFilter)
+  {
+    log << std::bitset<8>(v);
+  }
+  log << "\n" << "bloom filter size: " << bloomFilter.size() << "\n";
+  log << "\n\n";
+
+}
+
 mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
   if (context->getParameterCount() != 3)
   {
-    context->setErrorMessage("bloom_agg() requires 3 arguments");
+    context->setErrorMessage("bloom_agg() requires 3 arguments: max_elem_count, false pos rate, column");
     return mcsv1_UDAF::ERROR;
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  //context->setColWidth(65000);
+  context->setColWidth(65500);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }
@@ -61,21 +79,22 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
 {
   BloomAggData* data = static_cast<BloomAggData*>(context->getUserData());
 
-  if (context->isParamNull(0) || valsIn[0].columnData.empty())
+  if (context->isParamNull(2) || valsIn[2].columnData.empty())
   {
     return mcsv1_UDAF::SUCCESS;
   }
 
   if (!data->isInitialized)
   {
-    data->initialize(convertAnyTo<uint64_t>(valsIn[1].columnData), convertAnyTo<uint64_t>(valsIn[2].columnData));
+    data->initialize(convertAnyTo<uint64_t>(valsIn[0].columnData), convertAnyTo<uint64_t>(valsIn[1].columnData));
   }
 
-  //std::ofstream log("/tmp/bagg.log", std::ios::app);
-  //log << convertAnyTo<uint64_t>(valsIn[1].columnData) << "\n";
+  // std::ofstream log("/tmp/bagg.log", std::ios::app);
+  // log << "max el: " << convertAnyTo<uint64_t>(valsIn[0].columnData) << "\n";
+  // log << "gp tsyr: " << convertAnyTo<uint64_t>(valsIn[1].columnData) << "\n";
   
   // For now only numeric (non floating point) types are supported
-  switch (valsIn[0].dataType)
+  switch (valsIn[2].dataType)
   {
     // abs(val) if two values are same (even tho one is negative), the hash will be the same
     case datatypes::SystemCatalog::TINYINT:
@@ -89,7 +108,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::nextValue(mcsv1Context* context, ColumnDatum* 
     case datatypes::SystemCatalog::UINT:
     case datatypes::SystemCatalog::UBIGINT:
     {
-      auto intVal = convertAnyTo<uint64_t>(valsIn[0].columnData);
+      auto intVal = convertAnyTo<uint64_t>(valsIn[2].columnData);
       addValueToBloomFilter(intVal, *data);
       break;
     }
@@ -150,6 +169,8 @@ mcsv1_UDAF::ReturnCode bloom_agg::evaluate(mcsv1Context* context, static_any::an
 
   // std::string blob(data->bloomFilter.begin(), data->bloomFilter.end());
   // valOut = utils::NullString(blob);
+  
+  // logBloomFilter(data->bloomFilter);
 
   return mcsv1_UDAF::SUCCESS;
 }

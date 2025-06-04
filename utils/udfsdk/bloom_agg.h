@@ -20,27 +20,30 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "mcsv1_udaf.h"
+#include "bloom_funcs.h"
 
 #define EXPORT
 
 namespace mcsv1sdk
 {
 using BloomFilter = std::vector<uint8_t>;
+using namespace bloom_funcs;
 
 struct BloomAggData : public mcsv1sdk::UserData 
 {
-   BloomAggData(size_t hashFuncCount = 0, size_t bloomFilterSize = 200000)
-    : bloomFilter(bloomFilterSize, 0),
-      fHashFuncCount(hashFuncCount),
+   BloomAggData()
+    : bloomFilter(200000, 0),
       isInitialized(false)
    {}
 
-   void initialize(size_t bloomFilterSize, size_t hashFuncCount)
+   void initialize(size_t maxElemCount, double falsePosRate)
    {
-      fHashFuncCount = hashFuncCount;
-      bloomFilter.resize(bloomFilterSize);
+      auto bfBitCount = getBloomFilterBitCount(maxElemCount, falsePosRate/100);
+      fHashFuncCount = getHashFuncCount(maxElemCount, bfBitCount);
+      bloomFilter.resize((bfBitCount + blockSize - 1) / blockSize);
       isInitialized = true;
    }
 

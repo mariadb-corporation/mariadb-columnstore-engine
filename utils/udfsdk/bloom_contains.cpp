@@ -44,7 +44,7 @@ CalpontSystemCatalog::ColType bloom_contains::operationType(FunctionParm& fp,
   //assert(fp.size() == 3);
   CalpontSystemCatalog::ColType rt;
   //idbassert(fp[0]->data()->resultType().colDataType == execplan::CalpontSystemCatalog::VARBINARY);
-  lg(fp[1]->data()->getIntVal());
+  //lg(fp[1]->data()->getIntVal());
 
   rt.colDataType = execplan::CalpontSystemCatalog::INT;
   rt.colWidth = 8;
@@ -77,11 +77,8 @@ int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Ca
         return 0;
     }
 
-    vector<uint8_t> bloomFilter;
-    for (const auto& c : bloomFilterStr.toString())
-    {
-        bloomFilter.push_back(c);
-    }
+    std::string str = bloomFilterStr.toString();
+    BloomFilter bloomFilter(str.begin(), str.end());
 
     //logBloomFilter(bloomFilter);
 
@@ -100,8 +97,8 @@ int64_t bloom_contains::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Ca
         case CalpontSystemCatalog::UBIGINT:
         {
             auto val = parm[1]->data()->getIntVal();
-            //lg(val);
-            result = bloomFilterContains(val, bloomFilter, parm[2]->data()->getIntVal());
+            //lg(val);getHashFuncCount(maxElemCount, bloomFilter.size() * blockSize)
+            result = bloomFilterContains(val, bloomFilter, getHashFuncCount(parm[2]->data()->getIntVal(), bloomFilter.size()*blockSize));
         }
         default: break;
     }
