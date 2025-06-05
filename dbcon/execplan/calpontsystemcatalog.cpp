@@ -863,9 +863,11 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 
   ResourceManager* rm = ResourceManager::instance(true);
   DistributedEngineComm* fEc = DistributedEngineComm::instance(rm);
+  idblog("calling health check"); fEc->healthCheck();
   PrimitiveServerThreadPools dummyPrimitiveServerThreadPools;
 
   SJLP jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
+  idblog("calling health check"); fEc->healthCheck();
   //@bug 2221. Work around to prevent DMLProc crash.
   int retryNum = 0;
 
@@ -876,6 +878,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 
     sleep(1);
     jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
+  idblog("calling health check"); fEc->healthCheck();
     retryNum++;
   }
 
@@ -894,6 +897,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   TupleJobList* tjlp = dynamic_cast<TupleJobList*>(jl.get());
   idbassert(tjlp);
   RowGroup rowGroup = tjlp->getOutputRowGroup();
+  idblog("calling health check"); fEc->healthCheck();
   RGData rgData;
 
   while (true)
@@ -904,6 +908,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     // XXXST: take out the 'true' when all jobsteps have been made st-compatible.
     rgData.deserialize(bs, true);
     rowGroup.setData(&rgData);
+  idblog("calling health check"); fEc->healthCheck();
 
     // rowGroup.setData(const_cast<uint8_t*>(bs.buf()));
     if ((status = rowGroup.getStatus()) != 0)
@@ -919,6 +924,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     else
       break;
   }
+  idblog("calling health check"); fEc->healthCheck();
 }
 
 void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
