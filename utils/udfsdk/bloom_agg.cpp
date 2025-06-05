@@ -49,7 +49,7 @@ static inline void logBloomFilter(auto& bloomFilter)
 
 }
 
-mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTypes)
+mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, [[maybe_unused]] ColumnDatum* colTypes)
 {
   if (context->getParameterCount() != 3)
   {
@@ -58,7 +58,7 @@ mcsv1_UDAF::ReturnCode bloom_agg::init(mcsv1Context* context, ColumnDatum* colTy
   }
 
   context->setResultType(execplan::CalpontSystemCatalog::VARBINARY);
-  context->setColWidth(65500);
+  context->setColWidth(70000);
   context->setRunFlag(mcsv1sdk::UDAF_IGNORE_NULLS);
   return mcsv1_UDAF::SUCCESS;
 }

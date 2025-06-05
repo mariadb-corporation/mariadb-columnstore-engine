@@ -30,13 +30,13 @@ static inline void logBloomFilter(auto& bloomFilter)
 template<typename T>
 static inline void lg(T data)
 {
-  std::ofstream log("/tmp/bc.log", std::ios::app);
+  std::ofstream log("/tmp/band.log", std::ios::app);
   log << data << "\n";
 }
 
-static const int defaultColWidth = 3500000;
+static const int defaultColWidth = 65000;
 CalpontSystemCatalog::ColType bloom_and::operationType(FunctionParm& fp,
-                                                     CalpontSystemCatalog::ColType& resultType)
+                                                     CalpontSystemCatalog::ColType& /*resultType*/)
 {
   // operation type of MCS_bloom_and is always a long text.
   assert(fp.size() == 2);
@@ -50,7 +50,7 @@ CalpontSystemCatalog::ColType bloom_and::operationType(FunctionParm& fp,
   return rt;
 }
 
-double bloom_and::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+double bloom_and::getDoubleVal(Row& /*row*/, FunctionParm& /*parm*/, bool& isNull, CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   isNull = true;
   return 0;
@@ -72,7 +72,7 @@ int64_t bloom_and::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
   return (int64_t)getDoubleVal(row, parm, isNull, op_ct);
 }
 
-string bloom_and::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+string bloom_and::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   string strBloomFilter1 = parm[0]->data()->getStrVal(row, isNull).toString();
   if (isNull)
@@ -99,7 +99,7 @@ string bloom_and::getStrVal(Row& row, FunctionParm& parm, bool& isNull, CalpontS
     result[i] = static_cast<char>(static_cast<uint8_t>(strBloomFilter1[i]) & static_cast<uint8_t>(strBloomFilter2[i]));
   }
 
-  //lg(result);
+  lg(result);
 
   return result;
 }
@@ -113,8 +113,8 @@ IDB_Decimal bloom_and::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
   return dec;
 }
 
-int32_t bloom_and::getDateIntVal(Row& row, FunctionParm& parm, bool& isNull,
-                               CalpontSystemCatalog::ColType& op_ct)
+int32_t bloom_and::getDateIntVal(Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                               CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   throw logic_error("Invalid API called for BLOOM_CONTAINS");
 }
@@ -125,7 +125,7 @@ int64_t bloom_and::getDatetimeIntVal(Row& row, FunctionParm& parm, bool& isNull,
   return (int64_t)bloom_and::getDoubleVal(row, parm, isNull, op_ct);
 }
 
-bool bloom_and::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
+bool bloom_and::getBoolVal(Row& /*row*/, FunctionParm& /*parm*/, bool& isNull, CalpontSystemCatalog::ColType& /*op_ct*/)
 {
   isNull = true;
   return false;

@@ -40,11 +40,11 @@ static inline void lg(T data)
   log << data << "\n";
 }
 
-static inline void logBloomFilter(auto& bloomFilter)
+static inline void logBloomFilter(auto& bloomFilter, string_view s)
 {
-  std::ofstream log("/tmp/bloom_udfmysql.log", std::ios::app);
+  std::ofstream log("/tmp/bloom_and_udfmysql.log", std::ios::app);
   
-  log << "STUB Bloom filter: \n";
+  log << "STUB Bloom filter, " << s << "\n";
   for (const auto& v : bloomFilter)
   {
     log << std::bitset<8>(v);
@@ -459,13 +459,13 @@ extern "C"
       *reinterpret_cast<uint64_t*>(args->args[1])
     );
 
-    lg("Hash func count: ");
-    lg(data->fHashFuncCount);
+    //lg("Hash func count: ");
+    //lg(data->fHashFuncCount);
 
     
     initid->ptr = (char*)data;
     
-    logBloomFilter(data->bloomFilter);
+    //logBloomFilter(data->bloomFilter);
     initid->max_length = data->bloomFilter.size();
 
     return 0;
@@ -476,12 +476,12 @@ extern "C"
     free(initid->ptr);
   }
 
-    void bloom_agg_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+    void bloom_agg_clear(UDF_INIT* initid __attribute__((unused)), char* is_null __attribute__((unused)),
                      char* message __attribute__((unused)))
   {
   }
 
-    void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+    void bloom_agg_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null __attribute__((unused)), char* message __attribute__((unused)))
   {
     struct BloomData* data = (struct BloomData*)initid->ptr;
     auto val = *reinterpret_cast<const uint64_t*>(args->args[2]);;
@@ -490,7 +490,7 @@ extern "C"
   }
 
     char* bloom_agg(UDF_INIT *initid __attribute__((unused)),
-               UDF_ARGS *args, char *result, unsigned long *length,
+               UDF_ARGS *args __attribute__((unused)), char *result, unsigned long *length,
                char *is_null, char *error __attribute__((unused)))
   {
     struct BloomData* data = (struct BloomData*)initid->ptr;
@@ -541,6 +541,7 @@ extern "C"
     auto* data = new BloomData();
     data->bloomFilter = bloomFilter;
     data->fHashFuncCount = getHashFuncCount(maxElemCount, bloomFilter.size() * blockSize);
+    //lg(data->fHashFuncCount);
 
     //logBloomFilter(data->bloomFilter);
 
@@ -554,12 +555,12 @@ extern "C"
     free(initid->ptr);
   }
 
-    void bloom_contains_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+    void bloom_contains_clear(UDF_INIT* initid __attribute__((unused)), char* is_null __attribute__((unused)),
                      char* message __attribute__((unused)))
   {
   }
 
-    void bloom_contains_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+    void bloom_contains_add(UDF_INIT* initid __attribute__((unused)), UDF_ARGS* args __attribute__((unused)), char* is_null __attribute__((unused)), char* message __attribute__((unused)))
   {
   }
 
@@ -577,12 +578,16 @@ extern "C"
     *is_null = 0;
 
     // auto val = static_cast<uint64_t>(*args->args[1]);
-    auto val = *reinterpret_cast<const uint64_t*>(args->args[1]);
+    auto val = *reinterpret_cast<const int64_t*>(args->args[1]);
 
     // std::ofstream log("/tmp/bloom_udf.log", std::ios::app);
     // log << "Value: " << val << "\n";
 
-    //logBloomFilter(data->bloomFilter);
+    // logBloomFilter(data->bloomFilter, "BLOOM_CONTAINS");
+    // lg(data->fHashFuncCount);
+    // lg("bloom filter size: ");
+    // lg(data->bloomFilter.size());
+    // lg(val);
 
     return bloomFilterContains(val, data->bloomFilter, data->fHashFuncCount);
   }
@@ -604,19 +609,33 @@ extern "C"
 
     initid->max_length = args->lengths[0];
 
+    initid->max_length = args->lengths[0];  
+      
+    // Allocate buffer for the result  
+    if (!(initid->ptr = (char*)malloc(args->lengths[0])))  
+    {  
+        strcpy(message, "Couldn't allocate memory for result buffer");  
+        return 1;  
+    }  
+
     return 0;
   }
 
-    void bloom_and_deinit(UDF_INIT* initid)
-  {
+    void bloom_and_deinit(UDF_INIT* initid __attribute__((unused)))
+{
+    if (initid->ptr)  
+    {  
+        free(initid->ptr);  
+        initid->ptr = nullptr;  
+    }  
   }
 
-    void bloom_and_clear(UDF_INIT* initid, char* is_null __attribute__((unused)),
+    void bloom_and_clear(UDF_INIT* initid __attribute__((unused)), char* is_null __attribute__((unused)),
                      char* message __attribute__((unused)))
   {
   }
 
-    void bloom_and_add(UDF_INIT* initid, UDF_ARGS* args, char* is_null, char* message __attribute__((unused)))
+    void bloom_and_add(UDF_INIT* initid __attribute__((unused)), UDF_ARGS* args __attribute__((unused)), char* is_null __attribute__((unused)), char* message __attribute__((unused)))
   {
   }
 
@@ -630,23 +649,20 @@ extern "C"
       return result;
     }
 
-    //logBloomFilter(data->bloomFilter);
-
-    *is_null = 0;
-    *length = args->lengths[0];
-
-    const uint8_t* a = reinterpret_cast<const uint8_t*>(args->args[0]);
-    const uint8_t* b = reinterpret_cast<const uint8_t*>(args->args[1]);
-    uint8_t* out = reinterpret_cast<uint8_t*>(result);
-
-    // TODO: optimize this
-    for (unsigned long i = 0; i < *length; ++i)
-    {
-        out[i] = a[i] & b[i];
-    }
-
-    //memcpy(result, data->bloomFilter.data(), *length);
-    return result;
+    *length = args->lengths[0];  
+      
+    uint8_t* out = reinterpret_cast<uint8_t*>(initid->ptr);  
+    const uint8_t* a = reinterpret_cast<const uint8_t*>(args->args[0]);  
+    const uint8_t* b = reinterpret_cast<const uint8_t*>(args->args[1]);  
+      
+    for (unsigned long i = 0; i < *length; ++i)  
+    {  
+        out[i] = a[i] & b[i];  
+    }  
+      
+    return initid->ptr;
   }
+
+
 
 }
