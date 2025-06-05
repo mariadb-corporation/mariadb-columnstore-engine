@@ -1294,6 +1294,13 @@ void DistributedEngineComm::getLocalNetIfacesSins()
   }
   freeifaddrs(netIfacesList);
 }
+int32_t DistributedEngineComm::healthCheck()
+{
+  for (uint32_t i = 0; i < fPmConnections.size(); i++)
+  {
+    std::lock_guard lk(*(fWlock[i]));
+  }
+}
 template bool DistributedEngineComm::clientAtTheSameHost<DistributedEngineComm::SharedPtrEMSock>(
     SharedPtrEMSock& client) const;
 }  // namespace joblist
