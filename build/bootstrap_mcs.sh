@@ -390,6 +390,11 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-DDEB=${CODENAME})
     fi
 
+    if [[ "$NO_CLEAN" == true ]]; then
+        message "Skipping Columnstore.etc config installation"
+        MDB_CMAKE_FLAGS+=(-DSKIP_CONFIG_INSTALLATION=ON)
+    fi
+
     MDB_CMAKE_FLAGS+=($CUSTOM_CMAKE_FLAGS)
 
     message "Building with flags"
@@ -619,8 +624,10 @@ install() {
 
         make_dir /etc/columnstore
 
-        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
-        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
+        if [[ "$NO_CLEAN" == false ]]; then
+            cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+            cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
+        fi
 
         cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
