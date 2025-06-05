@@ -1,5 +1,5 @@
--- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
 -- disable_warnings
 DROP DATABASE IF EXISTS `mcol_5998`;
 -- enable_warnings
@@ -34,11 +34,12 @@ CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
 
+--echo #log_error
+select @@log_error;
+
 --exec printf "\ncolumnstore_innodb_queries_use_mcs = ON\n" >> /etc/my.cnf.d/columnstore.cnf
 # Restart server to apply configuration change
-SET GLOBAL innodb_fast_shutdown=0;
-let $restart_parameters=--innodb_encrypt_log=0 --plugin-load-add=$DEBUG_KEY_MANAGEMENT_SO;
---source include/restart_mysqld.inc
+-- source include/restart_mysqld.inc
 
 show variables like 'columnstore_innodb_queries_use_mcs';
 
