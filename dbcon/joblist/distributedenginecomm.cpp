@@ -1294,7 +1294,7 @@ void DistributedEngineComm::getLocalNetIfacesSins()
   }
   freeifaddrs(netIfacesList);
 }
-int32_t DistributedEngineComm::healthCheck()
+void DistributedEngineComm::healthCheck()
 {
   for (uint32_t i = 0; i < fPmConnections.size(); i++)
   {
