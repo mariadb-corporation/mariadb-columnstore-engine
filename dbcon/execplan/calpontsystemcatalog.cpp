@@ -103,6 +103,13 @@ std::ofstream csclog(tmpDir, std::ios::app);
   cerr
 #endif
 
+#define HEALTHCHECK \
+  do { \
+    ResourceManager* rm = ResourceManager::instance(true); \
+    DistributedEngineComm* fEc = DistributedEngineComm::instance(rm); \
+    idblog("calling health check"); fEc->healthCheck(); idblog("health check returned"); \
+  } while(0)
+
 namespace execplan
 {
 const SOP opeq(new Operator("="));
@@ -766,6 +773,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
   }
 
   idblog("Query context");
+  HEALTHCHECK;
   BRM::QueryContext verID, oldVerID;
   verID = fSessionManager->verID();
   oldTxnID = csep.txnID();
@@ -2992,6 +3000,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                                                                      int lower_case_table_names)
 {
   TableName aTableName(tableName);
+  HEALTHCHECK;
 
   if (lower_case_table_names)
   {
@@ -3012,6 +3021,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   {
     checkSysCatVer();
   }
+  HEALTHCHECK;
 
   boost::mutex::scoped_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
@@ -3076,6 +3086,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   lk1.unlock();
   lk3.unlock();
+  HEALTHCHECK;
 
   if (aTableName.schema != CALPONT_SCHEMA)
     DEBUG << aTableName << " was not cached, fetching..." << endl;
@@ -3198,6 +3209,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     oss << "EC";
   else
     oss << "FE";
+  HEALTHCHECK;
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
@@ -3258,6 +3270,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     fTableInfoMap[aTableName] = ti;
     lk1.unlock();
   }
+  HEALTHCHECK;
 
   // loop 2nd time to make sure rl has been populated.
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
@@ -3367,9 +3380,11 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
         ctList[i].charsetNumber = ((*it)->GetData(i));
     }
   }
+  HEALTHCHECK;
 
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
   std::sort(ctList, ctList + ti.numOfCols, ctListSort);
+  HEALTHCHECK;
 
   // populate colinfo cache
   lk3.lock();
@@ -3395,8 +3410,11 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       }
     }
   }
+  HEALTHCHECK;
 
   delete[] ctList;
+  HEALTHCHECK;
+
 
   // delete col[9];
   if (rlOut.size() != 0)
