@@ -797,7 +797,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Return a string rep of the CSEP
    * @return a string
    */
-  virtual std::string toString() const;
+  virtual std::string toString(const size_t ident = 0) const;
 
   /** @brief Is this an internal query?
    *

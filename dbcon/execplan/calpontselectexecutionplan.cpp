@@ -193,51 +193,64 @@ void CalpontSelectExecutionPlan::havingTokenList(const FilterTokenList& havingTo
     having(parser.parse(tokens.begin(), tokens.end()));
 }
 
-string CalpontSelectExecutionPlan::toString() const
+std::string endlWithIndent(const size_t ident)
+{
+  ostringstream output;
+  output << endl;
+  output << std::string(ident, ' ');
+  return output.str();
+}
+
+string CalpontSelectExecutionPlan::toString(const size_t ident) const
 {
   ostringstream output;
 
-  output << ">SELECT ";
+  output << std::string(ident, ' ') << "SELECT ";
 
   if (distinct())
+  {
     output << "DISTINCT ";
+  }
 
-  output << "limit: " << limitStart() << " - " << limitNum() << endl;
+  output << "limit: " << limitStart() << " - " << limitNum() << endlWithIndent(ident);
 
   switch (location())
   {
-    case CalpontSelectExecutionPlan::MAIN: output << "MAIN" << endl; break;
+    case CalpontSelectExecutionPlan::MAIN: output << "MAIN" << endlWithIndent(ident); break;
 
-    case CalpontSelectExecutionPlan::FROM: output << "FROM" << endl; break;
+    case CalpontSelectExecutionPlan::FROM: output << "FROM" << endlWithIndent(ident); break;
 
-    case CalpontSelectExecutionPlan::WHERE: output << "WHERE" << endl; break;
+    case CalpontSelectExecutionPlan::WHERE: output << "WHERE" << endlWithIndent(ident); break;
 
-    case CalpontSelectExecutionPlan::HAVING: output << "HAVING" << endl; break;
+    case CalpontSelectExecutionPlan::HAVING: output << "HAVING" << endlWithIndent(ident); break;
   }
 
   // Returned Column
   CalpontSelectExecutionPlan::ReturnedColumnList retCols = returnedCols();
-  output << ">>Returned Columns" << endl;
+  output << ">>Returned Columns" << endlWithIndent(ident);
+  output << std::string(ident, ' ');
+
   uint32_t seq = 0;
 
   for (unsigned int i = 0; i < retCols.size(); i++)
   {
-    output << *retCols[i] << endl;
+    output << *retCols[i] << endlWithIndent(ident);
 
     if (retCols[i]->colSource() & SELECT_SUB)
     {
-      output << "select sub -- " << endl;
+      output << "select sub -- " << endlWithIndent(ident);
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fSelectSubList[seq++].get());
 
       if (plan)
-        output << "{" << *plan << "}" << endl;
+        output << "{" << plan->toString(ident + 2) << "}" << endlWithIndent(ident);
     }
   }
 
   // From Clause
   CalpontSelectExecutionPlan::TableList tables = tableList();
-  output << ">>From Tables" << endl;
+  output << ">>From Tables" << endlWithIndent(ident);
+  output << std::string(ident, ' ');
   seq = 0;
 
   for (unsigned int i = 0; i < tables.size(); i++)
@@ -245,42 +258,55 @@ string CalpontSelectExecutionPlan::toString() const
     // derived table
     if (tables[i].schema.length() == 0 && tables[i].table.length() == 0)
     {
-      output << "derived table - " << tables[i].alias << endl;
+      output << "derived table - " << tables[i].alias << endlWithIndent(ident);
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq++].get());
 
       if (plan)
-        output << "{" << *plan << "}" << endl;
+      {
+        output << "{" << plan->toString(ident + 2) << "}" << endlWithIndent(ident);
+      }
+      output << std::string(ident, ' ');
+
     }
     else
     {
       output << tables[i] << endl;
+      output << std::string(ident, ' ');
     }
   }
 
   // Filters
-  output << ">>Filters" << endl;
+  output << ">>Filters" << endlWithIndent(ident);
+  output << std::string(ident, ' ');
+
 
   if (filters() != nullptr)
     filters()->walk(ParseTree::print, output);
   else
-    output << "empty filter tree" << endl;
+    output << "empty filter tree" << endlWithIndent(ident);
+  output << std::string(ident, ' ');
 
   // Group by columns
   const CalpontSelectExecutionPlan::GroupByColumnList& gbc = groupByCols();
 
   if (gbc.size() > 0)
   {
-    output << ">>Group By Columns" << endl;
+    output << ">>Group By Columns" << endlWithIndent(ident);
+    output << std::string(ident, ' ');
 
     for (unsigned int i = 0; i < gbc.size(); i++)
-      output << *gbc[i] << endl;
+    {
+      output << *gbc[i] << endlWithIndent(ident);
+    }
+    output << std::string(ident, ' ');
   }
 
   // Having
   if (having() != nullptr)
   {
-    output << ">>Having" << endl;
+    output << ">>Having" << endlWithIndent(ident);
+    output << std::string(ident, ' ');
     having()->walk(ParseTree::print, output);
   }
 
@@ -289,39 +315,39 @@ string CalpontSelectExecutionPlan::toString() const
 
   if (obc.size() > 0)
   {
-    output << ">>Order By Columns" << endl;
+    output << ">>Order By Columns" << endlWithIndent(ident);
 
     for (unsigned int i = 0; i < obc.size(); i++)
-      output << *obc[i] << endl;
+      output << *obc[i] << endlWithIndent(ident);
   }
 
-  output << "SessionID: " << fSessionID << endl;
-  output << "TxnID: " << fTxnID << endl;
-  output << "VerID: " << fVerID << endl;
-  output << "TraceFlags: " << fTraceFlags << endl;
-  output << "StatementID: " << fStatementID << endl;
-  output << "DistUnionNum: " << (int)fDistinctUnionNum << endl;
-  output << "Limit: " << fLimitStart << " - " << fLimitNum << endl;
-  output << "String table threshold: " << fStringTableThreshold << endl;
+  output << "SessionID: " << fSessionID << endlWithIndent(ident);
+  output << "TxnID: " << fTxnID << endlWithIndent(ident);
+  output << "VerID: " << fVerID << endlWithIndent(ident);
+  output << "TraceFlags: " << fTraceFlags << endlWithIndent(ident);
+  output << "StatementID: " << fStatementID << endlWithIndent(ident);
+  output << "DistUnionNum: " << (int)fDistinctUnionNum << endlWithIndent(ident);
+  output << "Limit: " << fLimitStart << " - " << fLimitNum << endlWithIndent(ident);
+  output << "String table threshold: " << fStringTableThreshold << endlWithIndent(ident);
 
-  output << "--- Column Map ---" << endl;
+  output << "--- Column Map ---" << endlWithIndent(ident);
   CalpontSelectExecutionPlan::ColumnMap::const_iterator iter;
 
   for (iter = columnMap().begin(); iter != columnMap().end(); iter++)
-    output << (*iter).first << " : " << (*iter).second << endl;
+    output << (*iter).first << " : " << (*iter).second << endlWithIndent(ident);
 
-  output << "UUID: " << fUuid << endl;
-  output << "QueryType: " << queryType() << endl;
+  output << "UUID: " << fUuid << endlWithIndent(ident);
+  output << "QueryType: " << queryType() << endlWithIndent(ident);
 
   if (!unionVec().empty())
-    output << "\n--- Union Unit ---" << endl;
+    output << "\n--- Union Unit ---" << endlWithIndent(ident);
 
   for (unsigned i = 0; i < unionVec().size(); i++)
   {
     CalpontSelectExecutionPlan* plan = dynamic_cast<CalpontSelectExecutionPlan*>(unionVec()[i].get());
 
     if (plan)
-      output << "{" << *plan << "}\n" << endl;
+      output << "{" << *plan << "}\n" << endlWithIndent(ident);
   }
 
   return output.str();
