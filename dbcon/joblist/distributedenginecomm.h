@@ -224,6 +224,9 @@ class DistributedEngineComm
 
   friend class ::TestDistributedEngineComm;
 
+  /* internal checks */
+  void healthCheck();
+
  private:
   typedef std::vector<boost::thread*> ReaderList;
   typedef std::vector<boost::shared_ptr<messageqcpp::MessageQueueClient>> ClientList;
