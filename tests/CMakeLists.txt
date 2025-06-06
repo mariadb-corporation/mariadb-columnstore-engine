@@ -101,6 +101,10 @@ if(WITH_UNITTESTS)
     columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:bytestream COMMAND bytestream)
 
+    add_executable(idbdatafile_test BufferedFile.cpp)
+    columnstore_link(idbdatafile_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} gtest gtest_main)
+    add_test(NAME columnstore:idbdatafile_test COMMAND idbdatafile_test)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     columnstore_link(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)

@@ -31,10 +31,13 @@ BufferedFile::BufferedFile(const char* fname, const char* mode, unsigned opts)
  : IDBDataFile(fname), m_fp(0), m_buffer(0)
 {
   m_fp = fopen(fname, mode);
+  int err = errno;
 
   if (m_fp == NULL)
   {
-    throw std::runtime_error("unable to open Buffered file ");
+    static string message = "unable to open file: ";
+
+    throw std::runtime_error(message + fname + ", exception: " + strerror(err));
   }
 
   applyOptions(opts);
