@@ -1,6 +1,12 @@
 SET sql_mode=ORACLE;
 SET default_storage_engine=ColumnStore;
 
+--disable_query_log
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+--enable_query_log
+
 --echo #
 --echo # MDEV-15664 sql_mode=ORACLE: Make TRIM return NULL instead of empty string
 --echo #
