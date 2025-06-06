@@ -4,7 +4,7 @@ import configparser
 from pathlib import Path
 from datetime import datetime
 
-from cmapi_server.controllers.dispatcher import _version
+from cmapi_server.constants import _version
 
 config_filename = './cmapi_server/cmapi_server.conf'
 

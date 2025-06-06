@@ -28,7 +28,7 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, CMAPI_DEFAULT_CONF_PATH, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, LOCALHOSTS
+    DEFAULT_SM_CONF_PATH, LOCALHOSTS, _version
 )
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.process import MCSProcessManager
@@ -576,7 +576,6 @@ def get_current_key(config_parser):
 
 
 def get_version():
-    from cmapi_server.controllers.dispatcher import _version
     return _version
 
 

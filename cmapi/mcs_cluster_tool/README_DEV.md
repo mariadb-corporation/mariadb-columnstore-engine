@@ -9,7 +9,7 @@
     ```
     Optionally could be generated from installed package.
     ```bash
-    PYTHONPATH="/usr/share/columnstore/cmapi:/usr/share/columnstore/cmapi/deps" /usr/share/columnstore/cmapi/python/bin/python3 -m  typer /usr/share/columnstore/cmapi/mcs_cluster_tool/__main__.py utils docs --name mcs --output ~/README.md
+    PYTHONPATH="/usr/share/columnstore/cmapi:/usr/share/columnstore/cmapi/deps" /usr/share/columnstore/cmapi/python/bin/python3 -m typer /usr/share/columnstore/cmapi/mcs_cluster_tool/__main__.py utils docs --name mcs --output ~/README.md
     ```
 - dependencies for gem build (RHEL example)
     ```bash

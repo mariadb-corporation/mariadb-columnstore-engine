@@ -59,6 +59,11 @@ app.command(
 app.add_typer(
     tools_commands.sentry_app, name='sentry', rich_help_panel='Tools commands', hidden=True
 )
+app.command(
+    'install_es', rich_help_panel='Tools commands',
+)(tools_commands.install_es)
+
+
 @app.command(
         name='help-all', help='Show help for all commands in man page style.',
         add_help_option=False
@@ -66,6 +71,7 @@ app.add_typer(
 def help_all():
     # Open the man page in interactive mode
     subprocess.run(['man', 'mcs'])
+
 
 @app.callback()
 def main(verbose: bool = typer.Option(False, '--verbose', '-v', help='Enable verbose logging to console')):
@@ -78,9 +84,9 @@ def setup_logging(verbose: bool = False) -> None:
     dict_config(MCS_CLI_LOG_CONF_PATH)
     if verbose:
         for logger_name in ("", "mcs_cli"):
-            logger = logging.getLogger(logger_name)
-            logger.setLevel(logging.DEBUG)
-            enable_console_logging(logger)
+            current_logger = logging.getLogger(logger_name)
+            current_logger.setLevel(logging.DEBUG)
+            enable_console_logging(current_logger)
 
 
 if __name__ == '__main__':

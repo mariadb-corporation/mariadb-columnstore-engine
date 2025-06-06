@@ -15,14 +15,15 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `backup`: Backup Columnstore and/or MariaDB server data.
+* `backup`: Backup Columnstore and/or MariaDB data.
 * `dbrm_backup`: Columnstore DBRM Backup.
-* `restore`: Restore Columnstore (and/or MariaDB server) data.
+* `restore`: Restore Columnstore (and/or MariaDB) data.
 * `dbrm_restore`: Restore Columnstore DBRM data.
 * `cskeys`: Generate a random AES encryption key and init vector and write them to disk.
 * `cspasswd`: Encrypt a Columnstore plaintext password.
 * `bootstrap-single-node`: Bootstrap a single node (localhost)...
 * `review`: Provides useful functions to review and troubleshoot the MCS cluster.
+* `install_es`: [Beta] Install the specified MDB ES version.
 * `help-all`: Show help for all commands in man page style.
 * `status`: Get status information.
 * `stop`: Stop the Columnstore cluster.
@@ -32,6 +33,7 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 * `set`: Set cluster parameters.
 * `cluster`: MariaDB Columnstore cluster management...
 * `cmapi`: Commands related to CMAPI itself.
+* `sentry`: Manage Sentry DSN configuration for error...
 
 ## `mcs backup`
 
@@ -247,10 +249,10 @@ $ mcs review [OPTIONS]
 
 * `--version`: Only show the header with version information.
 * `--logs`: Create a compressed archive of logs for MariaDB Support Ticket
-* `--path`: Define the path for where to save files/tarballs and outputs of this script.
+* `--path TEXT`: Define the path for where to save files/tarballs and outputs of this script.
 * `--backupdbrm`: Takes a compressed backup of extent map files in dbrm directory.
 * `--testschema`: Creates a test schema, tables, imports, queries, drops schema.
-* `--testschemakeep`: creates a test schema, tables, imports, queries, does not drop.
+* `--testschemakeep`: Creates a test schema, tables, imports, queries, does not drop.
 * `--ldlischema`: Using ldli, creates test schema, tables, imports, queries, drops schema.
 * `--ldlischemakeep`: Using ldli, creates test schema, tables, imports, queries, does not drop.
 * `--emptydirs`: Searches /var/lib/columnstore for empty directories.
@@ -265,6 +267,26 @@ $ mcs review [OPTIONS]
 * `--clearrollback`: Clear any rollback fragments from dbrm files.
 * `--killcolumnstore`: Stop columnstore processes gracefully, then kill remaining processes.
 * `--color TEXT`: print headers in color. Options:  prefix color with l for light.
+* `--help`: Show this message and exit.
+
+## `mcs install_es`
+
+[Beta]
+Install the specified MDB ES version.
+If the version is &#x27;latest&#x27;, it will upgrade to the latest tested version
+available.
+
+**Usage**:
+
+```console
+$ mcs install_es [OPTIONS]
+```
+
+**Options**:
+
+* `--token TEXT`: ES API Token to use for the upgrade.  [required]
+* `-v, --version TEXT`: ES version to upgdate.
+* `--ignore-mismatch`: Proceed even if nodes report different installed package versions (use majority as baseline).
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`
@@ -367,6 +389,7 @@ $ mcs node add [OPTIONS]
 **Options**:
 
 * `--node TEXT`: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
+* `--read-replica`: Add node (or nodes, if more than one is passed) as read replicas.
 * `--help`: Show this message and exit.
 
 ### `mcs node remove`
@@ -566,6 +589,7 @@ $ mcs cluster node add [OPTIONS]
 **Options**:
 
 * `--node TEXT`: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
+* `--read-replica`: Add node (or nodes, if more than one is passed) as read replicas.
 * `--help`: Show this message and exit.
 
 #### `mcs cluster node remove`
@@ -683,4 +707,71 @@ $ mcs cmapi is-ready [OPTIONS]
 **Options**:
 
 * `--node TEXT`: Which node to check the CMAPI is ready to handle requests.  [default: 127.0.0.1]
+* `--help`: Show this message and exit.
+
+## `mcs sentry`
+
+Manage Sentry DSN configuration for error tracking.
+
+**Usage**:
+
+```console
+$ mcs sentry [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `show`: Show current Sentry DSN configuration.
+* `enable`: Enable Sentry error tracking with the...
+* `disable`: Disable Sentry error tracking by removing...
+
+### `mcs sentry show`
+
+Show current Sentry DSN configuration.
+
+**Usage**:
+
+```console
+$ mcs sentry show [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+### `mcs sentry enable`
+
+Enable Sentry error tracking with the provided DSN.
+
+**Usage**:
+
+```console
+$ mcs sentry enable [OPTIONS] DSN
+```
+
+**Arguments**:
+
+* `DSN`: Sentry DSN URL to enable for error tracking.  [required]
+
+**Options**:
+
+* `-e, --environment TEXT`: Sentry environment name (default: development).  [default: development]
+* `--help`: Show this message and exit.
+
+### `mcs sentry disable`
+
+Disable Sentry error tracking by removing the configuration.
+
+**Usage**:
+
+```console
+$ mcs sentry disable [OPTIONS]
+```
+
+**Options**:
+
 * `--help`: Show this message and exit.

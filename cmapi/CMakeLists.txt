@@ -74,6 +74,7 @@ configure_file(conffiles.template conffiles)
 configure_file(mcs.template mcs)
 configure_file(mcs_aws.template mcs_aws)
 configure_file(mcs_gsutil.template mcs_gsutil)
+configure_file(updater/cmapi_updater.service.template cmapi_updater.service)
 
 install(
     DIRECTORY python
@@ -97,7 +98,7 @@ install(
     DESTINATION ${CMAPI_DIR}
 )
 install(FILES cmapi_server/cmapi_server.conf systemd.env DESTINATION ${ETC_DIR})
-install(FILES ${SYSTEMD_UNIT_NAME}.service DESTINATION ${SYSTEMD_UNIT_DIR})
+install(FILES ${SYSTEMD_UNIT_NAME}.service cmapi_updater.service DESTINATION ${SYSTEMD_UNIT_DIR})
 install(
     FILES mcs
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
@@ -118,7 +119,13 @@ install(
     PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
     DESTINATION ${BIN_DIR}
 )
+install(
+    FILES updater/cmapi_updater.sh
+    PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+    DESTINATION ${BIN_DIR}
+)
 install(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
+
 
 option(RPM "Build an RPM" OFF)
 if(RPM)

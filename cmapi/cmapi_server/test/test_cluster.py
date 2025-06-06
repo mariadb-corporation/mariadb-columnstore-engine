@@ -6,8 +6,7 @@ from shutil import copyfile
 
 import requests
 
-from cmapi_server.constants import MCSProgs
-from cmapi_server.controllers.dispatcher import _version
+from cmapi_server.constants import MCSProgs, _version
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.test.unittest_global import (
     COPY_MCS_CONFIG_FILEPATH,

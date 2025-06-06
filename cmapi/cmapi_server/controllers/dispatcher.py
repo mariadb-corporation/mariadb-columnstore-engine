@@ -3,16 +3,16 @@ import logging
 
 import cherrypy
 
+from cmapi_server.constants import _version
 from cmapi_server.controllers.endpoints import (
-    StatusController, ConfigController, BeginController, CommitController,
-    RollbackController, StartController, ShutdownController,
-    ExtentMapController, ClusterController, ApiKeyController,
-    LoggingConfigController, AppController, NodeProcessController
+    ApiKeyController, AppController, BeginController, ClusterController,
+    CommitController, ConfigController, ExtentMapController,
+    LoggingConfigController, NodeController, NodeProcessController,
+    RollbackController, ShutdownController, StartController, StatusController,
 )
-
 from cmapi_server.controllers.s3dataload import S3DataLoadController
 
-_version = '0.4.0'
+
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 logger = logging.getLogger(__name__)
 
@@ -253,13 +253,203 @@ dispatcher.connect(
 )
 
 
-# /_version/node/is_process_running/ (PUT)
+# /_version/node/is_process_running/ (GET)
 dispatcher.connect(
     name = 'is_process_running',
     route = f'/cmapi/{_version}/node/is_process_running',
     action = 'get_process_running',
     controller = NodeProcessController(),
     conditions = {'method': ['GET']}
+)
+
+
+# /_version/cluster/health/ (PUT)
+dispatcher.connect(
+    name = 'cluster_get_health',
+    route = f'/cmapi/{_version}/cluster/health',
+    action = 'get_health',
+    controller = ClusterController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/versions (GET)
+dispatcher.connect(
+    name = 'node_get_versions',
+    route = f'/cmapi/{_version}/node/versions',
+    action = 'get_versions',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/cluster/version (GET)
+dispatcher.connect(
+    name = 'cluster_get_versions',
+    route = f'/cmapi/{_version}/cluster/versions',
+    action = 'get_versions',
+    controller = ClusterController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/latest-mdb-version (GET)
+dispatcher.connect(
+    name = 'get_latest_mdb_version',
+    route = f'/cmapi/{_version}/node/latest-mdb-version',
+    action = 'latest_mdb_version',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/validate-mdb-version (GET)
+dispatcher.connect(
+    name = 'get_validate_mdb_version',
+    route = f'/cmapi/{_version}/node/validate-mdb-version',
+    action = 'validate_mdb_version',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/validate-es-token (GET)
+dispatcher.connect(
+    name = 'get_validate_es_token',
+    route = f'/cmapi/{_version}/node/validate-es-token',
+    action = 'validate_es_token',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/stop-mariadb (PUT)
+dispatcher.connect(
+    name = 'node_stop_mariadb',
+    route = f'/cmapi/{_version}/node/stop-mariadb',
+    action = 'stop_mariadb',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/stop-mariadb (PUT)
+dispatcher.connect(
+    name = 'cluster_stop_mariadb',
+    route = f'/cmapi/{_version}/cluster/stop-mariadb',
+    action = 'stop_mariadb',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/start-mariadb (PUT)
+dispatcher.connect(
+    name = 'node_start_mariadb',
+    route = f'/cmapi/{_version}/node/start-mariadb',
+    action = 'start_mariadb',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/start-mariadb (PUT)
+dispatcher.connect(
+    name = 'cluster_start_mariadb',
+    route = f'/cmapi/{_version}/cluster/start-mariadb',
+    action = 'start_mariadb',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/install-repo (PUT)
+dispatcher.connect(
+    name = 'node_install_repo',
+    route = f'/cmapi/{_version}/node/install-repo',
+    action = 'install_repo',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/install-repo (PUT)
+dispatcher.connect(
+    name = 'cluster_install_repo',
+    route = f'/cmapi/{_version}/cluster/install-repo',
+    action = 'install_repo',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/repo-pkg-versions (GET)
+dispatcher.connect(
+    name = 'get_repo_pkg_versions',
+    route = f'/cmapi/{_version}/node/repo-pkg-versions',
+    action = 'repo_pkg_versions',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/preupgrade-backup (PUT)
+dispatcher.connect(
+    name = 'node_preupgrade_backup',
+    route = f'/cmapi/{_version}/node/preupgrade-backup',
+    action = 'preupgrade_backup',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/preupgrade-backup (PUT)
+dispatcher.connect(
+    name = 'cluster_preupgrade_backup',
+    route = f'/cmapi/{_version}/cluster/preupgrade-backup',
+    action = 'preupgrade_backup',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/upgrade-mdb-mcs (PUT)
+dispatcher.connect(
+    name = 'node_upgrade_mdb_mcs',
+    route = f'/cmapi/{_version}/node/upgrade-mdb-mcs',
+    action = 'upgrade_mdb_mcs',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/upgrade-mdb-mcs (PUT)
+dispatcher.connect(
+    name = 'cluster_upgrade_mdb_mcs',
+    route = f'/cmapi/{_version}/cluster/upgrade-mdb-mcs',
+    action = 'upgrade_mdb_mcs',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/kick-cmapi-upgrade (PUT)
+dispatcher.connect(
+    name = 'node_kick_cmapi_upgrade',
+    route = f'/cmapi/{_version}/node/kick-cmapi-upgrade',
+    action = 'kick_cmapi_upgrade',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/upgrade-cmapi (PUT)
+dispatcher.connect(
+    name = 'cluster_upgrade_cmapi',
+    route = f'/cmapi/{_version}/cluster/upgrade-cmapi',
+    action = 'upgrade_cmapi',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
 )
 
 

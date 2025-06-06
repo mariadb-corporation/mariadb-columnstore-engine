@@ -482,3 +482,46 @@ class MCSProcessManager:
         if cls.get_running_mcs_procs():
             cls.stop_node(is_primary, use_sudo)
         cls.start_node(is_primary, use_sudo, is_read_replica)
+
+
+class MDBProcessManager:
+    """TODO: not working with a non systemd installations need to implement."""
+    process_dispatcher = SystemdDispatcher
+
+    @classmethod
+    def is_service_running(cls, use_sudo: bool = True) -> bool:
+        """Check if MariaDB process is running.
+
+        :param use_sudo: use sudo or not, defaults to True
+        :type use_sudo: bool, optional
+        :return: True if MariaDB process is running, otherwise False
+        :rtype: bool
+        """
+        return cls.process_dispatcher.is_service_running(
+            'mariadb', use_sudo=use_sudo
+        )
+
+    @classmethod
+    def start(cls, use_sudo: bool) -> bool:
+        """Start MariaDB process.
+
+        :type use_sudo: bool
+        :return: True if process started successfully
+        :rtype: bool
+        """
+        if not cls.is_service_running():
+            return cls.process_dispatcher.start('mariadb', use_sudo)
+        return True
+
+    @classmethod
+    def stop(cls, use_sudo: bool = True) -> bool:
+        """Stop MariaDB process.
+
+        :type use_sudo: bool
+        :return: True if process stopped
+          successfully
+        :rtype: bool
+        """
+        if cls.is_service_running():
+            return cls.process_dispatcher.stop('mariadb', use_sudo)
+        return True

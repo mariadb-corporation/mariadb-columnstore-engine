@@ -3,6 +3,7 @@
 TODO: move main constant paths here and replace in files in next releases.
 """
 import os
+from dataclasses import dataclass
 from enum import Enum
 from typing import NamedTuple
 
@@ -106,9 +107,72 @@ MCS_LOG_PATH = '/var/log/mariadb/columnstore'
 
 # BRM shmem lock inspection/reset tool
 SHMEM_LOCKS_PATH = os.path.join(MCS_INSTALL_BIN, 'mcs-shmem-locks')
+# mcs and cmapi constanst shared
+MCS_BACKUP_MANAGER_SH = os.path.join(MCS_INSTALL_BIN, 'mcs_backup_manager.sh')
 
 # client constants
 CMAPI_PORT = 8640  #TODO: use it in all places
 CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
 REQUEST_TIMEOUT: float = 30.0
 TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
+
+# API version
+_version = '0.4.0'
+
+# constants for packages and repositories
+SUPPORTED_DISTROS = (
+    'ubuntu',
+    'debian',
+    'centos',
+    'rhel',
+    'rocky',
+)
+SUPPORTED_ARCHITECTURES = ('x86_64', 'amd64', 'aarch64', 'arm64')
+
+@dataclass(frozen=True)
+class MultiDistroNamer:
+    rhel: str
+    deb: str
+
+MDB_SERVER_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-server',
+    deb='mariadb-server'
+)
+MDB_CS_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-columnstore-engine',
+    deb='mariadb-plugin-columnstore'
+)
+CMAPI_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-columnstore-cmapi',
+    deb='mariadb-columnstore-cmapi'
+)
+ES_REPO = MultiDistroNamer(
+    rhel=(
+'''[mariadb-es-main]
+name = MariaDB Enterprise Server
+baseurl = https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/rpm/rhel/{os_major_version}/{arch}
+gpgkey = {gpg_key_url}
+gpgcheck = 1
+enabled = 1
+module_hotfixes = 1
+'''
+    ),
+    deb='deb [arch=amd64,arm64] https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/deb {os_version} main'
+)
+ES_REPO_PRIORITY_PREFS = '''
+Package: *
+Pin: origin dlm.mariadb.com
+Pin-Priority: 1700
+'''
+ES_VERIFY_URL = MultiDistroNamer(
+    rhel='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/rpm/rhel/{os_major_version}/{arch}/repodata/repomd.xml',
+    deb='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/deb/dists/{os_version}/Release'
+)
+MDB_GPG_KEY_URL = 'https://supplychain.mariadb.com/MariaDB-Enterprise-GPG-KEY'
+ES_TOKEN_VERIFY_URL = 'https://dlm.mariadb.com/browse/{token}/mariadb_enterprise_server/'
+MDB_LATEST_TESTED_MAJOR = '10.6'
+MDB_LATEST_RELEASES_URL = 'https://dlm.mariadb.com/rest/releases/mariadb_enterprise_server/'
+PKG_GET_VER_CMD = MultiDistroNamer(
+    rhel="rpm -q --queryformat '%{{VERSION}}' {package_name}",
+    deb="dpkg-query -f '${{Version}}' -W {package_name}"
+)

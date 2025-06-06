@@ -117,6 +117,8 @@ def add_logging_level(level_name, level_num, method_name=None):
 def enable_console_logging(logger: logging.Logger) -> None:
     """Enable logging to console for passed logger by adding a StreamHandler to it"""
     console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(logger.handlers[0].formatter)
     logger.addHandler(console_handler)
 
 
@@ -159,7 +161,7 @@ def change_loggers_level(level: str):
         logger.setLevel(level)
 
 def disable_unwanted_loggers():
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 
 class JsonFormatter(logging.Formatter):

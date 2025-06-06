@@ -11,11 +11,9 @@ import requests
 requests.packages.urllib3.disable_warnings()
 
 from cmapi_server.constants import (
-    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH
+    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH, _version
 )
-from cmapi_server.controllers.dispatcher import (
-    dispatcher, jsonify_error,_version
-)
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.unittest_global import (
     cmapi_config_filename, tmp_cmapi_config_filename

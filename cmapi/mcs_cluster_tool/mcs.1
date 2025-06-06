@@ -21,7 +21,7 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 \fBCommands\fP:
 .RS
 .IP \(bu 2
-\fB\fCbackup\fR: Backup Columnstore and/or MariDB data.
+\fB\fCbackup\fR: Backup Columnstore and/or MariaDB data.
 .IP \(bu 2
 \fB\fCdbrm_backup\fR: Columnstore DBRM Backup.
 .IP \(bu 2
@@ -29,13 +29,15 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 .IP \(bu 2
 \fB\fCdbrm_restore\fR: Restore Columnstore DBRM data.
 .IP \(bu 2
-\fB\fCcskeys\fR: Generates a random AES encryption key and init vector and writes them to disk.
+\fB\fCcskeys\fR: Generate a random AES encryption key and init vector and write them to disk.
 .IP \(bu 2
 \fB\fCcspasswd\fR: Encrypt a Columnstore plaintext password.
 .IP \(bu 2
 \fB\fCbootstrap\-single\-node\fR: Bootstrap a single node (localhost)...
 .IP \(bu 2
 \fB\fCreview\fR: Provides useful functions to review and troubleshoot the MCS cluster.
+.IP \(bu 2
+\fB\fCinstall_es\fR: [Beta] Install the specified MDB ES version.
 .IP \(bu 2
 \fB\fChelp\-all\fR: Show help for all commands in man page style.
 .IP \(bu 2
@@ -53,11 +55,13 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 .IP \(bu 2
 \fB\fCcluster\fR: MariaDB Columnstore cluster management...
 .IP \(bu 2
-\fB\fCcmapi\fR: CMAPI itself related commands.
+\fB\fCcmapi\fR: Commands related to CMAPI itself.
+.IP \(bu 2
+\fB\fCsentry\fR: Manage Sentry DSN configuration for error...
 .RE
 .SH \fB\fCmcs backup\fR
 .PP
-Backup Columnstore and/or MariDB data.
+Backup Columnstore and/or MariaDB data.
 .PP
 \fBUsage\fP:
 .PP
@@ -362,13 +366,13 @@ $ mcs review [OPTIONS]
 .IP \(bu 2
 \fB\fC\-\-logs\fR: Create a compressed archive of logs for MariaDB Support Ticket
 .IP \(bu 2
-\fB\fC\-\-path\fR: Define the path for where to save files/tarballs and outputs of this script.
+\fB\fC\-\-path TEXT\fR: Define the path for where to save files/tarballs and outputs of this script.
 .IP \(bu 2
 \fB\fC\-\-backupdbrm\fR: Takes a compressed backup of extent map files in dbrm directory.
 .IP \(bu 2
 \fB\fC\-\-testschema\fR: Creates a test schema, tables, imports, queries, drops schema.
 .IP \(bu 2
-\fB\fC\-\-testschemakeep\fR: creates a test schema, tables, imports, queries, does not drop.
+\fB\fC\-\-testschemakeep\fR: Creates a test schema, tables, imports, queries, does not drop.
 .IP \(bu 2
 \fB\fC\-\-ldlischema\fR: Using ldli, creates test schema, tables, imports, queries, drops schema.
 .IP \(bu 2
@@ -397,6 +401,32 @@ $ mcs review [OPTIONS]
 \fB\fC\-\-killcolumnstore\fR: Stop columnstore processes gracefully, then kill remaining processes.
 .IP \(bu 2
 \fB\fC\-\-color TEXT\fR: print headers in color. Options:  prefix color with l for light.
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs install_es\fR
+.PP
+[Beta]
+Install the specified MDB ES version.
+If the version is \[aq]latest\[aq], it will upgrade to the latest tested version
+available.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs install_es [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-token TEXT\fR: ES API Token to use for the upgrade.  [required]
+.IP \(bu 2
+\fB\fC\-v, \-\-version TEXT\fR: ES version to upgdate.
+.IP \(bu 2
+\fB\fC\-\-ignore\-mismatch\fR: Proceed even if nodes report different installed package versions (use majority as baseline).
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
@@ -524,6 +554,8 @@ $ mcs node add [OPTIONS]
 .RS
 .IP \(bu 2
 \fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
+.IP \(bu 2
+\fB\fC\-\-read\-replica\fR: Add node (or nodes, if more than one is passed) as read replicas.
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
@@ -781,6 +813,8 @@ $ mcs cluster node add [OPTIONS]
 .IP \(bu 2
 \fB\fC\-\-node TEXT\fR: node IP, name or FQDN. Can be used multiple times to add several nodes at a time.  [required]
 .IP \(bu 2
+\fB\fC\-\-read\-replica\fR: Add node (or nodes, if more than one is passed) as read replicas.
+.IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
 .SS \fB\fCmcs cluster node remove\fR
@@ -892,7 +926,7 @@ $ mcs cluster set log\-level [OPTIONS]
 .RE
 .SH \fB\fCmcs cmapi\fR
 .PP
-CMAPI itself related commands.
+Commands related to CMAPI itself.
 .PP
 \fBUsage\fP:
 .PP
@@ -929,6 +963,92 @@ $ mcs cmapi is\-ready [OPTIONS]
 .RS
 .IP \(bu 2
 \fB\fC\-\-node TEXT\fR: Which node to check the CMAPI is ready to handle requests.  [default: 127.0.0.1]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SH \fB\fCmcs sentry\fR
+.PP
+Manage Sentry DSN configuration for error tracking.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs sentry [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCshow\fR: Show current Sentry DSN configuration.
+.IP \(bu 2
+\fB\fCenable\fR: Enable Sentry error tracking with the...
+.IP \(bu 2
+\fB\fCdisable\fR: Disable Sentry error tracking by removing...
+.RE
+.SS \fB\fCmcs sentry show\fR
+.PP
+Show current Sentry DSN configuration.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs sentry show [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs sentry enable\fR
+.PP
+Enable Sentry error tracking with the provided DSN.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs sentry enable [OPTIONS] DSN
+.fi
+.RE
+.PP
+\fBArguments\fP:
+.RS
+.IP \(bu 2
+\fB\fCDSN\fR: Sentry DSN URL to enable for error tracking.  [required]
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-e, \-\-environment TEXT\fR: Sentry environment name (default: development).  [default: development]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs sentry disable\fR
+.PP
+Disable Sentry error tracking by removing the configuration.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs sentry disable [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
