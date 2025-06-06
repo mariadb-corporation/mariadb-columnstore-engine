@@ -8,6 +8,13 @@ SET default_storage_engine=ColumnStore;
 --echo # MDEV-13003 - Oracle compatibility : Replace function
 --echo #
 
+--disable_query_log
+--disable_warnings
+DROP VIEW IF EXISTS v1;
+--enable_warnings
+--enable_query_log
+
+
 SELECT REPLACE(null,'a','b') ;
 SELECT REPLACE('ab',null,'b') ;
 SELECT REPLACE('ab','a',null) ;
