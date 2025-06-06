@@ -1,5 +1,5 @@
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
 
 SET sql_mode=ORACLE;
 SET default_storage_engine=ColumnStore;
@@ -7,7 +7,6 @@ SET default_storage_engine=ColumnStore;
 --disable_query_log
 --disable_warnings
 DROP VIEW IF EXISTS v1;
---enable_warnings
 --enable_query_log
 
 --error ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT
@@ -101,4 +100,5 @@ SELECT DECODE(NULL,10,10,NULL,1,2) FROM DUAL;
 
 SELECT DECODE_ORACLE(NULL,NULL,1,2) FROM DUAL;
 SELECT DECODE_ORACLE(NULL,10,10,NULL,1,2) FROM DUAL;
+--enable_warnings
 

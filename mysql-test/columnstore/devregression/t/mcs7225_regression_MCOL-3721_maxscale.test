@@ -5,7 +5,8 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
+--disable_warnings
 #
 USE tpch1;
 #

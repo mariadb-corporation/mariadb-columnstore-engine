@@ -5,7 +5,8 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
+--disable_warnings
 #
 USE autopilot;
 #
@@ -18,3 +19,4 @@ select cidx, TIME_TO_SEC('22:23:49 999999') from datatypetestm order by cidx;
 select cidx, CDATE from datatypetestm order by TIME_TO_SEC(CDATE), cidx;
 select cidx, CDATETIME from datatypetestm order by TIME_TO_SEC(CDATETIME), cidx;
 select cidx, CTIME from datatypetestm order by TIME_TO_SEC(CTIME), cidx;
+--enable_warnings

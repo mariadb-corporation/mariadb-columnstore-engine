@@ -5,7 +5,8 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
+--disable_warnings
 #
 USE autopilot;
 #
@@ -19,3 +20,4 @@ select cidx, MONTHNAME('2010-02-31') from datatypetestm order by cidx;
 select cidx, CDATE from datatypetestm where MONTHNAME(CDATE) <> 0 order by cidx;
 select cidx, CDATETIME from datatypetestm where MONTHNAME(CDATETIME) <> 0 order by cidx;
 #select cidx, CTIME from datatypetestm where MONTHNAME(CTIME) <> 0 order by cidx;
+--enable_warnings

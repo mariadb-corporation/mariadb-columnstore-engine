@@ -11,7 +11,6 @@ SET default_storage_engine=ColumnStore;
 --disable_query_log
 --disable_warnings
 DROP VIEW IF EXISTS v1;
---enable_warnings
 --enable_query_log
 
 
@@ -197,3 +196,4 @@ EXPLAIN EXTENDED SELECT * FROM v1;
 
 DROP VIEW v1;
 DROP TABLE t1;
+--enable_warnings

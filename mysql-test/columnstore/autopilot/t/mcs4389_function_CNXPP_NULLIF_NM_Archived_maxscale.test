@@ -5,7 +5,8 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
+--disable_warnings
 #
 USE autopilot;
 #
@@ -309,3 +310,4 @@ select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CCHAR4), cidx;
 select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,CDATE), cidx;
 select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,NULL), cidx;
 select cidx, CFLOAT from datatypetestm order by NULLIF(CFLOAT,'HELLO WORLD'), cidx;
+--enable_warnings
