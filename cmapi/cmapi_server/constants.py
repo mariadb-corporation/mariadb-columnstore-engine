@@ -59,7 +59,7 @@ class MCSProgs(Enum):
     WORKER_NODE = 'workernode'
     CONTROLLER_NODE = 'controllernode'
     PRIM_PROC = 'PrimProc'
-    EXE_MGR = 'ExeMgr'
+    # EXE_MGR = 'ExeMgr'
     WRITE_ENGINE_SERVER = 'WriteEngineServer'
     DML_PROC = 'DMLProc'
     DDL_PROC = 'DDLProc'
@@ -84,7 +84,7 @@ ALL_MCS_PROGS: dict[str, ProgInfo] = {
     MCSProgs.WORKER_NODE.value: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
     MCSProgs.CONTROLLER_NODE.value: ProgInfo(11, 'mcs-controllernode', 'fg', True),
     MCSProgs.PRIM_PROC.value: ProgInfo(5, 'mcs-primproc', '', False, 1),
-    MCSProgs.EXE_MGR.value: ProgInfo(9, 'mcs-exemgr', '', False, 1),
+    # MCSProgs.EXE_MGR.value: ProgInfo(9, 'mcs-exemgr', '', False, 1),
     MCSProgs.WRITE_ENGINE_SERVER.value: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
     MCSProgs.DML_PROC.value: ProgInfo(3, 'mcs-dmlproc', '', False),
     MCSProgs.DDL_PROC.value: ProgInfo(1, 'mcs-ddlproc', '', False),

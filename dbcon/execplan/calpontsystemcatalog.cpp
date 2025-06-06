@@ -103,13 +103,6 @@ std::ofstream csclog(tmpDir, std::ios::app);
   cerr
 #endif
 
-#define HEALTHCHECK \
-  do { \
-    ResourceManager* rm = ResourceManager::instance(true); \
-    DistributedEngineComm* fEc = DistributedEngineComm::instance(rm); \
-    idblog("calling health check"); fEc->healthCheck(); idblog("health check returned"); \
-  } while(0)
-
 namespace execplan
 {
 const SOP opeq(new Operator("="));
@@ -772,8 +765,6 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
     txnID.valid = true;
   }
 
-  idblog("Query context");
-  HEALTHCHECK;
   BRM::QueryContext verID, oldVerID;
   verID = fSessionManager->verID();
   oldTxnID = csep.txnID();
@@ -871,11 +862,9 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 
   ResourceManager* rm = ResourceManager::instance(true);
   DistributedEngineComm* fEc = DistributedEngineComm::instance(rm);
-  idblog("calling health check"); fEc->healthCheck();
   PrimitiveServerThreadPools dummyPrimitiveServerThreadPools;
 
   SJLP jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
-  idblog("calling health check"); fEc->healthCheck();
   //@bug 2221. Work around to prevent DMLProc crash.
   int retryNum = 0;
 
@@ -886,7 +875,6 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 
     sleep(1);
     jl = JobListFactory::makeJobList(&csep, rm, dummyPrimitiveServerThreadPools, true);
-  idblog("calling health check"); fEc->healthCheck();
     retryNum++;
   }
 
@@ -905,7 +893,6 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   TupleJobList* tjlp = dynamic_cast<TupleJobList*>(jl.get());
   idbassert(tjlp);
   RowGroup rowGroup = tjlp->getOutputRowGroup();
-  idblog("calling health check"); fEc->healthCheck();
   RGData rgData;
 
   while (true)
@@ -916,7 +903,6 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     // XXXST: take out the 'true' when all jobsteps have been made st-compatible.
     rgData.deserialize(bs, true);
     rowGroup.setData(&rgData);
-  idblog("calling health check"); fEc->healthCheck();
 
     // rowGroup.setData(const_cast<uint8_t*>(bs.buf()));
     if ((status = rowGroup.getStatus()) != 0)
@@ -932,7 +918,6 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     else
       break;
   }
-  idblog("calling health check"); fEc->healthCheck();
 }
 
 void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
@@ -1908,21 +1893,14 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 {
   boost::mutex::scoped_lock lock(map_mutex);
   boost::shared_ptr<CalpontSystemCatalog> instance;
-  //CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
-  auto it = fCatalogMap.begin();
-  while (it != fCatalogMap.end() && it->first != sessionID)
-  {
-    it++;
-  }
+  CatalogMap::const_iterator it = fCatalogMap.find(sessionID);
 
-  idblog("creating syscat for session ID " << sessionID);
   if (sessionID == 0)
   {
     if (it == fCatalogMap.end())
     {
       instance.reset(new CalpontSystemCatalog());
-      //fCatalogMap[0] = instance;
-      fCatalogMap.push_back(std::make_pair(sessionID, instance));
+      fCatalogMap[0] = instance;
       return instance;
     }
 
@@ -1945,18 +1923,10 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 
   if (it == fCatalogMap.end())
   {
-#if 01
     instance.reset(new CalpontSystemCatalog());
     instance->sessionID(sessionID);
     instance->fExeMgr->setSessionId(sessionID);
-    //fCatalogMap[sessionID] = instance;
-    fCatalogMap.push_back(std::make_pair(sessionID, instance));
-#else
     fCatalogMap[sessionID] = instance;
-    fCatalogMap[sessionID].reset(new CalpontSystemCatalog());
-    fCatalogMap[sessionID]->sessionID(sessionID);
-    fCatalogMap[sessionID]->fExeMgr->setSessionId(sessionID);
-#endif
     return instance;
   }
 
@@ -1967,18 +1937,8 @@ boost::shared_ptr<CalpontSystemCatalog> CalpontSystemCatalog::makeCalpontSystemC
 void CalpontSystemCatalog::removeCalpontSystemCatalog(uint32_t sessionID)
 {
   boost::mutex::scoped_lock lock(map_mutex);
-  //idblog("for session ID " << sessionID << " syscat map " << (fCatalogMap.contains(sessionID) ? "contains" : "does not caontain") << " syscat instance");
   DEBUG << "remove calpont system catalog for session " << sessionID << endl;
-  //fCatalogMap.erase(sessionID);
-
-  for (auto i = fCatalogMap.begin(); i != fCatalogMap.end(); i++)
-  {
-    if (i->first == sessionID)
-    {
-      fCatalogMap.erase(i);
-      break;
-    }
-  }
+  fCatalogMap.erase(sessionID);
   /*
       CatalogMap::iterator it = fCatalogMap.find(sessionID);
       if (it != fCatalogMap.end())
@@ -3000,7 +2960,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
                                                                      int lower_case_table_names)
 {
   TableName aTableName(tableName);
-  HEALTHCHECK;
 
   if (lower_case_table_names)
   {
@@ -3021,7 +2980,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
   {
     checkSysCatVer();
   }
-  HEALTHCHECK;
 
   boost::mutex::scoped_lock lk1(fTableInfoMapLock);
   TableInfoMap::const_iterator ti_iter = fTableInfoMap.find(aTableName);
@@ -3086,7 +3044,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   lk1.unlock();
   lk3.unlock();
-  HEALTHCHECK;
 
   if (aTableName.schema != CALPONT_SCHEMA)
     DEBUG << aTableName << " was not cached, fetching..." << endl;
@@ -3209,11 +3166,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     oss << "EC";
   else
     oss << "FE";
-  HEALTHCHECK;
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  idblog("getting system data for columnRIDs");
   getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
 
   vector<ColumnResult*>::const_iterator it;
@@ -3270,7 +3225,6 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     fTableInfoMap[aTableName] = ti;
     lk1.unlock();
   }
-  HEALTHCHECK;
 
   // loop 2nd time to make sure rl has been populated.
   for (it = sysDataList.begin(); it != sysDataList.end(); it++)
@@ -3380,11 +3334,9 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
         ctList[i].charsetNumber = ((*it)->GetData(i));
     }
   }
-  HEALTHCHECK;
 
   // MCOL-895 sort ctList, we can't specify an ORDER BY to do this yet
   std::sort(ctList, ctList + ti.numOfCols, ctListSort);
-  HEALTHCHECK;
 
   // populate colinfo cache
   lk3.lock();
@@ -3410,11 +3362,8 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
       }
     }
   }
-  HEALTHCHECK;
 
   delete[] ctList;
-  HEALTHCHECK;
-
 
   // delete col[9];
   if (rlOut.size() != 0)

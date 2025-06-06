@@ -113,8 +113,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   /** static calpontsystemcatalog instance map. one instance per session
    *  TODO: should be one per transaction
    */
-  //typedef std::map<uint32_t, boost::shared_ptr<CalpontSystemCatalog> > CatalogMap;
-  typedef std::vector<std::pair<uint32_t, boost::shared_ptr<CalpontSystemCatalog> > > CatalogMap;
+  typedef std::map<uint32_t, boost::shared_ptr<CalpontSystemCatalog> > CatalogMap;
 
   /** Server Identity
    *
