@@ -9238,7 +9238,7 @@ CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfL
   unionVec.reserve(numberOfLegs);
   for (size_t i = 0; i < numberOfLegs; ++i)
   {
-    unionVec.emplace_back(csep.cloneWORecursiveSelects());
+    unionVec.push_back(csep.cloneWORecursiveSelects());
   }
 
   return unionVec;
@@ -9246,9 +9246,6 @@ CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfL
 
 void applyParallelCES(CalpontSelectExecutionPlan& csep)
 {
-  std::cout << "applyParallelCES" << std::endl;
-  std::cout << "original unionVec size " << csep.unionVec().size() << std::endl;
-
   auto tables = csep.tableList();
   for (auto it = tables.begin(); it != tables.end(); ++it)
   {
@@ -9259,53 +9256,49 @@ void applyParallelCES(CalpontSelectExecutionPlan& csep)
       csep.unionVec().insert(csep.unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
     }
   }
-
-  std::cout << "modified CSEP" << std::endl;
-  std::cout << "unionVec size " << csep.unionVec().size() << std::endl;
 }
-
 struct Rule
 {
-  Rule(std::string&& name, bool (*match)(CalpontSelectExecutionPlan&),
-       void (*apply)(CalpontSelectExecutionPlan&))
-   : name(name), match(match), apply(apply) {};
+  Rule(std::string&& name, bool (*matchRule)(CalpontSelectExecutionPlan&),
+       void (*applyRule)(CalpontSelectExecutionPlan&))
+   : name(name), matchRule(matchRule), applyRule(applyRule) {};
 
   std::string name;
-  bool (*match)(CalpontSelectExecutionPlan&);
-  void (*apply)(CalpontSelectExecutionPlan&);
-  bool walk(CalpontSelectExecutionPlan& csep)
+  bool (*matchRule)(CalpontSelectExecutionPlan&);
+  void (*applyRule)(CalpontSelectExecutionPlan&);
+  bool apply(CalpontSelectExecutionPlan& csep)
   {
     bool rewrite = false;
     for (auto& table : csep.derivedTableList())
     {
-      auto csepLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
-      if (match(csepLocal))
+      auto& csepLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
+      if (matchRule(csepLocal))
       {
-        apply(csepLocal);
+        applyRule(csepLocal);
         rewrite = true;
       }
       else
       {
-        rewrite |= walk(csepLocal);
+        rewrite |= apply(csepLocal);
       }
     }
 
     for (auto& unionUnit : csep.unionVec())
     {
-      auto unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+      auto& unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
 
-      if (match(unionUnitLocal))
+      if (matchRule(unionUnitLocal))
       {
-        apply(unionUnitLocal);
+        applyRule(unionUnitLocal);
         rewrite = true;
       }
       else
       {
-        rewrite |= walk(unionUnitLocal);
+        rewrite |= apply(unionUnitLocal);
       }
     }
 
-    if (match(csep))
+    if (matchRule(csep))
     {
       apply(csep);
       rewrite = true;
@@ -9338,9 +9331,9 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
     return status;
 
 #ifdef DEBUG_WALK_COND
-  cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
-  cerr << *csep << endl;
-  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+  // cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
+  // cerr << *csep << endl;
+  // cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
 #endif
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
@@ -9356,8 +9349,13 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   Rule parallelCES{"parallelCES", matchParallelCES, applyParallelCES};
 
   {
-    parallelCES.walk(*csep);
+    parallelCES.apply(*csep);
   }
+
+  cerr << "---------------- cs_get_select_plan rewritten EXECUTION PLAN ----------------" << endl;
+  cerr << *csep << endl;
+  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+
 
   return 0;
 }
