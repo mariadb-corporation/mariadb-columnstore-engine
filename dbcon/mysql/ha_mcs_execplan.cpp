@@ -9203,14 +9203,26 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
   return 0;
 }
 
+bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table, CalpontSelectExecutionPlan& csep)
+{
+  return std::any_of(csep.unionVec().begin(), csep.unionVec().end(), 
+  [&table](const auto& unionUnit) {
+    auto unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+    bool tableIsPresented = std::any_of(unionUnitLocal.tableList().begin(), unionUnitLocal.tableList().end(), 
+    [&table](const auto& unionTable) {
+      return unionTable == table;
+    });
+    return tableIsPresented;
+  });
+}
+
 bool matchParallelCES(CalpontSelectExecutionPlan& csep)
 {
-  std::cout << csep.toString() << std::endl;
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level.
   for (auto& table : tables)
   {
-    if (!table.isColumnstore())
+    if (!table.isColumnstore() && !tableIsInUnion(table, csep))
     {
       return true;
     }
@@ -9219,28 +9231,37 @@ bool matchParallelCES(CalpontSelectExecutionPlan& csep)
   return false;
 }
 
-// CalpontSelectExecutionPlan tableIntoUnion(CalpontSelectExecutionPlan& table, CalpontSelectExecutionPlan& csep)
-// {
-//   auto* unionCSEP = {new CalpontSelectExecutionPlan()};
-//   CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
-//   CalpontSelectExecutionPlan::ColumnMap colMap;
+CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfLegs,
+                                          CalpontSelectExecutionPlan& csep)
+{
+  CalpontSelectExecutionPlan::SelectList unionVec;
+  unionVec.reserve(numberOfLegs);
+  for (size_t i = 0; i < numberOfLegs; ++i)
+  {
+    unionVec.emplace_back(csep.cloneWORecursiveSelects());
+  }
 
-//   unionSCEP.unionVec({csep});
-//   return unionSCEP;
-// }
+  return unionVec;
+}
 
 void applyParallelCES(CalpontSelectExecutionPlan& csep)
 {
+  std::cout << "applyParallelCES" << std::endl;
+  std::cout << "original unionVec size " << csep.unionVec().size() << std::endl;
+
   auto tables = csep.tableList();
   for (auto it = tables.begin(); it != tables.end(); ++it)
   {
     if (!it->isColumnstore())
     {
-      // auto unionSCEP = tableIntoUnion(*it, csep);
-      // tables.erase(it);
-      // csep.unionVec().push_back(unionSCEP);
+      size_t parallelFactor = 2;
+      auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
+      csep.unionVec().insert(csep.unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
     }
   }
+
+  std::cout << "modified CSEP" << std::endl;
+  std::cout << "unionVec size " << csep.unionVec().size() << std::endl;
 }
 
 struct Rule
@@ -9254,13 +9275,18 @@ struct Rule
   void (*apply)(CalpontSelectExecutionPlan&);
   bool walk(CalpontSelectExecutionPlan& csep)
   {
+    bool rewrite = false;
     for (auto& table : csep.derivedTableList())
     {
       auto csepLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
       if (match(csepLocal))
       {
         apply(csepLocal);
-        return true;
+        rewrite = true;
+      }
+      else
+      {
+        rewrite |= walk(csepLocal);
       }
     }
 
@@ -9271,17 +9297,21 @@ struct Rule
       if (match(unionUnitLocal))
       {
         apply(unionUnitLocal);
-        return true;
+        rewrite = true;
+      }
+      else
+      {
+        rewrite |= walk(unionUnitLocal);
       }
     }
 
     if (match(csep))
     {
       apply(csep);
-      return true;
+      rewrite = true;
     }
 
-    return false;
+    return rewrite;
   }
 };
 
