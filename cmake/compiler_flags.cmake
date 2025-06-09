@@ -72,6 +72,7 @@ set(ENGINE_LDFLAGS "-Wl,--no-as-needed -Wl,--add-needed")
 # compiler specific flags {
 set(CLANG_FLAGS
     # suppressed warnings
+    -Wno-unused-parameter
     -Wno-cast-function-type-strict
     -Wno-deprecated-copy
     -Wno-deprecated-declarations
@@ -80,11 +81,13 @@ set(CLANG_FLAGS
     -Wno-register
     -Wno-typedef-redefinition
     -Wno-missing-template-arg-list-after-template-kw
+    -Wno-unused-parameter
 )
 
 set(GNU_FLAGS # suppressed warnings
-    -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-format-truncation -Wno-register
+    -Wno-deprecated-copy -Wno-deprecated-declarations -Wno-format-truncation -Wno-register -Wno-unused-parameter
 )
+
 # } end compiler specific flags
 
 # Sanitizers {

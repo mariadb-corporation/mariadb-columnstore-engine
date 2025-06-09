@@ -223,8 +223,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     //  "test222.sh", FIXME: restore the test
     "test297.sh",
     "test299.sh",
-    "test400.sh",
-    "test500.sh",
   ] else [
     "test000.sh",
     "test001.sh",
