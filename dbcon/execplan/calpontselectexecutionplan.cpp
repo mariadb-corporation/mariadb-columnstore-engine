@@ -201,6 +201,17 @@ std::string endlWithIndent(const size_t ident)
   return output.str();
 }
 
+void CalpontSelectExecutionPlan::printSubCSEP(const size_t& ident, ostringstream& output,
+                                           CalpontSelectExecutionPlan*& plan) const
+{
+  if (plan)
+  {
+    output << endlWithIndent(ident) << "{" << endlWithIndent(ident + 2) << plan->toString(ident + 2);
+    // remove last two spaces from the stream.
+    output.seekp(-2, std::ios::cur);
+    output << "}" << std::endl << endlWithIndent(ident);
+  }
+}
 string CalpontSelectExecutionPlan::toString(const size_t ident) const
 {
   ostringstream output;
@@ -228,29 +239,26 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
   // Returned Column
   CalpontSelectExecutionPlan::ReturnedColumnList retCols = returnedCols();
   output << ">>Returned Columns" << endlWithIndent(ident);
-  output << std::string(ident, ' ');
 
   uint32_t seq = 0;
 
   for (unsigned int i = 0; i < retCols.size(); i++)
   {
-    output << *retCols[i] << endlWithIndent(ident);
+    output << *retCols[i] << endlWithIndent(ident+2); // WIP replace with constant
 
     if (retCols[i]->colSource() & SELECT_SUB)
     {
-      output << "select sub -- " << endlWithIndent(ident);
+      output << "select sub -- " << endlWithIndent(ident + 2);
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fSelectSubList[seq++].get());
 
-      if (plan)
-        output << "{" << plan->toString(ident + 2) << "}" << endlWithIndent(ident);
+      printSubCSEP(ident, output, plan);
     }
   }
 
   // From Clause
   CalpontSelectExecutionPlan::TableList tables = tableList();
-  output << ">>From Tables" << endlWithIndent(ident);
-  output << std::string(ident, ' ');
+  output << ">>From Tables" << endlWithIndent(ident + 2);
   seq = 0;
 
   for (unsigned int i = 0; i < tables.size(); i++)
@@ -258,34 +266,25 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     // derived table
     if (tables[i].schema.length() == 0 && tables[i].table.length() == 0)
     {
-      output << "derived table - " << tables[i].alias << endlWithIndent(ident);
+      output << "derived table - " << tables[i].alias << endlWithIndent(ident+2);
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq++].get());
 
-      if (plan)
-      {
-        output << "{" << plan->toString(ident + 2) << "}" << endlWithIndent(ident);
-      }
-      output << std::string(ident, ' ');
-
+      printSubCSEP(ident, output, plan);
     }
     else
     {
-      output << tables[i] << endl;
-      output << std::string(ident, ' ');
+      output << tables[i] << endlWithIndent(ident+2);
     }
   }
 
   // Filters
   output << ">>Filters" << endlWithIndent(ident);
-  output << std::string(ident, ' ');
-
 
   if (filters() != nullptr)
     filters()->walk(ParseTree::print, output);
   else
     output << "empty filter tree" << endlWithIndent(ident);
-  output << std::string(ident, ' ');
 
   // Group by columns
   const CalpontSelectExecutionPlan::GroupByColumnList& gbc = groupByCols();
@@ -348,8 +347,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
   {
     CalpontSelectExecutionPlan* plan = dynamic_cast<CalpontSelectExecutionPlan*>(unionVec()[i].get());
 
-    if (plan)
-      output << endlWithIndent(ident) << "{" << plan->toString(ident + 2) << "}\n" << endlWithIndent(ident);
+    printSubCSEP(ident, output, plan);
   }
 
   return output.str();
@@ -915,8 +913,8 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   newPlan->returnedCols(newReturnedCols);
   
   // Deep copy of filters
-  if (fFilters)
-    newPlan->filters(new ParseTree(*fFilters));
+  // if (fFilters)
+  //   newPlan->filters(new ParseTree(*fFilters));
   
   // Deep copy of filter token list
   newPlan->filterTokenList(fFilterTokenList);
