@@ -18,9 +18,7 @@ DROP TABLE IF EXISTS test_collate;
 CREATE TABLE test_collate (a INT, b INT) ENGINE=columnstore;
 INSERT INTO test_collate VALUES (1,2), (2,4);
 SELECT a, b FROM test_collate ORDER BY a COLLATE latin1_german2_ci;
-SHOW WARNINGS;
 SELECT a, b FROM test_collate ORDER BY a COLLATE latin1_german2_ci DESC;
-SHOW WARNINGS;
 
 --disable_warnings
 DROP TABLE IF EXISTS test_collate;

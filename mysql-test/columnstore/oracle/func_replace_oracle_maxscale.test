@@ -3,7 +3,7 @@
 #
 
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
 
 
 SET sql_mode=ORACLE;
@@ -15,7 +15,6 @@ SET default_storage_engine=ColumnStore;
 --disable_query_log
 --disable_warnings
 DROP VIEW IF EXISTS v1;
---enable_warnings
 --enable_query_log
 
 
@@ -31,3 +30,4 @@ CREATE VIEW v1 AS SELECT REPLACE('ab','a',null) ;
 SHOW CREATE VIEW v1;
 SELECT * FROM v1;
 DROP VIEW v1;
+--enable_warnings

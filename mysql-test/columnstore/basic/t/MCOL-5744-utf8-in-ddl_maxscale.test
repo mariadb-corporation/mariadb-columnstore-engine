@@ -1,5 +1,5 @@
 --source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
+--source ../include/detect_no_maxscale.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS MCOL5744;

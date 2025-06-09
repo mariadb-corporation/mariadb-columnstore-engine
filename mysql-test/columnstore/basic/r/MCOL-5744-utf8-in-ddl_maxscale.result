@@ -1,22 +1,19 @@
---source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
-
---disable_warnings
 DROP DATABASE IF EXISTS MCOL5744;
---enable_warnings
-
 CREATE DATABASE MCOL5744;
-
 SET old_mode='';
-
 CREATE TABLE t(x text CHARACTER SET utf8 COLLATE utf8_general_ci) ENGINE=COLUMNSTORE;
 SHOW CREATE TABLE t;
+Table	Create Table
+t	CREATE TABLE `t` (
+  `x` text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 DROP TABLE t;
-
 SET old_mode='UTF8_IS_UTF8MB3';
-
 CREATE TABLE t(x text CHARACTER SET utf8 COLLATE utf8_general_ci) ENGINE=COLUMNSTORE;
 SHOW CREATE TABLE t;
+Table	Create Table
+t	CREATE TABLE `t` (
+  `x` text DEFAULT NULL
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 DROP TABLE t;
-
 DROP DATABASE MCOL5744;
