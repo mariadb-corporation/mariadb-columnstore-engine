@@ -360,12 +360,12 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                         getContainerName("mtr")),
 
       if (event == "cron") then
-        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path +
+        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --record --extern socket=" + socket_path +
                         " --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite="
                         + std.join(",", std.map(function(x) "columnstore/" + x, std.split(mtr_full_set, ","))),
                         getContainerName("mtr")) + '"'
       else
-        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path +
+        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --record --extern socket=" + socket_path +
                         ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
                         getContainerName("mtr")),
     ],
