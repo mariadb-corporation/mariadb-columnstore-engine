@@ -1,147 +1,143 @@
-
-
 #
 # Tests for header files
 #
-INCLUDE (CheckIncludeFiles)
-INCLUDE (CheckIncludeFileCXX)
-INCLUDE (CheckCSourceCompiles)
-INCLUDE (CheckCXXSourceRuns)
-INCLUDE (CheckCXXSourceCompiles)
-INCLUDE (CheckStructHasMember)
-INCLUDE (CheckLibraryExists)
-INCLUDE (CheckFunctionExists)
-INCLUDE (CheckCCompilerFlag)
-INCLUDE (CheckCXXCompilerFlag)
-INCLUDE (CheckCXXSourceRuns)
-INCLUDE (CheckSymbolExists)
-INCLUDE (CheckCXXSymbolExists)
-INCLUDE (CheckTypeSize)
+include(CheckIncludeFiles)
+include(CheckIncludeFileCXX)
+include(CheckCSourceCompiles)
+include(CheckCXXSourceRuns)
+include(CheckCXXSourceCompiles)
+include(CheckStructHasMember)
+include(CheckLibraryExists)
+include(CheckFunctionExists)
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+include(CheckCXXSourceRuns)
+include(CheckSymbolExists)
+include(CheckCXXSymbolExists)
+include(CheckTypeSize)
 
-CHECK_INCLUDE_FILE_CXX (alloca.h HAVE_ALLOCA_H)
-CHECK_INCLUDE_FILE_CXX (arpa/inet.h HAVE_ARPA_INET_H)
-CHECK_INCLUDE_FILE_CXX (dlfcn.h HAVE_DLFCN_H)
-CHECK_INCLUDE_FILE_CXX (fcntl.h HAVE_FCNTL_H)
-CHECK_INCLUDE_FILE_CXX (inttypes.h HAVE_INTTYPES_H)
-CHECK_INCLUDE_FILE_CXX (limits.h HAVE_LIMITS_H)
-CHECK_INCLUDE_FILE_CXX (malloc.h HAVE_MALLOC_H)
-CHECK_INCLUDE_FILE_CXX (memory.h HAVE_MEMORY_H)
-CHECK_INCLUDE_FILE_CXX (ncurses.h HAVE_NCURSES_H)
-CHECK_INCLUDE_FILE_CXX (netdb.h HAVE_NETDB_H)
-CHECK_INCLUDE_FILE_CXX (netinet/in.h HAVE_NETINET_IN_H)
-CHECK_INCLUDE_FILE_CXX (stddef.h HAVE_STDDEF_H)
-CHECK_INCLUDE_FILE_CXX (stdint.h HAVE_STDINT_H)
-CHECK_INCLUDE_FILE_CXX (stdlib.h HAVE_STDLIB_H)
-CHECK_INCLUDE_FILE_CXX (strings.h HAVE_STRINGS_H)
-CHECK_INCLUDE_FILE_CXX (string.h HAVE_STRING_H)
-CHECK_INCLUDE_FILE_CXX (syslog.h HAVE_SYSLOG_H)
-CHECK_INCLUDE_FILE_CXX (sys/file.h HAVE_SYS_FILE_H)
-CHECK_INCLUDE_FILE_CXX (sys/mount.h HAVE_SYS_MOUNT_H)
-CHECK_INCLUDE_FILE_CXX (sys/select.h HAVE_SYS_SELECT_H)
-CHECK_INCLUDE_FILE_CXX (sys/socket.h HAVE_SYS_SOCKET_H)
-CHECK_INCLUDE_FILE_CXX (sys/statfs.h HAVE_SYS_STATFS_H)
-CHECK_INCLUDE_FILE_CXX (sys/stat.h HAVE_SYS_STAT_H)
-CHECK_INCLUDE_FILE_CXX (sys/timeb.h HAVE_SYS_TIMEB_H)
-CHECK_INCLUDE_FILE_CXX (sys/time.h HAVE_SYS_TIME_H)
-CHECK_INCLUDE_FILE_CXX (sys/types.h HAVE_SYS_TYPES_H)
-CHECK_INCLUDE_FILE_CXX (sys/wait.h HAVE_SYS_WAIT_H)
-CHECK_INCLUDE_FILE_CXX (unistd.h HAVE_UNISTD_H)
-CHECK_INCLUDE_FILE_CXX (utime.h HAVE_UTIME_H)
-CHECK_INCLUDE_FILE_CXX (values.h HAVE_VALUES_H)
-CHECK_INCLUDE_FILE_CXX (vfork.h HAVE_VFORK_H)
-CHECK_INCLUDE_FILE_CXX (wchar.h HAVE_WCHAR_H)
-CHECK_INCLUDE_FILE_CXX (wctype.h HAVE_WCTYPE_H)
-CHECK_INCLUDE_FILE_CXX (zlib.h HAVE_ZLIB_H)
+check_include_file_cxx(alloca.h HAVE_ALLOCA_H)
+check_include_file_cxx(arpa/inet.h HAVE_ARPA_INET_H)
+check_include_file_cxx(dlfcn.h HAVE_DLFCN_H)
+check_include_file_cxx(fcntl.h HAVE_FCNTL_H)
+check_include_file_cxx(inttypes.h HAVE_INTTYPES_H)
+check_include_file_cxx(limits.h HAVE_LIMITS_H)
+check_include_file_cxx(malloc.h HAVE_MALLOC_H)
+check_include_file_cxx(memory.h HAVE_MEMORY_H)
+check_include_file_cxx(ncurses.h HAVE_NCURSES_H)
+check_include_file_cxx(netdb.h HAVE_NETDB_H)
+check_include_file_cxx(netinet/in.h HAVE_NETINET_IN_H)
+check_include_file_cxx(stddef.h HAVE_STDDEF_H)
+check_include_file_cxx(stdint.h HAVE_STDINT_H)
+check_include_file_cxx(stdlib.h HAVE_STDLIB_H)
+check_include_file_cxx(strings.h HAVE_STRINGS_H)
+check_include_file_cxx(string.h HAVE_STRING_H)
+check_include_file_cxx(syslog.h HAVE_SYSLOG_H)
+check_include_file_cxx(sys/file.h HAVE_SYS_FILE_H)
+check_include_file_cxx(sys/mount.h HAVE_SYS_MOUNT_H)
+check_include_file_cxx(sys/select.h HAVE_SYS_SELECT_H)
+check_include_file_cxx(sys/socket.h HAVE_SYS_SOCKET_H)
+check_include_file_cxx(sys/statfs.h HAVE_SYS_STATFS_H)
+check_include_file_cxx(sys/stat.h HAVE_SYS_STAT_H)
+check_include_file_cxx(sys/timeb.h HAVE_SYS_TIMEB_H)
+check_include_file_cxx(sys/time.h HAVE_SYS_TIME_H)
+check_include_file_cxx(sys/types.h HAVE_SYS_TYPES_H)
+check_include_file_cxx(sys/wait.h HAVE_SYS_WAIT_H)
+check_include_file_cxx(unistd.h HAVE_UNISTD_H)
+check_include_file_cxx(utime.h HAVE_UTIME_H)
+check_include_file_cxx(values.h HAVE_VALUES_H)
+check_include_file_cxx(vfork.h HAVE_VFORK_H)
+check_include_file_cxx(wchar.h HAVE_WCHAR_H)
+check_include_file_cxx(wctype.h HAVE_WCTYPE_H)
+check_include_file_cxx(zlib.h HAVE_ZLIB_H)
 
-CHECK_FUNCTION_EXISTS (_getb67 GETB1)
-CHECK_FUNCTION_EXISTS (GETB67 GETB2)
-CHECK_FUNCTION_EXISTS (getb67 GETB3)
+check_function_exists(_getb67 GETB1)
+check_function_exists(GETB67 GETB2)
+check_function_exists(getb67 GETB3)
 
-IF(GETB1)
-    SET (CRAY_STACKSEG_END 1)
-ELSEIF(GETB2)
-    SET (CRAY_STACKSEG_END 1)
-ELSEIF(GETB3)
-    SET (CRAY_STACKSEG_END 1)
-ENDIF()
+if(GETB1)
+    set(CRAY_STACKSEG_END 1)
+elseif(GETB2)
+    set(CRAY_STACKSEG_END 1)
+elseif(GETB3)
+    set(CRAY_STACKSEG_END 1)
+endif()
 
-CHECK_FUNCTION_EXISTS (alarm HAVE_ALARM)
-CHECK_FUNCTION_EXISTS (btowc HAVE_BTOWC)
-CHECK_FUNCTION_EXISTS (dup2 HAVE_DUP2)
-CHECK_FUNCTION_EXISTS (error_at_line HAVE_ERROR_AT_LINE)
-CHECK_FUNCTION_EXISTS (floor HAVE_FLOOR)
-CHECK_FUNCTION_EXISTS (fork HAVE_FORK)
-CHECK_FUNCTION_EXISTS (ftime HAVE_FTIME)
-CHECK_FUNCTION_EXISTS (ftruncate HAVE_FTRUNCATE)
-CHECK_FUNCTION_EXISTS (getenv HAVE_DECL_GETENV)
-CHECK_FUNCTION_EXISTS (gethostbyname HAVE_GETHOSTBYNAME)
-CHECK_FUNCTION_EXISTS (getpagesize HAVE_GETPAGESIZE)
-CHECK_FUNCTION_EXISTS (gettimeofday HAVE_GETTIMEOFDAY)
-CHECK_FUNCTION_EXISTS (inet_ntoa HAVE_INET_NTOA)
-CHECK_FUNCTION_EXISTS (isascii HAVE_ISASCII)
-CHECK_FUNCTION_EXISTS (localtime_r HAVE_LOCALTIME_R)
-CHECK_FUNCTION_EXISTS (malloc HAVE_MALLOC)
-CHECK_FUNCTION_EXISTS (mbsrtowcs HAVE_MBSRTOWCS)
-CHECK_FUNCTION_EXISTS (memchr HAVE_MEMCHR)
-CHECK_FUNCTION_EXISTS (memmove HAVE_MEMMOVE)
-CHECK_FUNCTION_EXISTS (mempcpy HAVE_MEMPCPY)
-CHECK_FUNCTION_EXISTS (memset HAVE_MEMSET)
-CHECK_FUNCTION_EXISTS (mkdir HAVE_MKDIR)
-CHECK_FUNCTION_EXISTS (mktime HAVE_MKTIME)
-CHECK_FUNCTION_EXISTS (pow HAVE_POW)
-CHECK_FUNCTION_EXISTS (regcomp HAVE_REGCOMP)
-CHECK_FUNCTION_EXISTS (rmdir HAVE_RMDIR)
-CHECK_FUNCTION_EXISTS (select HAVE_SELECT)
-CHECK_FUNCTION_EXISTS (setenv HAVE_SETENV)
-CHECK_FUNCTION_EXISTS (setlocale HAVE_SETLOCALE)
-CHECK_FUNCTION_EXISTS (socket HAVE_SOCKET)
-CHECK_FUNCTION_EXISTS (stat HAVE_STAT)
-CHECK_FUNCTION_EXISTS (strcasecmp HAVE_STRCASECMP)
-CHECK_FUNCTION_EXISTS (strchr HAVE_STRCHR)
-CHECK_FUNCTION_EXISTS (strcspn HAVE_STRCSPN)
-CHECK_FUNCTION_EXISTS (strdup HAVE_STRDUP)
-CHECK_FUNCTION_EXISTS (strerror HAVE_STRERROR)
-CHECK_FUNCTION_EXISTS (strerror_r HAVE_STRERROR_R)
-CHECK_FUNCTION_EXISTS (strftime HAVE_STRFTIME)
-CHECK_FUNCTION_EXISTS (strrchr HAVE_STRRCHR)
-CHECK_FUNCTION_EXISTS (strspn HAVE_STRSPN)
-CHECK_FUNCTION_EXISTS (strstr HAVE_STRSTR)
-CHECK_FUNCTION_EXISTS (strtod HAVE_STRTOD)
-CHECK_FUNCTION_EXISTS (strtol HAVE_STRTOL)
-CHECK_FUNCTION_EXISTS (strtoul HAVE_STRTOUL)
-CHECK_FUNCTION_EXISTS (strtoull HAVE_STRTOULL)
-CHECK_FUNCTION_EXISTS (utime HAVE_UTIME)
-CHECK_FUNCTION_EXISTS (vfork HAVE_VFORK)
-CHECK_FUNCTION_EXISTS (wmempcpy HAVE_WMEMPCPY)
+check_function_exists(alarm HAVE_ALARM)
+check_function_exists(btowc HAVE_BTOWC)
+check_function_exists(dup2 HAVE_DUP2)
+check_function_exists(error_at_line HAVE_ERROR_AT_LINE)
+check_function_exists(floor HAVE_FLOOR)
+check_function_exists(fork HAVE_FORK)
+check_function_exists(ftime HAVE_FTIME)
+check_function_exists(ftruncate HAVE_FTRUNCATE)
+check_function_exists(getenv HAVE_DECL_GETENV)
+check_function_exists(gethostbyname HAVE_GETHOSTBYNAME)
+check_function_exists(getpagesize HAVE_GETPAGESIZE)
+check_function_exists(gettimeofday HAVE_GETTIMEOFDAY)
+check_function_exists(inet_ntoa HAVE_INET_NTOA)
+check_function_exists(isascii HAVE_ISASCII)
+check_function_exists(localtime_r HAVE_LOCALTIME_R)
+check_function_exists(malloc HAVE_MALLOC)
+check_function_exists(mbsrtowcs HAVE_MBSRTOWCS)
+check_function_exists(memchr HAVE_MEMCHR)
+check_function_exists(memmove HAVE_MEMMOVE)
+check_function_exists(mempcpy HAVE_MEMPCPY)
+check_function_exists(memset HAVE_MEMSET)
+check_function_exists(mkdir HAVE_MKDIR)
+check_function_exists(mktime HAVE_MKTIME)
+check_function_exists(pow HAVE_POW)
+check_function_exists(regcomp HAVE_REGCOMP)
+check_function_exists(rmdir HAVE_RMDIR)
+check_function_exists(select HAVE_SELECT)
+check_function_exists(setenv HAVE_SETENV)
+check_function_exists(setlocale HAVE_SETLOCALE)
+check_function_exists(socket HAVE_SOCKET)
+check_function_exists(stat HAVE_STAT)
+check_function_exists(strcasecmp HAVE_STRCASECMP)
+check_function_exists(strchr HAVE_STRCHR)
+check_function_exists(strcspn HAVE_STRCSPN)
+check_function_exists(strdup HAVE_STRDUP)
+check_function_exists(strerror HAVE_STRERROR)
+check_function_exists(strerror_r HAVE_STRERROR_R)
+check_function_exists(strftime HAVE_STRFTIME)
+check_function_exists(strrchr HAVE_STRRCHR)
+check_function_exists(strspn HAVE_STRSPN)
+check_function_exists(strstr HAVE_STRSTR)
+check_function_exists(strtod HAVE_STRTOD)
+check_function_exists(strtol HAVE_STRTOL)
+check_function_exists(strtoul HAVE_STRTOUL)
+check_function_exists(strtoull HAVE_STRTOULL)
+check_function_exists(utime HAVE_UTIME)
+check_function_exists(vfork HAVE_VFORK)
+check_function_exists(wmempcpy HAVE_WMEMPCPY)
 
-CHECK_CXX_SYMBOL_EXISTS (alloca alloca.h HAVE_ALLOCA)
-CHECK_CXX_SYMBOL_EXISTS (strerror_r string.h HAVE_DECL_STRERROR_R)
-CHECK_CXX_SYMBOL_EXISTS (tm sys/time.h TM_IN_SYS_TIME)
+check_cxx_symbol_exists(alloca alloca.h HAVE_ALLOCA)
+check_cxx_symbol_exists(strerror_r string.h HAVE_DECL_STRERROR_R)
+check_cxx_symbol_exists(tm sys/time.h TM_IN_SYS_TIME)
 
-#AC_TYPE_SIGNAL
-CHECK_TYPE_SIZE (ptrdiff_t PTRDIFF_T)
-CHECK_TYPE_SIZE (_Bool __BOOL)
-CHECK_TYPE_SIZE (mode_t mode_t_test)
-IF(NOT HAVE_mode_t_test)
-SET (mode_t int)
-ENDIF()
-CHECK_TYPE_SIZE(off_t off_t_test)
-IF(NOT HAVE_off_t_test)
-SET (off_t long int)
-ENDIF()
-CHECK_TYPE_SIZE(pid_t pid_t_test)
-IF(NOT HAVE_pid_t_test)
-SET (pid_t int)
-ENDIF()
-CHECK_TYPE_SIZE(size_t size_t_test)
-IF(NOT HAVE_size_t_test)
-SET (size_t unsigned int)
-ENDIF()
+# AC_TYPE_SIGNAL
+check_type_size(ptrdiff_t PTRDIFF_T)
+check_type_size(_Bool __BOOL)
+check_type_size(mode_t mode_t_test)
+if(NOT HAVE_mode_t_test)
+    set(mode_t int)
+endif()
+check_type_size(off_t off_t_test)
+if(NOT HAVE_off_t_test)
+    set(off_t long int)
+endif()
+check_type_size(pid_t pid_t_test)
+if(NOT HAVE_pid_t_test)
+    set(pid_t int)
+endif()
+check_type_size(size_t size_t_test)
+if(NOT HAVE_size_t_test)
+    set(size_t unsigned int)
+endif()
 
-
-
-CHECK_CXX_SOURCE_COMPILES(
-"#include <stdlib.h>
+check_cxx_source_compiles(
+    "#include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <float.h>
@@ -152,71 +148,72 @@ main ()
 
   ;
   return 0;
-}" STDC_HEADERS)
+}"
+    STDC_HEADERS
+)
 
+set(TEST_INCLUDES "
+#include <stdio.h>"
+)
 
-SET (TEST_INCLUDES 
-"
-#include <stdio.h>")
-
-IF (HAVE_SYS_TYPES_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <sys/types.h>")
-ENDIF()
-IF (HAVE_SYS_STAT_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <sys/stat.h>")
-ENDIF()
-IF (STDC_HEADERS)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <stdlib.h>
-    # include <stddef.h>")
-ELSE()
-    IF()
-        SET ( TEST_INCLUDES 
+if(HAVE_SYS_TYPES_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <sys/types.h>"
+    )
+endif()
+if(HAVE_SYS_STAT_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <sys/stat.h>"
+    )
+endif()
+if(STDC_HEADERS)
+    set(TEST_INCLUDES
         "${TEST_INCLUDES}
-        # include <stdlib.h>")
-    ENDIF()
-ENDIF()
-IF (HAVE_STRING_H)
-    IF(NOT STDC_HEADERS)
-        IF (HAVE_MEMORY_H)
-            SET ( TEST_INCLUDES 
-            "${TEST_INCLUDES}
-            # include <memory.h>")
-        ENDIF()
-    ENDIF()
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <string.h>")
-ENDIF()
-IF (HAVE_STRINGS_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <strings.h>")
-ENDIF()
-IF (HAVE_INTTYPES_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <inttypes.h>")
-ENDIF()
-IF (HAVE_STDINT_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <stdint.h>")
-ENDIF()
-IF (HAVE_UNISTD_H)
-    SET ( TEST_INCLUDES 
-    "${TEST_INCLUDES}
-    # include <unistd.h>")
-ENDIF()
+    # include <stdlib.h>
+    # include <stddef.h>"
+    )
+else()
+    if()
+        set(TEST_INCLUDES "${TEST_INCLUDES}
+        # include <stdlib.h>"
+        )
+    endif()
+endif()
+if(HAVE_STRING_H)
+    if(NOT STDC_HEADERS)
+        if(HAVE_MEMORY_H)
+            set(TEST_INCLUDES "${TEST_INCLUDES}
+            # include <memory.h>"
+            )
+        endif()
+    endif()
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <string.h>"
+    )
+endif()
+if(HAVE_STRINGS_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <strings.h>"
+    )
+endif()
+if(HAVE_INTTYPES_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <inttypes.h>"
+    )
+endif()
+if(HAVE_STDINT_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <stdint.h>"
+    )
+endif()
+if(HAVE_UNISTD_H)
+    set(TEST_INCLUDES "${TEST_INCLUDES}
+    # include <unistd.h>"
+    )
+endif()
 
-
-CHECK_CXX_SOURCE_COMPILES(
-"
+check_cxx_source_compiles(
+    "
 ${TEST_INCLUDES}
 #       include <wchar.h>
 int
@@ -225,11 +222,12 @@ main ()
 mbstate_t x; return sizeof x;
   ;
   return 0;
-}" HAVE_MBSTATE_T)
+}"
+    HAVE_MBSTATE_T
+)
 
-
-CHECK_CXX_SOURCE_RUNS(
-"
+check_cxx_source_runs(
+    "
 ${TEST_INCLUDES}
 
 int main ()
@@ -238,14 +236,15 @@ struct stat sbuf;
   return stat (\"\", &sbuf) == 0;
   ;
   return 0;
-}" STAT_EMPTY_STRING_BUG)
-IF (NOT STAT_EMPTY_STRING_BUG)
-SET (HAVE_STAT_EMPTY_STRING_BUG 1) 
-ENDIF()
+}"
+    STAT_EMPTY_STRING_BUG
+)
+if(NOT STAT_EMPTY_STRING_BUG)
+    set(HAVE_STAT_EMPTY_STRING_BUG 1)
+endif()
 
-
-CHECK_CXX_SOURCE_COMPILES(
-             "
+check_cxx_source_compiles(
+    "
              ${TEST_INCLUDES}
              #include <stdbool.h>
              #ifndef bool
@@ -304,28 +303,32 @@ main ()
 
   ;
   return 0;
-}" HAVE_STDBOOL_H)
+}"
+    HAVE_STDBOOL_H
+)
 
-IF (HAVE_UTIME_H)
-CHECK_CXX_SOURCE_COMPILES(
-"${TEST_INCLUDES}
+if(HAVE_UTIME_H)
+    check_cxx_source_compiles(
+        "${TEST_INCLUDES}
 # include <utime.h>
 int
 main ()
 {
 struct stat s, t;
-  return ! (stat (\"conftest.data\", &s) == 0
-        && utime (\"conftest.data\", 0) == 0
-        && stat (\"conftest.data\", &t) == 0
+  return ! (stat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", &s) == 0
+        && utime (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", 0) == 0
+        && stat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.data\", &t) == 0
         && t.st_mtime >= s.st_mtime
         && t.st_mtime - s.st_mtime < 120);
   ;
   return 0;
-}" HAVE_UTIME_NULL)
-ENDIF()
+}"
+        HAVE_UTIME_NULL
+    )
+endif()
 
-CHECK_CXX_SOURCE_COMPILES(
-"
+check_cxx_source_compiles(
+    "
 ${TEST_INCLUDES}
 int
 main ()
@@ -334,10 +337,12 @@ main ()
       return fork () < 0;
   ;
   return 0;
-}" HAVE_WORKING_FORK)
+}"
+    HAVE_WORKING_FORK
+)
 
-CHECK_CXX_SOURCE_COMPILES(
-"${TEST_INCLUDES}
+check_cxx_source_compiles(
+    "${TEST_INCLUDES}
 #include <sys/wait.h>
 #ifdef HAVE_VFORK_H
  include <vfork.h>
@@ -424,14 +429,16 @@ main ()
      || fstat(fileno(stdout), &st) != 0
      );
   }
-}" HAVE_WORKING_VFORK)
+}"
+    HAVE_WORKING_VFORK
+)
 
-IF (NOT HAVE_WORKING_VFORK)
-SET (VFORK fork)
-ENDIF()
+if(NOT HAVE_WORKING_VFORK)
+    set(VFORK fork)
+endif()
 
-CHECK_CXX_SOURCE_COMPILES(
-"
+check_cxx_source_compiles(
+    "
 #include <sys/types.h>
 #include <signal.h>
 
@@ -441,22 +448,24 @@ main ()
 return *(signal (0, 0)) (0) == 1;
   ;
   return 0;
-}" RET_SIGNAL_TYPES)
-IF (RET_SIGNAL_TYPES)
-SET (RETSIGTYPE int)
-ELSE()
-SET (RETSIGTYPE void)
-ENDIF()
+}"
+    RET_SIGNAL_TYPES
+)
+if(RET_SIGNAL_TYPES)
+    set(RETSIGTYPE int)
+else()
+    set(RETSIGTYPE void)
+endif()
 
-#IF(NOT LSTAT_FOLLOWS_SLASHED_SYMLINK)
-EXECUTE_PROCESS(
+# IF(NOT LSTAT_FOLLOWS_SLASHED_SYMLINK)
+execute_process(
     COMMAND rm -f conftest.sym conftest.file
     COMMAND touch conftest.file
     COMMAND ln -s conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-CHECK_CXX_SOURCE_RUNS(
-"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+check_cxx_source_runs(
+    "
 ${TEST_INCLUDES}
 int
 main ()
@@ -465,31 +474,30 @@ struct stat sbuf;
      /* Linux will dereference the symlink and fail, as required by POSIX.
     That is better in the sense that it means we will not
     have to compile and use the lstat wrapper.  */
-     return lstat (\"conftest.sym/\", &sbuf) == 0;
+     return lstat (\"${CMAKE_CURRENT_BINARY_DIR}/conftest.sym/\", &sbuf) == 0;
   ;
   return 0;
-}" LSTAT_FOLLOWS_SLASHED_SYMLINK)
+}"
+    LSTAT_FOLLOWS_SLASHED_SYMLINK
+)
 
+set(SELECT_INCLUDES ${TEST_INCLUDES})
+if(HAVE_SYS_SELECT_H)
+    set(SELECT_INCULDES "${SELECT_INCLUDES}
+# include <sys/select.h>"
+    )
+endif()
+if(HAVE_SYS_SOCKET_H)
+    set(SELECT_INCULDES "${SELECT_INCLUDES}
+# include <sys/select.h>"
+    )
+endif()
 
-
-SET (SELECT_INCLUDES ${TEST_INCLUDES})
-IF (HAVE_SYS_SELECT_H)
-SET (SELECT_INCULDES
-"${SELECT_INCLUDES}
-# include <sys/select.h>")
-ENDIF()
-IF (HAVE_SYS_SOCKET_H)
-SET (SELECT_INCULDES
-"${SELECT_INCLUDES}
-# include <sys/select.h>")
-ENDIF()
-
-
-FOREACH( ARG234 "fd_set *" "int *" "void *")
-FOREACH( ARG1 "int" "size_t" "unsigned long int" "unsigned int")
-FOREACH( ARG5 "struct timeval *" "const struct timeval *")
-CHECK_CXX_SOURCE_COMPILES(
-"
+foreach(ARG234 "fd_set *" "int *" "void *")
+    foreach(ARG1 "int" "size_t" "unsigned long int" "unsigned int")
+        foreach(ARG5 "struct timeval *" "const struct timeval *")
+            check_cxx_source_compiles(
+                "
 ${SELECT_INCLUDES}
 #ifdef HAVE_SYS_SELECT_H
 # include <sys/select.h>
@@ -507,26 +515,27 @@ extern int select (${ARG1},
   ;
   return 0;
 }
-" SELECT_ARGS)
-IF(SELECT_ARGS)
-SET (SELECT_TYPE_ARG1 ${ARG1})
-SET (SELECT_TYPE_ARG234 ${ARG234})
-SET (SELECT_TYPE_ARG5 ${ARG5})
-BREAK()
-ENDIF()
-ENDFOREACH()
-IF(SELECT_ARGS)
-BREAK()
-ENDIF()
-ENDFOREACH()
-IF(SELECT_ARGS)
-BREAK()
-ENDIF()
-ENDFOREACH()
-
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+                SELECT_ARGS
+            )
+            if(SELECT_ARGS)
+                set(SELECT_TYPE_ARG1 ${ARG1})
+                set(SELECT_TYPE_ARG234 ${ARG234})
+                set(SELECT_TYPE_ARG5 ${ARG5})
+                break()
+            endif()
+        endforeach()
+        if(SELECT_ARGS)
+            break()
+        endif()
+    endforeach()
+    if(SELECT_ARGS)
+        break()
+    endif()
+endforeach()
+
+check_cxx_source_compiles(
+    "
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -549,13 +558,15 @@ int main()
 {
     return 0;
 }
-" STATS_MACROS_CHECK)
-IF (NOT STATS_MACROS_CHECK)
-SET (STAT_MACROS_BROKEN 1)
-ENDIF()
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+    STATS_MACROS_CHECK
+)
+if(NOT STATS_MACROS_CHECK)
+    set(STAT_MACROS_BROKEN 1)
+endif()
+
+check_cxx_source_compiles(
+    "
 ${TEST_INCLUDES}
 int
 main ()
@@ -569,10 +580,12 @@ main ()
   ;
   return 0;
 }
-" STRERROR_R_CHAR_P)
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+    STRERROR_R_CHAR_P
+)
+
+check_cxx_source_compiles(
+    "
 #include <sys/types.h>
 #include <sys/time.h>
 #include <time.h>
@@ -585,11 +598,12 @@ return 0;
   ;
   return 0;
 }
-" TIME_WITH_SYS_TIME)
-
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+    TIME_WITH_SYS_TIME
+)
+
+check_cxx_source_compiles(
+    "
 int
 main ()
 {
@@ -647,13 +661,15 @@ main ()
   ;
   return 0;
 }
-" CONST_CONFORM_CHECK)
-IF (NOT CONST_CONFORM_CHECK)
-SET (const "")
-ENDIF()
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+    CONST_CONFORM_CHECK
+)
+if(NOT CONST_CONFORM_CHECK)
+    set(const "")
+endif()
+
+check_cxx_source_compiles(
+    "
 int
 main ()
 {
@@ -664,15 +680,17 @@ return !x && !y;
   ;
   return 0;
 }
-" WORKING_VOLATILE)
-IF (NOT WORKING_VOLATILE)
-SET (volatile "")
-ENDIF()
-
-FOREACH (RESTRICT_KW __restrict __restrict__ _Restrict restrict)
-
-CHECK_CXX_SOURCE_COMPILES(
 "
+    WORKING_VOLATILE
+)
+if(NOT WORKING_VOLATILE)
+    set(volatile "")
+endif()
+
+foreach(RESTRICT_KW __restrict __restrict__ _Restrict restrict)
+
+    check_cxx_source_compiles(
+        "
 typedef int * int_ptr;
     int foo (int_ptr ${RESTRICT_KW} ip) {
     return ip[0];
@@ -687,53 +705,78 @@ int s[1];
   ;
   return 0;
 }
-" RESTRICT_CHECK)
-IF (RESTRICT_CHECK)
-SET (restrict ${RESTRICT_KW})
-BREAK()
-ENDIF()
-ENDFOREACH()
-
-
-FOREACH(INLINE_KW inline __inline__ __inline)
-CHECK_CXX_SOURCE_COMPILES(
 "
+        RESTRICT_CHECK
+    )
+    if(RESTRICT_CHECK)
+        set(restrict ${RESTRICT_KW})
+        break()
+    endif()
+endforeach()
+
+foreach(INLINE_KW inline __inline__ __inline)
+    check_cxx_source_compiles(
+        "
 #ifndef __cplusplus
 typedef int foo_t;
 static ${INLINE_KW} foo_t static_foo () {return 0; }
 ${INLINE_KW} foo_t foo () {return 0; }
 int main (){return 0;}
 #endif
-"  INLINE)
-
-IF (INLINE)
-SET (inline ${INLINE_KW})
-BREAK()
-ENDIF()
-ENDFOREACH()
-
-IF (NOT INLINE)
-SET (inline "")
-ENDIF()
-
-EXECUTE_PROCESS(
-    COMMAND rm -f conftest.data conftest.file conftest.sym
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+"
+        INLINE
     )
-    
-CHECK_CXX_SOURCE_RUNS("
+
+    if(INLINE)
+        set(inline ${INLINE_KW})
+        break()
+    endif()
+endforeach()
+
+if(NOT INLINE)
+    set(inline "")
+endif()
+
+execute_process(COMMAND rm -f conftest.data conftest.file conftest.sym WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+check_cxx_source_runs(
+    "
 #include <limits>
 int main()
 {
-    // If long double is 16 bytes and digits and exponent are 64 and 16384 respectively, then we need to mask out the 
+    // If long double is 16 bytes and digits and exponent are 64 and 16384 respectively, then we need to mask out the
     // unused bits, as they contain garbage. There are times we test for equality by memcmp of a buffer containing,
     // in part, the long double set here. Garbage bytes will adversly affect that compare.
     // Note: There may be compilers that store 80 bit floats in 12 bytes. We do not account for that here. I don't believe
     // there are any modern Linux compilers that do that as a default. Windows uses 64 bits, so no masking is needed.
-    if (std::numeric_limits<long double>::digits == 64 
-     && std::numeric_limits<long double>::max_exponent == 16384 
+    if (std::numeric_limits<long double>::digits == 64
+     && std::numeric_limits<long double>::max_exponent == 16384
      && sizeof(long double) == 16)
         return 0;
-    return 1; 
+    return 1;
 }"
-MASK_LONGDOUBLE)
+    MASK_LONGDOUBLE
+)
+
+find_package(Git QUIET)
+
+if(GIT_FOUND AND EXISTS ${ENGINE_SRC_DIR}/.git)
+    execute_process(
+        COMMAND git describe --match=NeVeRmAtCh --always --dirty
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+    set(GIT_VERSION "source")
+endif()
+
+# releasenum is used by external scripts for various tasks. Leave it alone.
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
+columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/build/releasenum ${ENGINE_SUPPORTDIR})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
+
+columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_SUPPORTDIR})
