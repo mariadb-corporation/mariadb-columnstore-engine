@@ -11,10 +11,10 @@ source "$SCRIPT_LOCATION"/utils.sh
 echo "Arguments received: $@"
 
 optparse.define short=c long=container-name desc="Name of the Docker container to run tests in" variable=CONTAINER_NAME
-optparse.define short=i long=docker-image      desc="Docker image name to start container from" variable=DOCKER_IMAGE
-optparse.define short=r long=result-path       desc="Name suffix used in core dump file path"   variable=RESULT
-optparse.define short=s long=do-setup          desc="Run setup-repo.sh inside the container"    variable=DO_SETUP
-optparse.define short=u long=packages-url      desc="Packages url"                              variable=PACKAGES_URL
+optparse.define short=i long=docker-image desc="Docker image name to start container from" variable=DOCKER_IMAGE
+optparse.define short=r long=result-path desc="Name suffix used in core dump file path" variable=RESULT
+optparse.define short=s long=do-setup desc="Run setup-repo.sh inside the container" variable=DO_SETUP
+optparse.define short=u long=packages-url desc="Packages url" variable=PACKAGES_URL
 source $(optparse.build)
 
 if [[ "$EUID" -ne 0 ]]; then
@@ -104,10 +104,10 @@ fi
 
 # install deps
 if [[ "$RESULT" == *rocky* ]]; then
-    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release expect findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
 else
     change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
-    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
 fi
 
 # Configure core dump naming pattern
