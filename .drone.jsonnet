@@ -187,6 +187,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       AWS_SECRET_ACCESS_KEY: {
         from_secret: "aws_secret_access_key",
       },
+      AWS_REGION: "us-east-1",
+      AWS_DEFAULT_REGION: "us-east-1",
     },
     commands: [
       "ls " + result,
@@ -645,6 +647,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                AWS_SECRET_ACCESS_KEY: {
                  from_secret: "aws_secret_access_key",
                },
+               AWS_REGION: "us-east-1",
+               AWS_DEFAULT_REGION: "us-east-1",
                SCCACHE_BUCKET: "cs-sccache",
                SCCACHE_REGION: "us-east-1",
                SCCACHE_S3_USE_SSL: "true",
