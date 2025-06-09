@@ -1,22 +1,24 @@
-include_directories( ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
-MY_CHECK_AND_SET_COMPILER_FLAG("-U_FORTIFY_SOURCE" DEBUG RELWITHDEBINFO)
-MY_CHECK_AND_SET_COMPILER_FLAG("-fsanitize=address -fsanitize-address-use-after-scope -fPIC")
+include_directories(${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE})
 
-if (WITH_UNITTESTS)
+if(COLUMNSTORE_ASAN_FOR_UNITTESTS)
+    my_check_and_set_compiler_flag("-U_FORTIFY_SOURCE" DEBUG RELWITHDEBINFO)
+    my_check_and_set_compiler_flag("-fsanitize=address -fsanitize-address-use-after-scope -fPIC")
+endif()
+
+if(WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
-    ExternalProject_Add(googletest
+    ExternalProject_Add(
+        googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.0
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
     )
 
-    # this is a workaround for gtest's bug still not closed
-    # https://github.com/google/googletest/issues/3659
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        MY_CHECK_AND_SET_COMPILER_FLAG("-U__cpp_char8_t")
+    # this is a workaround for gtest's bug still not closed https://github.com/google/googletest/issues/3659
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        my_check_and_set_compiler_flag("-U__cpp_char8_t")
     endif()
-
 
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
     # lib64 for RPM-based distros
@@ -24,17 +26,16 @@ if (WITH_UNITTESTS)
     set(GTEST_LIBRARIES gtest gtest_main pthread)
     include(GoogleTest)
 
-    #GoogleTest tests
+    # GoogleTest tests
     add_executable(rowgroup_tests rowgroup-tests.cpp)
     add_dependencies(rowgroup_tests googletest)
     target_link_libraries(rowgroup_tests ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rowgroup_tests TEST_PREFIX columnstore:)
 
-
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
     target_link_libraries(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS} messageqcpp execplan)
-    #    gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
+    # gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
     add_dependencies(mcs_decimal_tests googletest)
@@ -59,7 +60,9 @@ if (WITH_UNITTESTS)
     add_executable(column_scan_filter_tests primitives_column_scan_and_filter.cpp)
     target_compile_options(column_scan_filter_tests PRIVATE -Wno-error -Wno-sign-compare)
     add_dependencies(column_scan_filter_tests googletest)
-    target_link_libraries(column_scan_filter_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    target_link_libraries(
+        column_scan_filter_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc
+    )
     gtest_add_tests(TARGET column_scan_filter_tests TEST_PREFIX columnstore:)
 
     add_executable(simd_processors simd_processors.cpp)
@@ -96,11 +99,20 @@ if (WITH_UNITTESTS)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 endif()
 # -Werror=sign-compare
-if (WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
+if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
     find_package(benchmark REQUIRED)
     add_executable(primitives_scan_bench primitives_scan_bench.cpp)
-    target_include_directories(primitives_scan_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE} )
-    target_link_libraries(primitives_scan_bench ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc benchmark::benchmark)
+    target_include_directories(
+        primitives_scan_bench PUBLIC ${ENGINE_COMMON_INCLUDES} ${ENGINE_BLOCKCACHE_INCLUDE} ${ENGINE_PRIMPROC_INCLUDE}
+    )
+    target_link_libraries(
+        primitives_scan_bench
+        ${ENGINE_LDFLAGS}
+        ${ENGINE_WRITE_LIBS}
+        ${GTEST_LIBRARIES}
+        processor
+        dbbc
+        benchmark::benchmark
+    )
     add_test(NAME columnstore_microbenchmarks:primitives_scan_bench, COMMAND primitives_scan_bench)
 endif()
-
