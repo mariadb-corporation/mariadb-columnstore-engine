@@ -742,8 +742,7 @@ if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
     build_package
     message_splitted "PACKAGES BUILD FINISHED"
-
-    return 0
+    exit 0
 fi
 
 stop_service
