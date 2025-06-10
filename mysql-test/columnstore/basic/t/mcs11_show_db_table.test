@@ -2,6 +2,7 @@
 #This test verifies show databases and tables with engine=columnstore.
 #
 -- source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 -- source include/have_innodb.inc
 -- source ../include/check_maxscale.inc
 

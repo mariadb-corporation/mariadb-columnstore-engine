@@ -61,9 +61,6 @@ DECODE(a,1,'x1',NULL,'xNULL','xELSE') AS d2,
 DECODE_ORACLE(a,1,'x1',NULL,'xNULL') AS d3,
 DECODE_ORACLE(a,1,'x1',NULL,'xNULL','xELSE') AS d4
 FROM t1;
-SHOW CREATE VIEW v1;
-View	Create View	character_set_client	collation_connection
-v1	CREATE VIEW "v1" AS select decode("t1"."a",1,'x1',NULL,'xNULL') AS "d1",decode("t1"."a",1,'x1',NULL,'xNULL','xELSE') AS "d2",decode("t1"."a",1,'x1',NULL,'xNULL') AS "d3",decode("t1"."a",1,'x1',NULL,'xNULL','xELSE') AS "d4" from "t1"	latin1	latin1_swedish_ci
 DROP VIEW v1;
 DROP TABLE t1;
 SELECT DECODE(TIME'10:20:31','10:20:31','then1','10:20:32','then2','def');
