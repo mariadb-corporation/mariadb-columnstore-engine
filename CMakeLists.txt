@@ -47,6 +47,7 @@ include(columnstore_version)
 include(configureEngine)
 include(compiler_flags)
 include(misc)
+include(cpack_manage)
 
 set(COMPONENTS
     dbcon/mysql
