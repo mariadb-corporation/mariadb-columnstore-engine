@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -277,6 +278,9 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
   json_engine_t jsEg1, jsEg2;
   jsEg1.s.error = jsEg2.s.error = 0;
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg1_stack[JSON_DEPTH_LIMIT], jsEg2_stack[JSON_DEPTH_LIMIT];
+#endif
 
   utils::NullString tmpJS(js);
   string retJS;
@@ -289,6 +293,12 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       isNull = false;
       goto next;
     }
+
+#if MYSQL_VERSION_ID >= 120100
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg2.stack, sizeof(int), &jsEg2_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
 
     initJSEngine(jsEg2, getCharset(fp[i]), js2);
 
@@ -303,6 +313,12 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       retJS.append(js2.str());
       goto next;
     }
+
+#if MYSQL_VERSION_ID >= 120100
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg1.stack, sizeof(int), &jsEg1_stack,
+                              JSON_DEPTH_DEFAULT, 0, MYF(0));
+#endif
 
     initJSEngine(jsEg1, getCharset(fp[0]), tmpJS);
     if (doMergePatch(retJS, &jsEg1, &jsEg2, isEmpty))

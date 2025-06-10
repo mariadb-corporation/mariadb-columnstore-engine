@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 #include "jsonhelpers.h"
 using namespace execplan;
 
@@ -30,6 +31,14 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   int strLen;
 
   const CHARSET_INFO* cs = type.getCharset();
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
+
   initJSEngine(jsEg, cs, js);
 
   json_read_value(&jsEg);

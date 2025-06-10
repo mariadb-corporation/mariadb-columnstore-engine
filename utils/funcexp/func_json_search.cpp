@@ -15,17 +15,31 @@ using namespace joblist;
 #include "jsonhelpers.h"
 using namespace funcexp::helpers;
 
+#include "my_sys.h"
+
 namespace
 {
+#if MYSQL_VERSION_ID >= 120100
+static bool appendJSPath(string& ret, json_path_t* p)
+#else
 static bool appendJSPath(string& ret, const json_path_t* p)
+#endif
 {
   const json_path_step_t* c;
+
+#if MYSQL_VERSION_ID >= 120100
+  json_path_step_t *last_step= (json_path_step_t*)(mem_root_dynamic_array_get_val(&p->steps, p->last_step_idx));
+#endif
 
   try
   {
     ret.append("\"$");
 
+#if MYSQL_VERSION_ID >= 120100
+    for (c = ((json_path_step_t*)(p->steps.buffer)) + 1; c <= last_step; c++)
+#else
     for (c = p->steps + 1; c <= p->last_step; c++)
+#endif
     {
       if (c->type & JSON_PATH_KEY)
       {
@@ -145,13 +159,34 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 #endif
   int pathFound = 0;
 
+#if MYSQL_VERSION_ID >= 120100
+  json_path_step_t savPath_steps[JSON_DEPTH_LIMIT], p_steps[JSON_DEPTH_LIMIT];
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+#endif
+
   initJSPaths(paths, fp, 4, 1);
+
+#if MYSQL_VERSION_ID >= 120100
+  vector<vector<json_path_step_t>> p_steps_arr(paths.size(), vector<json_path_step_t>(32));
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &savPath.steps, sizeof(json_path_step_t), &savPath_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
 
   for (size_t i = 4; i < fp.size(); i++)
   {
     JSONPath& path = paths[i - 4];
     if (!path.parsed)
     {
+#if MYSQL_VERSION_ID >= 120100
+      mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i-4],
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
       if (parseJSPath(path, row, fp[i]))
         goto error;
 #ifdef MYSQL_GE_1009
@@ -160,15 +195,24 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     }
   }
 
+#if MYSQL_VERSION_ID >= 120100
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
+
   json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
 
   while (json_get_path_next(&jsEg, &p) == 0)
   {
-#ifdef MYSQL_GE_1009
+#if MYSQL_VERSION_ID >= 120100
     if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
-      goto error;
+        json_skip_array_and_count(&jsEg, arrayCounter + (((json_path_step_t*)(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx))) - (json_path_step_t*)p.steps.buffer)))
+#else
+    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&jsEg, arrayCounter + (((json_path_step_t*)(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx))) - (json_path_step_t*)p.steps.buffer)))
 #endif
+      goto error;
 
     if (json_value_scalar(&jsEg))
     {
@@ -182,8 +226,11 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
         ++pathFound;
         if (pathFound == 1)
         {
-          savPath = p;
-          savPath.last_step = savPath.steps + (p.last_step - p.steps);
+
+#if MYSQL_VERSION_ID < 120010
+           savPath.last_step = savPath.steps + (p.last_step - p.steps);
+#endif
+    
         }
         else
         {

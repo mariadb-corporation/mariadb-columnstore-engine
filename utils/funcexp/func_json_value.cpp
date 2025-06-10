@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -63,6 +64,13 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 {
   bool isNullJS = false, isNullPath = false;
 
+#if MYSQL_VERSION_ID >= 120100
+  MEM_ROOT_DYNAMIC_ARRAY array;
+  IntType arrayCounters[JSON_DEPTH_LIMIT];
+  int je_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+#endif
+
   const utils::NullString& js = funcParamJS->data()->getStrVal(row, isNullJS);
   const utils::NullString& sjsp = funcParamPath->data()->getStrVal(row, isNullPath);
   if (isNullJS || isNullPath)
@@ -70,21 +78,44 @@ bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SP
 
   int error = 0;
 
+#if MYSQL_VERSION_ID >= 120100
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
+
   if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)sjsp.str(),
                                                      (const uchar*)sjsp.end()))
     return true;
 
   JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()), reinterpret_cast<const uchar*>(js.end()));
 
+#if MYSQL_VERSION_ID >= 120100
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &je.stack, sizeof(int), &je_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+
+  currStep = (json_path_step_t*)p.steps.buffer;
+
+  
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &array, sizeof(int), &arrayCounters,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#else
   currStep = p.steps;
+#endif
 
   do
   {
     if (error)
       return true;
 
+#if MYSQL_VERSION_ID >= 120100
+    if (json_find_path(&je, &p, &currStep, &array))
+#else
     IntType arrayCounters[JSON_DEPTH_LIMIT];
     if (json_find_path(&je, &p, &currStep, arrayCounters))
+#endif
       return true;
 
     if (json_read_value(&je))

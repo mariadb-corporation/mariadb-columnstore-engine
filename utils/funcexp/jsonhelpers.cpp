@@ -334,7 +334,11 @@ int cmpPartJSPath(const json_path_step_t* a, const json_path_step_t* aEnd, const
 
 int cmpJSPath(const json_path_t* a, const json_path_t* b, enum json_value_types vt, const int* arraySize)
 {
+#if MYSQL_VERSION_ID >= 120100
+  return cmpPartJSPath((json_path_step_t*)a->steps.buffer + 1, NULL, (json_path_step_t*)b->steps.buffer + 1, NULL, vt, arraySize);
+#else
   return cmpPartJSPath(a->steps + 1, a->last_step, b->steps + 1, b->last_step, vt, arraySize);
+#endif
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards)

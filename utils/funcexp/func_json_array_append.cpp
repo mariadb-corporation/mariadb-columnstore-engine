@@ -28,13 +28,21 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     return "";
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
-
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack[JSON_DEPTH_LIMIT];
+  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+#endif
   json_engine_t jsEg;
   const uchar* arrEnd;
   size_t strRestLen;
   string retJS;
   retJS.reserve(js.length() + padding);
 
+#if MYSQL_VERSION_ID >= 120100
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
   initJSPaths(paths, fp, 1, 2);
 
   utils::NullString tmpJS(js);
@@ -43,6 +51,12 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
     JSONPath& path = paths[j];
+
+#if MYSQL_VERSION_ID >= 120100
+    mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                               &path.p.steps, sizeof(json_path_step_t), &p_steps,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
 
     if (!path.parsed && parseJSPath(path, row, fp[i], false))
       goto error;

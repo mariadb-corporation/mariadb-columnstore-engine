@@ -47,7 +47,17 @@ string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   }
 
   json_engine_t jsEg;
+
+#if MYSQL_VERSION_ID >= 120100
+  int jsEg_stack [JSON_DEPTH_LIMIT];
+
+  mem_root_dynamic_array_init(NULL, PSI_INSTRUMENT_MEM | MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE,
+                              &jsEg.stack, sizeof(int), &jsEg_stack,
+                              JSON_DEPTH_LIMIT, 0, MYF(0));
+#endif
+
   initJSEngine(jsEg, getCharset(fp[0]), js);
+
   string ret;
   if (doFormat(&jsEg, ret, fmt, tabSize))
   {
