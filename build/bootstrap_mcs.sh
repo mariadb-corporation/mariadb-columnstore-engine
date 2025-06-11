@@ -555,7 +555,8 @@ run_unit_tests() {
 
     message "Running unittests"
     cd $MARIA_BUILD_PATH
-    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
+    (export ASAN_OPTIONS=detect_odr_violation=0
+    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure)
     cd - >/dev/null
 }
 

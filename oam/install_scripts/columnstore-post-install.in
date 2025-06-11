@@ -4,6 +4,8 @@
 #
 # Post-install steps for columnstore install
 
+export ASAN_OPTIONS=detect_odr_violation=0
+
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
        echo 0
@@ -147,6 +149,7 @@ rm -f @ENGINE_LOGDIR@/data/bulk/tmpjob/* >/dev/null 2>&1
 chmod -R 777 @ENGINE_LOGDIR@/data
 
 #get columnstore temp file directory name
+echo "get columnstore temp file directory name"
 tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
 scratchDir=$tmpDir`@ENGINE_BINDIR@/mcsGetConfig SystemConfig hdfsRdwrScratch`
 mkdir $tmpDir >/dev/null 2>&1
@@ -189,6 +192,7 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-loadbrm.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /lib/systemd/system/. >/dev/null 2>&1
+	echo "enabling services"
         systemctl enable mariadb-columnstore >/dev/null 2>&1
         systemctl enable mcs-controllernode > /dev/null 2>&1
         systemctl enable mcs-ddlproc > /dev/null 2>&1
@@ -198,6 +202,7 @@ if [ $user = "root" ]; then
         systemctl enable mcs-writeengineserver > /dev/null 2>&1
         systemctl enable mcs-loadbrm > /dev/null 2>&1
         systemctl enable mcs-storagemanager > /dev/null 2>&1
+	echo "services enabled"
     else
         chkconfig=`which chkconfig 2>/dev/null`
         if [ -n "$chkconfig" ]; then
@@ -226,7 +231,9 @@ if [ -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave ]; then
 fi
 
 if [ $user = "root" ]; then
+	echo "calling columnstoreSyslogSetup.sh"
     @ENGINE_BINDIR@/columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
+	echo "called columnstoreSyslogSetup.sh"
 
     #check if MariaDB Columnstore system logging was setup
     cat $installLogDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
