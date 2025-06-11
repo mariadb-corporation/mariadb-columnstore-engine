@@ -224,7 +224,25 @@ d	17	17
 b	18	18
 a	19	19
 SELECT a, b, MIN(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) min FROM t1;
-ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+a	b	min
+NULL	NULL	NULL
+a	12	12
+a	13	13
+b	14	14
+c	15	15
+d	16	16
+d	17	17
+b	18	18
+a	19	19
 SELECT a, b, MIN(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) min FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+a	b	min
+NULL	NULL	NULL
+a	19	12
+a	13	12
+a	12	12
+b	18	12
+b	14	12
+c	15	12
+d	16	12
+d	17	12
 DROP DATABASE mcs159_db;
