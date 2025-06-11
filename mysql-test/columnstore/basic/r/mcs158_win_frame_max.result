@@ -224,7 +224,25 @@ d	17	17
 b	18	18
 a	19	19
 SELECT a, b, MAX(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) max FROM t1;
-ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+a	b	max
+NULL	NULL	NULL
+a	12	12
+a	13	13
+b	14	14
+c	15	15
+d	16	16
+d	17	17
+b	18	18
+a	19	19
 SELECT a, b, MAX(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) max FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+a	b	max
+NULL	NULL	NULL
+a	19	19
+a	13	19
+a	12	19
+b	18	19
+b	14	19
+c	15	19
+d	16	19
+d	17	19
 DROP DATABASE mcs158_db;

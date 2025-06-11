@@ -86,5 +86,5 @@ SELECT @x / @y;
 @x / @y
 NULL
 SELECT unknown;
-ERROR 42S22: Unknown column 'unknown' in 'field list'
+ERROR 42S22: Unknown column 'unknown' in 'SELECT'
 DROP DATABASE IF EXISTS mcs33_db1;

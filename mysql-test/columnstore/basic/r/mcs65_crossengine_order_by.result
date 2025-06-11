@@ -63,11 +63,11 @@ t1_int	t1_char	t2_int	t2_char
 3	fffff	3	iii
 5	a	5	hhh
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY -1;
-ERROR 42S22: Unknown column '???' in 'order clause'
+ERROR 42S22: Unknown column '???' in 'ORDER BY'
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 0;
-ERROR 42S22: Unknown column '0' in 'order clause'
+ERROR 42S22: Unknown column '0' in 'ORDER BY'
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 5;
-ERROR 42S22: Unknown column '5' in 'order clause'
+ERROR 42S22: Unknown column '5' in 'ORDER BY'
 SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
 t1_int	t1_char	t2_int	t2_char
 7	ggg	7	nnnnn
