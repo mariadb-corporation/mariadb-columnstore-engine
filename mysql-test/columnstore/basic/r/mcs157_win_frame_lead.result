@@ -226,5 +226,14 @@ a	19	NULL
 SELECT a, b, LEAD(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) lead_value FROM t1;
 ERROR HY000: No order list in window specification for 'lead'
 SELECT a, b, LEAD(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) lead_value FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+a	b	lead_value
+NULL	NULL	19
+a	19	13
+a	13	12
+a	12	18
+b	18	14
+b	14	15
+c	15	16
+d	16	17
+d	17	NULL
 DROP DATABASE mcs157_db;

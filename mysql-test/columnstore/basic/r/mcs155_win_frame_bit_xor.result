@@ -14,7 +14,7 @@ ERROR HY000: Internal error: MCS-9018: Window Function 'BIT_XOR' is currently no
 SELECT a, b, BIT_XOR(b) OVER(ORDER BY b ROWS BETWEEN 1 PRECEDING AND UNBOUNDED FOLLOWING) BIT_XOR FROM t1;
 ERROR HY000: Internal error: MCS-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
 SELECT a, b, BIT_XOR(b) OVER(PARTITION BY b RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
-ERROR HY000: RANGE-type frame requires ORDER BY clause with single sort key
+ERROR HY000: Internal error: MCS-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
 SELECT a, b, BIT_XOR(b) OVER(ORDER BY a RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) BIT_XOR FROM t1;
-ERROR HY000: Numeric datatype is required for RANGE-type frame
+ERROR HY000: Internal error: MCS-9018: Window Function 'BIT_XOR' is currently not supported in Columnstore.
 DROP DATABASE mcs155_db;

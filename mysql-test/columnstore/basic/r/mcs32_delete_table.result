@@ -13,7 +13,7 @@ SELECT COUNT(*) FROM t1;
 COUNT(*)
 2
 DELETE FROM t1 WHERE unknown = 2;
-ERROR 42S22: Unknown column 'unknown' in 'where clause'
+ERROR 42S22: Unknown column 'unknown' in 'WHERE'
 INSERT INTO t1 VALUES (1, NULL);
 DELETE FROM t1 WHERE b IS NULL;
 SELECT COUNT(*) FROM t1;
