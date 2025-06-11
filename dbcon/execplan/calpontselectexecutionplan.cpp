@@ -282,9 +282,13 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
   output << ">>Filters" << endlWithIndent(ident);
 
   if (filters() != nullptr)
+  {
     filters()->walk(ParseTree::print, output);
+  }
   else
+  {
     output << "empty filter tree" << endlWithIndent(ident);
+  }
 
   // Group by columns
   const CalpontSelectExecutionPlan::GroupByColumnList& gbc = groupByCols();
@@ -913,8 +917,8 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   newPlan->returnedCols(newReturnedCols);
   
   // Deep copy of filters
-  // if (fFilters)
-  //   newPlan->filters(new ParseTree(*fFilters));
+  if (fFilters)
+    newPlan->filters(new ParseTree(*fFilters));
   
   // Deep copy of filter token list
   newPlan->filterTokenList(fFilterTokenList);

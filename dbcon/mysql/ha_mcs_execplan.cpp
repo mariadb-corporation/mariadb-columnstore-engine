@@ -9207,8 +9207,8 @@ bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
 {
   return std::any_of(csep.unionVec().begin(), csep.unionVec().end(), 
   [&table](const auto& unionUnit) {
-    auto unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
-    bool tableIsPresented = std::any_of(unionUnitLocal.tableList().begin(), unionUnitLocal.tableList().end(), 
+    execplan::CalpontSelectExecutionPlan* unionUnitLocal = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+    bool tableIsPresented = std::any_of(unionUnitLocal->tableList().begin(), unionUnitLocal->tableList().end(), 
     [&table](const auto& unionTable) {
       return unionTable == table;
     });
@@ -9220,15 +9220,9 @@ bool matchParallelCES(CalpontSelectExecutionPlan& csep)
 {
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level.
-  for (auto& table : tables)
-  {
-    if (!table.isColumnstore() && !tableIsInUnion(table, csep))
-    {
-      return true;
-    }
-  }
-
-  return false;
+  // WIP filter out CSEPs with orderBy, groupBy, having
+  // WIP filter out CSEPs with nonSimpleColumns in projection
+  return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
 }
 
 CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfLegs,
@@ -9244,19 +9238,69 @@ CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfL
   return unionVec;
 }
 
+// void applyParallelCES(CalpontSelectExecutionPlan& csep)
+// {
+//   auto tables = csep.tableList();
+//   for (auto it = tables.begin(); it != tables.end(); ++it)
+//   {
+//     if (!it->isColumnstore())
+//     {
+//       size_t parallelFactor = 2;
+//       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
+//       csep.unionVec().insert(csep.unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
+//     }
+//   }
+// }
+
 void applyParallelCES(CalpontSelectExecutionPlan& csep)
 {
   auto tables = csep.tableList();
-  for (auto it = tables.begin(); it != tables.end(); ++it)
+  CalpontSelectExecutionPlan::TableList newTableList;
+  CalpontSelectExecutionPlan::SelectList newDerivedTableList;
+  static const std::string aliasPrefix = "subQ";
+
+  // ATM Must be only 1 table
+  for (auto& table: tables)
   {
-    if (!it->isColumnstore())
+    if (!table.isColumnstore())
     {
+      auto derivedSCEP = csep.cloneWORecursiveSelects();
+      std::string alias = aliasPrefix + table.schema + "_" + table.table;
+
+      derivedSCEP->location(CalpontSelectExecutionPlan::FROM);
+      derivedSCEP->subType(CalpontSelectExecutionPlan::FROM_SUBS);
+      derivedSCEP->derivedTbAlias(alias);
+
       size_t parallelFactor = 2;
       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
-      csep.unionVec().insert(csep.unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
+      derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
+
+      // change parent to derived table columns
+      for (auto& rc : csep.returnedCols())
+      {
+        auto* sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+        if (sc)
+        {
+          sc->tableName("");
+          sc->schemaName("");
+          sc->tableAlias(alias);
+        }
+      }
+
+      
+
+      // WIP need to work with existing derived tables
+      newDerivedTableList.push_back(derivedSCEP);
+      // WIP
+      CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, "");
+      newTableList.push_back(tn);
     }
   }
+
+  csep.derivedTableList(newDerivedTableList);
+  csep.tableList(newTableList);
 }
+
 struct Rule
 {
   Rule(std::string&& name, bool (*matchRule)(CalpontSelectExecutionPlan&),
@@ -9300,7 +9344,7 @@ struct Rule
 
     if (matchRule(csep))
     {
-      apply(csep);
+      applyRule(csep);
       rewrite = true;
     }
 
@@ -9330,11 +9374,11 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   else if (status < 0)
     return status;
 
-#ifdef DEBUG_WALK_COND
-  // cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
-  // cerr << *csep << endl;
-  // cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
+// #ifdef DEBUG_WALK_COND
+  cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
+  cerr << *csep << endl;
+  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+// #endif
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
