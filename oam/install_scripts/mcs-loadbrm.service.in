@@ -6,6 +6,7 @@ After=network.target mcs-storagemanager.service
 [Service]
 Type=oneshot
 ExecStart=@ENGINE_BINDIR@/mcs-loadbrm.py
+Environment="ASAN_OPTIONS=detect_odr_violation=0"
 EnvironmentFile=-/etc/columnstore/systemd.env
 
 [Install]
