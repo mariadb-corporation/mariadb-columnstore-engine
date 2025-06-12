@@ -986,12 +986,12 @@ void VBBM::loadVersion2(IDBDataFile* in)
   }
 
   size_t readSize = vbbmEntries * sizeof(entry);
-  char* readBuf = new char[readSize];
+  std::unique_ptr<char[]> readBuf(new char[readSize]);
   size_t progress = 0;
   int err;
   while (progress < readSize)
   {
-    err = in->read(readBuf + progress, readSize - progress);
+    err = in->read(readBuf.get() + progress, readSize - progress);
     if (err < 0)
     {
       log_errno("VBBM::load()");
@@ -1005,7 +1005,7 @@ void VBBM::loadVersion2(IDBDataFile* in)
     progress += err;
   }
 
-  VBBMEntry* loadedEntries = (VBBMEntry*)readBuf;
+  VBBMEntry* loadedEntries = reinterpret_cast<VBBMEntry*>(readBuf.get());
   for (i = 0; i < vbbmEntries; i++)
     insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbOID, loadedEntries[i].vbFBO,
            true);

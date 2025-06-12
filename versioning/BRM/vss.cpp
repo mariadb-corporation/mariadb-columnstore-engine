@@ -1402,12 +1402,12 @@ void VSS::load(string filename)
   */
 
   size_t readSize = header.entries * sizeof(entry);
-  char* readBuf = new char[readSize];
+  std::unique_ptr<char[]>  readBuf(new char[readSize]);
   size_t progress = 0;
   int err;
   while (progress < readSize)
   {
-    err = in->read(readBuf + progress, readSize - progress);
+    err = in->read(readBuf.get() + progress, readSize - progress);
     if (err < 0)
     {
       log_errno("VBBM::load()");
@@ -1421,7 +1421,7 @@ void VSS::load(string filename)
     progress += err;
   }
 
-  VSSEntry* loadedEntries = (VSSEntry*)readBuf;
+  VSSEntry* loadedEntries = reinterpret_cast<VSSEntry*>(readBuf.get());
   for (i = 0; i < header.entries; i++)
     insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, loadedEntries[i].locked,
            true);
