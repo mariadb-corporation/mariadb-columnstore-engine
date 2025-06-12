@@ -32,7 +32,7 @@ namespace storagemanager
 class S3Storage : public CloudStorage
 {
  public:
-  explicit S3Storage(bool skipRetry = false);
+  explicit S3Storage(bool skipRetry = false, bool verbose = false);
 
   ~S3Storage() override;
 
@@ -57,6 +57,7 @@ class S3Storage : public CloudStorage
   void returnConnection(std::shared_ptr<Connection> conn);
 
   bool skipRetryableErrors;
+  bool verbose_enabled;
 
   std::string bucket;  // might store this as a char *, since it's only used that way
   std::string prefix;

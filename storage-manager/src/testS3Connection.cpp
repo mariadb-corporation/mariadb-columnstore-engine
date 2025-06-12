@@ -20,23 +20,26 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
+#include <boost/program_options.hpp>
 
 using namespace storagemanager;
 using namespace std;
+namespace po = boost::program_options;
 
-void printUsage()
+void printUsage(const po::options_description& desc)
 {
   cout << "MariaDB Columnstore Storage Manager Test Configuration Connectivity.\n" << endl;
   cout << "Usage: testS3Connection \n" << endl;
+  cout<< desc <<endl;
   cout << "Returns Success=0 Failure=1\n" << endl;
 }
-int s3TestConnection()
+int s3TestConnection(bool verbose)
 {
   S3Storage* s3 = NULL;
   int ret = 0;
   try
   {
-    S3Storage* s3 = new S3Storage(true);
+    S3Storage* s3 = new S3Storage(true, verbose);
     cout << "S3 Storage Manager Configuration OK" << endl;
     delete s3;
   }
@@ -53,17 +56,30 @@ int s3TestConnection()
 
 int main(int argc, char* argv[])
 {
-  int option;
-  while ((option = getopt(argc, argv, "h")) != EOF)
+  try
   {
-    switch (option)
+    //define options
+    po::options_description desc("Options");
+    desc.add_options ()
+    ("help,h", "Print help message")
+    ("verbose,v", po::value<bool>()->default_value(false), "Enable verbose output");
+
+    // Parse command line
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if(vm.count("help"))
     {
-      case 'h':
-      default:
-        printUsage();
-        return 0;
-        break;
+      printUsage (desc);
+      return 0;
     }
+    // Run the test with verbose flag
+    return s3TestConnection(vm["verbose"].as<bool>());
   }
-  return s3TestConnection();
+  catch(const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+  
 }
