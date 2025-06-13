@@ -18,5 +18,7 @@ LimitCORE=@CORE_DUMPS@
 ExecStartPre=/usr/bin/env bash -c "ldconfig -p | grep -m1 libjemalloc > /dev/null || echo 'Please install jemalloc to avoid ColumnStore performance degradation and unexpected service interruptions.'"
 ExecStart=/usr/bin/env bash -c "@PRIMPROC_ALLOC_CONFIG@ @LD_PRELOAD_STRING@ exec @ENGINE_BINDIR@/PrimProc"
 
+Environment="ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=/core/asan.primproc"
+
 Restart=on-failure
 TimeoutStopSec=2

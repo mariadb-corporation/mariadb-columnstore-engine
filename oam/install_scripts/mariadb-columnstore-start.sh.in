@@ -14,7 +14,7 @@ flock -n "$fd_lock" || exit 0
 /bin/systemctl start mcs-writeengineserver
 /bin/systemctl start mcs-dmlproc
 /bin/systemctl start mcs-ddlproc
-su -s /bin/sh -c 'export ASAN_OPTIONS=odr_violations=0; @ENGINE_BINDIR@/dbbuilder 7' @DEFAULT_USER@ 1> @ENGINE_LOGDIR@/install/dbbuilder.log
+su -s /bin/sh -c 'export ASAN_OPTIONS=detect_odr_violation=0; @ENGINE_BINDIR@/dbbuilder 7' @DEFAULT_USER@ 1> @ENGINE_LOGDIR@/install/dbbuilder.log
 
 flock -u "$fd_lock"
 
