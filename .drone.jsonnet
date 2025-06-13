@@ -176,7 +176,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   publish(step_prefix="pkg", eventp=event + "/${DRONE_BUILD_NUMBER}"):: {
     name: "publish " + step_prefix,
     depends_on: [std.strReplace(step_prefix, " latest", ""), "createrepo"],
-    image: "amazon/aws-cli",
+    image: "amazon/aws-cli:2.23.5",
     when: {
       status: ["success", "failure"],
     },
@@ -271,7 +271,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   smoke:: {
     name: "smoke",
     depends_on: ["publish pkg"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       prepareTestStage(getContainerName("smoke"), result, true),
@@ -281,7 +281,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   smokelog:: {
     name: "smokelog",
     depends_on: ["smoke"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("smoke"), result, "smoke"),
@@ -293,7 +293,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   upgrade(version):: {
     name: "upgrade-test from " + version,
     depends_on: ["regressionlog"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker],
     environment: {
       UPGRADE_TOKEN: {
@@ -314,7 +314,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   upgradelog:: {
     name: "upgradelog",
     depends_on: std.map(function(p) "upgrade-test from " + p, mdb_server_versions),
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands:
        ["echo"] +
@@ -377,7 +377,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   mtrlog:: {
     name: "mtrlog",
     depends_on: ["mtr"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("mtr"), result, "mtr"),
@@ -467,7 +467,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   regressionlog:: {
     name: "regressionlog",
     depends_on: [regression_tests[std.length(regression_tests) - 1]],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("regression"), result, "regression"),
@@ -480,7 +480,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "dockerfile",
     depends_on: ["publish pkg", "publish cmapi build"],
     //failure: 'ignore',
-    image: "alpine/git",
+    image: "alpine/git:2.49.0",
     environment: {
       DOCKER_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
       DOCKER_REF_AUX: branch_ref,
@@ -554,7 +554,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   cmapilog:: {
     name: "cmapilog",
     depends_on: ["cmapi test"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("cmapi"), result, "cmapi"),
@@ -567,7 +567,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "mtr",
     depends_on: ["dockerhub"],
     //failure: 'ignore',
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker],
     environment: {
       DOCKER_LOGIN: {
@@ -604,7 +604,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   steps: [
            {
              name: "submodules",
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              commands: [
                "git submodule update --init --recursive",
                "git config cmake.update-submodules no",
@@ -613,7 +613,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
            },
            {
              name: "clone-mdb",
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: "${SERVER_REF:-" + server + "}",
@@ -714,7 +714,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
            {
              name: "pkg",
              depends_on: ["unittests"],
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              when: {
                status: ["success", "failure"],
              },
