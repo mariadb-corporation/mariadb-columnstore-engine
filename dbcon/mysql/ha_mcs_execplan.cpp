@@ -9257,7 +9257,7 @@ void applyParallelCES(CalpontSelectExecutionPlan& csep)
   auto tables = csep.tableList();
   CalpontSelectExecutionPlan::TableList newTableList;
   CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  static const std::string aliasPrefix = "subQ";
+  static const std::string aliasPrefix = "$sub_";
 
   // ATM Must be only 1 table
   for (auto& table: tables)
@@ -9265,6 +9265,7 @@ void applyParallelCES(CalpontSelectExecutionPlan& csep)
     if (!table.isColumnstore())
     {
       auto derivedSCEP = csep.cloneWORecursiveSelects();
+      // need to intro a level
       std::string alias = aliasPrefix + table.schema + "_" + table.table;
 
       derivedSCEP->location(CalpontSelectExecutionPlan::FROM);
@@ -9284,10 +9285,9 @@ void applyParallelCES(CalpontSelectExecutionPlan& csep)
           sc->tableName("");
           sc->schemaName("");
           sc->tableAlias(alias);
+          sc->colPosition(0);
         }
       }
-
-      
 
       // WIP need to work with existing derived tables
       newDerivedTableList.push_back(derivedSCEP);
@@ -9296,6 +9296,14 @@ void applyParallelCES(CalpontSelectExecutionPlan& csep)
       newTableList.push_back(tn);
     }
   }
+
+  // SimpleColumn* sc = new SimpleColumn("test", "i1", "i", false, csep.sessionID());
+  // string alias(table->alias.c_ptr());
+  // sc->timeZone(csep.timeZone());
+  // sc->partitions(getPartitions(table));
+  // boost::shared_ptr<SimpleColumn> spsc(sc);
+
+  // csep.columnMap().insert({"`test`.`i1`.`i`", spsc});
 
   csep.derivedTableList(newDerivedTableList);
   csep.tableList(newTableList);
@@ -9399,7 +9407,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   cerr << "---------------- cs_get_select_plan rewritten EXECUTION PLAN ----------------" << endl;
   cerr << *csep << endl;
   cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-
+  
 
   return 0;
 }
