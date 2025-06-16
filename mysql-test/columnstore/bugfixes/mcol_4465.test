@@ -1,4 +1,5 @@
 --source ../include/have_columnstore.inc
+--source ../include/functions.inc
 --disable_warnings
 DROP DATABASE IF EXISTS mcol_4465;
 --enable_warnings

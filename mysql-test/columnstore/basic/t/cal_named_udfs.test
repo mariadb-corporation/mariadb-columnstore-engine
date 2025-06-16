@@ -1,4 +1,5 @@
 -- source ../include/have_columnstore.inc
+--source ../include/functions.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS cal_test_db;
