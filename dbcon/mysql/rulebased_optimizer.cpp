@@ -21,36 +21,52 @@
 
 namespace optimizer {
 
-bool Rule::apply(execplan::CalpontSelectExecutionPlan& csep)
+bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules) {
+
+  bool changed = false;
+  for (const auto& rule : rules)
+  {
+    changed |= rule.apply(root);
+  }
+  return changed;
+}
+
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root)
+{
+  optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
+  
+  std::vector<Rule> rules = {parallelCES};
+
+  return optimizeCSEPWithRules(root, rules);
+}
+
+// DFS walk
+bool Rule::apply(execplan::CalpontSelectExecutionPlan& csep) const
 {
   bool rewrite = false;
+
   for (auto& table : csep.derivedTableList())
   {
-    auto& csepLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
-    if (matchRule(csepLocal))
+    auto* csepPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
+    if (!csepPtr)
     {
-      applyRule(csepLocal);
-      rewrite = true;
+      continue;
     }
-    else
-    {
-      rewrite |= apply(csepLocal);
-    }
+
+    auto& csepLocal = *csepPtr;
+    rewrite |= apply(csepLocal);
   }
 
   for (auto& unionUnit : csep.unionVec())
   {
-    auto& unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+    auto* unionUnitPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+    if (!unionUnitPtr)
+    {
+      continue;
+    }
 
-    if (matchRule(unionUnitLocal))
-    {
-      applyRule(unionUnitLocal);
-      rewrite = true;
-    }
-    else
-    {
-      rewrite |= apply(unionUnitLocal);
-    }
+    auto& unionUnitLocal = *unionUnitPtr;
+    rewrite |= apply(unionUnitLocal);
   }
 
   if (matchRule(csep))

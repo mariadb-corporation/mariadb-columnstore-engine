@@ -31,10 +31,11 @@ struct Rule
   std::string name;
   bool (*matchRule)(execplan::CalpontSelectExecutionPlan&);
   void (*applyRule)(execplan::CalpontSelectExecutionPlan&);
-  bool apply(execplan::CalpontSelectExecutionPlan& csep);
+  bool apply(execplan::CalpontSelectExecutionPlan& csep) const;
 };
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);
 void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep);
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root);
 
 }

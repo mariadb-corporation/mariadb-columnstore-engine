@@ -9194,11 +9194,12 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
   else if (status < 0)
     return status;
 
-#ifdef DEBUG_WALK_COND
-  cerr << "---------------- cs_get_derived_plan EXECUTION PLAN ----------------" << endl;
-  cerr << *csep << endl;
-  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-#endif
+  if (csep->traceOn())
+  {
+    cerr << "---------------- cs_get_derived_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+  }
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
   return 0;
@@ -9227,24 +9228,23 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   else if (status < 0)
     return status;
 
-// #ifdef DEBUG_WALK_COND
-  cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
-  cerr << *csep << endl;
-  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-// #endif
+  if (csep->traceOn())
+  {
+    cerr << "---------------- cs_get_select_plan EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+  }
+  
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
-  optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
-
+  bool csepWasOptimized = optimizer::optimizeCSEP(*csep);
+  if (csep->traceOn() && csepWasOptimized)
   {
-    parallelCES.apply(*csep);
+    cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
-
-  cerr << "---------------- cs_get_select_plan rewritten EXECUTION PLAN ----------------" << endl;
-  cerr << *csep << endl;
-  cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-  
 
   return 0;
 }

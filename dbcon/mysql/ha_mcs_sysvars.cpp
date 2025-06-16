@@ -224,7 +224,9 @@ static my_bool innodb_queries_use_mcs;
 static MYSQL_SYSVAR_BOOL(innodb_queries_use_mcs, innodb_queries_use_mcs,
                       PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
                       "Direct all InnoDB-only queries into MCS via Select Handler.", NULL, NULL, FALSE);
-    
+static MYSQL_THDVAR_BOOL(unstable_optimizer, PLUGIN_VAR_RQCMDARG,
+                        "Apply optimizer rules after translation from SELECT_LEX/UNION", NULL, NULL, FALSE);
+                        
 st_mysql_sys_var* mcs_system_variables[] = {
     MYSQL_SYSVAR(compression_type),
     MYSQL_SYSVAR(fe_conn_info_ptr),
@@ -661,6 +663,15 @@ ulong get_max_allowed_in_values(THD* thd)
 void set_max_allowed_in_values(THD* thd, ulong value)
 {
   THDVAR(thd, max_allowed_in_values) = value;
+}
+
+bool get_unstable_optimizer(THD* thd)
+{
+  return (thd == NULL) ? 0 : THDVAR(thd, unstable_optimizer);
+}
+void set_unstable_optimizer(THD* thd, bool value)
+{
+  THDVAR(thd, unstable_optimizer) = value;
 }
 
 bool get_innodb_queries_uses_mcs()
