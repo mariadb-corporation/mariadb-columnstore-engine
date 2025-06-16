@@ -4,6 +4,7 @@
 #
 # Test MODA with various numeric types
 -- source ../include/have_columnstore.inc
+--source ../include/functions.inc
 --disable_warnings
 DROP DATABASE IF EXISTS mcs98_db;
 --enable_warnings
