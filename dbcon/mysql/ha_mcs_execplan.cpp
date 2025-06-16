@@ -9206,7 +9206,7 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
 }
 
 
-int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCSEP& csep, gp_walk_info& gwi,
+int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
                        bool isSelectLexUnit)
 {
   SELECT_LEX& select_lex = handler->select_lex ? *handler->select_lex : *handler->lex_unit->first_select();
@@ -9238,12 +9238,15 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
-  bool csepWasOptimized = optimizer::optimizeCSEP(*csep);
-  if (csep->traceOn() && csepWasOptimized)
+  if (get_unstable_optimizer(thd))
   {
-    cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+    bool csepWasOptimized = optimizer::optimizeCSEP(*csep);
+    if (csep->traceOn() && csepWasOptimized)
+    {
+      cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;
+      cerr << *csep << endl;
+      cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+    }
   }
 
   return 0;

@@ -110,7 +110,7 @@ bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 {
   auto tables = csep.tableList();
-  // This is leaf and there are no other tables at this level.
+  // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
   // WIP filter out CSEPs with orderBy, groupBy, having
   // WIP filter out CSEPs with nonSimpleColumns in projection
   return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
@@ -142,13 +142,14 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
     if (!table.isColumnstore())
     {
       auto derivedSCEP = csep.cloneWORecursiveSelects();
-      // need to intro a level
+      // need to add a level here
       std::string alias = aliasPrefix + table.schema + "_" + table.table;
 
       derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
       derivedSCEP->derivedTbAlias(alias);
 
+      // TODO: hardcoded for now
       size_t parallelFactor = 2;
       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
@@ -166,23 +167,15 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
         }
       }
 
-      // WIP need to work with existing derived tables
       newDerivedTableList.push_back(derivedSCEP);
-      // WIP
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", alias, "");
       newTableList.push_back(tn);
     }
   }
 
-  // SimpleColumn* sc = new SimpleColumn("test", "i1", "i", false, csep.sessionID());
-  // string alias(table->alias.c_ptr());
-  // sc->timeZone(csep.timeZone());
-  // sc->partitions(getPartitions(table));
-  // boost::shared_ptr<SimpleColumn> spsc(sc);
-
-  // csep.columnMap().insert({"`test`.`i1`.`i`", spsc});
-
+  // There must be no derived at this point.
   csep.derivedTableList(newDerivedTableList);
+  // Replace table list with new table list populated with union units
   csep.tableList(newTableList);
 }
 }

@@ -269,6 +269,7 @@ st_mysql_sys_var* mcs_system_variables[] = {
     MYSQL_SYSVAR(pron),
     MYSQL_SYSVAR(max_allowed_in_values),
     MYSQL_SYSVAR(innodb_queries_use_mcs),
+    MYSQL_SYSVAR(unstable_optimizer),
     NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
