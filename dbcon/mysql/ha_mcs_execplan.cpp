@@ -78,6 +78,7 @@ using namespace cal_impl_if;
 #include "predicateoperator.h"
 #include "rewrites.h"
 #include "rowcolumn.h"
+#include "rulebased_optimizer.h"
 #include "selectfilter.h"
 #include "simplecolumn_decimal.h"
 #include "simplecolumn_int.h"
@@ -9203,162 +9204,6 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
   return 0;
 }
 
-bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table, CalpontSelectExecutionPlan& csep)
-{
-  return std::any_of(csep.unionVec().begin(), csep.unionVec().end(), 
-  [&table](const auto& unionUnit) {
-    execplan::CalpontSelectExecutionPlan* unionUnitLocal = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
-    bool tableIsPresented = std::any_of(unionUnitLocal->tableList().begin(), unionUnitLocal->tableList().end(), 
-    [&table](const auto& unionTable) {
-      return unionTable == table;
-    });
-    return tableIsPresented;
-  });
-}
-
-bool matchParallelCES(CalpontSelectExecutionPlan& csep)
-{
-  auto tables = csep.tableList();
-  // This is leaf and there are no other tables at this level.
-  // WIP filter out CSEPs with orderBy, groupBy, having
-  // WIP filter out CSEPs with nonSimpleColumns in projection
-  return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
-}
-
-CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfLegs,
-                                          CalpontSelectExecutionPlan& csep)
-{
-  CalpontSelectExecutionPlan::SelectList unionVec;
-  unionVec.reserve(numberOfLegs);
-  for (size_t i = 0; i < numberOfLegs; ++i)
-  {
-    unionVec.push_back(csep.cloneWORecursiveSelects());
-  }
-
-  return unionVec;
-}
-
-// void applyParallelCES(CalpontSelectExecutionPlan& csep)
-// {
-//   auto tables = csep.tableList();
-//   for (auto it = tables.begin(); it != tables.end(); ++it)
-//   {
-//     if (!it->isColumnstore())
-//     {
-//       size_t parallelFactor = 2;
-//       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
-//       csep.unionVec().insert(csep.unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
-//     }
-//   }
-// }
-
-void applyParallelCES(CalpontSelectExecutionPlan& csep)
-{
-  auto tables = csep.tableList();
-  CalpontSelectExecutionPlan::TableList newTableList;
-  CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  static const std::string aliasPrefix = "$sub_";
-
-  // ATM Must be only 1 table
-  for (auto& table: tables)
-  {
-    if (!table.isColumnstore())
-    {
-      auto derivedSCEP = csep.cloneWORecursiveSelects();
-      // need to intro a level
-      std::string alias = aliasPrefix + table.schema + "_" + table.table;
-
-      derivedSCEP->location(CalpontSelectExecutionPlan::FROM);
-      derivedSCEP->subType(CalpontSelectExecutionPlan::FROM_SUBS);
-      derivedSCEP->derivedTbAlias(alias);
-
-      size_t parallelFactor = 2;
-      auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
-      derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
-
-      // change parent to derived table columns
-      for (auto& rc : csep.returnedCols())
-      {
-        auto* sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-        if (sc)
-        {
-          sc->tableName("");
-          sc->schemaName("");
-          sc->tableAlias(alias);
-          sc->colPosition(0);
-        }
-      }
-
-      // WIP need to work with existing derived tables
-      newDerivedTableList.push_back(derivedSCEP);
-      // WIP
-      CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, "");
-      newTableList.push_back(tn);
-    }
-  }
-
-  // SimpleColumn* sc = new SimpleColumn("test", "i1", "i", false, csep.sessionID());
-  // string alias(table->alias.c_ptr());
-  // sc->timeZone(csep.timeZone());
-  // sc->partitions(getPartitions(table));
-  // boost::shared_ptr<SimpleColumn> spsc(sc);
-
-  // csep.columnMap().insert({"`test`.`i1`.`i`", spsc});
-
-  csep.derivedTableList(newDerivedTableList);
-  csep.tableList(newTableList);
-}
-
-struct Rule
-{
-  Rule(std::string&& name, bool (*matchRule)(CalpontSelectExecutionPlan&),
-       void (*applyRule)(CalpontSelectExecutionPlan&))
-   : name(name), matchRule(matchRule), applyRule(applyRule) {};
-
-  std::string name;
-  bool (*matchRule)(CalpontSelectExecutionPlan&);
-  void (*applyRule)(CalpontSelectExecutionPlan&);
-  bool apply(CalpontSelectExecutionPlan& csep)
-  {
-    bool rewrite = false;
-    for (auto& table : csep.derivedTableList())
-    {
-      auto& csepLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
-      if (matchRule(csepLocal))
-      {
-        applyRule(csepLocal);
-        rewrite = true;
-      }
-      else
-      {
-        rewrite |= apply(csepLocal);
-      }
-    }
-
-    for (auto& unionUnit : csep.unionVec())
-    {
-      auto& unionUnitLocal = *dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
-
-      if (matchRule(unionUnitLocal))
-      {
-        applyRule(unionUnitLocal);
-        rewrite = true;
-      }
-      else
-      {
-        rewrite |= apply(unionUnitLocal);
-      }
-    }
-
-    if (matchRule(csep))
-    {
-      applyRule(csep);
-      rewrite = true;
-    }
-
-    return rewrite;
-  }
-};
 
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCSEP& csep, gp_walk_info& gwi,
                        bool isSelectLexUnit)
@@ -9390,15 +9235,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* /*thd*/, SCS
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
-  // static const Rule rules[] = {
-  //       {"paralliseCES", matchparalliseCES, applyParalliseCES},
-  //       /* add more here */
-  //   };
-
-  // auto matchParallelCES = [](CalpontSelectExecutionPlan&){return false;};
-  // auto applyParallelCES = [](CalpontSelectExecutionPlan&){ return;};
-
-  Rule parallelCES{"parallelCES", matchParallelCES, applyParallelCES};
+  optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
 
   {
     parallelCES.apply(*csep);

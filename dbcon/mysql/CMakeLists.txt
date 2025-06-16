@@ -40,6 +40,7 @@ set(libcalmysql_SRCS
     is_columnstore_files.cpp
     is_columnstore_extents.cpp
     columnstore_dataload.cpp
+    rulebased_optimizer.cpp
 )
 
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
