@@ -21,6 +21,7 @@
 
 namespace optimizer {
 
+// Apply a list of rules to a CSEP
 bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules) {
 
   bool changed = false;
@@ -31,6 +32,7 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
   return changed;
 }
 
+// high level API call for optimizer
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root)
 {
   optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
@@ -40,8 +42,22 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root)
   return optimizeCSEPWithRules(root, rules);
 }
 
-// DFS walk
-bool Rule::apply(execplan::CalpontSelectExecutionPlan& csep) const
+// Apply iteratively until CSEP is converged by rule
+bool Rule::apply(execplan::CalpontSelectExecutionPlan& root) const
+{
+  bool changedThisRound = false;
+  bool hasBeenApplied = false;
+  do 
+  {
+    changedThisRound = walk(root);
+    hasBeenApplied = changedThisRound;
+  } while (changedThisRound);
+
+  return hasBeenApplied;
+}
+
+// DFS walk to match CSEP and apply rules if match
+bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep) const
 {
   bool rewrite = false;
 
@@ -77,7 +93,6 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& csep) const
 
   return rewrite;
 }
-
 
 bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table, execplan::CalpontSelectExecutionPlan& csep)
 {

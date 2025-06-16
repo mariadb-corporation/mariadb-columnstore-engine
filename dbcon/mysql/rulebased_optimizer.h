@@ -32,6 +32,7 @@ struct Rule
   bool (*matchRule)(execplan::CalpontSelectExecutionPlan&);
   void (*applyRule)(execplan::CalpontSelectExecutionPlan&);
   bool apply(execplan::CalpontSelectExecutionPlan& csep) const;
+  bool walk(execplan::CalpontSelectExecutionPlan& csep) const;
 };
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);

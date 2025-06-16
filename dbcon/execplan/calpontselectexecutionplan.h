@@ -159,6 +159,9 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    */
   ~CalpontSelectExecutionPlan() override;
 
+  /**
+   * Clones this CSEP without recursive selects for optimizer purposes
+   */
   execplan::SCSEP cloneWORecursiveSelects();
   /**
    * Access and mutator methods
