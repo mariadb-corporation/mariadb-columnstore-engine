@@ -574,11 +574,15 @@ run_microbenchmarks_tests() {
 
 disable_plugins_for_bootstrap() {
     find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
-    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
+    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so/#plugin-load-add=ha_columnstore.so/g' {} +
 }
 
 enable_columnstore_back() {
-    cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf $CONFIG_DIR
+    if [[ "$NO_CLEAN" == true ]]; then
+        find /etc -type f -exec sed -i 's/#plugin-load-add=ha_columnstore.so/plugin-load-add=ha_columnstore.so/g' {} +
+    else
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf $CONFIG_DIR
+    fi
 }
 
 fix_config_files() {
@@ -594,6 +598,7 @@ fix_config_files() {
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
             warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
         else
+            echo "" >>$COLUMNSTORE_CONFIG
             echo "thread_stack = ${THREAD_STACK_SIZE}" >>$COLUMNSTORE_CONFIG
             message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
         fi
