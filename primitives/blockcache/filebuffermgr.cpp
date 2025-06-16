@@ -293,8 +293,11 @@ void FileBufferMgr::flushOIDs(const uint32_t* oids, uint32_t count)
         {
           fbList.erase(fFBPool[tmpIt->second->poolIdx].listLoc());
           fEmptyPoolSlots.push_back(tmpIt->second->poolIdx);
-          fbSet.erase(tmpIt->second);
           fCacheSize--;
+        }
+        for (byLBID_t::iterator tmpIt = itList.first; tmpIt != itList.second; tmpIt++)
+        {
+          fbSet.erase(tmpIt->second);
         }
       }
     }
