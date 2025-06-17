@@ -56,7 +56,7 @@ class RGDumper : protected Dumper
 {
  public:
   RGDumper(const compress::CompressInterface* comp, std::unique_ptr<MemManager> mm, const std::string& tmpDir,
-           const std::string& operationName, const uint64_t uniqId)
+           const std::string& operationName, const uint64_t /*uniqId*/)
    : Dumper(comp, mm), fTmpDir(tmpDir), fOperationName(operationName)
   {
   }

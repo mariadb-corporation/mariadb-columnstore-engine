@@ -82,8 +82,8 @@ struct TAEq
   bool operator()(const rowgroup::Row::Pointer&, const rowgroup::Row::Pointer&) const;
 };
 // TODO:  Generalize these and put them back in utils/common/hasher.h
-using TNSDistinctMap_t = std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq,
-                                            allocators::CountingAllocator<rowgroup::Row::Pointer> >;
+using TNSDistinctMap_t =
+    std::unordered_set<rowgroup::Row::Pointer, TAHasher, TAEq, STLPoolAllocator<rowgroup::Row::Pointer> >;
 };  // namespace
 
 inline uint64_t TAHasher::operator()(const Row::Pointer& p) const
@@ -821,9 +821,8 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
 
   auto allocSorting = fRm->getAllocator<ordering::OrderByRow>();
   ordering::SortingPQ finalPQ(rowgroup::rgCommonSize, allocSorting);
-  auto allocDistinct = fRm->getAllocator<rowgroup::Row::Pointer>();
   std::unique_ptr<TNSDistinctMap_t> distinctMap(
-      new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), allocDistinct));
+    new TNSDistinctMap_t(10, TAHasher(this), TAEq(this), STLPoolAllocator<rowgroup::Row::Pointer>(fRm)));
   fRowGroupIn.initRow(&row1);
   fRowGroupIn.initRow(&row2);
 

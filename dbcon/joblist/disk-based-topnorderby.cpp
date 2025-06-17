@@ -45,11 +45,11 @@ void DiskBasedTopNOrderBy::flushCurrentToDisk(RowGroupDL& dl, rowgroup::RowGroup
 
   incrementGenerationCounter();
 }
-void DiskBasedTopNOrderBy::diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& dataLists)
+void DiskBasedTopNOrderBy::diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& /*dataLists*/)
 {
 }
 
-std::vector<std::string> DiskBasedTopNOrderBy::getGenerationFileNamesNextBatch(const size_t batchSize)
+std::vector<std::string> DiskBasedTopNOrderBy::getGenerationFileNamesNextBatch(const size_t /*batchSize*/)
 {
   return {};
 }

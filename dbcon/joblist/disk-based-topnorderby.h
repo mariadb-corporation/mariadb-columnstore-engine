@@ -34,7 +34,7 @@ class DiskBasedTopNOrderBy : public rowgroup::RGDumper
   // std::string fCompStr = config::Config::makeConfig()->getConfig("RowAggregation", "Compression");
  public:
   // TODO Parametrize compression, tmpdir and memory manager (can be temp)
-  DiskBasedTopNOrderBy(ResourceManager* rm)
+  DiskBasedTopNOrderBy(ResourceManager* /*rm*/)
    : RGDumper(compress::getCompressInterfaceByName("LZ4"), std::make_unique<rowgroup::MemManager>(),
               config::Config::makeConfig()->getTempFileDir(config::Config::TempDirPurpose::Sorting),
               "Sorting", reinterpret_cast<std::uintptr_t>(this))
