@@ -202,6 +202,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   TABLE* table = tables->table;
 
   BRM::DBRM::refreshShmWithLock();
+  // XXX: SZ: shared pointer???
   BRM::DBRM* emp = new BRM::DBRM();
 
   if (!emp || !emp->isDBRMReady())
