@@ -1748,10 +1748,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       {
         convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value128);
       }
-      else if (cc->resultType().colDataType == CalpontSystemCatalog::DECIMAL && cc->resultType().scale > 0)
-      {
-        convertValueNum(constval.safeString(""), cc->resultType(), isNull, rf, jobInfo.timeZone, value);
-      }
       else
       {
         convertValueNum(constval.safeString(""), ct, isNull, rf, jobInfo.timeZone, value);
