@@ -4,7 +4,7 @@
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
 -- source ../include/check_maxscale.inc
-
+--source ../include/charset.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs12_db1;
