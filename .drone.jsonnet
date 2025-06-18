@@ -176,7 +176,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   publish(step_prefix="pkg", eventp=event + "/${DRONE_BUILD_NUMBER}"):: {
     name: "publish " + step_prefix,
     depends_on: [std.strReplace(step_prefix, " latest", ""), "createrepo"],
-    image: "amazon/aws-cli",
+    image: "amazon/aws-cli:2.22.30",
     when: {
       status: ["success", "failure"],
     },
