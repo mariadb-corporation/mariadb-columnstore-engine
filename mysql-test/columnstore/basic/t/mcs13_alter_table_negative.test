@@ -2,6 +2,7 @@
 # Test ALTER TABLE schemas in various negative scenarios.
 #
 -- source ../include/have_columnstore.inc
+--source ../include/charset.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs13_db1;
