@@ -1,5 +1,6 @@
 --disable_query_log
 --disable_warnings
+-- SYSTABLE
 create database if not exists calpontsys;
 
 use calpontsys;
@@ -46,4 +47,3 @@ create table if not exists syscolumn (`schema` varchar(128),
 
 --enable_warnings
 --enable_query_log
-
