@@ -93,7 +93,7 @@ static bool get_file_sizes(THD* thd, messageqcpp::MessageQueueClient* msgQueueCl
   }
 }
 
-static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* thd)
+static int generate_result(BRM::OID_t oid, std::shared_ptr<BRM::DBRM> emp, TABLE* table, THD* thd)
 {
   std::vector<struct BRM::EMEntry> entries;
   CHARSET_INFO* cs = system_charset_info;
@@ -171,7 +171,6 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
         !get_file_sizes(thd, msgQueueClient, fullFileName, &fileSize, &compressedFileSize))
     {
       messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
-      delete emp;
       return 1;
     }
 
@@ -201,7 +200,6 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
     if (schema_table_store_record(thd, table))
     {
       messageqcpp::MessageQueueClientPool::releaseInstance(msgQueueClient);
-      delete emp;
       return 1;
     }
 
@@ -307,7 +305,6 @@ static int is_columnstore_files_fill(THD* thd, TABLE_LIST* tables, COND* cond)
     }
   }
 
-  delete emp;
   return 0;
 }
 

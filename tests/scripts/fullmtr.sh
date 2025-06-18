@@ -63,7 +63,7 @@ add_mtr_warn_functions
 if (( $# >= 2 )); then
     suite_name=$1
     shift
-    while (( $# > 0 )):
+    while (( $# > 0 ));
     do
       run_suite $suite_name $1
       shift
