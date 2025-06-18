@@ -4,6 +4,7 @@ DROP DATABASE IF EXISTS MCOL5744;
 --source ../include/charset.inc
 
 CREATE DATABASE MCOL5744;
+USE MCOL5744;
 
 SET old_mode='';
 
