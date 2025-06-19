@@ -1,3 +1,5 @@
+-- source ../include/have_columnstore.inc
+--source include/have_innodb.inc
 --disable_warnings
 DROP DATABASE IF EXISTS MCOL5886;
 --enable_warnings
