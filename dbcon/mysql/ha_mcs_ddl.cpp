@@ -840,6 +840,10 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
           }
         }
 
+        if (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_ENUM) {
+          // TO DO
+        }
+
         // check varbinary data type
         if ((createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_VARBINARY) &&
             !isVarbinaryAllowed)

@@ -1125,6 +1125,7 @@ int ColumnType::unserialize(ByteStream& bytestream)
   std::string autoincrement;
   messageqcpp::ByteStream::octbyte nextVal;
   messageqcpp::ByteStream::quadbyte charsetNum;
+  messageqcpp::ByteStream::octbyte enumValuesNum = fEnumValues.size();
 
   // read column types
   bytestream >> ftype;
@@ -1136,6 +1137,14 @@ int ColumnType::unserialize(ByteStream& bytestream)
   bytestream >> autoincrement;
   bytestream >> nextVal;
   bytestream >> charsetNum;
+  bytestream >> enumValuesNum;
+
+  for (size_t i = 0; i<fEnumValues.size(); ++i) {
+    std::string value;
+
+    bytestream >> value;
+    fEnumValues.push_back(value);
+  }
 
   fType = ftype;
   fLength = length;
@@ -1166,6 +1175,7 @@ int ColumnType::serialize(ByteStream& bytestream)
   std::string autoincrement = fAutoincrement;
   messageqcpp::ByteStream::octbyte nextVal = fNextvalue;
   messageqcpp::ByteStream::quadbyte charsetNum = fCharsetNum;
+  messageqcpp::ByteStream::octbyte enumValuesNum = fEnumValues.size();
 
   // write column types
   bytestream << ftype;
@@ -1177,6 +1187,11 @@ int ColumnType::serialize(ByteStream& bytestream)
   bytestream << autoincrement;
   bytestream << nextVal;
   bytestream << charsetNum;
+  bytestream << enumValuesNum;
+
+  for (size_t i = 0; i<fEnumValues.size(); ++i) {
+    bytestream << fEnumValues[i];
+  }
 
   //	cout << "BS length = " << bytestream.length() << endl;
 

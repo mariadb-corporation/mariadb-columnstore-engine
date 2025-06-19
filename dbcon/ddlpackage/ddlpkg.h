@@ -186,6 +186,7 @@ enum DDL_DATATYPES
   DDL_MEDINT,
   DDL_INT,
   DDL_FLOAT,
+  DDL_ENUM,
   DDL_DATE,
   DDL_BIGINT,
   DDL_DOUBLE,
@@ -940,6 +941,9 @@ struct ColumnType
 
   /** @brief SQL "with timezone" specifier */
   bool fWithTimezone;
+
+  /** @brief enum values for the SQL with enum type */
+  std::vector<std::string> fEnumValues;
 
   int fCompressiontype;
 
