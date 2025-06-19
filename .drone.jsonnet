@@ -344,7 +344,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       prepareTestStage(getContainerName("mtr"), result, true),
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
-      'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
+      'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
@@ -365,7 +365,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   },
   prepare_regression:: {
     name: "prepare regression",
-    depends_on: ["mtr", "publish pkg", "publish cmapi build"],
+    depends_on: ["publish pkg", "publish cmapi build"],
     when: {
       status: ["success", "failure"],
     },
@@ -376,53 +376,23 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
-      // compute branch.
-      'echo "$$REGRESSION_REF"',
-      'echo "$$REGRESSION_BRANCH_REF"',
+      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
       // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
       'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
-      'echo "$$REGRESSION_REF"',
-      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
-      // assign what is appropriate by default.
       "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
       'echo "$$REGRESSION_REF"',
-      // clone regression test repo
-      "git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test",
-      // where are we now?
-      "cd mariadb-columnstore-regression-test",
-      "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
-      "cd ..",
       prepareTestStage(getContainerName("regression"), result, true),
-
-      "docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/",
-      // list storage manager binary
-      "ls -la /mdb/" + builddir + "/storage/columnstore/columnstore/storage-manager",
-      "docker cp /mdb/" + builddir + "/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/",
-      // check storage-manager unit test binary file
-      execInnerDocker("ls -l /storage-manager", getContainerName("regression")),
-      // copy test data for regression test suite
-      execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"', getContainerName("regression")),
-
-      // set mariadb lower_case_table_names=1 config option
-      execInnerDocker('sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + "server.cnf", getContainerName("regression")),
-      // set default client character set to utf-8
-      execInnerDocker('sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + "client.cnf", getContainerName("regression")),
-
-      // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", getContainerName("regression")),
-
-      execInnerDocker("systemctl start mariadb", getContainerName("regression")),
-      execInnerDocker("systemctl restart mariadb-columnstore", getContainerName("regression")),
-      // delay regression for manual debugging on live instance
-      "sleep $${REGRESSION_DELAY_SECONDS:-1s}",
-      execInnerDocker("/usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester", getContainerName("regression")),
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/prepare_regression.sh " +
+      "--container-name " + getContainerName("regression") +
+      " --regression-branch $$REGRESSION_REF" +
+      " --distro " + platform,
     ],
   },
   regression(name, depends_on):: {
     name: name,
     depends_on: depends_on,
     image: "docker:git",
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     when: {
       status: ["success", "failure"],
     },
@@ -433,12 +403,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       },
     },
     commands: [
-      execInnerDocker("mkdir -p reg-logs", getContainerName("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
-                      getContainerName("regresion")),
-      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + " || ./regression_logs.sh " + name + '"',
-                           getContainerName("regression"),
-                           "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_regression.sh " +
+      "--container-name " + getContainerName("regression") +
+      " --test-name " + name +
+      " --regression-timeout $${REGRESSION_TIMEOUT}",
     ],
   },
   regressionlog:: {
