@@ -154,7 +154,7 @@ WErrorCodes::WErrorCodes() : fErrorCodes()
   fErrorCodes[ERR_BULK_SEND_MSG_ERR] = " in a bulk load send msg";
   fErrorCodes[ERR_BULK_MISSING_EXTENT_ENTRY] = " missing Extent Entry when trying to save LBID info for CP";
   fErrorCodes[ERR_BULK_MISSING_EXTENT_ROW] = " missing Extent Row when trying to save LBID info for CP";
-  fErrorCodes[ERR_BULK_ROW_FILL_BUFFER] = " Single row fills read buffer; try larger read buffer.";
+  fErrorCodes[ERR_BULK_ROW_FILL_BUFFER] = " Single row fills read buffer; try larger read buffer via -c flag in cpimport";
   fErrorCodes[ERR_BULK_DBROOT_CHANGE] = " Local PM DBRoot settings changed during bulk load.";
   fErrorCodes[ERR_BULK_ROLLBACK_MISS_ROOT] = " Mode3 automatic rollback not performed. DBRoot missing.";
   fErrorCodes[ERR_BULK_ROLLBACK_SEG_LIST] = " Error building segment file list in a directory.";
