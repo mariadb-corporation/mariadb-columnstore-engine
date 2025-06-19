@@ -112,7 +112,7 @@ S3Storage::ScopedConnection::~ScopedConnection()
   s3->returnConnection(conn);
 }
 
-S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
+S3Storage::S3Storage(bool skipRetry, bool verbose) : skipRetryableErrors(skipRetry), verbose_enabled(verbose)
 {
   /*  Check creds from envvars
       Get necessary vars from config
@@ -225,7 +225,7 @@ S3Storage::S3Storage(bool skipRetry) : skipRetryableErrors(skipRetry)
   }
 
   ms3_library_init();
-  if (libs3_debug == "enabled")
+  if (verbose_enabled || libs3_debug == "enabled")
   {
     ms3_debug(1);
   }

@@ -176,7 +176,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   publish(step_prefix="pkg", eventp=event + "/${DRONE_BUILD_NUMBER}"):: {
     name: "publish " + step_prefix,
     depends_on: [std.strReplace(step_prefix, " latest", ""), "createrepo"],
-    image: "amazon/aws-cli",
+    image: "amazon/aws-cli:2.22.30",
     when: {
       status: ["success", "failure"],
     },
@@ -187,6 +187,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       AWS_SECRET_ACCESS_KEY: {
         from_secret: "aws_secret_access_key",
       },
+      AWS_REGION: "us-east-1",
+      AWS_DEFAULT_REGION: "us-east-1",
     },
     commands: [
       "ls " + result,
@@ -269,7 +271,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   smoke:: {
     name: "smoke",
     depends_on: ["publish pkg"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       prepareTestStage(getContainerName("smoke"), result, true),
@@ -279,7 +281,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   smokelog:: {
     name: "smokelog",
     depends_on: ["smoke"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("smoke"), result, "smoke"),
@@ -291,7 +293,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   upgrade(version):: {
     name: "upgrade-test from " + version,
     depends_on: ["regressionlog"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker],
     environment: {
       UPGRADE_TOKEN: {
@@ -312,7 +314,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   upgradelog:: {
     name: "upgradelog",
     depends_on: std.map(function(p) "upgrade-test from " + p, mdb_server_versions),
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands:
        ["echo"] +
@@ -340,42 +342,19 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       prepareTestStage(getContainerName("mtr"), result, true),
-      "docker cp mysql-test/columnstore mtr$${DRONE_BUILD_NUMBER}:" + mtr_path + "/suite/",
-      execInnerDocker("chown -R mysql:mysql " + mtr_path, getContainerName("mtr")),
-      // disable systemd 'ProtectSystem' (we need to write to /usr/share/)
-      execInnerDocker("bash -c 'sed -i /ProtectSystem/d $(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//)'", getContainerName("mtr")),
-      execInnerDocker("systemctl daemon-reload", getContainerName("mtr")),
-      execInnerDocker("systemctl start mariadb", getContainerName("mtr")),
-      // Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", getContainerName("mtr")),
-      execInnerDocker('mariadb -e "create database if not exists test;"', getContainerName("mtr")),
-      execInnerDocker("systemctl restart mariadb-columnstore", getContainerName("mtr")),
-
-      // delay mtr for manual debugging on live instance
-      "sleep $${MTR_DELAY_SECONDS:-1s}",
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
-      if (event == "custom" || event == "cron") then
-        execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"',
-                        getContainerName("mtr")),
-      if (event == "custom" || event == "cron") then
-        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"',
-                        getContainerName("mtr")),
 
-      if (event == "cron") then
-        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path +
-                        " --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite="
-                        + std.join(",", std.map(function(x) "columnstore/" + x, std.split(mtr_full_set, ","))),
-                        getContainerName("mtr")) + '"'
-      else
-        execInnerDocker('bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path +
-                        ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/$${MTR_SUITE_LIST//,/,columnstore/}"',
-                        getContainerName("mtr")),
+      'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
+      ' --container-name ' + getContainerName("mtr") +
+      ' --distro ' + platform +
+      ' --suite-list $${MTR_SUITE_LIST}' +
+      ' --triggering-event ' + event,
     ],
   },
   mtrlog:: {
     name: "mtrlog",
     depends_on: ["mtr"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("mtr"), result, "mtr"),
@@ -465,7 +444,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   regressionlog:: {
     name: "regressionlog",
     depends_on: [regression_tests[std.length(regression_tests) - 1]],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("regression"), result, "regression"),
@@ -478,7 +457,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "dockerfile",
     depends_on: ["publish pkg", "publish cmapi build"],
     //failure: 'ignore',
-    image: "alpine/git",
+    image: "alpine/git:2.49.0",
     environment: {
       DOCKER_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
       DOCKER_REF_AUX: branch_ref,
@@ -552,7 +531,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   cmapilog:: {
     name: "cmapilog",
     depends_on: ["cmapi test"],
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
       reportTestStage(getContainerName("cmapi"), result, "cmapi"),
@@ -565,7 +544,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "mtr",
     depends_on: ["dockerhub"],
     //failure: 'ignore',
-    image: "docker",
+    image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker],
     environment: {
       DOCKER_LOGIN: {
@@ -602,7 +581,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   steps: [
            {
              name: "submodules",
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              commands: [
                "git submodule update --init --recursive",
                "git config cmake.update-submodules no",
@@ -611,7 +590,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
            },
            {
              name: "clone-mdb",
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              volumes: [pipeline._volumes.mdb],
              environment: {
                SERVER_REF: "${SERVER_REF:-" + server + "}",
@@ -645,6 +624,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                AWS_SECRET_ACCESS_KEY: {
                  from_secret: "aws_secret_access_key",
                },
+               AWS_REGION: "us-east-1",
+               AWS_DEFAULT_REGION: "us-east-1",
                SCCACHE_BUCKET: "cs-sccache",
                SCCACHE_REGION: "us-east-1",
                SCCACHE_S3_USE_SSL: "true",
@@ -710,7 +691,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
            {
              name: "pkg",
              depends_on: ["unittests"],
-             image: "alpine/git",
+             image: "alpine/git:2.49.0",
              when: {
                status: ["success", "failure"],
              },

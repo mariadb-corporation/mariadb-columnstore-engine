@@ -2116,8 +2116,8 @@ int SlaveComm::replayJournal(string prefix)
 
   const char* filename = fName.c_str();
 
-  IDBDataFile* journalf =
-      IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0);
+  std::unique_ptr<IDBDataFile> journalf =
+      std::unique_ptr<IDBDataFile>(IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0));
 
   if (!journalf)
   {

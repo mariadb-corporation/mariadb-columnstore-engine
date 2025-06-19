@@ -1828,14 +1828,20 @@ static int columnstore_init_func(void* p)
   fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(),
           columnstore_release.c_str());
 
+  plugin_ref plugin_innodb;
   LEX_CSTRING name = {STRING_WITH_LEN("INNODB")};
-  auto* plugin_innodb = ha_resolve_by_name(0, &name, 0);
-  if (!plugin_innodb || plugin_state(plugin_innodb) != PLUGIN_IS_READY)
 
+  if (get_innodb_queries_uses_mcs())
   {
-    DBUG_RETURN(HA_ERR_RETRY_INIT);
-  }
+    std::cerr << "Columnstore: innodb_queries_uses_mcs is set, looking for InnoDB plugin." << std::endl;
 
+    plugin_innodb = ha_resolve_by_name(0, &name, 0);
+    if (!plugin_innodb || plugin_state(plugin_innodb) != PLUGIN_IS_READY)
+    {
+      DBUG_RETURN(HA_ERR_RETRY_INIT);
+    }
+  }
+  
   strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version) - 1);
   cs_version[sizeof(cs_version) - 1] = 0;
 
@@ -1844,10 +1850,14 @@ static int columnstore_init_func(void* p)
 
   mcs_hton = (handlerton*)p;
 
+  std::cerr << "Columnstore: init pthread_mutex_init" << std::endl;
   (void)pthread_mutex_init(&mcs_mutex, MY_MUTEX_INIT_FAST);
+  std::cerr << "Columnstore: init my_hash_init" << std::endl;
   (void)my_hash_init(PSI_NOT_INSTRUMENTED, &mcs_open_tables, system_charset_info, 32, 0, 0,
                      (my_hash_get_key)mcs_get_key, 0, 0);
 
+  std::cerr << "Columnstore: init mcs_hton attributes" << std::endl;
+  
   mcs_hton->create = ha_mcs_cache_create_handler;
   mcs_hton->panic = 0;
   mcs_hton->flags = HTON_CAN_RECREATE | HTON_NO_PARTITION;
@@ -1863,10 +1873,13 @@ static int columnstore_init_func(void* p)
 
   if (get_innodb_queries_uses_mcs())
   {
+    std::cerr << "Columnstore: innodb_queries_uses_mcs is set, redirecting all InnoDB queries to Columnstore." << std::endl;
+
     auto* innodb_hton = plugin_hton(plugin_innodb);
     int error = innodb_hton == nullptr;  // Engine must exists!
     if (error)
     {
+      std::cerr << "Columnstore: innodb_queries_uses_mcs is set, but could not find InnoDB plugin." << std::endl;
       my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
     }
     innodb_hton->create_select = create_columnstore_select_handler;
@@ -1874,11 +1887,13 @@ static int columnstore_init_func(void* p)
   }
 
 #ifdef HAVE_PSI_INTERFACE
+  std::cerr << "Columnstore: Registering mutex for Columnstore write cache." << std::endl;
   uint count = sizeof(all_mutexes) / sizeof(all_mutexes[0]);
   mysql_mutex_register("ha_mcs_cache", all_mutexes, count);
 #else
   (void)key_LOCK_cache_share;
 #endif
+  std::cerr << "Columnstore: Initialising mutex for Columnstore write cache." << std::endl;
   mysql_mutex_init(key_LOCK_cache_share, &LOCK_cache_share, MY_MUTEX_INIT_FAST);
 
   DBUG_RETURN(0);

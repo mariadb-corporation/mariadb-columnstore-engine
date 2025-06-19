@@ -49,7 +49,7 @@ CREATE TABLE t2
 --replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
-SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
+SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2,3,4;
 
 # Clean UP
 DROP DATABASE mcs229_db;

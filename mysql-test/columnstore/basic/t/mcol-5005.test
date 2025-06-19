@@ -52,7 +52,8 @@ SHOW CREATE TABLE t3;
 SHOW CREATE TABLE t4;
 
 SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
-WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4');
+WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4')
+ORDER BY tablename, columnname, charsetnum;
 
 DROP DATABASE mcol5005;
 

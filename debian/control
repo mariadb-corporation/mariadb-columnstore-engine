@@ -9,6 +9,7 @@ Depends: binutils,
          net-tools,
          python3,
          procps,
+         gawk,
          ${misc:Depends},
          ${shlibs:Depends}
 Breaks: mariadb-columnstore-libs,

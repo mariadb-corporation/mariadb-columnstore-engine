@@ -58,7 +58,8 @@ t4	CREATE TABLE `t4` (
   `a` varchar(15) DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=latin2 COLLATE=latin2_general_ci
 SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
-WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4');
+WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4')
+ORDER BY tablename, columnname, charsetnum;
 schema	tablename	columnname	charsetnum
 mcol5005	t1	a	227
 mcol5005	t1	b	33

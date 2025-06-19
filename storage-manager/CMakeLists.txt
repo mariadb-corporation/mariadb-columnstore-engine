@@ -93,7 +93,7 @@ columnstore_link(unit_tests storagemanager)
 
 columnstore_executable(testS3Connection src/testS3Connection.cpp)
 target_compile_definitions(testS3Connection PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
-columnstore_link(testS3Connection storagemanager)
+columnstore_link(testS3Connection storagemanager boost_program_options)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${TMPDIR})
 
