@@ -53,8 +53,8 @@ execInnerDocker "${CONTAINER_NAME}" "mariadb -e \"create database if not exists 
 execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb-columnstore"
 
 if [[ "${EVENT}" == "custom" || "${EVENT}" == "cron" ]]; then
-    execInnerDocker "${CONTAINER_NAME}" "cd ${MTR_PATH} && ./mtr --extern socket=${SOCKET_PATH} --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"
     execInnerDocker "${CONTAINER_NAME}" "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"
+    execInnerDocker "${CONTAINER_NAME}" "cd ${MTR_PATH} && ./mtr --extern socket=${SOCKET_PATH} --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/setup"
 fi
 
 if [[ "${EVENT}" == "cron" ]]; then
