@@ -47,11 +47,3 @@ set(execplan_LIB_SRCS
 
 columnstore_library(execplan ${execplan_LIB_SRCS})
 columnstore_link(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron loggingcpp)
-
-columnstore_executable(csep_rewrite csep_rewrite.cpp)
-columnstore_link(csep_rewrite
-    ${ENGINE_LDFLAGS}
-    ${NETSNMP_LIBRARIES}
-    ${ENGINE_WRITE_LIBS}
-    loggingcpp
-)
