@@ -535,6 +535,19 @@ function execInnerDocker() {
   fi
 }
 
+function execInnerDockerNoTTY() {
+  local container_name=$1
+  shift 1
+
+  docker exec "$container_name" bash -c "$@"
+  local dockerCommandExitCode=$?
+
+  if [[ $dockerCommandExitCode -ne 0 ]]; then
+    error "Command \"$@\" failed in container \"$container_name\""
+    exit $dockerCommandExitCode
+  fi
+}
+
 function change_ubuntu_mirror() {
   local region="$1"
   message "Changing Ubuntu mirror to $region"
