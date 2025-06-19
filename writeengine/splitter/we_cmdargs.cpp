@@ -89,10 +89,9 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
 #define DECLARE_INT_ARG(name, stor, min, max, desc) \
     (name,\
       po::value<int>(&stor)\
-        ->notifier(bind(&WECmdArgs::checkIntArg, name, min, max, placeholders::_1)),\
+        ->notifier([this](auto&& value) { checkIntArg(name, min, max, value); }),\
       desc)
 
-    namespace ph = placeholders;
     fOptions->add_options()
       ("help,h", "Print this message.")
       DECLARE_INT_ARG("read-buffer,b", fIOReadBufSize, 1, INT_MAX, "Number of read buffers.")
@@ -137,7 +136,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "default is '\\'")
       ("headers,O",
         po::value<int>(&fSkipRows)->implicit_value(1)
-          ->notifier(bind(&WECmdArgs::checkIntArg, "headers,O", 0, INT_MAX, placeholders::_1)),
+          ->notifier([this](auto&& value) { checkIntArg("headers,O", 0, INT_MAX, value); }),
         "Number of header rows to skip.")
       ("binary-mode,I", po::value<int>(),
         "Import binary data; how to treat NULL values:\n"
@@ -671,6 +670,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
   po::variables_map vm;
   po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
+  po::notify(vm);
 
   if (vm.contains("help"))
   {
@@ -731,12 +731,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     long lValue = strtol(optarg.c_str(), nullptr, 10);
     if (errno != 0 || lValue < 0 || lValue > INT_MAX)
     {
-      throw runtime_error("Option --job-id/-j is invalid or outof range");
+      throw runtime_error("Option --job-id/-j is invalid or out of range");
     }
     fJobId = optarg;
     fOrigJobId = fJobId;
 
-    if (0 == fJobId.length())
+    if (fJobId.empty())
     {
       throw runtime_error("Wrong JobID Value");
     }

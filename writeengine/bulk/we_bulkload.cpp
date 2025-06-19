@@ -541,6 +541,7 @@ int BulkLoad::preProcess(Job& job, int tableNo, std::shared_ptr<TableInfo>& tabl
   tableInfo->setImportDataMode(fImportDataMode);
   tableInfo->setTimeZone(fTimeZone);
   tableInfo->setJobUUID(fUUID);
+  tableInfo->setSkipRows(fSkipRows);
 
   // MCOL-4328 Get username gid and uid if they are set
   // We inject uid and gid into TableInfo and All ColumnInfo-s later.
@@ -1001,6 +1002,11 @@ int BulkLoad::processJob()
   {
     // std::cout << "Using default escape char" << std::endl;
     fEscapeChar = '\\';
+  }
+
+  if (fSkipRows == 0)
+  {
+    fSkipRows = curJob.fSkipRows;
   }
 
   // std::cout << "bulkload::fEnclosedByChar<" << fEnclosedByChar << '>' <<
