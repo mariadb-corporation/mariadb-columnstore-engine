@@ -530,14 +530,14 @@ int BulkLoad::preProcess(Job& job, int tableNo, std::shared_ptr<TableInfo>& tabl
   if (pwd)
     tableInfo->setUIDGID(pwd->pw_uid, pwd->pw_gid);
 
-  if (fMaxErrors != -1)
+  if (fMaxErrors != MAX_ERRORS_DEFAULT)
     tableInfo->setMaxErrorRows(fMaxErrors);
   else
     tableInfo->setMaxErrorRows(job.jobTableList[tableNo].maxErrNum);
 
   // @bug 3929: cpimport.bin error messaging using up too much memory.
   // Validate that max allowed error count is within valid range
-  long long maxErrNum = tableInfo->getMaxErrorRows();
+  int maxErrNum = tableInfo->getMaxErrorRows();
 
   if (maxErrNum > MAX_ALLOW_ERROR_COUNT)
   {

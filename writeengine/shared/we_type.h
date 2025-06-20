@@ -144,6 +144,13 @@ enum ImportDataMode
   IMPORT_DATA_BIN_SAT_NULL = 2
 };
 
+// Max number of ignored errors
+enum MaxErrors
+{
+  MAX_ERRORS_DEFAULT = -1,  // default value
+  MAX_ERRORS_ALL = -2       // special case: ignore all errors
+};
+
 /**
  * the set of Calpont column data type names; MUST match ColDataType in
  * calpontsystemcatalog.h.

@@ -1,0 +1,52 @@
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5164;
+--enable_warnings
+
+CREATE DATABASE mcol5164;
+USE mcol5164;
+
+CREATE TABLE t1(col1 INT, col2 VARCHAR(64)) ENGINE=Columnstore;
+
+--exec mkdir -p /tmp/mtr-mcol5164
+--exec awk 'BEGIN { for (i = 0; i < 11; i++) { printf "%d,test%d,wrong\n", i, i; }; printf "%d,test%d-good", i, i; }' > /tmp/mtr-mcol5164/mcol5164.csv
+
+--disable_result_log
+--error 1 # exceeds default max-errors
+--exec $MCS_CPIMPORT -s , -L /tmp/mtr-mcol5164 mcol5164 t1 /tmp/mtr-mcol5164/mcol5164.csv
+--enable_result_log
+SELECT * FROM t1;
+--exec echo Rejected rows:
+--exec cat /tmp/mtr-mcol5164/mcol5164.csv*.bad
+--exec rm -f /tmp/mtr-mcol5164/*.err
+--exec rm -f /tmp/mtr-mcol5164/*.bad
+TRUNCATE t1;
+
+# implicitly set max-errors
+--disable_result_log
+--exec $MCS_CPIMPORT -s , -e 11 -L /tmp/mtr-mcol5164 mcol5164 t1 /tmp/mtr-mcol5164/mcol5164.csv
+--enable_result_log
+SELECT * FROM t1;
+--exec echo Rejected rows:
+--exec cat /tmp/mtr-mcol5164/mcol5164.csv*.bad
+--exec rm -f /tmp/mtr-mcol5164/*.err
+--exec rm -f /tmp/mtr-mcol5164/*.bad
+TRUNCATE t1;
+
+# max-errors = all
+--disable_result_log
+--exec $MCS_CPIMPORT -s , -e all -L /tmp/mtr-mcol5164 mcol5164 t1 /tmp/mtr-mcol5164/mcol5164.csv
+--enable_result_log
+SELECT * FROM t1;
+--exec echo Rejected rows:
+--exec cat /tmp/mtr-mcol5164/mcol5164.csv*.bad
+
+
+# Clean UP
+--exec rm -rf /tmp/mtr-mcol5164
+DROP DATABASE mcol5164;

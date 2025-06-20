@@ -70,8 +70,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("read-buffer-size,c", fReadBufSize, 1, INT_MAX,
         "Application read buffer size (in bytes)")
       DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
-      DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
-          "Maximum number of allowable error per table per PM")
+      ("max-errors,e", po::value<string>(), "Maximum number (or 'all') of allowable error per table per PM")
       ("file-path,f", po::value<string>(&fPmFilePath),
         "Data file directory path. Default is current working directory.\n"
         "\tIn Mode 1, represents the local input file path.\n"
@@ -304,6 +303,24 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       fAllowMissingColumn = true;
     }
   }
+  if (vm.contains("max-errors"))
+  {
+    auto optarg= vm["max-errors"].as<string>();
+    if (optarg == "all")
+    {
+      fMaxErrors = MAX_ERRORS_ALL;
+    }
+    else
+    {
+      errno = 0;
+      long lValue = strtol(optarg.c_str(), nullptr, 10);
+      if (errno != 0 || lValue < 0 || lValue > INT_MAX)
+      {
+        startupError("Option --max-errors/-e is invalid or out of range");
+      }
+      fMaxErrors = lValue;
+    }
+  }
 
   if (fArgMode != -1)
     fMode = fArgMode;  // BUG 4210
@@ -337,10 +354,7 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
 
   curJob.setReadBufferCount(fIOReadBufSize);
   curJob.setReadBufferSize(fReadBufSize);
-  if (fMaxErrors >= 0)
-  {
-    curJob.setMaxErrorCount(fMaxErrors);
-  }
+  curJob.setMaxErrorCount(fMaxErrors);
   if (!fPmFilePath.empty())
   {
     importPath = fPmFilePath;

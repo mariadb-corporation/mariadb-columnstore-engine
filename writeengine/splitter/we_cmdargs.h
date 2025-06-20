@@ -323,7 +323,7 @@ class WECmdArgs
   int fBatchQty{10000};     // No. of batch Qty.
   int fNoOfReadThrds{0};    // No. of read buffers
   int fDebugLvl{0};         // Debug level
-  int fMaxErrors{-1};       // Max allowable errors
+  int fMaxErrors{MAX_ERRORS_DEFAULT}; // Max allowable errors
   int fReadBufSize{0};      // Read buffer size
   int fIOReadBufSize{0};    // I/O read buffer size
   int fSetBufSize{0};       // Buff size w/setvbuf

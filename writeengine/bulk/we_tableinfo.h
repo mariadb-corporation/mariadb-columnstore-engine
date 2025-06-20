@@ -85,7 +85,7 @@ class TableInfo : public WeUIDGID
   //   for this table.  Is volatile to
   //   insure parser & reader threads
   //   see the latest value.
-  unsigned fMaxErrorRows;   // Maximum error rows
+  int fMaxErrorRows;   // Maximum error rows
   int fLastBufferId;        // Id of the last buffer
   char* fFileBuffer;        // File buffer passed to setvbuf()
   int fCurrentParseBuffer;  // Id of leading current buffer being
@@ -298,7 +298,7 @@ class TableInfo : public WeUIDGID
 
   /** @brief Get the number of maximum allowed error rows
    */
-  unsigned getMaxErrorRows() const;
+  int getMaxErrorRows() const;
 
   /** @brief retrieve the tuncation as error setting for this
    *  import. When set, this causes char and varchar strings
@@ -309,7 +309,7 @@ class TableInfo : public WeUIDGID
 
   /** @brief set the maximum number of error rows allowed
    */
-  void setMaxErrorRows(const unsigned int maxErrorRows);
+  void setMaxErrorRows(int maxErrorRows);
 
   /** @brief Set mode to treat "NULL" string as NULL value or not.
    */
@@ -513,7 +513,7 @@ inline Status TableInfo::getStatusTI() const
   return fStatusTI;
 }
 
-inline unsigned TableInfo::getMaxErrorRows() const
+inline int TableInfo::getMaxErrorRows() const
 {
   return fMaxErrorRows;
 }
@@ -630,7 +630,7 @@ inline void TableInfo::setLoadFilesInput(bool bReadFromStdin, bool bReadFromS3,
   fS3Region = s3region;
 }
 
-inline void TableInfo::setMaxErrorRows(const unsigned int maxErrorRows)
+inline void TableInfo::setMaxErrorRows(int maxErrorRows)
 {
   fMaxErrorRows = maxErrorRows;
 }

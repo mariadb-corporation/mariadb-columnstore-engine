@@ -91,7 +91,7 @@ private:
 
   int fNoOfReadThrds{1};      // No. of read buffers
   int fDebugLvl{0};           // Debug level
-  int fMaxErrors{-1};         // Max allowable errors
+  int fMaxErrors{MAX_ERRORS_DEFAULT}; // Max allowable errors
   int fReadBufSize{-1};       // Read buffer size
   int fIOReadBufSize{-1};     // I/O read buffer size
   int fSetBufSize{0};         // Buff size w/setvbuf

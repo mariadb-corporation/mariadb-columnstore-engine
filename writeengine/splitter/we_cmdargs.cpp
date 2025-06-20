@@ -71,8 +71,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
       ("verbose,v", po::value<string>())
       ("silent,N", po::bool_switch())
-      DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
-          "Maximum number of allowable error per table per PM")
+      ("max-errors,e", po::value<string>(), "Maximum number (or 'all') of allowable error per table per PM")
       ("file-path,f", po::value<string>(&fPmFilePath),
         "Data file directory path. Default is current working directory.\n"
         "\tIn Mode 1, represents the local input file path.\n"
@@ -230,7 +229,9 @@ std::string WECmdArgs::getCpImportCmdLine(bool skipRows)
   if (fNoOfWriteThrds > 0)
     aSS << " -w " << fNoOfWriteThrds;
 
-  if (fMaxErrors >= 0)
+  if (fMaxErrors == MAX_ERRORS_ALL)
+    aSS << " -e all ";
+  else if (fMaxErrors != MAX_ERRORS_DEFAULT)
     aSS << " -e " << fMaxErrors;
 
   // BUG 5088
@@ -446,7 +447,7 @@ bool WECmdArgs::checkForCornerCases()
       cout << "Invalid option -b with Mode 0" << endl;
       throw(runtime_error("Mismatched options."));
     }
-    else if (fMaxErrors >= 0)
+    else if (fMaxErrors >= 0 || fMaxErrors == MAX_ERRORS_ALL)
     {
       cout << "Invalid option -e with Mode 0" << endl;
       throw(runtime_error("Mismatched options."));
@@ -733,6 +734,24 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else if (fBatchQty > 100000)
     {
       fBatchQty = 10000;
+    }
+  }
+  if (vm.contains("max-errors"))
+  {
+    auto optarg = vm["max-errors"].as<string>();
+    if (optarg == "all")
+    {
+      fMaxErrors = MAX_ERRORS_ALL;
+    }
+    else
+    {
+      errno = 0;
+      long lValue = strtol(optarg.c_str(), nullptr, 10);
+      if (errno != 0 || lValue < 0 || lValue > INT_MAX)
+      {
+        throw runtime_error("Option --max-errors/-e is invalid or out of range");
+      }
+      fMaxErrors = lValue;
     }
   }
 
