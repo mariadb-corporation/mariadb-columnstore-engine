@@ -1,0 +1,43 @@
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol4882;
+--enable_warnings
+
+CREATE DATABASE mcol4882;
+USE mcol4882;
+
+CREATE TABLE t1(col1 INT, col2 VARCHAR(64)) ENGINE=Columnstore;
+
+--exec printf '1,test1\n2,test2\n3,test3\n' > /tmp/mcol4882.csv
+
+--disable_result_log
+--exec $MCS_CPIMPORT -s , mcol4882 t1 /tmp/mcol4882.csv
+--enable_result_log
+SELECT * FROM t1;
+TRUNCATE t1;
+
+--disable_result_log
+--exec $MCS_CPIMPORT -s , --headers -- mcol4882 t1 /tmp/mcol4882.csv
+--enable_result_log
+SELECT * FROM t1;
+TRUNCATE t1;
+
+--disable_result_log
+--exec $MCS_CPIMPORT -s , --headers 2 mcol4882 t1 /tmp/mcol4882.csv
+--enable_result_log
+SELECT * FROM t1;
+TRUNCATE t1;
+
+--disable_result_log
+--exec $MCS_CPIMPORT -s , --headers 5 mcol4882 t1 /tmp/mcol4882.csv
+--enable_result_log
+SELECT * FROM t1;
+
+# Clean UP
+--exec rm -f /tmp/mcol4882.csv
+DROP DATABASE mcol4882;
