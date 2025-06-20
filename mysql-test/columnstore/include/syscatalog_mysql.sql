@@ -1,4 +1,5 @@
 --disable_query_log
+--disable_warnings
 create database if not exists calpontsys;
 
 use calpontsys;
@@ -43,4 +44,6 @@ create table if not exists syscolumn (`schema` varchar(128),
                         nextvalue bigint,
                         charsetnum int not null default 0) engine=columnstore comment='SCHEMA SYNC ONLY';
 
+--enable_warnings
 --enable_query_log
+
