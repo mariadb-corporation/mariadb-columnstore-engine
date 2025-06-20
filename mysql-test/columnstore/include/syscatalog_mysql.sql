@@ -1,6 +1,7 @@
 --disable_query_log
 --disable_warnings
 -- SYSTABLE
+
 create database if not exists calpontsys;
 
 use calpontsys;
