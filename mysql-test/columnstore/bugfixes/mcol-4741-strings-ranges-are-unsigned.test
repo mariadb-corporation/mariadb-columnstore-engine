@@ -16,4 +16,4 @@ SELECT COUNT(*) FROM t WHERE x='val';
 --eval LOAD DATA LOCAL infile '$MTR_SUITE_DIR/../std_data/mcol-4741-part-2-empty-strings.txt' INTO TABLE t
 
 SELECT COUNT(*) FROM t WHERE x='val';
-
+DROP DATABASE db4741;

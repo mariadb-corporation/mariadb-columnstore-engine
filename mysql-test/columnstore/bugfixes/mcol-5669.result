@@ -111,3 +111,4 @@ di_source_id	brand_sku_id	adjusted_dtm	is_sit	sit_uom	sales_uom_daily_average
 5304	1004	2024-01-01	1	0.2434	0.00000000
 5389	1004	2024-01-01	1	0.2074	0.00000000
 DROP DATABASE mcol_5669;
+REVOKE ALL PRIVILEGES ON *.* FROM 'cejuser'@'localhost';

@@ -83,6 +83,7 @@ disconnect addconroot2;
 
 --disable_warnings
 DROP DATABASE mcs13_db1;
+DROP DATABASE mcs13_db2;
 --enable_warnings
 #
 

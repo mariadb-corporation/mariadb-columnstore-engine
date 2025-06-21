@@ -40,4 +40,5 @@ select
   case when da.mtn in ('PFG','Person Focal Group') then count( acct_id) end +
     case when da.mtn = 'Person Focal Group' then count( acct_id) end as PFG_active_accounts
   from accnt da group by mtn, accts, act_created_dt order by mtn;
+  DROP DATABASE mcol_5074_db;
 
