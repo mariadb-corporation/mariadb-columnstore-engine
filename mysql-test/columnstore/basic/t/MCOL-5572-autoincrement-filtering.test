@@ -21,4 +21,5 @@ select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoi
 select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoincrement = 'n' and `schema`='mcol5572' and tablename='foo';
 
 DROP DATABASE mcol5572;
-
+--source ../include/drop_functions.inc
+DROP DATABASE calpontsys;
