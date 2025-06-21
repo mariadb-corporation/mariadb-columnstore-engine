@@ -10,3 +10,4 @@ LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/mcol-4741-part-2-empty-strings
 SELECT COUNT(*) FROM t WHERE x='val';
 COUNT(*)
 2
+DROP DATABASE db4741;

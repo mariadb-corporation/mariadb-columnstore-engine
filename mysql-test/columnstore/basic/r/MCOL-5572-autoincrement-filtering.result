@@ -18,3 +18,4 @@ select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoi
 tablename	autoincrement	nextvalue
 foo	n	1
 DROP DATABASE mcol5572;
+DROP DATABASE calpontsys;
