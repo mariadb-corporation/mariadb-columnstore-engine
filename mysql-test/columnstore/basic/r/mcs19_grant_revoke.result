@@ -76,4 +76,3 @@ SET default_storage_engine=default;
 DROP DATABASE mcs19_db;
 DROP USER 'user'@'localhost';
 DROP USER 'user1'@'localhost';
-DROP DATABASE mcs13_db2;
