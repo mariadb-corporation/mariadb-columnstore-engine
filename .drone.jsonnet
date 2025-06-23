@@ -248,8 +248,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     if (pkg_format == "deb") then execInnerDocker('bash -c "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"', containerName)
     else execInnerDocker('bash -c "yum update -y && yum install -y MariaDB-columnstore-cmapi"', containerName),
 
-  local prepareTestStage(containerName, result, do_setup) =
-    'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_stage.sh" +
+  local prepareTestContainer(containerName, result, do_setup) =
+    'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_container.sh" +
     " --container-name " + containerName +
     " --docker-image " + img +
     " --result-path " + result +
@@ -274,7 +274,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:28.2.2",
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
-      prepareTestStage(getContainerName("smoke"), result, true),
+      prepareTestContainer(getContainerName("smoke"), result, true),
       "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh " + getContainerName("smoke"),
     ],
   },
@@ -302,7 +302,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       // why do we mount cgroups here, but miss it on other steps?
-      prepareTestStage(getContainerName("upgrade") + version, result, false),
+      prepareTestContainer(getContainerName("upgrade") + version, result, false),
       if (pkg_format == "deb")
       then execInnerDocker('bash -c "./upgrade_setup_deb.sh ' + version + " " + result + " " + arch + " " + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
                            getContainerName("upgrade") + version),
@@ -341,7 +341,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
     },
     commands: [
-      prepareTestStage(getContainerName("mtr"), result, true),
+      prepareTestContainer(getContainerName("mtr"), result, true),
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
       'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
@@ -363,31 +363,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       status: ["success", "failure"],
     },
   },
-  prepare_regression:: {
-    name: "prepare regression",
-    depends_on: ["publish pkg", "publish cmapi build"],
-    when: {
-      status: ["success", "failure"],
-    },
-    image: "docker:git",
-    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
-    environment: {
-      REGRESSION_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
-      REGRESSION_REF_AUX: branch_ref,
-    },
-    commands: [
-      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
-      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
-      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
-      "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
-      'echo "$$REGRESSION_REF"',
-      prepareTestStage(getContainerName("regression"), result, true),
-      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/prepare_regression.sh " +
-      "--container-name " + getContainerName("regression") +
-      " --regression-branch $$REGRESSION_REF" +
-      " --distro " + platform,
-    ],
-  },
   regression(name, depends_on):: {
     name: name,
     depends_on: depends_on,
@@ -401,11 +376,23 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       REGRESSION_TIMEOUT: {
         from_secret: "regression_timeout",
       },
+      REGRESSION_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
+      REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
-      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_regression.sh " +
-      "--container-name " + getContainerName("regression") +
+      prepareTestContainer(getContainerName("regression"), result, true),
+
+      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
+      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
+      'echo "$$REGRESSION_REF"',
+
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_regression.sh" +
+      " --container-name " + getContainerName("regression") +
       " --test-name " + name +
+      " --distro " + platform +
+      " --regression-branch $$REGRESSION_REF" +
       " --regression-timeout $${REGRESSION_TIMEOUT}",
     ],
   },
@@ -482,7 +469,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       PYTHONPATH: "/usr/share/columnstore/cmapi/deps",
     },
     commands: [
-      prepareTestStage(getContainerName("cmapi"), result, true),
+      prepareTestContainer(getContainerName("cmapi"), result, true),
       installCmapi(getContainerName("cmapi"), pkg_format),
       "cd cmapi",
       "for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:" + cmapi_path + "/$${i}/; done",
@@ -695,8 +682,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
          (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
-         [pipeline.prepare_regression] +
-         [pipeline.regression(regression_tests[i], [if (i == 0) then "prepare regression" else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+         [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +

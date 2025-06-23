@@ -531,7 +531,7 @@ function execInnerDocker() {
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
     error "Command \"$@\" failed in container \"$container_name\""
-    exit $dockerCommandExitCode
+    return $dockerCommandExitCode
   fi
 }
 
@@ -544,7 +544,7 @@ function execInnerDockerNoTTY() {
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
     error "Command \"$@\" failed in container \"$container_name\""
-    exit $dockerCommandExitCode
+    return $dockerCommandExitCode
   fi
 }
 
