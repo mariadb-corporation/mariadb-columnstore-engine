@@ -21,6 +21,8 @@
 
 namespace optimizer {
 
+static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
+
 // Apply a list of rules to a CSEP
 bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules) {
 
@@ -47,9 +49,9 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root) const
 {
   bool changedThisRound = false;
   bool hasBeenApplied = false;
-  do 
+  do
   {
-    changedThisRound = walk(root);
+    changedThisRound = walk(root) && !applyOnlyOnce;
     hasBeenApplied = changedThisRound;
   } while (changedThisRound);
 
@@ -70,7 +72,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep) const
     }
 
     auto& csepLocal = *csepPtr;
-    rewrite |= apply(csepLocal);
+    rewrite |= walk(csepLocal);
   }
 
   for (auto& unionUnit : csep.unionVec())
@@ -82,7 +84,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep) const
     }
 
     auto& unionUnitLocal = *unionUnitPtr;
-    rewrite |= apply(unionUnitLocal);
+    rewrite |= walk(unionUnitLocal);
   }
 
   if (matchRule(csep))
@@ -112,7 +114,7 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
   // WIP filter out CSEPs with orderBy, groupBy, having
-  // WIP filter out CSEPs with nonSimpleColumns in projection
+  // Filter out tables that were re-written.
   return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
 }
 
@@ -134,7 +136,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   auto tables = csep.tableList();
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  static const std::string aliasPrefix = "$sub_";
+  execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
 
   // ATM Must be only 1 table
   for (auto& table: tables)
@@ -143,32 +145,35 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
     {
       auto derivedSCEP = csep.cloneWORecursiveSelects();
       // need to add a level here
-      std::string alias = aliasPrefix + table.schema + "_" + table.table;
+      std::string tableAlias = RewrittenSubTableAliasPrefix + table.schema + "_" + table.table;
 
       derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-      derivedSCEP->derivedTbAlias(alias);
+      derivedSCEP->derivedTbAlias(tableAlias);
 
       // TODO: hardcoded for now
       size_t parallelFactor = 2;
       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
 
+      size_t colPosition = 0;
       // change parent to derived table columns
       for (auto& rc : csep.returnedCols())
       {
-        auto* sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-        if (sc)
-        {
-          sc->tableName("");
-          sc->schemaName("");
-          sc->tableAlias(alias);
-          sc->colPosition(0);
-        }
+        auto rc_ = boost::make_shared<execplan::SimpleColumn>(*rc); 
+        // TODO timezone and result type are not copied
+        // TODO add specific ctor for this functionality
+        rc_->tableName("");
+        rc_->schemaName("");
+        rc_->tableAlias(tableAlias);
+        rc_->colPosition(colPosition++);
+        rc_->resultType(rc->resultType());
+
+        newReturnedColumns.push_back(rc_);
       }
 
       newDerivedTableList.push_back(derivedSCEP);
-      execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", alias, "");
+      execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
     }
   }
@@ -177,6 +182,8 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   csep.derivedTableList(newDerivedTableList);
   // Replace table list with new table list populated with union units
   csep.tableList(newTableList);
+  csep.returnedCols(newReturnedColumns);
 }
+
 }
 

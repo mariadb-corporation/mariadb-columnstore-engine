@@ -24,13 +24,24 @@ namespace optimizer {
 
 struct Rule
 {
-  Rule(std::string&& name, bool (*matchRule)(execplan::CalpontSelectExecutionPlan&),
-       void (*applyRule)(execplan::CalpontSelectExecutionPlan&))
+  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan&);
+  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan&);
+
+  Rule(std::string&& name, RuleMatcher matchRule, RuleApplier applyRule)
    : name(name), matchRule(matchRule), applyRule(applyRule) {};
 
   std::string name;
-  bool (*matchRule)(execplan::CalpontSelectExecutionPlan&);
-  void (*applyRule)(execplan::CalpontSelectExecutionPlan&);
+  RuleMatcher matchRule;
+  RuleApplier applyRule;
+  // TODO Wrap CSEP into Nodes to be able to navigate up and down the tree and remove this flag
+  bool applyOnlyOnce = true;
+
+  Rule() = default;
+  Rule(const Rule&) = default;
+  Rule(Rule&&) = default;
+  Rule& operator=(const Rule&) = default;
+  Rule& operator=(Rule&&) = default;
+
   bool apply(execplan::CalpontSelectExecutionPlan& csep) const;
   bool walk(execplan::CalpontSelectExecutionPlan& csep) const;
 };
