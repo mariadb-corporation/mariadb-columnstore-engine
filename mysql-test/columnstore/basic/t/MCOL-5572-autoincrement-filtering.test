@@ -22,4 +22,3 @@ select tablename, autoincrement, nextvalue from calpontsys.syscolumn where autoi
 
 DROP DATABASE mcol5572;
 --source ../include/drop_functions.inc
-DROP DATABASE calpontsys;
