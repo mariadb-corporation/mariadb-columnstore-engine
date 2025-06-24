@@ -1,18 +1,18 @@
 local events = ["pull_request", "cron"];
 
+
+local current_branch = "stable-23.10";
+
 local servers = {
-  develop: ["10.6-enterprise"],
   "stable-23.10": ["10.6-enterprise"],
 };
 
 local platforms = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local platforms_arm = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local rewrite_ubuntu_mirror = @"sed -i 's|//\\(us\\.\\)\\?archive\\.ubuntu\\.com|//us.archive.ubuntu.com|g' /etc/apt/sources.list || true; " +
@@ -56,10 +56,10 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
 
 
 local any_branch = "**";
-local platforms_custom = platforms.develop;
-local platforms_arm_custom = platforms_arm.develop;
+local platforms_custom = platforms[current_branch];
+local platforms_arm_custom = platforms_arm[current_branch];
 
-local platforms_mtr = platforms.develop;
+local platforms_mtr = platforms[current_branch];
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 
@@ -146,7 +146,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local socket_path = if (pkg_format == "rpm") then "/var/lib/mysql/mysql.sock" else "/run/mysqld/mysqld.sock",
   local config_path_prefix = if (pkg_format == "rpm") then "/etc/my.cnf.d/" else "/etc/mysql/mariadb.conf.d/50-",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
-  local branch_ref = if (branch == any_branch) then "stable-23.10" else branch,
+  local branch_ref = if (branch == any_branch) then current_branch else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == "**") then "" else branch + "/",
@@ -723,7 +723,7 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms.develop),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
   // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
@@ -763,5 +763,5 @@ local FinalPipeline(branch, event) = {
   for platform in ["ubuntu:24.04"]
   for buildenv in std.objectFields(customEnvCommandsMap)
   for triggeringEvent in events
-  for server in servers.develop
+  for server in servers[current_branch]
 ]
