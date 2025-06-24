@@ -77,8 +77,8 @@ namespace
 {
 struct cmpTuple
 {
-  bool operator()(boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> a,
-                  boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> b)
+  bool operator()(const boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> a,
+                  const boost::tuple<uint32_t, int, mcsv1sdk::mcsv1_UDAF*, std::vector<uint32_t>*> b) const
   {
     uint32_t keya = boost::get<0>(a);
     uint32_t keyb = boost::get<0>(b);
