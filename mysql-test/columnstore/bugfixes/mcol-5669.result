@@ -113,4 +113,3 @@ di_source_id	brand_sku_id	adjusted_dtm	is_sit	sit_uom	sales_uom_daily_average
 DROP DATABASE mcol_5669;
 REVOKE ALL PRIVILEGES ON *.* FROM 'cejuser'@'localhost';
 DROP USER 'cejuser'@'localhost';
-
