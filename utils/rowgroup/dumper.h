@@ -56,8 +56,8 @@ class RGDumper : protected Dumper
 {
  public:
   RGDumper(const compress::CompressInterface* comp, std::unique_ptr<MemManager> mm, const std::string& tmpDir,
-           const std::string& operationName, const uint64_t /*uniqId*/)
-   : Dumper(comp, mm), fTmpDir(tmpDir), fOperationName(operationName)
+           const std::string& operationName, const uint64_t uniqId)
+   : Dumper(comp, mm), fTmpDir(tmpDir), fOperationName(operationName), fUniqId(uniqId)
   {
   }
   ~RGDumper() = default;
@@ -66,6 +66,7 @@ class RGDumper : protected Dumper
   void saveRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGroupOut, RGData* rgdata);
 
   std::string makeRGFilename(uint64_t rgid, const uint16_t generation) const;
+  std::string makeRGFilePrefix(const uint16_t generation) const;
 
  private:
   std::string fTmpDir;

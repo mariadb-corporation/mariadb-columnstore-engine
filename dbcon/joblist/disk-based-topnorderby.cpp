@@ -28,31 +28,45 @@ void DiskBasedTopNOrderBy::flushCurrentToDisk(RowGroupDL& dl, rowgroup::RowGroup
   size_t rgid = (firstFlush) ? numberOfRGs : 0;
   rowgroup::RGData rgData;
 
+  size_t generation = (firstFlush) ? getGenerationCounter() : 0; // WIP 
+
   bool more = dl.next(0, &rgData);
   while (more)
   {
-    saveRG(rgid, getGenerationCounter(), rg, &rgData);
-    if (firstFlush)
-    {
-      --rgid;
-    }
-    else
-    {
-      ++rgid;
-    }
+    saveRG(rgid, generation, rg, &rgData);
     more = dl.next(0, &rgData);
+    rgid = (firstFlush) ? rgid - 1 : rgid + 1;
   }
 
-  incrementGenerationCounter();
+  if (firstFlush)
+  {
+    incrementGenerationCounter();
+  }
+  else
+  {
+    
+  }
 }
 void DiskBasedTopNOrderBy::diskBasedMergePhaseIfNeeded(std::vector<RowGroupDLSPtr>& /*dataLists*/)
 {
 }
 
-std::vector<std::string> DiskBasedTopNOrderBy::getGenerationFileNamesNextBatch(const size_t /*batchSize*/)
+std::vector<std::string> DiskBasedTopNOrderBy::getGenerationFileNamesNextBatch(const size_t batchSize)
 {
-  return {};
-}
+  // assert(getGenerationFilesNumber() > batchSize);
+  auto totalNumberOfFilesYetToMerge = getGenerationFilesNumber() - batchSize;
+  auto batchSizeOrFilesLeftNumber = std::max(getGenerationFilesNumber(), batchSize);
+  auto actualBatchSize = std::min(totalNumberOfFilesYetToMerge, batchSizeOrFilesLeftNumber);
+  // add state for the starting offset + wraparound
+  size_t startOffset = 0;
+  std::vector<std::string> res;
+  res.reserve(actualBatchSize);
+  for (size_t i = 0; i < startOffset + actualBatchSize; ++i)
+  {
+    res.push_back(makeRGFilePrefix(i));
+  }
 
+  return res;
+ 
 
 }  // namespace joblist

@@ -149,17 +149,26 @@ void Dumper::checkBuffer(size_t len)
     size_t newtmpsz = (len + 8191) / 8192 * 8192;
     std::vector<char> tmpvec(newtmpsz);
     // WIP needs OOM check
-    fMM->acquire(newtmpsz - fTmpBuf.size());
+      fMM->acquire(newtmpsz - fTmpBuf.size());
     fTmpBuf.swap(tmpvec);
   }
 }
 
+std::string RGDumper::makeRGFilePrefix(const uint16_t generation) const
+{
+  char buf[PATH_MAX];
+  snprintf(buf, sizeof(buf), "%s/p%u-t%ld-g%u-rg", fTmpDir.c_str(), getpid(),
+           fUniqId, generation);
+  return {buf};
+}
+
+// TODO Reuse prefix
 std::string RGDumper::makeRGFilename(uint64_t rgid, const uint16_t generation) const
 {
   char buf[PATH_MAX];
   snprintf(buf, sizeof(buf), "%s/p%u-t%ld-g%u-rg%lu", fTmpDir.c_str(), getpid(),
            fUniqId, generation, rgid);
-  return buf;
+  return {buf};
 }
 
 void RGDumper::loadRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGroupOut,
@@ -205,7 +214,7 @@ void RGDumper::saveRG(uint64_t rgid, const uint16_t generation, RowGroup& fRowGr
 
   int errNo;
   auto name = makeRGFilename(rgid, generation);
-  std::cout << "RGDumper::saveRG  " << name << std::endl;
+  // std::cout << "RGDumper::saveRG  " << name << std::endl;
   if ((errNo = write(makeRGFilename(rgid, generation), (char*)bs.buf(), bs.length())) != 0)
   {
     throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR,

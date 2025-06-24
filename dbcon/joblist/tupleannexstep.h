@@ -137,8 +137,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   //   return fGenerationCounter;
   // }
 
-  std::vector<RowGroupDLSPtr> createInputDLs(const std::vector<std::string>& fileNames);
-  std::vector<uint64_t> startReaders(std::vector<RowGroupDLSPtr>& inputDLs);
+  std::vector<RowGroupDLSPtr> createInputDLs(const size_t dLsCount) const;
+  std::vector<uint64_t> startReaders(std::vector<RowGroupDLSPtr>& inputDLs, std::vector<std::string>& fileNames);
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;

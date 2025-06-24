@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cstdint>
+#include <queue>
 #include <string>
 #include <vector>
 
@@ -45,10 +46,12 @@ class DiskBasedTopNOrderBy : public rowgroup::RGDumper
   void incrementGenerationCounter()
   {
     ++fGenerationCounter;
+    uint64_t newGeneration = (fGenerations.empty()) ? 1 : fGenerations.back() + 1;  
+    fGenerations.push(newGeneration);
   }
   uint64_t getGenerationCounter() const
   {
-    return fGenerationCounter;
+    return (fGenerations.empty()) ? 0 : fGenerations.back();  
   }
 
   bool isDiskBased() const
@@ -68,6 +71,7 @@ class DiskBasedTopNOrderBy : public rowgroup::RGDumper
 
   //  private:
   uint64_t fGenerationCounter{0};
+  std::queue<uint64_t> fGenerations;
 };
 
 }  // namespace joblist

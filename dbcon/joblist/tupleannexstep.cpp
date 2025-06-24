@@ -603,19 +603,19 @@ void TupleAnnexStep::checkAndAllocateMemory4RGData(const rowgroup::RowGroup& row
   }
 }
 
-// RowGroupDL* dl1 = new RowGroupDL(1, jobInfo.fifoSize);
-std::vector<RowGroupDLSPtr> TupleAnnexStep::createInputDLs(const std::vector<std::string>& fileNames)
+std::vector<RowGroupDLSPtr> TupleAnnexStep::createInputDLs(const size_t dLsCount) const
 {
   std::vector<RowGroupDLSPtr> result;
-  for (size_t i = 0; i < fileNames.size(); ++i)
+  for (size_t i = 0; i < dLsCount; ++i)
   {
     result.emplace_back(new RowGroupDL(1, 1));  // WIP hardcode
   }
   return result;
 }
 
-std::vector<uint64_t> TupleAnnexStep::startReaders(std::vector<RowGroupDLSPtr>& dataLists)
+std::vector<uint64_t> TupleAnnexStep::startReaders(std::vector<RowGroupDLSPtr>& dataLists, std::vector<std::string>& fileNames)
 {
+  //assert(dataLists.size(), fileNames.size())
   std::vector<uint64_t> result(dataLists.size());
   for (size_t i = 0; i < dataLists.size(); ++i)
   {
@@ -728,8 +728,8 @@ void TupleAnnexStep::executeWithOrderBy()
     while (inputQueuesNumber < fOrderBy->getGenerationFilesNumber())
     {
       auto fileNames = fOrderBy->getGenerationFileNamesNextBatch(inputQueuesNumber);
-      auto inputDLs = createInputDLs(fileNames);
-      auto readers = startReaders(inputDLs);
+      auto inputDLs = createInputDLs(fileNames.size());
+      auto readers = startReaders(inputDLs, fileNames);
       // create outputDLs or simplier atomic queues + readers threads
       fOrderBy->diskBasedMergePhaseIfNeeded(inputDLs);
       jobstepThreadPool.join(readers);

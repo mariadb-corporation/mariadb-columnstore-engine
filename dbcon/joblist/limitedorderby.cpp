@@ -262,6 +262,14 @@ void LimitedOrderBy::flushCurrentToDisk_(const bool firstFlush)
   // fDistinctMap
   // orderedRowsQueue
   queue<RGData> tempQueue;
+  // std::cout << "flush num of refs before deletion " << fDataQueue.front().rowData.use_count() << std::endl;
+  // {
+  //   auto frontOfQueue = fDataQueue.front();
+  //   fDataQueue.pop();
+  //   std::cout << "flush num of refs w/o the queue " << frontOfQueue.rowData.use_count() << std::endl;
+  //   std::cout << "flush num of refs swaping the queue with empty " << frontOfQueue.rowData.use_count() << " free " << fMemSize << std::endl;
+  // }
+
   fDataQueue.swap(tempQueue);
 
   if (fDistinctMap)
