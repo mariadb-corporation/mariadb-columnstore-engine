@@ -723,8 +723,8 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms.develop) +
-              std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms.develop),
+  // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
 [
@@ -734,13 +734,13 @@ local FinalPipeline(branch, event) = {
   for s in servers[b]
   for e in events
 ] +
-[
-  Pipeline(b, p, e, "arm64", s)
-  for b in std.objectFields(platforms_arm)
-  for p in platforms_arm[b]
-  for s in servers[b]
-  for e in events
-] +
+// [
+//   Pipeline(b, p, e, "arm64", s)
+//   for b in std.objectFields(platforms_arm)
+//   for p in platforms_arm[b]
+//   for s in servers[b]
+//   for e in events
+// ] +
 
 [
   FinalPipeline(b, "cron")
@@ -751,11 +751,11 @@ local FinalPipeline(branch, event) = {
   Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
   for p in platforms_custom
 ] +
-[
-  Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
-  for p in platforms_arm_custom
-]
-+
+// [
+//   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
+//   for p in platforms_arm_custom
+// ]
+// +
 [
   Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
   for a in ["amd64"]
