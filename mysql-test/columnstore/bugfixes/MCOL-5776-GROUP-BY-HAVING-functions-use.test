@@ -103,4 +103,3 @@ INSERT INTO t(k) VALUES (1), (2), (2), (3), (3), (4), (4),(4),(4),(4),(995), (NU
 SELECT k + k a FROM t GROUP BY a HAVING a >= 8;
 
 DROP DATABASE MCOL5776;
---source ../include/drop_functions.inc
