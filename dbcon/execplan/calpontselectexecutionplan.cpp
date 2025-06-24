@@ -863,6 +863,7 @@ void CalpontSelectExecutionPlan::pron(std::string&& pron)
   fPron = pron;
 }
 
+// This routine doesn't copy derived table list, union vector, select subqueries, subquery list, and subselects.
 execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
 {
   execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
@@ -925,15 +926,6 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   newPlan->filterTokenList(fFilterTokenList);
   newPlan->havingTokenList(fHavingTokenList);
   
-  // Deep copy of subselects
-  // SelectList newSubSelects;
-  // for (const auto& sel : fSubSelects)
-  // {
-  //   if (sel)
-  //     newSubSelects.push_back(SCEP(sel->clone()));
-  // }
-  // newPlan->subSelects(newSubSelects);
-  
   // Deep copy of group by columns
   GroupByColumnList newGroupByCols;
   for (const auto& col : fGroupByCols)
@@ -970,42 +962,6 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   
   // Deep copy of table list
   newPlan->tableList(fTableList);
-  
-  // // Deep copy of derived table list
-  // SelectList newDerivedTableList;
-  // for (const auto& sel : fDerivedTableList)
-  // {
-  //   if (sel)
-  //     newDerivedTableList.push_back(SCEP(sel->clone()));
-  // }
-  // newPlan->derivedTableList(newDerivedTableList);
-  
-  // // Deep copy of union vector
-  // SelectList newUnionVec;
-  // for (const auto& sel : fUnionVec)
-  // {
-  //   if (sel)
-  //     newUnionVec.push_back(SCEP(sel->clone()));
-  // }
-  // newPlan->unionVec(newUnionVec);
-  
-  // // Deep copy of select subqueries
-  // SelectList newSelectSubList;
-  // for (const auto& sel : fSelectSubList)
-  // {
-  //   if (sel)
-  //     newSelectSubList.push_back(SCEP(sel->clone()));
-  // }
-  // newPlan->selectSubList(newSelectSubList);
-  
-  // // Deep copy of subquery list
-  // std::vector<SCSEP> newSubSelectList;
-  // for (const auto& sel : fSubSelectList)
-  // {
-  //   if (sel)
-  //     newSubSelectList.push_back(SCSEP(sel->clone()));
-  // }
-  // newPlan->subSelectList(newSubSelectList);
   
   return newPlan;
 }

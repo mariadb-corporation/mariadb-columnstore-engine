@@ -51,9 +51,9 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root) const
   bool hasBeenApplied = false;
   do
   {
-    changedThisRound = walk(root) && !applyOnlyOnce;
-    hasBeenApplied = changedThisRound;
-  } while (changedThisRound);
+    changedThisRound = walk(root);
+    hasBeenApplied |= changedThisRound;
+  } while (changedThisRound && !applyOnlyOnce);
 
   return hasBeenApplied;
 }
