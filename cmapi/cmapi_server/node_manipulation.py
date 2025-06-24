@@ -20,6 +20,7 @@ from cmapi_server.constants import (
     CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
     MCS_DATA_PATH,
 )
+from cmapi_server.managers.network import NetworkManager
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -928,7 +929,7 @@ def _remove_node_from_PMS(root, node):
 
     return pm_num
 
-def _add_Module_entries(root, node):
+def _add_Module_entries(root, node: str) -> None:
     '''
     get new node id
     add ModuleIPAddr, ModuleHostName, ModuleDBRootCount (don't set ModuleDBRootID* here)
@@ -937,47 +938,52 @@ def _add_Module_entries(root, node):
     '''
 
     # XXXPAT: No guarantee these are the values used in the rest of the system.
-    # This will work best with a simple network configuration where there is 1 IP addr
-    # and 1 host name for a node.
-    ip4 = socket.gethostbyname(node)
-    if ip4 == node:   # node is an IP addr
-        node_name = socket.gethostbyaddr(node)[0]
-    else:
-        node_name = node   # node is a hostname
+    # TODO: what should we do with complicated network configs where node has
+    #       several ips and\or several hostnames
+    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    logging.info(f'Using ip address {ip4} and hostname {hostname}')
 
-    logging.info(f"_add_Module_entries(): using ip address {ip4} and hostname {node_name}")
-
-    smc_node = root.find("./SystemModuleConfig")
-    mod_count_node = smc_node.find("./ModuleCount3")
-    nnid_node = root.find("./NextNodeId")
+    smc_node = root.find('./SystemModuleConfig')
+    mod_count_node = smc_node.find('./ModuleCount3')
+    nnid_node = root.find('./NextNodeId')
     nnid = int(nnid_node.text)
     current_module_count = int(mod_count_node.text)
 
     # look for existing entries and fix if they exist
     for i in range(1, nnid):
-        ip_node = smc_node.find(f"./ModuleIPAddr{i}-1-3")
-        name_node = smc_node.find(f"./ModuleHostName{i}-1-3")
-        # if we find a matching IP address, but it has a different hostname, update the addr
-        if ip_node is not None and ip_node.text == ip4:
-            logging.info(f"_add_Module_entries(): found ip address already at ModuleIPAddr{i}-1-3")
-            hostname = smc_node.find(f"./ModuleHostName{i}-1-3").text
-            if hostname != node_name:
-                new_ip_addr = socket.gethostbyname(hostname)
-                logging.info(f"_add_Module_entries(): hostname doesn't match, updating address to {new_ip_addr}")
-                smc_node.find(f"ModuleHostName{i}-1-3").text = new_ip_addr
+        curr_ip_node = smc_node.find(f'./ModuleIPAddr{i}-1-3')
+        curr_name_node = smc_node.find(f'./ModuleHostName{i}-1-3')
+        # TODO: NETWORK: seems it's useless even in very rare cases.
+        #       Even simplier to rewrite resolved IP an Hostname
+        # if we find a matching IP address, but it has a different hostname,
+        # update the addr
+        if curr_ip_node is not None and curr_ip_node.text == ip4:
+            logging.info(f'Found ip address already at ModuleIPAddr{i}-1-3')
+            if curr_name_node != hostname:
+                new_ip_addr = NetworkManager.resolve_hostname_to_ip(
+                    curr_name_node
+                )
+                logging.info(
+                    'Hostname doesn\'t match, updating address to '
+                    f'{new_ip_addr!r}'
+                )
+                smc_node.find(f'ModuleHostName{i}-1-3').text = new_ip_addr
             else:
-                logging.info(f"_add_Module_entries(): no update is necessary")
+                logging.info('No update for ModuleIPAddr{i}-1-3 is necessary')
                 return
 
         # if we find a matching hostname, update the ip addr
-        if name_node is not None and name_node.text == node_name:
-            logging.info(f"_add_Module_entries(): found existing entry for {node_name}, updating its address to {ip4}")
-            ip_node.text = ip4
+        if curr_name_node is not None and curr_name_node.text == hostname:
+            logging.info(
+                f'Found existing entry for {hostname!r}, updating its '
+                f'address to {ip4!r}'
+            )
+            curr_ip_node.text = ip4
             return
 
-    etree.SubElement(smc_node, f"ModuleIPAddr{nnid}-1-3").text = ip4
-    etree.SubElement(smc_node, f"ModuleHostName{nnid}-1-3").text = node_name
-    etree.SubElement(smc_node, f"ModuleDBRootCount{nnid}-3").text = "0"
+    etree.SubElement(smc_node, f'ModuleIPAddr{nnid}-1-3').text = ip4
+    etree.SubElement(smc_node, f'ModuleHostName{nnid}-1-3').text = hostname
+    etree.SubElement(smc_node, f'ModuleDBRootCount{nnid}-3').text = '0'
     mod_count_node.text = str(current_module_count + 1)
     nnid_node.text = str(nnid + 1)
 
