@@ -5,76 +5,11 @@
 # Post-install steps for columnstore install
 
 running_systemd() {
-    # Check if init process (PID 1) is systemd by reading /proc/1/comm
-    if [ -r "/proc/1/comm" ]; then
-        if [ "$(cat /proc/1/comm)" = "systemd" ]; then
-            echo 0
-            return 0
-        fi
-    fi
-
-    # Alternative check using /proc/1/exe symlink
-    if [ -L "/proc/1/exe" ]; then
-        local exe_target
-        exe_target=$(readlink -f "/proc/1/exe")
-        if [[ "${exe_target##*/}" == "systemd" ]]; then
-            echo 0
-            return 0
-        fi
-    fi
-
-    # Fallback check for systemd presence in /run/systemd
-    if [ -d "/run/systemd/system" ]; then
-        echo 0
-        return 0
-    fi
-
-    echo 1
-    return 1
-}
-
-get_parent_pid() {
-    local pid=$1
-    local ppid
-
-    # Read the stat file for the given PID
-    if [ -f "/proc/$pid/stat" ]; then
-        # Read the entire stat file into a variable
-        read -r stat <"/proc/$pid/stat"
-
-        # Split into array (parent PID is the 4th field)
-        IFS=' ' read -ra stat_array <<<"$stat"
-
-        # The PPID is the 4th element (0-based index 3)
-        ppid=${stat_array[3]}
-
-        echo "$ppid"
-        return 0
-    else
-        echo "Error: Process $pid does not exist" >&2
-        return 1
-    fi
-}
-
-get_env_var_value() {
-    local pid=$1
-    local var_name=$2
-    local env_file="/proc/$pid/environ"
-
-    if [ ! -r "$env_file" ]; then
-        echo "Error: Cannot read $env_file" >&2
-        return 1
-    fi
-
-    # Read null-delimited environ file and process each line
-    while IFS= read -r -d '' line; do
-        if [[ "$line" == "${var_name}="* ]]; then
-            echo "${line#*=}"
-            return 0
-        fi
-    done <"$env_file"
-
-    return 1
+   if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
+       echo 0
+   else
+       echo 1
+   fi
 }
 
 # This function recursively(up to PID 1) searches for
@@ -83,66 +18,67 @@ find_env_var() {
     env_var_name=$1
     pid=$$
     ENV_VAR=''
-    while [ -z "$ENV_VAR" -a "$pid" != 1 ]; do
-        ppid=$(get_parent_pid $pid)
+    while [ -z "$ENV_VAR" -a "$pid" != 1  ]; do
+        ppid=$(ps -oppid -p$pid|tail -1|awk '{print $1}')
         # This condition is true in containers
         if [ "$ppid" == 0 ]; then
-            break
+            break;
         fi
-        ENV_VAR=$(get_env_var_value $ppid $env_var_name)
+        env=$(strings /proc/$ppid/environ)
+        ENV_VAR=$(echo "$env"|awk -F= "\$1 == \"$env_var_name\" { print \$2; }")
         pid=$ppid
     done
     echo $ENV_VAR
 }
 
 if [[ -f /etc/mysql/debian.cnf ]]; then
-    MDB="/usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf"
+  MDB="/usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf"
 else
-    MDB="/usr/bin/mysql"
+  MDB="/usr/bin/mysql"
 fi
 
 checkForError() {
-    # check for password error
-    grep "ERROR 1045" ${installLogDir}/mysql_install.log >${installLogDir}/error.check
-    if [ $(cat ${installLogDir}/error.check | wc -c) -ne 0 ]; then
-        echo "There were authentication issues running install_mcs_mysql.sh \
+	# check for password error
+	grep "ERROR 1045" ${installLogDir}/mysql_install.log > ${installLogDir}/error.check
+	if [ `cat ${installLogDir}/error.check | wc -c` -ne 0 ]; then
+		  echo "There were authentication issues running install_mcs_mysql.sh \
 script. The log is available in ${installLogDir}/mysql_install.log. Please re-run \
 columnstore-post-install manually after solving the authentication issues."
-        rm -f ${installLogDir}/error.check
-        return 2
-    fi
+		  rm -f ${installLogDir}/error.check
+		  return 2;
+	fi
 
-    rm -f ${installLogDir}/error.check
+	rm -f ${installLogDir}/error.check
 
-    #---------------------------------------------------------------------------
-    # See if engine columnstore exist
-    #---------------------------------------------------------------------------
-    echo "checking for engine columnstore..."
-    $MDB --execute="show engines" 2>${installLogDir}/post-mysql-install.log | grep -i columnstore >>${installLogDir}/post-mysql-install.log 2>&1
+        #---------------------------------------------------------------------------
+        # See if engine columnstore exist
+        #---------------------------------------------------------------------------
+        echo "checking for engine columnstore..."
+        $MDB --execute="show engines" 2> ${installLogDir}/post-mysql-install.log | grep -i columnstore >> ${installLogDir}/post-mysql-install.log 2>&1
 
-    #
-    # Add compressiontype column to SYSCOLUMN if applicable
-    #
-    if [ $? -ne 0 ]; then
-        echo "columnstore doesn't exist"
-        return 1
-    fi
+        #
+        # Add compressiontype column to SYSCOLUMN if applicable
+        #
+        if [ $? -ne 0 ]; then
+                echo "columnstore doesn't exist"
+                return 1
+        fi
 
-    echo "columnstore exists"
+        echo "columnstore exists"
 
-    return 0
+	return 0;
 }
 
 rpmmode=install
-user=$(whoami 2>/dev/null)
+user=`whoami 2>/dev/null`
 
 quiet=0
 
 stop_mysqld=0
-if [ -z "$(pgrep -x mariadbd)" ]; then
+if [ -z "$(pgrep -x mariadbd)" ];then
 
     # Startup mysqld
-    systemctl cat mariadb.service >/dev/null 2>&1
+    systemctl cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl start mariadb.service
     else
@@ -171,10 +107,11 @@ if [ -f @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml.rpmsave ]; then
 fi
 
 touch /dev/shm/columnstore-test && rm /dev/shm/columnstore-test
-if [ $? -ne 0 ]; then
+if [ $? -ne 0 ] ; then
     echo "User $user will need R/W access to /dev/shm."
     exit 1
 fi
+
 
 profileFile="/etc/profile.d/columnstoreAlias.sh"
 /bin/cp -f @ENGINE_SUPPORTDIR@/columnstoreAlias /etc/profile.d/columnstoreAlias.sh
@@ -187,7 +124,7 @@ test -d @ENGINE_LOGDIR@/trace || mkdir @ENGINE_LOGDIR@/trace >/dev/null 2>&1
 test -d @ENGINE_LOGDIR@/cpimport || mkdir @ENGINE_LOGDIR@/cpimport >/dev/null 2>&1
 test -d @ENGINE_LOGDIR@/install || mkdir @ENGINE_LOGDIR@/install >/dev/null 2>&1
 test -h @ENGINE_LOGDIR@/data && rm -f @ENGINE_LOGDIR@/data
-chmod 755 @ENGINE_LOGDIR@/corefiles >/dev/null 2>&1
+chmod 755 @ENGINE_LOGDIR@/corefiles > /dev/null 2>&1
 chmod 777 @ENGINE_LOGDIR@/cpimport
 chmod 777 @ENGINE_LOGDIR@/install
 installLogDir=@ENGINE_LOGDIR@/install
@@ -199,7 +136,7 @@ test -d @ENGINE_DATADIR@/data1/systemFiles/dataTransaction || rmdir @ENGINE_DATA
 test -d @ENGINE_DATADIR@/data1/systemFiles/dataTransaction/archive || rmdir @ENGINE_DATADIR@/data1/systemFiles/dataTransaction/archive >/dev/null 2>&1
 chmod 1755 @ENGINE_DATADIR@/data1 >/dev/null 2>&1
 chmod -R 1755 @ENGINE_DATADIR@/data1/systemFiles >/dev/null 2>&1
-chmod 1755 @ENGINE_SYSCONFDIR@/columnstore >/dev/null 2>&1
+chmod 1755 @ENGINE_SYSCONFDIR@/columnstore > /dev/null 2>&1
 
 #create the bulk-load dirs
 mkdir -p @ENGINE_LOGDIR@/data/bulk/data/import >/dev/null 2>&1
@@ -210,28 +147,28 @@ rm -f @ENGINE_LOGDIR@/data/bulk/tmpjob/* >/dev/null 2>&1
 chmod -R 777 @ENGINE_LOGDIR@/data
 
 #get columnstore temp file directory name
-tmpDir=$(@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir)
-scratchDir=$tmpDir$(@ENGINE_BINDIR@/mcsGetConfig SystemConfig hdfsRdwrScratch)
+tmpDir=`@ENGINE_BINDIR@/mcsGetConfig SystemConfig SystemTempFileDir`
+scratchDir=$tmpDir`@ENGINE_BINDIR@/mcsGetConfig SystemConfig hdfsRdwrScratch`
 mkdir $tmpDir >/dev/null 2>&1
 mkdir $scratchDir >/dev/null 2>&1
 chmod 777 $tmpDir
 chmod 777 $scratchDir
 
 #create mount directories
-mkdir /mnt/tmp >/dev/null 2>&1
+mkdir /mnt/tmp > /dev/null 2>&1
 
 if [ $user = "root" ]; then
-    #setup the columnstore service script
+	#setup the columnstore service script
     rm -f /etc/init.d/columnstore >/dev/null 2>&1
     rm -f /etc/default/columnstore
 
-    systemctl=$(which systemctl 2>/dev/null)
+    systemctl=`which systemctl 2>/dev/null`
     if [ -n "$systemctl" ]; then
         # Removing a separate ExeMgr unit.
-        if [[ -f /usr/lib/systemd/system/mcs-exemgr.service ]]; then
+        if [[ -f  /usr/lib/systemd/system/mcs-exemgr.service ]]; then
             rm -f /usr/lib/systemd/system/mcs-exemgr.service
         fi
-        if [[ -f /lib/systemd/system/mcs-exemgr.service ]]; then
+        if [[ -f  /lib/systemd/system/mcs-exemgr.service ]]; then
             rm -f /lib/systemd/system/mcs-exemgr.service
         fi
         cp @ENGINE_SUPPORTDIR@/mariadb-columnstore.service /usr/lib/systemd/system/. >/dev/null 2>&1
@@ -244,7 +181,7 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-dmlproc.service /lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-primproc.service /lib/systemd/system/. >/dev/null 2>&1
-        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/mcs-workernode@.service >/dev/null 2>&1
+        cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /usr/lib/systemd/system/mcs-workernode@.service  >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-workernode.service /lib/systemd/system/mcs-workernode@.service >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-writeengineserver.service /lib/systemd/system/. >/dev/null 2>&1
@@ -253,27 +190,27 @@ if [ $user = "root" ]; then
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /usr/lib/systemd/system/. >/dev/null 2>&1
         cp @ENGINE_SUPPORTDIR@/mcs-storagemanager.service /lib/systemd/system/. >/dev/null 2>&1
         systemctl enable mariadb-columnstore >/dev/null 2>&1
-        systemctl enable mcs-controllernode >/dev/null 2>&1
-        systemctl enable mcs-ddlproc >/dev/null 2>&1
-        systemctl enable mcs-dmlproc >/dev/null 2>&1
-        systemctl enable mcs-primproc >/dev/null 2>&1
-        systemctl enable mcs-workernode@1 >/dev/null 2>&1
-        systemctl enable mcs-writeengineserver >/dev/null 2>&1
-        systemctl enable mcs-loadbrm >/dev/null 2>&1
-        systemctl enable mcs-storagemanager >/dev/null 2>&1
+        systemctl enable mcs-controllernode > /dev/null 2>&1
+        systemctl enable mcs-ddlproc > /dev/null 2>&1
+        systemctl enable mcs-dmlproc > /dev/null 2>&1
+        systemctl enable mcs-primproc > /dev/null 2>&1
+        systemctl enable mcs-workernode@1 > /dev/null 2>&1
+        systemctl enable mcs-writeengineserver > /dev/null 2>&1
+        systemctl enable mcs-loadbrm > /dev/null 2>&1
+        systemctl enable mcs-storagemanager > /dev/null 2>&1
     else
-        chkconfig=$(which chkconfig 2>/dev/null)
+        chkconfig=`which chkconfig 2>/dev/null`
         if [ -n "$chkconfig" ]; then
 
             cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
-            chkconfig --add columnstore >/dev/null 2>&1
-            chkconfig columnstore on >/dev/null 2>&1
+            chkconfig --add columnstore > /dev/null 2>&1
+            chkconfig columnstore on > /dev/null 2>&1
         else
             cp @ENGINE_SBINDIR@/columnstore /etc/init.d/. >/dev/null 2>&1
-            updaterc=$(which update-rc.d 2>/dev/null)
+            updaterc=`which update-rc.d 2>/dev/null`
             if [ -n "$updaterc" ]; then
 
-                update-rc.d columnstore defaults 99 >/dev/null 2>&1
+                update-rc.d columnstore defaults 99 > /dev/null 2>&1
             else
                 echo ""
                 echo "Package 'systemctl', 'chkconfig' or 'update-rc.d' not installed, contact your sysadmin if you want to setup to autostart for columnstore"
@@ -284,12 +221,12 @@ fi
 
 # upgrade the columnstore.cnf file
 if [ -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave ]; then
-    cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.new
-    cp -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave @MARIADB_MYCNFDIR@/columnstore.cnf
+     cp -f @MARIADB_MYCNFDIR@/columnstore.cnf @MARIADB_MYCNFDIR@/columnstore.cnf.new
+     cp -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave @MARIADB_MYCNFDIR@/columnstore.cnf
 fi
 
 if [ $user = "root" ]; then
-    @ENGINE_BINDIR@/columnstoreSyslogSetup.sh install >$installLogDir/syslog_install.log 2>&1
+    @ENGINE_BINDIR@/columnstoreSyslogSetup.sh install > $installLogDir/syslog_install.log 2>&1
 
     #check if MariaDB Columnstore system logging was setup
     cat $installLogDir/syslog_install.log | grep 'No System Logging' >/dev/null 2>&1
@@ -299,7 +236,7 @@ if [ $user = "root" ]; then
 else
     chown $user:$user @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml
 
-    cat <<EOD
+cat <<EOD
 
 NOTE: For non-root install, you will need to run the following commands as root user to
       setup the MariaDB ColumnStore System Logging
@@ -325,12 +262,12 @@ rm -f $lockdir/columnstore
 @ENGINE_SBINDIR@/install_mcs_mysql.sh --tmpdir=$installLogDir
 
 # Restart MDB to enable plugin
-systemctl cat mariadb.service >/dev/null 2>&1
+systemctl cat mariadb.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-    systemctl restart mariadb.service >/dev/null 2>&1
+    systemctl restart mariadb.service > /dev/null 2>&1
 else
-    pkill mysqld >/dev/null 2>&1
-    while [ -n "$(pgrep -x mysqld)" ]; do
+    pkill mysqld > /dev/null 2>&1
+    while [ -n "$(pgrep -x mysqld)" ] ; do
         sleep 1
     done
     /usr/bin/mysqld_safe &
@@ -349,88 +286,88 @@ fi
 $MDB <@ENGINE_SUPPORTDIR@/syscatalog_mysql.sql 2>/dev/null
 
 if [ -z "$MCS_USE_S3_STORAGE" ]; then
-    MCS_USE_S3_STORAGE="$(find_env_var "MCS_USE_S3_STORAGE")"
-    MCS_S3_BUCKET="$(find_env_var "MCS_S3_BUCKET")"
-    MCS_S3_ENDPOINT="$(find_env_var "MCS_S3_ENDPOINT")"
-    MCS_S3_ACCESS_KEY_ID="$(find_env_var "MCS_S3_ACCESS_KEY_ID")"
-    MCS_S3_SECRET_ACCESS_KEY="$(find_env_var "MCS_S3_SECRET_ACCESS_KEY")"
-    MCS_S3_REGION="$(find_env_var "MCS_S3_REGION")"
-    MCS_S3_ROLE_NAME="$(find_env_var "MCS_S3_ROLE_NAME")"
-    MCS_S3_STS_REGION="$(find_env_var "MCS_S3_STS_REGION")"
-    MCS_S3_STS_ENDPOINT="$(find_env_var "MCS_S3_STS_ENDPOINT")"
-    MCS_S3_USE_HTTP="$(find_env_var "MCS_S3_USE_HTTP")"
-    MCS_S3_NO_SSL_VERIFY="$(find_env_var "MCS_S3_NO_SSL_VERIFY")"
-    MCS_S3_LIBS3_DEBUG="$(find_env_var "MCS_S3_LIBS3_DEBUG")"
+  MCS_USE_S3_STORAGE="$(find_env_var "MCS_USE_S3_STORAGE")"
+  MCS_S3_BUCKET="$(find_env_var "MCS_S3_BUCKET")"
+  MCS_S3_ENDPOINT="$(find_env_var "MCS_S3_ENDPOINT")"
+  MCS_S3_ACCESS_KEY_ID="$(find_env_var "MCS_S3_ACCESS_KEY_ID")"
+  MCS_S3_SECRET_ACCESS_KEY="$(find_env_var "MCS_S3_SECRET_ACCESS_KEY")"
+  MCS_S3_REGION="$(find_env_var "MCS_S3_REGION")"
+  MCS_S3_ROLE_NAME="$(find_env_var "MCS_S3_ROLE_NAME")"
+  MCS_S3_STS_REGION="$(find_env_var "MCS_S3_STS_REGION")"
+  MCS_S3_STS_ENDPOINT="$(find_env_var "MCS_S3_STS_ENDPOINT")"
+  MCS_S3_USE_HTTP="$(find_env_var "MCS_S3_USE_HTTP")"
+  MCS_S3_NO_SSL_VERIFY="$(find_env_var "MCS_S3_NO_SSL_VERIFY")"
+  MCS_S3_LIBS3_DEBUG="$(find_env_var "MCS_S3_LIBS3_DEBUG")"
 fi
 
 if [ ! -z "$MCS_USE_S3_STORAGE" ] && [ $MCS_USE_S3_STORAGE -eq 1 ]; then
-    if [ -z "$MCS_S3_BUCKET" ]; then
-        echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_BUCKET."
-    fi
-    if [ -z "$MCS_S3_ACCESS_KEY_ID" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
-        echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ACCESS_KEY_ID."
-    fi
-    if [ -z "$MCS_S3_SECRET_ACCESS_KEY" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
-        echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_SECRET_ACCESS_KEY."
-    fi
-    if [ -z "$MCS_S3_BUCKET" ] || [[ -z "$MCS_S3_ACCESS_KEY_ID" && -z "$MCS_S3_ROLE_NAME" ]] || [[ -z "$MCS_S3_SECRET_ACCESS_KEY" && -z "$MCS_S3_ROLE_NAME" ]]; then
-        echo "Using local storage."
-        @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
-        @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
-        @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
-    else
-        @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
-        @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
-        @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
-        sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
-        if [ ! -z "$MCS_S3_REGION" ]; then
-            sed -i "s|^region =.*|region = $MCS_S3_REGION|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_ROLE_NAME" ]; then
-            sed -i "s|^# iam_role_name =.*|iam_role_name = $MCS_S3_ROLE_NAME|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_STS_REGION" ]; then
-            sed -i "s|^# sts_region =.*|sts_region = $MCS_S3_STS_REGION|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_STS_ENDPOINT" ]; then
-            sed -i "s|^# sts_endpoint =.*|sts_endpoint = $MCS_S3_STS_ENDPOINT|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_USE_HTTP" ]; then
-            sed -i "s|^# use_http =.*|use_http = enabled|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_NO_SSL_VERIFY" ]; then
-            sed -i "s|^# ssl_verify =.*|ssl_verify = disabled|" /etc/columnstore/storagemanager.cnf
-        fi
-        if [ ! -z "$MCS_S3_LIBS3_DEBUG" ]; then
-            sed -i "s|^# libs3_debug =.*|libs3_debug = enabled|" /etc/columnstore/storagemanager.cnf
-        fi
-        sed -i "s|^bucket =.*|bucket = $MCS_S3_BUCKET|" /etc/columnstore/storagemanager.cnf
-        sed -i "s|^# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
-        sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
-        sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
-        @ENGINE_BINDIR@/testS3Connection
-        if [ $? -ne 0 ]; then
-            sed -i "s|^iam_role_name =.*|# iam_role_name = |" /etc/columnstore/storagemanager.cnf
-            sed -i "s|^sts_region =.*|# sts_region = |" /etc/columnstore/storagemanager.cnf
-            sed -i "s|^sts_endpoint =.*|# sts_endpoint = |" /etc/columnstore/storagemanager.cnf
-            sed -i "s|^endpoint =.*|# endpoint = |" /etc/columnstore/storagemanager.cnf
-            sed -i "s|^aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
-            sed -i "s|^aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
-            echo "There was an error validating the settings used to access S3."
-            echo "The specified user or role must have GET, PUT, HEAD, and DELETE permissions to the bucket."
-            echo "Verify the following environment variables are correct:"
-            echo "MCS_S3_BUCKET"
-            echo "MCS_S3_ENDPOINT"
-            echo "MCS_S3_ACCESS_KEY_ID"
-            echo "MCS_S3_SECRET_ACCESS_KEY"
-            echo "MCS_S3_REGION"
-            echo "MCS_S3_ROLE_NAME (optional)"
-            echo "MCS_S3_STS_REGION (optional)"
-            echo "MCS_S3_STS_ENDPOINT (optional)"
-            echo "After environment variables are fixed, run command: columnstore-post-install"
-            exit 1
-        fi
-    fi
+  if [ -z "$MCS_S3_BUCKET" ]; then
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_BUCKET."
+  fi
+  if [ -z "$MCS_S3_ACCESS_KEY_ID" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_ACCESS_KEY_ID."
+  fi
+  if [ -z "$MCS_S3_SECRET_ACCESS_KEY" ] && [ -z "$MCS_S3_ROLE_NAME" ]; then
+    echo "Environment variable \$MCS_USE_S3_STORAGE is set but there is no \$MCS_S3_SECRET_ACCESS_KEY."
+  fi
+  if [ -z "$MCS_S3_BUCKET" ] || [[ -z "$MCS_S3_ACCESS_KEY_ID" && -z "$MCS_S3_ROLE_NAME" ]] || [[ -z "$MCS_S3_SECRET_ACCESS_KEY" && -z "$MCS_S3_ROLE_NAME" ]]; then
+    echo "Using local storage."
+      @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
+      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
+      @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
+  else
+      @ENGINE_BINDIR@/mcsSetConfig -d Installation DBRootStorageType "storagemanager"
+      @ENGINE_BINDIR@/mcsSetConfig -d StorageManager Enabled "Y"
+      @ENGINE_BINDIR@/mcsSetConfig -d SystemConfig DataFilePlugin "libcloudio.so"
+      sed -i "s|^service =.*|service = S3|" /etc/columnstore/storagemanager.cnf
+      if [ ! -z "$MCS_S3_REGION" ]; then
+          sed -i "s|^region =.*|region = $MCS_S3_REGION|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_ROLE_NAME" ]; then
+          sed -i "s|^# iam_role_name =.*|iam_role_name = $MCS_S3_ROLE_NAME|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_STS_REGION" ]; then
+          sed -i "s|^# sts_region =.*|sts_region = $MCS_S3_STS_REGION|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_STS_ENDPOINT" ]; then
+          sed -i "s|^# sts_endpoint =.*|sts_endpoint = $MCS_S3_STS_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_USE_HTTP" ]; then
+          sed -i "s|^# use_http =.*|use_http = enabled|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_NO_SSL_VERIFY" ]; then
+          sed -i "s|^# ssl_verify =.*|ssl_verify = disabled|" /etc/columnstore/storagemanager.cnf
+      fi
+      if [ ! -z "$MCS_S3_LIBS3_DEBUG" ]; then
+          sed -i "s|^# libs3_debug =.*|libs3_debug = enabled|" /etc/columnstore/storagemanager.cnf
+      fi
+      sed -i "s|^bucket =.*|bucket = $MCS_S3_BUCKET|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# endpoint =.*|endpoint = $MCS_S3_ENDPOINT|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# aws_access_key_id =.*|aws_access_key_id = $MCS_S3_ACCESS_KEY_ID|" /etc/columnstore/storagemanager.cnf
+      sed -i "s|^# aws_secret_access_key =.*|aws_secret_access_key = $MCS_S3_SECRET_ACCESS_KEY|" /etc/columnstore/storagemanager.cnf
+      @ENGINE_BINDIR@/testS3Connection
+      if [ $? -ne 0 ]; then
+        sed -i "s|^iam_role_name =.*|# iam_role_name = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^sts_region =.*|# sts_region = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^sts_endpoint =.*|# sts_endpoint = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^endpoint =.*|# endpoint = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^aws_access_key_id =.*|# aws_access_key_id = |" /etc/columnstore/storagemanager.cnf
+        sed -i "s|^aws_secret_access_key =.*|# aws_secret_access_key = |" /etc/columnstore/storagemanager.cnf
+        echo "There was an error validating the settings used to access S3."
+        echo "The specified user or role must have GET, PUT, HEAD, and DELETE permissions to the bucket."
+        echo "Verify the following environment variables are correct:"
+        echo "MCS_S3_BUCKET"
+        echo "MCS_S3_ENDPOINT"
+        echo "MCS_S3_ACCESS_KEY_ID"
+        echo "MCS_S3_SECRET_ACCESS_KEY"
+        echo "MCS_S3_REGION"
+        echo "MCS_S3_ROLE_NAME (optional)"
+        echo "MCS_S3_STS_REGION (optional)"
+        echo "MCS_S3_STS_ENDPOINT (optional)"
+        echo "After environment variables are fixed, run command: columnstore-post-install"
+        exit 1
+      fi
+  fi
 fi
 
 #change ownership/permissions to be able to run columnstore as non-root
@@ -438,14 +375,14 @@ fi
 if [ $(running_systemd) -eq 0 ]; then
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_LOGDIR@
     chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ /etc/columnstore
-    findcmd=$(which find 2>/dev/null)
+    findcmd=`which find 2>/dev/null`
     if [ -n "$findcmd" ]; then
         if [[ $($findcmd @ENGINE_DATADIR@ -maxdepth 3 ! -user @DEFAULT_USER@ -exec echo {} \; -quit 2>/dev/null) ]]; then
             echo "At least one file is not owned by @DEFAULT_USER@ in @ENGINE_DATADIR@. Running chown..."
             chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
         else
             echo "Confirmed top @ENGINE_DATADIR@ folders owned by @DEFAULT_USER@"
-        fi
+        fi  
     else
         chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
     fi
@@ -453,7 +390,7 @@ if [ $(running_systemd) -eq 0 ]; then
     chmod 777 /dev/shm
 fi
 
-systemctl cat mariadb-columnstore.service >/dev/null 2>&1
+systemctl cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
 
     # mask mariadb-columnstore service to prevent starting services and dbbuilder
@@ -484,13 +421,13 @@ if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     flock -u "$fd_lock"
 fi
 
-if [ $stop_mysqld -eq 1 ]; then
+if [ $stop_mysqld -eq 1 ];then
     # Make sure we stop mariadb since it wasn't running prior to columnstore installation
-    systemctl cat mariadb.service >/dev/null 2>&1
+    systemctl cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
-        systemctl stop mariadb.service >/dev/null 2>&1
+        systemctl stop mariadb.service > /dev/null 2>&1
     else
-        pkill mysqld >/dev/null 2>&1
+        pkill mysqld > /dev/null 2>&1
     fi
 fi
 
