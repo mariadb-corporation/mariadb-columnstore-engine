@@ -25,4 +25,3 @@ select mcslastinsertid("t1");
 
 DROP TABLE t1;
 DROP DATABASE cal_test_db;
---source ../include/drop_functions.inc
