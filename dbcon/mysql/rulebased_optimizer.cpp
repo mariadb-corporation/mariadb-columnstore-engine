@@ -15,17 +15,23 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
+#include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
+#include "logicoperator.h"
+#include "operator.h"
+#include "predicateoperator.h"
+#include "simplefilter.h"
 #include "rulebased_optimizer.h"
 
-namespace optimizer {
+namespace optimizer
+{
 
 static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
 
 // Apply a list of rules to a CSEP
-bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules) {
-
+bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules)
+{
   bool changed = false;
   for (const auto& rule : rules)
   {
@@ -38,7 +44,7 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root)
 {
   optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
-  
+
   std::vector<Rule> rules = {parallelCES};
 
   return optimizeCSEPWithRules(root, rules);
@@ -96,17 +102,19 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep) const
   return rewrite;
 }
 
-bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table, execplan::CalpontSelectExecutionPlan& csep)
+bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                    execplan::CalpontSelectExecutionPlan& csep)
 {
-  return std::any_of(csep.unionVec().begin(), csep.unionVec().end(), 
-  [&table](const auto& unionUnit) {
-    execplan::CalpontSelectExecutionPlan* unionUnitLocal = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
-    bool tableIsPresented = std::any_of(unionUnitLocal->tableList().begin(), unionUnitLocal->tableList().end(), 
-    [&table](const auto& unionTable) {
-      return unionTable == table;
-    });
-    return tableIsPresented;
-  });
+  return std::any_of(csep.unionVec().begin(), csep.unionVec().end(),
+                     [&table](const auto& unionUnit)
+                     {
+                       execplan::CalpontSelectExecutionPlan* unionUnitLocal =
+                           dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
+                       bool tableIsPresented =
+                           std::any_of(unionUnitLocal->tableList().begin(), unionUnitLocal->tableList().end(),
+                                       [&table](const auto& unionTable) { return unionTable == table; });
+                       return tableIsPresented;
+                     });
 }
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
@@ -118,14 +126,65 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
 }
 
-execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(const size_t numberOfLegs,
-                                          execplan::CalpontSelectExecutionPlan& csep)
+// This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
+// TODO add engine-independent statistics-derived ranges
+execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep)
+{
+  // INV this is SimpleColumn we supply as an argument
+  // TODO find the suitable column using EI statistics.
+  auto* column = dynamic_cast<execplan::SimpleColumn*>(csep->returnedCols().front().get());
+  assert(column);
+
+  auto tableKeyColumnLeftOp = new execplan::SimpleColumn(*column);
+  tableKeyColumnLeftOp->resultType(column->resultType());
+
+  // TODO Nobody owns this allocation and cleanup only depends on delete in ParseTree nodes' dtors.
+  auto* filterColLeftOp = new execplan::ConstantColumnUInt(42ULL, 0, 0);
+  // set TZ
+  // There is a question with ownership of the const column
+  execplan::SOP ltOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="));
+  ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
+  ltOp->resultType(ltOp->operationType());
+
+  auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
+  // auto tableKeyColumn = derivedSCEP->returnedCols().front();
+  auto tableKeyColumnRightOp = new execplan::SimpleColumn(*column);
+  tableKeyColumnRightOp->resultType(column->resultType());
+  // TODO hardcoded column type and value
+  auto* filterColRightOp = new execplan::ConstantColumnUInt(30ULL, 0, 0);
+
+  execplan::SOP gtOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator(">="));
+  gtOp->setOpType(filterColRightOp->resultType(), tableKeyColumnRightOp->resultType());
+  gtOp->resultType(gtOp->operationType());
+
+  auto* sfl = new execplan::SimpleFilter(gtOp, tableKeyColumnRightOp, filterColRightOp);
+
+  execplan::ParseTree* ptp = new execplan::ParseTree(new execplan::LogicOperator("and"));
+  ptp->right(sfr);
+  ptp->left(sfl);
+
+  auto* currentFilters = csep->filters();
+  if (currentFilters)
+  {
+    execplan::ParseTree* andWithExistingFilters =
+        new execplan::ParseTree(new execplan::LogicOperator("and"), currentFilters, ptp);
+    return andWithExistingFilters;
+  }
+
+  return ptp;
+}
+
+execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
+    const size_t numberOfLegs, execplan::CalpontSelectExecutionPlan& csep)
 {
   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
   unionVec.reserve(numberOfLegs);
   for (size_t i = 0; i < numberOfLegs; ++i)
   {
-    unionVec.push_back(csep.cloneWORecursiveSelects());
+    auto clonedCSEP = csep.cloneWORecursiveSelects();
+    // Add BETWEEN based on key column range
+    clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP));
+    unionVec.push_back(clonedCSEP);
   }
 
   return unionVec;
@@ -139,7 +198,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
 
   // ATM Must be only 1 table
-  for (auto& table: tables)
+  for (auto& table : tables)
   {
     if (!table.isColumnstore())
     {
@@ -153,31 +212,36 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 
       // TODO: hardcoded for now
       size_t parallelFactor = 2;
+      // Create a copy of the current leaf CSEP with additional filters to partition the key column
       auto additionalUnionVec = makeUnionFromTable(parallelFactor, csep);
-      derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(), additionalUnionVec.end());
+      derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
+                                     additionalUnionVec.end());
 
       size_t colPosition = 0;
       // change parent to derived table columns
       for (auto& rc : csep.returnedCols())
       {
-        auto rc_ = boost::make_shared<execplan::SimpleColumn>(*rc); 
+        auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
         // TODO timezone and result type are not copied
         // TODO add specific ctor for this functionality
-        rc_->tableName("");
-        rc_->schemaName("");
-        rc_->tableAlias(tableAlias);
-        rc_->colPosition(colPosition++);
-        rc_->resultType(rc->resultType());
+        rcCloned->tableName("");
+        rcCloned->schemaName("");
+        rcCloned->tableAlias(tableAlias);
+        rcCloned->colPosition(colPosition++);
+        rcCloned->resultType(rc->resultType());
 
-        newReturnedColumns.push_back(rc_);
+        newReturnedColumns.push_back(rcCloned);
       }
 
       newDerivedTableList.push_back(derivedSCEP);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
+     // Remove the filters as they were pushed down to union units
+      derivedSCEP->filters(nullptr);
     }
   }
-
+  // Remove the filters as they were pushed down to union units
+  csep.filters(nullptr);
   // There must be no derived at this point.
   csep.derivedTableList(newDerivedTableList);
   // Replace table list with new table list populated with union units
@@ -185,5 +249,4 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
   csep.returnedCols(newReturnedColumns);
 }
 
-}
-
+}  // namespace optimizer
