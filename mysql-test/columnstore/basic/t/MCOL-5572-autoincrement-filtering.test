@@ -2,6 +2,12 @@
 --source ../include/functions.inc
 --source ../include/syscatalog_mysql.sql
 
+if ($MASTER_MYPORT)
+{
+  # Running without --extern
+  --skip Only works with --extern (will work without extern when cleanup issues are fixed)
+}
+
 SET default_storage_engine=columnstore;
 
 --disable_warnings
