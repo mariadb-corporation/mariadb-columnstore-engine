@@ -10,3 +10,4 @@ INSERT INTO cs1 VALUES('i',0),('i',0),('ii',0);
 SELECT c,regr_count(d,length(c)) f FROM cs1 GROUP BY 1 ORDER BY 1;
 SELECT * FROM (SELECT c,regr_count(d,length(c)) f FROM cs1 GROUP BY 1 ORDER BY 1)a;
 DROP DATABASE mcol_4465;
+--source ../include/drop_functions.inc
