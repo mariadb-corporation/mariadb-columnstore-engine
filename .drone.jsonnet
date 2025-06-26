@@ -697,8 +697,8 @@ local FinalPipeline(branch, event) = {
   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
   for a in ["amd64"]
   for b in std.objectFields(platforms)
-  for platform in ["rockylinux:8"]
-  for flag in ["gcc-toolset"]
+  for platform in ["ubuntu:24.04"]
+  for flag in ["ASan", "UBSan"]
   for triggeringEvent in events
   for server in servers[current_branch]
 ]
