@@ -83,6 +83,7 @@ class ClusterHandler():
                 r_json = r.json()
                 if len(r_json.get('services', 0)) == 0:
                     r_json['dbrm_mode'] = 'offline'
+                    r_json['cluster_mode'] = 'offline'
 
                 response[f'{str(node)}'] = r_json
                 num_nodes += 1

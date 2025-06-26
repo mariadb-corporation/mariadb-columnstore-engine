@@ -1,4 +1,5 @@
 -- source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS unsigned_joins_db;

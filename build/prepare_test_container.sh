@@ -75,8 +75,7 @@ start_container() {
     fi
 }
 
-start_container
-
+prepare_container() {
 if [[ "$RESULT" != *rocky* ]]; then
     execInnerDocker "$CONTAINER_NAME" 'sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d'
 fi
@@ -123,3 +122,11 @@ fi
 
 sleep 5
 echo "PrepareTestStage completed in $CONTAINER_NAME"
+}
+
+
+if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
+    start_container
+    prepare_container
+else warn "Container ${CONTAINER_NAME} is already running!"
+fi

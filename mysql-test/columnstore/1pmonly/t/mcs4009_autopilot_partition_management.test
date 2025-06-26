@@ -4,6 +4,7 @@
 # Author: Daniel Lee, daniel.lee@mariadb.com
 # -------------------------------------------------------------- #
 --source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 #
 --disable_warnings
 DROP DATABASE IF EXISTS mcs4009_db;
