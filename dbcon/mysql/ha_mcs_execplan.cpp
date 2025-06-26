@@ -3213,7 +3213,10 @@ CalpontSystemCatalog::ColType fieldType_MysqlToIDB(const Field* field)
 
     case DECIMAL_RESULT:
     {
-      Field_decimal* idp = (Field_decimal*)field;
+      const Field_new_decimal* idp = dynamic_cast<const Field_new_decimal*>(field);
+
+      idbassert(idp);
+
       ct.colDataType = CalpontSystemCatalog::DECIMAL;
       ct.colWidth = 8;
       ct.scale = idp->dec;
