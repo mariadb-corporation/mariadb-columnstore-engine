@@ -272,8 +272,17 @@ modify_packaging() {
     echo "Modifying_packaging..."
     cd $MDB_SOURCE_PATH
 
+    # Bypass of debian version list check in autobake
     if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
+    fi
+
+    # patch to avoid fakeroot, which is using LD_PRELOAD for libfakeroot.so
+    # and eamtmydata which is using LD_PRELOAD for libeatmydata.so and this
+    # breaks intermediate build binaries to fail with "ASan runtime does not come first in initial library list
+    if [[ $PKG_FORMAT == "deb" && $ASAN = true ]]; then
+        sed -i 's|BUILDPACKAGE_DPKGCMD+=( "fakeroot" "--" )|echo "fakeroot was disabled for ASAN build"|' debian/autobake-deb.sh
+        sed -i 's|BUILDPACKAGE_DPKGCMD+=("eatmydata")|echo "eatmydata was disabled for ASAN build"|' debian/autobake-deb.sh
     fi
 
     #disable LTO for 22.04 for now
@@ -316,7 +325,6 @@ modify_packaging() {
 }
 
 construct_cmake_flags() {
-
     MDB_CMAKE_FLAGS=(
         -DBUILD_CONFIG=mysql_release
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
@@ -777,7 +785,7 @@ if [[ $BUILD_PACKAGES = true ]]; then
     exit_code=$?
 
     if [[ $SCCACHE = true ]]; then
-        sccache --show-stats
+        sccache --show-adv-stats
     fi
 
     exit $exit_code
