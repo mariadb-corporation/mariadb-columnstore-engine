@@ -2,14 +2,26 @@
 
 set -eo pipefail
 
-CONTAINER_NAME=$1
-RESULT=$2
-STAGE=$3
-
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
 
+optparse.define short=c long=container-name desc="Name of the Docker container where mtr tests will run" variable=CONTAINER_NAME
+optparse.define short=r long=result-path desc="Path for logs and results" variable=RESULT
+optparse.define short=s long=stage desc="Test stage name" variable=STAGE
+source $(optparse.build)
+
 echo "Arguments received: $@"
+
+
+cleanup() {
+    if [[ -n $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
+        echo "Cleaning up container ${CONTAINER_NAME}..."
+        docker rm -f "${CONTAINER_NAME}" || echo "Can't remove container ${CONTAINER_NAME}!"
+    fi
+}
+#Remove the container on exit
+trap cleanup EXIT
+
 
 if [[ "$EUID" -ne 0 ]]; then
     error "Please run script as root"
@@ -86,11 +98,3 @@ echo "Saved artifacts:"
 ls -R "/drone/src/${RESULT}/"
 echo "Done reporting ${STAGE}"
 
-cleanup() {
-    if [[ -n $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
-        echo "Cleaning up container ${CONTAINER_NAME}..."
-        docker rm -f "${CONTAINER_NAME}" || echo "Can't remove container ${CONTAINER_NAME}!"
-    fi
-}
-#Remove the container on exit
-trap cleanup EXIT

@@ -9,6 +9,7 @@ optparse.define short=c long=container-name desc="Name of the Docker container w
 optparse.define short=d long=distro desc="Linux distro for which mtr is runned" variable=DISTRO
 optparse.define short=s long=suite-list desc="Comma-separated list of test suites to run" variable=MTR_SUITE_LIST
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
+optparse.define short=r long=result-path desc="Path for logs and results" variable=RESULT
 source $(optparse.build)
 
 MTR_FULL_SET="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly"
@@ -20,15 +21,24 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-if [[ -z "${CONTAINER_NAME}" ]]; then
-    echo "Please provide mtr container name as a parameter, e.g. ./run_mtr.sh -c mtr183"
+for flag in CONTAINER_NAME DISTRO EVENT MTR_SUITE_LIST RESULT; do
+  if [[ -z "${!flag}" ]]; then
+    error "Missing required flag: -${flag:0:1} / --${flag,,}"
     exit 1
-fi
+  fi
+done
 
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     error "Container '${CONTAINER_NAME}' is not running."
     exit 1
 fi
+
+#Collect the logs on exit event
+collect_logs() {
+  "${SCRIPT_LOCATION}/report_test_stage.sh" --container-name "${CONTAINER_NAME}" --result-path "${RESULT}" --stage "mtr"
+}
+trap collect_logs EXIT
+
 
 if [[ "$DISTRO" == *rocky* ]]; then
     SOCKET_PATH="/var/lib/mysql/mysql.sock"

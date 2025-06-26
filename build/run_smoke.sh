@@ -5,19 +5,29 @@ set -eo pipefail
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
 
-CONTAINER_NAME="$1"
+optparse.define short=c long=container-name desc="Name of the Docker container where mtr tests will run" variable=CONTAINER_NAME
+optparse.define short=r long=result-path desc="Path for logs and results" variable=RESULT
+source $(optparse.build)
 
 echo "Arguments received: $@"
 
-if [[ "$EUID" -ne 0 ]]; then
-  error "Please run script as root"
-  exit 1
-fi
+for flag in CONTAINER_NAME RESULT; do
+  if [[ -z "${!flag}" ]]; then
+    error "Missing required flag: -${flag:0:1} / --${flag,,}"
+    exit 1
+  fi
+done
 
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
   error "Container '${CONTAINER_NAME}' is not running."
   exit 1
 fi
+
+#Collect the logs on exit event
+collect_logs(){
+  "${SCRIPT_LOCATION}/report_test_stage.sh" --container-name "${CONTAINER_NAME}" --result-path "${RESULT}" --stage "smoke"
+}
+trap collect_logs EXIT
 
 message "Running smoke checks..."
 
@@ -38,3 +48,4 @@ execInnerDocker "$CONTAINER_NAME" 'systemctl restart mariadb-columnstore'
 sleep 10
 
 execInnerDocker "$CONTAINER_NAME" 'mariadb -e "INSERT INTO test.t1 VALUES (2); SELECT * FROM test.t1;"'
+

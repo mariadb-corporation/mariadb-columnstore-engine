@@ -56,10 +56,6 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
 
 
 local any_branch = "**";
-local platforms_custom = platforms[current_branch];
-local platforms_arm_custom = platforms_arm[current_branch];
-
-local platforms_mtr = platforms[current_branch];
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 
@@ -95,18 +91,6 @@ local upgrade_test_lists = {
     },
 };
 
-local testRun(platform) =
-  local platform_map = {
-    "rockylinux:8": "ctest3 -R columnstore: -j $(nproc) --output-on-failure",
-    "rockylinux:9": "ctest3 -R columnstore: -j $(nproc) --output-on-failure",
-    "debian:12": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
-    "ubuntu:20.04": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
-    "ubuntu:22.04": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
-    "ubuntu:24.04": "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
-
-  };
-  platform_map[platform];
-
 local gcc_version = "11";
 
 local rockylinux8_deps = "dnf install -y 'dnf-command(config-manager)' " +
@@ -139,15 +123,12 @@ local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
 
 local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
-  local init = if (pkg_format == "rpm") then "/usr/lib/systemd/systemd" else "systemd",
   local mtr_path = if (pkg_format == "rpm") then "/usr/share/mysql-test" else "/usr/share/mysql/mysql-test",
   local cmapi_path = "/usr/share/columnstore/cmapi",
   local etc_path = "/etc/columnstore",
   local socket_path = if (pkg_format == "rpm") then "/var/lib/mysql/mysql.sock" else "/run/mysqld/mysqld.sock",
-  local config_path_prefix = if (pkg_format == "rpm") then "/etc/my.cnf.d/" else "/etc/mysql/mariadb.conf.d/50-",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
-  // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == "**") then "" else branch + "/",
   local brancht = if (branch == "**") then "" else branch + "-",
@@ -256,7 +237,12 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --packages-url " + packages_url +
     " --do-setup " + std.toString(do_setup) + '"',
 
-  local reportTestStage(containerName, result, stage) = 'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/report_test_stage.sh " + containerName + " " + result + " " + stage + '"',
+  local reportTestStage(containerName, result, stage) =
+    'sh -c "apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/report_test_stage.sh' +
+    ' --container-name ' + containerName +
+    ' --result-path ' + result +
+    ' --stage ' + stage + '"',
+
 
   _volumes:: {
     mdb: {
@@ -275,20 +261,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true),
-      "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh " + getContainerName("smoke"),
+      "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh" +
+      ' --container-name ' + getContainerName("smoke") +
+      ' --result-path ' + result,
     ],
-  },
-  smokelog:: {
-    name: "smokelog",
-    depends_on: ["smoke"],
-    image: "docker:28.2.2",
-    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
-    commands: [
-      reportTestStage(getContainerName("smoke"), result, "smoke"),
-    ],
-    when: {
-      status: ["success", "failure"],
-    },
   },
   upgrade(version):: {
     name: "upgrade-test from " + version,
@@ -301,7 +277,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       },
     },
     commands: [
-      // why do we mount cgroups here, but miss it on other steps?
       prepareTestContainer(getContainerName("upgrade") + version, result, false),
       if (pkg_format == "deb")
       then execInnerDocker('bash -c "./upgrade_setup_deb.sh ' + version + " " + result + " " + arch + " " + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
@@ -348,20 +323,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
+      ' --result-path ' + result +
       ' --triggering-event ' + event,
     ],
-  },
-  mtrlog:: {
-    name: "mtrlog",
-    depends_on: ["mtr"],
-    image: "docker:28.2.2",
-    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
-    commands: [
-      reportTestStage(getContainerName("mtr"), result, "mtr"),
-    ],
-    when: {
-      status: ["success", "failure"],
-    },
   },
   regression(name, depends_on):: {
     name: name,
@@ -411,7 +375,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   dockerfile:: {
     name: "dockerfile",
     depends_on: ["publish pkg", "publish cmapi build"],
-    //failure: 'ignore',
     image: "alpine/git:2.49.0",
     environment: {
       DOCKER_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
@@ -498,7 +461,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   multi_node_mtr:: {
     name: "mtr",
     depends_on: ["dockerhub"],
-    //failure: 'ignore',
     image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker],
     environment: {
@@ -531,7 +493,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   type: "docker",
   name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParams, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
-  // [if arch == 'arm64' then 'node']: { arch: 'arm64' },
   clone: { depth: 10 },
   steps: [
            {
@@ -585,8 +546,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_REGION: "us-east-1",
                SCCACHE_S3_USE_SSL: "true",
                SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + "${DRONE_PULL_REQUEST}",
-               //SCCACHE_ERROR_LOG: '/tmp/sccache_log.txt',
-               //SCCACHE_LOG: 'debug',
              },
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
@@ -640,7 +599,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              commands: [
                "cd /mdb/" + builddir,
                testPreparation(platform),
-               testRun(platform),
+
+               if (platform == "rockylinux:8" || platform == "rockylinux:9")
+               then "ctest3 -R columnstore: -j $(nproc) --output-on-failure"
+               else "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
              ],
            },
            {
@@ -676,12 +638,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.publish()] +
          (if (event == "cron") then [pipeline.publish("pkg latest", "latest")] else []) +
          [pipeline.smoke] +
-         [pipeline.smokelog] +
-         [pipeline.publish("smokelog")] +
+         [pipeline.publish("smoke")] +
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
-         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish("mtr")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +
@@ -694,9 +655,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     event: [event],
     branch: [branch],
   },
-  //  + (if event == 'cron' then {
-  //        cron: ['nightly-' + std.strReplace(branch, '.', '-')],
-  //      } else {}),
 };
 
 local FinalPipeline(branch, event) = {
@@ -749,11 +707,11 @@ local FinalPipeline(branch, event) = {
 
 [
   Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
-  for p in platforms_custom
+  for p in platforms[current_branch]
 ] +
 // [
 //   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
-//   for p in platforms_arm_custom
+//   for p in platforms_arm[current_branch];
 // ]
 // +
 [

@@ -24,6 +24,12 @@ if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
   exit 1
 fi
 
+##Collect the logs on exit event
+#collect_logs(){
+#  "${SCRIPT_LOCATION}/report_test_stage.sh" --container-name "${CONTAINER_NAME}" --result-path "${RESULT}" --stage "regression"
+#}
+#trap collect_logs EXIT
+
 BUILD_DIR="verylongdirnameforverystrangecpackbehavior"
 
 prepare_regression() {
