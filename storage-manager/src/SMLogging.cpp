@@ -21,12 +21,6 @@
 
 using namespace std;
 
-namespace
-{
-storagemanager::SMLogging* smLog = NULL;
-boost::mutex m;
-};  // namespace
-
 namespace storagemanager
 {
 SMLogging::SMLogging()
