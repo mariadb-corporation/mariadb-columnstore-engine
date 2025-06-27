@@ -89,7 +89,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
 #define DECLARE_INT_ARG(name, stor, min, max, desc) \
     (name,\
       po::value<int>(&stor)\
-        ->notifier([this](auto&& value) { checkIntArg(name, min, max, value); }),\
+        ->notifier([](auto&& value) { checkIntArg(name, min, max, value); }),\
       desc)
 
     fOptions->add_options()
@@ -136,7 +136,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "default is '\\'")
       ("headers,O",
         po::value<int>(&fSkipRows)->implicit_value(1)
-          ->notifier([this](auto&& value) { checkIntArg("headers,O", 0, INT_MAX, value); }),
+          ->notifier([](auto&& value) { checkIntArg("headers,O", 0, INT_MAX, value); }),
         "Number of header rows to skip.")
       ("binary-mode,I", po::value<int>(),
         "Import binary data; how to treat NULL values:\n"
