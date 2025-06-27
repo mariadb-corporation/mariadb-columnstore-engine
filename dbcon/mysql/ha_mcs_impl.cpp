@@ -4248,19 +4248,6 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
       ifs.close();
       csep->unserialize(bs1);
 #endif
-
-      if (ci->traceFlags & 1)
-      {
-        cerr << "---------------- EXECUTION PLAN ----------------" << endl;
-        cerr << *csep << endl;
-        cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-      }
-      else
-      {
-        IDEBUG(cout << "---------------- EXECUTION PLAN ----------------" << endl);
-        IDEBUG(cerr << *csep << endl);
-        IDEBUG(cout << "-------------- EXECUTION PLAN END --------------\n" << endl);
-      }
     }
   }  // end of execution plan generation
 

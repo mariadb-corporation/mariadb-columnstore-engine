@@ -79,9 +79,6 @@ SubQueryTransformer::~SubQueryTransformer()
 SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPlan* csep,
                                               bool subInFromClause)
 {
-  if (fOutJobInfo->trace)
-    cout << (*csep) << endl;
-
     // Setup job info, job list and error status relation.
   fSubJobInfo = new JobInfo(fOutJobInfo->rm);
   fSubJobInfo->sessionId = fOutJobInfo->sessionId;
