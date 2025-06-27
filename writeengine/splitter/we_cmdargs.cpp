@@ -99,6 +99,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Application read buffer size (in bytes)")
       DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
       ("verbose,v", po::value<string>())
+      ("silent,N", po::bool_switch(&fConsoleOutput))
       DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
           "Maximum number of allowable error per table per PM")
       ("file-path,f", po::value<string>(&fPmFilePath),
