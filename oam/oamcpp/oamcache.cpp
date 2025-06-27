@@ -73,7 +73,7 @@ void OamCache::checkReload()
   idbassert(txt != "");
   numDBRoots = config->fromText(txt);
 
-  dbRootPMMap.reset(new map<int, int>());
+  dbRootPMMap.reset(new map<int, set<int>>());
 
   // cerr << "reloading oamcache\n";
   for (uint32_t i = 0; i < dbroots.size(); i++)
@@ -144,15 +144,15 @@ void OamCache::checkReload()
   systemName = config->getConfig("SystemConfig", "SystemName");
 }
 
-OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
-{
-  return dbRootPMMap;
-}
-
-OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
-{
-  return dbRootConnectionMap;
-}
+//OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
+//{
+//  return dbRootPMMap;
+//}
+//
+//OamCache::dbRootPMMap_t OamCache::getDBRootToConnectionMap()
+//{
+//  return dbRootConnectionMap;
+//}
 
 OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
 {
@@ -235,6 +235,16 @@ string OamCache::getModuleName()
   moduleFile.close();
 
   return moduleName;
+}
+
+bool OamCache::isAccessibleBy(int dbRoot, int pmId)
+{
+  return dbRootPMMap[dbRoot].contains(pmId);
+}
+
+bool OamCache::isOffline(int dbRoot)
+{
+  return dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end();
 }
 
 } /* namespace oam */

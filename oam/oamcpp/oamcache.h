@@ -20,6 +20,7 @@
 
 #include <unistd.h>
 #include <map>
+#include <set>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -31,7 +32,7 @@ namespace oam
 class OamCache
 {
  public:
-  typedef boost::shared_ptr<std::map<int, int> > dbRootPMMap_t;
+  typedef boost::shared_ptr<std::map<int, std::set<int>> > dbRootPMMap_t;
   typedef std::vector<int> dbRoots;
   typedef boost::shared_ptr<std::map<int, dbRoots> > PMDbrootsMap_t;
   virtual ~OamCache() = default;
@@ -42,9 +43,18 @@ class OamCache
     mtime = 0;
   }
 
-  dbRootPMMap_t getDBRootToPMMap();
-  dbRootPMMap_t getDBRootToConnectionMap();
+//  dbRootPMMap_t getDBRootToPMMap();
+//  dbRootPMMap_t getDBRootToConnectionMap();
   PMDbrootsMap_t getPMToDbrootsMap();
+
+  int getClosestPM(int dbroot); // who can access dbroot's records - either owner or us.
+  int getClosestConnection(int dbroot); // connection index to owner's PM or ours PM - who can access dbRoot.
+  int getOwnerConnection(int dbroot); // connection index to owner's PM.
+  int getOwnerPM(int dbroot); // Owner's PM index.
+  bool isAccessibleBy(int dbRoot, int pmId);
+    //// a necessary DB root is offline
+    //if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+  bool isOffline(int dbRoot); // not registered in map.
   uint32_t getDBRootCount();
   DBRootConfigList& getDBRootNums();
   std::vector<int>& getModuleIds();

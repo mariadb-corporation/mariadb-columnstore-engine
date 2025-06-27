@@ -611,8 +611,8 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
   try
   {
     OamCache* oamcache = OamCache::makeOamCache();
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    int pmNum = (*dbRootPMMap)[useDBRoot];
+    //boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
+    int pmNum = oamcache->getOwnerPM(useDBRoot); //(*dbRootPMMap)[useDBRoot];
 
     fWEClient->write(bytestream, (uint32_t)pmNum);
     bsIn.reset(new ByteStream());

@@ -500,7 +500,7 @@ class DMLPackageProcessor
   uint32_t fPMCount;
   WriteEngine::WEClients* fWEClient;
   BRM::DBRM* fDbrm;
-  boost::shared_ptr<std::map<int, int> > fDbRootPMMap;
+  boost::shared_ptr<std::map<int, std::set<int>> > fDbRootPMMap;
   oam::Oam fOam;
   bool fRollbackPending;  // When set, any derived object should stop what it's doing and cleanup in
                           // preparation for a Rollback

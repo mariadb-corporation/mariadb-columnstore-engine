@@ -846,8 +846,8 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
     lockGrabbed = true;
 
     oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-    oam::OamCache::dbRootPMMap_t dbRootPmMap = oamCache->getDBRootToPMMap();
-    std::map<int, int>::const_iterator mapIter;
+    //oam::OamCache::dbRootPMMap_t dbRootPmMap = oamCache->getDBRootToPMMap();
+    //std::map<int, int>::const_iterator mapIter;
     std::set<int> pmSet;
 
     // Construct relevant list of PMs based on the DBRoots associated
@@ -856,9 +856,9 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
     {
       mapIter = dbRootPmMap->find(lockInfo.dbrootList[k]);
 
-      if (mapIter != dbRootPmMap->end())
+      if (!oamCache->isOffline(lockInfo.dbrootList[k]))
       {
-        int pm = mapIter->second;
+        int pm = oamCache->getOwnerPM(lockInfo.dbrootList[k]);
         pmSet.insert(pm);
       }
       else
