@@ -843,7 +843,8 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
     if (tryCnt >= 5)
       // throw runtime_error("Error occurred when calling system catalog. ExeMgr is not functioning.");
-      throw IDBExcept(ERR_SYSTEM_CATALOG);
+      Message::Args& args = "Cannot connect to ExeMgr re-connections tries exceeded";
+      throw IDBExcept(ERR_SYSTEM_CATALOG, args);
   }
 
   csep.sessionID(fSessionID);
@@ -910,7 +911,9 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
       if (status >= 1000)  // new error system
         throw IDBExcept(status);
       else
-        throw IDBExcept(ERR_SYSTEM_CATALOG);
+        Message::Args args;
+        args.add("rowGroup status: ", status);
+        throw IDBExcept(ERR_SYSTEM_CATALOG, args);
     }
 
     if (rowCount > 0)
