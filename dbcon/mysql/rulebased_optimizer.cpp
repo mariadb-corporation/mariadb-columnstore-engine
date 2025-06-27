@@ -18,6 +18,7 @@
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
+#include "existsfilter.h"
 #include "logicoperator.h"
 #include "operator.h"
 #include "predicateoperator.h"
@@ -93,6 +94,37 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep) const
 
     auto& unionUnitLocal = *unionUnitPtr;
     rewrite |= walk(unionUnitLocal);
+  }
+
+  if (csep.filters() != nullptr)
+  {
+    bool rewriteLocal = false;
+    std::vector<execplan::ParseTree*> stack;
+    stack.push_back(csep.filters());
+    while (!stack.empty())
+    {
+      execplan::ParseTree* node = stack.back();
+      stack.pop_back();
+      if (node == nullptr)
+        continue;
+      
+      auto* existsFilter = dynamic_cast<execplan::ExistsFilter*>(node->data());
+      if (existsFilter)
+      {
+        if (matchRule(*existsFilter->sub()))
+        {
+          applyRule(*existsFilter->sub());
+          rewriteLocal = true;
+        }
+      }
+      
+      if (node->right())
+        stack.push_back(node->right());
+      if (node->left())
+        stack.push_back(node->left());
+    }
+    if (rewriteLocal)
+      rewrite |= rewriteLocal;
   }
 
   if (matchRule(csep))
