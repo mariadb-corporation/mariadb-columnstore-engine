@@ -53,7 +53,6 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
@@ -62,6 +61,7 @@ optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN defaul
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 
 source $(optparse.build)
 
@@ -81,6 +81,36 @@ pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
     pkg_format="rpm"
 fi
+
+install_sccache() {
+    if [[ "$SCCACHE" == false ]]; then
+      return
+    fi
+
+    if [[ "$(arch)" == "x86_64" ]]; then
+      sccache_arch="x86_64"
+    else
+      sccache_arch="aarch64"
+    fi
+
+    message "getting sccache..."
+
+    rewrite_ubuntu_mirror #TODO
+
+    if command -v apt-get &>/dev/null; then
+      apt-get clean
+      apt-get update -y
+      apt-get install -y curl
+    elif command -v yum &>/dev/null; then
+      yum install -y curl
+    fi || true
+
+    curl -L -o sccache.tar.gz \
+      "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
+
+    tar xzf sccache.tar.gz
+    install sccache*/sccache /usr/local/bin/ && echo "sccache installed"
+}
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
@@ -744,6 +774,7 @@ construct_cmake_flags
 init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
+
     modify_packaging
     build_package
     message_splitted "PACKAGES BUILD FINISHED"

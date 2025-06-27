@@ -556,12 +556,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
-                         "--build-packages --install-deps --sccache " +
+                         "--build-packages --install-deps --sccache --sccache-arch " + arch +
                          " " + customBootstrapParams +
                          " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
-                         "/mdb/" + builddir + "/" + result + '/build.log"',
-                         "sccache --show-stats",
+                         "/mdb/" + builddir + "/" + result + '/build.log "'
                        ],
            },
            {
