@@ -23,6 +23,8 @@
 #include "predicateoperator.h"
 #include "simplefilter.h"
 #include "rulebased_optimizer.h"
+#include <cstdint>
+#include <limits>
 
 namespace optimizer
 {
@@ -128,7 +130,8 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
 // TODO add engine-independent statistics-derived ranges
-execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep)
+execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep,
+                                                      std::pair<uint64_t, uint64_t>& bound)
 {
   // INV this is SimpleColumn we supply as an argument
   // TODO find the suitable column using EI statistics.
@@ -139,10 +142,11 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep)
   tableKeyColumnLeftOp->resultType(column->resultType());
 
   // TODO Nobody owns this allocation and cleanup only depends on delete in ParseTree nodes' dtors.
-  auto* filterColLeftOp = new execplan::ConstantColumnUInt(42ULL, 0, 0);
+  auto* filterColLeftOp = new execplan::ConstantColumnUInt(bound.second, 0, 0);
   // set TZ
   // There is a question with ownership of the const column
-  execplan::SOP ltOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="));
+  // WIP here we lost upper bound value if predicate is not changed to weak lt 
+  execplan::SOP ltOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
   ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
   ltOp->resultType(ltOp->operationType());
 
@@ -151,7 +155,7 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep)
   auto tableKeyColumnRightOp = new execplan::SimpleColumn(*column);
   tableKeyColumnRightOp->resultType(column->resultType());
   // TODO hardcoded column type and value
-  auto* filterColRightOp = new execplan::ConstantColumnUInt(30ULL, 0, 0);
+  auto* filterColRightOp = new execplan::ConstantColumnUInt(bound.first, 0, 0);
 
   execplan::SOP gtOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator(">="));
   gtOp->setOpType(filterColRightOp->resultType(), tableKeyColumnRightOp->resultType());
@@ -179,11 +183,13 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 {
   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
   unionVec.reserve(numberOfLegs);
-  for (size_t i = 0; i < numberOfLegs; ++i)
+  std::vector<std::pair<uint64_t, uint64_t>> bounds({{0, 3000961},
+                                                    {3000961, std::numeric_limits<uint64_t>::max()}});
+  for (auto bound : bounds)
   {
     auto clonedCSEP = csep.cloneWORecursiveSelects();
     // Add BETWEEN based on key column range
-    clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP));
+    clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP, bound));
     unionVec.push_back(clonedCSEP);
   }
 
@@ -236,7 +242,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep)
       newDerivedTableList.push_back(derivedSCEP);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
-     // Remove the filters as they were pushed down to union units
+      // Remove the filters as they were pushed down to union units
       derivedSCEP->filters(nullptr);
     }
   }
