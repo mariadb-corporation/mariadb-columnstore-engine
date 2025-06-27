@@ -383,8 +383,9 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 
     while (!fInFile.eof() && aIdx < getBatchQty())
     {
-      if (fSkipRows-- > 0)
+      if (fSkipRows > 0)
       {
+        fSkipRows--;
         fInFile.getline(fBuff, fBuffSize - 1);
         if (fSdh.getDebugLvl() > 3)
         {
