@@ -131,10 +131,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       AWS_DEFAULT_REGION: "us-east-1",
     },
     commands: [
+      "sleep 10",
       "ls " + result,
       '[ -z "$(ls -A "' + result + '")" ] && echo Nothing to publish! && exit 1',
 
-      "aws s3 sync " + result + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
+      "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors --debug",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
       make_clickable_link(publish_pkg_url),
       "rm -rf " + result + "/*",
@@ -574,10 +575,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish("mtr")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
-         [pipeline.publish("regressionlog")] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          // (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
-         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
+         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else [pipeline.publish("regressionlog")]),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],
   trigger: {
