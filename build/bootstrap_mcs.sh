@@ -781,6 +781,9 @@ if [[ $BUILD_PACKAGES = true ]]; then
     build_package
     message_splitted "PACKAGES BUILD FINISHED"
     run_unit_tests
+    if [[ $SCCACHE = true ]]; then
+      sccache --show-stats
+    fi
     exit 0
 fi
 
