@@ -283,6 +283,12 @@ const string& TypeHandlerBit::name() const
   return xname;
 }
 
+const string& TypeHandlerEnum::name() const
+{
+  static const string xname = "ENUM";
+  return xname;
+}
+
 TypeHandlerBit mcs_type_handler_bit;
 
 TypeHandlerSInt8 mcs_type_handler_sint8;
@@ -296,6 +302,8 @@ TypeHandlerUInt16 mcs_type_handler_uint16;
 TypeHandlerUInt24 mcs_type_handler_uint24;
 TypeHandlerUInt32 mcs_type_handler_uint32;
 TypeHandlerUInt64 mcs_type_handler_uint64;
+
+TypeHandlerEnum mcs_type_handler_enum;
 
 TypeHandlerSFloat mcs_type_handler_sfloat;
 TypeHandlerSDouble mcs_type_handler_sdouble;
@@ -343,6 +351,8 @@ const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode,
     case SystemCatalog::LONGDOUBLE: return &mcs_type_handler_slongdouble;
     case SystemCatalog::UFLOAT: return &mcs_type_handler_ufloat;
     case SystemCatalog::UDOUBLE: return &mcs_type_handler_udouble;
+
+    case SystemCatalog::ENUM: return &mcs_type_handler_enum;
 
     case SystemCatalog::DECIMAL:
       if (static_cast<uint32_t>(ct.colWidth) < datatypes::MAXDECIMALWIDTH)
@@ -433,6 +443,8 @@ const TypeHandler* TypeHandler::find_by_ddltype(const ddlpackage::ColumnType& ct
     case ddlpackage::DDL_UNSIGNED_MEDINT: return &mcs_type_handler_uint24;
     case ddlpackage::DDL_UNSIGNED_INT: return &mcs_type_handler_uint32;
     case ddlpackage::DDL_UNSIGNED_BIGINT: return &mcs_type_handler_uint64;
+
+    case ddlpackage::DDL_ENUM: return &mcs_type_handler_sint16;
 
     case ddlpackage::DDL_UNSIGNED_DECIMAL:
     case ddlpackage::DDL_UNSIGNED_NUMERIC:
@@ -1543,10 +1555,27 @@ boost::any TypeHandlerVarbinary::getNullValueForType(const SystemCatalog::TypeAt
 /****************************************************************************/
 
 boost::any TypeHandlerBit::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
-                                             const ConvertFromStringParam& prm, const std::string& data,
-                                             bool& pushWarning) const
+  const ConvertFromStringParam& prm, const std::string& data,
+  bool& pushWarning) const
 {
   return dataconvert::DataConvert::StringToBit(colType, prm, data, pushWarning);
+}
+
+boost::any TypeHandlerEnum::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+  const ConvertFromStringParam&, const std::string& data,
+  bool&) const
+{
+  unsigned short val = 0;
+
+  for (; val<colType.enumVals.size(); ++val) {
+    if (colType.enumVals[val] == data) {
+      break; 
+    }
+  }
+
+  boost::any value = val;
+
+  return value;
 }
 
 boost::any TypeHandlerSInt8::convertFromString(const SystemCatalog::TypeAttributesStd& colType,

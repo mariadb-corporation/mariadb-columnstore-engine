@@ -217,6 +217,7 @@ enum DDL_DATATYPES
 /** @brief Datatype string list
  */
 const std::string DDLDatatypeString[] = {"bit",
+                                         "enum",
                                          "tinyint",
                                          "char",
                                          "smallint",
@@ -261,6 +262,7 @@ const std::string AlterActionString[] = {
  */
 const int DDLDatatypeLength[] = {
     1,  // BIT
+    2,  // ENUM
     1,  // TINYINT
     1,  // CHAR
     2,  // SMALLINT

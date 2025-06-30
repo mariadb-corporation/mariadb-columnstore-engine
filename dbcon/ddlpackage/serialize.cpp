@@ -1138,6 +1138,7 @@ int ColumnType::unserialize(ByteStream& bytestream)
   bytestream >> nextVal;
   bytestream >> charsetNum;
   bytestream >> enumValuesNum;
+  fEnumValues.clear();
 
   for (size_t i = 0; i<fEnumValues.size(); ++i) {
     std::string value;

@@ -113,6 +113,8 @@ const string colDataTypeToString(CalpontSystemCatalog::ColDataType cdt)
   {
     case CalpontSystemCatalog::BIT: return "bit"; break;
 
+    case CalpontSystemCatalog::ENUM: return "enum"; break;
+
     case CalpontSystemCatalog::TINYINT: return "tinyint"; break;
 
     case CalpontSystemCatalog::CHAR: return "char"; break;
