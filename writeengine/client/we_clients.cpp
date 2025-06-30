@@ -154,6 +154,21 @@ struct QueueShutdown
     x.shutdown();
   }
 };
+
+/**
+ * This function checks if the WriteEngineServer (WES) is configured
+ * for the specified node in the configuration.
+ * @param config Pointer to the configuration object
+ * @param fOtherEnd The name of the node to check
+ * @return true if WES is configured, false otherwise
+ */
+bool isWESConfigured(config::Config* config, const std::string& fOtherEnd)
+{
+  // Check if WES IP address record exists in the config (if not, this is a read-only node)
+  std::string otherEndDnOrIPStr = config->getConfig(fOtherEnd, "IPAddr");
+  return !(otherEndDnOrIPStr.empty() || otherEndDnOrIPStr == "unassigned");
+}
+
 }  // namespace
 
 namespace WriteEngine
@@ -224,6 +239,13 @@ void WEClients::Setup()
     snprintf(buff, sizeof(buff), "pm%u_WriteEngineServer", moduleID);
     string fServer(buff);
 
+    // Check if WES is configured for this module
+    if (!isWESConfigured(rm->getConfig(), fServer))
+    {
+      writeToLog(__FILE__, __LINE__, "Skipping WriteEngineServer client creation for " + fServer + " as the node is read-only", LOG_TYPE_INFO);
+      continue;
+    }
+
     boost::shared_ptr<MessageQueueClient> cl(new MessageQueueClient(fServer, rm->getConfig()));
     boost::shared_ptr<boost::mutex> nl(new boost::mutex());
 
@@ -285,6 +307,11 @@ void WEClients::Setup()
       writeToLog(__FILE__, __LINE__, "Could not connect to " + fServer, LOG_TYPE_ERROR);
     }
   }
+}
+
+bool WEClients::isConnectionReadonly(uint32_t connection)
+{
+  return fPmConnections[connection] == nullptr;
 }
 
 int WEClients::Close()

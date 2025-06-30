@@ -114,6 +114,18 @@ class WEClients
     return pmCount;
   }
 
+  uint32_t getRWConnectionsCount()
+  {
+    uint32_t count = 0;
+    for (uint32_t i = 0; i < fPmConnections.size(); i++)
+    {
+      count += fPmConnections[i] != nullptr;
+    }
+    return count;
+  }
+
+  bool isConnectionReadonly(uint32_t connection);
+
  private:
   WEClients(const WEClients& weClient);
   WEClients& operator=(const WEClients& weClient);
