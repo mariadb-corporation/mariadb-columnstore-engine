@@ -1,6 +1,7 @@
 #
 #This test verifies show databases and tables with engine=columnstore.
 #
+--source ../include/disable_11.4.inc
 -- source ../include/have_columnstore.inc
 --source ../include/detect_maxscale.inc
 -- source include/have_innodb.inc
