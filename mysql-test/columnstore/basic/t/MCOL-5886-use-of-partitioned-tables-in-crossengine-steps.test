@@ -6,6 +6,12 @@ DROP DATABASE IF EXISTS MCOL5886;
 CREATE DATABASE MCOL5886;
 USE MCOL5886;
 
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
 --exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
 --exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
 --exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
