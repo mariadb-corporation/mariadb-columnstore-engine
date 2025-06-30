@@ -95,8 +95,6 @@ install_sccache() {
 
     message "getting sccache..."
 
-    rewrite_ubuntu_mirror #TODO
-
     if command -v apt-get &>/dev/null; then
       apt-get clean
       apt-get update -y
@@ -109,8 +107,10 @@ install_sccache() {
       "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
 
     tar xzf sccache.tar.gz
-    install sccache*/sccache /usr/local/bin/ && echo "sccache installed"
+    install sccache*/sccache /usr/local/bin/ && message "sccache installed"
 }
+
+install_sccache
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then

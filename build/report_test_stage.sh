@@ -22,6 +22,12 @@ cleanup() {
 #Remove the container on exit
 trap cleanup EXIT
 
+for flag in CONTAINER_NAME RESULT STAGE; do
+  if [[ -z "${!flag}" ]]; then
+    error "Missing required flag: -${flag:0:1} / --${flag,,}"
+    exit 1
+  fi
+done
 
 if [[ "$EUID" -ne 0 ]]; then
     error "Please run script as root"

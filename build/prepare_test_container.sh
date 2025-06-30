@@ -103,6 +103,7 @@ fi
 
 # install deps
 if [[ "$RESULT" == *rocky* ]]; then
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'dnf install -y dnf-plugins-core && dnf config-manager --set-enabled crb'
     execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release expect findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
 else
     change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
@@ -128,5 +129,5 @@ echo "PrepareTestStage completed in $CONTAINER_NAME"
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     start_container
     prepare_container
-else warn "Container ${CONTAINER_NAME} is already running!"
+else message "Container ${CONTAINER_NAME} is already running, skipping prepare step"
 fi

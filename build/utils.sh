@@ -548,15 +548,6 @@ function execInnerDockerNoTTY() {
   fi
 }
 
-function change_ubuntu_mirror() {
-  local region="$1"
-  message "Changing Ubuntu mirror to $region"
-  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list 2>/dev/null || true
-  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
-  cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null | grep archive || true
-  message_split
-}
-
 function execInnerDockerWithRetry() {
   local max_retries=5
   local container_name=$1
@@ -581,6 +572,15 @@ function execInnerDockerWithRetry() {
   fi
 
   return 0
+}
+
+function change_ubuntu_mirror() {
+  local region="$1"
+  message "Changing Ubuntu mirror to $region"
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list 2>/dev/null || true
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+  cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null | grep archive || true
+  message_split
 }
 
 change_ubuntu_mirror_in_docker() {
