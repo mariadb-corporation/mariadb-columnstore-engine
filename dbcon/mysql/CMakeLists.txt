@@ -23,6 +23,8 @@ set(libcalmysql_SRCS
     ha_mcs_impl.cpp
     ha_mcs_dml.cpp
     ha_mcs_ddl.cpp
+    ha_mcs_execplan_helpers.cpp
+    ha_mcs_execplan_walks.cpp
     ha_mcs_execplan.cpp
     ha_scalar_sub.cpp
     ha_in_sub.cpp
