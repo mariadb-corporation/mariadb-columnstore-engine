@@ -2199,34 +2199,32 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
     //@Bug 3602. Error message for MySql syntax for autoincrement
     algorithm::to_upper(ddlStatement);
 
-    std::string errMsg = "The syntax ";
     if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
     {
-       errMsg +=  "auto_increment is not supported in Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax auto_increment is not supported in Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
     else if(ddlStatement.find("RENAME COLUMN") != string::npos)
     {
-       errMsg += "rename column is not supported by Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax rename column is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
     else if(ddlStatement.find("MAX_ROWS") != string::npos || ddlStatement.find("MIN_ROWS") != string::npos)
     {
-       errMsg += "min_rows/max_rows is not supported by Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax min_rows/max_rows is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
     else if(ddlStatement.find("REPLACE TABLE") != string::npos)
     {
-       errMsg +=  "replace table is not supported by Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax replace table is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
     else if(ddlStatement.find("DROP COLUMN IF EXISTS") != string::npos)
     {
-       errMsg +=  "drop column if exists is not supported by Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax drop column if exists is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
     else
     {
       //@Bug 1888,1885. update error message
-      errMsg +=  " or the data type(s) is not supported by Columnstore.";
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
     }
-    errMsg += " Please check the Columnstore syntax guide for supported syntax or data types.";
-    thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, errMsg);
+
     ci->alterTableState = cal_connection_info::NOT_ALTER;
     ci->isAlter = false;
   }
