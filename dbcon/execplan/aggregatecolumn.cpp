@@ -471,7 +471,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 
       break;
 
-    case CalpontSystemCatalog::SMALLINT:
+      case CalpontSystemCatalog::SMALLINT:
       if (row.equals<2>(SMALLINTNULL, fInputIndex))
         isNull = true;
       else

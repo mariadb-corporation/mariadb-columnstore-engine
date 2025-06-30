@@ -242,7 +242,7 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
         fResult.intVal = joblist::INTNULL;
       }
       break;
-
+    
     case execplan::CalpontSystemCatalog::UBIGINT:
     {
       // XXX: this is bandaid solution for specific customer case (MCOL-5568).

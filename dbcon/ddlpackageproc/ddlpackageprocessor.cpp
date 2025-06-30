@@ -197,6 +197,8 @@ execplan::CalpontSystemCatalog::ColDataType DDLPackageProcessor::convertDataType
 
     case ddlpackage::DDL_TEXT: colDataType = CalpontSystemCatalog::TEXT; break;
 
+    case ddlpackage::DDL_ENUM: colDataType = CalpontSystemCatalog::ENUM; break;
+
     default: throw runtime_error("Unsupported datatype!");
   }
 

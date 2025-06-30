@@ -108,6 +108,12 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
 
       break;
 
+    case (CalpontSystemCatalog::ENUM):
+      if (newType.fType == DDL_ENUM && colType.enumVals == newType.fEnumValues)
+        return true;
+
+      break;
+
     case (CalpontSystemCatalog::TINYINT):
       if (newType.fType == DDL_TINYINT && colType.precision == newType.fPrecision &&
           colType.scale == newType.fScale)
