@@ -841,10 +841,12 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
       }
     }
 
-    if (tryCnt >= 5)
+    if (tryCnt >= 5){
       // throw runtime_error("Error occurred when calling system catalog. ExeMgr is not functioning.");
-      Message::Args& args = "Cannot connect to ExeMgr re-connections tries exceeded";
+      Message::Args args;
+      args.add("Cannot connect to ExeMgr re-connections tries exceeded");
       throw IDBExcept(ERR_SYSTEM_CATALOG, args);
+    }
   }
 
   csep.sessionID(fSessionID);
@@ -910,10 +912,11 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
     {
       if (status >= 1000)  // new error system
         throw IDBExcept(status);
-      else
+      else{
         Message::Args args;
-        args.add("rowGroup status: ", status);
+        args.add("rowGroup status: " + status);
         throw IDBExcept(ERR_SYSTEM_CATALOG, args);
+      }
     }
 
     if (rowCount > 0)
@@ -962,7 +965,9 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
 
   if (bs.length() == 0)
   {
-    throw IDBExcept(ERR_LOST_CONN_EXEMGR);
+    Message::Args args;
+    args.add("look in error.log on node, having dbroot1");
+    throw IDBExcept(ERR_LOST_CONN_EXEMGR, args);
   }
 
   string emsgStr;
@@ -993,8 +998,11 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
 
     // @bug 1782. check ExeMgr connection lost
     if (bs.length() == 0)
-      throw IDBExcept(ERR_LOST_CONN_EXEMGR);
-
+    {
+      Message::Args args;
+      args.add("look in error.log on node, having dbroot1");
+      throw IDBExcept(ERR_LOST_CONN_EXEMGR, args);
+    }
     if (!rowGroup)
     {
       rowGroup.reset(new RowGroup());

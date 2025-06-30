@@ -284,7 +284,7 @@ std::string WErrorCodes::errorString(int code)
     case ERR_FILE_DISK_SPACE:
     {
       logging::Message::Args args;
-      args.add("configured by WriteEngine.MaxFileSystemDiskUsagePct in columnstore.xml");
+      args.add("configured by WriteEngine.MaxFileSystemDiskUsagePct in Columnstore.xml");
       return logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_EXTENT_DISK_SPACE, args);
       break;
     }

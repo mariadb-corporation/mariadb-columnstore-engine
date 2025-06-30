@@ -2199,7 +2199,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
     //@Bug 3602. Error message for MySql syntax for autoincrement
     algorithm::to_upper(ddlStatement);
 
-    std::string errMsg = "The syntax "
+    std::string errMsg = "The syntax ";
     if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
     {
        errMsg +=  "auto_increment is not supported in Columnstore.";
