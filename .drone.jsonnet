@@ -93,8 +93,6 @@ local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
 local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local mtr_path = if (pkg_format == "rpm") then "/usr/share/mysql-test" else "/usr/share/mysql/mysql-test",
-  local cmapi_path = "/usr/share/columnstore/cmapi",
-  local etc_path = "/etc/columnstore",
   local socket_path = if (pkg_format == "rpm") then "/var/lib/mysql/mysql.sock" else "/run/mysqld/mysqld.sock",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -182,10 +180,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "docker exec " + flags + " -t " + containerName + " " + command,
 
   local getContainerName(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
-
-  local installCmapi(containerName, pkg_format) =
-    if (pkg_format == "deb") then execInnerDocker('bash -c "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"', containerName)
-    else execInnerDocker('bash -c "yum update -y && yum install -y MariaDB-columnstore-cmapi"', containerName),
 
   local prepareTestContainer(containerName, result, do_setup) =
     'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_container.sh" +
@@ -394,17 +388,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       prepareTestContainer(getContainerName("cmapi"), result, true),
-      installCmapi(getContainerName("cmapi"), pkg_format),
-      "cd cmapi",
-      "for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:" + cmapi_path + "/$${i}/; done",
-      "docker cp run_tests.py cmapi$${DRONE_BUILD_NUMBER}:" + cmapi_path + "/",
-      execInnerDocker("systemctl start mariadb-columnstore-cmapi", getContainerName("cmapi")),
-      // set API key to /etc/columnstore/cmapi_server.conf
-      execInnerDocker('bash -c "mcs cluster set api-key --key somekey123"', getContainerName("cmapi")),
-      // copy cmapi conf file for test purposes (there are api key already set inside)
-      execInnerDocker('bash -c "cp %s/cmapi_server.conf %s/cmapi_server/"' % [etc_path, cmapi_path], getContainerName("cmapi")),
-      execInnerDocker("systemctl stop mariadb-columnstore-cmapi", getContainerName("cmapi")),
-      execInnerDocker('bash -c "cd ' + cmapi_path + ' && python/bin/python3 run_tests.py"', getContainerName("cmapi")),
+
+      'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_cmapi_test.sh' +
+      ' --container-name ' + getContainerName("cmapi") +
+      ' --pkg-format ' + pkg_format,
     ],
   },
   cmapilog:: {
@@ -520,7 +507,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          " " + customBootstrapParams +
                          " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
-                         "/mdb/" + builddir + "/" + result + '/build.log "'
+                         "/mdb/" + builddir + "/" + result + '/build.log "',
                        ],
            },
            {
