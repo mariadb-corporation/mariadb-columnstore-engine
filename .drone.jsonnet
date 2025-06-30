@@ -86,32 +86,6 @@ local upgrade_test_lists = {
     },
 };
 
-local gcc_version = "11";
-
-local rockylinux8_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                         "&& dnf config-manager --set-enabled powertools " +
-                         "&& dnf install -y gcc-toolset-" + gcc_version + " libarchive cmake " +
-                         "&& . /opt/rh/gcc-toolset-" + gcc_version + "/enable ";
-
-local rockylinux9_deps = "dnf install -y 'dnf-command(config-manager)' " +
-                         "&& dnf config-manager --set-enabled crb " +
-                         "&& dnf install -y gcc gcc-c++";
-
-local rockylinux_common_deps = " && dnf install -y git lz4 lz4-devel cppunit-devel cmake3 boost-devel snappy-devel pcre2-devel";
-
-local deb_deps = rewrite_ubuntu_mirror + "apt-get clean && apt-get update && apt-get install --yes git libboost-all-dev libcppunit-dev libsnappy-dev cmake libpcre2-dev";
-
-local testPreparation(platform) =
-  local platform_map = {
-    "rockylinux:8": rockylinux8_deps + rockylinux_common_deps,
-    "rockylinux:9": rockylinux9_deps + rockylinux_common_deps,
-    "debian:12": deb_deps,
-    "ubuntu:20.04": deb_deps,
-    "ubuntu:22.04": deb_deps,
-    "ubuntu:24.04": deb_deps,
-  };
-  platform_map[platform];
-
 local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link + "\\e]8;;\\e\\\\'";
 local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
       make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
@@ -502,7 +476,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              },
              commands: echo_running_on +
              [
-              "echo $$SERVER_REF",
+               "echo $$SERVER_REF",
                "echo $$SERVER_REMOTE",
                "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
@@ -537,7 +511,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
                        ]
-                       + get_sccache
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
@@ -575,25 +548,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              ],
            },
            {
-             name: "unittests",
-             depends_on: ["createrepo"],
-             image: img,
-             volumes: [pipeline._volumes.mdb],
-             environment: {
-               DEBIAN_FRONTEND: "noninteractive",
-             },
-             commands: [
-               "cd /mdb/" + builddir,
-               testPreparation(platform),
-
-               if (platform == "rockylinux:8" || platform == "rockylinux:9")
-               then "ctest3 -R columnstore: -j $(nproc) --output-on-failure"
-               else "cd builddir; ctest -R columnstore: -j $(nproc) --output-on-failure",
-             ],
-           },
-           {
              name: "pkg",
-             depends_on: ["unittests"],
+             depends_on: ["createrepo"],
              image: "alpine/git:2.49.0",
              when: {
                status: ["success", "failure"],

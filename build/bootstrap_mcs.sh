@@ -11,7 +11,6 @@ export CLICOLOR_FORCE=1 #cmake output
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
-CTEST_BIN_NAME=ctest
 
 RPM_CONFIG_DIR="/etc/my.cnf.d"
 DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
@@ -77,9 +76,12 @@ if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
     detect_distro
 fi
 
-pkg_format="deb"
 if [[ "$OS" == *"rocky"* ]]; then
     pkg_format="rpm"
+    CTEST_BIN_NAME=:"ctest3"
+else
+    pkg_format="deb"
+    CTEST_BIN_NAME="ctest"
 fi
 
 install_sccache() {
@@ -585,7 +587,7 @@ run_unit_tests() {
 
     message "Running unittests"
     cd $MARIA_BUILD_PATH
-    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
+    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
     cd - >/dev/null
 }
 
@@ -778,6 +780,7 @@ if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
     build_package
     message_splitted "PACKAGES BUILD FINISHED"
+    run_unit_tests
     exit 0
 fi
 
