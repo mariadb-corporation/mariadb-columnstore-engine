@@ -26,6 +26,7 @@
 #include "dbrm.h"
 #include "liboamcpp.h"
 #include "writeengine.h"
+#include "oamcache.h"
 
 #define EXPORT
 
@@ -50,7 +51,7 @@ class WE_DDLCommandClient
  private:
   BRM::DBRM fDbrm;
   WEClients* fWEClient;
-  oam::Oam fOam;
+  oam::OamCache* fOamCache;
 };
 
 }  // namespace WriteEngine

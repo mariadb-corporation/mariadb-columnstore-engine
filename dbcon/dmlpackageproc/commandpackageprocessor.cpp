@@ -845,20 +845,15 @@ void CommandPackageProcessor::clearTableLock(uint64_t uniqueId, const dmlpackage
     establishTableLockToClear(tableLockID, lockInfo);
     lockGrabbed = true;
 
-    oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-    oam::OamCache::dbRootPMMap_t dbRootPmMap = oamCache->getDBRootToPMMap();
-    std::map<int, int>::const_iterator mapIter;
     std::set<int> pmSet;
 
     // Construct relevant list of PMs based on the DBRoots associated
     // with the tableLock.
     for (unsigned int k = 0; k < lockInfo.dbrootList.size(); k++)
     {
-      mapIter = dbRootPmMap->find(lockInfo.dbrootList[k]);
-
-      if (mapIter != dbRootPmMap->end())
+      if (!oamcache()->isOffline(lockInfo.dbrootList[k]))
       {
-        int pm = mapIter->second;
+        int pm = oamcache()->getOwnerPM(lockInfo.dbrootList[k]);
         pmSet.insert(pm);
       }
       else
