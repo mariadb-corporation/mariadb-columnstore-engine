@@ -12,24 +12,22 @@ source "$SCRIPT_LOCATION"/utils.sh
 
 optparse.define short=c long=container-name desc="Name of the Docker container where cmapi tests will run" variable=CONTAINER_NAME
 optparse.define short=f long=pkg-format desc="Package format" variable=PKG_FORMAT
+optparse.define short=r long=result-path desc="Path for logs and results" variable=RESULT
 source $(optparse.build)
 echo "Arguments received: $@"
 
-for flag in CONTAINER_NAME PKG_FORMAT; do
+for flag in CONTAINER_NAME PKG_FORMAT RESULT; do
   if [[ -z "${!flag}" ]]; then
     error "Missing required flag: -${flag:0:1} / --${flag,,}"
     exit 1
   fi
 done
 
-on_exit() {
-  if [[ $? -eq 0 ]]; then
-    echo "Cmapi tests passed"
-  else
-    echo "Cmapi tests failed!"
-  fi
+#Collect the logs on exit event
+collect_logs() {
+  "${SCRIPT_LOCATION}/report_test_stage.sh" --container-name "${CONTAINER_NAME}" --result-path "${RESULT}" --stage "cmapi"
 }
-trap on_exit EXIT
+trap collect_logs EXIT
 
 prepare_environment() {
   echo "Preparing for cmapi test run..."

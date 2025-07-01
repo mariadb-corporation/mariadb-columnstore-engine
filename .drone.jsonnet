@@ -390,22 +390,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("cmapi"), result, true),
 
-      'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_cmapi_test.sh' +
-      ' --container-name ' + getContainerName("cmapi") +
-      ' --pkg-format ' + pkg_format,
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_cmapi_test.sh" +
+      " --container-name " + getContainerName("cmapi") +
+      " --result-path " + result +
+      " --pkg-format " + pkg_format,
     ],
-  },
-  cmapilog:: {
-    name: "cmapilog",
-    depends_on: ["cmapi test"],
-    image: "docker:28.2.2",
-    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
-    commands: [
-      reportTestStage(getContainerName("cmapi"), result, "cmapi"),
-    ],
-    when: {
-      status: ["success", "failure"],
-    },
   },
   multi_node_mtr:: {
     name: "mtr",
@@ -570,8 +559,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.smoke] +
          [pipeline.publish("smoke")] +
          [pipeline.cmapitest] +
-         [pipeline.cmapilog] +
-         [pipeline.publish("cmapilog")] +
+         [pipeline.publish("cmapi test")] +
          (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish("mtr")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
