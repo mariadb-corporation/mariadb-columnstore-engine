@@ -45,7 +45,7 @@ ALTER TABLE cs3 ADD COLUMN d5 DECIMAL(20,18) UNSIGNED;
 Warnings:
 Warning	1618	ZEROFILL is ignored in ColumnStore
 ALTER TABLE cs1 RENAME COLUMN d7 TO d17;
-ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ERROR 42000: The storage engine for the table doesn't support The syntax rename column is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 ALTER TABLE cs2 ADD COLUMN (d5 DECIMAL(38,5), d6 DECIMAL(35,15));
 ERROR 42000: The storage engine for the table doesn't support Multiple actions in alter table statement is currently not supported by Columnstore.
 ALTER TABLE cs3 MODIFY d1 DECIMAL(38) SIGNED;
