@@ -2,7 +2,7 @@
 # Test comments
 # Author: Bharath, bharath.bokka@mariadb.com
 #
---source ../include/disable_11.4.inc
+--source ../include/only_10.6.inc
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
