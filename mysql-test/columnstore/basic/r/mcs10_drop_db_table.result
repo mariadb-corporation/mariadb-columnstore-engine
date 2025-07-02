@@ -62,8 +62,6 @@ DROP TABLE IF EXISTS mcs10_db2.t_columnstore1;
 USE mcs10_db1;
 CREATE TABLE t_columnstore1 (id int) engine=columnstore;
 CREATE TABLE t_columnstore2 (id int) engine=columnstore;
-connect  addconroot1, localhost, root,,;
-connect  addconroot2, localhost, root,,;
 connection addconroot1;
 DROP TABLE mcs10_db1.t_columnstore1;
 connection addconroot2;

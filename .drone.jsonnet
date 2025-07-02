@@ -1,18 +1,18 @@
 local events = ["pull_request", "cron"];
 
+
+local current_branch = "stable-23.10";
+
 local servers = {
-  develop: ["10.6-enterprise"],
   "stable-23.10": ["10.6-enterprise"],
 };
 
 local platforms = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local platforms_arm = {
-  develop: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:20.04", "ubuntu:22.04", "ubuntu:24.04"],
+  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local rewrite_ubuntu_mirror = @"sed -i 's|//\\(us\\.\\)\\?archive\\.ubuntu\\.com|//us.archive.ubuntu.com|g' /etc/apt/sources.list || true; " +
@@ -56,10 +56,10 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
 
 
 local any_branch = "**";
-local platforms_custom = platforms.develop;
-local platforms_arm_custom = platforms_arm.develop;
+local platforms_custom = platforms[current_branch];
+local platforms_arm_custom = platforms_arm[current_branch];
 
-local platforms_mtr = platforms.develop;
+local platforms_mtr = platforms[current_branch];
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 
@@ -146,7 +146,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local socket_path = if (pkg_format == "rpm") then "/var/lib/mysql/mysql.sock" else "/run/mysqld/mysqld.sock",
   local config_path_prefix = if (pkg_format == "rpm") then "/etc/my.cnf.d/" else "/etc/mysql/mariadb.conf.d/50-",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
-  local branch_ref = if (branch == any_branch) then "stable-23.10" else branch,
+  local branch_ref = if (branch == any_branch) then current_branch else branch,
   // local regression_tests = if (std.startsWith(platform, 'debian') || std.startsWith(platform, 'ubuntu:20')) then 'test000.sh' else 'test000.sh,test001.sh',
 
   local branchp = if (branch == "**") then "" else branch + "/",
@@ -248,8 +248,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     if (pkg_format == "deb") then execInnerDocker('bash -c "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"', containerName)
     else execInnerDocker('bash -c "yum update -y && yum install -y MariaDB-columnstore-cmapi"', containerName),
 
-  local prepareTestStage(containerName, result, do_setup) =
-    'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_stage.sh" +
+  local prepareTestContainer(containerName, result, do_setup) =
+    'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_container.sh" +
     " --container-name " + containerName +
     " --docker-image " + img +
     " --result-path " + result +
@@ -274,7 +274,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:28.2.2",
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
-      prepareTestStage(getContainerName("smoke"), result, true),
+      prepareTestContainer(getContainerName("smoke"), result, true),
       "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh " + getContainerName("smoke"),
     ],
   },
@@ -302,7 +302,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       // why do we mount cgroups here, but miss it on other steps?
-      prepareTestStage(getContainerName("upgrade") + version, result, false),
+      prepareTestContainer(getContainerName("upgrade") + version, result, false),
       if (pkg_format == "deb")
       then execInnerDocker('bash -c "./upgrade_setup_deb.sh ' + version + " " + result + " " + arch + " " + repo_pkg_url_no_res + ' $${UPGRADE_TOKEN}"',
                            getContainerName("upgrade") + version),
@@ -341,10 +341,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
     },
     commands: [
-      prepareTestStage(getContainerName("mtr"), result, true),
+      prepareTestContainer(getContainerName("mtr"), result, true),
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
-      'bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
+      'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
@@ -363,66 +363,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       status: ["success", "failure"],
     },
   },
-  prepare_regression:: {
-    name: "prepare regression",
-    depends_on: ["mtr", "publish pkg", "publish cmapi build"],
-    when: {
-      status: ["success", "failure"],
-    },
-    image: "docker:git",
-    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
-    environment: {
-      REGRESSION_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
-      REGRESSION_REF_AUX: branch_ref,
-    },
-    commands: [
-      // compute branch.
-      'echo "$$REGRESSION_REF"',
-      'echo "$$REGRESSION_BRANCH_REF"',
-      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
-      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
-      'echo "$$REGRESSION_REF"',
-      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
-      // assign what is appropriate by default.
-      "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
-      'echo "$$REGRESSION_REF"',
-      // clone regression test repo
-      "git clone --recurse-submodules --branch $$REGRESSION_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-regression-test",
-      // where are we now?
-      "cd mariadb-columnstore-regression-test",
-      "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
-      "cd ..",
-      prepareTestStage(getContainerName("regression"), result, true),
-
-      "docker cp mariadb-columnstore-regression-test regression$${DRONE_BUILD_NUMBER}:/",
-      // list storage manager binary
-      "ls -la /mdb/" + builddir + "/storage/columnstore/columnstore/storage-manager",
-      "docker cp /mdb/" + builddir + "/storage/columnstore/columnstore/storage-manager regression$${DRONE_BUILD_NUMBER}:/",
-      // check storage-manager unit test binary file
-      execInnerDocker("ls -l /storage-manager", getContainerName("regression")),
-      // copy test data for regression test suite
-      execInnerDocker('bash -c "wget -qO- https://cspkg.s3.amazonaws.com/testData.tar.lz4 | lz4 -dc - | tar xf - -C mariadb-columnstore-regression-test/"', getContainerName("regression")),
-
-      // set mariadb lower_case_table_names=1 config option
-      execInnerDocker('sed -i "/^.mariadb.$/a lower_case_table_names=1" ' + config_path_prefix + "server.cnf", getContainerName("regression")),
-      // set default client character set to utf-8
-      execInnerDocker('sed -i "/^.client.$/a default-character-set=utf8" ' + config_path_prefix + "client.cnf", getContainerName("regression")),
-
-      // Set RAM consumption limits to avoid RAM contention b/w mtr andregression steps.
-      execInnerDocker("/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local", getContainerName("regression")),
-
-      execInnerDocker("systemctl start mariadb", getContainerName("regression")),
-      execInnerDocker("systemctl restart mariadb-columnstore", getContainerName("regression")),
-      // delay regression for manual debugging on live instance
-      "sleep $${REGRESSION_DELAY_SECONDS:-1s}",
-      execInnerDocker("/usr/bin/g++ /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp -O2 -o  /mariadb-columnstore-regression-test/mysql/queries/queryTester", getContainerName("regression")),
-    ],
-  },
   regression(name, depends_on):: {
     name: name,
     depends_on: depends_on,
     image: "docker:git",
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     when: {
       status: ["success", "failure"],
     },
@@ -431,14 +376,24 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       REGRESSION_TIMEOUT: {
         from_secret: "regression_timeout",
       },
+      REGRESSION_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
+      REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
-      execInnerDocker("mkdir -p reg-logs", getContainerName("regression"), "--workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
-      execInnerDocker("bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' & ",
-                      getContainerName("regresion")),
-      execInnerDockerNoTTY('bash -c "timeout -k 1m -s SIGKILL --preserve-status $${REGRESSION_TIMEOUT} ./go.sh --sm_unit_test_dir=/storage-manager --tests=' + name + " || ./regression_logs.sh " + name + '"',
-                           getContainerName("regression"),
-                           "--env PRESERVE_LOGS=true --workdir /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest"),
+      prepareTestContainer(getContainerName("regression"), result, true),
+
+      // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
+      // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
+      'echo "$$REGRESSION_REF"',
+
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_regression.sh" +
+      " --container-name " + getContainerName("regression") +
+      " --test-name " + name +
+      " --distro " + platform +
+      " --regression-branch $$REGRESSION_REF" +
+      " --regression-timeout $${REGRESSION_TIMEOUT}",
     ],
   },
   regressionlog:: {
@@ -514,7 +469,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       PYTHONPATH: "/usr/share/columnstore/cmapi/deps",
     },
     commands: [
-      prepareTestStage(getContainerName("cmapi"), result, true),
+      prepareTestContainer(getContainerName("cmapi"), result, true),
       installCmapi(getContainerName("cmapi"), pkg_format),
       "cd cmapi",
       "for i in mcs_node_control cmapi_server failover; do docker cp $${i}/test cmapi$${DRONE_BUILD_NUMBER}:" + cmapi_path + "/$${i}/; done",
@@ -727,8 +682,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
          (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
-         [pipeline.prepare_regression] +
-         [pipeline.regression(regression_tests[i], [if (i == 0) then "prepare regression" else regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+         [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
@@ -769,8 +723,8 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms.develop) +
-              std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
+  // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
 [
@@ -780,13 +734,13 @@ local FinalPipeline(branch, event) = {
   for s in servers[b]
   for e in events
 ] +
-[
-  Pipeline(b, p, e, "arm64", s)
-  for b in std.objectFields(platforms_arm)
-  for p in platforms_arm[b]
-  for s in servers[b]
-  for e in events
-] +
+// [
+//   Pipeline(b, p, e, "arm64", s)
+//   for b in std.objectFields(platforms_arm)
+//   for p in platforms_arm[b]
+//   for s in servers[b]
+//   for e in events
+// ] +
 
 [
   FinalPipeline(b, "cron")
@@ -797,11 +751,11 @@ local FinalPipeline(branch, event) = {
   Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
   for p in platforms_custom
 ] +
-[
-  Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
-  for p in platforms_arm_custom
-]
-+
+// [
+//   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
+//   for p in platforms_arm_custom
+// ]
+// +
 [
   Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
   for a in ["amd64"]
@@ -809,5 +763,5 @@ local FinalPipeline(branch, event) = {
   for platform in ["ubuntu:24.04"]
   for buildenv in std.objectFields(customEnvCommandsMap)
   for triggeringEvent in events
-  for server in servers.develop
+  for server in servers[current_branch]
 ]

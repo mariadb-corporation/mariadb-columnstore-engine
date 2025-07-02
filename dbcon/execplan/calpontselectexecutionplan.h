@@ -160,6 +160,10 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   ~CalpontSelectExecutionPlan() override;
 
   /**
+   * Clones this CSEP without recursive selects for optimizer purposes
+   */
+  execplan::SCSEP cloneWORecursiveSelects();
+  /**
    * Access and mutator methods
    */
 
@@ -797,7 +801,8 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Return a string rep of the CSEP
    * @return a string
    */
-  virtual std::string toString() const;
+  void printSubCSEP(const size_t& ident, ostringstream& output, CalpontSelectExecutionPlan*& plan) const;
+  virtual std::string toString(const size_t ident = 0) const;
 
   /** @brief Is this an internal query?
    *

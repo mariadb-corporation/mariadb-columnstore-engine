@@ -1,3 +1,5 @@
+--source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 --disable_warnings
 DROP DATABASE IF EXISTS db4741;
 --enable_warnings
