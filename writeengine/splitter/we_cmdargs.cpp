@@ -209,7 +209,7 @@ void WECmdArgs::checkIntArg(const std::string& name, long min, long max, int val
 }
 
 //----------------------------------------------------------------------
-std::string WECmdArgs::getCpImportCmdLine()
+std::string WECmdArgs::getCpImportCmdLine(bool skipRows)
 {
   std::ostringstream aSS;
   std::string aCmdLine;
@@ -286,7 +286,7 @@ std::string WECmdArgs::getCpImportCmdLine()
   if (fEscChar != 0)
     aSS << " -C " << fEscChar;
 
-  if (fSkipRows)
+  if (skipRows && fSkipRows)
   {
     aSS << " -O " << fSkipRows;
   }

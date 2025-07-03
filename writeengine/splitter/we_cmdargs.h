@@ -46,7 +46,7 @@ class WECmdArgs
 
   void appTestFunction();
   void parseCmdLineArgs(int argc, char** argv);
-  std::string getCpImportCmdLine();
+  std::string getCpImportCmdLine(bool skipRows);
   void setSchemaAndTableFromJobFile(std::string& JobName);
   void setEnclByAndEscCharFromJobFile(std::string& JobName);
   void usage();

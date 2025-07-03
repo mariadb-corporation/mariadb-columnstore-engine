@@ -258,7 +258,7 @@ void WESplitterApp::processMessages()
       }
 
       aBs.restart();
-      std::string aCpImpCmd = fCmdArgs.getCpImportCmdLine();
+      std::string aCpImpCmd = fCmdArgs.getCpImportCmdLine(false);
       fDh.fLog.logMsg(aCpImpCmd, MSGLVL_INFO2);
 
       if (fDh.getDebugLvl())
@@ -315,7 +315,7 @@ void WESplitterApp::processMessages()
       }
 
       aBs.restart();
-      std::string aCpImpCmd = fCmdArgs.getCpImportCmdLine();
+      std::string aCpImpCmd = fCmdArgs.getCpImportCmdLine(false);
       fDh.fLog.logMsg(aCpImpCmd, MSGLVL_INFO2);
 
       if (fDh.getDebugLvl())
@@ -467,7 +467,7 @@ void WESplitterApp::invokeCpimport()
   fCmdArgs.setJobUUID(u);
 
   fCmdArgs.setMode(3);
-  std::string aCmdLineStr = fCmdArgs.getCpImportCmdLine();
+  std::string aCmdLineStr = fCmdArgs.getCpImportCmdLine(true);
 
   if (fDh.getDebugLvl())
     cout << "CPI CmdLineArgs : " << aCmdLineStr << endl;
