@@ -104,7 +104,7 @@ fi
 # install deps
 if [[ "$RESULT" == *rocky* ]]; then
     execInnerDockerWithRetry "$CONTAINER_NAME" 'dnf install -y dnf-plugins-core && dnf config-manager --set-enabled crb'
-    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release expect findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'yum --nobest update -y && yum --nobest install -y cracklib-dicts diffutils elfutils epel-release expect findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
 else
     change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
     execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'

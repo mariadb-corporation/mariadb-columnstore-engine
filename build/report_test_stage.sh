@@ -77,14 +77,14 @@ elif [[ "${CONTAINER_NAME}" == *upgrade* ]]; then
 
 elif [[ "${CONTAINER_NAME}" == *regression* ]]; then
     echo "---------- start columnstore regression short report ----------"
-    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log || echo "missing go.log"'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log' || echo "missing go.log"
     echo "---------- end columnstore regression short report ----------"
     echo
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "/drone/src/${RESULT}/" || echo "missing regression logs"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs.tgz"
 
     execInnerDocker "$CONTAINER_NAME" 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/'
-    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore || echo "failed to grab regression results"'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore' || echo "failed to grab regression results"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs2.tgz"
     docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "/drone/src/${RESULT}/" || echo "missing regressionQueries.tgz"
 

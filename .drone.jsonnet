@@ -130,13 +130,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       "sleep 10",
-      "ls " + result,
-      '[ -z "$(ls -A "' + result + '")" ] && echo Nothing to publish! && exit 1',
+      "ls -lR " + result,
 
       "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors --debug",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
       make_clickable_link(publish_pkg_url),
-      "rm -rf " + result + "/*",
     ],
   },
 
