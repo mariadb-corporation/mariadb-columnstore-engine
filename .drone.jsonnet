@@ -92,8 +92,6 @@ local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
 
 local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
-  local mtr_path = if (pkg_format == "rpm") then "/usr/share/mysql-test" else "/usr/share/mysql/mysql-test",
-  local socket_path = if (pkg_format == "rpm") then "/var/lib/mysql/mysql.sock" else "/run/mysqld/mysqld.sock",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
 
@@ -400,7 +398,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "mtr",
     depends_on: ["dockerhub"],
     image: "docker:28.2.2",
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       DOCKER_LOGIN: {
         from_secret: "dockerhub_user",
@@ -412,18 +410,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       "echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin",
-      "cd docker",
-      "cp .env_example .env",
-      'sed -i "/^MCS_IMAGE_NAME=/s/=.*/=${MCS_IMAGE_NAME}/" .env',
-      'sed -i "/^MAXSCALE=/s/=.*/=false/" .env',
-      "docker-compose up -d",
-      "docker exec mcs1 provision mcs1 mcs2 mcs3",
-      "docker cp ../mysql-test/columnstore mcs1:" + mtr_path + "/suite/",
-      "docker exec -t mcs1 chown mysql:mysql -R " + mtr_path,
-      'docker exec -t mcs1 mariadb -e "create database if not exists test;"',
-      // delay for manual debugging on live instance
-      "sleep $${COMPOSE_DELAY_SECONDS:-1s}",
-      'docker exec -t mcs1 bash -c "cd ' + mtr_path + " && ./mtr --extern socket=" + socket_path + ' --force --print-core=detailed --print-method=gdb --max-test-fail=0 --suite=columnstore/basic,columnstore/bugfixes"',
+
+      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_multi_node_mtr.sh " +
+      "--columnstore-image-name $${MCS_IMAGE_NAME}" +
+      "--distro " + platform,
     ],
   },
 
