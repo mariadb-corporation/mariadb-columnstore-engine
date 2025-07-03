@@ -762,7 +762,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
   //boost::shared_ptr<std::map<int, std::set<int>> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = oamcache->getOwnerPM(); //*(*dbRootPMMap)[dbRoot].begin();
+  pmNum = oamcache->getOwnerPM(dbRoot); //*(*dbRootPMMap)[dbRoot].begin();
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
   // Will create files on each PM as needed.
@@ -925,7 +925,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       if (rc != 0)
         throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-      pmNum = *(*dbRootPMMap)[dbRoot].begin();
+      pmNum = oamcache->getOwnerPM(dbRoot);
       bs.restart();
       bs << (ByteStream::byte)WE_SVR_UPDATE_SYSTABLE_AUTO;
       bs << uniqueId;
@@ -1379,7 +1379,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     if (rc != 0)
       throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-    pmNum = *(*dbRootPMMap)[dbRoot].begin();
+    pmNum = oamcache->getOwnerPM(dbRoot);
     bytestream.restart();
     bytestream << (ByteStream::byte)WE_SVR_UPDATE_SYSTABLE_AUTO;
     bytestream << uniqueId;
@@ -1452,7 +1452,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
   if (rc != 0)
     throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-  pmNum = *(*dbRootPMMap)[dbRoot].begin();
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   try
   {
@@ -1707,7 +1707,7 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
   //boost::shared_ptr<std::map<int, std::set<int>> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = oamcacne->getOwnerPM(dbRoot); //*(*dbRootPMMap)[dbRoot].begin();
+  pmNum = oamcache->getOwnerPM(dbRoot); //*(*dbRootPMMap)[dbRoot].begin();
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 
@@ -2540,7 +2540,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
     if (rc != 0)
       throw std::runtime_error("Error while calling getSysCatDBRoot");
 
-    pmNum = *(*dbRootPMMap)[dbRoot].begin();
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     // send to WES to process
     try

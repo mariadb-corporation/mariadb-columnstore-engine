@@ -39,7 +39,7 @@ using namespace boost;
 namespace oam
 {
 
-
+#if 0
 struct CacheReloaded
 {
   CacheReloaded()
@@ -246,5 +246,6 @@ bool OamCache::isOffline(int dbRoot)
 {
   return dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end();
 }
+#endif
 
 } /* namespace oam */
