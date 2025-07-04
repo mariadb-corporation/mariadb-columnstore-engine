@@ -4,8 +4,10 @@
 --disable_warnings
 DROP DATABASE IF EXISTS MCOL5744;
 --enable_warnings
+--source ../include/charset.inc
 
 CREATE DATABASE MCOL5744;
+USE MCOL5744;
 
 SET old_mode='';
 

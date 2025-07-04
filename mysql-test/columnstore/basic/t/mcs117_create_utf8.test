@@ -4,6 +4,7 @@
 #
 -- source ../include/have_columnstore.inc
 -- source ../include/detect_maxscale.inc
+--source ../include/charset.inc
 
 set names utf8;
 

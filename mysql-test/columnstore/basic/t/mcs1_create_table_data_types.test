@@ -2,7 +2,9 @@
 # Test CREATE TABLE with all data types supported in Columnstore
 # Author: Bharath, bharath.bokka@mariadb.com
 #
+--source ../include/disable_11.4.inc
 -- source ../include/have_columnstore.inc
+--source ../include/charset.inc
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcs1_db;
