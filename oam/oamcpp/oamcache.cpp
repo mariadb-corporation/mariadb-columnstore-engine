@@ -112,27 +112,27 @@ void OamCache::checkReload()
   std::set<int>::const_iterator it = uniquePids.begin();
   moduleIds.clear();
   uint32_t i = 0;
-  map<int, int> pmToConnectionMap;
+  pmConnectionMap.clear();
 
   // Restore for Windows when we support multiple PMs
   while (it != uniquePids.end())
   {
-    pmToConnectionMap[*it] = i++;
+    pmConnectionMap[*it] = i++;
     moduleIds.push_back(*it);
     it++;
   }
 
-  dbRootConnectionMap.reset(new map<int, set<int>>());
-
-  for (i = 0; i < dbroots.size(); i++)
-  {
-    auto pmIter = pmToConnectionMap.find(getOw(*dbRootPMMap)[dbroots[i]]);
-
-    if (pmIter != pmToConnectionMap.end())
-    {
-      (*dbRootConnectionMap)[dbroots[i]] = (*pmIter).second;
-    }
-  }
+//  dbRootConnectionMap.reset(new map<int, set<int>>());
+//
+//  for (i = 0; i < dbroots.size(); i++)
+//  {
+//    auto pmIter = pmToConnectionMap.find(getOw(*dbRootPMMap)[dbroots[i]]);
+//
+//    if (pmIter != pmToConnectionMap.end())
+//    {
+//      (*dbRootConnectionMap)[dbroots[i]] = (*pmIter).second;
+//    }
+//  }
 
   pmDbrootsMap.reset(new OamCache::PMDbrootsMap_t::element_type());
   systemStorageInfo_t t;
@@ -257,7 +257,7 @@ bool OamCache::isAccessibleBy(int dbRoot, int pmId)
 
 bool OamCache::isOffline(int dbRoot)
 {
-  return (*dbRootConnectionMap)->find(dbRoot) == (*dbRootConnectionMap)->end();
+  return dbRootConnectionMap->find(dbRoot) == dbRootConnectionMap->end();
 }
 int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for read requests - either owner or us.
 {
@@ -277,11 +277,11 @@ int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for re
 }
 int OamCache::getClosestConnection(int dbroot) // connection index to owner's PM or ours PM - who can access dbRoot.
 {
-  idbassert(0);
+  return pmConnectionMap[getClosestPM(dbroot)];
 }
 int OamCache::getOwnerConnection(int dbroot) // connection index to owner's PM.
 {
-  idbassert(0);
+  return pmConnectionMap[getOwnerPM(dbroot)];
 }
 int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
 {

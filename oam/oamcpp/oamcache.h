@@ -82,6 +82,7 @@ class OamCache
   int mLocalPMId = 0;  // The PM id running on this machine
   std::string systemName;
   std::string moduleName;
+  map<int, int> pmConnectionMap;
   set<int> rwPMs;
 };
 

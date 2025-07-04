@@ -254,7 +254,6 @@ void rollbackAll(DBRM* dbrm)
   message5.format(args5);
   ml.logInfoMessage(message5);
   OamCache* oamcache = OamCache::makeOamCache();
-  OamCache::dbRootPMMap_t dbRootPMMap = oamcache->getDBRootToPMMap();
   int errorTxn = 0;
 
   for (i = 0; i < tableLocks.size(); i++)
