@@ -76,11 +76,11 @@ if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
     detect_distro
 fi
 
-if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
+select_pkg_format ${OS}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     CTEST_BIN_NAME=:"ctest3"
 else
-    pkg_format="deb"
     CTEST_BIN_NAME="ctest"
 fi
 
@@ -277,7 +277,7 @@ modify_packaging() {
     echo "Modifying_packaging..."
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
     fi
 
@@ -289,7 +289,7 @@ modify_packaging() {
             grep mariadb /usr/share/lto-disabled-list/lto-disabled-list
     fi
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         apt-cache madison liburing-dev | grep liburing-dev || {
             sed 's/liburing-dev/libaio-dev/g' -i debian/control &&
                 sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules &&
@@ -498,7 +498,7 @@ generate_svgs() {
 build_package() {
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "rpm" ]]; then
+    if [[ $PKG_FORMAT == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"

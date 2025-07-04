@@ -481,7 +481,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                         'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
-                         "--build-packages --install-deps --sccache --sccache-arch " + arch +
+                         "--build-packages --install-deps --sccache" +
                          " " + customBootstrapParams +
                          " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
                          "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
@@ -497,7 +497,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                DEBIAN_FRONTEND: "noninteractive",
              },
              commands: [
-               "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/build_cmapi.sh --distro " + platform + " --arch " + arch,
+               "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/build_cmapi.sh --distro " + platform,
              ],
            },
            {

@@ -171,6 +171,16 @@ detect_distro() {
   message "Detected $color_yellow$OS $OS_VERSION$color_normal"
 }
 
+select_pkg_format() {
+  local distro="$1"
+
+  if [[ "$distro" == *rocky* ]]; then
+    export PKG_FORMAT="rpm"
+  else
+    export PKG_FORMAT="deb"
+  fi
+}
+
 menuStr=""
 
 function hideCursor() {

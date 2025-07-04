@@ -39,8 +39,9 @@ collect_logs() {
 }
 trap collect_logs EXIT
 
+select_pkg_format ${RESULT}
 
-if [[ "$DISTRO" == *rocky* ]]; then
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SOCKET_PATH="/var/lib/mysql/mysql.sock"
     MTR_PATH="/usr/share/mysql-test"
 else

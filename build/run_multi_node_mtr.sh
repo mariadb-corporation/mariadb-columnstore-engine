@@ -23,8 +23,9 @@ for flag in MCS_IMAGE_NAME DISTRO; do
   fi
 done
 
+select_pkg_format ${DISTRO}
 
-if [[ "$DISTRO" == *rocky* ]]; then
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SOCKET_PATH="/var/lib/mysql/mysql.sock"
     MTR_PATH="/usr/share/mysql-test"
 else

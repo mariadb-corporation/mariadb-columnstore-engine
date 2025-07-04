@@ -27,8 +27,10 @@ if [[ -z "${CONTAINER_NAME:-}" || -z "${DOCKER_IMAGE:-}" || -z "${RESULT:-}" || 
     exit 1
 fi
 
+select_pkg_format ${RESULT}
+
 start_container() {
-    if [[ "$RESULT" == *rocky* ]]; then
+    if [[ $PKG_FORMAT == "rpm" ]]; then
         SYSTEMD_PATH="/usr/lib/systemd/systemd"
         MTR_PATH="/usr/share/mysql-test"
     else

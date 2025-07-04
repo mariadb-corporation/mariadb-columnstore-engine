@@ -39,7 +39,9 @@ if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     exit 1
 fi
 
-if [[ "$RESULT" == *rocky* ]]; then
+select_pkg_format ${RESULT}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SYSTEMD_PATH="/usr/lib/systemd/systemd"
     MTR_PATH="/usr/share/mysql-test"
 else
