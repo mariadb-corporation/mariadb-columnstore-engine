@@ -4,7 +4,7 @@ SCRIPT_LOCATION=$(dirname "$0")
 MARIADB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../../../)
 COLUMNSTORE_MTR_SOURCE=$(realpath $SCRIPT_LOCATION/../../mysql-test/columnstore)
 INSTALLED_MTR_PATH='/usr/share/mysql/mysql-test'
-COLUMSNTORE_MTR_INSTALLED=${INSTALLED_MTR_PATH}/suite/columnstore
+COLUMSNTORE_MTR_INSTALLED=${INSTALLED_MTR_PATH}/plugin/columnstore/columnstore/
 PATCHNAME=$(realpath $SCRIPT_LOCATION)/mtr_warn.patch
 CURRENT_DIR=`pwd`
 mysql -e "create database if not exists test;"

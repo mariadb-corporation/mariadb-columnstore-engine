@@ -1,6 +1,9 @@
 #
 # Testing CONCAT with null values
 #
+--source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
+
 
 SET sql_mode=ORACLE;
 SET default_storage_engine=ColumnStore;

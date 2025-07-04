@@ -37,16 +37,16 @@ t2	CREATE TABLE `t2` (
   `t2_DATE` date DEFAULT NULL,
   `t2_TIME` time DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
-SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
+SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2,3,4;
 schema	tablename	columnname	compressiontype
+mcs229_db	t1	t1_date	2
+mcs229_db	t1	t1_decimal	2
 mcs229_db	t1	t1_int	2
 mcs229_db	t1	t1_text	2
-mcs229_db	t1	t1_date	2
 mcs229_db	t1	t1_time	2
-mcs229_db	t1	t1_decimal	2
 mcs229_db	t2	t2_date	2
+mcs229_db	t2	t2_decimal	2
 mcs229_db	t2	t2_int	2
 mcs229_db	t2	t2_text	2
 mcs229_db	t2	t2_time	2
-mcs229_db	t2	t2_decimal	2
 DROP DATABASE mcs229_db;

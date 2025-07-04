@@ -3,6 +3,7 @@
 # Author: Susil, susil.behera@mariadb.com     #  
 #
 -- source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 
 let $DATADIR= `SELECT @@datadir`;
 

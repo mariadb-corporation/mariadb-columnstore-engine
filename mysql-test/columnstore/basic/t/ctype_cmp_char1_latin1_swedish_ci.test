@@ -1,4 +1,5 @@
 --source ../include/have_columnstore.inc
+--source ../include/detect_maxscale.inc
 --source ctype_cmp_combinations.inc
 --source ctype_cmp_create.inc
 

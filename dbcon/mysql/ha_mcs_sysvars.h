@@ -176,3 +176,6 @@ void set_pron(THD* thd, char* value);
 
 ulong get_max_allowed_in_values(THD* thd);
 void set_max_allowed_in_values(THD* thd, ulong value);
+
+bool get_unstable_optimizer(THD* thd);
+void set_unstable_optimizer(THD* thd, bool value);

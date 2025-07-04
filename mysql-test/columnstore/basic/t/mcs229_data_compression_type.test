@@ -3,6 +3,7 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
+--source ../include/charset.inc
 
 #
 # If the calpontsys database does not exist, let's create it.
@@ -49,7 +50,7 @@ CREATE TABLE t2
 --replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t2;
 
-SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2;
+SELECT `schema`, tablename, columnname, compressiontype FROM calpontsys.syscolumn WHERE `schema`='mcs229_db' ORDER BY 2,3,4;
 
 # Clean UP
 DROP DATABASE mcs229_db;

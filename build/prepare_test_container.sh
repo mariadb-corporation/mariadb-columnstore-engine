@@ -75,8 +75,7 @@ start_container() {
     fi
 }
 
-start_container
-
+prepare_container() {
 if [[ "$RESULT" != *rocky* ]]; then
     execInnerDocker "$CONTAINER_NAME" 'sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d'
 fi
@@ -118,8 +117,16 @@ echo "Installing columnstore..."
 if [[ "$RESULT" == *rocky* ]]; then
     execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
 else
-    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test'
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data'
 fi
 
 sleep 5
 echo "PrepareTestStage completed in $CONTAINER_NAME"
+}
+
+
+if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
+    start_container
+    prepare_container
+else warn "Container ${CONTAINER_NAME} is already running!"
+fi

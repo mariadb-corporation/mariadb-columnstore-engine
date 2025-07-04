@@ -458,8 +458,13 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     {
       return !(*this == rhs);
     }
+    bool isColumnstore() const 
+    {
+      return fisColumnStore;
+    }
     void serialize(messageqcpp::ByteStream&) const;
     void unserialize(messageqcpp::ByteStream&);
+
     friend std::ostream& operator<<(std::ostream& os, const TableAliasName& rhs);
   };
 

@@ -23,8 +23,6 @@ SHOW GRANTS FOR 'user1'@'localhost';
 Grants for user1@localhost
 GRANT USAGE ON *.* TO `user1`@`localhost` IDENTIFIED BY PASSWORD '*CB386B3062EFB295ED40F6A5B1A8CFE300642E38'
 GRANT CREATE, SELECT, INSERT ON mcs19_db.* TO 'user1'@'localhost';
-connect conn1, localhost, user1, Vagrant1|0000001,;
-connect conn2, localhost, user1, Vagrant1|0000001,;
 connection conn1;
 SELECT USER();
 USER()
@@ -43,7 +41,7 @@ SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (
   `col` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
+) ENGINE=InnoDB
 INSERT INTO t1 VALUES(1);
 SELECT * FROM t1;
 col

@@ -30,11 +30,11 @@ namespace storagemanager
 {
 Downloader::Downloader() : maxDownloads(0)
 {
+  logger = SMLogging::get();
   storage = CloudStorage::get();
   configListener();
   Config::get()->addConfigListener(this);
   workers.setName("Downloader");
-  logger = SMLogging::get();
   tmpPath = "downloading";
   bytesDownloaded = 0;
 }
