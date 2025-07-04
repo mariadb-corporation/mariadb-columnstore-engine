@@ -211,9 +211,20 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true),
       "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh" +
-      ' --container-name ' + getContainerName("smoke") +
-      ' --result-path ' + result,
+      ' --container-name ' + getContainerName("smoke"),
     ],
+  },
+  smokelog:: {
+    name: "smokelog",
+    depends_on: ["smoke"],
+    image: "docker:28.2.2",
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    commands: [
+      reportTestStage(getContainerName("smoke"), result, "smoke"),
+    ],
+    when: {
+      status: ["success", "failure"],
+    },
   },
   upgrade(version):: {
     name: "upgrade-test from " + version,
@@ -275,9 +286,20 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
-      ' --result-path ' + result +
       ' --triggering-event ' + event,
     ],
+  },
+  mtrlog:: {
+    name: "mtrlog",
+    depends_on: ["mtr"],
+    image: "docker:28.2.2",
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    commands: [
+      reportTestStage(getContainerName("mtr"), result, "mtr"),
+    ],
+    when: {
+      status: ["success", "failure"],
+    },
   },
   regression(name, depends_on):: {
     name: name,
@@ -388,9 +410,20 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_cmapi_test.sh" +
       " --container-name " + getContainerName("cmapi") +
-      " --result-path " + result +
       " --pkg-format " + pkg_format,
     ],
+  },
+  cmapilog:: {
+    name: "cmapilog",
+    depends_on: ["cmapi test"],
+    image: "docker:28.2.2",
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    commands: [
+      reportTestStage(getContainerName("cmapi"), result, "cmapi"),
+    ],
+    when: {
+      status: ["success", "failure"],
+    },
   },
   multi_node_mtr:: {
     name: "mtr",
@@ -441,7 +474,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              },
              commands: echo_running_on +
              [
-               "echo $$SERVER_REF",
+              "echo $$SERVER_REF",
                "echo $$SERVER_REMOTE",
                "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
                'git config --global url."https://github.com/".insteadOf git@github.com:',
@@ -545,10 +578,12 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.publish()] +
          (if (event == "cron") then [pipeline.publish("pkg latest", "latest")] else []) +
          [pipeline.smoke] +
-         [pipeline.publish("smoke")] +
+         [pipeline.smokelog] +
+         [pipeline.publish("smokelog")] +
          [pipeline.cmapitest] +
-         [pipeline.publish("cmapi test")] +
-         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.publish("mtr")]) +
+         [pipeline.cmapilog] +
+         [pipeline.publish("cmapilog")] +
+         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
