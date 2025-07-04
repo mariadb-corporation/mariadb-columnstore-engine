@@ -250,6 +250,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
 
     case CalpontSystemCatalog::SMALLINT: rv = boost::any_cast<int16_t>(anyVal); break;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT: rv = boost::any_cast<uint16_t>(anyVal); break;
 
     case CalpontSystemCatalog::MEDINT:

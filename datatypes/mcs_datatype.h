@@ -1200,14 +1200,13 @@ class TypeHandlerEnum : public TypeHandler
   }
   boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
-    // TODO: How to communicate with write engine?
     return {};
   }
   boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
                                const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
                                bool& /*pushWarning*/) const override;
 
-const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     idbassert(0);
     return nullptr;

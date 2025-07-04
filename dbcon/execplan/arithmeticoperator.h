@@ -289,6 +289,8 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       fResult.uintVal = static_cast<uint64_t>(result);
     }
     break;
+
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
