@@ -20,7 +20,7 @@ ERROR HY000: Internal error: CAL0001: Alter table Failed:  Changing the datatype
 ALTER TABLE t1 CHANGE COLUMN c2 c2new CHAR(1);
 ALTER TABLE t1 CHANGE COLUMN c2new c2 CHAR(1);
 ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
-ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ERROR 42000: The storage engine for the table doesn't support The syntax drop column if exists is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 ALTER TABLE t1 DROP COLUMN c11;
 ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
 Warnings:

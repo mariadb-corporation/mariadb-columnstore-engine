@@ -25,7 +25,7 @@ t3	CREATE TABLE `t3` (
 CREATE TABLE t4(col1 INT PRIMARY KEY AUTO_INCREMENT)ENGINE=Columnstore;
 ERROR 42000: Too many keys specified; max 0 keys allowed
 CREATE TABLE t4(col1 INT )MAX_ROWS=10, ENGINE=Columnstore;
-ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ERROR 42000: The storage engine for the table doesn't support The syntax min_rows/max_rows is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 CREATE TABLE t5(col1 INT )MIN_ROWS=10, ENGINE=Columnstore;
-ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+ERROR 42000: The storage engine for the table doesn't support The syntax min_rows/max_rows is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
 DROP DATABASE mcs8_db;
