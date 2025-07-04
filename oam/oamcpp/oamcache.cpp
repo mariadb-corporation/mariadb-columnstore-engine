@@ -39,7 +39,6 @@ using namespace boost;
 namespace oam
 {
 
-#if 0
 struct CacheReloaded
 {
   CacheReloaded()
@@ -56,11 +55,20 @@ OamCache* OamCache::makeOamCache()
   return &cache.oamcache;
 }
 
+static bool isWESConfigured(config::Config* config, int moduleID)
+{
+  char buff[200];
+  snprintf(buff, sizeof(buff), "pm%u_WriteEngineServer", moduleID);
+  string fServer(buff);
+  // Check if WES IP address record exists in the config (if not, this is a read-only node)
+  std::string otherEndDnOrIPStr = config->getConfig(fServer, "IPAddr");
+  return !(otherEndDnOrIPStr.empty() || otherEndDnOrIPStr == "unassigned");
+}
 void OamCache::checkReload()
 {
   Oam oam;
   config::Config* config = config::Config::makeConfig();
-  int temp;
+  set<int> temp;
 
   if (config->getCurrentMTime() == mtime)
     return;
@@ -88,12 +96,17 @@ void OamCache::checkReload()
   oam.getSystemConfig("pm", moduletypeconfig);
   int moduleID = 0;
 
+  rwPMs.clear();
   for (unsigned i = 0; i < moduletypeconfig.ModuleCount; i++)
   {
     moduleID = atoi((moduletypeconfig.ModuleNetworkList[i])
                         .DeviceName.substr(MAX_MODULE_TYPE_SIZE, MAX_MODULE_ID_SIZE)
                         .c_str());
     uniquePids.insert(moduleID);
+    if (isWESConfigured(config, moduleID))
+    {
+      rwPMs.insert(moduleID);
+    }
   }
 
   std::set<int>::const_iterator it = uniquePids.begin();
@@ -109,11 +122,11 @@ void OamCache::checkReload()
     it++;
   }
 
-  dbRootConnectionMap.reset(new map<int, int>());
+  dbRootConnectionMap.reset(new map<int, set<int>>());
 
   for (i = 0; i < dbroots.size(); i++)
   {
-    map<int, int>::iterator pmIter = pmToConnectionMap.find((*dbRootPMMap)[dbroots[i]]);
+    auto pmIter = pmToConnectionMap.find(getOw(*dbRootPMMap)[dbroots[i]]);
 
     if (pmIter != pmToConnectionMap.end())
     {
@@ -239,13 +252,48 @@ string OamCache::getModuleName()
 
 bool OamCache::isAccessibleBy(int dbRoot, int pmId)
 {
-  return dbRootPMMap[dbRoot].contains(pmId);
+  return (*dbRootPMMap)[dbRoot].contains(pmId);
 }
 
 bool OamCache::isOffline(int dbRoot)
 {
-  return dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end();
+  return (*dbRootConnectionMap)->find(dbRoot) == (*dbRootConnectionMap)->end();
 }
-#endif
+int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for read requests - either owner or us.
+{
+  if ((*dbRootPMMap)[dbroot].contains(mLocalPMId))
+  {
+    return mLocalPMId;
+  }
+  for(auto j : (*dbRootPMMap)[dbroot])
+  {
+    int pm = j;
+    if (rwPMs.contains(pm))
+    {
+      return pm;
+    }
+  }
+  idbassert_s(0, "dbroot " << dbroot << " has empty set of PM's");
+}
+int OamCache::getClosestConnection(int dbroot) // connection index to owner's PM or ours PM - who can access dbRoot.
+{
+  idbassert(0);
+}
+int OamCache::getOwnerConnection(int dbroot) // connection index to owner's PM.
+{
+  idbassert(0);
+}
+int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
+{
+  for(auto j : (*dbRootPMMap)[dbroot])
+  {
+    int pm = j;
+    if (rwPMs.contains(pm))
+    {
+      return pm;
+    }
+  }
+  idbassert_s(0, "cannot find owner for dbroot " << dbroot);
+}
 
 } /* namespace oam */

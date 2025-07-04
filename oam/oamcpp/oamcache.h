@@ -47,7 +47,7 @@ class OamCache
 //  dbRootPMMap_t getDBRootToConnectionMap();
   PMDbrootsMap_t getPMToDbrootsMap();
 
-  int getClosestPM(int dbroot); // who can access dbroot's records - either owner or us.
+  int getClosestPM(int dbroot); // who can access dbroot's records for read requests - either owner or us.
   int getClosestConnection(int dbroot); // connection index to owner's PM or ours PM - who can access dbRoot.
   int getOwnerConnection(int dbroot); // connection index to owner's PM.
   int getOwnerPM(int dbroot); // Owner's PM index.
@@ -82,6 +82,7 @@ class OamCache
   int mLocalPMId = 0;  // The PM id running on this machine
   std::string systemName;
   std::string moduleName;
+  set<int> rwPMs;
 };
 
 }  // namespace oam

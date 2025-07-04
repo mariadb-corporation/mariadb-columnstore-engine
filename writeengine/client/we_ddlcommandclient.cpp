@@ -37,7 +37,7 @@ namespace WriteEngine
 WE_DDLCommandClient::WE_DDLCommandClient()
 {
   fWEClient = new WEClients(WEClients::DDLPROC);
-  fOamCache = oam::OamCache->makeOamCache();
+  fOamCache = oam::OamCache::makeOamCache();
 }
 
 WE_DDLCommandClient::~WE_DDLCommandClient()

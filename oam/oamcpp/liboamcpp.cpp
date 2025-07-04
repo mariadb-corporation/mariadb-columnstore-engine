@@ -684,7 +684,7 @@ void Oam::getPmDbrootConfig(const int pmid, DBRootConfigList& dbrootconfiglist)
  * Get DBRoot - PM Config data
  *
  ********************************************************************/
-void Oam::getDbrootPmConfig(const int dbrootid, set<int>& pmidis)
+void Oam::getDbrootPmConfig(const int dbrootid, set<int>& pmids)
 {
   SystemModuleTypeConfig systemmoduletypeconfig;
   ModuleTypeConfig moduletypeconfig;
