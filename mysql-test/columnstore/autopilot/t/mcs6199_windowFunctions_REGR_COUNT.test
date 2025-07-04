@@ -5,6 +5,7 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--source ../include/functions.inc
 #
 use tpch1m;
 #
@@ -256,3 +257,4 @@ select o_custkey, REGR_COUNT(o_custkey,o_orderkey) OVER (PARTITION BY abs(o_cust
 select o_custkey, REGR_COUNT(o_custkey,o_orderkey) OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ,o_orderdate ROWS BETWEEN 15 PRECEDING AND 15 PRECEDING) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
 select o_custkey, REGR_COUNT(o_custkey,o_orderkey) OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ,o_orderdate ROWS BETWEEN 15 PRECEDING AND 15 FOLLOWING) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
 select o_custkey, REGR_COUNT(o_custkey,o_orderkey) OVER (PARTITION BY abs(o_custkey)+2 ORDER BY o_custkey ,o_orderkey ,o_orderdate ROWS BETWEEN 15 FOLLOWING AND 15 FOLLOWING) from (select * from orders where o_custkey <= 20000) s order by 1, 2;
+--source ../include/drop_functions.inc

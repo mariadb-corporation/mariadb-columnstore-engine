@@ -5,6 +5,7 @@
 # -------------------------------------------------------------- #
 --source ../include/have_columnstore.inc
 --source ../include/detect_maxscale.inc
+--source ../include/functions.inc
 #
 --disable_warnings
 DROP DATABASE IF EXISTS mcs4009_db;
@@ -60,3 +61,4 @@ select calshowpartitions('lineitem','l_orderkey');
 # -------------------------------------------------------------- #
 #
 DROP DATABASE mcs4009_db;
+--source ../include/drop_functions.inc

@@ -5,12 +5,13 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--source ../include/functions.inc
 #
 USE tpch1;
 #
 # Negative test case for attempting to drop a non-existent partition.
 select caldroppartitions('lineitem', '4.1.1');
 select caldisablepartitions('lineitem', '4.1.1');
-
+--source ../include/drop_functions.inc
 #
 
