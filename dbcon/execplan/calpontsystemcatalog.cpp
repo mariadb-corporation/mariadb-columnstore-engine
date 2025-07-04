@@ -914,7 +914,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
         throw IDBExcept(status);
       else{
         Message::Args args;
-        args.add("rowGroup status: " + status);
+        args.add("rowGroup status: " + std::to_string(status));
         throw IDBExcept(ERR_SYSTEM_CATALOG, args);
       }
     }
