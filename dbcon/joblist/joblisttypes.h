@@ -29,7 +29,6 @@
 
 namespace joblist
 {
-const uint64_t ENUMNULL = 0xffff;
 const uint64_t BIGINTNULL = 0x8000000000000000ULL;
 const uint64_t BIGINTEMPTYROW = 0x8000000000000001ULL;
 const uint32_t INTNULL = 0x80000000;

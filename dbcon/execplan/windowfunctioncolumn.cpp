@@ -610,6 +610,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
       break;
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
     {
       if (row.equals<2>(USMALLINTNULL, fInputIndex))

@@ -314,12 +314,7 @@ boost::any DDLIndexPopulator::convertData(const CalpontSystemCatalog::ColType& c
   switch (colType.colDataType)
   {
     case CalpontSystemCatalog::BIT:
-    case CalpontSystemCatalog::ENUM:
-    {
-      string strData(colType.fEnumValues[data]);
-
-      return *reinterpret_cast<string*>(&strData);
-    }
+    case CalpontSystemCatalog::ENUM: return colType.fEnumValues[data];
     case execplan::CalpontSystemCatalog::TINYINT: return *reinterpret_cast<char*>(&data);
 
     case execplan::CalpontSystemCatalog::SMALLINT: return *reinterpret_cast<short*>(&data);
@@ -467,7 +462,8 @@ bool DDLIndexPopulator::checkNotNull(const IdxTuple& data, const CalpontSystemCa
     case CalpontSystemCatalog::BIT: break;
 
     case execplan::CalpontSystemCatalog::ENUM:
-      isNull = any_cast<short>(data.data) == any_cast<short>(nullvalue);
+      isNull = (any_cast<unsigned>(data.data) == any_cast<unsigned>(nullvalue)) ||
+      (any_cast<unsigned>(data.data)==colType.enumVals.size());
       break;
 
     case execplan::CalpontSystemCatalog::TINYINT:

@@ -731,6 +731,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
       break;
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
     {
       fResult.uintVal = row.getUintField<2>(fInputIndex);

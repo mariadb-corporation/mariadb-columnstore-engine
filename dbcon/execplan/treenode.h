@@ -474,6 +474,16 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 {
   switch (fResultType.colDataType)
   {
+    case CalpontSystemCatalog::ENUM:
+    
+    if (fResult.uintVal<fResultType.enumVals.size()) {
+      fResult.strVal.assign(fResultType.enumVals[fResult.uintVal]);
+    } else {
+      fResult.strVal.dropString();
+    }
+
+    break;
+
     case CalpontSystemCatalog::VARCHAR:
       if (fResultType.colWidth <= 7)
       {
@@ -713,6 +723,7 @@ inline int64_t TreeNode::getIntVal()
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::INT: return fResult.intVal;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:
@@ -764,6 +775,7 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::MEDINT:
     case CalpontSystemCatalog::INT: return fResult.intVal;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::UBIGINT:
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:

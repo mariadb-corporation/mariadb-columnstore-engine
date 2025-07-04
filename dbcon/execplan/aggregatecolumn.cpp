@@ -479,8 +479,16 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
 
       break;
 
-    case CalpontSystemCatalog::USMALLINT:
+      case CalpontSystemCatalog::USMALLINT:
       if (row.equals<2>(USMALLINTNULL, fInputIndex))
+        isNull = true;
+      else
+        fResult.uintVal = row.getUintField<2>(fInputIndex);
+
+      break;
+
+      case CalpontSystemCatalog::ENUM:
+      if ((row.equals<2>(USMALLINTNULL, fInputIndex)) || (row.getUintField<2>(fInputIndex) == USMALLINTNULL))
         isNull = true;
       else
         fResult.uintVal = row.getUintField<2>(fInputIndex);
