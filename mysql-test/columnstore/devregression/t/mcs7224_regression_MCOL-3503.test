@@ -5,10 +5,11 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--source ../include/functions.inc
 #
 USE tpch1;
 #
 select depname, empno, moda(salary) over(partition by depname order by enroll_date) from empsalary order by depname, empno, enroll_date;
 select avg(salary),depname, moda(salary) over(partition by depname order by enroll_date) from empsalary group by depname order by depname, avg(salary);
 #
-
+--source ../include/drop_functions.inc

@@ -5,12 +5,18 @@ set -eo pipefail
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
 
-CONTAINER_NAME="$1"
+optparse.define short=c long=container-name desc="Name of the Docker container where mtr tests will run" variable=CONTAINER_NAME
+source $(optparse.build)
 
 echo "Arguments received: $@"
 
 if [[ "$EUID" -ne 0 ]]; then
   error "Please run script as root"
+  exit 1
+fi
+
+if [[ -z "${CONTAINER_NAME:-}" ]]; then
+  echo "Please provide provide --container-name parameter, e.g. ./run_smoke.sh --container-name smoke185"
   exit 1
 fi
 

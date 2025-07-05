@@ -20,17 +20,21 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-if [[ -z "${CONTAINER_NAME}" ]]; then
-    echo "Please provide mtr container name as a parameter, e.g. ./run_mtr.sh -c mtr183"
+for flag in CONTAINER_NAME DISTRO EVENT MTR_SUITE_LIST; do
+  if [[ -z "${!flag}" ]]; then
+    error "Missing required flag: -${flag:0:1} / --${flag,,}"
     exit 1
-fi
+  fi
+done
 
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     error "Container '${CONTAINER_NAME}' is not running."
     exit 1
 fi
 
-if [[ "$DISTRO" == *rocky* ]]; then
+select_pkg_format ${DISTRO}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SOCKET_PATH="/var/lib/mysql/mysql.sock"
     MTR_PATH="/usr/share/mysql-test"
 else

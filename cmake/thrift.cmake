@@ -25,8 +25,8 @@ set(THRIFT_LIBRARY ${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${
 
 ExternalProject_Add(
     external_thrift
-    URL https://github.com/apache/thrift/archive/refs/tags/v0.17.0.tar.gz
-    URL_HASH SHA256=f5888bcd3b8de40c2c2ab86896867ad9b18510deb412cba3e5da76fb4c604c29
+    URL https://github.com/apache/thrift/archive/refs/tags/v0.22.0.tar.gz
+    URL_HASH SHA256=c4649c5879dd56c88f1e7a1c03e0fbfcc3b2a2872fb81616bffba5aa8a225a37
     PREFIX ${INSTALL_LOCATION}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_LOCATION}
                -DBUILD_COMPILER=YES

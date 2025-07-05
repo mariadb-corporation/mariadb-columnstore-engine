@@ -1826,7 +1826,7 @@ void ExtentMap::save(const string& filename)
 
   if (!out)
   {
-    log_errno("ExtentMap::save(): open");
+    log_errno("ExtentMap::save(): can't open file " + filename);
     releaseFreeList(READ);
     releaseEMIndex(READ);
     releaseEMEntryTable(READ);

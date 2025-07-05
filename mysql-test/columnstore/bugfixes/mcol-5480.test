@@ -2,7 +2,7 @@
 # MCOL-5480 LDI loads values incorrectly for MEDIUMINT, TIME and TIMESTAMP
 # when cpimport is used for batch insert
 #
-
+--source ../include/disable_11.4.inc
 --source ../include/have_columnstore.inc
 --source ../include/detect_maxscale.inc
 

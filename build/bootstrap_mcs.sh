@@ -11,7 +11,6 @@ export CLICOLOR_FORCE=1 #cmake output
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
-CTEST_BIN_NAME=ctest
 
 RPM_CONFIG_DIR="/etc/my.cnf.d"
 DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
@@ -53,7 +52,6 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
@@ -62,6 +60,7 @@ optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN defaul
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 
 source $(optparse.build)
 
@@ -77,10 +76,43 @@ if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
     detect_distro
 fi
 
-pkg_format="deb"
-if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
+select_pkg_format ${OS}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
+    CTEST_BIN_NAME=:"ctest3"
+else
+    CTEST_BIN_NAME="ctest"
 fi
+
+install_sccache() {
+    if [[ "$SCCACHE" == false ]]; then
+      return
+    fi
+
+    if [[ "$(arch)" == "x86_64" ]]; then
+      sccache_arch="x86_64"
+    else
+      sccache_arch="aarch64"
+    fi
+
+    message "getting sccache..."
+
+    if command -v apt-get &>/dev/null; then
+      apt-get clean
+      apt-get update -y
+      apt-get install -y curl
+    elif command -v yum &>/dev/null; then
+      yum install -y curl
+    fi || true
+
+    curl -L -o sccache.tar.gz \
+      "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
+
+    tar xzf sccache.tar.gz
+    install sccache*/sccache /usr/local/bin/ && message "sccache installed"
+}
+
+install_sccache
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
@@ -245,7 +277,7 @@ modify_packaging() {
     echo "Modifying_packaging..."
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
     fi
 
@@ -257,7 +289,7 @@ modify_packaging() {
             grep mariadb /usr/share/lto-disabled-list/lto-disabled-list
     fi
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         apt-cache madison liburing-dev | grep liburing-dev || {
             sed 's/liburing-dev/libaio-dev/g' -i debian/control &&
                 sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules &&
@@ -466,7 +498,7 @@ generate_svgs() {
 build_package() {
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "rpm" ]]; then
+    if [[ $PKG_FORMAT == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"
@@ -555,7 +587,7 @@ run_unit_tests() {
 
     message "Running unittests"
     cd $MARIA_BUILD_PATH
-    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
+    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
     cd - >/dev/null
 }
 
@@ -744,9 +776,14 @@ construct_cmake_flags
 init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
+
     modify_packaging
     build_package
     message_splitted "PACKAGES BUILD FINISHED"
+    run_unit_tests
+    if [[ $SCCACHE = true ]]; then
+      sccache --show-stats
+    fi
     exit 0
 fi
 

@@ -23,6 +23,8 @@ set(libcalmysql_SRCS
     ha_mcs_impl.cpp
     ha_mcs_dml.cpp
     ha_mcs_ddl.cpp
+    ha_mcs_execplan_helpers.cpp
+    ha_mcs_execplan_walks.cpp
     ha_mcs_execplan.cpp
     ha_scalar_sub.cpp
     ha_in_sub.cpp
@@ -40,6 +42,7 @@ set(libcalmysql_SRCS
     is_columnstore_files.cpp
     is_columnstore_extents.cpp
     columnstore_dataload.cpp
+    rulebased_optimizer.cpp
 )
 
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")

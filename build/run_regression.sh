@@ -12,7 +12,7 @@ optparse.define short=t long=regression-timeout desc="Timeout for the regression
 optparse.define short=n long=test-name          desc="Name of regression test to execute"                           variable=TEST_NAME
 source "$(optparse.build)"
 
-for flag in CONTAINER_NAME REGRESSION_BRANCH DISTRO; do
+for flag in CONTAINER_NAME REGRESSION_BRANCH DISTRO REGRESSION_TIMEOUT TEST_NAME; do
   if [[ -z "${!flag}" ]]; then
     error "Missing required flag: -${flag:0:1} / --${flag,,}"
     exit 1

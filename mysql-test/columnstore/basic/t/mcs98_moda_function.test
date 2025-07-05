@@ -4,6 +4,7 @@
 #
 # Test MODA with various numeric types
 -- source ../include/have_columnstore.inc
+--source ../include/functions.inc
 --disable_warnings
 DROP DATABASE IF EXISTS mcs98_db;
 --enable_warnings
@@ -100,4 +101,4 @@ SELECT moda(floor(rl)) FROM t2;
 SELECT t, moda(tu) 'q1' FROM t2 GROUP BY t HAVING moda(tu) > 5;
 # Clean UP
 DROP DATABASE mcs98_db;
-
+--source ../include/drop_functions.inc

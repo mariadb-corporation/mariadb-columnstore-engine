@@ -425,7 +425,8 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
              << endl;
         Message::Args args;
         Message message(9);
-        args.add("Error in dropping table from systables.");
+        args.add(fTxnid.id);
+        args.add(" Error in dropping table from systables.");
         args.add(errorMsg);
         message.format(args);
         result.result = (ResultCode)rc;
