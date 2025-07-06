@@ -443,7 +443,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin",
 
       "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_multi_node_mtr.sh " +
-      "--columnstore-image-name $${MCS_IMAGE_NAME}" +
+      "--columnstore-image-name $${MCS_IMAGE_NAME} " +
       "--distro " + platform,
     ],
   },
