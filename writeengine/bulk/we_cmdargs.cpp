@@ -66,7 +66,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
  , fReadBufSize(-1)
  , fIOReadBufSize(-1)
  , fSetBufSize(0)
- , fColDelim('|')
+ , fColDelim(0)
  , fEnclosedChar(0)
  , fEscChar(0)
  , fSkipRows(0)
@@ -367,7 +367,10 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
 
   curJob.setReadBufferCount(fIOReadBufSize);
   curJob.setReadBufferSize(fReadBufSize);
-  curJob.setMaxErrorCount(fMaxErrors);
+  if (fMaxErrors >= 0)
+  {
+    curJob.setMaxErrorCount(fMaxErrors);
+  }
   if (!fPmFilePath.empty())
   {
     importPath = fPmFilePath;
