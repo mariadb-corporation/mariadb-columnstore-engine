@@ -48,8 +48,12 @@ include(configureEngine)
 include(compiler_flags)
 include(misc)
 
+add_subdirectory(dbcon/mysql)
+if(NOT TARGET columnstore)
+    return()
+endif()
+
 set(COMPONENTS
-    dbcon/mysql
     utils
     oam/oamcpp
     dbcon/execplan
