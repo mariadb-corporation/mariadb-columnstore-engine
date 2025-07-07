@@ -86,33 +86,31 @@ fi
 
 install_sccache() {
     if [[ "$SCCACHE" == false ]]; then
-      return
+        return
     fi
 
     if [[ "$(arch)" == "x86_64" ]]; then
-      sccache_arch="x86_64"
+        sccache_arch="x86_64"
     else
-      sccache_arch="aarch64"
+        sccache_arch="aarch64"
     fi
 
     message "getting sccache..."
 
     if command -v apt-get &>/dev/null; then
-      apt-get clean
-      apt-get update -y
-      apt-get install -y curl
+        apt-get clean
+        apt-get update -y
+        apt-get install -y curl
     elif command -v yum &>/dev/null; then
-      yum install -y curl
+        yum install -y curl
     fi || true
 
     curl -L -o sccache.tar.gz \
-      "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
+        "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
 
     tar xzf sccache.tar.gz
     install sccache*/sccache /usr/local/bin/ && message "sccache installed"
 }
-
-install_sccache
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
@@ -161,6 +159,7 @@ install_deps() {
 }
 
 install_deps
+install_sccache
 
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -782,7 +781,7 @@ if [[ $BUILD_PACKAGES = true ]]; then
     message_splitted "PACKAGES BUILD FINISHED"
     run_unit_tests
     if [[ $SCCACHE = true ]]; then
-      sccache --show-stats
+        sccache --show-stats
     fi
     exit 0
 fi
