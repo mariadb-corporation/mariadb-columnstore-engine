@@ -79,7 +79,7 @@ fi
 select_pkg_format ${OS}
 
 if [[ "$PKG_FORMAT" == "rpm" ]]; then
-    CTEST_BIN_NAME=:"ctest3"
+    CTEST_BIN_NAME="ctest3"
 else
     CTEST_BIN_NAME="ctest"
 fi
