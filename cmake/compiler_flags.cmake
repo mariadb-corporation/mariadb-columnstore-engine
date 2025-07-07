@@ -82,6 +82,7 @@ set(CLANG_FLAGS
     -Wno-typedef-redefinition
     -Wno-missing-template-arg-list-after-template-kw
     -Wno-unused-parameter
+    -Wno-unused-private-field
 )
 
 set(GNU_FLAGS # suppressed warnings

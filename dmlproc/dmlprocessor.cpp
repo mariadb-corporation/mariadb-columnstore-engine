@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <ctime>
 
-//#define      SERIALIZE_DDL_DML_CPIMPORT    1
+// #define      SERIALIZE_DDL_DML_CPIMPORT    1
 #include <boost/thread/mutex.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
@@ -64,11 +64,6 @@ extern boost::mutex mute;
 extern boost::condition_variable cond;
 
 #define MCOL_140  // Undefine to test VSS for out of order transactions
-
-namespace
-{
-const std::string myname = "DMLProc";
-}
 
 namespace dmlprocessor
 {
