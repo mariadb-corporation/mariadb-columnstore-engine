@@ -115,6 +115,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "publish " + step_prefix,
     depends_on: [std.strReplace(step_prefix, " latest", ""), "createrepo"],
     image: "amazon/aws-cli:2.22.30",
+    volumes: [pipeline._volumes.mdb],
     when: {
       status: ["success", "failure"],
     },
@@ -132,7 +133,21 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "sleep 10",
       "ls -lR " + result,
 
-      "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors --debug",
+     //clean old versions of .deb/.rpm files
+     "source /mdb/" + builddir + "/storage/columnstore/columnstore/VERSION && " +
+     "CURRENT_VERSION=${COLUMNSTORE_VERSION_MAJOR}.${COLUMNSTORE_VERSION_MINOR}.${COLUMNSTORE_VERSION_PATCH} && " +
+     "aws s3 rm s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + "/ " +
+     "--recursive " +
+     "--exclude \"*\" " +
+     // include only debs/rpms with columnstore in names
+     "--include \"*columnstore*.deb\" " +
+     "--include \"*columnstore*.rpm\" " +
+     // but do not delete the ones matching CURRENT_VERSION
+     "--exclude \"*${CURRENT_VERSION}*.deb\" " +
+     "--exclude \"*${CURRENT_VERSION}*.rpm\" " +
+     "--only-show-errors",
+
+      "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
       make_clickable_link(publish_pkg_url),
     ],
