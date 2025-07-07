@@ -99,16 +99,16 @@ struct LitEval<'0', Cs...>
 };
 
 template <char... Cs>
-constexpr uint128_t operator"" _xxl()
+constexpr uint128_t operator""_xxl()
 {
   return LitEval<Cs...>::eval();
 }
 }  // namespace detail_xxl
 
 template <char... Cs>
-constexpr uint128_t operator"" _xxl()
+constexpr uint128_t operator""_xxl()
 {
-  return ::detail_xxl::operator"" _xxl<Cs...>();
+  return ::detail_xxl::operator""_xxl < Cs...>();
 }
 
 namespace datatypes
@@ -183,7 +183,6 @@ const long long columnstore_precision[19] = {0,
                                              9999999999999999LL,
                                              99999999999999999LL,
                                              999999999999999999LL};
-
 
 const int128_t ConversionRangeMaxValue[20] = {9999999999999999999_xxl,
                                               99999999999999999999_xxl,

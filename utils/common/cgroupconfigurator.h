@@ -62,7 +62,6 @@ class CGroupConfigurator
   bool cGroupDefined;
   config::Config* config;
   uint64_t totalMemory = 0;
-  uint64_t totalSwap = 0;
   bool printedWarning = false;
   enum CGroupVersions cGroupVersion_;
 };
