@@ -11,7 +11,6 @@ export CLICOLOR_FORCE=1 #cmake output
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
-CTEST_BIN_NAME=ctest
 
 RPM_CONFIG_DIR="/etc/my.cnf.d"
 DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
@@ -53,7 +52,6 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
@@ -62,6 +60,7 @@ optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN defaul
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 
 source $(optparse.build)
 
@@ -77,10 +76,43 @@ if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
     detect_distro
 fi
 
-pkg_format="deb"
-if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
+select_pkg_format ${OS}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
+    CTEST_BIN_NAME=:"ctest3"
+else
+    CTEST_BIN_NAME="ctest"
 fi
+
+install_sccache() {
+    if [[ "$SCCACHE" == false ]]; then
+      return
+    fi
+
+    if [[ "$(arch)" == "x86_64" ]]; then
+      sccache_arch="x86_64"
+    else
+      sccache_arch="aarch64"
+    fi
+
+    message "getting sccache..."
+
+    if command -v apt-get &>/dev/null; then
+      apt-get clean
+      apt-get update -y
+      apt-get install -y curl
+    elif command -v yum &>/dev/null; then
+      yum install -y curl
+    fi || true
+
+    curl -L -o sccache.tar.gz \
+      "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
+
+    tar xzf sccache.tar.gz
+    install sccache*/sccache /usr/local/bin/ && message "sccache installed"
+}
+
+install_sccache
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
@@ -97,7 +129,7 @@ install_deps() {
       bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
-      graphviz devscripts ccache equivs eatmydata curl"
+      graphviz devscripts ccache equivs eatmydata curl python3"
 
     if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
@@ -144,6 +176,9 @@ if [[ ${BRANCH_NAME_TO_OUTDIR} = true ]]; then
 fi
 
 disable_git_restore_frozen_revision() {
+    if [[ $DO_NOT_FREEZE_REVISION = true ]]; then
+        return
+    fi
     cd $MDB_SOURCE_PATH
     git config submodule.storage/columnstore/columnstore.update none
     cd - >/dev/null
@@ -152,6 +187,15 @@ disable_git_restore_frozen_revision() {
 DEP_GRAPH_PATH="$MARIA_BUILD_PATH/dependency_graph/mariadb.dot"
 
 stop_service() {
+    if [[ $RESTART_SERVICES = false || $RECOMPILE_ONLY = true ]]; then
+        return
+    fi
+
+    if [ "$EUID" -ne 0 ]; then
+        error "Please run script as root to be able to manage services"
+        exit 1
+    fi
+
     message_split
     message "Stopping MariaDB services"
     systemctl stop mariadb
@@ -169,6 +213,15 @@ check_service() {
 }
 
 start_service() {
+    if [[ $RESTART_SERVICES = false || $RECOMPILE_ONLY = true ]]; then
+        return
+    fi
+
+    if [ "$EUID" -ne 0 ]; then
+        error "Please run script as root to be able to manage services"
+        exit 1
+    fi
+
     message_split
     message "Starting MariaDB services"
     systemctl start mariadb-columnstore
@@ -185,16 +238,26 @@ start_service() {
 }
 
 start_storage_manager_if_needed() {
-    if [[ $CLOUD_STORAGE_ENABLED = true ]]; then
-        export MCS_USE_S3_STORAGE=1
-        message_split
-        message "Starting Storage Manager service"
-        systemctl start mcs-storagemanager
-        check_service mcs-storagemanager
+    if [[ $CLOUD_STORAGE_ENABLED = false ]]; then
+        return
     fi
+
+    export MCS_USE_S3_STORAGE=1
+    message_split
+    message "Starting Storage Manager service"
+    systemctl start mcs-storagemanager
+    check_service mcs-storagemanager
 }
 
 clean_old_installation() {
+    if [[ $NO_CLEAN = true || $RECOMPILE_ONLY = true ]]; then
+        return
+    fi
+
+    if [ "$EUID" -ne 0 ]; then
+        error "Please run script as root to be able to clean installations"
+        exit 1
+    fi
     message_split
     message "Cleaning old installation"
     rm -rf /var/lib/columnstore/data1/*
@@ -214,7 +277,7 @@ modify_packaging() {
     echo "Modifying_packaging..."
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
     fi
 
@@ -226,7 +289,7 @@ modify_packaging() {
             grep mariadb /usr/share/lto-disabled-list/lto-disabled-list
     fi
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         apt-cache madison liburing-dev | grep liburing-dev || {
             sed 's/liburing-dev/libaio-dev/g' -i debian/control &&
                 sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules &&
@@ -435,7 +498,7 @@ generate_svgs() {
 build_package() {
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "rpm" ]]; then
+    if [[ $PKG_FORMAT == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"
@@ -479,17 +542,26 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
-    check_debian_install_file
+    # check_debian_install_file // will be uncommented later
     generate_svgs
 
-    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator &&
-        message "Installing silently" &&
-        ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
-
+    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
     check_errorcode
 
     message "Adding symbol link to compile_commands.json to the source root"
     ln -sf "$MARIA_BUILD_PATH/compile_commands.json" "$MDB_SOURCE_PATH"
+}
+
+install_binary() {
+    if [[ $RECOMPILE_ONLY = true ]]; then
+        warn "No binary installation done"
+        return
+    fi
+
+    message "Installing silently"
+    cd $MDB_SOURCE_PATH
+    ${CMAKE_BIN_NAME} --install "$MARIA_BUILD_PATH" | spinner 30
+    check_errorcode
 }
 
 check_user_and_group() {
@@ -510,33 +582,39 @@ run_unit_tests() {
     message_split
     if [[ $SKIP_UNIT_TESTS = true ]]; then
         warn "Skipping unittests"
-    else
-        message "Running unittests"
-        cd $MARIA_BUILD_PATH
-        ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
-        cd - >/dev/null
+        return
     fi
+
+    message "Running unittests"
+    cd $MARIA_BUILD_PATH
+    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
+    cd - >/dev/null
 }
 
 run_microbenchmarks_tests() {
     message_split
     if [[ $RUN_BENCHMARKS = false ]]; then
         warn "Skipping microbenchmarks"
-    else
-        message "Runnning microbenchmarks"
-        cd $MARIA_BUILD_PATH
-        ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
-        cd - >/dev/null
+        return
     fi
+
+    message "Runnning microbenchmarks"
+    cd $MARIA_BUILD_PATH
+    ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
+    cd - >/dev/null
 }
 
 disable_plugins_for_bootstrap() {
     find /etc -type f -exec sed -i 's/plugin-load-add=auth_gssapi.so//g' {} +
-    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so//g' {} +
+    find /etc -type f -exec sed -i 's/plugin-load-add=ha_columnstore.so/#plugin-load-add=ha_columnstore.so/g' {} +
 }
 
 enable_columnstore_back() {
-    cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf $CONFIG_DIR
+    if [[ "$NO_CLEAN" == true ]]; then
+        find /etc -type f -exec sed -i 's/#plugin-load-add=ha_columnstore.so/plugin-load-add=ha_columnstore.so/g' {} +
+    else
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/dbcon/mysql/columnstore.cnf $CONFIG_DIR
+    fi
 }
 
 fix_config_files() {
@@ -552,6 +630,7 @@ fix_config_files() {
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
             warn "MDB Server has thread_stack settings on $COLUMNSTORE_CONFIG check it's compatibility with ASAN"
         else
+            echo "" >>$COLUMNSTORE_CONFIG
             echo "thread_stack = ${THREAD_STACK_SIZE}" >>$COLUMNSTORE_CONFIG
             message "thread_stack was set to ${THREAD_STACK_SIZE} in $COLUMNSTORE_CONFIG"
         fi
@@ -593,77 +672,79 @@ make_dir() {
 }
 
 install() {
-    if [[ $RECOMPILE_ONLY = false ]]; then
+    if [[ $RECOMPILE_ONLY = true ]]; then
+        warn "No install configuration done"
+        return
+    fi
 
-        if [ "$EUID" -ne 0 ]; then
-            error "Please run script as root to install MariaDb to system paths"
-            exit 1
-        fi
+    if [ "$EUID" -ne 0 ]; then
+        error "Please run script as root to install MariaDb to system paths"
+        exit 1
+    fi
 
-        message_split
-        message "Installing MariaDB"
-        disable_plugins_for_bootstrap
+    message_split
+    message "Installing MariaDB"
+    disable_plugins_for_bootstrap
 
-        make_dir "$REPORT_PATH"
-        chmod 777 "$REPORT_PATH"
+    make_dir "$REPORT_PATH"
+    chmod 777 "$REPORT_PATH"
 
-        check_user_and_group mysql
-        check_user_and_group syslog
+    check_user_and_group mysql
+    check_user_and_group syslog
 
-        make_dir $CONFIG_DIR
+    make_dir $CONFIG_DIR
 
-        echo "[client-server]
+    echo "[client-server]
     socket=/run/mysqld/mysqld.sock" >$CONFIG_DIR/socket.cnf
 
-        make_dir /var/lib/mysql
+    make_dir /var/lib/mysql
 
-        message "Running mysql_install_db"
-        sudo -u mysql mysql_install_db --rpm --user=mysql >/dev/null
+    message "Running mariadb-install-db"
+    sudo -u mysql mariadb-install-db --rpm --user=mysql >/dev/null
 
-        enable_columnstore_back
+    enable_columnstore_back
 
-        make_dir /etc/columnstore
+    make_dir /etc/columnstore
 
-        if [[ "$NO_CLEAN" == false ]]; then
-            cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
-            cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
-        fi
-
-        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
-
-        if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
-            make_dir /usr/share/mysql
-            make_dir /etc/mysql/
-            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
-            cp "$MDB_SOURCE_PATH"/debian/additions/debian-start /etc/mysql/debian-start
-            >/etc/mysql/debian.cnf
-        fi
-
-        fix_config_files
-
-        if [ -d "$DEBCONFIG_DIR" ]; then
-            message "Copying configs from $DEBCONFIG_DIR to $CONFIG_DIR"
-            cp -rp "$DEBCONFIG_DIR"/* "$CONFIG_DIR"
-        fi
-
-        make_dir /var/lib/columnstore/data1
-        make_dir /var/lib/columnstore/data1/systemFiles
-        make_dir /var/lib/columnstore/data1/systemFiles/dbrm
-        make_dir /run/mysqld/
-        make_dir $DATA_DIR
-
-        chmod +x $INSTALL_PREFIX/bin/mariadb*
-
-        ldconfig
-
-        start_storage_manager_if_needed
-
-        message "Running columnstore-post-install"
-        make_dir /var/lib/columnstore/local
-        columnstore-post-install --rpmmode=install
-        message "Running install_mcs_mysql"
-        install_mcs_mysql.sh
+    if [[ "$NO_CLEAN" == false ]]; then
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/storage-manager/storagemanager.cnf /etc/columnstore/storagemanager.cnf
     fi
+
+    cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
+
+    if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
+        make_dir /usr/share/mysql
+        make_dir /etc/mysql/
+        cp "$MDB_SOURCE_PATH"/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
+        cp "$MDB_SOURCE_PATH"/debian/additions/debian-start /etc/mysql/debian-start
+        >/etc/mysql/debian.cnf
+    fi
+
+    fix_config_files
+
+    if [ -d "$DEBCONFIG_DIR" ]; then
+        message "Copying configs from $DEBCONFIG_DIR to $CONFIG_DIR"
+        cp -rp "$DEBCONFIG_DIR"/* "$CONFIG_DIR"
+    fi
+
+    make_dir /var/lib/columnstore/data1
+    make_dir /var/lib/columnstore/data1/systemFiles
+    make_dir /var/lib/columnstore/data1/systemFiles/dbrm
+    make_dir /run/mysqld/
+    make_dir $DATA_DIR
+
+    chmod +x $INSTALL_PREFIX/bin/mariadb*
+
+    ldconfig
+
+    start_storage_manager_if_needed
+
+    message "Running columnstore-post-install"
+    make_dir /var/lib/columnstore/local
+    columnstore-post-install --rpmmode=install
+    message "Running install_mcs_mysql"
+    install_mcs_mysql.sh
 
     chown -R syslog:syslog /var/log/mariadb/
     chmod 777 /var/log/mariadb/
@@ -671,17 +752,19 @@ install() {
 }
 
 smoke() {
-    if [[ $SKIP_SMOKE = false ]]; then
-        message_split
-        message "Creating test database"
-        mariadb -e "create database if not exists test;"
-        message "Selecting magic numbers"
-        MAGIC=$(mysql -N test <"$MDB_SOURCE_PATH"/storage/columnstore/columnstore/tests/scripts/smoke.sql)
-        if [[ $MAGIC == '42' ]]; then
-            message "Great answer correct!"
-        else
-            warn "Smoke failed, answer is '$MAGIC'"
-        fi
+    if [[ $RECOMPILE_ONLY = true || $SKIP_SMOKE = true || $RESTART_SERVICES = false ]]; then
+        return
+    fi
+
+    message_split
+    message "Creating test database"
+    mariadb -e "create database if not exists test;"
+    message "Selecting magic numbers"
+    MAGIC=$(mariadb -N test <"$MDB_SOURCE_PATH"/storage/columnstore/columnstore/tests/scripts/smoke.sql)
+    if [[ $MAGIC == '42' ]]; then
+        message "Great answer correct!"
+    else
+        warn "Smoke failed, answer is '$MAGIC'"
     fi
 }
 
@@ -692,23 +775,26 @@ fi
 construct_cmake_flags
 init_submodules
 
-if [[ $BUILD_PACKAGES = false ]]; then
-    stop_service
+if [[ $BUILD_PACKAGES = true ]]; then
 
-    if [[ $NO_CLEAN = false ]]; then
-        clean_old_installation
-    fi
-    build_binary
-    run_unit_tests
-    run_microbenchmarks_tests
-    install
-    if [[ $RESTART_SERVICES = true ]]; then
-        start_service
-        smoke
-    fi
-else
     modify_packaging
     build_package
+    message_splitted "PACKAGES BUILD FINISHED"
+    run_unit_tests
+    if [[ $SCCACHE = true ]]; then
+      sccache --show-stats
+    fi
+    exit 0
 fi
+
+stop_service
+clean_old_installation
+build_binary
+install_binary
+run_unit_tests
+run_microbenchmarks_tests
+install
+start_service
+smoke
 
 message_splitted "FINISHED"
