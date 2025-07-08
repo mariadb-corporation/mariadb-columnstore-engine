@@ -393,7 +393,7 @@ void rollbackAll(DBRM* dbrm)
 
       try
       {
-        rollbackProcessor.processBulkRollback(tableLocks[i], dbrm, uniqueId, dbRootPMMap, lockReleased);
+        rollbackProcessor.processBulkRollback(tableLocks[i], dbrm, uniqueId, oamcache, lockReleased);
         ostringstream oss;
         oss << "DMLProc started bulkrollback on table OID " << tableLocks[i].tableOID << " and table lock id "
             << tableLocks[i].id << " finished and tablelock is released.";

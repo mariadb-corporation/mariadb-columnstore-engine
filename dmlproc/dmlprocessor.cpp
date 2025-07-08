@@ -1847,7 +1847,7 @@ void DMLProcessor::operator()()
 
 void RollbackTransactionProcessor::processBulkRollback(BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm,
                                                        uint64_t uniqueId,
-                                                       OamCache::dbRootPMMap_t& dbRootPMMap,
+                                                       OamCache* oamcache,
                                                        bool& lockReleased)
 {
   // Take over ownership of stale lock.
@@ -1886,7 +1886,7 @@ void RollbackTransactionProcessor::processBulkRollback(BRM::TableLockInfo lockIn
 
   for (uint32_t i = 0; i < lockInfo.dbrootList.size(); i++)
   {
-    pmId = (*dbRootPMMap)[lockInfo.dbrootList[i]];
+    pmId = oamcache->getOwnerPM(lockInfo.dbrootList[i]);
     pmSet.insert(pmId);
   }
 

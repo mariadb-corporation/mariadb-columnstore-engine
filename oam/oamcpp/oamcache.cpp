@@ -295,5 +295,17 @@ int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
   }
   idbassert_s(0, "cannot find owner for dbroot " << dbroot);
 }
+std::vector<int> OamCache::getPMDBRoots(int PM) // what DBRoots are owned by given PM.
+{
+  std::vector<int> result;
+  for (const auto& dbroot : (*dbRootPMMap))
+  {
+    if (dbroot.second.find(PM) != dbroot.second.end())
+    {
+      result.push_back(dbroot.first);
+    }
+  }
+  return result;
+}
 
 } /* namespace oam */
