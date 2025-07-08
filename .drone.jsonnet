@@ -4,27 +4,21 @@ local events = ["pull_request", "cron"];
 local current_branch = "stable-23.10";
 
 local servers = {
-  "stable-23.10": ["10.6-enterprise"],
+  [current_branch]: ["10.6-enterprise"],
 };
 
 local platforms = {
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local platforms_arm = {
-  "stable-23.10": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
+local builddir = "verylongdirnameforverystrangecpackbehavior";
 local customEnvCommandsMap = {
-  // 'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
-  "clang-20": [
-    "apt-get clean && apt-get update",
-    "apt-get install -y wget curl lsb-release software-properties-common gnupg",
-    "wget https://apt.llvm.org/llvm.sh",
-    "bash llvm.sh 20",
-    "export CC=/usr/bin/clang",
-    "export CXX=/usr/bin/clang++",
-  ],
+  // 'clang-18': ["bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/install_clang_deb.sh 18"],
+  "clang-20": ["bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/install_clang_deb.sh 20"],
 };
 
 local customEnvCommands(envkey, builddir) =
@@ -52,7 +46,6 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
 
 local any_branch = "**";
 
-local builddir = "verylongdirnameforverystrangecpackbehavior";
 
 local mtr_suite_list = "basic,bugfixes";
 local mtr_full_set = "basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly";
