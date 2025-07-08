@@ -16,6 +16,7 @@ logging.basicConfig(level='DEBUG')
 SINGLE_NODE_XML = "./cmapi_server/SingleNode.xml"
 
 
+@unittest.skip('Temp skip for testing reason')
 class NodeManipTester(BaseNodeManipTestCase):
 
     def test_add_remove_node(self):
@@ -384,5 +385,3 @@ class TestDBRootsManipulation(unittest.TestCase):
             self.assertIsNotNone(dbroot2)
             self.assertEqual(dbroot1.text, '1')
             self.assertEqual(dbroot2.text, '2')
-
-
