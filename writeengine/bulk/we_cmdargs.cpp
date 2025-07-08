@@ -435,7 +435,10 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
   curJob.setS3Secret(fS3Secret);
   curJob.setS3Region(fS3Region);
   curJob.setS3Host(fS3Host);
-  curJob.setUsername(fUsername);
+  if (!fUsername.empty())
+  {
+    curJob.setUsername(fUsername);
+  }
   curJob.setSkipRows(fSkipRows);
 
   curJob.setDefaultJobUUID();
