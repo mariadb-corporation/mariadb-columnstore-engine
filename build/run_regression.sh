@@ -28,6 +28,7 @@ BUILD_DIR="verylongdirnameforverystrangecpackbehavior"
 
 prepare_regression() {
   if execInnerDocker "${CONTAINER_NAME}" "test -f /mariadb-columnstore-regression-test/mysql/queries/queryTester.cpp"; then
+    message "Preparation for regression tests is already done — skipping"
     return 0
   fi
 
@@ -68,7 +69,7 @@ prepare_regression() {
 run_test() {
   message "Running test: ${TEST_NAME:-<none>}"
 
-  execInnerDocker "${CONTAINER_NAME}" "bash -c 'sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/' &"
+  execInnerDocker "${CONTAINER_NAME}" "sleep 4800 && bash /save_stack.sh /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/ &"
 
   execInnerDockerNoTTY "${CONTAINER_NAME}" \
     "export PRESERVE_LOGS=true && cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && \
