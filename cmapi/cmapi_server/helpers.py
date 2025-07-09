@@ -136,6 +136,10 @@ def start_transaction(
         # this copy will be updated if an optional node can't be reached
         real_active_nodes = set(active_nodes)
         logging.trace(f'Active nodes on start transaction {active_nodes}')
+
+        if not len(active_nodes):
+            logging.warning('No active nodes found, transaction start will not have any effect')
+
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{version}/node/begin'
             node_success = False
