@@ -122,18 +122,6 @@ void OamCache::checkReload()
     it++;
   }
 
-//  dbRootConnectionMap.reset(new map<int, set<int>>());
-//
-//  for (i = 0; i < dbroots.size(); i++)
-//  {
-//    auto pmIter = pmToConnectionMap.find(getOw(*dbRootPMMap)[dbroots[i]]);
-//
-//    if (pmIter != pmToConnectionMap.end())
-//    {
-//      (*dbRootConnectionMap)[dbroots[i]] = (*pmIter).second;
-//    }
-//  }
-
   pmDbrootsMap.reset(new OamCache::PMDbrootsMap_t::element_type());
   systemStorageInfo_t t;
   t = oam.getStorageConfig();
@@ -155,6 +143,18 @@ void OamCache::checkReload()
   tm = oam.getModuleInfo();
   OAMParentModuleName = boost::get<3>(tm);
   systemName = config->getConfig("SystemConfig", "SystemName");
+  dbRootConnectionMap.clear();
+
+  for (i = 0; i < dbroots.size(); i++)
+  {
+    auto pmIter = pmConnectionMap.find(getOwnerPM(dbroots[i]));
+
+    if (pmIter != pmConnectionMap.end())
+    {
+      dbRootConnectionMap[dbroots[i]] = (*pmIter).second;
+    }
+  }
+
 }
 
 //OamCache::dbRootPMMap_t OamCache::getDBRootToPMMap()
@@ -167,10 +167,10 @@ void OamCache::checkReload()
 //  return dbRootConnectionMap;
 //}
 
-OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
-{
-  return pmDbrootsMap;
-}
+//OamCache::PMDbrootsMap_t OamCache::getPMToDbrootsMap()
+//{
+//  return pmDbrootsMap;
+//}
 
 uint32_t OamCache::getDBRootCount()
 {
@@ -257,8 +257,9 @@ bool OamCache::isAccessibleBy(int dbRoot, int pmId)
 
 bool OamCache::isOffline(int dbRoot)
 {
-  return dbRootConnectionMap->find(dbRoot) == dbRootConnectionMap->end();
+  return dbRootConnectionMap.find(dbRoot) == dbRootConnectionMap.end();
 }
+
 int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for read requests - either owner or us.
 {
   if ((*dbRootPMMap)[dbroot].contains(mLocalPMId))
@@ -275,14 +276,17 @@ int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for re
   }
   idbassert_s(0, "dbroot " << dbroot << " has empty set of PM's");
 }
+
 int OamCache::getClosestConnection(int dbroot) // connection index to owner's PM or ours PM - who can access dbRoot.
 {
   return pmConnectionMap[getClosestPM(dbroot)];
 }
+
 int OamCache::getOwnerConnection(int dbroot) // connection index to owner's PM.
 {
   return pmConnectionMap[getOwnerPM(dbroot)];
 }
+
 int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
 {
   for(auto j : (*dbRootPMMap)[dbroot])
@@ -295,6 +299,7 @@ int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
   }
   idbassert_s(0, "cannot find owner for dbroot " << dbroot);
 }
+
 std::vector<int> OamCache::getPMDBRoots(int PM) // what DBRoots are owned by given PM.
 {
   std::vector<int> result;
@@ -304,6 +309,16 @@ std::vector<int> OamCache::getPMDBRoots(int PM) // what DBRoots are owned by giv
     {
       result.push_back(dbroot.first);
     }
+  }
+  return result;
+}
+
+std::vector<int> OamCache::getAllDBRoots() // get all DBRoots.
+{
+  std::vector<int> result;
+  for (const auto& dbroot : (*dbRootPMMap))
+  {
+    result.push_back(dbroot.first);
   }
   return result;
 }

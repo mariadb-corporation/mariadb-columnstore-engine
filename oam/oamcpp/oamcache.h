@@ -45,13 +45,14 @@ class OamCache
 
 //  dbRootPMMap_t getDBRootToPMMap();
 //  dbRootPMMap_t getDBRootToConnectionMap();
-  PMDbrootsMap_t getPMToDbrootsMap();
+//  PMDbrootsMap_t getPMToDbrootsMap();
 
   int getClosestPM(int dbroot); // who can access dbroot's records for read requests - either owner or us.
   int getClosestConnection(int dbroot); // connection index to owner's PM or ours PM - who can access dbRoot.
   int getOwnerConnection(int dbroot); // connection index to owner's PM.
   int getOwnerPM(int dbroot); // Owner's PM index.
   std::vector<int> getPMDBRoots(int PM); // what DBRoots are owned by given PM.
+  std::vector<int> getAllDBRoots(); // get all DBRoots.
   bool isAccessibleBy(int dbRoot, int pmId);
     //// a necessary DB root is offline
     //if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
@@ -72,7 +73,7 @@ class OamCache
   OamCache& operator=(const OamCache&) const = delete;
 
   dbRootPMMap_t dbRootPMMap;
-  dbRootPMMap_t dbRootConnectionMap;
+  map<int, int> dbRootConnectionMap;
   PMDbrootsMap_t pmDbrootsMap;
   uint32_t numDBRoots = 1;
   time_t mtime = 0;

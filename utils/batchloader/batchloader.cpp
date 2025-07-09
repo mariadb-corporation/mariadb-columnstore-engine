@@ -49,6 +49,11 @@ BatchLoader::BatchLoader(uint32_t tableOid, execplan::CalpontSystemCatalog::SCN 
   fSessionId = sessionId;
   fTableOid = tableOid;
   fOamCache = OamCache::makeOamCache();
+  auto allDBRoots = fOamCache->getAllDBRoots();
+  for (auto dbr : allDBRoots)
+  {
+    fDbRoots.push_back(dbr);
+  }
 }
 //------------------------------------------------------------------------------
 // Select the first PM to send the first batch of rows.
@@ -80,6 +85,7 @@ void BatchLoader::selectFirstPM(uint32_t& PMId)
   int rc = 0;
   std::vector<BRM::EmDbRootHWMInfo_v> allInfo(fPMs.size());
 
+  idblog("fPMs size " << fPMs.size());
   for (unsigned i = 0; i < fPMs.size(); i++)
   {
     rc = dbrmp->getDbRootHWMInfo((ridList[0].objnum), fPMs[i], allInfo[i]);
@@ -380,6 +386,7 @@ void BatchLoader::buildBatchDistSeqVector()
   fPmDistSeq.clear();
   BlIntVec aDbCntVec(fPMs.size());
 
+  idblog("fPMs size " << fPMs.size());
   for (uint32_t i = 0; i < fPMs.size(); i++)
   {
     auto dbroots = fOamCache->getPMDBRoots(fPMs[i]);
