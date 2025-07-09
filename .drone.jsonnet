@@ -45,11 +45,16 @@ local customBootstrapParamsForExisitingPipelines(envkey) =
 
 local customBootstrapParamsForAdditionalPipelinesMap = {
   ASan: "--asan",
+<<<<<<< HEAD
   TSAN: "--tsan",
   UBSan: "--ubsan",
   MSan: "--msan",
   "libcpp": "--libcpp",
   "gcc-toolset": "--gcc-toolset-for-rocky-8"
+=======
+  //TSAN: "--tsan",
+  UBSan: "--ubsan",
+>>>>>>> a25d751cb (Add flag key prefix to $result)
 };
 
 local customBuildFlags(buildKey) =
