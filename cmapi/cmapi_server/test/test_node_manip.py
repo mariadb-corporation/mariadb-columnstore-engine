@@ -16,7 +16,6 @@ logging.basicConfig(level='DEBUG')
 SINGLE_NODE_XML = "./cmapi_server/SingleNode.xml"
 
 
-@unittest.skip('Temp skip for testing reason')
 class NodeManipTester(BaseNodeManipTestCase):
 
     def test_add_remove_node(self):
