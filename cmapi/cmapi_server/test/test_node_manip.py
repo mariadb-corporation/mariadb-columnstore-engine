@@ -28,8 +28,7 @@ class NodeManipTester(BaseNodeManipTestCase):
             node_manipulation.add_node(
                 self.NEW_NODE_NAME, tmp_mcs_config_filename, self.tmp_files[0]
             )
-            mock_update_dbroots_of_readonly_nodes.assert_called_once()
-            mock_update_dbroots_of_readonly_nodes.reset_mock()
+            mock_update_dbroots_of_readonly_nodes.assert_not_called()
 
             node_manipulation.add_node(
                 hostaddr, self.tmp_files[0], self.tmp_files[1]
