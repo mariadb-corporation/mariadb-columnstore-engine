@@ -224,14 +224,16 @@ class ClusterHandler():
                 node, input_config_filename=config,
                 output_config_filename=config
             )
-            with NodeConfig().modify_config(config) as root:
-                update_dbroots_of_readonly_nodes(root)
+
         except Exception as err:
             raise CMAPIBasicError('Error while removing node.') from err
 
         response['node_id'] = node
         active_nodes = get_active_nodes(config)
         if len(active_nodes) > 0:
+            with NodeConfig().modify_config(config) as root:
+                update_dbroots_of_readonly_nodes(root)
+
             update_revision_and_manager(
                 input_config_filename=config, output_config_filename=config
             )
