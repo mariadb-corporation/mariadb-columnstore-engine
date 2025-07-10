@@ -684,11 +684,13 @@ void Oam::getPmDbrootConfig(const int pmid, DBRootConfigList& dbrootconfiglist)
  * Get DBRoot - PM Config data
  *
  ********************************************************************/
-void Oam::getDbrootPmConfig(const int dbrootid, int& pmid)
+void Oam::getDbrootPmConfig(const int dbrootid, set<int>& pmids)
 {
   SystemModuleTypeConfig systemmoduletypeconfig;
   ModuleTypeConfig moduletypeconfig;
   ModuleConfig moduleconfig;
+
+  pmids.clear();
 
   try
   {
@@ -716,12 +718,15 @@ void Oam::getDbrootPmConfig(const int dbrootid, int& pmid)
           {
             if (*pt1 == dbrootid)
             {
-              pmid = (*pt).DeviceID;
-              return;
+              pmids.insert((*pt).DeviceID);
             }
           }
         }
       }
+    }
+    if (!pmids.empty())
+    {
+      return;
     }
 
     // dbrootid not found, return with error

@@ -643,7 +643,7 @@ bool DeletePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
 {
   bool rc = false;
   // cout << "Get dbroot " << dbroot << endl;
-  int pmNum = (*fDbRootPMMap)[dbroot];
+  int pmNum = oamcache()->getOwnerPM(dbroot);
   DMLTable* tablePtr = cpackage.get_Table();
   ByteStream bytestream;
   bytestream << (ByteStream::byte)WE_SVR_DELETE;

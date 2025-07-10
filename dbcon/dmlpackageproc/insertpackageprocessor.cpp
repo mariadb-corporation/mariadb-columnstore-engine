@@ -275,8 +275,7 @@ DMLPackageProcessor::DMLResult InsertPackageProcessor::processPackageInternal(
       if (tmpSet)
       {
         dbroot = tmp.dbRoot;
-        boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-        pmNum = (*dbRootPMMap)[dbroot];
+        pmNum = oamcache->getOwnerPM(dbroot);
 
         //@Bug 4760. validate pm value
         if (pmNum == 0)

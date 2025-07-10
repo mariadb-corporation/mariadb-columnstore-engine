@@ -165,8 +165,6 @@ class DMLPackageProcessor
       std::cout << "Cannot make connection to WES" << std::endl;
     }
 
-    oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-    fDbRootPMMap = oamCache->getDBRootToPMMap();
     fDbrm = aDbrm;
     fSessionID = sid;
     fExeMgr = new execplan::ClientRotator(fSessionID, "ExeMgr");
@@ -489,6 +487,8 @@ class DMLPackageProcessor
                      uint32_t tableOid);
   int endTransaction(uint64_t uniqueId, BRM::TxnID txnID, bool success);
 
+  oam::OamCache* oamcache() { return oam::OamCache::makeOamCache(); }
+
   /** @brief the Session Manager interface
    */
   execplan::SessionManager fSessionManager;
@@ -500,8 +500,6 @@ class DMLPackageProcessor
   uint32_t fPMCount;
   WriteEngine::WEClients* fWEClient;
   BRM::DBRM* fDbrm;
-  boost::shared_ptr<std::map<int, int> > fDbRootPMMap;
-  oam::Oam fOam;
   bool fRollbackPending;  // When set, any derived object should stop what it's doing and cleanup in
                           // preparation for a Rollback
   execplan::ClientRotator* fExeMgr;

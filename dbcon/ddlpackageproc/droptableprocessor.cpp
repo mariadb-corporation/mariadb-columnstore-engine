@@ -359,8 +359,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
       return result;
     }
 
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     try
     {
@@ -464,7 +463,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
       return result;
     }
 
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     try
     {
@@ -1275,8 +1274,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackageInternal(ddlpa
       bytestream << (uint32_t)colType.compressionType;
     }
 
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    pmNum = (*dbRootPMMap)[useDBRoot];
+    pmNum = oamcache->getOwnerPM(useDBRoot);
 
     try
     {

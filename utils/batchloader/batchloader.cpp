@@ -48,31 +48,11 @@ BatchLoader::BatchLoader(uint32_t tableOid, execplan::CalpontSystemCatalog::SCN 
   fPMs = PMs;
   fSessionId = sessionId;
   fTableOid = tableOid;
-  OamCache* oamcache = OamCache::makeOamCache();
-  oam::OamCache::PMDbrootsMap_t systemPmDbrootMap = oamcache->getPMToDbrootsMap();
-  std::map<int, OamCache::dbRoots>::iterator iter = systemPmDbrootMap->begin();
-  // cout << "fPMs size is " << fPMs.size() << endl;
-  fPmDbrootMap.reset(new OamCache::PMDbrootsMap_t::element_type());
-  fDbrootPMmap.reset(new map<int, int>());
-
-  for (uint32_t i = 0; i < fPMs.size(); i++)
+  fOamCache = OamCache::makeOamCache();
+  auto allDBRoots = fOamCache->getAllDBRoots();
+  for (auto dbr : allDBRoots)
   {
-    iter = systemPmDbrootMap->find(fPMs[i]);
-
-    if (iter != systemPmDbrootMap->end())
-    {
-      fDbRoots.insert(fDbRoots.end(), (iter->second).begin(), (iter->second).end());
-      (*fPmDbrootMap)[fPMs[i]] = iter->second;
-    }
-  }
-
-  // Build dbroot to PM map
-  for (iter = fPmDbrootMap->begin(); iter != fPmDbrootMap->end(); iter++)
-  {
-    for (uint32_t i = 0; i < iter->second.size(); i++)
-    {
-      (*fDbrootPMmap)[iter->second[i]] = iter->first;
-    }
+    fDbRoots.push_back(dbr);
   }
 }
 //------------------------------------------------------------------------------
@@ -199,12 +179,7 @@ void BatchLoader::selectFirstPM(uint32_t& PMId)
 
   if (createdDbroot != 0)
   {
-    std::map<int, int>::iterator iter = fDbrootPMmap->begin();
-
-    iter = fDbrootPMmap->find(createdDbroot);
-
-    if (iter != fDbrootPMmap->end())
-      PMId = iter->second;
+    PMId = fOamCache->getOwnerPM(createdDbroot);
   }
 
   // This will build the batch distribution sequence
@@ -233,12 +208,12 @@ void BatchLoader::selectFirstPM(uint32_t& PMId)
     {
       PMRootInfo aEntry;
       aEntry.PMId = fPmDistSeq[j];
-      iter = fPmDbrootMap->find(aEntry.PMId);
+      auto dbroots = fOamCache->getPMDBRoots(PMId);
 
-      for (unsigned k = 0; k < (iter->second).size(); k++)
+      for (unsigned k = 0; k < dbroots.size(); k++)
       {
         RootExtentsBlocks aRootInfo;
-        aRootInfo.DBRoot = (iter->second)[k];
+        aRootInfo.DBRoot = dbroots[k];
         aRootInfo.numExtents = rootExtents[aRootInfo.DBRoot];
         aRootInfo.numBlocks = rootBlocks[aRootInfo.DBRoot];
         // cout << "aRootInfo DBRoot:numExtents:numBlocks = " <<
@@ -410,17 +385,15 @@ void BatchLoader::buildBatchDistSeqVector()
   fPmDistSeq.clear();
   BlIntVec aDbCntVec(fPMs.size());
 
-  std::map<int, OamCache::dbRoots>::iterator iter = fPmDbrootMap->begin();
-
   for (uint32_t i = 0; i < fPMs.size(); i++)
   {
-    iter = fPmDbrootMap->find(fPMs[i]);
+    auto dbroots = fOamCache->getPMDBRoots(fPMs[i]);
 
-    if ((iter != fPmDbrootMap->end()) && ((iter->second).begin() != (iter->second).end()))
+    if (dbroots.size() > 0)
     {
       try
       {
-        aDbCntVec[i] = (iter->second).size();
+        aDbCntVec[i] = dbroots.size();
         // cout << "PM - "<<fPMs[i] << " Size = " << aDbCntVec[i] << endl;
       }
       catch (std::exception& exp)
@@ -507,15 +480,13 @@ void BatchLoader::buildBatchDistSeqVector(uint32_t StartPm)
     }
   }
 
-  std::map<int, OamCache::dbRoots>::iterator iter = fPmDbrootMap->begin();
-
   for (uint32_t i = 0; i < aPms.size(); i++)
   {
-    iter = fPmDbrootMap->find(aPms[i]);
+    auto dbroots = fOamCache->getPMDBRoots(aPms[i]);
 
-    if ((iter != fPmDbrootMap->end()) && ((iter->second).begin() != (iter->second).end()))
+    if (dbroots.size())
     {
-      aDbCntVec[i] = (iter->second).size();
+      aDbCntVec[i] = dbroots.size();
       // cout << "PM - "<<aPms[i] << " Size = " << aDbCntVec[i] << endl;
     }
     else

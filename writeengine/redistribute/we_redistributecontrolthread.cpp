@@ -758,8 +758,7 @@ int RedistributeControlThread::executeRedistributePlan()
 int RedistributeControlThread::connectToWes(int dbroot)
 {
   int ret = 0;
-  OamCache::dbRootPMMap_t dbrootToPM = fOamCache->getDBRootToPMMap();
-  int pmId = (*dbrootToPM)[dbroot];
+  int pmId = fOamCache->getOwnerPM(dbroot);
   ostringstream oss;
   oss << "pm" << pmId << "_WriteEngineServer";
 
