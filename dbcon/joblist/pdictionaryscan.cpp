@@ -330,16 +330,11 @@ void pDictionaryScan::sendPrimitiveMessages()
   uint32_t partNum;
   uint16_t segNum;
   BRM::OID_t oid;
-  boost::shared_ptr<map<int, int> > dbRootConnectionMap;
-  boost::shared_ptr<map<int, int> > dbRootPMMap;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
   int localPMId = oamCache->getLocalPMId();
 
   try
   {
-    dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
-    dbRootPMMap = oamCache->getDBRootToPMMap();
-
     it = fDictlbids.begin();
 
     for (; it != fDictlbids.end() && !cancelled(); it++)
@@ -350,10 +345,11 @@ void pDictionaryScan::sendPrimitiveMessages()
       // Bug5741 If we are local only and this doesn't belongs to us, skip it
       if (fLocalQuery == execplan::CalpontSelectExecutionPlan::LOCAL_QUERY)
       {
+	      // XXX SZ: this may trigger.
         if (localPMId == 0)
           throw IDBExcept(ERR_LOCAL_QUERY_UM);
 
-        if (dbRootPMMap->find(dbroot)->second != localPMId)
+        if (!oamCache->isAccessibleBy(dbroot, localPMId))
           continue;
       }
 
@@ -374,23 +370,22 @@ void pDictionaryScan::sendPrimitiveMessages()
         if (remainingLbids < msgLbidCount)
           msgLbidCount = remainingLbids;
 
-        if (dbRootConnectionMap->find(dbroot) == dbRootConnectionMap->end())
+        if (oamCache->isOffline(dbroot))
         {
           // MCOL-259 force a reload of the xml. This usualy fixes it.
           Logger log;
           log.logMessage(logging::LOG_TYPE_DEBUG,
                          "dictionary forcing reload of columnstore.xml for dbRootConnectionMap");
           oamCache->forceReload();
-          dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
 
-          if (dbRootConnectionMap->find(dbroot) == dbRootConnectionMap->end())
+          if (oamCache->isOffline(dbroot))
           {
             log.logMessage(logging::LOG_TYPE_DEBUG, "dictionary still not in dbRootConnectionMap");
             throw IDBExcept(ERR_DATA_OFFLINE);
           }
         }
 
-        sendAPrimitiveMessage(msgLbidStart, msgLbidCount, (*dbRootConnectionMap)[dbroot]);
+        sendAPrimitiveMessage(msgLbidStart, msgLbidCount, oamCache->getClosestConnection(dbroot));
 
         mutex.lock();
         msgsSent += msgLbidCount;

@@ -159,19 +159,22 @@ int constructPMList(const std::vector<uint32_t>& dbRootList, std::vector<uint32_
     // Get OAM information
     oam::Oam oam;
     std::set<uint32_t> pmSet;  // used to filter out duplicates
-    int pm;
+    std::set<int> pms;
 
     for (unsigned j = 0; j < dbRootList.size(); j++)
     {
       dbRoot = dbRootList[j];
-      oam.getDbrootPmConfig(dbRootList[j], pm);
-      pmSet.insert(pm);
+      oam.getDbrootPmConfig(dbRootList[j], pms);
+      for (auto pm : pms)
+      {
+        pmSet.insert(pm);
+      }
     }
 
     // Store unique set of PM IDs into output vector
-    for (std::set<uint32_t>::const_iterator iter = pmSet.begin(); iter != pmSet.end(); ++iter)
+    for (auto pm : pmSet)
     {
-      pmList.push_back(*iter);
+      pmList.push_back(pm);
     }
   }
   catch (std::exception& ex)

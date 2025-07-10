@@ -134,11 +134,10 @@ void RedistributeWorkerThread::handleRequest()
       {
         memcpy(&fPlanEntry, fBs.buf(), sizeof(RedistributePlanEntry));
         fBs.advance(sizeof(RedistributePlanEntry));
-        OamCache::dbRootPMMap_t dbrootToPM = fOamCache->getDBRootToPMMap();
         fMyId.first = fPlanEntry.source;
-        fMyId.second = (*dbrootToPM)[fMyId.first];
+        fMyId.second = fOamCache->getOwnerPM(fMyId.first);
         fPeerId.first = fPlanEntry.destination;
-        fPeerId.second = (*dbrootToPM)[fPeerId.first];
+        fPeerId.second = fOamCache->getOwnerPM(fPeerId.first);
 
         if (grabTableLock() == 0)
         {
