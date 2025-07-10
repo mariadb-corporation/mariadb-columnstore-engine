@@ -761,8 +761,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
 
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
   // Will create files on each PM as needed.
@@ -925,7 +924,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
       if (rc != 0)
         throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-      pmNum = (*dbRootPMMap)[dbRoot];
+      pmNum = oamcache->getOwnerPM(dbRoot);
       bs.restart();
       bs << (ByteStream::byte)WE_SVR_UPDATE_SYSTABLE_AUTO;
       bs << uniqueId;
@@ -1317,8 +1316,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   // MCOL-66 The DBRM can't handle concurrent DDL
   boost::mutex::scoped_lock lk(dbrmMutex);
@@ -1379,7 +1377,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
     if (rc != 0)
       throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
     bytestream.restart();
     bytestream << (ByteStream::byte)WE_SVR_UPDATE_SYSTABLE_AUTO;
     bytestream << uniqueId;
@@ -1452,7 +1450,7 @@ void AlterTableProcessor::dropColumn(uint32_t sessionID, execplan::CalpontSystem
   if (rc != 0)
     throw std::runtime_error("Error while calling getSysCatDBRoot ");
 
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   try
   {
@@ -1706,8 +1704,7 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
 
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 
@@ -1795,8 +1792,7 @@ void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::Calpon
 
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 
@@ -2001,8 +1997,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
 
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   try
   {
@@ -2067,7 +2062,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   if (rc != 0)
     throw std::runtime_error("Error while calling getSysCatDBRoot");
 
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   try
   {
@@ -2131,8 +2126,7 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   int pmNum = 1;
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
 
   if (rc != 0)
     throw std::runtime_error("Error while calling getSysCatDBRoot");
@@ -2354,8 +2348,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
 
   int pmNum = 1;
   OamCache* oamcache = OamCache::makeOamCache();
-  boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-  pmNum = (*dbRootPMMap)[dbRoot];
+  pmNum = oamcache->getOwnerPM(dbRoot);
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
 
   CalpontSystemCatalog::TableName tableName;
@@ -2539,7 +2532,7 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
     if (rc != 0)
       throw std::runtime_error("Error while calling getSysCatDBRoot");
 
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     // send to WES to process
     try

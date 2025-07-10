@@ -1936,7 +1936,7 @@ bool TupleBPS::processLBIDFilter(const EMEntry& emEntry) const
 }
 
 bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
-                                       boost::shared_ptr<map<int, int>> dbRootPMMap) const
+                                       oam::OamCache* oamCache) const
 {
   if (!hasPCFilter)
     return true;
@@ -1946,7 +1946,7 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
   if (bop == BOP_AND)
   {
     /* All Pseudocolumns have been promoted to 8-bytes except the casual partitioning filters */
-    return (!hasPMFilter || processOneFilterType(8, (*dbRootPMMap)[emEntry.dbRoot], PSEUDO_PM)) &&
+    return (!hasPMFilter || processOneFilterType(8, oamCache->getClosestPM(emEntry.dbRoot), PSEUDO_PM)) &&
            (!hasSegmentFilter || processOneFilterType(8, emEntry.segmentNum, PSEUDO_SEGMENT)) &&
            (!hasDBRootFilter || processOneFilterType(8, emEntry.dbRoot, PSEUDO_DBROOT)) &&
            (!hasSegmentDirFilter || processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR)) &&
@@ -1971,7 +1971,7 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
   }
   else
   {
-    return (hasPMFilter && processOneFilterType(8, (*dbRootPMMap)[emEntry.dbRoot], PSEUDO_PM)) ||
+    return (hasPMFilter && processOneFilterType(8, oamCache->getClosestPM(emEntry.dbRoot), PSEUDO_PM)) ||
            (hasSegmentFilter && processOneFilterType(8, emEntry.segmentNum, PSEUDO_SEGMENT)) ||
            (hasDBRootFilter && processOneFilterType(8, emEntry.dbRoot, PSEUDO_DBROOT)) ||
            (hasSegmentDirFilter && processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR)) ||
@@ -2004,8 +2004,6 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   uint32_t blocksToScan;
   LBID_t startingLBID;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-  boost::shared_ptr<map<int, int>> dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
-  boost::shared_ptr<map<int, int>> dbRootPMMap = oamCache->getDBRootToPMMap();
   int localPMId = oamCache->getLocalPMId();
 
   idbassert(ffirstStepType == SCAN);
@@ -2043,7 +2041,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       continue;
     }
 
-    if (!processPseudoColFilters(i, dbRootPMMap))
+    if (!processPseudoColFilters(i, oamCache))
     {
       fNumBlksSkipped += lbidsToScan;
       continue;
@@ -2066,20 +2064,19 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
         throw IDBExcept(ERR_LOCAL_QUERY_UM);
       }
 
-      if (dbRootPMMap->find(scannedExtents[i].dbRoot)->second != localPMId)
+      if (!oamCache->isAccessibleBy(scannedExtents[i].dbRoot, localPMId))
         continue;
     }
 
     // a necessary DB root is offline
-    if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+    if (oamCache->isOffline(scannedExtents[i].dbRoot))
     {
       // MCOL-259 force a reload of the xml. This usualy fixes it.
       Logger log;
       log.logMessage(logging::LOG_TYPE_WARNING, "forcing reload of columnstore.xml for dbRootConnectionMap");
       oamCache->forceReload();
-      dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
 
-      if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+      if (oamCache->isOffline(scannedExtents[i].dbRoot))
       {
         log.logMessage(logging::LOG_TYPE_WARNING, "dbroot still not in dbRootConnectionMap");
         throw IDBExcept(ERR_DATA_OFFLINE);
@@ -2106,9 +2103,10 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       fBPP->setLBID(startingLBID, scannedExtents[i]);
       fBPP->setCount(blocksThisJob);
       bs.reset(new ByteStream());
-      fBPP->runBPP(*bs, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], isExeMgrDEC);
+      int connIndex = oamCache->getClosestConnection(scannedExtents[i].dbRoot);
+      fBPP->runBPP(*bs, connIndex, isExeMgrDEC);
       jobs->push_back(
-          Job(scannedExtents[i].dbRoot, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], blocksThisJob, bs));
+          Job(scannedExtents[i].dbRoot, connIndex, blocksThisJob, bs));
       blocksToScan -= blocksThisJob;
       startingLBID += fColType.colWidth * blocksThisJob;
       fBPP->reset();

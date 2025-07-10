@@ -384,7 +384,7 @@ class Oam
   /**
    *@brief Get DBRoot - PM Config data
    */
-  EXPORT void getDbrootPmConfig(const int dbrootid, int& pmid);
+  EXPORT void getDbrootPmConfig(const int dbrootid, set<int>& pmid);
 
   /**
    *@brief Get System DBRoot Config data

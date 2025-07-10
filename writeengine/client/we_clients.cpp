@@ -505,8 +505,9 @@ void WEClients::write(const messageqcpp::ByteStream& msg, uint32_t connection)
     fPmConnections[connection]->write(msg);
   else
   {
+    // new behavior: connection client is nullptr means it is read-only.
     ostringstream os;
-    os << "Lost connection to WriteEngineServer on pm" << connection;
+    os << "Connection to readonly pm" << connection;
     throw runtime_error(os.str());
   }
 }

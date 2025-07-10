@@ -230,6 +230,15 @@ void BatchInsertProc::buildLastPkg(messageqcpp::ByteStream& bs)
   bs << rt;
 }
 
+uint32_t BatchInsertProc::selectNextPM()
+{
+  uint32_t pm;
+  do
+  {
+    pm = fBatchLoader->selectNextPM();
+  } while (pm != 0 && fWEClient->isConnectionReadonly(pm));
+  return pm;
+}
 void BatchInsertProc::sendFirstBatch()
 {
   uint32_t firstPmId = 0;
@@ -237,7 +246,7 @@ void BatchInsertProc::sendFirstBatch()
 
   try
   {
-    firstPmId = fBatchLoader->selectNextPM();
+    firstPmId = selectNextPM();
   }
   catch (std::exception& ex)
   {
@@ -268,7 +277,7 @@ void BatchInsertProc::sendNextBatch()
 
   try
   {
-    fCurrentPMid = fBatchLoader->selectNextPM();
+    fCurrentPMid = selectNextPM();
   }
   catch (std::exception& ex)
   {
