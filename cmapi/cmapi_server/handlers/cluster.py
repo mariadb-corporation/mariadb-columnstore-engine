@@ -50,7 +50,7 @@ def toggle_cluster_state(
     broadcast_new_config(config, distribute_secrets=True)
 
 
-class ClusterHandler():
+class ClusterHandler:
     """Class for handling MCS Cluster operations."""
 
     @staticmethod
@@ -143,6 +143,7 @@ class ClusterHandler():
     def add_node(
         node: str, config: str = DEFAULT_MCS_CONF_PATH,
         read_only: bool = False,
+        add_other_nodes_dbroots: bool = True,
     ) -> dict:
         """Method to add node to MCS CLuster.
 
@@ -151,8 +152,10 @@ class ClusterHandler():
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :param read_only: add node in read-only mode, defaults to False
+        :param read_only: add node in read-only mode (not starting write engine), defaults to False
         :type read_only: bool, optional
+        :param add_other_nodes_dbroots: for read-only nodes, whether to add dbroots of other nodes
+        :type add_other_nodes_dbroots: bool, optional
         :raises CMAPIBasicError: on exception while starting transaction
         :raises CMAPIBasicError: if transaction start isn't successful
         :raises CMAPIBasicError: on exception while adding node
@@ -170,11 +173,15 @@ class ClusterHandler():
 
         response = {'timestamp': str(datetime.now())}
 
+        if not read_only and add_other_nodes_dbroots is not True:
+            raise CMAPIBasicError('add_other_nodes_dbroots is only valid when read_only is true')
+
         try:
             add_node(
                 node, input_config_filename=config,
                 output_config_filename=config,
                 read_only=read_only,
+                add_other_nodes_dbroots=add_other_nodes_dbroots,
             )
             if not get_dbroots(node, config):
                 if not read_only:  # Read-only nodes don't own dbroots

@@ -64,6 +64,7 @@ def add_node(
     output_config_filename: Optional[str] = None,
     use_rebalance_dbroots: bool = True,
     read_only: bool = False,
+    add_other_nodes_dbroots: bool = True,
 ):
     """Add node to a cluster.
 
@@ -102,7 +103,7 @@ def add_node(
                 _add_WES(c_root, pm_num, node)
             else:
                 logging.info('Node is read-only, skipping WES addition.')
-                _add_read_only_node(c_root, node)
+                _add_read_only_node(c_root, node, add_other_nodes_dbroots)
 
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
@@ -113,7 +114,8 @@ def add_node(
                     _rebalance_dbroots(c_root)
                     _move_primary_node(c_root)
 
-            update_dbroots_of_readonly_nodes(c_root)
+            if read_only and add_other_nodes_dbroots:
+                update_dbroots_of_readonly_nodes(c_root)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -1020,8 +1022,8 @@ def _add_WES(root, pm_num, node):
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
-def _add_read_only_node(root: etree.Element, node: str) -> None:
-    '''Add node name to ReadOnlyNodes if it is not already there'''
+def _add_read_only_node(root: etree.Element, node: str, add_other_nodes_dbroots: bool = True) -> None:
+    '''Add node name to ReadOnlyNodes if it is not already there, with attribute'''
     read_only_nodes = root.find('./ReadOnlyNodes')
     if read_only_nodes is None:
         read_only_nodes = etree.SubElement(root, 'ReadOnlyNodes')
@@ -1031,9 +1033,11 @@ def _add_read_only_node(root: etree.Element, node: str) -> None:
                 logging.warning(
                     f"_add_read_only_node(): node {node} already exists in ReadOnlyNodes"
                 )
+                n.set("add_other_nodes_dbroots", str(add_other_nodes_dbroots).lower())
                 return
-
-    etree.SubElement(read_only_nodes, "Node").text = node
+    node_elem = etree.SubElement(read_only_nodes, "Node")
+    node_elem.text = node
+    node_elem.set("add_other_nodes_dbroots", str(add_other_nodes_dbroots).lower())
 
 
 def _add_DBRM_Worker(root, node):
@@ -1202,17 +1206,28 @@ def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
 def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
     """Read-only nodes do not have their own dbroots, but they must have all the dbroots of the other nodes
     So this function sets list of dbroots of each read-only node to the list of all the dbroots in the cluster
+
+    There is a special sub-mode of read-only nodes: coordinator nodes, they don't add dbroots of other nodes.
+    They are identified by the add_other_nodes_dbroots="false" attribute.
     """
-    nc = NodeConfig()
+
     pm_num_to_addr = get_pm_module_num_to_addr_map(root)
-    for ro_node in nc.get_read_only_nodes(root):
+    read_only_nodes = root.find('./ReadOnlyNodes')
+    if read_only_nodes is None:
+        return
+    for n in read_only_nodes.findall("./Node"):
+        add_dbroots = n.get("add_other_nodes_dbroots", "true").lower() == "true"
+        if not add_dbroots:
+            logging.info(f"Not adding dbroots of other nodes to {n.text} because it is a coordinator node")
+            continue
+
+        ro_node = n.text
         # Get PM num by IP address
         this_ip_pm_num = None
         for pm_num, pm_addr in pm_num_to_addr.items():
             if pm_addr == ro_node:
                 this_ip_pm_num = pm_num
                 break
-
         if this_ip_pm_num is not None:
             # Add dbroots of other nodes to this read-only node
             add_dbroots_of_other_nodes(root, this_ip_pm_num)

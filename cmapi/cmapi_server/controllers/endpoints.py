@@ -913,16 +913,20 @@ class ClusterController:
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
         read_only = request_body.get('read_only', False)
+        add_other_nodes_dbroots = request_body.get('add_other_nodes_dbroots', True)
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
 
+        if not read_only and ('add_other_nodes_dbroots' in request_body):
+            raise_422_error(module_logger, func_name, 'add_other_nodes_dbroots is only valid when read_only is true')
+
         try:
             if not in_transaction:
                 with TransactionManager(extra_nodes=[node]):
-                    response = ClusterHandler.add_node(node, config, read_only)
+                    response = ClusterHandler.add_node(node, config, read_only, add_other_nodes_dbroots)
             else:
-                response = ClusterHandler.add_node(node, config, read_only)
+                response = ClusterHandler.add_node(node, config, read_only, add_other_nodes_dbroots)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
