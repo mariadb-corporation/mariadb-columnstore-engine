@@ -240,7 +240,6 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     std::istringstream ss(aCmdLine);
     std::string arg;
     std::vector<std::string> v2;
-    v2.reserve(20);
     unsigned int i = 0;
 
     while (ss >> arg)

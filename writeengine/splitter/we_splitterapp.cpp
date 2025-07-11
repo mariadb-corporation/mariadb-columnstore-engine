@@ -477,7 +477,6 @@ void WESplitterApp::invokeCpimport()
   std::istringstream ss(aCmdLineStr);
   std::string arg;
   std::vector<std::string> v2;
-  v2.reserve(50);
 
   while (ss >> arg)
   {
@@ -490,7 +489,7 @@ void WESplitterApp::invokeCpimport()
     Cmds.push_back(const_cast<char*>(v2[j].c_str()));
   }
 
-  Cmds.push_back(0);  // null terminate
+  Cmds.push_back(nullptr);  // null terminate
 
   int aRet = execvp(Cmds[0], &Cmds[0]);  // NOTE - works with full Path
 

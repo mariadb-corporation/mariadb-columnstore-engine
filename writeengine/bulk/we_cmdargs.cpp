@@ -53,36 +53,6 @@ namespace WriteEngine
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 WECmdArgs::WECmdArgs(int argc, char** argv)
- : fMultiTableCount(0)
- , fJobLogOnly(false)
- , fHelp(false)
- , fMode(BULK_MODE_LOCAL)
- , fArgMode(-1)
- , fQuiteMode(true)
- , fConsoleLog(false)
- , fNoOfReadThrds(1)
- , fDebugLvl(0)
- , fMaxErrors(-1)
- , fReadBufSize(-1)
- , fIOReadBufSize(-1)
- , fSetBufSize(0)
- , fColDelim(0)
- , fEnclosedChar(0)
- , fEscChar(0)
- , fSkipRows(0)
- , fNoOfWriteThrds(3)
- , fNullStrMode(false)
- , fImportDataMode(IMPORT_DATA_TEXT)
- , fBlockMode3(false)
- , fbTruncationAsError(false)
- , fUUID(to_string(boost::uuids::nil_generator()()))
- , fConsoleOutput(true)
- , fTimeZone("SYSTEM")
- , fErrorDir(string(MCSLOGDIR) + "/cpimport/")
- , fDisableTableLockTimeOut(false)
- , fSilent(false)
- , fKeepRollbackMetaData(false)
- , fAllowMissingColumn(false)
 {
   try
   {
@@ -386,23 +356,9 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
   bulkMode = static_cast<BulkModeType>(fMode);
   curJob.setNullStringMode(fNullStrMode);
   sXMLJobDir = fJobPath;
-#if !defined (__LP64__) && !defined(_MSC_VER)
-  if (fNoOfReadThrds > 1)
-  {
-    cerr << "Note: resetting number of read threads to maximum" << endl;
-    fNoOfReadThreads = 1;
-  }
-#endif
   curJob.setNoOfReadThreads(fNoOfReadThrds);
   curJob.setColDelimiter(fColDelim);
   curJob.setJobUUID(fUUID);
-#if !defined (__LP64__) && !defined(_MSC_VER)
-  if (fNoOfWriteThrds > 3)
-  {
-    cerr << "Note: resetting number of parse threads to maximum" << endl;
-    fNoOfWriteThreads = 3;
-  }
-#endif
   curJob.setNoOfParseThreads(fNoOfWriteThrds);
   curJob.setVbufReadSize(fReadBufSize);
   if (fEscChar != -1)

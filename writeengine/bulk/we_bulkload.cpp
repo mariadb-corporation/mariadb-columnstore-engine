@@ -72,7 +72,7 @@ const std::string ERR_LOG_SUFFIX = ".err";  // Job err log file suffix
 namespace WriteEngine
 {
 /* static */ std::vector<std::shared_ptr<TableInfo>> BulkLoad::fTableInfo;
-/* static */ boost::mutex* BulkLoad::fDDLMutex = 0;
+/* static */ boost::mutex* BulkLoad::fDDLMutex = new boost::mutex();
 
 /* static */ const std::string BulkLoad::DIR_BULK_JOB("job");
 /* static */ const std::string BulkLoad::DIR_BULK_TEMP_JOB("tmpjob");
@@ -140,36 +140,8 @@ struct CancellationThread
 // Constructor
 //------------------------------------------------------------------------------
 BulkLoad::BulkLoad()
- : fColOp(new ColumnOpBulk())
- , fColDelim('\0')
- , fNoOfBuffers(-1)
- , fBufferSize(-1)
- , fFileVbufSize(-1)
- , fMaxErrors(-1)
- , fNoOfParseThreads(3)
- , fNoOfReadThreads(1)
- , fKeepRbMetaFiles(false)
- , fNullStringMode(false)
- , fEnclosedByChar('\0')
- ,  // not enabled unless user overrides enclosed by char
- fEscapeChar('\0')
- , fSkipRows(0)
- , fTotalTime(0.0)
- , fBulkMode(BULK_MODE_LOCAL)
- , fbTruncationAsError(false)
- , fImportDataMode(IMPORT_DATA_TEXT)
- , fbContinue(false)
- , fDisableTimeOut(false)
- , fUUID(boost::uuids::nil_generator()())
- , fTimeZone(dataconvert::systemTimeZoneOffset())
- , fUsername("mysql")  // MCOL-4328 default file owner
 {
-  fTableInfo.clear();
   setDebugLevel(DEBUG_0);
-
-  fDDLMutex = new boost::mutex();
-  memset(&fStartTime, 0, sizeof(timeval));
-  memset(&fEndTime, 0, sizeof(timeval));
 }
 
 //------------------------------------------------------------------------------
