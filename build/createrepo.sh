@@ -17,6 +17,8 @@ COLUMNSTORE_RPM_PACKAGES_PATH="/mdb/${BUILDDIR}/*.rpm"
 CMAPI_RPM_PACKAGES_PATH="/mdb/${BUILDDIR}/storage/columnstore/columnstore/cmapi/*.rpm"
 
 COLUMNSTORE_DEB_PACKAGES_PATH="/mdb/*.deb"
+COLUMNSTORE_DEBUG_DEB_PACKAGES_PATH="/mdb/*.ddeb"
+
 CMAPI_DEB_PACKAGES_PATH="/mdb/${BUILDDIR}/storage/columnstore/columnstore/cmapi/*.deb"
 
 if [ "$EUID" -ne 0 ]; then
@@ -44,6 +46,7 @@ if [[ $(compgen -G "$COLUMNSTORE_RPM_PACKAGES_PATH") ]]; then
   mv -v $COLUMNSTORE_RPM_PACKAGES_PATH "./${RESULT}/"
 elif [[ $(compgen -G "$COLUMNSTORE_DEB_PACKAGES_PATH") ]]; then
   mv -v $COLUMNSTORE_DEB_PACKAGES_PATH "./${RESULT}/"
+  mv -v $COLUMNSTORE_DEBUG_DEB_PACKAGES_PATH "./${RESULT}/"
 else
   echo "Columnstore packages are not found!"
 fi
@@ -62,7 +65,10 @@ if [[ $(compgen -G "./${RESULT}/*.rpm") ]]; then
   createrepo "./${RESULT}"
 else
   retry_eval 5 "apt update && apt install -y dpkg-dev"
-  dpkg-scanpackages "${RESULT}" | gzip >"./${RESULT}/Packages.gz"
+
+  dpkg-scanpackages "${RESULT}" >Packages
+  dpkg-scanpackages --type ddeb "${RESULT}" >>Packages
+  gzip -c Packages >"./${RESULT}/Packages.gz"
 fi
 
 mkdir -p "/drone/src/${RESULT}"
