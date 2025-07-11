@@ -476,7 +476,8 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
   {
     case CalpontSystemCatalog::ENUM:
     
-    if (fResult.uintVal<fResultType.enumVals.size()) {
+    // Nedeljko TO DO
+    if (fResult.uintVal==joblist::USMALLINTNULL) {
       fResult.strVal.assign(fResultType.enumVals[fResult.uintVal]);
     } else {
       fResult.strVal.dropString();

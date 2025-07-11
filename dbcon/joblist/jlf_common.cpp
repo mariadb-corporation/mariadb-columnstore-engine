@@ -726,6 +726,7 @@ bool compatibleColumnTypes(const CalpontSystemCatalog::ColDataType& dt1, uint32_
 
   switch (dt1)
   {
+    // Nedeljko TO DO
     case CalpontSystemCatalog::BIT:
       if (dt2 != CalpontSystemCatalog::BIT)
         return false;

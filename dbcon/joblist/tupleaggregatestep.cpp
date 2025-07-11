@@ -152,6 +152,8 @@ inline string colTypeIdString(CalpontSystemCatalog::ColDataType type)
   {
     case CalpontSystemCatalog::BIT: return string("BIT");
 
+    case CalpontSystemCatalog::ENUM: return string("ENUM");
+
     case CalpontSystemCatalog::TINYINT: return string("TINYINT");
 
     case CalpontSystemCatalog::CHAR: return string("CHAR");

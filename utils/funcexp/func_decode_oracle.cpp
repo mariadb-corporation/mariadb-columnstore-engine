@@ -139,6 +139,7 @@ inline uint64_t simple_case_cmp(Row& row, FunctionParm& parm, bool& isNull,
       break;
     }
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::UBIGINT:
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:

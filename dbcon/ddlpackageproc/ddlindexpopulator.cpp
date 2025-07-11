@@ -463,7 +463,7 @@ bool DDLIndexPopulator::checkNotNull(const IdxTuple& data, const CalpontSystemCa
 
     case execplan::CalpontSystemCatalog::ENUM:
       isNull = (any_cast<unsigned>(data.data) == any_cast<unsigned>(nullvalue)) ||
-      (any_cast<unsigned>(data.data)==colType.enumVals.size());
+      (any_cast<unsigned>(data.data)==USMALLINTNULL);
       break;
 
     case execplan::CalpontSystemCatalog::TINYINT:

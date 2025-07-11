@@ -1182,6 +1182,8 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
       break;
     }
 
+    // Nedeljko TO DO
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
       if (joblist::USMALLINTNULL == (uint16_t)val)

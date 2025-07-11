@@ -175,6 +175,7 @@ inline uint64_t getUintNullValue(int colType, int colWidth = 0)
       return joblist::UTINYINTNULL;
     }
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
       return joblist::USMALLINTNULL;
@@ -399,6 +400,7 @@ inline bool RowAggregation::isNull(const RowGroup* pRowGroup, const Row& row, in
       break;
     }
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
       ret = ((uint16_t)row.getIntField(col) == joblist::USMALLINTNULL);

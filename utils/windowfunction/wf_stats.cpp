@@ -62,6 +62,7 @@ boost::shared_ptr<WindowFunctionType> WF_stats<T>::makeFunction(int id, const st
       break;
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UMEDINT:

@@ -492,6 +492,7 @@ void GroupConcator::outputRow(std::ostringstream& oss, const rowgroup::Row& row)
 
     switch (types[*i])
     {
+      // Nedeljko TO DO
       case CalpontSystemCatalog::TINYINT:
       case CalpontSystemCatalog::SMALLINT:
       case CalpontSystemCatalog::MEDINT:
@@ -733,6 +734,7 @@ int64_t GroupConcator::lengthEstimate(const rowgroup::Row& row)
 
     switch (types[*i])
     {
+      // Nedeljko TO DO
       case CalpontSystemCatalog::TINYINT:
       case CalpontSystemCatalog::SMALLINT:
       case CalpontSystemCatalog::MEDINT:

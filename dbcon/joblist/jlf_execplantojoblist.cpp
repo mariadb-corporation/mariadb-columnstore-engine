@@ -150,6 +150,7 @@ void valueNullNum(const CalpontSystemCatalog::ColType& ct, const long timeZone, 
 
     case CalpontSystemCatalog::SMALLINT: n = boost::any_cast<short>(anyVal); break;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT: n = boost::any_cast<uint16_t>(anyVal); break;
 
     case CalpontSystemCatalog::MEDINT:
@@ -346,6 +347,7 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
     }
     break;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::VARBINARY:
@@ -1723,6 +1725,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       {
         switch (ct.colDataType)
         {
+          case CalpontSystemCatalog::ENUM:
           case CalpontSystemCatalog::TINYINT:
           case CalpontSystemCatalog::SMALLINT:
           case CalpontSystemCatalog::MEDINT:

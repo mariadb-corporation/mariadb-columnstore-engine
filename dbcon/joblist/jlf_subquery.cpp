@@ -106,6 +106,7 @@ void getColumnValue(ConstantColumn** cc, uint64_t i, const Row& row, const long 
       }
       break;
 
+      // Nedeljko TO DO
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UMEDINT:

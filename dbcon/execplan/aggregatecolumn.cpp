@@ -561,6 +561,7 @@ void AggregateColumn::evaluate(Row& row, bool& isNull)
       break;
 
       case CalpontSystemCatalog::ENUM:
+      // Nedeljko TO DO
       if ((row.equals<2>(USMALLINTNULL, fInputIndex)) || (row.getUintField<2>(fInputIndex) == USMALLINTNULL))
         isNull = true;
       else

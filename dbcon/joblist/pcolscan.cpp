@@ -321,6 +321,7 @@ bool pColScanStep::isEmptyVal(const uint8_t* val8) const
       return (*val8 == joblist::UTINYINTEMPTYROW);
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
     {
       const uint16_t* val16 = reinterpret_cast<const uint16_t*>(val8);
