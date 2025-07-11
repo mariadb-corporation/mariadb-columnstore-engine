@@ -346,6 +346,11 @@ construct_cmake_flags() {
         -DWITH_WSREP=NO
     )
 
+    if [[ $BUILD_PACKAGES = true ]]; then
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_PACKAGES_BUILD=YES)
+        message "Building packages for Columnstore"
+    fi
+
     if [[ $MAINTAINER_MODE = true ]]; then
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
         message "Columnstore maintainer mode on"
@@ -622,12 +627,20 @@ enable_columnstore_back() {
 
 fix_config_files() {
     message Fixing config files
-
     THREAD_STACK_SIZE="20M"
 
-    SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
-    MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
-    COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+    # while packaging we have to patch configs in the sources to get them in the packakges
+    # for local builds, we patch config after installation in the systemdirs
+    if [[ $BUILD_PACKAGES = true ]]; then
+        MDB_SERVICE_FILE=$MDB_SOURCE_PATH/support-files/mariadb.service.in
+        COLUMNSTORE_CONFIG=$COLUMSNTORE_SOURCE_PATH/dbcon/mysql/columnstore.cnf
+        SANITIZERS_ABORT_ON_ERROR='0'
+    else
+        SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
+        MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+        COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+        SANITIZERS_ABORT_ON_ERROR='1'
+    fi
 
     if [[ $ASAN = true ]]; then
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
@@ -641,7 +654,7 @@ fix_config_files() {
         if grep -q ASAN $MDB_SERVICE_FILE; then
             warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'ASAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
             message "ASAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -650,7 +663,7 @@ fix_config_files() {
         if grep -q TSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has TSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'TSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/tsan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'TSAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR,log_path=${REPORT_PATH}/tsan.mariadb'" >>$MDB_SERVICE_FILE
             message "TSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -659,7 +672,7 @@ fix_config_files() {
         if grep -q UBSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >>$MDB_SERVICE_FILE
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -780,7 +793,7 @@ init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
-
+    fix_config_files
     (build_package && run_unit_tests)
     exit_code=$?
 
