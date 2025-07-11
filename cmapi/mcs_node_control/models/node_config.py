@@ -592,7 +592,7 @@ has dbroot {subel.text}')
 
     def get_read_only_nodes(self, root=None) -> list[str]:
         """Get names of read only nodes from config"""
-        root = root or self.get_current_config_root()
+        root = root if root is not None else self.get_current_config_root()
         return [node.text for node in root.findall('./ReadOnlyNodes/Node')]
 
     def is_read_only(self, root=None) -> bool:

@@ -26,14 +26,16 @@ class NodeManipTester(BaseNodeManipTestCase):
 
         with patch('cmapi_server.node_manipulation.update_dbroots_of_readonly_nodes') as mock_update_dbroots_of_readonly_nodes:
             node_manipulation.add_node(
-                self.NEW_NODE_NAME, tmp_mcs_config_filename, self.tmp_files[0]
+                self.NEW_NODE_NAME, tmp_mcs_config_filename, self.tmp_files[0],
+                read_only=False,
             )
             mock_update_dbroots_of_readonly_nodes.assert_not_called()
 
             node_manipulation.add_node(
-                hostaddr, self.tmp_files[0], self.tmp_files[1]
+                hostaddr, self.tmp_files[0], self.tmp_files[1],
+                read_only=False,
             )
-            mock_update_dbroots_of_readonly_nodes.assert_called_once()
+            mock_update_dbroots_of_readonly_nodes.assert_not_called()
 
         # get a NodeConfig, read test.xml
         # look for some of the expected changes.
@@ -281,6 +283,8 @@ class NodeManipTester(BaseNodeManipTestCase):
 
 class TestDBRootsManipulation(unittest.TestCase):
     our_module_idx = 3
+    rw_node1_ip = '192.168.1.1'
+    rw_node2_ip = '192.168.1.2'
     ro_node1_ip = '192.168.1.3'
     ro_node2_ip = '192.168.1.4'
 
@@ -292,9 +296,9 @@ class TestDBRootsManipulation(unittest.TestCase):
         module_count = etree.SubElement(smc, 'ModuleCount3')
         module_count.text = '2'
         module1_ip = etree.SubElement(smc, 'ModuleIPAddr1-1-3')
-        module1_ip.text = '192.168.1.1'
+        module1_ip.text = self.rw_node1_ip
         module2_ip = etree.SubElement(smc, 'ModuleIPAddr2-1-3')
-        module2_ip.text = '192.168.1.2'
+        module2_ip.text = self.rw_node2_ip
 
         system_config = etree.SubElement(self.root, 'SystemConfig')
         dbroot_count = etree.SubElement(system_config, 'DBRootCount')
@@ -308,8 +312,8 @@ class TestDBRootsManipulation(unittest.TestCase):
         result = node_manipulation.get_pm_module_num_to_addr_map(self.root)
 
         expected = {
-            1: '192.168.1.1',
-            2: '192.168.1.2',
+            1: self.rw_node1_ip,
+            2: self.rw_node2_ip,
         }
         self.assertEqual(result, expected)
 
@@ -383,3 +387,33 @@ class TestDBRootsManipulation(unittest.TestCase):
             self.assertIsNotNone(dbroot2)
             self.assertEqual(dbroot1.text, '1')
             self.assertEqual(dbroot2.text, '2')
+
+    def test_update_dbroots_of_readonly_nodes_ignores_coordinator_nodes(self):
+        """Test that update_dbroots_of_readonly_nodes doesn't add dbroots to coordinator nodes
+        (read-only nodes that have add_other_nodes_dbroots="false")
+        """
+        # Add two read-only nodes, one is a coordinator node
+        smc = self.root.find('./SystemModuleConfig')
+        module_count = smc.find('./ModuleCount3')
+        module_count.text = '4'
+        module3_ip = etree.SubElement(smc, 'ModuleIPAddr3-1-3')
+        module3_ip.text = self.ro_node1_ip
+        module4_ip = etree.SubElement(smc, 'ModuleIPAddr4-1-3')
+        module4_ip.text = self.ro_node2_ip
+
+        read_only_nodes = etree.SubElement(self.root, 'ReadOnlyNodes')
+        for ip, is_coordinator in zip([self.ro_node1_ip, self.ro_node2_ip], [True, False]):
+            node = etree.SubElement(read_only_nodes, 'Node')
+            node.text = ip
+            node.set('add_other_nodes_dbroots', str(not is_coordinator).lower())
+
+        update_dbroots_of_readonly_nodes(self.root)
+
+        # Check that RO node 1 (coordinator) has no dbroots
+        module_count = self.root.find('./SystemModuleConfig/ModuleDBRootCount3-3')
+        self.assertIsNone(module_count)
+
+        # Check that RO node 2 has dbroots
+        module_count = self.root.find('./SystemModuleConfig/ModuleDBRootCount4-3')
+        self.assertIsNotNone(module_count)
+        self.assertEqual(module_count.text, '2')

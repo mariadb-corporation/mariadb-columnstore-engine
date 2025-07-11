@@ -1216,11 +1216,6 @@ def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
     if read_only_nodes is None:
         return
     for n in read_only_nodes.findall("./Node"):
-        add_dbroots = n.get("add_other_nodes_dbroots", "true").lower() == "true"
-        if not add_dbroots:
-            logging.info(f"Not adding dbroots of other nodes to {n.text} because it is a coordinator node")
-            continue
-
         ro_node = n.text
         # Get PM num by IP address
         this_ip_pm_num = None
@@ -1229,8 +1224,13 @@ def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
                 this_ip_pm_num = pm_num
                 break
         if this_ip_pm_num is not None:
-            # Add dbroots of other nodes to this read-only node
-            add_dbroots_of_other_nodes(root, this_ip_pm_num)
+            add_dbroots = n.get("add_other_nodes_dbroots", "true").lower() == "true"
+            if add_dbroots:
+                # Add dbroots of other nodes to this read-only node
+                add_dbroots_of_other_nodes(root, this_ip_pm_num)
+            else:
+                logging.info(f"Not adding dbroots of other nodes to {n.text} because it is a coordinator node")
+                remove_dbroots_of_node(root, this_ip_pm_num)
         else:  # This should not happen
             err_msg = f"Could not find PM number for read-only node {ro_node}"
             logging.error(err_msg)
