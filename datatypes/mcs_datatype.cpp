@@ -1573,6 +1573,7 @@ boost::any TypeHandlerEnum::convertFromString(const SystemCatalog::TypeAttribute
     }
   }
 
+  // Nedeljko TO DO
   boost::any value = val;
 
   return value;

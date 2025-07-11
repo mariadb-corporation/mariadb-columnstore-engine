@@ -256,6 +256,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
       case CalpontSystemCatalog::BLOB:
       case CalpontSystemCatalog::TEXT: return (in->colType.DataSize < 8);
 
+      // Nedeljko TO DO
       case CalpontSystemCatalog::TINYINT:
       case CalpontSystemCatalog::SMALLINT:
       case CalpontSystemCatalog::MEDINT:
@@ -494,6 +495,7 @@ T getEmptyValue(uint8_t type)
     case CalpontSystemCatalog::TIMESTAMP:
     case CalpontSystemCatalog::TIME: return joblist::CHAR2EMPTYROW;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT: return joblist::USMALLINTEMPTYROW;
 
     default: return joblist::SMALLINTEMPTYROW;

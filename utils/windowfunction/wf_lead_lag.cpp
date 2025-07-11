@@ -66,6 +66,7 @@ boost::shared_ptr<WindowFunctionType> WF_lead_lag<T>::makeFunction(int id, const
       break;
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UMEDINT:

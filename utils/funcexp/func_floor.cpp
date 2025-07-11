@@ -63,6 +63,7 @@ int64_t Func_floor::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     }
     break;
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::UBIGINT:
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:
@@ -165,6 +166,7 @@ uint64_t Func_floor::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
     }
     break;
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::UBIGINT:
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:

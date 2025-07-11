@@ -1193,6 +1193,7 @@ boost::shared_ptr<FrameBound> WindowFunctionStep::parseFrameBoundRows(const exec
         break;
       }
 
+      case execplan::CalpontSystemCatalog::ENUM:
       case execplan::CalpontSystemCatalog::UTINYINT:
       case execplan::CalpontSystemCatalog::USMALLINT:
       case execplan::CalpontSystemCatalog::UMEDINT:
@@ -1344,6 +1345,7 @@ boost::shared_ptr<FrameBound> WindowFunctionStep::parseFrameBoundRange(const exe
       break;
     }
 
+    // Nedeljko TO DO
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
     case execplan::CalpontSystemCatalog::UMEDINT:

@@ -736,6 +736,7 @@ namespace
               break;
             }
 
+            case CalpontSystemCatalog::ENUM:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
@@ -810,6 +811,7 @@ namespace
 
           break;
 
+        case CalpontSystemCatalog::ENUM:
         case CalpontSystemCatalog::UTINYINT:
         case CalpontSystemCatalog::USMALLINT:
         case CalpontSystemCatalog::UMEDINT:
@@ -835,6 +837,7 @@ namespace
               break;
             }
 
+            case CalpontSystemCatalog::ENUM:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
@@ -1042,6 +1045,7 @@ namespace
                 break;
               }
 
+            case CalpontSystemCatalog::ENUM:
             case CalpontSystemCatalog::UTINYINT:
             case CalpontSystemCatalog::USMALLINT:
             case CalpontSystemCatalog::UMEDINT:
@@ -1758,6 +1762,8 @@ void TupleUnion::writeNull(Row* out, uint32_t col)
     case CalpontSystemCatalog::SMALLINT: out->setUintField<1>(joblist::SMALLINTNULL, col); break;
 
     case CalpontSystemCatalog::UTINYINT: out->setUintField<1>(joblist::UTINYINTNULL, col); break;
+
+    case CalpontSystemCatalog::ENUM: out->setUintField<1>(joblist::USMALLINTNULL, col); break;
 
     case CalpontSystemCatalog::USMALLINT: out->setUintField<1>(joblist::USMALLINTNULL, col); break;
 

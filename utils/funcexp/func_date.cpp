@@ -104,6 +104,7 @@ int64_t Func_date::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNul
       break;
     }
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::MEDINT:

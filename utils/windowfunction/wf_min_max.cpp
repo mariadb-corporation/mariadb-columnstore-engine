@@ -57,6 +57,7 @@ boost::shared_ptr<WindowFunctionType> WF_min_max<T>::makeFunction(int id, const 
       break;
     }
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::UTINYINT:
     case CalpontSystemCatalog::USMALLINT:
     case CalpontSystemCatalog::UMEDINT:

@@ -83,6 +83,7 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
       return false;
     }
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::UBIGINT:
     case execplan::CalpontSystemCatalog::UINT:
     case execplan::CalpontSystemCatalog::UMEDINT:

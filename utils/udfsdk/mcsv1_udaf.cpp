@@ -81,6 +81,7 @@ int32_t mcsv1Context::getColWidth()
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::CHAR: fColWidth = 1; break;
 
+    case execplan::CalpontSystemCatalog::ENUM:
     case execplan::CalpontSystemCatalog::SMALLINT:
     case execplan::CalpontSystemCatalog::USMALLINT: fColWidth = 2; break;
 

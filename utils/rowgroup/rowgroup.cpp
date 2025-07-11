@@ -879,6 +879,7 @@ void Row::setToNull(uint32_t colIndex)
 
     case CalpontSystemCatalog::UTINYINT: data[offsets[colIndex]] = joblist::UTINYINTNULL; break;
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
       *((uint16_t*)&data[offsets[colIndex]]) = joblist::USMALLINTNULL;
       break;
@@ -1047,6 +1048,7 @@ bool Row::isNullValue(uint32_t colIndex) const
 
     case CalpontSystemCatalog::UTINYINT: return (data[offsets[colIndex]] == joblist::UTINYINTNULL);
 
+    case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
       return (*((uint16_t*)&data[offsets[colIndex]]) == joblist::USMALLINTNULL);
 

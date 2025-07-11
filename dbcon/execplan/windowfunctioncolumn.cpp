@@ -610,6 +610,7 @@ void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
       break;
     }
 
+    // Nedeljko TO DO
     case CalpontSystemCatalog::ENUM:
     case CalpontSystemCatalog::USMALLINT:
     {

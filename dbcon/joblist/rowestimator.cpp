@@ -136,6 +136,8 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
     {
       case CalpontSystemCatalog::BIT: return 2;
 
+      case CalpontSystemCatalog::ENUM: return ct.enumVals.size();
+
       // Return limit/2 for integers where limit is number of possible values.
       case CalpontSystemCatalog::TINYINT: return (1 << 8) / 2;
 
