@@ -771,12 +771,8 @@ else()
     set(GIT_VERSION "source")
 endif()
 
-# releasenum is used by external scripts for various tasks. Leave it alone.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/build/releasenum.in ${CMAKE_CURRENT_BINARY_DIR}/build/releasenum IMMEDIATE)
-columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/build/releasenum ${ENGINE_SUPPORTDIR})
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h.in ${CMAKE_CURRENT_SOURCE_DIR}/columnstoreversion.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mcsconfig.h.in ${CMAKE_CURRENT_BINARY_DIR}/mcsconfig.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gitversionEngine.in ${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine IMMEDIATE)
-
-columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_SUPPORTDIR})
