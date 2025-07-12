@@ -49,6 +49,7 @@ using namespace logging;
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include "idb_mysql.h"
+#include "opt_histogram_json.h"
 #include "partition_element.h"
 #include "partition_info.h"
 
@@ -6287,6 +6288,40 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
   return 0;
 }
 
+void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
+{
+  if (!ifp->field->part_of_key.is_clear_all())
+  {
+    return;
+  }
+  std::cout << "Processing field item: " << ifp->field_name.str << std::endl;
+  // std::cout << "part of a key: " << buf << std::endl;
+  std::cout << "ifp->field->field_index " << ifp->field->field_index << std::endl;
+
+  for (uint j = 0; j < ifp->field->table->s->keys; j++)
+  {
+    for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
+    {
+      std::cout << "key fieldnr " << i << " "
+                << ifp->field->table->s->key_info[j].key_part[i].field->field_name.str << " "
+                << ifp->field->table->s->key_info[j].key_part[i].fieldnr << std::endl;
+      if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
+      {
+        std::cout << "key_info " << j << " key_part " << i << " matched " << std::endl;
+        if (i == 0 && ifp->field->read_stats)
+        {
+          assert(ifp->field->table->s);
+          // assert(ifp->field->table->s->db);
+          // assert(ifp->field->table->s->table_name);
+          // FQCN fqcn({ifp->field->table->s->db.str}, {ifp->field->table->s->table_name.str}, {ifp->field->field_name.str});
+          //TODO use FQCN as a key type
+          gwi.columnStatisticsMap[ifp->field->field_name.str] = ifp->field->read_stats->histogram->get_histogram();
+        }
+      }
+    }
+  }
+}
+
 /*@brief  Process SELECT part of a query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -6376,21 +6411,20 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        SimpleColumn* sc = NULL;
+        extractColumnStatistics(ifp, gwi);
 
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
           collectAllCols(gwi, ifp);
           break;
         }
-        sc = buildSimpleColumn(ifp, gwi);
+        SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)
         {
-          string fullname;
           String str;
           ifp->print(&str, QT_ORDINARY);
-          fullname = str.c_ptr();
+          string fullname(str.c_ptr());
 
           if (!ifp->is_explicit_name())  // no alias
           {
@@ -7413,7 +7447,6 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
   return 0;
 }
 
-
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
                        bool isSelectLexUnit)
 {
@@ -7442,7 +7475,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << *csep << endl;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
-  
+
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 

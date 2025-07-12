@@ -28,6 +28,7 @@
 #include <vector>
 #include "basic/string_utils.h"
 #include "idb_mysql.h"
+#include "sql_statistics.h"
 #include "ha_mcs_sysvars.h"
 
 #include "dmlpkg.h"
@@ -110,6 +111,7 @@ struct gp_walk_info
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
   std::vector<Item*> extSelAggColsItems;
   execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
+  std::unordered_map<std::string, std::vector<Histogram_bucket>> columnStatisticsMap;
   // This vector temporarily hold the projection columns to be added
   // to the returnedCols vector for subquery processing. It will be appended
   // to the end of returnedCols when the processing is finished.
