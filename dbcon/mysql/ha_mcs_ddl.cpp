@@ -25,16 +25,14 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
 #include <fstream>
 #include <sstream>
 #include <cerrno>
 #include <cstring>
 #include <regex>
-#include <tr1/unordered_set>
+#include <unordered.h>
 #include <utility>
 #include <cassert>
-using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
@@ -81,6 +79,7 @@ using namespace execplan;
 
 #include "resourcemanager.h"
 using namespace joblist;
+using namespace std;
 
 namespace
 {
@@ -761,7 +760,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
 #ifdef MCS_DEBUG
   cout << "ProcessDDLStatement: " << schema << "." << table << ":" << ddlStatement << endl;
 #endif
-  
+
   parser.setDefaultSchema(schema);
   parser.setDefaultCharset(default_table_charset);
   int rc = 0;
@@ -2203,34 +2202,46 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
 
     if (ddlStatement.find("AUTO_INCREMENT") != string::npos)
     {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax auto_increment is not supported in Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax auto_increment is not supported in Columnstore. Please check the "
+                              "Columnstore syntax guide for supported syntax or data types.");
     }
-    else if(ddlStatement.find("RENAME COLUMN") != string::npos)
+    else if (ddlStatement.find("RENAME COLUMN") != string::npos)
     {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax rename column is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax rename column is not supported by Columnstore. Please check the "
+                              "Columnstore syntax guide for supported syntax or data types.");
     }
-    else if(ddlStatement.find("MAX_ROWS") != string::npos || ddlStatement.find("MIN_ROWS") != string::npos)
+    else if (ddlStatement.find("MAX_ROWS") != string::npos || ddlStatement.find("MIN_ROWS") != string::npos)
     {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax min_rows/max_rows is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax min_rows/max_rows is not supported by Columnstore. Please check "
+                              "the Columnstore syntax guide for supported syntax or data types.");
     }
-    else if(ddlStatement.find("REPLACE TABLE") != string::npos)
+    else if (ddlStatement.find("REPLACE TABLE") != string::npos)
     {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax replace table is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax replace table is not supported by Columnstore. Please check the "
+                              "Columnstore syntax guide for supported syntax or data types.");
     }
-    else if(ddlStatement.find("DROP COLUMN IF EXISTS") != string::npos)
+    else if (ddlStatement.find("DROP COLUMN IF EXISTS") != string::npos)
     {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax drop column if exists is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax drop column if exists is not supported by Columnstore. Please "
+                              "check the Columnstore syntax guide for supported syntax or data types.");
     }
     else
     {
       //@Bug 1888,1885. update error message
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED, "The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.");
+      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                              "The syntax or the data type(s) is not supported by Columnstore. Please check "
+                              "the Columnstore syntax guide for supported syntax or data types.");
     }
 
     ci->alterTableState = cal_connection_info::NOT_ALTER;
     ci->isAlter = false;
   }
-  
+
   return rc;
 }
 

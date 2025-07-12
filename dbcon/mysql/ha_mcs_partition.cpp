@@ -29,7 +29,6 @@
 #include <sstream>
 // #include <unistd.h>
 #include <iomanip>
-using namespace std;
 
 #include <boost/tokenizer.hpp>
 
@@ -65,6 +64,7 @@ using namespace logging;
 
 #include <boost/algorithm/string/case_conv.hpp>
 using namespace boost;
+using namespace std;
 
 namespace
 {

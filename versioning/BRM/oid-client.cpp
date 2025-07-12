@@ -39,23 +39,24 @@ int main(int argc, char** argv)
 
   uint32_t lowerOid;
   uint32_t upperOid;
-  desc.add_options()("help", "produce help message")
-      ("lower-oid,l", po::value<uint32_t>(&lowerOid)->required(), "lower oid that can not be lower 3000")
-      ("upper-oid,u", po::value<uint32_t>(&upperOid)->required(), "lower oid that can not be bigger 16 * 1024 ^ 2");
+  desc.add_options()("help", "produce help message")(
+      "lower-oid,l", po::value<uint32_t>(&lowerOid)->required(), "lower oid that can not be lower 3000")(
+      "upper-oid,u", po::value<uint32_t>(&upperOid)->required(),
+      "lower oid that can not be bigger 16 * 1024 ^ 2");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
 
   if (argc == 1 || vm.count("help"))
   {
-    cout << desc << "\n";
+    std::cout << desc << "\n";
     return 1;
   }
 
   uint32_t bitMapSize = 8 * 2 * 1024 * 1024;
-  check_value<int>(vm, "lower-oid", 3000, bitMapSize-1);
+  check_value<int>(vm, "lower-oid", 3000, bitMapSize - 1);
   check_value<int>(vm, "upper-oid", lowerOid, bitMapSize);
-  
+
   po::notify(vm);
 
   BRM::DBRM brm;

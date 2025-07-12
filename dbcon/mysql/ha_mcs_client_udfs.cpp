@@ -585,7 +585,7 @@ extern "C"
     stmt->serialize(bytestream);
     ByteStream::byte b = 0;
     THD* thd = current_thd;
-    string emsg;
+    std::string emsg;
     mq.write(bytestream);
 
     try
@@ -606,7 +606,7 @@ extern "C"
         bytestream >> emsg;
       }
     }
-    catch (runtime_error&)
+    catch (std::runtime_error&)
     {
       thd->get_stmt_da()->set_overwrite_status(true);
       thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DDLProc");

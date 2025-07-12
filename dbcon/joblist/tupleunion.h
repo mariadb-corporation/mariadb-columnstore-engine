@@ -28,7 +28,7 @@
 //
 
 #include "jobstep.h"
-#include <tr1/unordered_set>
+#include <unordered.h>
 
 #include "stlpoolallocator.h"
 #include "threadnaming.h"
@@ -116,7 +116,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
     uint64_t group : 48;
     uint64_t row : 16;
 
-    inline explicit RowPosition(uint64_t i = 0, uint64_t j = 0) : group(i), row(j){};
+    inline explicit RowPosition(uint64_t i = 0, uint64_t j = 0) : group(i), row(j) {};
     static const uint64_t normalizedFlag = 0x800000000000ULL;  // 48th bit is set
   };
 

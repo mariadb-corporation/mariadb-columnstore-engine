@@ -20,8 +20,8 @@ CalpontSystemCatalog::ColType Func_json_insert::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
@@ -40,7 +40,7 @@ string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   initJSPaths(paths, fp, 1, 2);
 
   // Save the result of each merge and the result of the final merge separately
-  string retJS;
+  std::string retJS;
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {

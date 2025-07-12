@@ -32,7 +32,7 @@
 #include <sstream>
 #include <vector>
 #include <list>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include <boost/thread.hpp>
 #include <boost/scoped_array.hpp>
@@ -55,10 +55,10 @@ extern void timespec_sub(const struct timespec& tv1, const struct timespec& tv2,
 
 namespace joblist
 {
-const string createHashStr("create hash");
-const string hashJoinStr("hash join");
-const string insertResultsStr("insert results");
-const string insertLastResultsStr("insert last results");
+const std::string createHashStr("create hash");
+const std::string hashJoinStr("hash join");
+const std::string insertResultsStr("insert results");
+const std::string insertLastResultsStr("insert last results");
 
 template <typename element_t>
 void* HashJoinByBucket_thr(void* arg);

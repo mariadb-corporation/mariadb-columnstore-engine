@@ -20,8 +20,8 @@ CalpontSystemCatalog::ColType Func_json_remove::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
 
@@ -37,7 +37,7 @@ string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   initJSPaths(paths, fp, 1, 1);
 
-  string retJS;
+  std::string retJS;
   utils::NullString tmpJS(js);
   for (size_t i = 1, j = 0; i < fp.size(); i++, j++)
   {

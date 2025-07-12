@@ -24,6 +24,7 @@
 #include "columnwidth.h"
 
 using namespace mcsv1sdk;
+using namespace std;
 
 // This is the standard way to get a UDAF function into the system's
 // map of UDAF for lookup
@@ -104,9 +105,7 @@ mcsv1_UDAF* moda::getImpl(mcsv1Context* context)
     case execplan::CalpontSystemCatalog::LONGDOUBLE: data->modaImpl = &moda_impl_longdouble; break;
 
     case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::CHAR:
-      data->modaImpl = &moda_impl_string;
-      break;
+    case execplan::CalpontSystemCatalog::CHAR: data->modaImpl = &moda_impl_string; break;
 
     default: data->modaImpl = NULL;
   }
@@ -368,8 +367,7 @@ void ModaData::serialize(messageqcpp::ByteStream& bs) const
     case execplan::CalpontSystemCatalog::DOUBLE: serializeMap<double>(bs); break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: serializeMap<long double>(bs); break;
     case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::VARCHAR:
-      serializeMap<string>(bs); break;
+    case execplan::CalpontSystemCatalog::VARCHAR: serializeMap<string>(bs); break;
     default: throw std::runtime_error("ModaData::serialize with bad data type"); break;
   }
 }
@@ -408,8 +406,7 @@ void ModaData::unserialize(messageqcpp::ByteStream& bs)
     case execplan::CalpontSystemCatalog::DOUBLE: unserializeMap<double>(bs); break;
     case execplan::CalpontSystemCatalog::LONGDOUBLE: unserializeMap<long double>(bs); break;
     case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::VARCHAR:
-      unserializeMap<string>(bs); break;
+    case execplan::CalpontSystemCatalog::VARCHAR: unserializeMap<string>(bs); break;
     default: throw std::runtime_error("ModaData::unserialize with bad data type"); break;
   }
 }
@@ -503,7 +500,7 @@ void ModaData::cleanup()
 
 /************************************************************************************************
  * String Specialization
-************************************************************************************************/
+ ************************************************************************************************/
 
 mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDatum* /*colTypes*/)
 {
@@ -524,7 +521,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::reset(mcsv1Context* context)
 mcsv1_UDAF::ReturnCode Moda_impl_T<string>::nextValue(mcsv1Context* context, ColumnDatum* valsIn)
 {
   static_any::any& valIn = valsIn[0].columnData;
-  ModaData* data  = static_cast<ModaData*>(context->getUserData());
+  ModaData* data = static_cast<ModaData*>(context->getUserData());
   std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map = data->getMap<string>();
 
   if (valIn.empty())
@@ -554,9 +551,10 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::subEvaluate(mcsv1Context* context, c
   }
 
   ModaData* outData = static_cast<ModaData*>(context->getUserData());
-  const ModaData* inData  = static_cast<const ModaData*>(userDataIn);
-  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* outMap  = outData->getMap<string>();
-  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* inMap   = inData->getMap<string>();
+  const ModaData* inData = static_cast<const ModaData*>(userDataIn);
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* outMap =
+      outData->getMap<string>();
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* inMap = inData->getMap<string>();
   typename std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >::const_iterator iter;
 
   for (iter = inMap->begin(); iter != inMap->end(); ++iter)
@@ -615,7 +613,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::dropValue(mcsv1Context* context, Col
 {
   static_any::any& valDropped = valsDropped[0].columnData;
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map        = data->getMap<string>();
+  std::unordered_map<string, uint32_t, hasher<string>, comparator<string> >* map = data->getMap<string>();
 
   if (valDropped.empty())
   {
@@ -630,5 +628,3 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::dropValue(mcsv1Context* context, Col
 
   return mcsv1_UDAF::SUCCESS;
 }
-
-

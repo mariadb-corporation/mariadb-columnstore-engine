@@ -28,7 +28,7 @@
 
 using namespace idbdatafile;
 using namespace logging;
-
+using namespace std;
 namespace statistics
 {
 StatisticsManager* StatisticsManager::instance()

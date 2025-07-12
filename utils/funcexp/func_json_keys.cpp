@@ -14,7 +14,7 @@ using namespace funcexp::helpers;
 
 namespace
 {
-bool checkKeyInList(const string& res, const uchar* key, const int keyLen)
+bool checkKeyInList(const std::string& res, const uchar* key, const int keyLen)
 {
   const uchar* curr = (const uchar*)res.c_str() + 2;             /* beginning '["' */
   const uchar* end = (const uchar*)res.c_str() + res.size() - 1; /* ending '"' */
@@ -51,15 +51,15 @@ CalpontSystemCatalog::ColType Func_json_keys::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
   IntType keySize = 0;
-  string ret;
+  std::string ret;
   json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
 

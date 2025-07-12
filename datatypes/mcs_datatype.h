@@ -35,8 +35,6 @@ typedef int32_t mcs_sint32_t;
 struct charset_info_st;
 typedef const struct charset_info_st CHARSET_INFO;
 
-using namespace std;  // e.g. string
-
 namespace ddlpackage
 {
 struct ColumnType;
@@ -1019,8 +1017,8 @@ class TypeHandler
   static const TypeHandler* find_by_ddltype(const ddlpackage::ColumnType& ct);
   virtual ~TypeHandler() = default;
 
-  virtual const string& name() const = 0;
-  virtual const string print(const SystemCatalog::TypeAttributesStd& /*attr*/) const
+  virtual const std::string& name() const = 0;
+  virtual const std::string print(const SystemCatalog::TypeAttributesStd& /*attr*/) const
   {
     return name();
   }
@@ -1062,10 +1060,10 @@ class TypeHandler
   virtual MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
                                                      BRM::DBRM& em, const BRM::EMEntry& entry,
                                                      int* state) const;
-  virtual string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                                     const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                                     round_style_t rfMin, const SimpleValue& endVal,
-                                     round_style_t rfMax) const
+  virtual std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                          const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                          round_style_t rfMin, const SimpleValue& endVal,
+                                          round_style_t rfMax) const
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1086,7 +1084,7 @@ class TypeHandler
 // QQ: perhaps not needed yet
 class TypeHandlerBit : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIT;
@@ -1155,7 +1153,7 @@ class TypeHandlerInt : public TypeHandler
 class TypeHandlerSInt8 : public TypeHandlerInt
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TINYINT;
@@ -1202,7 +1200,7 @@ class TypeHandlerSInt8 : public TypeHandlerInt
 class TypeHandlerSInt16 : public TypeHandlerInt
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::SMALLINT;
@@ -1248,7 +1246,7 @@ class TypeHandlerSInt16 : public TypeHandlerInt
 
 class TypeHandlerSInt24 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::MEDINT;
@@ -1297,7 +1295,7 @@ class TypeHandlerSInt24 : public TypeHandlerInt
 
 class TypeHandlerSInt32 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::INT;
@@ -1346,7 +1344,7 @@ class TypeHandlerSInt32 : public TypeHandlerInt
 
 class TypeHandlerSInt64 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIGINT;
@@ -1392,7 +1390,7 @@ class TypeHandlerSInt64 : public TypeHandlerInt
 
 class TypeHandlerUInt8 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UTINYINT;
@@ -1435,10 +1433,10 @@ class TypeHandlerUInt8 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1457,7 +1455,7 @@ class TypeHandlerUInt8 : public TypeHandlerInt
 
 class TypeHandlerUInt16 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::USMALLINT;
@@ -1499,10 +1497,10 @@ class TypeHandlerUInt16 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1521,7 +1519,7 @@ class TypeHandlerUInt16 : public TypeHandlerInt
 
 class TypeHandlerUInt24 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UMEDINT;
@@ -1566,10 +1564,10 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1588,7 +1586,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
 
 class TypeHandlerUInt32 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UINT;
@@ -1633,10 +1631,10 @@ class TypeHandlerUInt32 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1655,7 +1653,7 @@ class TypeHandlerUInt32 : public TypeHandlerInt
 
 class TypeHandlerUInt64 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIGINT;
@@ -1697,10 +1695,10 @@ class TypeHandlerUInt64 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1739,9 +1737,10 @@ class TypeHandlerXDecimal : public TypeHandler
                                                const BRM::EMEntry& entry, int* state) const;
   MinMaxPartitionInfo getExtentPartitionInfo128(const SystemCatalog::TypeAttributesStd& attr, BRM::DBRM& em,
                                                 const BRM::EMEntry& entry, int* state) const;
-  string PrintPartitionValue128(const SystemCatalog::TypeAttributesStd& attr,
-                                const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                                round_style_t rfMin, const SimpleValue& endVal, round_style_t rfMax) const;
+  std::string PrintPartitionValue128(const SystemCatalog::TypeAttributesStd& attr,
+                                     const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                     round_style_t rfMin, const SimpleValue& endVal,
+                                     round_style_t rfMax) const;
 
  public:
   size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
@@ -1760,7 +1759,7 @@ class TypeHandlerXDecimal : public TypeHandler
 class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DECIMAL;
@@ -1804,10 +1803,10 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo64(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1826,7 +1825,7 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
 class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDECIMAL;
@@ -1870,10 +1869,10 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo64(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1892,7 +1891,7 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
 class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DECIMAL;
@@ -1936,10 +1935,10 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo128(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1958,7 +1957,7 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
 class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDECIMAL;
@@ -2002,10 +2001,10 @@ class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo128(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -2043,7 +2042,7 @@ class TypeHandlerReal : public TypeHandler
 
 class TypeHandlerSFloat : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::FLOAT;
@@ -2071,7 +2070,7 @@ class TypeHandlerSFloat : public TypeHandlerReal
 
 class TypeHandlerSDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DOUBLE;
@@ -2099,7 +2098,7 @@ class TypeHandlerSDouble : public TypeHandlerReal
 
 class TypeHandlerUFloat : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UFLOAT;
@@ -2127,7 +2126,7 @@ class TypeHandlerUFloat : public TypeHandlerReal
 
 class TypeHandlerUDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDOUBLE;
@@ -2155,7 +2154,7 @@ class TypeHandlerUDouble : public TypeHandlerReal
 
 class TypeHandlerSLongDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::LONGDOUBLE;
@@ -2219,14 +2218,14 @@ class TypeHandlerStr : public TypeHandler
 
 class TypeHandlerChar : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::CHAR;
   }
-  const string print(const SystemCatalog::TypeAttributesStd& attr) const override
+  const std::string print(const SystemCatalog::TypeAttributesStd& attr) const override
   {
-    ostringstream oss;
+    std::ostringstream oss;
     oss << name() << "(" << attr.colWidth << ")";
     return oss.str();
   }
@@ -2256,14 +2255,14 @@ class TypeHandlerChar : public TypeHandlerStr
 
 class TypeHandlerVarchar : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::VARCHAR;
   }
-  const string print(const SystemCatalog::TypeAttributesStd& attr) const override
+  const std::string print(const SystemCatalog::TypeAttributesStd& attr) const override
   {
-    ostringstream oss;
+    std::ostringstream oss;
     oss << name() << "(" << attr.colWidth << ")";
     return oss.str();
   }
@@ -2297,7 +2296,7 @@ class TypeHandlerVarchar : public TypeHandlerStr
 
 class TypeHandlerVarbinary : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::VARBINARY;
@@ -2317,7 +2316,7 @@ class TypeHandlerVarbinary : public TypeHandlerStr
 
 class TypeHandlerBlob : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BLOB;
@@ -2344,7 +2343,7 @@ class TypeHandlerBlob : public TypeHandlerStr
 
 class TypeHandlerText : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TEXT;
@@ -2374,7 +2373,7 @@ class TypeHandlerText : public TypeHandlerStr
 
 class TypeHandlerClob : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::CLOB;
@@ -2423,7 +2422,7 @@ class TypeHandlerTemporal : public TypeHandler
 
 class TypeHandlerDate : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DATE;
@@ -2449,7 +2448,7 @@ class TypeHandlerDate : public TypeHandlerTemporal
 
 class TypeHandlerDatetime : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DATETIME;
@@ -2475,7 +2474,7 @@ class TypeHandlerDatetime : public TypeHandlerTemporal
 
 class TypeHandlerTime : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TIME;
@@ -2501,7 +2500,7 @@ class TypeHandlerTime : public TypeHandlerTemporal
 
 class TypeHandlerTimestamp : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TIMESTAMP;

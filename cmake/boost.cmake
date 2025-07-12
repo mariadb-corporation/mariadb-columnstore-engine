@@ -22,6 +22,10 @@ set(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 link_directories("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+if(WITH_MSAN)
+    set(_cxxargs "${_cxxargs} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE -stdlib=libc++")
+endif()
+
 set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi;${_extra};toolset=${_toolset}
             --without-mpi;--without-charconv;--without-python;--prefix=${INSTALL_LOCATION}
 )

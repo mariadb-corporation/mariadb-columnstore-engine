@@ -24,12 +24,11 @@
 /** @file */
 /** class FromSubSelect definition */
 
-//#define NDEBUG
+// #define NDEBUG
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <cassert>
 #include <map>
-using namespace std;
 
 #include "idb_mysql.h"
 
@@ -39,7 +38,7 @@ using namespace std;
 #include "constantcolumn.h"
 #include "simplecolumn.h"
 using namespace execplan;
-
+using namespace std;
 #include "ha_subquery.h"
 
 namespace cal_impl_if

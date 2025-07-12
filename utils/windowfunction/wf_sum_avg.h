@@ -42,7 +42,8 @@ class WF_sum_avg : public WindowFunctionType
   WindowFunctionType* clone() const override;
   void resetData() override;
 
-  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const std::string&, int,
+                                                            WindowFunctionColumn*);
 
  protected:
   T_IN fVal;

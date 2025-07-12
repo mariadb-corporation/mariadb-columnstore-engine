@@ -53,7 +53,7 @@
 
 #if defined(__GNUC__)
 #include <string>
-static const std::string optim(
+[[maybe_unused]] static const std::string optim(
     "Build is "
 #if !defined(__OPTIMIZE__)
     "NOT "

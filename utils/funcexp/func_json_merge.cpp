@@ -13,7 +13,7 @@ using namespace funcexp::helpers;
 
 namespace
 {
-int doMerge(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2)
+int doMerge(std::string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2)
 {
   if (json_read_value(jsEg1) || json_read_value(jsEg2))
     return 1;
@@ -214,8 +214,8 @@ CalpontSystemCatalog::ColType Func_json_merge::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
@@ -226,7 +226,7 @@ string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& is
   json_engine_t jsEg1, jsEg2;
 
   utils::NullString tmpJS(js);
-  string retJS;
+  std::string retJS;
 
   for (size_t i = 1; i < fp.size(); i++)
   {

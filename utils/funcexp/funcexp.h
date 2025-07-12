@@ -26,7 +26,8 @@
 
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <boost/thread/mutex.hpp>
 
 #include "rowgroup.h"

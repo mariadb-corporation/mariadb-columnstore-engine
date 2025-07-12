@@ -339,7 +339,7 @@ class ServiceExeMgr : public Service, public Opt
   }
   void getLocalNetIfacesSins()
   {
-    string ipAddress = "Unable to get IP Address";
+    std::string ipAddress = "Unable to get IP Address";
     struct ifaddrs* netIfacesList = nullptr;
     struct ifaddrs* ifaceListMembPtr = nullptr;
     int success = 0;

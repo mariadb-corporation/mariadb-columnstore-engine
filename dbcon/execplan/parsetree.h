@@ -698,7 +698,7 @@ inline void ParseTree::drawTree(std::string filename)
   dotFile.close();
 }
 
-inline string ParseTree::toCppCode(IncludeSet& includes) const
+inline std::string ParseTree::toCppCode(IncludeSet& includes) const
 {
   includes.insert("parsetree.h");
   std::stringstream ss;
@@ -711,7 +711,7 @@ inline string ParseTree::toCppCode(IncludeSet& includes) const
 
 inline void ParseTree::codeToFile(std::string filename, std::string varname) const
 {
-  ofstream hFile(filename.c_str(), std::ios::app);
+  std::ofstream hFile(filename.c_str(), std::ios::app);
   IncludeSet includes;
   auto result = toCppCode(includes);
   for (const auto& inc : includes)

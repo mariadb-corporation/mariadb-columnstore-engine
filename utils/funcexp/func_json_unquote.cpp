@@ -42,7 +42,7 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
                               (uchar*)buf, (uchar*)(buf + jsEg.value_len))) >= 0)
   {
     buf[strLen] = '\0';
-    string ret = buf;
+    std::string ret = buf;
     return strLen == 0 ? "" : ret;
   }
 

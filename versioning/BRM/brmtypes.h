@@ -33,7 +33,8 @@
 #include "mcs_basic_types.h"
 #include "logicalpartition.h"
 
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #ifndef _UNORDERED_MAP_FIX_
 #define _UNORDERED_MAP_FIX_
 #endif  //_UNORDERED_MAP_FIX_

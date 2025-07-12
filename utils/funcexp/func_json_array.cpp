@@ -22,14 +22,14 @@ CalpontSystemCatalog::ColType Func_json_array::operationType(FunctionParm& fp,
   return fp.size() > 0 ? fp[0]->data()->resultType() : resultType;
 }
 
-string Func_json_array::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& type)
+std::string Func_json_array::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& type)
 {
   if (fp.size() == 0)
     return "[]";
 
   const CHARSET_INFO* retCS = type.getCharset();
-  string ret("[");
+  std::string ret("[");
 
   if (appendJSValue(ret, retCS, row, fp[0]))
     goto error;

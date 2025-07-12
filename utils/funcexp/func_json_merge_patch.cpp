@@ -13,7 +13,7 @@ using namespace funcexp::helpers;
 
 namespace
 {
-int copyValuePatch(string& retJS, json_engine_t* jsEg)
+int copyValuePatch(std::string& retJS, json_engine_t* jsEg)
 {
   int firstKey = 1;
 
@@ -69,7 +69,7 @@ int copyValuePatch(string& retJS, json_engine_t* jsEg)
   return 0;
 }
 
-int doMergePatch(string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool& isEmpty)
+int doMergePatch(std::string& retJS, json_engine_t* jsEg1, json_engine_t* jsEg2, bool& isEmpty)
 {
   if (json_read_value(jsEg1))
   {
@@ -266,8 +266,8 @@ CalpontSystemCatalog::ColType Func_json_merge_patch::operationType(
   return fp[0]->data()->resultType();
 }
 
-string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                             execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   // JSON_MERGE_PATCH return NULL if any argument is NULL
   bool isEmpty = false, hasNullArg = false;
@@ -279,7 +279,7 @@ string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   jsEg1.s.error = jsEg2.s.error = 0;
 
   utils::NullString tmpJS(js);
-  string retJS;
+  std::string retJS;
   for (size_t i = 1; i < fp.size(); i++)
   {
     const auto& js2 = fp[i]->data()->getStrVal(row, isNull);

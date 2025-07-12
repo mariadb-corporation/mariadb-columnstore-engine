@@ -104,7 +104,6 @@ const int64_t IDB_pow[19] = {1,
                              100000000000000000LL,
                              1000000000000000000LL};
 
-
 const int32_t SECS_PER_MIN = 60;
 const int32_t MINS_PER_HOUR = 60;
 const int32_t HOURS_PER_DAY = 24;
@@ -1089,7 +1088,7 @@ void number_int_value(const std::string& data, cscDataType typeCode,
                       const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
                       bool noRoundup, T& intVal, bool* saturate = 0);
 
-uint64_t number_uint_value(const string& data, cscDataType typeCode,
+uint64_t number_uint_value(const std::string& data, cscDataType typeCode,
                            const datatypes::SystemCatalog::TypeAttributesStd& ct, bool& pushwarning,
                            bool noRoundup);
 
@@ -1319,7 +1318,7 @@ inline void DataConvert::datetimeToString(long long datetimevalue, char* buf, un
 
   if ((datetimevalue & 0xfffff) > 0)
   {
-    msec = (unsigned)((datetimevalue)&0xfffff);
+    msec = (unsigned)((datetimevalue) & 0xfffff);
   }
 
   snprintf(buf, buflen, "%04d-%02d-%02d %02d:%02d:%02d", (unsigned)((datetimevalue >> 48) & 0xffff),
@@ -1377,7 +1376,7 @@ inline void DataConvert::timeToString(long long timevalue, char* buf, unsigned i
 
   if ((timevalue & 0xffffff) > 0)
   {
-    msec = (unsigned)((timevalue)&0xffffff);
+    msec = (unsigned)((timevalue) & 0xffffff);
   }
 
   if ((hour >= 0) && (timevalue >> 63))
@@ -1553,7 +1552,6 @@ inline int128_t strtoll128(const char* data, bool& saturate, char** ep)
 
   return res;
 }
-
 
 template <class T>
 T decimalRangeUp(int32_t precision)

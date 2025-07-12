@@ -3,9 +3,10 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
-using namespace std;
 
 #include "idb_mysql.h"
+
+using namespace std;
 
 namespace
 {

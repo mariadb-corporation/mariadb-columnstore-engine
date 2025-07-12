@@ -23,7 +23,7 @@
 #include <signal.h>
 #include <boost/thread/mutex.hpp>
 #include <sys/poll.h>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 namespace storagemanager
 {

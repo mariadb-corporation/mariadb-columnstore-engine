@@ -86,6 +86,24 @@ if(WITH_TSAN)
     set(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.storagemanager)
 endif()
 
+if(WITH_MSAN)
+    set(MSAN_PATH "/tmp/msan")
+    if(WITH_COLUMNSTORE_REPORT_PATH)
+        set(MSAN_PATH "${WITH_COLUMNSTORE_REPORT_PATH}/msan")
+    endif(WITH_COLUMNSTORE_REPORT_PATH)
+
+    set(LD_PRELOAD_STRING "")
+    set(MSAN_OPTIONS abort_on_error=0:log_path=${MSAN_PATH})
+    set(ALLOC_CONFIG MSAN_OPTIONS=${MSAN_OPTIONS})
+    set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.primproc)
+    set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.dmlproc)
+    set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.ddlproc)
+    set(WRITEENGINE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.writeengine)
+    set(CONTROLLERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.controllernode)
+    set(WORKERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.workernode)
+    set(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.storagemanager)
+endif()
+
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/columnstoreSyslogSetup.sh"
     @ONLY

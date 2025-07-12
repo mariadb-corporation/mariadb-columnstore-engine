@@ -24,8 +24,8 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include <fstream>
 #include <sstream>
 #include <cerrno>
@@ -36,7 +36,6 @@
 #include <map>
 #include <limits>
 #include <wait.h>  //wait()
-using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -132,6 +131,8 @@ using namespace funcexp;
 #include "ha_subquery.h"
 #include "statistics_manager/statistics.h"
 
+using namespace std;
+
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
@@ -176,26 +177,26 @@ const string infinidb_autoswitch_warning =
     "was switched to standard mode with downgraded performance.";
 
 // copied from item_timefunc.cc
-static const string interval_names[] = {"year",
-                                        "quarter",
-                                        "month",
-                                        "week",
-                                        "day",
-                                        "hour",
-                                        "minute",
-                                        "second",
-                                        "microsecond",
-                                        "year_month",
-                                        "day_hour",
-                                        "day_minute",
-                                        "day_second",
-                                        "hour_minute",
-                                        "hour_second",
-                                        "minute_second",
-                                        "day_microsecond",
-                                        "hour_microsecond",
-                                        "minute_microsecond",
-                                        "second_microsecond"};
+[[maybe_unused]] static const string interval_names[] = {"year",
+                                                         "quarter",
+                                                         "month",
+                                                         "week",
+                                                         "day",
+                                                         "hour",
+                                                         "minute",
+                                                         "second",
+                                                         "microsecond",
+                                                         "year_month",
+                                                         "day_hour",
+                                                         "day_minute",
+                                                         "day_second",
+                                                         "hour_minute",
+                                                         "hour_second",
+                                                         "minute_second",
+                                                         "day_microsecond",
+                                                         "hour_microsecond",
+                                                         "minute_microsecond",
+                                                         "second_microsecond"};
 
 // HDFS is never used nowadays, so don't bother
 bool useHdfs = false;  // ResourceManager::instance()->useHdfs();
@@ -4108,7 +4109,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (!get_fe_conn_info_ptr()) 
+  if (!get_fe_conn_info_ptr())
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());

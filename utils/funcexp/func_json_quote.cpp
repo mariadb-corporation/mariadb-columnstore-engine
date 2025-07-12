@@ -35,7 +35,7 @@ std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     return "";
   }
 
-  string ret("\"");
+  std::string ret("\"");
 
   isNull = appendEscapedJS(ret, &my_charset_utf8mb4_bin, js, getCharset(fp[0]));
   if (isNull)

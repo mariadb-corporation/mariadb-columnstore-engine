@@ -19,18 +19,18 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
 #include <fstream>
 #include <sstream>
 #include <cerrno>
 #include <cstring>
-#include <tr1/unordered_set>
+
 #include <utility>
 #include <cassert>
 using namespace std;
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <unordered.h>
 #include "dataconvert.h"
 using namespace dataconvert;
 

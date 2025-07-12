@@ -65,7 +65,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
   std::unique_lock<std::mutex> sl(msgQueueLock);
 
   if (gotException)
-    throw runtime_error(exceptionString);
+    throw std::runtime_error(exceptionString);
 
   (void)atomicops::atomicAdd<uint64_t>(&currentByteSize, msg.msg->lengthWithHdrOverhead());
   msgQueue.push(msg);
@@ -91,7 +91,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     queueNotEmpty.notify_one();
 }
 
-void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
+void BPPSendThread::sendResults(const std::vector<Msg_t>& msgs, bool newConnection)
 {
   // Wait for the queue to empty out a bit if it's stuffed full
   if (sizeTooBig())
@@ -110,7 +110,7 @@ void BPPSendThread::sendResults(const vector<Msg_t>& msgs, bool newConnection)
   std::unique_lock<std::mutex> sl(msgQueueLock);
 
   if (gotException)
-    throw runtime_error(exceptionString);
+    throw std::runtime_error(exceptionString);
 
   if (!sawAllConnections && newConnection)
   {
