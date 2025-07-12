@@ -595,6 +595,8 @@ void TupleHashJoinStep::djsReaderFcn(int index)
 
   for (auto& diskJoinStep : djs)
   {
+    // TODO add and verify mutex 
+    // boost::mutex::scoped_lock lk(*fStatsMutexPtr);
     fExtendedInfo += diskJoinStep->extendedInfo();
     fMiniInfo += diskJoinStep->miniInfo();
   }
