@@ -132,7 +132,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "S3 Hostname (for S3 imports, Amazon's S3 default)")
       ("s3-region,g", po::value<string>(&fS3Region),
         "S3 Region (for S3 imports)")
-      ("errors-dir,L", po::value<string>(&fErrorDir)->default_value(MCSLOGDIR),
+      ("errors-dir,L", po::value<string>(&fErrorDir)->default_value(fErrorDir),
         "Directory for the output .err and .bad files")
       ("username,U", po::value<string>(&fUsername), "Username of the files owner.")
       ("dbname", po::value<string>(), "Name of the database to load")
