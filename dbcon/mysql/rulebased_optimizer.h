@@ -18,14 +18,31 @@
 #pragma once
 
 #include <string>
+
+#define PREFER_MY_CONFIG_H
+#include <my_config.h>
+#include "idb_mysql.h"
+
+#include "ha_mcs_impl_if.h"
+
 #include "execplan/calpontselectexecutionplan.h"
 
 namespace optimizer {
 
+class RBOptimizerContext {
+public:
+  RBOptimizerContext() = delete;
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info) : gwi(walk_info) {}
+  // gwi lifetime should be longer than optimizer context. 
+  // In plugin runtime this is always true.
+  cal_impl_if::gp_walk_info& gwi;
+  uint64_t uniqueId {0};
+};
+
 struct Rule
 {
   using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan&);
-  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan&);
+  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan&, RBOptimizerContext&);
 
   Rule(std::string&& name, RuleMatcher matchRule, RuleApplier applyRule)
    : name(name), matchRule(matchRule), applyRule(applyRule) {};
@@ -39,15 +56,21 @@ struct Rule
   Rule() = default;
   Rule(const Rule&) = default;
   Rule(Rule&&) = default;
+
+  std::string getName() const
+  {
+    return name;
+  }
+
   Rule& operator=(const Rule&) = default;
   Rule& operator=(Rule&&) = default;
 
-  bool apply(execplan::CalpontSelectExecutionPlan& csep) const;
-  bool walk(execplan::CalpontSelectExecutionPlan& csep) const;
+  bool apply(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx) const;
+  bool walk(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx) const;
 };
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);
-void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep);
-bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root);
+void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx);
 
 }

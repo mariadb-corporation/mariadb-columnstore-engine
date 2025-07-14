@@ -135,6 +135,11 @@ using namespace funcexp;
 namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
+
+void gp_walk_info::mergeColumnStatisticsMap(const ColumnStatisticsMap& aColumnStatisticsMap)
+{
+  columnStatisticsMap.insert(aColumnStatisticsMap.begin(), aColumnStatisticsMap.end());
+}
 }
 
 namespace

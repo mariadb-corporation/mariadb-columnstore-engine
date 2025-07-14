@@ -96,6 +96,12 @@ SCSEP SelectSubQuery::transform()
     return csep;
   }
 
+  // Insert column statistics
+  fGwip.mergeColumnStatisticsMap(gwi.columnStatisticsMap);
+  // std::cout << "fGwip.columnStatisticsMap 2 size " << fGwip.columnStatisticsMap.size() << std::endl;
+  // std::cout << "gwi.columnStatisticsMap 2 size " << gwi.columnStatisticsMap.size() << std::endl;
+
+  // Insert subselect CSEP
   fGwip.subselectList.push_back(csep);
 
   // remove outer query tables

@@ -49,7 +49,7 @@ using namespace logging;
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include "idb_mysql.h"
-#include "opt_histogram_json.h"
+
 #include "partition_element.h"
 #include "partition_info.h"
 
@@ -6290,24 +6290,25 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
 
 void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
 {
-  if (!ifp->field->part_of_key.is_clear_all())
-  {
-    return;
-  }
-  std::cout << "Processing field item: " << ifp->field_name.str << std::endl;
+  // TODO find clear way to check if the field is part of a key
+  // if (!ifp->field->part_of_key.is_clear_all())
+  // {
+  //   return;
+  // }
+  // std::cout << "Processing field item: " << ifp->field_name.str << std::endl;
   // std::cout << "part of a key: " << buf << std::endl;
-  std::cout << "ifp->field->field_index " << ifp->field->field_index << std::endl;
+  // std::cout << "ifp->field->field_index " << ifp->field->field_index << std::endl;
 
   for (uint j = 0; j < ifp->field->table->s->keys; j++)
   {
     for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
     {
-      std::cout << "key fieldnr " << i << " "
-                << ifp->field->table->s->key_info[j].key_part[i].field->field_name.str << " "
-                << ifp->field->table->s->key_info[j].key_part[i].fieldnr << std::endl;
+      // std::cout << "key fieldnr " << i << " "
+      //           << ifp->field->table->s->key_info[j].key_part[i].field->field_name.str << " "
+      //           << ifp->field->table->s->key_info[j].key_part[i].fieldnr << std::endl;
       if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
       {
-        std::cout << "key_info " << j << " key_part " << i << " matched " << std::endl;
+        // std::cout << "key_info " << j << " key_part " << i << " matched " << std::endl;
         if (i == 0 && ifp->field->read_stats)
         {
           assert(ifp->field->table->s);
@@ -6315,7 +6316,15 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           // assert(ifp->field->table->s->table_name);
           // FQCN fqcn({ifp->field->table->s->db.str}, {ifp->field->table->s->table_name.str}, {ifp->field->field_name.str});
           //TODO use FQCN as a key type
-          gwi.columnStatisticsMap[ifp->field->field_name.str] = ifp->field->read_stats->histogram->get_histogram();
+          std::cout << "Adding column statistics for " << ifp->field->field_name.str << std::endl;
+          auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
+          if (histogram)
+          {
+            std::cout << "Type of histogram object: " << typeid(*histogram).name() << std::endl;
+            std::vector<Histogram_bucket> histogramBuckets = histogram->get_histogram();
+            std::cout << "gwi.columnStatisticsMap[ifp->field->field_name.str].size() " << histogramBuckets.size() << std::endl;
+            gwi.columnStatisticsMap[ifp->field->field_name.str] = histogramBuckets;
+          }
         }
       }
     }
@@ -6412,7 +6421,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       {
         Item_field* ifp = (Item_field*)item;
         extractColumnStatistics(ifp, gwi);
-
+        std::cout << "gwi.columnStatisticsMap 1 size " << gwi.columnStatisticsMap.size() << std::endl;
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
           collectAllCols(gwi, ifp);
@@ -7464,6 +7473,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 
   int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
+  std::cout << "cs_get_select_plan columnStatisticsMap size " << gwi.columnStatisticsMap.size() << std::endl;
   if (status > 0)
     return ER_INTERNAL_ERROR;
   else if (status < 0)
@@ -7481,7 +7491,8 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 
   if (get_unstable_optimizer(thd))
   {
-    bool csepWasOptimized = optimizer::optimizeCSEP(*csep);
+    optimizer::RBOptimizerContext ctx(gwi);
+    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx);
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;

@@ -102,6 +102,7 @@ typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
+using ColumnStatisticsMap = std::unordered_map<std::string, std::vector<Histogram_bucket>>;
 
 struct gp_walk_info
 {
@@ -232,6 +233,8 @@ struct gp_walk_info
   {
   }
   ~gp_walk_info();
+
+  void mergeColumnStatisticsMap(const std::unordered_map<std::string, std::vector<Histogram_bucket>>& columnStatisticsMap);
 };
 
 struct SubQueryChainHolder;

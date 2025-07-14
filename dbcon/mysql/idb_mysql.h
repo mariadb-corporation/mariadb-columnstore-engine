@@ -74,6 +74,7 @@
 #include "rpl_rli.h"
 #include "my_dbug.h"
 #include "sql_show.h"
+#include "opt_histogram_json.h"
 #pragma GCC diagnostic pop
 
 // Now clean up the pollution as best we can...
