@@ -143,10 +143,11 @@ class WESDHandler
   void sendHeartbeats();
   std::string getTableName() const;
   std::string getSchemaName() const;
-  char getEnclChar();
-  char getEscChar();
-  char getDelimChar();
-  bool getConsoleLog();
+  char getEnclChar() const;
+  char getEscChar() const;
+  char getDelimChar() const;
+  size_t getSkipRows() const;
+  bool getConsoleLog() const;
   int getReadBufSize();
   ImportDataMode getImportDataMode() const;
   void sysLog(const logging::Message::Args& msgArgs, logging::LOG_TYPE logType,

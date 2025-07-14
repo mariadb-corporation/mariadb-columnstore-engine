@@ -148,8 +148,9 @@ class TableInfo : public WeUIDGID
   size_t fS3ParseLength;
   bool fNullStringMode;  // Treat "NULL" as a null value
   char fEnclosedByChar;  // Character to enclose col values
-  char fEscapeChar;      // Escape character used in conjunc-
-  //   tion with fEnclosedByChar
+  char fEscapeChar;      // Escape character used in conjunction with fEnclosedByChar
+  size_t fSkipRows;      // Header rows to skip
+  size_t fSkipRowsCur;   // Header rows left oto skip in the current file
   bool fProcessingBegun;                 // Has processing begun on this tbl
   BulkModeType fBulkMode;                // Distributed bulk mode (1,2, or 3)
   std::string fBRMRptFileName;           // Name of distributed mode rpt file
@@ -333,6 +334,10 @@ class TableInfo : public WeUIDGID
   /** @brief Set escape char to use in conjunction with enclosed by char.
    */
   void setEscapeChar(char esChar);
+
+  /** @brief Set how many header rows should be skipped.
+   */
+  void setSkipRows(size_t skipRows);
 
   /** @brief Has processing begun for this table.
    */
@@ -578,6 +583,12 @@ inline void TableInfo::setEscapeChar(char esChar)
 {
   fEscapeChar = esChar;
 }
+
+inline void TableInfo::setSkipRows(size_t skipRows)
+{
+  fSkipRows = skipRows;
+}
+
 
 inline void TableInfo::setFileBufferSize(const int fileBufSize)
 {

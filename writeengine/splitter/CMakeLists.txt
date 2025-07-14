@@ -26,4 +26,5 @@ columnstore_link(
     batchloader
     threadpool
     marias3
+    boost_program_options
 )

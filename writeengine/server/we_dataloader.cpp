@@ -239,12 +239,13 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     std::string aCmdLine = fCmdLineStr;
     std::istringstream ss(aCmdLine);
     std::string arg;
-    std::vector<std::string> v2(20, "");
+    std::vector<std::string> v2;
     unsigned int i = 0;
 
     while (ss >> arg)
     {
-      v2[i++] = arg;
+      v2.push_back(arg);
+      i++;
     }
 
     for (unsigned int j = 0; j < i; ++j)

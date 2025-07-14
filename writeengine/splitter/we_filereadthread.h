@@ -42,13 +42,11 @@ class WEFileReadThread;
 class WEReadThreadRunner
 {
  public:
-  WEReadThreadRunner(WEFileReadThread& Owner) : fRef(Owner)
+  explicit WEReadThreadRunner(WEFileReadThread& Owner) : fRef(Owner)
   {
     // ctor
   }
-  ~WEReadThreadRunner()
-  {
-  }
+  ~WEReadThreadRunner() = default;
 
   void operator()();  // Thread function
 
@@ -61,7 +59,7 @@ class WEReadThreadRunner
 class WEFileReadThread
 {
  public:
-  WEFileReadThread(WESDHandler& aSdh);
+  explicit WEFileReadThread(WESDHandler& aSdh);
   virtual ~WEFileReadThread();
 
   void reset();
@@ -82,9 +80,9 @@ class WEFileReadThread
   {
     return fContinue;
   }
-  void setContinue(bool fContinue)
+  void setContinue(bool cont)
   {
-    this->fContinue = fContinue;
+    fContinue = cont;
   }
   std::string getInFileName() const
   {
@@ -98,30 +96,34 @@ class WEFileReadThread
   {
     return fBatchQty;
   }
-  void setFpThread(boost::thread* fpThread)
+  void setFpThread(boost::thread* pThread)
   {
-    this->fpThread = fpThread;
+    fpThread = pThread;
   }
-  void setInFileName(std::string fInFileName)
+  void setInFileName(const std::string& inFileName)
   {
-    if ((0 == fInFileName.compare("STDIN")) || (0 == fInFileName.compare("stdin")))
-      this->fInFileName = "/dev/stdin";
+    if (0 == inFileName.compare("STDIN") || 0 == inFileName.compare("stdin"))
+    {
+      fInFileName = "/dev/stdin";
+    }
     else
-      this->fInFileName = fInFileName;
+    {
+      fInFileName = inFileName;
+    }
   }
   //@BUG 4326
   const std::istream& getInFile() const
   {
     return fInFile;
   }
-  void setBatchQty(unsigned int BatchQty)
+  void setBatchQty(unsigned int batchQty)
   {
-    fBatchQty = BatchQty;
+    fBatchQty = batchQty;
   }
 
-  bool chkForListOfFiles(std::string& FileName);
+  bool chkForListOfFiles(const std::string& fileName);
   std::string getNextInputDataFile();
-  void add2InputDataFileList(std::string& FileName);
+  void add2InputDataFileList(const std::string& fileName);
 
  private:
   enum
@@ -130,9 +132,9 @@ class WEFileReadThread
   };
 
   // don't allow anyone else to set
-  void setTgtPmId(unsigned int fTgtPmId)
+  void setTgtPmId(unsigned int tgtPmId)
   {
-    this->fTgtPmId = fTgtPmId;
+    fTgtPmId = tgtPmId;
   }
 
   WESDHandler& fSdh;
@@ -148,11 +150,12 @@ class WEFileReadThread
 
   unsigned int fTgtPmId;
   unsigned int fBatchQty;
-  bool fEnclEsc;  // Encl/Esc char is set
-  char fEncl;     // Encl char
-  char fEsc;      // Esc char
-  char fDelim;    // Column Delimit char
-  char* fBuff;    // main data buffer
+  bool fEnclEsc;    // Encl/Esc char is set
+  char fEncl;       // Encl char
+  char fEsc;        // Esc char
+  char fDelim;      // Column Delimit char
+  size_t fSkipRows; // Header rows to skip
+  char* fBuff;      // main data buffer
   int fBuffSize;
 
   /* To support mode 1 imports from objects on S3 */

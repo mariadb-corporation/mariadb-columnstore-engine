@@ -130,6 +130,7 @@ void XMLJob::printJobInfo(Log& logger) const
   oss1 << "Read Buffers:     " << job.numberOfReadBuffers << endl;
   oss1 << "Read Buffer Size: " << job.readBufferSize << endl;
   oss1 << "setvbuf Size: " << job.writeBufferSize << endl;
+  oss1 << "Header rows : " << job.fSkipRows << endl;
   oss1 << "Create Date : " << job.createDate << endl;
   oss1 << "Create Time : " << job.createTime << endl;
   oss1 << "Schema Name : " << job.schema << endl;
@@ -223,7 +224,8 @@ void XMLJob::printJobInfoBrief(Log& logger) const
     oss1 << "n/a";
 
   oss1 << "); ReadBufs(" << job.numberOfReadBuffers << "); ReadBufSize(" << job.readBufferSize
-       << "); setvbufSize(" << job.writeBufferSize << ')';
+       << "); setvbufSize(" << job.writeBufferSize << "); "
+       << "SkipRows(" << job.fSkipRows << ")";
   logger.logMsg(oss1.str(), MSGLVL_INFO2);
 
   for (unsigned int i = 0; i < job.jobTableList.size(); i++)
@@ -316,6 +318,8 @@ bool XMLJob::processNode(xmlNode* pNode)
     setJobData(pNode, TAG_ENCLOSED_BY_CHAR, true, TYPE_CHAR);
   else if (isTag(pNode, TAG_ESCAPE_CHAR))
     setJobData(pNode, TAG_ESCAPE_CHAR, true, TYPE_CHAR);
+  else if (isTag(pNode, TAG_SKIP_ROWS))
+    setJobData(pNode, TAG_SKIP_ROWS, true, TYPE_INT);
   else
   {
     ostringstream oss;
@@ -429,6 +433,12 @@ void XMLJob::setJobData(xmlNode* pNode, const xmlTag tag, bool bExpectContent, X
     case TAG_ESCAPE_CHAR:
     {
       fJob.fEscapeChar = bufString[0];
+      break;
+    }
+
+    case TAG_SKIP_ROWS:
+    {
+      fJob.fSkipRows = intVal;
       break;
     }
 

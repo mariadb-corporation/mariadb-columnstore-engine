@@ -145,6 +145,8 @@ TableInfo::TableInfo(Log* logger, const BRM::TxnID txnID, const string& processN
  , fNullStringMode(false)
  , fEnclosedByChar('\0')
  , fEscapeChar('\\')
+ , fSkipRows(0)
+ , fSkipRowsCur(0)
  , fProcessingBegun(false)
  , fBulkMode(BULK_MODE_LOCAL)
  , fBRMReporter(logger, tableName)
@@ -269,7 +271,7 @@ int TableInfo::readTableData()
   int fileCounter = 0;
   unsigned long long qtSentAt = 0;
 
-  if (fHandle == NULL)
+  if (fHandle == nullptr)
   {
     fFileName = fLoadFileList[fileCounter];
     int rc = openTableFile();
@@ -421,13 +423,14 @@ int TableInfo::readTableData()
     if (fReadFromS3)
     {
       readRc = fBuffers[readBufNo].fillFromMemory(fBuffers[prevReadBuf], fFileBuffer, fS3ReadLength,
-                                                  &fS3ParseLength, totalRowsPerInputFile, validTotalRows,
-                                                  fColumns, allowedErrCntThisCall);
+                                                  &fS3ParseLength, fSkipRowsCur, totalRowsPerInputFile,
+                                                  validTotalRows, fColumns, allowedErrCntThisCall);
     }
     else
     {
-      readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, totalRowsPerInputFile,
-                                                validTotalRows, fColumns, allowedErrCntThisCall);
+      readRc = fBuffers[readBufNo].fillFromFile(fBuffers[prevReadBuf], fHandle, fSkipRowsCur,
+                                                totalRowsPerInputFile, validTotalRows, fColumns,
+                                                allowedErrCntThisCall);
     }
 
     if (readRc != NO_ERROR)
@@ -1208,7 +1211,6 @@ bool TableInfo::bufferReadyForParse(const int& bufferId, bool report) const
 int TableInfo::initializeBuffers(int noOfBuffers, const JobFieldRefList& jobFieldRefList,
                                  unsigned int fixedBinaryRecLen)
 {
-
   fReadBufCount = noOfBuffers;
 
   // initialize and populate the buffer vector.
@@ -1258,7 +1260,7 @@ void TableInfo::addColumn(ColumnInfo* info)
 //------------------------------------------------------------------------------
 int TableInfo::openTableFile()
 {
-  if (fHandle != NULL)
+  if (fHandle != nullptr)
     return NO_ERROR;
 
   if (fReadFromStdin)
@@ -1321,6 +1323,8 @@ int TableInfo::openTableFile()
     oss << "Opening " << fFileName << " to import into table " << fTableName;
     fLog->logMsg(oss.str(), MSGLVL_INFO2);
   }
+
+  fSkipRowsCur = fSkipRows;
 
   return NO_ERROR;
 }

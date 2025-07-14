@@ -60,10 +60,13 @@ class XMLGenData
   EXPORT const static std::string READ_BUFFER_CAPACITY;
   EXPORT const static std::string WRITE_BUFFER_SIZE;
   EXPORT const static std::string EXT;
+  EXPORT const static std::string SKIP_ROWS;
 
   /** @brief XMLGenData constructor
    */
   EXPORT XMLGenData();
+  XMLGenData(const XMLGenData&) = delete;
+  XMLGenData& operator=(const XMLGenData&) = delete;
 
   /** @brief XMLGenData destructor
    */
@@ -92,10 +95,6 @@ class XMLGenData
   ParmList fParms;
   std::string fSchema;
   LoadNames fLoadNames;
-
- private:
-  XMLGenData(const XMLGenData&);             // disable default copy ctor
-  XMLGenData& operator=(const XMLGenData&);  // disable default assignment
 };
 
 }  // namespace WriteEngine

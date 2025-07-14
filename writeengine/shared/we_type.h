@@ -525,6 +525,7 @@ struct Job /** @brief Job Structure */
   int numberOfReadBuffers;
   unsigned readBufferSize;
   unsigned writeBufferSize;
+  int fSkipRows;
   Job()
    : id(0)
    , fDelimiter('|')
@@ -533,6 +534,7 @@ struct Job /** @brief Job Structure */
    , numberOfReadBuffers(0)
    , readBufferSize(0)
    , writeBufferSize(0)
+   , fSkipRows(0)
   {
   }
 };

@@ -24,9 +24,15 @@
 #include <set>
 
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/nil_generator.hpp>
 
 #include "we_xmlgetter.h"
 #include "we_type.h"
+
+namespace boost::program_options
+{
+class options_description;
+}
 
 namespace WriteEngine
 {
@@ -34,18 +40,17 @@ class WECmdArgs
 {
  public:
   WECmdArgs(int argc, char** argv);
-  virtual ~WECmdArgs() = default;
+  virtual ~WECmdArgs();
 
   typedef std::vector<unsigned int> VecInts;
   typedef std::vector<std::string> VecArgs;
 
   void appTestFunction();
   void parseCmdLineArgs(int argc, char** argv);
-  std::string getCpImportCmdLine();
+  std::string getCpImportCmdLine(bool skipRows);
   void setSchemaAndTableFromJobFile(std::string& JobName);
   void setEnclByAndEscCharFromJobFile(std::string& JobName);
   void usage();
-  void usageMode3();
   bool checkForCornerCases();
   void checkForBulkLogDir(const std::string& BulkRoot);
 
@@ -76,11 +81,11 @@ class WECmdArgs
   {
     return fLocFile;
   }
-  int getReadBufSize()
+  int getReadBufSize() const
   {
     return fReadBufSize;
   }
-  int getMode()
+  int getMode() const
   {
     return fMode;
   }
@@ -88,36 +93,40 @@ class WECmdArgs
   {
     return fArgMode;
   }
-  bool isHelpMode()
+  bool isHelpMode() const
   {
     return fHelp;
   }
-  int getDebugLvl()
+  int getDebugLvl() const
   {
     return fDebugLvl;
   }
-  char getEnclChar()
+  char getEnclChar() const
   {
     return fEnclosedChar;
   }
-  char getEscChar()
+  char getEscChar() const
   {
     return fEscChar;
   }
-  char getDelimChar()
+  char getDelimChar() const
   {
     return fColDelim;
+  }
+  int getSkipRows() const
+  {
+    return fSkipRows;
   }
   ImportDataMode getImportDataMode() const
   {
     return fImportDataMode;
   }
-  bool getConsoleLog()
+  bool getConsoleLog() const
   {
     return fConsoleLog;
   }
 
-  bool isCpimportInvokeMode()
+  bool isCpimportInvokeMode() const
   {
     return (fBlockMode3) ? false : fCpiInvoke;
   }
@@ -125,11 +134,15 @@ class WECmdArgs
   {
     return fQuiteMode;
   }
-  void setJobId(std::string fJobId)
+  void setJobId(const std::string& fJobId)
   {
     this->fJobId = fJobId;
   }
-  void setLocFile(std::string fLocFile)
+  void setOrigJobId()
+  {
+    this->fOrigJobId = fJobId;
+  }
+  void setLocFile(const std::string& fLocFile)
   {
     this->fLocFile = fLocFile;
   }
@@ -141,7 +154,7 @@ class WECmdArgs
   {
     this->fArgMode = ArgMode;
   }
-  void setPmFile(std::string fPmFile)
+  void setPmFile(const std::string& fPmFile)
   {
     this->fPmFile = fPmFile;
   }
@@ -183,7 +196,7 @@ class WECmdArgs
   {
     fUUID = jobUUID;
   }
-  bool getConsoleOutput()
+  bool getConsoleOutput() const
   {
     return fConsoleOutput;
   }
@@ -194,7 +207,7 @@ class WECmdArgs
 
   bool getPmStatus(int Id);
   bool str2PmList(std::string& PmList, VecInts& V);
-  int getPmVecSize()
+  size_t getPmVecSize() const
   {
     return fPmVec.size();
   }
@@ -265,7 +278,7 @@ class WECmdArgs
   {
     return fErrorDir;
   }
-  void setErrorDir(std::string fErrorDir)
+  void setErrorDir(const std::string& fErrorDir)
   {
     this->fErrorDir = fErrorDir;
   }
@@ -273,24 +286,26 @@ class WECmdArgs
   std::string PrepMode2ListOfFiles(std::string& FileName);  // Bug 4342
   void getColumnList(std::set<std::string>& columnList) const;
 
+ private:
+  static void checkIntArg(const std::string& name, long min, long max, int value);
  private:  // variables for SplitterApp
   VecArgs fVecArgs;
   VecInts fPmVec;
 
   VecArgs fVecJobFiles;         // JobFiles splitter from master JobFile
-  int fMultiTableCount;         // MultiTable count
+  int fMultiTableCount{0};      // MultiTable count
   VecArgs fColFldsFromJobFile;  // List of columns from any job file, that
-  // represent fields in the import data
+                                // represent fields in the import data
 
   std::string fJobId;       // JobID
   std::string fOrigJobId;   // Original JobID, in case we have to split it
-  bool fJobLogOnly;         // Job number is only for log filename only
-  bool fHelp;               // Help mode
-  int fMode;                // splitter Mode
-  int fArgMode;             // Argument mode, dep. on this fMode is decided.
-  bool fQuiteMode;          // in quite mode or not
-  bool fConsoleLog;         // Log everything to console - w.r.t cpimport
-  int fVerbose;             // how many v's
+  bool fJobLogOnly{false};  // Job number is only for log filename only
+  bool fHelp{false};        // Help mode
+  int fMode{1};             // splitter Mode
+  int fArgMode{-1};         // Argument mode, dep. on this fMode is decided.
+  bool fQuiteMode{true};    // in quite mode or not
+  bool fConsoleLog{false};  // Log everything to console - w.r.t cpimport
+  int fVerbose{0};          // how many v's
   std::string fPmFile;      // FileName at PM
   std::string fPmFilePath;  // Path of input file in PM
   std::string fLocFile;     // Local file name
@@ -305,32 +320,33 @@ class WECmdArgs
   std::string fS3Host;      // S3 Host
   std::string fS3Region;    // S3 Region
 
-  unsigned int fBatchQty;  // No. of batch Qty.
-  int fNoOfReadThrds;      // No. of read buffers
-  // std::string fConfig;	// config filename
-  int fDebugLvl;                   // Debug level
-  int fMaxErrors;                  // Max allowable errors
-  int fReadBufSize;                // Read buffer size
-  int fIOReadBufSize;              // I/O read buffer size
-  int fSetBufSize;                 // Buff size w/setvbuf
-  char fColDelim;                  // column delimiter
-  char fEnclosedChar;              // enclosed by char
-  char fEscChar;                   // esc char
-  int fNoOfWriteThrds;             // No. of write threads
-  bool fNullStrMode;               // set null string mode - treat null as null
-  ImportDataMode fImportDataMode;  // Importing text or binary data
-  std::string fPrgmName;           // argv[0]
-  std::string fSchema;             // Schema name - positional parmater
-  std::string fTable;              // Table name - table name parameter
+  int fBatchQty{10000};     // No. of batch Qty.
+  int fNoOfReadThrds{0};    // No. of read buffers
+  int fDebugLvl{0};         // Debug level
+  int fMaxErrors{-1};       // Max allowable errors
+  int fReadBufSize{0};      // Read buffer size
+  int fIOReadBufSize{0};    // I/O read buffer size
+  int fSetBufSize{0};       // Buff size w/setvbuf
+  char fColDelim{'|'};      // column delimiter
+  char fEnclosedChar{0};    // enclosed by char
+  char fEscChar{0};         // esc char
+  int fSkipRows{0};         // skip header
+  int fNoOfWriteThrds{0};   // No. of write threads
+  bool fNullStrMode{false}; // set null string mode - treat null as null
+  ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
+  std::string fPrgmName;    // argv[0]
+  std::string fSchema;      // Schema name - positional parmater
+  std::string fTable;       // Table name - table name parameter
 
-  bool fCpiInvoke;           // invoke cpimport in mode 3
-  bool fBlockMode3;          // Do not allow Mode 3
-  bool fbTruncationAsError;  // Treat string truncation as error
-  boost::uuids::uuid fUUID;
-  bool fConsoleOutput;    // If false, no output to console.
-  std::string fTimeZone;  // Timezone to use for TIMESTAMP datatype
-  std::string fUsername;  // Username of the data files owner
-  std::string fErrorDir;
+  bool fCpiInvoke{false};            // invoke cpimport in mode 3
+  bool fBlockMode3{false};           // Do not allow Mode 3
+  bool fbTruncationAsError{false};   // Treat string truncation as error
+  boost::uuids::uuid fUUID{boost::uuids::nil_generator()()};
+  bool fConsoleOutput{true};         // If false, no output to console.
+  std::string fTimeZone{"SYSTEM"};   // Timezone to use for TIMESTAMP datatype
+  std::string fUsername;             // Username of the data files owner
+  std::string fErrorDir{MCSLOGDIR "/cpimport/"};
+  std::unique_ptr<boost::program_options::options_description> fOptions;
 };
 //----------------------------------------------------------------------
 

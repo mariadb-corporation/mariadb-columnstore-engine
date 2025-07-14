@@ -29,7 +29,7 @@
 #include <sys/time.h>
 
 #include <we_log.h>
-#include <we_colop.h>
+#include <we_colopbulk.h>
 #include <we_xmljob.h>
 #include <we_convertor.h>
 #include <writeengine.h>
@@ -48,12 +48,7 @@
 #include <boost/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/uuid/uuid.hpp>
-
-#if 0  // defined(_MSC_VER) && defined(WE_BULKLOAD_DLLEXPORT)
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
+#include <boost/uuid/nil_generator.hpp>
 
 /** Namespace WriteEngine */
 namespace WriteEngine
@@ -65,18 +60,18 @@ class BulkLoad : public FileOp
   /**
    * @brief BulkLoad constructor
    */
-  EXPORT BulkLoad();
+  BulkLoad();
 
   /**
    * @brief BulkLoad destructor
    */
-  EXPORT ~BulkLoad() override;
+  ~BulkLoad() override;
 
   /**
    * @brief Load job information
    */
-  EXPORT int loadJobInfo(const std::string& fullFileName, bool bUseTempJobFile, int argc, char** argv,
-                         bool bLogInfo2ToConsole, bool bValidateColumnList);
+  int loadJobInfo(const std::string& fullFileName, bool bUseTempJobFile, int argc, char** argv,
+                  bool bLogInfo2ToConsole, bool bValidateColumnList);
 
   /**
    * @brief Pre process jobs to validate and assign values to the job structure
@@ -91,7 +86,7 @@ class BulkLoad : public FileOp
   /**
    * @brief Process job
    */
-  EXPORT int processJob();
+  int processJob();
 
   /**
    * @brief Set Debug level for this BulkLoad object and any data members
@@ -126,12 +121,13 @@ class BulkLoad : public FileOp
     return fUUID;
   }
 
-  EXPORT int setAlternateImportDir(const std::string& loadDir, std::string& errMsg);
+  int setAlternateImportDir(const std::string& loadDir, std::string& errMsg);
   void setImportDataMode(ImportDataMode importMode);
   void setColDelimiter(char delim);
   void setBulkLoadMode(BulkModeType bulkMode, const std::string& rptFileName);
   void setEnclosedByChar(char enChar);
   void setEscapeChar(char esChar);
+  void setSkipRows(size_t skipRows);
   void setKeepRbMetaFiles(bool keepMeta);
   void setMaxErrorCount(unsigned int maxErrors);
   void setNoOfParseThreads(int parseThreads);
@@ -181,7 +177,7 @@ class BulkLoad : public FileOp
   //--------------------------------------------------------------------------
   XMLJob fJobInfo;  // current job information
 
-  boost::scoped_ptr<ColumnOp> fColOp;  // column operation
+  boost::scoped_ptr<ColumnOp> fColOp{new ColumnOpBulk()};  // column operation
 
   std::string fRootDir;      // job process root directory
   std::string fJobFileName;  // job description file name
@@ -189,49 +185,50 @@ class BulkLoad : public FileOp
   Log fLog;  // logger
 
   int fNumOfParser;  // total number of parser
-  char fColDelim;    // delimits col values within a row
+  char fColDelim{0}; // delimits col values within a row
 
-  int fNoOfBuffers;                                           // Number of read buffers
-  int fBufferSize;                                            // Read buffer size
-  int fFileVbufSize;                                          // Internal file system buffer size
-  long long fMaxErrors;                                       // Max allowable errors per job
+  int fNoOfBuffers{-1};                                       // Number of read buffers
+  int fBufferSize{-1};                                        // Read buffer size
+  int fFileVbufSize{-1};                                      // Internal file system buffer size
+  long long fMaxErrors{-1};                                   // Max allowable errors per job
   std::string fAlternateImportDir;                            // Alternate bulk import directory
   std::string fErrorDir;                                      // Opt. where error records record
   std::string fProcessName;                                   // Application process name
   static std::vector<std::shared_ptr<TableInfo>> fTableInfo;  // Vector of Table information
-  int fNoOfParseThreads;                                      // Number of parse threads
-  int fNoOfReadThreads;                                       // Number of read threads
+  int fNoOfParseThreads{3};                                   // Number of parse threads
+  int fNoOfReadThreads{1};                                    // Number of read threads
   boost::thread_group fReadThreads;                           // Read thread group
   boost::thread_group fParseThreads;                          // Parse thread group
   boost::mutex fReadMutex;                                    // Manages table selection by each
-  //   read thread
+                                                              //   read thread
   boost::mutex fParseMutex;  // Manages table/buffer/column
-  //   selection by each parsing thread
-  BRM::TxnID fTxnID;                             // TransID acquired from SessionMgr
-  bool fKeepRbMetaFiles;                         // Keep/delete bulkRB metadata files
-  bool fNullStringMode;                          // Treat "NULL" as NULL value
-  char fEnclosedByChar;                          // Char used to enclose column value
-  char fEscapeChar;                              // Escape char within enclosed value
-  timeval fStartTime;                            // job start time
-  timeval fEndTime;                              // job end time
-  double fTotalTime;                             // elapsed time for current phase
-  std::vector<std::string> fCmdLineImportFiles;  // Import Files from cmd line
-  BulkModeType fBulkMode;                        // Distributed bulk mode (1,2, or 3)
-  std::string fBRMRptFileName;                   // Name of distributed mode rpt file
-  bool fbTruncationAsError;                      // Treat string truncation as error
-  ImportDataMode fImportDataMode;                // Importing text or binary data
-  bool fbContinue;                               // true when read and parse r running
+                             //   selection by each parsing thread
+  BRM::TxnID fTxnID;                                // TransID acquired from SessionMgr
+  bool fKeepRbMetaFiles{false};                     // Keep/delete bulkRB metadata files
+  bool fNullStringMode{false};                      // Treat "NULL" as NULL value
+  char fEnclosedByChar{0};                          // Char used to enclose column value
+  char fEscapeChar{0};                              // Escape char within enclosed value
+  size_t fSkipRows{0};                              // Header rows to skip
+  timeval fStartTime{0, 0};                         // job start time
+  timeval fEndTime{0, 0};                           // job end time
+  double fTotalTime{0.0};                           // elapsed time for current phase
+  std::vector<std::string> fCmdLineImportFiles;     // Import Files from cmd line
+  BulkModeType fBulkMode{BULK_MODE_LOCAL};          // Distributed bulk mode (1,2, or 3)
+  std::string fBRMRptFileName;                      // Name of distributed mode rpt file
+  bool fbTruncationAsError{false};                  // Treat string truncation as error
+  ImportDataMode fImportDataMode{IMPORT_DATA_TEXT}; // Importing text or binary data
+  bool fbContinue{false};                           // true when read and parse r running
   //
   static boost::mutex* fDDLMutex;  // Insure only 1 DDL op at a time
 
-  EXPORT static const std::string DIR_BULK_JOB;       // Bulk job directory
-  EXPORT static const std::string DIR_BULK_TEMP_JOB;  // Dir for tmp job files
+  static const std::string DIR_BULK_JOB;              // Bulk job directory
+  static const std::string DIR_BULK_TEMP_JOB;         // Dir for tmp job files
   static const std::string DIR_BULK_IMPORT;           // Bulk job import dir
   static const std::string DIR_BULK_LOG;              // Bulk job log directory
-  bool fDisableTimeOut;                               // disable timeout when waiting for table lock
-  boost::uuids::uuid fUUID;                           // job UUID
+  bool fDisableTimeOut{false};                        // disable timeout when waiting for table lock
+  boost::uuids::uuid fUUID{boost::uuids::nil_generator()()}; // job UUID
   static bool fNoConsoleOutput;                       // disable output to console
-  long fTimeZone;                                     // Timezone offset (in seconds) relative to UTC,
+  long fTimeZone{dataconvert::systemTimeZoneOffset()};// Timezone offset (in seconds) relative to UTC,
                                                       // to use for TIMESTAMP data type. For example,
                                                       // for EST which is UTC-5:00, offset will be -18000s.
   std::string fS3Key;                                 // S3 Key
@@ -239,7 +236,7 @@ class BulkLoad : public FileOp
   std::string fS3Host;                                // S3 Host
   std::string fS3Bucket;                              // S3 Bucket
   std::string fS3Region;                              // S3 Region
-  std::string fUsername;                              // data files owner name mysql by default
+  std::string fUsername{"mysql"};                     // data files owner name mysql by default
 
   //--------------------------------------------------------------------------
   // Private Functions
@@ -415,6 +412,11 @@ inline void BulkLoad::setEnclosedByChar(char enChar)
 inline void BulkLoad::setEscapeChar(char esChar)
 {
   fEscapeChar = esChar;
+}
+
+inline void BulkLoad::setSkipRows(size_t skipRows)
+{
+  fSkipRows = skipRows;
 }
 
 inline void BulkLoad::setImportDataMode(ImportDataMode importMode)
