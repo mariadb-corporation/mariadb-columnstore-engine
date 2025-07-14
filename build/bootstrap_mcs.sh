@@ -400,7 +400,7 @@ construct_cmake_flags() {
 
     if [[ $MSAN = true ]]; then
         warn "Building with Memory Sanitizer"
-        MDB_CMAKE_FLAGS+=(-DWITH_MSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+        MDB_CMAKE_FLAGS+=(-DWITH_MSAN=ON -DCOLUMNSTORE_WITH_LIBCPP=YES -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
@@ -800,6 +800,7 @@ init_submodules
 if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
     fix_config_files
+
     (build_package && run_unit_tests)
     exit_code=$?
 
