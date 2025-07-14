@@ -15,12 +15,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <sstream>
 #include <cstring>
-#include <typeinfo>
 #include "corr.h"
-#include "bytestream.h"
-#include "objectreader.h"
 
 using namespace mcsv1sdk;
 

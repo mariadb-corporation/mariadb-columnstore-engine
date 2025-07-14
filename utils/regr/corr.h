@@ -36,8 +36,6 @@
 #include <unordered.h>
 
 #include "mcsv1_udaf.h"
-#include "calpontsystemcatalog.h"
-#include "windowfunctioncolumn.h"
 
 #define EXPORT
 

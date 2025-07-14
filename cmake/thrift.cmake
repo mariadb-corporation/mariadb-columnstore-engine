@@ -33,14 +33,14 @@ set(THRIFT_INCLUDE_DIRS "${INSTALL_LOCATION}/include")
 set(THRIFT_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 set(THRIFT_LIBRARY ${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-set(cxxflags "-fPIC")
+set(cxxflags -fPIC)
 
 if(WITH_MSAN)
-    set(cxxflags "${cxxflags} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE")
+    set(cxxflags "'${cxxflags} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE -stdlib=libc++'")
 endif()
 
-if(COLUMNSTORE_WITH_LIBCPP)
-    set(cxxflags "${cxxflags} -stdlib=libc++")
+if(COLUMNSTORE_WITH_LIBCPP AND NOT DEFINED WITH_MSAN)
+    set(cxxflags "'${cxxflags} -stdlib=libc++'")
 endif()
 
 ExternalProject_Add(
@@ -62,16 +62,10 @@ ExternalProject_Add(
                -DBUILD_TUTORIALS=NO
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS:STRING="${cxxflags}"
+               -DCMAKE_CXX_FLAGS:STRING=${cxxflags}
                -DBOOST_ROOT=${BOOST_ROOT}
     BUILD_BYPRODUCTS "${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${CMAKE_STATIC_LIBRARY_SUFFIX}"
     EXCLUDE_FROM_ALL TRUE
-)
-
-ExternalProject_Add_Step(
-    external_thrift print_cmake_flags
-    COMMAND ${CMAKE_COMMAND} -E echo "!!!!!!!! CXX_FLAGS: ${CMAKE_CXX_FLAGS}"
-    DEPENDEES configure
 )
 
 add_dependencies(external_thrift external_boost)

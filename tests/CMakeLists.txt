@@ -9,8 +9,13 @@ if(WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
     set(cxxflags "")
+
     if(WITH_MSAN)
         set(cxxflags "'${cxxflags} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE -stdlib=libc++'")
+    endif()
+
+    if(COLUMNSTORE_WITH_LIBCPP AND NOT DEFINED WITH_MSAN)
+        set(cxxflags "'${cxxflags} -stdlib=libc++'")
     endif()
 
     ExternalProject_Add(

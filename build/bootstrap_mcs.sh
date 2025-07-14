@@ -44,6 +44,7 @@ optparse.define short=f long=do-not-freeze-revision desc="Disable revision freez
 optparse.define short=g long=alien desc="Turn off maintainer mode (ex. -Werror)" variable=MAINTAINER_MODE default=true value=false
 optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
+optparse.define short=L long=libcpp desc="Build with libc++" variable=WITH_LIBCPP default=false value=true
 optparse.define short=M long=msan desc="Build with MSan" variable=MSAN default=false value=true
 optparse.define short=m long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
@@ -401,6 +402,11 @@ construct_cmake_flags() {
     if [[ $MSAN = true ]]; then
         warn "Building with Memory Sanitizer"
         MDB_CMAKE_FLAGS+=(-DWITH_MSAN=ON -DCOLUMNSTORE_WITH_LIBCPP=YES -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+    fi
+
+    if [[ $WITH_LIBCPP = true ]]; then
+        warn "Building with libc++"
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_WITH_LIBCPP=YES)
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
