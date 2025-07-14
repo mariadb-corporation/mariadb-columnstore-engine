@@ -877,7 +877,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         if (timeZone != "SYSTEM" && dataconvert::timeZoneToOffset(timeZone.c_str(), timeZone.size(), &offset))
         {
           throw(runtime_error("Value for option -T is invalid"));
-        }
+        } 
 
         fTimeZone = timeZone;
         break;
@@ -896,7 +896,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         if (fBatchQty < 10000)
           fBatchQty = 10000;
         else if (fBatchQty > 100000)
-          fBatchQty = 10000;
+          fBatchQty = BRM::MAX_EXTENT_SIZE;
 
         break;
       }

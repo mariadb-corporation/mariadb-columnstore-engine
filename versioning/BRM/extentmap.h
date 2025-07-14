@@ -100,6 +100,8 @@ using DBRootVec = std::vector<DBRootT>;
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
 
+static const uint32_t MAX_EXTENT_SIZE = 8000000;
+
 // valid values for EMEntry.status
 const int16_t EXTENTSTATUSMIN(0);  // equal to minimum valid status value
 const int16_t EXTENTAVAILABLE(0);
