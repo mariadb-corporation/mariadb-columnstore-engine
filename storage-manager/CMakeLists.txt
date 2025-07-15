@@ -82,7 +82,6 @@ target_include_directories(storagemanager PRIVATE ${Boost_INCLUDE_DIRS})
 
 columnstore_executable(StorageManager src/main.cpp)
 columnstore_link(StorageManager storagemanager)
-set_property(TARGET StorageManager PROPERTY CXX_STANDARD 20)
 
 set(TMPDIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

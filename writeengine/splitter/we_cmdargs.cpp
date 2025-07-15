@@ -736,7 +736,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       fBatchQty = 10000;
     }
   }
-  if (vm.contains("max-errors"))
+  if (vm.count("max-errors"))
   {
     auto optarg = vm["max-errors"].as<string>();
     if (optarg == "all")
