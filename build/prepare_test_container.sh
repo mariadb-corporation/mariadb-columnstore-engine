@@ -15,6 +15,8 @@ optparse.define short=i long=docker-image desc="Docker image name to start conta
 optparse.define short=r long=result-path desc="Name suffix used in core dump file path" variable=RESULT
 optparse.define short=s long=do-setup desc="Run setup-repo.sh inside the container" variable=DO_SETUP
 optparse.define short=u long=packages-url desc="Packages url" variable=PACKAGES_URL
+optparse.define short=l long=install-libcpp desc="Install libcpp" variable=INSTALL_LIBCPP default=false value=true
+
 source $(optparse.build)
 
 if [[ "$EUID" -ne 0 ]]; then
@@ -98,9 +100,15 @@ prepare_container() {
     docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
+    docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_clang_deb.sh "$CONTAINER_NAME":/
 
     if [[ "$DO_SETUP" == "true" ]]; then
         execInnerDocker "$CONTAINER_NAME" '/setup-repo.sh'
+    fi
+
+    # FIX THIS HACK
+    if [[ "$INSTALL_LIBCPP" == "true" ]]; then
+        execInnerDocker "$CONTAINER_NAME" '/install_clang_deb.sh 20'
     fi
 
     # install deps
@@ -119,7 +127,7 @@ prepare_container() {
     if [[ "$RESULT" == *rocky* ]]; then
         execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
     else
-        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym'
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data'
     fi
 
     sleep 5
