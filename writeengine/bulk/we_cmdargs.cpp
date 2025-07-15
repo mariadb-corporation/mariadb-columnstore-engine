@@ -235,13 +235,13 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
   po::notify(vm);
 
-  if (vm.contains("help"))
+  if (vm.count("help"))
   {
     fHelp = true;
     usage();
     return;
   }
-  if (vm.contains("separator"))
+  if (vm.count("separator"))
   {
     auto value = vm["separator"].as<std::string>();
     if (value == "\\t")
@@ -253,7 +253,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       fColDelim = value[0];
     }
   }
-  if (vm.contains("binary-mode"))
+  if (vm.count("binary-mode"))
   {
     int value = vm["binary-mode"].as<int>();
     if (value == 1)
@@ -269,7 +269,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       startupError("Invalid Binary mode; value can be 1 or 2");
     }
   }
-  if (vm.contains("tz"))
+  if (vm.count("tz"))
   {
     auto tz = vm["tz"].as<std::string>();
     long offset;
@@ -279,7 +279,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     }
     fTimeZone = tz;
   }
-  if (vm.contains("job-id"))
+  if (vm.count("job-id"))
   {
     errno = 0;
     string optarg = vm["job-id"].as<std::string>();
@@ -296,7 +296,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       startupError("Wrong JobID Value");
     }
   }
-  if (vm.contains("allow-missing-columns"))
+  if (vm.count("allow-missing-columns"))
   {
     if (vm["allow-missing-columns"].as<string>() == "AllowMissingColumn")
     {
@@ -328,15 +328,15 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   if (2 == fArgMode && fPmFilePath.empty())
     throw runtime_error("-f option is mandatory with mode 2.");
 
-  if (vm.contains("dbname"))
+  if (vm.count("dbname"))
   {
     fSchema = vm["dbname"].as<std::string>();
   }
-  if (vm.contains("table"))
+  if (vm.count("table"))
   {
     fTable = vm["table"].as<std::string>();
   }
-  if (vm.contains("load-file"))
+  if (vm.count("load-file"))
   {
     fLocFile = vm["load-file"].as<std::string>();
   }

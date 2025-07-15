@@ -645,17 +645,17 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
   po::notify(vm);
 
-  if (vm.contains("silent"))
+  if (vm.count("silent"))
   {
     fConsoleOutput = !vm["silent"].as<bool>();
   }
-  if (vm.contains("help"))
+  if (vm.count("help"))
   {
     fHelp = true;
     usage();
     return;
   }
-  if (vm.contains("separator"))
+  if (vm.count("separator"))
   {
     auto value = vm["separator"].as<std::string>();
     if (value == "\\t")
@@ -675,7 +675,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       }
     }
   }
-  if (vm.contains("binary-mode"))
+  if (vm.count("binary-mode"))
   {
     int value = vm["binary-mode"].as<int>();
     if (value == 1)
@@ -691,7 +691,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       throw runtime_error("Invalid Binary mode; value can be 1 or 2");
     }
   }
-  if (vm.contains("tz"))
+  if (vm.count("tz"))
   {
     auto tz = vm["tz"].as<std::string>();
     long offset;
@@ -701,7 +701,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     }
     fTimeZone = tz;
   }
-  if (vm.contains("job-id"))
+  if (vm.count("job-id"))
   {
     errno = 0;
     string optarg = vm["job-id"].as<std::string>();
@@ -720,12 +720,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
     aJobType = true;
   }
-  if (vm.contains("verbose"))
+  if (vm.count("verbose"))
   {
     string optarg = vm["verbose"].as<std::string>();
     fVerbose = fDebugLvl = optarg.length();
   }
-  if (vm.contains("batch-quantity"))
+  if (vm.count("batch-quantity"))
   {
     if (fBatchQty < 10000)
     {
@@ -770,12 +770,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (0 == fArgMode)
       throw runtime_error("Incompatible mode and option types");
 
-    if (vm.contains("dbname"))
+    if (vm.count("dbname"))
     {
       fSchema = vm["dbname"].as<string>();
 
 
-      if (!vm.contains("table"))
+      if (!vm.count("table"))
       {
         // if schema is there, table name should be there
         throw runtime_error("No table name specified with schema.");
@@ -783,7 +783,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
       fTable = vm["table"].as<string>();  // 2nd pos parm
 
-      if (vm.contains("load-file"))  // see if input file name is given
+      if (vm.count("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
         fLocFile = vm["load-file"].as<string>();
@@ -865,7 +865,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   // 1. no positional parameters	- Mode 0 & stdin
   // 2. Two positional parameters (schema and table names) - Mode 1/2, stdin
   // 3. Three positional parameters (schema, table, and import file name)
-  else if (vm.contains("dbname"))  // see if db schema name is given
+  else if (vm.count("dbname"))  // see if db schema name is given
   {
     if (fArgMode == 0)
     {
@@ -882,7 +882,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         fLocFile = vm["dbname"].as<string>();
       }
 
-      if (vm.contains("table"))  // dest filename provided
+      if (vm.count("table"))  // dest filename provided
       {
         fPmFile = vm["table"].as<string>();
 
@@ -936,11 +936,11 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else
       fSchema = vm["dbname"].as<string>();  // 1st pos parm
 
-    if (vm.contains("table"))  // see if table name is given
+    if (vm.count("table"))  // see if table name is given
     {
       fTable = vm["table"].as<string>();  // 2nd pos parm
 
-      if (vm.contains("load-file"))  // see if input file name is given
+      if (vm.count("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
         fLocFile = vm["load-file"].as<string>();
