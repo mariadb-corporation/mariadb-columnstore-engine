@@ -36,8 +36,9 @@ local customEnvCommands(envkey, builddir) =
 
 
 local customBootstrapParamsForExisitingPipelines(envkey) =
+  # errorprone if we pass --custom-cmake-flags twice, the last one will win
   local customBootstrapMap = {
-//    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
@@ -48,6 +49,7 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
   UBSan: "--ubsan",
   MSan: "--msan",
   "libcpp": "--libcpp",
+  "gcc-toolset": "--gcc-toolset-for-rocky-8"
 };
 
 local customBuildFlags(buildKey) =
@@ -204,9 +206,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --docker-image " + img +
     " --result-path " + result +
     " --packages-url " + packages_url +
-    " --do-setup " + std.toString(do_setup) +
-    if result=="ubuntu24.04_clang-20_libcpp" then "" else " --install-libcpp " +     //FIX THIS HACK
-    '"',
+    " --do-setup " + std.toString(do_setup) + '"',
 
   local reportTestStage(containerName, result, stage) =
     'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
@@ -530,6 +530,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_S3_USE_SSL: "true",
                SCCACHE_S3_KEY_PREFIX: result + branch + server + arch,
              },
+
+             # errorprone if we pass --custom-cmake-flags twice, the last one will win
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
                        ]
@@ -609,7 +611,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
-         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
@@ -691,13 +693,11 @@ local FinalPipeline(branch, event) = {
 ]
 +
 [
-  Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand)
+  Pipeline(b, platform, triggeringEvent, a, server, flag, "")
   for a in ["amd64"]
   for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for flag in ["libcpp"]
-  for envcommand in ["clang-20"]
-//  for flag in std.objectFields(customBootstrapParamsForAdditionalPipelinesMap)
+  for platform in ["rockylinux:8"]
+  for flag in ["gcc-toolset"]
   for triggeringEvent in events
   for server in servers[current_branch]
 ]
