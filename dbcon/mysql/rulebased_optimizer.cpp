@@ -202,10 +202,11 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
   // unionVec.reserve(numberOfLegs);
   execplan::SimpleColumn* keyColumn = findSuitableKeyColumn(csep);
-  std::cout << "looking for " << keyColumn->columnName() << " in ctx.gwi.columnStatisticsMap " << " with size " << ctx.gwi.columnStatisticsMap.size() << std::endl;
+  std::cout << "looking for " << keyColumn->columnName() << " in ctx.gwi.columnStatisticsMap "
+            << " with size " << ctx.gwi.columnStatisticsMap.size() << std::endl;
   for (auto& [k, v] : ctx.gwi.columnStatisticsMap)
   {
-    std::cout << "key " << k << std::endl;
+    std::cout << "key " << k << " vector size " << v.size() << std::endl;
   }
   if (!keyColumn ||
       ctx.gwi.columnStatisticsMap.find(keyColumn->columnName()) == ctx.gwi.columnStatisticsMap.end())
@@ -216,16 +217,33 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   auto columnStatistics = ctx.gwi.columnStatisticsMap[keyColumn->columnName()];
   std::cout << "columnStatistics.size() " << columnStatistics.size() << std::endl;
   // TODO char and other numerical types support
+  size_t numberOfUnionUnits = 2;
+  size_t numberOfBucketsPerUnionUnit = columnStatistics.size() / numberOfUnionUnits;
+
   std::vector<std::pair<uint64_t, uint64_t>> bounds;
-  std::transform(columnStatistics.begin(), columnStatistics.end(), std::back_inserter(bounds),
-                 [](const auto& bucket)
-                 {
-                   uint64_t lowerBound = std::stoul(bucket.start_value);
-                   uint64_t upperBound = lowerBound + bucket.ndv;
-                   return std::make_pair(lowerBound, upperBound);
-                 });
-  // std::vector<std::pair<uint64_t, uint64_t>> bounds({{0, 3000961},
-  //                                                   // {3000961, std::numeric_limits<uint64_t>::max()}});
+
+  // TODO need to process tail if number of buckets is not divisible by number of union units
+  // TODO non-overlapping buckets if it is a problem at all
+  for (size_t i = 0; i < numberOfUnionUnits; ++i)
+  {
+    auto bucket = columnStatistics.begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = columnStatistics.begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    // TODO find a median b/w the current bucket start and the previous bucket end
+    uint64_t currentLowerBound =
+        (bounds.empty() ? *(uint32_t*)bucket->start_value.data()
+                        : std::min((uint64_t)*(uint32_t*)bucket->start_value.data(), bounds.back().second));
+    uint64_t currentUpperBound = currentLowerBound;
+    for (; bucket != endBucket; ++bucket)
+    {
+      uint64_t bucketLowerBound = *(uint32_t*)bucket->start_value.data();
+      std::cout << "bucket.start_value " << bucketLowerBound << std::endl;
+      currentUpperBound = bucketLowerBound + bucket->ndv;
+    }
+    std::cout << "currentLowerBound " << currentLowerBound << " currentUpperBound " << currentUpperBound
+              << std::endl;
+    bounds.push_back(std::make_pair(currentLowerBound, currentUpperBound));
+  }
+
   for (auto& bound : bounds)
   {
     auto clonedCSEP = csep.cloneWORecursiveSelects();
