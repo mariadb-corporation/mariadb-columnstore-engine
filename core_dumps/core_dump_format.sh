@@ -12,10 +12,10 @@ STEP_NAME=$5
 save_ansi_to_html() {
 
 	echo "<h2> $1 </h2>" >>"${FILENAME}"
-	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --palette=solarized >>"${FILENAME}"
+	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --bg=dark --palette=tango >>"${FILENAME}"
 }
 invoke_gdb_command() {
-    gdb -x "${SCRIPT_LOCATION}"/gdbinit -q ${BINARY} --core ${COREDUMP} -ex "$1" -ex quit >>"$DUMPNAME"
+	script -q -c "gdb -x \"${SCRIPT_LOCATION}\"/gdbinit -q ${BINARY} --core ${COREDUMP} -ex \"$1\" -ex \"quit\"" $DUMPNAME
 }
 
 echo "<h1> Step: ${STEP_NAME}<br> Binary name: ${BINARY}<br> </h1>" >>"${FILENAME}"
