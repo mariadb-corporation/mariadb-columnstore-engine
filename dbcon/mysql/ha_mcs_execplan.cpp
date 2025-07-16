@@ -6321,7 +6321,7 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           if (histogram)
           {
             std::cout << "Type of histogram object: " << typeid(*histogram).name() << std::endl;
-            std::vector<Histogram_bucket> histogramBuckets = histogram->get_histogram();
+            std::vector<Histogram_bucket> histogramBuckets = histogram->get_json_histogram();
             std::cout << "gwi.columnStatisticsMap[ifp->field->field_name.str].size() " << histogramBuckets.size() << std::endl;
             gwi.columnStatisticsMap[ifp->field->field_name.str] = histogramBuckets;
           }
