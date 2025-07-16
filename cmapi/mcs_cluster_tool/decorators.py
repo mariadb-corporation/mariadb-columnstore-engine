@@ -23,7 +23,7 @@ def handle_output(func):
             typer.echo(err.message, err=True)
             logger.error('Error during command execution', exc_info=True)
         except typer.BadParameter as err:
-            logger.error('Bad command line parameter.')
+            logger.error('Invalid command line parameter.')
             raise err
         except typer.Exit as err:  # if some command used typer.Exit
             #TODO: think about universal protocol to return json data and
@@ -31,10 +31,10 @@ def handle_output(func):
             return_code = err.exit_code
         except Exception:
             logger.error(
-                'Undefined error during command execution',
+                'An undefined error occurred during command execution',
                 exc_info=True
             )
-            typer.echo('Unknown error, check the log file.', err=True)
+            typer.echo('An unknown error occurred, please check the log file.', err=True)
 
         raise typer.Exit(return_code)
     return wrapper

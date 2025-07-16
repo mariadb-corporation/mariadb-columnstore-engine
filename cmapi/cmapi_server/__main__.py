@@ -220,10 +220,10 @@ if __name__ == '__main__':
                 'Something went wrong while trying to detect dbrm protocol.\n'
                 'Seems "controllernode" process isn\'t started.\n'
                 'This is just a notification, not a problem.\n'
-                'Next detection will started at first node\\cluster '
+                'Next detection will start at first node\\cluster '
                 'status check.\n'
-                f'This can cause extra {SOCK_TIMEOUT} seconds delay while\n'
-                'first attempt to get status.',
+                f'This can cause extra {SOCK_TIMEOUT} seconds delay during\n'
+                'this first attempt to get the status.',
                 exc_info=True
             )
     else:

@@ -495,7 +495,7 @@ class ConfigController:
                     attempts +=1
                     if attempts >= 10:
                         module_logger.debug(
-                            'Timed out waiting for node to be ready.'
+                            'Timed out while waiting for the node to become ready.'
                         )
                         break
                     time.sleep(1)
@@ -1204,7 +1204,7 @@ class AppController():
         if AppManager.started:
             return {'started': True}
         else:
-            raise APIError(503, 'CMAPI not ready to handle requests.')
+            raise APIError(503, 'CMAPI is not ready to handle requests.')
 
 
 class NodeProcessController():
@@ -1232,7 +1232,7 @@ class NodeProcessController():
                 name='DMLProc', is_primary=True, use_sudo=True, timeout=timeout
             )
         else:
-            module_logger.debug('Callling stop DMLproc gracefully.')
+            module_logger.debug('Calling stop DMLproc gracefully.')
             try:
                 MCSProcessManager.gracefully_stop_dmlproc()
             except (ConnectionRefusedError, RuntimeError):

@@ -43,7 +43,7 @@ if __name__ == '__main__':
     if (storage.lower() != 's3' and master_addr != default_addr) or \
 master_addr == default_addr:
         is_primary = True
-        print('Multi-node with local-storage detected.')
+        print('Multi-node configuration with local storage detected.')
     else:
         has_requests = False
         try:
@@ -55,7 +55,7 @@ master_addr == default_addr:
     Please install CMAPI first.')
         if has_requests is True:
             try:
-                print('Requesting for the primary node status.')
+                print('Requesting the status of the primary node.')
                 api_version = get_version()
                 api_port = get_port()
                 url = "https://{}:{}/cmapi/{}/node/primary".format(default_addr, \
@@ -64,12 +64,11 @@ master_addr == default_addr:
                                  verify=False,
                                  timeout=REST_REQUEST_TO)
                 if (resp.status_code != 200):
-                    print("Error sending GET /node/primary.")
+                    print("Error occurred while sending GET /node/primary.")
                 else:
                     is_primary = resp.json()['is_primary'] == 'True'
             except:
-                print('Failed to request.')
-                print(str(e))
+                print('Failed to send request.')
 
     if is_primary is True:
         try:

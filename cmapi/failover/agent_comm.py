@@ -181,7 +181,7 @@ class AgentComm:
                 self.__runner()
             except Exception:
                 logger.error(
-                    'AgentComm.runner(): got an unrecognised exception.',
+                    'AgentComm.runner(): got an unhandled exception.',
                     exc_info=True
                 )
             if not self._die:
@@ -227,7 +227,7 @@ class AgentComm:
 
             if needs_transaction:
                 logger.debug(
-                    'Failover starts transaction to run upcoming event.'
+                    'Failover is starting a transaction to process the upcoming event.'
                 )
                 (txn_id, nodes) = self._agent.startTransaction(
                     extra_nodes=list(nodes_added),

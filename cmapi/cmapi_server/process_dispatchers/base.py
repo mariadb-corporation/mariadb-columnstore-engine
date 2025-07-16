@@ -64,7 +64,7 @@ class BaseDispatcher:
                 encoding='utf-8'
             )
         except Exception:
-            logging.error(f'Failed on run command "{command}".', exc_info=True)
+            logging.error(f'Failed to run command "{command}".', exc_info=True)
             # TODO: cmapi have to close with exception here
             #       to stop docker container?
             # raise
@@ -79,7 +79,7 @@ class BaseDispatcher:
             del proc
             result = (True, output)
         else:
-            logging.debug('Waiting for command to finish.')
+            logging.debug('Waiting for the command to finish.')
             stdout_str, _ = proc.communicate()
             returncode = proc.wait()
             if stdout_str is not None:

@@ -77,7 +77,7 @@ class NodeMonitor:
                 )
             if not self._die:
                 time.sleep(1)
-        self._logger.info("node monitor logic exiting normally...")
+        self._logger.info("Node monitor logic exited normally...")
 
     def _monitor(self):
         """
@@ -138,7 +138,7 @@ class NodeMonitor:
                 self._inStandby = False
             # has it been deactivated?
             else:
-                self._logger.trace('Node not in active nodes, do nothing.')
+                self._logger.trace('Node is not in active nodes, no action taken.')
                 self._inStandby = True
                 continue    # wait to be activated
 
@@ -191,7 +191,7 @@ class NodeMonitor:
             # if we are in a cohort that has <= 50% of the desired nodes, enter standby
             if len(activeNodes)/len(desiredNodes) <= 0.5 and len(effectiveActiveNodeList)/len(desiredNodes) <= 0.5:
                 if not inStandbyMode:
-                    msg = "Only {} out of {} nodes are active.  At least {} are required.  Entering standby mode to protect the system."\
+                    msg = "Only {} out of {} nodes are active. At least {} are required.  Entering standby mode to protect the system."\
                         .format(len(activeNodes), len(desiredNodes), int(len(desiredNodes)/2) + 1)
                     self._agentComm.raiseAlarm(msg)
                     self._logger.critical(msg)

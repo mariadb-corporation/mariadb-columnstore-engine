@@ -41,7 +41,7 @@ class DBRM:
         master_conn_info = node_config.get_dbrm_conn_info(root)
         if master_conn_info is None:
             module_logger.warning(
-                 'DBRB.connect: No DBRM info in the Columnstore.xml.'
+                'DBRB.connect: No DBRM info found in the Columnstore.xml.'
             )
         dbrm_host = master_conn_info['IPAddr'] or DEFAULT_HOST
         dbrm_port = int(master_conn_info['Port']) or DEFAULT_PORT

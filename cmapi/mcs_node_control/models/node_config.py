@@ -256,7 +256,7 @@ class NodeConfig:
             # Raise an appropriate exception
             module_logger.error(
                 f'{self.apply_config.__name__} throws an exception.'
-                'The original config must be restored by '
+                'The original config must be restored by an '
                 'explicit ROLLBACK command or timeout.',
                 exc_info=True
             )
