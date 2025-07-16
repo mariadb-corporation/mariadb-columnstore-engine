@@ -100,7 +100,6 @@ prepare_container() {
     docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
-    docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_clang_deb.sh "$CONTAINER_NAME":/
 
     if [[ "$DO_SETUP" == "true" ]]; then
         execInnerDocker "$CONTAINER_NAME" '/setup-repo.sh'
@@ -108,7 +107,11 @@ prepare_container() {
 
     # FIX THIS HACK
     if [[ "$INSTALL_LIBCPP" == "true" ]]; then
+        docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_clang_deb.sh "$CONTAINER_NAME":/
+        docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_libc++.sh.sh "$CONTAINER_NAME":/
+
         execInnerDocker "$CONTAINER_NAME" '/install_clang_deb.sh 20'
+        execInnerDocker "$CONTAINER_NAME" '/install_libc++.sh 20'
     fi
 
     # install deps
