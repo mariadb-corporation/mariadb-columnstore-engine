@@ -108,7 +108,7 @@ prepare_container() {
     # FIX THIS HACK
     if [[ "$INSTALL_LIBCPP" == "true" ]]; then
         docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_clang_deb.sh "$CONTAINER_NAME":/
-        docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_libc++.sh.sh "$CONTAINER_NAME":/
+        docker cp "$COLUMNSTORE_SOURCE_PATH"/build/install_libc++.sh "$CONTAINER_NAME":/
 
         execInnerDocker "$CONTAINER_NAME" '/install_clang_deb.sh 20'
         execInnerDocker "$CONTAINER_NAME" '/install_libc++.sh 20'
