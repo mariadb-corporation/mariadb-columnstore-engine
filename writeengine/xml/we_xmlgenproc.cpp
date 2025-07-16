@@ -230,8 +230,16 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table, con
     }
 
     xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_LOAD_NAME], BAD_CAST tmp.c_str());
-    xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
-                                      atoi(fInputMgr->getParm(XMLGenData::MAXERROR).c_str()));
+    auto sMaxErrors = fInputMgr->getParm(XMLGenData::MAXERROR);
+    if (sMaxErrors == "all")
+    {
+      xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], BAD_CAST sMaxErrors.c_str());
+    }
+    else
+    {
+      xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
+                                        atoi(sMaxErrors.c_str()));
+    }
   }
 
   kount++;

@@ -1,14 +1,7 @@
 #include <my_config.h>
 #include <cmath>
-#include <iostream>
-#include <sstream>
 #include <string.h>
 #include <unordered_map>
-#include <algorithm>
-#include <sstream>
-#include <iostream>
-#include <charconv>
-#include "boost/lexical_cast.hpp"
 #include "idb_mysql.h"
 
 namespace

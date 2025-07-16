@@ -71,8 +71,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
       ("verbose,v", po::value<string>())
       ("silent,N", po::bool_switch())
-      DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
-          "Maximum number of allowable error per table per PM")
+      ("max-errors,e", po::value<string>(), "Maximum number (or 'all') of allowable error per table per PM")
       ("file-path,f", po::value<string>(&fPmFilePath),
         "Data file directory path. Default is current working directory.\n"
         "\tIn Mode 1, represents the local input file path.\n"
@@ -230,7 +229,9 @@ std::string WECmdArgs::getCpImportCmdLine(bool skipRows)
   if (fNoOfWriteThrds > 0)
     aSS << " -w " << fNoOfWriteThrds;
 
-  if (fMaxErrors >= 0)
+  if (fMaxErrors == MAX_ERRORS_ALL)
+    aSS << " -e all ";
+  else if (fMaxErrors != MAX_ERRORS_DEFAULT)
     aSS << " -e " << fMaxErrors;
 
   // BUG 5088
@@ -446,7 +447,7 @@ bool WECmdArgs::checkForCornerCases()
       cout << "Invalid option -b with Mode 0" << endl;
       throw(runtime_error("Mismatched options."));
     }
-    else if (fMaxErrors >= 0)
+    else if (fMaxErrors >= 0 || fMaxErrors == MAX_ERRORS_ALL)
     {
       cout << "Invalid option -e with Mode 0" << endl;
       throw(runtime_error("Mismatched options."));
@@ -644,17 +645,17 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
   po::notify(vm);
 
-  if (vm.contains("silent"))
+  if (vm.count("silent"))
   {
     fConsoleOutput = !vm["silent"].as<bool>();
   }
-  if (vm.contains("help"))
+  if (vm.count("help"))
   {
     fHelp = true;
     usage();
     return;
   }
-  if (vm.contains("separator"))
+  if (vm.count("separator"))
   {
     auto value = vm["separator"].as<std::string>();
     if (value == "\\t")
@@ -674,7 +675,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       }
     }
   }
-  if (vm.contains("binary-mode"))
+  if (vm.count("binary-mode"))
   {
     int value = vm["binary-mode"].as<int>();
     if (value == 1)
@@ -690,7 +691,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       throw runtime_error("Invalid Binary mode; value can be 1 or 2");
     }
   }
-  if (vm.contains("tz"))
+  if (vm.count("tz"))
   {
     auto tz = vm["tz"].as<std::string>();
     long offset;
@@ -700,7 +701,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     }
     fTimeZone = tz;
   }
-  if (vm.contains("job-id"))
+  if (vm.count("job-id"))
   {
     errno = 0;
     string optarg = vm["job-id"].as<std::string>();
@@ -719,12 +720,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
     aJobType = true;
   }
-  if (vm.contains("verbose"))
+  if (vm.count("verbose"))
   {
     string optarg = vm["verbose"].as<std::string>();
     fVerbose = fDebugLvl = optarg.length();
   }
-  if (vm.contains("batch-quantity"))
+  if (vm.count("batch-quantity"))
   {
     if (fBatchQty < 10000)
     {
@@ -733,6 +734,24 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else if (fBatchQty > 100000)
     {
       fBatchQty = min(static_cast<uint32_t>(fBatchQty), BRM::MAX_EXTENT_SIZE);
+    }
+  }
+  if (vm.count("max-errors"))
+  {
+    auto optarg = vm["max-errors"].as<string>();
+    if (optarg == "all")
+    {
+      fMaxErrors = MAX_ERRORS_ALL;
+    }
+    else
+    {
+      errno = 0;
+      long lValue = strtol(optarg.c_str(), nullptr, 10);
+      if (errno != 0 || lValue < 0 || lValue > INT_MAX)
+      {
+        throw runtime_error("Option --max-errors/-e is invalid or out of range");
+      }
+      fMaxErrors = lValue;
     }
   }
 
@@ -751,12 +770,12 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (0 == fArgMode)
       throw runtime_error("Incompatible mode and option types");
 
-    if (vm.contains("dbname"))
+    if (vm.count("dbname"))
     {
       fSchema = vm["dbname"].as<string>();
 
 
-      if (!vm.contains("table"))
+      if (!vm.count("table"))
       {
         // if schema is there, table name should be there
         throw runtime_error("No table name specified with schema.");
@@ -764,7 +783,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 
       fTable = vm["table"].as<string>();  // 2nd pos parm
 
-      if (vm.contains("load-file"))  // see if input file name is given
+      if (vm.count("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
         fLocFile = vm["load-file"].as<string>();
@@ -846,7 +865,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   // 1. no positional parameters	- Mode 0 & stdin
   // 2. Two positional parameters (schema and table names) - Mode 1/2, stdin
   // 3. Three positional parameters (schema, table, and import file name)
-  else if (vm.contains("dbname"))  // see if db schema name is given
+  else if (vm.count("dbname"))  // see if db schema name is given
   {
     if (fArgMode == 0)
     {
@@ -863,7 +882,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
         fLocFile = vm["dbname"].as<string>();
       }
 
-      if (vm.contains("table"))  // dest filename provided
+      if (vm.count("table"))  // dest filename provided
       {
         fPmFile = vm["table"].as<string>();
 
@@ -917,11 +936,11 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else
       fSchema = vm["dbname"].as<string>();  // 1st pos parm
 
-    if (vm.contains("table"))  // see if table name is given
+    if (vm.count("table"))  // see if table name is given
     {
       fTable = vm["table"].as<string>();  // 2nd pos parm
 
-      if (vm.contains("load-file"))  // see if input file name is given
+      if (vm.count("load-file"))  // see if input file name is given
       {
         // 3rd pos parm
         fLocFile = vm["load-file"].as<string>();

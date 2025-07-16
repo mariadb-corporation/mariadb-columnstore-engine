@@ -129,7 +129,7 @@ class BulkLoad : public FileOp
   void setEscapeChar(char esChar);
   void setSkipRows(size_t skipRows);
   void setKeepRbMetaFiles(bool keepMeta);
-  void setMaxErrorCount(unsigned int maxErrors);
+  void setMaxErrorCount(int maxErrors);
   void setNoOfParseThreads(int parseThreads);
   void setNoOfReadThreads(int readThreads);
   void setNullStringMode(bool bMode);
@@ -184,13 +184,13 @@ class BulkLoad : public FileOp
 
   Log fLog;  // logger
 
-  int fNumOfParser;  // total number of parser
+  int fNumOfParser{0};  // total number of parser
   char fColDelim{0}; // delimits col values within a row
 
   int fNoOfBuffers{-1};                                       // Number of read buffers
   int fBufferSize{-1};                                        // Read buffer size
   int fFileVbufSize{-1};                                      // Internal file system buffer size
-  long long fMaxErrors{-1};                                   // Max allowable errors per job
+  long long fMaxErrors{MAX_ERRORS_DEFAULT};                   // Max allowable errors per job
   std::string fAlternateImportDir;                            // Alternate bulk import directory
   std::string fErrorDir;                                      // Opt. where error records record
   std::string fProcessName;                                   // Application process name
@@ -429,10 +429,7 @@ inline void BulkLoad::setKeepRbMetaFiles(bool keepMeta)
   fKeepRbMetaFiles = keepMeta;
 }
 
-// Mutator takes an unsigned int, but we store in a long long, because...
-// TableInfo which eventually needs this attribute, takes an unsigned int,
-// but we want to be able to init to -1, to indicate when it has not been set.
-inline void BulkLoad::setMaxErrorCount(unsigned int maxErrors)
+inline void BulkLoad::setMaxErrorCount(int maxErrors)
 {
   fMaxErrors = maxErrors;
 }

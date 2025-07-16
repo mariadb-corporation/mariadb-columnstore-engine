@@ -49,9 +49,7 @@ namespace WriteEngine
 // Constructor
 //------------------------------------------------------------------------------
 XMLJob::XMLJob()
- : fDeleteTempFile(false)
- , fValidateColList(true)
- , fTimeZone(dataconvert::systemTimeZoneOffset())
+ : fDeleteTempFile(false), fValidateColList(true), fTimeZone(dataconvert::systemTimeZoneOffset())
 {
 }
 
@@ -197,7 +195,7 @@ void XMLJob::printJobInfo(Log& logger) const
 
       logger.logMsg(oss3.str(), MSGLVL_INFO2);
     }  // end of loop through columns in a table
-  }    // end of loop through tables
+  }  // end of loop through tables
 }
 
 //------------------------------------------------------------------------------
@@ -473,8 +471,13 @@ void XMLJob::setJobDataTable(xmlNode* pNode)
   if (getNodeAttributeStr(pNode, xmlTagTable[TAG_LOAD_NAME], bufString))
     curTable.loadFileName = bufString;
 
-  if (getNodeAttribute(pNode, xmlTagTable[TAG_MAX_ERR_ROW], &intVal, TYPE_INT))
-    curTable.maxErrNum = intVal;
+  if (getNodeAttributeStr(pNode, xmlTagTable[TAG_MAX_ERR_ROW], bufString))
+  {
+    if (bufString == "all")
+      curTable.maxErrNum = MAX_ERRORS_ALL;
+    else
+      curTable.maxErrNum = atoi(bufString.c_str());
+  }
 
   fJob.jobTableList.push_back(curTable);
 }
@@ -683,7 +686,6 @@ void XMLJob::initSatLimits(JobColumn& curColumn) const
   {
     curColumn.fMaxIntSat = dataconvert::decimalRangeUp<int128_t>(curColumn.precision);
     curColumn.fMinIntSat = -curColumn.fMaxIntSat;
-
   }
   else if (curColumn.typeName == ColDataTypeStr[CalpontSystemCatalog::UDECIMAL])
   {
@@ -987,12 +989,13 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       {
         if (LIKELY(colType.colWidth == datatypes::MAXDECIMALWIDTH))
         {
-          col.fDefaultWideDecimal = colType.decimal128FromString(col_defaultValue.safeString(), &bDefaultConvertError);
+          col.fDefaultWideDecimal =
+              colType.decimal128FromString(col_defaultValue.safeString(), &bDefaultConvertError);
         }
         else
         {
-          col.fDefaultInt = Convertor::convertDecimalString(col_defaultValue.str(),
-                                                            col_defaultValue.length(), colType.scale);
+          col.fDefaultInt = Convertor::convertDecimalString(col_defaultValue.str(), col_defaultValue.length(),
+                                                            colType.scale);
 
           if (errno == ERANGE)
             bDefaultConvertError = true;
@@ -1004,9 +1007,8 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::DATE:
       {
         int convertStatus;
-        int32_t dt = dataconvert::DataConvert::convertColumnDate(col_defaultValue.str(),
-                                                                 dataconvert::CALPONTDATE_ENUM, convertStatus,
-                                                                 col_defaultValue.length());
+        int32_t dt = dataconvert::DataConvert::convertColumnDate(
+            col_defaultValue.str(), dataconvert::CALPONTDATE_ENUM, convertStatus, col_defaultValue.length());
 
         if (convertStatus != 0)
           bDefaultConvertError = true;
@@ -1046,9 +1048,8 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
       case execplan::CalpontSystemCatalog::TIME:
       {
         int convertStatus;
-        int64_t dt = dataconvert::DataConvert::convertColumnTime(col_defaultValue.str(),
-                                                                 dataconvert::CALPONTTIME_ENUM, convertStatus,
-                                                                 col_defaultValue.length());
+        int64_t dt = dataconvert::DataConvert::convertColumnTime(
+            col_defaultValue.str(), dataconvert::CALPONTTIME_ENUM, convertStatus, col_defaultValue.length());
 
         if (convertStatus != 0)
           bDefaultConvertError = true;

@@ -70,8 +70,7 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("read-buffer-size,c", fReadBufSize, 1, INT_MAX,
         "Application read buffer size (in bytes)")
       DECLARE_INT_ARG("debug,d", fDebugLvl, 1, 3, "Print different level(1-3) debug message")
-      DECLARE_INT_ARG("max-errors,e", fMaxErrors, 0, INT_MAX,
-          "Maximum number of allowable error per table per PM")
+      ("max-errors,e", po::value<string>(), "Maximum number (or 'all') of allowable error per table per PM")
       ("file-path,f", po::value<string>(&fPmFilePath),
         "Data file directory path. Default is current working directory.\n"
         "\tIn Mode 1, represents the local input file path.\n"
@@ -236,13 +235,13 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   po::store(po::command_line_parser(argc, argv).options(*fOptions).positional(pos_opt).run(), vm);
   po::notify(vm);
 
-  if (vm.contains("help"))
+  if (vm.count("help"))
   {
     fHelp = true;
     usage();
     return;
   }
-  if (vm.contains("separator"))
+  if (vm.count("separator"))
   {
     auto value = vm["separator"].as<std::string>();
     if (value == "\\t")
@@ -254,7 +253,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       fColDelim = value[0];
     }
   }
-  if (vm.contains("binary-mode"))
+  if (vm.count("binary-mode"))
   {
     int value = vm["binary-mode"].as<int>();
     if (value == 1)
@@ -270,7 +269,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       startupError("Invalid Binary mode; value can be 1 or 2");
     }
   }
-  if (vm.contains("tz"))
+  if (vm.count("tz"))
   {
     auto tz = vm["tz"].as<std::string>();
     long offset;
@@ -280,7 +279,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     }
     fTimeZone = tz;
   }
-  if (vm.contains("job-id"))
+  if (vm.count("job-id"))
   {
     errno = 0;
     string optarg = vm["job-id"].as<std::string>();
@@ -297,11 +296,29 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
       startupError("Wrong JobID Value");
     }
   }
-  if (vm.contains("allow-missing-columns"))
+  if (vm.count("allow-missing-columns"))
   {
     if (vm["allow-missing-columns"].as<string>() == "AllowMissingColumn")
     {
       fAllowMissingColumn = true;
+    }
+  }
+  if (vm.count("max-errors"))
+  {
+    auto optarg= vm["max-errors"].as<string>();
+    if (optarg == "all")
+    {
+      fMaxErrors = MAX_ERRORS_ALL;
+    }
+    else
+    {
+      errno = 0;
+      long lValue = strtol(optarg.c_str(), nullptr, 10);
+      if (errno != 0 || lValue < 0 || lValue > INT_MAX)
+      {
+        startupError("Option --max-errors/-e is invalid or out of range");
+      }
+      fMaxErrors = lValue;
     }
   }
 
@@ -311,15 +328,15 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   if (2 == fArgMode && fPmFilePath.empty())
     throw runtime_error("-f option is mandatory with mode 2.");
 
-  if (vm.contains("dbname"))
+  if (vm.count("dbname"))
   {
     fSchema = vm["dbname"].as<std::string>();
   }
-  if (vm.contains("table"))
+  if (vm.count("table"))
   {
     fTable = vm["table"].as<std::string>();
   }
-  if (vm.contains("load-file"))
+  if (vm.count("load-file"))
   {
     fLocFile = vm["load-file"].as<std::string>();
   }
@@ -337,10 +354,7 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
 
   curJob.setReadBufferCount(fIOReadBufSize);
   curJob.setReadBufferSize(fReadBufSize);
-  if (fMaxErrors >= 0)
-  {
-    curJob.setMaxErrorCount(fMaxErrors);
-  }
+  curJob.setMaxErrorCount(fMaxErrors);
   if (!fPmFilePath.empty())
   {
     importPath = fPmFilePath;

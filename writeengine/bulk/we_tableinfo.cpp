@@ -412,7 +412,11 @@ int TableInfo::readTableData()
     // We keep a running total of read errors;  fMaxErrorRows specifies
     // the error limit.  Here's where we see how many more errors we
     // still have below the limit, and we pass this to fillFromFile().
-    unsigned allowedErrCntThisCall = ((fMaxErrorRows > fTotalErrRows) ? (fMaxErrorRows - fTotalErrRows) : 0);
+    int allowedErrCntThisCall;
+    if (fMaxErrorRows == MAX_ERRORS_ALL)
+      allowedErrCntThisCall = MAX_ERRORS_ALL;
+    else
+      allowedErrCntThisCall = static_cast<unsigned>(fMaxErrorRows) > fTotalErrRows ? fMaxErrorRows - fTotalErrRows : 0;
 
     // Fill in the specified buffer.
     // fTotalReadRowsPerInputFile is ongoing total number of rows read,
@@ -485,7 +489,7 @@ int TableInfo::readTableData()
     writeErrorList(&fBuffers[readBufNo].getErrorRows(), &fBuffers[readBufNo].getExactErrorRows(), false);
     fBuffers[readBufNo].clearErrRows();
 
-    if (fTotalErrRows > fMaxErrorRows)
+    if (fMaxErrorRows != MAX_ERRORS_ALL && fTotalErrRows > static_cast<unsigned>(fMaxErrorRows))
     {
       // flush the reject data file and output the rejected rows
       // flush err file and output the rejected row id and the reason.

@@ -52,6 +52,7 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
+optparse.define short=R long=gcc-toolset-for-rocky-8 variable=GCC_TOOLSET default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
@@ -109,12 +110,12 @@ install_deps() {
     fi
     message_split
     prereq=""
-    RPM_BUILD_DEPS="dnf install -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
+    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
       cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
 
-    DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
+    DEB_BUILD_DEPS="build-essential automake libboost-all-dev \
       bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
@@ -122,16 +123,20 @@ install_deps() {
 
     if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
-      dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
-      ${RPM_BUILD_DEPS}"
+      dnf install -y libarchive cmake  ${RPM_BUILD_DEPS}"
+        if [[ $GCC_TOOLSET = false ]]; then
+            command="$command && dnf group install -y \"Development Tools\""
+        else
+            command="$command && dnf install -y gcc-toolset-${GCC_VERSION} && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable"
+        fi
     elif
         [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
     then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
+      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
-        command="${DEB_BUILD_DEPS}"
+        command="apt-get -y update && apt-get -y install ${DEB_BUILD_DEPS}"
     else
         echo "Unsupported OS: $OS"
         exit 17
@@ -768,7 +773,7 @@ init_submodules
 if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
 
-    ( build_package && run_unit_tests )
+    (build_package && run_unit_tests)
     exit_code=$?
 
     if [[ $SCCACHE = true ]]; then
