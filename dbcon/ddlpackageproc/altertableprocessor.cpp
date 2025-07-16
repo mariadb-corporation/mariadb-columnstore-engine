@@ -41,6 +41,9 @@ using namespace execplan;
 #include "ddlpkg.h"
 using namespace ddlpackage;
 
+#include "dmltable.h"
+using namespace dmlpackage;
+
 #include "sqllogger.h"
 #include "messagelog.h"
 using namespace logging;
@@ -673,6 +676,18 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackageInternal(
   return result;
 }
 
+bool AlterTableProcessor::tableTooBig(ddlpackage::QualifiedName& fTableNam)
+{
+  //check fi there are more thank 500 rows
+  DMLTable tableProc;
+  tableProc.set_TableName(fTableNam.fName);
+  if(tableProc.get_RowList().size() > 500)
+  {
+    return true;
+  }
+  return false;
+}
+
 void AlterTableProcessor::rollBackAlter(const string& error, BRM::TxnID txnID, int sessionId,
                                         DDLResult& result, uint64_t uniqueId)
 {
@@ -717,7 +732,12 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
   tableColName.table = inTableName.fName;
   tableColName.column = columnDefPtr->fName;
   CalpontSystemCatalog::OID columnOid;
-
+  if(tableTooBig(inTableName))
+  {
+    result.result = ALTER_ERROR;
+    err += "Table too big - statement may take eternity";
+    throw std::runtime_error(err);
+  }
   try
   {
     columnOid = systemCatalogPtr->lookupOID(tableColName);
@@ -1618,6 +1638,13 @@ void AlterTableProcessor::dropColumns(uint32_t sessionID, execplan::CalpontSyste
   ddlpackage::ColumnNameList::const_iterator col_iter = colList.begin();
 
   std::string err;
+  if(tableTooBig(fTableName))
+  {
+    result.result = ALTER_ERROR;
+    err += "Table too big - statement may take eternity";
+    DETAIL_INFO("dropColumns::dropColumn failed");
+    return;
+  }
 
   try
   {
@@ -1698,6 +1725,10 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
   uint16_t dbRoot;
   BRM::OID_t sysOid = 1021;
   ByteStream::byte rc = 0;
+  if(tableTooBig(fTableName))
+  {
+    throw std::runtime_error("Table too big - statement may take eternity");
+  }
   // Find out where syscolumns
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
 
@@ -1787,6 +1818,10 @@ void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::Calpon
   uint16_t dbRoot;
   BRM::OID_t sysOid = 1021;
   ByteStream::byte rc = 0;
+  if(tableTooBig(fTableName))
+  {
+    throw std::runtime_error("Table too big - statement may take eternity");
+  }
   // Find out where syscolumn is
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
 
@@ -1964,7 +1999,10 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   tableName.table = ataRenameTable.fQualifiedName->fName;
   execplan::CalpontSystemCatalog::ROPair roPair;
   roPair.objnum = 0;
-
+  if(tableTooBig(fTableName))
+  {
+    throw std::runtime_error("Table too big - statement may take eternity");
+  }
   try
   {
     roPair = systemCatalogPtr->tableRID(tableName);
@@ -2130,6 +2168,10 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   std::string errorMsg;
   int pmNum = 1;
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
+  if(tableTooBig(fTableName))
+  {
+    throw std::runtime_error("Table too big - statement may take eternity");
+  }
   OamCache* oamcache = OamCache::makeOamCache();
   boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
   pmNum = (*dbRootPMMap)[dbRoot];
@@ -2346,6 +2388,10 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
   uint16_t dbRoot;
   BRM::OID_t sysOid = 1001;
   ByteStream::byte rc = 0;
+  if(tableTooBig(fTableName))
+  {
+    throw std::runtime_error("Table too big - statement may take eternity");
+  }
   // Find out where systable is
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
 

@@ -151,6 +151,12 @@ class AlterTableProcessor : public DDLPackageProcessor
    * @param alterTableStmt the AlterTableStatement
    */
   DDLResult processPackageInternal(ddlpackage::SqlStatement* alterTableStmt) override;
+
+  /** @brief check if the table have more than 500 rows
+   *
+   * @param fTableName the QualifiedName for the table
+   */
+  bool tableTooBig(ddlpackage::QualifiedName& fTableNam);
 };
 
 }  // namespace ddlpackageprocessor
