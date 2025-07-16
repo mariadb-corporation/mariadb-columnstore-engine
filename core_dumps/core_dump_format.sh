@@ -15,7 +15,7 @@ save_ansi_to_html() {
 	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --palette=solarized >>"${FILENAME}"
 }
 invoke_gdb_command() {
-	unbuffer gdb -x "${SCRIPT_LOCATION}"/gdbinit -q ${BINARY} --core ${COREDUMP} -ex "$1" -ex quit >>"$DUMPNAME"
+    gdb -x "${SCRIPT_LOCATION}"/gdbinit -q ${BINARY} --core ${COREDUMP} -ex "$1" -ex quit >>"$DUMPNAME"
 }
 
 echo "<h1> Step: ${STEP_NAME}<br> Binary name: ${BINARY}<br> </h1>" >>"${FILENAME}"
