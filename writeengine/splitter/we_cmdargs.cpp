@@ -732,7 +732,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     }
     else if (fBatchQty > 100000)
     {
-      fBatchQty = min((uint32_t)fBatchQty, BRM::MAX_EXTENT_SIZE);
+      fBatchQty = min(static_cast<uint32_t>(fBatchQty), BRM::MAX_EXTENT_SIZE);
     }
   }
 
