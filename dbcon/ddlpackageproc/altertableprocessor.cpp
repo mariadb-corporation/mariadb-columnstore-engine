@@ -678,7 +678,7 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackageInternal(
 
 bool AlterTableProcessor::tableTooBig(ddlpackage::QualifiedName& fTableNam)
 {
-  //check fi there are more thank MAX BATCH SIZE rows
+  //check if there are more thank MAX ROW SIZE rows
   DMLTable tableProc;
   tableProc.set_TableName(fTableNam.fName);
   string maxRowSizeAlterString;
