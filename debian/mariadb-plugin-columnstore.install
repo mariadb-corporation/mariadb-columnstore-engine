@@ -45,6 +45,7 @@ usr/bin/mycnfUpgrade
 usr/bin/post-mysql-install
 usr/bin/post-mysqld-install
 usr/bin/reset_locks
+usr/bin/rgprint
 usr/bin/rollback
 usr/bin/save_brm
 usr/bin/smcat
