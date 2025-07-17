@@ -678,10 +678,14 @@ AlterTableProcessor::DDLResult AlterTableProcessor::processPackageInternal(
 
 bool AlterTableProcessor::tableTooBig(ddlpackage::QualifiedName& fTableNam)
 {
-  //check fi there are more thank 500 rows
+  //check fi there are more thank MAX BATCH SIZE rows
   DMLTable tableProc;
   tableProc.set_TableName(fTableNam.fName);
-  if(tableProc.get_RowList().size() > 500)
+  string maxRowSizeAlterString;
+  config::Config* config = config::Config::makeConfig();
+  maxRowSizeAlterString = config->getConfig("SystemConfig", "MaxRowSizeAlter");
+  uint64_t maxRowSizeAlter = config::Config::uFromText(maxRowSizeAlterString);
+  if(tableProc.get_RowList().size() > maxRowSizeAlter)
   {
     return true;
   }

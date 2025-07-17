@@ -70,6 +70,8 @@
 			the entire subdirectories "joins" & "aggregates" and recreates it to make sure no
 			files are left behind. -->
 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
+		<!-- Maximum row size of a table for which ALTER TABLE statements are allowed-->
+		<MaxRowSizeAlter>500</MaxRowSizeAlter>
 	</SystemConfig>
 	<SystemModuleConfig>
 		<ModuleType2>um</ModuleType2>
