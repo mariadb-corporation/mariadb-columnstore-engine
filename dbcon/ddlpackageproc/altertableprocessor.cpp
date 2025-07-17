@@ -739,7 +739,7 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
   if(tableTooBig(inTableName))
   {
     result.result = ALTER_ERROR;
-    err += "Table too big - statement may take eternity";
+    err = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
     throw std::runtime_error(err);
   }
   try
@@ -1645,7 +1645,7 @@ void AlterTableProcessor::dropColumns(uint32_t sessionID, execplan::CalpontSyste
   if(tableTooBig(fTableName))
   {
     result.result = ALTER_ERROR;
-    err += "Table too big - statement may take eternity";
+    err = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
     DETAIL_INFO("dropColumns::dropColumn failed");
     return;
   }
@@ -1731,7 +1731,8 @@ void AlterTableProcessor::setColumnDefault(uint32_t sessionID, execplan::Calpont
   ByteStream::byte rc = 0;
   if(tableTooBig(fTableName))
   {
-    throw std::runtime_error("Table too big - statement may take eternity");
+    errorMsg = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
+    throw std::runtime_error(errorMsg);
   }
   // Find out where syscolumns
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
@@ -1824,7 +1825,8 @@ void AlterTableProcessor::dropColumnDefault(uint32_t sessionID, execplan::Calpon
   ByteStream::byte rc = 0;
   if(tableTooBig(fTableName))
   {
-    throw std::runtime_error("Table too big - statement may take eternity");
+    errorMsg = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
+    throw std::runtime_error(errorMsg);
   }
   // Find out where syscolumn is
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
@@ -2005,7 +2007,7 @@ void AlterTableProcessor::renameTable(uint32_t sessionID, execplan::CalpontSyste
   roPair.objnum = 0;
   if(tableTooBig(fTableName))
   {
-    throw std::runtime_error("Table too big - statement may take eternity");
+    throw std::runtime_error("Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml");
   }
   try
   {
@@ -2174,7 +2176,8 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
   if(tableTooBig(fTableName))
   {
-    throw std::runtime_error("Table too big - statement may take eternity");
+    errorMsg = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
+    throw std::runtime_error(errorMsg);
   }
   OamCache* oamcache = OamCache::makeOamCache();
   boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
@@ -2394,7 +2397,8 @@ void AlterTableProcessor::renameColumn(uint32_t sessionID, execplan::CalpontSyst
   ByteStream::byte rc = 0;
   if(tableTooBig(fTableName))
   {
-    throw std::runtime_error("Table too big - statement may take eternity");
+    errorMsg = "Table too big - statement may take eternity. Look SystemConfig.MaxRowSizeAlter in Columnstore.xml";
+    throw std::runtime_error(errorMsg);
   }
   // Find out where systable is
   rc = fDbrm->getSysCatDBRoot(sysOid, dbRoot);
