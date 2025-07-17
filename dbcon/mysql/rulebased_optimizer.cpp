@@ -191,9 +191,24 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep,
   return ptp;
 }
 
-execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep)
+// Looking for a projected column that comes first in an available index and has EI statistics
+// INV nullptr signifies that no suitable column was found
+execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
-  return dynamic_cast<execplan::SimpleColumn*>(csep.returnedCols().front().get());
+  for (auto& rc : csep.returnedCols())
+  {
+    auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+    if (simpleColumn)
+    {
+      std::cout << "Found simple column " << simpleColumn->columnName() << std::endl;
+      cal_impl_if::SchemaAndTableName schemaAndTableNam = {simpleColumn->tableName(), simpleColumn->columnName()};
+      auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableNam);
+
+      return simpleColumn;
+    }
+  }
+
+  return nullptr;
 }
 
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
@@ -201,48 +216,64 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 {
   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
   // unionVec.reserve(numberOfLegs);
-  execplan::SimpleColumn* keyColumn = findSuitableKeyColumn(csep);
-  std::cout << "looking for " << keyColumn->columnName() << " in ctx.gwi.columnStatisticsMap "
-            << " with size " << ctx.gwi.columnStatisticsMap.size() << std::endl;
-  for (auto& [k, v] : ctx.gwi.columnStatisticsMap)
-  {
-    std::cout << "key " << k << " vector size " << v.size() << std::endl;
-  }
-  if (!keyColumn ||
-      ctx.gwi.columnStatisticsMap.find(keyColumn->columnName()) == ctx.gwi.columnStatisticsMap.end())
+  execplan::SimpleColumn* keyColumn = findSuitableKeyColumn(csep, ctx);
+  if (!keyColumn)
   {
     return unionVec;
   }
 
-  auto columnStatistics = ctx.gwi.columnStatisticsMap[keyColumn->columnName()];
-  std::cout << "columnStatistics.size() " << columnStatistics.size() << std::endl;
+  std::cout << "looking for " << keyColumn->columnName() << " in ctx.gwi.tableStatisticsMap "
+            << " with size " << ctx.gwi.tableStatisticsMap.size() << std::endl;
+  for (auto& [k, v] : ctx.gwi.tableStatisticsMap)
+  {
+    std::cout << "SchemaAndTableName " << k.schema << "." << k.table << " column map size " << v.size() << std::endl;
+  }
+
+
+
+  cal_impl_if::SchemaAndTableName schemaAndTableName = {keyColumn->schemaName(), keyColumn->tableName()};
+  auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
+  if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end())
+  {
+    return unionVec;
+  }
+
+  auto columnStatisticsIt = tableColumnsStatisticsIt->second.find(keyColumn->columnName());
+  if (columnStatisticsIt == tableColumnsStatisticsIt->second.end())
+  {
+    return unionVec;
+  }
+
+  auto columnStatistics = columnStatisticsIt->second;
+  std::cout << "Histogram_json_hb histogram size " << columnStatistics.get_json_histogram().size() << std::endl;
   // TODO char and other numerical types support
-  size_t numberOfUnionUnits = 2;
-  size_t numberOfBucketsPerUnionUnit = columnStatistics.size() / numberOfUnionUnits;
+  size_t numberOfUnionUnits = std::min(columnStatistics.get_json_histogram().size(), 16UL);
+  size_t numberOfBucketsPerUnionUnit = columnStatistics.get_json_histogram().size() / numberOfUnionUnits;
 
   std::vector<std::pair<uint64_t, uint64_t>> bounds;
 
   // TODO need to process tail if number of buckets is not divisible by number of union units
   // TODO non-overlapping buckets if it is a problem at all
-  for (size_t i = 0; i < numberOfUnionUnits; ++i)
+  for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
-    auto bucket = columnStatistics.begin() + i * numberOfBucketsPerUnionUnit;
-    auto endBucket = columnStatistics.begin() + (i + 1) * numberOfBucketsPerUnionUnit;
-    // TODO find a median b/w the current bucket start and the previous bucket end
-    uint64_t currentLowerBound =
-        (bounds.empty() ? *(uint32_t*)bucket->start_value.data()
-                        : std::min((uint64_t)*(uint32_t*)bucket->start_value.data(), bounds.back().second));
-    uint64_t currentUpperBound = currentLowerBound;
-    for (; bucket != endBucket; ++bucket)
-    {
-      uint64_t bucketLowerBound = *(uint32_t*)bucket->start_value.data();
-      std::cout << "bucket.start_value " << bucketLowerBound << std::endl;
-      currentUpperBound = bucketLowerBound + bucket->ndv;
-    }
+    auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = columnStatistics.get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    uint64_t currentLowerBound = *(uint32_t*)bucket->start_value.data();
+    uint64_t currentUpperBound = *(uint32_t*)endBucket->start_value.data();
+
     std::cout << "currentLowerBound " << currentLowerBound << " currentUpperBound " << currentUpperBound
               << std::endl;
     bounds.push_back(std::make_pair(currentLowerBound, currentUpperBound));
   }
+
+  // Add last range
+  auto lastBucket = columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
+  uint64_t currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
+  uint64_t currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
+
+  std::cout << "last currentLowerBound " << currentLowerBound << " last currentUpperBound " << currentUpperBound
+            << std::endl;
+  bounds.push_back(std::make_pair(currentLowerBound, currentUpperBound));
 
   for (auto& bound : bounds)
   {
@@ -275,8 +306,6 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
       derivedSCEP->derivedTbAlias(tableAlias);
 
-      // TODO: hardcoded for now
-      // size_t parallelFactor = 2;
       // Create a copy of the current leaf CSEP with additional filters to partition the key column
       auto additionalUnionVec = makeUnionFromTable(csep, ctx);
       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),

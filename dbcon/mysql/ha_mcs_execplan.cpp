@@ -6314,16 +6314,20 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           assert(ifp->field->table->s);
           // assert(ifp->field->table->s->db);
           // assert(ifp->field->table->s->table_name);
-          // FQCN fqcn({ifp->field->table->s->db.str}, {ifp->field->table->s->table_name.str}, {ifp->field->field_name.str});
-          //TODO use FQCN as a key type
+          // FQCN fqcn({ifp->field->table->s->db.str}, {ifp->field->table->s->table_name.str},
+          // {ifp->field->field_name.str});
+          // TODO use FQCN as a key type
           std::cout << "Adding column statistics for " << ifp->field->field_name.str << std::endl;
           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
           if (histogram)
           {
             std::cout << "Type of histogram object: " << typeid(*histogram).name() << std::endl;
-            std::vector<Histogram_bucket> histogramBuckets = histogram->get_json_histogram();
-            std::cout << "gwi.columnStatisticsMap[ifp->field->field_name.str].size() " << histogramBuckets.size() << std::endl;
-            gwi.columnStatisticsMap[ifp->field->field_name.str] = histogramBuckets;
+            // std::vector<Histogram_bucket> histogramBuckets = histogram->get_json_histogram();
+            // std::cout << "gwi.tableStatisticsMap[{ifp->field->table->s->db.str, "
+            //              "ifp->field->table->s->table_name.str}][ifp->field->field_name.str].size() "
+            //           << histogramBuckets.size() << std::endl;
+            SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
+            gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
           }
         }
       }
@@ -6421,7 +6425,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       {
         Item_field* ifp = (Item_field*)item;
         extractColumnStatistics(ifp, gwi);
-        std::cout << "gwi.columnStatisticsMap 1 size " << gwi.columnStatisticsMap.size() << std::endl;
+        // Handle * case
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
           collectAllCols(gwi, ifp);
@@ -7473,7 +7477,6 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 
   int status = getSelectPlan(gwi, select_lex, csep, false, true, isSelectLexUnit);
 
-  std::cout << "cs_get_select_plan columnStatisticsMap size " << gwi.columnStatisticsMap.size() << std::endl;
   if (status > 0)
     return ER_INTERNAL_ERROR;
   else if (status < 0)

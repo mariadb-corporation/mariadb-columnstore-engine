@@ -136,10 +136,36 @@ namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
 
-void gp_walk_info::mergeColumnStatisticsMap(const ColumnStatisticsMap& aColumnStatisticsMap)
+void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
 {
-  columnStatisticsMap.insert(aColumnStatisticsMap.begin(), aColumnStatisticsMap.end());
+  for (auto& [schemaAndTableName, aColumnStatisticsMap]: aTableStatisticsMap)
+  {
+    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
+    if (tableStatisticsMapIt == tableStatisticsMap.end())
+    {
+      tableStatisticsMap[schemaAndTableName] = aColumnStatisticsMap;
+    }
+    else
+    {
+      for (auto& [columnName, histogram]: aColumnStatisticsMap)
+      {
+        tableStatisticsMapIt->second[columnName] = histogram;
+      }
+    }
+  }
 }
+
+std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+{
+  auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
+  if (tableStatisticsMapIt == tableStatisticsMap.end())
+  {
+    return std::nullopt;
+  }
+
+  return {tableStatisticsMapIt->second};
+}
+
 }
 
 namespace

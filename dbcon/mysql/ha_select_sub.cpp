@@ -97,7 +97,7 @@ SCSEP SelectSubQuery::transform()
   }
 
   // Insert column statistics
-  fGwip.mergeColumnStatisticsMap(gwi.columnStatisticsMap);
+  fGwip.mergeTableStatistics(gwi.tableStatisticsMap);
   // std::cout << "fGwip.columnStatisticsMap 2 size " << fGwip.columnStatisticsMap.size() << std::endl;
   // std::cout << "gwi.columnStatisticsMap 2 size " << gwi.columnStatisticsMap.size() << std::endl;
 

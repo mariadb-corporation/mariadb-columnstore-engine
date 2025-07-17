@@ -445,7 +445,7 @@ SCSEP FromSubQuery::transform()
   }
 
   // Insert column statistics
-  fGwip.mergeColumnStatisticsMap(gwi.columnStatisticsMap);
+  fGwip.mergeTableStatistics(gwi.tableStatisticsMap);
 
   fGwip.subselectList.push_back(csep);
   return csep;
