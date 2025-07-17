@@ -28,7 +28,7 @@ fi
 
 select_pkg_format ${OS}
 
-if [[ "$(arch)" == "arm64" ]]; then
+if [[ "$(arch)" == "arm64" || "$(arch)" == "aarch64" ]]; then
   export CC=gcc
 fi
 
@@ -59,7 +59,7 @@ install_deps() {
 
   if [ "$(arch)" == "x86_64" ]; then
     PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
-  elif [ "$(arch)" == "arm64" ]; then
+  elif [[ "$(arch)" == "arm64" || "$(arch)" == "aarch64" ]]; then
     PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst"
   else
     echo "Unsupported architecture: $(arch)"
