@@ -69,8 +69,5 @@ struct Rule
   bool walk(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx) const;
 };
 
-bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);
-void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx);
-
 }
