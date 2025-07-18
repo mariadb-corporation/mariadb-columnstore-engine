@@ -58,7 +58,7 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 {
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
-  // WIP filter out CSEPs with orderBy, groupBy, having
+  // TODO filter out CSEPs with orderBy, groupBy, having
   // Filter out tables that were re-written.
   return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
 }
@@ -76,13 +76,12 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, exe
   auto* filterColLeftOp = new execplan::ConstantColumnUInt(bound.second, 0, 0);
   // set TZ
   // There is a question with ownership of the const column
-  // WIP here we lost upper bound value if predicate is not changed to weak lt
+  // TODO here we lost upper bound value if predicate is not changed to weak lt
   execplan::SOP ltOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
   ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
   ltOp->resultType(ltOp->operationType());
 
   auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
-  // auto tableKeyColumn = derivedSCEP->returnedCols().front();
   auto tableKeyColumnRightOp = new execplan::SimpleColumn(column);
   tableKeyColumnRightOp->resultType(column.resultType());
   // TODO hardcoded column type and value

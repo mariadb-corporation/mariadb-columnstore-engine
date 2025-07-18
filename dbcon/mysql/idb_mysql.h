@@ -87,7 +87,7 @@ struct Histogram_bucket
   longlong ndv;
 };
 
-class Histogram_json_hb final : public Histogram_base
+class Histogram_json_hb
 {
   std::vector<Histogram_bucket> buckets;
 

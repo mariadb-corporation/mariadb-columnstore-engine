@@ -28,7 +28,6 @@
 #include <vector>
 #include "basic/string_utils.h"
 #include "idb_mysql.h"
-#include "sql_statistics.h"
 #include "ha_mcs_sysvars.h"
 
 #include "dmlpkg.h"
