@@ -206,6 +206,14 @@ def add(
             'Add node (or nodes, if more than one is passed) in read-only '
             'mode.'
         )
+    ),
+    coordinator_only: bool = typer.Option(
+        False,
+        '--coordinator-only',
+        help=(
+            'Add node(s) as coordinator-only (read-only, but does not add other nodes\' dbroots).'
+        ),
+        hidden=True,
     )
 ):
     """Add nodes to the Columnstore cluster."""
@@ -214,9 +222,10 @@ def add(
         timeout=timedelta(days=1).total_seconds(), handle_signals=True,
         extra_nodes=nodes
     ):
+        add_other_nodes_dbroots = not coordinator_only
         for node in nodes:
             result.append(
-                client.add_node({'node': node, 'read_only': read_only})
+                client.add_node({'node': node, 'read_only': read_only, 'add_other_nodes_dbroots': add_other_nodes_dbroots})
             )
     return result
 

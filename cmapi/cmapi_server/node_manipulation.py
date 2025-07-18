@@ -1023,7 +1023,7 @@ def _add_WES(root, pm_num, node):
 
 
 def _add_read_only_node(root: etree.Element, node: str, add_other_nodes_dbroots: bool = True) -> None:
-    '''Add node name to ReadOnlyNodes if it is not already there, with attribute'''
+    '''Add node name to ReadOnlyNodes if it is not already there, also set attribute add_other_nodes_dbroots in the tag'''
     read_only_nodes = root.find('./ReadOnlyNodes')
     if read_only_nodes is None:
         read_only_nodes = etree.SubElement(root, 'ReadOnlyNodes')
