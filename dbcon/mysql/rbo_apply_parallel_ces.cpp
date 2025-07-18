@@ -68,10 +68,6 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, execplan::SimpleColumn& column,
                                                       std::pair<uint64_t, uint64_t>& bound)
 {
-  // INV this is SimpleColumn we supply as an argument
-  // TODO find the suitable column using EI statistics.
-  // auto* column = dynamic_cast<execplan::SimpleColumn*>(csep->returnedCols().front().get());
-  // assert(column);
 
   auto tableKeyColumnLeftOp = new execplan::SimpleColumn(column);
   tableKeyColumnLeftOp->resultType(column.resultType());
@@ -117,13 +113,11 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, exe
 // INV nullptr signifies that no suitable column was found
 execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
-  std::cout << "findSuitableKeyColumn " << csep.returnedCols().size() << std::endl;
   for (auto& rc : csep.returnedCols())
   {
     auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
     if (simpleColumn)
     {
-      std::cout << "Found simple column " << simpleColumn->columnName() << std::endl;
       cal_impl_if::SchemaAndTableName schemaAndTableNam = {simpleColumn->schemaName(), simpleColumn->tableName()};
       auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableNam);
       if (!columnStatistics)
@@ -141,6 +135,7 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
   return nullptr;
 }
 
+// TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
@@ -152,13 +147,6 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   if (!keyColumn)
   {
     return unionVec;
-  }
-
-  std::cout << "looking for " << keyColumn->columnName() << " in ctx.gwi.tableStatisticsMap "
-            << " with size " << ctx.gwi.tableStatisticsMap.size() << std::endl;
-  for (auto& [k, v] : ctx.gwi.tableStatisticsMap)
-  {
-    std::cout << "SchemaAndTableName " << k.schema << "." << k.table << " column map size " << v.size() << std::endl;
   }
 
   cal_impl_if::SchemaAndTableName schemaAndTableName = {keyColumn->schemaName(), keyColumn->tableName()};
@@ -184,17 +172,13 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   // TODO char and other numerical types support
   std::vector<std::pair<uint64_t, uint64_t>> bounds;
 
-  // TODO need to process tail if number of buckets is not divisible by number of union units
-  // TODO non-overlapping buckets if it is a problem at all
+  // Loop over buckets to produce filter ranges
   for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
     auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
     auto endBucket = columnStatistics.get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
     uint64_t currentLowerBound = *(uint32_t*)bucket->start_value.data();
     uint64_t currentUpperBound = *(uint32_t*)endBucket->start_value.data();
-
-    std::cout << "currentLowerBound " << currentLowerBound << " currentUpperBound " << currentUpperBound
-              << std::endl;
     bounds.push_back({currentLowerBound, currentUpperBound});
   }
 
@@ -202,12 +186,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
   auto lastBucket = columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
   uint64_t currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
-  std::cout << "lastBucket start_value " << currentLowerBound << std::endl;
   uint64_t currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
-  std::cout << "Histogram end_value " << currentUpperBound << std::endl;
-
-  std::cout << "last currentLowerBound " << currentLowerBound << " last currentUpperBound " << currentUpperBound
-            << std::endl;
   bounds.push_back({currentLowerBound, currentUpperBound});
 
   for (auto& bound : bounds)
@@ -270,97 +249,13 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       derivedSCEP->filters(nullptr);
     }
   }
-  // Remove the filters as they were pushed down to union units
-  // This is inappropriate for EXISTS filter and join conditions
-  // csep.filters(nullptr);
-  // There must be no derived at this point.
+  // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
+  // But this is inappropriate for EXISTS filter and join conditions
+  // There must be no derived at this point, so we can replace it with the new derived table list
   csep.derivedTableList(newDerivedTableList);
   // Replace table list with new table list populated with union units
   csep.tableList(newTableList);
   csep.returnedCols(newReturnedColumns);
 }
-
-// execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable_exists(
-//     const size_t numberOfLegs, execplan::CalpontSelectExecutionPlan& csep)
-// {
-//   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
-//   unionVec.reserve(numberOfLegs);
-//   std::vector<std::pair<uint64_t, uint64_t>> bounds(
-//       {{0, 3000961}, {3000961, std::numeric_limits<uint64_t>::max()}});
-//   for (auto bound : bounds)
-//   {
-//     auto clonedCSEP = csep.cloneWORecursiveSelects();
-//     clonedCSEP->filters(nullptr);
-//     // Add BETWEEN based on key column range
-//     clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP, bound));
-//     unionVec.push_back(clonedCSEP);
-//   }
-
-//   return unionVec;
-// }
-
-// // TODO: remove applyParallelCES_exists
-// void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
-// {
-//   auto tables = csep.tableList();
-//   execplan::CalpontSelectExecutionPlan::TableList newTableList;
-//   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-//   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
-
-//   // ATM Must be only 1 table
-//   for (auto& table : tables)
-//   {
-//     if (!table.isColumnstore())
-//     {
-//       auto derivedSCEP = csep.cloneWORecursiveSelects();
-//       // need to add a level here
-//       std::string tableAlias = RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
-//                                std::to_string(ctx.uniqueId);
-
-//       derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
-//       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-//       derivedSCEP->derivedTbAlias(tableAlias);
-
-//       // TODO: hardcoded for now
-//       size_t parallelFactor = 2;
-//       // Create a copy of the current leaf CSEP with additional filters to partition the key column
-//       auto additionalUnionVec = makeUnionFromTable_exists(parallelFactor, csep);
-//       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
-//                                      additionalUnionVec.end());
-
-//       size_t colPosition = 0;
-//       // change parent to derived table columns
-//       for (auto& rc : csep.returnedCols())
-//       {
-//         auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
-//         // TODO timezone and result type are not copied
-//         // TODO add specific ctor for this functionality
-//         rcCloned->tableName("");
-//         rcCloned->schemaName("");
-//         rcCloned->tableAlias(tableAlias);
-//         rcCloned->colPosition(colPosition++);
-//         rcCloned->resultType(rc->resultType());
-
-//         newReturnedColumns.push_back(rcCloned);
-//       }
-
-//       newDerivedTableList.push_back(derivedSCEP);
-//       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
-//       newTableList.push_back(tn);
-//       // Remove the filters as they were pushed down to union units
-//       // This is inappropriate for EXISTS filter and join conditions
-//       // TODO if needed
-//       derivedSCEP->filters(nullptr);
-//     }
-//   }
-//   // Remove the filters as they were pushed down to union units
-//   // This is inappropriate for EXISTS filter and join conditions
-//   // csep.filters(nullptr);
-//   // There must be no derived at this point.
-//   csep.derivedTableList(newDerivedTableList);
-//   // Replace table list with new table list populated with union units
-//   csep.tableList(newTableList);
-//   csep.returnedCols(newReturnedColumns);
-// }
 
 }  // namespace optimizer

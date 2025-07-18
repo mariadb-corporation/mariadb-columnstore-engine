@@ -6288,44 +6288,23 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
   return 0;
 }
 
+// Loop over available indexes to find and extract corresponding EI column statistics
+// for the first column of the index if any.
+// Statistics is stored in GWI context.
 void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
 {
-  // TODO find clear way to check if the field is part of a key
-  // if (!ifp->field->part_of_key.is_clear_all())
-  // {
-  //   return;
-  // }
-  // std::cout << "Processing field item: " << ifp->field_name.str << std::endl;
-  // std::cout << "part of a key: " << buf << std::endl;
-  // std::cout << "ifp->field->field_index " << ifp->field->field_index << std::endl;
-
   for (uint j = 0; j < ifp->field->table->s->keys; j++)
   {
     for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
     {
-      // std::cout << "key fieldnr " << i << " "
-      //           << ifp->field->table->s->key_info[j].key_part[i].field->field_name.str << " "
-      //           << ifp->field->table->s->key_info[j].key_part[i].fieldnr << std::endl;
       if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
       {
-        // std::cout << "key_info " << j << " key_part " << i << " matched " << std::endl;
         if (i == 0 && ifp->field->read_stats)
         {
           assert(ifp->field->table->s);
-          // assert(ifp->field->table->s->db);
-          // assert(ifp->field->table->s->table_name);
-          // FQCN fqcn({ifp->field->table->s->db.str}, {ifp->field->table->s->table_name.str},
-          // {ifp->field->field_name.str});
-          // TODO use FQCN as a key type
-          std::cout << "Adding column statistics for " << ifp->field->field_name.str << std::endl;
           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
           if (histogram)
           {
-            std::cout << "Type of histogram object: " << typeid(*histogram).name() << std::endl;
-            // std::vector<Histogram_bucket> histogramBuckets = histogram->get_json_histogram();
-            // std::cout << "gwi.tableStatisticsMap[{ifp->field->table->s->db.str, "
-            //              "ifp->field->table->s->table_name.str}][ifp->field->field_name.str].size() "
-            //           << histogramBuckets.size() << std::endl;
             SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
             gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
           }

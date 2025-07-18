@@ -120,6 +120,12 @@ using ColumnName = std::string;
 using ColumnStatisticsMap = std::unordered_map<ColumnName, Histogram_json_hb>;
 using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
+// This structure is used to store MDB AST -> CSEP translation context.
+// There is a column statistics for some columns in a query.
+// As per 23.10.5 "some" means first column of the index in projection list of CSEP
+// satisfies the condition of applyParallelCSEP RBO rule.
+// Note that statistics must be merged from subquery/derived table
+// to the statistics of the outer query.
 struct gp_walk_info
 {
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList returnedCols;
