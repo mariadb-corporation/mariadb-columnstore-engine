@@ -64,6 +64,7 @@ set(joblist_LIB_SRCS
 add_library(joblist SHARED ${joblist_LIB_SRCS})
 target_include_directories(joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR})
 add_dependencies(joblist loggingcpp)
+target_link_libraries(joblist PRIVATE ssl)
 
 install(TARGETS joblist DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
