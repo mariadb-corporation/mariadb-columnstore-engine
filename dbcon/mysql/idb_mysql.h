@@ -74,7 +74,37 @@
 #include "rpl_rli.h"
 #include "my_dbug.h"
 #include "sql_show.h"
+#if MYSQL_VERSION_ID >= 110401
 #include "opt_histogram_json.h"
+#else
+// Mock Histogram_bucket for MySQL < 11.4
+struct Histogram_bucket
+{
+  std::string start_value;
+
+  double cum_fract;
+
+  longlong ndv;
+};
+
+class Histogram_json_hb final : public Histogram_base
+{
+  std::vector<Histogram_bucket> buckets;
+
+  std::string last_bucket_end_endp;
+
+public:
+  const std::vector<Histogram_bucket>& get_json_histogram() const
+  {
+    return buckets;
+  }
+
+  const std::string& get_last_bucket_end_endp() const
+  {
+    return last_bucket_end_endp;
+  }
+};
+#endif
 #pragma GCC diagnostic pop
 
 // Now clean up the pollution as best we can...
