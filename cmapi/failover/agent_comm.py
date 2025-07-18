@@ -211,9 +211,10 @@ class AgentComm:
                 # determine whether we need a transaction at all.
                 # List the fcns that require a txn here.
                 if not needs_transaction and event.name in (
-                  self._agent.activateNodes,
-                  self._agent.deactivateNodes,
-                  self._agent.movePrimaryNode):
+                    self._agent.activateNodes,
+                    self._agent.deactivateNodes,
+                    self._agent.movePrimaryNode
+                ):
                     needs_transaction = True
 
                 if event.name == self._agent.activateNodes:

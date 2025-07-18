@@ -7,12 +7,13 @@ from cmapi_server.controllers.endpoints import (
     StatusController, ConfigController, BeginController, CommitController,
     RollbackController, StartController, ShutdownController,
     ExtentMapController, ClusterController, ApiKeyController,
-    LoggingConfigController, AppController, NodeProcessController
+    LoggingConfigController, AppController, NodeController,
+    NodeProcessController
 )
 
 from cmapi_server.controllers.s3dataload import S3DataLoadController
 
-_version = '0.4.0'
+_version = '0.4.0'  #TODO: MOVE to constants
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,26 @@ dispatcher.connect(
     action = 'get_process_running',
     controller = NodeProcessController(),
     conditions = {'method': ['GET']}
+)
+
+
+# /_version/node/check-shared-file/ (GET)
+dispatcher.connect(
+    name = 'node_check_shared_file',
+    route = f'/cmapi/{_version}/node/check-shared-file',
+    action = 'check_shared_file',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/cluster/check-shared-storage/ (PUT)
+dispatcher.connect(
+    name = 'cluster_check_shared_storage',
+    route = f'/cmapi/{_version}/cluster/check-shared-storage',
+    action = 'check_shared_storage',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
 )
 
 

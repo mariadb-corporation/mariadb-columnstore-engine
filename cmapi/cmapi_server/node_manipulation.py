@@ -62,6 +62,43 @@ def switch_node_maintenance(
     node_config.write_config(config_root, filename=output_config_filename)
     # TODO: probably move publishing to cherrypy.engine failover channel here?
 
+
+def set_shared_storage(
+    state: bool,
+    input_config_filename: str = DEFAULT_MCS_CONF_PATH,
+    output_config_filename: str = DEFAULT_MCS_CONF_PATH,
+) -> bool:
+    """Set shared storage state in Columnstore.xml.
+
+    :param state: state to set
+    :type state: bool
+    :param input_config_filename: mcs input config path,
+                                  defaults to DEFAULT_MCS_CONF_PATH
+    :type input_config_filename: str, optional
+    :param output_config_filename: mcs output config path,
+                                   defaults to DEFAULT_MCS_CONF_PATH
+    :return: True if new state to set is differ from state from Columnstore.xml
+    :rtype: bool
+    """
+    current_state: str
+    node_config = NodeConfig()
+    config_root = node_config.get_current_config_root(input_config_filename)
+    shared_storage_element = config_root.find('SharedStorage')
+    if shared_storage_element is None:
+        shared_storage_element = etree.SubElement(config_root, 'SharedStorage')
+    else:
+        current_state = shared_storage_element.text
+    new_state = str(state).lower()
+    if current_state != new_state:
+        logging.debug(f'Shared storage state changed to {new_state!r}')
+        shared_storage_element.text = str(state).lower()
+        node_config.write_config(config_root, filename=output_config_filename)
+        return True
+    else:
+        # shared storage state not changed
+        return False
+
+
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,

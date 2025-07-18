@@ -7,6 +7,10 @@ from .config import Config
 from .heartbeat_history import HBHistory
 from .agent_comm import AgentComm
 
+from cmapi_server import helpers
+from cmapi_server.node_manipulation import set_shared_storage
+from cmapi_server.handlers.cluster import ClusterHandler
+
 
 class NodeMonitor:
 
@@ -78,6 +82,22 @@ class NodeMonitor:
             if not self._die:
                 time.sleep(1)
         self._logger.info("node monitor logic exiting normally...")
+
+    def check_shared_storage(self):
+        # need to do it only in one node
+        result = ClusterHandler.check_shared_storage()
+        shared_storage_on = result['shared_storage']
+        active_nodes_count = int(result['active_nodes_count'])
+        if active_nodes_count < 2:
+            logging.debug(
+                'Less than 2 nodes in cluster, no need to update SharedStorage '
+                'flag in Columnstore.xml.'
+            )
+        else:
+            state_changed = set_shared_storage(shared_storage_on)
+            if state_changed:
+                helpers.broadcast_new_config()
+
 
     def _monitor(self):
         """

@@ -1,5 +1,8 @@
 """Module contains Cluster business logic functions."""
+import configparser
+import hashlib
 import logging
+import tempfile
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -9,10 +12,11 @@ from mcs_node_control.models.node_config import NodeConfig
 from tracing.traced_session import get_traced_session
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH,
-    DEFAULT_MCS_CONF_PATH,
+    CMAPI_CONF_PATH, CMAPI_PORT, DEFAULT_MCS_CONF_PATH, REQUEST_TIMEOUT,
 )
 from cmapi_server.exceptions import CMAPIBasicError, exc_to_cmapi_error
+from cmapi_server.controllers.api_clients import NodeControllerClient
+from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
     broadcast_new_config,
     get_active_nodes,
@@ -296,7 +300,9 @@ class ClusterHandler:
         payload['cluster_mode'] = mode
 
         try:
-            r = get_traced_session().request('PUT', url, headers=headers, json=payload, verify=False)
+            r = get_traced_session().request(
+                'PUT', url, headers=headers, json=payload, verify=False
+            )
             r.raise_for_status()
             response['cluster-mode'] = mode
         except Exception as err:
@@ -416,5 +422,71 @@ class ClusterHandler:
         response['timestamp'] = str(datetime.now())
         logger.debug(
             'Successfully finished setting new log level to all nodes.'
+        )
+        return response
+
+    @staticmethod
+    def check_shared_storage():
+        """Check shared storage.
+
+        :return: status result
+        :rtype: dict
+        """
+        tmp_file_path: str
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        sm_parser = configparser.ConfigParser()
+        sm_config_str = NodeConfig().get_current_sm_config()
+        sm_parser.read_string(sm_config_str)
+        storage_type = sm_parser.get(
+            'ObjectStorage', 'service', fallback='LocalStorage'
+        )
+        file_dir = '/var/lib/columnstore/data1'
+        if storage_type.lower == 's3':
+            file_dir = '/var/lib/columnstore/storagemanager/metadata/data1'
+
+        with tempfile.NamedTemporaryFile(
+            mode='wb+', delete=True, dir=file_dir, prefix='mcs_test_shared_'
+        ) as temp_file:
+            file_data = rb'File to check shared storage working.'
+            temp_file.write(file_data)
+            tmp_file_md5 = hashlib.md5(file_data)
+            tmp_file_path = temp_file.name
+            logging.debug(f'Temporary file created at: {temp_file.name}')
+            for node in active_nodes:
+                logging.debug(f'Checking shared file on {node!r}.')
+                client = NodeControllerClient(
+                    request_timeout=REQUEST_TIMEOUT,
+                    base_url=f'https://{node}:{CMAPI_PORT}'
+                )
+                node_response = client.check_shared_file(
+                    file_path=tmp_file_path, check_sum=tmp_file_md5
+                )
+                logging.debug(f'Finished checking file on {node!r}')
+                all_responses[node] = node_response
+
+        nodes_success_responses = (
+            v['success'] for _, v in all_responses.items()
+        )
+        if nodes_success_responses:
+            shared_storage = all(nodes_success_responses)
+        else:
+            # no nodes in cluster case
+            shared_storage = False
+        partially_failed = False
+        if len(active_nodes) > 2 and not shared_storage:
+            # case when some nodes got shared file, and some are not
+            partially_failed =  sum(nodes_success_responses) > 1
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'shared_storage': shared_storage,
+            'partially_failed': partially_failed,
+            'active_nodes_count': len(active_nodes),
+            **all_responses
+        }
+
+        logging.debug(
+            'Successfully finished checking shared storage on all nodes.'
         )
         return response

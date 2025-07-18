@@ -1,4 +1,5 @@
 import logging
+import hashlib
 import socket
 import subprocess
 import time
@@ -1120,6 +1121,26 @@ class ClusterController:
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_storage(self):
+        """Handler for /cluster/check-shared-storage/ (PUT) endpoint."""
+        func_name = 'check_shared_storage'
+        log_begin(module_logger, func_name)
+        try:
+            response = ClusterHandler.check_shared_storage()
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        except Exception:
+            raise_422_error(
+                module_logger, func_name,
+                'Undefined error happened while checking shared storage.'
+            )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
 
 class ApiKeyController:
     @cherrypy.tools.timeit()
@@ -1274,4 +1295,37 @@ class NodeProcessController():
             'running': process_running
         }
         module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+
+class NodeController:
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_file(self, file_path, check_sum):
+        func_name = 'check_shared_file'
+        log_begin(module_logger, func_name)
+        ACCEPTED_PATHS = (
+            '/var/lib/columnstore/data1/x',
+            '/var/lib/columnstore/storagemanager/metadata/data1/x'
+        )
+        if not file_path.startswith(ACCEPTED_PATHS):
+            raise_422_error('Not acceptable file_path.')
+
+        success = True
+        file_path_obj = Path(file_path)
+        if not file_path_obj.exists():
+            success = False
+        else:
+            with file_path_obj.open(mode='rb') as file_to_check:
+                data = file_to_check.read()
+                calculated_md5 = hashlib.md5(data).hexdigest()
+            if calculated_md5 != check_sum:
+                success = False
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'success': success
+        }
         return response

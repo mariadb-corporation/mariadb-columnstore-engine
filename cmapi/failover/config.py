@@ -3,6 +3,8 @@ import logging
 import threading
 from os.path import getmtime
 
+import lxml
+
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH
 from mcs_node_control.models.node_config import NodeConfig
 
@@ -15,6 +17,7 @@ class Config:
     _active_nodes = []
     _inactive_nodes = []
     _primary_node = ''
+    _shared_storage = False
     _my_name = None  # derived from config file
 
     config_lock = threading.Lock()
@@ -67,24 +70,14 @@ class Config:
         self.config_lock.release()
         return ret
 
-    def is_shared_storage(self, sm_config_file=DEFAULT_SM_CONF_PATH):
+    def is_shared_storage(self) -> bool:
         """Check if SM is S3 or not.
 
-        :param sm_config_file: path to SM config,
-            defaults to DEFAULT_SM_CONF_PATH
-        :type sm_config_file: str, optional
-        :return: True if SM is S3 otherwise False
+        :return: True if SM is S3 or shared FS otherwise False
         :rtype: bool
-
-        TODO: remove in next releases, useless?
         """
-        sm_config = configparser.ConfigParser()
-        sm_config.read(sm_config_file)
-        # only LocalStorage or S3 can be returned for now
-        storage = sm_config.get(
-            'ObjectStorage', 'service', fallback='LocalStorage'
-        )
-        return storage.lower() == 's3'
+        self.check_reload()
+        return self._shared_storage
 
     def check_reload(self):
         """Check config reload.
@@ -174,4 +167,11 @@ class Config:
         self._primary_node = primary_node
         self.last_mtime = last_mtime
         self._my_name = my_name
+
+        self._shared_storage = False
+        shared_storage_element = root.find('./SharedStorage')
+        if shared_storage_element is not None:
+            self._shared_storage = lxml.objectify.BoolElement(
+                shared_storage_element.text
+            )
         return True

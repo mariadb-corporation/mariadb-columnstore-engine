@@ -117,6 +117,10 @@ class NodeConfig:
         maintenance = etree.SubElement(root, 'Maintenance')
         maintenance.text = str(False).lower()
 
+        # Add SharedStorage tag and set to False
+        shared_storage = etree.SubElement(root, 'SharedStorage')
+        shared_storage.text = str(False).lower()
+
     def upgrade_config(self, tree=None, root=None, upgrade=True):
         """
         Add the parts that might be missing after an upgrade from an earlier
@@ -398,7 +402,7 @@ class NodeConfig:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
 
     def get_network_addresses_and_names(self):
         """Retrievs the list of the network addresses, hostnames, and aliases
@@ -412,7 +416,7 @@ class NodeConfig:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
                         try:
                             (host, aliases, _) = socket.gethostbyaddr(addr)
                         except:
