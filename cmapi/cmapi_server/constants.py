@@ -176,3 +176,7 @@ PKG_GET_VER_CMD = MultiDistroNamer(
     rhel="rpm -q --queryformat '%{{VERSION}}' {package_name}",
     deb="dpkg-query -f '${{Version}}' -W {package_name}"
 )
+
+class ClusterModeEnum(str, Enum):
+    READONLY = 'readonly'
+    READWRITE = 'readwrite'

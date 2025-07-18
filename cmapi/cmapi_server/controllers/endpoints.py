@@ -1,4 +1,5 @@
 import logging
+import hashlib
 import socket
 import subprocess
 import time
@@ -12,6 +13,7 @@ import requests
 from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
+from pydantic import ValidationError
 
 from cmapi_server.constants import (
     CMAPI_PACKAGE_NAME, CMAPI_PORT, DEFAULT_MCS_CONF_PATH,
@@ -22,6 +24,9 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server.controllers.error import APIError
 from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
+from cmapi_server.controllers.request_models import (
+    ConfigPutRequestRootModel, StatefulConfigPutRequestModel,
+)
 from cmapi_server.handlers.cej import CEJError, CEJPasswordHandler
 from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
@@ -30,7 +35,9 @@ from cmapi_server.helpers import (
     save_cmapi_conf_file, system_ready,
 )
 from cmapi_server.logging_management import change_loggers_level
-from cmapi_server.managers.application import AppManager
+from cmapi_server.managers.application import (
+    AppManager, AppStatefulConfig, StatefulConfigModel
+)
 from cmapi_server.managers.upgrade.packages import PackagesManager
 from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
@@ -341,41 +348,68 @@ class ConfigController:
                 'PUT /config called outside of an operation.'
             )
 
+        try:
+            wrapper = ConfigPutRequestRootModel.model_validate(cherrypy.request.json)
+            # the actual StatefulConfigPutRequestModel or FullConfigPutRequestModel or
+            # PutConfigSetModeRequestModel
+            req_model = wrapper.root
+        except ValidationError as exp:
+            raise_422_error(
+                module_logger, func_name, f'Mandatory attribute is missing: {exp.errors()}'
+            )
+
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
-        request_body = cherrypy.request.json
-        request_revision = request_body.get('revision', None)
-        request_manager = request_body.get('manager', None)
-        request_timeout = request_body.get('timeout', None)
 
         #TODO: remove is_test
         # is_test = True means this should not save
         # the config file or apply the changes
-        is_test = request_body.get('test', False)
+        is_test = req_model.test
+        if req_model.type == 'set_mode':
+            # TODO: move it to separate endpoint
+            request_timeout = req_model.timeout
+            request_cluster_mode = req_model.cluster_mode
+            current_mode = set_cluster_mode(request_cluster_mode)
+            if current_mode == request_cluster_mode:
+                # Normal exit
+                request_response = {'timestamp': str(datetime.now())}
+                module_logger.debug(
+                    f'{func_name} returns {str(request_response)}'
+                )
+                return request_response
+            else:
+                raise_422_error(
+                    module_logger, func_name,
+                    (
+                        f'Error occured setting cluster to "{request_cluster_mode}" '
+                        f'mode, got "{current_mode}"'
+                    )
+                )
 
-        mandatory = (request_revision, request_manager, request_timeout)
-        if None in mandatory:
-            raise_422_error(
-                module_logger, func_name, 'Mandatory attribute is missing.')
+        # if stateful config is provided, we just need to fast apply only stateful config
+        success = AppStatefulConfig.apply_update(req_model.stateful_config_dict)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term {req_model.stateful_config_dict.version.term} '
+                f'and seq {req_model.stateful_config_dict.version.seq}.'
+            )
 
-        request_mode = request_body.get('cluster_mode', None)
-        xml_config = request_body.get('config', None)
-        sm_config = request_body.get('sm_config', None)
-        mcs_config_filename = request_body.get(
-            'mcs_config_filename', DEFAULT_MCS_CONF_PATH
-        )
-        sm_config_filename = request_body.get(
-            'sm_config_filename', DEFAULT_SM_CONF_PATH
-        )
-        secrets = request_body.get('secrets', None)
+        if isinstance(req_model, StatefulConfigPutRequestModel):
+            return {'timestamp': str(datetime.now()), 'success': success}
 
+        request_mode = req_model.cluster_mode
+        xml_config = req_model.config
+        sm_config = req_model.sm_config
+        mcs_config_filename = req_model.mcs_config_filename
+        sm_config_filename = req_model.sm_config_filename
+        secrets = req_model.secrets
+        request_timeout = req_model.timeout
         operation_params = (request_mode, xml_config, secrets)
         # if no operation to apply, return 422
         if not any(operation_params):
-            raise_422_error(
-                module_logger, func_name,
-                'Mandatory attribute is missing.'
-            )
+            raise_422_error(module_logger, func_name, 'Mandatory operation attribute is missing.')
 
         request_headers = cherrypy.request.headers
         request_manager_address = request_headers.get('Remote-Addr', None)
@@ -406,25 +440,7 @@ class ConfigController:
         node_config = NodeConfig()
         if is_test:
             return request_response
-        if request_mode is not None:
-            current_mode = set_cluster_mode(
-                request_mode, config_filename=mcs_config_filename
-            )
-            if current_mode == request_mode:
-                # Normal exit
-                module_logger.debug(
-                    f'{func_name} returns {str(request_response)}'
-                )
-                return request_response
-            else:
-                raise_422_error(
-                    module_logger, func_name,
-                    (
-                        f'Error occured setting cluster to "{request_mode}" '
-                        f'mode, got "{current_mode}"'
-                    )
-                )
-        elif xml_config is not None:
+        if xml_config is not None:
             node_config.apply_config(
                 config_filename=mcs_config_filename,
                 xml_string=xml_config,
@@ -1429,6 +1445,30 @@ class ClusterController:
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_storage(self):
+        """Handler for /cluster/check-shared-storage/ (PUT) endpoint."""
+        func_name = 'check_shared_storage'
+        log_begin(module_logger, func_name)
+        # Optional skip list provided by caller (e.g., failover monitor)
+        request = cherrypy.request
+        request_body = request.json or {}
+        skip_nodes = request_body.get('skip_nodes', [])
+        try:
+            response = ClusterHandler.check_shared_storage(skip_nodes)
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        except Exception:
+            raise_422_error(
+                module_logger, func_name,
+                'Undefined error happened while checking shared storage.'
+            )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
 
 class ApiKeyController:
     @cherrypy.tools.timeit()
@@ -1676,7 +1716,6 @@ class NodeController:
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
-
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
@@ -1701,7 +1740,6 @@ class NodeController:
         response = {'timestamp': str(datetime.now())}
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
-
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()
@@ -1888,3 +1926,73 @@ class NodeController:
         response = {'timestamp': str(datetime.now())}
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_file(self, file_path, check_sum):
+        func_name = 'check_shared_file'
+        log_begin(module_logger, func_name)
+        ACCEPTED_PATHS = (
+            '/var/lib/columnstore/data1/',
+            '/var/lib/columnstore/storagemanager/metadata/data1/'
+        )
+        if not file_path.startswith(ACCEPTED_PATHS):
+            raise_422_error(module_logger, func_name, 'Not acceptable file_path.')
+
+        success = True
+        file_path_obj = Path(file_path)
+        logging.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
+        if not file_path_obj.exists():
+            success = False
+            logging.debug(f'Shared file {file_path} does not exist.')
+        else:
+            with file_path_obj.open(mode='rb') as file_to_check:
+                data = file_to_check.read()
+                calculated_md5 = hashlib.md5(data).hexdigest()
+            if calculated_md5 != check_sum:
+                logging.debug(
+                    f'Shared file at {file_path} md5 {calculated_md5} does not match given md5 {check_sum}.'
+                )
+                success = False
+        if success:
+            logging.debug(f'Shared file {file_path} md5 matches {check_sum}.')
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'success': success
+        }
+        logging.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def put_stateful_config(self):
+        """Handler for /node/stateful-config (PUT) endpoint.
+
+        #TODO: for next releases.
+        """
+
+        func_name = 'put_stateful_config'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        try:
+            request_stateful_config = StatefulConfigModel.model_validate(
+                request_body.get('stateful_config_dict')
+            )
+        except ValidationError as exp:
+            raise_422_error(module_logger, func_name,f'Invalid request body: {exp.errors()}')
+
+        success = AppStatefulConfig.apply_update(request_stateful_config)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term  {request_stateful_config.version.term} '
+                f'and seq {request_stateful_config.version.seq}.'
+            )
+
+        return {'timestamp': str(datetime.now()), 'success': success}

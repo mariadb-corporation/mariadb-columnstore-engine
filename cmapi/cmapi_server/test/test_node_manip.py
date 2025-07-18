@@ -7,6 +7,9 @@ from lxml import etree
 from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server import node_manipulation
+from cmapi_server.managers.application import (
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel
+)
 from cmapi_server.constants import MCS_DATA_PATH
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.node_manipulation import (
@@ -29,6 +32,8 @@ class NodeManipTester(BaseNodeManipTestCase):
     REMOTE_IP = '203.0.113.5'
 
     def test_add_remove_node(self):
+        # Toggle shared storage as requested and remember to restore it back.
+        original_shared_storage = self._set_shared_storage(True)
         self.tmp_files = (
             './test-output0.xml', './test-output1.xml', './test-output2.xml'
         )
@@ -85,6 +90,7 @@ class NodeManipTester(BaseNodeManipTestCase):
         # TODO: Fix node_manipulation add_node logic and _replace_localhost
         # node = root.find('./PMS2/IPAddr')
         # self.assertEqual(node, None)
+        _ = self._set_shared_storage(original_shared_storage)
 
     def test_add_remove_read_replica_node(self):
         """add_node(read_replica=True) should add a read replica node into the config,
@@ -166,6 +172,8 @@ class NodeManipTester(BaseNodeManipTestCase):
             mock_update_dbroots_of_read_replicas.assert_not_called()
 
     def test_add_dbroots_nodes_rebalance(self):
+        # Toggle shared storage as requested and remember to restore it back.
+        original_shared_storage = self._set_shared_storage(True)
         self.tmp_files = (
             './extra-dbroots-0.xml', './extra-dbroots-1.xml', './extra-dbroots-2.xml'
         )
@@ -203,6 +211,8 @@ class NodeManipTester(BaseNodeManipTestCase):
             .build()
         ):
             node_manipulation.remove_node(hostname, self.tmp_files[1], self.tmp_files[2], test_mode=True)
+
+        _ = self._set_shared_storage(original_shared_storage)
 
     def test_add_dbroot(self):
         self.tmp_files = (
@@ -323,6 +333,25 @@ class NodeManipTester(BaseNodeManipTestCase):
         with MockResolutionBuilder().add_mapping(bad_hostname, '10.0.0.5', bidirectional=False).build():
             with self.assertRaises(CMAPIBasicError):
                 node_manipulation.add_node(bad_hostname, tmp_mcs_config_filename, self.tmp_files[0])
+
+    def test_rebalance_noop_when_shared_storage_off(self):
+        # Ensure shared storage flag is False
+        current_cfg = AppStatefulConfig.get_config_copy()
+        if current_cfg.flags.shared_storage_on:
+            new_cfg = StatefulConfigModel(
+                version=current_cfg.version.next_seq(),
+                flags=StatefulFlagsModel(shared_storage_on=False)
+            )
+            AppStatefulConfig.apply_update(new_cfg)
+
+        nc = NodeConfig()
+        root = nc.get_current_config_root(tmp_mcs_config_filename)
+        smc_before = etree.tostring(root.find('./SystemModuleConfig'))
+
+        node_manipulation._rebalance_dbroots(root)
+
+        smc_after = etree.tostring(root.find('./SystemModuleConfig'))
+        self.assertEqual(smc_before, smc_after)
 
 
 class TestDBRootsManipulation(unittest.TestCase):

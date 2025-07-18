@@ -453,6 +453,36 @@ dispatcher.connect(
 )
 
 
+# /_version/node/check-shared-file/ (GET)
+dispatcher.connect(
+    name = 'node_check_shared_file',
+    route = f'/cmapi/{_version}/node/check-shared-file',
+    action = 'check_shared_file',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
+# /_version/cluster/check-shared-storage/ (PUT)
+dispatcher.connect(
+    name = 'cluster_check_shared_storage',
+    route = f'/cmapi/{_version}/cluster/check-shared-storage',
+    action = 'check_shared_storage',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/stateful-config/ (PUT)
+dispatcher.connect(
+    name = 'node_put_stateful_config',
+    route = f'/cmapi/{_version}/node/stateful-config',
+    action = 'put_stateful_config',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
 def jsonify_error(status, message, traceback, version): \
     # pylint: disable=unused-argument
     """JSONify all CherryPy error responses (created by raising the

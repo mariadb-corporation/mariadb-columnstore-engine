@@ -398,7 +398,7 @@ class NodeConfig:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
 
     def get_network_addresses_and_names(self):
         """Retrievs the list of the network addresses, hostnames, and aliases
@@ -412,7 +412,7 @@ class NodeConfig:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
                         try:
                             (host, aliases, _) = socket.gethostbyaddr(addr)
                         except:

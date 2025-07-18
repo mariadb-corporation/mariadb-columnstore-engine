@@ -1,8 +1,9 @@
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pyotp
 import requests
+
 
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY, _version
@@ -31,19 +32,16 @@ class BaseClient:
 
         :param base_url: The base URL for the API endpoints,
                          defaults to CURRENT_NODE_CMAPI_URL
-        :type base_url: str, optional
-        :param request_timeout: request timeout, defaults to None
-        :type request_timeout: Optional[float], optional
         """
         self.base_url = base_url
         self.request_timeout = request_timeout
-        self.cmd_url = None
+        self.cmd_class = None
 
     def _request(
         self, method: str, endpoint: str,
         data: Optional[Dict[str, Any]] = None,
         throw_real_exp: bool = False
-    ) -> Union[Dict[str, Any], Dict[str, str]]:
+    ) -> Union[Dict[str, Any], List[Any]]:
         """Make a request to the API.
 
         :param method: The HTTP method to use.
@@ -51,7 +49,8 @@ class BaseClient:
         :param data: The data to send with the request.
         :return: The response from the API.
         """
-        url = f'{self.cmd_url}/{endpoint}'
+
+        url = f'{self.base_url}/cmapi/{_version}/{self.cmd_class}/{endpoint}'
         cmapi_cfg_parser = get_config_parser(CMAPI_CONF_PATH)
         key = get_current_key(cmapi_cfg_parser)
         headers = {'x-api-key': key}
@@ -59,10 +58,10 @@ class BaseClient:
             headers['Content-Type'] = 'application/json'
             data = {'in_transaction': True, **(data or {})}
         try:
-            response = requests.request(
+            response = get_traced_session().request(
                 method, url, headers=headers,
                 params=data if method == 'GET' else None,
-                json=data if method in ('PUT', 'POST') else None,
+                json=data if method in ('PUT', 'POST', 'DELETE') else None,
                 timeout=self.request_timeout, verify=False
             )
             response.raise_for_status()
@@ -76,11 +75,12 @@ class BaseClient:
             if throw_real_exp:
                 raise exc
             raise CMAPIBasicError(message)
-        # TODO: different handler for timeout exception?
-        except requests.exceptions.HTTPError as exc:
+        except requests.HTTPError as exc:
             resp = exc.response
+            request_url = exc.request.url if exc.request else url
+            status_code = resp.status_code if resp is not None else 'N/A'
             error_msg = str(exc)
-            if resp.status_code == 422:
+            if status_code == 422:
                 # in this case we think cmapi server returned some value but
                 # had error during running endpoint handler code
                 try:
@@ -89,19 +89,26 @@ class BaseClient:
                 except requests.exceptions.JSONDecodeError:
                     error_msg = resp.text
             message = (
-                f'API client got an exception in request to {exc.request.url} '
-                f'with code {resp.status_code if resp is not None else "NA"} '
-                f'and error: {error_msg}'
+                f'API client got an HTTPError exception in request to {request_url} with code '
+                f'{status_code} and error: {error_msg}'
             )
             logging.error(message)
             if throw_real_exp:
                 raise exc
             raise CMAPIBasicError(message)
+        except requests.exceptions.Timeout:
+            message = f'Request to {url} timed out after {self.request_timeout}'
+            logging.error(message)
+            if throw_real_exp:
+                raise exc
+            raise CMAPIBasicError(message)
         except requests.exceptions.RequestException as exc:
-            status_code = exc.response.status_code if exc.response else 'NA'
+            resp = exc.response
+            request_url = exc.request.url if exc.request else url
+            status_code = resp.status_code if exc.response is not None else 'N/A'
             message = (
                 'API client got an undefined error in request to '
-                f'{exc.request.url} with code {status_code!r} and '
+                f'{request_url} with code {status_code!r} and '
                 f'error: {str(exc)}'
             )
             logging.error(message)
@@ -120,7 +127,7 @@ class ClusterControllerClient(BaseClient):
             self, base_url: str = CURRENT_NODE_CMAPI_URL,
             request_timeout: Optional[float] = None
     ):
-        """Initialize the ClusterControllerClient with the base URL.
+        """Initialize the BaseClient with the base URL.
 
         :param base_url: The base URL for the API endpoints,
                          defaults to CURRENT_NODE_CMAPI_URL
@@ -129,7 +136,7 @@ class ClusterControllerClient(BaseClient):
         :type request_timeout: Optional[float], optional
         """
         super().__init__(base_url, request_timeout)
-        self.cmd_url = f'{self.base_url}/cmapi/{_version}/cluster'
+        self.cmd_class = 'cluster'
 
     def start_cluster(
             self, extra: Dict[str, Any] = dict()
@@ -307,6 +314,15 @@ class ClusterControllerClient(BaseClient):
             'PUT', 'upgrade-cmapi', {'version': version, **extra}
         )
 
+    def check_shared_storage(
+            self, extra: Dict[str, Any] = dict()
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Check if shared storage working.
+
+        :return: The response from the API.
+        """
+        return self._request('PUT', 'check-shared-storage', extra)
+
 
 class NodeControllerClient(BaseClient):
     """Client for the NodeController API.
@@ -327,7 +343,7 @@ class NodeControllerClient(BaseClient):
         :type request_timeout: Optional[float], optional
         """
         super().__init__(base_url, request_timeout)
-        self.cmd_url = f'{self.base_url}/cmapi/{_version}/node'
+        self.cmd_class = 'node'
 
     def get_versions(
             self, extra: Dict[str, Any] = dict()
@@ -461,6 +477,24 @@ class NodeControllerClient(BaseClient):
         return self._request(
             'PUT', 'kick-cmapi-upgrade', {'version': version, **extra}
         )
+
+    def check_shared_file(
+        self, file_path: str, check_sum: str
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Get packages versions installed on a node.
+
+        :param file_path: file path to check
+        :type file_path: str
+        :param check_sum: expected MD5 file checksum
+        :type check_sum: str
+        :return: The response from the API.
+        """
+        data = {
+            'file_path': file_path,
+            'check_sum': check_sum,
+        }
+        return self._request('GET', 'check-shared-file', data)
+
 
 
 class AppControllerClient(BaseClient):
