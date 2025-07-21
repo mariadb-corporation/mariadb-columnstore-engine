@@ -150,6 +150,7 @@ columnstore_link(
     pron
     loggingcpp
     dataconvert
-    ${MARIADB_STRING_LIBS}
-    ${NETSNMP_LIBRARIES}
+    mariadb_charset
 )
+
+columnstore_link(funcexp PRIVATE ${MARIADB_STRING_LIBS})

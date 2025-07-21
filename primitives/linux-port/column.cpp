@@ -40,7 +40,6 @@ using namespace boost;
 #include "simd_sse.h"
 #include "simd_arm.h"
 #include "utils/common/columnwidth.h"
-#include "utils/common/bit_cast.h"
 
 #include "exceptclasses.h"
 

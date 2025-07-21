@@ -49,7 +49,7 @@
 #undef max
 
 #include "mcs_datatype.h"
-#include "collation.h"  // CHARSET_INFO, class Charset
+#include "mariadb_charset/collation.h"  // CHARSET_INFO, class Charset
 #include "nullstring.h"
 
 class ExecPlanTest;
@@ -75,7 +75,8 @@ const int32_t IDB_VTABLE_ID = CNX_VTABLE_ID;
 /**
  * A struct to hold a list of table partitions.
  */
-struct Partitions {
+struct Partitions
+{
   std::vector<std::string> fPartNames;
   void serialize(messageqcpp::ByteStream& b) const
   {
@@ -96,12 +97,11 @@ struct Partitions {
       b >> t;
       fPartNames.push_back(t);
     }
-
   }
 };
-bool operator <(const Partitions& a, const Partitions& b);
-bool operator ==(const Partitions& a, const Partitions& b);
-bool operator !=(const Partitions& a, const Partitions& b); // for GCC9
+bool operator<(const Partitions& a, const Partitions& b);
+bool operator==(const Partitions& a, const Partitions& b);
+bool operator!=(const Partitions& a, const Partitions& b);  // for GCC9
 
 /** The CalpontSystemCatalog class
  *
@@ -259,9 +259,9 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    public:
     ColType() = default;
     ColType(const ColType& rhs);
-    ColType(int32_t colWidth_, int32_t scale_, int32_t precision_,
-            const ConstraintType& constraintType_, const DictOID& ddn_, int32_t colPosition_,
-            int32_t compressionType_, OID columnOID_, const ColDataType& colDataType_);
+    ColType(int32_t colWidth_, int32_t scale_, int32_t precision_, const ConstraintType& constraintType_,
+            const DictOID& ddn_, int32_t colPosition_, int32_t compressionType_, OID columnOID_,
+            const ColDataType& colDataType_);
     ColType& operator=(const ColType& rhs);
 
     CHARSET_INFO* getCharset() const;
@@ -1301,8 +1301,8 @@ const int OID_SYSCOLUMN_MINVALUE = SYSCOLUMN_BASE + 19;        /** @brief min va
 const int OID_SYSCOLUMN_MAXVALUE = SYSCOLUMN_BASE + 20;        /** @brief max value col */
 const int OID_SYSCOLUMN_COMPRESSIONTYPE = SYSCOLUMN_BASE + 21; /** @brief compression type */
 const int OID_SYSCOLUMN_NEXTVALUE = SYSCOLUMN_BASE + 22;       /** @brief next value */
-const int OID_SYSCOLUMN_CHARSETNUM = SYSCOLUMN_BASE + 23;      /** @brief character set number for the column */
-const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 24;                 // be sure this is one more than the highest #
+const int OID_SYSCOLUMN_CHARSETNUM = SYSCOLUMN_BASE + 23; /** @brief character set number for the column */
+const int SYSCOLUMN_MAX = SYSCOLUMN_BASE + 24;            // be sure this is one more than the highest #
 
 /*****************************************************
  * SYSTABLE columns dictionary OID definition

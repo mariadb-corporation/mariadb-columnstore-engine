@@ -21,11 +21,12 @@ set(regr_LIB_SRCS
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 columnstore_library(regr ${regr_LIB_SRCS})
-columnstore_link(regr PRIVATE loggingcpp)
+columnstore_link(regr PRIVATE loggingcpp messageqcpp)
 
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
+# Do anyone use it?
 columnstore_mysql_plugin_library(regr_mysql SHARED ${regr_mysql_LIB_SRCS})
-add_dependencies(regr_mysql external_boost)
+add_dependencies(regr_mysql external_boost GenError) # for "idb_mysql.h" that uses generated mysqld_error.h
 
 set_target_properties(regr_mysql PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../../../)

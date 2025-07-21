@@ -11,9 +11,11 @@ set(udfsdk_LIB_SRCS
 )
 
 columnstore_library(udfsdk ${udfsdk_LIB_SRCS})
-columnstore_link(udfsdk PRIVATE loggingcpp)
+columnstore_link(udfsdk PRIVATE loggingcpp messageqcpp)
 
 # Do anyone use it?
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 set(udf_mysql_LIB_SRCS udfmysql.cpp)
 columnstore_mysql_plugin_library(udf_mysql SHARED ${udf_mysql_LIB_SRCS})
+
+add_dependencies(udf_mysql GenError) # for "idb_mysql.h" that uses generated mysqld_error.h

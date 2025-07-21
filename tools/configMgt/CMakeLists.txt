@@ -5,4 +5,4 @@ include_directories(${ENGINE_COMMON_INCLUDES})
 set(autoConfigure_SRCS autoConfigure.cpp)
 
 add_executable(autoConfigure ${autoConfigure_SRCS})
-columnstore_link(autoConfigure ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_EXEC_LIBS})
+columnstore_link(autoConfigure ${ENGINE_LDFLAGS} ${ENGINE_EXEC_LIBS})

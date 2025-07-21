@@ -7,7 +7,7 @@
 #include <my_sys.h>
 #include <json_lib.h>
 
-#include "collation.h"
+#include "mariadb_charset/collation.h"
 #include "functor_bool.h"
 #include "functor_int.h"
 #include "functor_str.h"

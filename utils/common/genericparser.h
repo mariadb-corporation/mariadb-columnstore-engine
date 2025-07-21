@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "conststring.h"
+#include "basic/conststring.h"
 
 namespace genericparser
 {

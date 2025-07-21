@@ -37,7 +37,4 @@ set(writeengine_LIB_SRCS
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
 columnstore_library(writeengine ${writeengine_LIB_SRCS})
-
-add_dependencies(writeengine loggingcpp)
-
-columnstore_link(writeengine ${NETSNMP_LIBRARIES})
+columnstore_link(writeengine loggingcpp oamcpp boost_thread compress messageqcpp)

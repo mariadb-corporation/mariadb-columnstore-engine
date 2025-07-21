@@ -7,9 +7,6 @@ set(writeengineredistribute_LIB_SRCS we_redistribute.cpp we_redistributecontrol.
 )
 
 columnstore_library(writeengineredistribute ${writeengineredistribute_LIB_SRCS})
-
-add_dependencies(writeengineredistribute loggingcpp)
-
-columnstore_link(writeengineredistribute ${NETSNMP_LIBRARIES})
+columnstore_link(writeengineredistribute loggingcpp oamcpp boost_thread messageqcpp)
 
 target_compile_definitions(writeengineredistribute PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)

@@ -6,4 +6,4 @@ set(cleartablelock_SRCS cleartablelock.cpp cleartablelockthread.cpp)
 
 columnstore_executable(cleartablelock ${cleartablelock_SRCS})
 
-columnstore_link(cleartablelock ${ENGINE_LDFLAGS} ${NETSNMP_LIBRARIES} ${ENGINE_WRITE_LIBS})
+columnstore_link(cleartablelock ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS})

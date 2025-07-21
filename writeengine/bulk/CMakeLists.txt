@@ -29,7 +29,7 @@ set(we_bulk_STAT_SRCS
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
 columnstore_static_library(we_bulk ${we_bulk_STAT_SRCS})
-columnstore_link(we_bulk ${NETSNMP_LIBRARIES} loggingcpp boost_program_options)
+columnstore_link(we_bulk loggingcpp boost_program_options)
 
 remove_definitions(-D_FILE_OFFSET_BITS=64)
 
@@ -38,13 +38,13 @@ remove_definitions(-D_FILE_OFFSET_BITS=64)
 set(cpimport.bin_SRCS cpimport.cpp)
 
 columnstore_executable(cpimport.bin ${cpimport.bin_SRCS})
-add_dependencies(cpimport.bin marias3)
+
 columnstore_link(
     cpimport.bin
     ${ENGINE_LDFLAGS}
-    ${NETSNMP_LIBRARIES}
     ${ENGINE_WRITE_LIBS}
     ${S3API_DEPS}
     we_bulk
     we_xml
+    marias3
 )

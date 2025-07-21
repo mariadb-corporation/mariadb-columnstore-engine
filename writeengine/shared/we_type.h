@@ -40,7 +40,7 @@
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 #include "nullstring.h"
-#include "collation.h" // For CHARSET_INFO struct
+#include "mariadb_charset/collation.h"  // For CHARSET_INFO struct
 
 #undef EXPORT
 #undef DELETE
@@ -408,8 +408,8 @@ struct JobColumn /** @brief Job Column Structure */
   int compressionType;             /** @brief compression type */
   bool autoIncFlag;                /** @brief auto increment flag */
   DctnryStruct dctnry;             /** @brief dictionary structure */
-  int128_t fMinIntSat;              /** @brief For integer type, the min saturation value */
-  uint128_t fMaxIntSat;             /** @brief For integer type, the max saturation value */
+  int128_t fMinIntSat;             /** @brief For integer type, the min saturation value */
+  uint128_t fMaxIntSat;            /** @brief For integer type, the max saturation value */
   double fMinDblSat;               /** @brief for float/double, the min saturation value */
   double fMaxDblSat;               /** @brief for float/double, the max saturation value */
   bool fWithDefault;               /** @brief With default */
@@ -447,10 +447,9 @@ struct JobColumn /** @brief Job Column Structure */
    , cs(nullptr)
   {
   }
-  JobColumn(const std::string& colName_, OID mapOid_, const std::string& typeName_,
-            int width_, int definedWidth_, int compressionType_, int dctnryCompressionType_,
-            int64_t minIntSat_, uint64_t maxIntSat_, bool withDefault_,
-            unsigned long long defaultUInt_)
+  JobColumn(const std::string& colName_, OID mapOid_, const std::string& typeName_, int width_,
+            int definedWidth_, int compressionType_, int dctnryCompressionType_, int64_t minIntSat_,
+            uint64_t maxIntSat_, bool withDefault_, unsigned long long defaultUInt_)
    : colName(colName_)
    , mapOid(mapOid_)
    , dataType(execplan::CalpontSystemCatalog::INT)

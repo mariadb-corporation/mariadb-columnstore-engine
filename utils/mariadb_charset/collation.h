@@ -35,7 +35,7 @@
 #include "mcsconfig.h"
 
 #include "exceptclasses.h"
-#include "conststring.h"
+#include "basic/conststring.h"
 
 /*
   Redefine definitions used by MariaDB m_ctype.h.
