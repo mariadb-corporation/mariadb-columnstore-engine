@@ -118,6 +118,7 @@ typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 using ColumnName = std::string;
 using ColumnStatisticsMap = std::unordered_map<ColumnName, Histogram_json_hb>;
 using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+using TableAliasMap = std::unordered_map<SchemaAndTableName, std::string, SchemaAndTableNameHash>;
 
 // This structure is used to store MDB AST -> CSEP translation context.
 // There is a column statistics for some columns in a query.
