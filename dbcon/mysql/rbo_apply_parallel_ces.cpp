@@ -18,17 +18,16 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 
 #include "rulebased_optimizer.h"
 
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
-#include "existsfilter.h"
 #include "logicoperator.h"
 #include "operator.h"
 #include "predicateoperator.h"
+#include "rbo_apply_parallel_ces.h"
 #include "simplefilter.h"
 
 namespace optimizer
@@ -75,7 +74,6 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
 execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, execplan::SimpleColumn& column,
                                                       std::pair<uint64_t, uint64_t>& bound)
 {
-
   auto tableKeyColumnLeftOp = new execplan::SimpleColumn(column);
   tableKeyColumnLeftOp->resultType(column.resultType());
 
@@ -117,15 +115,18 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, exe
 
 // Looking for a projected column that comes first in an available index and has EI statistics
 // INV nullptr signifies that no suitable column was found
-execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
+execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep,
+                                              optimizer::RBOptimizerContext& ctx)
 {
   for (auto& rc : csep.returnedCols())
   {
+    // TODO extract SC from RC
     auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
     if (simpleColumn)
     {
-      cal_impl_if::SchemaAndTableName schemaAndTableNam = {simpleColumn->schemaName(), simpleColumn->tableName()};
-      auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableNam);
+      cal_impl_if::SchemaAndTableName schemaAndTableName = {simpleColumn->schemaName(),
+                                                            simpleColumn->tableName()};
+      auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
       if (!columnStatistics)
       {
         continue;
@@ -190,7 +191,8 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   // Add last range
   // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
-  auto lastBucket = columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
+  auto lastBucket =
+      columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
   uint64_t currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
   uint64_t currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
   bounds.push_back({currentLowerBound, currentUpperBound});
@@ -210,19 +212,23 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
   auto tables = csep.tableList();
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  cal_impl_if::TableAliasMap tableAliasMap;
+  TableAliasMap tableAliasMap;
 
-  // ATM Must be only 1 table
   for (auto& table : tables)
   {
-    if (!table.isColumnstore())
+    cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
+    std::cout << "Processing table schema " << schemaAndTableName.schema << " table "
+              << schemaAndTableName.table << " alias " << table.alias << std::endl;
+    auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
+    // TODO add column statistics check to the corresponding match
+    if (!table.isColumnstore() && columnStatistics)
     {
       auto derivedSCEP = csep.cloneWORecursiveSelects();
       // need to add a level here
       std::string tableAlias = RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
                                std::to_string(ctx.uniqueId);
       // TODO add original alias to support multiple same name tables
-      tableAliasMap.insert({{table.schema, table.table}, tableAlias});
+      tableAliasMap.insert({table, tableAlias});
       derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
       derivedSCEP->derivedTbAlias(tableAlias);
@@ -231,8 +237,6 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       auto additionalUnionVec = makeUnionFromTable(csep, ctx);
       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
                                      additionalUnionVec.end());
-
-
 
       newDerivedTableList.push_back(derivedSCEP);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
@@ -244,22 +248,39 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
   }
 
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
-  size_t colPosition = 0;
-  // change parent to derived table columns using ScheamAndTableName -> tableAlias map
+  [[maybe_unused]] size_t colPosition = 0;
+  // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
   for (auto& rc : csep.returnedCols())
   {
     // TODO support expressions
+    // Find SC for the RC
     auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
     // TODO timezone and result type are not copied
     // TODO add specific ctor for this functionality
-    auto newTableAlias = tableAliasMap.find({rc->schemaName(), rc->tableName()});
-    rcCloned->tableName("");
-    rcCloned->schemaName("");
-    rcCloned->tableAlias(tableAlias);
-    rcCloned->colPosition(colPosition++);
-    rcCloned->resultType(rc->resultType());
+    // If there is an alias in the map then it is a new derived table
+    auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+    std::vector<execplan::SimpleColumn*> scs;
+    // execplan::ParseTree pt(rc.get());
+    // pt.walk(execplan::getSimpleCols, &scs);
 
-    newReturnedColumns.push_back(rcCloned);
+    // auto sc = scs[0];
+    std::cout << "Processing RC schema " << sc->schemaName() << " table " << sc->tableName() << " alias "
+              << sc->tableAlias() << std::endl;
+    auto newTableAlias = tableAliasMap.find(
+        {sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
+    if (newTableAlias == tableAliasMap.end())
+    {
+      std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
+      continue;
+    }
+    sc->tableName("");
+    sc->schemaName("");
+    sc->tableAlias(newTableAlias->second);
+    sc->isColumnStore(true);
+    sc->colPosition(colPosition++);
+    // rcCloned->colPosition(colPosition++);
+    // rcCloned->resultType(rc->resultType());
+    // newReturnedColumns.push_back(rcCloned);
   }
   // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
   // But this is inappropriate for EXISTS filter and join conditions
@@ -267,7 +288,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
   csep.derivedTableList(newDerivedTableList);
   // Replace table list with new table list populated with union units
   csep.tableList(newTableList);
-  csep.returnedCols(newReturnedColumns);
+  // csep.returnedCols(newReturnedColumns);
 }
 
 }  // namespace optimizer

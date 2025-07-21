@@ -437,6 +437,10 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
      : schema(sch), table(tb), alias(al), view(v), fisColumnStore(true)
     {
     }
+    TableAliasName(const std::string& sch, const std::string& tb, const std::string& al, const std::string& v, const bool isColumnStore)
+     : schema(sch), table(tb), alias(al), view(v), fisColumnStore(isColumnStore)
+    {
+    }
     std::string schema;
     std::string table;
     std::string alias;
@@ -458,7 +462,7 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     {
       return !(*this == rhs);
     }
-    bool isColumnstore() const 
+    bool isColumnstore() const
     {
       return fisColumnStore;
     }
