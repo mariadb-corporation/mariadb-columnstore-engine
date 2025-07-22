@@ -95,13 +95,36 @@ enum ClauseType
   ORDER_BY
 };
 
+struct SchemaAndTableName {
+  std::string schema;
+  std::string table;
+  bool operator==(const SchemaAndTableName& other) const {
+    return schema == other.schema && table == other.table;
+  }
+};
+
+struct SchemaAndTableNameHash {
+  std::size_t operator()(const SchemaAndTableName& k) const {
+    return std::hash<std::string>()(k.schema + k.table);
+  }
+};
+
 typedef std::vector<JoinInfo> JoinInfoVec;
 typedef dmlpackage::ColValuesList ColValuesList;
 typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
+using ColumnName = std::string;
+using ColumnStatisticsMap = std::unordered_map<ColumnName, Histogram_json_hb>;
+using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
+// This structure is used to store MDB AST -> CSEP translation context.
+// There is a column statistics for some columns in a query.
+// As per 23.10.5 "some" means first column of the index in projection list of CSEP
+// satisfies the condition of applyParallelCSEP RBO rule.
+// Note that statistics must be merged from subquery/derived table
+// to the statistics of the outer query.
 struct gp_walk_info
 {
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList returnedCols;
@@ -110,6 +133,7 @@ struct gp_walk_info
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
   std::vector<Item*> extSelAggColsItems;
   execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
+  TableStatisticsMap tableStatisticsMap;
   // This vector temporarily hold the projection columns to be added
   // to the returnedCols vector for subquery processing. It will be appended
   // to the end of returnedCols when the processing is finished.
@@ -200,7 +224,8 @@ struct gp_walk_info
   SubQuery** subQueriesChain;
 
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
-   : sessionid(0)
+   : tableStatisticsMap({})
+   , sessionid(0)
    , fatalParseError(false)
    , condPush(false)
    , dropCond(false)
@@ -230,6 +255,9 @@ struct gp_walk_info
   {
   }
   ~gp_walk_info();
+
+  void mergeTableStatistics(const TableStatisticsMap& tableStatisticsMap);
+  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName);
 };
 
 struct SubQueryChainHolder;

@@ -42,7 +42,15 @@ class Row;
 
 namespace execplan
 {
-// class Operator;
+
+using ParseTreeWalker = void (*)(ParseTree* n);
+using ParseTreeConstWalker = void (*)(const ParseTree* n);
+
+using ParseTreePrinter = void (*)(const ParseTree* n, std::ostream& output);
+
+using ParseTreeWalkerWithContext = void (*)(ParseTree* n, void* obj);
+using ParseTreeConstWalkerWithContext = void (*)(const ParseTree* n, void* obj);
+// class ParseTree;
 /**
  * @brief A template class template to represent an expression tree
  *
@@ -133,31 +141,31 @@ class ParseTree
    *
    * postfix walking of a const tree
    */
-  inline void walk(void (*fn)(ParseTree* n)) const;
+  inline void walk(ParseTreeWalker fn) const;
 
   /** walk the tree
    *
    * postfix walking of a non-const tree. This is for deleting the tree
    */
-  inline void walk(void (*fn)(const ParseTree* n)) const;
+  inline void walk(ParseTreeConstWalker fn) const;
 
   /** output the tree
    *
    * take ostream argument to walk and output the tree
    */
-  inline void walk(void (*fn)(const ParseTree* n, std::ostream& output), std::ostream& output) const;
+  inline void walk(ParseTreePrinter fn, std::ostream& output) const;
 
   /** output the tree
    *
    * take user argument to walk and output the tree
    */
-  inline void walk(void (*fn)(const ParseTree* n, void* obj), void* object) const;
+  inline void walk(ParseTreeConstWalkerWithContext fn, void* object) const;
 
   /** output the tree
    *
    * take user argument to walk and output the tree
    */
-  inline void walk(void (*fn)(ParseTree* n, void* obj), void* object) const;
+  inline void walk(ParseTreeWalkerWithContext fn, void* object) const;
 
   /** output the tree to string
    * for debug purpose
@@ -448,7 +456,7 @@ inline ParseTree::~ParseTree()
   }
 }
 
-inline void ParseTree::walk(void (*fn)(ParseTree* n)) const
+inline void ParseTree::walk(ParseTreeWalker fn) const
 {
   DFSStack stack;
   stack.emplace_back(const_cast<ParseTree*>(this));
@@ -477,7 +485,7 @@ inline void ParseTree::walk(void (*fn)(ParseTree* n)) const
   }
 }
 
-inline void ParseTree::walk(void (*fn)(const ParseTree* n)) const
+inline void ParseTree::walk(ParseTreeConstWalker fn) const
 {
   DFSStack stack;
   stack.emplace_back(const_cast<ParseTree*>(this));
@@ -506,7 +514,7 @@ inline void ParseTree::walk(void (*fn)(const ParseTree* n)) const
   }
 }
 
-inline void ParseTree::walk(void (*fn)(const ParseTree* n, std::ostream& output), std::ostream& output) const
+inline void ParseTree::walk(ParseTreePrinter fn, std::ostream& output) const
 {
   DFSStack stack;
   stack.emplace_back(const_cast<ParseTree*>(this));
@@ -535,7 +543,7 @@ inline void ParseTree::walk(void (*fn)(const ParseTree* n, std::ostream& output)
   }
 }
 
-inline void ParseTree::walk(void (*fn)(const ParseTree* n, void* obj), void* obj) const
+inline void ParseTree::walk(ParseTreeConstWalkerWithContext fn, void* obj) const
 {
   DFSStack stack;
   stack.emplace_back(const_cast<ParseTree*>(this));
@@ -571,7 +579,7 @@ inline std::string ParseTree::toString() const
   return oss.str();
 }
 
-inline void ParseTree::walk(void (*fn)(ParseTree* n, void* obj), void* obj) const
+inline void ParseTree::walk(ParseTreeWalkerWithContext fn, void* obj) const
 {
   DFSStack stack;
   stack.emplace_back(const_cast<ParseTree*>(this));

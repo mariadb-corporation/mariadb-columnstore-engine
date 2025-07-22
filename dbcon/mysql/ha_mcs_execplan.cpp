@@ -49,6 +49,7 @@ using namespace logging;
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include "idb_mysql.h"
+
 #include "partition_element.h"
 #include "partition_info.h"
 
@@ -6287,6 +6288,39 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
   return 0;
 }
 
+// Loop over available indexes to find and extract corresponding EI column statistics
+// for the first column of the index if any.
+// Statistics is stored in GWI context.
+// Mock for ES 10.6
+#if MYSQL_VERSION_ID >= 110401
+void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
+{
+  for (uint j = 0; j < ifp->field->table->s->keys; j++)
+  {
+    for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
+    {
+      if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
+      {
+        if (i == 0 && ifp->field->read_stats)
+        {
+          assert(ifp->field->table->s);
+          auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
+          if (histogram)
+          {
+            SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
+            gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
+          }
+        }
+      }
+    }
+  }
+}
+#else
+void extractColumnStatistics(Item_field* /*ifp*/, gp_walk_info& /*gwi*/)
+{
+}
+#endif
+
 /*@brief  Process SELECT part of a query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -6376,21 +6410,20 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        SimpleColumn* sc = NULL;
-
+        extractColumnStatistics(ifp, gwi);
+        // Handle * case
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
           collectAllCols(gwi, ifp);
           break;
         }
-        sc = buildSimpleColumn(ifp, gwi);
+        SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)
         {
-          string fullname;
           String str;
           ifp->print(&str, QT_ORDINARY);
-          fullname = str.c_ptr();
+          string fullname(str.c_ptr());
 
           if (!ifp->is_explicit_name())  // no alias
           {
@@ -7413,7 +7446,6 @@ int cs_get_derived_plan(ha_columnstore_derived_handler* handler, THD* /*thd*/, S
   return 0;
 }
 
-
 int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& csep, gp_walk_info& gwi,
                        bool isSelectLexUnit)
 {
@@ -7442,13 +7474,14 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << *csep << endl;
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
-  
+
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
 
   if (get_unstable_optimizer(thd))
   {
-    bool csepWasOptimized = optimizer::optimizeCSEP(*csep);
+    optimizer::RBOptimizerContext ctx(gwi);
+    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx);
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;

@@ -23,7 +23,7 @@ link_directories("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
 set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi;${_extra};toolset=${_toolset}
-            --without-python;--prefix=${INSTALL_LOCATION}
+            --without-mpi;--without-charconv;--without-python;--prefix=${INSTALL_LOCATION}
 )
 
 set(byproducts)
@@ -48,8 +48,8 @@ ExternalProject_Add(
     BUILD_COMMAND ./b2 -q ${_b2args}
     BUILD_IN_SOURCE TRUE
     INSTALL_COMMAND ./b2 -q install ${_b2args}
-    LOG_BUILD TRUE
-    LOG_INSTALL TRUE
+    #LOG_BUILD TRUE
+    #LOG_INSTALL TRUE
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
 )
