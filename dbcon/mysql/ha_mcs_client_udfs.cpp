@@ -1169,4 +1169,65 @@ extern "C"
   {
   }
 
+  my_bool analyze_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  {
+    if (args->arg_count != 3 || 
+        args->arg_type[0] != STRING_RESULT || 
+        args->arg_type[1] != STRING_RESULT || 
+        args->arg_type[2] != STRING_RESULT)
+    {
+      sprintf(message, "%s() requires three string arguments", funcname);
+      return 1;
+    }
+
+    initid->maybe_null = 0;
+    initid->max_length = 3;
+
+    return 0;
+  }
+
+  my_bool mcs_analyze_partition_bloat_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return analyze_partition_bloat_init(initid, args, message, "MCSANALYZEPARTITIONBLOAT");
+  }
+
+  const char* mcs_analyze_partition_bloat(UDF_INIT* /*initid*/, UDF_ARGS* args, char* result, 
+                                         unsigned long* length, char* /*is_null*/, char* /*error*/)
+  {
+    THD* thd = current_thd;
+
+    if (get_fe_conn_info_ptr() == NULL)
+    {
+      set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
+    }
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    execplan::CalpontSystemCatalog::TableName tableName;
+
+    tableName.schema = args->args[0];
+    tableName.table = args->args[1];
+    std::string partition = args->args[2];
+
+    if (lower_case_table_names) {
+        boost::algorithm::to_lower(tableName.schema);
+        boost::algorithm::to_lower(tableName.table);
+    }
+
+    if (!ci->dmlProc)
+    {
+      ci->dmlProc = new MessageQueueClient("DMLProc");
+    }
+
+    std::string analysisResult = ha_mcs_impl_analyze_partition_bloat(*ci, tableName, partition);
+
+    memcpy(result, analysisResult.c_str(), analysisResult.length());
+    *length = analysisResult.length();
+    return result;
+  }
+
+  void mcs_analyze_partition_bloat_deinit(UDF_INIT* /*initid*/)
+  {
+  }
+
 }  // extern "C"

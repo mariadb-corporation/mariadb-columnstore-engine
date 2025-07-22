@@ -913,19 +913,20 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
   // e.g. in client UDFs like calshowpartitions().
   explicit CalpontSystemCatalog();
 
+  /** get system data for Front End */
+  void getSysData_FE(const execplan::CalpontSelectExecutionPlan&, NJLSysDataList&,
+                     const TableName& tableName);
+
+  /** get system data */
+  void getSysData(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const TableName& tableName);
  private:
   /** Constuctors */
   explicit CalpontSystemCatalog(const CalpontSystemCatalog& rhs);
 
   CalpontSystemCatalog& operator=(const CalpontSystemCatalog& rhs);
 
-  /** get system data */
-  void getSysData(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
-  /** get system data for Front End */
-  void getSysData_FE(const execplan::CalpontSelectExecutionPlan&, NJLSysDataList&,
-                     const std::string& sysTableName);
   /** get system data for Engine Controller */
-  void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+  void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const TableName& tableName);
 
   void buildSysColinfomap();
   void buildSysOIDmap();
