@@ -1001,3 +1001,79 @@ int ha_mcs_impl_close_connection_(handlerton* /*hton*/, THD* thd, cal_connection
   // transaction. Under either situation, system catalog cache for this session should be removed
   return rc;
 }
+
+std::string ha_mcs_impl_analyze_partition_bloat(cal_impl_if::cal_connection_info& ci,
+                                               execplan::CalpontSystemCatalog::TableName& tablename,
+                                               const std::string& partition)
+{
+  THD* thd = current_thd;
+  ulong sessionID = tid2sid(thd->thread_id);
+  CalpontDMLPackage* pDMLPackage;
+  std::string dmlStatement("ANALYZEPARTITIONBLOAT");
+  VendorDMLStatement cmdStmt(dmlStatement, DML_COMMAND, sessionID);
+  pDMLPackage = CalpontDMLFactory::makeCalpontDMLPackageFromMysqlBuffer(cmdStmt);
+  
+  if (lower_case_table_names)
+  {
+    boost::algorithm::to_lower(tablename.schema);
+    boost::algorithm::to_lower(tablename.table);
+  }
+  pDMLPackage->set_SchemaName(tablename.schema);
+  pDMLPackage->set_TableName(tablename.table);
+  
+  pDMLPackage->set_SQLStatement(partition);
+
+  ByteStream bytestream;
+  bytestream << static_cast<uint32_t>(sessionID);
+  pDMLPackage->write(bytestream);
+  delete pDMLPackage;
+
+  ByteStream::byte b = 0;
+  ByteStream::octbyte rows;
+  std::string errorMsg;
+  std::string analysisResult;
+
+  try
+  {
+    ci.dmlProc->write(bytestream);
+    bytestream = ci.dmlProc->read();
+
+    if (bytestream.length() == 0)
+    {
+      thd->get_stmt_da()->set_overwrite_status(true);
+      thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [9]");
+    }
+    else
+    {
+      bytestream >> b;
+      bytestream >> rows;
+      bytestream >> errorMsg;
+
+      // Skip tableLockInfo, queryStats, extendedStats, miniStats (not used for this command)
+      std::string tmp;
+      bytestream >> tmp;
+      bytestream >> tmp;
+      bytestream >> tmp;
+      bytestream >> tmp;
+      
+      // Read the bloatAnalysis result
+      bytestream >> analysisResult;
+    }
+  }
+  catch (runtime_error&)
+  {
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Lost connection to DMLProc [10]");
+  }
+  catch (...)
+  {
+    thd->get_stmt_da()->set_overwrite_status(true);
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Caught unknown error");
+  }
+
+  if (b != 0)
+    analysisResult = errorMsg;
+
+  return analysisResult;
+}
+

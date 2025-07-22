@@ -449,7 +449,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupTableOID(const TableName& 
 
   try
   {
-    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
   }
   catch (IDBExcept&)
   {
@@ -662,7 +662,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
   TableColName tcn;
   ColType ct;
   OID coloid = -1;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -751,7 +751,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
 }
 
 void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
-                                      const string& sysTableName)
+                                      const TableName& tableName)
 {
   // start up new transaction
 
@@ -777,12 +777,19 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
   // in joblist that a high-bit-set session id is always a syscat query. This will be okay for a long time,
   // but not forever...
 
-  csep.sessionID(fSessionID | 0x80000000);
+  if (tableName.schema == CALPONT_SCHEMA)
+  {
+    csep.sessionID(fSessionID | 0x80000000);
+  }
+  else
+  {
+    csep.sessionID(fSessionID);
+  }
   int tryCnt = 0;
 
   // add the tableList to csep for tuple joblist to use
   CalpontSelectExecutionPlan::TableList tablelist;
-  tablelist.push_back(make_aliastable("calpontsys", sysTableName, ""));
+  tablelist.push_back(make_aliastable(tableName.schema, tableName.table, ""));
   csep.tableList(tablelist);
 
   // populate the returned column list as column map
@@ -798,7 +805,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
   {
     try
     {
-      getSysData_EC(csep, sysDataList, sysTableName);
+      getSysData_EC(csep, sysDataList, tableName);
     }
     catch (IDBExcept&)
     {
@@ -817,7 +824,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
       try
       {
-        getSysData_FE(csep, sysDataList, sysTableName);
+        getSysData_FE(csep, sysDataList, tableName);
         break;
       }
       catch (IDBExcept&)  // error already occurred. this is not a broken pipe
@@ -855,11 +862,19 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 }
 
 void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
-                                         const string& /*sysTableName*/)
+                                         const TableName& tableName)
 {
   DEBUG << "Enter getSysData_EC " << fSessionID << endl;
 
-  uint32_t tableOID = IDB_VTABLE_ID;
+  uint32_t tableOID;
+  if (tableName.schema == CALPONT_SCHEMA)
+  {
+    tableOID = IDB_VTABLE_ID;
+  }
+  else
+  {
+    tableOID = lookupTableOID(tableName);
+  }
   ByteStream bs;
   uint32_t status;
 
@@ -927,7 +942,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
 }
 
 void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
-                                         const string& sysTableName)
+                                         const TableName& tableName)
 {
   DEBUG << "Enter getSysData_FE " << fSessionID << endl;
 
@@ -943,11 +958,19 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
   csep.serialize(msg);
   fExeMgr->write(msg);
 
-  // Get the table oid for the system table being queried.
-  TableName tableName;
-  tableName.schema = CALPONT_SCHEMA;
-  tableName.table = sysTableName;
-  uint32_t tableOID = IDB_VTABLE_ID;
+  // Get the table oid for the table being queried.
+  // Use lookupTableOID for regular tables or fall back to IDB_VTABLE_ID for system catalog queries
+  uint32_t tableOID;
+  if (tableName.schema == CALPONT_SCHEMA)
+  {
+    // System catalog tables still use virtual table ID for compatibility with existing infrastructure
+    tableOID = IDB_VTABLE_ID;
+  }
+  else
+  {
+    // Regular user tables - look up the actual table OID
+    tableOID = lookupTableOID(tableName);
+  }
   uint16_t status = 0;
 
   // Send the request for the table.
@@ -1192,7 +1215,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   TableColName tcn;
   vector<ColumnResult*>::const_iterator it;
@@ -1360,7 +1383,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colTypeDct(const OID& 
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -1472,7 +1495,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -1573,7 +1596,7 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -1681,7 +1704,7 @@ uint64_t CalpontSystemCatalog::nextAutoIncrValue(TableName aTableName, int lower
 
   try
   {
-    getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
   }
   catch (runtime_error& e)
   {
@@ -1790,7 +1813,7 @@ int32_t CalpontSystemCatalog::autoColumOid(TableName aTableName, int lower_case_
 
   try
   {
-    getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
   }
   catch (runtime_error& e)
   {
@@ -1860,7 +1883,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::nextAutoIncrRid(const O
 
   try
   {
-    getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
   }
   catch (runtime_error& e)
   {
@@ -2831,7 +2854,7 @@ CalpontSystemCatalog::getTables(const std::string schema, int lower_case_table_n
   }
 
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSTABLE_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
   vector<string> tnl;
@@ -2911,7 +2934,7 @@ int CalpontSystemCatalog::getTableCount()
   OID oid1 = OID_SYSTABLE_OBJECTID;
 
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSTABLE_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -3180,7 +3203,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
   ColType ct;
@@ -3457,7 +3480,7 @@ const CalpontSystemCatalog::TableName CalpontSystemCatalog::tableName(const OID&
 
   try
   {
-    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
   }
   catch (runtime_error& e)
   {
@@ -3595,7 +3618,7 @@ const CalpontSystemCatalog::ROPair CalpontSystemCatalog::tableRID(const TableNam
 
   try
   {
-    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
   }
   catch (IDBExcept&)
   {
@@ -3738,7 +3761,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::tableAUXColumnOID(const TableNam
 
   try
   {
-    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
   }
   catch (IDBExcept&)
   {
@@ -3837,7 +3860,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::isAUXColumnOID(const OID& oid)
 
   try
   {
-    getSysData(csep, sysDataList, SYSTABLE_TABLE);
+    getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSTABLE_TABLE));
   }
   catch (IDBExcept&)
   {
@@ -5058,7 +5081,7 @@ const CalpontSystemCatalog::DictOIDList CalpontSystemCatalog::dictOIDs(const Tab
   csep.filterTokenList(filterTokenList);
 
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
 
@@ -5671,7 +5694,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
 
   csep.data(oss.str());
   NJLSysDataList sysDataList;
-  getSysData(csep, sysDataList, SYSCOLUMN_TABLE);
+  getSysData(csep, sysDataList, TableName(CALPONT_SCHEMA, SYSCOLUMN_TABLE));
 
   vector<ColumnResult*>::const_iterator it;
   ColType ct;
