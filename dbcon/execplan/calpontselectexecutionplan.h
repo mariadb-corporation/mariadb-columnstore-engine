@@ -168,6 +168,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   execplan::SCSEP cloneForTableWORecursiveSelectsGbObHaving(
       const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias, const bool withFilters = true);
 
+  SCSEP clone();
   /**
    * Access and mutator methods
    */
@@ -495,7 +496,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     return fDerivedTableList;
   }
-  void derivedTableList(SelectList& derivedTableList)
+  void derivedTableList(const SelectList& derivedTableList)
   {
     fDerivedTableList = derivedTableList;
   }
