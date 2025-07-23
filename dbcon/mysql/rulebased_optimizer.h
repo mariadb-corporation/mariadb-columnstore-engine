@@ -41,8 +41,8 @@ public:
 
 struct Rule
 {
-  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan&);
-  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan&, RBOptimizerContext&);
+  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
 
   Rule(std::string&& name, RuleMatcher matchRule, RuleApplier applyRule)
    : name(name), matchRule(matchRule), applyRule(applyRule) {};

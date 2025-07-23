@@ -38,13 +38,6 @@ void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, const s
 static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
 static const size_t MaxParallelFactor = 16;
 
-bool tableAliasEqual(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
-  const execplan::CalpontSystemCatalog::TableAliasName& rhs)
-{
-return (lhs.schema == rhs.schema && lhs.table == rhs.table && lhs.alias == rhs.alias &&
-lhs.fisColumnStore == rhs.fisColumnStore);
-}
-
 bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
                     execplan::CalpontSelectExecutionPlan& csep)
 {
@@ -66,14 +59,26 @@ bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep)
                      [](const auto& table) { return !table.isColumnstore(); });
 }
 
-bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
+bool someForeignTablesHasIndex(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
+{
+  return std::any_of(
+      csep.tableList().begin(), csep.tableList().end(),
+      [&ctx](const auto& table)
+      {
+        cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
+        return (!table.isColumnstore() &&
+                ctx.gwi.tableStatisticsMap.find(schemaAndTableName) != ctx.gwi.tableStatisticsMap.end());
+      });
+}
+
+bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
   // TODO filter out CSEPs with orderBy, groupBy, having
   // Filter out tables that were re-written.
   // return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
-  return someAreForeignTables(csep);
+  return someAreForeignTables(csep) && someForeignTablesHasIndex(csep, ctx);
 }
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
@@ -135,7 +140,7 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
     {
       execplan::CalpontSystemCatalog::TableAliasName rcTable(
           simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "", false);
-      if (!tableAliasEqual(targetTable, rcTable))
+      if (!targetTable.weakerEq(rcTable))
       {
         continue;
       }
@@ -217,7 +222,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   for (auto& bound : bounds)
   {
-    auto clonedCSEP = csep.cloneWORecursiveSelects();
+    auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
     // Add BETWEEN based on key column range
     clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP, *keyColumn, bound));
     unionVec.push_back(clonedCSEP);
@@ -238,10 +243,22 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     std::cout << "Processing table schema " << schemaAndTableName.schema << " table "
               << schemaAndTableName.table << " alias " << table.alias << std::endl;
     auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
+    std::cout << "Column statistics: " << columnStatistics.has_value() << std::endl;
     // TODO add column statistics check to the corresponding match
     if (!table.isColumnstore() && columnStatistics)
     {
-      auto derivedSCEP = csep.cloneWORecursiveSelects();
+      auto derivedSCEP = csep.cloneForTableWORecursiveSelects(table);
+      // Remove the filters as they were pushed down to union units
+      // This is inappropriate for EXISTS filter and join conditions
+      // WIP replace with filters applied to filters, so that only relevant filters are left
+      derivedSCEP->filters(nullptr);
+      auto* derivedCSEP = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedSCEP.get());
+      if (!derivedCSEP)
+      {
+        continue;
+      }
+      auto additionalUnionVec = makeUnionFromTable(*derivedCSEP, table, ctx);
+
       // need to add a level here
       std::string tableAlias = RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
                                std::to_string(ctx.uniqueId);
@@ -251,64 +268,94 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
       derivedSCEP->derivedTbAlias(tableAlias);
 
-      // Create a copy of the current leaf CSEP with additional filters to partition the key column
-      auto additionalUnionVec = makeUnionFromTable(csep, table, ctx);
       derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
                                      additionalUnionVec.end());
 
       newDerivedTableList.push_back(derivedSCEP);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
-      // Remove the filters as they were pushed down to union units
-      // This is inappropriate for EXISTS filter and join conditions
-      derivedSCEP->filters(nullptr);
+    }
+    else
+    {
+      newTableList.push_back(table);
     }
   }
 
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
   // [[maybe_unused]] size_t colPosition = 0;
   // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
-  for (auto& rc : csep.returnedCols())
+  if (!newDerivedTableList.empty())
   {
-    // TODO support expressions
-    // Find SC for the RC
-    auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
-    // TODO timezone and result type are not copied
-    // TODO add specific ctor for this functionality
-    // If there is an alias in the map then it is a new derived table
-    auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-    std::vector<execplan::SimpleColumn*> scs;
-    // execplan::ParseTree pt(rc.get());
-    // pt.walk(execplan::getSimpleCols, &scs);
-
-    // auto sc = scs[0];
-    std::cout << "Processing RC schema " << sc->schemaName() << " table " << sc->tableName() << " alias "
-              << sc->tableAlias() << std::endl;
-    auto newTableAliasAndColPositionCounter =
-        tableAliasMap.find({sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
-    if (newTableAliasAndColPositionCounter == tableAliasMap.end())
+    for (auto& rc : csep.returnedCols())
     {
-      std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
-      continue;
+      // TODO support expressions
+      // Find SC for the RC
+      auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
+      // TODO timezone and result type are not copied
+      // TODO add specific ctor for this functionality
+      // If there is an alias in the map then it is a new derived table
+      auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+      std::vector<execplan::SimpleColumn*> scs;
+      // execplan::ParseTree pt(rc.get());
+      // pt.walk(execplan::getSimpleCols, &scs);
+
+      std::cout << "Processing RC schema " << sc->schemaName() << " table " << sc->tableName() << " alias "
+                << sc->tableAlias() << std::endl;
+      for (auto& [tableAlias, aliasAndCounter] : tableAliasMap)
+      {
+        std::cout << "Processing table alias " << tableAlias << " new alias " << aliasAndCounter.first
+                  << " col position " << aliasAndCounter.second << std::endl;
+      }
+      auto newTableAliasAndColPositionCounter =
+          tableAliasMap.find({sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
+      if (newTableAliasAndColPositionCounter == tableAliasMap.end())
+      {
+        std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
+        continue;
+      }
+      sc->tableName("");
+      sc->schemaName("");
+      auto& [newTableAlias, colPosition] = newTableAliasAndColPositionCounter->second;
+      sc->tableAlias(newTableAlias);
+      // WIP Not needed according with CSEP output
+      // sc->isColumnStore(true);
+      sc->colPosition(colPosition++);
+      // rcCloned->colPosition(colPosition++);
+      // rcCloned->resultType(rc->resultType());
+      // newReturnedColumns.push_back(rcCloned);
     }
-    sc->tableName("");
-    sc->schemaName("");
-    auto& [newTableAlias, colPosition] = newTableAliasAndColPositionCounter->second;
-    sc->tableAlias(newTableAlias);
-    // WIP Not needed according with CSEP output
-    // sc->isColumnStore(true);
-    sc->colPosition(colPosition++);
-    // rcCloned->colPosition(colPosition++);
-    // rcCloned->resultType(rc->resultType());
-    // newReturnedColumns.push_back(rcCloned);
+    // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
+    // But this is inappropriate for EXISTS filter and join conditions
+    // There must be no derived at this point, so we can replace it with the new derived table list
+
+    auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
+    if (left)
+    {
+      auto* lhs = left->lhs()->clone();
+      if (lhs)
+      {
+        auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
+        if (lhsSC)
+        {
+          auto newTableAlias = tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
+          // WIP Leak loosing previous lhs
+          if (newTableAlias != tableAliasMap.end())
+          {
+            lhsSC->tableName("");
+            lhsSC->schemaName("");
+            lhsSC->tableAlias(newTableAlias->second.first);
+            lhsSC->colPosition(0);
+            left->lhs(lhs);
+          }
+        }
+      }
+    }
+
+    csep.derivedTableList(newDerivedTableList);
+    // Replace table list with new table list populated with union units
+    csep.tableList(newTableList);
+    // csep.returnedCols(newReturnedColumns);
   }
-  // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
-  // But this is inappropriate for EXISTS filter and join conditions
-  // There must be no derived at this point, so we can replace it with the new derived table list
-  csep.derivedTableList(newDerivedTableList);
-  // Replace table list with new table list populated with union units
-  csep.tableList(newTableList);
-  // csep.returnedCols(newReturnedColumns);
 }
 
 }  // namespace optimizer

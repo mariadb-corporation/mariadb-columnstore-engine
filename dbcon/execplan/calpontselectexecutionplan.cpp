@@ -202,7 +202,7 @@ std::string endlWithIndent(const size_t ident)
 }
 
 void CalpontSelectExecutionPlan::printSubCSEP(const size_t& ident, ostringstream& output,
-                                           CalpontSelectExecutionPlan*& plan) const
+                                              CalpontSelectExecutionPlan*& plan) const
 {
   if (plan)
   {
@@ -243,7 +243,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   for (unsigned int i = 0; i < retCols.size(); i++)
   {
-    output << endlWithIndent(ident+2) << *retCols[i]; // WIP replace with constant
+    output << endlWithIndent(ident + 2) << *retCols[i];  // WIP replace with constant
 
     if (retCols[i]->colSource() & SELECT_SUB)
     {
@@ -257,7 +257,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   // From Clause
   CalpontSelectExecutionPlan::TableList tables = tableList();
-  output << endlWithIndent(ident) <<">>From Tables";
+  output << endlWithIndent(ident) << ">>From Tables";
   seq = 0;
 
   for (unsigned int i = 0; i < tables.size(); i++)
@@ -265,7 +265,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     // derived table
     if (tables[i].schema.length() == 0 && tables[i].table.length() == 0)
     {
-      output << endlWithIndent(ident+2) << "derived table - " << tables[i].alias;
+      output << endlWithIndent(ident + 2) << "derived table - " << tables[i].alias;
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq++].get());
 
@@ -273,7 +273,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     }
     else
     {
-      output << endlWithIndent(ident+2) << tables[i];
+      output << endlWithIndent(ident + 2) << tables[i];
     }
   }
 
@@ -863,11 +863,12 @@ void CalpontSelectExecutionPlan::pron(std::string&& pron)
   fPron = pron;
 }
 
-// This routine doesn't copy derived table list, union vector, select subqueries, subquery list, and subselects.
+// This routine doesn't copy derived table list, union vector, select subqueries, subquery list, and
+// subselects.
 execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
 {
   execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
-  
+
   // Copy simple members
   newPlan->fLocalQuery = fLocalQuery;
   newPlan->fTableAlias = fTableAlias;
@@ -908,7 +909,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   newPlan->fTimeZone = fTimeZone;
   newPlan->fPron = fPron;
   newPlan->fWithRollup = fWithRollup;
-  
+
   // Deep copy of ReturnedColumnList
   ReturnedColumnList newReturnedCols;
   for (const auto& col : fReturnedCols)
@@ -917,15 +918,15 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newReturnedCols.push_back(SRCP(col->clone()));
   }
   newPlan->returnedCols(newReturnedCols);
-  
+
   // Deep copy of filters
   if (fFilters)
     newPlan->filters(new ParseTree(*fFilters));
-  
+
   // Deep copy of filter token list
   newPlan->filterTokenList(fFilterTokenList);
   newPlan->havingTokenList(fHavingTokenList);
-  
+
   // Deep copy of group by columns
   GroupByColumnList newGroupByCols;
   for (const auto& col : fGroupByCols)
@@ -934,11 +935,11 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newGroupByCols.push_back(SRCP(col->clone()));
   }
   newPlan->groupByCols(newGroupByCols);
-  
+
   // Deep copy of having clause
   if (fHaving)
     newPlan->having(new ParseTree(*fHaving));
-  
+
   // Deep copy of order by columns
   OrderByColumnList newOrderByCols;
   for (const auto& col : fOrderByCols)
@@ -947,7 +948,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newOrderByCols.push_back(SRCP(col->clone()));
   }
   newPlan->orderByCols(newOrderByCols);
-  
+
   // Deep copy of column map
   ColumnMap newColumnMap;
   for (const auto& entry : fColumnMap)
@@ -956,13 +957,131 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newColumnMap.insert(ColumnMap::value_type(entry.first, SRCP(entry.second->clone())));
   }
   newPlan->columnMap(newColumnMap);
-  
+
   // Copy RM parameters
   newPlan->rmParms(frmParms);
-  
+
   // Deep copy of table list
   newPlan->tableList(fTableList);
-  
+
+  return newPlan;
+}
+
+execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
+    const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias)
+{
+  execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
+
+  // Copy simple members
+  newPlan->fLocalQuery = fLocalQuery;
+  newPlan->fTableAlias = fTableAlias;
+  newPlan->fLocation = fLocation;
+  newPlan->fDependent = fDependent;
+  newPlan->fData = fData;
+  newPlan->fSessionID = fSessionID;
+  newPlan->fTxnID = fTxnID;
+  newPlan->fVerID = fVerID;
+  newPlan->fSchemaName = fSchemaName;
+  newPlan->fTableName = fTableName;
+  newPlan->fTraceFlags = fTraceFlags;
+  newPlan->fStatementID = fStatementID;
+  newPlan->fDistinct = fDistinct;
+  newPlan->fOverrideLargeSideEstimate = fOverrideLargeSideEstimate;
+  newPlan->fDistinctUnionNum = fDistinctUnionNum;
+  newPlan->fSubType = fSubType;
+  newPlan->fDerivedTbAlias = fDerivedTbAlias;
+  newPlan->fDerivedTbView = fDerivedTbView;
+  newPlan->fLimitStart = fLimitStart;
+  newPlan->fLimitNum = fLimitNum;
+  newPlan->fHasOrderBy = fHasOrderBy;
+  newPlan->fStringScanThreshold = fStringScanThreshold;
+  newPlan->fQueryType = fQueryType;
+  newPlan->fPriority = fPriority;
+  newPlan->fStringTableThreshold = fStringTableThreshold;
+  newPlan->fSpecHandlerProcessed = fSpecHandlerProcessed;
+  newPlan->fOrderByThreads = fOrderByThreads;
+  newPlan->fUuid = fUuid;
+  newPlan->fDJSSmallSideLimit = fDJSSmallSideLimit;
+  newPlan->fDJSLargeSideLimit = fDJSLargeSideLimit;
+  newPlan->fDJSPartitionSize = fDJSPartitionSize;
+  newPlan->fDJSMaxPartitionTreeDepth = fDJSMaxPartitionTreeDepth;
+  newPlan->fDJSForceRun = fDJSForceRun;
+  newPlan->fMaxPmJoinResultCount = fMaxPmJoinResultCount;
+  newPlan->fUMMemLimit = fUMMemLimit;
+  newPlan->fIsDML = fIsDML;
+  newPlan->fTimeZone = fTimeZone;
+  newPlan->fPron = fPron;
+  newPlan->fWithRollup = fWithRollup;
+
+  // Deep copy of ReturnedColumnList
+  ReturnedColumnList newReturnedCols;
+  for (const auto& rc : fReturnedCols)
+  {
+    auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+    if (simpleColumn)
+    {
+      execplan::CalpontSystemCatalog::TableAliasName rcTable(
+          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "", false);
+      if (!targetTableAlias.weakerEq(rcTable))
+      {
+        continue;
+      }
+      newReturnedCols.push_back(SRCP(rc->clone()));
+    }
+  }
+  newPlan->returnedCols(newReturnedCols);
+
+  // Deep copy of filters
+  // WIP only filters that apply to the target table must be left intact
+  // replace all irrelevant branches with true
+  if (fFilters)
+  {
+    newPlan->filters(new ParseTree(*fFilters));
+  }
+
+  // Deep copy of filter token list
+  newPlan->filterTokenList(fFilterTokenList);
+  newPlan->havingTokenList(fHavingTokenList);
+
+  // Deep copy of group by columns
+  GroupByColumnList newGroupByCols;
+  for (const auto& col : fGroupByCols)
+  {
+    newGroupByCols.push_back(SRCP(col->clone()));
+  }
+  newPlan->groupByCols(newGroupByCols);
+
+  // Deep copy of having clause
+  if (fHaving)
+    newPlan->having(new ParseTree(*fHaving));
+
+  // Deep copy of order by columns
+  OrderByColumnList newOrderByCols;
+  for (const auto& col : fOrderByCols)
+  {
+      newOrderByCols.push_back(SRCP(col->clone()));
+  }
+  newPlan->orderByCols(newOrderByCols);
+
+  // Deep copy of column map
+  ColumnMap newColumnMap;
+  for (const auto& entry : fColumnMap)
+  {
+    // WIP only relevant RCs must be copied
+    if (entry.second)
+      newColumnMap.insert({entry.first, SRCP(entry.second->clone())});
+  }
+  newPlan->columnMap(newColumnMap);
+
+  // Copy RM parameters
+  newPlan->rmParms(frmParms);
+
+  // Deep copy of table list
+  // INV the target table must be contained in the original TableList in this CSEP
+  TableList newTableList{targetTableAlias};
+
+  newPlan->tableList(newTableList);
+
   return newPlan;
 }
 

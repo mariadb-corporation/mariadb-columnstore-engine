@@ -103,7 +103,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       }
     }
 
-    if (matchRule(*current))
+    if (matchRule(*current, ctx))
     {
       applyRule(*current, ctx);
       ++ctx.uniqueId;

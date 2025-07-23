@@ -139,7 +139,7 @@ extern bool nonConstFunc(Item_func* ifp);
 
 void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
 {
-  for (auto& [schemaAndTableName, aColumnStatisticsMap]: aTableStatisticsMap)
+  for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatisticsMap)
   {
     auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
     if (tableStatisticsMapIt == tableStatisticsMap.end())
@@ -148,7 +148,7 @@ void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisti
     }
     else
     {
-      for (auto& [columnName, histogram]: aColumnStatisticsMap)
+      for (auto& [columnName, histogram] : aColumnStatisticsMap)
       {
         tableStatisticsMapIt->second[columnName] = histogram;
       }
@@ -156,9 +156,16 @@ void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisti
   }
 }
 
-std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(
+    SchemaAndTableName& schemaAndTableName)
 {
   auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
+  for (auto& [schemaAndTableName, columnStatisticsMap] : tableStatisticsMap)
+  {
+    std::cout << "Table " << schemaAndTableName.schema << "." << schemaAndTableName.table
+              << " has statistics " << columnStatisticsMap.size() << std::endl;
+  }
+
   if (tableStatisticsMapIt == tableStatisticsMap.end())
   {
     return std::nullopt;
@@ -167,7 +174,7 @@ std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(SchemaA
   return {tableStatisticsMapIt->second};
 }
 
-}
+}  // namespace cal_impl_if
 
 namespace
 {

@@ -163,6 +163,9 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Clones this CSEP without recursive selects for optimizer purposes
    */
   execplan::SCSEP cloneWORecursiveSelects();
+
+  execplan::SCSEP cloneForTableWORecursiveSelects(const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias);
+
   /**
    * Access and mutator methods
    */

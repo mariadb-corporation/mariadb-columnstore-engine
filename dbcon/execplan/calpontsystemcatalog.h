@@ -437,7 +437,8 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
      : schema(sch), table(tb), alias(al), view(v), fisColumnStore(true)
     {
     }
-    TableAliasName(const std::string& sch, const std::string& tb, const std::string& al, const std::string& v, const bool isColumnStore)
+    TableAliasName(const std::string& sch, const std::string& tb, const std::string& al, const std::string& v,
+                   const bool isColumnStore)
      : schema(sch), table(tb), alias(al), view(v), fisColumnStore(isColumnStore)
     {
     }
@@ -457,6 +458,11 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     {
       return (schema == rhs.schema && table == rhs.table && alias == rhs.alias && view == rhs.view &&
               partitions == rhs.partitions && fisColumnStore == rhs.fisColumnStore);
+    }
+    bool weakerEq(const TableAliasName& rhs) const
+    {
+      return (schema == rhs.schema && table == rhs.table && alias == rhs.alias && view == rhs.view &&
+              fisColumnStore == rhs.fisColumnStore);
     }
     bool operator!=(const TableAliasName& rhs) const
     {
