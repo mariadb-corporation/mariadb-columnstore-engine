@@ -107,15 +107,19 @@ class NodeManipTester(BaseNodeManipTestCase):
             mock_update_dbroots_of_readonly_nodes.reset_mock()
 
             # Test read-only node removal
+            # Note: deactivate_only is always True in production, so node is only deactivated, not fully removed from config sections.
             node_manipulation.remove_node(
-                self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2],
-                deactivate_only=False,
+                self.NEW_NODE_NAME, self.tmp_files[1], self.tmp_files[2]
             )
 
             nc = NodeConfig()
             root = nc.get_current_config_root(self.tmp_files[2])
             read_only_nodes = nc.get_read_only_nodes(root)
+            # Node should be removed from ReadOnlyNodes (current code does this), but not from InactiveNodes/DesiredNodes
             self.assertEqual(len(read_only_nodes), 0)
+
+            inactive_nodes = root.find('./InactiveNodes')
+            self.assertTrue(any(n.text == self.NEW_NODE_NAME for n in inactive_nodes.findall('./Node')))
 
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
