@@ -66,7 +66,13 @@ class TestEMEndpoints(unittest.TestCase):
                 ["smcat", S3_BRM_CURRENT_PATH], stdout=subprocess.PIPE
             )
             element_current_suffix = ret.stdout.decode("utf-8").rstrip()
-            element_current_filename = f'{EM_PATH_SUFFIX}/{element_current_suffix}_{element}'
+
+            suffix_for_file = element_current_suffix
+            # Journal is always singular, so strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
+
+            element_current_filename = f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}'
             ret = subprocess.run(
                 ["smcat", element_current_filename], stdout=subprocess.PIPE
             )
@@ -74,8 +80,14 @@ class TestEMEndpoints(unittest.TestCase):
         else:
             element_current_name = Path(MCS_BRM_CURRENT_PATH)
             element_current_filename = element_current_name.read_text().rstrip()
+
+            suffix_for_file = element_current_filename
+            # Journal is always singular, so strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
+
             element_current_file = Path(
-                f'{MCS_EM_PATH}/{element_current_filename}_{element}'
+                f'{MCS_EM_PATH}/{suffix_for_file}_{element}'
             )
             result = element_current_file.read_bytes()
         return result
