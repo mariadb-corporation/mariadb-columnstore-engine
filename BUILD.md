@@ -21,7 +21,7 @@ git clone https://github.com/MariaDB/server.git
 MariaDB server contains many git submodules that need to be checked out with:
 
 ```bash
-git submodule update --init --recursive --depth=1
+git submodule update --init --recursive
 
 ```
 
@@ -46,12 +46,27 @@ git config --global --add safe.directory `pwd`
 
 ## Build
 
-Regarding dependencies: If this is the first time building MCS on your system you should either use the `./install-deps.sh` script or pass `--install-deps` to the `bootstrap_mcs.sh` script.
+The `bootstrap_mcs.sh` script can now do **two** main things:
 
-For development convenience, building the MariaDB server with MCS can be done with:
+1. **Build & install** ColumnStore into your system
+```bash
+cd server/storage/columnstore/columnstore
 
+sudo build/bootstrap_mcs.sh  --install-deps
 ```
-sudo -E build/bootstrap_mcs.sh
-```
 
-Tested for: Ubuntu:20.04/22.04, CentOS:7, Debian:10/11, RockyLinux:8
+2. **Build native OS packages** (RPM or DEB)
+
+```bash
+cd server/storage/columnstore/columnstore
+sudo build/bootstrap_mcs.sh  --install-deps --build-packages
+# → find your .rpm/.deb files in the build directory
+```
+Note: Packages can be built only for the OS you’re on—for so for example if you are running --build-packages on Rocky Linux it will produce RPMs for Rocky.
+You can see the full options list in the script itself
+
+> **Supported distros:**  
+> Ubuntu:20.04/22.04/24.04, Debian:11/12, Rocky Linux:8/9
+
+
+
