@@ -24,37 +24,40 @@
 #include "execplan/calpontselectexecutionplan.h"
 #include "rulebased_optimizer.h"
 
-namespace optimizer {
-  struct LessThan
+namespace optimizer
+{
+struct TableAliasLessThan
+{
+  bool operator()(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
+                  const execplan::CalpontSystemCatalog::TableAliasName& rhs) const
   {
-    bool operator()(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
-                    const execplan::CalpontSystemCatalog::TableAliasName& rhs) const
+    if (lhs.schema < rhs.schema)
     {
-      if (lhs.schema < rhs.schema)
+      return true;
+    }
+    else if (lhs.schema == rhs.schema)
+    {
+      if (lhs.table < rhs.table)
       {
         return true;
       }
-      else if (lhs.schema == rhs.schema)
+      else if (lhs.table == rhs.table)
       {
-        if (lhs.table < rhs.table)
+        if (lhs.alias < rhs.alias)
         {
           return true;
         }
-        else if (lhs.table == rhs.table)
-        {
-          if (lhs.alias < rhs.alias)
-          {
-            return true;
-          }
-        }
       }
-
-      return false;
     }
-  };
-  using TableAliasMap = std::map<execplan::CalpontSystemCatalog::TableAliasName, std::string,
-                                 LessThan>;
 
-  bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);
-  void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-}
+    return false;
+  }
+};
+
+using NewTableAliasAndColumnPosCounter = std::pair<string, size_t>;
+using TableAliasMap = std::map<execplan::CalpontSystemCatalog::TableAliasName,
+                               NewTableAliasAndColumnPosCounter, TableAliasLessThan>;
+
+bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep);
+void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+}  // namespace optimizer
