@@ -4,39 +4,39 @@ local events = ["pull_request", "cron"];
 local current_branch = "develop-23.02";
 
 local servers = {
-  "develop-23.02": ["10.6-enterprise"],
+  [current_branch]: ["10.6-enterprise"],
 };
 
 local platforms = {
-  "develop-23.02": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 local platforms_arm = {
-  "develop-23.02": ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
+local builddir = "verylongdirnameforverystrangecpackbehavior";
+
+local get_build_command(command) = "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/" + command + " ";
+
+local clang(version) = [get_build_command("install_clang_deb.sh " + version),
+                        get_build_command("update-clang-version.sh " + version + " 100"),
+                        get_build_command("install_libc++.sh " + version),
+                        "export CC=/usr/bin/clang",
+                        "export CXX=/usr/bin/clang++"
+                        ];
+
 local customEnvCommandsMap = {
-  // 'clang-18': ['apt install -y clang-18', 'export CC=/usr/bin/clang-18', 'export CXX=/usr/bin/clang++-18'],
-  "clang-20": [
-    "apt-get clean && apt-get update",
-    "apt-get install -y wget curl lsb-release software-properties-common gnupg",
-    "wget https://apt.llvm.org/llvm.sh",
-    "bash llvm.sh 20",
-    "export CC=/usr/bin/clang",
-    "export CXX=/usr/bin/clang++",
-  ],
+  "clang-20": clang("20"),
 };
 
 local customEnvCommands(envkey, builddir) =
-  local updateAlternatives = {
-    "clang-20": ["bash /mdb/" + builddir +
-                 "/storage/columnstore/columnstore/build/update-clang-version.sh 20 100"],
-  };
   (if (std.objectHas(customEnvCommandsMap, envkey))
-   then customEnvCommandsMap[envkey] + updateAlternatives[envkey] else []);
+   then customEnvCommandsMap[envkey] else []);
 
 
 local customBootstrapParamsForExisitingPipelines(envkey) =
+  # errorprone if we pass --custom-cmake-flags twice, the last one will win
   local customBootstrapMap = {
     "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
   };
@@ -44,15 +44,17 @@ local customBootstrapParamsForExisitingPipelines(envkey) =
    then customBootstrapMap[envkey] else "");
 
 local customBootstrapParamsForAdditionalPipelinesMap = {
-  ASAN: "--asan",
+  ASan: "--asan",
   TSAN: "--tsan",
-  UBSAN: "--ubsan",
+  UBSan: "--ubsan",
 };
 
+local customBuildFlags(buildKey) =
+  (if (std.objectHas(customBootstrapParamsForAdditionalPipelinesMap, buildKey))
+   then customBootstrapParamsForAdditionalPipelinesMap[buildKey] else "");
 
 local any_branch = "**";
 
-local builddir = "verylongdirnameforverystrangecpackbehavior";
 
 local mtr_suite_list = "basic,bugfixes";
 local mtr_full_set = "basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly";
@@ -90,7 +92,7 @@ local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link
 local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
       make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParams="", customBuildEnvCommandsMapKey="") = {
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -98,7 +100,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local branchp = if (branch == "**") then "" else branch + "/",
   local brancht = if (branch == "**") then "" else branch + "-",
   local platformKey = std.strReplace(std.strReplace(platform, ":", ""), "/", "-"),
-  local result = platformKey + if customBuildEnvCommandsMapKey != "" then "_" + customBuildEnvCommandsMapKey else "",
+  local result = platformKey +
+     (if customBuildEnvCommandsMapKey != "" then "_" + customBuildEnvCommandsMapKey else "") +
+     (if customBootstrapParamsKey != "" then "_" + customBootstrapParamsKey else ""),
 
   local packages_url = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server,
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
@@ -115,6 +119,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "publish " + step_prefix,
     depends_on: [std.strReplace(step_prefix, " latest", ""), "createrepo"],
     image: "amazon/aws-cli:2.22.30",
+    volumes: [pipeline._volumes.mdb],
     when: {
       status: ["success", "failure"],
     },
@@ -132,7 +137,21 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "sleep 10",
       "ls -lR " + result,
 
-      "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors --debug",
+     //clean old versions of .deb/.rpm files
+     "source /mdb/" + builddir + "/storage/columnstore/columnstore/VERSION && " +
+     "CURRENT_VERSION=${COLUMNSTORE_VERSION_MAJOR}.${COLUMNSTORE_VERSION_MINOR}.${COLUMNSTORE_VERSION_PATCH} && " +
+     "aws s3 rm s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + "/ " +
+     "--recursive " +
+     "--exclude \"*\" " +
+     // include only debs/rpms with columnstore in names
+     "--include \"*columnstore*.deb\" " +
+     "--include \"*columnstore*.rpm\" " +
+     // but do not delete the ones matching CURRENT_VERSION
+     "--exclude \"*${CURRENT_VERSION}*.deb\" " +
+     "--exclude \"*${CURRENT_VERSION}*.rpm\" " +
+     "--only-show-errors",
+
+      "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
       make_clickable_link(publish_pkg_url),
     ],
@@ -159,11 +178,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "test210.sh",
     "test211.sh",
     "test212.sh",
-    //  "test222.sh", FIXME: restore the test
     "test297.sh",
     "test299.sh",
-    "test400.sh",
-    "test500.sh",
   ] else [
     "test000.sh",
     "test001.sh",
@@ -179,7 +195,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local getContainerName(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
 
   local prepareTestContainer(containerName, result, do_setup) =
-    'sh -c "apk add bash && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/prepare_test_container.sh" +
+    'sh -c "apk add bash && ' + get_build_command("prepare_test_container.sh") +
     " --container-name " + containerName +
     " --docker-image " + img +
     " --result-path " + result +
@@ -187,7 +203,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --do-setup " + std.toString(do_setup) + '"',
 
   local reportTestStage(containerName, result, stage) =
-    'sh -c "apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/report_test_stage.sh' +
+    'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
     ' --container-name ' + containerName +
     ' --result-path ' + result +
     ' --stage ' + stage + '"',
@@ -210,7 +226,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true),
-      "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_smoke.sh" +
+      get_build_command("run_smoke.sh") +
       ' --container-name ' + getContainerName("smoke"),
     ],
   },
@@ -282,7 +298,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       prepareTestContainer(getContainerName("mtr"), result, true),
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
-      'apk add bash && bash /mdb/' + builddir + '/storage/columnstore/columnstore/build/run_mtr.sh' +
+      'apk add bash &&' +
+      get_build_command("run_mtr.sh") +
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
@@ -326,7 +343,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
       'echo "$$REGRESSION_REF"',
 
-      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_regression.sh" +
+      "apk add bash && " +
+      get_build_command("run_regression.sh") +
       " --container-name " + getContainerName("regression") +
       " --test-name " + name +
       " --distro " + platform +
@@ -407,8 +425,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       prepareTestContainer(getContainerName("cmapi"), result, true),
-
-      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_cmapi_test.sh" +
+      "apk add bash && " +
+      get_build_command("run_cmapi_test.sh") +
       " --container-name " + getContainerName("cmapi") +
       " --pkg-format " + pkg_format,
     ],
@@ -441,16 +459,16 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       "echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin",
-
-      "apk add bash && bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/run_multi_node_mtr.sh " +
-      "--columnstore-image-name $${MCS_IMAGE_NAME} " +
-      "--distro " + platform,
+      "apk add bash && " +
+      get_build_command("run_multi_node_mtr.sh") +
+      " --columnstore-image-name $${MCS_IMAGE_NAME} " +
+      " --distro " + platform,
     ],
   },
 
   kind: "pipeline",
   type: "docker",
-  name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParams, customBuildEnvCommandsMapKey]),
+  name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParamsKey, customBuildEnvCommandsMapKey]),
   platform: { arch: arch },
   clone: { depth: 10 },
   steps: [
@@ -504,21 +522,25 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_BUCKET: "cs-sccache",
                SCCACHE_REGION: "us-east-1",
                SCCACHE_S3_USE_SSL: "true",
-               SCCACHE_S3_KEY_PREFIX: result + branch + server + arch + "${DRONE_PULL_REQUEST}",
+               SCCACHE_S3_KEY_PREFIX: result + branch + server + arch,
              },
+
+             # errorprone if we pass --custom-cmake-flags twice, the last one will win
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
                        ]
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
-                        'bash -c "set -o pipefail && bash /mdb/' + builddir + "/storage/columnstore/columnstore/build/bootstrap_mcs.sh " +
+                        'bash -c "set -o pipefail && ' +
+                         get_build_command("bootstrap_mcs.sh") +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
-                         "--build-packages --install-deps --sccache" +
-                         " " + customBootstrapParams +
-                         " " + customBootstrapParamsForExisitingPipelines(platform) + " | " +
-                         "/mdb/" + builddir + "/storage/columnstore/columnstore/build/ansi2txt.sh " +
-                         "/mdb/" + builddir + "/" + result + '/build.log "',
+                         "--build-packages --install-deps --sccache " +
+                         "--build-path " + "/mdb/" + builddir + "/builddir " +
+                          " " + customBootstrapParamsForExisitingPipelines(platform) +
+                          " " + customBuildFlags(customBootstrapParamsKey) +
+                          " | " + get_build_command("ansi2txt.sh") +
+                          "/mdb/" + builddir + "/" + result + '/build.log "',
                        ],
            },
            {
@@ -530,7 +552,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                DEBIAN_FRONTEND: "noninteractive",
              },
              commands: [
-               "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/build_cmapi.sh --distro " + platform,
+               get_build_command("build_cmapi.sh") + " --distro " + platform,
              ],
            },
            {
@@ -542,7 +564,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              },
              volumes: [pipeline._volumes.mdb],
              commands: [
-               "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/createrepo.sh --result " + result,
+               get_build_command("createrepo.sh") + " --result " + result,
              ],
            },
            {
@@ -583,12 +605,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
-         (if (platform == "rockylinux:8" && arch == "amd64") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
+         [pipeline.publish("regressionlog")] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          // (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
-         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else [pipeline.publish("regressionlog")]),
+         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],
   trigger: {
@@ -648,18 +671,11 @@ local FinalPipeline(branch, event) = {
 [
   Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
   for p in platforms[current_branch]
-] +
+]
+//+
 // [
 //   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
 //   for p in platforms_arm[current_branch];
 // ]
 // +
-[
-  Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for buildenv in std.objectFields(customEnvCommandsMap)
-  for triggeringEvent in events
-  for server in servers[current_branch]
-]
+

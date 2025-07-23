@@ -79,7 +79,7 @@ fi
 select_pkg_format ${OS}
 
 if [[ "$PKG_FORMAT" == "rpm" ]]; then
-    CTEST_BIN_NAME=:"ctest3"
+    CTEST_BIN_NAME="ctest3"
 else
     CTEST_BIN_NAME="ctest"
 fi
@@ -96,15 +96,6 @@ install_sccache() {
     fi
 
     message "getting sccache..."
-
-    if command -v apt-get &>/dev/null; then
-        apt-get clean
-        apt-get update -y
-        apt-get install -y curl
-    elif command -v yum &>/dev/null; then
-        yum install -y curl
-    fi || true
-
     curl -L -o sccache.tar.gz \
         "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
 
@@ -775,15 +766,16 @@ construct_cmake_flags
 init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
-
     modify_packaging
-    build_package
-    message_splitted "PACKAGES BUILD FINISHED"
-    run_unit_tests
+
+    ( build_package && run_unit_tests )
+    exit_code=$?
+
     if [[ $SCCACHE = true ]]; then
         sccache --show-stats
     fi
-    exit 0
+
+    exit $exit_code
 fi
 
 stop_service
