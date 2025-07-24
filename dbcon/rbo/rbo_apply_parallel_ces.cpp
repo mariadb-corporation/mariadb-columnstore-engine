@@ -46,8 +46,6 @@ using ExtraSRRC = std::vector<std::unique_ptr<execplan::SimpleColumn>>;
 using SCAndItsProjectionPosition = std::pair<execplan::SimpleColumn*, uint32_t>;
 using SCsAndTheirProjectionPositions = std::vector<SCAndItsProjectionPosition>;
 
-static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
-
 namespace details
 {
 
@@ -562,8 +560,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     auto anyColumnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
     if (!table.isColumnstore() && anyColumnStatistics)
     {
-      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table +
-                               "_" + std::to_string(ctx.getUniqueId());
+      std::string tableAlias = getRewrittenSubTableAlias(table, ctx);
       tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);

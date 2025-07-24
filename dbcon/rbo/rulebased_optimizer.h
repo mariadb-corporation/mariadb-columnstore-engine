@@ -27,6 +27,7 @@
 #include <dbcon/mysql/ha_mcs_impl_if.h>
 
 #include "execplan/calpontselectexecutionplan.h"
+#include "execplan/calpontsystemcatalog.h"
 
 namespace optimizer
 {
@@ -141,4 +142,7 @@ struct Rule
 
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx,
                   bool useUnstableOptimizer);
-}  // namespace optimizer
+std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                      const RBOptimizerContext& ctx);
+
+}

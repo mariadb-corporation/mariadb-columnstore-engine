@@ -15,36 +15,29 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-
 #include "rulebased_optimizer.h"
 
 #include "configcpp.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
-#include "execplan/simplecolumn.h"
-#include "existsfilter.h"
-#include "logicoperator.h"
-#include "operator.h"
 #include "predicateoperator.h"
-#include "simplefilter.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_predicate_pushdown.h"
+#include "rbo_apply_rewrite_distinct.h"
 #include "utils/pron/pron.h"
 
+#include "calpontsystemcatalog.h"
 #include "functioncolumn.h"
-
-namespace
-{
-bool matchDistinct(execplan::CalpontSelectExecutionPlan& csep);
-void applyDistinct(execplan::CalpontSelectExecutionPlan& csep);
-}  // namespace
 
 namespace optimizer
 {
+
+std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                      const RBOptimizerContext& ctx)
+{
+  static constexpr std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
+  return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" + std::to_string(ctx.uniqueId);
+}
 
 // Apply a list of rules to a CSEP
 bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules,
@@ -92,7 +85,7 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-    optimizer::Rule rewriteDistinct{"rewriteDistinct", optimizer::matchDistinct, optimizer::applyDistinct};
+    optimizer::Rule rewriteDistinct{"rewriteDistinct", optimizer::matchRewriteDistinct, optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
   }
 
@@ -173,100 +166,3 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 }
 
 }  // namespace optimizer
-
-namespace
-{
-bool matchDistinct(execplan::CalpontSelectExecutionPlan& csep)
-{
-  return csep.distinct();
-}
-
-void applyDistinct(execplan::CalpontSelectExecutionPlan& csep)
-{
-  csep.distinct(false);
-  auto new_query = csep.clone();
-#if 0
-  std::swap(csep, *new_query);
-  new_query->orderByCols({});
-  new_query->having(nullptr);
-  new_query->limitNum = 0;
-  new_query->limitStart = 0;
-#endif
-  auto tableAlias = optimizer::RewrittenSubTableAliasPrefix + csep.schemaName() + "_" + csep.tableName();
-  new_query->location(execplan::CalpontSelectExecutionPlan::FROM);
-  new_query->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-  new_query->derivedTbAlias(tableAlias);
-
-  execplan::CalpontSelectExecutionPlan::TableList tblList;
-  tblList.push_back(execplan::make_aliasview("", "", tableAlias, ""));
-  csep.tableList(tblList);
-  execplan::CalpontSelectExecutionPlan::SelectList derivedTblList;
-  derivedTblList.emplace_back(new_query);
-  csep.derivedTableList(derivedTblList);
-
-  csep.filters(nullptr);
-
-  csep.returnedCols({});
-  csep.groupByCols({});
-  size_t colPos = 0;
-  for (auto& rc : new_query->returnedCols())
-  {
-    auto* rcsc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-    // auto* rcfc = dynamic_cast<execplan::FunctionColumn*>(rc.get());
-#if 0
-    if (!rcsc)
-    {
-      throw std::runtime_error("applyDistinct: unexpected column type");
-    }
-    auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
-    rcCloned->tableName("");
-    rcCloned->schemaName("");
-    rcCloned->tableAlias(tableAlias);
-    rcCloned->colPosition(colPos);
-    rcCloned->resultType(rc->resultType());
-    rcCloned->distinct(false);
-    rcCloned->derivedTable(tableAlias);
-    rcCloned->alias(tableAlias + "." + rc->alias());
-    csep.returnedCols().emplace_back(rcCloned);
-
-    auto grpByCloned = boost::make_shared<execplan::SimpleColumn>(*rcCloned);
-    csep.groupByCols().emplace_back(grpByCloned);
-#endif
-    auto rcCloned = boost::make_shared<execplan::SimpleColumn>();
-    // fill SimpleColumn data
-    rcCloned->schemaName("");
-    rcCloned->tableName(tableAlias);
-    if (rcsc)
-      rcCloned->columnName(rcsc->columnName());
-    rcCloned->oid(0);
-    rcCloned->tableAlias(tableAlias);
-    rcCloned->data("");
-    if (rcsc)
-      rcCloned->timeZone(rcsc->timeZone());
-
-    // fill ReturnedColumn data
-    rcCloned->charsetNumber(rc->charsetNumber());
-    rcCloned->alias(tableAlias + "." + rc->alias());
-
-    // fill TreeNode data
-    rcCloned->derivedTable(tableAlias);
-    rcCloned->derivedRefCol(rc.get());
-    rcCloned->resultType(rc->resultType());
-    rcCloned->operationType(rc->operationType());
-    rcCloned->colPosition(colPos);
-    rc->refCount(rc->refCount() + 1);
-
-    csep.returnedCols().emplace_back(rcCloned);
-
-    auto grpByCloned = boost::make_shared<execplan::SimpleColumn>(*rcCloned);
-    grpByCloned->orderPos(colPos);
-    rc->refCount(rc->refCount() + 1);
-    csep.groupByCols().emplace_back(grpByCloned);
-
-    ++colPos;
-  }
-
-  new_query->distinct(false);
-}
-
-}  // namespace
