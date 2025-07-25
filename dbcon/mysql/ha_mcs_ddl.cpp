@@ -867,12 +867,14 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
           return rc;
         }
 
+#if MYSQL_VERSION_ID < 110400
         // For TIMESTAMP, if no constraint is given, default to NOT NULL
         if (createTable->fTableDef->fColumns[i]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
             createTable->fTableDef->fColumns[i]->fConstraints.empty())
         {
           createTable->fTableDef->fColumns[i]->fConstraints.push_back(new ColumnConstraintDef(DDL_NOT_NULL));
         }
+#endif
 
         if (createTable->fTableDef->fColumns[i]->fDefaultValue)
         {

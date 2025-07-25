@@ -6292,7 +6292,7 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
 // for the first column of the index if any.
 // Statistics is stored in GWI context.
 // Mock for ES 10.6
-#if MYSQL_VERSION_ID >= 110401
+#if MYSQL_VERSION_ID >= 120401
 void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
 {
   for (uint j = 0; j < ifp->field->table->s->keys; j++)
