@@ -176,8 +176,14 @@ def remove_node(
             _remove_Module_entries(c_root, node)
             _remove_from_ExeMgrs(c_root, node)
 
+            # FIXME MCOL-6105: for some reason deactivate_only is always True, so the nodes are never removed from InactiveNodes
             if deactivate_only:
                 _deactivate_node(c_root, node)
+
+                # Remove node from ReadOnlyNodes if it is present there
+                read_only_nodes = c_root.find('./ReadOnlyNodes')
+                if read_only_nodes is not None:
+                    __remove_helper(read_only_nodes, node)
             else:
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
