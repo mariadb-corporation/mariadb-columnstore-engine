@@ -614,9 +614,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
+         [pipeline.publish("regressionlog")] +
          // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          // (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
-         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else [pipeline.publish("regressionlog")]),
+         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],
   trigger: {
