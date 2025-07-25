@@ -74,7 +74,7 @@
 #include "rpl_rli.h"
 #include "my_dbug.h"
 #include "sql_show.h"
-#if MYSQL_VERSION_ID >= 110401
+#if MYSQL_VERSION_ID >= 120401
 #include "opt_histogram_json.h"
 #else
 // Mock Histogram_bucket for MySQL < 11.4
