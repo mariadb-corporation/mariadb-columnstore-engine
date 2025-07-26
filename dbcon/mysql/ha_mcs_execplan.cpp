@@ -6307,7 +6307,15 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           if (histogram)
           {
             SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
-            gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
+            auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
+            if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
+            {
+              gwi.tableStatisticsMap.insert({tableName, {{ifp->field->field_name.str, *histogram}}});
+            }
+            else
+            {
+              tableStatisticsMapIt->second.insert({ifp->field->field_name.str, *histogram});
+            }
           }
         }
       }

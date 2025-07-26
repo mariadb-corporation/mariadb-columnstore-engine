@@ -751,4 +751,9 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
   }
 }
 
+void SimpleColumn::setSimpleColumnList()
+{
+  fSimpleColumnList.push_back(this);
+}
+
 }  // namespace execplan

@@ -288,7 +288,7 @@ class ReturnedColumn : public TreeNode
   /* @brief traverse this ReturnedColumn and re-populate fSimpleColumnList.
    *
    * @note all ReturnedColumns that may have simple column arguments added
-   * to the list need to implement thhis function.
+   * to the list need to implement this function.
    */
   virtual void setSimpleColumnList();
 

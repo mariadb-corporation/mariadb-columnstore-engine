@@ -264,6 +264,9 @@ class SimpleColumn : public ReturnedColumn
    */
   bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
 
+  void setSimpleColumnList() override;
+
+
  protected:
   /**
    * Fields

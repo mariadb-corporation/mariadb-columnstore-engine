@@ -1017,17 +1017,24 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   ReturnedColumnList newReturnedCols;
   for (const auto& rc : fReturnedCols)
   {
-    auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-    if (simpleColumn)
+    rc->setSimpleColumnList();
+    for (auto* simpleColumn : rc->simpleColumnList())
     {
+      // TODO check that is columnstore is correct
       execplan::CalpontSystemCatalog::TableAliasName rcTable(
-          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "", false);
+          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "",
+          simpleColumn->isColumnStore());
       if (!targetTableAlias.weakerEq(rcTable))
       {
         continue;
       }
       newReturnedCols.push_back(SRCP(rc->clone()));
     }
+  }
+  if (newReturnedCols.empty())
+  {
+    std::cout << "cloneForTableWORecursiveSelects(): there are no Returned Columns after table filtering."
+              << std::endl;
   }
   newPlan->returnedCols(newReturnedCols);
 
@@ -1059,7 +1066,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   OrderByColumnList newOrderByCols;
   for (const auto& col : fOrderByCols)
   {
-      newOrderByCols.push_back(SRCP(col->clone()));
+    newOrderByCols.push_back(SRCP(col->clone()));
   }
   newPlan->orderByCols(newOrderByCols);
 

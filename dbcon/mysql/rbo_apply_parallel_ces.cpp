@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
+#include <vector>
 
 #include "rulebased_optimizer.h"
 
@@ -32,6 +34,9 @@
 
 namespace optimizer
 {
+
+template <typename T>
+using FilterRangeBounds = std::vector<std::pair<T, T>>;
 
 void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, const size_t id);
 
@@ -163,6 +168,55 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
   return nullptr;
 }
 
+// Populates range bounds based on column statistics
+// Returns optional with bounds if successful, nullopt otherwise
+template <typename T>
+std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* keyColumn,
+                                                        optimizer::RBOptimizerContext& ctx)
+{
+  cal_impl_if::SchemaAndTableName schemaAndTableName = {keyColumn->schemaName(), keyColumn->tableName()};
+  auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
+  if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end())
+  {
+    return std::nullopt;
+  }
+
+  auto columnStatisticsIt = tableColumnsStatisticsIt->second.find(keyColumn->columnName());
+  if (columnStatisticsIt == tableColumnsStatisticsIt->second.end())
+  {
+    return std::nullopt;
+  }
+
+  auto columnStatistics = columnStatisticsIt->second;
+
+  // TODO configurable parallel factor via session variable
+  // NB now histogram size is the way to control parallel factor with 16 being the maximum
+  size_t numberOfUnionUnits = std::min(columnStatistics.get_json_histogram().size(), MaxParallelFactor);
+  size_t numberOfBucketsPerUnionUnit = columnStatistics.get_json_histogram().size() / numberOfUnionUnits;
+
+  FilterRangeBounds<T> bounds;
+
+  // Loop over buckets to produce filter ranges
+  for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
+  {
+    auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = columnStatistics.get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    T currentLowerBound = *(uint32_t*)bucket->start_value.data();
+    T currentUpperBound = *(uint32_t*)endBucket->start_value.data();
+    bounds.push_back({currentLowerBound, currentUpperBound});
+  }
+
+  // Add last range
+  // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
+  auto lastBucket =
+      columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
+  T currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
+  T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
+  bounds.push_back({currentLowerBound, currentUpperBound});
+
+  return bounds;
+}
+
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
@@ -179,46 +233,12 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   }
 
   // TODO char and other numerical types support
-  std::vector<std::pair<uint64_t, uint64_t>> bounds;
+  auto boundsOpt = populateRangeBounds<uint64_t>(keyColumn, ctx);
+  if (!boundsOpt.has_value())
   {
-    cal_impl_if::SchemaAndTableName schemaAndTableName = {keyColumn->schemaName(), keyColumn->tableName()};
-    auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
-    if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end())
-    {
-      return unionVec;
-    }
-
-    auto columnStatisticsIt = tableColumnsStatisticsIt->second.find(keyColumn->columnName());
-    if (columnStatisticsIt == tableColumnsStatisticsIt->second.end())
-    {
-      return unionVec;
-    }
-
-    auto columnStatistics = columnStatisticsIt->second;
-
-    // TODO configurable parallel factor via session variable
-    // NB now histogram size is the way to control parallel factor with 16 being the maximum
-    size_t numberOfUnionUnits = std::min(columnStatistics.get_json_histogram().size(), MaxParallelFactor);
-    size_t numberOfBucketsPerUnionUnit = columnStatistics.get_json_histogram().size() / numberOfUnionUnits;
-
-    // Loop over buckets to produce filter ranges
-    for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
-    {
-      auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
-      auto endBucket = columnStatistics.get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
-      uint64_t currentLowerBound = *(uint32_t*)bucket->start_value.data();
-      uint64_t currentUpperBound = *(uint32_t*)endBucket->start_value.data();
-      bounds.push_back({currentLowerBound, currentUpperBound});
-    }
-
-    // Add last range
-    // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
-    auto lastBucket = columnStatistics.get_json_histogram().begin() +
-                      (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
-    uint64_t currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
-    uint64_t currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
-    bounds.push_back({currentLowerBound, currentUpperBound});
+    return unionVec;
   }
+  auto& bounds = boundsOpt.value();
 
   for (auto& bound : bounds)
   {
@@ -242,15 +262,19 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
     std::cout << "Processing table schema " << schemaAndTableName.schema << " table "
               << schemaAndTableName.table << " alias " << table.alias << std::endl;
-    auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
-    std::cout << "Column statistics: " << columnStatistics.has_value() << std::endl;
+    auto anyColumnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
+    std::cout << "Column statistics: " << anyColumnStatistics.has_value() << std::endl;
     // TODO add column statistics check to the corresponding match
-    if (!table.isColumnstore() && columnStatistics)
+    if (!table.isColumnstore() && anyColumnStatistics)
     {
+      // Don't copy filters for this
       auto derivedSCEP = csep.cloneForTableWORecursiveSelects(table);
       // Remove the filters as they were pushed down to union units
       // This is inappropriate for EXISTS filter and join conditions
       // WIP replace with filters applied to filters, so that only relevant filters are left
+      // WIP Ugly hack to avoid leaks
+      auto unusedFilters = derivedSCEP->filters();
+      delete unusedFilters;
       derivedSCEP->filters(nullptr);
       auto* derivedCSEP = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedSCEP.get());
       if (!derivedCSEP)
@@ -281,8 +305,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     }
   }
 
-  execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
-  // [[maybe_unused]] size_t colPosition = 0;
+  // execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
   // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
   if (!newDerivedTableList.empty())
   {
@@ -296,8 +319,6 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       // If there is an alias in the map then it is a new derived table
       auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
       std::vector<execplan::SimpleColumn*> scs;
-      // execplan::ParseTree pt(rc.get());
-      // pt.walk(execplan::getSimpleCols, &scs);
 
       std::cout << "Processing RC schema " << sc->schemaName() << " table " << sc->tableName() << " alias "
                 << sc->tableAlias() << std::endl;
@@ -328,24 +349,29 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     // But this is inappropriate for EXISTS filter and join conditions
     // There must be no derived at this point, so we can replace it with the new derived table list
 
-    auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
-    if (left)
+    // WIP hardcoded query
+    if (csep.filters() && csep.filters()->data())
     {
-      auto* lhs = left->lhs()->clone();
-      if (lhs)
+      auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
+      if (left)
       {
-        auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
-        if (lhsSC)
+        auto* lhs = left->lhs()->clone();
+        if (lhs)
         {
-          auto newTableAlias = tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
-          // WIP Leak loosing previous lhs
-          if (newTableAlias != tableAliasMap.end())
+          auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
+          if (lhsSC)
           {
-            lhsSC->tableName("");
-            lhsSC->schemaName("");
-            lhsSC->tableAlias(newTableAlias->second.first);
-            lhsSC->colPosition(0);
-            left->lhs(lhs);
+            auto newTableAlias =
+                tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
+            // WIP Leak loosing previous lhs
+            if (newTableAlias != tableAliasMap.end())
+            {
+              lhsSC->tableName("");
+              lhsSC->schemaName("");
+              lhsSC->tableAlias(newTableAlias->second.first);
+              lhsSC->colPosition(0);
+              left->lhs(lhs);
+            }
           }
         }
       }
