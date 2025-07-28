@@ -1862,7 +1862,7 @@ uint8_t WE_DMLCommandProc::processBatchInsertBinary(messageqcpp::ByteStream& bs,
             NullString valStr;
             bool valZero = false;  // Needed for autoinc check
 
-            switch (colType.colDataType)
+            switch (colType.colDataType.kind())
             {
               case execplan::CalpontSystemCatalog::TINYINT:
               case execplan::CalpontSystemCatalog::UTINYINT:

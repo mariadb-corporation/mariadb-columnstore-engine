@@ -589,7 +589,7 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
   {
     colType = systemCatalogPtr->colType(ridList[col].objnum);
     bytestream << (uint32_t)ridList[col].objnum;
-    bytestream << (uint8_t)colType.colDataType;
+    bytestream << colType.colDataType;
     bytestream << (uint8_t) false;
     bytestream << (uint32_t)colType.colWidth;
     bytestream << (uint16_t)useDBRoot;
@@ -598,7 +598,7 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
     if (colType.ddn.dictOID > 3000)
     {
       bytestream << (uint32_t)colType.ddn.dictOID;
-      bytestream << (uint8_t)colType.colDataType;
+      bytestream << colType.colDataType;
       bytestream << (uint8_t) true;
       bytestream << (uint32_t)colType.colWidth;
       bytestream << (uint16_t)useDBRoot;

@@ -488,7 +488,7 @@ void WindowFunctionType::setValue(int ct, int64_t b, int64_t e, int64_t c, T* v)
 template <typename T>
 void WindowFunctionType::implicit2T(uint64_t i, T& t, int s)
 {
-  int ct = fRow.getColType(i);
+  int ct = fRow.getColType(i).kind();
 
   switch (ct)
   {

@@ -339,7 +339,7 @@ bool AggregateColumn::hasAggregate()
 
 void AggregateColumn::evaluate(Row& row, bool& isNull)
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::DATE:
       if (row.equals<4>(DATENULL, fInputIndex))

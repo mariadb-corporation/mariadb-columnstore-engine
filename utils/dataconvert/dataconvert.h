@@ -75,7 +75,7 @@ inline uint64_t uint64ToStr(uint64_t n)
   return htonll(n);
 }
 
-using cscDataType = datatypes::SystemCatalog::ColDataType;
+using cscDataType = datatypes::SystemCatalog::Kind;
 
 #define EXPORT
 

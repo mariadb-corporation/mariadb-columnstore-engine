@@ -297,8 +297,7 @@ void WF_sum_avg<T_IN, T_OUT>::operator()(int64_t b, int64_t e, int64_t c)
       v = &fSum;
   }
 
-  setValue(fRow.getColType(colOut), b, e, c, v);
-
+  setValue(fRow.getColType(colOut).kind(), b, e, c, v);
   fPrev = c;
 }
 

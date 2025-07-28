@@ -296,7 +296,7 @@ void BRMReporter::sendCPToFile()
     {
       if (!datatypes::isWideDecimalType(fCPInfo[i].type, fCPInfo[i].colWidth))
       {
-        fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' << fCPInfo[i].seqNum << ' ' << fCPInfo[i].type
+        fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' << fCPInfo[i].seqNum << ' ' << fCPInfo[i].type.kind()
                  << ' ' << fCPInfo[i].colWidth << ' ' << fCPInfo[i].max << ' ' << fCPInfo[i].min << ' '
                  << fCPInfo[i].newExtent << std::endl;
       }
@@ -305,7 +305,7 @@ void BRMReporter::sendCPToFile()
         datatypes::TSInt128 bigMin(&fCPInfo[i].bigMin);
         datatypes::TSInt128 bigMax(&fCPInfo[i].bigMax);
 
-        fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' << fCPInfo[i].seqNum << ' ' << fCPInfo[i].type
+        fRptFile << "CP: " << fCPInfo[i].startLbid << ' ' << fCPInfo[i].seqNum << ' ' << fCPInfo[i].type.kind()
                  << ' ' << fCPInfo[i].colWidth << ' ' << bigMax << ' ' << bigMin << ' '
                  << fCPInfo[i].newExtent << std::endl;
       }
@@ -327,8 +327,8 @@ void BRMReporter::reportTotals(
 
     for (unsigned k = 0; k < satCounts.size(); k++)
     {
-      if (boost::get<0>(satCounts[k]) > 0)
-        fRptFile << "DATA: " << k << ' ' << boost::get<0>(satCounts[k]) << ' ' << boost::get<1>(satCounts[k])
+      if (boost::get<0>(satCounts[k]).kind() > 0)
+        fRptFile << "DATA: " << k << ' ' << boost::get<0>(satCounts[k]).kind() << ' ' << boost::get<1>(satCounts[k])
                  << ' ' << boost::get<2>(satCounts[k]) << std::endl;
     }
 

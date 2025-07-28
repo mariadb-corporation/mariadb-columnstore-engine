@@ -830,7 +830,7 @@ void BatchPrimitiveProcessorJL::getRowGroupData(ByteStream& in, vector<RGData>* 
         {
           std::ostringstream oss;
           oss << __func__ << " WARNING!!! Not implemented for the data type ";
-          oss << colType.colDataType << std::endl;
+          oss << colType.colDataType.kind() << std::endl;
           std::cout << oss.str();
           idbassert(false);
         }
@@ -1561,7 +1561,7 @@ bool BatchPrimitiveProcessorJL::nextTupleJoinerMsg(ByteStream& bs)
         // Small side is a long double. Since CS can't store larger than DOUBLE,
         // we need to convert to whatever type large side is -- double or int64
         long double smallkeyld = r.getLongDoubleField(smallKeyCol);
-        switch (largeSideRG.getColType(tJoiners[joinerNum]->getLargeKeyColumns()[0]))
+        switch (largeSideRG.getColType(tJoiners[joinerNum]->getLargeKeyColumns()[0]).kind())
         {
           case CalpontSystemCatalog::DOUBLE:
           case CalpontSystemCatalog::UDOUBLE:

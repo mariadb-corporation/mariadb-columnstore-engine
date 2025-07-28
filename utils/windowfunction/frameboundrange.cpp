@@ -262,7 +262,7 @@ void FrameBoundExpressionRange<T>::validate()
   }
   else
   {
-    switch (this->fRow.getColType(this->fIndex[1]))
+    switch (this->fRow.getColType(this->fIndex[1]).kind())
     {
       case execplan::CalpontSystemCatalog::TINYINT:
       case execplan::CalpontSystemCatalog::SMALLINT:

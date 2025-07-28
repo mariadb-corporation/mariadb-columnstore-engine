@@ -19,6 +19,7 @@
 
 #include <sstream>
 #include <boost/any.hpp>
+#include <boost/intrusive_ptr.hpp>
 #include "exceptclasses.h"
 #include "basic/conststring.h"
 #include "mcs_datatype_basic.h"
@@ -148,11 +149,13 @@ class SystemCatalog
 
   /** the set of Calpont column data types
    *
-   */
-  enum ColDataType
-  {
+   */ 
+
+   enum Kind {
     BIT,                  /*!< BIT type */
     ENUM,                 /*!< ENUM type */
+    SET,
+    JSON,
     TINYINT,              /*!< TINYINT type */
     CHAR,                 /*!< CHAR type */
     SMALLINT,             /*!< SMALLINT type */
@@ -185,6 +188,65 @@ class SystemCatalog
     UNDEFINED,            /*!< Undefined - used in UDAF API */
   };
 
+  class ColDataType
+  {
+      Kind _kind;
+      std::shared_ptr<std::vector<std::string>> _values;
+
+      public:
+        ColDataType() : _kind(UNDEFINED)
+        {
+        }
+
+        ColDataType(Kind kind) : _kind(kind)
+        {
+          assert(_kind != ENUM && _kind != SET);
+        }
+
+        ColDataType(Kind kind, const std::vector<std::string> &values) : _kind(kind), _values(new std::vector<std::string>(values))
+        {
+          assert(_kind != ENUM || _kind == SET);
+        }
+
+        operator Kind() const {
+          return _kind;
+        }
+
+        bool operator==(Kind val) const {
+          assert((_kind!=val) || (_kind!=ENUM && _kind!=SET));
+          
+          return _kind==val;
+        }
+
+        Kind kind() const
+        {
+          return _kind;
+        }
+
+        const std::shared_ptr<std::vector<std::string>>& values() const
+        {
+          return _values;
+        }
+
+        ColDataType& operator=(Kind kind)
+        {
+          assert(_kind != ENUM && _kind != SET);
+          _kind = kind;
+          _values.reset();
+
+          return *this;
+        }
+
+        void set(Kind kind, const std::shared_ptr<std::vector<std::string>> &values)
+        {
+          assert(_kind != ENUM || _kind == SET);
+          _kind = kind;
+          _values = values;
+        }
+
+        bool operator==(const ColDataType &) const = default;
+  };
+
   // XXX: It is assumed here that ALL TYPES have width, scale and precision.
   // XXX: And then some of them have the type tag itself.
   // XXX: But, all types have type tag, some need explicit width (decimals, for example)
@@ -196,12 +258,13 @@ class SystemCatalog
     int32_t colWidth;
     int32_t scale;  // number after decimal points
     int32_t precision;
-    std::vector<std::string> enumVals;
+    ColDataType colDataType;
+//    std::vector<std::string> enumVals;
 
-    TypeAttributesStd() : colWidth(0), scale(0), precision(-1)
+    TypeAttributesStd() : colWidth(0), scale(0), precision(-1), colDataType(MEDINT)
     {
     }
-    TypeAttributesStd(int32_t w, int32_t s, int32_t p) : colWidth(w), scale(s), precision(p)
+    TypeAttributesStd(int32_t w, int32_t s, int32_t p) : colWidth(w), scale(s), precision(p), colDataType(MEDINT)
     {
     }
     /**
@@ -279,8 +342,7 @@ class SystemCatalog
   class TypeHolderStd : public TypeAttributesStd
   {
    public:
-    ColDataType colDataType;
-    TypeHolderStd() : colDataType(MEDINT)
+    TypeHolderStd()
     {
     }
     const class TypeHandler* typeHandler() const;
@@ -292,7 +354,7 @@ class SystemCatalog
     */
     inline bool isWideDecimalType() const
     {
-      return (colDataType == DECIMAL || colDataType == UDECIMAL) && colWidth == MAXDECIMALWIDTH;
+      return (colDataType.kind() == DECIMAL || colDataType.kind() == UDECIMAL) && colWidth == MAXDECIMALWIDTH;
     }
 
     inline bool isWide() const
@@ -357,7 +419,7 @@ class SystemCatalog
 */
 static inline bool isWideDecimalType(const datatypes::SystemCatalog::ColDataType& dt, const int32_t width)
 {
-  return width == MAXDECIMALWIDTH && (dt == SystemCatalog::DECIMAL || dt == SystemCatalog::UDECIMAL);
+  return width == MAXDECIMALWIDTH && (dt.kind() == SystemCatalog::DECIMAL || dt.kind() == SystemCatalog::UDECIMAL);
 }
 
 /** convenience function to determine if column type is a char
@@ -365,14 +427,14 @@ static inline bool isWideDecimalType(const datatypes::SystemCatalog::ColDataType
  */
 inline bool isCharType(const datatypes::SystemCatalog::ColDataType type)
 {
-  return (datatypes::SystemCatalog::VARCHAR == type || datatypes::SystemCatalog::CHAR == type ||
-          datatypes::SystemCatalog::BLOB == type || datatypes::SystemCatalog::TEXT == type);
+  return (datatypes::SystemCatalog::VARCHAR == type.kind() || datatypes::SystemCatalog::CHAR == type.kind() ||
+          datatypes::SystemCatalog::BLOB == type.kind() || datatypes::SystemCatalog::TEXT == type.kind());
 }
 
 inline bool typeHasCollation(const datatypes::SystemCatalog::ColDataType type)
 {
-  return datatypes::SystemCatalog::VARCHAR == type || datatypes::SystemCatalog::CHAR == type ||
-         datatypes::SystemCatalog::TEXT == type;
+  return datatypes::SystemCatalog::VARCHAR == type.kind() || datatypes::SystemCatalog::CHAR == type.kind() ||
+         datatypes::SystemCatalog::TEXT == type.kind();
 }
 
 /** convenience function to determine if column type is a
@@ -380,7 +442,7 @@ inline bool typeHasCollation(const datatypes::SystemCatalog::ColDataType type)
  */
 inline bool isNumeric(const datatypes::SystemCatalog::ColDataType type)
 {
-  switch (type)
+  switch (type.kind())
   {
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::SMALLINT:
@@ -405,7 +467,7 @@ inline bool isNumeric(const datatypes::SystemCatalog::ColDataType type)
 
 inline bool isInteger(const datatypes::SystemCatalog::ColDataType type)
 {
-  switch (type)
+  switch (type.kind())
   {
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::SMALLINT:
@@ -424,17 +486,17 @@ inline bool isInteger(const datatypes::SystemCatalog::ColDataType type)
 
 inline bool isLongDouble(const datatypes::SystemCatalog::ColDataType type)
 {
-  return type == datatypes::SystemCatalog::LONGDOUBLE;
+  return type.kind() == datatypes::SystemCatalog::LONGDOUBLE;
 }
 
 inline bool isDecimal(const datatypes::SystemCatalog::ColDataType type)
 {
-  return (type == datatypes::SystemCatalog::DECIMAL || type == datatypes::SystemCatalog::UDECIMAL);
+  return (type.kind() == datatypes::SystemCatalog::DECIMAL || type.kind() == datatypes::SystemCatalog::UDECIMAL);
 }
 
 inline bool isUnsignedInteger(const datatypes::SystemCatalog::ColDataType type)
 {
-  switch (type)
+  switch (type.kind())
   {
     case datatypes::SystemCatalog::UTINYINT:
     case datatypes::SystemCatalog::USMALLINT:
@@ -454,7 +516,7 @@ inline bool isUnsigned(const datatypes::SystemCatalog::ColDataType type)
   if (isUnsignedInteger(type))
     return true;
 
-  switch (type)
+  switch (type.kind())
   {
     case datatypes::SystemCatalog::CHAR:
     case datatypes::SystemCatalog::VARCHAR:
@@ -467,7 +529,7 @@ inline bool isUnsigned(const datatypes::SystemCatalog::ColDataType type)
 
 inline bool isSignedInteger(const datatypes::SystemCatalog::ColDataType type)
 {
-  switch (type)
+  switch (type.kind())
   {
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::SMALLINT:
@@ -495,7 +557,7 @@ inline bool differentSignednessInteger(const datatypes::SystemCatalog::ColDataTy
 
 inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unionedType)
 {
-  switch (unionedType.colDataType)
+  switch (unionedType.colDataType.kind())
   {
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::UTINYINT:
@@ -1203,6 +1265,122 @@ class TypeHandlerEnum : public TypeHandler
     return nullptr;
   }
 };
+
+class TypeHandlerSet : public TypeHandler
+{
+  const string& name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::SET;
+  }
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return "0";  // QQ
+  }
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
+  {
+    idbassert(0);
+    return "Error";
+  }
+
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
+  {
+    idbassert(0);
+    return {};
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return {};
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+};
+
+// QQ: perhaps not needed yet
+class TypeHandlerJson : public TypeHandler
+{
+  const string& name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::JSON;
+  }
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return "0";  // QQ
+  }
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
+  {
+    idbassert(0);
+    return "Error";
+  }
+
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
+  {
+    idbassert(0);
+    return {};
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return {};
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+};
+
 
 class TypeHandlerInt : public TypeHandler
 {

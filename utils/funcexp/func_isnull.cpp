@@ -52,7 +52,7 @@ CalpontSystemCatalog::ColType Func_isnull::operationType(FunctionParm& fp,
  */
 bool Func_isnull::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     // For the purpose of this function, one does not need to get the value of
     // the argument. One only need to know if the argument is NULL. The passed

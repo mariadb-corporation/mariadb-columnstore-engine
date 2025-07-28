@@ -51,7 +51,7 @@ int64_t Func_floor::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   int64_t ret = 0;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
@@ -154,7 +154,7 @@ uint64_t Func_floor::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   int64_t ret = 0;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
@@ -425,7 +425,7 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
 {
   IDB_Decimal ret;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

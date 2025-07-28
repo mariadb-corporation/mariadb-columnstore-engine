@@ -1329,7 +1329,7 @@ bool ColumnOp::getColDataType(const char* name, CalpontSystemCatalog::ColDataTyp
   for (int i = 0; i < CalpontSystemCatalog::NUM_OF_COL_DATA_TYPE; i++)
     if (strcmp(name, ColDataTypeStr[i]) == 0)
     {
-      colDataType = static_cast<CalpontSystemCatalog::ColDataType>(i);
+      colDataType = static_cast<CalpontSystemCatalog::Kind>(i);
       bFound = true;
       break;
     }

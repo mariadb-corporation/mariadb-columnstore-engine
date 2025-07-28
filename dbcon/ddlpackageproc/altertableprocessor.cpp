@@ -100,7 +100,7 @@ bool checkTextTypesLengthAreEqual(const CalpontSystemCatalog::ColType& colType, 
 
 bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType& newType)
 {
-  switch (colType.colDataType)
+  switch (colType.colDataType.kind())
   {
     case (CalpontSystemCatalog::BIT):
       if (newType.fType == DDL_BIT)
@@ -109,7 +109,7 @@ bool typesAreSame(const CalpontSystemCatalog::ColType& colType, const ColumnType
       break;
 
     case (CalpontSystemCatalog::ENUM):
-      if (newType.fType == DDL_ENUM && colType.enumVals == newType.fEnumValues)
+      if (newType.fType == DDL_ENUM && *(colType.colDataType.values()) == newType.fEnumValues)
         return true;
 
       break;
@@ -2198,7 +2198,7 @@ void AlterTableProcessor::tableComment(uint32_t sessionID, execplan::CalpontSyst
   bool validated = true;
   bool negative = false;
 
-  switch (type.colDataType)
+  switch (type.colDataType.kind())
   {
     case CalpontSystemCatalog::BIGINT:
       if (static_cast<int64_t>(nextVal) > MAX_BIGINT)

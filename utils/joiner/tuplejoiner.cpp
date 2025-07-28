@@ -773,7 +773,7 @@ void TupleJoiner::doneInserting()
       if (isLongDouble(smallSideColType))
       {
         double dval = (double)roundl(smallRow.getLongDoubleField(smallSideColIdx));
-        switch (largeRG.getColType(largeKeyColumns[col]))
+        switch (largeRG.getColType(largeKeyColumns[col]).kind())
         {
           case CalpontSystemCatalog::DOUBLE:
           case CalpontSystemCatalog::UDOUBLE:
@@ -1120,7 +1120,7 @@ void TupleJoiner::updateCPData(const Row& r)
       if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
       {
         double dval = (double)roundl(r.getLongDoubleField(smallKeyColumns[col]));
-        switch (largeRG.getColType(largeKeyColumns[col]))
+        switch (largeRG.getColType(largeKeyColumns[col]).kind())
         {
           case CalpontSystemCatalog::DOUBLE:
           case CalpontSystemCatalog::UDOUBLE:
@@ -1158,7 +1158,7 @@ void TupleJoiner::updateCPData(const Row& r)
       if (r.getColType(colIdx) == CalpontSystemCatalog::LONGDOUBLE)
       {
         double dval = (double)roundl(r.getLongDoubleField(colIdx));
-        switch (largeRG.getColType(largeKeyColumns[col]))
+        switch (largeRG.getColType(largeKeyColumns[col]).kind())
         {
           case CalpontSystemCatalog::DOUBLE:
           case CalpontSystemCatalog::UDOUBLE:
@@ -1356,7 +1356,7 @@ uint32 TypelessData::hash(const RowGroup& r, const std::vector<uint32_t>& keyCol
   datatypes::MariaDBHasher hasher;
   for (auto keyColId : keyCols)
   {
-    switch (r.getColTypes()[keyColId])
+    switch (r.getColTypes()[keyColId].kind())
     {
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::CHAR:
@@ -1398,7 +1398,7 @@ int TypelessData::cmpToRow(const RowGroup& r, const std::vector<uint32_t>& keyCo
   for (uint32_t i = 0; i < keyCols.size(); i++)
   {
     auto largeSideKeyColRowIdx = keyCols[i];
-    switch (r.getColType(largeSideKeyColRowIdx))
+    switch (r.getColType(largeSideKeyColRowIdx).kind())
     {
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::CHAR:
@@ -1492,7 +1492,7 @@ int TypelessData::cmp(const RowGroup& r, const std::vector<uint32_t>& keyCols, c
   for (uint32_t i = 0; i < keyCols.size(); ++i)
   {
     auto keyColIdx = keyCols[i];
-    switch (r.getColTypes()[keyColIdx])
+    switch (r.getColTypes()[keyColIdx].kind())
     {
       case CalpontSystemCatalog::VARCHAR:
       case CalpontSystemCatalog::CHAR:
@@ -1563,7 +1563,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, uint
     {
       bool otherSideIsIntOrNarrow = otherSideRG.getColumnWidth(otherKeyCols[i]) <= datatypes::MAXLEGACYWIDTH;
       // useless if otherSideIsInt is false
-      auto otherSideType = (otherSideIsIntOrNarrow) ? otherSideRG.getColType(otherKeyCols[i])
+      auto otherSideType = (otherSideIsIntOrNarrow) ? otherSideRG.getColType(otherKeyCols[i]).kind()
                                                     : datatypes::SystemCatalog::UNDEFINED;
       if (WideDecimalKeyConverter(r, keyCols[i])
               .convert(otherSideIsIntOrNarrow, otherSideType)
@@ -1579,7 +1579,7 @@ TypelessData makeTypelessKey(const Row& r, const vector<uint32_t>& keyCols, uint
       // Small side is a long double. Since CS can't store larger than DOUBLE,
       // we need to convert to whatever type large side is -- double or int64
       long double keyld = r.getLongDoubleField(keyCols[i]);
-      switch (otherSideRG.getColType(otherKeyCols[i]))
+      switch (otherSideRG.getColType(otherKeyCols[i]).kind())
       {
         case CalpontSystemCatalog::DOUBLE:
         case CalpontSystemCatalog::UDOUBLE:
@@ -1921,7 +1921,7 @@ uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds,
                                                  : std::numeric_limits<uint64_t>::max();
     const auto& smallKeyColumnType = aSmallRowGroup.getColTypes()[smallSideKeyColumnId];
     // Not used if aLargeRowGroup is 0 that happens in PrimProc.
-    const auto& largeKeyColumntype = (aLargeRowGroup) ? aLargeRowGroup->getColTypes()[largeSideKeyColumnId]
+    const auto& largeKeyColumntype = (aLargeRowGroup) ? aLargeRowGroup->getColTypes()[largeSideKeyColumnId].kind()
                                                       : datatypes::SystemCatalog::UNDEFINED;
     if (datatypes::isCharType(smallKeyColumnType))
     {

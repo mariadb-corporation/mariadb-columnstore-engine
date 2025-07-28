@@ -1190,8 +1190,7 @@ uint8_t WE_DDLCommandProc::createtablefiles(ByteStream& bs, std::string& err)
   {
     bs >> tmp32;
     dataOid = tmp32;
-    bs >> tmp8;
-    colDataType = (CalpontSystemCatalog::ColDataType)tmp8;
+    bs >> colDataType;
     bs >> tmp8;
     tokenFlag = (tmp8 != 0);
     bs >> tmp32;
@@ -3201,8 +3200,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   dataOid = tmp32;
   bs >> tmp32;
   dictOid = tmp32;
-  bs >> tmp8;
-  dataType = (CalpontSystemCatalog::ColDataType)tmp8;
+  bs >> dataType;
   bs >> tmp8;
   autoincrement = (tmp8 != 0);
   bs >> tmp32;
@@ -3216,8 +3214,7 @@ uint8_t WE_DDLCommandProc::fillNewColumn(ByteStream& bs, std::string& err)
   compressionType = tmp8;
   bs >> tmp32;
   refColOID = tmp32;
-  bs >> tmp8;
-  refColDataType = (CalpontSystemCatalog::ColDataType)tmp8;
+  bs >> refColDataType;
   bs >> tmp32;
   refColWidth = tmp32;
   bs >> tmp8;

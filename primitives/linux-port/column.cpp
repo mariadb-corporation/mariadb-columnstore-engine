@@ -248,7 +248,7 @@ inline bool isMinMaxValid(const NewColRequestHeader* in)
   }
   else
   {
-    switch (in->colType.DataType)
+    switch (in->colType.DataType.kind())
     {
       case CalpontSystemCatalog::CHAR: return (in->colType.DataSize < 9);
 
@@ -1831,7 +1831,7 @@ namespace primitives
 // The routine used to dispatch CHAR|VARCHAR|TEXT|BLOB scan.
 inline bool isDictTokenScan(NewColRequestHeader* in)
 {
-  switch (in->colType.DataType)
+  switch (in->colType.DataType.kind())
   {
     case CalpontSystemCatalog::CHAR: return (in->colType.DataSize > 8);
 

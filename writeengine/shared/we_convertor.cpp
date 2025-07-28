@@ -470,7 +470,7 @@ void Convertor::convertColType(CalpontSystemCatalog::ColDataType dataType, int c
     return;
   }
 
-  switch (dataType)
+  switch (dataType.kind())
   {
     // Map BIT and TINYINT to WR_BYTE
     case CalpontSystemCatalog::BIT:
@@ -643,7 +643,7 @@ void Convertor::convertColType(ColStruct* curStruct)
   bTokenFlag = curStruct->tokenFlag;
   width = &(curStruct->colWidth);
 
-  switch (dataType)
+  switch (dataType.kind())
   {
     // Map BIT and TINYINT to WR_BYTE
     case CalpontSystemCatalog::BIT:
@@ -746,7 +746,7 @@ int Convertor::getCorrectRowWidth(CalpontSystemCatalog::ColDataType dataType, in
 {
   int offset, newWidth = 4;
 
-  switch (dataType)
+  switch (dataType.kind())
   {
     case CalpontSystemCatalog::TINYINT:
     case CalpontSystemCatalog::UTINYINT: newWidth = 1; break;

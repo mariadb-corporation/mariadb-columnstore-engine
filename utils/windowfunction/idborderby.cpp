@@ -557,7 +557,7 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
 
   for (auto spec_el : spec)
   {
-    switch (types[spec_el.fIndex])
+    switch (types[spec_el.fIndex].kind())
     {
       case CalpontSystemCatalog::TINYINT:
       {
@@ -804,7 +804,7 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
   {
     CalpontSystemCatalog::ColDataType type = fRow1.getColType(*i);
 
-    switch (type)
+    switch (type.kind())
     {
       case CalpontSystemCatalog::TINYINT:
       case CalpontSystemCatalog::SMALLINT:
@@ -874,8 +874,8 @@ bool EqualCompData::operator()(Row::Pointer a, Row::Pointer b)
       {
         eq = false;
         uint64_t ec = ERR_WF_UNKNOWN_COL_TYPE;
-        cerr << IDBErrorInfo::instance()->errorMsg(ec, type) << " @" << __FILE__ << ":" << __LINE__;
-        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ec, type), ec);
+        cerr << IDBErrorInfo::instance()->errorMsg(ec, type.kind()) << " @" << __FILE__ << ":" << __LINE__;
+        throw IDBExcept(IDBErrorInfo::instance()->errorMsg(ec, type.kind()), ec);
         break;
       }
     }

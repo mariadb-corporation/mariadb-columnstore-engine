@@ -1039,8 +1039,8 @@ static void* EMRunner([[maybe_unused]] void* arg)
     colWidth = colWidthsAvailable[randNumber % colWidthsAvailable.size()];
     partNum = randNumber % std::numeric_limits<PartitionNumberT>::max();
     segmentNum = randNumber % std::numeric_limits<SegmentT>::max();
-    colDataType = (execplan::CalpontSystemCatalog::ColDataType)(
-        randNumber % (int)execplan::CalpontSystemCatalog::ColDataType::TIMESTAMP);
+    colDataType = (execplan::CalpontSystemCatalog::Kind)(
+        randNumber % (int)execplan::CalpontSystemCatalog::TIMESTAMP);
 #ifdef BRM_VERBOSE
     cerr << "next op is " << op << endl;
 #endif

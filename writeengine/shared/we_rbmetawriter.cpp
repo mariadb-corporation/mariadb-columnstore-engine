@@ -213,7 +213,7 @@ void RBMetaWriter::saveBulkRollbackMetaData(const std::vector<Column>& columns,
 
         // Save column meta-data info to support bulk rollback
         writeColumnMetaData(metaFileName, bExtentWithData, columns[i].dataFile.oid, dbRoot, partition,
-                            segment, localHWM, columns[i].colDataType, ColDataTypeStr[columns[i].colDataType],
+                            segment, localHWM, columns[i].colDataType, ColDataTypeStr[columns[i].colDataType.kind()],
                             columns[i].colWidth, columns[i].compressionType);
 
         // Save dctnry store meta-data info to support bulk rollback
@@ -519,12 +519,12 @@ void RBMetaWriter::writeColumnMetaData(const std::string& metaFileName, bool wit
   if (withHWM)
   {
     fMetaDataStream << "COLUM1: " << columnOID << ' ' << dbRoot << ' ' << partition << ' ' << segment << ' '
-                    << lastLocalHwm << ' ' << colType << ' ' << colTypeName << ' ' << colWidth;
+                    << lastLocalHwm << ' ' << colType.kind() << ' ' << colTypeName << ' ' << colWidth;
   }
   else
   {
     fMetaDataStream << "COLUM2: " << columnOID << ' ' << dbRoot << ' ' << partition << ' ' << segment << ' '
-                    << colType << ' ' << colTypeName << ' ' << colWidth;
+                    << colType.kind() << ' ' << colTypeName << ' ' << colWidth;
   }
 
   if (compressionType)

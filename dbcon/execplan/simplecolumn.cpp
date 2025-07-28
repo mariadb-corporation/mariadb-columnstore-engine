@@ -547,7 +547,7 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
     return;
   }
 
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::DATE:
     {

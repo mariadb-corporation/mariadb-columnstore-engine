@@ -80,7 +80,7 @@ CalpontSystemCatalog::ColType Func_round::operationType(FunctionParm& fp,
   {
     CalpontSystemCatalog::ColType ct = fp[0]->data()->resultType();
 
-    switch (ct.colDataType)
+    switch (ct.colDataType.kind())
     {
       case execplan::CalpontSystemCatalog::BIGINT:
       case execplan::CalpontSystemCatalog::INT:
@@ -313,7 +313,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
 {
   IDB_Decimal decimal;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
@@ -694,7 +694,7 @@ string Func_round::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
   while (e-- > 0)
     p *= 10;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

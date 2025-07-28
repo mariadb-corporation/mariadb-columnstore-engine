@@ -392,7 +392,8 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
   cerr << "WorkerComm: do_createStripeColumnExtents()" << endl;
 #endif
 
-  deserializeInlineVector(msg, cols);
+
+  deserializeVector(msg, cols);
   msg >> tmp16;
   dbRoot = tmp16;
   msg >> tmp32;
@@ -465,7 +466,7 @@ void SlaveComm::do_createColumnExtent_DBroot(ByteStream& msg)
   msg >> tmp16;
   segmentNum = tmp16;
   msg >> tmp8;
-  colDataType = (execplan::CalpontSystemCatalog::ColDataType)tmp8;
+  colDataType = (execplan::CalpontSystemCatalog::Kind)tmp8;
 
   if (printOnly)
   {
@@ -534,7 +535,7 @@ void SlaveComm::do_createColumnExtentExactFile(ByteStream& msg)
   msg >> tmp16;
   segmentNum = tmp16;
   msg >> tmp8;
-  colDataType = (execplan::CalpontSystemCatalog::ColDataType)tmp8;
+  colDataType = (execplan::CalpontSystemCatalog::Kind)tmp8;
 
   if (printOnly)
   {
@@ -1023,7 +1024,7 @@ void SlaveComm::do_bulkSetHWMAndCP(ByteStream& msg)
 
   deserializeInlineVector(msg, hwmArgs);
   deserializeInlineVector(msg, setCPDataArgs);
-  deserializeInlineVector(msg, mergeCPDataArgs);
+  deserializeVector(msg, mergeCPDataArgs);
   msg >> tmp32;
   transID = tmp32;
 
@@ -1090,7 +1091,7 @@ void SlaveComm::do_markInvalid(ByteStream& msg)
     return;
   }
 
-  err = slave->markExtentInvalid(lbid, (execplan::CalpontSystemCatalog::ColDataType)colDataType);
+  err = slave->markExtentInvalid(lbid, (execplan::CalpontSystemCatalog::Kind)colDataType);
   reply << (uint8_t)err;
 #ifdef BRM_VERBOSE
   cerr << "WorkerComm: do_markInvalid() err code is " << err << endl;
@@ -1126,7 +1127,7 @@ void SlaveComm::do_markManyExtentsInvalid(ByteStream& msg)
     msg >> tmp64;
     msg >> colDataType;
     lbids.push_back(tmp64);
-    colDataTypes.push_back((execplan::CalpontSystemCatalog::ColDataType)colDataType);
+    colDataTypes.push_back((execplan::CalpontSystemCatalog::Kind)colDataType);
 
     if (printOnly)
       cout << "   " << tmp64 << " " << colDataType << endl;
@@ -1311,7 +1312,7 @@ void SlaveComm::do_mergeExtentsMaxMin(ByteStream& msg)
     cpMaxMin.seqNum = tmp32;
 
     msg >> tmp32;
-    cpMaxMin.type = (execplan::CalpontSystemCatalog::ColDataType)tmp32;
+    cpMaxMin.type = (execplan::CalpontSystemCatalog::Kind)tmp32;
 
     msg >> tmp32;
     cpMaxMin.newExtent = tmp32;

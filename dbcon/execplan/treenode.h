@@ -407,7 +407,7 @@ class TreeNode
 
 inline bool TreeNode::getBoolVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
@@ -472,15 +472,15 @@ inline bool TreeNode::getBoolVal()
 
 inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::ENUM:
     
-    // Nedeljko TO DO
     if (fResult.uintVal==joblist::USMALLINTNULL) {
-      fResult.strVal.assign(fResultType.enumVals[fResult.uintVal]);
-    } else {
       fResult.strVal.dropString();
+    } else {
+      const std::vector<std::string> &vals = *(fResultType.colDataType.values());
+      fResult.strVal.assign(vals[fResult.uintVal]);
     }
 
     break;
@@ -693,7 +693,7 @@ inline const utils::NullString& TreeNode::getStrVal(const long timeZone)
 
 inline int64_t TreeNode::getIntVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
     {
@@ -754,7 +754,7 @@ inline int64_t TreeNode::getIntVal()
 }
 inline uint64_t TreeNode::getUintVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
@@ -806,7 +806,7 @@ inline uint64_t TreeNode::getUintVal()
 }
 inline float TreeNode::getFloatVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
@@ -877,7 +877,7 @@ inline float TreeNode::getFloatVal()
 }
 inline double TreeNode::getDoubleVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
@@ -948,7 +948,7 @@ inline double TreeNode::getDoubleVal()
 }
 inline long double TreeNode::getLongDoubleVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
       if (fResultType.colWidth <= 8)
@@ -1018,7 +1018,7 @@ inline long double TreeNode::getLongDoubleVal()
 }
 inline IDB_Decimal TreeNode::getDecimalVal()
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
@@ -1113,9 +1113,9 @@ inline IDB_Decimal TreeNode::getDecimalVal()
 
 inline int64_t TreeNode::getDatetimeIntVal(long timeZone)
 {
-  if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATE)
+  if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::DATE)
     return (fResult.intVal & 0x00000000FFFFFFC0LL) << 32;
-  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIME)
+  else if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::TIME)
   {
     dataconvert::Time tt;
     int day = 0;
@@ -1139,10 +1139,10 @@ inline int64_t TreeNode::getDatetimeIntVal(long timeZone)
     memcpy(&fResult.intVal, &dt, 8);
     return fResult.intVal;
   }
-  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
+  else if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::DATETIME)
     // return (fResult.intVal & 0xFFFFFFFFFFF00000LL);
     return (fResult.intVal);
-  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+  else if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::TIMESTAMP)
   {
     dataconvert::TimeStamp timestamp(fResult.intVal);
     int64_t seconds = timestamp.second;
@@ -1159,7 +1159,7 @@ inline int64_t TreeNode::getDatetimeIntVal(long timeZone)
 
 inline int64_t TreeNode::getTimestampIntVal()
 {
-  if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP)
+  if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::TIMESTAMP)
     return fResult.intVal;
   else
     return getIntVal();
@@ -1167,7 +1167,7 @@ inline int64_t TreeNode::getTimestampIntVal()
 
 inline int64_t TreeNode::getTimeIntVal()
 {
-  if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
+  if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::DATETIME)
   {
     dataconvert::DateTime dt;
 
@@ -1176,7 +1176,7 @@ inline int64_t TreeNode::getTimeIntVal()
     memcpy(&fResult.intVal, &tt, 8);
     return fResult.intVal;
   }
-  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::TIME)
+  else if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::TIME)
     return (fResult.intVal);
   else
     return getIntVal();
@@ -1184,9 +1184,9 @@ inline int64_t TreeNode::getTimeIntVal()
 
 inline int32_t TreeNode::getDateIntVal()
 {
-  if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATETIME)
+  if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::DATETIME)
     return (((int32_t)(fResult.intVal >> 32) & 0xFFFFFFC0) | 0x3E);
-  else if (fResultType.colDataType == execplan::CalpontSystemCatalog::DATE)
+  else if (fResultType.colDataType.kind() == execplan::CalpontSystemCatalog::DATE)
     return ((fResult.intVal & 0xFFFFFFC0) | 0x3E);
   else
     return getIntVal();

@@ -614,7 +614,7 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 
     ret->prestored_rfs[argIndex] = args->rf;
 
-    auto colDataType = (execplan::CalpontSystemCatalog::ColDataType)colType;
+    auto colDataType = (execplan::CalpontSystemCatalog::Kind)colType;
     bool isFilterValueNull = false;
 
     if (datatypes::isUnsigned(colDataType))

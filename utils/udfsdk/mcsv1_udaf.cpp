@@ -74,7 +74,7 @@ int32_t mcsv1Context::getColWidth()
   }
 
   // JIT initialization for types that have a defined size.
-  switch (fResultType)
+  switch (fResultType.kind())
   {
     case execplan::CalpontSystemCatalog::BIT:
     case execplan::CalpontSystemCatalog::TINYINT:
@@ -116,7 +116,7 @@ bool mcsv1Context::operator==(const mcsv1Context& c) const
   // We don't test the per row data fields. They don't determine
   // if it's the same Context.
   if (getName() != c.getName() || fRunFlags != c.fRunFlags || fContextFlags != c.fContextFlags ||
-      fUserDataSize != c.fUserDataSize || fResultType != c.fResultType || fResultscale != c.fResultscale ||
+      fUserDataSize != c.fUserDataSize || !(fResultType == c.fResultType) || fResultscale != c.fResultscale ||
       fResultPrecision != c.fResultPrecision || fStartFrame != c.fStartFrame || fEndFrame != c.fEndFrame ||
       fStartConstant != c.fStartConstant || fEndConstant != c.fEndConstant || fParamCount != c.fParamCount)
     return false;
@@ -201,7 +201,7 @@ void mcsv1Context::serialize(messageqcpp::ByteStream& b) const
   b << fRunFlags;
   // Dont send context flags, These are set for each call
   b << fUserDataSize;
-  b << (uint32_t)fResultType;
+  b << fResultType;
   b << fColWidth;
   b << fResultscale;
   b << fResultPrecision;
@@ -222,9 +222,7 @@ void mcsv1Context::unserialize(messageqcpp::ByteStream& b)
   b >> functionName;
   b >> fRunFlags;
   b >> fUserDataSize;
-  uint32_t iResultType;
-  b >> iResultType;
-  fResultType = (execplan::CalpontSystemCatalog::ColDataType)iResultType;
+  b >> fResultType;
   b >> fColWidth;
   b >> fResultscale;
   b >> fResultPrecision;

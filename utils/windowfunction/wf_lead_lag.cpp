@@ -228,7 +228,7 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t /*c*/)
     if (o < b || o > e || fOffsetNull)  // out of bound
     {
       T* v = (fDefNull) ? NULL : &fDefault;
-      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+      setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, v);
       continue;
     }
 
@@ -276,7 +276,7 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t /*c*/)
       else if (!fDefNull)
         v = &fDefault;
 
-      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+      setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, v);
     }
     else
     {
@@ -291,7 +291,7 @@ void WF_lead_lag<T>::operator()(int64_t b, int64_t e, int64_t /*c*/)
       else if (!fDefNull)
         v = &fDefault;
 
-      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+      setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, v);
     }
   }
 }

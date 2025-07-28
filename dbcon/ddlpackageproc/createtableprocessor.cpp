@@ -259,7 +259,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
     for (unsigned i = 0; i < numColumns; i++)
     {
       int dataType;
-      dataType = convertDataType(tableDef.fColumns[i]->fType->fType);
+      dataType = convertDataType(tableDef.fColumns[i]->fType->fType).kind();
 
       if ((dataType == CalpontSystemCatalog::CHAR && tableDef.fColumns[i]->fType->fLength > 8) ||
           (dataType == CalpontSystemCatalog::VARCHAR && tableDef.fColumns[i]->fType->fLength > 7) ||
@@ -593,7 +593,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
       }
 
       bytestream << (fStartingColOID + (colNum++) + 1);
-      bytestream << (uint8_t)dataType;
+      bytestream << dataType;
       bytestream << (uint8_t) false;
 
       bytestream << (uint32_t)colDefPtr->fType->fLength;
@@ -607,7 +607,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
           (dataType == CalpontSystemCatalog::TEXT && colDefPtr->fType->fLength > 7))
       {
         bytestream << (uint32_t)(fStartingColOID + numColumns + (dictNum++) + 1);
-        bytestream << (uint8_t)dataType;
+        bytestream << dataType;
         bytestream << (uint8_t) true;
         bytestream << (uint32_t)colDefPtr->fType->fLength;
         bytestream << (uint16_t)useDBRoot;
@@ -618,7 +618,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
     }
 
     bytestream << (fStartingColOID + numColumnOids);
-    bytestream << (uint8_t)execplan::AUX_COL_DATATYPE;
+    bytestream << (uint8_t)execplan::AUX_COL_DATATYPE.kind();
     bytestream << (uint8_t) false;
     bytestream << (uint32_t)execplan::AUX_COL_WIDTH;
     bytestream << (uint16_t)useDBRoot;
