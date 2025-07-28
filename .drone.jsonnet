@@ -206,9 +206,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --docker-image " + img +
     " --result-path " + result +
     " --packages-url " + packages_url +
-    " --do-setup " + std.toString(do_setup) +
-    (if result=="ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +     //FIX THIS HACK
-    '"',
+    " --do-setup " + std.toString(do_setup) + '"',
 
   local reportTestStage(containerName, result, stage) =
     'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
@@ -652,20 +650,17 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
- // depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
   // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
-// [
-//   Pipeline(b, p, e, "amd64", s)
-//   for b in std.objectFields(platforms)
-//   for p in platforms[b]
-//   for s in servers[b]
-//   for e in events
-// ] +
-
-
-
+[
+  Pipeline(b, p, e, "amd64", s)
+  for b in std.objectFields(platforms)
+  for p in platforms[b]
+  for s in servers[b]
+  for e in events
+] +
 // [
 //   Pipeline(b, p, e, "arm64", s)
 //   for b in std.objectFields(platforms_arm)
