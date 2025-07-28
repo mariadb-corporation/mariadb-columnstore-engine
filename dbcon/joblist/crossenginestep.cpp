@@ -234,7 +234,7 @@ T CrossEngineStep::convertValueNum(const char* str, const CalpontSystemCatalog::
     anyVal = ct.getNullValueForType();
   }
 
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case CalpontSystemCatalog::BIT: rv = boost::any_cast<bool>(anyVal); break;
 

@@ -77,7 +77,7 @@ mcsv1_UDAF* moda::getImpl(mcsv1Context* context)
   if (data->modaImpl)
     return data->modaImpl;
 
-  switch (context->getResultType())
+  switch (context->getResultType().kind())
   {
     case execplan::CalpontSystemCatalog::TINYINT: data->modaImpl = &moda_impl_int8; break;
     case execplan::CalpontSystemCatalog::SMALLINT: data->modaImpl = &moda_impl_int16; break;
@@ -130,8 +130,8 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
 
   if (!(datatypes::isNumeric(colTypes[0].dataType)))
   {
-    if (colTypes[0].dataType != datatypes::SystemCatalog::VARCHAR &&
-        colTypes[0].dataType != datatypes::SystemCatalog::CHAR)
+    if (colTypes[0].dataType.kind() != datatypes::SystemCatalog::VARCHAR &&
+        colTypes[0].dataType.kind() != datatypes::SystemCatalog::CHAR)
     {
       // The error message will be prepended with
       // "The storage engine for the table doesn't support "
@@ -140,7 +140,7 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
     }
   }
 
-  if (colTypes[0].dataType == execplan::CalpontSystemCatalog::DECIMAL ||
+  if (colTypes[0].dataType.kind() == execplan::CalpontSystemCatalog::DECIMAL ||
       colTypes[0].dataType == execplan::CalpontSystemCatalog::UDECIMAL)
   {
     if (colTypes[0].precision < 3)
@@ -187,8 +187,8 @@ mcsv1_UDAF::ReturnCode moda::init(mcsv1Context* context, ColumnDatum* colTypes)
 template <class T>
 mcsv1_UDAF::ReturnCode Moda_impl_T<T>::init(mcsv1Context* context, ColumnDatum* colTypes)
 {
-  if (!(colTypes[0].dataType == execplan::CalpontSystemCatalog::DECIMAL ||
-        colTypes[0].dataType == execplan::CalpontSystemCatalog::UDECIMAL))
+  if (!(colTypes[0].dataType.kind() == execplan::CalpontSystemCatalog::DECIMAL ||
+        colTypes[0].dataType.kind() == execplan::CalpontSystemCatalog::UDECIMAL))
   {
     context->setColWidth(sizeof(T));
     context->setScale(0);
@@ -201,7 +201,7 @@ template <class T>
 mcsv1_UDAF::ReturnCode Moda_impl_T<T>::reset(mcsv1Context* context)
 {
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  data->fReturnType = context->getResultType();
+  data->fReturnType = context->getResultType().kind();
   data->fColWidth = context->getColWidth();
   data->clear<T>();
   return mcsv1_UDAF::SUCCESS;
@@ -340,7 +340,7 @@ void ModaData::serialize(messageqcpp::ByteStream& bs) const
   bs << fCount;
   bs << fColWidth;
 
-  switch ((execplan::CalpontSystemCatalog::ColDataType)fReturnType)
+  switch ((execplan::CalpontSystemCatalog::Kind)fReturnType)
   {
     case execplan::CalpontSystemCatalog::TINYINT: serializeMap<int8_t>(bs); break;
     case execplan::CalpontSystemCatalog::SMALLINT: serializeMap<int16_t>(bs); break;
@@ -379,7 +379,7 @@ void ModaData::unserialize(messageqcpp::ByteStream& bs)
   bs >> fCount;
   bs >> fColWidth;
 
-  switch ((execplan::CalpontSystemCatalog::ColDataType)fReturnType)
+  switch ((execplan::CalpontSystemCatalog::Kind)fReturnType)
   {
     case execplan::CalpontSystemCatalog::TINYINT: unserializeMap<int8_t>(bs); break;
     case execplan::CalpontSystemCatalog::SMALLINT: unserializeMap<int16_t>(bs); break;
@@ -415,7 +415,7 @@ void ModaData::cleanup()
 {
   if (!fMap)
     return;
-  switch ((execplan::CalpontSystemCatalog::ColDataType)fReturnType)
+  switch ((execplan::CalpontSystemCatalog::Kind)fReturnType)
   {
     case execplan::CalpontSystemCatalog::TINYINT:
       clear<int8_t>();
@@ -511,7 +511,7 @@ mcsv1_UDAF::ReturnCode Moda_impl_T<string>::init(mcsv1Context* context, ColumnDa
 mcsv1_UDAF::ReturnCode Moda_impl_T<string>::reset(mcsv1Context* context)
 {
   ModaData* data = static_cast<ModaData*>(context->getUserData());
-  data->fReturnType = context->getResultType();
+  data->fReturnType = context->getResultType().kind();
   data->fColWidth = context->getColWidth();
   data->fCs_num = context->getCharsetNumber();
   data->clear<string>();

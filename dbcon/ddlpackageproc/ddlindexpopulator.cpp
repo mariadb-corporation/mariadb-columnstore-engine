@@ -311,7 +311,7 @@ boost::any DDLIndexPopulator::convertData(const CalpontSystemCatalog::ColType& c
 {
   uint64_t data = cr->GetData(idx);
 
-  switch (colType.colDataType)
+  switch (colType.colDataType.kind())
   {
     case CalpontSystemCatalog::BIT:
     case CalpontSystemCatalog::ENUM: return colType.fEnumValues[data];
@@ -457,7 +457,7 @@ bool DDLIndexPopulator::checkNotNull(const IdxTuple& data, const CalpontSystemCa
   any nullvalue = DDLNullValueForType(colType);
   bool isNull = false;
 
-  switch (colType.colDataType)
+  switch (colType.colDataType.kind())
   {
     case CalpontSystemCatalog::BIT: break;
 

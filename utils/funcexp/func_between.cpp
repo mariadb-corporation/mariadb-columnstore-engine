@@ -67,7 +67,7 @@ inline bool strLE(CHARSET_INFO& cs, const string& op1, const string& op2)
 inline bool getBool(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& isNull,
                     CalpontSystemCatalog::ColType& ct, bool notBetween)
 {
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

@@ -1348,7 +1348,7 @@ void RowGroup::deserialize(ByteStream& bs)
   deserializeInlineVector<uint32_t>(bs, colWidths);
   deserializeInlineVector<uint32_t>(bs, oids);
   deserializeInlineVector<uint32_t>(bs, keys);
-  deserializeInlineVector<CalpontSystemCatalog::ColDataType>(bs, types);
+  deserializeVector<CalpontSystemCatalog::ColDataType>(bs, types);
   deserializeInlineVector<uint32_t>(bs, charsetNumbers);
   deserializeInlineVector<uint32_t>(bs, scale);
   deserializeInlineVector<uint32_t>(bs, precision);
@@ -1557,9 +1557,9 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
   for (i = 0; i < in.getColumnCount(); i++)
     if (mapping[i] != -1)
     {
-      if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
-                   in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
-                   in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT))
+      if (UNLIKELY(in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::VARBINARY ||
+                   in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::BLOB ||
+                   in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::TEXT))
       {
         out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), mapping[i]);
       }
@@ -1569,7 +1569,7 @@ void applyMapping(const int* mapping, const Row& in, Row* out)
       }
       else if (UNLIKELY(in.isShortString(i)))
         out->setUintField(in.getUintField(i), mapping[i]);
-      else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+      else if (UNLIKELY(in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::LONGDOUBLE))
         out->setLongDoubleField(in.getLongDoubleField(i), mapping[i]);
       // WIP this doesn't look right b/c we can pushdown colType
       // Migrate to offset based methods here

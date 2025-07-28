@@ -289,6 +289,18 @@ const string& TypeHandlerEnum::name() const
   return xname;
 }
 
+const string& TypeHandlerSet::name() const
+{
+  static const string xname = "SET";
+  return xname;
+}
+
+const string& TypeHandlerJson::name() const
+{
+  static const string xname = "JSON";
+  return xname;
+}
+
 TypeHandlerBit mcs_type_handler_bit;
 
 TypeHandlerSInt8 mcs_type_handler_sint8;
@@ -304,6 +316,8 @@ TypeHandlerUInt32 mcs_type_handler_uint32;
 TypeHandlerUInt64 mcs_type_handler_uint64;
 
 TypeHandlerEnum mcs_type_handler_enum;
+TypeHandlerSet mcs_type_handler_set;
+TypeHandlerJson mcs_type_handler_json;
 
 TypeHandlerSFloat mcs_type_handler_sfloat;
 TypeHandlerSDouble mcs_type_handler_sdouble;
@@ -353,6 +367,8 @@ const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode,
     case SystemCatalog::UDOUBLE: return &mcs_type_handler_udouble;
 
     case SystemCatalog::ENUM: return &mcs_type_handler_enum;
+    case SystemCatalog::SET: return &mcs_type_handler_set;
+    case SystemCatalog::JSON: return &mcs_type_handler_json;
 
     case SystemCatalog::DECIMAL:
       if (static_cast<uint32_t>(ct.colWidth) < datatypes::MAXDECIMALWIDTH)
@@ -1567,11 +1583,41 @@ boost::any TypeHandlerEnum::convertFromString(const SystemCatalog::TypeAttribute
 {
   unsigned short val = 0;
 
-  for (; val<colType.enumVals.size(); ++val) {
-    if (colType.enumVals[val] == data) {
+  for (; val<colType.colDataType.values().get()->size(); ++val) {
+    if (colType.colDataType.values().get()->operator[](val) == data) {
       break; 
     }
   }
+
+  // Nedeljko TO DO
+  boost::any value = val;
+
+  return value;
+}
+
+boost::any TypeHandlerSet::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+  const ConvertFromStringParam&, const std::string& data,
+  bool&) const
+{
+  unsigned short val = 0;
+
+  for (; val<colType.colDataType.values().get()->size(); ++val) {
+    if (colType.colDataType.values().get()->operator[](val) == data) {
+      break; 
+    }
+  }
+
+  // Nedeljko TO DO
+  boost::any value = val;
+
+  return value;
+}
+
+boost::any TypeHandlerJson::convertFromString(const SystemCatalog::TypeAttributesStd&,
+  const ConvertFromStringParam&, const std::string&,
+  bool&) const
+{
+  unsigned short val = 0;
 
   // Nedeljko TO DO
   boost::any value = val;

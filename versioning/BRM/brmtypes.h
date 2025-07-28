@@ -179,7 +179,24 @@ struct CPInfoMerge
     int64_t min_;
   };
 };
+
+inline messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream &stream, const CPInfoMerge &obj)
+{
+  stream << obj.startLbid << obj.max << obj.min << obj.seqNum << obj.type << obj.colWidth << obj.newExtent << obj.bigMax << obj.bigMin;
+
+  return stream;
+}
+
+inline messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream &stream, CPInfoMerge &obj)
+{
+  stream >> obj.startLbid >> obj.max >> obj.min >> obj.seqNum >> obj.type >> obj.colWidth >> obj.newExtent >> obj.bigMax >> obj.bigMin;
+
+  return stream;
+}
+
 typedef std::vector<CPInfoMerge> CPInfoMergeList_t;
+
+
 
 // Used for map where lbid is the key.  Data members have same meaning as
 // those in CPInfoMerge.
@@ -325,6 +342,22 @@ struct CreateStripeColumnExtentsArgIn
   uint32_t width = 0;  // column width in bytes
   execplan::CalpontSystemCatalog::ColDataType colDataType;
 };
+
+inline messageqcpp::ByteStream& operator<<(messageqcpp::ByteStream &bs, const CreateStripeColumnExtentsArgIn &in)
+{
+  static_assert(sizeof(in.oid)==4);
+  bs << (int32_t)in.oid << in.width << in.colDataType;
+
+  return bs;
+}
+
+inline messageqcpp::ByteStream& operator>>(messageqcpp::ByteStream &bs, CreateStripeColumnExtentsArgIn &in)
+{
+  static_assert(sizeof(in.oid)==4);
+  bs >> (int32_t&)in.oid >> in.width >> in.colDataType;
+
+  return bs;
+}
 
 /* Output Arg type for DBRM:createStripeColumnExtents() */
 struct CreateStripeColumnExtentsArgOut

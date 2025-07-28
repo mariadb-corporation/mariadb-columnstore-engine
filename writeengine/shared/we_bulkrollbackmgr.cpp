@@ -725,7 +725,7 @@ void BulkRollbackMgr::deleteColumn1ExtentsV4(const char* inBuf)
   // Read meta-data record
   int numFields = sscanf(inBuf, "%s %u %u %u %u %u %d %s %u %d", recType, &columnOID, &dbRootHwm, &partNumHwm,
                          &segNumHwm, &lastLocalHwm, &colTypeInt, colTypeName, &colWidth, &compressionType);
-  colType = (CalpontSystemCatalog::ColDataType)colTypeInt;
+  colType = (CalpontSystemCatalog::Kind)colTypeInt;
 
   if (numFields < 9)  // compressionType is optional
   {

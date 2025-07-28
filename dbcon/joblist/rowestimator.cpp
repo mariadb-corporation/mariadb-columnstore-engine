@@ -83,7 +83,7 @@ uint32_t RowEstimator::daysThroughMonth(uint32_t mth)
 // The values are adjusted so that one can be subtracted from another to find a range, compare, etc.
 uint64_t RowEstimator::adjustValue(const execplan::CalpontSystemCatalog::ColType& ct, const uint64_t& value)
 {
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     // Use day precision for dates.  We'll use day relative to the year 0 without worrying about leap
     // years.  This is for row count estimation and we are close enough for hand grenades.
@@ -132,11 +132,11 @@ uint32_t RowEstimator::estimateDistinctValues(const execplan::CalpontSystemCatal
   // If no casual partitioning info available for extent.  These rules were defined in the requirements.
   if (cpStatus != BRM::CP_VALID)
   {
-    switch (ct.colDataType)
+    switch (ct.colDataType.kind())
     {
       case CalpontSystemCatalog::BIT: return 2;
 
-      case CalpontSystemCatalog::ENUM: return ct.enumVals.size();
+      case CalpontSystemCatalog::ENUM: return ct.colDataType.values()->size();
 
       // Return limit/2 for integers where limit is number of possible values.
       case CalpontSystemCatalog::TINYINT: return (1 << 8) / 2;

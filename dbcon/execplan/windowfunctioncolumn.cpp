@@ -444,7 +444,7 @@ void WindowFunctionColumn::adjustResultType()
 
 void WindowFunctionColumn::evaluate(Row& row, bool& isNull)
 {
-  switch (fResultType.colDataType)
+  switch (fResultType.colDataType.kind())
   {
     case CalpontSystemCatalog::DATE:
     {

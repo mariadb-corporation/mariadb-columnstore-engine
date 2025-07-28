@@ -75,7 +75,7 @@ CalpontSystemCatalog::ColType Func_truncate::operationType(FunctionParm& fp,
   {
     CalpontSystemCatalog::ColType ct = fp[0]->data()->resultType();
 
-    switch (ct.colDataType)
+    switch (ct.colDataType.kind())
     {
       case execplan::CalpontSystemCatalog::BIGINT:
       case execplan::CalpontSystemCatalog::INT:
@@ -171,7 +171,7 @@ uint64_t Func_truncate::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 double Func_truncate::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                    CalpontSystemCatalog::ColType& op_ct)
 {
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::FLOAT:
@@ -296,7 +296,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
 {
   IDB_Decimal decimal;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:
@@ -612,7 +612,7 @@ string Func_truncate::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   IDB_Decimal x = getDecimalVal(row, parm, isNull, op_ct);
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

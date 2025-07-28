@@ -169,7 +169,7 @@ void WF_min_max<T>::operator()(int64_t b, int64_t e, int64_t c)
   }
 
   T* v = ((fCount > 0) ? &fValue : NULL);
-  setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+  setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, v);
 
   fPrev = c;
 }

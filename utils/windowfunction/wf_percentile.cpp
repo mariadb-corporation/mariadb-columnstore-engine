@@ -251,7 +251,7 @@ void WF_percentile<T>::operator()(int64_t b, int64_t e, int64_t c)
         break;
 
       fRow.setData(getPointer(fRowData->at(c)));
-      setValue(fRow.getColType(fFieldIndex[0]), b, e, c, (T*)NULL);
+      setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, (T*)NULL);
     }
 
     return;
@@ -300,7 +300,7 @@ void WF_percentile<T>::operator()(int64_t b, int64_t e, int64_t c)
 
   T* p = NULL;
   T v;
-  int ct = (fFunctionId == WF__PERCENTILE_CONT) ? CalpontSystemCatalog::DOUBLE : fRow.getColType(idx);
+  int ct = (fFunctionId == WF__PERCENTILE_CONT) ? CalpontSystemCatalog::DOUBLE : fRow.getColType(idx).kind();
 
   if (b1 != -1)
   {

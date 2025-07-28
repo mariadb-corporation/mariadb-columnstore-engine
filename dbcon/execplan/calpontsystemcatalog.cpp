@@ -689,7 +689,7 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
     if ((*it)->ColumnOID() == oid[0])
       ct.colWidth = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[2])
-      ct.colDataType = (ColDataType)((*it)->GetData(0));
+      ct.colDataType = (Kind)((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[3])
       ct.ddn.dictOID = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[4])
@@ -1210,7 +1210,7 @@ const CalpontSystemCatalog::ColType CalpontSystemCatalog::colType(const OID& Oid
         rid = (*it)->GetRid(0);
     }
     else if ((*it)->ColumnOID() == oid[2])
-      ct.colDataType = (ColDataType)((*it)->GetData(0));
+      ct.colDataType = (Kind)((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[3])
       ct.ddn.dictOID = ((*it)->GetData(0));
     else if ((*it)->ColumnOID() == oid[4])
@@ -3266,7 +3266,7 @@ const CalpontSystemCatalog::RIDList CalpontSystemCatalog::columnRIDs(const Table
     else if ((*it)->ColumnOID() == oid[2])
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
-        ctList[i].colDataType = (ColDataType)((*it)->GetData(i));
+        ctList[i].colDataType = (Kind)((*it)->GetData(i));
     }
     else if ((*it)->ColumnOID() == oid[3])
     {
@@ -5770,7 +5770,7 @@ void CalpontSystemCatalog::getSchemaInfo(const string& in_schema, int lower_case
     else if ((*it)->ColumnOID() == oid[2])
     {
       for (int i = 0; i < (*it)->dataCount(); i++)
-        ctList[i].colDataType = (ColDataType)((*it)->GetData(i));
+        ctList[i].colDataType = (Kind)((*it)->GetData(i));
     }
     else if ((*it)->ColumnOID() == oid[3])
     {

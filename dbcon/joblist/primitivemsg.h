@@ -331,8 +331,8 @@ struct ColRequestHeaderDataType : public datatypes::Charset
 {
   int32_t CompType;
   uint16_t DataSize;
-  uint8_t DataType;  // enum ColDataType defined in calpont system catalog header file
-  ColRequestHeaderDataType() : Charset(my_charset_bin), CompType(0), DataSize(0), DataType(0)
+  execplan::CalpontSystemCatalog::ColDataType DataType;  // enum ColDataType defined in calpont system catalog header file
+  ColRequestHeaderDataType() : Charset(my_charset_bin), CompType(0), DataSize(0), DataType(datatypes::SystemCatalog::ColDataType(datatypes::SystemCatalog::Kind::UNDEFINED))
   {
   }
   explicit ColRequestHeaderDataType(const execplan::CalpontSystemCatalog::ColType& rhs)

@@ -598,7 +598,7 @@ class AggDriver : public CppUnit::TestFixture
 
     boost::any anyVal = DataConvert::convertColumnData(ct, str, false);
 
-    switch (ct.colDataType)
+    switch (ct.colDataType.kind())
     {
       case CalpontSystemCatalog::BIT: v = boost::any_cast<bool>(anyVal); break;
 

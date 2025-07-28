@@ -332,7 +332,7 @@ CalpontSystemCatalog::OID isDictCol(const CalpontSystemCatalog::ColType& colType
 //------------------------------------------------------------------------------
 bool isCharCol(const CalpontSystemCatalog::ColType& colType)
 {
-  switch (colType.colDataType)
+  switch (colType.colDataType.kind())
   {
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::CHAR:

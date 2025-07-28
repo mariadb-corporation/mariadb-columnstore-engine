@@ -88,30 +88,30 @@ CalpontSystemCatalog::ColType MCS_add::operationType(FunctionParm& fp,
   {
     rt = fp[0]->data()->resultType();
   }
-  else if (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
-           fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
-           fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DOUBLE ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DOUBLE)
+  else if (fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::CHAR ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::CHAR ||
+           fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::VARCHAR ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::VARCHAR ||
+           fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DOUBLE ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DOUBLE)
   {
     rt.colDataType = CalpontSystemCatalog::DOUBLE;
     rt.colWidth = 8;
   }
-  else if (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DATE ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DATE ||
-           fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DATETIME ||
-           fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::TIME ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TIME)
+  else if (fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DATE ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DATE ||
+           fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DATETIME ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DATETIME ||
+           fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::TIME ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::TIME)
   {
     rt.colDataType = CalpontSystemCatalog::BIGINT;
     rt.colWidth = 8;
   }
-  else if (fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
-           fp[0]->data()->resultType().colDataType == CalpontSystemCatalog::UDECIMAL ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::DECIMAL ||
-           fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::UDECIMAL)
+  else if (fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DECIMAL ||
+           fp[0]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::UDECIMAL ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::DECIMAL ||
+           fp[1]->data()->resultType().colDataType.kind() == CalpontSystemCatalog::UDECIMAL)
   {
     rt.colDataType = CalpontSystemCatalog::DECIMAL;
     rt.colWidth = 8;
@@ -141,7 +141,7 @@ CalpontSystemCatalog::ColType MCS_add::operationType(FunctionParm& fp,
  */
 double MCS_add::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     // The APIs for the evaluation of the function parameters are the same getXXXval()
     // functions. However, only two arguments are passed in, the current
@@ -285,7 +285,7 @@ CalpontSystemCatalog::ColType MCS_isnull::operationType(FunctionParm& fp,
  */
 bool MCS_isnull::getBoolVal(Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& op_ct)
 {
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     // For the purpose of this function, one does not need to get the value of
     // the argument. One only need to know if the argument is NULL. The passed

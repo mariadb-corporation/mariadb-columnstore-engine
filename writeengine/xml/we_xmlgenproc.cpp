@@ -304,7 +304,7 @@ bool XMLGenProc::makeColumnData(const CalpontSystemCatalog::TableName& table)
     {
       xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_COL_OID], "%d", col->oid);
       xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_DATA_TYPE],
-                                  BAD_CAST ColDataTypeStr[col->colType.colDataType]);
+                                  BAD_CAST ColDataTypeStr[col->colType.colDataType.kind()]);
 
       if (col->colType.compressionType != CalpontSystemCatalog::NO_COMPRESSION)
         xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_COMPRESS_TYPE], "%d",

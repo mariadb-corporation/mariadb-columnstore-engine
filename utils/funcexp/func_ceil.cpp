@@ -73,7 +73,7 @@ int64_t Func_ceil::getIntVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 {
   int64_t ret = 0;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::INT:
@@ -198,7 +198,7 @@ uint64_t Func_ceil::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
 {
   uint64_t ret = 0;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case CalpontSystemCatalog::BIGINT:
     case CalpontSystemCatalog::INT:
@@ -498,7 +498,7 @@ IDB_Decimal Func_ceil::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
   // and call an appropriate ctor
   IDB_Decimal ret;
 
-  switch (op_ct.colDataType)
+  switch (op_ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

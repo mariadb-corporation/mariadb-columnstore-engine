@@ -876,7 +876,7 @@ void XMLJob::fillInXMLDataAsLoaded(execplan::CalpontSystemCatalog::RIDList& colR
         col.scale = colType.scale;
       }
 
-      col.typeName = ColDataTypeStr[colType.colDataType];
+      col.typeName = ColDataTypeStr[colType.colDataType.kind()];
       col.compressionType = colType.compressionType;
       col.dctnry.fCompressionType = colType.compressionType;
 
@@ -951,7 +951,7 @@ void XMLJob::fillInXMLDataNotNullDefault(const std::string& fullTblName,
     // but we don't do complete validation (like checking to see
     // if the default is too large for the given integer type),
     // because we assume DDL is fully validating the default value.
-    switch (colType.colDataType)
+    switch (colType.colDataType.kind())
     {
       case execplan::CalpontSystemCatalog::BIT:
       case execplan::CalpontSystemCatalog::TINYINT:

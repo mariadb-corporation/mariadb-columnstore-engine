@@ -2920,7 +2920,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
       throw runtime_error("VARBINARY in UNION must be the same width.");
   }
 
-  switch (type.colDataType)
+  switch (type.colDataType.kind())
   {
     case datatypes::SystemCatalog::TINYINT:
     case datatypes::SystemCatalog::SMALLINT:
@@ -2935,7 +2935,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
     case datatypes::SystemCatalog::UBIGINT:
     case datatypes::SystemCatalog::UDECIMAL:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::TINYINT:
         case datatypes::SystemCatalog::SMALLINT:
@@ -3050,7 +3050,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
 
     case datatypes::SystemCatalog::DATE:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::TINYINT:
         case datatypes::SystemCatalog::SMALLINT:
@@ -3098,7 +3098,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
 
     case datatypes::SystemCatalog::DATETIME:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::TINYINT:
         case datatypes::SystemCatalog::SMALLINT:
@@ -3150,7 +3150,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
 
     case datatypes::SystemCatalog::TIMESTAMP:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::TINYINT:
         case datatypes::SystemCatalog::SMALLINT:
@@ -3204,7 +3204,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
     case datatypes::SystemCatalog::UFLOAT:
     case datatypes::SystemCatalog::UDOUBLE:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::DATE:
           unionedType.colDataType = datatypes::SystemCatalog::CHAR;
@@ -3260,7 +3260,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
 
     case datatypes::SystemCatalog::LONGDOUBLE:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::DATE:
           unionedType.colDataType = datatypes::SystemCatalog::CHAR;
@@ -3318,7 +3318,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
     case datatypes::SystemCatalog::CHAR:
     case datatypes::SystemCatalog::VARCHAR:
     {
-      switch (unionedType.colDataType)
+      switch (unionedType.colDataType.kind())
       {
         case datatypes::SystemCatalog::TINYINT:
         case datatypes::SystemCatalog::SMALLINT:

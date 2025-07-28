@@ -56,7 +56,7 @@ inline bool getBoolForIn(rowgroup::Row& row, funcexp::FunctionParm& pm, bool& is
 {
   IDB_Decimal d;  // to be removed;
 
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::BIGINT:
     case execplan::CalpontSystemCatalog::INT:

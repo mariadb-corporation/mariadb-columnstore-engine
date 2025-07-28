@@ -404,7 +404,7 @@ int DBRM::markExtentInvalid(const LBID_t lbid,
   ByteStream command, response;
   uint8_t err;
 
-  command << MARKEXTENTINVALID << (uint64_t)lbid << (uint32_t)colDataType;
+  command << MARKEXTENTINVALID << (uint64_t)lbid << (uint32_t)colDataType.kind();
   err = send_recv(command, response);
 
   if (err != ERR_OK)
@@ -437,7 +437,7 @@ int DBRM::markExtentsInvalid(const vector<LBID_t>& lbids,
   for (i = 0; i < size; i++)
   {
     command << (uint64_t)lbids[i];
-    command << (uint32_t)colDataTypes[i];
+    command << (uint32_t)colDataTypes[i].kind();
   }
 
   err = send_recv(command, response);
@@ -621,7 +621,7 @@ int DBRM::mergeExtentsMaxMin(const CPInfoMergeList_t& cpInfos) DBRM_THROW
   for (it = cpInfos.begin(); it != cpInfos.end(); it++)
   {
     command << (uint64_t)it->startLbid << (uint64_t)it->max << (uint64_t)it->min << (uint32_t)it->seqNum
-            << (uint32_t)it->type << (uint32_t)it->newExtent;
+            << (uint32_t)it->type.kind() << (uint32_t)it->newExtent;
   }
 
   err = send_recv(command, response);
@@ -1019,7 +1019,7 @@ int DBRM::createColumnExtent_DBroot(OID_t oid, uint32_t colWidth, uint16_t dbRoo
 
   ByteStream command, response;
   uint8_t err;
-  uint32_t tmp8 = (uint8_t)colDataType;
+  uint32_t tmp8 = (uint8_t)colDataType.kind();
   uint16_t tmp16;
   uint32_t tmp32;
   uint64_t tmp64;
@@ -1096,7 +1096,7 @@ int DBRM::createColumnExtentExactFile(OID_t oid, uint32_t colWidth, uint16_t dbR
   uint32_t tmp32;
   uint64_t tmp64;
 
-  tmp8 = (uint8_t)colDataType;
+  tmp8 = (uint8_t)colDataType.kind();
   command << CREATE_COLUMN_EXTENT_EXACT_FILE << (ByteStream::quadbyte)oid << colWidth << dbRoot
           << partitionNum << segmentNum << tmp8;
   err = send_recv(command, response);
@@ -4382,7 +4382,7 @@ void DBRM::startAISequence(uint32_t OID, uint64_t firstNum, uint32_t colWidth,
 {
   ByteStream command, response;
   uint8_t err;
-  uint8_t tmp8 = colDataType;
+  uint8_t tmp8 = colDataType.kind();
 
   command << START_AI_SEQUENCE << OID << firstNum << colWidth << tmp8;
   err = send_recv(command, response);

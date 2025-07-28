@@ -4185,7 +4185,7 @@ void WriteEngineWrapper::printInputValue(const ColStructList& colStructList, con
     std::cerr << "Column[" << i << "]";
     std::cerr << "Data file OID : " << curColStruct.dataOid << "\t";
     std::cerr << "Width : " << curColStruct.colWidth << "\t"
-              << " Type: " << curColStruct.colDataType << std::endl;
+              << " Type: " << curColStruct.colDataType.kind() << std::endl;
     std::cerr << "Total values : " << curTupleList.size() << std::endl;
 
     for (j = 0; j < curTupleList.size(); j++)

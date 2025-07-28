@@ -54,7 +54,7 @@ class QueryTeleServiceHandler : public QueryTeleServiceIf
 
 const string st2str(enum StepType::type t)
 {
-  switch (t)
+  switch(t.kind())
   {
     case StepType::T_HJS: return "HJS";
 

@@ -2745,7 +2745,7 @@ void MasterDBRMNode::doStartAISequence(ByteStream& msg, ThreadParams* p)
   try
   {
     msg >> cmd >> oid >> firstNum >> colWidth >> tmp8;
-    colDataType = (execplan::CalpontSystemCatalog::ColDataType)tmp8;
+    colDataType = (execplan::CalpontSystemCatalog::Kind)tmp8;
     idbassert(msg.length() == 0);
     aiManager.startSequence(oid, firstNum, colWidth, colDataType);
     reply << (uint8_t)ERR_OK;

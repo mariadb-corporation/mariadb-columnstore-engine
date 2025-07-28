@@ -138,7 +138,7 @@ void valueNullNum(const CalpontSystemCatalog::ColType& ct, const long timeZone, 
   bool pushWarning = false;
   boost::any anyVal = ct.convertColumnData("", pushWarning, timeZone, true, false, false);
 
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case CalpontSystemCatalog::BIT:
       // n = boost::any_cast<bool>(anyVal);
@@ -288,7 +288,7 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
   bool pushWarning = false;
   boost::any anyVal = ct.convertColumnData(str, pushWarning, timeZone, false, true, false);
 
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case CalpontSystemCatalog::BIT: v = boost::any_cast<bool>(anyVal); break;
 
@@ -1723,7 +1723,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
       }
       catch (...)
       {
-        switch (ct.colDataType)
+        switch (ct.colDataType.kind())
         {
           case CalpontSystemCatalog::ENUM:
           case CalpontSystemCatalog::TINYINT:

@@ -175,7 +175,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
       if (!bSkipIt && !(flags[k] & mcsv1sdk::PARAM_IS_NULL))
       {
-        switch (datum.dataType)
+        switch (datum.dataType.kind())
         {
           case CalpontSystemCatalog::TINYINT:
           case CalpontSystemCatalog::SMALLINT:
@@ -492,7 +492,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
           default:
           {
-            string errStr = "(" + colType2String[(int)datum.dataType] + ")";
+            string errStr = "(" + colType2String[(int)datum.dataType.kind()] + ")";
             errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
             cerr << errStr << endl;
             throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);
@@ -686,11 +686,11 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::UDECIMAL:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (int64_t*)NULL);
+        setValue(colDataType.kind(), b, e, c, (int64_t*)NULL);
       }
       else
       {
-        setValue(colDataType, b, e, c, &intOut);
+        setValue(colDataType.kind(), b, e, c, &intOut);
       }
       break;
 
@@ -705,11 +705,11 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::TIME:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (uint64_t*)NULL);
+        setValue(colDataType.kind(), b, e, c, (uint64_t*)NULL);
       }
       else
       {
-        setValue(colDataType, b, e, c, &uintOut);
+        setValue(colDataType.kind(), b, e, c, &uintOut);
       }
       break;
 
@@ -717,11 +717,11 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::UFLOAT:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (float*)NULL);
+        setValue(colDataType.kind(), b, e, c, (float*)NULL);
       }
       else
       {
-        setValue(colDataType, b, e, c, &floatOut);
+        setValue(colDataType.kind(), b, e, c, &floatOut);
       }
       break;
 
@@ -729,22 +729,22 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::UDOUBLE:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (double*)NULL);
+        setValue(colDataType.kind(), b, e, c, (double*)NULL);
       }
       else
       {
-        setValue(colDataType, b, e, c, &doubleOut);
+        setValue(colDataType.kind(), b, e, c, &doubleOut);
       }
       break;
 
     case execplan::CalpontSystemCatalog::LONGDOUBLE:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (long double*)NULL);
+        setValue(colDataType.kind(), b, e, c, (long double*)NULL);
       }
       else
       {
-        setValue(colDataType, b, e, c, &longdoubleOut);
+        setValue(colDataType.kind(), b, e, c, &longdoubleOut);
       }
       break;
 
@@ -756,19 +756,19 @@ void WF_udaf::SetUDAFValue(static_any::any& valOut, int64_t colOut, int64_t b, i
     case execplan::CalpontSystemCatalog::BLOB:
       if (valOut.empty())
       {
-        setValue(colDataType, b, e, c, (utils::NullString*)NULL);
+        setValue(colDataType.kind(), b, e, c, (utils::NullString*)NULL);
       }
       else
       {
         utils::NullString nullStrOut(strOut);
-        setValue(colDataType, b, e, c, &nullStrOut);
+        setValue(colDataType.kind(), b, e, c, &nullStrOut);
       }
       break;
 
     default:
     {
       std::ostringstream errmsg;
-      errmsg << "WF_udaf: No logic for data type: " << colDataType;
+      errmsg << "WF_udaf: No logic for data type: " << colDataType.kind();
       cerr << errmsg.str() << endl;
       throw runtime_error(errmsg.str().c_str());
       break;
@@ -859,7 +859,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
         if (!bSkipIt && !(flags[k] & mcsv1sdk::PARAM_IS_NULL))
         {
-          switch (datum.dataType)
+          switch (datum.dataType.kind())
           {
             case CalpontSystemCatalog::TINYINT:
             case CalpontSystemCatalog::SMALLINT:
@@ -1145,7 +1145,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
             default:
             {
-              string errStr = "(" + colType2String[(int)datum.dataType] + ")";
+              string errStr = "(" + colType2String[(int)datum.dataType.kind()] + ")";
               errStr = IDBErrorInfo::instance()->errorMsg(ERR_WF_INVALID_PARM_TYPE, errStr);
               cerr << errStr << endl;
               throw IDBExcept(errStr, ERR_WF_INVALID_PARM_TYPE);

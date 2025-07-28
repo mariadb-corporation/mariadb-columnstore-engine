@@ -312,7 +312,7 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
       pTok = strtok(NULL, " ");
 
       if (pTok)
-        cpInfoMerge.type = (execplan::CalpontSystemCatalog::ColDataType)atoi(pTok);
+        cpInfoMerge.type = (execplan::CalpontSystemCatalog::Kind)atoi(pTok);
       else
       {
         // cout << "CP Entry : " << aEntry << endl;
@@ -570,7 +570,7 @@ bool WEBrmUpdater::prepareColumnOutOfRangeInfo(std::string Entry, int& ColNum,
 
     if (pTok)
     {
-      ColType = (execplan::CalpontSystemCatalog::ColDataType)atoi(pTok);
+      ColType = (execplan::CalpontSystemCatalog::Kind)atoi(pTok);
     }
     else
     {

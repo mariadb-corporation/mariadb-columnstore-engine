@@ -126,7 +126,7 @@ void log_query(const querytele::QueryTele& qtdata)
 #ifdef QUERY_TELE_DEBUG
 const string st2str(enum querytele::StepType::type t)
 {
-  switch (t)
+  switch(t.kind())
   {
     case querytele::StepType::T_HJS: return "HJS";
 

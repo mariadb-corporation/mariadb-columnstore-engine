@@ -278,7 +278,18 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     // for F&E use. only serialize necessary info for now
     void serialize(messageqcpp::ByteStream& b) const
     {
-      b << (uint32_t)colDataType;
+      b << (uint8_t)colDataType.kind();
+      b << (uint8_t)(colDataType.values().get()!=nullptr);
+
+      if (colDataType.values()) {
+        const std::vector<std::string> &v = *colDataType.values();
+        b << (uint16_t)v.size();
+
+        for (size_t i = 0; i<v.size(); ++i) {
+          b << v[i];
+        }
+      }
+
       b << (uint32_t)colWidth;
       b << (uint32_t)scale;
       b << (uint32_t)precision;
@@ -288,9 +299,30 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
     void unserialize(messageqcpp::ByteStream& b)
     {
-      uint32_t val;
-      b >> (uint32_t&)val;
-      colDataType = (ColDataType)val;
+      uint8_t kind;
+      uint8_t nonempty;
+      std::shared_ptr<std::vector<std::string>> vals_ptr;
+
+      b >> (uint8_t&)kind;
+      b >> (uint8_t&)nonempty;
+      
+      if (nonempty) {
+        uint16_t size;
+
+        b >> (uint16_t&)size;
+        vals_ptr = std::shared_ptr<std::vector<std::string>>(new std::vector<std::string>);
+
+        std::vector<std::string> &vals = *vals_ptr;
+
+        for (size_t i = 0; i<size; ++i) {
+          std::string val;
+
+          b >> val;
+          vals.push_back(val);
+        }
+      }
+
+      colDataType.set((Kind)kind, vals_ptr);
       b >> (uint32_t&)colWidth;
       b >> (uint32_t&)scale;
       b >> (uint32_t&)precision;
@@ -1034,7 +1066,7 @@ inline bool isNull(int64_t val, const execplan::CalpontSystemCatalog::ColType& c
 {
   bool ret = false;
 
-  switch (ct.colDataType)
+  switch (ct.colDataType.kind())
   {
     case execplan::CalpontSystemCatalog::TINYINT:
     {

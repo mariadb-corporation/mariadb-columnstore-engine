@@ -13,7 +13,7 @@ inline double cvtArgToDouble(int t, const char* v)
 {
   double d = 0.0;
 
-  switch (t)
+  switch(t)
   {
     case INT_RESULT: d = (double)(*((long long*)v)); break;
 

@@ -34,6 +34,7 @@
 #include <cstring>
 
 #include "mcs_basic_types.h"
+#include "mcs_datatype.h"
 #include "exceptclasses.h"
 #include "serializeable.h"
 #include "any.hpp"
@@ -168,6 +169,37 @@ class ByteStream : public Serializeable
    * push a NullString onto the end of the stream.
    */
   EXPORT ByteStream& operator<<(const utils::NullString& s);
+
+  /**
+   * push a bool
+   */
+  inline ByteStream& operator<<(bool b)
+  {
+    *this << (uint8_t)b;
+
+    return *this;
+  }
+  
+  /**
+   * push a ColDataType
+   */
+  ByteStream& operator<<(const datatypes::SystemCatalog::ColDataType& c)
+  {
+    *this << (uint16_t)c.kind();
+    *this << (uint8_t)(bool)c.values();
+
+    if (c.values()) {
+      const std::vector<std::string> &vals = *(c.values());
+
+      *this << (uint16_t) vals.size();
+
+      for (size_t i = 0; i < vals.size(); ++i) {
+        *this << vals[i];
+      }
+    }
+
+    return *this;
+  }
   /**
    * push an arbitrary class onto the end of the stream.
    */
@@ -251,6 +283,44 @@ class ByteStream : public Serializeable
    * calling length()).
    */
   EXPORT ByteStream& operator>>(uint8_t*& b);
+
+  ByteStream& operator>>(datatypes::SystemCatalog::ColDataType &c)
+  {
+    uint8_t kind;
+    uint8_t nonempty;
+    std::shared_ptr<std::vector<std::string>> values;
+
+    *this >> kind >> nonempty;
+
+    if (nonempty) {
+      values = std::shared_ptr<std::vector<std::string>>(new std::vector<std::string>);
+      std::vector<std::string> &vals = *values;
+      uint16_t size;
+
+      *this >> size;
+
+      for (size_t i = 0; i <size; ++i) {
+        std::string val;
+
+        *this >> val;
+        vals.push_back(val);
+      }
+    }
+
+    c.set((datatypes::SystemCatalog::Kind) kind, values);
+
+    return *this;
+  }
+
+  /**
+   * extract bool.
+   */
+  inline ByteStream& operator>>(bool &b)
+  {
+    *this >> (uint8_t&)b;
+
+    return *this;
+  }
   /**
    * extract an arbitrary object from the front of the stream.
    */

@@ -26,7 +26,7 @@ namespace utils
 {
 uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
 {
-  switch (t)
+  switch (t.kind())
   {
     case CalpontSystemCatalog::TINYINT: return joblist::TINYINTNULL;
 
@@ -104,14 +104,14 @@ uint64_t getNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
     case CalpontSystemCatalog::VARBINARY:
     default:
       ostringstream os;
-      os << "getNullValue(): got bad column type (" << t << ").  Width=" << colWidth << endl;
+      os << "getNullValue(): got bad column type (" << t.kind() << ").  Width=" << colWidth << endl;
       throw logic_error(os.str());
   }
 }
 
 int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidth)
 {
-  switch (t)
+  switch(t.kind())
   {
     case CalpontSystemCatalog::TINYINT: return (int64_t)((int8_t)joblist::TINYINTNULL);
 
@@ -174,7 +174,7 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
 
         default:
           ostringstream os;
-          os << "getSignedNullValue(): got bad column width (" << t << ").  Width=" << colWidth << endl;
+          os << "getSignedNullValue(): got bad column width (" << t.kind() << ").  Width=" << colWidth << endl;
           throw logic_error(os.str());
       }
 
@@ -195,7 +195,7 @@ int64_t getSignedNullValue(CalpontSystemCatalog::ColDataType t, uint32_t colWidt
     case CalpontSystemCatalog::VARBINARY:
     default:
       ostringstream os;
-      os << "getSignedNullValue(): got bad column type (" << t << ").  Width=" << colWidth << endl;
+      os << "getSignedNullValue(): got bad column type (" << t.kind() << ").  Width=" << colWidth << endl;
       throw logic_error(os.str());
   }
   return 0;

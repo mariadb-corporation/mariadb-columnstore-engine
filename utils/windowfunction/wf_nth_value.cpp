@@ -263,7 +263,7 @@ void WF_nth_value<T>::operator()(int64_t b, int64_t e, int64_t c)
     }
 
     T* v = (isNull) ? NULL : &fValue;
-    setValue(fRow.getColType(fFieldIndex[0]), b, e, c, v);
+    setValue(fRow.getColType(fFieldIndex[0]).kind(), b, e, c, v);
   }
 }
 

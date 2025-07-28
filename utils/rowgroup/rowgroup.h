@@ -1002,7 +1002,7 @@ inline utils::ConstString Row::getConstString(uint32_t colIndex) const
 inline void Row::colUpdateHasher(datatypes::MariaDBHasher& hM, const utils::Hasher_r& h, const uint32_t col,
                                  uint32_t& intermediateHash) const
 {
-  switch (getColType(col))
+  switch (getColType(col).kind())
   {
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
@@ -1029,7 +1029,7 @@ inline void Row::colUpdateHasherTypeless(datatypes::MariaDBHasher& h, uint32_t k
 {
   auto rowKeyColIdx = keyCols[keyColsIdx];
   auto largeSideColType = getColType(rowKeyColIdx);
-  switch (largeSideColType)
+  switch (largeSideColType.kind())
   {
     case datatypes::SystemCatalog::CHAR:
     case datatypes::SystemCatalog::VARCHAR:
@@ -1462,10 +1462,10 @@ inline void Row::copyField(uint32_t destIndex, uint32_t srcIndex) const
 
 inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) const
 {
-  if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
-               types[srcIndex] == execplan::CalpontSystemCatalog::BLOB ||
-               types[srcIndex] == execplan::CalpontSystemCatalog::TEXT ||
-               types[srcIndex] == execplan::CalpontSystemCatalog::CLOB))
+  if (UNLIKELY(types[srcIndex].kind() == execplan::CalpontSystemCatalog::VARBINARY ||
+               types[srcIndex].kind() == execplan::CalpontSystemCatalog::BLOB ||
+               types[srcIndex].kind() == execplan::CalpontSystemCatalog::TEXT ||
+               types[srcIndex].kind() == execplan::CalpontSystemCatalog::CLOB))
   {
     out.setVarBinaryField(getVarBinaryField(srcIndex), getVarBinaryLength(srcIndex), destIndex);
   }
@@ -1477,7 +1477,7 @@ inline void Row::copyField(Row& out, uint32_t destIndex, uint32_t srcIndex) cons
   {
     out.setUintField(getUintField(srcIndex), destIndex);
   }
-  else if (UNLIKELY(types[srcIndex] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+  else if (UNLIKELY(types[srcIndex].kind() == execplan::CalpontSystemCatalog::LONGDOUBLE))
   {
     out.setLongDoubleField(getLongDoubleField(srcIndex), destIndex);
   }
@@ -1934,18 +1934,18 @@ inline bool RowGroup::isUnsigned(uint32_t colIndex) const
 
 inline bool RowGroup::isShortString(uint32_t colIndex) const
 {
-  return ((getColumnWidth(colIndex) <= 7 && types[colIndex] == execplan::CalpontSystemCatalog::VARCHAR) ||
-          (getColumnWidth(colIndex) <= 8 && types[colIndex] == execplan::CalpontSystemCatalog::CHAR));
+  return ((getColumnWidth(colIndex) <= 7 && types[colIndex].kind() == execplan::CalpontSystemCatalog::VARCHAR) ||
+          (getColumnWidth(colIndex) <= 8 && types[colIndex].kind() == execplan::CalpontSystemCatalog::CHAR));
 }
 
 inline bool RowGroup::isLongString(uint32_t colIndex) const
 {
-  return ((getColumnWidth(colIndex) > 7 && types[colIndex] == execplan::CalpontSystemCatalog::VARCHAR) ||
-          (getColumnWidth(colIndex) > 8 && types[colIndex] == execplan::CalpontSystemCatalog::CHAR) ||
-          types[colIndex] == execplan::CalpontSystemCatalog::VARBINARY ||
-          types[colIndex] == execplan::CalpontSystemCatalog::BLOB ||
-          types[colIndex] == execplan::CalpontSystemCatalog::TEXT ||
-          types[colIndex] == execplan::CalpontSystemCatalog::CLOB);
+  return ((getColumnWidth(colIndex) > 7 && types[colIndex].kind() == execplan::CalpontSystemCatalog::VARCHAR) ||
+          (getColumnWidth(colIndex) > 8 && types[colIndex].kind() == execplan::CalpontSystemCatalog::CHAR) ||
+          types[colIndex].kind() == execplan::CalpontSystemCatalog::VARBINARY ||
+          types[colIndex].kind() == execplan::CalpontSystemCatalog::BLOB ||
+          types[colIndex].kind() == execplan::CalpontSystemCatalog::TEXT ||
+          types[colIndex].kind() == execplan::CalpontSystemCatalog::CLOB);
 }
 
 inline bool RowGroup::usesStringTable() const
@@ -2125,10 +2125,10 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
 
   for (uint32_t i = 0; i < colCount; i++)
   {
-    if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
-                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
-                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
-                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
+    if (UNLIKELY(in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::VARBINARY ||
+                 in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::BLOB ||
+                 in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::TEXT ||
+                 in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::CLOB))
     {
       out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
     }
@@ -2140,11 +2140,11 @@ inline void copyRow(const Row& in, Row* out, uint32_t colCount)
     {
       out->setUintField(in.getUintField(i), i);
     }
-    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DOUBLE))
+    else if (UNLIKELY(in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::DOUBLE))
     {
       out->setDoubleField(in.getDoubleField(i), i);
     }
-    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+    else if (UNLIKELY(in.getColTypes()[i].kind() == execplan::CalpontSystemCatalog::LONGDOUBLE))
     {
       out->setLongDoubleField(in.getLongDoubleField(i), i);
     }
