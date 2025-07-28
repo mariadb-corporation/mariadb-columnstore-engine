@@ -17,7 +17,7 @@
    MA 02110-1301, USA. */
 
 #include <string>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <map>
 #include <set>
@@ -47,7 +47,6 @@ struct CacheReloaded
   }
   OamCache oamcache;
 };
-
 
 OamCache* OamCache::makeOamCache()
 {
@@ -154,7 +153,6 @@ void OamCache::checkReload()
       dbRootConnectionMap[dbroots[i]] = (*pmIter).second;
     }
   }
-
 }
 
 uint32_t OamCache::getDBRootCount()
@@ -237,7 +235,7 @@ string OamCache::getModuleName()
 
 bool OamCache::isAccessibleBy(int dbRoot, int pmId)
 {
-  return (*dbRootPMMap)[dbRoot].contains(pmId);
+  return (*dbRootPMMap)[dbRoot].count(pmId);
 }
 
 bool OamCache::isOffline(int dbRoot)
@@ -245,16 +243,17 @@ bool OamCache::isOffline(int dbRoot)
   return dbRootConnectionMap.find(dbRoot) == dbRootConnectionMap.end();
 }
 
-int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for read requests - either owner or us.
+int OamCache::getClosestPM(
+    int dbroot)  // who can access dbroot's records for read requests - either owner or us.
 {
-  if ((*dbRootPMMap)[dbroot].contains(mLocalPMId))
+  if ((*dbRootPMMap)[dbroot].count(mLocalPMId))
   {
     return mLocalPMId;
   }
-  for(auto j : (*dbRootPMMap)[dbroot])
+  for (auto j : (*dbRootPMMap)[dbroot])
   {
     int pm = j;
-    if (rwPMs.contains(pm))
+    if (rwPMs.count(pm))
     {
       return pm;
     }
@@ -262,22 +261,23 @@ int OamCache::getClosestPM(int dbroot) // who can access dbroot's records for re
   idbassert_s(0, "dbroot " << dbroot << " has empty set of PM's");
 }
 
-int OamCache::getClosestConnection(int dbroot) // connection index to owner's PM or ours PM - who can access dbRoot.
+int OamCache::getClosestConnection(
+    int dbroot)  // connection index to owner's PM or ours PM - who can access dbRoot.
 {
   return pmConnectionMap[getClosestPM(dbroot)];
 }
 
-int OamCache::getOwnerConnection(int dbroot) // connection index to owner's PM.
+int OamCache::getOwnerConnection(int dbroot)  // connection index to owner's PM.
 {
   return pmConnectionMap[getOwnerPM(dbroot)];
 }
 
-int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
+int OamCache::getOwnerPM(int dbroot)  // Owner's PM index.
 {
-  for(auto j : (*dbRootPMMap)[dbroot])
+  for (auto j : (*dbRootPMMap)[dbroot])
   {
     int pm = j;
-    if (rwPMs.contains(pm))
+    if (rwPMs.count(pm))
     {
       return pm;
     }
@@ -285,7 +285,7 @@ int OamCache::getOwnerPM(int dbroot) // Owner's PM index.
   idbassert_s(0, "cannot find owner for dbroot " << dbroot);
 }
 
-std::vector<int> OamCache::getPMDBRoots(int PM) // what DBRoots are owned by given PM.
+std::vector<int> OamCache::getPMDBRoots(int PM)  // what DBRoots are owned by given PM.
 {
   std::vector<int> result;
   for (const auto& dbroot : (*dbRootPMMap))
@@ -298,7 +298,7 @@ std::vector<int> OamCache::getPMDBRoots(int PM) // what DBRoots are owned by giv
   return result;
 }
 
-std::vector<int> OamCache::getAllDBRoots() // get all DBRoots.
+std::vector<int> OamCache::getAllDBRoots()  // get all DBRoots.
 {
   std::vector<int> result;
   for (const auto& dbroot : (*dbRootPMMap))
