@@ -527,13 +527,9 @@ void SimpleColumn::setDerivedTable()
     fDerivedTable = "";
 }
 
-bool SimpleColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
+std::optional<CalpontSystemCatalog::TableAliasName> SimpleColumn::singleTable()
 {
-  tan.table = fTableName;
-  tan.schema = fSchemaName;
-  tan.view = fViewName;
-  tan.alias = fTableAlias;
-  return true;
+  return {CalpontSystemCatalog::TableAliasName(fSchemaName, fTableName, fTableAlias, fViewName)};
 }
 
 // @todo move to inline
@@ -754,6 +750,24 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
 void SimpleColumn::setSimpleColumnList()
 {
   fSimpleColumnList.push_back(this);
+}
+
+std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(std::vector<SimpleColumn*> simpleColumnList)
+{
+  std::optional<CalpontSystemCatalog::TableAliasName> tan;
+  for (SimpleColumn* simpleColumn : simpleColumnList)
+  {
+    CalpontSystemCatalog::TableAliasName stan(
+        simpleColumn->schemaName(), simpleColumn->tableName(),
+        simpleColumn->tableAlias(), simpleColumn->viewName());
+  
+    if (!tan.has_value())
+      tan = stan;
+    else if (stan != tan)
+      return std::nullopt;
+  }
+  
+  return tan;
 }
 
 }  // namespace execplan

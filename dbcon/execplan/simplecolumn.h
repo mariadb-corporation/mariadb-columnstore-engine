@@ -262,7 +262,7 @@ class SimpleColumn : public ReturnedColumn
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+  std::optional<CalpontSystemCatalog::TableAliasName> singleTable() override;
 
   void setSimpleColumnList() override;
 
@@ -407,5 +407,7 @@ std::ostream& operator<<(std::ostream& output, const SimpleColumn& rhs);
  */
 void getSimpleCols(ParseTree* n, void* obj);
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList&);
+
+std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(std::vector<SimpleColumn*> simpleColumnList);
 
 }  // namespace execplan

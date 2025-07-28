@@ -238,6 +238,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   {
     return unionVec;
   }
+
   auto& bounds = boundsOpt.value();
 
   for (auto& bound : bounds)
@@ -254,6 +255,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
 {
   auto tables = csep.tableList();
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
+  // TODO support CSEPs with derived tables
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
   TableAliasMap tableAliasMap;
 
@@ -305,42 +307,94 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     }
   }
 
-  // execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
+  execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
   // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
   if (!newDerivedTableList.empty())
   {
+    std::cout << "Iterating over RCs" << std::endl;
     for (auto& rc : csep.returnedCols())
     {
+      auto sameTableAliasOpt = rc->singleTable();
+      // Same table so RC was pushed into UNION units and can be replaced with new derived table SC
+      if (sameTableAliasOpt)
+      {
+        std::cout << "RC table schema " << sameTableAliasOpt->schema << " table "
+        << sameTableAliasOpt->table << " alias " << sameTableAliasOpt->alias << std::endl;
+        auto tableAliasIt = tableAliasMap.find(*sameTableAliasOpt);
+        if (tableAliasIt != tableAliasMap.end())
+        {
+          // add new SC
+          auto& [newTableAlias, colPosition] = tableAliasIt->second;
+          auto newSC = boost::make_shared<execplan::SimpleColumn>(*rc, rc->sessionID());
+          newSC->tableName("");
+          newSC->schemaName("");
+          newSC->tableAlias(newTableAlias);
+          newSC->colPosition(colPosition++);
+          newSC->oid(0);
+          newReturnedColumns.push_back(newSC);
+        }
+        // RC doesn't belong to any of the new derived tables
+        else
+        {
+          newReturnedColumns.push_back(rc);
+        }
+      }
+      // if SCs belong to different tables 
+      else 
+      {
+        rc->setSimpleColumnList();
+        for (auto* sc : rc->simpleColumnList())
+        {
+          // TODO add method to SC to get table alias
+          // auto scTableAliasOpt = sc->singleTable();
+          auto tableAliasIt = tableAliasMap.find(*sc->singleTable());
+          // Need a method to replace original SCs in the SClist
+          if (tableAliasIt != tableAliasMap.end())
+          {
+            auto& [newTableAlias, colPosition] = tableAliasIt->second;
+            sc->tableName("");
+            sc->schemaName("");
+            sc->tableAlias(newTableAlias);
+            sc->colPosition(colPosition++);
+          }
+          // do nothing with this SC
+        }
+        newReturnedColumns.push_back(rc);
+      }
+      // This part is not used
       // TODO support expressions
       // Find SC for the RC
-      auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
+
+      // auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc, rc->sessionID());
       // TODO timezone and result type are not copied
       // TODO add specific ctor for this functionality
       // If there is an alias in the map then it is a new derived table
-      auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-      std::vector<execplan::SimpleColumn*> scs;
+      
+      // auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+      // std::vector<execplan::SimpleColumn*> scs;
 
-      std::cout << "Processing RC schema " << sc->schemaName() << " table " << sc->tableName() << " alias "
-                << sc->tableAlias() << std::endl;
-      for (auto& [tableAlias, aliasAndCounter] : tableAliasMap)
-      {
-        std::cout << "Processing table alias " << tableAlias << " new alias " << aliasAndCounter.first
-                  << " col position " << aliasAndCounter.second << std::endl;
-      }
-      auto newTableAliasAndColPositionCounter =
-          tableAliasMap.find({sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
-      if (newTableAliasAndColPositionCounter == tableAliasMap.end())
-      {
-        std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
-        continue;
-      }
-      sc->tableName("");
-      sc->schemaName("");
-      auto& [newTableAlias, colPosition] = newTableAliasAndColPositionCounter->second;
-      sc->tableAlias(newTableAlias);
-      // WIP Not needed according with CSEP output
-      // sc->isColumnStore(true);
-      sc->colPosition(colPosition++);
+      // std::cout << "Processing RC schema " << rc->schemaName() << " table " << rc->tableName() << " alias "
+      //           << rc->tableAlias() << std::endl;
+      // for (auto& [tableAlias, aliasAndCounter] : tableAliasMap)
+      // {
+      //   std::cout << "Processing table alias " << tableAlias << " new alias " << aliasAndCounter.first
+      //             << " col position " << aliasAndCounter.second << std::endl;
+      // }
+      // auto newTableAliasAndColPositionCounter =
+      //     tableAliasMap.find({sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
+      // if (newTableAliasAndColPositionCounter == tableAliasMap.end())
+      // {
+      //   std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
+      //   continue;
+      // }
+      // auto& [newTableAlias, colPosition] = newTableAliasAndColPositionCounter->second;
+
+      // sc->tableName("");
+      // sc->schemaName("");
+      // sc->tableAlias(newTableAlias);
+      // sc->colPosition(colPosition++);
+
+      // rcCloned->isColumnStore(true);
       // rcCloned->colPosition(colPosition++);
       // rcCloned->resultType(rc->resultType());
       // newReturnedColumns.push_back(rcCloned);
@@ -380,7 +434,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     csep.derivedTableList(newDerivedTableList);
     // Replace table list with new table list populated with union units
     csep.tableList(newTableList);
-    // csep.returnedCols(newReturnedColumns);
+    csep.returnedCols(newReturnedColumns);
   }
 }
 

@@ -23,6 +23,7 @@
 /** @file */
 
 #pragma once
+#include <optional>
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -321,9 +322,9 @@ class ReturnedColumn : public TreeNode
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& /*tan*/)
+  virtual std::optional<CalpontSystemCatalog::TableAliasName> singleTable()
   {
-    return false;
+    return std::nullopt;
   }
 
  protected:

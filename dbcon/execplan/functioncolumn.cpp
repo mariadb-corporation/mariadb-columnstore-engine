@@ -521,24 +521,10 @@ void FunctionColumn::setSimpleColumnList()
     fFunctionParms[i]->walk(getSimpleCols, &fSimpleColumnList);
 }
 
-bool FunctionColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
+std::optional<CalpontSystemCatalog::TableAliasName> FunctionColumn::singleTable()
 {
-  tan.clear();
   setSimpleColumnList();
-
-  for (uint i = 0; i < fSimpleColumnList.size(); i++)
-  {
-    CalpontSystemCatalog::TableAliasName stan(
-        fSimpleColumnList[i]->schemaName(), fSimpleColumnList[i]->tableName(),
-        fSimpleColumnList[i]->tableAlias(), fSimpleColumnList[i]->viewName());
-
-    if (tan.table.empty())
-      tan = stan;
-    else if (stan != tan)
-      return false;
-  }
-
-  return true;
+  return sameTableCheck(fSimpleColumnList);
 }
 
 }  // namespace execplan

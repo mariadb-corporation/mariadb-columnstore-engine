@@ -1021,6 +1021,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
     for (auto* simpleColumn : rc->simpleColumnList())
     {
       // TODO check that is columnstore is correct
+      // use RC::singleTable here
       execplan::CalpontSystemCatalog::TableAliasName rcTable(
           simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "",
           simpleColumn->isColumnStore());

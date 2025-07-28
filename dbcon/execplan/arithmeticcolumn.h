@@ -181,7 +181,7 @@ class ArithmeticColumn : public ReturnedColumn
    * @return tablename, if all arguments belong to one table
    *         empty string "", if multiple tables are involved in this func
    */
-  bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+  std::optional<CalpontSystemCatalog::TableAliasName> singleTable() override;
 
   std::string toCppCode(IncludeSet& includes) const override;
 

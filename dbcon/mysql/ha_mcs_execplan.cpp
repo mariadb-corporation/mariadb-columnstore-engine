@@ -1230,19 +1230,20 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedCol
 
   if (sop->op() == OP_EQ)
   {
-    CalpontSystemCatalog::TableAliasName tan_lhs;
-    CalpontSystemCatalog::TableAliasName tan_rhs;
-    bool outerjoin = (rhs->singleTable(tan_rhs) && lhs->singleTable(tan_lhs));
+    auto tan_rhs = rhs->singleTable();
+    auto tan_lhs = lhs->singleTable();
+
+    bool outerjoin = (tan_rhs && tan_lhs);
 
     // @bug 1632. Alias should be taken account to the identity of tables for selfjoin to work
-    if (outerjoin && tan_lhs != tan_rhs)  // join
+    if (outerjoin && *tan_lhs != *tan_rhs)  // join
     {
       if (!gwip->condPush)  // vtable
       {
         if (!gwip->innerTables.empty())
         {
-          checkOuterTableColumn(gwip, tan_lhs, lhs);
-          checkOuterTableColumn(gwip, tan_rhs, rhs);
+          checkOuterTableColumn(gwip, *tan_lhs, lhs);
+          checkOuterTableColumn(gwip, *tan_rhs, rhs);
         }
 
         if (funcType == Item_func::EQ_FUNC)

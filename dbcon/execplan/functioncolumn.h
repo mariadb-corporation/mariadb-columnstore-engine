@@ -172,7 +172,7 @@ class FunctionColumn : public ReturnedColumn
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  bool singleTable(CalpontSystemCatalog::TableAliasName& tan) override;
+  std::optional<CalpontSystemCatalog::TableAliasName> singleTable() override;
 
   std::string toCppCode(IncludeSet& includes) const override;
 
