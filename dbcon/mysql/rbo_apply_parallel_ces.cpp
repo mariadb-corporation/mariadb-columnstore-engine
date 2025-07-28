@@ -88,8 +88,8 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
 // TODO add engine-independent statistics-derived ranges
-execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, execplan::SimpleColumn& column,
-                                                      std::pair<uint64_t, uint64_t>& bound)
+execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::SimpleColumn& column,
+                                         std::pair<uint64_t, uint64_t>& bound, bool isLast)
 {
   auto tableKeyColumnLeftOp = new execplan::SimpleColumn(column);
   tableKeyColumnLeftOp->resultType(column.resultType());
@@ -99,7 +99,8 @@ execplan::ParseTree* filtersWithNewRangeAddedIfNeeded(execplan::SCSEP& csep, exe
   // set TZ
   // There is a question with ownership of the const column
   // TODO here we lost upper bound value if predicate is not changed to weak lt
-  execplan::SOP ltOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
+  execplan::SOP ltOp = (isLast) ? boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="))
+                               : boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
   ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
   ltOp->resultType(ltOp->operationType());
 
@@ -194,6 +195,9 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
   size_t numberOfUnionUnits = std::min(columnStatistics.get_json_histogram().size(), MaxParallelFactor);
   size_t numberOfBucketsPerUnionUnit = columnStatistics.get_json_histogram().size() / numberOfUnionUnits;
 
+  std::cout << "Number of union units: " << numberOfUnionUnits << std::endl;
+  std::cout << "Number of buckets per union unit: " << numberOfBucketsPerUnionUnit << std::endl;
+
   FilterRangeBounds<T> bounds;
 
   // Loop over buckets to produce filter ranges
@@ -208,11 +212,17 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
 
   // Add last range
   // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
-  auto lastBucket =
-      columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
-  T currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
-  T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
-  bounds.push_back({currentLowerBound, currentUpperBound});
+  // auto lastBucket =
+  //     columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) *
+  //     numberOfBucketsPerUnionUnit;
+  // T currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
+  // T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
+  // bounds.push_back({currentLowerBound, currentUpperBound});
+
+  for (auto& bound : bounds)
+  {
+    std::cout << "Bound: " << bound.first << " " << bound.second << std::endl;
+  }
 
   return bounds;
 }
@@ -241,13 +251,21 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   auto& bounds = boundsOpt.value();
 
-  for (auto& bound : bounds)
+  // These bounds produce low <= col < high
+  if (bounds.size() > 1)
   {
-    auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
-    // Add BETWEEN based on key column range
-    clonedCSEP->filters(filtersWithNewRangeAddedIfNeeded(clonedCSEP, *keyColumn, bound));
-    unionVec.push_back(clonedCSEP);
+    for (size_t i = 0; i <= bounds.size() - 2; ++i)
+    {
+      auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
+      // Add BETWEEN based on key column range
+      clonedCSEP->filters(filtersWithNewRange(clonedCSEP, *keyColumn, bounds[i], false));
+      unionVec.push_back(clonedCSEP);
+    }
   }
+  // This last bound produces low <= col <= high
+  auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
+  clonedCSEP->filters(filtersWithNewRange(clonedCSEP, *keyColumn, bounds.back(), true));
+  unionVec.push_back(clonedCSEP);
 
   return unionVec;
 }
@@ -318,11 +336,12 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       // Same table so RC was pushed into UNION units and can be replaced with new derived table SC
       if (sameTableAliasOpt)
       {
-        std::cout << "RC table schema " << sameTableAliasOpt->schema << " table "
-        << sameTableAliasOpt->table << " alias " << sameTableAliasOpt->alias << std::endl;
+        std::cout << "RC table schema " << sameTableAliasOpt->schema << " table " << sameTableAliasOpt->table
+                  << " alias " << sameTableAliasOpt->alias << std::endl;
         auto tableAliasIt = tableAliasMap.find(*sameTableAliasOpt);
         if (tableAliasIt != tableAliasMap.end())
         {
+          std::cout << "Replacing RC with new SC" << std::endl;
           // add new SC
           auto& [newTableAlias, colPosition] = tableAliasIt->second;
           auto newSC = boost::make_shared<execplan::SimpleColumn>(*rc, rc->sessionID());
@@ -330,17 +349,21 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
           newSC->schemaName("");
           newSC->tableAlias(newTableAlias);
           newSC->colPosition(colPosition++);
+          // MB not needed
           newSC->oid(0);
+          newSC->expressionId(4294967295);
+          newSC->alias(rc->alias());
           newReturnedColumns.push_back(newSC);
         }
         // RC doesn't belong to any of the new derived tables
         else
         {
+          std::cout << "RC doesn't belong to any of the new derived tables" << std::endl;
           newReturnedColumns.push_back(rc);
         }
       }
-      // if SCs belong to different tables 
-      else 
+      // if SCs belong to different tables
+      else
       {
         rc->setSimpleColumnList();
         for (auto* sc : rc->simpleColumnList())
@@ -369,7 +392,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       // TODO timezone and result type are not copied
       // TODO add specific ctor for this functionality
       // If there is an alias in the map then it is a new derived table
-      
+
       // auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
       // std::vector<execplan::SimpleColumn*> scs;
 
