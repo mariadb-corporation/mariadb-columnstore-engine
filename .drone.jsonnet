@@ -11,9 +11,9 @@ local platforms = {
   [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
-local platforms_arm = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
-};
+
+//local archs = ["amd64", "arm64"];
+local archs = ["amd64"];
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 
@@ -95,7 +95,7 @@ local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link
 local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
       make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="") = {
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[]) = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -206,7 +206,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --docker-image " + img +
     " --result-path " + result +
     " --packages-url " + packages_url +
-    " --do-setup " + std.toString(do_setup) + '"',
+    " --do-setup " + std.toString(do_setup) +
+    (if result=="ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +
+    '"',
 
   local reportTestStage(containerName, result, stage) =
     'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
@@ -311,6 +313,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       ' --suite-list $${MTR_SUITE_LIST}' +
       ' --triggering-event ' + event,
     ],
+    [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
+
   },
   mtrlog:: {
     name: "mtrlog",
@@ -323,8 +327,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
+    [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
+
   },
-  regression(name, depends_on):: {
+  regression(name, depends_on, ):: {
     name: name,
     depends_on: depends_on,
     image: "docker:git",
@@ -332,7 +338,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
-    [if (name != "test000.sh" && name != "test001.sh") then "failure"]: "ignore",
+    [if (std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression")) then "failure"]: "ignore",
     environment: {
       REGRESSION_TIMEOUT: {
         from_secret: "regression_timeout",
@@ -357,6 +363,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --regression-branch $$REGRESSION_REF" +
       " --regression-timeout $${REGRESSION_TIMEOUT}",
     ],
+
   },
   regressionlog:: {
     name: "regressionlog",
@@ -369,6 +376,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
+    [if (std.member(ignoreFailureStepList, "regression")) then "failure"]: "ignore",
+
   },
   dockerfile:: {
     name: "dockerfile",
@@ -396,7 +405,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   dockerhub:: {
     name: "dockerhub",
     depends_on: ["dockerfile"],
-    //failure: 'ignore',
     image: "plugins/docker",
     environment: {
       VERSION: container_version,
@@ -626,6 +634,61 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   },
 };
 
+
+local AllPipelines = [
+  Pipeline(b, p, e, a, s)
+  for b in std.objectFields(platforms)
+  for p in platforms[b]
+  for s in servers[b]
+  for e in events
+  for a in archs
+] +
+[
+  Pipeline(any_branch, p, "custom", a, server)
+  for p in platforms[current_branch]
+  for server in servers[current_branch]
+  for a in archs
+] +
+[
+  Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
+  for a in ["amd64"]
+  for b in std.objectFields(platforms)
+  for platform in ["ubuntu:24.04"]
+  for buildenv in std.objectFields(customEnvCommandsMap)
+  for triggeringEvent in events
+  for server in servers[current_branch]
+] +
+// last argument is to ignore mtr and regression failures
+[
+  Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
+  for a in ["amd64"]
+  for b in std.objectFields(platforms)
+  for platform in ["ubuntu:24.04"]
+  for flag in ["libcpp"]
+  for envcommand in ["clang-20"]
+  for triggeringEvent in events
+  for server in servers[current_branch]
+] +
+// last argument is to ignore mtr and regression failures
+[
+  Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
+  for a in ["amd64"]
+  for b in std.objectFields(platforms)
+  for platform in ["ubuntu:24.04"]
+  for flag in ["ASan", "UBSan"]
+  for triggeringEvent in events
+  for server in servers[current_branch]
+] +
+[
+  Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+  for a in ["amd64"]
+  for b in std.objectFields(platforms)
+  for platform in ["rockylinux:8"]
+  for flag in ["gcc-toolset"]
+  for triggeringEvent in events
+  for server in servers[current_branch]
+];
+
 local FinalPipeline(branch, event) = {
   kind: "pipeline",
   name: std.join(" ", ["after", branch, event]),
@@ -650,55 +713,13 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
-  // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
+  depends_on: std.map(function(p) p.name, AllPipelines),
 };
 
-[
-  Pipeline(b, p, e, "amd64", s)
-  for b in std.objectFields(platforms)
-  for p in platforms[b]
-  for s in servers[b]
-  for e in events
-] +
-// [
-//   Pipeline(b, p, e, "arm64", s)
-//   for b in std.objectFields(platforms_arm)
-//   for p in platforms_arm[b]
-//   for s in servers[b]
-//   for e in events
-// ] +
 
+
+AllPipelines +
 [
   FinalPipeline(b, "cron")
   for b in std.objectFields(platforms)
-] +
-
-[
-  Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
-  for p in platforms[current_branch]
-] +
-// [
-//   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
-//   for p in platforms_arm[current_branch];
-// ]
-// +
-[
-  Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for buildenv in std.objectFields(customEnvCommandsMap)
-  for triggeringEvent in events
-  for server in servers[current_branch]
-]
-+
-[
-  Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["rockylinux:8"]
-  for flag in ["gcc-toolset"]
-  for triggeringEvent in events
-  for server in servers[current_branch]
 ]
