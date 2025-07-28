@@ -650,19 +650,17 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-//  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
   // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
 };
 
-// [
-//   Pipeline(b, p, e, "amd64", s)
-//   for b in std.objectFields(platforms)
-//   for p in platforms[b]
-//   for s in servers[b]
-//   for e in events
-// ] +
-
-
+[
+  Pipeline(b, p, e, "amd64", s)
+  for b in std.objectFields(platforms)
+  for p in platforms[b]
+  for s in servers[b]
+  for e in events
+] +
 // [
 //   Pipeline(b, p, e, "arm64", s)
 //   for b in std.objectFields(platforms_arm)
@@ -699,8 +697,8 @@ local FinalPipeline(branch, event) = {
   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
   for a in ["amd64"]
   for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for flag in ["ASan", "UBSan"]
+  for platform in ["rockylinux:8"]
+  for flag in ["gcc-toolset"]
   for triggeringEvent in events
   for server in servers[current_branch]
 ]
