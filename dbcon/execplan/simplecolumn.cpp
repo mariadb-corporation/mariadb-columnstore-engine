@@ -529,7 +529,8 @@ void SimpleColumn::setDerivedTable()
 
 std::optional<CalpontSystemCatalog::TableAliasName> SimpleColumn::singleTable()
 {
-  return {CalpontSystemCatalog::TableAliasName(fSchemaName, fTableName, fTableAlias, fViewName)};
+  return {
+      CalpontSystemCatalog::TableAliasName(fSchemaName, fTableName, fTableAlias, fViewName, fisColumnStore)};
 }
 
 // @todo move to inline
@@ -759,21 +760,21 @@ void SimpleColumn::setSimpleColumnList()
   }
 }
 
-std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(std::vector<SimpleColumn*> simpleColumnList)
+std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(
+    std::vector<SimpleColumn*> simpleColumnList)
 {
   std::optional<CalpontSystemCatalog::TableAliasName> tan;
   for (SimpleColumn* simpleColumn : simpleColumnList)
   {
-    CalpontSystemCatalog::TableAliasName stan(
-        simpleColumn->schemaName(), simpleColumn->tableName(),
-        simpleColumn->tableAlias(), simpleColumn->viewName());
-  
+    CalpontSystemCatalog::TableAliasName stan(simpleColumn->schemaName(), simpleColumn->tableName(),
+                                              simpleColumn->tableAlias(), simpleColumn->viewName());
+
     if (!tan.has_value())
       tan = stan;
     else if (stan != tan)
       return std::nullopt;
   }
-  
+
   return tan;
 }
 

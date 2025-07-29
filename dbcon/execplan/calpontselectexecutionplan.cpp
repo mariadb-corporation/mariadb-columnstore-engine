@@ -1018,9 +1018,10 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   for (const auto& rc : fReturnedCols)
   {
     rc->setSimpleColumnList();
-    for (auto* sc : rc->simpleColumnList())
+    for (auto* simpleColumn : rc->simpleColumnList())
     {
-      if (targetTableAlias.weakerEq(*sc->singleTable()))
+      auto tableAlias = simpleColumn->singleTable();
+      if (tableAlias && targetTableAlias.weakerEq(*tableAlias))
       {
         newReturnedCols.push_back(SRCP(rc->clone()));
       }

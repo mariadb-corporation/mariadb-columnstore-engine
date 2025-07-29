@@ -201,6 +201,7 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
   FilterRangeBounds<T> bounds;
 
   // Loop over buckets to produce filter ranges
+  // NB Currently Histogram_json_hb has the last bucket that has end as its start
   for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
     auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
@@ -209,15 +210,6 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
     T currentUpperBound = *(uint32_t*)endBucket->start_value.data();
     bounds.push_back({currentLowerBound, currentUpperBound});
   }
-
-  // Add last range
-  // NB despite the fact that currently Histogram_json_hb has the last bucket that has end as its start
-  // auto lastBucket =
-  //     columnStatistics.get_json_histogram().begin() + (numberOfUnionUnits - 1) *
-  //     numberOfBucketsPerUnionUnit;
-  // T currentLowerBound = *(uint32_t*)lastBucket->start_value.data();
-  // T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
-  // bounds.push_back({currentLowerBound, currentUpperBound});
 
   for (auto& bound : bounds)
   {
@@ -349,9 +341,6 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
           newSC->schemaName("");
           newSC->tableAlias(newTableAlias);
           newSC->colPosition(colPosition++);
-          // MB not needed
-          newSC->oid(0);
-          newSC->expressionId(4294967295);
           newSC->alias(rc->alias());
           newReturnedColumns.push_back(newSC);
         }
@@ -384,49 +373,11 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
         }
         newReturnedColumns.push_back(rc);
       }
-      // This part is not used
-      // TODO support expressions
-      // Find SC for the RC
-
-      // auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc, rc->sessionID());
-      // TODO timezone and result type are not copied
-      // TODO add specific ctor for this functionality
-      // If there is an alias in the map then it is a new derived table
-
-      // auto sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-      // std::vector<execplan::SimpleColumn*> scs;
-
-      // std::cout << "Processing RC schema " << rc->schemaName() << " table " << rc->tableName() << " alias "
-      //           << rc->tableAlias() << std::endl;
-      // for (auto& [tableAlias, aliasAndCounter] : tableAliasMap)
-      // {
-      //   std::cout << "Processing table alias " << tableAlias << " new alias " << aliasAndCounter.first
-      //             << " col position " << aliasAndCounter.second << std::endl;
-      // }
-      // auto newTableAliasAndColPositionCounter =
-      //     tableAliasMap.find({sc->schemaName(), sc->tableName(), sc->tableAlias(), "", false});
-      // if (newTableAliasAndColPositionCounter == tableAliasMap.end())
-      // {
-      //   std::cout << "The RC doesn't belong to any of the derived tables, so leave it intact" << std::endl;
-      //   continue;
-      // }
-      // auto& [newTableAlias, colPosition] = newTableAliasAndColPositionCounter->second;
-
-      // sc->tableName("");
-      // sc->schemaName("");
-      // sc->tableAlias(newTableAlias);
-      // sc->colPosition(colPosition++);
-
-      // rcCloned->isColumnStore(true);
-      // rcCloned->colPosition(colPosition++);
-      // rcCloned->resultType(rc->resultType());
-      // newReturnedColumns.push_back(rcCloned);
     }
-    // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
-    // But this is inappropriate for EXISTS filter and join conditions
-    // There must be no derived at this point, so we can replace it with the new derived table list
+    // Remove the filters that are not necessary as they were pushed down to union units.
+    // But this is inappropriate for some EXISTS filter and join conditions
 
-    // WIP hardcoded query
+    // WIP hardcoded query with lhs,rhs being simple columns
     if (csep.filters() && csep.filters()->data())
     {
       auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
