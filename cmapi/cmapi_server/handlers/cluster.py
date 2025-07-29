@@ -202,6 +202,7 @@ class ClusterHandler:
             input_config_filename=config, output_config_filename=config
         )
         broadcast_new_config(config, distribute_secrets=True)
+        ClusterHandler.check_shared_storage()
         logger.debug(f'Successfully finished adding node {node}.')
         return response
 
@@ -247,6 +248,7 @@ class ClusterHandler:
                 input_config_filename=config, output_config_filename=config
             )
             broadcast_new_config(config, nodes=active_nodes)
+        ClusterHandler.check_shared_storage()
         logger.debug(f'Successfully finished removing node {node}.')
         return response
 
