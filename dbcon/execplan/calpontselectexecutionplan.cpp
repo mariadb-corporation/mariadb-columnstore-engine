@@ -1018,18 +1018,12 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   for (const auto& rc : fReturnedCols)
   {
     rc->setSimpleColumnList();
-    for (auto* simpleColumn : rc->simpleColumnList())
+    for (auto* sc : rc->simpleColumnList())
     {
-      // TODO check that is columnstore is correct
-      // use RC::singleTable here
-      execplan::CalpontSystemCatalog::TableAliasName rcTable(
-          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "",
-          simpleColumn->isColumnStore());
-      if (!targetTableAlias.weakerEq(rcTable))
+      if (targetTableAlias.weakerEq(*sc->singleTable()))
       {
-        continue;
+        newReturnedCols.push_back(SRCP(rc->clone()));
       }
-      newReturnedCols.push_back(SRCP(rc->clone()));
     }
   }
   if (newReturnedCols.empty())

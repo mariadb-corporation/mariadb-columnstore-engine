@@ -749,7 +749,14 @@ void SimpleColumn::evaluate(Row& row, bool& isNull)
 
 void SimpleColumn::setSimpleColumnList()
 {
-  fSimpleColumnList.push_back(this);
+  if (fSimpleColumnList.empty())
+  {
+    fSimpleColumnList.push_back(this);
+  }
+  else
+  {
+    fSimpleColumnList.back() = this;
+  }
 }
 
 std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(std::vector<SimpleColumn*> simpleColumnList)
