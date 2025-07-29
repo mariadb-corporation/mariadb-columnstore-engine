@@ -4,7 +4,7 @@ local events = ["pull_request", "cron"];
 local current_branch = "stable-23.10";
 
 local servers = {
-  [current_branch]: ["10.6-enterprise"],
+  [current_branch]: ["10.6-enterprise", "11.4-enterprise", "11.8-enterprise"],
 };
 
 local platforms = {
@@ -160,7 +160,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests = if (event == "cron") then [
+  local regression_tests = if (true) then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -312,6 +312,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
       ' --triggering-event ' + event,
+
     ],
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
@@ -717,9 +718,17 @@ local FinalPipeline(branch, event) = {
 };
 
 
+// AllPipelines +
+// [
+//   FinalPipeline(b, "cron")
+//   for b in std.objectFields(platforms)
+// ]
 
-AllPipelines +
 [
-  FinalPipeline(b, "cron")
+  Pipeline(b, platform, triggeringEvent, a, server, "", "")
+  for a in ["amd64"]
   for b in std.objectFields(platforms)
+  for platform in ["ubuntu:24.04"]
+  for triggeringEvent in events
+  for server in servers[current_branch]
 ]
