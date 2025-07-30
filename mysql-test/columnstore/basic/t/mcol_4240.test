@@ -1,0 +1,224 @@
+-- source ../include/have_columnstore.inc
+
+--echo # MCOL-641 Union Test Cases
+--echo # Once MCOL-5417 is supported, the errored out queries below should be fixed.
+
+--disable_warnings
+DROP DATABASE IF mcol4240_enum_set_json_db;
+--enable_warnings
+
+CREATE DATABASE mcol4240_enum_set_json_db;
+USE mcol4240_enum_set_json_db;
+
+SET SQL_MODE='ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+
+create database test_mcol4240;
+use test_mcol4240;
+
+CREATE TABLE t (
+    status ENUM('active', 'inactive', 'deleted') NOT NULL,
+    options SET('a', 'b', 'c', 'd') NOT NULL,
+    info JSON NOT NULL
+);
+
+SELECT * FROM t;
+
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+
+SELECT * FROM t;
+
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE * from t;
+
+SELECT * FROM t;
+
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE * from t;
+
+SELECT * FROM t;
+
+INSERT INTO t (status, options, info)
+VALUES ('active', 'a,b','{ "comment": "This is example", "number": 42 }');
+
+INSERT INTO t (status, options, info)
+VALUES ('inactive', '','{ "comment": "This is example", "number": 43 }');
+
+SELECT * FROM t;
+
+DELETE FROM t WHERE status = 'active';
+
+SELECT * FROM t;
+
+UPDATE t SET status = 'active' WHERE status = 'inactive';
+
+SELECT * FROM t;
+
+-- Nothing to update
+UPDATE t SET options = 'a' WHERE options = 'b';
+
+SELECT * FROM t;
+
+-- Something to update
+UPDATE t SET options = 'a' WHERE options = 'a,b';
+
+SELECT * FROM t;
+
+-- Invalid JSON syntax
+INSERT INTO t (status, options, info)
+VALUES ('inactive', '','{ "comment": "This is example", "number": 43 ');
+
+SELECT * FROM t;
+
+-- Nothing to delete
+DELETE FROM t WHERE status = 'deleted';
+
+SELECT * FROM t;
+
+INSERT INTO t (status, options, info)
+VALUES ('inactive', 'b','{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+-- Something to delete
+DELETE FROM t WHERE options = 'b';
+
+SELECT * FROM t;
+
+DELETE * FROM t;
+
+SELECT * FROM t;
+
+DROP TABLE t;
+
+-- Impossible enum constraint
+CREATE TABLE t (
+    status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT NULL,
+    dummy int
+);
+
+SELECT * FROM t;
+
+-- Impossible set constraint
+CREATE TABLE t (
+    options SET('a', 'b', 'c', 'd') NOT NULL DEFAULT NULL,
+    dummy int
+);
+
+SELECT * FROM t;
+
+-- Impossible json constraint
+CREATE TABLE t (
+    info JSON NOT NULL DEFAULT NULL,
+    dummy int
+);
+
+SELECT * FROM t;
+
+-- Impossible int constraint
+CREATE TABLE t (
+    info JSON,
+    dummy int NOT NULL DEFAULT NULL
+);
+
+SELECT * FROM t;
+
+CREATE TABLE t (
+    status ENUM('active', 'inactive', 'deleted') NOT NULL,
+    options SET('a', 'b', 'c', 'd') NOT NULL,
+    info JSON NOT NULL
+);
+
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+
+SELECT * FROM t;
+
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+CREATE TABLE t (
+    status ENUM('active', 'inactive', 'deleted') DEFAULT NULL,
+    options SET('a', 'b', 'c', 'd') DEFAULT NULL,
+    info JSON DEFAULT NULL
+);
+
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+CREATE TABLE t (
+    status ENUM('active', 'inactive', 'deleted') DEFAULT 'active',
+    options SET('a', 'b', 'c', 'd') DEFAULT 'a,b',
+    info JSON DEFAULT '{}'
+);
+
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+
+SELECT * FROM t;
+
+DELETE` * FROM t;
+
+SELECT * FROM t;
+
+DROP TABLE t;
+
+-- Clean UP
+DROP DATABASE mcol4240_enum_set_json_db;
