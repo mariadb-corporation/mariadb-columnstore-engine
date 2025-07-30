@@ -64,7 +64,7 @@ bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep)
                      [](const auto& table) { return !table.isColumnstore(); });
 }
 
-bool someForeignTablesHasIndex(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
+bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
   return std::any_of(
       csep.tableList().begin(), csep.tableList().end(),
@@ -83,7 +83,7 @@ bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   // TODO filter out CSEPs with orderBy, groupBy, having
   // Filter out tables that were re-written.
   // return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
-  return someAreForeignTables(csep) && someForeignTablesHasIndex(csep, ctx);
+  return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
 }
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
@@ -210,6 +210,15 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
     T currentUpperBound = *(uint32_t*)endBucket->start_value.data();
     bounds.push_back({currentLowerBound, currentUpperBound});
   }
+  for (auto& bucket : columnStatistics.get_json_histogram())
+  {
+    T currentLowerBound = *(uint32_t*)bucket.start_value.data();
+    std::cout << "Bucket: " << currentLowerBound << std::endl;
+  }
+  // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits * numberOfBucketsPerUnionUnit;
+  // T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data();
+  // T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
+  // bounds.push_back({currentLowerBound, currentUpperBound});
 
   for (auto& bound : bounds)
   {

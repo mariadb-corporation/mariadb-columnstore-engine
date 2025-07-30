@@ -5207,9 +5207,38 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
         // trigger system catalog cache
         if (columnStore)
+        {
           gwi.csc->columnRIDs(
               make_table(table_ptr->db.str, table_ptr->table_name.str, lower_case_table_names), true);
-
+        }
+        else
+        {
+          for (uint j = 0; j < table_ptr->table->s->keys; j++)
+          {
+            // for (uint i = 0; i < table_ptr->table->s->key_info[j].usable_key_parts; i++)
+            {
+              Field* field = table_ptr->table->key_info[j].key_part[0].field;
+              std::cout << "j index " << j << " i column " << 0 << " fieldnr "
+                        << table_ptr->table->key_info[j].key_part[0].fieldnr << " " << field->field_name.str;
+              if (field->read_stats)
+              {
+                auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
+                if (histogram)
+                {
+                  std::cout << " has stats ";
+                  SchemaAndTableName tableName = {field->table->s->db.str,
+                    field->table->s->table_name.str}; 
+                  gwi.tableStatisticsMap[tableName][field->field_name.str] = *histogram;
+                }
+                else
+                {
+                  std::cout << " no stats ";
+                }
+              }
+              std::cout << std::endl;
+            }
+          }
+        }
         string table_name = table_ptr->table_name.str;
 
         // @bug5523
@@ -6307,7 +6336,8 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
           if (histogram)
           {
-            SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
+            SchemaAndTableName tableName = {ifp->field->table->s->db.str,
+                                            ifp->field->table->s->table_name.str};
             auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
             if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
             {
@@ -6418,7 +6448,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        extractColumnStatistics(ifp, gwi);
+        // extractColumnStatistics(ifp, gwi);
         // Handle * case
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
