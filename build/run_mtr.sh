@@ -34,17 +34,9 @@ fi
 
 select_pkg_format ${DISTRO}
 
-if [[ "$PKG_FORMAT" == "rpm" ]]; then
-    SOCKET_PATH="/var/lib/mysql/mysql.sock"
-    MTR_PATH="/usr/share/mysql-test"
-else
-    SOCKET_PATH="/run/mysqld/mysqld.sock"
-    MTR_PATH="/usr/share/mysql/mysql-test"
-fi
 
 message "Running mtr tests..."
 
-execInnerDocker "${CONTAINER_NAME}" "chown -R mysql:mysql ${MTR_PATH}"
 
 # disable systemd 'ProtectSystem' (we need to write to /usr/share/)
 execInnerDocker "${CONTAINER_NAME}" "sed -i /ProtectSystem/d \$(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//) || true"
@@ -55,6 +47,26 @@ execInnerDocker "${CONTAINER_NAME}" "systemctl start mariadb"
 execInnerDocker "${CONTAINER_NAME}" "/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local"
 execInnerDocker "${CONTAINER_NAME}" "mariadb -e \"create database if not exists test;\""
 execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb-columnstore"
+
+
+VERSION_GREATER_THAN_10=$(execInnerDocker "${CONTAINER_NAME}" "mariadb -N -s -e 'SELECT (sys.version_major(), sys.version_minor(), sys.version_patch()) >= (11, 4, 0);'")
+SOCKET_PATH=$(execInnerDocker "${CONTAINER_NAME}" "mariadb -e \"show variables like 'socket';\" | grep socket | cut -f2")
+
+SERVERNAME="mysql"
+if [[ $VERSION_GREATER_THAN_10 == "1" ]]; then
+    SERVERNAME="mariadb"
+fi
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
+    MTR_PATH="/usr/share/${SERVERNAME}-test"
+else
+    MTR_PATH="/usr/share/${SERVERNAME}/${SERVERNAME}-test"
+fi
+
+
+message "Running mtr tests from $MTR_PATH with $SOCKET_PATH and version >=11.4 $VERSION_GREATER_THAN_10"
+
+execInnerDocker "${CONTAINER_NAME}" "chown -R mysql:mysql ${MTR_PATH}"
 
 if [[ "${EVENT}" == "custom" || "${EVENT}" == "cron" ]]; then
     execInnerDocker "${CONTAINER_NAME}" "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"
