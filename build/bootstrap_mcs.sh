@@ -327,13 +327,20 @@ modify_packaging() {
 }
 
 construct_cmake_flags() {
+    if [[ $MARIADB_BRANCH == *enterprise ]]; then
+        BUILD_CONFIG=enterprise
+    else
+        BUILD_CONFIG=mysql_release
+    fi
+
+    message The server build will use $color_yellow$BUILD_CONFIG$color_cyan build configuration
+
     MDB_CMAKE_FLAGS=(
-        -DBUILD_CONFIG=mysql_release
+        -DBUILD_CONFIG=$BUILD_CONFIG
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-        -DMYSQL_MAINTAINER_MODE=NO
-        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_COLUMNSTORE=DYNAMIC
         -DPLUGIN_CONNECT=NO
         -DPLUGIN_GSSAPI=NO
         -DPLUGIN_MROONGA=NO
@@ -341,6 +348,7 @@ construct_cmake_flags() {
         -DPLUGIN_ROCKSDB=NO
         -DPLUGIN_SPHINX=NO
         -DPLUGIN_SPIDER=NO
+        -DSPIDER_WITH_UNIXODBC=ON
         -DPLUGIN_TOKUDB=NO
         -DWITH_EMBEDDED_SERVER=NO
         -DWITH_SSL=system
@@ -357,6 +365,7 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
         message "Columnstore maintainer mode on"
     else
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=NO)
         warn "Maintainer mode is disabled, be careful, alien"
     fi
 

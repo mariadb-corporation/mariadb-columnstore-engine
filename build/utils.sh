@@ -536,7 +536,7 @@ function execInnerDocker() {
   local container_name=$1
   shift 1 # Remove first arg (container_name)
 
-  docker exec -t "$container_name" bash -c "$@"
+  docker exec -t "$container_name" bash -c "$@" | tr -d '[:space:]'
   local dockerCommandExitCode=$?
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
