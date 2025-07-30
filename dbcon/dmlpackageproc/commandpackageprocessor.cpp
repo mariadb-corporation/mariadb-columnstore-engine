@@ -1286,13 +1286,19 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
     BRM::TxnID txnID;
     txnID = fSessionManager.getTxnID(fSessionID);
     csep.txnID(txnID.id);
-    
+
+    // Set the table list
+    CalpontSelectExecutionPlan::TableList tablelist;
+    tablelist.push_back(make_aliastable(tableName.schema, tableName.table, ""));
+    csep.tableList(tablelist);
+    csep.schemaName(tableName.schema, 0);
+    csep.tableName(tableName.table, 0);
 
     // Send CSEP to ExeMgr
     auto csepStr = csep.toString();
     cout << "csep: " << csepStr << endl;
     CalpontSystemCatalog::NJLSysDataList sysDataList;
-    systemCatalogPtr->getSysData(csep, sysDataList, tableName);
+    systemCatalogPtr->getQueryData(csep, sysDataList);
 
     cout << "Done getSysData" << endl;
 
@@ -1305,7 +1311,7 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
     }
 
     // Return the result - use toString() to get the full plan representation
-    analysisResults << "80 (for testing)";
+    analysisResults << sysDataList.sysDataVec.front()->GetData(0);
 
     result.bloatAnalysis = analysisResults.str();
     cout << "analysisResults: " << analysisResults.str() << endl;
