@@ -10,10 +10,10 @@
 #include <my_sys.h>
 // #include <json_lib.h>
 
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 #include "functor_json.h"
 #include "functor_str.h"
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 #include "rowgroup.h"
 #include "treenode.h"
 #include "functioncolumn.h"

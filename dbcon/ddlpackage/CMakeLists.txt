@@ -42,4 +42,4 @@ columnstore_library(
     ${FLEX_ddl_scan_OUTPUTS}
 )
 
-columnstore_link(ddlpackage loggingcpp messageqcpp)
+columnstore_link(ddlpackage loggingcpp)

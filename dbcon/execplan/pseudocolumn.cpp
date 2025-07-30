@@ -28,7 +28,7 @@ using namespace std;
 #include "basic/string_utils.h"
 
 #include "bytestream.h"
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 
 using namespace messageqcpp;
 

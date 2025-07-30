@@ -45,7 +45,7 @@
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
 #include "hasher.h"
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 
 #define EXPORT
 
@@ -277,7 +277,7 @@ class Moda_impl_T<std::string> : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  Moda_impl_T() : cs(8) {};
+  Moda_impl_T() : cs(8){};
   ~Moda_impl_T() override = default;
 
   mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
@@ -305,7 +305,7 @@ class moda : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  moda() : mcsv1_UDAF() {};
+  moda() : mcsv1_UDAF(){};
   ~moda() override = default;
 
   mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;

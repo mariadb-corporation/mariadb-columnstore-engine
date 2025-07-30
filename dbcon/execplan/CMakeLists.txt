@@ -46,12 +46,4 @@ set(execplan_LIB_SRCS
 )
 
 columnstore_library(execplan ${execplan_LIB_SRCS})
-columnstore_link(
-    execplan
-    messageqcpp
-    ${ENGINE_DT_LIB}
-    pron
-    oamcpp
-    loggingcpp
-    querytele
-)
+columnstore_link(execplan messageqcpp ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB} pron loggingcpp)

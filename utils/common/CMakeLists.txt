@@ -9,17 +9,10 @@ set(common_LIB_SRCS
     MonitorProcMem.cpp
     nullvaluemanip.cpp
     threadnaming.cpp
+    utils_utf8.cpp
+    statistics.cpp
     string_prefixes.cpp
 )
 
 columnstore_library(common ${common_LIB_SRCS})
-columnstore_link(
-    common
-    PRIVATE
-    boost_filesystem
-    configcpp
-    loggingcpp
-    messageqcpp
-    idbdatafile
-    mariadb_charset
-)
+columnstore_link(common boost_filesystem configcpp loggingcpp messageqcpp)

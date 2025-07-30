@@ -14,17 +14,10 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
-
-/* One include file to deal with all the MySQL pollution of the
-   global namespace
-
-   Don't include ANY mysql headers anywhere except here!
-
-   WARN: if any cmake build target uses this include file,
-   GenError from server must be added to the target dependencies
-   to generate mysqld_error.h used below
-*/
-
+// One include file to deal with all the MySQL pollution of the
+//  global namespace
+//
+// Don't include ANY mysql headers anywhere except here!
 #pragma once
 
 #ifdef TEST_MCSCONFIG_H
