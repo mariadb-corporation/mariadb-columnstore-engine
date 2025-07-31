@@ -242,7 +242,22 @@ class SystemCatalog
           _values = values;
         }
 
-        bool operator==(const ColDataType &) const = default;
+        bool operator==(const ColDataType &other) const
+        {
+          if (this != &other) {
+            if (_kind != other._kind) {
+              return false;
+            }
+
+            if (_kind != ENUM && _kind != SET) {
+              return true;
+            }
+
+            return (*_values) == (*other._values);
+          }
+
+          return true;
+        }
   };
 
   // XXX: It is assumed here that ALL TYPES have width, scale and precision.
