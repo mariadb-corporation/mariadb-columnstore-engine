@@ -1197,4 +1197,73 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObH
   return newPlan;
 }
 
+SCSEP CalpontSelectExecutionPlan::clone()
+{
+  auto newPlan = cloneWORecursiveSelects();
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSubSelects)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    if (subCSEP)
+    {
+      newPlan->fSubSelects.push_back(subCSEP->clone());
+    }
+    else
+    {
+      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
+    }
+  }
+
+  newPlan->fDerivedTableList.clear();
+  for (const auto& drvTable: fDerivedTableList)
+  {
+    auto* drvCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(drvTable.get());
+    if (drvCSEP)
+    {
+      newPlan->fDerivedTableList.push_back(drvCSEP->clone());
+    }
+    else
+    {
+      throw runtime_error("CalpontSelectExecutionPlan::clone() - drvTable is not a CalpontSelectExecutionPlan");
+    }
+  }
+
+  newPlan->fUnionVec.clear();
+  for (const auto& subPlan : fUnionVec)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    if (subCSEP)
+    {
+      newPlan->fUnionVec.push_back(subCSEP->clone());
+    }
+    else
+    {
+      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
+    }
+  }
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSelectSubList)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    if (subCSEP)
+    {
+      newPlan->fSelectSubList.push_back(subCSEP->clone());
+    }
+    else
+    {
+      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
+    }
+  }
+
+  newPlan->fSubSelectList.clear();
+  for (const auto& subPlan : fSubSelectList)
+  {
+    newPlan->fSubSelectList.push_back(subPlan->clone());
+  }
+
+  return newPlan;
+}
+
 }  // namespace execplan
