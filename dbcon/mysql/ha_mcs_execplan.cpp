@@ -5227,8 +5227,28 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
                 {
                   std::cout << " has stats ";
                   SchemaAndTableName tableName = {field->table->s->db.str,
-                    field->table->s->table_name.str}; 
-                  gwi.tableStatisticsMap[tableName][field->field_name.str] = *histogram;
+                    field->table->s->table_name.str};
+                  execplan::SimpleColumn simpleColumn = {field->table->s->db.str,
+                    field->table->s->table_name.str,
+                    field->field_name.str};
+                  auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
+                  if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
+                  {
+                    gwi.tableStatisticsMap[tableName][field->field_name.str] = {simpleColumn, {*histogram}};
+                  }
+                  else
+                  {
+                    auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
+                    if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
+                    {
+                      tableStatisticsMapIt->second[field->field_name.str] = {simpleColumn, {*histogram}};
+                    }
+                    else
+                    {
+                      auto columnStatisticsVec = columnStatisticsMapIt->second.second;
+                      columnStatisticsVec.push_back(*histogram);
+                    }
+                  }
                 }
                 else
                 {
@@ -6321,43 +6341,43 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
 // for the first column of the index if any.
 // Statistics is stored in GWI context.
 // Mock for ES 10.6
-#if MYSQL_VERSION_ID >= 120401
-void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
-{
-  for (uint j = 0; j < ifp->field->table->s->keys; j++)
-  {
-    for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
-    {
-      if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
-      {
-        if (i == 0 && ifp->field->read_stats)
-        {
-          assert(ifp->field->table->s);
-          auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
-          if (histogram)
-          {
-            SchemaAndTableName tableName = {ifp->field->table->s->db.str,
-                                            ifp->field->table->s->table_name.str};
-            auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
-            if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
-            {
-              gwi.tableStatisticsMap.insert({tableName, {{ifp->field->field_name.str, *histogram}}});
-            }
-            else
-            {
-              tableStatisticsMapIt->second.insert({ifp->field->field_name.str, *histogram});
-            }
-          }
-        }
-      }
-    }
-  }
-}
-#else
-void extractColumnStatistics(Item_field* /*ifp*/, gp_walk_info& /*gwi*/)
-{
-}
-#endif
+// #if MYSQL_VERSION_ID >= 120401
+// void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
+// {
+//   for (uint j = 0; j < ifp->field->table->s->keys; j++)
+//   {
+//     for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
+//     {
+//       if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
+//       {
+//         if (i == 0 && ifp->field->read_stats)
+//         {
+//           assert(ifp->field->table->s);
+//           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
+//           if (histogram)
+//           {
+//             SchemaAndTableName tableName = {ifp->field->table->s->db.str,
+//                                             ifp->field->table->s->table_name.str};
+//             auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
+//             if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
+//             {
+//               gwi.tableStatisticsMap.insert({tableName, {{ifp->field->field_name.str, *histogram}}});
+//             }
+//             else
+//             {
+//               tableStatisticsMapIt->second.insert({ifp->field->field_name.str, *histogram});
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+// }
+// #else
+// void extractColumnStatistics(Item_field* /*ifp*/, gp_walk_info& /*gwi*/)
+// {
+// }
+// #endif
 
 /*@brief  Process SELECT part of a query or sub-query      */
 /***********************************************************
