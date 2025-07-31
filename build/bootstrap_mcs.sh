@@ -608,7 +608,9 @@ run_unit_tests() {
     message "Running unittests"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 run_microbenchmarks_tests() {
@@ -621,7 +623,9 @@ run_microbenchmarks_tests() {
     message "Runnning microbenchmarks"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 disable_plugins_for_bootstrap() {
