@@ -53,7 +53,7 @@
 #include "branchpred.h"
 #include "datatypes/mcs_int128.h"
 
-#include "basic/collation.h"
+#include "collation.h"
 #include "common/hashfamily.h"
 #include "buffertypes.h"
 

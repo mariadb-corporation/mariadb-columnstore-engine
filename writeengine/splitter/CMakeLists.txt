@@ -16,6 +16,8 @@ set(cpimport_SRCS
 
 columnstore_executable(cpimport ${cpimport_SRCS})
 
+add_dependencies(cpimport loggingcpp)
+
 columnstore_link(
     cpimport
     ${ENGINE_LDFLAGS}
@@ -25,5 +27,4 @@ columnstore_link(
     threadpool
     marias3
     boost_program_options
-    loggingcpp
 )

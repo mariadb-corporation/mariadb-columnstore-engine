@@ -11,7 +11,7 @@ set(udfsdk_LIB_SRCS
 )
 
 columnstore_library(udfsdk ${udfsdk_LIB_SRCS})
-columnstore_link(udfsdk PRIVATE loggingcpp messageqcpp)
+columnstore_link(udfsdk PRIVATE loggingcpp)
 
 # Do anyone use it?
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)

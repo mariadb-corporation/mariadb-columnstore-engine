@@ -5,4 +5,4 @@ include_directories(${ENGINE_COMMON_INCLUDES})
 
 set(querystats_LIB_SRCS querystats.cpp)
 columnstore_library(querystats ${querystats_LIB_SRCS})
-columnstore_link(querystats PRIVATE loggingcpp messageqcpp)
+columnstore_link(querystats PRIVATE loggingcpp)

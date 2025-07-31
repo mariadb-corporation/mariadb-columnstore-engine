@@ -20,7 +20,7 @@
 #include <sstream>
 #include <boost/any.hpp>
 #include "exceptclasses.h"
-#include "basic/conststring.h"
+#include "conststring.h"
 #include "mcs_datatype_basic.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
@@ -794,7 +794,7 @@ class MinMaxPartitionInfo : public MinMaxInfo
   uint64_t m_status;
 
  public:
-  MinMaxPartitionInfo() : m_status(0) {};
+  MinMaxPartitionInfo() : m_status(0){};
   explicit MinMaxPartitionInfo(const BRM::EMEntry& entry);
   void set_invalid()
   {
@@ -1100,8 +1100,7 @@ class TypeHandlerBit : public TypeHandler
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -1134,7 +1133,7 @@ class TypeHandlerBit : public TypeHandler
                                const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
                                bool& /*pushWarning*/) const override;
 
-  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     idbassert(0);
     return nullptr;
@@ -2033,8 +2032,7 @@ class TypeHandlerReal : public TypeHandler
   {
     return {};  // QQ: real types were not handled in IDB_format()
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2330,8 +2328,7 @@ class TypeHandlerBlob : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2357,8 +2354,7 @@ class TypeHandlerText : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2389,8 +2385,7 @@ class TypeHandlerClob : public TypeHandlerStr
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }

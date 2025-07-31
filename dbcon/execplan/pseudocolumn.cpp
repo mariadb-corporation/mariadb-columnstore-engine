@@ -28,7 +28,7 @@ using namespace std;
 #include "basic/string_utils.h"
 
 #include "bytestream.h"
-#include "basic/collation.h"
+#include "collation.h"
 
 using namespace messageqcpp;
 

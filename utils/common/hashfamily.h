@@ -18,7 +18,7 @@
 #pragma once
 
 #include "hasher.h"
-#include "basic/collation.h"
+#include "collation.h"
 
 namespace utils
 {

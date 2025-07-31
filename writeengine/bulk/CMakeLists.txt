@@ -38,7 +38,7 @@ remove_definitions(-D_FILE_OFFSET_BITS=64)
 set(cpimport.bin_SRCS cpimport.cpp)
 
 columnstore_executable(cpimport.bin ${cpimport.bin_SRCS})
-
+add_dependencies(cpimport.bin marias3)
 columnstore_link(
     cpimport.bin
     ${ENGINE_LDFLAGS}
@@ -47,5 +47,4 @@ columnstore_link(
     ${S3API_DEPS}
     we_bulk
     we_xml
-    marias3
 )

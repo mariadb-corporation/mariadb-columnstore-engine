@@ -21,7 +21,7 @@ set(regr_LIB_SRCS
 add_definitions(-DMYSQL_DYNAMIC_PLUGIN)
 
 columnstore_library(regr ${regr_LIB_SRCS})
-columnstore_link(regr PRIVATE loggingcpp messageqcpp)
+columnstore_link(regr PRIVATE loggingcpp)
 
 set(regr_mysql_LIB_SRCS regrmysql.cpp modamysql.cpp)
 
