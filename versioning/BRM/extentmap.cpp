@@ -1732,7 +1732,7 @@ void ExtentMap::load(const string& filename, bool /*fixFL*/)
 
   if (!in)
   {
-    log_errno("ExtentMap::save(): can't open file " + filename);
+    log_errno("ExtentMap::load(): can't open file " + filename);
     releaseFreeList(WRITE);
     releaseEMIndex(WRITE);
     releaseEMEntryTable(WRITE);
@@ -1826,7 +1826,7 @@ void ExtentMap::save(const string& filename)
 
   if (!out)
   {
-    log_errno("ExtentMap::save(): open");
+    log_errno("ExtentMap::save(): can't open file " + filename);
     releaseFreeList(READ);
     releaseEMIndex(READ);
     releaseEMEntryTable(READ);
