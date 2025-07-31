@@ -18,7 +18,7 @@
 #pragma once
 
 #include "basic/conststring.h"
-#include "mariadb_charset/collation.h"  // class Charset
+#include "basic/collation.h"  // class Charset
 
 namespace datatypes
 {

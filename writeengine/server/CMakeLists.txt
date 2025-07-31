@@ -18,4 +18,12 @@ set(WriteEngineServer_SRCS
 )
 
 columnstore_executable(WriteEngineServer ${WriteEngineServer_SRCS})
-columnstore_link(WriteEngineServer ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} threadpool writeengineredistribute loggingcpp)
+columnstore_link(
+    WriteEngineServer
+    ${ENGINE_LDFLAGS}
+    ${NETSNMP_LIBRARIES}
+    ${ENGINE_WRITE_LIBS}
+    threadpool
+    writeengineredistribute
+    loggingcpp
+)

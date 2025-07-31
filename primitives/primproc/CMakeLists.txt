@@ -32,11 +32,11 @@ target_include_directories(PrimProc PRIVATE ${Boost_INCLUDE_DIRS})
 columnstore_link(
     PrimProc
     ${ENGINE_LDFLAGS}
+    ${NETSNMP_LIBRARIES}
     ${ENGINE_WRITE_LIBS}
     threadpool
     cacheutils
     dbbc
     processor
     loggingcpp
-    statistics_manager
 )

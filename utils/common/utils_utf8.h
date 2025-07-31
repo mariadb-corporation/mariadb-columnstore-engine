@@ -20,10 +20,16 @@
 
 #pragma once
 
-#include <cstdint>
 #include <string>
+#if   defined(__FreeBSD__)
+//#include <cstdlib>
+#else
+#include <alloca.h>
+#endif
 #include <cstdlib>
+
 #include <clocale>
+#include "liboamcpp.h"
 
 // Change the name from utf8. Even change the file name to something resembling char helper
 namespace utf8

@@ -39,7 +39,7 @@
 #include "returnedcolumn.h"
 #include "dataconvert.h"
 
-#include "mariadb_charset/collation.h"  // CHARSET_INFO
+#include "basic/collation.h"  // CHARSET_INFO
 
 namespace messageqcpp
 {

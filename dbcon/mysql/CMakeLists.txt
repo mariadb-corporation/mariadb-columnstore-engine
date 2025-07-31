@@ -64,7 +64,7 @@ if(COMMAND mysql_add_plugin)
         ${PLUGIN_EXEC_LIBS}
         ${PLUGIN_WRITE_LIBS}
         joblist_server
-        statistics_manager
+        ${NETSNMP_LIBRARIES}
         ${MARIADB_CLIENT_LIBS}
         ${S3API_DEPS}
         threadpool
@@ -90,10 +90,10 @@ else()
         ${S3API_DEPS}
         ${ENGINE_LDFLAGS}
         ${ENGINE_WRITE_LIBS}
+        ${NETSNMP_LIBRARIES}
         ${SERVER_BUILD_DIR}/libservices/libmysqlservices.a
         threadpool
         loggingcpp
-        statistics_manager
         marias3
     )
     # define this dummy target for standalone builds (ie, when mysql_add_plugin doesn't exist)

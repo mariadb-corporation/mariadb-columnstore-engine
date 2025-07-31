@@ -150,5 +150,6 @@ columnstore_link(
     pron
     loggingcpp
     dataconvert
-    mariadb_charset
+    ${MARIADB_STRING_LIBS}
+    ${NETSNMP_LIBRARIES}
 )

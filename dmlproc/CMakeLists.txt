@@ -12,6 +12,7 @@ columnstore_link(
     DMLProc
     ${ENGINE_LDFLAGS}
     ${ENGINE_WRITE_LIBS}
+    ${NETSNMP_LIBRARIES}
     threadpool
     ddlcleanuputil
     batchloader

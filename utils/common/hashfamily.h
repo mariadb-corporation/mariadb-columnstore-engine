@@ -18,7 +18,7 @@
 #pragma once
 
 #include "hasher.h"
-#include "mariadb_charset/collation.h"
+#include "basic/collation.h"
 
 namespace utils
 {
