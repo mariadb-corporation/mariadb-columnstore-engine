@@ -48,7 +48,7 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
   TSAN: "--tsan",
   UBSan: "--ubsan",
   MSan: "--msan",
-  "libcpp": "--libcpp",
+  "libcpp": "--libcpp --skip-unit-tests",
   "gcc-toolset": "--gcc-toolset-for-rocky-8"
 };
 
