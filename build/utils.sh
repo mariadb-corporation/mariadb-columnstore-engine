@@ -536,13 +536,17 @@ function execInnerDocker() {
   local container_name=$1
   shift 1 # Remove first arg (container_name)
 
-  docker exec -t "$container_name" bash -c "$@" | tr -d '[:space:]'
+  docker exec -t "$container_name" bash -c "$@"
   local dockerCommandExitCode=$?
 
   if [[ $dockerCommandExitCode -ne 0 ]]; then
     error "Command \"$@\" failed in container \"$container_name\""
     return $dockerCommandExitCode
   fi
+}
+
+function execInnerDockerStripped() {
+  execInnerDocker "$@" | tr -d '[:space:]'
 }
 
 function execInnerDockerNoTTY() {
