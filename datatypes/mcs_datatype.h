@@ -1226,7 +1226,7 @@ class TypeHandlerBit : public TypeHandler
 // QQ: perhaps not needed yet
 class TypeHandlerEnum : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::ENUM;
@@ -1283,7 +1283,7 @@ class TypeHandlerEnum : public TypeHandler
 
 class TypeHandlerSet : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::SET;
@@ -1341,7 +1341,7 @@ class TypeHandlerSet : public TypeHandler
 // QQ: perhaps not needed yet
 class TypeHandlerJson : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::JSON;
@@ -1409,7 +1409,7 @@ class TypeHandlerInt : public TypeHandler
 class TypeHandlerSInt8 : public TypeHandlerInt
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TINYINT;
@@ -1456,7 +1456,7 @@ class TypeHandlerSInt8 : public TypeHandlerInt
 class TypeHandlerSInt16 : public TypeHandlerInt
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::SMALLINT;
@@ -1502,7 +1502,7 @@ class TypeHandlerSInt16 : public TypeHandlerInt
 
 class TypeHandlerSInt24 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::MEDINT;
@@ -1551,7 +1551,7 @@ class TypeHandlerSInt24 : public TypeHandlerInt
 
 class TypeHandlerSInt32 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::INT;
@@ -1600,7 +1600,7 @@ class TypeHandlerSInt32 : public TypeHandlerInt
 
 class TypeHandlerSInt64 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIGINT;
@@ -1646,7 +1646,7 @@ class TypeHandlerSInt64 : public TypeHandlerInt
 
 class TypeHandlerUInt8 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UTINYINT;
@@ -1711,7 +1711,7 @@ class TypeHandlerUInt8 : public TypeHandlerInt
 
 class TypeHandlerUInt16 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::USMALLINT;
@@ -1775,7 +1775,7 @@ class TypeHandlerUInt16 : public TypeHandlerInt
 
 class TypeHandlerUInt24 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UMEDINT;
@@ -1842,7 +1842,7 @@ class TypeHandlerUInt24 : public TypeHandlerInt
 
 class TypeHandlerUInt32 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UINT;
@@ -1909,7 +1909,7 @@ class TypeHandlerUInt32 : public TypeHandlerInt
 
 class TypeHandlerUInt64 : public TypeHandlerInt
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIGINT;
@@ -2014,7 +2014,7 @@ class TypeHandlerXDecimal : public TypeHandler
 class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DECIMAL;
@@ -2080,7 +2080,7 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
 class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDECIMAL;
@@ -2146,7 +2146,7 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
 class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DECIMAL;
@@ -2212,7 +2212,7 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
 class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
 {
  public:
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDECIMAL;
@@ -2297,7 +2297,7 @@ class TypeHandlerReal : public TypeHandler
 
 class TypeHandlerSFloat : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::FLOAT;
@@ -2325,7 +2325,7 @@ class TypeHandlerSFloat : public TypeHandlerReal
 
 class TypeHandlerSDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DOUBLE;
@@ -2353,7 +2353,7 @@ class TypeHandlerSDouble : public TypeHandlerReal
 
 class TypeHandlerUFloat : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UFLOAT;
@@ -2381,7 +2381,7 @@ class TypeHandlerUFloat : public TypeHandlerReal
 
 class TypeHandlerUDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::UDOUBLE;
@@ -2409,7 +2409,7 @@ class TypeHandlerUDouble : public TypeHandlerReal
 
 class TypeHandlerSLongDouble : public TypeHandlerReal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::LONGDOUBLE;
@@ -2473,7 +2473,7 @@ class TypeHandlerStr : public TypeHandler
 
 class TypeHandlerChar : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::CHAR;
@@ -2510,7 +2510,7 @@ class TypeHandlerChar : public TypeHandlerStr
 
 class TypeHandlerVarchar : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::VARCHAR;
@@ -2551,7 +2551,7 @@ class TypeHandlerVarchar : public TypeHandlerStr
 
 class TypeHandlerVarbinary : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::VARBINARY;
@@ -2571,7 +2571,7 @@ class TypeHandlerVarbinary : public TypeHandlerStr
 
 class TypeHandlerBlob : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BLOB;
@@ -2598,7 +2598,7 @@ class TypeHandlerBlob : public TypeHandlerStr
 
 class TypeHandlerText : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TEXT;
@@ -2628,7 +2628,7 @@ class TypeHandlerText : public TypeHandlerStr
 
 class TypeHandlerClob : public TypeHandlerStr
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::CLOB;
@@ -2677,7 +2677,7 @@ class TypeHandlerTemporal : public TypeHandler
 
 class TypeHandlerDate : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DATE;
@@ -2703,7 +2703,7 @@ class TypeHandlerDate : public TypeHandlerTemporal
 
 class TypeHandlerDatetime : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::DATETIME;
@@ -2729,7 +2729,7 @@ class TypeHandlerDatetime : public TypeHandlerTemporal
 
 class TypeHandlerTime : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TIME;
@@ -2755,7 +2755,7 @@ class TypeHandlerTime : public TypeHandlerTemporal
 
 class TypeHandlerTimestamp : public TypeHandlerTemporal
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::TIMESTAMP;
