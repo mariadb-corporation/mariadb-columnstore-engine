@@ -1732,7 +1732,7 @@ void ExtentMap::load(const string& filename, bool /*fixFL*/)
 
   if (!in)
   {
-    log_errno("ExtentMap::load(): open");
+    log_errno("ExtentMap::save(): can't open file " + filename);
     releaseFreeList(WRITE);
     releaseEMIndex(WRITE);
     releaseEMEntryTable(WRITE);
@@ -4541,7 +4541,7 @@ void ExtentMap::getDbRootHWMInfo(int OID, uint16_t pmNumber, EmDbRootHWMInfo_v& 
            "There are no DBRoots for OID "
         << OID << " and PM " << pmNumber << endl;
     log(oss.str(), logging::LOG_TYPE_CRITICAL);
-    // previously it was logic error with invalid_argument(oss.str()) exception.
+    throw invalid_argument(oss.str());
   }
 
   grabEMEntryTable(READ);
