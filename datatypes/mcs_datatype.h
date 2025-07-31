@@ -1166,7 +1166,7 @@ class TypeHandler
 // QQ: perhaps not needed yet
 class TypeHandlerBit : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::BIT;
