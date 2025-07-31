@@ -58,7 +58,7 @@ if(WITH_UBSAN)
 
     set(LD_PRELOAD_STRING "")
     set(UBSAN_OPTIONS abort_on_error=0:print_stacktrace=1)
-    set(ALLOC_CONFIG "UBSAN_OPTIONS="${UBSAN_OPTIONS})
+    set(ALLOC_CONFIG UBSAN_OPTIONS=${UBSAN_OPTIONS})
     set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.primproc)
     set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.dmlproc)
     set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.ddlproc)
