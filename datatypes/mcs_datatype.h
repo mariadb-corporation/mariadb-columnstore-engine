@@ -1235,7 +1235,7 @@ const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*at
 // QQ: perhaps not needed yet
 class TypeHandlerEnum : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::ENUM;
@@ -1292,7 +1292,7 @@ class TypeHandlerEnum : public TypeHandler
 
 class TypeHandlerSet : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::SET;
@@ -1350,7 +1350,7 @@ class TypeHandlerSet : public TypeHandler
 // QQ: perhaps not needed yet
 class TypeHandlerJson : public TypeHandler
 {
-  const string& name() const override;
+  const std::string& name() const override;
   code_t code() const override
   {
     return SystemCatalog::JSON;
