@@ -105,6 +105,7 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   ltOp->resultType(ltOp->operationType());
 
   auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
+  // TODO new
   auto tableKeyColumnRightOp = new execplan::SimpleColumn(column);
   tableKeyColumnRightOp->resultType(column.resultType());
   // TODO hardcoded column type and value
@@ -114,8 +115,10 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   gtOp->setOpType(filterColRightOp->resultType(), tableKeyColumnRightOp->resultType());
   gtOp->resultType(gtOp->operationType());
 
+  // TODO new
   auto* sfl = new execplan::SimpleFilter(gtOp, tableKeyColumnRightOp, filterColRightOp);
 
+  // TODO new
   execplan::ParseTree* ptp = new execplan::ParseTree(new execplan::LogicOperator("and"));
   ptp->right(sfr);
   ptp->left(sfl);
@@ -169,6 +172,12 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
   return nullptr;
 }
 
+// TBD
+Histogram_json_hb& chooseStatisticsToUse(std::vector<Histogram_json_hb>& columnStatisticsVec)
+{
+  return columnStatisticsVec.front();
+}
+
 // Populates range bounds based on column statistics
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
@@ -188,7 +197,8 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* 
     return std::nullopt;
   }
 
-  auto columnStatistics = columnStatisticsIt->second;
+  auto& [simpleColumn, columnStatisticsVec] = columnStatisticsIt->second;
+  auto& columnStatistics = chooseStatisticsToUse(columnStatisticsVec);
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
