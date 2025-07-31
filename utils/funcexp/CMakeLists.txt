@@ -152,5 +152,3 @@ columnstore_link(
     dataconvert
     mariadb_charset
 )
-
-columnstore_link(funcexp PRIVATE ${MARIADB_STRING_LIBS})
