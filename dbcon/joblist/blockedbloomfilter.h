@@ -1,4 +1,4 @@
-#include <vector>
+#include <array>
 #include <atomic>
 #include <cmath>
 
@@ -8,14 +8,14 @@ namespace joblist
 class BlockedBloomFilter
 {
     public:
-        // TODO
-        BlockedBloomFilter() {}
+        BlockedBloomFilter() = default;
 
         void insert(uint64_t hash);
         bool probe(uint64_t hash) const;
 
     private:
         // Member variables
+        static constexpr uint8_t HASH_FUNC_COUNT = 8;
         static constexpr uint32_t SALTS[HASH_FUNC_COUNT] = 
         {
             0x47b6137b,
@@ -30,7 +30,6 @@ class BlockedBloomFilter
         
         // Calculating BF's parameters at compile-time
         static constexpr uint8_t BLOCK_SIZE = 64;
-        static constexpr uint8_t HASH_FUNC_COUNT = 8;
         static constexpr uint32_t EXTENT_SIZE = 8'000'000UL;
         static constexpr uint32_t DOUBLE_EXTENT_SIZE = 2*8'000'000UL;
         static constexpr double FALSE_POSITIVE_RATE = 0.01;
@@ -39,8 +38,7 @@ class BlockedBloomFilter
         static constexpr uint64_t NUMBER_OF_BITS = (EXTENT_SIZE * lnFP) / ln2sqr;
         static constexpr uint64_t BLOOM_FILTER_BLOCK_COUNT = (NUMBER_OF_BITS + BLOCK_SIZE - 1) / BLOCK_SIZE;
         
-        // Possible to make it as array, at least the first 8 mln filter
-        std::vector<std::atomic<uint64_t>> bloomFilter;
+        std::array<std::atomic<uint64_t>, BLOOM_FILTER_BLOCK_COUNT> bloomFilter = {};
 
         // Private member functions
         inline uint64_t mix64(uint64_t hash) const;
@@ -51,3 +49,6 @@ class BlockedBloomFilter
 
 
 } // namespace joblist
+
+
+
