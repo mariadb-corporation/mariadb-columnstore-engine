@@ -277,7 +277,7 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
     {
       BRM::CPInfoMerge cpInfoMerge;
 
-      cpInfoMerge.bigMin = cpInfoMerge.bigMax = 0;
+      cpInfoMerge.min = cpInfoMerge.max = cpInfoMerge.bigMin = cpInfoMerge.bigMax = 0;
 
       const int BUFLEN = 128;
       char aBuff[BUFLEN];
