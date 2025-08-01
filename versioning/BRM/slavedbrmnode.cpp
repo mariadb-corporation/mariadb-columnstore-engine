@@ -389,6 +389,8 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
 
     if (mergeCPDataArgs.size() > 0)
     {
+      // avoid warrning
+      mergeCPEntry.colWidth = 0;
       for (i = 0; i < mergeCPDataArgs.size(); i++)
       {
         mergeCPEntry.type = mergeCPDataArgs[i].type;
