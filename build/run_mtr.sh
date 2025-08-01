@@ -9,8 +9,8 @@ optparse.define short=c long=container-name desc="Name of the Docker container w
 optparse.define short=d long=distro desc="Linux distro for which mtr is runned" variable=DISTRO
 optparse.define short=s long=suite-list desc="Comma-separated list of test suites to run" variable=MTR_SUITE_LIST
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
-optparse.define short=D long=download-data desc="Download and extract data from S3 for extended MTR" variable=DOWNLOAD_DATA default false value true
-optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default false value true
+optparse.define short=D long=download-data desc="Download and extract data from S3 for extended MTR" variable=DOWNLOAD_DATA default=false value=true
+optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default=false value=true
 
 source $(optparse.build)
 
