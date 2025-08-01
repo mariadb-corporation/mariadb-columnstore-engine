@@ -352,6 +352,9 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
   CPMaxMinMerge mergeCPEntry;
   CPMaxMinMergeMap_t bulkMergeCPMap;
 
+  // avoid warning
+  mergeCPEntry.min = mergeCPEntry.max = 0;
+
   try
   {
     if (transID)
@@ -403,7 +406,7 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
           mergeCPEntry.max = mergeCPDataArgs[i].max;
           mergeCPEntry.min = mergeCPDataArgs[i].min;
         }
-        
+
         mergeCPEntry.newExtent = mergeCPDataArgs[i].newExtent;
         mergeCPEntry.seqNum = mergeCPDataArgs[i].seqNum;
         bulkMergeCPMap[mergeCPDataArgs[i].startLbid] = mergeCPEntry;
