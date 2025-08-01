@@ -26,6 +26,6 @@
 
 namespace optimizer
 {
-  bool matchRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep);
-  void applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
+  bool rewriteDistinctFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
+  bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
 }

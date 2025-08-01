@@ -1205,56 +1205,32 @@ SCSEP CalpontSelectExecutionPlan::clone()
   for (const auto& subPlan : fSubSelects)
   {
     auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
-    if (subCSEP)
-    {
-      newPlan->fSubSelects.push_back(subCSEP->clone());
-    }
-    else
-    {
-      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
-    }
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSubSelects.push_back(subCSEP->clone());
   }
 
   newPlan->fDerivedTableList.clear();
   for (const auto& drvTable: fDerivedTableList)
   {
     auto* drvCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(drvTable.get());
-    if (drvCSEP)
-    {
-      newPlan->fDerivedTableList.push_back(drvCSEP->clone());
-    }
-    else
-    {
-      throw runtime_error("CalpontSelectExecutionPlan::clone() - drvTable is not a CalpontSelectExecutionPlan");
-    }
+    idbassert_s(drvCSEP != nullptr, "derivedTable is not a CalpontSelectExecutionPlan");
+    newPlan->fDerivedTableList.push_back(drvCSEP->clone());
   }
 
   newPlan->fUnionVec.clear();
   for (const auto& subPlan : fUnionVec)
   {
     auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
-    if (subCSEP)
-    {
-      newPlan->fUnionVec.push_back(subCSEP->clone());
-    }
-    else
-    {
-      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
-    }
+    idbassert_s(subCSEP != nullptr, "unionVec is not a CalpontSelectExecutionPlan");
+    newPlan->fUnionVec.push_back(subCSEP->clone());
   }
 
   newPlan->fSelectSubList.clear();
   for (const auto& subPlan : fSelectSubList)
   {
     auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
-    if (subCSEP)
-    {
-      newPlan->fSelectSubList.push_back(subCSEP->clone());
-    }
-    else
-    {
-      throw runtime_error("CalpontSelectExecutionPlan::clone() - subPlan is not a CalpontSelectExecutionPlan");
-    }
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSelectSubList.push_back(subCSEP->clone());
   }
 
   newPlan->fSubSelectList.clear();

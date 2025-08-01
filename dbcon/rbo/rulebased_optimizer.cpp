@@ -35,8 +35,9 @@ namespace optimizer
 std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
                                       const RBOptimizerContext& ctx)
 {
-  static constexpr std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
-  return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" + std::to_string(ctx.uniqueId);
+  static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
+  return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
+         std::to_string(ctx.getUniqueId());
 }
 
 // Apply a list of rules to a CSEP
@@ -85,7 +86,8 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-    optimizer::Rule rewriteDistinct{"rewriteDistinct", optimizer::matchRewriteDistinct, optimizer::applyRewriteDistinct};
+    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+                                    optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
   }
 

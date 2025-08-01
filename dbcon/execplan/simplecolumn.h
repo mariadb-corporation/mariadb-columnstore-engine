@@ -413,4 +413,8 @@ ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColu
 std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(
     std::vector<SimpleColumn*> simpleColumnList);
 
+/// utility function for constructing a reasonable alias for a SimpleColumn copy, based on the alias/column
+/// name/function name of the original colum
+std::string getSimpleColumnAlias(const ReturnedColumn& origCol, int64_t colPos);
+
 }  // namespace execplan

@@ -27,7 +27,7 @@
 namespace optimizer
 {
 
-bool matchRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep)
+bool rewriteDistinctFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& /*ctx*/)
 {
   return csep.distinct() && csep.tableList().size() > 0;
 }
@@ -44,7 +44,6 @@ execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& 
 
   // fill ReturnedColumn data
   rcCloned->charsetNumber(rc->charsetNumber());
-  rcCloned->alias(tableAlias + "." + rc->alias());
 
   // fill TreeNode data
   rcCloned->derivedTable(tableAlias);
@@ -55,36 +54,42 @@ execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& 
 
   if (const auto* rcsc = dynamic_cast<execplan::SimpleColumn*>(rc.get()); rcsc != nullptr)
   {
-    rcCloned->columnName(rcsc->columnName());
     rcCloned->timeZone(rcsc->timeZone());
   }
   else if (const auto* rcfc = dynamic_cast<execplan::FunctionColumn*>(rc.get()))
   {
-    rcCloned->columnName(rcfc->functionName());
     rcCloned->timeZone(rcfc->timeZone());
   }
   else if (const auto* rcac = dynamic_cast<execplan::AggregateColumn*>(rc.get()))
   {
-    rcCloned->columnName(rcac->functionName());
     rcCloned->timeZone(rcac->timeZone());
   }
   else if (const auto* rcwc = dynamic_cast<execplan::WindowFunctionColumn*>(rc.get()))
   {
-    rcCloned->columnName(rcwc->functionName());
     rcCloned->timeZone(rcwc->timeZone());
   }
   rc->incRefCount();
 
+  auto colName = getSimpleColumnAlias(*rc, colPos);
+  rcCloned->columnName(colName);
+  rcCloned->alias("`" + tableAlias + "`." + colName);
+  rcCloned->colSource(0);
+
   return rcCloned;
 }
 
-void applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
+bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
 {
   auto origCSEP = csep.clone();
   auto tableAlias = getRewrittenSubTableAlias(csep.tableList()[0], ctx);
   origCSEP->location(execplan::CalpontSelectExecutionPlan::FROM);
   origCSEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
   origCSEP->derivedTbAlias(tableAlias);
+
+  csep.subSelectList({});
+  csep.subSelects({});
+  csep.selectSubList({});
+  csep.unionVec({});
 
   execplan::CalpontSelectExecutionPlan::TableList tblList;
   tblList.push_back(execplan::make_aliasview("", "", tableAlias, ""));
@@ -162,13 +167,14 @@ void applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
     aggCol->aggOp(execplan::AggregateColumn::SELECT_SOME);
     aggCol->aggParms().emplace_back(rcCloned);
 
-    //obcCloned->orderPos(colPos + orderByColPos);
     csep.orderByCols().emplace_back(obcCloned);
 
     ++orderByColPos;
   }
   origCSEP->orderByCols().clear();
   origCSEP->distinct(false);
+
+  return true;
 }
 
 }  // namespace optimizer
