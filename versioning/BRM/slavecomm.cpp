@@ -1317,6 +1317,8 @@ void SlaveComm::do_mergeExtentsMaxMin(ByteStream& msg)
     msg >> tmp32;
     cpMaxMin.newExtent = tmp32;
 
+    // avoid warrning
+    cpMaxMin.colWidth = 0;
     cpMap[startLbid] = cpMaxMin;
 
     if (printOnly)
