@@ -15,7 +15,7 @@ optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR defa
 source $(optparse.build)
 
 if [[ "${EVENT}" == "cron" ]]; then
-    FULL_MTR = true
+    FULL_MTR=true
 fi
 
 if [[ $FULL_MTR = true ]]; then
