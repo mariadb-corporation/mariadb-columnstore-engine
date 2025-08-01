@@ -33,7 +33,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
@@ -49,7 +49,7 @@ class regr_count : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  regr_count() : mcsv1_UDAF(){};
+  regr_count() : mcsv1_UDAF() {};
   ~regr_count() override = default;
 
   ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;

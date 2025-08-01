@@ -25,8 +25,8 @@
 #pragma once
 
 #include <map>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include <unordered_map>
 #include <boost/thread.hpp>
 

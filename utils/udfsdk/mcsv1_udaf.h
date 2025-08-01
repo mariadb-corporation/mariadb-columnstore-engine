@@ -67,7 +67,8 @@
 #include <vector>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include "any.hpp"
 #include "calpontsystemcatalog.h"
 #include "wf_frame.h"

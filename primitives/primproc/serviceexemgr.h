@@ -58,7 +58,7 @@
 #include "dbrm.h"
 
 #include "mariadb_my_sys.h"
-#include "statistics_manager/statistics.h"
+#include "statistics.h"
 
 namespace exemgr
 {
@@ -69,7 +69,7 @@ class Opt
   int m_debug;
   bool m_e;
   bool m_fg;
-  Opt() : m_debug(0), m_e(false), m_fg(false) {};
+  Opt() : m_debug(0), m_e(false), m_fg(false){};
   Opt(int argc, char* argv[]) : m_debug(0), m_e(false), m_fg(false)
   {
     int c;
@@ -339,7 +339,7 @@ class ServiceExeMgr : public Service, public Opt
   }
   void getLocalNetIfacesSins()
   {
-    string ipAddress = "Unable to get IP Address";
+    std::string ipAddress = "Unable to get IP Address";
     struct ifaddrs* netIfacesList = nullptr;
     struct ifaddrs* ifaceListMembPtr = nullptr;
     int success = 0;

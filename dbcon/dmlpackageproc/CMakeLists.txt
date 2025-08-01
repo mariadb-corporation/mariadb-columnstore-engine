@@ -13,4 +13,4 @@ set(dmlpackageproc_LIB_SRCS
 )
 
 columnstore_library(dmlpackageproc ${dmlpackageproc_LIB_SRCS})
-columnstore_link(dmlpackageproc loggingcpp oamcpp messageqcpp)
+columnstore_link(dmlpackageproc ${NETSNMP_LIBRARIES} loggingcpp)

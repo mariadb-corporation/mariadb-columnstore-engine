@@ -545,6 +545,10 @@ function execInnerDocker() {
   fi
 }
 
+function execInnerDockerStripped() {
+  execInnerDocker "$@" | tr -d '[:space:]'
+}
+
 function execInnerDockerNoTTY() {
   local container_name=$1
   shift 1

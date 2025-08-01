@@ -28,7 +28,7 @@
 
 #include <map>
 #include <set>
-#include <tr1/unordered_set>
+#include <unordered.h>
 #include <boost/thread.hpp>
 
 #include "brmtypes.h"

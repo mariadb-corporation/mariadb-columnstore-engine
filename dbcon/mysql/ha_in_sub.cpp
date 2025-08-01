@@ -27,10 +27,9 @@
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <stdint.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
-using namespace std;
 
 #include "idb_mysql.h"
 
@@ -49,6 +48,8 @@ using namespace execplan;
 using namespace logging;
 
 #include "ha_subquery.h"
+
+using namespace std;
 
 namespace cal_impl_if
 {

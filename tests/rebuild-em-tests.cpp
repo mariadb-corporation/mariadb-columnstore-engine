@@ -80,8 +80,9 @@ TEST_F(RebuildEMTest, File2OidCheckFileFormatTest)
   FileId fExpected(getOid(0, 0, 8, 28), 00, 79);
 
   std::vector<std::pair<std::string, FileId>> expectedFileIds = {
-      make_pair(aFileName, aExpected), make_pair(bFileName, bExpected), make_pair(cFileName, cExpected),
-      make_pair(dFileName, dExpected), make_pair(eFileName, eExpected), make_pair(fFileName, fExpected)};
+      std::make_pair(aFileName, aExpected), std::make_pair(bFileName, bExpected),
+      std::make_pair(cFileName, cExpected), std::make_pair(dFileName, dExpected),
+      std::make_pair(eFileName, eExpected), std::make_pair(fFileName, fExpected)};
 
   for (const auto& expectedPair : expectedFileIds)
   {

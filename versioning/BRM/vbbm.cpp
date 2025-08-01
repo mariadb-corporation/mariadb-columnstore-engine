@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <ext/stdio_filebuf.h>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -540,7 +539,7 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
 {
   int index, prev, bucket;
 
-  //#ifdef BRM_DEBUG
+  // #ifdef BRM_DEBUG
   if (lbid < 0)
   {
     log("VBBM::lookup(): lbid must be >= 0", logging::LOG_TYPE_DEBUG);
@@ -553,7 +552,7 @@ int VBBM::lookup(LBID_t lbid, VER_t verID, OID_t& oid, uint32_t& fbo) const
     throw invalid_argument("VBBM::lookup(): verID must be > 1)");
   }
 
-  //#endif
+  // #endif
 
   index = getIndex(lbid, verID, prev, bucket);
 
@@ -1011,8 +1010,8 @@ void VBBM::loadVersion2(IDBDataFile* in)
            true);
 }
 
-//#include "boost/date_time/posix_time/posix_time.hpp"
-// using namespace boost::posix_time;
+// #include "boost/date_time/posix_time/posix_time.hpp"
+//  using namespace boost::posix_time;
 
 void VBBM::load(string filename)
 {

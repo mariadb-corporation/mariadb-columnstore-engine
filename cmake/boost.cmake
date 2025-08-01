@@ -15,6 +15,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set(_toolset "intel-linux")
 endif()
 
+message("${_toolset} will be used for Boost compilation with compiler ${CMAKE_CXX_COMPILER_ID}")
+
 set(INSTALL_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/.boost/boost-lib)
 set(BOOST_ROOT "${INSTALL_LOCATION}")
 set(Boost_INCLUDE_DIRS "${INSTALL_LOCATION}/include")
@@ -22,8 +24,18 @@ set(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 link_directories("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+set(_linkflags "")
+
+if(WITH_MSAN)
+    set(_cxxargs "${_cxxargs} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE")
+    set(_linkflags "-stdlib=libc++")
+elseif(COLUMNSTORE_WITH_LIBCPP)
+    set(_cxxargs "${_cxxargs} -stdlib=libc++")
+    set(_linkflags "-stdlib=libc++")
+endif()
+
 set(_b2args cxxflags=${_cxxargs};cflags=-fPIC;threading=multi;${_extra};toolset=${_toolset}
-            --without-mpi;--without-charconv;--without-python;--prefix=${INSTALL_LOCATION}
+            --without-mpi;--without-charconv;--without-python;--prefix=${INSTALL_LOCATION} linkflags=${_linkflags}
 )
 
 set(byproducts)
@@ -48,8 +60,7 @@ ExternalProject_Add(
     BUILD_COMMAND ./b2 -q ${_b2args}
     BUILD_IN_SOURCE TRUE
     INSTALL_COMMAND ./b2 -q install ${_b2args}
-    #LOG_BUILD TRUE
-    #LOG_INSTALL TRUE
+    # LOG_BUILD TRUE LOG_INSTALL TRUE
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
 )

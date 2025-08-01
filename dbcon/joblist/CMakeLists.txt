@@ -68,15 +68,7 @@ columnstore_library(joblist ${joblist_LIB_SRCS})
 target_include_directories(
     joblist BEFORE PUBLIC ${OPENSSL_INCLUDE_DIR} ${LIBMARIADB_BININC_DIR} ${LIBMARIADB_SRCINC_DIR}
 )
-columnstore_link(
-    joblist
-    loggingcpp
-    boost_thread
-    oamcpp
-    querytele
-    messageqcpp
-    statistics_manager
-)
+columnstore_link(joblist loggingcpp)
 
 if(WITH_ORDERBY_UT)
     columnstore_executable(job_orderby_tests orderby-tests.cpp)

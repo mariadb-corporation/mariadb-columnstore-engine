@@ -47,7 +47,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
@@ -70,7 +70,7 @@ class allnull : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  allnull() : mcsv1_UDAF(){};
+  allnull() : mcsv1_UDAF() {};
   ~allnull() override = default;
 
   /**

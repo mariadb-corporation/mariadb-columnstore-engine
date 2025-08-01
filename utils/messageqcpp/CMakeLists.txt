@@ -8,6 +8,7 @@ set(messageqcpp_LIB_SRCS
     iosocket.cpp
     messagequeue.cpp
     messagequeuepool.cpp
+    samenodepseudosocket.cpp
     socketparms.cpp
 )
 

@@ -11,7 +11,7 @@ STEP_NAME=$5
 
 save_ansi_to_html() {
 	echo "<h2> $1 </h2>" >>"${FILENAME}"
-	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --palette=solarized >>"${FILENAME}"
+	cat "$DUMPNAME" | bash "${SCRIPT_LOCATION}"/ansi2html.sh --bg=dark --palette=tango >>"${FILENAME}"
 }
 
 invoke_gdb_command() {

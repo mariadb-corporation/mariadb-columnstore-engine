@@ -15,13 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <sstream>
 #include <cstring>
-#include <typeinfo>
 #include "regr_r2.h"
-#include "bytestream.h"
-#include "objectreader.h"
-
+#include <cmath>
 using namespace mcsv1sdk;
 
 class Add_regr_r2_ToUDAFMap
@@ -197,8 +193,8 @@ mcsv1_UDAF::ReturnCode regr_r2::evaluate(mcsv1Context* context, static_any::any&
       valOut = 1.0;
       return mcsv1_UDAF::SUCCESS;
     }
-    long double std_popx = sqrt(var_popx);
-    long double std_popy = sqrt(var_popy);
+    long double std_popx = std::sqrt(var_popx);
+    long double std_popy = std::sqrt(var_popy);
     long double corr = cxy / (std_popy * std_popx * N);
     valOut = static_cast<double>(corr * corr);
   }

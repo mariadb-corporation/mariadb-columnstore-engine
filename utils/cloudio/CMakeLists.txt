@@ -14,7 +14,7 @@ columnstore_library(cloudio ${cloudio_LIB_SRCS})
 
 # IDBDataFile currently depends on cloudio, which is backward. Once cloudio has been turned into a proper plugin for
 # idbdatafile, we should be able to reverse the dependency like so:
-columnstore_link(cloudio idbdatafile messageqcpp boost_thread)
+columnstore_link(cloudio idbdatafile messageqcpp)
 
 add_executable(cloudio_component_test component_test.cpp)
 add_executable(cloudio_end_to_end_test end_to_end_test.cpp)

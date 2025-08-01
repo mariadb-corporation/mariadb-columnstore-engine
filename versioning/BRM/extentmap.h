@@ -30,8 +30,8 @@
 #include <sys/types.h>
 #include <vector>
 #include <set>
-#include <unordered_map>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <mutex>
 
 // #define NDEBUG
@@ -40,7 +40,6 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/containers/map.hpp>
-
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 

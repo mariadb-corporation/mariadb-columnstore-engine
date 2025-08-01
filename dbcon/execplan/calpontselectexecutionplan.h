@@ -801,7 +801,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Return a string rep of the CSEP
    * @return a string
    */
-  void printSubCSEP(const size_t& ident, ostringstream& output, CalpontSelectExecutionPlan*& plan) const;
+  void printSubCSEP(const size_t& ident, std::ostringstream& output, CalpontSelectExecutionPlan*& plan) const;
   virtual std::string toString(const size_t ident = 0) const;
 
   /** @brief Is this an internal query?
@@ -968,7 +968,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   uint32_t fDJSMaxPartitionTreeDepth = 8;
   bool fDJSForceRun = false;
   uint32_t fMaxPmJoinResultCount = 1048576;
-  int64_t fUMMemLimit = numeric_limits<int64_t>::max();
+  int64_t fUMMemLimit = std::numeric_limits<int64_t>::max();
   bool fIsDML = false;
   long fTimeZone = 0;
   std::vector<execplan::ParseTree*> fDynamicParseTreeVec;

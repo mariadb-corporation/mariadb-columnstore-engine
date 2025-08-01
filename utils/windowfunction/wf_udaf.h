@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include "windowfunctiontype.h"
 #include "mcsv1_udaf.h"
 
@@ -101,7 +102,7 @@ class WF_udaf : public WindowFunctionType
   static_any::any fValOut;  // The return value
 
  public:
-  static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const string& name, int ct,
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int id, const std::string& name, int ct,
                                                             mcsv1sdk::mcsv1Context& context,
                                                             WindowFunctionColumn* wc);
 };

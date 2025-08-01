@@ -29,7 +29,7 @@
 #include <fcntl.h>
 // end
 #include <boost/lexical_cast.hpp>
-#include <tr1/unordered_set>
+#include <unordered.h>
 
 #include "we_brm.h"
 #include "we_colop.h"
@@ -125,8 +125,8 @@ class WriteEngineWrapper : public WEObj
    * purpose and not for generic use
    */
   int buildIndex(const OID& /*colOid*/, const OID& /*treeOid*/, const OID& /*listOid*/,
-                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/, bool /*resetFile*/,
-                 uint64_t& /*totalRows*/, int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
+                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/,
+                 bool /*resetFile*/, uint64_t& /*totalRows*/, int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
   {
     return -1;
   }
@@ -135,9 +135,9 @@ class WriteEngineWrapper : public WEObj
    * @brief Build a index from a file
    */
   int buildIndex(const std::string& /*sourceFileName*/, const OID& /*treeOid*/, const OID& /*listOid*/,
-                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/, bool /*resetFile*/,
-                 uint64_t& /*totalRows*/, const std::string& /*indexName*/, Log* /*pLogger*/,
-                 int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
+                 execplan::CalpontSystemCatalog::ColDataType /*colDataType*/, int /*width*/, int /*hwm*/,
+                 bool /*resetFile*/, uint64_t& /*totalRows*/, const std::string& /*indexName*/,
+                 Log* /*pLogger*/, int /*maxRow*/ = IDX_DEFAULT_READ_ROW)
   {
     return -1;
   }

@@ -626,7 +626,7 @@ class DBRM
    * The updated lbidList is used by invalidateUncommittedExtentLBIDs().
    * @param lbidList (in and out) This contains the ranges of LBIDs
    */
-  EXPORT void addToLBIDList(uint32_t sessionID, vector<LBID_t>& lbidList);
+  EXPORT void addToLBIDList(uint32_t sessionID, std::vector<LBID_t>& lbidList);
 
   /** @brief Atomically prepare to copy data to the version buffer
    *

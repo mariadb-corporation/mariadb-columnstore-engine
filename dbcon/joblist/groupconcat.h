@@ -124,7 +124,7 @@ class GroupConcator
   virtual void merge(GroupConcator*) = 0;
   virtual uint8_t* getResultImpl(const std::string& sep) = 0;
   virtual uint8_t* getResult(const std::string& sep);
-  uint8_t* swapStreamWithStringAndReturnBuf(ostringstream& oss, bool isNull);
+  uint8_t* swapStreamWithStringAndReturnBuf(std::ostringstream& oss, bool isNull);
 
   virtual const std::string toString() const;
 
@@ -178,7 +178,10 @@ class GroupConcatNoOrder : public GroupConcator
   const std::string toString() const override;
 
  protected:
-  std::vector<rowgroup::RGDataUnPtr>& getRGDatas() { return fDataVec; }
+  std::vector<rowgroup::RGDataUnPtr>& getRGDatas()
+  {
+    return fDataVec;
+  }
 
   void createNewRGData();
   rowgroup::RowGroup fRowGroup;
@@ -247,8 +250,14 @@ class GroupConcatOrderBy : public GroupConcator, public ordering::IdbCompare
   void createNewRGData();
   uint64_t getCurrentRowIdx() const;
   static uint64_t shiftGroupIdxBy(uint64_t idx, uint32_t shift);
-  std::vector<rowgroup::RGDataUnPtr>& getRGDatas() { return fDataVec; }
-  SortingPQ* getQueue() { return fOrderByQueue.get(); }
+  std::vector<rowgroup::RGDataUnPtr>& getRGDatas()
+  {
+    return fDataVec;
+  }
+  SortingPQ* getQueue()
+  {
+    return fOrderByQueue.get();
+  }
 
   rowgroup::RGDataSizeType fMemSize{0};
   static constexpr uint64_t fRowsPerRG{128};

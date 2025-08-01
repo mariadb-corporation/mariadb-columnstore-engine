@@ -25,13 +25,11 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
 #include <fstream>
 #include <sstream>
 #include <cerrno>
 #include <cstring>
-using namespace std;
 
 #include <boost/shared_ptr.hpp>
 using namespace boost;
@@ -74,6 +72,8 @@ using namespace joblist;
 #include "ha_mcs_datatype.h"
 
 #include "nullstring.h"
+
+using namespace std;
 
 namespace
 {

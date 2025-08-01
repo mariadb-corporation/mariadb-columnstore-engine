@@ -26,7 +26,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include <boost/thread.hpp>
 #include <deque>
 

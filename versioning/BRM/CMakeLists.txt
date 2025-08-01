@@ -34,7 +34,7 @@ set(brm_LIB_SRCS
 )
 
 columnstore_library(brm ${brm_LIB_SRCS})
-columnstore_link(brm loggingcpp datatypes oamcpp boost_thread messageqcpp)
+columnstore_link(brm loggingcpp datatypes)
 
 # ########## next target ###############
 
@@ -62,41 +62,53 @@ columnstore_link(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS
 set(reset_locks_SRCS reset_locks.cpp)
 
 columnstore_executable(reset_locks ${reset_locks_SRCS})
-columnstore_link(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+columnstore_link(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
 # ########## next target ###############
 
 set(rollback_SRCS rollback.cpp)
 
 columnstore_executable(rollback ${rollback_SRCS})
-columnstore_link(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+columnstore_link(rollback ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
 # ########## next target ###############
 
 set(save_brm_SRCS save_brm.cpp)
 
 columnstore_executable(save_brm ${save_brm_SRCS})
-columnstore_link(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+columnstore_link(save_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
 # ########## next target ###############
 
 set(load_brm_SRCS load_brm.cpp)
 
 columnstore_executable(load_brm ${load_brm_SRCS})
-columnstore_link(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+columnstore_link(load_brm ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
 
 columnstore_executable(mcs-load-em load_em.cpp)
-columnstore_link(mcs-load-em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
+columnstore_link(
+    mcs-load-em ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES}
+)
 
 columnstore_executable(mcs-load-brm-from-file load_brm_from_file.cpp)
 columnstore_link(
-    mcs-load-brm-from-file ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS}
+    mcs-load-brm-from-file
+    ${ENGINE_LDFLAGS}
+    ${MARIADB_CLIENT_LIBS}
+    ${ENGINE_OAM_LIBS}
+    ${ENGINE_EXEC_LIBS}
+    ${NETSNMP_LIBRARIES}
     boost_program_options
 )
 
 columnstore_executable(mcs-shmem-locks shmem_locks.cpp)
 columnstore_link(
-    mcs-shmem-locks ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS}
+    mcs-shmem-locks
+    ${ENGINE_LDFLAGS}
+    ${MARIADB_CLIENT_LIBS}
+    ${ENGINE_OAM_LIBS}
+    ${ENGINE_EXEC_LIBS}
+    ${NETSNMP_LIBRARIES}
     boost_program_options
 )
 

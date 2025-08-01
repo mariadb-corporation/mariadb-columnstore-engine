@@ -36,12 +36,10 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/foreach.hpp>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include <pthread.h>
 #include <cerrno>
-
-using namespace std;
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/scoped_array.hpp>
@@ -90,6 +88,8 @@ using namespace compress;
 using namespace idbdatafile;
 
 using namespace threadpool;
+
+using namespace std;
 
 #include "threadnaming.h"
 
