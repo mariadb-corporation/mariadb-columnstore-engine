@@ -40,7 +40,7 @@ bool treeEqual(execplan::ParseTree* fst, execplan::ParseTree* snd, int depth = 0
          (treeEqual(fst->left(), snd->right(), depth + 1) && treeEqual(fst->right(), snd->left(), depth + 1));
 }
 
-#define REWRITE_TREE_TEST_DEBUG false
+#define REWRITE_TREE_TEST_DEBUG true
 
 void printTree([[maybe_unused]] const std::string& queryName, [[maybe_unused]] execplan::ParseTree* tree,
                [[maybe_unused]] const std::string& treeName)

@@ -254,12 +254,13 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     }
 
     Cmds.push_back(0);  // null terminate
-    // updatePrgmPath(Cmds);
+                        // updatePrgmPath(Cmds);
 
-    // NOTE: for debugging
+    // // NOTE: for debugging
     int aSize = Cmds.size();
 
-    for (int aIdx = 0; aIdx < aSize; ++aIdx)
+    // Do not address last terminating 0
+    for (int aIdx = 0; aIdx < aSize - 1; ++aIdx)
     {
       cout << "Args " << Cmds[aIdx] << endl;
     }

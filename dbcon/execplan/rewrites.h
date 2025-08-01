@@ -24,7 +24,7 @@
 namespace execplan
 {
 
-#define debug_rewrites false
+#define debug_rewrites true
 
 execplan::OpType oppositeOperator(execplan::OpType op);
 
@@ -34,7 +34,7 @@ struct NodeSemanticComparator
 };
 
 // Walk the tree and find out common conjuctions
-template<bool stableSort = false>
+template <bool stableSort = false>
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree);
 bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit);
 }  // namespace execplan

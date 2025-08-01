@@ -6103,7 +6103,7 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   string rewriteEnabled = cf->getConfig("Rewrites", "CommonLeafConjunctionsToTop");
   if (filters && rewriteEnabled != "OFF")
   {
-    filters = extractCommonLeafConjunctionsToRoot(filters);
+    filters = extractCommonLeafConjunctionsToRoot<true>(filters);
   }
 
   uint64_t limit = get_max_allowed_in_values(gwi.thd);
@@ -6306,7 +6306,8 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
           if (histogram)
           {
-            SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
+            SchemaAndTableName tableName = {ifp->field->table->s->db.str,
+                                            ifp->field->table->s->table_name.str};
             gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
           }
         }
