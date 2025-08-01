@@ -1155,6 +1155,8 @@ void PackageHandler::run()
     logging::Message message(1);
     args.add("dmlprocessor.cpp PackageHandler::run() package type");
     args.add((uint64_t)fPackageType);
+    args.add(" ,transaction ID: ");
+    args.add(fTxnid);
     args.add(e.what());
     message.format(args);
     ml.logErrorMessage(message);
