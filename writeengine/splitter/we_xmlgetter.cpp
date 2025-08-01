@@ -46,20 +46,23 @@ namespace WriteEngine
 //------------------------------------------------------------------------------
 // WEXmlgetter constructor
 //------------------------------------------------------------------------------
-WEXmlgetter::WEXmlgetter(std::string& ConfigName) : fConfigName(ConfigName), fDoc(NULL), fpRoot(NULL)
+WEXmlgetter::WEXmlgetter(const std::string& ConfigName)
+ : fConfigName(ConfigName)
+ , fDoc(nullptr)
+ , fpRoot(nullptr)
 {
   //  xmlNodePtr curPtr;
   fDoc = xmlParseFile(ConfigName.c_str());
 
-  if (fDoc == NULL)
+  if (fDoc == nullptr)
     throw runtime_error("WEXmlgetter::getConfig(): no XML document!");
 
   fpRoot = xmlDocGetRootElement(fDoc);
 
-  if (fpRoot == NULL)
+  if (fpRoot == nullptr)
   {
     xmlFreeDoc(fDoc);
-    fDoc = NULL;
+    fDoc = nullptr;
     throw runtime_error("WEXmlgetter::getConfig(): no XML Root Tag!");
   }
 }
@@ -70,24 +73,24 @@ WEXmlgetter::WEXmlgetter(std::string& ConfigName) : fConfigName(ConfigName), fDo
 WEXmlgetter::~WEXmlgetter()
 {
   xmlFreeDoc(fDoc);
-  fDoc = NULL;
+  fDoc = nullptr;
 }
 
 //------------------------------------------------------------------------------
 // Get/return the property or attribute value (strVal) for the specified xml tag
 // (pNode) and property/attribute (pTag)
 //------------------------------------------------------------------------------
-bool WEXmlgetter::getNodeAttribute(const xmlNode* pNode, const char* pTag, std::string& strVal) const
+bool WEXmlgetter::getNodeAttribute(const xmlNode* pNode, const char* pTag, std::string& strVal)
 {
-  xmlChar* pTmp = NULL;
+  xmlChar* pTmp = nullptr;
   bool bFound = false;
 
-  pTmp = xmlGetProp(const_cast<xmlNode*>(pNode), (xmlChar*)pTag);
+  pTmp = xmlGetProp(pNode, reinterpret_cast<const xmlChar*>(pTag));
 
   if (pTmp)
   {
     bFound = true;
-    strVal = (char*)pTmp;
+    strVal = reinterpret_cast<char*>(pTmp);
     xmlFree(pTmp);
   }
   else
@@ -101,19 +104,19 @@ bool WEXmlgetter::getNodeAttribute(const xmlNode* pNode, const char* pTag, std::
 //------------------------------------------------------------------------------
 // Get/return the node content (strVal) for the specified xml tag (pNode)
 //------------------------------------------------------------------------------
-bool WEXmlgetter::getNodeContent(const xmlNode* pNode, std::string& strVal) const
+bool WEXmlgetter::getNodeContent(const xmlNode* pNode, std::string& strVal)
 {
-  xmlChar* pTmp = NULL;
+  xmlChar* pTmp = nullptr;
   bool bFound = false;
 
-  if (pNode->children != NULL)
+  if (pNode->children != nullptr)
   {
     pTmp = xmlNodeGetContent(pNode->children);
 
     if (pTmp)
     {
       bFound = true;
-      strVal = (char*)pTmp;
+      strVal = reinterpret_cast<char*>(pTmp);
       xmlFree(pTmp);
     }
     else
@@ -152,29 +155,29 @@ void WEXmlgetter::getConfig(const string& section, const string& name, vector<st
 {
   string res;
 
-  if (section.length() == 0)
+  if (section.empty())
     throw invalid_argument("Config::getConfig: section must have a length");
 
-  xmlNode* pPtr = fpRoot->xmlChildrenNode;
+  const xmlNode* pPtr = fpRoot->xmlChildrenNode;
 
-  while (pPtr != NULL)
+  while (pPtr != nullptr)
   {
     // cout << "pPtr->name:    " <<
     //	(const xmlChar*)pPtr->name << std::endl;
 
-    if ((!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str())))
+    if ((!xmlStrcmp(pPtr->name, reinterpret_cast<const xmlChar*>(section.c_str()))))
     {
       xmlNodePtr pPtr2 = pPtr->xmlChildrenNode;
 
-      while (pPtr2 != NULL)
+      while (pPtr2 != nullptr)
       {
         // cout << "  pPtr2->name: " <<
         //	(const xmlChar*)pPtr2->name << std::endl;
 
-        if ((!xmlStrcmp(pPtr2->name, (const xmlChar*)name.c_str())))
+        if ((!xmlStrcmp(pPtr2->name, reinterpret_cast<const xmlChar*>(name.c_str()))))
         {
           xmlNodePtr pPtr3 = pPtr2->xmlChildrenNode;
-          values.push_back((const char*)pPtr3->content);
+          values.emplace_back(reinterpret_cast<const char*>(pPtr3->content));
 
           // cout << "    pPtr3->name: " <<
           //	(const xmlChar*)pPtr3->name <<
@@ -204,8 +207,8 @@ std::string WEXmlgetter::getValue(const vector<string>& sections) const
 {
   std::string aRet;
   const xmlNode* pPtr = fpRoot;
-  int aSize = sections.size();
-  int aIdx = 0;
+  auto aSize = sections.size();
+  size_t aIdx = 0;
 
   // cout << aSize << endl;
   while (aIdx < aSize)
@@ -213,7 +216,7 @@ std::string WEXmlgetter::getValue(const vector<string>& sections) const
     // cout << aIdx <<" "<< sections[aIdx] << endl;
     pPtr = getNode(pPtr, sections[aIdx]);
 
-    if ((pPtr == NULL) || (aIdx == aSize - 1))
+    if ((pPtr == nullptr) || (aIdx == aSize - 1))
       break;
     else
     {
@@ -223,7 +226,7 @@ std::string WEXmlgetter::getValue(const vector<string>& sections) const
     }
   }
 
-  if (pPtr != NULL)
+  if (pPtr != nullptr)
   {
     // aRet = (const char*)pPtr->content;
     std::string aBuff;
@@ -240,17 +243,17 @@ std::string WEXmlgetter::getValue(const vector<string>& sections) const
 // a node with the specified name (section).  The xmlNode (if found) is
 // returned.
 //------------------------------------------------------------------------------
-const xmlNode* WEXmlgetter::getNode(const xmlNode* pParent, const string& section) const
+const xmlNode* WEXmlgetter::getNode(const xmlNode* pParent, const string& section)
 {
-  if (pParent == NULL)
-    return NULL;
+  if (pParent == nullptr)
+    return nullptr;
 
   const xmlNode* pPtr = pParent;
 
-  while (pPtr != NULL)
+  while (pPtr != nullptr)
   {
     // cout << "getNode Name " << (const char*)pPtr->name << endl;
-    if (!xmlStrcmp(pPtr->name, (const xmlChar*)section.c_str()))
+    if (!xmlStrcmp(pPtr->name, reinterpret_cast<const xmlChar*>(section.c_str())))
       return pPtr;
     else
       pPtr = pPtr->next;
@@ -268,12 +271,12 @@ std::string WEXmlgetter::getAttribute(const vector<string>& sections, const stri
 {
   std::string aRet;
   const xmlNode* pPtr = fpRoot;
-  int aSize = sections.size();
+  auto aSize = sections.size();
 
   if (aSize == 0)
     throw invalid_argument("WEXmlgetter::getAttribute(): section must be valid");
 
-  int aIdx = 0;
+  size_t aIdx = 0;
 
   // cout << aSize << endl;
   while (aIdx < aSize)
@@ -281,7 +284,7 @@ std::string WEXmlgetter::getAttribute(const vector<string>& sections, const stri
     // cout << aIdx <<" "<< sections[aIdx] << endl;
     pPtr = getNode(pPtr, sections[aIdx]);
 
-    if ((pPtr == NULL) || (aIdx == aSize - 1))
+    if ((pPtr == nullptr) || (aIdx == aSize - 1))
       break;
     else
     {
@@ -291,7 +294,7 @@ std::string WEXmlgetter::getAttribute(const vector<string>& sections, const stri
     }
   }
 
-  if (pPtr != NULL)
+  if (pPtr != nullptr)
   {
     std::string aBuff;
 
@@ -315,10 +318,10 @@ std::string WEXmlgetter::getAttribute(const vector<string>& sections, const stri
 // is returned.
 //------------------------------------------------------------------------------
 void WEXmlgetter::getAttributeListForAllChildren(const vector<string>& sections, const string& attributeTag,
-                                                 vector<string>& attributeValues)
+                                                 vector<string>& attributeValues) const
 {
   const xmlNode* pPtr = fpRoot;
-  int aSize = sections.size();
+  auto aSize = sections.size();
 
   if (aSize == 0)
   {
@@ -328,13 +331,13 @@ void WEXmlgetter::getAttributeListForAllChildren(const vector<string>& sections,
   }
 
   // Step down the branch that has the nodes of interest
-  int aIdx = 0;
+  size_t aIdx = 0;
 
   while (aIdx < aSize)
   {
     pPtr = getNode(pPtr, sections[aIdx]);
 
-    if ((pPtr == NULL) || (aIdx == aSize - 1))
+    if ((pPtr == nullptr) || (aIdx == aSize - 1))
     {
       break;
     }
@@ -347,9 +350,9 @@ void WEXmlgetter::getAttributeListForAllChildren(const vector<string>& sections,
 
   // Look for all the "matching" nodes at the end of the branch, and
   // get the requested attribute value for each matching node.
-  if (pPtr != NULL)
+  if (pPtr != nullptr)
   {
-    while (pPtr != NULL)
+    while (pPtr != nullptr)
     {
       std::string attrib;
 

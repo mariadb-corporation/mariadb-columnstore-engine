@@ -1,0 +1,4 @@
+--let CHECK_MULTINODE_RESULT=$MYSQL_TMP_DIR/check_multinode_result.inc
+--exec echo "--let columnstore_nodes_count=`mcsGetConfig PrimitiveServers Count`" > $CHECK_MULTINODE_RESULT
+--source $CHECK_MULTINODE_RESULT
+--remove_file $CHECK_MULTINODE_RESULT

@@ -171,6 +171,16 @@ detect_distro() {
   message "Detected $color_yellow$OS $OS_VERSION$color_normal"
 }
 
+select_pkg_format() {
+  local distro="$1"
+
+  if [[ "$distro" == *rocky* ]]; then
+    export PKG_FORMAT="rpm"
+  else
+    export PKG_FORMAT="deb"
+  fi
+}
+
 menuStr=""
 
 function hideCursor() {
@@ -535,6 +545,10 @@ function execInnerDocker() {
   fi
 }
 
+function execInnerDockerStripped() {
+  execInnerDocker "$@" | tr -d '[:space:]'
+}
+
 function execInnerDockerNoTTY() {
   local container_name=$1
   shift 1
@@ -546,15 +560,6 @@ function execInnerDockerNoTTY() {
     error "Command \"$@\" failed in container \"$container_name\""
     return $dockerCommandExitCode
   fi
-}
-
-function change_ubuntu_mirror() {
-  local region="$1"
-  message "Changing Ubuntu mirror to $region"
-  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list 2>/dev/null || true
-  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
-  cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null | grep archive || true
-  message_split
 }
 
 function execInnerDockerWithRetry() {
@@ -581,6 +586,15 @@ function execInnerDockerWithRetry() {
   fi
 
   return 0
+}
+
+function change_ubuntu_mirror() {
+  local region="$1"
+  message "Changing Ubuntu mirror to $region"
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list 2>/dev/null || true
+  sed -i "s|//\(${region}\.\)\?archive\.ubuntu\.com|//${region}.archive.ubuntu.com|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+  cat /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null | grep archive || true
+  message_split
 }
 
 change_ubuntu_mirror_in_docker() {

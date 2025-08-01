@@ -19,7 +19,7 @@ CalpontSystemCatalog::ColType Func_json_type::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+std::string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
@@ -27,7 +27,7 @@ string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isN
     return "";
 
   json_engine_t jsEg;
-  string result;
+  std::string result;
 
   initJSEngine(jsEg, getCharset(fp[0]), js);
 

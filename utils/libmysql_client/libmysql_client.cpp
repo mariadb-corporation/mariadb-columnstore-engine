@@ -1,4 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
+   Copyright (C) 2016-2025 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -91,7 +92,7 @@ int LibMySQL::init(const char* h, unsigned int p, const char* u, const char* w, 
   static const std::string extendNetTimeoutQuery  = "SET SESSION net_write_timeout = 3600";
   if (mysql_real_query(fCon, extendNetTimeoutQuery.c_str(), extendNetTimeoutQuery.length()) != 0)
   {
-    fErrStr = "fatal error setting net_write_timeout=3600 in libmysql_client lib";
+    fErrStr = "Set or verify credentials in CrossEngineSupport section of Columnstore.xml.";
     ret = -1;
     return ret;
   }

@@ -34,7 +34,8 @@
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include "batchprimitiveprocessor.h"

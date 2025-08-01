@@ -1828,7 +1828,7 @@ static int columnstore_init_func(void* p)
   fprintf(stderr, "Columnstore: Started; Version: %s-%s\n", columnstore_version.c_str(),
           columnstore_release.c_str());
 
-  plugin_ref plugin_innodb;
+  plugin_ref plugin_innodb = nullptr;
   LEX_CSTRING name = {STRING_WITH_LEN("INNODB")};
 
   if (get_innodb_queries_uses_mcs())
@@ -1841,7 +1841,7 @@ static int columnstore_init_func(void* p)
       DBUG_RETURN(HA_ERR_RETRY_INIT);
     }
   }
-  
+
   strncpy(cs_version, columnstore_version.c_str(), sizeof(cs_version) - 1);
   cs_version[sizeof(cs_version) - 1] = 0;
 
@@ -1857,7 +1857,7 @@ static int columnstore_init_func(void* p)
                      (my_hash_get_key)mcs_get_key, 0, 0);
 
   std::cerr << "Columnstore: init mcs_hton attributes" << std::endl;
-  
+
   mcs_hton->create = ha_mcs_cache_create_handler;
   mcs_hton->panic = 0;
   mcs_hton->flags = HTON_CAN_RECREATE | HTON_NO_PARTITION;
@@ -1873,13 +1873,15 @@ static int columnstore_init_func(void* p)
 
   if (get_innodb_queries_uses_mcs())
   {
-    std::cerr << "Columnstore: innodb_queries_uses_mcs is set, redirecting all InnoDB queries to Columnstore." << std::endl;
+    std::cerr << "Columnstore: innodb_queries_uses_mcs is set, redirecting all InnoDB queries to Columnstore."
+              << std::endl;
 
     auto* innodb_hton = plugin_hton(plugin_innodb);
     int error = innodb_hton == nullptr;  // Engine must exists!
     if (error)
     {
-      std::cerr << "Columnstore: innodb_queries_uses_mcs is set, but could not find InnoDB plugin." << std::endl;
+      std::cerr << "Columnstore: innodb_queries_uses_mcs is set, but could not find InnoDB plugin."
+                << std::endl;
       my_error(HA_ERR_INITIALIZATION, MYF(0), "Could not find storage engine %s", name.str);
     }
     innodb_hton->create_select = create_columnstore_select_handler;

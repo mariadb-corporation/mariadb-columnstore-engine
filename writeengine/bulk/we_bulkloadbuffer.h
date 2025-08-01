@@ -215,11 +215,12 @@ class BulkLoadBuffer
 
   /** @brief tokenize the buffer contents and fill up the token array.
    */
-  void tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
+  void tokenize(const boost::ptr_vector<ColumnInfo>& columnsInfo, int allowedErrCntThisCall,
+                size_t& skipRows);
 
   /** @brief Binary tokenization of the buffer, and fill up the token array.
    */
-  int tokenizeBinary(const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall,
+  int tokenizeBinary(const boost::ptr_vector<ColumnInfo>& columnsInfo, int allowedErrCntThisCall,
                      bool bEndOfData);
 
   /** @brief Determine if specified value is NULL or not.
@@ -273,13 +274,14 @@ class BulkLoadBuffer
   bool tryAndLockColumn(const int& columnId, const int& id);
 
   int fillFromMemory(const BulkLoadBuffer& overFlowBufIn, const char* input, size_t length,
-                     size_t* parse_length, RID& totalReadRows, RID& correctTotalRows,
-                     const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
+                     size_t* parse_length, size_t& skipRows, RID& totalReadRows, RID& correctTotalRows,
+                     const boost::ptr_vector<ColumnInfo>& columnsInfo, int allowedErrCntThisCall);
 
   /** @brief Read the table data into the buffer
    */
-  int fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* handle, RID& totalRows, RID& correctTotalRows,
-                   const boost::ptr_vector<ColumnInfo>& columnsInfo, unsigned int allowedErrCntThisCall);
+  int fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* handle, size_t& skipRows, RID& totalRows,
+                   RID& correctTotalRows, const boost::ptr_vector<ColumnInfo>& columnsInfo,
+                   int allowedErrCntThisCall);
 
   /** @brief Get the overflow size
    */

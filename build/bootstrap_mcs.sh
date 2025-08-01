@@ -11,7 +11,6 @@ export CLICOLOR_FORCE=1 #cmake output
 INSTALL_PREFIX="/usr/"
 DATA_DIR="/var/lib/mysql/data"
 CMAKE_BIN_NAME=cmake
-CTEST_BIN_NAME=ctest
 
 RPM_CONFIG_DIR="/etc/my.cnf.d"
 DEB_CONFIG_DIR="/etc/mysql/mariadb.conf.d"
@@ -33,7 +32,7 @@ source "$SCRIPT_LOCATION"/utils.sh
 
 echo "Arguments received: $@"
 
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=A long=asan desc="Build with ASan" variable=ASAN default=false value=true
 optparse.define short=a long=build-path desc="Path for build output" variable=MARIA_BUILD_PATH default=$DEFAULT_MARIA_BUILD_PATH
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
@@ -45,7 +44,9 @@ optparse.define short=f long=do-not-freeze-revision desc="Disable revision freez
 optparse.define short=g long=alien desc="Turn off maintainer mode (ex. -Werror)" variable=MAINTAINER_MODE default=true value=false
 optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=L long=libcpp desc="Build with libc++" variable=WITH_LIBCPP default=false value=true
+optparse.define short=M long=msan desc="Build with MSan" variable=MSAN default=false value=true
+optparse.define short=m long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
@@ -53,15 +54,16 @@ optparse.define short=O long=static desc="Build all with static libraries" varia
 optparse.define short=p long=build-packages desc="Build packages" variable=BUILD_PACKAGES default=false value=true
 optparse.define short=P long=report-path desc="Path for storing reports and profiles" variable=REPORT_PATH default="/core"
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
-optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
+optparse.define short=R long=gcc-toolset-for-rocky-8 variable=GCC_TOOLSET default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
+optparse.define short=T long=tsan desc="Build with TSan" variable=TSAN default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
-optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
+optparse.define short=U long=ubsan desc="Build with UBSan" variable=UBSAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
+optparse.define short=s long=sccache desc="Build with sccache" variable=SCCACHE default=false value=true
 
 source $(optparse.build)
 
@@ -77,10 +79,32 @@ if [[ ! " ${DISTRO_OPTIONS[*]} " =~ " ${OS} " ]]; then
     detect_distro
 fi
 
-pkg_format="deb"
-if [[ "$OS" == *"rocky"* ]]; then
-    pkg_format="rpm"
+select_pkg_format ${OS}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
+    CTEST_BIN_NAME="ctest3"
+else
+    CTEST_BIN_NAME="ctest"
 fi
+
+install_sccache() {
+    if [[ "$SCCACHE" == false ]]; then
+        return
+    fi
+
+    if [[ "$(arch)" == "x86_64" ]]; then
+        sccache_arch="x86_64"
+    else
+        sccache_arch="aarch64"
+    fi
+
+    message "getting sccache..."
+    curl -L -o sccache.tar.gz \
+        "https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${sccache_arch}-unknown-linux-musl.tar.gz"
+
+    tar xzf sccache.tar.gz
+    install sccache*/sccache /usr/local/bin/ && message "sccache installed"
+}
 
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
@@ -88,12 +112,12 @@ install_deps() {
     fi
     message_split
     prereq=""
-    RPM_BUILD_DEPS="dnf install -y lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
+    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
       cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
 
-    DEB_BUILD_DEPS="apt-get -y update && apt-get -y install build-essential automake libboost-all-dev \
+    DEB_BUILD_DEPS="build-essential automake libboost-all-dev \
       bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
@@ -101,16 +125,20 @@ install_deps() {
 
     if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
-      dnf install -y gcc-toolset-${GCC_VERSION} libarchive cmake && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable && \
-      ${RPM_BUILD_DEPS}"
+      dnf install -y libarchive cmake  ${RPM_BUILD_DEPS}"
+        if [[ $GCC_TOOLSET = false ]]; then
+            command="$command && dnf group install -y \"Development Tools\""
+        else
+            command="$command && dnf install -y gcc-toolset-${GCC_VERSION} && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable"
+        fi
     elif
         [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
     then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
-      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal && ${RPM_BUILD_DEPS}"
+      dnf install -y pcre2-devel gcc gcc-c++ curl-minimal ${RPM_BUILD_DEPS}"
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
-        command="${DEB_BUILD_DEPS}"
+        command="apt-get -y update && apt-get -y install ${DEB_BUILD_DEPS}"
     else
         echo "Unsupported OS: $OS"
         exit 17
@@ -129,6 +157,7 @@ install_deps() {
 }
 
 install_deps
+install_sccache
 
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -245,8 +274,17 @@ modify_packaging() {
     echo "Modifying_packaging..."
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "deb" ]]; then
+    # Bypass of debian version list check in autobake
+    if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
+    fi
+
+    # patch to avoid fakeroot, which is using LD_PRELOAD for libfakeroot.so
+    # and eamtmydata which is using LD_PRELOAD for libeatmydata.so and this
+    # breaks intermediate build binaries to fail with "ASan runtime does not come first in initial library list
+    if [[ $PKG_FORMAT == "deb" && $ASAN = true ]]; then
+        sed -i 's|BUILDPACKAGE_DPKGCMD+=( "fakeroot" "--" )|echo "fakeroot was disabled for ASAN build"|' debian/autobake-deb.sh
+        sed -i 's|BUILDPACKAGE_DPKGCMD+=("eatmydata")|echo "eatmydata was disabled for ASAN build"|' debian/autobake-deb.sh
     fi
 
     #disable LTO for 22.04 for now
@@ -257,7 +295,7 @@ modify_packaging() {
             grep mariadb /usr/share/lto-disabled-list/lto-disabled-list
     fi
 
-    if [[ $pkg_format == "deb" ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         apt-cache madison liburing-dev | grep liburing-dev || {
             sed 's/liburing-dev/libaio-dev/g' -i debian/control &&
                 sed '/-DIGNORE_AIO_CHECK=YES/d' -i debian/rules &&
@@ -289,14 +327,20 @@ modify_packaging() {
 }
 
 construct_cmake_flags() {
+    if [[ $MARIADB_BRANCH == *enterprise ]]; then
+        BUILD_CONFIG=enterprise
+    else
+        BUILD_CONFIG=mysql_release
+    fi
+
+    message The server build will use $color_yellow$BUILD_CONFIG$color_cyan build configuration
 
     MDB_CMAKE_FLAGS=(
-        -DBUILD_CONFIG=mysql_release
+        -DBUILD_CONFIG=$BUILD_CONFIG
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-        -DMYSQL_MAINTAINER_MODE=NO
-        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_COLUMNSTORE=DYNAMIC
         -DPLUGIN_CONNECT=NO
         -DPLUGIN_GSSAPI=NO
         -DPLUGIN_MROONGA=NO
@@ -304,6 +348,7 @@ construct_cmake_flags() {
         -DPLUGIN_ROCKSDB=NO
         -DPLUGIN_SPHINX=NO
         -DPLUGIN_SPIDER=NO
+        -DSPIDER_WITH_UNIXODBC=ON
         -DPLUGIN_TOKUDB=NO
         -DWITH_EMBEDDED_SERVER=NO
         -DWITH_SSL=system
@@ -311,10 +356,16 @@ construct_cmake_flags() {
         -DWITH_WSREP=NO
     )
 
+    if [[ $BUILD_PACKAGES = true ]]; then
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_PACKAGES_BUILD=YES)
+        message "Building packages for Columnstore"
+    fi
+
     if [[ $MAINTAINER_MODE = true ]]; then
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
         message "Columnstore maintainer mode on"
     else
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=NO)
         warn "Maintainer mode is disabled, be careful, alien"
     fi
 
@@ -355,6 +406,16 @@ construct_cmake_flags() {
     if [[ $UBSAN = true ]]; then
         warn "Building with UB Sanitizer"
         MDB_CMAKE_FLAGS+=(-DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+    fi
+
+    if [[ $MSAN = true ]]; then
+        warn "Building with Memory Sanitizer"
+        MDB_CMAKE_FLAGS+=(-DWITH_MSAN=ON -DCOLUMNSTORE_WITH_LIBCPP=YES -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+    fi
+
+    if [[ $WITH_LIBCPP = true ]]; then
+        warn "Building with libc++"
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_WITH_LIBCPP=YES)
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
@@ -466,7 +527,7 @@ generate_svgs() {
 build_package() {
     cd $MDB_SOURCE_PATH
 
-    if [[ $pkg_format == "rpm" ]]; then
+    if [[ $PKG_FORMAT == "rpm" ]]; then
         command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
     else
         export DEBIAN_FRONTEND="noninteractive"
@@ -555,8 +616,10 @@ run_unit_tests() {
 
     message "Running unittests"
     cd $MARIA_BUILD_PATH
-    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --progress --output-on-failure
+    ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 run_microbenchmarks_tests() {
@@ -569,7 +632,9 @@ run_microbenchmarks_tests() {
     message "Runnning microbenchmarks"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 disable_plugins_for_bootstrap() {
@@ -587,12 +652,20 @@ enable_columnstore_back() {
 
 fix_config_files() {
     message Fixing config files
-
     THREAD_STACK_SIZE="20M"
 
-    SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
-    MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
-    COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+    # while packaging we have to patch configs in the sources to get them in the packakges
+    # for local builds, we patch config after installation in the systemdirs
+    if [[ $BUILD_PACKAGES = true ]]; then
+        MDB_SERVICE_FILE=$MDB_SOURCE_PATH/support-files/mariadb.service.in
+        COLUMNSTORE_CONFIG=$COLUMSNTORE_SOURCE_PATH/dbcon/mysql/columnstore.cnf
+        SANITIZERS_ABORT_ON_ERROR='0'
+    else
+        SYSTEMD_SERVICE_DIR="/usr/lib/systemd/system"
+        MDB_SERVICE_FILE=$SYSTEMD_SERVICE_DIR/mariadb.service
+        COLUMNSTORE_CONFIG=$CONFIG_DIR/columnstore.cnf
+        SANITIZERS_ABORT_ON_ERROR='1'
+    fi
 
     if [[ $ASAN = true ]]; then
         if grep -q thread_stack $COLUMNSTORE_CONFIG; then
@@ -606,7 +679,7 @@ fix_config_files() {
         if grep -q ASAN $MDB_SERVICE_FILE; then
             warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'ASAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=0,detect_stack_use_after_return=1,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
             message "ASAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -615,7 +688,7 @@ fix_config_files() {
         if grep -q TSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has TSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'TSAN_OPTIONS=abort_on_error=0,log_path=${REPORT_PATH}/tsan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'TSAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR,log_path=${REPORT_PATH}/tsan.mariadb'" >>$MDB_SERVICE_FILE
             message "TSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -624,7 +697,7 @@ fix_config_files() {
         if grep -q UBSAN $MDB_SERVICE_FILE; then
             warn "MDB Server has UBSAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
-            echo Environment="'UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'UBSAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR,print_stacktrace=true,log_path=${REPORT_PATH}/ubsan.mariadb'" >>$MDB_SERVICE_FILE
             message "UBSAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
@@ -745,9 +818,16 @@ init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
-    build_package
-    message_splitted "PACKAGES BUILD FINISHED"
-    exit 0
+    fix_config_files
+
+    (build_package && run_unit_tests)
+    exit_code=$?
+
+    if [[ $SCCACHE = true ]]; then
+        sccache --show-adv-stats
+    fi
+
+    exit $exit_code
 fi
 
 stop_service

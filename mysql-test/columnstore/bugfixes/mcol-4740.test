@@ -1,7 +1,7 @@
 #
 # MCOL-4740 UPDATE involving multi-tables returns wrong "Rows matched"
 #
-
+--source ../include/disable_11.4.inc
 --source ../include/have_columnstore.inc
 
 --disable_warnings

@@ -30,7 +30,8 @@
 #include <limits>
 #include <stdint.h>
 #include <set>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <boost/thread/mutex.hpp>
 
 #include "brmtypes.h"
@@ -143,13 +144,13 @@ class ColExtInfBase
   {
   }
 
-  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int64_t /*minVal*/, int64_t /*maxVal*/, ColDataType /*colDataType*/,
-                                int /*width*/)
+  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int64_t /*minVal*/, int64_t /*maxVal*/,
+                                ColDataType /*colDataType*/, int /*width*/)
   {
   }
 
-  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int128_t /*minVal*/, int128_t /*maxVal*/, ColDataType /*colDataType*/,
-                                int /*width*/)
+  virtual void addOrUpdateEntry(RID /*lastInputRow*/, int128_t /*minVal*/, int128_t /*maxVal*/,
+                                ColDataType /*colDataType*/, int /*width*/)
   {
   }
 

@@ -30,8 +30,8 @@
 #include <sys/types.h>
 #include <vector>
 #include <set>
-#include <unordered_map>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <mutex>
 
 // #define NDEBUG
@@ -40,7 +40,6 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/containers/map.hpp>
-
 
 #include <boost/interprocess/managed_shared_memory.hpp>
 
@@ -99,6 +98,8 @@ using DBRootVec = std::vector<DBRootT>;
 
 // assumed column width when calculating dictionary store extent size
 #define DICT_COL_WIDTH 8
+
+static const uint32_t MAX_EXTENT_SIZE = 8000000;
 
 // valid values for EMEntry.status
 const int16_t EXTENTSTATUSMIN(0);  // equal to minimum valid status value

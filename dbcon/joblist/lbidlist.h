@@ -31,7 +31,7 @@
 #include "bytestream.h"
 #include <iostream>
 #include "brm.h"
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 namespace joblist
 {

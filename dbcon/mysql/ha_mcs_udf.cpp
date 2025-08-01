@@ -21,7 +21,8 @@
  */
 
 #include <my_config.h>
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 using namespace std;
 
 #include "idb_mysql.h"

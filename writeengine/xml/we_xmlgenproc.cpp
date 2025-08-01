@@ -147,6 +147,11 @@ void XMLGenProc::startXMLFile()
     xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_ESCAPE_CHAR],
                               BAD_CAST fInputMgr->getParm(XMLGenData::ESCAPE_CHAR).c_str());
 
+    if (auto skipRows = fInputMgr->getParm(XMLGenData::SKIP_ROWS); !skipRows.empty())
+    {
+      xmlTextWriterWriteElement(fWriter, BAD_CAST xmlTagTable[TAG_SKIP_ROWS], BAD_CAST skipRows.c_str());
+    }
+
     // Added new tags for configurable parameters
     xmlTextWriterStartElement(fWriter, BAD_CAST xmlTagTable[TAG_READ_BUFFERS]);
     xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_NO_OF_READ_BUFFERS], "%d",
@@ -225,8 +230,16 @@ void XMLGenProc::makeTableData(const CalpontSystemCatalog::TableName& table, con
     }
 
     xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_LOAD_NAME], BAD_CAST tmp.c_str());
-    xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
-                                      atoi(fInputMgr->getParm(XMLGenData::MAXERROR).c_str()));
+    auto sMaxErrors = fInputMgr->getParm(XMLGenData::MAXERROR);
+    if (sMaxErrors == "all")
+    {
+      xmlTextWriterWriteAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], BAD_CAST sMaxErrors.c_str());
+    }
+    else
+    {
+      xmlTextWriterWriteFormatAttribute(fWriter, BAD_CAST xmlTagTable[TAG_MAX_ERR_ROW], "%d",
+                                        atoi(sMaxErrors.c_str()));
+    }
   }
 
   kount++;

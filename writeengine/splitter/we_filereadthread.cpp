@@ -79,6 +79,7 @@ WEFileReadThread::WEFileReadThread(WESDHandler& aSdh)
  , fEncl('\0')
  , fEsc('\\')
  , fDelim('|')
+ , fSkipRows(0)
 {
   // TODO batch qty to get from config
   fBatchQty = 10000;
@@ -187,6 +188,8 @@ void WEFileReadThread::setup(std::string FileName)
     if (aEncl != 0)
       fEnclEsc = true;
 
+    fSkipRows = fSdh.getSkipRows();
+
     // BUG 4342 - Need to support "list of infiles"
     // chkForListOfFiles(FileName); - List prepared in sdhandler.
 
@@ -216,12 +219,10 @@ void WEFileReadThread::setup(std::string FileName)
 
 //------------------------------------------------------------------------------
 
-bool WEFileReadThread::chkForListOfFiles(std::string& FileName)
+bool WEFileReadThread::chkForListOfFiles(const std::string& fileName)
 {
   // cout << "Inside chkForListOfFiles("<< FileName << ")" << endl;
-  std::string aFileName = FileName;
-
-  istringstream iss(aFileName);
+  istringstream iss(fileName);
   ostringstream oss;
   size_t start = 0, end = 0;
   const char* sep = " ,|";
@@ -229,8 +230,8 @@ bool WEFileReadThread::chkForListOfFiles(std::string& FileName)
 
   do
   {
-    end = aFileName.find_first_of(sep, start);
-    std::string aFile = aFileName.substr(start, end - start);
+    end = fileName.find_first_of(sep, start);
+    std::string aFile = fileName.substr(start, end - start);
     if (aFile == "STDIN" || aFile == "stdin")
       aFile = "/dev/stdin";
 
@@ -270,9 +271,9 @@ std::string WEFileReadThread::getNextInputDataFile()
 }
 //------------------------------------------------------------------------------
 
-void WEFileReadThread::add2InputDataFileList(std::string& FileName)
+void WEFileReadThread::add2InputDataFileList(const std::string& fileName)
 {
-  fInfileList.push_front(FileName);
+  fInfileList.push_front(fileName);
 }
 //------------------------------------------------------------------------------
 
@@ -371,17 +372,33 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 
   // For now we are going to send KEEPALIVES
   //*Sbs << (ByteStream::byte)(WE_CLT_SRV_KEEPALIVE);
-  if ((fInFile.good()) && (!fInFile.eof()))
+  if (fInFile.good() && !fInFile.eof())
   {
     // cout << "Inside WEFileReadThread::readDataFile" << endl;
     // char aBuff[1024*1024];			// TODO May have to change it later
     // char*pStart = aBuff;
     unsigned int aIdx = 0;
     int aLen = 0;
-    *Sbs << (ByteStream::byte)(WE_CLT_SRV_DATA);
+    *Sbs << static_cast<ByteStream::byte>(WE_CLT_SRV_DATA);
 
-    while ((!fInFile.eof()) && (aIdx < getBatchQty()))
+    while (!fInFile.eof() && aIdx < getBatchQty())
     {
+      if (fSkipRows > 0)
+      {
+        fSkipRows--;
+        fInFile.getline(fBuff, fBuffSize - 1);
+        if (fSdh.getDebugLvl() > 3)
+        {
+          aLen = fInFile.gcount();
+          if (aLen > 0 && aLen < fBuffSize - 2)
+          {
+            fBuff[aLen - 1] = 0;
+            cout << "Skip header row (" << fSkipRows<< " to go): " << fBuff << endl;
+          }
+        }
+        continue;
+      }
+
       if (fEnclEsc)
       {
         // pStart = aBuff;
@@ -551,6 +568,9 @@ void WEFileReadThread::openInFile()
       fInFile.rdbuf(fIfFile.rdbuf());  //@BUG 4326
     }
 
+    // Got new file, so reset fSkipRows
+    fSkipRows = fSdh.getSkipRows();
+
     //@BUG 4326  -below three lines commented out
     //		if (!fInFile.is_open()) fInFile.open(fInFileName.c_str());
     //		if (!fInFile.good())
@@ -657,13 +677,13 @@ void WEFileReadThread::initS3Connection(const WECmdArgs& args)
     s3Host = args.getS3Host();
     ms3_library_init();
     s3Connection =
-        ms3_init(s3Key.c_str(), s3Secret.c_str(), s3Region.c_str(), (s3Host.empty() ? NULL : s3Host.c_str()));
+        ms3_init(s3Key.c_str(), s3Secret.c_str(), s3Region.c_str(), (s3Host.empty() ? nullptr : s3Host.c_str()));
     if (!s3Connection)
       throw runtime_error("failed to get an S3 connection");
   }
   else
-    s3Connection = NULL;
-  buf = NULL;
+    s3Connection = nullptr;
+  buf = nullptr;
 }
 
 //------------------------------------------------------------------------------

@@ -9,6 +9,7 @@ set(we_bulk_STAT_SRCS
     we_bulkload.cpp
     we_bulkloadbuffer.cpp
     we_bulkstatus.cpp
+    we_cmdargs.cpp
     we_colopbulk.cpp
     we_colbuf.cpp
     we_colbufcompressed.cpp
@@ -28,7 +29,7 @@ set(we_bulk_STAT_SRCS
 add_definitions(-D_FILE_OFFSET_BITS=64)
 
 columnstore_static_library(we_bulk ${we_bulk_STAT_SRCS})
-columnstore_link(we_bulk ${NETSNMP_LIBRARIES} loggingcpp)
+columnstore_link(we_bulk ${NETSNMP_LIBRARIES} loggingcpp boost_program_options)
 
 remove_definitions(-D_FILE_OFFSET_BITS=64)
 

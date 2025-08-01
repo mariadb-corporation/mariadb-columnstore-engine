@@ -14,13 +14,13 @@ namespace funcexp
 
 class QueryJSONPathWrapper : public JSONPathWrapper
 {
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
+  bool checkAndGetValue(JSONEgWrapper* je, std::string& res, int* error) override
   {
     return je->checkAndGetComplexVal(res, error);
   }
 };
 
-bool JSONEgWrapper::checkAndGetComplexVal(string& ret, int* error)
+bool JSONEgWrapper::checkAndGetComplexVal(std::string& ret, int* error)
 {
   if (json_value_scalar(this))
   {
@@ -47,10 +47,10 @@ CalpontSystemCatalog::ColType Func_json_query::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_query::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_query::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  string ret;
+  std::string ret;
   QueryJSONPathWrapper qpw;
   isNull = qpw.extract(ret, row, fp[0], fp[1]);
   return isNull ? "" : ret;

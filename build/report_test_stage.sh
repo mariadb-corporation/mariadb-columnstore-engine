@@ -2,14 +2,32 @@
 
 set -eo pipefail
 
-CONTAINER_NAME=$1
-RESULT=$2
-STAGE=$3
-
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
 
+optparse.define short=c long=container-name desc="Name of the Docker container where mtr tests will run" variable=CONTAINER_NAME
+optparse.define short=r long=result-path desc="Path for logs and results" variable=RESULT
+optparse.define short=s long=stage desc="Test stage name" variable=STAGE
+source $(optparse.build)
+
 echo "Arguments received: $@"
+
+
+cleanup() {
+    if [[ -n $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
+        echo "Cleaning up container ${CONTAINER_NAME}..."
+        docker rm -f "${CONTAINER_NAME}" || echo "Can't remove container ${CONTAINER_NAME}!"
+    fi
+}
+#Remove the container on exit
+trap cleanup EXIT
+
+for flag in CONTAINER_NAME RESULT STAGE; do
+  if [[ -z "${!flag}" ]]; then
+    error "Missing required flag: -${flag:0:1} / --${flag,,}"
+    exit 1
+  fi
+done
 
 if [[ "$EUID" -ne 0 ]]; then
     error "Please run script as root"
@@ -21,7 +39,9 @@ if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     exit 1
 fi
 
-if [[ "$RESULT" == *rocky* ]]; then
+select_pkg_format ${RESULT}
+
+if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SYSTEMD_PATH="/usr/lib/systemd/systemd"
     MTR_PATH="/usr/share/mysql-test"
 else
@@ -59,14 +79,14 @@ elif [[ "${CONTAINER_NAME}" == *upgrade* ]]; then
 
 elif [[ "${CONTAINER_NAME}" == *regression* ]]; then
     echo "---------- start columnstore regression short report ----------"
-    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log || echo "missing go.log"'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log' || echo "missing go.log"
     echo "---------- end columnstore regression short report ----------"
     echo
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "/drone/src/${RESULT}/" || echo "missing regression logs"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs.tgz"
 
     execInnerDocker "$CONTAINER_NAME" 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/'
-    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore || echo "failed to grab regression results"'
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore' || echo "failed to grab regression results"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs2.tgz"
     docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "/drone/src/${RESULT}/" || echo "missing regressionQueries.tgz"
 
@@ -86,11 +106,3 @@ echo "Saved artifacts:"
 ls -R "/drone/src/${RESULT}/"
 echo "Done reporting ${STAGE}"
 
-cleanup() {
-    if [[ -n $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
-        echo "Cleaning up container ${CONTAINER_NAME}..."
-        docker rm -f "${CONTAINER_NAME}" || echo "Can't remove container ${CONTAINER_NAME}!"
-    fi
-}
-#Remove the container on exit
-trap cleanup EXIT

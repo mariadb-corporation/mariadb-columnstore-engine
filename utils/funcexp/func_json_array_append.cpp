@@ -20,8 +20,8 @@ CalpontSystemCatalog::ColType Func_json_array_append::operationType(
   return fp[0]->data()->resultType();
 }
 
-string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                         execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                              execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
@@ -32,7 +32,7 @@ string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   json_engine_t jsEg;
   const uchar* arrEnd;
   size_t strRestLen;
-  string retJS;
+  std::string retJS;
   retJS.reserve(js.length() + padding);
 
   initJSPaths(paths, fp, 1, 2);

@@ -73,6 +73,7 @@ enum xmlTag
   TAG_TBL_OID,
   TAG_WIDTH,
   TAG_SCHEMA_NAME,
+  TAG_SKIP_ROWS,
   NUM_OF_XML_TAGS
 };
 
@@ -93,6 +94,7 @@ const char xmlTagTable[NUM_OF_XML_TAGS + 1][MAX_XML_TAG_NAME_SIZE] = {
     "origName",  //@bug 3599: deprecated; kept for backwards compatibility
     "precision", "scale",
     "tblName",  //@bug 3599: replaces origName
-    "tblOid", "width", "Name"};
+    "tblOid", "width", "Name",
+    "skipRows"};
 
 }  // namespace WriteEngine

@@ -1,11 +1,10 @@
 #include <my_config.h>
 #include <cmath>
-#include <iostream>
-#include <sstream>
 #include <string.h>
-using namespace std;
 
 #include "idb_mysql.h"
+
+using namespace std;
 
 namespace
 {
@@ -596,8 +595,8 @@ extern "C"
         // When var_popy is 0, 1 is the result
         return 1;
       }
-      long double std_popx = sqrt(var_popx);
-      long double std_popy = sqrt(var_popy);
+      long double std_popx = std::sqrt(var_popx);
+      long double std_popy = std::sqrt(var_popy);
       long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
       long double corr = covar_pop / (std_popy * std_popx);
       valOut = static_cast<double>(corr * corr);
@@ -716,8 +715,8 @@ extern "C"
         // When var_popy is 0, 1 is the result
         return 1;
       }
-      long double std_popx = sqrt(var_popx);
-      long double std_popy = sqrt(var_popy);
+      long double std_popx = std::sqrt(var_popx);
+      long double std_popy = std::sqrt(var_popy);
       long double covar_pop = (sumxy - ((sumx * sumy) / N)) / N;
       long double corr = covar_pop / (std_popy * std_popx);
       return static_cast<double>(corr);

@@ -58,3 +58,4 @@ a	c1
 disconnect addconroot1;
 disconnect addconroot2;
 DROP DATABASE mcs13_db1;
+DROP DATABASE mcs13_db2;

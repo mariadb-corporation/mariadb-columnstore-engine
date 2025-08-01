@@ -8,11 +8,22 @@ endif()
 if(WITH_UNITTESTS)
     cmake_policy(SET CMP0054 NEW)
     set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+    set(cxxflags "")
+    set(linkflags "")
+    if(WITH_MSAN)
+        set(cxxflags "'${cxxflags} -fsanitize=memory -fsanitize-memory-track-origins -U_FORTIFY_SOURCE -stdlib=libc++'")
+        set(linkflags "'${linkflags} -stdlib=libc++'")
+    elseif(COLUMNSTORE_WITH_LIBCPP)
+        set(cxxflags "'${cxxflags} -stdlib=libc++'")
+        set(linkflags "'${linkflags} -stdlib=libc++'")
+    endif()
     ExternalProject_Add(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.0
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
+                   -DCMAKE_CXX_FLAGS:STRING=${cxxflags} -DCMAKE_EXE_LINKER_FLAGS=${linkflags}
+                   -DCMAKE_SHARED_LINKER_FLAGS=${linkflags} -DCMAKE_MODULE_LINKER_FLAGS=${linkflags}
     )
 
     # this is a workaround for gtest's bug still not closed https://github.com/google/googletest/issues/3659
@@ -93,23 +104,25 @@ if(WITH_UNITTESTS)
     columnstore_link(stlpoolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET stlpoolallocator TEST_PREFIX columnstore:)
 
-    add_executable(comparators_tests comparators-tests.cpp)
-    columnstore_link(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
-
-    add_executable(bytestream bytestream.cpp)
-    columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    add_test(NAME columnstore:bytestream COMMAND bytestream)
-
     add_executable(idbdatafile_test BufferedFile.cpp)
     columnstore_link(idbdatafile_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} gtest gtest_main)
     add_test(NAME columnstore:idbdatafile_test COMMAND idbdatafile_test)
 
-    # standalone EM routines test
-    add_executable(brm_em_standalone brm-em-standalone.cpp)
-    columnstore_link(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
-    set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+    if(NOT DEFINED WITH_MSAN) # CPPUnit is not build from sources
+        add_executable(comparators_tests comparators-tests.cpp)
+        columnstore_link(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
+
+        add_executable(bytestream bytestream.cpp)
+        columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:bytestream COMMAND bytestream)
+
+        # standalone EM routines test
+        add_executable(brm_em_standalone brm-em-standalone.cpp)
+        columnstore_link(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
+        set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+    endif()
 endif()
 
 if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))

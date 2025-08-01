@@ -26,6 +26,8 @@
 #include "rowcolumn.h"
 #include "simplefilter.h"
 
+using namespace std;
+
 namespace cal_impl_if
 {
 // In certain cases, gp_walk is called recursively. When done so,
@@ -121,15 +123,15 @@ void gp_walk(const Item* item, void* arg)
         if (!scp)
           break;
 
-        string aliasTableName(scp->tableAlias());
+        std::string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);
         gwip->rcWorkStack.push(scp->clone());
         boost::shared_ptr<execplan::SimpleColumn> scsp(scp);
         gwip->scsp = scsp;
 
         gwip->funcName.clear();
-        gwip->columnMap.insert(
-            execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(string(ifp->field_name.str), scsp));
+        gwip->columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(
+            std::string(ifp->field_name.str), scsp));
 
         //@bug4636 take where clause column as dummy projection column, but only on local column.
         // varbinary aggregate is not supported yet, so rule it out
@@ -138,7 +140,7 @@ void gp_walk(const Item* item, void* arg)
         {
           TABLE_LIST* tmp = (ifp->cached_table ? ifp->cached_table : 0);
           gwip->tableMap[execplan::make_aliastable(scp->schemaName(), scp->tableName(), scp->tableAlias(),
-                                                   scp->isColumnStore())] = make_pair(1, tmp);
+                                                   scp->isColumnStore())] = std::make_pair(1, tmp);
         }
       }
 
@@ -162,7 +164,8 @@ void gp_walk(const Item* item, void* arg)
           if (item->type_handler() == &type_handler_hex_hybrid)
           {
             Item_hex_hybrid* hip = static_cast<Item_hex_hybrid*>(const_cast<Item*>(item));
-            gwip->rcWorkStack.push(new execplan::ConstantColumn((int64_t)hip->val_int(), execplan::ConstantColumn::NUM));
+            gwip->rcWorkStack.push(
+                new execplan::ConstantColumn((int64_t)hip->val_int(), execplan::ConstantColumn::NUM));
             execplan::ConstantColumn* cc = dynamic_cast<execplan::ConstantColumn*>(gwip->rcWorkStack.top());
             cc->timeZone(gwip->timeZone);
             break;
@@ -175,7 +178,7 @@ void gp_walk(const Item* item, void* arg)
             String val, *str = isp->val_str(&val);
             if (str)
             {
-              string cval;
+              std::string cval;
 
               if (str->ptr())
               {
@@ -218,7 +221,7 @@ void gp_walk(const Item* item, void* arg)
             break;
           }
 
-          ostringstream oss;
+          std::ostringstream oss;
           oss << "Unhandled Item type(): " << item->type();
           gwip->parseErrorText = oss.str();
           gwip->fatalParseError = true;
@@ -248,7 +251,7 @@ void gp_walk(const Item* item, void* arg)
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
 
-      string funcName = ifp->func_name();
+      std::string funcName = ifp->func_name();
 
       if (!gwip->condPush)
       {
@@ -323,14 +326,14 @@ void gp_walk(const Item* item, void* arg)
       }
 
       // try to evaluate const F&E
-      vector<Item_field*> tmpVec;
+      std::vector<Item_field*> tmpVec;
       uint16_t parseInfo = 0;
       parse_item(ifp, tmpVec, gwip->fatalParseError, parseInfo, gwip);
 
       // table mode takes only one table filter
       if (gwip->condPush)
       {
-        set<string> tableSet;
+        std::set<std::string> tableSet;
 
         for (uint32_t i = 0; i < tmpVec.size(); i++)
         {
@@ -389,7 +392,8 @@ void gp_walk(const Item* item, void* arg)
         {
           logging::Message::Args args;
           args.add(funcName);
-          gwip->parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORTED_FUNCTION, args);
+          gwip->parseErrorText =
+              logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORTED_FUNCTION, args);
         }
 
         return;
@@ -463,14 +467,15 @@ void gp_walk(const Item* item, void* arg)
           //@bug3495, @bug5865 error out non-supported OR with correlated subquery
           if (isOr)
           {
-            vector<Item_field*> fieldVec;
+            std::vector<Item_field*> fieldVec;
             uint16_t parseInfo = 0;
             parse_item(it, fieldVec, gwip->fatalParseError, parseInfo, gwip);
 
             if (parseInfo & CORRELATED)
             {
               gwip->fatalParseError = true;
-              gwip->parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_CORRELATED_SUB_OR);
+              gwip->parseErrorText =
+                  logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_CORRELATED_SUB_OR);
               return;
             }
           }
@@ -664,7 +669,8 @@ void gp_walk(const Item* item, void* arg)
       else if (col->type() == Item::FIELD_ITEM && gwip->clauseType == HAVING)
       {
         // ReturnedColumn* rc = buildAggFrmTempField(const_cast<Item*>(item), *gwip);
-        execplan::ReturnedColumn* rc = buildReturnedColumn(const_cast<Item*>(item), *gwip, gwip->fatalParseError);
+        execplan::ReturnedColumn* rc =
+            buildReturnedColumn(const_cast<Item*>(item), *gwip, gwip->fatalParseError);
         if (rc)
           gwip->rcWorkStack.push(rc);
 
@@ -735,7 +741,8 @@ void gp_walk(const Item* item, void* arg)
       // temp change clause type because the elements of row column are not walked yet
       gwip->clauseType = SELECT;
       for (uint32_t i = 0; i < row->cols(); i++)
-        cols.push_back(execplan::SRCP(buildReturnedColumn(row->element_index(i), *gwip, gwip->fatalParseError)));
+        cols.push_back(
+            execplan::SRCP(buildReturnedColumn(row->element_index(i), *gwip, gwip->fatalParseError)));
 
       gwip->clauseType = WHERE;
       rowCol->columnVec(cols);
@@ -971,7 +978,8 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
       gwi->fatalParseError = true;
       // DRRTUY The questionable error text. I've seen
       // ERR_CORRELATED_SUB_OR
-      string parseErrorText = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORT_SUB_QUERY_TYPE);
+      string parseErrorText =
+          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORT_SUB_QUERY_TYPE);
       setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
       break;
     }
@@ -1633,4 +1641,4 @@ void debug_walk(const Item* item, void* arg)
   }
 }
 
-}
+}  // namespace cal_impl_if

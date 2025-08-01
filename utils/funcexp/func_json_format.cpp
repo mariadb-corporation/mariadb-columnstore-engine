@@ -22,8 +22,8 @@ CalpontSystemCatalog::ColType Func_json_format::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
@@ -48,7 +48,7 @@ string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
 
   json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
-  string ret;
+  std::string ret;
   if (doFormat(&jsEg, ret, fmt, tabSize))
   {
     isNull = true;

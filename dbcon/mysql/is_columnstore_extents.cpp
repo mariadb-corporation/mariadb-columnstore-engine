@@ -202,7 +202,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   TABLE* table = tables->table;
 
   BRM::DBRM::refreshShmWithLock();
-  BRM::DBRM* emp = new BRM::DBRM();
+  std::unique_ptr<BRM::DBRM> emp(new BRM::DBRM());
 
   if (!emp || !emp->isDBRMReady())
   {
@@ -224,7 +224,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         if (strcasecmp(item_field->field_name.str, "object_id") == 0)
         {
           cond_oid = fitem->arguments()[1]->val_int();
-          return generate_result(cond_oid, emp, table, thd);
+          return generate_result(cond_oid, emp.get(), table, thd);
         }
       }
       else if (fitem->arguments()[1]->real_item()->type() == Item::FIELD_ITEM &&
@@ -236,7 +236,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         if (strcasecmp(item_field->field_name.str, "object_id") == 0)
         {
           cond_oid = fitem->arguments()[0]->val_int();
-          return generate_result(cond_oid, emp, table, thd);
+          return generate_result(cond_oid, emp.get(), table, thd);
         }
       }
     }
@@ -250,7 +250,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
         for (unsigned int i = 1; i < fitem->argument_count(); i++)
         {
           cond_oid = fitem->arguments()[i]->val_int();
-          int result = generate_result(cond_oid, emp, table, thd);
+          int result = generate_result(cond_oid, emp.get(), table, thd);
 
           if (result)
             return 1;
@@ -266,7 +266,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
       while (ss >> cond_oid)
       {
-        int ret = generate_result(cond_oid, emp, table, thd);
+        int ret = generate_result(cond_oid, emp.get(), table, thd);
 
         if (ret)
           return 1;
@@ -282,7 +282,7 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 
   for (BRM::OID_t oid = 3000; oid <= MaxOID; oid++)
   {
-    int result = generate_result(oid, emp, table, thd);
+    int result = generate_result(oid, emp.get(), table, thd);
 
     if (result)
       return 1;

@@ -38,7 +38,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
-#include <tr1/unordered_set>
+#include <unordered.h>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -1826,7 +1826,7 @@ void ExtentMap::save(const string& filename)
 
   if (!out)
   {
-    log_errno("ExtentMap::save(): open");
+    log_errno("ExtentMap::save(): can't open file " + filename);
     releaseFreeList(READ);
     releaseEMIndex(READ);
     releaseEMEntryTable(READ);

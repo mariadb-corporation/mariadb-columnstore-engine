@@ -5,7 +5,7 @@
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
 -- source ../include/check_maxscale.inc
-
+--source ../include/charset.inc
 
 SET default_storage_engine=InnoDB;
 
@@ -50,7 +50,7 @@ USE mcs19_db;
 --error ER_DBACCESS_DENIED_ERROR
 CREATE DATABASE mcs19_db1;
 CREATE TABLE t1(col INT) ENGINE=InnoDB;
---replace_regex /( COLLATE=latin1_swedish_ci)//
+--replace_regex /(\ DEFAULT CHARSET(.*))//
 SHOW CREATE TABLE t1;
 INSERT INTO t1 VALUES(1);
 SELECT * FROM t1;

@@ -27,7 +27,8 @@
 
 #include <stdexcept>
 #include <vector>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include "joblisttypes.h"
 
 #define POSIX_REGEX
@@ -40,7 +41,6 @@
 #include <cstddef>
 #include <boost/shared_ptr.hpp>
 
-
 #include "primitivemsg.h"
 #include "calpontsystemcatalog.h"
 #include "stats.h"
@@ -50,7 +50,7 @@
 class PrimTest;
 
 // XXX: turn off dictionary range setting during scan.
-//#define XXX_PRIMITIVES_TOKEN_RANGES_XXX
+// #define XXX_PRIMITIVES_TOKEN_RANGES_XXX
 
 namespace primitives
 {
@@ -121,13 +121,16 @@ class DictEqualityFilter : public std::tr1::unordered_set<std::string, datatypes
    : std::tr1::unordered_set<std::string, datatypes::CollationAwareHasher,
                              datatypes::CollationAwareComparator>(10, datatypes::CollationAwareHasher(cs),
                                                                   datatypes::CollationAwareComparator(cs))
+   , charset(cs.getCharset())
   {
   }
   CHARSET_INFO& getCharset() const
   {
-    idbassert(&_M_h1.getCharset() == &_M_eq.getCharset());
-    return _M_h1.getCharset();
+    return charset;
   }
+
+ private:
+  CHARSET_INFO& charset;
 };
 
 // Not the safest way b/c it doesn't cover uint128_t but the type
@@ -493,7 +496,8 @@ T getNullValue(uint8_t type)
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT: return joblist::CHAR8NULL;
 
-    // VARCHARs with width >= 8 are stored as dictionaries (used TypeHandlerVarchar::getNullValueForType as a reference)
+    // VARCHARs with width >= 8 are stored as dictionaries (used TypeHandlerVarchar::getNullValueForType as a
+    // reference)
     case execplan::CalpontSystemCatalog::VARCHAR: return joblist::UBIGINTNULL;
 
     case execplan::CalpontSystemCatalog::UBIGINT: return joblist::UBIGINTNULL;
@@ -581,7 +585,7 @@ boost::shared_ptr<ParsedColumnFilter> _parseColumnFilter(
 {
   using UT = typename std::conditional<std::is_unsigned<T>::value || datatypes::is_uint128_t<T>::value, T,
                                        typename datatypes::make_unsigned<T>::type>::type;
-  const uint32_t WIDTH = sizeof(T);  // Sizeof of the column to be filtered
+  const uint32_t WIDTH = sizeof(T);           // Sizeof of the column to be filtered
   boost::shared_ptr<ParsedColumnFilter> ret;  // Place for building the value to return
   if (filterCount == 0)
     return ret;

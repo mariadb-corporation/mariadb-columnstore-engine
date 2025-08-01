@@ -4,6 +4,7 @@
 #
 --source ../include/have_columnstore.inc
 --source include/have_innodb.inc
+--source ../include/charset.inc
 
 #
 # If the calpontsys database does not exist, let's create it.

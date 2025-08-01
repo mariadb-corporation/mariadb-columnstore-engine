@@ -85,7 +85,7 @@ class TableInfo : public WeUIDGID
   //   for this table.  Is volatile to
   //   insure parser & reader threads
   //   see the latest value.
-  unsigned fMaxErrorRows;   // Maximum error rows
+  int fMaxErrorRows;   // Maximum error rows
   int fLastBufferId;        // Id of the last buffer
   char* fFileBuffer;        // File buffer passed to setvbuf()
   int fCurrentParseBuffer;  // Id of leading current buffer being
@@ -148,8 +148,9 @@ class TableInfo : public WeUIDGID
   size_t fS3ParseLength;
   bool fNullStringMode;  // Treat "NULL" as a null value
   char fEnclosedByChar;  // Character to enclose col values
-  char fEscapeChar;      // Escape character used in conjunc-
-  //   tion with fEnclosedByChar
+  char fEscapeChar;      // Escape character used in conjunction with fEnclosedByChar
+  size_t fSkipRows;      // Header rows to skip
+  size_t fSkipRowsCur;   // Header rows left oto skip in the current file
   bool fProcessingBegun;                 // Has processing begun on this tbl
   BulkModeType fBulkMode;                // Distributed bulk mode (1,2, or 3)
   std::string fBRMRptFileName;           // Name of distributed mode rpt file
@@ -297,7 +298,7 @@ class TableInfo : public WeUIDGID
 
   /** @brief Get the number of maximum allowed error rows
    */
-  unsigned getMaxErrorRows() const;
+  int getMaxErrorRows() const;
 
   /** @brief retrieve the tuncation as error setting for this
    *  import. When set, this causes char and varchar strings
@@ -308,7 +309,7 @@ class TableInfo : public WeUIDGID
 
   /** @brief set the maximum number of error rows allowed
    */
-  void setMaxErrorRows(const unsigned int maxErrorRows);
+  void setMaxErrorRows(int maxErrorRows);
 
   /** @brief Set mode to treat "NULL" string as NULL value or not.
    */
@@ -333,6 +334,10 @@ class TableInfo : public WeUIDGID
   /** @brief Set escape char to use in conjunction with enclosed by char.
    */
   void setEscapeChar(char esChar);
+
+  /** @brief Set how many header rows should be skipped.
+   */
+  void setSkipRows(size_t skipRows);
 
   /** @brief Has processing begun for this table.
    */
@@ -508,7 +513,7 @@ inline Status TableInfo::getStatusTI() const
   return fStatusTI;
 }
 
-inline unsigned TableInfo::getMaxErrorRows() const
+inline int TableInfo::getMaxErrorRows() const
 {
   return fMaxErrorRows;
 }
@@ -579,6 +584,12 @@ inline void TableInfo::setEscapeChar(char esChar)
   fEscapeChar = esChar;
 }
 
+inline void TableInfo::setSkipRows(size_t skipRows)
+{
+  fSkipRows = skipRows;
+}
+
+
 inline void TableInfo::setFileBufferSize(const int fileBufSize)
 {
   fFileBufSize = fileBufSize;
@@ -619,7 +630,7 @@ inline void TableInfo::setLoadFilesInput(bool bReadFromStdin, bool bReadFromS3,
   fS3Region = s3region;
 }
 
-inline void TableInfo::setMaxErrorRows(const unsigned int maxErrorRows)
+inline void TableInfo::setMaxErrorRows(int maxErrorRows)
 {
   fMaxErrorRows = maxErrorRows;
 }

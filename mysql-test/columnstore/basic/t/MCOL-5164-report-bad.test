@@ -1,0 +1,35 @@
+if (!$MYSQL_TEST_ROOT){
+  skip Should be run by root to execute cpimport;
+}
+
+--source ../include/have_columnstore.inc
+--source ../include/check_multinode.inc
+
+--if ($columnstore_nodes_count != 1) {
+    --skip This test makes sense when run on a single-node setup
+--}
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5164rep;
+--enable_warnings
+
+CREATE DATABASE mcol5164rep;
+USE mcol5164rep;
+
+CREATE TABLE t1(col1 INT, col2 VARCHAR(64)) ENGINE=Columnstore;
+
+--exec mkdir -p /tmp/mtr-mcol5164rep
+--exec awk 'BEGIN { for (i = 0; i < 11; i++) { printf "%d,test%d,wrong\n", i, i; }; printf "%d,test%d-good\n", i, i; }' > /tmp/mtr-mcol5164rep/mcol5164rep.csv
+
+--disable_result_log
+--exec $MCS_CPIMPORT -e all -s , -L /tmp/mtr-mcol5164rep mcol5164rep t1 /tmp/mtr-mcol5164rep/mcol5164rep.csv
+--enable_result_log
+SELECT * FROM t1;
+--exec echo Rejected rows:
+--exec cat /tmp/mtr-mcol5164rep/mcol5164rep.csv*.bad
+--exec rm -f /tmp/mtr-mcol5164rep/mcol5164rep.csv*.err
+--exec rm -f /tmp/mtr-mcol5164rep/mcol5164rep.csv*.bad
+
+# Clean UP
+--exec rm -rf /tmp/mtr-mcol5164rep
+DROP DATABASE mcol5164rep;

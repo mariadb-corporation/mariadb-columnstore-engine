@@ -5,9 +5,10 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--source ../include/functions.inc
 #
 USE tpch1;
 #
 select mcsSystemPrimary() as a;
 #
-
+--source ../include/drop_functions.inc

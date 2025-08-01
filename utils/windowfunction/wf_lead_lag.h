@@ -38,7 +38,8 @@ class WF_lead_lag : public WindowFunctionType
   void resetData() override;
   void parseParms(const std::vector<execplan::SRCP>&) override;
 
-  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const string&, int, WindowFunctionColumn*);
+  static boost::shared_ptr<WindowFunctionType> makeFunction(int, const std::string&, int,
+                                                            WindowFunctionColumn*);
 
  protected:
   T fValue;

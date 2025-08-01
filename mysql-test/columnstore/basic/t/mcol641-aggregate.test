@@ -221,3 +221,4 @@ DROP TABLE cs2;
 DROP TABLE cs3;
 DROP TABLE cs4;
 DROP TABLE cs5;
+DROP DATABASE test_mcol641_aggregate;

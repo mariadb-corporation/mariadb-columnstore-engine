@@ -144,6 +144,13 @@ enum ImportDataMode
   IMPORT_DATA_BIN_SAT_NULL = 2
 };
 
+// Max number of ignored errors
+enum MaxErrors
+{
+  MAX_ERRORS_DEFAULT = -1,  // default value
+  MAX_ERRORS_ALL = -2       // special case: ignore all errors
+};
+
 /**
  * the set of Calpont column data type names; MUST match ColDataType in
  * calpontsystemcatalog.h.
@@ -525,6 +532,7 @@ struct Job /** @brief Job Structure */
   int numberOfReadBuffers;
   unsigned readBufferSize;
   unsigned writeBufferSize;
+  int fSkipRows;
   Job()
    : id(0)
    , fDelimiter('|')
@@ -533,6 +541,7 @@ struct Job /** @brief Job Structure */
    , numberOfReadBuffers(0)
    , readBufferSize(0)
    , writeBufferSize(0)
+   , fSkipRows(0)
   {
   }
 };

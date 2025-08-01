@@ -49,8 +49,17 @@ include(compiler_flags)
 include(misc)
 include(cpack_manage)
 
+if(NOT __msg1_CS_NO_CXX20)
+    add_subdirectory(dbcon/mysql)
+endif()
+if(NOT TARGET columnstore)
+    return()
+endif()
+# releasenum is used by external scripts for various tasks. Leave it alone.
+columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/build/releasenum ${ENGINE_SUPPORTDIR})
+columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_SUPPORTDIR})
+
 set(COMPONENTS
-    dbcon/mysql
     utils
     oam/oamcpp
     dbcon/execplan

@@ -22,13 +22,13 @@ CalpontSystemCatalog::ColType Func_json_normalize::operationType(
   return fp[0]->data()->resultType();
 }
 
-string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                      execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                           execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
-  const string_view js = js_ns.unsafeStringRef();
+  const std::string_view js = js_ns.unsafeStringRef();
 
   using DynamicString = unique_ptr<DYNAMIC_STRING, decltype(&dynstr_free)>;
 

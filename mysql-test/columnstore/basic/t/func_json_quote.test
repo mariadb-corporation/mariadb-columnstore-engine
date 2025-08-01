@@ -1,4 +1,6 @@
 --source ../include/have_columnstore.inc
+--source ../include/charset.inc
+
 --disable_warnings
 DROP DATABASE IF EXISTS json_quote_db;
 

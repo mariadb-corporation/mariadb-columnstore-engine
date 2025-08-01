@@ -748,7 +748,12 @@ class ExtentMapController:
                     retry_count += 1
                     continue
                 elem_current_suffix = ret.stdout.decode("utf-8").rstrip()
-                elem_current_filename = f'{EM_PATH_SUFFIX}/{elem_current_suffix}_{element}'
+
+                suffix_for_file = elem_current_suffix
+                # The journal is always in the current directory, strip trailing A/B from suffix
+                if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                    suffix_for_file = suffix_for_file[:-1]
+                elem_current_filename = f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}'
 
                 # TODO: Remove conditional once container dispatcher
                 #       uses non-root by default
@@ -774,8 +779,13 @@ class ExtentMapController:
             )
             elem_current_name = Path(MCS_BRM_CURRENT_PATH)
             elem_current_filename = elem_current_name.read_text().rstrip()
+
+            suffix_for_file = elem_current_filename
+            # The journal is always in the current directory, strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
             elem_current_file = Path(
-                f'{MCS_EM_PATH}/{elem_current_filename}_{element}'
+                f'{MCS_EM_PATH}/{suffix_for_file}_{element}'
             )
             result = elem_current_file.read_bytes()
 

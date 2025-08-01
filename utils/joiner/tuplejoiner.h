@@ -124,7 +124,7 @@ class TypelessDataDecoder
   void checkAvailableData(uint32_t nbytes) const
   {
     if (mPtr + nbytes > mEnd)
-      throw runtime_error("TypelessData is too short");
+      throw std::runtime_error("TypelessData is too short");
   }
 
  public:
@@ -172,7 +172,7 @@ class TypelessDataDecoder
 class LongDoubleEq
 {
  public:
-  LongDoubleEq(){};
+  LongDoubleEq() {};
   inline bool operator()(const long double& pos1, const long double& pos2) const
   {
     return pos1 == pos2;
@@ -203,7 +203,6 @@ class TypelessDataStructure
   {
   }
 };
-
 
 using RowPointersVec =
     std::vector<rowgroup::Row::Pointer, allocators::CountingAllocator<rowgroup::Row::Pointer>>;
@@ -279,7 +278,8 @@ class TupleJoiner
   /* ctor to use for string & compound join */
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
-              joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm, const uint64_t numCores);
+              joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm,
+              const uint64_t numCores);
 
   ~TupleJoiner();
 
@@ -454,7 +454,7 @@ class TupleJoiner
 
   // Wide-DECIMAL JOIN
   bool joinHasSkewedKeyColumn();
-  inline const vector<uint32_t>& getSmallSideColumnsWidths() const
+  inline const std::vector<uint32_t>& getSmallSideColumnsWidths() const
   {
     return smallRG.getColWidths();
   }
@@ -473,10 +473,11 @@ class TupleJoiner
 
   void initHashMaps(uint32_t& smallJoinColumn);
   void clearHashMaps();
+
  private:
-  template<typename K, typename V>
-  using HashMapTemplate = std::unordered_multimap<K, V, hasher, std::equal_to<K>,
-                                                 utils::STLPoolAllocator<std::pair<const K, V>>>;
+  template <typename K, typename V>
+  using HashMapTemplate =
+      std::unordered_multimap<K, V, hasher, std::equal_to<K>, utils::STLPoolAllocator<std::pair<const K, V>>>;
   using hash_t = HashMapTemplate<int64_t, uint8_t*>;
   using sthash_t = HashMapTemplate<int64_t, rowgroup::Row::Pointer>;
   using typelesshash_t = HashMapTemplate<TypelessData, rowgroup::Row::Pointer>;

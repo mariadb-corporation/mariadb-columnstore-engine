@@ -1,0 +1,22 @@
+DROP DATABASE IF EXISTS mcol4882;
+CREATE DATABASE mcol4882;
+USE mcol4882;
+CREATE TABLE t1(col1 INT, col2 VARCHAR(64)) ENGINE=Columnstore;
+SELECT * FROM t1;
+col1	col2
+1	test1
+2	test2
+3	test3
+TRUNCATE t1;
+SELECT * FROM t1;
+col1	col2
+2	test2
+3	test3
+TRUNCATE t1;
+SELECT * FROM t1;
+col1	col2
+3	test3
+TRUNCATE t1;
+SELECT * FROM t1;
+col1	col2
+DROP DATABASE mcol4882;

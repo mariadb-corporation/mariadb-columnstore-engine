@@ -19,12 +19,12 @@
 
 #include <deque>
 #include <string>
-#include <map>
 #include <memory>
 #include <optional>
+#include <unordered_map>
+
 #include "CloudStorage.h"
 #include "libmarias3/marias3.h"
-#include "Config.h"
 #include <curl/curl.h>
 
 namespace storagemanager

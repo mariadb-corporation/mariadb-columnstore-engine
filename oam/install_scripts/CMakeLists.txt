@@ -24,9 +24,17 @@ if(WITH_COLUMNSTORE_ASAN)
     endif(WITH_COLUMNSTORE_REPORT_PATH)
 
     set(LD_PRELOAD_STRING "")
-    set(ALLOC_CONFIG
-        "ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false"
+    set(ABORT_ON_ERROR "1")
+
+    if(COLUMNSTORE_PACKAGES_BUILD)
+        set(ABORT_ON_ERROR "0")
+    endif()
+
+    set(ASAN_OPTIONS
+        abort_on_error=${ABORT_ON_ERROR}:disable_coredump=0:print_stats=0:detect_odr_violation=0:check_initialization_order=1:detect_stack_use_after_return=1:atexit=0
     )
+    set(ALLOC_CONFIG ASAN_OPTIONS=${ASAN_OPTIONS})
+
     set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.primproc)
     set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.dmlproc)
     set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.ddlproc)
@@ -34,6 +42,12 @@ if(WITH_COLUMNSTORE_ASAN)
     set(CONTROLLERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.controllernode)
     set(WORKERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.workernode)
     set(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${ASAN_PATH}.storagemanager)
+    set(COLUMNSTORE_STANDALONE_BINARIES_ASAN_COPTIONS ${ASAN_OPTIONS})
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/storage/columnstore/columnstore/build/asan_options.cpp.in"
+        "${CMAKE_BINARY_DIR}/asan_options.cpp" @ONLY
+    )
+
 endif()
 
 if(WITH_UBSAN)
@@ -43,7 +57,8 @@ if(WITH_UBSAN)
     endif(WITH_COLUMNSTORE_REPORT_PATH)
 
     set(LD_PRELOAD_STRING "")
-    set(ALLOC_CONFIG "UBSAN_OPTIONS=abort_on_error=0,print_stacktrace=true")
+    set(UBSAN_OPTIONS abort_on_error=0:print_stacktrace=1)
+    set(ALLOC_CONFIG UBSAN_OPTIONS=${UBSAN_OPTIONS})
     set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.primproc)
     set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.dmlproc)
     set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${UBSAN_PATH}.ddlproc)
@@ -60,7 +75,8 @@ if(WITH_TSAN)
     endif(WITH_COLUMNSTORE_REPORT_PATH)
 
     set(LD_PRELOAD_STRING "")
-    set(ALLOC_CONFIG "TSAN_OPTIONS=abort_on_error=0:log_path=${TSAN_PATH}")
+    set(TSAN_OPTIONS abort_on_error=0:log_path=${TSAN_PATH})
+    set(ALLOC_CONFIG TSAN_OPTIONS=${TSAN_OPTIONS})
     set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.primproc)
     set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.dmlproc)
     set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.ddlproc)
@@ -68,6 +84,24 @@ if(WITH_TSAN)
     set(CONTROLLERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.controllernode)
     set(WORKERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.workernode)
     set(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${TSAN_PATH}.storagemanager)
+endif()
+
+if(WITH_MSAN)
+    set(MSAN_PATH "/tmp/msan")
+    if(WITH_COLUMNSTORE_REPORT_PATH)
+        set(MSAN_PATH "${WITH_COLUMNSTORE_REPORT_PATH}/msan")
+    endif(WITH_COLUMNSTORE_REPORT_PATH)
+
+    set(LD_PRELOAD_STRING "")
+    set(MSAN_OPTIONS abort_on_error=0:log_path=${MSAN_PATH})
+    set(ALLOC_CONFIG MSAN_OPTIONS=${MSAN_OPTIONS})
+    set(PRIMPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.primproc)
+    set(DMLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.dmlproc)
+    set(DDLPROC_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.ddlproc)
+    set(WRITEENGINE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.writeengine)
+    set(CONTROLLERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.controllernode)
+    set(WORKERNODE_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.workernode)
+    set(STORAGEMANAGER_ALLOC_CONFIG ${ALLOC_CONFIG},log_path=${MSAN_PATH}.storagemanager)
 endif()
 
 configure_file(

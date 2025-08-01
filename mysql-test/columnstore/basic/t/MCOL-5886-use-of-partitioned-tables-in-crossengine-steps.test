@@ -1,11 +1,20 @@
+-- source ../include/have_columnstore.inc
+--source include/have_innodb.inc
 --disable_warnings
 DROP DATABASE IF EXISTS MCOL5886;
 --enable_warnings
 CREATE DATABASE MCOL5886;
 USE MCOL5886;
 
+if (!$MASTER_MYPORT)
+{
+  # Running with --extern
+  let $MASTER_MYPORT=`SELECT @@port`;
+}
+
 --exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
 --exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
 
 --disable_warnings
 CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
@@ -21,4 +30,6 @@ CREATE TABLE IF NOT EXISTS t2  ( a DECIMAL(12, 2), b int ) ENGINE=COLUMNSTORE;
 SELECT COUNT(*) FROM (SELECT * FROM t1 PARTITION (p0)) tt;
 
 SELECT COUNT(*) FROM (SELECT * FROM t2 UNION ALL SELECT * FROM t1 PARTITION (p0)) tt;
-
+REVOKE ALL PRIVILEGES ON *.* FROM 'cejuser'@'localhost';
+DROP USER 'cejuser'@'localhost';
+DROP DATABASE MCOL5886;

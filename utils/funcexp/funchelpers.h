@@ -202,7 +202,8 @@ inline void get_date_from_mysql_daynr(long daynr, dataconvert::DateTime& dateTim
 //   else:
 //       0 = Monday, 1 = Tuesday, ..., 6 = Sunday
 // This is a mirror of calc_weekday, at a later date we should use sql_time.h
-inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst, bool& isNull)
+inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst,
+                                   bool& isNull)
 {
   if (!dataconvert::isDateValid(day, month, year) || (day == 0 && month == 0 && year == 0))
   {
@@ -642,21 +643,21 @@ inline int dayOfWeek(std::string day)  // Sunday = 0
   return -1;
 }
 
-inline string intToString(int64_t i)
+inline std::string intToString(int64_t i)
 {
   char buf[32];
   snprintf(buf, sizeof(buf), "%" PRId64 "", i);
   return buf;
 }
 
-inline string uintToString(uint64_t i)
+inline std::string uintToString(uint64_t i)
 {
   char buf[32];
   snprintf(buf, sizeof(buf), "%" PRIu64 "", i);
   return buf;
 }
 
-inline string doubleToString(double d)
+inline std::string doubleToString(double d)
 {
   // double's can be *really* long to print out.  Max mysql
   // is e308 so allow for 308 + 36 decimal places minimum.
@@ -665,7 +666,7 @@ inline string doubleToString(double d)
   return buf;
 }
 
-inline string longDoubleToString(long double ld)
+inline std::string longDoubleToString(long double ld)
 {
   // long double's can be *really* long to print out.  Max mysql
   // is e308 so allow for 308 + 36 decimal places minimum.
