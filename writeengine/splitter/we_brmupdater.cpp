@@ -276,6 +276,9 @@ bool WEBrmUpdater::prepareCasualPartitionInfo()
     if ((!aEntry.empty()) && (aEntry.at(0) == 'C'))
     {
       BRM::CPInfoMerge cpInfoMerge;
+
+      cpInfoMerge.bigMin = cpInfoMerge.bigMax = 0;
+
       const int BUFLEN = 128;
       char aBuff[BUFLEN];
       strncpy(aBuff, aEntry.c_str(), BUFLEN);

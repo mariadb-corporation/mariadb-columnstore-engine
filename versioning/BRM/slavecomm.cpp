@@ -439,7 +439,6 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
 void SlaveComm::do_createColumnExtent_DBroot(ByteStream& msg)
 {
   int allocdSize, err;
-  uint8_t tmp8;
   uint16_t tmp16;
   uint32_t tmp32;
   OID_t oid;
@@ -465,8 +464,7 @@ void SlaveComm::do_createColumnExtent_DBroot(ByteStream& msg)
   partitionNum = tmp32;
   msg >> tmp16;
   segmentNum = tmp16;
-  msg >> tmp8;
-  colDataType = (execplan::CalpontSystemCatalog::Kind)tmp8;
+  msg >> colDataType;
 
   if (printOnly)
   {
@@ -508,7 +506,6 @@ void SlaveComm::do_createColumnExtent_DBroot(ByteStream& msg)
 void SlaveComm::do_createColumnExtentExactFile(ByteStream& msg)
 {
   int allocdSize, err;
-  uint8_t tmp8;
   uint16_t tmp16;
   uint32_t tmp32;
   OID_t oid;
@@ -534,8 +531,7 @@ void SlaveComm::do_createColumnExtentExactFile(ByteStream& msg)
   partitionNum = tmp32;
   msg >> tmp16;
   segmentNum = tmp16;
-  msg >> tmp8;
-  colDataType = (execplan::CalpontSystemCatalog::Kind)tmp8;
+  msg >> colDataType;
 
   if (printOnly)
   {
@@ -1313,8 +1309,7 @@ void SlaveComm::do_mergeExtentsMaxMin(ByteStream& msg)
     msg >> tmp32;
     cpMaxMin.seqNum = tmp32;
 
-    msg >> tmp32;
-    cpMaxMin.type = (execplan::CalpontSystemCatalog::Kind)tmp32;
+    msg >> cpMaxMin.type;
 
     msg >> tmp32;
     cpMaxMin.newExtent = tmp32;
