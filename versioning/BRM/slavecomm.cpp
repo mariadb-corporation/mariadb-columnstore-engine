@@ -1303,9 +1303,11 @@ void SlaveComm::do_mergeExtentsMaxMin(ByteStream& msg)
     startLbid = tmp64;
 
     msg >> tmp64;
+    cpMaxMin.bigMax = 0;
     cpMaxMin.max = tmp64;
 
     msg >> tmp64;
+    cpMaxMin.bigMin = 0;
     cpMaxMin.min = tmp64;
 
     msg >> tmp32;

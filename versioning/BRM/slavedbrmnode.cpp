@@ -395,16 +395,15 @@ int SlaveDBRMNode::bulkSetHWMAndCP(const vector<BulkSetHWMArg>& hwmArgs,
       {
         mergeCPEntry.type = mergeCPDataArgs[i].type;
         mergeCPEntry.colWidth = mergeCPDataArgs[i].colWidth;
-//        if (mergeCPDataArgs[i].colWidth <= 8)
+        mergeCPEntry.bigMax = mergeCPDataArgs[i].bigMax;
+        mergeCPEntry.bigMin = mergeCPDataArgs[i].bigMin;
+
+        if (mergeCPDataArgs[i].colWidth <= 8)
         {
           mergeCPEntry.max = mergeCPDataArgs[i].max;
           mergeCPEntry.min = mergeCPDataArgs[i].min;
         }
-  //      else
-        {
-          mergeCPEntry.bigMax = mergeCPDataArgs[i].bigMax;
-          mergeCPEntry.bigMin = mergeCPDataArgs[i].bigMin;
-        }
+        
         mergeCPEntry.newExtent = mergeCPDataArgs[i].newExtent;
         mergeCPEntry.seqNum = mergeCPDataArgs[i].seqNum;
         bulkMergeCPMap[mergeCPDataArgs[i].startLbid] = mergeCPEntry;
