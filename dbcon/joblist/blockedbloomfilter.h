@@ -10,8 +10,8 @@ class BlockedBloomFilter
     public:
         BlockedBloomFilter() = default;
 
-        void insert(uint64_t hash);
-        bool probe(uint64_t hash) const;
+        void insert(uint32_t hash);
+        bool probe(uint32_t hash) const;
 
     private:
         // Member variables
@@ -35,13 +35,13 @@ class BlockedBloomFilter
         static constexpr double FALSE_POSITIVE_RATE = 0.01;
         static constexpr double lnFP = 4.605170186; // lnFP <- |ln(FPR)|
         static constexpr double ln2sqr = 0.4804530139; // pow(ln(2), 2)
-        static constexpr uint64_t NUMBER_OF_BITS = (EXTENT_SIZE * lnFP) / ln2sqr;
-        static constexpr uint64_t BLOOM_FILTER_BLOCK_COUNT = (NUMBER_OF_BITS + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        static constexpr uint32_t NUMBER_OF_BITS = (EXTENT_SIZE * lnFP) / ln2sqr;
+        static constexpr uint32_t BLOOM_FILTER_BLOCK_COUNT = (NUMBER_OF_BITS + BLOCK_SIZE - 1) / BLOCK_SIZE;
         
         std::array<std::atomic<uint64_t>, BLOOM_FILTER_BLOCK_COUNT> bloomFilter = {};
 
         // Private member functions
-        inline uint64_t mix64(uint64_t hash) const;
+        inline uint32_t mix32(uint32_t hash) const;
 
 };
 
