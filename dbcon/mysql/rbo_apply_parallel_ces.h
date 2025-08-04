@@ -54,7 +54,7 @@ struct TableAliasLessThan
   }
 };
 
-using NewTableAliasAndColumnPosCounter = std::pair<string, size_t>;
+using NewTableAliasAndColumnPosCounter = std::pair<std::string, size_t>;
 using TableAliasMap = std::map<execplan::CalpontSystemCatalog::TableAliasName,
                                NewTableAliasAndColumnPosCounter, TableAliasLessThan>;
 
