@@ -26,15 +26,14 @@
 
 #include "liboamcpp.h"
 
-
 namespace oam
 {
 class OamCache
 {
  public:
-  typedef boost::shared_ptr<std::map<int, std::set<int>> > dbRootPMMap_t;
+  typedef boost::shared_ptr<std::map<int, std::set<int>>> dbRootPMMap_t;
   typedef std::vector<int> dbRoots;
-  typedef boost::shared_ptr<std::map<int, dbRoots> > PMDbrootsMap_t;
+  typedef boost::shared_ptr<std::map<int, dbRoots>> PMDbrootsMap_t;
   virtual ~OamCache() = default;
 
   void checkReload();
@@ -43,14 +42,14 @@ class OamCache
     mtime = 0;
   }
 
-  int getClosestPM(int dbroot); // who can access dbroot's records for read requests - either owner or us.
-  int getClosestConnection(int dbroot); // connection index to owner's PM or ours PM - who can access dbRoot.
-  int getOwnerConnection(int dbroot); // connection index to owner's PM.
-  int getOwnerPM(int dbroot); // Owner's PM index.
-  std::vector<int> getPMDBRoots(int PM); // what DBRoots are owned by given PM.
-  std::vector<int> getAllDBRoots(); // get all DBRoots.
+  int getClosestPM(int dbroot);  // who can access dbroot's records for read requests - either owner or us.
+  int getClosestConnection(int dbroot);  // connection index to owner's PM or ours PM - who can access dbRoot.
+  int getOwnerConnection(int dbroot);    // connection index to owner's PM.
+  int getOwnerPM(int dbroot);            // Owner's PM index.
+  std::vector<int> getPMDBRoots(int PM);  // what DBRoots are owned by given PM.
+  std::vector<int> getAllDBRoots();       // get all DBRoots.
   bool isAccessibleBy(int dbRoot, int pmId);
-  bool isOffline(int dbRoot); // not registered in map.
+  bool isOffline(int dbRoot);  // not registered in map.
   uint32_t getDBRootCount();
   DBRootConfigList& getDBRootNums();
   std::vector<int>& getModuleIds();
@@ -67,7 +66,7 @@ class OamCache
   OamCache& operator=(const OamCache&) const = delete;
 
   dbRootPMMap_t dbRootPMMap;
-  map<int, int> dbRootConnectionMap;
+  std::map<int, int> dbRootConnectionMap;
   PMDbrootsMap_t pmDbrootsMap;
   uint32_t numDBRoots = 1;
   time_t mtime = 0;
@@ -77,9 +76,8 @@ class OamCache
   int mLocalPMId = 0;  // The PM id running on this machine
   std::string systemName;
   std::string moduleName;
-  map<int, int> pmConnectionMap;
-  set<int> rwPMs;
+  std::map<int, int> pmConnectionMap;
+  std::set<int> rwPMs;
 };
 
 }  // namespace oam
-
