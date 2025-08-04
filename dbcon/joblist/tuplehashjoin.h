@@ -32,6 +32,7 @@
 #include <utility>
 #include "resourcemanager.h"
 #include "exceptclasses.h"
+#include "blockedbloomfilter.h"
 
 namespace joblist
 {
@@ -658,6 +659,10 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   void outOfMemoryHandler(std::shared_ptr<joiner::TupleJoiner> joiner);
 
   friend class DiskJoinStep;
+
+  // Blocked Bloom Filter
+  std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>> bloomFilters;
+  
 };
 
 }  // namespace joblist

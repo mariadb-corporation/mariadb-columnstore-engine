@@ -632,8 +632,14 @@ void TupleHashJoinStep::hjRunner()
   rgData.reset(new vector<RGData>[smallDLs.size()]);
   memUsedByEachJoin.reset(new ssize_t[smallDLs.size()]);
 
+
+  bloomFilters.resize(smallDLs.size());
   for (i = 0; i < smallDLs.size(); i++)
+  {
+    bloomFilters[i] = std::make_shared<std::array<std::optional<BlockedBloomFilter>, 2>>();
+    (*(bloomFilters[i]))[0].emplace();
     atomicops::atomicZero(&memUsedByEachJoin[i]);
+  }
 
   try
   {
