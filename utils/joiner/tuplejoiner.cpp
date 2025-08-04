@@ -166,7 +166,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          const vector<uint32_t>& smallJoinColumns, const vector<uint32_t>& largeJoinColumns,
                          JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm,
-                         const uint64_t numCores)
+                         const uint64_t numCores, std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>> bloomFilters)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
@@ -182,6 +182,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
  , resourceManager_(rm)
+ , fBloomFilters(bloomFilters)
 {
   uint i;
 
@@ -314,7 +315,14 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row& r)
     td[i] = makeTypelessKey(r, smallKeyColumns, keyLength, alloc, largeRG, largeKeyColumns);
     if (td[i].len == 0)
       continue;
-    uint bucket = bucketPicker((char*)td[i].data, td[i].len, bpSeed) & bucketMask;
+
+    uint32_t hash = bucketPicker((char*)td[i].data, td[i].len, bpSeed);
+    
+    if (fBloomFilters->at(0).has_value()) {
+      fBloomFilters->at(0)->insert(hash);
+    }
+    
+    uint bucket = hash & bucketMask;
     v[bucket].emplace_back(pair<TypelessData, Row::Pointer>(td[i], r.getPointer()));
   }
   bucketsToTables(&v[0], ht);

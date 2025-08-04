@@ -228,7 +228,7 @@ void TupleHashJoinStep::startSmallRunners(uint index)
   if (typelessJoin[index])
   {
     joiners[index].reset(new TupleJoiner(smallRGs[index], largeRG, smallSideKeys[index], largeSideKeys[index],
-                                         jt, &jobstepThreadPool, resourceManager, numCores));
+                                         jt, &jobstepThreadPool, resourceManager, numCores, bloomFilters[index]));
   }
   else
   {

@@ -38,6 +38,7 @@
 #include "threadpool.h"
 #include "columnwidth.h"
 #include "mcs_string.h"
+#include "blockedbloomfilter.h"
 
 namespace joiner
 {
@@ -279,7 +280,7 @@ class TupleJoiner
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
               joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm,
-              const uint64_t numCores);
+              const uint64_t numCores, std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>> bloomFilters);
 
   ~TupleJoiner();
 
@@ -567,6 +568,10 @@ class TupleJoiner
   joblist::ResourceManager* resourceManager_ = nullptr;
   bool wasAborted_ = false;
   void initRowsVector();
+
+  // Blocked Bloom filter
+  std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>> fBloomFilters;
+
 };
 
 }  // namespace joiner
