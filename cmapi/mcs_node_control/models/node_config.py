@@ -1,10 +1,10 @@
 import configparser
-from contextlib import contextmanager
 import grp
 import logging
 import pwd
 import re
 import socket
+from contextlib import contextmanager
 from os import chown, mkdir, replace
 from pathlib import Path
 from shutil import copyfile

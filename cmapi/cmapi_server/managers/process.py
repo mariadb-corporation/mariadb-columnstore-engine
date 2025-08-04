@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import logging
 import os.path
 import socket
@@ -6,18 +7,15 @@ from time import sleep
 
 import psutil
 
+from cmapi_server.constants import ALL_MCS_PROGS, MCS_INSTALL_BIN, MCSProgs, ProgInfo
 from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs, ProgInfo
 from cmapi_server.process_dispatchers.base import BaseDispatcher
+from cmapi_server.process_dispatchers.container import ContainerDispatcher
 from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
-from cmapi_server.process_dispatchers.container import (
-    ContainerDispatcher
-)
 from mcs_node_control.models.dbrm import DBRM
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT
 from mcs_node_control.models.misc import get_workernodes
 from mcs_node_control.models.process import Process
-
 
 PROCESS_DISPATCHERS: dict[str, type[BaseDispatcher]] = {
     'systemd': SystemdDispatcher,
@@ -78,7 +76,7 @@ class MCSProcessManager:
         if is_read_only:
             logging.debug('Node is in read-only mode, skipping WriteEngine')
             unsorted_progs.pop(
-                MCSProgs.WRITE_ENGINE_SERVER.value, None
+                MCSProgs.WRITE_ENGINE_SERVER, None
             )
 
         if reverse:
@@ -220,7 +218,7 @@ class MCSProcessManager:
                 with DBRM():
                     # check connection
                     success = True
-            except (ConnectionRefusedError, RuntimeError, socket.error):
+            except (OSError, ConnectionRefusedError, RuntimeError):
                 logging.info(
                     'Cannot establish connection to controllernode.'
                     f'Controller node still not started. Waiting...{attempts}'
@@ -433,7 +431,7 @@ class MCSProcessManager:
         for prog_name in cls._get_sorted_progs(is_primary=is_primary, is_read_only=is_read_only):
             if (
                     cls.dispatcher_name == 'systemd'
-                    and prog_name == MCSProgs.STORAGE_MANAGER.value
+                    and prog_name == MCSProgs.STORAGE_MANAGER
             ):
                 # TODO: MCOL-5458
                 logging.info(
@@ -441,9 +439,9 @@ class MCSProcessManager:
                 )
                 continue
             # TODO: additional error handling
-            if prog_name == MCSProgs.CONTROLLER_NODE.value:
+            if prog_name == MCSProgs.CONTROLLER_NODE:
                 cls._wait_for_workernodes()
-            if prog_name in (MCSProgs.DML_PROC.value, MCSProgs.DDL_PROC.value):
+            if prog_name in (MCSProgs.DML_PROC, MCSProgs.DDL_PROC):
                 cls._wait_for_controllernode()
             if not cls.start(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not started properly.')

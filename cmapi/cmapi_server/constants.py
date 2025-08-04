@@ -3,9 +3,8 @@
 TODO: move main constant paths here and replace in files in next releases.
 """
 import os
-from typing import NamedTuple
 from enum import Enum
-
+from typing import NamedTuple
 
 # default MARIADB ColumnStore config path
 MCS_ETC_PATH = '/etc/columnstore'
@@ -61,7 +60,7 @@ CMAPI_SINGLE_NODE_XML = os.path.join(
     CMAPI_INSTALL_PATH, 'cmapi_server/SingleNode.xml'
 )
 
-class MCSProgs(Enum):
+class MCSProgs(str, Enum):
     STORAGE_MANAGER = 'StorageManager'
     WORKER_NODE = 'workernode'
     CONTROLLER_NODE = 'controllernode'

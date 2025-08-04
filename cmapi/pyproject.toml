@@ -1,5 +1,5 @@
 [tool.ruff]
-line-length = 80
+line-length = 100
 target-version = "py39"
 # Enable common rule sets
 select = [
@@ -20,3 +20,7 @@ exclude = [
 
 [tool.ruff.format]
 quote-style = "single"
+
+[tool.ruff.lint.isort]
+force-single-line = false
+combine-as-imports = true

@@ -17,12 +17,14 @@ from lxml import etree
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
+    CMAPI_CONF_PATH,
+    CMAPI_SINGLE_NODE_XML,
+    DEFAULT_MCS_CONF_PATH,
+    LOCALHOSTS,
     MCS_DATA_PATH,
 )
 from cmapi_server.managers.network import NetworkManager
 from mcs_node_control.models.node_config import NodeConfig
-
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -176,7 +178,8 @@ def remove_node(
             _remove_Module_entries(c_root, node)
             _remove_from_ExeMgrs(c_root, node)
 
-            # FIXME MCOL-6105: for some reason deactivate_only is always True, so the nodes are never removed from InactiveNodes
+            # FIXME MCOL-6105: for some reason deactivate_only is always True,
+            #   so the nodes are never removed from InactiveNodes
             if deactivate_only:
                 _deactivate_node(c_root, node)
 
@@ -262,7 +265,7 @@ def rebalance_dbroots(
 # all params are optional.  If node_id is unset, it will add a dbroot but not attach it to a node.
 # if node_id is set, it will attach the new dbroot to that node.  Node_id should be either
 # 'pm1' 'PM1' or '1'.  Those three all refer to node 1 as identified by the Module* entries in the
-# config file.  TBD whether we need a different identifier for the node.  Maybe the hostname instead.
+# config file.  TBD whether we need a different identifier for the node.  Maybe the hostname instead
 #
 # returns the id of the new dbroot on success
 # raises an exception on error
@@ -401,7 +404,11 @@ def _remove_node(root, node):
     remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadOnlyNodes
     '''
 
-    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
+    for n in (
+        root.find("./DesiredNodes"),
+        root.find("./InactiveNodes"),
+        root.find("./ActiveNodes"),
+    ):
         __remove_helper(n, node)
 
     read_only_nodes = root.find('./ReadOnlyNodes')
