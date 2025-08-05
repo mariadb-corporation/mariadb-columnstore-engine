@@ -79,11 +79,8 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
-  auto tables = csep.tableList();
-  // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
-  // TODO filter out CSEPs with orderBy, groupBy, having
+  // TODO filter out CSEPs with orderBy, groupBy, having || or clean up OB,GB,HAVING cloning CSEP
   // Filter out tables that were re-written.
-  // return tables.size() == 1 && !tables[0].isColumnstore() && !tableIsInUnion(tables[0], csep);
   return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
 }
 
@@ -106,7 +103,7 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   ltOp->resultType(ltOp->operationType());
 
   auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
-  // TODO new 
+  // TODO new
   // TODO remove new and re-use tableKeyColumnLeftOp
   auto tableKeyColumnRightOp = new execplan::SimpleColumn(column);
   tableKeyColumnRightOp->resultType(column.resultType());
@@ -214,8 +211,8 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
-  std::cout << "populateRangeBounds() columnStatistics->buckets.size() " << columnStatistics->get_json_histogram().size()
-            << std::endl;
+  std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
+            << columnStatistics->get_json_histogram().size() << std::endl;
   size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), MaxParallelFactor);
   size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
 
@@ -237,11 +234,11 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
     T currentLowerBound = *(uint32_t*)bucket.start_value.data();
     std::cout << "Bucket: " << currentLowerBound << std::endl;
   }
+  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound. 
   // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits *
   // numberOfBucketsPerUnionUnit; T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data(); T
   // currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
   // bounds.push_back({currentLowerBound, currentUpperBound});
-
 
   for (auto& bound : bounds)
   {
@@ -304,7 +301,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     clonedCSEP->filters(filter);
     unionVec.push_back(clonedCSEP);
   }
-  
+
   return unionVec;
 }
 void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
