@@ -2651,6 +2651,39 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
   return ct;
 }
 
+// Simplified version to support QA-specific RBO re-write rule.
+// TBD turn into template to merge with colType_MysqlToIDB for Item
+CalpontSystemCatalog::ColType colType_MysqlToIDB(const Field* field)
+{
+  CalpontSystemCatalog::ColType ct;
+  ct.precision = 4;
+
+  switch (field->result_type())
+  {
+    case INT_RESULT:
+      if (field->is_unsigned())
+      {
+        ct.colDataType = CalpontSystemCatalog::UBIGINT;
+      }
+      else
+      {
+        ct.colDataType = CalpontSystemCatalog::BIGINT;
+      }
+
+      ct.colWidth = 8;
+      break;
+
+    case STRING_RESULT:
+      ct.colDataType = CalpontSystemCatalog::VARCHAR;
+
+    default:
+      IDEBUG(cerr << "colType_MysqlToIDB:: Unknown result type of MySQL " << item->result_type() << endl);
+      break;
+  }
+  ct.charsetNumber = field->charset()->number;
+  return ct;
+}
+
 bool itemDisablesWrapping(Item* item, gp_walk_info& gwi)
 {
   if (gwi.select_lex == nullptr)
@@ -4184,6 +4217,62 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   return sc;
 }
 
+SimpleColumn* buildSimpleColumnFromFieldForStatistics(Field* field, gp_walk_info& gwi)
+{
+  if (!gwi.csc)
+  {
+    gwi.csc = CalpontSystemCatalog::makeCalpontSystemCatalog(gwi.sessionid);
+    gwi.csc->identity(CalpontSystemCatalog::FE);
+  }
+
+  CalpontSystemCatalog::ColType ct;
+  datatypes::SimpleColumnParam prm(gwi.sessionid, true);
+
+  try
+  {
+    // check foreign engine
+    if (field->table)
+      prm.columnStore(ha_mcs_common::isMCSTable(field->table));
+
+    if (prm.columnStore())
+    {
+      ct = gwi.csc->colType(gwi.csc->lookupOID(
+          make_tcn(field->table->s->db.str, field->table->s->table_name.str, field->field_name.str)));
+    }
+    else
+    {
+      ct = colType_MysqlToIDB(field);
+    }
+  }
+  catch (std::exception& ex)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = ex.what();
+    return NULL;
+  }
+
+  const datatypes::DatabaseQualifiedColumnName name(field->table->s->db.str, field->table->s->table_name.str,
+                                                    field->field_name.str);
+  const datatypes::TypeHandler* h = ct.typeHandler();
+  SimpleColumn* sc = h->newSimpleColumn(name, ct, prm);
+
+  sc->resultType(ct);
+  sc->charsetNumber(field->charset()->number);
+  string tbname(field->table->s->table_name.str);
+
+  // Note: differs with the original buildSimpleColumn
+  sc->tableAlias(field->table->alias.c_ptr(), lower_case_table_names);
+
+  sc->alias(field->field_name.str);
+  sc->isColumnStore(prm.columnStore());
+  sc->timeZone(gwi.timeZone);
+
+  sc->oid(field->field_index + 1);  // ExeMgr requires offset started from 1
+  // TODO add partitions support here
+
+  return sc;
+}
+
 ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& /*nonSupport*/)
 {
   ParseTree* pt = 0;
@@ -5215,7 +5304,6 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         {
           for (uint j = 0; j < table_ptr->table->s->keys; j++)
           {
-            // for (uint i = 0; i < table_ptr->table->s->key_info[j].usable_key_parts; i++)
             {
               Field* field = table_ptr->table->key_info[j].key_part[0].field;
               std::cout << "j index " << j << " i column " << 0 << " fieldnr "
@@ -5225,28 +5313,29 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
                 auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
                 if (histogram)
                 {
-                  std::cout << " has stats ";
-                  SchemaAndTableName tableName = {field->table->s->db.str,
-                    field->table->s->table_name.str};
-                  execplan::SimpleColumn simpleColumn = {field->table->s->db.str,
-                    field->table->s->table_name.str,
-                    field->field_name.str};
+                  std::cout << " has stats with " << histogram->buckets.size() << " buckets";
+                  SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
+                  auto* sc = buildSimpleColumnFromFieldForStatistics(field, gwi);
+                  std::cout << "sc with stats !!!!! " << sc->toString() << std::endl;
+                  // execplan::SimpleColumn simpleColumn = {
+                  //     field->table->s->db.str, field->table->s->table_name.str, field->field_name.str, false};
+
                   auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
                   if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
                   {
-                    gwi.tableStatisticsMap[tableName][field->field_name.str] = {simpleColumn, {*histogram}};
+                    gwi.tableStatisticsMap[tableName][field->field_name.str] = {*sc, {histogram}};
                   }
                   else
                   {
                     auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
                     if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
                     {
-                      tableStatisticsMapIt->second[field->field_name.str] = {simpleColumn, {*histogram}};
+                      tableStatisticsMapIt->second[field->field_name.str] = {*sc, {histogram}};
                     }
                     else
                     {
                       auto columnStatisticsVec = columnStatisticsMapIt->second.second;
-                      columnStatisticsVec.push_back(*histogram);
+                      columnStatisticsVec.push_back(histogram);
                     }
                   }
                 }

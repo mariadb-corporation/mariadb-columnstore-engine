@@ -64,7 +64,8 @@ bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep)
                      [](const auto& table) { return !table.isColumnstore(); });
 }
 
-bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
+bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep,
+                                              optimizer::RBOptimizerContext& ctx)
 {
   return std::any_of(
       csep.tableList().begin(), csep.tableList().end(),
@@ -100,12 +101,13 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   // There is a question with ownership of the const column
   // TODO here we lost upper bound value if predicate is not changed to weak lt
   execplan::SOP ltOp = (isLast) ? boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="))
-                               : boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
+                                : boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
   ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
   ltOp->resultType(ltOp->operationType());
 
   auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
-  // TODO new
+  // TODO new 
+  // TODO remove new and re-use tableKeyColumnLeftOp
   auto tableKeyColumnRightOp = new execplan::SimpleColumn(column);
   tableKeyColumnRightOp->resultType(column.resultType());
   // TODO hardcoded column type and value
@@ -173,62 +175,73 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
 }
 
 // TBD
-Histogram_json_hb& chooseStatisticsToUse(std::vector<Histogram_json_hb>& columnStatisticsVec)
+Histogram_json_hb* chooseStatisticsToUse(std::vector<Histogram_json_hb*>& columnStatisticsVec)
 {
   return columnStatisticsVec.front();
+}
+
+// Looking for a projected column that comes first in an available index and has EI statistics
+// INV nullptr signifies that no suitable column was found
+std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
+    execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx)
+{
+  cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
+
+  auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
+  if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end() ||
+      tableColumnsStatisticsIt->second.empty())
+  {
+    return std::nullopt;
+  }
+
+  // TODO take some column and some stats for it!!!
+  for (auto& [columnName, scAndStatisticsVec] : tableColumnsStatisticsIt->second)
+  {
+    auto& [sc, columnStatisticsVec] = scAndStatisticsVec;
+    auto* columnStatistics = chooseStatisticsToUse(columnStatisticsVec);
+    return {{sc, columnStatistics}};
+  }
+
+  return std::nullopt;
 }
 
 // Populates range bounds based on column statistics
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
-std::optional<FilterRangeBounds<T>> populateRangeBounds(execplan::SimpleColumn* keyColumn,
-                                                        optimizer::RBOptimizerContext& ctx)
+std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
 {
-  cal_impl_if::SchemaAndTableName schemaAndTableName = {keyColumn->schemaName(), keyColumn->tableName()};
-  auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
-  if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end())
-  {
-    return std::nullopt;
-  }
-
-  auto columnStatisticsIt = tableColumnsStatisticsIt->second.find(keyColumn->columnName());
-  if (columnStatisticsIt == tableColumnsStatisticsIt->second.end())
-  {
-    return std::nullopt;
-  }
-
-  auto& [simpleColumn, columnStatisticsVec] = columnStatisticsIt->second;
-  auto& columnStatistics = chooseStatisticsToUse(columnStatisticsVec);
+  FilterRangeBounds<T> bounds;
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
-  size_t numberOfUnionUnits = std::min(columnStatistics.get_json_histogram().size(), MaxParallelFactor);
-  size_t numberOfBucketsPerUnionUnit = columnStatistics.get_json_histogram().size() / numberOfUnionUnits;
+  std::cout << "populateRangeBounds() columnStatistics->buckets.size() " << columnStatistics->get_json_histogram().size()
+            << std::endl;
+  size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), MaxParallelFactor);
+  size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
 
   std::cout << "Number of union units: " << numberOfUnionUnits << std::endl;
   std::cout << "Number of buckets per union unit: " << numberOfBucketsPerUnionUnit << std::endl;
-
-  FilterRangeBounds<T> bounds;
 
   // Loop over buckets to produce filter ranges
   // NB Currently Histogram_json_hb has the last bucket that has end as its start
   for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
-    auto bucket = columnStatistics.get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
-    auto endBucket = columnStatistics.get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    auto bucket = columnStatistics->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = columnStatistics->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
     T currentLowerBound = *(uint32_t*)bucket->start_value.data();
     T currentUpperBound = *(uint32_t*)endBucket->start_value.data();
     bounds.push_back({currentLowerBound, currentUpperBound});
   }
-  for (auto& bucket : columnStatistics.get_json_histogram())
+  for (auto& bucket : columnStatistics->get_json_histogram())
   {
     T currentLowerBound = *(uint32_t*)bucket.start_value.data();
     std::cout << "Bucket: " << currentLowerBound << std::endl;
   }
-  // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits * numberOfBucketsPerUnionUnit;
-  // T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data();
-  // T currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
+  // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits *
+  // numberOfBucketsPerUnionUnit; T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data(); T
+  // currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
   // bounds.push_back({currentLowerBound, currentUpperBound});
+
 
   for (auto& bound : bounds)
   {
@@ -247,14 +260,19 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   // SC type controls an integral type used to produce suitable filters. The continuation of this function
   // should become a template function based on SC type.
-  execplan::SimpleColumn* keyColumn = findSuitableKeyColumn(csep, table, ctx);
-  if (!keyColumn)
+  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
+  if (!keyColumnAndStatistics)
   {
     return unionVec;
   }
 
+  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+
+  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
+  std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
+
   // TODO char and other numerical types support
-  auto boundsOpt = populateRangeBounds<uint64_t>(keyColumn, ctx);
+  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
   if (!boundsOpt.has_value())
   {
     return unionVec;
@@ -269,15 +287,24 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     {
       auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
       // Add BETWEEN based on key column range
-      clonedCSEP->filters(filtersWithNewRange(clonedCSEP, *keyColumn, bounds[i], false));
+      auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
+      clonedCSEP->filters(filter);
+      // To create CES filter we need to have a column in the column map
+      clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
       unionVec.push_back(clonedCSEP);
     }
   }
   // This last bound produces low <= col <= high
-  auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
-  clonedCSEP->filters(filtersWithNewRange(clonedCSEP, *keyColumn, bounds.back(), true));
-  unionVec.push_back(clonedCSEP);
-
+  // TODO add NULLs into filter of the last step
+  if (!bounds.empty())
+  {
+    auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
+    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
+    clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+    clonedCSEP->filters(filter);
+    unionVec.push_back(clonedCSEP);
+  }
+  
   return unionVec;
 }
 void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
