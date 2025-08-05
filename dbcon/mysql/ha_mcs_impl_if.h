@@ -116,7 +116,7 @@ typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, 
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 using ColumnName = std::string;
-using ColumnStatisticsMap = std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb>>>;
+using ColumnStatisticsMap = std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
 using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
 // This structure is used to store MDB AST -> CSEP translation context.

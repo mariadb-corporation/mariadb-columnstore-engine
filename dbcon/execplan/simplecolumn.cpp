@@ -207,6 +207,7 @@ SimpleColumn::SimpleColumn(const SimpleColumn& rhs, const uint32_t sessionID)
  , fTimeZone(rhs.timeZone())
  , fisColumnStore(rhs.isColumnStore())
 {
+  fResultType = rhs.resultType();
 }
 
 SimpleColumn::SimpleColumn(const ReturnedColumn& rhs, const uint32_t sessionID)
@@ -250,6 +251,7 @@ SimpleColumn& SimpleColumn::operator=(const SimpleColumn& rhs)
     fDistinct = rhs.distinct();
     fisColumnStore = rhs.isColumnStore();
     fPartitions = rhs.fPartitions;
+    fResultType = rhs.resultType();
   }
 
   return *this;
