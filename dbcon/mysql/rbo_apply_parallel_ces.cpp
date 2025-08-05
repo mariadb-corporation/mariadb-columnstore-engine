@@ -248,69 +248,102 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
   return bounds;
 }
 
+
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
-    execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
-    optimizer::RBOptimizerContext& ctx)
+  execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
+  optimizer::RBOptimizerContext& ctx)
 {
-  execplan::CalpontSelectExecutionPlan::SelectList unionVec;
+execplan::CalpontSelectExecutionPlan::SelectList unionVec;
 
-  // SC type controls an integral type used to produce suitable filters. The continuation of this function
-  // should become a template function based on SC type.
-  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
-  if (!keyColumnAndStatistics)
-  {
-    return unionVec;
-  }
-
-  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
-
-  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
-  std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
-
-  // TODO char and other numerical types support
-  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
-  if (!boundsOpt.has_value())
-  {
-    return unionVec;
-  }
-
-  auto& bounds = boundsOpt.value();
-
-  // These bounds produce low <= col < high
-  if (bounds.size() > 1)
-  {
-    for (size_t i = 0; i <= bounds.size() - 2; ++i)
-    {
-      auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
-      // Add BETWEEN based on key column range
-      auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
-      clonedCSEP->filters(filter);
-      // To create CES filter we need to have a column in the column map
-      clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
-      unionVec.push_back(clonedCSEP);
-    }
-  }
-  // This last bound produces low <= col <= high
-  // TODO add NULLs into filter of the last step
-  if (!bounds.empty())
-  {
-    auto clonedCSEP = csep.cloneForTableWORecursiveSelects(table);
-    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
-    clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
-    clonedCSEP->filters(filter);
-    unionVec.push_back(clonedCSEP);
-  }
-
+// SC type controls an integral type used to produce suitable filters. The continuation of this function
+// should become a template function based on SC type.
+auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
+if (!keyColumnAndStatistics)
+{
   return unionVec;
 }
-void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
+
+auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+
+std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
+std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
+
+// TODO char and other numerical types support
+auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
+if (!boundsOpt.has_value())
+{
+  return unionVec;
+}
+
+auto& bounds = boundsOpt.value();
+
+// These bounds produce low <= col < high
+if (bounds.size() > 1)
+{
+  for (size_t i = 0; i <= bounds.size() - 2; ++i)
+  {
+    auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
+    // Add BETWEEN based on key column range
+    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
+    clonedCSEP->filters(filter);
+    // To create CES filter we need to have a column in the column map
+    clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+    unionVec.push_back(clonedCSEP);
+  }
+}
+// This last bound produces low <= col <= high
+// TODO add NULLs into filter of the last step
+if (!bounds.empty())
+{
+  auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
+  auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
+  clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+  clonedCSEP->filters(filter);
+  unionVec.push_back(clonedCSEP);
+}
+
+return unionVec;
+}
+
+execplan::SCSEP createDerivedTableFromTable(
+    execplan::CalpontSelectExecutionPlan& csep,
+    const execplan::CalpontSystemCatalog::TableAliasName& table,
+    const std::string& tableAlias,
+    optimizer::RBOptimizerContext& ctx)
+{
+  // Don't copy filters for this
+  auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
+  // Remove the filters as they were pushed down to union units
+  // This is inappropriate for EXISTS filter and join conditions
+  // WIP replace with filters applied to filters, so that only relevant filters are left
+  // WIP Ugly hack to avoid leaks
+  auto* derivedCSEP = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedSCEP.get());
+  // TODO more rigorous error handling.
+  if (!derivedCSEP)
+  {
+    return execplan::SCSEP();
+  }
+  auto additionalUnionVec = makeUnionFromTable(*derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
+
+  // TODO add original alias to support multiple same name tables
+  derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
+  derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
+  derivedSCEP->derivedTbAlias(tableAlias);
+
+  derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
+                                 additionalUnionVec.end());
+
+  return derivedSCEP;
+}
+
+void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
   auto tables = csep.tableList();
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   // TODO support CSEPs with derived tables
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  TableAliasMap tableAliasMap;
+  optimizer::TableAliasMap tableAliasMap;
 
   for (auto& table : tables)
   {
@@ -322,37 +355,14 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
     // TODO add column statistics check to the corresponding match
     if (!table.isColumnstore() && anyColumnStatistics)
     {
-      // Don't copy filters for this
-      auto derivedSCEP = csep.cloneForTableWORecursiveSelects(table);
-      // Remove the filters as they were pushed down to union units
-      // This is inappropriate for EXISTS filter and join conditions
-      // WIP replace with filters applied to filters, so that only relevant filters are left
-      // WIP Ugly hack to avoid leaks
-      auto unusedFilters = derivedSCEP->filters();
-      delete unusedFilters;
-      derivedSCEP->filters(nullptr);
-      auto* derivedCSEP = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedSCEP.get());
-      if (!derivedCSEP)
-      {
-        continue;
-      }
-      auto additionalUnionVec = makeUnionFromTable(*derivedCSEP, table, ctx);
-
-      // need to add a level here
-      std::string tableAlias = RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
-                               std::to_string(ctx.uniqueId);
-      // TODO add original alias to support multiple same name tables
+      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
+      std::to_string(ctx.uniqueId);
       tableAliasMap.insert({table, {tableAlias, 0}});
-      derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
-      derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-      derivedSCEP->derivedTbAlias(tableAlias);
-
-      derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
-                                     additionalUnionVec.end());
-
-      newDerivedTableList.push_back(derivedSCEP);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
+
+      auto derivedSCEP = createDerivedTableFromTable(csep, table, tableAlias, ctx);
+      newDerivedTableList.push_back(std::move(derivedSCEP));
     }
     else
     {

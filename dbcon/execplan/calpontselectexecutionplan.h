@@ -164,7 +164,8 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    */
   execplan::SCSEP cloneWORecursiveSelects();
 
-  execplan::SCSEP cloneForTableWORecursiveSelects(const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias);
+  execplan::SCSEP cloneForTableWORecursiveSelectsGbObHaving(
+      const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias, const bool withFilters = true);
 
   /**
    * Access and mutator methods
