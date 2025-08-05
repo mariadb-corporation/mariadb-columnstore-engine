@@ -967,8 +967,9 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   return newPlan;
 }
 
-execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
-    const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias)
+// This clone must return CSEP w/o sub-selects, group by, order by, having limit.
+execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObHaving(
+    const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias, const bool withFilters)
 {
   execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
 
@@ -991,9 +992,6 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   newPlan->fSubType = fSubType;
   newPlan->fDerivedTbAlias = fDerivedTbAlias;
   newPlan->fDerivedTbView = fDerivedTbView;
-  newPlan->fLimitStart = fLimitStart;
-  newPlan->fLimitNum = fLimitNum;
-  newPlan->fHasOrderBy = fHasOrderBy;
   newPlan->fStringScanThreshold = fStringScanThreshold;
   newPlan->fQueryType = fQueryType;
   newPlan->fPriority = fPriority;
@@ -1037,34 +1035,13 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelects(
   // Deep copy of filters
   // WIP only filters that apply to the target table must be left intact
   // replace all irrelevant branches with true
-  if (fFilters)
+  if (fFilters && withFilters)
   {
     newPlan->filters(new ParseTree(*fFilters));
   }
 
   // Deep copy of filter token list
   newPlan->filterTokenList(fFilterTokenList);
-  newPlan->havingTokenList(fHavingTokenList);
-
-  // Deep copy of group by columns
-  GroupByColumnList newGroupByCols;
-  for (const auto& col : fGroupByCols)
-  {
-    newGroupByCols.push_back(SRCP(col->clone()));
-  }
-  newPlan->groupByCols(newGroupByCols);
-
-  // Deep copy of having clause
-  if (fHaving)
-    newPlan->having(new ParseTree(*fHaving));
-
-  // Deep copy of order by columns
-  OrderByColumnList newOrderByCols;
-  for (const auto& col : fOrderByCols)
-  {
-    newOrderByCols.push_back(SRCP(col->clone()));
-  }
-  newPlan->orderByCols(newOrderByCols);
 
   // Deep copy of column map
   ColumnMap newColumnMap;
