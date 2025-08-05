@@ -2673,8 +2673,7 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Field* field)
       ct.colWidth = 8;
       break;
 
-    case STRING_RESULT:
-      ct.colDataType = CalpontSystemCatalog::VARCHAR;
+    case STRING_RESULT: ct.colDataType = CalpontSystemCatalog::VARCHAR;
 
     default:
       IDEBUG(cerr << "colType_MysqlToIDB:: Unknown result type of MySQL " << item->result_type() << endl);
@@ -5205,6 +5204,64 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
     csep->umMemLimit(get_um_mem_limit(gwi.thd) * 1024ULL * 1024);
 }
 
+// Loop over available indexes to find and extract corresponding EI column statistics
+// for the first column of the index if any.
+// Statistics is stored in GWI context.
+// Mock for ES 10.6
+// TODO clean up extra logging when the feature is ready
+#if MYSQL_VERSION_ID >= 110401
+void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
+{
+  for (uint j = 0; j < table_ptr->table->s->keys; j++)
+  {
+    {
+      Field* field = table_ptr->table->key_info[j].key_part[0].field;
+      std::cout << "j index " << j << " i column " << 0 << " fieldnr "
+                << table_ptr->table->key_info[j].key_part[0].fieldnr << " " << field->field_name.str;
+      if (field->read_stats)
+      {
+        auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
+        if (histogram)
+        {
+          std::cout << " has stats with " << histogram->buckets.size() << " buckets";
+          SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
+          auto* sc = buildSimpleColumnFromFieldForStatistics(field, gwi);
+          std::cout << "sc with stats !!!!! " << sc->toString() << std::endl;
+
+          auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
+          if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
+          {
+            gwi.tableStatisticsMap[tableName][field->field_name.str] = {*sc, {histogram}};
+          }
+          else
+          {
+            auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
+            if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
+            {
+              tableStatisticsMapIt->second[field->field_name.str] = {*sc, {histogram}};
+            }
+            else
+            {
+              auto columnStatisticsVec = columnStatisticsMapIt->second.second;
+              columnStatisticsVec.push_back(histogram);
+            }
+          }
+        }
+        else
+        {
+          std::cout << " no stats ";
+        }
+      }
+      std::cout << std::endl;
+    }
+  }
+}
+#else
+void extractColumnStatistics(Item_field* /*ifp*/, gp_walk_info& /*gwi*/)
+{
+}
+#endif
+
 /*@brief  Process FROM part of the query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -5302,51 +5359,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         }
         else
         {
-          for (uint j = 0; j < table_ptr->table->s->keys; j++)
-          {
-            {
-              Field* field = table_ptr->table->key_info[j].key_part[0].field;
-              std::cout << "j index " << j << " i column " << 0 << " fieldnr "
-                        << table_ptr->table->key_info[j].key_part[0].fieldnr << " " << field->field_name.str;
-              if (field->read_stats)
-              {
-                auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
-                if (histogram)
-                {
-                  std::cout << " has stats with " << histogram->buckets.size() << " buckets";
-                  SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
-                  auto* sc = buildSimpleColumnFromFieldForStatistics(field, gwi);
-                  std::cout << "sc with stats !!!!! " << sc->toString() << std::endl;
-                  // execplan::SimpleColumn simpleColumn = {
-                  //     field->table->s->db.str, field->table->s->table_name.str, field->field_name.str, false};
-
-                  auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
-                  if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
-                  {
-                    gwi.tableStatisticsMap[tableName][field->field_name.str] = {*sc, {histogram}};
-                  }
-                  else
-                  {
-                    auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
-                    if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
-                    {
-                      tableStatisticsMapIt->second[field->field_name.str] = {*sc, {histogram}};
-                    }
-                    else
-                    {
-                      auto columnStatisticsVec = columnStatisticsMapIt->second.second;
-                      columnStatisticsVec.push_back(histogram);
-                    }
-                  }
-                }
-                else
-                {
-                  std::cout << " no stats ";
-                }
-              }
-              std::cout << std::endl;
-            }
-          }
+          // TODO move extractColumnStatistics up when statistics is supported in MCS
+          extractColumnStatistics(table_ptr, gwi);
         }
         string table_name = table_ptr->table_name.str;
 
@@ -6557,7 +6571,6 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        // extractColumnStatistics(ifp, gwi);
         // Handle * case
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
