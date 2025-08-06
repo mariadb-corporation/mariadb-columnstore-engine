@@ -22,10 +22,12 @@
  *
  ***********************************************************************/
 #include <ctime>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <set>
 #include <vector>
+#include <iomanip>
 #include <boost/scoped_ptr.hpp>
 
 #include "commandpackageprocessor.h"
@@ -474,6 +476,10 @@ DMLPackageProcessor::DMLResult CommandPackageProcessor::processPackageInternal(
     else if (stmt == "ANALYZEPARTITIONBLOAT")
     {
       analyzePartitionBloat(cpackage, result);
+    }
+    else if (stmt == "ANALYZETABLEBLOAT")
+    {
+      analyzeTableBloat(cpackage, result);
     }
     else if (!cpackage.get_Logging())
     {
@@ -1195,7 +1201,7 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
       return;
     }
 
-    // SELECT COUNT(aux) AS count_aux FROM schema.table WHERE idbPartition(aux) = partitionStr;
+    // SELECT COUNT(aux) AS count_aux, COUNT(CASE aux WHEN 1 THEN 1 END) AS count_aux_deleted FROM schema.table WHERE idbPartition(aux) = partitionStr;
     CalpontSelectExecutionPlan csep;
     CalpontSelectExecutionPlan::ReturnedColumnList returnedColumnList;
     CalpontSelectExecutionPlan::FilterTokenList filterTokenList;
@@ -1223,16 +1229,74 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
     SRCP auxSRCP(auxCol->clone());
     countAuxCol->aggParms().push_back(auxSRCP);
 
+    // Create the CASE aux WHEN 1 THEN 1 END expression
+    FunctionColumn* caseCol = new FunctionColumn();
+    caseCol->functionName("case_simple");  // Use case_simple for expression comparison
+    caseCol->sessionID(fSessionID);
+    caseCol->expressionId(2);
+    caseCol->alias("case_aux_deleted");
+    
+    // Set the result type for the CASE expression
+    CalpontSystemCatalog::ColType caseColType;
+    caseColType.colDataType = CalpontSystemCatalog::INT;
+    caseColType.colWidth = 4;
+    caseCol->resultType(caseColType);
+    
+    // Create the WHEN value: 1
+    ConstantColumn* whenValue = new ConstantColumn("1", ConstantColumn::NUM);
+    whenValue->sessionID(fSessionID);
+    
+    // Create the THEN result: 1
+    ConstantColumn* thenResult = new ConstantColumn("1", ConstantColumn::NUM);
+    thenResult->sessionID(fSessionID);
+    
+    // Build the function parameters for CASE
+    funcexp::FunctionParm funcParms;
+    SPTP sptp;
+    
+    // Add the CASE expression (aux column)
+    sptp.reset(new ParseTree(auxCol->clone()));
+    funcParms.push_back(sptp);
+    
+    // Add the WHEN value
+    sptp.reset(new ParseTree(whenValue));
+    funcParms.push_back(sptp);
+    
+    // Add the THEN result
+    sptp.reset(new ParseTree(thenResult));
+    funcParms.push_back(sptp);
+    
+    // Set the function parameters
+    caseCol->functionParms(funcParms);
+
+    // Create the COUNT(CASE aux WHEN 1 THEN 1 END) AS count_aux_deleted aggregate column
+    AggregateColumn* countCaseCol = new AggregateColumn(fSessionID);
+    countCaseCol->alias("count_aux_deleted");
+    countCaseCol->aggOp(AggregateColumn::COUNT);
+    countCaseCol->functionName("count");
+    countCaseCol->expressionId(3);
+    CalpontSystemCatalog::ColType countCaseColType;
+    countCaseColType.colDataType = CalpontSystemCatalog::INT;
+    countCaseColType.colWidth = 4;
+    countCaseCol->resultType(countCaseColType);
+
+    SRCP caseSRCP(caseCol->clone());
+    countCaseCol->aggParms().push_back(caseSRCP);
+
     // Add the base 'aux' column to ColumnMap (used for reference resolution)
-    // Note: The aggregate result "count_aux" does NOT go in ColumnMap
-    // Add "aux" twice since it's referenced in both COUNT(aux) and idbPartition(aux)
+    // Note: The aggregate results do NOT go in ColumnMap
+    // Add "aux" multiple times since it's referenced in COUNT(aux), CASE expression, and idbPartition(aux)
+    colMap.insert(CMVT_(tableName.schema + "." + tableName.table + "." + "aux", auxSRCP));
+    auxSRCP.reset(auxCol->clone());
     colMap.insert(CMVT_(tableName.schema + "." + tableName.table + "." + "aux", auxSRCP));
     auxSRCP.reset(auxCol->clone());
     colMap.insert(CMVT_(tableName.schema + "." + tableName.table + "." + "aux", auxSRCP));
 
-    // Add the COUNT column to ReturnedColumnList (what gets returned by SELECT)
+    // Add both COUNT columns to ReturnedColumnList (what gets returned by SELECT)
     SRCP countSRCP(countAuxCol->clone());
     returnedColumnList.push_back(countSRCP);
+    SRCP countCaseSRCP(countCaseCol->clone());
+    returnedColumnList.push_back(countCaseSRCP);
 
     csep.columnMapNonStatic(colMap);
     csep.returnedCols(returnedColumnList);
@@ -1242,23 +1306,23 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
 
     // Create a FunctionColumn for idbPartition(aux)
     // parms: psueducolumn dbroot, segmentdir, segment
-    SPTP sptp;
+    SPTP sptp2;
     FunctionColumn* fc = new FunctionColumn();
     fc->functionName("idbpartition");
     fc->sessionID(fSessionID);
     fc->expressionId(0);
     funcexp::FunctionParm parms;
     PseudoColumn* dbroot = new PseudoColumn(*auxCol, PSEUDO_DBROOT, fSessionID);
-    sptp.reset(new ParseTree(dbroot));
-    parms.push_back(sptp);
+    sptp2.reset(new ParseTree(dbroot));
+    parms.push_back(sptp2);
 
     PseudoColumn* pp = new PseudoColumn(*auxCol, PSEUDO_SEGMENTDIR, fSessionID);
-    sptp.reset(new ParseTree(pp));
-    parms.push_back(sptp);
+    sptp2.reset(new ParseTree(pp));
+    parms.push_back(sptp2);
 
     PseudoColumn* seg = new PseudoColumn(*auxCol, PSEUDO_SEGMENT, fSessionID);
-    sptp.reset(new ParseTree(seg));
-    parms.push_back(sptp);
+    sptp2.reset(new ParseTree(seg));
+    parms.push_back(sptp2);
 
     fc->functionParms(parms);
 
@@ -1295,26 +1359,23 @@ void CommandPackageProcessor::analyzePartitionBloat(const dmlpackage::CalpontDML
     csep.tableName(tableName.table, 0);
 
     // Send CSEP to ExeMgr
-    auto csepStr = csep.toString();
-    cout << "csep: " << csepStr << endl;
     CalpontSystemCatalog::NJLSysDataList sysDataList;
     systemCatalogPtr->getQueryData(csep, sysDataList);
 
-    cout << "Done getSysData" << endl;
-
-    cout << "result size: " << sysDataList.sysDataVec.size() << endl;
-
-    // parse the result
+    int64_t countAux = 0;
+    int64_t countAuxDeleted = 0;
+    
     for (auto it = sysDataList.begin(); it != sysDataList.end(); it++)
     {
-      cout << "result: " << (*it)->GetData(0) << endl;
+      if (it == sysDataList.begin()) {
+        countAux = (*it)->GetData(0);
+      } else {
+        countAuxDeleted = (*it)->GetData(0);
+      }
     }
 
-    // Return the result - use toString() to get the full plan representation
-    analysisResults << sysDataList.sysDataVec.front()->GetData(0);
-
+    analysisResults << std::fixed << std::setprecision(2) << (static_cast<double>(countAuxDeleted) / countAux) * 100 << "%";
     result.bloatAnalysis = analysisResults.str();
-    cout << "analysisResults: " << analysisResults.str() << endl;
   }
   catch (std::exception& ex)
   {
