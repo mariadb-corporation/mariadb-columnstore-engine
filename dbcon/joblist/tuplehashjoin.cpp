@@ -897,11 +897,6 @@ void TupleHashJoinStep::hjRunner()
   {
     largeBPS->useJoiners(tbpsJoiners);
 
-    if (!bloomFilters.empty()) 
-    {
-      largeBPS->setBloomFilters(std::move(bloomFilters));
-    }
-
     if (djs.size())
       largeBPS->setJoinedResultRG(largeRG + outputRG);
     else

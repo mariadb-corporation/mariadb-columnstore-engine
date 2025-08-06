@@ -389,13 +389,6 @@ class BatchPrimitiveProcessorJL
   friend class CommandJL;
   friend class ColumnCommandJL;
   friend class PassThruCommandJL;
-
-  // Blocked Bloom filter
-  public:
-  std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>> bloomFilters;
-  void setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters);
-  void serializeBloomFilters(messageqcpp::ByteStream& bs) const;
-
 };
 
 }  // namespace joblist

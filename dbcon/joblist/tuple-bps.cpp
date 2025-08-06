@@ -3407,9 +3407,4 @@ template bool TupleBPS::processSingleFilterString<int128_t>(int8_t BOP, int8_t c
 template bool TupleBPS::compareSingleValue<int64_t>(uint8_t COP, int64_t val1, int64_t val2) const;
 template bool TupleBPS::compareSingleValue<int128_t>(uint8_t COP, int128_t val1, int128_t val2) const;
 
-void TupleBPS::setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters)
-{
-  fBPP->setBloomFilters(std::move(bloomFilters));
-}
-
 }  // namespace joblist
