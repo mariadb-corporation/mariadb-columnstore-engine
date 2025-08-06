@@ -311,7 +311,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       ' --container-name ' + getContainerName("mtr") +
       ' --distro ' + platform +
       ' --suite-list $${MTR_SUITE_LIST}' +
-      ' --triggering-event ' + event,
+      ' --triggering-event ' + event
+      + if std.endsWith(result, 'ASan') then ' --run-as-extern' else '',
     ],
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
