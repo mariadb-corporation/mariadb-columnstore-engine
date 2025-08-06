@@ -1472,6 +1472,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   bool compareRange(uint8_t COP, int64_t min, int64_t max, int64_t val) const;
   bool hasPCFilter, hasPMFilter, hasRIDFilter, hasSegmentFilter, hasDBRootFilter, hasSegmentDirFilter,
       hasPartitionFilter, hasMaxFilter, hasMinFilter, hasLBIDFilter, hasExtentIDFilter;
+
+  // Blocked Bloom filter
+  public:
+  void setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters);
+
 };
 
 /** @brief class FilterStep

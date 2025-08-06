@@ -1778,4 +1778,9 @@ void BatchPrimitiveProcessorJL::deliverStringTableRowGroup(bool b)
     projectionRG.setUseStringTable(b);
 }
 
+void BatchPrimitiveProcessorJL::setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters)
+{
+  this->bloomFilters = std::move(bloomFilters);
+}
+
 }  // namespace joblist
