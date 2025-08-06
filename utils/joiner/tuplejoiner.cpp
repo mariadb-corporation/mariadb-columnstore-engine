@@ -182,7 +182,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
  , jobstepThreadPool(jsThreadPool)
  , _convertToDiskJoin(false)
  , resourceManager_(rm)
- , fBloomFilters(bloomFilters)
+ , bloomFilters(bloomFilters)
 {
   uint i;
 
@@ -318,8 +318,8 @@ void TupleJoiner::um_insertTypeless(uint threadID, uint rowCount, Row& r)
 
     uint32_t hash = bucketPicker((char*)td[i].data, td[i].len, bpSeed);
     
-    if (fBloomFilters->at(0).has_value()) {
-      fBloomFilters->at(0)->insert(hash);
+    if (bloomFilters->at(0).has_value()) {
+      bloomFilters->at(0)->insert(hash);
     }
     
     uint bucket = hash & bucketMask;

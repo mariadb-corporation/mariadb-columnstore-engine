@@ -570,7 +570,7 @@ class TupleJoiner
   void initRowsVector();
 
   // Blocked Bloom filter
-  std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>> fBloomFilters;
+  std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>> bloomFilters;
 
 };
 
