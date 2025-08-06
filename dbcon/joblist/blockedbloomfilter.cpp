@@ -3,7 +3,6 @@
 namespace joblist
 {
 
-
 void BlockedBloomFilter::insert(uint32_t hash)
 {
     uint32_t blockIdx = hash % BLOOM_FILTER_BLOCK_COUNT;
@@ -19,7 +18,6 @@ void BlockedBloomFilter::insert(uint32_t hash)
 
     bloomFilter[blockIdx].fetch_or(bitmask, std::memory_order_relaxed);
 }
-
 
 bool BlockedBloomFilter::probe(uint32_t hash) const
 {
@@ -53,7 +51,23 @@ inline uint32_t BlockedBloomFilter::mix32(uint32_t hash) const
     return hash;
 }
 
+void BlockedBloomFilter::serialize(messageqcpp::ByteStream& bs) const
+{
+    for (const auto& block : bloomFilter)
+    {
+        bs << block.load(std::memory_order_relaxed);
+    }
+}
 
+void BlockedBloomFilter::deserialize(messageqcpp::ByteStream& bs)
+{
+    for (auto& block : bloomFilter)
+    {
+        uint64_t val;
+        bs >> val;
+        block.store(val, std::memory_order_relaxed);
+    }
+}
 
 } // namespace joblist
 

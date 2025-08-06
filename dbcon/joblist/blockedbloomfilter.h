@@ -4,6 +4,12 @@
 #include <atomic>
 #include <cmath>
 
+// Debug
+#include <string>
+#include <bitset>
+
+#include "bytestream.h"
+
 namespace joblist
 {
 
@@ -14,6 +20,9 @@ class BlockedBloomFilter
 
         void insert(uint32_t hash);
         bool probe(uint32_t hash) const;
+
+        void serialize(messageqcpp::ByteStream& bs) const;
+        void deserialize(messageqcpp::ByteStream& bs);
 
     private:
         // Member variables
