@@ -217,8 +217,18 @@ execplan::ParseTree* newAndNode()
   return new execplan::ParseTree(op);
 }
 
+template <typename T>
+struct is_set : std::false_type
+{
+};
+
+template <typename T, typename Compare, typename Alloc>
+struct is_set<std::set<T, Compare, Alloc>> : std::true_type
+{
+};
+
 template <typename Common>
-execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& common)
+execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, Common& common)
 {
   if (common.empty())
     return tree;
@@ -230,7 +240,15 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& commo
   {
     execplan::ParseTree* andCondition = *treenode;
 
-    ++treenode;
+    // Increment or erase based on container type
+    if constexpr (is_set<Common>::value)
+    {
+      treenode = common.erase(treenode);
+    }
+    else
+    {
+      ++treenode;
+    }
     current->right(andCondition);
 
     if ((treenode != common.end() && std::next(treenode) != common.end()) ||
