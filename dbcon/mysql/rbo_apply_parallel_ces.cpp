@@ -345,6 +345,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
   optimizer::TableAliasMap tableAliasMap;
   bool ruleHasBeenApplied = false;
+  optimizer::TableAliasToNewAliasAndSCPositionsMap tableAliasToSCPositionsMap;
 
   for (auto& table : tables)
   {
@@ -359,6 +360,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
       std::to_string(ctx.uniqueId);
       tableAliasMap.insert({table, {tableAlias, 0}});
+      tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
 
@@ -386,6 +388,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         std::cout << "RC table schema " << sameTableAliasOpt->schema << " table " << sameTableAliasOpt->table
                   << " alias " << sameTableAliasOpt->alias << std::endl;
         auto tableAliasIt = tableAliasMap.find(*sameTableAliasOpt);
+        auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sameTableAliasOpt);
         if (tableAliasIt != tableAliasMap.end())
         {
           std::cout << "Replacing RC with new SC" << std::endl;
@@ -395,8 +398,30 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           newSC->tableName("");
           newSC->schemaName("");
           newSC->tableAlias(newTableAlias);
-          newSC->colPosition(colPosition++);
           newSC->alias(rc->alias());
+
+          auto* sc = dynamic_cast<execplan::SimpleColumn*>(rc.get());
+          if (sc)
+          {
+            auto& [unused, SCAliasToPosCounterMap, currentColPosition] = tableAliasToSCPositionsIt->second;
+            auto it = SCAliasToPosCounterMap.find(sc->columnName());
+            if (it == SCAliasToPosCounterMap.end())
+            {
+              SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
+              std::cout << " first case new column in the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+            }
+            else
+            {
+              std::cout << " first case reusing column from the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+            }
+            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition);
+            newSC->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
+          }
+          else 
+          {
+            newSC->colPosition(colPosition++);
+          }
+          
           newReturnedColumns.push_back(newSC);
         }
         // RC doesn't belong to any of the new derived tables
@@ -413,8 +438,9 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         for (auto* sc : rc->simpleColumnList())
         {
           // TODO add method to SC to get table alias
-          // auto scTableAliasOpt = sc->singleTable();
           auto tableAliasIt = tableAliasMap.find(*sc->singleTable());
+          auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
+
           // Need a method to replace original SCs in the SClist
           if (tableAliasIt != tableAliasMap.end())
           {
@@ -422,7 +448,21 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             sc->tableName("");
             sc->schemaName("");
             sc->tableAlias(newTableAlias);
-            sc->colPosition(colPosition++);
+
+            auto& [unused, SCAliasToPosCounterMap, currentColPosition] = tableAliasToSCPositionsIt->second;
+            auto it = SCAliasToPosCounterMap.find(sc->columnName());
+            if (it == SCAliasToPosCounterMap.end())
+            {
+              SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
+              std::cout << " 2nd case new column in the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+            }
+            else
+            {
+              std::cout << " 2nd case reusing column from the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+            }
+            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition);
+            sc->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
+            // sc->colPosition(colPosition++);
           }
           // do nothing with this SC
         }
@@ -433,32 +473,66 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // But this is inappropriate for some EXISTS filter and join conditions
 
     // WIP hardcoded query with lhs,rhs being simple columns
-    if (csep.filters() && csep.filters()->data())
+    auto filters = csep.filters();
+
+    if (filters)
     {
-      auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
-      if (left)
+      std::vector<execplan::SimpleColumn*> simpleColumns;
+      filters->walk(execplan::getSimpleCols, &simpleColumns);
+      for (auto* sc : simpleColumns)
       {
-        auto* lhs = left->lhs()->clone();
-        if (lhs)
+        std::cout << " filters SC " << sc->toString() << std::endl;
+        auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
+        if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
         {
-          auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
-          if (lhsSC)
+          auto& [newTableAlias, SCAliasToPosCounterMap, currentColPosition] = tableAliasToSCPositionsIt->second;
+          std::cout << " filters map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+          auto it = SCAliasToPosCounterMap.find(sc->columnName());
+          if (it == SCAliasToPosCounterMap.end())
           {
-            auto newTableAlias =
-                tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
-            // WIP Leak loosing previous lhs
-            if (newTableAlias != tableAliasMap.end())
-            {
-              lhsSC->tableName("");
-              lhsSC->schemaName("");
-              lhsSC->tableAlias(newTableAlias->second.first);
-              lhsSC->colPosition(0);
-              left->lhs(lhs);
-            }
+            SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
           }
+          else
+          {
+            // noop
+          }
+          sc->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
+
+          sc->tableName("");
+          sc->schemaName("");
+          sc->tableAlias(newTableAlias);
         }
       }
     }
+
+    // if (csep.filters() && csep.filters()->data())
+    // {
+    //   auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
+    //   if (left)
+    //   {
+    //     auto* lhs = left->lhs()->clone();
+    //     if (lhs)
+    //     {
+    //       auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
+    //       if (lhsSC)
+    //       {
+    //         auto newTableAlias =
+    //             tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
+    //         // WIP Leak loosing previous lhs
+    //         if (newTableAlias != tableAliasMap.end())
+    //         {
+    //           lhsSC->tableName("");
+    //           lhsSC->schemaName("");
+    //           lhsSC->tableAlias(newTableAlias->second.first);
+    //           lhsSC->colPosition(0);
+    //           left->lhs(lhs);
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+
+
 
     csep.derivedTableList(newDerivedTableList);
     // Replace table list with new table list populated with union units
