@@ -1348,7 +1348,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
   // Save the item list
   List<Item> items;
-  SELECT_LEX select_lex;
 
   if (ha_mcs_common::isUpdateStatement(thd->lex->sql_command))
   {
@@ -1356,7 +1355,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     thd->lex->first_select_lex()->item_list = thd->lex->value_list;
   }
 
-  select_lex = *lex->first_select_lex();
+  SELECT_LEX* select_lex = lex->first_select_lex();
 
   //@Bug 2808 Error out on order by or limit clause
   //@bug5096. support dml limit.
@@ -1412,7 +1411,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     gwi.clauseType = WHERE;
 
-    if (getSelectPlan(gwi, select_lex, updateCP, false, false, false, condStack) !=
+    if (getSelectPlan(gwi, *select_lex, updateCP, false, false, false, condStack) !=
         0)  //@Bug 3030 Modify the error message for unsupported functions
     {
       if (gwi.cs_vtable_is_update_with_derive)
