@@ -57,6 +57,10 @@ struct TableAliasLessThan
 using NewTableAliasAndColumnPosCounter = std::pair<std::string, size_t>;
 using TableAliasMap = std::map<execplan::CalpontSystemCatalog::TableAliasName,
                                NewTableAliasAndColumnPosCounter, TableAliasLessThan>;
+using SCAliasToPosCounterMap = std::map<std::string, size_t>;
+using TableAliasToNewAliasAndSCPositionsMap =
+    std::map<execplan::CalpontSystemCatalog::TableAliasName,
+             std::tuple<std::string, SCAliasToPosCounterMap, size_t>, TableAliasLessThan>;
 
 bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
 void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);

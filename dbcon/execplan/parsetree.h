@@ -612,7 +612,6 @@ inline ParseTree& ParseTree::operator=(const ParseTree& rhs)
 {
   if (this != &rhs)
   {
-    // copyTree(*this, rhs);
     copyTree(rhs);
   }
 

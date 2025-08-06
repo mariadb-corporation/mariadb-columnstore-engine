@@ -7595,10 +7595,19 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
 
   // Derived table projection and filter optimization.
   derivedTableOptimization(&gwi, csep);
+  if (csep->traceOn())
+  {
+    cerr << "---------------- cs_get_select_plan derived table optimization EXECUTION PLAN ----------------" << endl;
+    cerr << *csep << endl;
+    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
+  }
+
 
   if (get_unstable_optimizer(thd))
   {
     optimizer::RBOptimizerContext ctx(gwi);
+    // TODO RBO can crash or fail leaving CSEP in an invalid state, so there must be a valid CSEP copy
+    // TBD There is a tradeoff b/w copy per rule and copy per optimizer run.
     bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx);
     if (csep->traceOn() && csepWasOptimized)
     {
