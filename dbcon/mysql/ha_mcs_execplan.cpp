@@ -5205,9 +5205,10 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
 }
 
 // Loop over indexes available for a table to find and extract corresponding Engine Independent column
-// statistics for the first column of the index if any. Statistics are stored in a GWI context. Mock for ES 10.6
+// statistics for the first column of the index if any. Statistics are stored in a GWI context. Mock for
+// ES 10.6
 // TODO clean up extra logging when the feature is ready
-#if MYSQL_VERSION_ID >= 110401
+#if MYSQL_VERSION_ID >= 110406
 void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
 {
   for (uint j = 0; j < table_ptr->table->s->keys; j++)
@@ -5223,7 +5224,8 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
         {
           std::cout << " has stats with " << histogram->buckets.size() << " buckets";
           SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
-          auto* sc = buildSimpleColumnFromFieldForStatistics(field, gwi);
+          auto sc =
+              std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
           std::cout << "sc with stats !!!!! " << sc->toString() << std::endl;
 
           auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
