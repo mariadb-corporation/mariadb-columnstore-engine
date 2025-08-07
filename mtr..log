@@ -1,0 +1,10 @@
+Logging: ./mtr  --force --extern=socket=/run/mysqld/mysqld.sock --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/
+VS config: 
+vardir: /usr/share/mysql/mysql-test/var
+Checking supported features...
+MariaDB Version 11.4.6
+ - skipping SSL, mysqld not compiled with SSL
+ - binaries are debug compiled
+Using suites: columnstore/
+Collecting tests...
+No tests to run...

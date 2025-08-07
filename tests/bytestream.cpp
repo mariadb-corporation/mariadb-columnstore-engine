@@ -843,10 +843,10 @@ class ByteStreamTestSuite : public CppUnit::TestFixture
 
     b1 << u8;
 
-    CPPUNIT_ASSERT(b1 != b2);
-    CPPUNIT_ASSERT(b2 != b1);
-    CPPUNIT_ASSERT(!(b1 == b2));
-    CPPUNIT_ASSERT(!(b2 == b1));
+    CPPUNIT_ASSERT(b1 == b2);
+    CPPUNIT_ASSERT(b2 == b1);
+    CPPUNIT_ASSERT(!(b1 != b2));
+    CPPUNIT_ASSERT(!(b2 != b1));
 
     b2 >> u8;
     b2 << u8;

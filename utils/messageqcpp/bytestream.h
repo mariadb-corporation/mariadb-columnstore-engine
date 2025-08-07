@@ -186,9 +186,8 @@ class ByteStream : public Serializeable
   ByteStream& operator<<(const datatypes::SystemCatalog::ColDataType& c)
   {
     *this << (uint16_t)c.kind();
-    *this << (uint8_t)(bool)c.values();
 
-    if (c.values()) {
+    if (c.kind()==datatypes::SystemCatalog::ENUM || c.kind()==datatypes::SystemCatalog::SET) {
       const std::vector<std::string> &vals = *(c.values());
 
       *this << (uint16_t) vals.size();
@@ -286,13 +285,12 @@ class ByteStream : public Serializeable
 
   ByteStream& operator>>(datatypes::SystemCatalog::ColDataType &c)
   {
-    uint8_t kind;
-    uint8_t nonempty;
+    uint16_t kind;
     std::shared_ptr<std::vector<std::string>> values;
 
-    *this >> kind >> nonempty;
+    *this >> kind;
 
-    if (nonempty) {
+    if (kind==datatypes::SystemCatalog::ENUM || kind==datatypes::SystemCatalog::SET) {
       values = std::shared_ptr<std::vector<std::string>>(new std::vector<std::string>);
       std::vector<std::string> &vals = *values;
       uint16_t size;
