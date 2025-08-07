@@ -945,6 +945,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   bool fHasOrderBy = false;
 
   // for Select clause subquery
+  // Populated from derived found in projection list.
   SelectList fSelectSubList;
 
   // @bug3321, for string scan blocks
@@ -961,6 +962,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   uint32_t fOrderByThreads = 1;
 
   // Derived table involved in the query. For derived table optimization
+  // Populated from derived found in filters.
   std::vector<SCSEP> fSubSelectList;
 
   boost::uuids::uuid fUuid{};

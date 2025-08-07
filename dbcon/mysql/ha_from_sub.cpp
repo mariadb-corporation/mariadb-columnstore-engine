@@ -291,7 +291,7 @@ void derivedTableOptimization(gp_walk_info* gwip, SCSEP& csep)
   for (mapIt = derivedTbFilterMap.begin(); mapIt != derivedTbFilterMap.end(); ++mapIt)
     delete (*mapIt).second;
 
-  // recursively process the nested derived table
+  // recursively process the nested derived table found in filters
   for (uint i = 0; i < csep->subSelectList().size(); i++)
   {
     SCSEP subselect(boost::dynamic_pointer_cast<CalpontSelectExecutionPlan>(csep->subSelectList()[i]));
