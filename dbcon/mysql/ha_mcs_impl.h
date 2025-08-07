@@ -78,4 +78,6 @@ extern std::string ha_mcs_impl_cleartablelock(cal_impl_if::cal_connection_info& 
 extern std::string ha_mcs_impl_analyze_partition_bloat(cal_impl_if::cal_connection_info& ci,
                                                         execplan::CalpontSystemCatalog::TableName& tablename,
                                                         const std::string& partition);
+extern std::string ha_mcs_impl_analyze_table_bloat(cal_impl_if::cal_connection_info& ci,
+                                                    execplan::CalpontSystemCatalog::TableName& tablename);
 #endif
