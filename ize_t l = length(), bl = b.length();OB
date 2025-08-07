@@ -1,0 +1,66 @@
+[1mdiff --git a/tests/bytestream.cpp b/tests/bytestream.cpp[m
+[1mindex 481cea8d8..3450059d8 100644[m
+[1m--- a/tests/bytestream.cpp[m
+[1m+++ b/tests/bytestream.cpp[m
+[36m@@ -843,10 +843,10 @@[m [mclass ByteStreamTestSuite : public CppUnit::TestFixture[m
+ [m
+     b1 << u8;[m
+ [m
+[31m-    CPPUNIT_ASSERT(b1 != b2);[m
+[31m-    CPPUNIT_ASSERT(b2 != b1);[m
+[31m-    CPPUNIT_ASSERT(!(b1 == b2));[m
+[31m-    CPPUNIT_ASSERT(!(b2 == b1));[m
+[32m+[m[32m    CPPUNIT_ASSERT(b1 == b2);[m
+[32m+[m[32m    CPPUNIT_ASSERT(b2 == b1);[m
+[32m+[m[32m    CPPUNIT_ASSERT(!(b1 != b2));[m
+[32m+[m[32m    CPPUNIT_ASSERT(!(b2 != b1));[m
+ [m
+     b2 >> u8;[m
+     b2 << u8;[m
+[1mdiff --git a/utils/messageqcpp/bytestream.cpp b/utils/messageqcpp/bytestream.cpp[m
+[1mindex 37243c567..303654533 100644[m
+[1m--- a/utils/messageqcpp/bytestream.cpp[m
+[1m+++ b/utils/messageqcpp/bytestream.cpp[m
+[36m@@ -599,7 +599,9 @@[m [mifstream& operator>>(ifstream& ifs, ByteStream& bs)[m
+ [m
+ bool ByteStream::operator==(const ByteStream& b) const[m
+ {[m
+[31m-  if (b.length() != length())[m
+[32m+[m[32m  size_t l = length(), bl = b.length();[m
+[32m+[m
+[32m+[m[32m  if (bl != l)[m
+     return false;[m
+ [m
+   if (memcmp(fCurOutPtr, b.fCurOutPtr, length()) != 0)[m
+[1mdiff --git a/utils/messageqcpp/bytestream.h b/utils/messageqcpp/bytestream.h[m
+[1mindex 606fefe2a..5a5e4fe51 100644[m
+[1m--- a/utils/messageqcpp/bytestream.h[m
+[1m+++ b/utils/messageqcpp/bytestream.h[m
+[36m@@ -186,9 +186,8 @@[m [mclass ByteStream : public Serializeable[m
+   ByteStream& operator<<(const datatypes::SystemCatalog::ColDataType& c)[m
+   {[m
+     *this << (uint16_t)c.kind();[m
+[31m-    *this << (uint8_t)(bool)c.values();[m
+ [m
+[31m-    if (c.values()) {[m
+[32m+[m[32m    if (c.kind()==datatypes::SystemCatalog::ENUM || c.kind()==datatypes::SystemCatalog::SET) {[m
+       const std::vector<std::string> &vals = *(c.values());[m
+ [m
+       *this << (uint16_t) vals.size();[m
+[36m@@ -286,13 +285,12 @@[m [mclass ByteStream : public Serializeable[m
+ [m
+   ByteStream& operator>>(datatypes::SystemCatalog::ColDataType &c)[m
+   {[m
+[31m-    uint8_t kind;[m
+[31m-    uint8_t nonempty;[m
+[32m+[m[32m    uint16_t kind;[m
+     std::shared_ptr<std::vector<std::string>> values;[m
+ [m
+[31m-    *this >> kind >> nonempty;[m
+[32m+[m[32m    *this >> kind;[m
+ [m
+[31m-    if (nonempty) {[m
+[32m+[m[32m    if (kind==datatypes::SystemCatalog::ENUM || kind==datatypes::SystemCatalog::SET) {[m
+       values = std::shared_ptr<std::vector<std::string>>(new std::vector<std::string>);[m
+       std::vector<std::string> &vals = *values;[m
+       uint16_t size;[m
