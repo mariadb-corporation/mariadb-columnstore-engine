@@ -54,6 +54,7 @@ class CommandPackageProcessor : public DMLPackageProcessor
   void clearTableLock(uint64_t uniqueId, const dmlpackage::CalpontDMLPackage& cpackage, DMLResult& result);
   void establishTableLockToClear(uint64_t tableLockID, BRM::TableLockInfo& lockInfo);
   void analyzePartitionBloat(const dmlpackage::CalpontDMLPackage& cpackage, DMLPackageProcessor::DMLResult& result);
+  void analyzeTableBloat(const dmlpackage::CalpontDMLPackage& cpackage, DMLPackageProcessor::DMLResult& result);
   DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) override;
 
   // Tracks active cleartablelock commands by storing set of table lock IDs
