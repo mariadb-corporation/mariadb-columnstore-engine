@@ -13,6 +13,8 @@ trigger-dynamic:
   stage: build
   needs:
     - jsonnet-build
+  variables:
+    TRIGGER_SOURCE: $CI_PIPELINE_SOURCE
   trigger:
     include:
       - artifact: generated-config.yml

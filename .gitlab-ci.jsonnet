@@ -1,5 +1,5 @@
-local events = ["pull_request", "cron"];
-local current_branch = "stable-23.10";
+local events = ["merge_request", "cron"];
+local current_branch = "MCOL-6111-gitlab-poc";
 local servers = { [current_branch]: ["10.6-enterprise"] };
 local platforms = {
   [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"]
@@ -53,9 +53,9 @@ local upgrade_test_lists = {
 };
 
 local make_clickable_link(link) = "echo -e '\\e]8;;" + link + "\\e\\\\" + link + "\\e]8;;\\e\\\\'";
-local echo_running_on = ["echo running on ${CI_RUNNER_ID}", make_clickable_link("https://gitlab.com/")];
+local echo_running_on = ["echo running on ${CI_RUNNER_ID}", make_clickable_link("${CI_SERVER_URL}/${CI_PROJECT_PATH}/-/runners/${CI_RUNNER_ID}")];
 
-local jobName(step, params) = step + "_" + std.join("_", [params.branch, params.platform, params.event, params.arch, params.server, params.customParams, params.customEnv]);
+local jobName(step, params) = step + "_" + std.join("_", [x for x in [(if params.branch == "**" then "any" else params.branch), std.strReplace(std.strReplace(params.platform, ":", ""), "/", "-"), params.event, params.arch, std.strReplace(params.server, ".", "_"), params.customParams, params.customEnv] if x != ""]);
 
 local generateJob(stepName, image, script, dependsOn, params, variables={}, artifacts={ paths: ["./mdb"] }, services=[]) = {
   [jobName(stepName, params)]: {
@@ -68,11 +68,13 @@ local generateJob(stepName, image, script, dependsOn, params, variables={}, arti
     needs: [jobName(dep, params) for dep in dependsOn],
     rules: [
       {
-        ["if"]: local source = if params.event == "pull_request" then "merge_request_event" else "schedule";
-            local condition = if params.branch == "**"
-              then '$CI_PIPELINE_SOURCE == "' + source + '"'
-              else '$CI_COMMIT_BRANCH == "' + params.branch + '" && $CI_PIPELINE_SOURCE == "' + source + '"';
-            condition,
+        ["if"]: local source = if params.event == "merge_request" then "merge_request_event" else if params.event == "cron" then "schedule" else "push";
+                local branch_check = if source == "merge_request_event" then '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME' else '$CI_COMMIT_BRANCH';
+                local effective_source_var = '$TRIGGER_SOURCE';
+                local condition = if params.branch == "**"
+                  then effective_source_var + ' == "' + source + '"'
+                  else branch_check + ' == "' + params.branch + '" && ' + effective_source_var + ' == "' + source + '"';
+                condition,
         ["when"]: "always"
       }
     ],
@@ -91,14 +93,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local result = platformKey +
     (if customBuildEnvCommandsMapKey != "" then "_" + customBuildEnvCommandsMapKey else "") +
     (if customBootstrapParamsKey != "" then "_" + customBootstrapParamsKey else ""),
-  local packages_url = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_ID}/" + server,
-  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${CI_PIPELINE_ID}/" + server + "/" + arch + "/" + result + "/",
-  local repo_pkg_url_no_res = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_ID}/" + server + "/" + arch + "/",
-  local container_tags = if event == "cron" then [brancht + std.strReplace(event, "_", "-") + "${CI_PIPELINE_ID}", brancht] else [brancht + std.strReplace(event, "_", "-") + "${CI_PIPELINE_ID}"],
-  local container_version = branchp + event + "/${CI_PIPELINE_ID}/" + server + "/" + arch,
+  local packages_url = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_IID}/" + server,
+  local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${CI_PIPELINE_IID}/" + server + "/" + arch + "/" + result + "/",
+  local repo_pkg_url_no_res = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_IID}/" + server + "/" + arch + "/",
+  local container_tags = if event == "cron" then [brancht + std.strReplace(event, "_", "-") + "${CI_PIPELINE_IID}", brancht] else [brancht + std.strReplace(event, "_", "-") + "${CI_PIPELINE_IID}"],
+  local container_version = branchp + event + "/${CI_PIPELINE_IID}/" + server + "/" + arch,
   local server_remote = if std.endsWith(server, "enterprise") then "https://github.com/mariadb-corporation/MariaDBEnterprise" else "https://github.com/MariaDB/server",
-
-  local publish(step_prefix="pkg", eventp=event + "/${CI_PIPELINE_ID}") = generateJob(
+  local publish(step_prefix="pkg", eventp=event + "/${CI_PIPELINE_IID}") = generateJob(
     "publish " + step_prefix,
     "amazon/aws-cli:2.22.30",
     [
@@ -122,13 +123,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       AWS_DEFAULT_REGION: "us-east-1"
     }
   ),
-
   local regression_tests = if event == "cron" then full_regression_tests else ["test000.sh", "test001.sh"],
-
   local mdb_server_versions = upgrade_test_lists[platformKey][arch],
   local indexes(arr) = std.range(0, std.length(arr) - 1),
   local execInnerDocker(command, containerName, flags="") = "docker exec " + flags + " -t " + containerName + " " + command,
-  local getContainerName(stepname) = stepname + "${CI_PIPELINE_ID}",
+  local getContainerName(stepname) = stepname + "${CI_PIPELINE_IID}",
   local prepareTestContainer(containerName, result, do_setup) =
     'sh -c "apk add bash && ' + get_build_command("prepare_test_container.sh") +
     " --container-name " + containerName +
@@ -136,13 +135,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --result-path " + result +
     " --packages-url " + packages_url +
     " --do-setup " + std.toString(do_setup) +
-    (if result == "ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") + '"',
+    (if result == "ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +
+    '"',
   local reportTestStage(containerName, result, stage) =
     'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
     ' --container-name ' + containerName +
     ' --result-path ' + result +
     ' --stage ' + stage + '"',
-
   jobs:
     generateJob("submodules", "alpine/git:2.49.0", [
       "git submodule update --init --recursive",
@@ -190,11 +189,11 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "cd ./mdb/" + builddir,
       'echo "engine: $CI_COMMIT_SHA" > buildinfo.txt',
       'echo "server: $(git rev-parse HEAD)" >> buildinfo.txt',
-      'echo "buildNo: $CI_PIPELINE_ID" >> buildinfo.txt',
+      'echo "buildNo: $CI_PIPELINE_IID" >> buildinfo.txt',
       'echo "serverBranch: $SERVER_REF" >> buildinfo.txt',
       'echo "serverRepo: $SERVER_REMOTE" >> buildinfo.txt',
       'echo "engineBranch: $CI_COMMIT_REF_NAME" >> buildinfo.txt',
-      'echo "engineRepo: https://gitlab.com/$CI_PROJECT_PATH" >> buildinfo.txt',
+      'echo "engineRepo: ${CI_SERVER_URL}/${CI_PROJECT_PATH}" >> buildinfo.txt',
       "mv buildinfo.txt ./%s/" % result,
       "yes | cp -vr ./%s/. $CI_PROJECT_DIR/%s/" % [result, result],
       "ls -l $CI_PROJECT_DIR/" + result,
@@ -225,7 +224,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       then generateJob("dockerfile", "alpine/git:2.49.0", [
           'echo "$DOCKER_REF"',
           'echo "$CI_COMMIT_REF_NAME"',
-          'export DOCKER_REF=${DOCKER_REF:-$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/$CI_COMMIT_REF_NAME" | grep -E -o "[^/]+$")}',
+          'export DOCKER_REF=${DOCKER_REF:-$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_REF_NAME}" | grep -E -o "[^/]+$")}',
           'echo "$DOCKER_REF"',
           "export DOCKER_REF=${DOCKER_REF:-$DOCKER_REF_AUX}",
           'echo "$DOCKER_REF"',
@@ -237,9 +236,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
           "docker build -t mariadb/enterprise-columnstore-dev:" + container_tags[0] + " " +
           "--build-arg VERSION=" + container_version + " " +
           "--build-arg MCS_REPO=columnstore " +
-          "--build-arg MCS_BASEURL=https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_ID}/" + server + "/" + arch + "/" + result + "/ " +
+          "--build-arg MCS_BASEURL=https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_IID}/" + server + "/" + arch + "/" + result + "/ " +
           "--build-arg CMAPI_REPO=cmapi " +
-          "--build-arg CMAPI_BASEURL=https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_ID}/" + server + "/" + arch + "/" + result + "/ " +
+          "--build-arg CMAPI_BASEURL=https://cspkg.s3.amazonaws.com/" + branchp + event + "/${CI_PIPELINE_IID}/" + server + "/" + arch + "/" + result + "/ " +
           "--build-arg DEV=true " +
           "-f docker/Dockerfile docker",
           "docker push mariadb/enterprise-columnstore-dev:" + container_tags[0]
@@ -268,14 +267,14 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ) +
     std.foldl(function(acc, i) acc + generateJob(regression_tests[i], "docker:git", [
         prepareTestContainer(getContainerName("regression"), result, true),
-        'export REGRESSION_REF=${REGRESSION_REF:-$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$CI_COMMIT_REF_NAME" | grep -E -o "[^/]+$")}',
+        'export REGRESSION_REF=${REGRESSION_REF:-$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_REF_NAME}" | grep -E -o "[^/]+$")}',
         "export REGRESSION_REF=${REGRESSION_REF:-$REGRESSION_REF_AUX}",
         'echo "$REGRESSION_REF"',
         "apk add bash && " + get_build_command("run_regression.sh") +
         " --container-name " + getContainerName("regression") + " --test-name " + regression_tests[i] +
         " --distro " + platform + " --regression-branch $REGRESSION_REF --regression-timeout ${REGRESSION_TIMEOUT}"
       ], if i == 0 then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]], params, {
-        REGRESSION_BRANCH_REF: "${CI_COMMIT_REF_NAME}",
+        REGRESSION_BRANCH_REF: "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_REF_NAME}",
         REGRESSION_REF_AUX: branch_ref,
         REGRESSION_TIMEOUT: "$REGRESSION_TIMEOUT"
       }, { paths: ["./mdb"] }, ["docker:dind"]), indexes(regression_tests), {}) +
@@ -334,36 +333,58 @@ local AllPipelines = [
 ];
 
 local FinalPipeline(branch, event) = {
-  [jobName("notify", { branch: branch, platform: "", event: event, arch: "", server: "", customParams: "", customEnv: "", ignoreFailureStepList: [] })]: {
-    stage: "notify",
+  local base_script(status) = [
+    "duration=$(($(date +%s) - $(date -d \"$CI_PIPELINE_CREATED_AT\" +%s)))",
+    'mr_info=""',
+    'if [ "${TRIGGER_SOURCE:-$CI_PIPELINE_SOURCE}" = "merge_request_event" ]; then mr_info="<${CI_PROJECT_URL}/-/merge_requests/${CI_MERGE_REQUEST_IID}|#${CI_MERGE_REQUEST_IID}>"; fi',
+    "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"*" +
+    event + " build <${CI_PIPELINE_URL}|${CI_PIPELINE_IID}> " + status + "*.\\n\\n*Branch*: ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_REF_NAME} ${mr_info}\\n*Commit*: <$CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA|${CI_COMMIT_SHORT_SHA}> ${CI_COMMIT_TITLE}\\n*Author*: $CI_COMMIT_AUTHOR\\n*Duration*: ${duration} s\"}' $SLACK_WEBHOOK"
+  ],
+  local source = if event == "merge_request" then "merge_request_event" else if event == "cron" then "schedule" else "push",
+  local branch_check = if source == "merge_request_event" then '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME' else '$CI_COMMIT_BRANCH',
+  local effective_source_var = '$TRIGGER_SOURCE',
+  local condition = if branch == "**"
+    then effective_source_var + ' == "' + source + '"'
+    else branch_check + ' == "' + branch + '" && ' + effective_source_var + ' == "' + source + '"',
+  [jobName("notify_success", { branch: branch, platform: "", event: event, arch: "", server: "", customParams: "", customEnv: "", ignoreFailureStepList: [] })]: {
+    stage: ".post",
     image: "curlimages/curl",
-    script: [
-      "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"*" +
-      event + " build <$CI_JOB_URL|$CI_PIPELINE_ID> ${CI_PIPELINE_STATUS:-unknown}*.\\n\\n*Branch*: $CI_COMMIT_REF_NAME\\n*Commit*: $CI_COMMIT_SHA\\n*Author*: $GITLAB_USER_NAME\\n*Duration*: $CI_JOB_DURATION\"}' $SLACK_WEBHOOK"
-    ],
+    script: base_script("succeeded"),
     rules: [
       {
-        ["if"]: local source = if event == "pull_request" then "merge_request_event" else "schedule";
-            local condition = if branch == "**"
-              then '$CI_PIPELINE_SOURCE == "' + source + '"'
-              else '$CI_COMMIT_BRANCH == "' + branch + '" && $CI_PIPELINE_SOURCE == "' + source + '"';
-            condition,
-        ["when"]: "always"
+        ["if"]: condition,
+        when: "on_success"
+      }
+    ]
+  },
+  [jobName("notify_failure", { branch: branch, platform: "", event: event, arch: "", server: "", customParams: "", customEnv: "", ignoreFailureStepList: [] })]: {
+    stage: ".post",
+    image: "curlimages/curl",
+    script: base_script("failed"),
+    rules: [
+      {
+        ["if"]: condition,
+        when: "on_failure"
       }
     ]
   }
 };
 
-local allJobsArray = [p.jobs for p in AllPipelines] + [FinalPipeline(b, "cron") for b in std.objectFields(platforms)];
+local allJobsArray = [p.jobs for p in AllPipelines] + [FinalPipeline(b, "cron") for b in std.objectFields(platforms)] + [FinalPipeline(b, "merge_request") for b in std.objectFields(platforms)] + [FinalPipeline(any_branch, "custom")];
 local allJobs = std.foldl(function(acc, job) acc + job, allJobsArray, {});
 
 {
+  workflow: {
+    rules: [
+      { when: "always" }
+    ]
+  },
   stages: [
     "submodules", "clone-mdb", "build", "cmapi build", "createrepo", "pkg",
     "publish cmapi build", "publish pkg", "publish pkg latest", "smoke", "smokelog",
     "publish smokelog", "cmapi test", "cmapilog", "publish cmapilog", "dockerfile", "dockerhub", "mtr",
     "mtrlog", "publish mtrlog"
   ] + [r for r in full_regression_tests] + [
-    "regressionlog", "publish regressionlog", "publish regressionlog latest", "notify"
+    "regressionlog", "publish regressionlog", "publish regressionlog latest", ".post"
   ]
 } + allJobs
