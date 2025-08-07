@@ -5222,7 +5222,7 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
         auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
         if (histogram)
         {
-          std::cout << " has stats with " << histogram->buckets.size() << " buckets";
+          std::cout << " has stats with " << histogram->get_json_histogram().size() << " buckets";
           SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
           auto sc =
               std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
