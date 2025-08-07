@@ -208,6 +208,9 @@ template <typename T>
 std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
 {
   FilterRangeBounds<T> bounds;
+  // bounds.push_back({0, 6200000});
+
+  // return bounds;
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
@@ -395,8 +398,8 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           // add new SC
           auto& [newTableAlias, colPosition] = tableAliasIt->second;
           auto newSC = boost::make_shared<execplan::SimpleColumn>(*rc, rc->sessionID());
-          newSC->tableName("");
           newSC->schemaName("");
+          newSC->tableAlias(newTableAlias);
           newSC->tableAlias(newTableAlias);
           newSC->alias(rc->alias());
 
@@ -408,14 +411,16 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             if (it == SCAliasToPosCounterMap.end())
             {
               SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
+              colPosition++;
               std::cout << " first case new column in the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
             else
             {
               std::cout << " first case reusing column from the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
-            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition);
+            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition-1);
             newSC->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
+            sc->derivedTable(newTableAlias);
           }
           else 
           {
@@ -445,9 +450,10 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           if (tableAliasIt != tableAliasMap.end())
           {
             auto& [newTableAlias, colPosition] = tableAliasIt->second;
-            sc->tableName("");
             sc->schemaName("");
+            sc->tableName(newTableAlias);
             sc->tableAlias(newTableAlias);
+            sc->derivedTable(newTableAlias);
 
             auto& [unused, SCAliasToPosCounterMap, currentColPosition] = tableAliasToSCPositionsIt->second;
             auto it = SCAliasToPosCounterMap.find(sc->columnName());
@@ -463,6 +469,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition);
             sc->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
             // sc->colPosition(colPosition++);
+            colPosition++;
           }
           // do nothing with this SC
         }
@@ -472,7 +479,6 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // Remove the filters that are not necessary as they were pushed down to union units.
     // But this is inappropriate for some EXISTS filter and join conditions
 
-    // WIP hardcoded query with lhs,rhs being simple columns
     auto filters = csep.filters();
 
     if (filters)
@@ -498,41 +504,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           }
           sc->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
 
-          sc->tableName("");
           sc->schemaName("");
+          sc->tableName(newTableAlias);
+          sc->derivedTable(newTableAlias);
           sc->tableAlias(newTableAlias);
         }
       }
     }
-
-    // if (csep.filters() && csep.filters()->data())
-    // {
-    //   auto* left = dynamic_cast<execplan::SimpleFilter*>(csep.filters()->data());
-    //   if (left)
-    //   {
-    //     auto* lhs = left->lhs()->clone();
-    //     if (lhs)
-    //     {
-    //       auto* lhsSC = dynamic_cast<execplan::SimpleColumn*>(lhs);
-    //       if (lhsSC)
-    //       {
-    //         auto newTableAlias =
-    //             tableAliasMap.find({lhsSC->schemaName(), lhsSC->tableName(), lhsSC->tableAlias(), "", false});
-    //         // WIP Leak loosing previous lhs
-    //         if (newTableAlias != tableAliasMap.end())
-    //         {
-    //           lhsSC->tableName("");
-    //           lhsSC->schemaName("");
-    //           lhsSC->tableAlias(newTableAlias->second.first);
-    //           lhsSC->colPosition(0);
-    //           left->lhs(lhs);
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-
-
 
     csep.derivedTableList(newDerivedTableList);
     // Replace table list with new table list populated with union units
