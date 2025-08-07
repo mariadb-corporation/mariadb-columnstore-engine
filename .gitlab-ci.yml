@@ -1,0 +1,19 @@
+jsonnet-build:
+  stage: .pre
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache jsonnet
+  script:
+    - jsonnet .gitlab-ci.jsonnet > generated-config.yml
+  artifacts:
+    paths:
+      - generated-config.yml
+
+trigger-dynamic:
+  stage: build
+  needs:
+    - jsonnet-build
+  trigger:
+    include:
+      - artifact: generated-config.yml
+        job: jsonnet-build
