@@ -39,7 +39,7 @@ from cmapi_server.helpers import (
     system_ready,
 )
 from cmapi_server.logging_management import change_loggers_level
-from cmapi_server.managers.application import AppManager
+from cmapi_server.managers.application import AppManager, AppStatefulConfig, StateConfigVersion
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
@@ -353,16 +353,57 @@ class ConfigController:
         request_revision = request_body.get('revision', None)
         request_manager = request_body.get('manager', None)
         request_timeout = request_body.get('timeout', None)
+        only_stateful_config = request_body.get('only_stateful_config', False)
+        request_stateful_config = request_body.get('stateful_config_dict', None)
 
         #TODO: remove is_test
         # is_test = True means this should not save
         # the config file or apply the changes
         is_test = request_body.get('test', False)
-
-        mandatory = (request_revision, request_manager, request_timeout)
+        if only_stateful_config:
+            # if stateful config is provided, we do not need other params
+            mandatory = (request_timeout, request_stateful_config)
+        else:
+            mandatory = (request_revision, request_manager, request_timeout)
         if None in mandatory:
             raise_422_error(
                 module_logger, func_name, 'Mandatory attribute is missing.')
+
+        if request_stateful_config:
+            # if stateful config is provided, we just need to fast apply only stateful config
+            new_version = request_stateful_config.get('version', None)
+            if new_version is None:
+                raise_422_error(
+                    module_logger, func_name,
+                    'Stateful config version is not set.'
+                )
+            new_term = new_version.get('term', None)
+            new_seq = new_version.get('seq', None)
+            if new_term is None or new_seq is None:
+                raise_422_error(
+                    module_logger, func_name,
+                    'Stateful config version term or seq in request body is not set.'
+                )
+            new_flags = request_stateful_config.get('flags', None)
+            if new_flags is None or not isinstance(new_flags, dict):
+                raise_422_error(
+                    module_logger, func_name,
+                    'Stateful config flags in request body are not set or wrong format .'
+                )
+
+            success = AppStatefulConfig.apply_update(
+                new_flags=new_flags,
+                version=StateConfigVersion(term=new_term, seq=new_seq)
+            )
+            if not success:
+                logging.info('Stateful config update was stale.')
+            else:
+                logging.info(
+                    f'Stateful config updated with term {new_term} and seq {new_seq}.'
+                )
+
+        if only_stateful_config:
+            return {'timestamp': str(datetime.now()), 'success': success}
 
         request_mode = request_body.get('cluster_mode', None)
         xml_config = request_body.get('config', None)
@@ -1307,11 +1348,11 @@ class NodeController:
         func_name = 'check_shared_file'
         log_begin(module_logger, func_name)
         ACCEPTED_PATHS = (
-            '/var/lib/columnstore/data1/x',
-            '/var/lib/columnstore/storagemanager/metadata/data1/x'
+            '/var/lib/columnstore/data1/',
+            '/var/lib/columnstore/storagemanager/metadata/data1/'
         )
         if not file_path.startswith(ACCEPTED_PATHS):
-            raise_422_error('Not acceptable file_path.')
+            raise_422_error(module_logger, func_name, 'Not acceptable file_path.')
 
         success = True
         file_path_obj = Path(file_path)

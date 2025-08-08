@@ -18,6 +18,7 @@ _version = '0.4.0'
 
 class BaseClient:
     """Base class for API clients.
+
     This class is not intended to be used directly, but rather as a
     base class for other API clients. It provides a common interface
     for making requests to the API and handling responses.
@@ -38,7 +39,6 @@ class BaseClient:
         self.base_url = base_url
         self.request_timeout = request_timeout
         self.cmd_class = None
-
 
     def _request(
         self, method: str, endpoint: str,
@@ -193,7 +193,7 @@ class ClusterControllerClient(BaseClient):
             'api_key': api_key,
             'verification_key': totp.now()
         }
-        return self._request('put', 'apikey-set', payload)
+        return self._request('PUT', 'apikey-set', payload)
 
     def set_log_level(
             self, log_level: str
@@ -203,7 +203,7 @@ class ClusterControllerClient(BaseClient):
         :param log_level: The log level to set.
         :return: The response from the API.
         """
-        return self._request('put', 'log-level', {'log_level': log_level})
+        return self._request('PUT', 'log-level', {'log_level': log_level})
 
     def load_s3data(
             self, s3data_info: Dict[str, Any]

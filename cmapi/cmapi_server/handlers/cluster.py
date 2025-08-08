@@ -428,11 +428,10 @@ class ClusterHandler:
         return response
 
     @staticmethod
-    def check_shared_storage():
+    def check_shared_storage() -> dict:
         """Check shared storage.
 
         :return: status result
-        :rtype: dict
         """
         tmp_file_path: str
         active_nodes = get_active_nodes()

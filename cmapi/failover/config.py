@@ -17,7 +17,6 @@ class Config:
     _active_nodes = []
     _inactive_nodes = []
     _primary_node = ''
-    _shared_storage = False
     _my_name = None  # derived from config file
 
     config_lock = threading.Lock()
@@ -69,15 +68,6 @@ class Config:
         ret = self._primary_node
         self.config_lock.release()
         return ret
-
-    def is_shared_storage(self) -> bool:
-        """Check if SM is S3 or not.
-
-        :return: True if SM is S3 or shared FS otherwise False
-        :rtype: bool
-        """
-        self.check_reload()
-        return self._shared_storage
 
     def check_reload(self):
         """Check config reload.
@@ -167,11 +157,4 @@ class Config:
         self._primary_node = primary_node
         self.last_mtime = last_mtime
         self._my_name = my_name
-
-        self._shared_storage = False
-        shared_storage_element = root.find('./SharedStorage')
-        if shared_storage_element is not None:
-            self._shared_storage = lxml.objectify.BoolElement(
-                shared_storage_element.text
-            )
         return True

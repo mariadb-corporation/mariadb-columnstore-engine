@@ -6,10 +6,9 @@ from .heartbeater import HeartBeater
 from .config import Config
 from .heartbeat_history import HBHistory
 from .agent_comm import AgentComm
+from .shared_storage_monitor import SharedStorageMonitor
 
-from cmapi_server import helpers
-from cmapi_server.node_manipulation import set_shared_storage
-from cmapi_server.handlers.cluster import ClusterHandler
+from cmapi_server.managers.application import AppStatefulConfig
 
 
 class NodeMonitor:
@@ -34,6 +33,7 @@ class NodeMonitor:
         # not used yet, KI-V-SS for V1 [old comment from Patrick]
         self.flakyNodeThreshold = flakyNodeThreshold
         self.myName = self._config.who_am_I()
+        self.shared_storage_monitor = SharedStorageMonitor()
         #self._logger.info("Using {} as my name".format(self.myName))
 
     def __del__(self):
@@ -42,6 +42,7 @@ class NodeMonitor:
     def start(self):
         self._agentComm.start()
         self._hb.start()
+        self.shared_storage_monitor.start()
         self._die = False
         self._runner = threading.Thread(
             target=self.monitor, name='NodeMonitor'
@@ -54,6 +55,7 @@ class NodeMonitor:
         if not self._testMode:
             self._hb.stop()
         self._runner.join()
+        self.shared_storage_monitor.stop()
 
     def _removeRemovedNodes(self, desiredNodes):
         self._hbHistory.keepOnlyTheseNodes(desiredNodes)
@@ -82,22 +84,6 @@ class NodeMonitor:
             if not self._die:
                 time.sleep(1)
         self._logger.info("node monitor logic exiting normally...")
-
-    def check_shared_storage(self):
-        # need to do it only in one node
-        result = ClusterHandler.check_shared_storage()
-        shared_storage_on = result['shared_storage']
-        active_nodes_count = int(result['active_nodes_count'])
-        if active_nodes_count < 2:
-            logging.debug(
-                'Less than 2 nodes in cluster, no need to update SharedStorage '
-                'flag in Columnstore.xml.'
-            )
-        else:
-            state_changed = set_shared_storage(shared_storage_on)
-            if state_changed:
-                helpers.broadcast_new_config()
-
 
     def _monitor(self):
         """
@@ -132,7 +118,7 @@ class NodeMonitor:
             self._removeRemovedNodes(desiredNodes)
 
             # if there are less than 3 nodes in the cluster, do nothing
-            if len(desiredNodes) < 3:
+            if len(desiredNodes) < 3 or not AppStatefulConfig.is_shared_storage():
                 if not logged_idleness_msg:
                     self._logger.info(
                         'Failover support is inactive; '

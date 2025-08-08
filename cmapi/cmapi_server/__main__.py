@@ -26,11 +26,9 @@ from cmapi_server import helpers
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error, jsonify_404
 from cmapi_server.failover_agent import FailoverAgent
-from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
-from cmapi_server.node_manipulation import set_shared_storage
 from failover.node_monitor import NodeMonitor
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig

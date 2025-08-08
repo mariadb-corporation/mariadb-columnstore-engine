@@ -13,7 +13,7 @@ import time
 from collections import namedtuple
 from random import random
 from shutil import copyfile
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
 from urllib.parse import urlencode, urlunparse
 
 import aiohttp
@@ -32,6 +32,7 @@ from cmapi_server.constants import (
 )
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.application import AppStatefulConfig
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -301,28 +302,23 @@ def broadcast_new_config(
     test_mode: bool = False,
     nodes: Optional[list] = None,
     timeout: Optional[int] = None,
-    distribute_secrets: bool = False
+    distribute_secrets: bool = False,
+    stateful_config_dict: Optional[dict[str, Any]] = None
 ) -> None:
     """Send new config to nodes. Now in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
-    :type cs_config_filename: str, optional
     :param cmapi_config_filename: cmapi config path,
                                   defaults to CMAPI_CONF_PATH
-    :type cmapi_config_filename: str, optional
     :param sm_config_filename: storage manager config path,
                                defaults to DEFAULT_SM_CONF_PATH
-    :type sm_config_filename: str, optional
     :param test_mode: for test purposes, defaults to False TODO: remove
-    :type test_mode: bool, optional
     :param nodes: nodes list for config put, defaults to None
-    :type nodes: Optional[list], optional
     :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
                     releases. Could affect all logic of broadcacting new config
-    :type timeout: Optional[int], optional
     :param distribute_secrets: flag to distribute secrets to nodes
-    :type distribute_secrets: bool
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
     :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
@@ -333,24 +329,32 @@ def broadcast_new_config(
     if nodes is None:
         nodes = get_active_nodes(cs_config_filename)
 
-    nc = NodeConfig()
-    root = nc.get_current_config_root(config_filename=cs_config_filename)
-    with open(cs_config_filename) as f:
-        config_text = f.read()
-
-    with open(sm_config_filename) as f:
-        sm_config_text = f.read()
-
     headers = {'x-api-key': key}
-    body = {
-        'manager': root.find('./ClusterManager').text,
-        'revision': root.find('./ConfigRevision').text,
-        'timeout': 300,
-        'config': config_text,
-        'cs_config_filename': cs_config_filename,
-        'sm_config_filename': sm_config_filename,
-        'sm_config': sm_config_text
-    }
+    if stateful_config_dict:
+        body = {
+            'timeout': 300,
+            'stateful_config_dict': stateful_config_dict,
+            'only_stateful_config': True,
+        }
+    else:
+        nc = NodeConfig()
+        root = nc.get_current_config_root(config_filename=cs_config_filename)
+        with open(cs_config_filename, mode='r', encoding='utf-8') as f:
+            config_text = f.read()
+
+        with open(sm_config_filename, mode='r', encoding='utf-8') as f:
+            sm_config_text = f.read()
+
+        body = {
+            'manager': root.find('./ClusterManager').text,
+            'revision': root.find('./ConfigRevision').text,
+            'timeout': 300,
+            'config': config_text,
+            'cs_config_filename': cs_config_filename,
+            'sm_config_filename': sm_config_filename,
+            'sm_config': sm_config_text,
+            'stateful_config_dict': AppStatefulConfig.get()
+        }
 
     if distribute_secrets:
         # TODO: do not restart cluster when put xml config only with
@@ -369,11 +373,8 @@ def broadcast_new_config(
         """Update remote node config asyncronously.
 
         :param node: node ip address or hostname
-        :type node: str
         :param headers: headers for request
-        :type headers: dict
         :param body: request body
-        :type body: dict
         :raises CMAPIBasicError: If request failed by status code
         :raises CMAPIBasicError: If request failed by some undefined error
         :raises CMAPIBasicError: If request failed by timeout
@@ -442,6 +443,27 @@ def broadcast_new_config(
         )
         raise CMAPIBasicError(final_message)
 
+
+def broadcast_stateful_config(stateful_config_dict: dict[str, Any]) -> None:
+    """Broadcast new stateful config to nodes.
+
+    :param stateful_config_dict: stateful config dict to broadcast
+    """
+
+    try:
+        broadcast_new_config(stateful_config_dict=stateful_config_dict)
+    except CMAPIBasicError as err:
+        logging.error(
+            (
+                f'Failed to broadcast new stateful config dict: {stateful_config_dict}, '
+                f'got error: {err.message}'
+            )
+        )
+        return
+    else:
+        logging.debug(
+            f'Successfully broadcasted new stateful config dict: {stateful_config_dict}'
+        )
 
 # Might be more appropriate to put these in node_manipulation?
 def update_revision_and_manager(

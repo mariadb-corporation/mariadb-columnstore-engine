@@ -117,10 +117,6 @@ class NodeConfig:
         maintenance = etree.SubElement(root, 'Maintenance')
         maintenance.text = str(False).lower()
 
-        # Add SharedStorage tag and set to False
-        shared_storage = etree.SubElement(root, 'SharedStorage')
-        shared_storage.text = str(False).lower()
-
     def upgrade_config(self, tree=None, root=None, upgrade=True):
         """
         Add the parts that might be missing after an upgrade from an earlier
