@@ -3394,6 +3394,11 @@ void TupleBPS::abort()
   abort_nolock();
 }
 
+void TupleBPS::setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters)
+{
+  this->bloomFilters = std::move(bloomFilters);
+}
+
 template bool TupleBPS::processOneFilterType<int64_t>(int8_t colWidth, int64_t value, uint32_t type) const;
 template bool TupleBPS::processOneFilterType<int128_t>(int8_t colWidth, int128_t value, uint32_t type) const;
 

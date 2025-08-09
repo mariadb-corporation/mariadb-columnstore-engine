@@ -688,6 +688,8 @@ void TupleHashJoinStep::hjRunner()
   jobstepThreadPool.join(smallRunners);
   smallRunners.clear();
 
+  largeBPS->setBloomFilters(std::move(bloomFilters));
+
   for (i = 0; i < feIndexes.size() && joiners.size() > 0; i++)
     joiners[feIndexes[i]]->setFcnExpFilter(fe[i]);
 
