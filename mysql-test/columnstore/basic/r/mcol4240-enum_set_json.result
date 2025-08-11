@@ -1,0 +1,178 @@
+# MCOL-4240 enum, set and json Test Cases
+DROP DATABASE IF EXISTS mcol4240_enum_set_json_db;
+SET SQL_MODE='ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+create database mcol4240_enum_set_json_db;
+use mcol4240_enum_set_json_db;
+CREATE TABLE t (
+status ENUM('active', 'inactive', 'deleted') NOT NULL,
+options SET('a', 'b', 'c', 'd') NOT NULL,
+info JSON NOT NULL
+) ENGINE=columnstore;
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+ERROR 23000: CONSTRAINT `t.info` failed for `mcol4240_enum_set_json_db`.`t`
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+Warnings:
+Warning	1364	Field 'options' doesn't have a default value
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 42 }
+DELETE FROM t WHERE status = 'active';
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+INSERT INTO t (status, options, info)
+VALUES ('active', 'a,b','{ "comment": "This is example", "number": 42 }');
+INSERT INTO t (status, options, info)
+VALUES ('inactive', '','{ "comment": "This is example", "number": 43 }');
+SELECT * FROM t;
+status	options	info
+active	a,b	{ "comment": "This is example", "number": 42 }
+active	a,b	{ "comment": "This is example", "number": 42 }
+inactive		{ "comment": "This is example", "number": 43 }
+DELETE FROM t WHERE status = 'active';
+SELECT * FROM t;
+status	options	info
+inactive		{ "comment": "This is example", "number": 43 }
+UPDATE t SET status = 'active' WHERE status = 'inactive';
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+UPDATE t SET options = 'a' WHERE options = 'b';
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+UPDATE t SET options = 'a' WHERE options = 'a,b';
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+INSERT INTO t (status, options, info)
+VALUES ('inactive', '','{ "comment": "This is example", "number": 43 ');
+ERROR 23000: CONSTRAINT `t.info` failed for `mcol4240_enum_set_json_db`.`t`
+DELETE FROM t WHERE status = 'deleted';
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+INSERT INTO t (status, options, info)
+VALUES ('inactive', 'b','{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+inactive	b	{ "comment": "This is example", "number": 42 }
+DELETE FROM t WHERE options = 'b';
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 43 }
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+DROP TABLE t;
+CREATE TABLE t (
+status ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT NULL,
+dummy int
+) ENGINE=columnstore;
+ERROR 42000: Invalid default value for 'status'
+CREATE TABLE t (
+options SET('a', 'b', 'c', 'd') NOT NULL DEFAULT NULL,
+dummy int
+) ENGINE=columnstore;
+ERROR 42000: Invalid default value for 'options'
+CREATE TABLE t (
+info JSON NOT NULL DEFAULT NULL,
+dummy int
+) ENGINE=columnstore;
+ERROR 42000: Invalid default value for 'info'
+CREATE TABLE t (
+info JSON,
+dummy int NOT NULL DEFAULT NULL
+) ENGINE=columnstore;
+ERROR 42000: Invalid default value for 'dummy'
+CREATE TABLE t (
+status ENUM('active', 'inactive', 'deleted') NOT NULL,
+options SET('a', 'b', 'c', 'd') NOT NULL,
+info JSON NOT NULL
+) ENGINE=columnstore;
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+ERROR 23000: CONSTRAINT `t.info` failed for `mcol4240_enum_set_json_db`.`t`
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+Warnings:
+Warning	1364	Field 'options' doesn't have a default value
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 42 }
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+active		{ "comment": "This is example", "number": 42 }
+active	a,b	{ "comment": "This is example", "number": 42 }
+DROP TABLE t;
+CREATE TABLE t (
+status ENUM('active', 'inactive', 'deleted') DEFAULT NULL,
+options SET('a', 'b', 'c', 'd') DEFAULT NULL,
+info JSON DEFAULT NULL
+) ENGINE=columnstore;
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+SELECT * FROM t;
+status	options	info
+active	a,b	NULL
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+active	NULL	{ "comment": "This is example", "number": 42 }
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+NULL	a,b	{ "comment": "This is example", "number": 42 }
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+DROP TABLE t;
+CREATE TABLE t (
+status ENUM('active', 'inactive', 'deleted') DEFAULT 'active',
+options SET('a', 'b', 'c', 'd') DEFAULT 'a,b',
+info JSON DEFAULT '{}'
+) ENGINE=columnstore;
+INSERT INTO t (status, options)
+VALUES ('active', 'a,b');
+SELECT * FROM t;
+status	options	info
+active	a,b	{}
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (status, info)
+VALUES ('active', '{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+active	a,b	{ "comment": "This is example", "number": 42 }
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+INSERT INTO t (options, info)
+VALUES ('a,b', '{ "comment": "This is example", "number": 42 }');
+SELECT * FROM t;
+status	options	info
+active	a,b	{ "comment": "This is example", "number": 42 }
+TRUNCATE TABLE t;
+SELECT * FROM t;
+status	options	info
+DROP TABLE t;
+DROP DATABASE mcol4240_enum_set_json_db;
