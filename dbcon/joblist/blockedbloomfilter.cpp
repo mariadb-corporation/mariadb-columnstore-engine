@@ -69,5 +69,10 @@ void BlockedBloomFilter::deserialize(messageqcpp::ByteStream& bs)
     }
 }
 
+size_t BlockedBloomFilter::getSize() const
+{
+    return bloomFilter.size();
+}
+
 } // namespace joblist
 

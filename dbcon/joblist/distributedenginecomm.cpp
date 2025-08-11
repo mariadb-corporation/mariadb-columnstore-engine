@@ -882,6 +882,7 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
       case BATCH_PRIMITIVE_ADD_JOINER:
       case BATCH_PRIMITIVE_END_JOINER:
       case BATCH_PRIMITIVE_ABORT:
+      case BATCH_PRIMITIVE_BLOOM_FILTER:
       case DICT_CREATE_EQUALITY_FILTER:
       case DICT_DESTROY_EQUALITY_FILTER:
         /* XXXPAT: This relies on the assumption that the first pmCount "PMS*"

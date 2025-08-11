@@ -436,6 +436,12 @@ class BatchPrimitiveProcessor
   bool initiatedByEM_;
   uint32_t weight_;
 
+  // Blocked Bloom Filter
+  std::vector<std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>>> bloomFilters;
+  public:
+  void addBloomFilters(messageqcpp::ByteStream& bs);
+  private:
+
   uint32_t maxPmJoinResultCount = 1048576;
   friend class Command;
   friend class ColumnCommand;

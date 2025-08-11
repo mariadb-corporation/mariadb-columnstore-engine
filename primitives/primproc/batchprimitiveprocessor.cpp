@@ -2695,4 +2695,34 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
       vssCache.insert(make_pair(lbidList[i], vssData[i]));
 }
 
+void BatchPrimitiveProcessor::addBloomFilters([[maybe_unused]] messageqcpp::ByteStream& bs)
+{
+  bs.advance(sizeof(ISMPacketHeader) + 4 * sizeof(uint32_t));
+  if (bloomFilters.empty() && doJoin)
+  {
+    bloomFilters.resize(joinerCount);
+  }
+
+  for (size_t j = 0; j < joinerCount; ++j)
+  {
+    for (size_t i = 0; i < 2; ++i)
+    {
+      uint8_t hasBloomFilter = 0;
+      bs >> hasBloomFilter;
+
+      if (hasBloomFilter)
+      {
+        if (!bloomFilters[j])
+          bloomFilters[j] = std::make_shared<std::array<std::optional<BlockedBloomFilter>, 2>>();
+        
+        (*bloomFilters[j]).at(i).emplace();
+        (*bloomFilters[j]).at(i)->deserialize(bs);
+        
+      }
+      
+    }
+  }
+
+}
+
 }  // namespace primitiveprocessor

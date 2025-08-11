@@ -1279,6 +1279,20 @@ struct BPPHandler
     }
   };
 
+  struct BloomFilter : public BPPHandlerFunctor
+  {
+    BloomFilter(boost::shared_ptr<BPPHandler> r, SBS b) : BPPHandlerFunctor(std::move(r), std::move(b))
+    {
+    }
+
+    int operator()() override
+    {
+      utils::setThreadName("PPHandBloomFilter");
+      return rt->addBloomFiltersToBPP(*bs, dieTime);
+    }
+
+  };
+
   int doAbort(ByteStream& bs, const posix_time::ptime& dieTime)
   {
     uint32_t key;
@@ -1483,6 +1497,37 @@ struct BPPHandler
       }
       else
         return -1;
+    }
+  }
+
+  int addBloomFiltersToBPP(ByteStream& bs, const posix_time::ptime& dieTime)
+  {
+    SBPPV bppv;
+    uint32_t uniqueID;
+    const uint8_t* buf;
+
+    buf = bs.buf();
+    uniqueID = *((const uint32_t*)&buf[sizeof(ISMPacketHeader) + 3 * sizeof(uint32_t)]);
+
+    bppv = grabBPPs(uniqueID);
+
+    if (bppv)
+    {
+      boost::shared_lock<boost::shared_mutex> lk(getDJLock(uniqueID));
+      bppv->get()[0]->addBloomFilters(bs);
+      return 0;
+    }
+    else
+    {
+      if (posix_time::second_clock::universal_time() > dieTime)
+      {
+        cout << "addBloomFilterToBPP: job for id " << uniqueID << " has been killed." << endl;
+        return 0;
+      }
+      else
+      {
+        return -1;
+      }
     }
   }
 
@@ -2024,6 +2069,30 @@ struct ReadThread
         fBPPHandler->doAck(*sbs);
         break;
       }
+
+      case BATCH_PRIMITIVE_BLOOM_FILTER:
+      {
+        const uint8_t* buf = sbs->buf();
+        uint32_t pos = sizeof(ISMPacketHeader);
+        const uint32_t txnId = *((uint32_t*)&buf[pos]);
+        [[maybe_unused]] const uint32_t sessionID = *((uint32_t*)&buf[pos + 4]);
+        const uint32_t stepID = *((uint32_t*)&buf[pos + 8]);
+        const uint32_t uniqueID = *((uint32_t*)&buf[pos + 12]);
+        
+        const uint32_t id = 0;
+        const uint32_t weight = threadpool::MetaJobsInitialWeight;
+        const uint32_t priority = 0;
+        
+        boost::shared_ptr<FairThreadPool::Functor> functor;
+        functor.reset(new BPPHandler::BloomFilter(fBPPHandler, sbs));
+
+        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+        OOBProcPool->addJob(job);
+
+
+        break;
+      }
+
       default:
       {
         std::ostringstream os;

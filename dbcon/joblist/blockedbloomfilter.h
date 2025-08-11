@@ -24,6 +24,8 @@ class BlockedBloomFilter
         void serialize(messageqcpp::ByteStream& bs) const;
         void deserialize(messageqcpp::ByteStream& bs);
 
+        size_t getSize() const;
+
     private:
         // Member variables
         static constexpr uint8_t HASH_FUNC_COUNT = 8;

@@ -1475,6 +1475,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
 
   // Blocked Bloom filter
   std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>> bloomFilters;
+  void serializeBloomFilters();
 
   public:
   void setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters);

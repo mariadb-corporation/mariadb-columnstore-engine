@@ -1480,7 +1480,10 @@ void TupleBPS::run()
     BPPIsAllocated = true;
 
     if (doJoin && tjoiners[0]->inPM())
+    {
+      serializeBloomFilters();
       serializeJoiner();
+    }
 
     prepCasualPartitioning();
     startPrimitiveThread();
@@ -3397,6 +3400,61 @@ void TupleBPS::abort()
 void TupleBPS::setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters)
 {
   this->bloomFilters = std::move(bloomFilters);
+}
+
+void TupleBPS::serializeBloomFilters()
+{
+  messageqcpp::ByteStream bs;
+  ISMPacketHeader ism{};
+
+  ism.Interleave = 0;
+  ism.Flags = 0;
+  ism.Command = BATCH_PRIMITIVE_BLOOM_FILTER;
+  ism.Type = 2;
+  
+  uint32_t messageSize = sizeof(ISMPacketHeader);
+
+  // How to get rid of iterating over BFs 2 times?
+  for (const auto& joinerBF : bloomFilters)
+  {
+    for (size_t i = 0; i < joinerBF->size(); ++i)
+    {
+      messageSize += sizeof(uint8_t);
+
+      if ((*joinerBF)[i].has_value())
+      {
+        messageSize += (*joinerBF)[i]->getSize() * sizeof(uint64_t);
+      }
+
+    }
+  }
+
+  ism.Size = messageSize;
+  bs.append((uint8_t*)&ism, sizeof(ism));
+
+  bs << txnId();
+  bs << sessionId();
+  bs << static_cast<uint32_t>(stepId());
+  bs << uniqueID;
+
+  for (const auto& joinerBF : bloomFilters)
+  {
+    for (size_t i = 0; i < joinerBF->size(); ++i)
+    {
+      uint8_t hasBloomFilter = (*joinerBF)[i].has_value() ? 1 : 0;
+      bs << hasBloomFilter;
+
+      if (hasBloomFilter)
+      {
+        (*joinerBF)[i]->serialize(bs);
+      }
+    
+    }
+  }
+
+  SBS sbs(new messageqcpp::ByteStream(bs));
+  fDec->write(uniqueID, sbs);
+
 }
 
 template bool TupleBPS::processOneFilterType<int64_t>(int8_t colWidth, int64_t value, uint32_t type) const;
