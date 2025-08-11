@@ -4,8 +4,18 @@
 SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../)
 MARIADB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../../../)
+
+
+VERSION_GREATER_THAN_10=$(mariadb -N -s -e 'SELECT (sys.version_major(), sys.version_minor(), sys.version_patch()) >= (11, 4, 0);')
+
+SERVERNAME="mysql"
+if [[ $VERSION_GREATER_THAN_10 == '1' ]]; then
+    SERVERNAME="mariadb"
+fi
+
+
 COLUMNSTORE_MTR_SOURCE=$(realpath $COLUMNSTORE_SOURCE_PATH/mysql-test/columnstore)
-INSTALLED_MTR_PATH='/usr/share/mysql/mysql-test/'
+INSTALLED_MTR_PATH="/usr/share/${SERVERNAME}/${SERVERNAME}-test/"
 PATCHNAME=$(realpath $SCRIPT_LOCATION)/mtr_warn.patch
 CURRENT_DIR=$(pwd)
 
@@ -74,7 +84,6 @@ run_suite() {
     else
         RECORD_FLAG=""
     fi
-
     ./mtr --force $EXTERN_FLAG $RECORD_FLAG --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
     # dump analyses.
     systemctl stop mariadb

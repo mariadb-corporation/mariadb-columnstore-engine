@@ -21,7 +21,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include "../common/simpleallocator.h"
 #include "../joblist/elementtype.h"

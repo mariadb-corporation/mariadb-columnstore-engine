@@ -14,7 +14,7 @@ using namespace funcexp::helpers;
 
 namespace funcexp
 {
-bool JSONEgWrapper::checkAndGetScalar(string& ret, int* error)
+bool JSONEgWrapper::checkAndGetScalar(std::string& ret, int* error)
 {
   CHARSET_INFO* cs;
   const uchar* js;
@@ -111,16 +111,16 @@ class JSONPathWrapperValue : public JSONPathWrapper
   {
   }
 
-  bool checkAndGetValue(JSONEgWrapper* je, string& res, int* error) override
+  bool checkAndGetValue(JSONEgWrapper* je, std::string& res, int* error) override
   {
     return je->checkAndGetScalar(res, error);
   }
 };
 
-string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  string ret;
+  std::string ret;
   JSONPathWrapperValue pw;
   isNull = pw.extract(ret, row, fp[0], fp[1]);
   return isNull ? "" : ret;

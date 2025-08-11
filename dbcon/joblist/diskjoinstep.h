@@ -49,7 +49,7 @@ class DiskJoinStep : public JobStep
  private:
   void initializeFIFO(uint32_t threadCount);
   void processJoinPartitions(const uint32_t threadID, const uint32_t smallSideSizeLimitPerThread,
-                             const vector<joiner::JoinPartition*>& joinPartitions);
+                             const std::vector<joiner::JoinPartition*>& joinPartitions);
   void prepareJobs(const std::vector<joiner::JoinPartition*>& joinPartitions,
                    JoinPartitionJobs& joinPartitionsJobs);
   void outputResult(const std::vector<rowgroup::RGData>& result);

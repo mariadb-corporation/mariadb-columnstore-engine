@@ -24,8 +24,8 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
+
 #include <fstream>
 #include <sstream>
 #include <cerrno>
@@ -36,7 +36,6 @@
 #include <map>
 #include <limits>
 #include <wait.h>  //wait()
-using namespace std;
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -128,9 +127,11 @@ using namespace funcexp;
 #include "ha_mcs_sysvars.h"
 
 #include "ha_mcs_datatype.h"
+#include "statistics.h"
 #include "ha_mcs_logging.h"
 #include "ha_subquery.h"
-#include "statistics_manager/statistics.h"
+
+using namespace std;
 
 namespace cal_impl_if
 {
@@ -176,26 +177,26 @@ const string infinidb_autoswitch_warning =
     "was switched to standard mode with downgraded performance.";
 
 // copied from item_timefunc.cc
-static const string interval_names[] = {"year",
-                                        "quarter",
-                                        "month",
-                                        "week",
-                                        "day",
-                                        "hour",
-                                        "minute",
-                                        "second",
-                                        "microsecond",
-                                        "year_month",
-                                        "day_hour",
-                                        "day_minute",
-                                        "day_second",
-                                        "hour_minute",
-                                        "hour_second",
-                                        "minute_second",
-                                        "day_microsecond",
-                                        "hour_microsecond",
-                                        "minute_microsecond",
-                                        "second_microsecond"};
+[[maybe_unused]] static const string interval_names[] = {"year",
+                                                         "quarter",
+                                                         "month",
+                                                         "week",
+                                                         "day",
+                                                         "hour",
+                                                         "minute",
+                                                         "second",
+                                                         "microsecond",
+                                                         "year_month",
+                                                         "day_hour",
+                                                         "day_minute",
+                                                         "day_second",
+                                                         "hour_minute",
+                                                         "hour_second",
+                                                         "minute_second",
+                                                         "day_microsecond",
+                                                         "hour_microsecond",
+                                                         "minute_microsecond",
+                                                         "second_microsecond"};
 
 // HDFS is never used nowadays, so don't bother
 bool useHdfs = false;  // ResourceManager::instance()->useHdfs();
@@ -1347,7 +1348,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
   // Save the item list
   List<Item> items;
-  SELECT_LEX select_lex;
 
   if (ha_mcs_common::isUpdateStatement(thd->lex->sql_command))
   {
@@ -1355,7 +1355,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     thd->lex->first_select_lex()->item_list = thd->lex->value_list;
   }
 
-  select_lex = *lex->first_select_lex();
+  SELECT_LEX* select_lex = lex->first_select_lex();
 
   //@Bug 2808 Error out on order by or limit clause
   //@bug5096. support dml limit.
@@ -1411,7 +1411,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 
     gwi.clauseType = WHERE;
 
-    if (getSelectPlan(gwi, select_lex, updateCP, false, false, false, condStack) !=
+    if (getSelectPlan(gwi, *select_lex, updateCP, false, false, false, condStack) !=
         0)  //@Bug 3030 Modify the error message for unsupported functions
     {
       if (gwi.cs_vtable_is_update_with_derive)
@@ -4108,7 +4108,7 @@ int ha_mcs_impl_pushdown_init(mcs_handler_info* handler_info, TABLE* table, bool
   boost::shared_ptr<CalpontSystemCatalog> csc = CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
   csc->identity(CalpontSystemCatalog::FE);
 
-  if (!get_fe_conn_info_ptr()) 
+  if (!get_fe_conn_info_ptr())
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
     thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());

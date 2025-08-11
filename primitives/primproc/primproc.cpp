@@ -31,7 +31,7 @@
 #include <csignal>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <tr1/unordered_set>
+#include <unordered.h>
 
 #include <clocale>
 #include <iterator>

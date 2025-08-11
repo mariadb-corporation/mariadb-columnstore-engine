@@ -34,7 +34,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include "mcsv1_udaf.h"
 #include "calpontsystemcatalog.h"
@@ -60,7 +60,7 @@ class avgx : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  avgx() : mcsv1_UDAF(){};
+  avgx() : mcsv1_UDAF() {};
   ~avgx() override = default;
 
   ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;

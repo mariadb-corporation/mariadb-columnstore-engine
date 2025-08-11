@@ -32,7 +32,7 @@ source "$SCRIPT_LOCATION"/utils.sh
 
 echo "Arguments received: $@"
 
-optparse.define short=A long=asan desc="Build with ASAN" variable=ASAN default=false value=true
+optparse.define short=A long=asan desc="Build with ASan" variable=ASAN default=false value=true
 optparse.define short=a long=build-path desc="Path for build output" variable=MARIA_BUILD_PATH default=$DEFAULT_MARIA_BUILD_PATH
 optparse.define short=B long=run-microbench desc="Compile and run microbenchmarks " variable=RUN_BENCHMARKS default=false value=true
 optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_STORAGE_ENABLED default=false value=true
@@ -44,7 +44,9 @@ optparse.define short=f long=do-not-freeze-revision desc="Disable revision freez
 optparse.define short=g long=alien desc="Turn off maintainer mode (ex. -Werror)" variable=MAINTAINER_MODE default=true value=false
 optparse.define short=G long=draw-deps desc="Draw dependencies graph" variable=DRAW_DEPS default=false value=true
 optparse.define short=j long=parallel desc="Number of paralles for build" variable=CPUS default=$(getconf _NPROCESSORS_ONLN)
-optparse.define short=M long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
+optparse.define short=L long=libcpp desc="Build with libc++" variable=WITH_LIBCPP default=false value=true
+optparse.define short=M long=msan desc="Build with MSan" variable=MSAN default=false value=true
+optparse.define short=m long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
@@ -55,9 +57,9 @@ optparse.define short=r long=restart-services variable=RESTART_SERVICES default=
 optparse.define short=R long=gcc-toolset-for-rocky-8 variable=GCC_TOOLSET default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
-optparse.define short=T long=tsan desc="Build with TSAN" variable=TSAN default=false value=true
+optparse.define short=T long=tsan desc="Build with TSan" variable=TSAN default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
-optparse.define short=U long=ubsan desc="Build with UBSAN" variable=UBSAN default=false value=true
+optparse.define short=U long=ubsan desc="Build with UBSan" variable=UBSAN default=false value=true
 optparse.define short=v long=verbose desc="Verbose makefile commands" variable=MAKEFILE_VERBOSE default=false value=true
 optparse.define short=V long=add-branch-name-to-outdir desc="Add branch name to build output directory" variable=BRANCH_NAME_TO_OUTDIR default=false value=true
 optparse.define short=W long=without-core-dumps desc="Do not produce core dumps" variable=WITHOUT_COREDUMPS default=false value=true
@@ -325,13 +327,20 @@ modify_packaging() {
 }
 
 construct_cmake_flags() {
+    if [[ $MARIADB_BRANCH == *enterprise ]]; then
+        BUILD_CONFIG=enterprise
+    else
+        BUILD_CONFIG=mysql_release
+    fi
+
+    message The server build will use $color_yellow$BUILD_CONFIG$color_cyan build configuration
+
     MDB_CMAKE_FLAGS=(
-        -DBUILD_CONFIG=mysql_release
+        -DBUILD_CONFIG=$BUILD_CONFIG
         -DCMAKE_BUILD_TYPE=$MCS_BUILD_TYPE
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1
         -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX
-        -DMYSQL_MAINTAINER_MODE=NO
-        -DPLUGIN_COLUMNSTORE=YES
+        -DPLUGIN_COLUMNSTORE=DYNAMIC
         -DPLUGIN_CONNECT=NO
         -DPLUGIN_GSSAPI=NO
         -DPLUGIN_MROONGA=NO
@@ -339,6 +348,7 @@ construct_cmake_flags() {
         -DPLUGIN_ROCKSDB=NO
         -DPLUGIN_SPHINX=NO
         -DPLUGIN_SPIDER=NO
+        -DSPIDER_WITH_UNIXODBC=ON
         -DPLUGIN_TOKUDB=NO
         -DWITH_EMBEDDED_SERVER=NO
         -DWITH_SSL=system
@@ -355,6 +365,7 @@ construct_cmake_flags() {
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=YES)
         message "Columnstore maintainer mode on"
     else
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_MAINTAINER=NO)
         warn "Maintainer mode is disabled, be careful, alien"
     fi
 
@@ -395,6 +406,16 @@ construct_cmake_flags() {
     if [[ $UBSAN = true ]]; then
         warn "Building with UB Sanitizer"
         MDB_CMAKE_FLAGS+=(-DWITH_UBSAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+    fi
+
+    if [[ $MSAN = true ]]; then
+        warn "Building with Memory Sanitizer"
+        MDB_CMAKE_FLAGS+=(-DWITH_MSAN=ON -DCOLUMNSTORE_WITH_LIBCPP=YES -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+    fi
+
+    if [[ $WITH_LIBCPP = true ]]; then
+        warn "Building with libc++"
+        MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_WITH_LIBCPP=YES)
     fi
 
     if [[ $WITHOUT_COREDUMPS = true ]]; then
@@ -596,7 +617,9 @@ run_unit_tests() {
     message "Running unittests"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 run_microbenchmarks_tests() {
@@ -609,7 +632,9 @@ run_microbenchmarks_tests() {
     message "Runnning microbenchmarks"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -V -R columnstore_microbenchmarks: -j $(nproc) --progress
+    exit_code=$?
     cd - >/dev/null
+    return $exit_code
 }
 
 disable_plugins_for_bootstrap() {
@@ -794,6 +819,7 @@ init_submodules
 if [[ $BUILD_PACKAGES = true ]]; then
     modify_packaging
     fix_config_files
+
     (build_package && run_unit_tests)
     exit_code=$?
 

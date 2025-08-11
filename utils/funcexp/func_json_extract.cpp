@@ -13,7 +13,7 @@ using namespace funcexp::helpers;
 
 namespace funcexp
 {
-int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* type, string& retJS,
+int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* type, std::string& retJS,
                                  bool compareWhole = true)
 {
   bool isNull = false;
@@ -34,7 +34,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   bool hasNegPath = false;
 #endif
   const size_t argSize = fp.size();
-  string tmp;
+  std::string tmp;
 
   initJSPaths(paths, fp, 1, 1);
 
@@ -151,10 +151,10 @@ CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
+                                         CalpontSystemCatalog::ColType& /*type*/)
 {
-  string retJS;
+  std::string retJS;
   json_value_types valType;
   if (doExtract(row, fp, &valType, retJS) == 0)
     return retJS;
@@ -166,7 +166,7 @@ string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
 int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
                                      execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  string retJS;
+  std::string retJS;
   json_value_types valType;
   int64_t ret = 0;
   if (doExtract(row, fp, &valType, retJS, false) == 0)
@@ -192,7 +192,7 @@ int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool&
 double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& /*isNull*/,
                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  string retJS;
+  std::string retJS;
   json_value_types valType;
   double ret = 0.0;
   if (doExtract(row, fp, &valType, retJS, false) == 0)
@@ -219,7 +219,7 @@ execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, Funct
                                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   json_value_types valType;
-  string retJS;
+  std::string retJS;
 
   if (doExtract(row, fp, &valType, retJS, false) == 0)
   {

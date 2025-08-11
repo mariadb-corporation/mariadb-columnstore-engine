@@ -47,6 +47,7 @@ if [[ $(compgen -G "$COLUMNSTORE_RPM_PACKAGES_PATH") ]]; then
 elif [[ $(compgen -G "$COLUMNSTORE_DEB_PACKAGES_PATH") ]]; then
   mv -v $COLUMNSTORE_DEB_PACKAGES_PATH "./${RESULT}/"
   mv -v $COLUMNSTORE_DEBUG_DEB_PACKAGES_PATH "./${RESULT}/" || true
+  # debian 12 produces debug packages as *.deb
 else
   echo "Columnstore packages are not found!"
 fi

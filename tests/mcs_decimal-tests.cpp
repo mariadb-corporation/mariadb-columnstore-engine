@@ -23,6 +23,8 @@
 #include "mcs_decimal.h"
 #include "dataconvert.h"
 
+using namespace std;
+
 TEST(Decimal, compareCheckInt64)
 {
   // remainder-based checks

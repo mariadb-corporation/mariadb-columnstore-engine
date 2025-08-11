@@ -21,7 +21,7 @@
 #include <bitset>
 #include <string>
 #include <stdint.h>
-#include <tr1/unordered_map>
+#include <unordered.h>
 #include <iosfwd>
 #include <boost/shared_ptr.hpp>
 #include <stack>

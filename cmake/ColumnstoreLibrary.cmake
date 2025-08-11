@@ -82,31 +82,12 @@ macro(columnstore_shared_library libname)
     columnstore_install_target(${libname} ${ENGINE_LIBDIR})
 endmacro()
 
-macro(columnstore_static_library libname)
-    add_definitions(-fPIC -DPIC)
-    add_library(${libname} STATIC ${ARGN})
-endmacro()
-
-macro(columnstore_shared_library libname)
-    add_library(${libname} SHARED ${ARGN})
-    columnstore_install_target(${libname} ${ENGINE_LIBDIR})
-endmacro()
-
 macro(columnstore_library libname)
     if(COLUMNSTORE_STATIC_LIBRARIES)
         columnstore_static_library(${libname} ${ARGN})
     else()
         columnstore_shared_library(${libname} ${ARGN})
     endif()
-endmacro()
-
-macro(columnstore_mysql_plugin_library libname)
-    add_library(${libname} SHARED ${ARGN})
-    columnstore_install_target(${libname} ${MARIADB_PLUGINDIR})
-endmacro()
-
-macro(columnstore_link libname)
-    target_link_libraries(${libname} ${ARGN})
 endmacro()
 
 macro(columnstore_mysql_plugin_library libname)

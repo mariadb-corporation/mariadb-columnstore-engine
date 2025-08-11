@@ -17,7 +17,7 @@ using namespace funcexp::helpers;
 
 namespace
 {
-static bool appendJSPath(string& ret, const json_path_t* p)
+static bool appendJSPath(std::string& ret, const json_path_t* p)
 {
   const json_path_step_t* c;
 
@@ -35,7 +35,7 @@ static bool appendJSPath(string& ret, const json_path_t* p)
       else /*JSON_PATH_ARRAY*/
       {
         ret.append("[");
-        ret.append(to_string(c->n_item));
+        ret.append(std::to_string(c->n_item));
         ret.append("]");
       }
     }
@@ -81,10 +81,10 @@ CalpontSystemCatalog::ColType Func_json_search::operationType(FunctionParm& fp,
   return fp[0]->data()->resultType();
 }
 
-string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                   execplan::CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  string ret;
+  std::string ret;
   bool isNullJS = false, isNullVal = false;
   const auto& js = fp[0]->data()->getStrVal(row, isNull);
   const auto& cmpStr = fp[2]->data()->getStrVal(row, isNull);
@@ -102,7 +102,7 @@ string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& i
     const auto& mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return "";
-    string mode = mode_ns.safeString("");
+    std::string mode = mode_ns.safeString("");
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")

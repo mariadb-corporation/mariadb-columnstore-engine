@@ -29,7 +29,8 @@
 #include <string>
 #include <vector>
 
-#include <tr1/unordered_map>
+#include <unordered.h>
+
 #include <boost/thread/mutex.hpp>
 
 #include "we_type.h"
@@ -64,17 +65,17 @@ class AllocExtEntry
   {
   }
 
-  OID fOid = 0;                 // column OID
-  int fColWidth = 0;            // colum width (in bytes)
-  uint16_t fDbRoot = 0;         // DBRoot of allocated extent
-  uint32_t fPartNum = 0;        // Partition number of allocated extent
-  uint16_t fSegNum = 0;         // Segment number of allocated extent
-  BRM::LBID_t fStartLbid = 0;   // Starting LBID of allocated extent
-  int fAllocSize = 0;           // Number of allocated LBIDS
-  HWM fHwm = 0;                 // Starting fbo or hwm of allocated extent
-  int fStatus = NO_ERROR;              // Status of extent allocation
-  std::shared_ptr<std::string> fStatusMsg{new std::string()};   // Status msg of extent allocation
-  unsigned int fStripeKey = 0;  // "Stripe" identifier for this extent
+  OID fOid = 0;                                                // column OID
+  int fColWidth = 0;                                           // colum width (in bytes)
+  uint16_t fDbRoot = 0;                                        // DBRoot of allocated extent
+  uint32_t fPartNum = 0;                                       // Partition number of allocated extent
+  uint16_t fSegNum = 0;                                        // Segment number of allocated extent
+  BRM::LBID_t fStartLbid = 0;                                  // Starting LBID of allocated extent
+  int fAllocSize = 0;                                          // Number of allocated LBIDS
+  HWM fHwm = 0;                                                // Starting fbo or hwm of allocated extent
+  int fStatus = NO_ERROR;                                      // Status of extent allocation
+  std::shared_ptr<std::string> fStatusMsg{new std::string()};  // Status msg of extent allocation
+  unsigned int fStripeKey = 0;                                 // "Stripe" identifier for this extent
 };
 
 //------------------------------------------------------------------------------

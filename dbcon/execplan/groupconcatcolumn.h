@@ -135,7 +135,7 @@ class GroupConcatColumn : public AggregateColumn
   using AggregateColumn::operator!=;
   virtual bool operator!=(const GroupConcatColumn& t) const;
 
-  string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   std::vector<SRCP> fOrderCols;

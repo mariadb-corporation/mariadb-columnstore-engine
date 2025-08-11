@@ -3,7 +3,6 @@
 // #include <cmath>
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 #include "idb_mysql.h"
 
@@ -24,6 +23,7 @@ using namespace execplan;
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_sysvars.h"
 using namespace cal_impl_if;
+using namespace std;
 
 namespace
 {

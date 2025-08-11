@@ -45,7 +45,7 @@
 #include "calpontsystemcatalog.h"
 #include "windowfunctioncolumn.h"
 #include "hasher.h"
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 
 #define EXPORT
 
@@ -91,12 +91,12 @@ struct hasher<long double>
 
 // A collation aware hasher for strings
 template <>
-struct hasher<string>
+struct hasher<std::string>
 {
   explicit hasher(uint32_t cs_num) : fHasher(cs_num)
   {
   }
-  inline size_t operator()(string val) const
+  inline size_t operator()(std::string val) const
   {
     return fHasher(val.c_str(), val.size());
   }
@@ -273,11 +273,11 @@ class Moda_impl_T : public mcsv1_UDAF
 };
 
 template <>  // string specialization
-class Moda_impl_T<string> : public mcsv1_UDAF
+class Moda_impl_T<std::string> : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  Moda_impl_T() : cs(8) {};
+  Moda_impl_T() : cs(8){};
   ~Moda_impl_T() override = default;
 
   mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
@@ -305,7 +305,7 @@ class moda : public mcsv1_UDAF
 {
  public:
   // Defaults OK
-  moda() : mcsv1_UDAF() {};
+  moda() : mcsv1_UDAF(){};
   ~moda() override = default;
 
   mcsv1_UDAF::ReturnCode init(mcsv1Context* context, ColumnDatum* colTypes) override;
@@ -357,7 +357,7 @@ class moda : public mcsv1_UDAF
   Moda_impl_T<float> moda_impl_float;
   Moda_impl_T<double> moda_impl_double;
   Moda_impl_T<long double> moda_impl_longdouble;
-  Moda_impl_T<string> moda_impl_string;
+  Moda_impl_T<std::string> moda_impl_string;
 };
 
 };  // namespace mcsv1sdk

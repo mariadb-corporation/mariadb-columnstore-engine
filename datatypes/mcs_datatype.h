@@ -20,7 +20,7 @@
 #include <sstream>
 #include <boost/any.hpp>
 #include "exceptclasses.h"
-#include "basic/conststring.h"
+#include "conststring.h"
 #include "mcs_datatype_basic.h"
 #include "mcs_numeric_limits.h"
 #include "mcs_data_condition.h"
@@ -34,8 +34,6 @@ typedef int32_t mcs_sint32_t;
 // Because including my_sys.h in a Columnstore header causes too many conflicts
 struct charset_info_st;
 typedef const struct charset_info_st CHARSET_INFO;
-
-using namespace std;  // e.g. string
 
 namespace ddlpackage
 {
@@ -800,7 +798,7 @@ class MinMaxPartitionInfo : public MinMaxInfo
   uint64_t m_status;
 
  public:
-  MinMaxPartitionInfo() : m_status(0) {};
+  MinMaxPartitionInfo() : m_status(0){};
   explicit MinMaxPartitionInfo(const BRM::EMEntry& entry);
   void set_invalid()
   {
@@ -1023,8 +1021,8 @@ class TypeHandler
   static const TypeHandler* find_by_ddltype(const ddlpackage::ColumnType& ct);
   virtual ~TypeHandler() = default;
 
-  virtual const string& name() const = 0;
-  virtual const string print(const SystemCatalog::TypeAttributesStd& /*attr*/) const
+  virtual const std::string& name() const = 0;
+  virtual const std::string print(const SystemCatalog::TypeAttributesStd& /*attr*/) const
   {
     return name();
   }
@@ -1066,10 +1064,10 @@ class TypeHandler
   virtual MinMaxPartitionInfo getExtentPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
                                                      BRM::DBRM& em, const BRM::EMEntry& entry,
                                                      int* state) const;
-  virtual string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                                     const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                                     round_style_t rfMin, const SimpleValue& endVal,
-                                     round_style_t rfMax) const
+  virtual std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                          const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                          round_style_t rfMin, const SimpleValue& endVal,
+                                          round_style_t rfMax) const
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1286,8 +1284,7 @@ class TypeHandlerBit : public TypeHandler
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -1320,7 +1317,7 @@ class TypeHandlerBit : public TypeHandler
                                const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
                                bool& /*pushWarning*/) const override;
 
-  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     idbassert(0);
     return nullptr;
@@ -1619,10 +1616,10 @@ class TypeHandlerUInt8 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1683,10 +1680,10 @@ class TypeHandlerUInt16 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1750,10 +1747,10 @@ class TypeHandlerUInt24 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1817,10 +1814,10 @@ class TypeHandlerUInt32 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1881,10 +1878,10 @@ class TypeHandlerUInt64 : public TypeHandlerInt
   {
     return MinMaxInfo::widenUInt64(a, b);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueUInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -1923,9 +1920,10 @@ class TypeHandlerXDecimal : public TypeHandler
                                                const BRM::EMEntry& entry, int* state) const;
   MinMaxPartitionInfo getExtentPartitionInfo128(const SystemCatalog::TypeAttributesStd& attr, BRM::DBRM& em,
                                                 const BRM::EMEntry& entry, int* state) const;
-  string PrintPartitionValue128(const SystemCatalog::TypeAttributesStd& attr,
-                                const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                                round_style_t rfMin, const SimpleValue& endVal, round_style_t rfMax) const;
+  std::string PrintPartitionValue128(const SystemCatalog::TypeAttributesStd& attr,
+                                     const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                     round_style_t rfMin, const SimpleValue& endVal,
+                                     round_style_t rfMax) const;
 
  public:
   size_t ColWriteBatch(WriteBatchField* field, const unsigned char* buf, bool nullVal,
@@ -1988,10 +1986,10 @@ class TypeHandlerSDecimal64 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo64(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -2054,10 +2052,10 @@ class TypeHandlerUDecimal64 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo64(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValueSInt64(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -2120,10 +2118,10 @@ class TypeHandlerSDecimal128 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo128(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -2186,10 +2184,10 @@ class TypeHandlerUDecimal128 : public TypeHandlerXDecimal
   {
     return getExtentPartitionInfo128(attr, em, entry, state);
   }
-  string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
-                             const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
-                             round_style_t rfMin, const SimpleValue& endVal,
-                             round_style_t rfMax) const override
+  std::string PrintPartitionValue(const SystemCatalog::TypeAttributesStd& attr,
+                                  const MinMaxPartitionInfo& partInfo, const SimpleValue& startVal,
+                                  round_style_t rfMin, const SimpleValue& endVal,
+                                  round_style_t rfMax) const override
   {
     return PrintPartitionValue128(attr, partInfo, startVal, rfMin, endVal, rfMax);
   }
@@ -2218,8 +2216,7 @@ class TypeHandlerReal : public TypeHandler
   {
     return {};  // QQ: real types were not handled in IDB_format()
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2408,9 +2405,9 @@ class TypeHandlerChar : public TypeHandlerStr
   {
     return SystemCatalog::CHAR;
   }
-  const string print(const SystemCatalog::TypeAttributesStd& attr) const override
+  const std::string print(const SystemCatalog::TypeAttributesStd& attr) const override
   {
-    ostringstream oss;
+    std::ostringstream oss;
     oss << name() << "(" << attr.colWidth << ")";
     return oss.str();
   }
@@ -2445,9 +2442,9 @@ class TypeHandlerVarchar : public TypeHandlerStr
   {
     return SystemCatalog::VARCHAR;
   }
-  const string print(const SystemCatalog::TypeAttributesStd& attr) const override
+  const std::string print(const SystemCatalog::TypeAttributesStd& attr) const override
   {
-    ostringstream oss;
+    std::ostringstream oss;
     oss << name() << "(" << attr.colWidth << ")";
     return oss.str();
   }
@@ -2515,8 +2512,7 @@ class TypeHandlerBlob : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2542,8 +2538,7 @@ class TypeHandlerText : public TypeHandlerStr
   {
     return storeValueToFieldBlobText(row, pos, f);
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }
@@ -2574,8 +2569,7 @@ class TypeHandlerClob : public TypeHandlerStr
     idbassert(0);  // QQ
     return 1;
   }
-  std::string format(const SimpleValue& /*v*/,
-                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  std::string format(const SimpleValue& /*v*/, const SystemCatalog::TypeAttributesStd& /*attr*/) const override
   {
     return "0";  // QQ
   }

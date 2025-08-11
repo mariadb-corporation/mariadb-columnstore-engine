@@ -1,4 +1,4 @@
-/* Copyright (C) 2025 MariaDB Corporation
+/* Copyright (C) 2020 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -15,25 +15,20 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include "mariadb_charset/collation.h"
-#include "mariadb_my_sys.h"
-#include "mcs_datatype.h"
+#pragma once
 
-namespace datatypes
-{
-static inline CHARSET_INFO& get_charset_or_bin(int32_t charsetNumber)
-{
-  CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
-  return cs ? *cs : my_charset_bin;
-}
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <string>
+#include <limits.h>
+#include <sstream>
+#include "configcpp.h"
+#include "liboamcpp.h"
 
-Charset::Charset(uint32_t charsetNumber) : mCharset(&get_charset_or_bin(charsetNumber))
-{
-}
-
-void Charset::setCharset(uint32_t charsetNumber)
-{
-  mCharset = &get_charset_or_bin(charsetNumber);
-}
-
-}  // namespace datatypes
+void getSystemNetworkConfig(FILE* pOutputFile);
+void getModuleTypeConfig(FILE* pOutputFile);
+void getStorageConfig(FILE* pOutputFile);
+void getStorageStatus(FILE* pOutputFile);
+bool checkLogStatus(std::string filename, std::string phase);
+std::string getIPAddress(std::string hostName);

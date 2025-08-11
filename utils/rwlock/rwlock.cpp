@@ -26,7 +26,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #ifndef NDEBUG
 #define NDEBUG
@@ -239,16 +239,12 @@ again:
   }
   catch (std::exception& ex)
   {
-    cerr <<
-        __PRETTY_FUNCTION__ <<
-        ":" << __LINE__ << ": caught an exception: " << ex.what() << endl;
+    cerr << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": caught an exception: " << ex.what() << endl;
     throw;
   }
   catch (...)
   {
-    cerr <<
-        __PRETTY_FUNCTION__ <<
-        ":" << __LINE__ << ": caught an exception" << endl;
+    cerr << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": caught an exception" << endl;
     throw runtime_error("RWLock::down(): caught an exception");
   }
 }
@@ -293,16 +289,12 @@ again:
   }
   catch (std::exception& ex)
   {
-    cerr <<
-        __PRETTY_FUNCTION__ <<
-        ":" << __LINE__ << ": caught an exception: " << ex.what() << endl;
+    cerr << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": caught an exception: " << ex.what() << endl;
     throw;
   }
   catch (...)
   {
-    cerr <<
-        __PRETTY_FUNCTION__ <<
-        ":" << __LINE__ << ": caught an exception" << endl;
+    cerr << __PRETTY_FUNCTION__ << ":" << __LINE__ << ": caught an exception" << endl;
     throw runtime_error("RWLock::timed_down(): caught an exception");
   }
 

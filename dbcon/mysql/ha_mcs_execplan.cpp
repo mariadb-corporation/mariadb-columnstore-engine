@@ -21,8 +21,7 @@
 #include <string>
 #include <iostream>
 #include <stack>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
 #include <fstream>
 #include <sstream>
 #include <cerrno>
@@ -35,8 +34,6 @@
 #include "messagelog.h"
 
 #include <string.h>
-
-using namespace std;
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
@@ -98,6 +95,8 @@ using namespace funcexp;
 #include "vlarray.h"
 
 #include "ha_view.h"
+
+using namespace std;
 
 namespace cal_impl_if
 {

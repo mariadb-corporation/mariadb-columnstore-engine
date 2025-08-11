@@ -20,14 +20,15 @@
  *
  ****************************************************************************/
 
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #ifdef __linux__
 #include <sys/types.h>
 #endif
-using namespace std;
 
 #include "primitiveprocessor.h"
+
+using namespace std;
 
 namespace primitives
 {

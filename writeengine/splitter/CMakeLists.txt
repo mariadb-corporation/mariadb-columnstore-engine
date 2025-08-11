@@ -16,13 +16,15 @@ set(cpimport_SRCS
 
 columnstore_executable(cpimport ${cpimport_SRCS})
 
+add_dependencies(cpimport loggingcpp)
+
 columnstore_link(
     cpimport
     ${ENGINE_LDFLAGS}
+    ${NETSNMP_LIBRARIES}
     ${ENGINE_WRITE_LIBS}
     batchloader
     threadpool
     marias3
     boost_program_options
-    loggingcpp
 )

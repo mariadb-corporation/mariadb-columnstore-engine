@@ -154,7 +154,7 @@ class SimpleScalarFilter : public Filter
    */
   bool operator!=(const SimpleScalarFilter& t) const;
 
-  string toCppCode(IncludeSet& includes) const override;
+  std::string toCppCode(IncludeSet& includes) const override;
 
  private:
   // default okay?

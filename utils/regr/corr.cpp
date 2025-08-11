@@ -15,12 +15,9 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <sstream>
+#include <cmath>
 #include <cstring>
-#include <typeinfo>
 #include "corr.h"
-#include "bytestream.h"
-#include "objectreader.h"
 
 using namespace mcsv1sdk;
 
@@ -197,8 +194,8 @@ mcsv1_UDAF::ReturnCode corr::evaluate(mcsv1Context* context, static_any::any& va
       // When var_popy is 0, NULL is the result
       return mcsv1_UDAF::SUCCESS;
     }
-    long double std_popx = sqrt(var_popx);
-    long double std_popy = sqrt(var_popy);
+    long double std_popx = std::sqrt(var_popx);
+    long double std_popy = std::sqrt(var_popy);
     long double corr = cxy / (std_popy * std_popx * N);
     valOut = static_cast<double>(corr);
   }

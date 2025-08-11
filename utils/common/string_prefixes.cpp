@@ -18,7 +18,7 @@
 
 /* handling of the conversion of string prefixes to int64_t for quick range checking */
 
-#include "mariadb_charset/collation.h"
+#include "collation.h"
 #include "joblisttypes.h"
 
 #include "string_prefixes.h"

@@ -25,7 +25,7 @@
 #pragma once
 
 #include <string>
-#include <tr1/unordered_map>
+#include <unordered.h>
 
 #include <stddef.h>
 

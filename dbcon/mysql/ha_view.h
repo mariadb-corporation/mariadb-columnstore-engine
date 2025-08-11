@@ -54,7 +54,8 @@ class View
   uint32_t processJoin(gp_walk_info& gwi, std::stack<execplan::ParseTree*>&);
 
  private:
-  SELECT_LEX fSelect;
+  // Lifetime of fSelect is managed by MDB and must be longer than View object
+  SELECT_LEX& fSelect;
   gp_walk_info* fParentGwip;
   execplan::CalpontSystemCatalog::TableAliasName fViewName;
 };

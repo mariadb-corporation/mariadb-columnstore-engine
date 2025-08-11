@@ -48,8 +48,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered.h>
 #include <set>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -61,7 +60,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <pthread.h>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 
 using namespace std;
@@ -648,7 +647,7 @@ void* thr_popper(ioManager* arg)
           fdCountSort.clear();
 
         }  // if (fdcache.size()...
-      }    // if (oid > 3000)
+      }  // if (oid > 3000)
 
       int opts = primitiveprocessor::directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
       fp = NULL;

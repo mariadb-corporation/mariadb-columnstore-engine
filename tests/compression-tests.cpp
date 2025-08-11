@@ -24,7 +24,7 @@
 class CompressionTest : public ::testing::Test
 {
  protected:
-  std::string genPermutations(string& data)
+  std::string genPermutations(std::string& data)
   {
     std::string generated;
     generate(data, 0, generated);
@@ -32,7 +32,7 @@ class CompressionTest : public ::testing::Test
   }
 
  private:
-  void generate(string& data, uint32_t i, std::string& generated)
+  void generate(std::string& data, uint32_t i, std::string& generated)
   {
     if (i == data.size())
     {
