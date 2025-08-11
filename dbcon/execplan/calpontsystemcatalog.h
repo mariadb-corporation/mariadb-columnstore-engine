@@ -279,6 +279,15 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
     void serialize(messageqcpp::ByteStream& b) const
     {
       b << (uint32_t)colDataType;
+
+      if (colDataType==datatypes::SystemCatalog::ENUM || colDataType==datatypes::SystemCatalog::SET) {
+        b << (uint32_t) stringValues.size();
+
+        for (size_t i = 0; i<stringValues.size(); ++i) {
+          b << stringValues[i];
+        }
+      }
+
       b << (uint32_t)colWidth;
       b << (uint32_t)scale;
       b << (uint32_t)precision;
@@ -291,6 +300,21 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
       uint32_t val;
       b >> (uint32_t&)val;
       colDataType = (ColDataType)val;
+
+      if (colDataType==datatypes::SystemCatalog::ENUM || colDataType==datatypes::SystemCatalog::SET) {
+        uint32_t size;
+
+        stringValues.clear();
+        b >> size;
+
+        for (size_t i = 0; i<size; ++i) {
+          std::string str;
+
+          b >> str;
+          stringValues.push_back(str);
+        }
+      }
+
       b >> (uint32_t&)colWidth;
       b >> (uint32_t&)scale;
       b >> (uint32_t&)precision;

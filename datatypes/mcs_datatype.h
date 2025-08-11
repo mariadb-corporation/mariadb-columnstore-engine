@@ -178,6 +178,9 @@ class SystemCatalog
     TEXT,                 /*!< TEXT type */
     TIME,                 /*!< TIME type */
     TIMESTAMP,            /*!< TIMESTAMP type */
+    ENUM,                 /*!< ENUM type */
+    SET,                  /*!< SET type */
+    JSON,                 /*!< JSON type */
     NUM_OF_COL_DATA_TYPE, /* NEW TYPES ABOVE HERE */
     LONGDOUBLE,           /* @bug3241, dev and variance calculation only */
     STRINT,               /* @bug3532, string as int for fast comparison */
@@ -192,6 +195,7 @@ class SystemCatalog
   class TypeAttributesStd
   {
    public:
+    std::vector<std::string> stringValues;
     int32_t colWidth;
     int32_t scale;  // number after decimal points
     int32_t precision;
@@ -1081,6 +1085,186 @@ class TypeHandler
                                        const ConvertFromStringParam& prm, const std::string& str,
                                        bool& pushWarning) const = 0;
   virtual const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& attr) const = 0;
+};
+
+// QQ: perhaps not needed yet
+class TypeHandlerEnum : public TypeHandler
+{
+  const string& name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::ENUM;
+  }
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
+  {
+    idbassert(0);  // QQ
+    return 1;
+  }
+  std::string format(const SimpleValue& /*v*/,
+                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return "0";  // QQ
+  }
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
+  {
+    idbassert(0);
+    return "Error";
+  }
+
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
+  {
+    idbassert(0);
+    return {};
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    // TODO: How to communicate with write engine?
+    return {};
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+};
+
+// QQ: perhaps not needed yet
+class TypeHandlerSet : public TypeHandler
+{
+  const string& name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::SET;
+  }
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
+  {
+    idbassert(0);  // QQ
+    return 1;
+  }
+  std::string format(const SimpleValue& /*v*/,
+                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return "0";  // QQ
+  }
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
+  {
+    idbassert(0);
+    return "Error";
+  }
+
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
+  {
+    idbassert(0);
+    return {};
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    // TODO: How to communicate with write engine?
+    return {};
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+};
+
+// QQ: perhaps not needed yet
+class TypeHandlerJson : public TypeHandler
+{
+  const string& name() const override;
+  code_t code() const override
+  {
+    return SystemCatalog::JSON;
+  }
+  size_t ColWriteBatch(WriteBatchField* /*field*/, const unsigned char* /*buf*/, bool /*nullVal*/,
+                       ColBatchWriter& /*writer*/) const override
+  {
+    idbassert(0);  // QQ
+    return 0;
+  }
+  int storeValueToField(rowgroup::Row& /*row*/, int /*pos*/, StoreField* /*f*/) const override
+  {
+    idbassert(0);  // QQ
+    return 1;
+  }
+  std::string format(const SimpleValue& /*v*/,
+                     const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    return "0";  // QQ
+  }
+  std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& /*attr*/,
+                                  const MinMaxInfo& /*i*/) const override
+  {
+    idbassert(0);
+    return "Error";
+  }
+
+  execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& /*name*/,
+                                          SystemCatalog::TypeHolderStd& /*ct*/,
+                                          const SimpleColumnParam& /*prm*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
+  SimpleValue toSimpleValue(const SessionParam& /*sp*/, const SystemCatalog::TypeAttributesStd& /*attr*/,
+                            const char* /*str*/, round_style_t& /*rf*/) const override
+  {
+    idbassert(0);
+    return {};
+  }
+  boost::any getNullValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    // TODO: How to communicate with write engine?
+    return {};
+  }
+  boost::any convertFromString(const SystemCatalog::TypeAttributesStd& /*colType*/,
+                               const ConvertFromStringParam& /*prm*/, const std::string& /*str*/,
+                               bool& /*pushWarning*/) const override;
+
+  const uint8_t* getEmptyValueForType(const SystemCatalog::TypeAttributesStd& /*attr*/) const override
+  {
+    idbassert(0);
+    return nullptr;
+  }
 };
 
 // QQ: perhaps not needed yet

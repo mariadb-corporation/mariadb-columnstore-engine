@@ -277,11 +277,33 @@ const string& TypeHandlerText::name() const
   return xname;
 }
 
+const string& TypeHandlerEnum::name() const
+{
+  static const string xname = "ENUM";
+  return xname;
+}
+
+const string& TypeHandlerSet::name() const
+{
+  static const string xname = "SET";
+  return xname;
+}
+
+const string& TypeHandlerJson::name() const
+{
+  static const string xname = "JSON";
+  return xname;
+}
+
 const string& TypeHandlerBit::name() const
 {
   static const string xname = "BIT";
   return xname;
 }
+
+TypeHandlerEnum mcs_type_handler_enum;
+TypeHandlerSet mcs_type_handler_set;
+TypeHandlerJson mcs_type_handler_json;
 
 TypeHandlerBit mcs_type_handler_bit;
 
@@ -327,6 +349,9 @@ const TypeHandler* TypeHandler::find(SystemCatalog::ColDataType typeCode,
 {
   switch (typeCode)
   {
+    case SystemCatalog::ENUM: return &mcs_type_handler_enum;
+    case SystemCatalog::SET: return &mcs_type_handler_set;
+    case SystemCatalog::JSON: return &mcs_type_handler_json;
     case SystemCatalog::BIT: return &mcs_type_handler_bit;
     case SystemCatalog::TINYINT: return &mcs_type_handler_sint8;
     case SystemCatalog::SMALLINT: return &mcs_type_handler_sint16;
@@ -1541,6 +1566,27 @@ boost::any TypeHandlerVarbinary::getNullValueForType(const SystemCatalog::TypeAt
 }
 
 /****************************************************************************/
+
+boost::any TypeHandlerEnum::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+  const ConvertFromStringParam& prm, const std::string& data,
+  bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToEnum(colType, prm, data, pushWarning);
+}
+
+boost::any TypeHandlerSet::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+  const ConvertFromStringParam& prm, const std::string& data,
+  bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToSet(colType, prm, data, pushWarning);
+}
+
+boost::any TypeHandlerJson::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
+  const ConvertFromStringParam& prm, const std::string& data,
+  bool& pushWarning) const
+{
+  return dataconvert::DataConvert::StringToJson(colType, prm, data, pushWarning);
+}
 
 boost::any TypeHandlerBit::convertFromString(const SystemCatalog::TypeAttributesStd& colType,
                                              const ConvertFromStringParam& prm, const std::string& data,

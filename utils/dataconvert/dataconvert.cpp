@@ -1216,6 +1216,105 @@ bool stringToTimestampStruct(const string& data, TimeStamp& timeStamp, long time
   return true;
 }
 
+boost::any DataConvert::StringToEnum(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+  bool& pushWarning)
+{
+  std::string data(dataOrig);
+
+  (void)prm;
+
+  for (size_t i = 0; i<colType.stringValues.size(); ++i) {
+    if (data == colType.stringValues[i]) {
+      pushWarning = false;
+
+      boost::any val = (uint32)i;
+
+      return val;
+    }
+  }
+
+  pushWarning = true;
+
+  throw QueryDataExcept("Invalid value on ENUM type.", formatErr);
+}
+
+boost::any DataConvert::StringToSet(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+  bool& pushWarning)
+{
+  std::string data(dataOrig);
+  uint128_t result = 0;
+  std::string current;
+
+  (void)prm;
+
+  for (size_t i = 0; i<data.size(); ++i) {
+    char c = data[i];
+
+    if (c==',') {
+      bool found = false;
+      for (size_t j = 0; j<colType.stringValues.size(); ++j) {
+        if (current == colType.stringValues[j]) {
+          found = true;
+          result |= ((uint128_t)1) << j;
+
+          break;
+        }
+      }
+
+      current.clear();
+
+      if (!found) {
+        pushWarning = true;
+
+        throw QueryDataExcept("Invalid value on SET type.", formatErr);
+      }
+    } else {
+      current += c;
+    }
+  }
+
+  bool found = false;
+
+  for (size_t j = 0; j<colType.stringValues.size(); ++j) {
+    if (current == colType.stringValues[j]) {
+      found = true;
+      result |= ((uint128_t)1) << j;
+
+      break;
+    }
+  }
+
+  if (!found) {
+    pushWarning = true;
+
+    throw QueryDataExcept("Invalid value on SET type.", formatErr);
+  }
+
+  boost::any val = result;
+
+  pushWarning = false;
+
+  return val;
+}
+
+boost::any DataConvert::StringToJson(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+  const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+  bool& pushWarning)
+{
+  std::string data(dataOrig);
+  
+  (void)prm;
+  (void)colType;
+  
+  boost::any val = data;
+
+  pushWarning = false;
+
+  return val;
+}
+
 boost::any DataConvert::StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
                                     const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
                                     bool& pushWarning)

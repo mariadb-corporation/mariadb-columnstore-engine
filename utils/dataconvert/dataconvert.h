@@ -1270,6 +1270,18 @@ class DataConvert
                                          const datatypes::SystemCatalog::TypeHolderStd& type,
                                          unsigned int& rc);
 
+  static boost::any StringToEnum(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+                                bool& pushWarning);
+
+  static boost::any StringToSet(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+                                bool& pushWarning);
+  
+  static boost::any StringToJson(const datatypes::SystemCatalog::TypeAttributesStd& colType,
+                                const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
+                                bool& pushWarning);
+  
   static boost::any StringToBit(const datatypes::SystemCatalog::TypeAttributesStd& colType,
                                 const datatypes::ConvertFromStringParam& prm, const std::string& dataOrig,
                                 bool& pushWarning);
