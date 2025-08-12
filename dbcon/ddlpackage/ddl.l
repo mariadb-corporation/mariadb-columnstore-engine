@@ -117,6 +117,9 @@ CREATE {return CREATE;}
 CURRENT_USER {return CURRENT_USER;}
 DATE {ddlget_lval(yyscanner)->str = scanner_copy("date", yyscanner); return DATE;}
 DATETIME {return DATETIME;}
+ENUM {return ENUM;}
+SET {return SET;}
+JSON {return JSON;}
 TIME {ddlget_lval(yyscanner)->str = scanner_copy("time", yyscanner); return TIME;}
 TIMESTAMP {return TIMESTAMP;}
 DECIMAL {return DECIMAL;}

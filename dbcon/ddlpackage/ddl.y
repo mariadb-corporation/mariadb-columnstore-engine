@@ -122,6 +122,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
   ddlpackage::AlterTableActionList *ataList;
   ddlpackage::DDL_CONSTRAINT_ATTRIBUTES cattr;
   std::pair<std::string, std::string> *tableOption;
+  std::vector<std::string> *strList;
   const char *columnOption;
   ddlpackage::ColumnConstraintDef *columnConstraintDef;
   ddlpackage::ColumnNameList *columnNameList;
@@ -154,7 +155,7 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
 CHARACTER CHECK CLOB COLUMN
 BOOL BOOLEAN
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
-DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
+DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE ENUM SET, JSON
 FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
 MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT MEDIUMINT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
@@ -207,6 +208,7 @@ ZEROFILL
 %type <refActionCode>        opt_delete_rule
 %type <columnType>           exact_numeric_type
 %type <str>                  literal
+%type <strList>              nonemptyLiteralList
 %type <matchType>            opt_match_type
 %type <matchType>            match_type
 %type <ata>                  alter_table_comment
@@ -261,7 +263,7 @@ ZEROFILL
 // for objects allocated during parse:.
 %destructor { delete $$; } qualified_name ident table_element column_def exact_numeric_type
 %destructor { delete $$; } table_options opt_table_options table_name
-%destructor { delete $$; } column_name_list data_type column_constraint
+%destructor { delete $$; } column_name_list data_type column_constraint nonemptyLiteralList
 %destructor { delete $$; } column_constraint_def column_qualifier_list
 %destructor { delete $$; } opt_referential_triggered_action referential_triggered_action
 %destructor { delete $$; } table_option character_string_type binary_string_type blob_type
@@ -845,6 +847,9 @@ data_type:
         $1->fCollate = $3;
         $$ = $1;
     }
+	| ENUM '(' nonemptyLiteralList ')' { $$ = new ColumnType(DDL_ENUM); $$->fEnumValues = std::move(*$3); }
+	| SET '(' nonemptyLiteralList ')' { $$ = new ColumnType(DDL_SET); $$->fEnumValues = std::move(*$3); }
+	| JSON { $$ = new ColumnType(DDL_JSON); }
 	| IDB_BLOB
 	{
 		$$ = new ColumnType(DDL_BLOB);
@@ -855,7 +860,11 @@ data_type:
 		$$ = new ColumnType(DDL_CLOB);
 		$$->fLength = DDLDatatypeLength[DDL_CLOB];
 	}
+	;
 
+nonemptyLiteralList:
+	literal { $$ = new std::vector<std::string>(); $$->push_back($1); }
+	| nonemptyLiteralList ',' literal { $$ = $1; $1 = nullptr; $$->push_back($3); }
 	;
 
 column_qualifier_list:
