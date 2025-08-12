@@ -27,22 +27,28 @@
 
 #include "execplan/calpontselectexecutionplan.h"
 
-namespace optimizer {
+namespace optimizer
+{
 
-class RBOptimizerContext {
-public:
+class RBOptimizerContext
+{
+ public:
   RBOptimizerContext() = delete;
-  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info) : gwi(walk_info) {}
-  // gwi lifetime should be longer than optimizer context. 
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info) : gwi(walk_info)
+  {
+  }
+  // gwi lifetime should be longer than optimizer context.
   // In plugin runtime this is always true.
   cal_impl_if::gp_walk_info& gwi;
-  uint64_t uniqueId {0};
+  uint64_t uniqueId{0};
 };
 
 struct Rule
 {
-  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan& csep,
+                               optimizer::RBOptimizerContext& ctx);
+  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan& csep,
+                               optimizer::RBOptimizerContext& ctx);
 
   Rule(std::string&& name, RuleMatcher matchRule, RuleApplier applyRule)
    : name(name), matchRule(matchRule), applyRule(applyRule) {};
@@ -70,4 +76,4 @@ struct Rule
 };
 
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx);
-}
+}  // namespace optimizer

@@ -234,7 +234,7 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
     T currentLowerBound = *(uint32_t*)bucket.start_value.data();
     std::cout << "Bucket: " << currentLowerBound << std::endl;
   }
-  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound. 
+  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound.
   // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits *
   // numberOfBucketsPerUnionUnit; T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data(); T
   // currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
@@ -248,69 +248,66 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
   return bounds;
 }
 
-
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
-  execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
-  optimizer::RBOptimizerContext& ctx)
+    execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
+    optimizer::RBOptimizerContext& ctx)
 {
-execplan::CalpontSelectExecutionPlan::SelectList unionVec;
+  execplan::CalpontSelectExecutionPlan::SelectList unionVec;
 
-// SC type controls an integral type used to produce suitable filters. The continuation of this function
-// should become a template function based on SC type.
-auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
-if (!keyColumnAndStatistics)
-{
-  return unionVec;
-}
+  // SC type controls an integral type used to produce suitable filters. The continuation of this function
+  // should become a template function based on SC type.
+  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
+  if (!keyColumnAndStatistics)
+  {
+    return unionVec;
+  }
 
-auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
 
-std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
-std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
+  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
+  std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
 
-// TODO char and other numerical types support
-auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
-if (!boundsOpt.has_value())
-{
-  return unionVec;
-}
+  // TODO char and other numerical types support
+  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
+  if (!boundsOpt.has_value())
+  {
+    return unionVec;
+  }
 
-auto& bounds = boundsOpt.value();
+  auto& bounds = boundsOpt.value();
 
-// These bounds produce low <= col < high
-if (bounds.size() > 1)
-{
-  for (size_t i = 0; i <= bounds.size() - 2; ++i)
+  // These bounds produce low <= col < high
+  if (bounds.size() > 1)
+  {
+    for (size_t i = 0; i <= bounds.size() - 2; ++i)
+    {
+      auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
+      // Add BETWEEN based on key column range
+      auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
+      clonedCSEP->filters(filter);
+      // To create CES filter we need to have a column in the column map
+      clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+      unionVec.push_back(clonedCSEP);
+    }
+  }
+  // This last bound produces low <= col <= high
+  // TODO add NULLs into filter of the last step
+  if (!bounds.empty())
   {
     auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
-    // Add BETWEEN based on key column range
-    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
-    clonedCSEP->filters(filter);
-    // To create CES filter we need to have a column in the column map
+    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
     clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+    clonedCSEP->filters(filter);
     unionVec.push_back(clonedCSEP);
   }
-}
-// This last bound produces low <= col <= high
-// TODO add NULLs into filter of the last step
-if (!bounds.empty())
-{
-  auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
-  auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
-  clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
-  clonedCSEP->filters(filter);
-  unionVec.push_back(clonedCSEP);
+
+  return unionVec;
 }
 
-return unionVec;
-}
-
-execplan::SCSEP createDerivedTableFromTable(
-    execplan::CalpontSelectExecutionPlan& csep,
-    const execplan::CalpontSystemCatalog::TableAliasName& table,
-    const std::string& tableAlias,
-    optimizer::RBOptimizerContext& ctx)
+execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan& csep,
+                                            const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                            const std::string& tableAlias, optimizer::RBOptimizerContext& ctx)
 {
   // Don't copy filters for this
   auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
@@ -324,7 +321,8 @@ execplan::SCSEP createDerivedTableFromTable(
   {
     return execplan::SCSEP();
   }
-  auto additionalUnionVec = makeUnionFromTable(*derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
+  auto additionalUnionVec = makeUnionFromTable(
+      *derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
 
   // TODO add original alias to support multiple same name tables
   derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
@@ -355,8 +353,8 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // TODO add column statistics check to the corresponding match
     if (!table.isColumnstore() && anyColumnStatistics)
     {
-      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
-      std::to_string(ctx.uniqueId);
+      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table +
+                               "_" + std::to_string(ctx.uniqueId);
       tableAliasMap.insert({table, {tableAlias, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
