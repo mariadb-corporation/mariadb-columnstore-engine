@@ -590,15 +590,15 @@ has dbroot {subel.text}')
 
         return dbroots
 
-    def get_read_only_nodes(self, root=None) -> list[str]:
-        """Get names of read only nodes from config"""
+    def get_read_replicas(self, root=None) -> list[str]:
+        """Get names of read replicas from config."""
         root = root or self.get_current_config_root()
-        return [node.text for node in root.findall('./ReadOnlyNodes/Node')]
+        return [node.text for node in root.findall('./ReadReplicas/Node')]
 
-    def is_read_only(self, root=None) -> bool:
-        """Checks if this node is in read-only mode"""
+    def is_read_replica(self, root=None) -> bool:
+        """Checks if this node is configured as a read replica."""
 
         root = root or self.get_current_config_root()
-        read_only_nodes = set(self.get_read_only_nodes(root))
+        read_replicas = set(self.get_read_replicas(root))
         my_names = set(self.get_network_addresses_and_names())
-        return bool(read_only_nodes.intersection(my_names))
+        return bool(read_replicas.intersection(my_names))

@@ -52,7 +52,7 @@ class MCSProcessManager:
 
     @classmethod
     def _get_sorted_progs(
-        cls, is_primary: bool, reverse: bool = False, is_read_only: bool = False
+        cls, is_primary: bool, reverse: bool = False, is_read_replica: bool = False
     ) -> dict:
         """Get sorted services dict.
 
@@ -73,8 +73,8 @@ class MCSProcessManager:
                 if prog_name not in PRIMARY_PROGS
             }
 
-        if is_read_only:
-            logging.debug('Node is in read-only mode, skipping WriteEngine')
+        if is_read_replica:
+            logging.debug('Node is a read replica, skipping WriteEngine')
             unsorted_progs.pop(
                 MCSProgs.WRITE_ENGINE_SERVER, None
             )
@@ -416,7 +416,7 @@ class MCSProcessManager:
         cls,
         is_primary: bool,
         use_sudo: bool = True,
-        is_read_only: bool = False,
+        is_read_replica: bool = False,
     ) -> None:
         """Start mcs node processes.
 
@@ -424,11 +424,14 @@ class MCSProcessManager:
         :type is_primary: bool
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
-        :param is_read_only: if true, doesn't start WriteEngine
-        :type is_read_only: bool, optional
+        :param is_read_replica: if true, doesn't start WriteEngine
+        :type is_read_replica: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not started
         """
-        for prog_name in cls._get_sorted_progs(is_primary=is_primary, is_read_only=is_read_only):
+        for prog_name in cls._get_sorted_progs(
+            is_primary=is_primary,
+            is_read_replica=is_read_replica,
+        ):
             if (
                     cls.dispatcher_name == 'systemd'
                     and prog_name == MCSProgs.STORAGE_MANAGER
@@ -474,8 +477,8 @@ class MCSProcessManager:
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
 
     @classmethod
-    def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_only: bool = False):
+    def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_replica: bool = False):
         """TODO: For next releases."""
         if cls.get_running_mcs_procs():
             cls.stop_node(is_primary, use_sudo)
-        cls.start_node(is_primary, use_sudo, is_read_only)
+        cls.start_node(is_primary, use_sudo, is_read_replica)

@@ -65,7 +65,7 @@ def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
     use_rebalance_dbroots: bool = True,
-    read_only: bool = False,
+    read_replica: bool = False,
 ):
     """Add node to a cluster.
 
@@ -100,22 +100,22 @@ def add_node(
         if not _replace_localhost(c_root, node):
             pm_num = _add_node_to_PMS(c_root, node)
 
-            if not read_only:
+            if not read_replica:
                 _add_WES(c_root, pm_num, node)
             else:
-                logging.info('Node is read-only, skipping WES addition.')
-                _add_read_only_node(c_root, node)
+                logging.info('Node is read replica, skipping WES addition.')
+                _add_read_replica(c_root, node)
 
             _add_DBRM_Worker(c_root, node)
             _add_Module_entries(c_root, node)
             _add_active_node(c_root, node)
             _add_node_to_ExeMgrs(c_root, node)
             if use_rebalance_dbroots:
-                if not read_only:
+                if not read_replica:
                     _rebalance_dbroots(c_root)
                     _move_primary_node(c_root)
 
-            update_dbroots_of_readonly_nodes(c_root)
+            update_dbroots_of_read_replicas(c_root)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -170,8 +170,8 @@ def remove_node(
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, node)
 
-            is_read_only = node in node_config.get_read_only_nodes(c_root)
-            if not is_read_only:
+            is_read_replica = node in node_config.get_read_replicas(c_root)
+            if not is_read_replica:
                 _remove_WES(c_root, pm_num)
 
             _remove_DBRM_Worker(c_root, node)
@@ -183,19 +183,19 @@ def remove_node(
             if deactivate_only:
                 _deactivate_node(c_root, node)
 
-                # Remove node from ReadOnlyNodes if it is present there
-                read_only_nodes = c_root.find('./ReadOnlyNodes')
-                if read_only_nodes is not None:
-                    __remove_helper(read_only_nodes, node)
+                # Remove node from ReadReplicas if present
+                read_replicas = c_root.find('./ReadReplicas')
+                if read_replicas is not None:
+                    __remove_helper(read_replicas, node)
             else:
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
 
-            if use_rebalance_dbroots and not is_read_only:
+            if use_rebalance_dbroots and not is_read_replica:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
 
-            update_dbroots_of_readonly_nodes(c_root)
+            update_dbroots_of_read_replicas(c_root)
         else:
             # TODO:
             #   - IMO undefined behaviour here. Removing one single node
@@ -401,7 +401,7 @@ def __remove_helper(parent_node, node):
 
 def _remove_node(root, node):
     '''
-    remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadOnlyNodes
+    remove node from DesiredNodes, InactiveNodes, ActiveNodes and (if present) ReadReplicas
     '''
 
     for n in (
@@ -411,9 +411,9 @@ def _remove_node(root, node):
     ):
         __remove_helper(n, node)
 
-    read_only_nodes = root.find('./ReadOnlyNodes')
-    if read_only_nodes is not None:
-        __remove_helper(read_only_nodes, node)
+    rr = root.find('./ReadReplicas')
+    if rr is not None:
+        __remove_helper(rr, node)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
@@ -1033,20 +1033,20 @@ def _add_WES(root, pm_num, node):
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
-def _add_read_only_node(root: etree.Element, node: str) -> None:
-    '''Add node name to ReadOnlyNodes if it is not already there'''
-    read_only_nodes = root.find('./ReadOnlyNodes')
-    if read_only_nodes is None:
-        read_only_nodes = etree.SubElement(root, 'ReadOnlyNodes')
+def _add_read_replica(root: etree.Element, node: str) -> None:
+    """Add node name to ReadReplicas if it is not already there."""
+    read_replicas = root.find('./ReadReplicas')
+    if read_replicas is None:
+        read_replicas = etree.SubElement(root, 'ReadReplicas')
     else:
-        for n in read_only_nodes.findall("./Node"):
+        for n in read_replicas.findall("./Node"):
             if n.text == node:
                 logging.warning(
-                    f"_add_read_only_node(): node {node} already exists in ReadOnlyNodes"
+                    f"_add_read_replica(): node {node} already exists in ReadReplicas"
                 )
                 return
 
-    etree.SubElement(read_only_nodes, "Node").text = node
+    etree.SubElement(read_replicas, "Node").text = node
 
 
 def _add_DBRM_Worker(root, node):
@@ -1212,31 +1212,32 @@ def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
     return module_num_to_addr
 
 
-def update_dbroots_of_readonly_nodes(root: etree.Element) -> None:
-    """Read-only nodes do not have their own dbroots, but they must have all the dbroots of the other nodes
-    So this function sets list of dbroots of each read-only node to the list of all the dbroots in the cluster
+def update_dbroots_of_read_replicas(root: etree.Element) -> None:
+    """Read replicas do not have their own dbroots, but they must have all the
+    dbroots of the other nodes. Sets the list of dbroots of each read replica to
+    the list of all dbroots in the cluster.
     """
     nc = NodeConfig()
     pm_num_to_addr = get_pm_module_num_to_addr_map(root)
-    for ro_node in nc.get_read_only_nodes(root):
+    for read_replica in nc.get_read_replicas(root):
         # Get PM num by IP address
         this_ip_pm_num = None
         for pm_num, pm_addr in pm_num_to_addr.items():
-            if pm_addr == ro_node:
+            if pm_addr == read_replica:
                 this_ip_pm_num = pm_num
                 break
 
         if this_ip_pm_num is not None:
-            # Add dbroots of other nodes to this read-only node
+            # Add dbroots of other nodes to this read replica
             add_dbroots_of_other_nodes(root, this_ip_pm_num)
         else:  # This should not happen
-            err_msg = f"Could not find PM number for read-only node {ro_node}"
+            err_msg = f"Could not find PM number for read replica {read_replica}"
             logging.error(err_msg)
             raise NodeNotFoundException(err_msg)
 
 
 def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
-    """Adds all the dbroots listed in the config to this (read-only) node"""
+    """Adds all the dbroots listed in the config to this read replica"""
     existing_dbroots = _get_existing_db_roots(root)
     sysconf_node = root.find("./SystemModuleConfig")
 
@@ -1256,11 +1257,14 @@ def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
         )
         dbroot_id_node.text = str(dbroot_id)
 
-    logging.info("Added %d dbroots to read-only node %d: %s", len(existing_dbroots), module_num, sorted(existing_dbroots))
+    logging.info(
+        "Added %d dbroots to read replica %d: %s",
+        len(existing_dbroots), module_num, sorted(existing_dbroots)
+    )
 
 
 def remove_dbroots_of_node(root: etree.Element, module_num: int) -> None:
-    """Removes all the dbroots listed in the config from this (read-only) node"""
+    """Removes all the dbroots listed in the config from this read replica"""
     sysconf_node = root.find("./SystemModuleConfig")
     dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
     if dbroot_count_node is not None:

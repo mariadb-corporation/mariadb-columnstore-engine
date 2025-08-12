@@ -199,12 +199,11 @@ def add(
             'Can be used multiple times to add several nodes at a time.'
         )
     ),
-    read_only: bool = typer.Option(
+    read_replica: bool = typer.Option(
         False,
-        '--read-only',
+        '--read-replica',
         help=(
-            'Add node (or nodes, if more than one is passed) in read-only '
-            'mode.'
+            'Add node (or nodes, if more than one is passed) as read replicas.'
         )
     )
 ):
@@ -216,7 +215,7 @@ def add(
     ):
         for node in nodes:
             result.append(
-                client.add_node({'node': node, 'read_only': read_only})
+                client.add_node({'node': node, 'read_replica': read_replica})
             )
     return result
 
