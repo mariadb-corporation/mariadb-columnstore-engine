@@ -76,7 +76,7 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
-    if (ctx.logRules)
+    if (ctx.logRules && changedThisRound)
     {
       std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
     }
@@ -132,7 +132,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
     if (mayApply(*current))
     {
-      rewrite = applyRule(*current, ctx);
+      rewrite |= applyRule(*current, ctx);
       ++ctx.uniqueId;
     }
   }

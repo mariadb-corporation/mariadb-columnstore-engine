@@ -188,6 +188,12 @@ void derivedTableOptimization(gp_walk_info* gwip, SCSEP& csep)
       }
     }
   }
+  // recursively process the nested derived table
+  for (uint i = 0; i < csep->subSelectList().size(); i++)
+  {
+    SCSEP subselect(boost::dynamic_pointer_cast<CalpontSelectExecutionPlan>(csep->subSelectList()[i]));
+    derivedTableOptimization(gwip, subselect);
+  }
 }
 
 FromSubQuery::FromSubQuery(gp_walk_info& gwip) : SubQuery(gwip)
