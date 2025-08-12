@@ -9,6 +9,7 @@ optparse.define short=c long=container-name desc="Name of the Docker container w
 optparse.define short=d long=distro desc="Linux distro for which mtr is runned" variable=DISTRO
 optparse.define short=s long=suite-list desc="Comma-separated list of test suites to run" variable=MTR_SUITE_LIST
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
+optparse.define short=E long=run-as-extern desc="Run MTR with --extern flag" variable=EXTERN default=false value=true
 optparse.define short=D long=download-data desc="Download and extract data from S3 for extended MTR" variable=DOWNLOAD_DATA default=false value=true
 optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default=false value=true
 
@@ -20,6 +21,7 @@ fi
 
 if [[ $FULL_MTR = true ]]; then
     DOWNLOAD_DATA=true
+    EXTERN=true
 fi
 
 MTR_FULL_SET="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly"
@@ -82,7 +84,7 @@ fi
 
 EXTERN_FLAG=""
 
-if [[ $FULL_MTR = true ]]; then
+if [[ $EXTERN = true ]]; then
     EXTERN_FLAG="--extern socket=${SOCKET_PATH}"
 fi
 
