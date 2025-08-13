@@ -10,25 +10,9 @@ See requirements.txt file.
 
 All the Python packages prerequisits are shipped with a pre-built Python enterpreter.
 
-### Optional Sentry (development only)
+### Optional Sentry
 
-Sentry support is optional and not installed by default. Developers can enable it locally:
-
-1. Install dev requirements (includes Sentry):
-   ```sh
-   python/bin/pip3 install -t deps --only-binary :all -r requirements-dev.txt
-   ```
-
-2. Set DSN in CMAPI config: edit `/etc/columnstore/cmapi_server.conf` and add section:
-   ```ini
-   [Sentry]
-   dsn = '<your_sentry_dsn>'
-   # environment = 'development'    ; optional
-   # traces_sample_rate = 0.0       ; optional
-   ```
-   If `dsn` is set, CMAPI will attempt to enable Sentry on startup.
-
-If the dependency is not installed or no DSN is provided, Sentry initialization is skipped.
+Sentry support is optional and disabled by default. It can be bundled at build time using the CMake option `-DENABLE_SENTRY=ON`. Runtime activation still requires setting a DSN in the CMAPI config. If the dependency is not present or no DSN is provided, Sentry initialization is skipped.
 
 ## Usage
 

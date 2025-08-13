@@ -13,6 +13,7 @@ MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 source "$SCRIPT_LOCATION"/utils.sh
 
 optparse.define short=d long=distro desc="distro" variable=OS
+optparse.define long=enable-sentry desc="Enable Sentry bundling" variable=ENABLE_SENTRY
 source $(optparse.build)
 echo "Arguments received: $@"
 
@@ -80,7 +81,11 @@ install_deps() {
 build_cmapi() {
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
   ./cleanup.sh
-  cmake -D"${PKG_FORMAT^^}"=1 -DSERVER_DIR="$MDB_SOURCE_PATH" . && make package
+  LOCAL_CMAKE_FLAGS=""
+  if [[ -n "${ENABLE_SENTRY:-}" ]]; then
+    LOCAL_CMAKE_FLAGS+=" -DENABLE_SENTRY=ON"
+  fi
+  cmake -D"${PKG_FORMAT^^}"=1 -DSERVER_DIR="$MDB_SOURCE_PATH" ${LOCAL_CMAKE_FLAGS} . && make package
 }
 install_deps
 build_cmapi

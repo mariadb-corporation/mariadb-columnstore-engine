@@ -108,6 +108,41 @@ install(
 )
 install(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
 
+# Optional Sentry support: vendor sentry-sdk into runtime deps when enabled
+option(ENABLE_SENTRY "Bundle sentry-sdk for Sentry support" OFF)
+# Use the version pinned in requirements-dev.txt
+set(SENTRY_SDK_VERSION "2.34.1" CACHE STRING "sentry-sdk version to bundle")
+
+if(ENABLE_SENTRY)
+    # Use the same portable interpreter used for other deps
+    set(PYTHON_EXECUTABLE "${CMAKE_CURRENT_SOURCE_DIR}/python/bin/python3")
+    if(NOT EXISTS "${PYTHON_EXECUTABLE}")
+        message(FATAL_ERROR "Portable Python not found at '${PYTHON_EXECUTABLE}'. Provision it as described in README before packaging.")
+    endif()
+    message(STATUS "Using portable Python for Sentry vendoring: ${PYTHON_EXECUTABLE}")
+
+    message(STATUS "Vendoring sentry-sdk==${SENTRY_SDK_VERSION}")
+    set(SENTRY_DEPS_DIR "${CMAKE_BINARY_DIR}/sentry_deps")
+    file(MAKE_DIRECTORY "${SENTRY_DEPS_DIR}")
+
+    execute_process(
+        COMMAND "${PYTHON_EXECUTABLE}" -m pip install
+                --no-compile --upgrade
+                --target "${SENTRY_DEPS_DIR}"
+                "sentry-sdk==${SENTRY_SDK_VERSION}"
+        RESULT_VARIABLE PIP_RC
+        OUTPUT_VARIABLE PIP_OUT
+        ERROR_VARIABLE  PIP_ERR
+    )
+    if(NOT PIP_RC EQUAL 0)
+        message(FATAL_ERROR "Failed to vendor sentry-sdk: ${PIP_ERR}")
+    endif()
+
+    # Install vendored Sentry into runtime deps directory alongside other deps
+    install(DIRECTORY "${SENTRY_DEPS_DIR}/"
+            DESTINATION "${CMAPI_DIR}/deps")
+endif()
+
 option(RPM "Build an RPM" OFF)
 if(RPM)
     set(CPACK_GENERATOR "RPM")
