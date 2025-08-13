@@ -250,9 +250,15 @@ void gp_walk(const Item* item, void* arg)
     {
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
-
+      std::string funcName = ifp->func_name();
       if(ifp->arguments()[0] != nullptr && ifp->arguments()[0]->type()!= Item::FIELD_ITEM)
       {
+        logging::Message::Args args;
+        args.add(funcName);
+        gwip->fatalParseError = true;
+        gwip->parseErrorText =
+              logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DATATYPE_NOT_SUPPORT, args);
+        std::cout<<gwip->parseErrorText<<std::endl;
         return;
       }
       
