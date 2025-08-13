@@ -208,9 +208,6 @@ template <typename T>
 std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
 {
   FilterRangeBounds<T> bounds;
-  // bounds.push_back({0, 6200000});
-
-  // return bounds;
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
@@ -257,56 +254,56 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
   optimizer::RBOptimizerContext& ctx)
 {
-execplan::CalpontSelectExecutionPlan::SelectList unionVec;
+  execplan::CalpontSelectExecutionPlan::SelectList unionVec;
 
-// SC type controls an integral type used to produce suitable filters. The continuation of this function
-// should become a template function based on SC type.
-auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
-if (!keyColumnAndStatistics)
-{
-  return unionVec;
-}
+  // SC type controls an integral type used to produce suitable filters. The continuation of this function
+  // should become a template function based on SC type.
+  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
+  if (!keyColumnAndStatistics)
+  {
+    return unionVec;
+  }
 
-auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
 
-std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
-std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
+  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
+  std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
 
-// TODO char and other numerical types support
-auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
-if (!boundsOpt.has_value())
-{
-  return unionVec;
-}
+  // TODO char and other numerical types support
+  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
+  if (!boundsOpt.has_value())
+  {
+    return unionVec;
+  }
 
-auto& bounds = boundsOpt.value();
+  auto& bounds = boundsOpt.value();
 
-// These bounds produce low <= col < high
-if (bounds.size() > 1)
-{
-  for (size_t i = 0; i <= bounds.size() - 2; ++i)
+  // These bounds produce low <= col < high
+  if (bounds.size() > 1)
+  {
+    for (size_t i = 0; i <= bounds.size() - 2; ++i)
+    {
+      auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
+      // Add BETWEEN based on key column range
+      auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
+      clonedCSEP->filters(filter);
+      // To create CES filter we need to have a column in the column map
+      clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+      unionVec.push_back(clonedCSEP);
+    }
+  }
+  // This last bound produces low <= col <= high
+  // TODO add NULLs into filter of the last step
+  if (!bounds.empty())
   {
     auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
-    // Add BETWEEN based on key column range
-    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds[i], false);
-    clonedCSEP->filters(filter);
-    // To create CES filter we need to have a column in the column map
+    auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
     clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
+    clonedCSEP->filters(filter);
     unionVec.push_back(clonedCSEP);
   }
-}
-// This last bound produces low <= col <= high
-// TODO add NULLs into filter of the last step
-if (!bounds.empty())
-{
-  auto clonedCSEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table);
-  auto filter = filtersWithNewRange(clonedCSEP, keyColumn, bounds.back(), true);
-  clonedCSEP->columnMap().insert({keyColumn.columnName(), execplan::SRCP(keyColumn.clone())});
-  clonedCSEP->filters(filter);
-  unionVec.push_back(clonedCSEP);
-}
 
-return unionVec;
+  return unionVec;
 }
 
 execplan::SCSEP createDerivedTableFromTable(

@@ -7610,14 +7610,6 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     }
   }
 
-  derivedTableOptimization(&gwi, csep);
-  if (csep->traceOn())
-  {
-    cerr << "---------------- cs_get_select_plan 2nd derived table optimization pass EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
-  }
-
   return 0;
 }
 
