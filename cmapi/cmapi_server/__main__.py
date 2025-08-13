@@ -15,7 +15,7 @@ from cherrypy.process import plugins
 
 # TODO: fix dispatcher choose logic because code executing in endpoints.py
 #       while import process, this cause module logger misconfiguration
-from cmapi_server.logging_management import config_cmapi_server_logging
+from cmapi_server.logging_management import config_cmapi_server_logging, maybe_init_sentry
 config_cmapi_server_logging()
 
 from cmapi_server import helpers
@@ -139,6 +139,9 @@ if __name__ == '__main__':
 
     # TODO: read cmapi config filepath as an argument
     helpers.cmapi_config_check()
+
+    # Init Sentry if DSN is present
+    maybe_init_sentry()
 
     CertificateManager.create_self_signed_certificate_if_not_exist()
     CertificateManager.renew_certificate()

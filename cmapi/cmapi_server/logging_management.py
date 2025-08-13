@@ -6,7 +6,8 @@ from functools import partial, partialmethod
 import cherrypy
 from cherrypy import _cperror
 
-from cmapi_server.constants import CMAPI_LOG_CONF_PATH
+from cmapi_server.constants import CMAPI_LOG_CONF_PATH, CMAPI_CONF_PATH
+from cmapi_server import helpers
 
 
 class AddIpFilter(logging.Filter):
@@ -136,3 +137,57 @@ def change_loggers_level(level: str):
     loggers.append(logging.getLogger())  # add RootLogger
     for logger in loggers:
         logger.setLevel(level)
+
+
+def maybe_init_sentry() -> None:
+    """Initialize Sentry only if configured in cmapi config.
+
+    Reads `/etc/columnstore/cmapi_server.conf` [Sentry] section. If `dsn` is set,
+    initializes Sentry. Otherwise does nothing. If sentry-sdk is not installed,
+    this function is a no-op.
+    """
+    try:
+        cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
+        dsn = helpers.dequote(
+            cfg_parser.get('Sentry', 'dsn', fallback='').strip()
+        )
+        if not dsn:
+            return
+
+        environment = helpers.dequote(
+            cfg_parser.get('Sentry', 'environment', fallback='development').strip()
+        )
+        traces_sample_rate_str = helpers.dequote(
+            cfg_parser.get('Sentry', 'traces_sample_rate', fallback='0.0').strip()
+        )
+    except Exception:
+        # Config not available/readable yet
+        return
+
+    try:
+        import sentry_sdk  # type: ignore
+        from sentry_sdk.integrations.logging import LoggingIntegration  # type: ignore
+
+        sentry_logging = LoggingIntegration(
+            level=logging.INFO,
+            event_level=logging.ERROR,
+        )
+
+        try:
+            traces_sample_rate = float(traces_sample_rate_str)
+        except ValueError:
+            traces_sample_rate = 0.0
+
+        sentry_sdk.init(
+            dsn=dsn,
+            environment=environment,
+            traces_sample_rate=traces_sample_rate,
+            integrations=[sentry_logging],
+        )
+        logging.getLogger(__name__).info('Sentry initialized for CMAPI via config.')
+    except ImportError:
+        logging.getLogger(__name__).info(
+            'sentry-sdk not installed; skipping Sentry initialization.'
+        )
+    except Exception:
+        logging.getLogger(__name__).exception('Failed to initialize Sentry.')
