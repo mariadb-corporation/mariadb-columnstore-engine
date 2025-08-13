@@ -110,7 +110,6 @@ install(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
 
 # Optional Sentry support: vendor sentry-sdk into runtime deps when enabled
 option(ENABLE_SENTRY "Bundle sentry-sdk for Sentry support" OFF)
-# Use the version pinned in requirements-dev.txt
 set(SENTRY_SDK_VERSION "2.34.1" CACHE STRING "sentry-sdk version to bundle")
 
 if(ENABLE_SENTRY)

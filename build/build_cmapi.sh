@@ -13,7 +13,7 @@ MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 source "$SCRIPT_LOCATION"/utils.sh
 
 optparse.define short=d long=distro desc="distro" variable=OS
-optparse.define long=enable-sentry desc="Enable Sentry bundling" variable=ENABLE_SENTRY
+optparse.define short=s long=enable-sentry desc="Enable Sentry bundling" variable=ENABLE_SENTRY value=1
 source $(optparse.build)
 echo "Arguments received: $@"
 
