@@ -7602,7 +7602,6 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
 
-
   if (get_unstable_optimizer(thd))
   {
     optimizer::RBOptimizerContext ctx(gwi);
@@ -7615,14 +7614,6 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
       cerr << *csep << endl;
       cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
     }
-  }
-
-  derivedTableOptimization(&gwi, csep);
-  if (csep->traceOn())
-  {
-    cerr << "---------------- cs_get_select_plan 2nd derived table optimization pass EXECUTION PLAN ----------------" << endl;
-    cerr << *csep << endl;
-    cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
 
   return 0;
