@@ -54,7 +54,7 @@ bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
                      });
 }
 
-bool matchParallelCES(execplan::CalpontSelectExecutionPlan& csep)
+bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep)
 {
   auto tables = csep.tableList();
   // This is leaf and there are no other tables at this level in neither UNION, nor derived table.
@@ -198,12 +198,13 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   return unionVec;
 }
-void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
+bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
 {
   auto tables = csep.tableList();
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
+  bool ruleHasBeenApplied = false;
 
   // ATM Must be only 1 table
   for (auto& table : tables)
@@ -246,6 +247,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
       // Remove the filters as they were pushed down to union units
       // This is inappropriate for EXISTS filter and join conditions
       derivedSCEP->filters(nullptr);
+      ruleHasBeenApplied = true;
     }
   }
   // Remove the filters if necessary using csep.filters(nullptr) as they were pushed down to union units
@@ -255,6 +257,7 @@ void applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerCon
   // Replace table list with new table list populated with union units
   csep.tableList(newTableList);
   csep.returnedCols(newReturnedColumns);
+  return ruleHasBeenApplied;
 }
 
 }  // namespace optimizer

@@ -7474,12 +7474,11 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
 
-  // Derived table projection and filter optimization.
+  // Derived table projection list optimization.
   derivedTableOptimization(&gwi, csep);
 
-  if (get_unstable_optimizer(thd))
   {
-    optimizer::RBOptimizerContext ctx(gwi);
+    optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn());
     bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx);
     if (csep->traceOn() && csepWasOptimized)
     {

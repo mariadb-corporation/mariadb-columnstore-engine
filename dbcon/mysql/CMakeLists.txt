@@ -44,6 +44,7 @@ set(libcalmysql_SRCS
     columnstore_dataload.cpp
     rulebased_optimizer.cpp
     rbo_apply_parallel_ces.cpp
+    rbo_predicate_pushdown.cpp
 )
 
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")

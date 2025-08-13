@@ -1,0 +1,20 @@
+# Ansible provisioning for integration tests
+
+- hosts: "primary,replicas"
+  become: yes
+  become_user: root
+  gather_facts: no
+
+  tasks:
+    # Install cs_package_manager
+    - name: "Copy cs_package_manager from local repo to remote host"
+      copy:
+        src: "../scripts/cs_package_manager.sh"
+        dest: "/usr/local/bin/cs_package_manager"
+        mode: '0755'
+
+    # Install iptables (will use nftables behind the scenes)
+    - name: "Install iptables"
+      package:
+        name:
+          - iptables
