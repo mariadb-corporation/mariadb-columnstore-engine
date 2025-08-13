@@ -1474,11 +1474,11 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
       hasPartitionFilter, hasMaxFilter, hasMinFilter, hasLBIDFilter, hasExtentIDFilter;
 
   // Blocked Bloom filter
-  std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>> bloomFilters;
+  std::vector<BloomFilters> bloomFilters;
   void serializeBloomFilters();
 
   public:
-  void setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters);
+  void setBloomFilters(std::vector<BloomFilters>&& bloomFilters);
 
 };
 

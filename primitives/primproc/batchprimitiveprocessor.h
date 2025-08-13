@@ -437,7 +437,7 @@ class BatchPrimitiveProcessor
   uint32_t weight_;
 
   // Blocked Bloom Filter
-  std::vector<std::shared_ptr<std::array<std::optional<joblist::BlockedBloomFilter>, 2>>> bloomFilters;
+  std::vector<BloomFilters> bloomFilters;
   public:
   void addBloomFilters(messageqcpp::ByteStream& bs);
   private:

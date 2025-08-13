@@ -661,7 +661,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   friend class DiskJoinStep;
 
   // Blocked Bloom Filter
-  std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>> bloomFilters;
+  std::vector<BloomFilters> bloomFilters;
   
 };
 

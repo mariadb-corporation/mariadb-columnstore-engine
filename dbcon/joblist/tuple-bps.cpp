@@ -1479,10 +1479,13 @@ void TupleBPS::run()
     fDec->write(uniqueID, sbs);
     BPPIsAllocated = true;
 
-    if (doJoin && tjoiners[0]->inPM())
+    if (doJoin)
     {
-      serializeBloomFilters();
-      serializeJoiner();
+      if (tjoiners[0]->inPM())
+        serializeJoiner();
+      
+      if (tjoiners[0]->inUM())
+        serializeBloomFilters();
     }
 
     prepCasualPartitioning();
@@ -3397,7 +3400,7 @@ void TupleBPS::abort()
   abort_nolock();
 }
 
-void TupleBPS::setBloomFilters(std::vector<std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>>&& bloomFilters)
+void TupleBPS::setBloomFilters(std::vector<BloomFilters>&& bloomFilters)
 {
   this->bloomFilters = std::move(bloomFilters);
 }

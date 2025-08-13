@@ -58,8 +58,7 @@ class BlockedBloomFilter
 
 };
 
-
-
+using BloomFilters = std::shared_ptr<std::array<std::optional<BlockedBloomFilter>, 2>>;
 
 } // namespace joblist
 
