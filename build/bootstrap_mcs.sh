@@ -572,7 +572,7 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
-    # check_debian_install_file // will be uncommented later
+    check_debian_install_file
     generate_svgs
 
     ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator

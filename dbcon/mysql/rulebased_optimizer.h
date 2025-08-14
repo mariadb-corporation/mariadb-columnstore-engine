@@ -21,24 +21,29 @@
 
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
-#include "idb_mysql.h"
+// #include "idb_mysql.h"
 
 #include "ha_mcs_impl_if.h"
 
 #include "execplan/calpontselectexecutionplan.h"
 
-namespace optimizer {
+namespace optimizer
+{
 
-class RBOptimizerContext {
-public:
+class RBOptimizerContext
+{
+ public:
   RBOptimizerContext() = delete;
-  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules) : gwi(walk_info), thd(thd), logRules(logRules) {}
-  // gwi lifetime should be longer than optimizer context. 
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules)
+   : gwi(walk_info), thd(thd), logRules(logRules)
+  {
+  }
+  // gwi lifetime should be longer than optimizer context.
   // In plugin runtime this is always true.
   cal_impl_if::gp_walk_info& gwi;
   THD& thd;
-  uint64_t uniqueId {0};
-  bool logRules {false};
+  uint64_t uniqueId{0};
+  bool logRules{false};
 };
 
 struct Rule
@@ -74,4 +79,4 @@ struct Rule
 };
 
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx);
-}
+}  // namespace optimizer

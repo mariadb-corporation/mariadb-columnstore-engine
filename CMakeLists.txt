@@ -62,18 +62,13 @@ columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_S
 set(COMPONENTS
     utils
     oam/oamcpp
-    dbcon/execplan
-    dbcon/joblist
+    dbcon
     versioning
     oam
     writeengine/wrapper
     writeengine/client
     writeengine/xml
     writeengine/redistribute
-    dbcon/ddlpackage
-    dbcon/ddlpackageproc
-    dbcon/dmlpackage
-    dbcon/dmlpackageproc
     ddlproc
     dmlproc
     oamapps

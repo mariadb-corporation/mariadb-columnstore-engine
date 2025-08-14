@@ -80,6 +80,7 @@ usr/lib/*/libmarias3.so
 usr/lib/*/liboamcpp.so
 usr/lib/*/libquerystats.so
 usr/lib/*/libquerytele.so
+usr/lib/*/librbo.so
 usr/lib/*/libregr.so
 usr/lib/*/librowgroup.so
 usr/lib/*/librwlock.so
