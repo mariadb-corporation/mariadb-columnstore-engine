@@ -95,16 +95,20 @@ enum ClauseType
   ORDER_BY
 };
 
-struct SchemaAndTableName {
+struct SchemaAndTableName
+{
   std::string schema;
   std::string table;
-  bool operator==(const SchemaAndTableName& other) const {
+  bool operator==(const SchemaAndTableName& other) const
+  {
     return schema == other.schema && table == other.table;
   }
 };
 
-struct SchemaAndTableNameHash {
-  std::size_t operator()(const SchemaAndTableName& k) const {
+struct SchemaAndTableNameHash
+{
+  std::size_t operator()(const SchemaAndTableName& k) const
+  {
     return std::hash<std::string>()(k.schema + k.table);
   }
 };
@@ -116,8 +120,10 @@ typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, 
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 using ColumnName = std::string;
-using ColumnStatisticsMap = std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
-using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+using ColumnStatisticsMap =
+    std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
+using TableStatisticsMap =
+    std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
 // This structure is used to store MDB AST -> CSEP translation context.
 // There is a column statistics for some columns in a query.
@@ -257,7 +263,22 @@ struct gp_walk_info
   ~gp_walk_info();
 
   void mergeTableStatistics(const TableStatisticsMap& tableStatisticsMap);
-  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName);
+  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  {
+    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
+    for (auto& [schemaAndTableName, columnStatisticsMap] : tableStatisticsMap)
+    {
+      std::cout << "Table " << schemaAndTableName.schema << "." << schemaAndTableName.table
+                << " has statistics " << columnStatisticsMap.size() << std::endl;
+    }
+
+    if (tableStatisticsMapIt == tableStatisticsMap.end())
+    {
+      return std::nullopt;
+    }
+
+    return {tableStatisticsMapIt->second};
+  }
 };
 
 struct SubQueryChainHolder;
