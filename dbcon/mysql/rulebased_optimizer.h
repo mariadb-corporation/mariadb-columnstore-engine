@@ -32,23 +32,27 @@ namespace optimizer {
 class RBOptimizerContext {
 public:
   RBOptimizerContext() = delete;
-  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info) : gwi(walk_info) {}
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules) : gwi(walk_info), thd(thd), logRules(logRules) {}
   // gwi lifetime should be longer than optimizer context. 
   // In plugin runtime this is always true.
   cal_impl_if::gp_walk_info& gwi;
+  THD& thd;
   uint64_t uniqueId {0};
+  bool logRules {false};
 };
 
 struct Rule
 {
-  using RuleMatcher = bool (*)(execplan::CalpontSelectExecutionPlan&);
-  using RuleApplier = void (*)(execplan::CalpontSelectExecutionPlan&, RBOptimizerContext&);
+  // returns true if rule may be applied
+  using RuleApplierFilter = bool (*)(execplan::CalpontSelectExecutionPlan&);
+  // returns true if rule was applied
+  using RuleApplier = bool (*)(execplan::CalpontSelectExecutionPlan&, RBOptimizerContext&);
 
-  Rule(std::string&& name, RuleMatcher matchRule, RuleApplier applyRule)
-   : name(name), matchRule(matchRule), applyRule(applyRule) {};
+  Rule(std::string&& name, RuleApplierFilter mayApply, RuleApplier applyRule)
+   : name(name), mayApply(mayApply), applyRule(applyRule) {};
 
   std::string name;
-  RuleMatcher matchRule;
+  RuleApplierFilter mayApply;
   RuleApplier applyRule;
   // TODO Wrap CSEP into Nodes to be able to navigate up and down the tree and remove this flag
   bool applyOnlyOnce = true;

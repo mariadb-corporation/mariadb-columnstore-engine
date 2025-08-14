@@ -31,6 +31,7 @@
 #include "predicateoperator.h"
 #include "simplefilter.h"
 #include "rbo_apply_parallel_ces.h"
+#include "rbo_predicate_pushdown.h"
 
 namespace optimizer
 {
@@ -50,9 +51,17 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
 // high level API call for optimizer
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx)
 {
-  optimizer::Rule parallelCES{"parallelCES", optimizer::matchParallelCES, optimizer::applyParallelCES};
+  std::vector<optimizer::Rule> rules;
 
-  std::vector<optimizer::Rule> rules = {parallelCES};
+  if (get_unstable_optimizer(&ctx.thd))
+  {
+    optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
+    rules.push_back(parallelCES);
+  }
+
+  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+                                    optimizer::applyPredicatePushdown};
+  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }
@@ -67,6 +76,10 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
+    if (ctx.logRules && changedThisRound)
+    {
+      std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
+    }
   } while (changedThisRound && !applyOnlyOnce);
 
   return hasBeenApplied;
@@ -85,6 +98,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
 
+    // Walk nested derived
     for (auto& table : current->derivedTableList())
     {
       auto* csepPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
@@ -94,6 +108,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       }
     }
 
+    // Walk nested UNION UNITS
     for (auto& unionUnit : current->unionVec())
     {
       auto* unionUnitPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
@@ -103,11 +118,22 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       }
     }
 
-    if (matchRule(*current))
+    // Walk nested subselect in filters, e.g. SEMI-JOIN
+    for (auto& subselect : current->subSelectList())
     {
-      applyRule(*current, ctx);
+      auto* subselectPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subselect.get());
+      if (subselectPtr)
+      {
+        planStack.push(subselectPtr);
+      }
+    }
+
+    // TODO add walking nested subselect in projection. See CSEP::fSelectSubList
+
+    if (mayApply(*current))
+    {
+      rewrite |= applyRule(*current, ctx);
       ++ctx.uniqueId;
-      rewrite = true;
     }
   }
 

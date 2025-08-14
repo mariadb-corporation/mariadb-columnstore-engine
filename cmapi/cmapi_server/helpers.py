@@ -99,6 +99,7 @@ def start_transaction(
     final_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
 
     success = False
+    successes = []
     while datetime.datetime.now() < final_time and not success:
         successes = []
 

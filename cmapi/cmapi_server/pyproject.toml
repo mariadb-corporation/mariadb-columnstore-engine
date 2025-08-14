@@ -1,0 +1,25 @@
+[tool.ruff]
+line-length = 80
+target-version = "py39"
+# Enable common rule sets
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes: undefined names, unused imports, etc.
+    "I",  # isort: import sorting
+    "B",  # flake8-bugbear: common bugs and anti-patterns
+    "UP", # pyupgrade: use modern Python syntax
+    "N",  # pep8-naming: naming conventions
+]
+
+ignore = []
+
+# Exclude cache and temporary directories
+exclude = [
+    "__pycache__",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.isort]
+force-single-line = false
