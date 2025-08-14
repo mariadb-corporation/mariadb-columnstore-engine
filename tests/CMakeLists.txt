@@ -98,6 +98,11 @@ if(WITH_UNITTESTS)
     columnstore_link(poolallocator ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET poolallocator TEST_PREFIX columnstore:)
 
+    add_executable(rbo_tests rbo_hybrid.cpp)
+    add_dependencies(rbo_tests googletest)
+    columnstore_link(rbo_tests rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_tests TEST_PREFIX columnstore:)
+
     add_executable(stlpoolallocator stlpoolallocator.cpp)
     target_compile_options(stlpoolallocator PRIVATE -Wno-sign-compare)
     add_dependencies(stlpoolallocator googletest)
