@@ -21,7 +21,11 @@
 #include <my_config.h>
 #include "idb_mysql.h"
 
+#include <optional>
+#include <vector>
+
 #include "execplan/calpontselectexecutionplan.h"
+#include "execplan/simplecolumn.h"
 #include "rulebased_optimizer.h"
 
 namespace optimizer
@@ -62,6 +66,33 @@ using TableAliasToNewAliasAndSCPositionsMap =
     std::map<execplan::CalpontSystemCatalog::TableAliasName,
              std::tuple<std::string, SCAliasToPosCounterMap, size_t>, TableAliasLessThan>;
 
+// Helper functions in details namespace
+namespace details
+{
+
+template <typename T>
+using FilterRangeBounds = std::vector<std::pair<T, T>>;
+
+bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                    execplan::CalpontSelectExecutionPlan& csep);
+
+bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep);
+
+bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep,
+                                              optimizer::RBOptimizerContext& ctx);
+
+execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep,
+                                              execplan::CalpontSystemCatalog::TableAliasName& targetTable,
+                                              optimizer::RBOptimizerContext& ctx);
+
+std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
+    execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx);
+
+Histogram_json_hb* chooseStatisticsToUse(const std::vector<Histogram_json_hb*>& statisticsVec);
+
+}  // namespace details
+
+// Main functions
 bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
 bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
 }  // namespace optimizer

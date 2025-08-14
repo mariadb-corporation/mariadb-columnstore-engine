@@ -43,6 +43,9 @@ void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, const s
 static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
 static const size_t MaxParallelFactor = 16;
 
+namespace details
+{
+
 bool tableIsInUnion(const execplan::CalpontSystemCatalog::TableAliasName& table,
                     execplan::CalpontSelectExecutionPlan& csep)
 {
@@ -75,13 +78,6 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
         return (!table.isColumnstore() &&
                 ctx.gwi.tableStatisticsMap.find(schemaAndTableName) != ctx.gwi.tableStatisticsMap.end());
       });
-}
-
-bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
-{
-  // TODO filter out CSEPs with orderBy, groupBy, having || or clean up OB,GB,HAVING cloning CSEP
-  // Filter out tables that were re-written.
-  return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
 }
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
@@ -201,13 +197,23 @@ std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyC
 
   return std::nullopt;
 }
+}  // namespace details
+
+using namespace details;
+
+bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
+{
+  // TODO filter out CSEPs with orderBy, groupBy, having || or clean up OB,GB,HAVING cloning CSEP
+  // Filter out tables that were re-written.
+  return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
+}
 
 // Populates range bounds based on column statistics
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
-std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
+std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
 {
-  FilterRangeBounds<T> bounds;
+  details::FilterRangeBounds<T> bounds;
 
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
@@ -234,7 +240,7 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
     T currentLowerBound = *(uint32_t*)bucket.start_value.data();
     std::cout << "Bucket: " << currentLowerBound << std::endl;
   }
-  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound. 
+  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound.
   // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits *
   // numberOfBucketsPerUnionUnit; T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data(); T
   // currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
@@ -248,11 +254,10 @@ std::optional<FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* colum
   return bounds;
 }
 
-
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
-  execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
-  optimizer::RBOptimizerContext& ctx)
+    execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
+    optimizer::RBOptimizerContext& ctx)
 {
   execplan::CalpontSelectExecutionPlan::SelectList unionVec;
 
@@ -306,11 +311,9 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   return unionVec;
 }
 
-execplan::SCSEP createDerivedTableFromTable(
-    execplan::CalpontSelectExecutionPlan& csep,
-    const execplan::CalpontSystemCatalog::TableAliasName& table,
-    const std::string& tableAlias,
-    optimizer::RBOptimizerContext& ctx)
+execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan& csep,
+                                            const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                            const std::string& tableAlias, optimizer::RBOptimizerContext& ctx)
 {
   // Don't copy filters for this
   auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
@@ -324,7 +327,8 @@ execplan::SCSEP createDerivedTableFromTable(
   {
     return execplan::SCSEP();
   }
-  auto additionalUnionVec = makeUnionFromTable(*derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
+  auto additionalUnionVec = makeUnionFromTable(
+      *derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
 
   // TODO add original alias to support multiple same name tables
   derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
@@ -357,8 +361,8 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // TODO add column statistics check to the corresponding match
     if (!table.isColumnstore() && anyColumnStatistics)
     {
-      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
-      std::to_string(ctx.uniqueId);
+      std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table +
+                               "_" + std::to_string(ctx.uniqueId);
       tableAliasMap.insert({table, {tableAlias, 0}});
       tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
@@ -409,21 +413,23 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             {
               SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
               colPosition++;
-              std::cout << " first case new column in the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+              std::cout << " first case new column in the map colPosition "
+                        << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
             else
             {
-              std::cout << " first case reusing column from the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+              std::cout << " first case reusing column from the map colPosition "
+                        << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
-            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition-1);
+            assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition - 1);
             newSC->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
             sc->derivedTable(newTableAlias);
           }
-          else 
+          else
           {
             newSC->colPosition(colPosition++);
           }
-          
+
           newReturnedColumns.push_back(newSC);
         }
         // RC doesn't belong to any of the new derived tables
@@ -457,11 +463,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             if (it == SCAliasToPosCounterMap.end())
             {
               SCAliasToPosCounterMap.insert({sc->columnName(), currentColPosition++});
-              std::cout << " 2nd case new column in the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+              std::cout << " 2nd case new column in the map colPosition "
+                        << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
             else
             {
-              std::cout << " 2nd case reusing column from the map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
+              std::cout << " 2nd case reusing column from the map colPosition "
+                        << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
             }
             assert(SCAliasToPosCounterMap[sc->columnName()] == colPosition);
             sc->colPosition(SCAliasToPosCounterMap[sc->columnName()]);
@@ -488,7 +496,8 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
         if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
         {
-          auto& [newTableAlias, SCAliasToPosCounterMap, currentColPosition] = tableAliasToSCPositionsIt->second;
+          auto& [newTableAlias, SCAliasToPosCounterMap, currentColPosition] =
+              tableAliasToSCPositionsIt->second;
           std::cout << " filters map colPosition " << SCAliasToPosCounterMap[sc->columnName()] << std::endl;
           auto it = SCAliasToPosCounterMap.find(sc->columnName());
           if (it == SCAliasToPosCounterMap.end())

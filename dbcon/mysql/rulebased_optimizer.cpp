@@ -49,11 +49,11 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
 }
 
 // high level API call for optimizer
-bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx)
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx,
+                  bool useUnstableOptimizer)
 {
   std::vector<optimizer::Rule> rules;
-
-  if (get_unstable_optimizer(&ctx.thd))
+  if (useUnstableOptimizer)
   {
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);

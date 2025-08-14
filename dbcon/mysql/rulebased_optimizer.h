@@ -78,5 +78,6 @@ struct Rule
   bool walk(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx) const;
 };
 
-bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx);
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext& ctx,
+                  bool useUnstableOptimizer);
 }  // namespace optimizer
