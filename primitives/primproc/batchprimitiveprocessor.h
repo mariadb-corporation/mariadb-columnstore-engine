@@ -49,6 +49,7 @@
 #include "funcexpwrapper.h"
 #include "bppsendthread.h"
 #include "columnwidth.h"
+#include "blockedbloomfilter.h"
 
 #ifdef PRIMPROC_STOPWATCH
 #include "stopwatch.h"
@@ -437,7 +438,7 @@ class BatchPrimitiveProcessor
   uint32_t weight_;
 
   // Blocked Bloom Filter
-  std::vector<BloomFilters> bloomFilters;
+  std::vector<joblist::BloomFilters> bloomFilters;
   public:
   void addBloomFilters(messageqcpp::ByteStream& bs);
   private:

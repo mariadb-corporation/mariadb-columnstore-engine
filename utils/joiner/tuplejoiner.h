@@ -280,7 +280,7 @@ class TupleJoiner
   TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
               const std::vector<uint32_t>& smallJoinColumns, const std::vector<uint32_t>& largeJoinColumns,
               joblist::JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm,
-              const uint64_t numCores, BloomFilters bloomFilters);
+              const uint64_t numCores, joblist::BloomFilters bloomFilters);
 
   ~TupleJoiner();
 
@@ -570,7 +570,7 @@ class TupleJoiner
   void initRowsVector();
 
   // Blocked Bloom filter
-  BloomFilters bloomFilters;
+  joblist::BloomFilters bloomFilters;
 
 };
 

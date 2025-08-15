@@ -166,7 +166,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
 TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::RowGroup& largeInput,
                          const vector<uint32_t>& smallJoinColumns, const vector<uint32_t>& largeJoinColumns,
                          JoinType jt, threadpool::ThreadPool* jsThreadPool, joblist::ResourceManager* rm,
-                         const uint64_t numCores, BloomFilters bloomFilters)
+                         const uint64_t numCores, joblist::BloomFilters bloomFilters)
  : smallRG(smallInput)
  , largeRG(largeInput)
  , joinAlg(INSERTING)
