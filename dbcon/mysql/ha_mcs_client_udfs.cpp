@@ -46,6 +46,7 @@ using namespace logging;
 #include "columnstoreversion.h"
 #include "ha_mcs_sysvars.h"
 #include "basic/string_utils.h"
+#include "oamcache.h"
 
 extern "C"
 {
@@ -58,6 +59,7 @@ extern "C"
   const char* InvalidParmSize = "Invalid parameter size: Input value cannot be larger than ";
   const char* MsgEMIndexSizeInitErrMsg = "mcs_emindex_size() takes no arguments";
   const char* MsgEMIndexFreeInitErrMsg = "mcs_emindex_free() takes no arguments";
+  const char* MsgNodesCountInitErrMsg = "mcs_nodes_count() takes no arguments";
 
   const size_t Plen = strlen(SetParmsPrelude);
   const size_t Elen = strlen(SetParmsError);
@@ -1166,6 +1168,27 @@ extern "C"
   }
 
   void mcs_emindex_free_deinit(UDF_INIT* /*initid*/)
+  {
+  }
+
+  long long mcs_nodes_count(UDF_INIT* /*initid*/, UDF_ARGS* /*args*/, char* /*is_null*/, char* /*error*/)
+  {
+    oam::OamCache* oamCache = oam::OamCache::makeOamCache();
+    return oamCache->getPMToDbrootsMap()->size();
+  }
+
+  my_bool mcs_nodes_count_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count != 0)
+    {
+      strcpy(message, MsgNodesCountInitErrMsg);
+      return 1;
+    }
+
+    return 0;
+  }
+
+  void mcs_nodes_count_deinit(UDF_INIT* /*initid*/)
   {
   }
 

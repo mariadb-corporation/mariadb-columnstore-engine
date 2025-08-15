@@ -23,25 +23,46 @@
 #pragma once
 
 #include <string>
+#include <limits>
 
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
 
 #include <cinttypes>
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include "dataconvert.h"
 #include "operator.h"
 #include "intervalcolumn.h"
-#include "treenode.h"
+#include "exceptclasses.h"
+#include "overflow_config.h"
 
 #ifndef ULONGLONG_MAX
 #define ULONGLONG_MAX ulonglong_max
 #endif
+
 namespace funcexp::helpers
 {
+
+// Helper function to handle integer overflow based on ColumnStore configuration
+template <typename T>
+inline T handleIntegerOverflow(T maxValue, const char* operation = "arithmetic operation")
+{
+  if (columnstore::isStrictOverflowMode())
+  {
+    // Strict mode: throw an error for overflow (Error 1690)
+    std::ostringstream oss;
+    oss << operation << " result is out of range";
+    throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+  }
+  else
+  {
+    // Permissive mode: clamp to maximum value
+    return maxValue;
+  }
+}
 // 10 ** i
 const int64_t powerOf10_c[] = {1ll,
                                10ll,
@@ -385,7 +406,7 @@ inline int power(int16_t a)
 }
 
 template <typename T>
-inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s)
+inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s, const char* msg)
 {
   // find new scale if D < s
   if (d < s)
@@ -396,7 +417,16 @@ inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s)
     int64_t i = (d >= 0) ? d : (-d);
 
     while (i--)
+    {
+      // Check for overflow before multiplication
+      if (p > std::numeric_limits<T>::max() / 10)
+      {
+        // Overflow would occur, handle according to sql_mode
+        p = handleIntegerOverflow<T>(std::numeric_limits<T>::max(), msg);
+        break;
+      }
       p *= 10;
+    }
   }
   else
   {
@@ -566,7 +596,17 @@ inline int getNumbers(const std::string& expr, int* array, execplan::OpType func
     if ((value >= '0' && value <= '9'))
     {
       foundNumber = true;
-      number = (number * 10) + (value - '0');
+      int digit = value - '0';
+
+      // Check for overflow before multiplication and addition
+      if (number > (std::numeric_limits<int>::max() - digit) / 10)
+      {
+        // Overflow would occur, handle according to sql_mode
+        number = handleIntegerOverflow<int>(std::numeric_limits<int>::max(), "number parsing");
+        break;
+      }
+
+      number = (number * 10) + digit;
     }
     else if (value == '-' && !foundNumber)
     {
@@ -609,7 +649,7 @@ inline int getNumbers(const std::string& expr, int* array, execplan::OpType func
 
 inline int dayOfWeek(std::string day)  // Sunday = 0
 {
-  boost::to_lower(day);
+  boost::algorithm::to_lower(day);
 
   if (day == "sunday" || day == "sun")
   {

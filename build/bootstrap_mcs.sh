@@ -634,6 +634,11 @@ run_unit_tests() {
 
     message "Running unittests"
     cd $MARIA_BUILD_PATH
+    # Config is needed for Unittests from buildroot
+    if [[ $BUILD_PACKAGES = true ]]; then
+        message "Storing Columnstore.xml to oam/etc/Columnstore.xml for unittests"
+        cp $COLUMSNTORE_SOURCE_PATH/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+    fi
     ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
     exit_code=$?
     cd - >/dev/null

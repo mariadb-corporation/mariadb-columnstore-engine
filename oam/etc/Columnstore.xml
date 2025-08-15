@@ -252,4 +252,11 @@
 		<predicate_pushdown>true</predicate_pushdown>
 		<parallel_ces>true</parallel_ces>
 	</OptimizerRules>
+	<ArithmeticOperations>
+		<!-- Controls overflow behavior for arithmetic operations and numeric functions.
+		     Values: strict, permissive
+		     strict: Throws exceptions on overflow (default)
+		     permissive: Clamps to type limits and sets null on overflow -->
+		<OverflowHandling>permissive</OverflowHandling>
+	</ArithmeticOperations>
 </Columnstore>

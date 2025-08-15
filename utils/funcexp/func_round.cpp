@@ -337,7 +337,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
           d = parm[1]->data()->getIntVal(row, isNull);
 
           if (!isNull)
-            helpers::decimalPlaceDec(d, nvp, decimal.scale);
+            helpers::decimalPlaceDec(d, nvp, decimal.scale, "round: decimal scaling");
 
           p = nvp;
         }
@@ -414,7 +414,7 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
           {
             d += expectedScale;
           }
-          helpers::decimalPlaceDec(d, nvp, decimal.scale);
+          helpers::decimalPlaceDec(d, nvp, decimal.scale, "round: wide decimal scaling");
 
           p = nvp;
         }

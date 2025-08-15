@@ -28,10 +28,13 @@
 #include <iosfwd>
 #include <cmath>
 #include <sstream>
+#include <limits>
 
 #include "operator.h"
 #include "parsetree.h"
 #include "mcs_datatype.h"
+#include "exceptclasses.h"
+#include "overflow_config.h"
 
 namespace messageqcpp
 {
@@ -40,6 +43,7 @@ class ByteStream;
 
 namespace execplan
 {
+
 class ArithmeticOperator : public Operator
 {
   using cscType = execplan::CalpontSystemCatalog::ColType;
@@ -270,21 +274,25 @@ inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, Parse
       int128_t result = execute(x, y, isNull);
       if (!isNull && (result > MAX_UBIGINT || result < 0))
       {
-        logging::Message::Args args;
-        std::string func = "<unknown>";
-        switch (fOp)
-        {
-          case OP_ADD: func = "\"+\""; break;
-          case OP_SUB: func = "\"-\""; break;
-          case OP_MUL: func = "\"*\""; break;
-          case OP_DIV: func = "\"/\""; break;
-          default: break;
-        }
-        args.add(func);
-        args.add(static_cast<double>(x));
-        args.add(static_cast<double>(y));
-        unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
-        throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+        if (columnstore::isStrictOverflowMode())
+	{
+          logging::Message::Args args;
+          std::string func = "<unknown>";
+          switch (fOp)
+          {
+            case OP_ADD: func = "\"+\""; break;
+            case OP_SUB: func = "\"-\""; break;
+            case OP_MUL: func = "\"*\""; break;
+            case OP_DIV: func = "\"/\""; break;
+            default: break;
+          }
+          args.add(func);
+          args.add(static_cast<double>(x));
+          args.add(static_cast<double>(y));
+          unsigned errcode = logging::ERR_FUNC_OUT_OF_RANGE_RESULT;
+          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(errcode, args), errcode);
+	}
+	isNull = true;
       }
       fResult.uintVal = static_cast<uint64_t>(result);
     }
@@ -344,11 +352,142 @@ inline result_t ArithmeticOperator::execute(result_t op1, result_t op2, bool& is
   }
   switch (fOp)
   {
-    case OP_ADD: return op1 + op2;
+    case OP_ADD:
+    {
+      // Check for addition overflow
+      // XXX: __int128 is not signed for some reason.
+      if constexpr (std::is_signed_v<result_t> || std::is_same<__int128, result_t>::value)
+      {
+        if ((op2 > 0 && op1 > std::numeric_limits<result_t>::max() - op2) ||
+            (op2 < 0 && op1 < std::numeric_limits<result_t>::min() - op2))
+        {
+          if (columnstore::isStrictOverflowMode())
+          {
+            // Strict mode: throw exception for out of range
+            std::ostringstream oss;
+            oss << "BIGINT value is out of range in addition";
+            throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+          }
+          else
+          {
+            // Permissive mode: set null and return clamped value
+            isNull = true;
+            return (op2 > 0) ? std::numeric_limits<result_t>::max() : std::numeric_limits<result_t>::min();
+          }
+        }
+      }
+      else
+      {
+        if (op1 > std::numeric_limits<result_t>::max() - op2)
+        {
+          if (columnstore::isStrictOverflowMode())
+          {
+            // Strict mode: throw exception for out of range
+            std::ostringstream oss;
+            oss << "BIGINT UNSIGNED value is out of range in addition";
+            throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+          }
+          else
+          {
+            // Permissive mode: set null and return max value
+            isNull = true;
+            return std::numeric_limits<result_t>::max();
+          }
+        }
+      }
+      return op1 + op2;
+    }
 
-    case OP_SUB: return op1 - op2;
+    case OP_SUB:
+    {
+      // Check for subtraction overflow
+      if constexpr (std::is_signed_v<result_t> || std::is_same<__int128, result_t>::value)
+      {
+        if ((op2 < 0 && op1 > std::numeric_limits<result_t>::max() + op2) ||
+            (op2 > 0 && op1 < std::numeric_limits<result_t>::min() + op2))
+        {
+          if (columnstore::isStrictOverflowMode())
+          {
+            // Strict mode: throw exception for out of range
+            std::ostringstream oss;
+            oss << "BIGINT value is out of range in subtraction";
+            throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+          }
+          else
+          {
+            // Permissive mode: set null and return clamped value
+            isNull = true;
+            return (op2 < 0) ? std::numeric_limits<result_t>::max() : std::numeric_limits<result_t>::min();
+          }
+        }
+      }
+      else
+      {
+        if (op1 < op2)
+        {
+          if (columnstore::isStrictOverflowMode())
+          {
+            // Handle underflow - throw exception for out of range
+            std::ostringstream oss;
+            oss << "BIGINT UNSIGNED value is out of range in subtraction";
+            throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+	  }
+	  else
+	  {
+            isNull = true;
+	  }
+        }
+      }
+      return op1 - op2;
+    }
 
-    case OP_MUL: return op1 * op2;
+    case OP_MUL:
+    {
+      // Check for multiplication overflow
+      if (op1 != 0 && op2 != 0)
+      {
+        if constexpr (std::is_signed_v<result_t> || std::is_same<__int128, result_t>::value)
+        {
+          // For signed types, check both positive and negative overflow
+          if ((op1 > 0 && op2 > 0 && op1 > std::numeric_limits<result_t>::max() / op2) ||
+              (op1 < 0 && op2 < 0 && op1 < std::numeric_limits<result_t>::max() / op2) ||
+              (op1 > 0 && op2 < 0 && op2 < std::numeric_limits<result_t>::min() / op1) ||
+              (op1 < 0 && op2 > 0 && op1 < std::numeric_limits<result_t>::min() / op2))
+          {
+            if (columnstore::isStrictOverflowMode())
+	    {
+              // Handle overflow - throw exception for out of range
+              std::ostringstream oss;
+              oss << "BIGINT value is out of range in multiplication";
+              throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+	    }
+	    else
+	    {
+              isNull = true;
+	    }
+          }
+        }
+        else
+        {
+          // For unsigned types
+          if (op1 > std::numeric_limits<result_t>::max() / op2)
+          {
+            if (columnstore::isStrictOverflowMode())
+	    {
+              // Handle overflow - throw exception for out of range
+              std::ostringstream oss;
+              oss << "BIGINT UNSIGNED value is out of range in multiplication";
+              throw logging::IDBExcept(oss.str(), logging::ERR_FUNC_OUT_OF_RANGE_RESULT);
+	    }
+	    else
+	    {
+              isNull = true;
+	    }
+          }
+        }
+      }
+      return op1 * op2;
+    }
 
     case OP_DIV:
       if (op2)

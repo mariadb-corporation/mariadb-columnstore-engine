@@ -1829,7 +1829,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
             d = scale;
 
             if (!isNull)
-              helpers::decimalPlaceDec(d, p, decimal.scale);
+              helpers::decimalPlaceDec(d, p, decimal.scale, "format: wide decimal scaling");
           }
 
           if (isNull)
@@ -1888,7 +1888,7 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
             d = scale;
 
             if (!isNull)
-              helpers::decimalPlaceDec(d, p, decimal.scale);
+              helpers::decimalPlaceDec(d, p, decimal.scale, "format: decimal scaling");
           }
 
           if (isNull)

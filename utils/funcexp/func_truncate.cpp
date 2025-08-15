@@ -329,7 +329,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
         if (isNull)
           break;
 
-        helpers::decimalPlaceDec(d, nvp, decimal.scale);
+        helpers::decimalPlaceDec(d, nvp, decimal.scale, "truncate: decimal scaling");
 
         p = nvp;
 
@@ -392,7 +392,7 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
           {
             d += expectedScale;
           }
-          helpers::decimalPlaceDec(d, nvp, decimal.scale);
+          helpers::decimalPlaceDec(d, nvp, decimal.scale, "truncate: wide decimal scaling");
 
           p = nvp;
         }
