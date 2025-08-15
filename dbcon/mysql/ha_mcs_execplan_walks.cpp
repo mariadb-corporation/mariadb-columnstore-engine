@@ -25,6 +25,7 @@
 #include "logicoperator.h"
 #include "rowcolumn.h"
 #include "simplefilter.h"
+#include "pseudocolumn.h"
 
 using namespace std;
 
@@ -251,16 +252,6 @@ void gp_walk(const Item* item, void* arg)
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
       std::string funcName = ifp->func_name();
-      if(funcName == "idbpartition" && (ifp->arguments()[0] == nullptr || ifp->arguments()[0]->type() == Item::CONST_ITEM))
-      {
-        logging::Message::Args args;
-        args.add(funcName);
-        gwip->fatalParseError = true;
-        gwip->parseErrorText =
-              logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DATATYPE_NOT_SUPPORT, args);
-        std::cout<<gwip->parseErrorText<<std::endl;
-        return;
-      }
       
       if (!gwip->condPush)
       {
@@ -357,6 +348,15 @@ void gp_walk(const Item* item, void* arg)
       if (!gwip->fatalParseError && !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT) && !nonConstFunc(ifp) &&
           !(parseInfo & AF_BIT) && tmpVec.size() == 0 && ifp->functype() != Item_func::MULT_EQUAL_FUNC)
       {
+        if(ifp->functype() == Item_func::UDF_FUNC &&
+           execplan::PseudoColumn::pseudoNameToType(funcName) != execplan::PSEUDO_UNKNOWN &&
+           ifp->arguments()[0] != nullptr && ifp->arguments()[0]->type() != Item::FUNC_ITEM)
+        {
+          gwip->fatalParseError = true;
+          gwip->parseErrorText =
+                logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DATATYPE_NOT_SUPPORT, funcName);
+          return;
+        }
         ValStrStdString valStr(ifp);
 
         execplan::ConstantColumn* cc = buildConstantColumnMaybeNullFromValStr(ifp, valStr, *gwip);
