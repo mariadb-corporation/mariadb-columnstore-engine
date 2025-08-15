@@ -1,6 +1,6 @@
 [mariadb-client]
 quick
-quick-max-column-width=0
+loose-quick-max-column-width=0
 
 [mysqld]
 plugin-load-add=ha_columnstore.so

@@ -196,7 +196,8 @@ class Config
   enum class TempDirPurpose
   {
     Joins,      ///< disk joins
-    Aggregates  ///< disk-based aggregation
+    Aggregates, ///< disk-based aggregation
+    Sorting     ///< disk-based sorting
   };
   /** @brief Return temporaru directory path for the specified purpose */
   std::string getTempFileDir(TempDirPurpose what);

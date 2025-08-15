@@ -365,7 +365,7 @@ class RGData
     return !!rowData;
   }
 
- private:
+//  private:
   uint32_t rowSize = 0;      // can't be.
   uint32_t columnCount = 0;  // shouldn't be, but...
   boost::shared_ptr<RGDataBufType> rowData;

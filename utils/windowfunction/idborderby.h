@@ -458,7 +458,7 @@ class IdbOrderBy : public IdbCompare
 
   std::unique_ptr<SortingPQ> fOrderByQueue = nullptr;
 
- protected:
+//  protected:
   std::vector<IdbSortSpec> fOrderByCond;
   rowgroup::Row fRow0;
   CompareRule fRule;

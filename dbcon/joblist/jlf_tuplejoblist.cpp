@@ -499,12 +499,6 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     deliverySteps[CNX_VTABLE_ID] = ws;
   }
 
-  // TODO MCOL-894 we don't need to run sorting|distinct
-  // every time
-  //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
-  //            (jobInfo.constantCol == CONST_COL_EXIST) ||
-  //            (jobInfo.hasDistinct))
-  //    {
   if (jobInfo.annexStep.get() == NULL)
     jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
 
@@ -513,19 +507,18 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
 
   if (jobInfo.orderByColVec.size() > 0)
   {
-    tas->addOrderBy(new LimitedOrderBy());
+    tas->addOrderBy(jobInfo.rm);
     if (jobInfo.orderByThreads > 1)
       tas->setParallelOp();
     tas->setMaxThreads(jobInfo.orderByThreads);
   }
 
+  // TODO decouple TCS from TNS
   if (jobInfo.constantCol == CONST_COL_EXIST)
     tas->addConstant(new TupleConstantStep(jobInfo));
 
   if (jobInfo.hasDistinct)
     tas->setDistinct();
-
-  //    }
 
   if (jobInfo.annexStep)
   {

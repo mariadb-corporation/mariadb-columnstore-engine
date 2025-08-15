@@ -22,8 +22,11 @@
 #pragma once
 
 #include <string>
-#include "rowgroup.h"
+
+#include "disk-based-topnorderby.h"
 #include "../../utils/windowfunction/idborderby.h"
+#include "resourcemanager.h"
+#include "rowgroup.h"
 
 namespace joblist
 {
@@ -34,15 +37,16 @@ struct JobInfo;
 // This version is for subqueries, limit the result set to fit in memory,
 // use ORDER BY to make the results consistent.
 // The actual output are the first or last # of rows, which are NOT ordered.
-class LimitedOrderBy : public ordering::IdbOrderBy
+class LimitedOrderBy : public ordering::IdbOrderBy, public DiskBasedTopNOrderBy
 {
  public:
-  LimitedOrderBy();
+  LimitedOrderBy(ResourceManager* rm = nullptr); // TODO remove default
   ~LimitedOrderBy() override;
   using ordering::IdbOrderBy::initialize;
   void initialize(const rowgroup::RowGroup&, const JobInfo&, bool invertRules = false,
                   bool isMultiThreded = false);
   void processRow(const rowgroup::Row&) override;
+  void processRow_(const rowgroup::Row&);
   uint64_t getKeyLength() const override;
   uint64_t getLimitCount() const
   {
@@ -50,13 +54,20 @@ class LimitedOrderBy : public ordering::IdbOrderBy
   }
   const std::string toString() const override;
 
+  void flushCurrentToDisk_(const bool firstFlush);
+  
   void finalize();
+  void brandNewFinalize();
+  bool getNextRGData(rowgroup::RGData& data);
+
 
  protected:
   uint64_t fStart;
   uint64_t fCount;
   uint64_t fUncommitedMemory;
   static const uint64_t fMaxUncommited;
+  uint64_t fOffsetInOrderedRowsQueue;
+  uint64_t fRowsReturned{0};
 };
 
 }  // namespace joblist

@@ -130,7 +130,8 @@ void cleanTempDir()
     TempDirPurpose purpose;
   };
   std::vector<Dirs> dirs{{"HashJoin", "AllowDiskBasedJoin", TempDirPurpose::Joins},
-                         {"RowAggregation", "AllowDiskBasedAggregation", TempDirPurpose::Aggregates}};
+                         {"RowAggregation", "AllowDiskBasedAggregation", TempDirPurpose::Aggregates},
+                         {"Sorting", "AllowDiskBasedSorting", TempDirPurpose::Sorting}};
   const auto config = config::Config::makeConfig();
 
   for (const auto& dir : dirs)
