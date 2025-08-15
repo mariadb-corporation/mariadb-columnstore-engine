@@ -980,7 +980,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
       // ERR_CORRELATED_SUB_OR
       string parseErrorText =
           logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORT_SUB_QUERY_TYPE);
-      setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
+      setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText, *gwi);
       break;
     }
 

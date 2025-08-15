@@ -424,7 +424,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, execpla
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, execplan::SCSEP& csep, bool isUnion = false,
                   bool isSelectHandlerTop = false, bool isSelectLexUnit = false,
                   const std::vector<COND*>& condStack = std::vector<COND*>());
-void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info* gwi);
+void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info& gwi);
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
 void clearDeleteStacks(gp_walk_info& gwi);
