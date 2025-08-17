@@ -1484,7 +1484,7 @@ void TupleBPS::run()
       if (tjoiners[0]->inPM())
         serializeJoiner();
       
-      if (tjoiners[0]->inUM())
+      if (tjoiners[0]->inUM() && !bloomFilters.empty())
         serializeBloomFilters();
     }
 
@@ -3439,6 +3439,7 @@ void TupleBPS::serializeBloomFilters()
   bs << sessionId();
   bs << static_cast<uint32_t>(stepId());
   bs << uniqueID;
+  bs << bloomFilters.size();
 
   for (const auto& joinerBF : bloomFilters)
   {

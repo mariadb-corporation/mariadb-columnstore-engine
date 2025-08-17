@@ -2698,12 +2698,13 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
 void BatchPrimitiveProcessor::addBloomFilters([[maybe_unused]] messageqcpp::ByteStream& bs)
 {
   bs.advance(sizeof(ISMPacketHeader) + 4 * sizeof(uint32_t));
-  if (bloomFilters.empty() && doJoin)
-  {
-    bloomFilters.resize(joinerCount);
-  }
 
-  for (size_t j = 0; j < joinerCount; ++j)
+  size_t bfSize = 0;
+  bs >> bfSize;
+  
+  bloomFilters.resize(bfSize);
+
+  for (size_t j = 0; j < bfSize; ++j)
   {
     for (size_t i = 0; i < 2; ++i)
     {
@@ -2717,7 +2718,6 @@ void BatchPrimitiveProcessor::addBloomFilters([[maybe_unused]] messageqcpp::Byte
         
         (*bloomFilters[j]).at(i).emplace();
         (*bloomFilters[j]).at(i)->deserialize(bs);
-        
       }
       
     }
