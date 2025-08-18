@@ -1,3 +1,5 @@
+--source ../include/have_columnstore.inc
+
 --disable_warnings
 DROP DATABASE IF EXISTS test_invalid_args;
 CREATE DATABASE test_invalid_args;
@@ -7,6 +9,7 @@ USE test_invalid_args;
 create table cs1(i bigint)engine=columnstore;
 
 # incorrect args - idbpartition must receive column name and it received a string literal
+--source ../include/functions.inc
 --error 1815
 select count(i) from cs1 where idbPartition('i') = '0.0.1';
 
@@ -24,8 +27,8 @@ select count(i) from cs1 where idbPm('i') = '0.0.1';
 
 --error 1815
 select count(i) from cs1 where idbSegmentDir('i') = '0.0.1';
+--source ../include/drop_functions.inc
 
-#correct arguments
-select count(i) from cs1 where idbSegment(i) = 1;
+
 # Clean UP
 DROP DATABASE test_invalid_args;

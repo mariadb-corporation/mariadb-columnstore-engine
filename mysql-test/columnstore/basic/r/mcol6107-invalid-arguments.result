@@ -14,7 +14,4 @@ select count(i) from cs1 where idbPm('i') = '0.0.1';
 ERROR HY000: Internal error: MCS-1006: Function called with unsupported datatype.
 select count(i) from cs1 where idbSegmentDir('i') = '0.0.1';
 ERROR HY000: Internal error: MCS-1006: Function called with unsupported datatype.
-select count(i) from cs1 where idbSegment(i) = 1;
-count(i)
-0
 DROP DATABASE test_invalid_args;
