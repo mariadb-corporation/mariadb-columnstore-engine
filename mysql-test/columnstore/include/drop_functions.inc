@@ -60,4 +60,5 @@ DROP FUNCTION calenablepartitionsbyvalue;
 DROP FUNCTION calshowpartitionsbyvalue;
 DROP FUNCTION moda;
 DROP FUNCTION mcs_set_ddldebug_level;
+DROP FUNCTION mcsgetplan;
 --enable_query_log

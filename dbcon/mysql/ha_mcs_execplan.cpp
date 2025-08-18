@@ -100,6 +100,42 @@ using namespace std;
 
 namespace cal_impl_if
 {
+// Helper utilities to store plan strings and applied rules into cal_connection_info
+
+enum class PlanType
+{
+  Original,
+  Optimized
+};
+
+static cal_connection_info* ensure_conn_info()
+{
+  if (get_fe_conn_info_ptr() == NULL)
+  {
+    set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
+  return static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+}
+
+static void store_query_plan(execplan::SCSEP& csep, PlanType planType)
+{
+  cal_connection_info* ci = ensure_conn_info();
+  switch (planType)
+  {
+    case PlanType::Original: ci->queryPlanOriginal = csep->toString(); break;
+    case PlanType::Optimized: ci->queryPlanOptimized = csep->toString(); break;
+    default: break;
+  }
+}
+
+
+static void store_applied_rules(const std::string rboRules)
+{
+  cal_connection_info* ci = ensure_conn_info();
+  ci->rboAppliedRules = rboRules;
+}
+
 // This is taken from Item_cond::fix_fields in sql/item_cmpfunc.cc.
 void calculateNotNullTables(const std::vector<COND*>& condList, table_map& not_null_tables)
 {
@@ -7597,6 +7633,9 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
 
+  // Store original (pre-RBO) plan string for UDFs
+  store_query_plan(csep, PlanType::Original);
+
   // Derived table projection list optimization.
   derivedTableOptimization(&gwi, csep);
 
@@ -7604,7 +7643,11 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn(), get_ces_optimization_parallel_factor(thd));
     // TODO RBO can crash or fail leaving CSEP in an invalid state, so there must be a valid CSEP copy
     // TBD There is a tradeoff b/w copy per rule and copy per optimizer run.
-    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx, get_unstable_optimizer(&ctx.thd));
+    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx, get_unstable_optimizer(&ctx.getThd()));
+
+    // Store optimized plan and applied rules
+    store_query_plan(csep, PlanType::Optimized);
+    store_applied_rules(ctx.serializeAppliedRules());
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;

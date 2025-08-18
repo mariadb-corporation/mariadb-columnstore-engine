@@ -167,7 +167,7 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
    if (pt)
    {
      pt->walk(setDerivedTable);
-     setDerivedFilter(&ctx.gwi, pt, derivedTbFilterMap, derivedTbList);
+     setDerivedFilter(&ctx.getGwi(), pt, derivedTbFilterMap, derivedTbList);
      csep.filters(pt);
    }
  

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
@@ -35,16 +36,43 @@ class RBOptimizerContext
  public:
   RBOptimizerContext() = delete;
   RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules, uint cesOptimizationParallelFactor = 50)
-   : gwi(walk_info), thd(thd), logRules(logRules), cesOptimizationParallelFactor(cesOptimizationParallelFactor)
+   : gwi_(walk_info), thd_(thd), logRules_(logRules), cesOptimizationParallelFactor_(cesOptimizationParallelFactor)
   {
   }
+
+  // Accessors
+  cal_impl_if::gp_walk_info& getGwi() { return gwi_; }
+  THD& getThd() { return thd_; }
+  uint64_t getUniqueId() const { return uniqueId_; }
+  void incrementUniqueId() { ++uniqueId_; }
+  bool logRulesEnabled() const { return logRules_; }
+  uint getCesOptimizationParallelFactor() const { return cesOptimizationParallelFactor_; }
+
+  // Applied rules API
+  void addAppliedRule(const std::string& name) { appliedRules_.push_back(name); }
+  const std::vector<std::string>& getAppliedRules() const { return appliedRules_; }
+  bool hasAppliedRules() const { return !appliedRules_.empty(); }
+  std::string serializeAppliedRules() const
+  {
+    std::string out;
+    for (size_t i = 0; i < appliedRules_.size(); ++i)
+    {
+      if (i) out += ",";
+      out += appliedRules_[i];
+    }
+    return out;
+  }
+
+ private:
   // gwi lifetime should be longer than optimizer context.
   // In plugin runtime this is always true.
-  cal_impl_if::gp_walk_info& gwi;
-  THD& thd;
-  uint64_t uniqueId{0};
-  bool logRules{false};
-  uint cesOptimizationParallelFactor;
+  cal_impl_if::gp_walk_info& gwi_;
+  THD& thd_;
+  uint64_t uniqueId_{0};
+  bool logRules_{false};
+  uint cesOptimizationParallelFactor_;
+  // Names of rules that were actually applied in order
+  std::vector<std::string> appliedRules_;
 };
 
 struct Rule

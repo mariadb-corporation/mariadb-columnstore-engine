@@ -404,6 +404,9 @@ struct cal_connection_info
   bool isCacheInsert;
   std::string extendedStats;
   std::string miniStats;
+  std::string queryPlanOriginal;     // CSEP string before RBO
+  std::string queryPlanOptimized;    // CSEP string after RBO
+  std::string rboAppliedRules;       // Comma-separated list of applied RBO rules
   messageqcpp::MessageQueueClient* dmlProc;
   ha_rows rowsHaveInserted;
   ColNameList colNameList;

@@ -60,4 +60,6 @@ CREATE OR REPLACE FUNCTION calenablepartitionsbyvalue RETURNS STRING SONAME 'ha_
 CREATE OR REPLACE FUNCTION calshowpartitionsbyvalue RETURNS STRING SONAME 'ha_columnstore.so';
 CREATE OR REPLACE AGGREGATE FUNCTION moda RETURNS STRING SONAME 'libregr_mysql.so';
 CREATE OR REPLACE FUNCTION mcs_set_ddldebug_level RETURNS STRING SONAME 'ha_columnstore.so';
+CREATE OR REPLACE FUNCTION mcsgetplan RETURNS STRING SONAME 'ha_columnstore.so';
+
 --enable_query_log

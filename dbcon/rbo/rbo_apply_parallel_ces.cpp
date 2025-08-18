@@ -80,7 +80,7 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
       {
         cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
         return (!table.isColumnstore() &&
-                ctx.gwi.tableStatisticsMap.find(schemaAndTableName) != ctx.gwi.tableStatisticsMap.end());
+                ctx.getGwi().tableStatisticsMap.find(schemaAndTableName) != ctx.getGwi().tableStatisticsMap.end());
       });
 }
 
@@ -202,7 +202,7 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
       cal_impl_if::SchemaAndTableName schemaAndTableName = {simpleColumn->schemaName(),
                                                             simpleColumn->tableName()};
 
-      auto columnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
+      auto columnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
       if (!columnStatistics)
       {
         continue;
@@ -231,8 +231,8 @@ std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyC
 {
   cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
 
-  auto tableColumnsStatisticsIt = ctx.gwi.tableStatisticsMap.find(schemaAndTableName);
-  if (tableColumnsStatisticsIt == ctx.gwi.tableStatisticsMap.end() ||
+  auto tableColumnsStatisticsIt = ctx.getGwi().tableStatisticsMap.find(schemaAndTableName);
+  if (tableColumnsStatisticsIt == ctx.getGwi().tableStatisticsMap.end() ||
       tableColumnsStatisticsIt->second.empty())
   {
     return std::nullopt;
@@ -281,7 +281,7 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   };
 
   // Get parallel factor from context
-  size_t maxParallelFactor = ctx.cesOptimizationParallelFactor;
+  size_t maxParallelFactor = ctx.getCesOptimizationParallelFactor();
   std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
             << columnStatistics->get_json_histogram().size() << std::endl;
   std::cout << "Session ces_optimization_parallel_factor: " << maxParallelFactor << std::endl;
@@ -567,11 +567,11 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   for (auto& table : tables)
   {
     cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
-    auto anyColumnStatistics = ctx.gwi.findStatisticsForATable(schemaAndTableName);
+    auto anyColumnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
     if (!table.isColumnstore() && anyColumnStatistics)
     {
       std::string tableAlias = optimizer::RewrittenSubTableAliasPrefix + table.schema + "_" + table.table +
-                               "_" + std::to_string(ctx.uniqueId);
+                               "_" + std::to_string(ctx.getUniqueId());
       tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);

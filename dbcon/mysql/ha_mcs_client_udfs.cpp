@@ -924,6 +924,103 @@ extern "C"
   {
   }
 
+  // --- Plan UDFs ---
+  // Return plan strings or applied rules based on optional parameter:
+  //   no arg or 1 -> optimized/latest plan (ci->queryPlan)
+  //   0 or 'original'  -> pre-RBO plan
+  //   1 or 'optimized' -> post-RBO plan
+  //   2 or 'rules'     -> comma-separated applied RBO rules
+  const char* mcsgetplan(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*result*/, unsigned long* length,
+                         char* is_null, char* /*error*/)
+  {
+    if (get_fe_conn_info_ptr() == NULL)
+    {
+      set_fe_conn_info_ptr((void*)new cal_connection_info());
+      thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+    }
+
+    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+    static const std::string wrongArg("Wrong argument produced");
+    const std::string* out = &wrongArg;
+    ;
+    if (args && args->arg_count >= 1 && args->args[0])
+    {
+      if (args->arg_type[0] == INT_RESULT)
+      {
+        long long sel = *reinterpret_cast<long long*>(args->args[0]);
+        if (sel == 0)
+          out = &ci->queryPlanOriginal;
+        else if (sel == 1)
+          out = &ci->queryPlanOptimized;
+        else if (sel == 2)
+          out = &ci->rboAppliedRules;
+      }
+      else if (args->arg_type[0] == STRING_RESULT)
+      {
+        std::string key(args->args[0], args->lengths[0]);
+        // normalize to lower
+        for (auto& ch : key)
+          ch = (char)tolower((unsigned char)ch);
+        if (key == "original" || key == "orig" || key == "0")
+          out = &ci->queryPlanOriginal;
+        else if (key == "optimized" || key == "opt" || key == "1")
+          out = &ci->queryPlanOptimized;
+        else if (key == "rules" || key == "2")
+          out = &ci->rboAppliedRules;
+      }
+    }
+
+    unsigned long l = out->size();
+
+    if (l == 0)
+    {
+      *is_null = 1;
+      return 0;
+    }
+
+    if (l > TraceSize)
+      l = TraceSize;
+
+    *length = l;
+    return out->c_str();
+  }
+
+  my_bool mcsgetplan_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    if (args->arg_count > 1)
+    {
+      sprintf(message, "MCSGETPLAN() takes 0 or 1 argument: [original|optimized|rules|0|1|2]");
+      return 1;
+    }
+    if (args->arg_count == 1 && !(args->arg_type[0] == INT_RESULT || args->arg_type[0] == STRING_RESULT))
+    {
+      sprintf(message, "MCSGETPLAN() argument must be INT or STRING");
+      return 1;
+    }
+    initid->maybe_null = 1;
+    initid->max_length = TraceSize;
+    return 0;
+  }
+
+  void mcsgetplan_deinit(UDF_INIT* /*initid*/)
+  {
+  }
+
+  const char* calgetplan(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length, char* is_null,
+                         char* error)
+  {
+    return mcsgetplan(initid, args, result, length, is_null, error);
+  }
+
+  my_bool calgetplan_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  {
+    return mcsgetplan_init(initid, args, message);
+  }
+
+  void calgetplan_deinit(UDF_INIT* /*initid*/)
+  {
+  }
+
   my_bool getversion_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
