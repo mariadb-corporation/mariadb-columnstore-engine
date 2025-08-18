@@ -208,102 +208,121 @@ std::string endlWithIndent(const size_t ident)
   return output.str();
 }
 
-// Recursive tree printer that preserves vertical branches for multi-line nodes
-static void printIndentedFilterTreeImpl(const ParseTree* node, ostringstream& output, size_t indent,
-                                        const std::vector<bool>& ancestorHasNext, bool isLastAtLevel)
+// Iterative tree printer that preserves vertical branches for multi-line nodes
+static void printIndentedFilterTreeImpl(const ParseTree* root, ostringstream& output, size_t indent,
+                                        const std::vector<bool>& rootAncestors, bool rootIsLast)
 {
-  if (!node)
+  // Stack holds frames: (node, ancestorHasNext, isLastAtLevel)
+  struct Frame
   {
-    // Build prefix for a null placeholder
-    std::string base;
-    for (bool hasNext : ancestorHasNext)
-      base += hasNext ? "│   " : "    ";
-    std::string nodePrefix = base + (isLastAtLevel ? "└── " : "├── ");
-    output << endlWithIndent(indent) << nodePrefix << "(null)";
-    return;
-  }
-
-  // Gather children in left-to-right order
-  std::vector<const ParseTree*> children;
-  if (node->left())
-    children.push_back(node->left());
-  if (node->right())
-    children.push_back(node->right());
-
-  // Helper to build prefixes
-  auto makePrefixes = [&](bool isLast)
-  {
-    std::string base;
-    for (bool hasNext : ancestorHasNext)
-      base += hasNext ? "│   " : "    ";
-    std::string first = base + (isLast ? "└── " : "├── ");
-    std::string cont = base + (isLast ? "    " : "│   ");
-    return std::pair<std::string, std::string>(first, cont);
+    const ParseTree* node;
+    std::vector<bool> ancestors;
+    bool isLast;
   };
 
-  // Build node content string
-  TreeNode* data = node->data();
-  std::string nodeContent;
-  if (data)
-  {
-    if (auto sf = dynamic_cast<SimpleFilter*>(data))
-    {
-      nodeContent = sf->toString(true);
-    }
-    else if (auto op = dynamic_cast<Operator*>(data))
-    {
-      nodeContent = op->toString();
-    }
-    else
-    {
-      nodeContent = boost::core::demangle(typeid(*data).name()) + ": " + data->toString();
-    }
-  }
-  else
-  {
-    nodeContent = "(null data)";
-  }
+  std::vector<Frame> stack;
+  stack.push_back(Frame{root, rootAncestors, rootIsLast});
 
-  // For the root, print without branch glyphs
-  if (ancestorHasNext.empty())
+  while (!stack.empty())
   {
-    // Print root content as a multi-line block without a branch prefix
-    std::istringstream contentStream(nodeContent);
-    std::string line;
-    while (std::getline(contentStream, line))
-      output << endlWithIndent(indent) << line;
-  }
-  else
-  {
-    // Non-root: use the explicit isLastAtLevel flag
-    auto prefixes = makePrefixes(isLastAtLevel);
+    Frame frame = std::move(stack.back());
+    stack.pop_back();
 
-    std::istringstream contentStream(nodeContent);
-    std::string line;
-    bool firstLine = true;
-    while (std::getline(contentStream, line))
+    const ParseTree* node = frame.node;
+    const std::vector<bool>& ancestorHasNext = frame.ancestors;
+    const bool isLastAtLevel = frame.isLast;
+
+    if (!node)
     {
-      if (firstLine)
+      // Build prefix for a null placeholder
+      std::string base;
+      for (bool hasNext : ancestorHasNext)
+        base += hasNext ? "│   " : "    ";
+      std::string nodePrefix = base + (isLastAtLevel ? "└── " : "├── ");
+      output << endlWithIndent(indent) << nodePrefix << "(null)";
+      continue;
+    }
+
+    // Gather children in left-to-right order
+    std::vector<const ParseTree*> children;
+    if (node->left())
+      children.push_back(node->left());
+    if (node->right())
+      children.push_back(node->right());
+
+    // Helper to build prefixes
+    auto makePrefixes = [&](bool isLast)
+    {
+      std::string base;
+      for (bool hasNext : ancestorHasNext)
+        base += hasNext ? "│   " : "    ";
+      std::string first = base + (isLast ? "└── " : "├── ");
+      std::string cont = base + (isLast ? "    " : "│   ");
+      return std::pair<std::string, std::string>(first, cont);
+    };
+
+    // Build node content string
+    TreeNode* data = node->data();
+    std::string nodeContent;
+    if (data)
+    {
+      if (auto sf = dynamic_cast<SimpleFilter*>(data))
       {
-        output << endlWithIndent(indent) << prefixes.first << line;
-        firstLine = false;
+        nodeContent = sf->toString(true);
+      }
+      else if (auto op = dynamic_cast<Operator*>(data))
+      {
+        nodeContent = op->toString();
       }
       else
       {
-        output << endlWithIndent(indent) << prefixes.second << line;
+        nodeContent = boost::core::demangle(typeid(*data).name()) + ": " + data->toString();
       }
     }
-  }
+    else
+    {
+      nodeContent = "(null data)";
+    }
 
-  // Print children
-  for (size_t i = 0; i < children.size(); ++i)
-  {
-    bool childIsLast = (i == children.size() - 1);
-    std::vector<bool> nextAncestors = ancestorHasNext;
-    // For children, push whether THIS node has a next sibling; this keeps the vertical bar under this node
-    // if we are not the last at our level.
-    nextAncestors.push_back(!isLastAtLevel);
-    printIndentedFilterTreeImpl(children[i], output, indent, nextAncestors, childIsLast);
+    // Print current node content
+    if (ancestorHasNext.empty())
+    {
+      // Root: print without branch glyphs
+      std::istringstream contentStream(nodeContent);
+      std::string line;
+      while (std::getline(contentStream, line))
+        output << endlWithIndent(indent) << line;
+    }
+    else
+    {
+      auto prefixes = makePrefixes(isLastAtLevel);
+      std::istringstream contentStream(nodeContent);
+      std::string line;
+      bool firstLine = true;
+      while (std::getline(contentStream, line))
+      {
+        if (firstLine)
+        {
+          output << endlWithIndent(indent) << prefixes.first << line;
+          firstLine = false;
+        }
+        else
+        {
+          output << endlWithIndent(indent) << prefixes.second << line;
+        }
+      }
+    }
+
+    // Push children onto stack in reverse order to process left child first
+    for (size_t i = children.size(); i-- > 0;)
+    {
+      bool childIsLast = (i == children.size() - 1);
+      std::vector<bool> nextAncestors = ancestorHasNext;
+      // For children, push whether THIS node has a next sibling; this keeps the vertical bar under this node
+      // if we are not the last at our level.
+      nextAncestors.push_back(!isLastAtLevel);
+      stack.push_back(Frame{children[i], std::move(nextAncestors), childIsLast});
+    }
   }
 }
 
