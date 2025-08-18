@@ -161,6 +161,8 @@ class AggregateColumn : public ReturnedColumn
     fAggParms = parms;
   }
 
+  void setSimpleColumnList() override;
+
   /** return a copy of this pointer
    *
    * deep copy of this pointer and return the copy

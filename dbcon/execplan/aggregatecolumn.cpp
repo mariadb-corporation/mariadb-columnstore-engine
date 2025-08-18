@@ -126,6 +126,26 @@ AggregateColumn::AggregateColumn(const AggregateColumn& rhs, const uint32_t sess
  * Methods
  */
 
+void AggregateColumn::setSimpleColumnList()
+{
+  fSimpleColumnList.clear();
+
+  for (const auto& parm : aggParms())
+  {
+    if (!parm)
+      continue;
+    
+    parm->setSimpleColumnList();
+    for (auto* sc : parm->simpleColumnList())
+    {
+      if (sc)
+      {
+        fSimpleColumnList.push_back(sc);
+      }
+    }
+  }
+}
+
 const string AggregateColumn::toString() const
 {
   ostringstream output;

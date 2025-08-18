@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -37,6 +38,9 @@ namespace optimizer
 
 template <typename T>
 using FilterRangeBounds = std::vector<std::pair<T, T>>;
+using ExtraSRRC = std::vector<std::unique_ptr<execplan::SimpleColumn>>;
+using SCAndItsProjectionPosition = std::pair<execplan::SimpleColumn*, uint32_t>;
+using SCsAndTheirProjectionPositions = std::vector<SCAndItsProjectionPosition>;
 
 void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, const size_t id);
 
@@ -314,14 +318,34 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
 execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan& csep,
                                             const execplan::CalpontSystemCatalog::TableAliasName& table,
-                                            const std::string& tableAlias, optimizer::RBOptimizerContext& ctx)
+                                            const std::string& tableAlias, optimizer::RBOptimizerContext& ctx,
+                                            SCsAndTheirProjectionPositions& extraSCsAndTheirPositions)
 {
   // Don't copy filters for this
   auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
-  // Remove the filters as they were pushed down to union units
-  // This is inappropriate for EXISTS filter and join conditions
-  // WIP replace with filters applied to filters, so that only relevant filters are left
-  // WIP Ugly hack to avoid leaks
+  // update returned columns using extraSCsAndTheirPositions
+
+  // TODO
+  auto derivedProjection = derivedSCEP->returnedCols();
+  for (auto& [sc, colPosition] : extraSCsAndTheirPositions)
+  {
+    auto scTableAlias = sc->singleTable();
+    if (!scTableAlias || !table.weakerEq(scTableAlias.value()))
+    {
+      continue;
+    }
+
+    auto foundSc = derivedSCEP->columnMap().find(sc->columnName());
+    // We add extra SCs from GB and OB to the projection if they are not already there
+    if (foundSc == derivedSCEP->columnMap().end())
+    {
+      derivedProjection.push_back(execplan::SRCP(sc->clone()));
+      derivedSCEP->columnMap().insert({sc->columnName(), execplan::SRCP(sc->clone())});
+    }
+  }
+
+  // At this point CSEP contains all SCs from original projection, GB and OB that belongs to the target table.
+
   auto* derivedCSEP = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedSCEP.get());
   // TODO more rigorous error handling.
   if (!derivedCSEP)
@@ -379,10 +403,17 @@ std::pair<uint32_t, bool> findOrInsertColumnPosition(execplan::SimpleColumn* sc,
   return {it->second, false};
 }
 
-void tryToUpdateScToUseRewrittenDerived(
+enum UpdateResult
+{
+  IS_NEW_COLUMN = true,
+  IS_NOT_NEW_COLUMN = false,
+};
+
+UpdateResult tryToUpdateScToUseRewrittenDerived(
     execplan::SimpleColumn* sc, optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap)
 {
   auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
+  UpdateResult result = UpdateResult::IS_NOT_NEW_COLUMN;
 
   if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
   {
@@ -395,9 +426,53 @@ void tryToUpdateScToUseRewrittenDerived(
     if (isNewColumn)
     {
       ++currentColPositionCursorValue;
+      result = UpdateResult::IS_NEW_COLUMN;
     }
     updateScToUseRewrittenDerived(sc, newTableAlias, colPosition, std::nullopt);
   }
+
+  return result;
+}
+
+ExtraSRRC extractExtraSCsFromGBOrOB(
+    optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap,
+    const execplan::CalpontSelectExecutionPlan::GroupByColumnList& groupByOrOrderByCols)
+{
+  ExtraSRRC extraSCs;
+  for (auto& rc : groupByOrOrderByCols)
+  {
+    rc->setSimpleColumnList();
+    for (auto* sc : rc->simpleColumnList())
+    {
+      auto* originalSC = sc->clone();
+      if (tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap) == UpdateResult::IS_NEW_COLUMN)
+      {
+        extraSCs.push_back(std::unique_ptr<execplan::SimpleColumn>(originalSC));
+      }
+    }
+  }
+
+  return extraSCs;
+}
+
+// This routine takes tableAliasToSCPositionsMap and extraSCs and correlate extraSCs with positions.
+SCsAndTheirProjectionPositions findPositionsForExtraSCs(
+    optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap, ExtraSRRC& extraSCs)
+{
+  SCsAndTheirProjectionPositions scsAndTheirProjectionPositions;
+  for (auto& extraSC : extraSCs)
+  {
+    auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*extraSC->singleTable());
+    if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
+    {
+      auto& [newTableAlias, SCAliasToPosCounterMap, unused] = tableAliasToSCPositionsIt->second;
+      // INV there must be a position for all SCs from extraSCs
+      auto colPosition = SCAliasToPosCounterMap.at(extraSC->columnName());
+      scsAndTheirProjectionPositions.push_back({extraSC.get(), colPosition});
+    }
+  }
+
+  return scsAndTheirProjectionPositions;
 }
 
 bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
@@ -409,6 +484,8 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   bool ruleHasBeenApplied = false;
   optimizer::TableAliasToNewAliasAndSCPositionsMap tableAliasToSCPositionsMap;
 
+  // 1st pass over tables to create derived tables placeholders to collect
+  // SCs to be updated
   for (auto& table : tables)
   {
     cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
@@ -425,9 +502,9 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
 
-      auto derivedSCEP = createDerivedTableFromTable(csep, table, tableAlias, ctx);
-      newDerivedTableList.push_back(std::move(derivedSCEP));
-      ruleHasBeenApplied = true;
+      // auto derivedSCEP = createDerivedTableFromTable(csep, table, tableAlias, ctx);
+      // newDerivedTableList.push_back(std::move(derivedSCEP));
+      // ruleHasBeenApplied = true;
     }
     else
     {
@@ -435,6 +512,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     }
   }
 
+  // 2nd pass over RCs to update RCs with derived table SCs
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
   // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
   if (!newDerivedTableList.empty())
@@ -444,7 +522,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     {
       auto sameTableAliasOpt = rc->singleTable();
       // Same table so RC was pushed into UNION units and can be replaced with new derived table SC
-      if (sameTableAliasOpt)
+      if (sameTableAliasOpt && !rc->hasAggregate())
       {
         std::cout << "RC table schema " << sameTableAliasOpt->schema << " table " << sameTableAliasOpt->table
                   << " alias " << sameTableAliasOpt->alias << std::endl;
@@ -483,7 +561,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           newReturnedColumns.push_back(rc);
         }
       }
-      // if SCs belong to different tables
+      // if SCs belong to different tables || RC has aggregate
       else
       {
         rc->setSimpleColumnList();
@@ -494,19 +572,67 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         newReturnedColumns.push_back(rc);
       }
     }
-    // Remove the filters that are not necessary as they were pushed down to union units.
-    // But this is inappropriate for some EXISTS filter and join conditions
 
+    // OB and GB might use SCs that are not listed in projection.
+    // Collect extra SCs into a vector to add them to the new derived table.
+    // The lifetime of this vector must be at least until the end of the block that creates derived tables and
+    // UNION units.
+    ExtraSRRC groupByAndOrderByExtraSCs;
+
+    // 3d pass over GROUP BY columns
+    if (!csep.groupByCols().empty())
+    {
+      groupByAndOrderByExtraSCs = extractExtraSCsFromGBOrOB(tableAliasToSCPositionsMap, csep.groupByCols());
+    }
+
+    // 4th pass over ORDER BY columns
+    if (!csep.orderByCols().empty())
+    {
+      auto extraSCs = extractExtraSCsFromGBOrOB(tableAliasToSCPositionsMap, csep.orderByCols());
+      for (auto&& extraSC : extraSCs)
+      {
+        groupByAndOrderByExtraSCs.push_back(std::move(extraSC));
+      }
+    }
+
+    // 5th pass over filters to update filters with derived table SCs
     auto filters = csep.filters();
-
     if (filters)
     {
       std::vector<execplan::SimpleColumn*> simpleColumns;
       filters->walk(execplan::getSimpleCols, &simpleColumns);
+      // TODO must also collect extra SCs from filters
       for (auto* sc : simpleColumns)
       {
         std::cout << " filters SC " << sc->toString() << std::endl;
         tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap);
+      }
+    }
+
+    auto extraSCsAndTheirPositions =
+        findPositionsForExtraSCs(tableAliasToSCPositionsMap, groupByAndOrderByExtraSCs);
+
+    // 6th pass over tables to create derived CSEP with the collected SCs
+    for (auto& table : tables)
+    {
+      cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
+      std::cout << "Processing table schema " << schemaAndTableName.schema << " table "
+                << schemaAndTableName.table << " alias " << table.alias << std::endl;
+      if (!table.isColumnstore())
+      {
+        auto produceDerivedTableIt = tableAliasToSCPositionsMap.find(table);
+        if (produceDerivedTableIt != tableAliasToSCPositionsMap.end())
+        {
+          auto& [newTableAlias, SCAliasToPosCounterMap, unused] = produceDerivedTableIt->second;
+          auto derivedSCEP =
+              createDerivedTableFromTable(csep, table, newTableAlias, ctx, extraSCsAndTheirPositions);
+          newDerivedTableList.push_back(std::move(derivedSCEP));
+          ruleHasBeenApplied = true;
+        }
+      }
+      else
+      {
+        newTableList.push_back(table);
       }
     }
 
