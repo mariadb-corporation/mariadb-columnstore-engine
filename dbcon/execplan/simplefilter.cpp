@@ -29,16 +29,22 @@ using namespace std;
 
 #include "returnedcolumn.h"
 #include "constantcolumn.h"
-#include "simplecolumn.h"
-#include "operator.h"
-#include "constantfilter.h"
+#include "simplefilter.h"
 #include "bytestream.h"
 #include "objectreader.h"
-#include "functioncolumn.h"
-#include "arithmeticcolumn.h"
-#include "simplefilter.h"
+#include "simplecolumn.h"
 #include "aggregatecolumn.h"
+#include "arithmeticcolumn.h"
+#include "functioncolumn.h"
+#include "constantcolumn.h"
+#include "selectfilter.h"
+#include "operator.h"
 #include "windowfunctioncolumn.h"
+#include "rowgroup.h"
+#include "joblisttypes.h"
+using namespace messageqcpp;
+using namespace std;
+using namespace execplan;
 
 namespace execplan
 {
@@ -247,6 +253,53 @@ const string SimpleFilter::toString() const
   output << "  " << *fLhs;
   output << "  " << *fOp;
   output << "  " << *fRhs;
+  return output.str();
+}
+
+const string SimpleFilter::toString(bool compact) const
+{
+  if (!compact)
+  {
+    // Use the original detailed format
+    return toString();
+  }
+
+  ostringstream output;
+
+  // Compact format for tree display
+  output << "SimpleFilter(indexflag=" << fIndexFlag;
+  output << " joinFlag= " << fJoinFlag;
+  output << " card= " << fCardinality << ")";
+
+  // Handle different types of left operands with compact formatting
+  SimpleColumn* sc = dynamic_cast<SimpleColumn*>(fLhs);
+  AggregateColumn* ac = dynamic_cast<AggregateColumn*>(fLhs);
+
+  if (ac)
+  {
+    string acCompact = ac->toString(true);
+    if (!acCompact.empty())
+    {
+      output << endl << acCompact;
+    }
+  }
+  else if (sc)
+  {
+    string scCompact = sc->toString(true);
+    if (!scCompact.empty())
+    {
+      output << endl << scCompact;
+    }
+  }
+  else
+  {
+    // For other operand types, show them compactly
+    output << endl << "LHS: " << fLhs->data();
+  }
+
+  output << endl << "Op: " << fOp->data();
+  output << endl << "RHS: " << fRhs->data();
+
   return output.str();
 }
 

@@ -132,6 +132,7 @@ class SimpleFilter : public Filter
   void rhs(ReturnedColumn* rhs);
 
   const std::string toString() const override;
+  const std::string toString(bool compact) const;
 
   /**
    * The serialization interface
