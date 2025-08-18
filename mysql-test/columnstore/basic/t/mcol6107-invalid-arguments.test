@@ -8,7 +8,7 @@ create table cs1(i bigint)engine=columnstore;
 
 # incorrect args - idbpartition must receive column name and it received a string literal
 --error 1815
-select count(i) from cs1 where idbpartition('i') = '0.0.1';
+select count(i) from cs1 where idbPartition('i') = '0.0.1';
 
 --error 1815
 select count(i) from cs1 where idbExtentMin('i') = '0.0.1';

@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS test_invalid_args;
 CREATE DATABASE test_invalid_args;
 USE test_invalid_args;
 create table cs1(i bigint)engine=columnstore;
-select count(i) from cs1 where idbpartition('i') = '0.0.1';
+select count(i) from cs1 where idbPartition('i') = '0.0.1';
 ERROR HY000: Internal error: MCS-1006: Function called with unsupported datatype.
 select count(i) from cs1 where idbExtentMin('i') = '0.0.1';
 ERROR HY000: Internal error: MCS-1006: Function called with unsupported datatype.
