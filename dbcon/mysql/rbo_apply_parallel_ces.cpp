@@ -219,7 +219,6 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
 {
   details::FilterRangeBounds<T> bounds;
 
-
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
   std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
@@ -481,7 +480,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   // TODO support CSEPs with derived tables
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
-  bool ruleHasBeenApplied = false;
+  bool ruleMustBeApplied = false;
   optimizer::TableAliasToNewAliasAndSCPositionsMap tableAliasToSCPositionsMap;
 
   // 1st pass over tables to create derived tables placeholders to collect
@@ -501,10 +500,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
-
-      // auto derivedSCEP = createDerivedTableFromTable(csep, table, tableAlias, ctx);
-      // newDerivedTableList.push_back(std::move(derivedSCEP));
-      // ruleHasBeenApplied = true;
+      ruleMustBeApplied = true;
     }
     else
     {
@@ -512,10 +508,10 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     }
   }
 
-  // 2nd pass over RCs to update RCs with derived table SCs
+  // 2nd pass over RCs to update RCs with derived table SCs in projection
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
   // replace parent CSEP RCs with derived table RCs using ScheamAndTableName -> tableAlias map
-  if (!newDerivedTableList.empty())
+  if (ruleMustBeApplied)
   {
     std::cout << "Iterating over RCs" << std::endl;
     for (auto& rc : csep.returnedCols())
@@ -627,7 +623,6 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           auto derivedSCEP =
               createDerivedTableFromTable(csep, table, newTableAlias, ctx, extraSCsAndTheirPositions);
           newDerivedTableList.push_back(std::move(derivedSCEP));
-          ruleHasBeenApplied = true;
         }
       }
       else
@@ -641,7 +636,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     csep.tableList(newTableList);
     csep.returnedCols(newReturnedColumns);
   }
-  return ruleHasBeenApplied;
+  return ruleMustBeApplied;
 }
 
 }  // namespace optimizer

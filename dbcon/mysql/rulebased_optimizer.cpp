@@ -98,16 +98,6 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
 
-    // Walk nested derived
-    for (auto& table : current->derivedTableList())
-    {
-      auto* csepPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
-      if (csepPtr)
-      {
-        planStack.push(csepPtr);
-      }
-    }
-
     // Walk nested UNION UNITS
     for (auto& unionUnit : current->unionVec())
     {
@@ -118,7 +108,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       }
     }
 
-    // Walk nested subselect in filters, e.g. SEMI-JOIN
+    // Walk nested subselect in filters, e.g. SEMI-JOIN and also derived tables
     for (auto& subselect : current->subSelectList())
     {
       auto* subselectPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subselect.get());
