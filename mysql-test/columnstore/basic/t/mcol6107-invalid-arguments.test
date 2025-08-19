@@ -14,21 +14,50 @@ create table cs1(i bigint)engine=columnstore;
 select count(i) from cs1 where idbPartition('i') = '0.0.1';
 
 --error 1815
+select count(i) from cs1 where idbPartition(1) = '0.0.1';
+
+#correct params
+select count(i) from cs1 where idbPartition(i) = '0.0.1';
+
+--error 1815
 select count(i) from cs1 where idbExtentMin('i') = '0.0.1';
+
+#--error 1815
+#select count(i) from cs1 where idbExtentMin(i) = '0.0.1';
+
+#correct params
+#select count(i) from cs1 where idbExtentMin(1) = '0.0.1';
 
 --error 1815
 select count(i) from cs1 where idbExtentRelativeRid('i') = '0.0.1';
 
 --error 1815
-select count(i) from cs1 where idbExtentMin('i') = '0.0.1';
+select count(i) from cs1 where idbExtentRelativeRid(3) = '0.0.1';
+
+#correct params
+select count(i) from cs1 where idbExtentRelativeRid(i);
 
 --error 1815
 select count(i) from cs1 where idbPm('i') = '0.0.1';
 
 --error 1815
-select count(i) from cs1 where idbSegmentDir('i') = '0.0.1';
---source ../include/drop_functions.inc
+select count(i) from cs1 where idbPm(10) = '0.0.1';
 
+#correct params
+select count(i) from cs1 where idbPm(i);
+
+--error 1815
+select count(i) from cs1 where idbSegmentDir('i') = '0.0.1';
+
+--error 1815
+select count(i) from cs1 where idbSegmentDir(1) = '0.0.1';
+
+#correct params
+select count(i) from cs1 where idbSegmentDir(i);
+
+
+
+--source ../include/drop_functions.inc
 
 # Clean UP
 DROP DATABASE test_invalid_args;
