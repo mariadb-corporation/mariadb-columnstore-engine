@@ -408,7 +408,6 @@ std::pair<uint32_t, bool> findOrInsertColumnPosition(execplan::SimpleColumn* sc,
   if (it == SCToPosCounterMap.end())
   {
     SCToPosCounterMap.insert({sc, colPosition});
-    std::cout << " first case new column in the map colPosition " << SCToPosCounterMap[sc] << std::endl;
     return {colPosition, true};
   }
   return {it->second, false};
@@ -544,7 +543,19 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       }
     }
 
-    // 6th pass over tables to create derived CSEP with the collected SCs
+    // 6th pass over filters to use derived table SCs in filters
+    auto having = csep.having();
+    if (having)
+    {
+      std::vector<execplan::SimpleColumn*> simpleColumns;
+      having->walk(execplan::getSimpleCols, &simpleColumns);
+      for (auto* sc : simpleColumns)
+      {
+        tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap);
+      }
+    }
+
+    // 7th pass over tables to create derived CSEP with the collected SCs
     for (auto& table : tables)
     {
       cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
