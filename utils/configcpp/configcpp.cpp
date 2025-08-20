@@ -552,4 +552,26 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
   return {};
 }
 
+bool parseBooleanParamValue(const std::string& s)
+{
+  if (s.empty())
+    throw runtime_error("Empty value cannot be parsed");
+  std::string v;
+  v.reserve(s.size());
+  for (char c : s)
+    v.push_back(static_cast<char>(::tolower(static_cast<unsigned char>(c))));
+
+  if (v == "Y" || v == "y" || v == "1" || v == "true" || v == "on" || v == "yes" || v == "enable" ||
+      v == "enabled")
+  {
+    return true;
+  }
+  if (v == "N" || v == "n" || v == "0" || v == "false" || v == "off" || v == "no" || v == "disable" ||
+      v == "disabled")
+  {
+    return false;
+  }
+  throw runtime_error("Value " + s + " cannot be parsed as boolean");
+}
+
 }  // namespace config

@@ -22,6 +22,7 @@
 
 #include "rulebased_optimizer.h"
 
+#include "configcpp.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
@@ -32,6 +33,7 @@
 #include "simplefilter.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_predicate_pushdown.h"
+#include "utils/pron/pron.h"
 
 namespace optimizer
 {
@@ -41,9 +43,33 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
                            optimizer::RBOptimizerContext& ctx)
 {
   bool changed = false;
+  config::Config* cfg = config::Config::makeConfig();
+  const auto& pronMap = utils::Pron::instance().pron();
+
   for (const auto& rule : rules)
   {
-    changed |= rule.apply(root, ctx);
+    bool apply_rule = true;
+    try
+    {
+      const std::string val = cfg->getConfig("OptimizerRules", rule.getName());
+      apply_rule = config::parseBooleanParamValue(val);
+
+      const std::string k1 = std::string("OptimizerRules.") + rule.getName();
+      // PRON params override the config file
+      auto it = pronMap.find(k1);
+      if (it != pronMap.end())
+      {
+        apply_rule = config::parseBooleanParamValue(it->second);
+      }
+    }
+    catch (...)
+    {
+      // Missing section/name or other config issues – keep default behavior
+    }
+    if (apply_rule)
+    {
+      changed |= rule.apply(root, ctx);
+    }
   }
   return changed;
 }

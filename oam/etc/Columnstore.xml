@@ -203,8 +203,8 @@
 			  is 20 extents worth of work for the PMs to process at any given time.
 			  ProcessorThreadsPerScan * MaxOutstandingRequests should be at least
 			  as many threads are available across all PMs.  -->
-		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> --> 
-		<!-- MaxOutstandingRequests is a windows size for outstanding PrimitiveJobs messages per query step. 
+		<!-- <ProcessorThreadsPerScan>16</ProcessorThreadsPerScan> -->
+		<!-- MaxOutstandingRequests is a windows size for outstanding PrimitiveJobs messages per query step.
 			A bigger number increases PrimProc workload. -->
 		<MaxOutstandingRequests>20000</MaxOutstandingRequests>
 		<ThreadPoolSize>1000</ThreadPoolSize>
@@ -248,4 +248,8 @@
 	<Rewrites>
 		<CommonLeafConjunctionsToTop>Y</CommonLeafConjunctionsToTop>
 	</Rewrites>
+	<OptimizerRules>
+		<predicate_pushdown>true</predicate_pushdown>
+		<parallel_ces>true</parallel_ces>
+	</OptimizerRules>
 </Columnstore>

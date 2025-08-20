@@ -42,8 +42,6 @@ using ExtraSRRC = std::vector<std::unique_ptr<execplan::SimpleColumn>>;
 using SCAndItsProjectionPosition = std::pair<execplan::SimpleColumn*, uint32_t>;
 using SCsAndTheirProjectionPositions = std::vector<SCAndItsProjectionPosition>;
 
-void applyParallelCES_exists(execplan::CalpontSelectExecutionPlan& csep, const size_t id);
-
 static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
 static const size_t MaxParallelFactor = 16;
 
