@@ -58,11 +58,19 @@ struct TableAliasLessThan
   }
 };
 
+struct SimpleColumnLessThan
+{
+  bool operator()(const execplan::SimpleColumn* lhs, const execplan::SimpleColumn* rhs) const
+  {
+    return lhs->columnName() < rhs->columnName();
+  }
+};
+
 using NewTableAliasAndColumnPosCounter = std::pair<std::string, size_t>;
-using SCAliasToPosCounterMap = std::map<std::string, size_t>;
+using SCToPosCounterMap = std::map<execplan::SimpleColumn*, size_t, SimpleColumnLessThan>;
 using TableAliasToNewAliasAndSCPositionsMap =
     std::map<execplan::CalpontSystemCatalog::TableAliasName,
-             std::tuple<std::string, SCAliasToPosCounterMap, size_t>, TableAliasLessThan>;
+             std::tuple<std::string, SCToPosCounterMap, size_t>, TableAliasLessThan>;
 
 // Helper functions in details namespace
 namespace details
