@@ -122,6 +122,24 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   ptp->right(sfr);
   ptp->left(sfl);
 
+  // For the last range, add OR IS NULL to handle NULL values
+  if (isLast)
+  {
+    // Create IS NULL filter: column IS NULL
+    auto* nullCheckColumn = new execplan::SimpleColumn(column);
+    nullCheckColumn->resultType(column.resultType());
+
+    auto* nullFilter = new execplan::SimpleFilter();
+    nullFilter->op(boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull")));
+    nullFilter->lhs(nullCheckColumn);
+
+    // Create OR condition: (range_filter) OR (column IS NULL)
+    execplan::ParseTree* orWithNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
+    orWithNull->left(ptp);
+    orWithNull->right(nullFilter);
+    ptp = orWithNull;
+  }
+
   auto* currentFilters = csep->filters();
   if (currentFilters)
   {
