@@ -2,17 +2,13 @@
 [![Build Status](https://ci.columnstore.mariadb.net/api/badges/mariadb-corporation/mariadb-columnstore-cmapi/status.svg)](https://ci.columnstore.mariadb.net/mariadb-corporation/mariadb-columnstore-cmapi)
 
 ## Overview
-This RESTfull server enables multi-node setups for MCS.
+This RESTful server enables multi-node setups for MCS.
 
 ## Requirements
 
 See requirements.txt file.
 
-All the Python packages prerequisits are shipped with a pre-built Python enterpreter.
-
-### Optional Sentry
-
-Sentry support is optional and disabled by default. It can be bundled at build time using the CMake option `-DENABLE_SENTRY=ON`. Runtime activation still requires setting a DSN in the CMAPI config. If the dependency is not present or no DSN is provided, Sentry initialization is skipped.
+All the Python packages prerequisites are shipped with a pre-built Python interpreter.
 
 ## Usage
 

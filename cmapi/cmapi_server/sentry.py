@@ -2,12 +2,15 @@ import logging
 import socket
 
 import cherrypy
+import sentry_sdk
+from sentry_sdk.integrations.aiohttp import AioHttpIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.requests import RequestsIntegration
 
 from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 
 SENTRY_ACTIVE = False
-_sentry_sdk = None
 
 
 def maybe_init_sentry() -> None:
@@ -23,9 +26,9 @@ def maybe_init_sentry() -> None:
     - AioHttpIntegration: propagate trace headers for outbound requests made
       with `aiohttp` and record breadcrumbs.
 
-    The function is a no-op if the DSN is missing or if the `sentry-sdk` package is not installed.
+    The function is a no-op if the DSN is missing.
     """
-    global SENTRY_ACTIVE, _sentry_sdk
+    global SENTRY_ACTIVE
     try:
         cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
         dsn = helpers.dequote(
@@ -44,11 +47,6 @@ def maybe_init_sentry() -> None:
         return
 
     try:
-        import sentry_sdk  # type: ignore
-        from sentry_sdk.integrations.aiohttp import AioHttpIntegration  # type: ignore
-        from sentry_sdk.integrations.logging import LoggingIntegration  # type: ignore
-        from sentry_sdk.integrations.requests import RequestsIntegration  # type: ignore
-
         sentry_logging = LoggingIntegration(
             level=logging.INFO,
             event_level=logging.ERROR,
@@ -65,13 +63,8 @@ def maybe_init_sentry() -> None:
             traces_sample_rate=traces_sample_rate,
             integrations=[sentry_logging, RequestsIntegration(), AioHttpIntegration()],
         )
-        _sentry_sdk = sentry_sdk
         SENTRY_ACTIVE = True
         logging.getLogger(__name__).info('Sentry initialized for CMAPI via config.')
-    except ImportError:
-        logging.getLogger(__name__).info(
-            'sentry-sdk not installed; skipping Sentry initialization.'
-        )
     except Exception:
         logging.getLogger(__name__).exception('Failed to initialize Sentry.')
 
@@ -87,19 +80,19 @@ def _sentry_on_start_resource():
     - Stores the transaction on the CherryPy request object for later finishing
       in `_sentry_on_end_request`.
     """
-    if not SENTRY_ACTIVE or _sentry_sdk is None:
+    if not SENTRY_ACTIVE:
         return
     try:
         request = cherrypy.request
         headers = dict(getattr(request, 'headers', {}) or {})
         name = f"{request.method} {request.path_info}"
-        transaction = _sentry_sdk.start_transaction(
+        transaction = sentry_sdk.start_transaction(
             op='http.server', name=name, continue_from_headers=headers
         )
-        _sentry_sdk.Hub.current.scope.set_span(transaction)
+        sentry_sdk.Hub.current.scope.set_span(transaction)
 
         # Add request-level context/tags
-        scope = _sentry_sdk.Hub.current.scope
+        scope = sentry_sdk.Hub.current.scope
         scope.set_tag('http.method', request.method)
         scope.set_tag('http.path', request.path_info)
         scope.set_tag('client.ip', getattr(request.remote, 'ip', ''))
@@ -123,10 +116,10 @@ def _sentry_before_error_response():
     This hook runs when CherryPy prepares an error response. If an exception is
     available in the current context, it will be sent to Sentry.
     """
-    if not SENTRY_ACTIVE or _sentry_sdk is None:
+    if not SENTRY_ACTIVE:
         return
     try:
-        _sentry_sdk.capture_exception()
+        sentry_sdk.capture_exception()
     except Exception:
         pass
 
@@ -138,7 +131,7 @@ def _sentry_on_end_request():
     finishes it. If no transaction was started on this request, the function is
     a no-op.
     """
-    if not SENTRY_ACTIVE or _sentry_sdk is None:
+    if not SENTRY_ACTIVE:
         return
     try:
         request = cherrypy.request
