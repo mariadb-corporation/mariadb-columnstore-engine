@@ -48,6 +48,11 @@ foreach(name chrono filesystem program_options regex system thread)
     set_target_properties(${lib} PROPERTIES IMPORTED_LOCATION ${loc} EXCLUDE_FROM_ALL TRUE)
 endforeach()
 
+set(LOG_BOOST_INSTEAD_OF_SCREEN "")
+if(COLUMNSTORE_MAINTAINER_MODE)
+    set(LOG_BOOST_INSTEAD_OF_SCREEN "LOG_BUILD TRUE LOG_INSTALL TRUE")
+endif()
+
 ExternalProject_Add(
     external_boost
     PREFIX .boost
@@ -60,7 +65,7 @@ ExternalProject_Add(
     BUILD_COMMAND ./b2 -q ${_b2args}
     BUILD_IN_SOURCE TRUE
     INSTALL_COMMAND ./b2 -q install ${_b2args}
-    # LOG_BUILD TRUE LOG_INSTALL TRUE
+    ${LOG_BOOST_INSTEAD_OF_SCREEN}
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
 )
