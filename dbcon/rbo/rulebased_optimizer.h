@@ -23,7 +23,7 @@
 #include <my_config.h>
 // #include "idb_mysql.h"
 
-#include "ha_mcs_impl_if.h"
+#include <dbcon/mysql/ha_mcs_impl_if.h>
 
 #include "execplan/calpontselectexecutionplan.h"
 

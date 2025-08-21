@@ -1,4 +1,4 @@
-set(rbo_SRCS ../mysql/rulebased_optimizer.cpp ../mysql/rbo_apply_parallel_ces.cpp ../mysql/rbo_predicate_pushdown.cpp)
+set(rbo_SRCS rulebased_optimizer.cpp rbo_apply_parallel_ces.cpp rbo_predicate_pushdown.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 

@@ -9,11 +9,11 @@
 #include <vector>
 #include <string>
 
-#include "../dbcon/mysql/rbo_apply_parallel_ces.h"
+#include <dbcon/rbo/rbo_apply_parallel_ces.h>
 
-#include "../dbcon/execplan/calpontselectexecutionplan.h"
-#include "../dbcon/execplan/simplecolumn.h"
-#include "../dbcon/mysql/ha_mcs_impl_if.h"
+#include <dbcon/execplan/calpontselectexecutionplan.h>
+#include <dbcon/execplan/simplecolumn.h>
+#include <dbcon/mysql/ha_mcs_impl_if.h>
 
 class RBOHybridTest : public ::testing::Test
 {

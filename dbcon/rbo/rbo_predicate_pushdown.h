@@ -19,7 +19,7 @@
 
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
-#include "idb_mysql.h"
+#include <dbcon/mysql/idb_mysql.h>
 
 #include "execplan/calpontselectexecutionplan.h"
 #include "rulebased_optimizer.h"
