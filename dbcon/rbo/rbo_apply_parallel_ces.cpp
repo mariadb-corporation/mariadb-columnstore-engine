@@ -34,7 +34,7 @@
 #include "rbo_apply_parallel_ces.h"
 #include "returnedcolumn.h"
 #include "simplefilter.h"
-
+#include "existsfilter.h"
 
 namespace optimizer
 {
@@ -262,7 +262,8 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
 // Populates range bounds based on column statistics
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
-std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics, optimizer::RBOptimizerContext& ctx)
+std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics,
+                                                                 optimizer::RBOptimizerContext& ctx)
 {
   details::FilterRangeBounds<T> bounds;
 
@@ -324,8 +325,8 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   {
     T originalFirstLower = bounds.front().first;
     bounds.front().first = std::numeric_limits<T>::lowest();
-    std::cout << "Adjusted first bound lower from " << originalFirstLower << " to "
-              << bounds.front().first << std::endl;
+    std::cout << "Adjusted first bound lower from " << originalFirstLower << " to " << bounds.front().first
+              << std::endl;
   }
 
   for (auto& bucket : columnStatistics->get_json_histogram())
@@ -456,8 +457,8 @@ void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string
                                    const uint32_t colPosition, std::optional<std::string> scAlias)
 {
   sc->schemaName("");
-
-  sc->tableName(newTableAlias);
+  // For derived tables, leave tableName empty; use tableAlias/derivedTable to reference it
+  sc->tableName("");
   sc->tableAlias(newTableAlias);
   sc->derivedTable(newTableAlias);
 
@@ -624,6 +625,53 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap);
       }
     }
+
+    // 6.5 pass: update correlated columns inside EXISTS subqueries
+    // Walk filter/having trees, find ExistsFilter nodes and update correlated outer SCs within sub-CSEPs
+    auto updateExistsCorrelated = [&tableAliasToSCPositionsMap](const execplan::ParseTree* root)
+    {
+      if (!root)
+        return;
+      // Walker to process ExistsFilter nodes
+      auto walker = [](const execplan::ParseTree* n, void* obj)
+      {
+        auto* ef = dynamic_cast<execplan::ExistsFilter*>(n->data());
+        if (!ef)
+          return;
+        auto* mapPtr = static_cast<optimizer::TableAliasToNewAliasAndSCPositionsMap*>(obj);
+        auto& map = *mapPtr;
+        auto sub = ef->sub();
+        if (sub)
+        {
+          if (auto subFilters = sub->filters())
+          {
+            std::vector<execplan::SimpleColumn*> subSCs;
+            subFilters->walk(execplan::getSimpleCols, &subSCs);
+            for (auto* sc : subSCs)
+            {
+              if (sc)
+                tryToUpdateScToUseRewrittenDerived(sc, map);
+            }
+          }
+          if (auto subHaving = sub->having())
+          {
+            std::vector<execplan::SimpleColumn*> subSCs;
+            subHaving->walk(execplan::getSimpleCols, &subSCs);
+            for (auto* sc : subSCs)
+            {
+              if (sc)
+                tryToUpdateScToUseRewrittenDerived(sc, map);
+            }
+          }
+        }
+      };
+      root->walk(walker, &tableAliasToSCPositionsMap);
+    };
+
+    if (filters)
+      updateExistsCorrelated(filters);
+    if (having)
+      updateExistsCorrelated(having);
 
     // 7th pass over tables to create derived CSEP with the collected SCs
     for (auto& table : tables)
