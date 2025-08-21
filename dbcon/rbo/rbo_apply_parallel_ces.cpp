@@ -131,6 +131,8 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
     auto* nullFilter = new execplan::SimpleFilter();
     nullFilter->op(boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull")));
     nullFilter->lhs(nullCheckColumn);
+    // Ensure rhs is not null to avoid crashes in consumers that expect both sides
+    nullFilter->rhs(new execplan::ConstantColumnNull());
 
     // Create OR condition: (range_filter) OR (column IS NULL)
     execplan::ParseTree* orWithNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
