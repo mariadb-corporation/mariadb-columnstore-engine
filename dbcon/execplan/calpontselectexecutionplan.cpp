@@ -243,13 +243,28 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   for (unsigned int i = 0; i < retCols.size(); i++)
   {
-    output << endlWithIndent(ident + 2) << *retCols[i];  // WIP replace with constant
+    if (!retCols[i])
+    {
+      output << endlWithIndent(ident + 2) << "<null ReturnedColumn>";
+    }
+    else
+    {
+      output << endlWithIndent(ident + 2) << *retCols[i];  // WIP replace with constant
+    }
 
-    if (retCols[i]->colSource() & SELECT_SUB)
+    if (retCols[i] && (retCols[i]->colSource() & SELECT_SUB))
     {
       output << endlWithIndent(ident + 2) << "select sub -- ";
-      CalpontSelectExecutionPlan* plan =
-          dynamic_cast<CalpontSelectExecutionPlan*>(fSelectSubList[seq++].get());
+      CalpontSelectExecutionPlan* plan = nullptr;
+      if (seq < fSelectSubList.size())
+      {
+        plan = dynamic_cast<CalpontSelectExecutionPlan*>(fSelectSubList[seq].get());
+      }
+      else
+      {
+        output << endlWithIndent(ident + 2) << "<missing select subquery>";
+      }
+      ++seq;
 
       printSubCSEP(ident + 2, output, plan);
     }
@@ -266,8 +281,16 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     if (tables[i].schema.length() == 0 && tables[i].table.length() == 0)
     {
       output << endlWithIndent(ident + 2) << "derived table - " << tables[i].alias;
-      CalpontSelectExecutionPlan* plan =
-          dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq++].get());
+      CalpontSelectExecutionPlan* plan = nullptr;
+      if (seq < fDerivedTableList.size())
+      {
+        plan = dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq].get());
+      }
+      else
+      {
+        output << endlWithIndent(ident + 2) << "<missing derived table subquery>";
+      }
+      ++seq;
 
       printSubCSEP(ident + 2, output, plan);
     }
@@ -300,7 +323,10 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
     for (unsigned int i = 0; i < gbc.size(); i++)
     {
-      output << endlWithIndent(ident + 2) << *gbc[i];
+      if (!gbc[i])
+        output << endlWithIndent(ident + 2) << "<null GroupBy column>";
+      else
+        output << endlWithIndent(ident + 2) << *gbc[i];
     }
     output << std::string(ident, ' ');
   }
@@ -320,7 +346,12 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     output << endlWithIndent(ident) << ">>Order By Columns";
 
     for (unsigned int i = 0; i < obc.size(); i++)
-      output << endlWithIndent(ident + 2) << *obc[i];
+    {
+      if (!obc[i])
+        output << endlWithIndent(ident + 2) << "<null OrderBy column>";
+      else
+        output << endlWithIndent(ident + 2) << *obc[i];
+    }
   }
 
   output << endlWithIndent(ident) << "SessionID: " << fSessionID;
@@ -337,7 +368,11 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   for (iter = columnMap().begin(); iter != columnMap().end(); iter++)
   {
-    output << endlWithIndent(ident + 2) << (*iter).first << " : " << (*iter).second;
+    output << endlWithIndent(ident + 2) << (*iter).first << " : ";
+    if (!(*iter).second)
+      output << "<null column map entry>";
+    else
+      output << (*iter).second;
   }
 
   output << endlWithIndent(ident) << "UUID: " << fUuid;
@@ -350,7 +385,9 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   for (unsigned i = 0; i < unionVec().size(); i++)
   {
-    CalpontSelectExecutionPlan* plan = dynamic_cast<CalpontSelectExecutionPlan*>(unionVec()[i].get());
+    CalpontSelectExecutionPlan* plan = nullptr;
+    if (unionVec()[i])
+      plan = dynamic_cast<CalpontSelectExecutionPlan*>(unionVec()[i].get());
 
     printSubCSEP(ident, output, plan);
   }

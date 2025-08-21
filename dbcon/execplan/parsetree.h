@@ -208,6 +208,17 @@ class ParseTree
    */
   inline static void print(const ParseTree* n, std::ostream& output)
   {
+    // Be defensive: print placeholder if node or its data is null
+    if (!n)
+    {
+      output << "<null parse tree node>" << std::endl;
+      return;
+    }
+    if (!n->data())
+    {
+      output << "<null treenode data>" << std::endl;
+      return;
+    }
     output << *n->data() << std::endl;
   }
 
