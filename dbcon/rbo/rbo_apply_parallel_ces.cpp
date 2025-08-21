@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -95,7 +96,7 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   auto* filterColLeftOp = new execplan::ConstantColumnUInt(bound.second, 0, 0);
   // set TZ
   // There is a question with ownership of the const column
-  // TODO here we lost upper bound value if predicate is not changed to weak lt
+  // Use exclusive upper bound for intermediate bounds; inclusive for the final bound
   execplan::SOP ltOp = (isLast) ? boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="))
                                 : boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
   ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
@@ -236,6 +237,19 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
 {
   details::FilterRangeBounds<T> bounds;
 
+  // Guard: empty histogram
+  if (!columnStatistics || columnStatistics->get_json_histogram().empty())
+    return std::nullopt;
+
+  auto decodeU64 = [](const std::string& bytes) -> uint64_t
+  {
+    uint64_t v = 0;
+    const size_t n = std::min<size_t>(bytes.size(), sizeof(uint64_t));
+    if (n)
+      std::memcpy(&v, bytes.data(), n);
+    return v;
+  };
+
   // TODO configurable parallel factor via session variable
   // NB now histogram size is the way to control parallel factor with 16 being the maximum
   std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
@@ -252,20 +266,44 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   {
     auto bucket = columnStatistics->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
     auto endBucket = columnStatistics->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
-    T currentLowerBound = *(uint32_t*)bucket->start_value.data();
-    T currentUpperBound = *(uint32_t*)endBucket->start_value.data();
+    T currentLowerBound = static_cast<T>(decodeU64(bucket->start_value));
+    T currentUpperBound = static_cast<T>(decodeU64(endBucket->start_value));
     bounds.push_back({currentLowerBound, currentUpperBound});
   }
+
+  // Final segment: from the start of the last chunk to the histogram's last end endpoint
+  if (numberOfUnionUnits >= 1)
+  {
+    auto lastChunkIndex = (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
+    if (lastChunkIndex < columnStatistics->get_json_histogram().size())
+    {
+      auto lastStartBucket = columnStatistics->get_json_histogram().begin() + lastChunkIndex;
+      T finalLowerBound = static_cast<T>(decodeU64(lastStartBucket->start_value));
+
+      T finalUpperBound = std::numeric_limits<T>::max();
+      if (!columnStatistics->get_last_bucket_end_endp().empty())
+      {
+        finalUpperBound = static_cast<T>(decodeU64(columnStatistics->get_last_bucket_end_endp()));
+      }
+      bounds.push_back({finalLowerBound, finalUpperBound});
+    }
+  }
+
+  // Ensure the first bound starts from the minimal representable value to avoid dropping values
+  if (!bounds.empty())
+  {
+    T originalFirstLower = bounds.front().first;
+    bounds.front().first = std::numeric_limits<T>::lowest();
+    std::cout << "Adjusted first bound lower from " << originalFirstLower << " to "
+              << bounds.front().first << std::endl;
+  }
+
   for (auto& bucket : columnStatistics->get_json_histogram())
   {
-    T currentLowerBound = *(uint32_t*)bucket.start_value.data();
+    T currentLowerBound = static_cast<T>(decodeU64(bucket.start_value));
     std::cout << "Bucket: " << currentLowerBound << std::endl;
   }
-  // TODO leave this here b/c there is a corresponding JIRA about the last upper range bound.
-  // auto penultimateBucket = columnStatistics.get_json_histogram().begin() + numberOfUnionUnits *
-  // numberOfBucketsPerUnionUnit; T currentLowerBound = *(uint32_t*)penultimateBucket->start_value.data(); T
-  // currentUpperBound = *(uint32_t*)columnStatistics.get_last_bucket_end_endp().data();
-  // bounds.push_back({currentLowerBound, currentUpperBound});
+  // Note: last bound now uses histogram's last end endpoint to cover the tail.
 
   for (auto& bound : bounds)
   {
@@ -303,6 +341,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   }
 
   auto& bounds = boundsOpt.value();
+  std::cout << "Bounds generated: " << bounds.size() << std::endl;
 
   // These bounds produce low <= col < high
   if (bounds.size() > 1)
@@ -328,6 +367,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     clonedCSEP->filters(filter);
     unionVec.push_back(clonedCSEP);
   }
+  std::cout << "Union units created: " << unionVec.size() << std::endl;
 
   return unionVec;
 }
