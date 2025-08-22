@@ -294,11 +294,11 @@ const string SimpleFilter::toString(bool compact) const
   else
   {
     // For other operand types, show them compactly
-    output << endl << "LHS: " << fLhs->data();
+    output << endl << "LHS: " << fLhs->toString();
   }
 
-  output << endl << "Op: " << fOp->data();
-  output << endl << "RHS: " << fRhs->data();
+  output << endl << "Op: " << fOp->toString();
+  output << endl << "RHS: " << fRhs->toString();
 
   return output.str();
 }

@@ -125,18 +125,47 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
   if (isLast)
   {
     // Create IS NULL filter: column IS NULL
-    auto* nullCheckColumn = new execplan::SimpleColumn(column);
-    nullCheckColumn->resultType(column.resultType());
+    auto* nullCheckColumn1 = new execplan::SimpleColumn(column);
+    nullCheckColumn1->resultType(column.resultType());
+    auto* nullCheckColumn2 = new execplan::SimpleColumn(column);
+    nullCheckColumn2->resultType(column.resultType());
 
-    auto* nullFilter = new execplan::SimpleFilter();
-    nullFilter->op(boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull")));
-    nullFilter->lhs(nullCheckColumn);
+    auto* nullFilter1 = new execplan::SimpleFilter();
+    execplan::SOP isNullOp1 = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull"));
+    isNullOp1->setOpType(nullCheckColumn1->resultType(), nullCheckColumn1->resultType());
+    isNullOp1->resultType(isNullOp1->operationType());
+    nullFilter1->op(isNullOp1);
+    nullFilter1->lhs(nullCheckColumn1);
+    auto* nullConstant1 = new execplan::ConstantColumnNull();
+    nullConstant1->resultType(nullCheckColumn1->resultType());
+    nullFilter1->rhs(nullConstant1);
 
-    // Create OR condition: (range_filter) OR (column IS NULL)
-    execplan::ParseTree* orWithNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
-    orWithNull->left(ptp);
-    orWithNull->right(nullFilter);
-    ptp = orWithNull;
+    auto* nullFilter2 = new execplan::SimpleFilter();
+    execplan::SOP isNullOp2 = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull"));
+    isNullOp2->setOpType(nullCheckColumn2->resultType(), nullCheckColumn2->resultType());
+    isNullOp2->resultType(isNullOp2->operationType());
+    nullFilter2->op(isNullOp2);
+    nullFilter2->lhs(nullCheckColumn2);
+    auto* nullConstant2 = new execplan::ConstantColumnNull();
+    nullConstant2->resultType(nullCheckColumn2->resultType());
+    nullFilter2->rhs(nullConstant2);
+
+    // Transform (A AND B) OR C to (A OR C) AND (B OR C)
+    // Left side of original AND: sfl (col >= X)
+    execplan::ParseTree* leftOrNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
+    leftOrNull->left(new execplan::ParseTree(sfl));
+    leftOrNull->right(new execplan::ParseTree(nullFilter1));
+
+    // Right side of original AND: sfr (col <= Y)
+    execplan::ParseTree* rightOrNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
+    rightOrNull->left(new execplan::ParseTree(sfr));
+    rightOrNull->right(new execplan::ParseTree(nullFilter2));
+
+    // Final: (A OR C) AND (B OR C)
+    execplan::ParseTree* finalAnd = new execplan::ParseTree(new execplan::LogicOperator("and"));
+    finalAnd->left(leftOrNull);
+    finalAnd->right(rightOrNull);
+    ptp = finalAnd;
   }
 
   auto* currentFilters = csep->filters();
