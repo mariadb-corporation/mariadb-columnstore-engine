@@ -35,6 +35,7 @@
 #include "returnedcolumn.h"
 #include "simplefilter.h"
 
+
 namespace optimizer
 {
 
@@ -45,7 +46,6 @@ using SCAndItsProjectionPosition = std::pair<execplan::SimpleColumn*, uint32_t>;
 using SCsAndTheirProjectionPositions = std::vector<SCAndItsProjectionPosition>;
 
 static const std::string RewrittenSubTableAliasPrefix = "$added_sub_";
-static const size_t MaxParallelFactor = 50;
 
 namespace details
 {
@@ -233,7 +233,7 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
 // Populates range bounds based on column statistics
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
-std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics)
+std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics, optimizer::RBOptimizerContext& ctx)
 {
   details::FilterRangeBounds<T> bounds;
 
@@ -250,11 +250,12 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
     return v;
   };
 
-  // TODO configurable parallel factor via session variable
-  // NB now histogram size is the way to control parallel factor with 16 being the maximum
+  // Get parallel factor from context
+  size_t maxParallelFactor = ctx.cesOptimizationParallelFactor;
   std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
             << columnStatistics->get_json_histogram().size() << std::endl;
-  size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), MaxParallelFactor);
+  std::cout << "Session ces_optimization_parallel_factor: " << maxParallelFactor << std::endl;
+  size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), maxParallelFactor);
   size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
 
   std::cout << "Number of union units: " << numberOfUnionUnits << std::endl;
@@ -334,7 +335,7 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
 
   // TODO char and other numerical types support
-  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics);
+  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics, ctx);
   if (!boundsOpt.has_value())
   {
     return unionVec;

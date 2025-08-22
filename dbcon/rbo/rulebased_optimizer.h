@@ -34,8 +34,8 @@ class RBOptimizerContext
 {
  public:
   RBOptimizerContext() = delete;
-  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules)
-   : gwi(walk_info), thd(thd), logRules(logRules)
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules, uint cesOptimizationParallelFactor = 50)
+   : gwi(walk_info), thd(thd), logRules(logRules), cesOptimizationParallelFactor(cesOptimizationParallelFactor)
   {
   }
   // gwi lifetime should be longer than optimizer context.
@@ -44,6 +44,7 @@ class RBOptimizerContext
   THD& thd;
   uint64_t uniqueId{0};
   bool logRules{false};
+  uint cesOptimizationParallelFactor;
 };
 
 struct Rule

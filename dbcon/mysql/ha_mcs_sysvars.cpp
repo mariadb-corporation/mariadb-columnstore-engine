@@ -85,6 +85,12 @@ static MYSQL_THDVAR_UINT(orderby_threads, PLUGIN_VAR_RQCMDARG,
                          "Number of parallel threads used by ORDER BY. (default to 16)", NULL, NULL, 16, 0,
                          2048, 1);
 
+static constexpr uint DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR = 50;
+
+static MYSQL_THDVAR_UINT(ces_optimization_parallel_factor, PLUGIN_VAR_RQCMDARG,
+                         "Maximum parallel factor for parallel CES optimization. (default to 50)", NULL, NULL, DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR, 1,
+                         1000, 1);
+
 // legacy system variables
 static MYSQL_THDVAR_ULONG(decimal_scale, PLUGIN_VAR_RQCMDARG,
                           "The default decimal precision for calculated column sub-operations ", NULL, NULL,
@@ -236,6 +242,7 @@ st_mysql_sys_var* mcs_system_variables[] = {
     MYSQL_SYSVAR(derived_handler),
     MYSQL_SYSVAR(select_handler_in_stored_procedures),
     MYSQL_SYSVAR(orderby_threads),
+    MYSQL_SYSVAR(ces_optimization_parallel_factor),
     MYSQL_SYSVAR(decimal_scale),
     MYSQL_SYSVAR(use_decimal_scale),
     MYSQL_SYSVAR(ordered_only),
@@ -366,6 +373,15 @@ uint get_orderby_threads(THD* thd)
 void set_orderby_threads(THD* thd, uint value)
 {
   THDVAR(thd, orderby_threads) = value;
+}
+
+uint get_ces_optimization_parallel_factor(THD* thd)
+{
+  return (thd == NULL) ? DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR : THDVAR(thd, ces_optimization_parallel_factor);
+}
+void set_ces_optimization_parallel_factor(THD* thd, uint value)
+{
+  THDVAR(thd, ces_optimization_parallel_factor) = value;
 }
 
 bool get_use_decimal_scale(THD* thd)
