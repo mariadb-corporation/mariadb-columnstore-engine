@@ -1,8 +1,9 @@
 import logging
 import threading
-from copy import deepcopy
-from dataclasses import dataclass
+from functools import total_ordering
 from typing import Any, Dict, Optional, Tuple
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from cmapi_server.constants import VERSION_PATH
 
@@ -70,8 +71,8 @@ class AppManager:
         return version, revision
 
 
-@dataclass
-class StateConfigVersion:
+@total_ordering
+class StatefulVersionModel(BaseModel):
     """
     Version info inspired by Raft consensus algorithm.
 
@@ -85,12 +86,45 @@ class StateConfigVersion:
        - Monotonically increases for every change made by the leader.
        - Ensures updates from the same leader are applied in order.
        - Represents the change number during the leader's term.
-
-    :param term: Leader term or epoch number.
-    :param seq: Sequence number of the update within the term.
     """
-    term: int
-    seq: int
+
+    term: int = Field(ge=0)
+    seq: int = Field(ge=0)
+
+    model_config = ConfigDict(frozen=True)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, StatefulVersionModel):
+            return NotImplemented
+        return (self.term, self.seq) == (other.term, other.seq)
+
+    def __lt__(self, other: "StatefulVersionModel") -> bool:
+        if not isinstance(other, StatefulVersionModel):
+            return NotImplemented
+        return (self.term, self.seq) < (other.term, other.seq)
+
+    def next_seq(self) -> "StatefulVersionModel":
+        """Return new version with incremented seq."""
+        return StatefulVersionModel(term=self.term, seq=self.seq + 1)
+
+    def next_term(self) -> "StatefulVersionModel":
+        """Return new version with incremented term and reset seq."""
+        return StatefulVersionModel(term=self.term + 1, seq=0)
+
+
+class StatefulFlagsModel(BaseModel):
+    """Flags for stateful config."""
+
+    shared_storage_on: bool = False
+
+    model_config = ConfigDict(frozen=True)
+
+
+class StatefulConfigModel(BaseModel):
+    """Stateful config model with version and flags."""
+
+    version: StatefulVersionModel
+    flags: StatefulFlagsModel
 
 
 class AppStatefulConfig:
@@ -103,44 +137,48 @@ class AppStatefulConfig:
     """
 
     _lock = threading.RLock()
-    _version = StateConfigVersion(term=0, seq=0)
-    # declare flags with default values
-    _flags: dict[str, Any] = {
-        'shared_storage_on': False,
-    }
+    _config: StatefulConfigModel = StatefulConfigModel(
+        version=StatefulVersionModel(term=0, seq=0),
+        flags=StatefulFlagsModel(shared_storage_on=False)
+    )
 
     @classmethod
-    def get(cls) -> dict[str, Any]:
+    def get_config_copy(cls) -> StatefulConfigModel:
+        """Get the current config atomically.
+
+        :return: Current config with flags and version.
+        """
+        with cls._lock:
+            return cls._config.model_copy(deep=True)
+
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
         """
         Get the current config flags and version atomically.
 
         :return: Dictionary with all flags and 'version' key included.
         """
         with cls._lock:
-            # Return a copy to avoid external mutation
-            flags_copy = deepcopy(cls._flags)
-            version_dict = dict(term=cls._version.term, seq=cls._version.seq)
-            return dict(flags=flags_copy, version=version_dict)
+            return cls._config.model_dump(mode='json')
 
     @classmethod
-    def apply_update(cls, new_flags: dict[str, Any], version: StateConfigVersion) -> bool:
+    def apply_update(cls, new_config: StatefulConfigModel) -> bool:
         """
         Apply updates to config flags if the version is newer.
 
         Only updates flags present in new_flags. The entire update is applied
         atomically and only if the version is newer than the current version.
 
-        :param new_flags: Dictionary of flags to update.
-        :param version: Version of the update.
+        :param new_config: New config with updated flags and version.
         :return: True if update was applied; False if update was stale or version missing.
         """
 
         with cls._lock:
-            if (version.term, version.seq) <= (cls._version.term, cls._version.seq):
+            if new_config.version <= cls._config.version:
                 return False  # stale update
-            cls._flags.update(new_flags)
-            cls._version = version
+            cls._config = new_config
             return True
+
 
     @classmethod
     def is_shared_storage(cls) -> bool:
@@ -148,7 +186,5 @@ class AppStatefulConfig:
 
         :return: True if shared storage is enabled, False otherwise.
         """
-        current_stateful_config = AppStatefulConfig.get()
-        flags = current_stateful_config['flags']
-        current_shared_storage_on = flags.get('shared_storage_on', False)
-        return current_shared_storage_on
+        with cls._lock:
+            return cls._config.flags.shared_storage_on

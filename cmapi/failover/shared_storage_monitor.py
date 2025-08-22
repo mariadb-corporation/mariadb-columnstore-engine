@@ -7,7 +7,9 @@ from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.constants import REQUEST_TIMEOUT
 from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.helpers import broadcast_stateful_config
-from cmapi_server.managers.application import AppStatefulConfig
+from cmapi_server.managers.application import (
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel, StatefulVersionModel,
+)
 from cmapi_server.node_manipulation import get_existing_db_roots
 from mcs_node_control.models.node_config import NodeConfig
 
@@ -98,10 +100,8 @@ class SharedStorageMonitor:
         else:
             shared_storage_on = self._check_shared_storage()
 
-        current_stateful_config = AppStatefulConfig.get()
-        flags = current_stateful_config['flags']
-        current_shared_storage_on = flags.get('shared_storage_on', False)
-        current_version = current_stateful_config['version']
+        current_stateful_config: StatefulConfigModel = AppStatefulConfig.get_config_copy()
+        current_shared_storage_on: bool = current_stateful_config.flags.shared_storage_on
         if not current_shared_storage_on != shared_storage_on:
             self._logger.debug(f'Shared storage state is unchanged: {current_shared_storage_on}')
         else:
@@ -109,13 +109,9 @@ class SharedStorageMonitor:
                 f'Shared storage state changed from {current_shared_storage_on} '
                 f'to {shared_storage_on}. Updating stateful config.'
             )
-            stateful_dict = {
-                'version': {
-                    'term': current_version.term,
-                    'seq': current_version.seq + 1
-                },
-                'flags': {
-                    'shared_storage_on': shared_storage_on
-                }
-            }
-            broadcast_stateful_config(stateful_config_dict=stateful_dict)
+            new_stateful_config = StatefulConfigModel(
+                version=current_stateful_config.version.next_seq(),
+                flags=StatefulFlagsModel(shared_storage_on=shared_storage_on)
+            )
+            new_stateful_config_dict = new_stateful_config.model_dump(mode='json')
+            broadcast_stateful_config(stateful_config_dict=new_stateful_config_dict)

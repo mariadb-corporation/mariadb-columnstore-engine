@@ -13,6 +13,7 @@ import requests
 from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
+from pydantic import ValidationError
 
 from cmapi_server.constants import (
     DEFAULT_MCS_CONF_PATH,
@@ -39,7 +40,9 @@ from cmapi_server.helpers import (
     system_ready,
 )
 from cmapi_server.logging_management import change_loggers_level
-from cmapi_server.managers.application import AppManager, AppStatefulConfig, StateConfigVersion
+from cmapi_server.managers.application import (
+    AppManager, AppStatefulConfig, StatefulConfigModel, StatefulVersionModel,
+)
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
@@ -369,37 +372,22 @@ class ConfigController:
             raise_422_error(
                 module_logger, func_name, 'Mandatory attribute is missing.')
 
+        # if stateful config is provided, we just need to fast apply only stateful config
         if request_stateful_config:
-            # if stateful config is provided, we just need to fast apply only stateful config
-            new_version = request_stateful_config.get('version', None)
-            if new_version is None:
-                raise_422_error(
-                    module_logger, func_name,
-                    'Stateful config version is not set.'
+            try:
+                request_stateful_config = StatefulConfigModel.model_validate(
+                    request_body.get('stateful_config_dict')
                 )
-            new_term = new_version.get('term', None)
-            new_seq = new_version.get('seq', None)
-            if new_term is None or new_seq is None:
-                raise_422_error(
-                    module_logger, func_name,
-                    'Stateful config version term or seq in request body is not set.'
-                )
-            new_flags = request_stateful_config.get('flags', None)
-            if new_flags is None or not isinstance(new_flags, dict):
-                raise_422_error(
-                    module_logger, func_name,
-                    'Stateful config flags in request body are not set or wrong format .'
-                )
+            except ValidationError as exp:
+                raise_422_error(module_logger, func_name,f'Invalid request body: {exp.errors()}')
 
-            success = AppStatefulConfig.apply_update(
-                new_flags=new_flags,
-                version=StateConfigVersion(term=new_term, seq=new_seq)
-            )
+            success = AppStatefulConfig.apply_update(request_stateful_config)
             if not success:
                 logging.info('Stateful config update was stale.')
             else:
                 logging.info(
-                    f'Stateful config updated with term {new_term} and seq {new_seq}.'
+                    f'Stateful config updated with term  {request_stateful_config.version.term} '
+                    f'and seq {request_stateful_config.version.seq}.'
                 )
 
         if only_stateful_config:
@@ -1370,3 +1358,35 @@ class NodeController:
             'success': success
         }
         return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def put_stateful_config(self):
+        """Handler for /node/stateful-config (PUT) endpoint.
+
+        #TODO: for next releases.
+        """
+
+        func_name = 'put_stateful_config'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        try:
+            request_stateful_config = StatefulConfigModel.model_validate(
+                request_body.get('stateful_config_dict')
+            )
+        except ValidationError as exp:
+            raise_422_error(module_logger, func_name,f'Invalid request body: {exp.errors()}')
+
+        success = AppStatefulConfig.apply_update(request_stateful_config)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term  {request_stateful_config.version.term} '
+                f'and seq {request_stateful_config.version.seq}.'
+            )
+
+        return {'timestamp': str(datetime.now()), 'success': success}

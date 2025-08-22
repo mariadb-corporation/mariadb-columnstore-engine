@@ -350,10 +350,10 @@ def broadcast_new_config(
             'revision': root.find('./ConfigRevision').text,
             'timeout': 300,
             'config': config_text,
-            'cs_config_filename': cs_config_filename,
+            'mcs_config_filename': cs_config_filename,
             'sm_config_filename': sm_config_filename,
             'sm_config': sm_config_text,
-            'stateful_config_dict': AppStatefulConfig.get()
+            'stateful_config_dict': AppStatefulConfig.to_dict(),
         }
 
     if distribute_secrets:
@@ -447,23 +447,23 @@ def broadcast_new_config(
 def broadcast_stateful_config(stateful_config_dict: dict[str, Any]) -> None:
     """Broadcast new stateful config to nodes.
 
-    :param stateful_config_dict: stateful config dict to broadcast
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
     """
 
     try:
         broadcast_new_config(stateful_config_dict=stateful_config_dict)
     except CMAPIBasicError as err:
-        logging.error(
-            (
-                f'Failed to broadcast new stateful config dict: {stateful_config_dict}, '
-                f'got error: {err.message}'
-            )
+        message = (
+            f'Failed to broadcast new stateful config dict: {stateful_config_dict}, '
+            f'got error: {err.message}'
         )
+        logging.error(message)
         return
     else:
         logging.debug(
             f'Successfully broadcasted new stateful config dict: {stateful_config_dict}'
         )
+
 
 # Might be more appropriate to put these in node_manipulation?
 def update_revision_and_manager(

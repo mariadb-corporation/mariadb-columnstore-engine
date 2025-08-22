@@ -112,3 +112,6 @@ CMAPI_PORT = 8640  #TODO: use it in all places
 CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
 REQUEST_TIMEOUT: float = 30.0
 TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
+
+# API version
+_version = '0.4.0'

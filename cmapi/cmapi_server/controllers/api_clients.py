@@ -4,8 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 import pyotp
 import requests
 
+
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY,
+    CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY, _version
 )
 from cmapi_server.controllers.dispatcher import _version
 from cmapi_server.exceptions import CMAPIBasicError
@@ -13,7 +14,6 @@ from cmapi_server.helpers import get_config_parser, get_current_key
 from tracing.traced_session import get_traced_session
 
 
-_version = '0.4.0'
 
 
 class BaseClient:
@@ -213,7 +213,7 @@ class ClusterControllerClient(BaseClient):
         :param s3data_info: Information about the S3 data to load.
         :return: The response from the API.
         """
-        return self._request('put', 'load_s3data', s3data_info)
+        return self._request('PUT', 'load_s3data', s3data_info)
 
     def check_shared_storage(
             self, extra: Dict[str, Any] = dict()

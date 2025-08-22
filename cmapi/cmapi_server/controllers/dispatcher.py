@@ -3,6 +3,7 @@ import logging
 
 import cherrypy
 
+from cmapi_server.constants import _version
 from cmapi_server.controllers.endpoints import (
     StatusController, ConfigController, BeginController, CommitController,
     RollbackController, StartController, ShutdownController,
@@ -13,7 +14,7 @@ from cmapi_server.controllers.endpoints import (
 
 from cmapi_server.controllers.s3dataload import S3DataLoadController
 
-_version = '0.4.0'  #TODO: MOVE to constants
+
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,16 @@ dispatcher.connect(
     route = f'/cmapi/{_version}/cluster/check-shared-storage',
     action = 'check_shared_storage',
     controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/stateful-config/ (PUT)
+dispatcher.connect(
+    name = 'node_put_stateful_config',
+    route = f'/cmapi/{_version}/node/stateful-config',
+    action = 'put_stateful_config',
+    controller = NodeController(),
     conditions = {'method': ['PUT']}
 )
 

@@ -443,7 +443,7 @@ class ClusterHandler:
             'ObjectStorage', 'service', fallback='LocalStorage'
         )
         file_dir = '/var/lib/columnstore/data1'
-        if storage_type.lower == 's3':
+        if storage_type.lower() == 's3':
             file_dir = '/var/lib/columnstore/storagemanager/metadata/data1'
 
         with tempfile.NamedTemporaryFile(
@@ -451,9 +451,9 @@ class ClusterHandler:
         ) as temp_file:
             file_data = rb'File to check shared storage working.'
             temp_file.write(file_data)
-            tmp_file_md5 = hashlib.md5(file_data)
+            tmp_file_md5 = hashlib.md5(file_data).hexdigest()
             tmp_file_path = temp_file.name
-            logging.debug(f'Temporary file created at: {temp_file.name}')
+            logging.debug(f'Temporary file created at: {tmp_file_path}')
             for node in active_nodes:
                 logging.debug(f'Checking shared file on {node!r}.')
                 client = NodeControllerClient(
@@ -466,9 +466,9 @@ class ClusterHandler:
                 logging.debug(f'Finished checking file on {node!r}')
                 all_responses[node] = node_response
 
-        nodes_success_responses = (
-            v['success'] for _, v in all_responses.items()
-        )
+        nodes_success_responses = [
+            v['success'] for v in all_responses.values()
+        ]
         if nodes_success_responses:
             shared_storage = all(nodes_success_responses)
         else:
