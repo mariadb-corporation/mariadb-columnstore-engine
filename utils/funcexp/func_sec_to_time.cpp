@@ -67,33 +67,73 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     case execplan::CalpontSystemCatalog::USMALLINT:
     {
       val = parm[0]->data()->getIntVal(row, isNull);
+      break;
     }
-    break;
 
     case execplan::CalpontSystemCatalog::DOUBLE:
+    case execplan::CalpontSystemCatalog::UDOUBLE:
     {
       datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
       val = d.toMCSSInt64Round();
       break;
     }
+
     case execplan::CalpontSystemCatalog::FLOAT:
+    case execplan::CalpontSystemCatalog::UFLOAT:
     {
       datatypes::TDouble d(parm[0]->data()->getFloatVal(row, isNull));
       val = d.toMCSSInt64Round();
+      break;
     }
-    break;
+
+    case execplan::CalpontSystemCatalog::LONGDOUBLE:
+    {
+      datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
+      val = d.toMCSSInt64Round();
+      break;
+    }
 
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
+    {
       val = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
       break;
+    }
 
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     {
       val = parm[0]->data()->getIntVal(row, isNull);
+      break;
+    }
 
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      int64_t timeVal = parm[0]->data()->getTimeIntVal(row, isNull);
+      uint32_t hour = (uint32_t)((timeVal >> 40) & 0xfff);
+      uint32_t minute = (uint32_t)((timeVal >> 32) & 0xff);
+      uint32_t second = (uint32_t)((timeVal >> 24) & 0xff);
+      val = (int64_t)(hour * 3600 + minute * 60 + second);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    case execplan::CalpontSystemCatalog::DATETIME:
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    { 
+      return "838:59:59";
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::STRINT:
+    case execplan::CalpontSystemCatalog::NUM_OF_COL_DATA_TYPE:
+    case execplan::CalpontSystemCatalog::UNDEFINED:
+    {
+      val = parm[0]->data()->getIntVal(row, isNull);
       break;
     }
 

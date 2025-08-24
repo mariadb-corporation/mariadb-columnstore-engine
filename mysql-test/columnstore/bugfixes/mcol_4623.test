@@ -1,0 +1,45 @@
+-- source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_4623;
+--enable_warnings
+CREATE DATABASE mcol_4623;
+USE mcol_4623;
+
+CREATE TABLE t1 (a DOUBLE UNSIGNED) Engine=ColumnStore;
+INSERT INTO t1 VALUES (1000);
+SELECT SEC_TO_TIME(a) FROM t1 ORDER BY 1;
+--disable_warnings
+DROP TABLE t1;
+--enable_warnings
+
+CREATE TABLE t1 (a TIME) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES ('17:31:27');
+SELECT SEC_TO_TIME(a) FROM t1 ORDER BY 1;
+--disable_warnings
+DROP TABLE t1;
+--enable_warnings
+
+CREATE TABLE t1 (a DATE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES ('2023-07-23');
+SELECT SEC_TO_TIME(a) FROM t1 ORDER BY 1;
+--disable_warnings
+DROP TABLE t1;
+--enable_warnings
+
+CREATE TABLE t1 (a DATETIME) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES ('2009-03-17 14:30:45');
+SELECT SEC_TO_TIME(a) FROM t1 ORDER BY 1;
+--disable_warnings
+DROP TABLE t1;
+--enable_warnings
+
+CREATE TABLE t1 (a TIMESTAMP) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES ('2017-01-01 04:30:45');
+SELECT SEC_TO_TIME(a) FROM t1 ORDER BY 1;
+--disable_warnings
+DROP TABLE t1;
+--enable_warnings
+
+--disable_warnings
+DROP DATABASE mcol_4623;
+--enable_warnings
