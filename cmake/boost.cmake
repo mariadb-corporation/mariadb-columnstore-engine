@@ -62,9 +62,20 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> patch -p1 -i
                   ${CMAKE_SOURCE_DIR}/storage/columnstore/columnstore/cmake/boost.1.88.named_proxy.hpp.patch
-    BUILD_COMMAND ./b2 -q ${_b2args}
+    # Build Boost in parallel and stage outputs (headers are in source tree; libs under stage/lib)
+    BUILD_COMMAND ./b2 -q -j$(nproc) ${_b2args} stage
     BUILD_IN_SOURCE TRUE
-    INSTALL_COMMAND ./b2 -q install ${_b2args}
+    # Fast install via tar streaming:
+    # - Avoids thousands of per-file copy operations (common.copy) and logging
+    # - Uses a single producer (tar from source/stage) piped to a single consumer (tar extract)
+    # - Minimizes process/syscall overhead and keeps sequential I/O streaming
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E sh -c "\
+      mkdir -p ${INSTALL_LOCATION}/include ${INSTALL_LOCATION}/lib ${INSTALL_LOCATION}/lib/cmake && \
+      tar -C <SOURCE_DIR> -cf - boost | tar -C ${INSTALL_LOCATION}/include -xf - && \
+      tar -C <BINARY_DIR>/stage/lib -cf - . | tar -C ${INSTALL_LOCATION}/lib -xf - && \
+      if [ -d <BINARY_DIR>/stage/lib/cmake ]; then \
+        tar -C <BINARY_DIR>/stage/lib/cmake -cf - . | tar -C ${INSTALL_LOCATION}/lib/cmake -xf -; \
+      fi"
     ${LOG_BOOST_INSTEAD_OF_SCREEN}
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
