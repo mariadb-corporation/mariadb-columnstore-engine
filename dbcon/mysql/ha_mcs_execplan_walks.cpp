@@ -119,7 +119,7 @@ void gp_walk(const Item* item, void* arg)
       if (ifp)
       {
         // XXX: this looks awfuly wrong.
-        execplan::SimpleColumn* scp = buildSimpleColumn(ifp, *gwip);
+        execplan::SimpleColumn* scp = buildSimpleColumn(ifp, *gwip, false);
 
         if (!scp)
           break;

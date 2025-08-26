@@ -5049,7 +5049,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
   adjustLastStep(querySteps, deliverySteps, jobInfo);  // to match the select clause
 }
 
-SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo)
+SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo, uint32_t keyCount)
 {
   vector<RowGroup> inputRGs;
   vector<bool> distinct;
@@ -5124,7 +5124,7 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
   dl->OID(CNX_VTABLE_ID);
   JobStepAssociation jsa;
   jsa.outAdd(spdl);
-  TupleUnion* unionStep = new TupleUnion(CNX_VTABLE_ID, jobInfo);
+  TupleUnion* unionStep = new TupleUnion(CNX_VTABLE_ID, jobInfo, keyCount);
   unionStep->inputAssociation(jsaToUnion);
   unionStep->outputAssociation(jsa);
 
@@ -5167,6 +5167,11 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
 
   for (size_t i = 0; i < jobInfo.deliveredCols.size(); i++)
   {
+    auto* cc = dynamic_cast<ConstantColumn*>(jobInfo.deliveredCols[i].get());
+    if (cc)
+    {
+      jobInfo.deliveredCols[i].reset(new SimpleColumn(*jobInfo.deliveredCols[i]));
+    }
     CalpontSystemCatalog::ColType ct = jobInfo.deliveredCols[i]->resultType();
     // XXX remove after connector change
     ct.colDataType = types[i];

@@ -43,7 +43,7 @@ using normalizeFunctionsT =
 class TupleUnion : public JobStep, public TupleDeliveryStep
 {
  public:
-  TupleUnion(execplan::CalpontSystemCatalog::OID tableOID, const JobInfo& jobInfo);
+  TupleUnion(execplan::CalpontSystemCatalog::OID tableOID, const JobInfo& jobInfo, uint32_t keyCount);
   ~TupleUnion() override;
 
   void run() override;
@@ -200,6 +200,7 @@ class TupleUnion : public JobStep, public TupleDeliveryStep
 
   boost::shared_ptr<int64_t> sessionMemLimit;
   long fTimeZone;
+  uint32_t fLastCol;
 };
 
 }  // namespace joblist

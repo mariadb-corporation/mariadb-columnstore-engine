@@ -505,7 +505,6 @@ bool sortItemIsInGroupRec(Item* sort_item, Item* group_item)
     Item* ifp_sort_arg = ifp_sort->arguments()[i];
     if (ifp_sort_arg->type() == Item::FUNC_ITEM || ifp_sort_arg->type() == Item::FIELD_ITEM)
     {
-      Item* ifp_sort_arg = ifp_sort->arguments()[i];
       found = sortItemIsInGroupRec(ifp_sort_arg, group_item);
     }
     else if (ifp_sort_arg->type() == Item::REF_ITEM)
@@ -2736,7 +2735,8 @@ ReturnedColumn* buildReturnedColumnNull(gp_walk_info& gwi)
   return rc;
 }
 
-ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool /*isRefItem*/)
+ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool /*isRefItem*/,
+                                        bool isUnion)
 {
   ReturnedColumn* rc = NULL;
 
@@ -2758,7 +2758,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
     {
       Item_field* ifp = (Item_field*)item;
 
-      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi), gwi, ifp);
+      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi, isUnion), gwi, ifp);
     }
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
     case Item::CONST_ITEM:
@@ -2797,10 +2797,10 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       }
 
       if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/")
-        return buildArithmeticColumn(ifp, gwi, nonSupport);
+        return buildArithmeticColumn(ifp, gwi, nonSupport, isUnion);
       else
       {
-        return buildFunctionColumn(ifp, gwi, nonSupport);
+        return buildFunctionColumn(ifp, gwi, nonSupport, false, isUnion);
       }
     }
 
@@ -2817,11 +2817,13 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       {
         case Item::SUM_FUNC_ITEM: return buildAggregateColumn(*(ref->ref), gwi);
 
-        case Item::FIELD_ITEM: return buildReturnedColumn(*(ref->ref), gwi, nonSupport);
+        case Item::FIELD_ITEM: return buildReturnedColumn(*(ref->ref), gwi, nonSupport, false, isUnion);
 
-        case Item::REF_ITEM: return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport);
+        case Item::REF_ITEM:
+          return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport, false, isUnion);
 
-        case Item::FUNC_ITEM: return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport);
+        case Item::FUNC_ITEM:
+          return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport, false, isUnion);
 
         case Item::WINDOW_FUNC_ITEM: return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
 
@@ -2833,7 +2835,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
         default:
           if (ref->ref_type() == Item_ref::DIRECT_REF)
           {
-            return buildReturnedColumn(ref->real_item(), gwi, nonSupport);
+            return buildReturnedColumn(ref->real_item(), gwi, nonSupport, false, isUnion);
           }
           gwi.fatalParseError = true;
           gwi.parseErrorText = "Unknown REF item";
@@ -2922,11 +2924,12 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
 
   return rc;
 }
-ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem)
+ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem,
+                                    bool isUnion)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
-  ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem);
+  ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem, isUnion);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
@@ -2960,7 +2963,7 @@ ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& 
   return cc;
 }
 
-ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -2989,7 +2992,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
     if (gwi.clauseType == SELECT || /*gwi.clauseType == HAVING || */ gwi.clauseType == GROUP_BY ||
         gwi.clauseType == FROM)  // select list
     {
-      lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+      lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
 
       if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
       {
@@ -3004,12 +3007,12 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
         gwi.fatalParseError = false;
 
         // ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi, nonSupport);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion);
         if (rc)
           lhs = new ParseTree(rc);
       }
 
-      rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+      rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
 
       if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
       {
@@ -3024,7 +3027,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
         gwi.fatalParseError = false;
 
         // ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi, nonSupport);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion);
         if (rc)
           rhs = new ParseTree(rc);
       }
@@ -3035,7 +3038,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.ptWorkStack.empty())
         {
-          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
         }
         else
         {
@@ -3047,7 +3050,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.rcWorkStack.empty())
         {
-          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport));
+          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
         }
         else
         {
@@ -3060,7 +3063,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.ptWorkStack.empty())
         {
-          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
         }
         else
         {
@@ -3072,7 +3075,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.rcWorkStack.empty())
         {
-          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
         }
         else
         {
@@ -3105,13 +3108,13 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
 
     if (gwi.clauseType == SELECT || gwi.clauseType == HAVING || gwi.clauseType == GROUP_BY)  // select clause
     {
-      rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+      rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
     }
     else
     {
       if (gwi.rcWorkStack.empty())
       {
-        rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport));
+        rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
       }
       else
       {
@@ -3233,17 +3236,17 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
   }
   return ac;
 }
-ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
-  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport);
+  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport, isUnion);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
 ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport,
-                                        bool selectBetweenIn)
+                                        bool selectBetweenIn, bool isUnion)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -3306,12 +3309,12 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   // Arithmetic exp
   if (funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/")
   {
-    return buildArithmeticColumn(ifp, gwi, nonSupport);
+    return buildArithmeticColumn(ifp, gwi, nonSupport, isUnion);
   }
 
   else if (funcName == "case")
   {
-    fc = buildCaseFunction(ifp, gwi, nonSupport);
+    fc = buildCaseFunction(ifp, gwi, nonSupport, isUnion);
   }
 
   else if ((funcName == "charset" || funcName == "collation") && ifp->argument_count() == 1 &&
@@ -3486,7 +3489,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
           rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
         else
         {
-          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport);
+          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, false, isUnion);
         }
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
@@ -3853,16 +3856,17 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
 
   return fc;
 }
-ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn)
+ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn,
+                                    bool isUnion)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(ifp, gwi);
-  ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn);
+  ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn, isUnion);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
-FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport)
+FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -3945,7 +3949,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       // rwWorkStack or ptWorkStack.
       // For example, simple predicates, such as 1=1 or 1=0, land in the
       // ptWorkStack but other stuff might land in the rwWorkStack
-      ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport);
+      ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport, false, isUnion);
 
       if (parm)
       {
@@ -4085,7 +4089,7 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
-SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
+SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi, bool isUnion)
 {
   if (!gwi.csc)
   {
@@ -4099,6 +4103,14 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi)
   if (ifp->cached_table && ifp->cached_table->db.length > 0 &&
       strcmp(ifp->cached_table->db.str, "information_schema") == 0)
     isInformationSchema = true;
+
+  if (isUnion && !isInformationSchema)
+  {
+    auto* rc = gwi.returnedCols[ifp->field->field_index]->clone();
+    rc->orderPos(ifp->field->field_index);
+    gwi.returnedCols[ifp->field->field_index]->incRefCount();
+    return dynamic_cast<SimpleColumn*>(rc);
+  }
 
   // support FRPM subquery. columns from the derived table has no definition
   if ((!ifp->field || !ifp->db_name.str || strlen(ifp->db_name.str) == 0) && !isInformationSchema)
@@ -4557,7 +4569,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
           case Item::FIELD_ITEM:
           {
             Item_field* ifp = static_cast<Item_field*>(sfitemp);
-            SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
+            SimpleColumn* sc = buildSimpleColumn(ifp, gwi, false);
 
             if (!sc)
             {
@@ -5674,7 +5686,7 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
     {
       Item_field* ifp = (Item_field*)groupItem;
       // this GB col could be an alias of F&E on the SELECT clause, not necessarily a field.
-      ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
+      ReturnedColumn* rc = buildSimpleColumn(ifp, gwi, false);
       SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
       if (sc)
@@ -6310,7 +6322,8 @@ void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
           auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
           if (histogram)
           {
-            SchemaAndTableName tableName = {ifp->field->table->s->db.str, ifp->field->table->s->table_name.str};
+            SchemaAndTableName tableName = {ifp->field->table->s->db.str,
+                                            ifp->field->table->s->table_name.str};
             gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
           }
         }
@@ -6420,7 +6433,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
           collectAllCols(gwi, ifp);
           break;
         }
-        SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
+        SimpleColumn* sc = buildSimpleColumn(ifp, gwi, false);
 
         if (sc)
         {
@@ -7015,32 +7028,90 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
       gwi.returnedCols.push_back(minSc);
   }
 
-  // ORDER BY translation part
+  // process UNION ORDER BY part
   if (!isUnion && !gwi.hasWindowFunc && gwi.subSelectType == CalpontSelectExecutionPlan::MAIN_SELECT)
   {
+    if (unionSel)
     {
-      if (unionSel)
-        order_list = select_lex.master_unit()->global_parameters()->order_list;
-
+      order_list = select_lex.master_unit()->global_parameters()->order_list;
       ordercol = static_cast<ORDER*>(order_list.first);
 
       for (; ordercol; ordercol = ordercol->next)
       {
-        Item* ord_item = *(ordercol->item);
+        ReturnedColumn* rc = NULL;
 
-        if (ord_item->name.length)
+        if (ordercol->in_field_list && ordercol->item &&
+            (ordercol->counter_used || (*ordercol->item)->type() == Item::FIELD_ITEM))
         {
-          // for union order by 1 case. For unknown reason, it doesn't show in_field_list
-          if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
+          auto* ifp = dynamic_cast<Item_field*>(*ordercol->item);
+          auto pos = ordercol->counter_used ? ordercol->counter - 1 : ifp->field->field_index;
+          rc = gwi.returnedCols[pos]->clone();
+          rc->orderPos(pos);
+          // can not be optimized off if used in order by with counter.
+          // set with self derived table alias if it's derived table
+          gwi.returnedCols[pos]->incRefCount();
+        }
+        else
+        {
+          Item* ord_item = *(ordercol->item);
+
+          // ignore not_used column on order by.
+          if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
+              ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
           {
+            continue;
+          }
+          else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
+          {
+            // DRRTUY This section looks useless b/c there is no
+            // way to put constant INT into an ORDER BY list
+            rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
           }
           else if (ord_item->type() == Item::SUBSELECT_ITEM)
           {
+            gwi.fatalParseError = true;
+          }
+          else if ((ord_item->type() == Item::FUNC_ITEM) &&
+                   (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
+          {
+            push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
+                         "COLLATE is ignored in ColumnStore");
+            continue;
           }
           else
           {
+            rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError, false, true);
+
+            rc = wrapIntoAggregate(rc, gwi, ord_item);
+          }
+          // @bug5501 try item_ptr if item can not be fixed. For some
+          // weird dml statement state, item can not be fixed but the
+          // infomation is available in item_ptr.
+          if (!rc || gwi.fatalParseError)
+          {
+            Item* item_ptr = ordercol->item_ptr;
+
+            while (item_ptr->type() == Item::REF_ITEM)
+              item_ptr = *(((Item_ref*)item_ptr)->ref);
+
+            rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError, false, true);
+          }
+
+          if (!rc)
+          {
+            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+            gwi.parseErrorText = emsg;
+            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+            return ER_CHECK_NOT_IMPLEMENTED;
           }
         }
+
+        if (ordercol->direction == ORDER::ORDER_ASC)
+          rc->asc(true);
+        else
+          rc->asc(false);
+
+        gwi.orderByCols.push_back(SRCP(rc));
       }
     }
 
@@ -7137,7 +7208,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
+    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi, false);
 
     if (!sc || gwi.fatalParseError)
     {
@@ -7196,10 +7267,10 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
 
+  gwi.clauseType = GROUP_BY;
   // Group by list. not valid for union main query
   if (!unionSel)
   {
-    gwi.clauseType = GROUP_BY;
     if ((rc = processGroupBy(select_lex, gwi, withRollup)))
     {
       return rc;
@@ -7234,6 +7305,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       minSc = gwi.returnedCols[0];
     else if (!gwi.additionalRetCols.empty())
       minSc = gwi.additionalRetCols[0];
+    minSc->orderPos(0);
   }
 
   // @bug3523, count(*) on subquery always pick column[0].
@@ -7250,6 +7322,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
       sc1->viewName(sc->viewName());
       sc1->partitions(sc->partitions());
       sc1->colPosition(0);
+      sc1->orderPos(0);
       sc1->timeZone(gwi.timeZone);
       minSc.reset(sc1);
     }

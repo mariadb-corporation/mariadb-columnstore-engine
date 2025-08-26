@@ -1985,29 +1985,200 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
   makeVtableModeSteps(csep, jobInfo, querySteps, projectSteps, deliverySteps);
 }
 
-void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVector& querySteps,
-                       JobStepVector&, DeliveredTableMap& deliverySteps)
+void fixUnionExpressionCol(ParseTree* tree, void* obj)
 {
-  CalpontSelectExecutionPlan::SelectList& selectVec = csep->unionVec();
+  if (tree->left() || tree->right())
+  {
+    return;
+  }
+  auto* ac = dynamic_cast<ArithmeticColumn*>(tree->data());
+  if (ac && ac->expression())
+  {
+    ac->expression()->walk(fixUnionExpressionCol, obj);
+    ac->setSimpleColumnList();
+    return;
+  }
+  auto* fc = dynamic_cast<FunctionColumn*>(tree->data());
+  if (fc && !fc->functionParms().empty())
+  {
+    for (auto& parm : fc->functionParms())
+    {
+      parm->walk(fixUnionExpressionCol, obj);
+    }
+    fc->setSimpleColumnList();
+    return;
+  }
+  auto* csep = static_cast<CalpontSelectExecutionPlan*>(obj);
+  auto* rc = dynamic_cast<ReturnedColumn*>(tree->data());
+  if (rc)
+  {
+    if (dynamic_cast<ConstantColumn*>(rc) || rc->orderPos() == -1ull)
+    {
+      return;
+    }
+    auto* newrc = csep->returnedCols()[rc->orderPos()]->clone();
+    csep->returnedCols()[rc->orderPos()]->incRefCount();
+    tree->data(newrc);
+  }
+}
+
+void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVector& querySteps,
+                       JobStepVector& /*projectSteps*/, DeliveredTableMap& deliverySteps)
+{
+  CalpontSelectExecutionPlan::SelectList& unionVec = csep->unionVec();
   uint8_t distinctUnionNum = csep->distinctUnionNum();
-  RetColsVector unionRetCols = csep->returnedCols();
+  uint32_t unionRetColsCount = csep->returnedCols().size();
   JobStepVector unionFeeders;
 
-  for (CalpontSelectExecutionPlan::SelectList::iterator cit = selectVec.begin(); cit != selectVec.end();
-       cit++)
+  std::decay_t<decltype(csep->orderByCols())> expOrderByCols;
+  for (auto& obc : csep->orderByCols())
   {
-    // @bug4848, enhance and unify limit handling.
-    SJSTEP sub = doUnionSub(cit->get(), jobInfo);
+    if (obc->orderPos() != -1ull)
+    {
+      continue;
+    }
+    if (dynamic_cast<SimpleColumn*>(obc.get()) == nullptr &&
+        dynamic_cast<ConstantColumn*>(obc.get()) == nullptr)
+    {
+      // Arithmetic & function columns need special processing
+      expOrderByCols.push_back(obc);
+    }
+  }
+
+  for (auto& unionSub : unionVec)
+  {
+    auto* unionCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(unionSub.get());
+    for (auto& obc : expOrderByCols)
+    {
+      // Replace any leaf of expressions in the ORDER BY list with the corresponding column for each table in
+      // the UNION, and add the expression to the returned columns.
+      auto* col = obc->clone();
+      auto* ac = dynamic_cast<ArithmeticColumn*>(col);
+      auto* fc = dynamic_cast<FunctionColumn*>(col);
+      if (ac)
+      {
+        ac->expression()->walk(fixUnionExpressionCol, unionCSEP);
+        ac->setSimpleColumnList();
+      }
+      else if (fc)
+      {
+        for (auto& parm : fc->functionParms())
+        {
+          parm->walk(fixUnionExpressionCol, unionCSEP);
+        }
+        fc->setSimpleColumnList();
+      }
+      unionCSEP->returnedCols().emplace_back(col);
+    }
+    SJSTEP sub = doUnionSub(unionSub.get(), jobInfo);
     querySteps.push_back(sub);
     unionFeeders.push_back(sub);
   }
 
-  jobInfo.deliveredCols = unionRetCols;
-  SJSTEP unionStep(unionQueries(unionFeeders, distinctUnionNum, jobInfo));
+  for (auto& obc : expOrderByCols)
+  {
+    // Add a SimpleColumn to the outer query for the every ORDER BY expression
+    auto* sc = new SimpleColumn(*obc.get());
+    csep->returnedCols().emplace_back(sc);
+    sc->colPosition(csep->returnedCols().size() - 1);
+    sc->orderPos(csep->returnedCols().size() - 1);
+    obc->orderPos(csep->returnedCols().size() - 1);
+  }
+
+  jobInfo.deliveredCols = csep->returnedCols();
+  SJSTEP unionStep(unionQueries(unionFeeders, distinctUnionNum, jobInfo, unionRetColsCount));
   querySteps.push_back(unionStep);
   uint16_t stepNo = jobInfo.subId * 10000;
   numberSteps(querySteps, stepNo, jobInfo.traceFlags);
   deliverySteps[execplan::CNX_VTABLE_ID] = unionStep;
+  if (!csep->orderByCols().empty() || csep->limitStart() != 0 || csep->limitNum() != -1ull)
+  {
+    jobInfo.limitStart = csep->limitStart();
+    jobInfo.limitCount = csep->limitNum();
+    jobInfo.orderByThreads = csep->orderByThreads();
+    for (auto& obc : csep->orderByCols())
+    {
+      auto* osc = dynamic_cast<SimpleColumn*>(obc.get());
+      if (osc)
+      {
+        auto* sc = dynamic_cast<SimpleColumn*>(jobInfo.deliveredCols[obc->orderPos()].get());
+        idbassert(sc);
+        sc->schemaName("");
+        sc->tableAlias(querySteps[0]->alias());
+        sc->colPosition(obc->orderPos());
+        sc->oid(tableOid(sc, jobInfo.csc) + 1 + obc->orderPos());
+        jobInfo.orderByColVec.emplace_back(getTupleKey(jobInfo, sc), obc->asc());
+      }
+      else
+      {
+        auto* tus = dynamic_cast<TupleUnion*>(unionStep.get());
+        auto& keys = tus->getOutputRowGroup().getKeys();
+        idbassert(obc->orderPos() < keys.size());
+        jobInfo.orderByColVec.emplace_back(keys[obc->orderPos()], obc->asc());
+      }
+    }
+
+    for (auto& rc : csep->returnedCols())
+    {
+      // Replace ConstantColumns with SimpleColumns and fix OIDs
+      auto* sc = dynamic_cast<SimpleColumn*>(rc.get());
+      if (sc)
+      {
+        sc->schemaName("");
+        sc->tableAlias(querySteps[0]->alias());
+        sc->oid(tableOid(sc, jobInfo.csc) + 1 + rc->colPosition());
+      }
+      else
+      {
+        sc = new SimpleColumn(*rc.get());
+        rc.reset(sc);
+        sc->schemaName("");
+        sc->tableAlias(querySteps[0]->alias());
+        sc->oid(tableOid(sc, jobInfo.csc) + 1 + rc->colPosition());
+      }
+    }
+    doProject(csep->returnedCols(), jobInfo);
+    checkReturnedColumns(csep, jobInfo);
+    auto* tas = new TupleAnnexStep(jobInfo);
+    jobInfo.annexStep.reset(tas);
+    tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
+    if (!jobInfo.orderByColVec.empty())
+    {
+      tas->addOrderBy(new LimitedOrderBy());
+      if (jobInfo.orderByThreads > 1)
+      {
+        tas->setParallelOp();
+      }
+      tas->setMaxThreads(jobInfo.orderByThreads);
+    }
+    auto* tds = dynamic_cast<TupleDeliveryStep*>(unionStep.get());
+    RowGroup rg = tds->getDeliveredRowGroup();
+
+    AnyDataListSPtr spdlIn(new AnyDataList());
+    RowGroupDL* dlIn;
+    if (!jobInfo.orderByColVec.empty())
+      dlIn = new RowGroupDL(jobInfo.orderByThreads, jobInfo.fifoSize);
+    else
+      dlIn = new RowGroupDL(1, jobInfo.fifoSize);
+    dlIn->OID(CNX_VTABLE_ID);
+    spdlIn->rowGroupDL(dlIn);
+    JobStepAssociation jsaIn;
+    jsaIn.outAdd(spdlIn);
+    dynamic_cast<JobStep*>(tds)->outputAssociation(jsaIn);
+    jobInfo.annexStep->inputAssociation(jsaIn);
+
+    AnyDataListSPtr spdlOut(new AnyDataList());
+    RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+    dlOut->OID(CNX_VTABLE_ID);
+    spdlOut->rowGroupDL(dlOut);
+    JobStepAssociation jsaOut;
+    jsaOut.outAdd(spdlOut);
+    jobInfo.annexStep->outputAssociation(jsaOut);
+
+    querySteps.push_back(jobInfo.annexStep);
+    dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get())->initialize(rg, jobInfo);
+    deliverySteps[CNX_VTABLE_ID] = jobInfo.annexStep;
+  }
 }
 }  // namespace joblist
 

@@ -95,16 +95,20 @@ enum ClauseType
   ORDER_BY
 };
 
-struct SchemaAndTableName {
+struct SchemaAndTableName
+{
   std::string schema;
   std::string table;
-  bool operator==(const SchemaAndTableName& other) const {
+  bool operator==(const SchemaAndTableName& other) const
+  {
     return schema == other.schema && table == other.table;
   }
 };
 
-struct SchemaAndTableNameHash {
-  std::size_t operator()(const SchemaAndTableName& k) const {
+struct SchemaAndTableNameHash
+{
+  std::size_t operator()(const SchemaAndTableName& k) const
+  {
     return std::hash<std::string>()(k.schema + k.table);
   }
 };
@@ -117,7 +121,8 @@ typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 using ColumnName = std::string;
 using ColumnStatisticsMap = std::unordered_map<ColumnName, Histogram_json_hb>;
-using TableStatisticsMap = std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+using TableStatisticsMap =
+    std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
 // This structure is used to store MDB AST -> CSEP translation context.
 // There is a column statistics for some columns in a query.
@@ -434,13 +439,15 @@ const std::string bestTableName(const Item_field* ifp);
 
 // execution plan util functions prototypes
 execplan::ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport,
-                                              bool isRefItem = false);
+                                              bool isRefItem = false, bool isUnion = false);
 execplan::ReturnedColumn* buildFunctionColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
-                                              bool selectBetweenIn = false);
-execplan::ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
+                                              bool selectBetweenIn = false, bool isUnion = false);
+execplan::ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
+                                                bool isUnion);
 execplan::ConstantColumn* buildDecimalColumn(const Item* item, const std::string& str, gp_walk_info& gwi);
-execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi);
-execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport);
+execplan::SimpleColumn* buildSimpleColumn(Item_field* item, gp_walk_info& gwi, bool isUnion);
+execplan::FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
+                                            bool isUnion);
 execplan::ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& nonSupport);
 execplan::ReturnedColumn* buildAggregateColumn(Item* item, gp_walk_info& gwi);
 execplan::ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& nonSupport);

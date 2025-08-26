@@ -423,7 +423,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
   if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
     return nullOnError(gwi, funcName);
 
-  SimpleColumn* sc = buildSimpleColumn(field, gwi);
+  SimpleColumn* sc = buildSimpleColumn(field, gwi, false);
 
   if (!sc)
     return nullOnError(gwi, funcName);

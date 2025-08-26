@@ -1305,7 +1305,7 @@ inline uint64_t TupleUnion::Hasher::operator()(const RowPosition& p) const
   else
     ts->rowMemory[p.group].getRow(p.row, &row);
 
-  return row.hash();
+  return row.hash(ts->fLastCol);
 }
 
 inline bool TupleUnion::Eq::operator()(const RowPosition& d1, const RowPosition& d2) const
@@ -1322,10 +1322,10 @@ inline bool TupleUnion::Eq::operator()(const RowPosition& d1, const RowPosition&
   else
     ts->rowMemory[d2.group].getRow(d2.row, &r2);
 
-  return r1.equals(r2);
+  return r1.equals(r2, ts->fLastCol);
 }
 
-TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInfo)
+TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInfo, uint32_t keyCount)
  : JobStep(jobInfo)
  , fTableOID(tableOID)
  , output(NULL)
@@ -1340,6 +1340,7 @@ TupleUnion::TupleUnion(CalpontSystemCatalog::OID tableOID, const JobInfo& jobInf
  , joinRan(false)
  , sessionMemLimit(jobInfo.umMemLimit)
  , fTimeZone(jobInfo.timeZone)
+ , fLastCol(keyCount - 1)
 {
   uniquer.reset(new Uniquer_t(10, Hasher(this), Eq(this), allocator));
   fExtendedInfo = "TUN: ";

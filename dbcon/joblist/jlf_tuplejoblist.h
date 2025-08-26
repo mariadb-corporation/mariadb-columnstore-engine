@@ -129,7 +129,7 @@ void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSte
 void orExpresssion(const execplan::Operator* op, JobInfo& jobInfo);
 
 // union the queries and return the tuple union step
-SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo);
+SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo, uint32_t keyCount);
 
 // Used for join graph analysis.
 // WHITE - node is not processed.
