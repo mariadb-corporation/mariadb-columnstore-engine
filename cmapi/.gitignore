@@ -87,3 +87,7 @@ result
 centos8
 ubuntu20.04
 buildinfo.txt
+
+# Self-signed certificates
+cmapi_server/self-signed.crt
+cmapi_server/self-signed.key

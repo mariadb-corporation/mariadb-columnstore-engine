@@ -18,6 +18,7 @@ from cherrypy.process import plugins
 from cmapi_server.logging_management import config_cmapi_server_logging
 from cmapi_server.sentry import maybe_init_sentry, register_sentry_cherrypy_tool
 config_cmapi_server_logging()
+from cmapi_server.trace_tool import register_tracing_tools
 
 from cmapi_server import helpers
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
@@ -141,6 +142,7 @@ if __name__ == '__main__':
     # TODO: read cmapi config filepath as an argument
     helpers.cmapi_config_check()
 
+    register_tracing_tools()
     # Init Sentry if DSN is present
     sentry_active = maybe_init_sentry()
     if sentry_active:
@@ -153,6 +155,9 @@ if __name__ == '__main__':
     root_config = {
         "request.dispatch": dispatcher,
         "error_page.default": jsonify_error,
+        # Enable tracing tools
+        'tools.trace.on': True,
+        'tools.trace_end.on': True,
     }
     if sentry_active:
         root_config["tools.sentry.on"] = True
@@ -230,10 +235,10 @@ if __name__ == '__main__':
                 'Something went wrong while trying to detect dbrm protocol.\n'
                 'Seems "controllernode" process isn\'t started.\n'
                 'This is just a notification, not a problem.\n'
-                'Next detection will started at first node\\cluster '
+                'Next detection will start at first node\\cluster '
                 'status check.\n'
-                f'This can cause extra {SOCK_TIMEOUT} seconds delay while\n'
-                'first attempt to get status.',
+                f'This can cause extra {SOCK_TIMEOUT} seconds delay during\n'
+                'this first attempt to get the status.',
                 exc_info=True
             )
     else:

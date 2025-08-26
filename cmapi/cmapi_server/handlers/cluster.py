@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-import requests
+from cmapi_server.traced_session import get_traced_session
 
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH,
@@ -78,7 +78,7 @@ class ClusterHandler():
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{get_version()}/node/status'
             try:
-                r = requests.get(url, verify=False, headers=headers)
+                r = get_traced_session().request('GET', url, verify=False, headers=headers)
                 r.raise_for_status()
                 r_json = r.json()
                 if len(r_json.get('services', 0)) == 0:
@@ -277,7 +277,7 @@ class ClusterHandler():
         payload['cluster_mode'] = mode
 
         try:
-            r = requests.put(url, headers=headers, json=payload, verify=False)
+            r = get_traced_session().request('PUT', url, headers=headers, json=payload, verify=False)
             r.raise_for_status()
             response['cluster-mode'] = mode
         except Exception as err:
@@ -330,7 +330,7 @@ class ClusterHandler():
             logger.debug(f'Setting new api key to "{node}".')
             url = f'https://{node}:8640/cmapi/{get_version()}/node/apikey-set'
             try:
-                resp = requests.put(url, verify=False, json=body)
+                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers={})
                 resp.raise_for_status()
                 r_json = resp.json()
                 if active_nodes_count > 0:
@@ -383,7 +383,7 @@ class ClusterHandler():
             logger.debug(f'Setting new log level to "{node}".')
             url = f'https://{node}:8640/cmapi/{get_version()}/node/log-level'
             try:
-                resp = requests.put(url, verify=False, json=body)
+                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers={})
                 resp.raise_for_status()
                 r_json = resp.json()
                 if active_nodes_count > 0:
