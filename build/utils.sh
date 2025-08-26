@@ -532,6 +532,24 @@ function retry_eval() {
   exit 13
 }
 
+# ISO-8601 UTC timestamp
+iso_now() {
+  date -u "+%Y-%m-%dT%H:%M:%SZ"
+}
+
+# Run a named stage function and log timing
+run_stage() {
+  local _stage_name="$1"; shift || true
+  local _start_ts=$(date +%s)
+  echo -e "${color_yellow}[$(iso_now)] START ${_stage_name}${color_normal}"
+  "${_stage_name}" "$@"
+  local _rc=$?
+  local _end_ts=$(date +%s)
+  local _elapsed=$((_end_ts-_start_ts))
+  echo -e "${color_yellow}[$(iso_now)] END   ${_stage_name}${color_normal} elapsed=${_elapsed}s status=${_rc}"
+  return $_rc
+}
+
 function execInnerDocker() {
   local container_name=$1
   shift 1 # Remove first arg (container_name)

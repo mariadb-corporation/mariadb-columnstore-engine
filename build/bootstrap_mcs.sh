@@ -159,8 +159,8 @@ install_deps() {
     retry_eval 5 "$command"
 }
 
-install_deps
-install_sccache
+run_stage install_deps
+run_stage install_sccache
 
 export PATH="/usr/local/bin:$PATH"
 
@@ -848,15 +848,19 @@ if [[ $DO_NOT_FREEZE_REVISION = false ]]; then
     disable_git_restore_frozen_revision
 fi
 
-construct_cmake_flags
-init_submodules
+run_stage construct_cmake_flags
+run_stage init_submodules
 
 if [[ $BUILD_PACKAGES = true ]]; then
-    modify_packaging
-    fix_config_files
+    run_stage modify_packaging
+    run_stage fix_config_files
 
-    (build_package && run_unit_tests)
+    run_stage build_package
     exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        run_stage run_unit_tests
+        exit_code=$?
+    fi
 
     if [[ $SCCACHE = true ]]; then
         sccache --show-adv-stats
@@ -865,14 +869,14 @@ if [[ $BUILD_PACKAGES = true ]]; then
     exit $exit_code
 fi
 
-stop_service
-clean_old_installation
-build_binary
-install_binary
-run_unit_tests
-run_microbenchmarks_tests
-install
-start_service
-smoke
+run_stage stop_service
+run_stage clean_old_installation
+run_stage build_binary
+run_stage install_binary
+run_stage run_unit_tests
+run_stage run_microbenchmarks_tests
+run_stage install
+run_stage start_service
+run_stage smoke
 
 message_splitted "FINISHED"
