@@ -162,6 +162,8 @@ install_deps() {
 install_deps
 install_sccache
 
+export PATH="/usr/local/bin:$PATH"
+
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 message "Columnstore will be built from $color_yellow$COLUMNSTORE_BRANCH$color_cyan branch"
@@ -442,7 +444,7 @@ construct_cmake_flags() {
 
     if [[ $SCCACHE = true ]]; then
         warn "Use sccache"
-        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache)
     fi
 
     if [[ $RUN_BENCHMARKS = true ]]; then
@@ -527,11 +529,40 @@ generate_svgs() {
     fi
 }
 
+ensure_sccache_launcher() {
+    if [[ $SCCACHE = true ]]; then
+        if [[ ! -f "$MARIA_BUILD_PATH/CMakeCache.txt" ]]; then
+            error "CMakeCache.txt not found in $MARIA_BUILD_PATH to verify sccache launcher"
+            exit 2
+        fi
+        if ! grep -q 'CMAKE_C_COMPILER_LAUNCHER' "$MARIA_BUILD_PATH/CMakeCache.txt"; then
+            error "sccache launcher not recorded in CMakeCache.txt"
+            exit 2
+        fi
+        if ! grep -q '/usr/local/bin/sccache' "$MARIA_BUILD_PATH/CMakeCache.txt"; then
+            error "sccache absolute path not used for compiler launcher"
+            exit 2
+        fi
+    fi
+}
+
 build_package() {
     cd $MDB_SOURCE_PATH
 
     if [[ $PKG_FORMAT == "rpm" ]]; then
-        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
+        # Out-of-source configure and build for RPM path
+        if [[ $FORCE_CMAKE_CONFIG = true ]]; then
+            rm -f "$MARIA_BUILD_PATH/CMakeCache.txt"
+            rm -rf "$MARIA_BUILD_PATH/CMakeFiles"
+        fi
+
+        message "Configuring cmake for RPM package"
+        cmake "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH"
+        check_errorcode
+        ensure_sccache_launcher
+
+        message "Building RPM package"
+        command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package"
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
@@ -574,6 +605,7 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
+    ensure_sccache_launcher
     # check_debian_install_file // will be uncommented later
     generate_svgs
 

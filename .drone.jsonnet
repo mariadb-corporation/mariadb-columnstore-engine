@@ -39,6 +39,8 @@ local customBootstrapParamsForExisitingPipelines(envkey) =
   # errorprone if we pass --custom-cmake-flags twice, the last one will win
   local customBootstrapMap = {
     "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+    "rockylinux:8": "--force-cmake-reconfig --verbose",
+    "rockylinux:9": "--force-cmake-reconfig --verbose",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
@@ -538,6 +540,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_REGION: "us-east-1",
                SCCACHE_S3_USE_SSL: "true",
                SCCACHE_S3_KEY_PREFIX: result + branch + server + arch,
+               SCCACHE_IDLE_TIMEOUT: "0",
+               SCCACHE_LOG: "info",
+               SCCACHE_ERROR_LOG: "/mdb/" + builddir + "/" + result + "/sccache.log",
+               PATH: "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin",
              },
 
              # errorprone if we pass --custom-cmake-flags twice, the last one will win
