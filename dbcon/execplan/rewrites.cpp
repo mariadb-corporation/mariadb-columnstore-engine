@@ -240,7 +240,7 @@ execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, Common& common)
   {
     execplan::ParseTree* andCondition = *treenode;
 
-    // Increment or erase based on container type
+    // Increment or erase based on container type to avoid UB
     if constexpr (is_set<Common>::value)
     {
       treenode = common.erase(treenode);
