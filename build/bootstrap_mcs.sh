@@ -47,7 +47,7 @@ optparse.define short=j long=parallel desc="Number of paralles for build" variab
 optparse.define short=L long=libcpp desc="Build with libc++" variable=WITH_LIBCPP default=false value=true
 optparse.define short=M long=msan desc="Build with MSan" variable=MSAN default=false value=true
 optparse.define short=m long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
-optparse.define short=N long=ninja desc="Build with ninja" variable=USE_NINJA default=false value=true
+optparse.define short=N long=ninja desc="Build without ninja" variable=USE_NINJA default=true value=false
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
 optparse.define short=O long=static desc="Build all with static libraries" variable=STATIC_BUILD default=false value=true
@@ -562,7 +562,11 @@ build_package() {
         ensure_sccache_launcher
 
         message "Building RPM package"
-        command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package"
+        if [[ $USE_NINJA = true ]]; then
+            command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package -- -d stats"
+        else
+            command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package"
+        fi
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
@@ -609,7 +613,11 @@ build_binary() {
     # check_debian_install_file // will be uncommented later
     generate_svgs
 
-    ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
+    if [[ $USE_NINJA = true ]]; then
+        ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" -- -d stats
+    else
+        ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
+    fi
     check_errorcode
 
     message "Adding symbol link to compile_commands.json to the source root"
