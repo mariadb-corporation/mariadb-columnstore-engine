@@ -48,6 +48,7 @@ optparse.define short=L long=libcpp desc="Build with libc++" variable=WITH_LIBCP
 optparse.define short=M long=msan desc="Build with MSan" variable=MSAN default=false value=true
 optparse.define short=m long=skip-smoke desc="Skip final smoke test" variable=SKIP_SMOKE default=false value=true
 optparse.define short=N long=ninja desc="Build without ninja" variable=USE_NINJA default=true value=false
+optparse.define short=Q long=build-report-dir desc="Directory to store build reports (logs, graphs)" variable=BUILD_REPORT_DIR
 optparse.define short=n long=no-clean-install desc="Do not perform a clean install (keep existing db files)" variable=NO_CLEAN default=false value=true
 optparse.define short=o long=recompile-only variable=RECOMPILE_ONLY default=false value=true
 optparse.define short=O long=static desc="Build all with static libraries" variable=STATIC_BUILD default=false value=true
@@ -112,7 +113,7 @@ install_deps() {
     fi
     message_split
     prereq=""
-    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make ninja-build libaio-devel openssl-devel boost-devel bison \
+    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make ninja-build graphviz libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
       cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
@@ -169,6 +170,26 @@ if [[ $USE_NINJA = true ]] && ! command -v ninja >/dev/null 2>&1; then
     error "Install ninja (ninja-build) or disable Ninja with -N/--ninja"
     exit 2
 fi
+
+generate_ninja_svg() {
+    # Export dependency graph as SVG near build log when possible
+    if [[ $USE_NINJA = true ]]; then
+        if ! command -v ninja >/dev/null 2>&1; then
+            return
+        fi
+        if ! command -v dot >/dev/null 2>&1; then
+            warn "graphviz 'dot' not found; skipping ninja graph export"
+            return
+        fi
+        local out_dir=${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}
+        mkdir -p "$out_dir" || true
+        local dot_file="$out_dir/ninja_graph.dot"
+        local svg_file="$out_dir/ninja_graph.svg"
+        message "Exporting Ninja dependency graph to $svg_file"
+        ninja -C "$MARIA_BUILD_PATH" -t graph all >"$dot_file" 2>/dev/null || true
+        dot -Tsvg "$dot_file" -o "$svg_file" 2>/dev/null || true
+    fi
+}
 
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -568,8 +589,8 @@ build_package() {
         ensure_sccache_launcher
 
         message "Building RPM package"
-        if [[ $USE_NINJA = true ]] && command -v ninja >/dev/null 2>&1; then
-            command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package -- -d stats"
+        if [[ $USE_NINJA = true ]]; then
+            command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package -- -d stats; ninja -C \"$MARIA_BUILD_PATH\" -t graph all > \"${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}/ninja_graph.dot\" 2>/dev/null || true; dot -Tsvg \"${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}/ninja_graph.dot\" -o \"${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}/ninja_graph.svg\" 2>/dev/null || true"
         else
             command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package"
         fi
@@ -621,6 +642,7 @@ build_binary() {
 
     if [[ $USE_NINJA = true ]]; then
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" -- -d stats
+        generate_ninja_svg
     else
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
     fi
