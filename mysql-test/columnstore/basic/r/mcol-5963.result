@@ -5,13 +5,35 @@ create table FOO(foo datetime) engine = columnstore;
 insert into FOO(foo) values (curtime());
 select if(0 = 1, curdate(), foo) from FOO;
 if(0 = 1, curdate(), foo)
-2025-08-25 14:34:25
+2025-08-27 15:26:25
 select if(0 = 1, null, foo) from FOO;
 if(0 = 1, null, foo)
-2025-08-25 14:34:25
+2025-08-27 15:26:25
 select if(0 = 1, true, foo) from FOO;
 if(0 = 1, true, foo)
-2025-08-25 14:34:25
+2025-08-27 15:26:25
 select if(0 = 1, 5, foo) from FOO;
 if(0 = 1, 5, foo)
-2025-08-25 14:34:25
+2025-08-27 15:26:25
+select if(0 = 1, null, "text");
+if(0 = 1, null, "text")
+text
+drop table FOO;
+create table FOO(foo varchar(30)) engine = columnstore;
+insert into FOO(foo) values ("text1");
+select if(0 = 1, true, foo) from FOO;
+if(0 = 1, true, foo)
+text1
+select if(0 = 1, NULL, foo) from FOO;
+if(0 = 1, NULL, foo)
+text1
+drop table FOO;
+create table FOO(foo int) engine = columnstore;
+insert into FOO(foo) values (123);
+select if(0 = 1, true, foo) from FOO;
+if(0 = 1, true, foo)
+123
+select if(0 = 1, NULL, foo) from FOO;
+if(0 = 1, NULL, foo)
+123
+drop table FOO;

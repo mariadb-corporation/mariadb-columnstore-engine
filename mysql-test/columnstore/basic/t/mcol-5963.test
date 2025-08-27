@@ -18,3 +18,27 @@ select if(0 = 1, null, foo) from FOO;
 select if(0 = 1, true, foo) from FOO;
 
 select if(0 = 1, 5, foo) from FOO;
+
+select if(0 = 1, null, "text");
+
+drop table FOO;
+
+create table FOO(foo varchar(30)) engine = columnstore;
+
+insert into FOO(foo) values ("text1");
+
+select if(0 = 1, true, foo) from FOO;
+
+select if(0 = 1, NULL, foo) from FOO;
+
+drop table FOO;
+
+create table FOO(foo int) engine = columnstore;
+
+insert into FOO(foo) values (123);
+
+select if(0 = 1, true, foo) from FOO;
+
+select if(0 = 1, NULL, foo) from FOO;
+
+drop table FOO;

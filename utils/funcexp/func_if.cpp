@@ -114,7 +114,20 @@ CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp,
   CalpontSystemCatalog::ColType ct2 = fp[2]->data()->resultType();
   // Special handling for datetime types - if one parameter is datetime and the other
   // could be NULL, prefer the datetime type
-  if (ct1.colDataType == CalpontSystemCatalog::DATETIME ||
+  if (ct1.colDataType == CalpontSystemCatalog::CHAR ||
+      ct1.colDataType == CalpontSystemCatalog::VARCHAR ||
+      ct1.colDataType == CalpontSystemCatalog::TEXT ||
+      ct2.colDataType == CalpontSystemCatalog::CHAR ||
+      ct2.colDataType == CalpontSystemCatalog::TEXT ||
+      ct2.colDataType == CalpontSystemCatalog::VARCHAR)
+  {
+    CalpontSystemCatalog::ColType ct;
+    ct.colDataType = CalpontSystemCatalog::VARCHAR;
+    ct.colWidth = 255;
+    resultType = ct;
+    return ct;
+  }
+  else if (ct1.colDataType == CalpontSystemCatalog::DATETIME ||
       ct1.colDataType == CalpontSystemCatalog::DATE ||
       ct1.colDataType == CalpontSystemCatalog::TIME ||
       ct1.colDataType == CalpontSystemCatalog::TIMESTAMP)
