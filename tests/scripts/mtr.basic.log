@@ -1,0 +1,22 @@
+Logging: ./mtr  --force --extern=socket=/run/mysqld/mysqld.sock --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/basic mcol-5963
+VS config: 
+vardir: /usr/share/mysql/mysql-test/var
+Checking supported features...
+MariaDB Version 10.6.23
+ - skipping SSL, mysqld not compiled with SSL
+ - binaries are debug compiled
+Collecting tests...
+
+==============================================================================
+
+TEST                                      RESULT   TIME (ms) or COMMENT
+--------------------------------------------------------------------------
+
+worker[01] Using MTR_BUILD_THREAD 300, with reserved ports 19000..19029
+columnstore/basic.mcol-5963              [ pass ]   5547
+--------------------------------------------------------------------------
+The servers were restarted 0 times
+Spent 5.547 of 6 seconds executing testcases
+
+Completed: All 1 tests were successful.
+
