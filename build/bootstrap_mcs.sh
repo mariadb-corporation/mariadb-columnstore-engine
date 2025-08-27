@@ -112,12 +112,12 @@ install_deps() {
     fi
     message_split
     prereq=""
-    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
+    RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make ninja-build libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
       cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
 
-    DEB_BUILD_DEPS="build-essential automake libboost-all-dev \
+    DEB_BUILD_DEPS="build-essential automake ninja-build libboost-all-dev \
       bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
       libkrb5-dev flex libpam-dev git libsnappy-dev libcurl4-openssl-dev libgtest-dev libcppunit-dev googletest \
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
@@ -163,6 +163,12 @@ run_stage install_deps
 run_stage install_sccache
 
 export PATH="/usr/local/bin:$PATH"
+
+if [[ $USE_NINJA = true ]] && ! command -v ninja >/dev/null 2>&1; then
+    error "Ninja generator requested (USE_NINJA=true) but 'ninja' not found in PATH"
+    error "Install ninja (ninja-build) or disable Ninja with -N/--ninja"
+    exit 2
+fi
 
 cd $COLUMSNTORE_SOURCE_PATH
 COLUMNSTORE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -562,7 +568,7 @@ build_package() {
         ensure_sccache_launcher
 
         message "Building RPM package"
-        if [[ $USE_NINJA = true ]]; then
+        if [[ $USE_NINJA = true ]] && command -v ninja >/dev/null 2>&1; then
             command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package -- -d stats"
         else
             command="cmake --build \"$MARIA_BUILD_PATH\" -j\$(nproc) --target package"
