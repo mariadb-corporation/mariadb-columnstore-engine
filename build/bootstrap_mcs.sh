@@ -143,6 +143,10 @@ install_deps() {
         exit 17
     fi
 
+    if is_rocky_version_ge $OS 10; then
+        command="${command} && dnf install -y selinux-policy-devel"
+    fi
+
     if [[ $OS == 'ubuntu:22.04' || $OS == 'ubuntu:24.04' ]]; then
         if [ -f /.dockerenv ]; then
             change_ubuntu_mirror us

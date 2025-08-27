@@ -48,6 +48,7 @@ include(configureEngine)
 include(compiler_flags)
 include(misc)
 include(cpack_manage)
+include(selinux_policy)
 
 if(NOT __msg1_CS_NO_CXX20)
     add_subdirectory(dbcon/mysql)
