@@ -1,10 +1,6 @@
 #
 # MDEV-25080: Allow pushdown of queries involving UNIONs
 # in outer select to foreign engines
-#
-# Remove the sorted_result MTR qualifier and add ORDER BY
-# clause after MCOL-5222 is fixed
-#
 CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
@@ -20,17 +16,17 @@ INSERT INTO t2 VALUES ('bcd'), ('cde'), ('def'), ('efg');
 INSERT INTO t3 VALUES ('t3_myisam1'), ('t3_myisam2'), ('t3_myisam3');
 INSERT INTO t4 VALUES ('t4_myisam1'), ('t4_myisam2'), ('t4_myisam3');
 # Pushdown of the whole UNION
-SELECT * FROM t1 UNION SELECT * FROM t2;
+SELECT * FROM t1 UNION SELECT * FROM t2 ORDER BY 1;
 a
 abc
 bcd
 cde
 def
 efg
-EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t2 ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
-SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY 1;
 a
 abc
 bcd
@@ -39,11 +35,11 @@ cde
 cde
 def
 efg
-EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2;
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # UNION with a foreign engine
-SELECT * FROM t1 UNION SELECT * FROM t3;
+SELECT * FROM t1 UNION SELECT * FROM t3 ORDER BY 1;
 a
 abc
 bcd
@@ -51,13 +47,14 @@ cde
 t3_myisam1
 t3_myisam2
 t3_myisam3
-EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3;
+EXPLAIN SELECT * FROM t1 UNION SELECT * FROM t3 ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # More than two SELECTs in a UNIT:
 SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
-SELECT * FROM t1;
+SELECT * FROM t1
+ORDER BY 1;
 a
 abc
 abc
@@ -69,12 +66,14 @@ def
 efg
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
-SELECT * FROM t1;
+SELECT * FROM t1
+ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
-SELECT * FROM t1;
+SELECT * FROM t1
+ORDER BY 1;
 a
 abc
 abc
@@ -86,13 +85,15 @@ def
 efg
 EXPLAIN (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
-SELECT * FROM t1;
+SELECT * FROM t1
+ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t3 UNION
-SELECT * FROM t4;
+SELECT * FROM t4
+ORDER BY 1;
 a
 abc
 bcd
@@ -108,13 +109,15 @@ t4_myisam3
 EXPLAIN SELECT * FROM t1 UNION
 SELECT * FROM t2 UNION ALL
 SELECT * FROM t3 UNION
-SELECT * FROM t4;
+SELECT * FROM t4
+ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
 (SELECT * FROM t3 UNION
-SELECT * FROM t4);
+SELECT * FROM t4)
+ORDER BY 1;
 a
 abc
 bcd
@@ -130,23 +133,26 @@ t4_myisam3
 EXPLAIN (SELECT * FROM t1 UNION
 SELECT * FROM t2) UNION ALL
 (SELECT * FROM t3 UNION
-SELECT * FROM t4);
+SELECT * FROM t4)
+ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT count(*) FROM t1 UNION
 SELECT count(*) FROM t2 UNION ALL
 SELECT count(*)+20 FROM t2 UNION
-SELECT count(*)+5 FROM t1;
+SELECT count(*)+5 FROM t1
+ORDER BY 1;
 count(*)
-24
 3
 4
 8
+24
 EXPLAIN
 SELECT count(*) FROM t1 UNION
 SELECT count(*) FROM t2 UNION ALL
 SELECT count(*)+20 FROM t2 UNION
-SELECT count(*)+5 FROM t1;
+SELECT count(*)+5 FROM t1
+ORDER BY 1;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # UNION inside a derived table: the whole derived table must be pushed
@@ -181,7 +187,7 @@ id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 1	PUSHED SELECT	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 # Prepared statements
 PREPARE stmt FROM "SELECT * FROM t1 UNION
-  SELECT * FROM t2";
+  SELECT * FROM t2 ORDER BY 1";
 EXECUTE stmt;
 a
 abc
@@ -204,7 +210,7 @@ cde
 def
 efg
 PREPARE stmt FROM "EXPLAIN SELECT * FROM t1 UNION
-  SELECT * FROM t2";
+  SELECT * FROM t2 ORDER BY 1";
 EXECUTE stmt;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
@@ -214,7 +220,7 @@ NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 PREPARE stmt FROM "(SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   (SELECT * FROM t1 UNION
-  SELECT * FROM t2)";
+  SELECT * FROM t2) ORDER BY 1";
 EXECUTE stmt;
 a
 abc
@@ -254,7 +260,7 @@ efg
 PREPARE stmt FROM "EXPLAIN (SELECT * FROM t1 UNION
   SELECT * FROM t2) UNION ALL
   (SELECT * FROM t1 UNION
-  SELECT * FROM t2)";
+  SELECT * FROM t2) ORDER BY 1";
 EXECUTE stmt;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
 NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
@@ -274,18 +280,15 @@ def
 efg
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
-1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
-2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
-NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
-SELECT * FROM t1 UNION ALL SELECT * FROM t2 LIMIT 3;
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
+SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3;
 a
 abc
 bcd
-cde
-EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 LIMIT 3;
+bcd
+EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
-1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
-2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a DESC LIMIT 5;
 a
 efg
@@ -295,9 +298,7 @@ cde
 bcd
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a DESC LIMIT 5;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
-1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
-2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
-NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3 OFFSET 2;
 a
 bcd
@@ -305,9 +306,7 @@ cde
 cde
 EXPLAIN SELECT * FROM t1 UNION ALL SELECT * FROM t2 ORDER BY a LIMIT 3 OFFSET 2;
 id	select_type	table	type	possible_keys	key	key_len	ref	rows	Extra
-1	PRIMARY	t1	ALL	NULL	NULL	NULL	NULL	2000	
-2	UNION	t2	ALL	NULL	NULL	NULL	NULL	2000	
-NULL	UNION RESULT	<union1,2>	ALL	NULL	NULL	NULL	NULL	NULL	Using filesort
+NULL	PUSHED UNION	NULL	NULL	NULL	NULL	NULL	NULL	NULL	NULL
 DROP USER 'cejuser'@'localhost';
 DROP TABLE t1, t2, t3, t4;
 DROP DATABASE mdev25080;
