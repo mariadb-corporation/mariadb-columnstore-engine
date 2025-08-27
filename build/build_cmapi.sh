@@ -52,7 +52,7 @@ install_deps() {
   fi
 
   #no redhat-lsb-release for rockylinux >=10
-  if ! is_rocky_version_ge $OS 10; then
+  if is_rocky_version $OS && ! is_rocky_version_ge $OS 10; then
     retry_eval 5 "dnf update -q -y && dnf install -q -y redhat-lsb-core"
   fi
 
