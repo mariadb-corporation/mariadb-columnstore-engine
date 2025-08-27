@@ -1,0 +1,20 @@
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5963;
+--enable_warnings
+
+CREATE DATABASE mcol5963;
+
+USE mcol5963;
+
+create table FOO(foo datetime) engine = columnstore;
+ 
+insert into FOO(foo) values (curtime());
+ 
+ 
+select if(0 = 1, curdate(), foo) from FOO;
+ 
+select if(0 = 1, null, foo) from FOO;
+
+select if(0 = 1, true, foo) from FOO;
+
+select if(0 = 1, 5, foo) from FOO;

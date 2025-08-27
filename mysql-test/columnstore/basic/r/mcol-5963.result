@@ -1,0 +1,17 @@
+DROP DATABASE IF EXISTS mcol5963;
+CREATE DATABASE mcol5963;
+USE mcol5963;
+create table FOO(foo datetime) engine = columnstore;
+insert into FOO(foo) values (curtime());
+select if(0 = 1, curdate(), foo) from FOO;
+if(0 = 1, curdate(), foo)
+2025-08-25 14:34:25
+select if(0 = 1, null, foo) from FOO;
+if(0 = 1, null, foo)
+2025-08-25 14:34:25
+select if(0 = 1, true, foo) from FOO;
+if(0 = 1, true, foo)
+2025-08-25 14:34:25
+select if(0 = 1, 5, foo) from FOO;
+if(0 = 1, 5, foo)
+2025-08-25 14:34:25
