@@ -46,13 +46,23 @@ install_deps() {
 
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
 
-  if [[ "$OS" == "rockylinux:9" ]]; then
+  if is_rocky_version $OS 9; then
     retry_eval 5 "dnf install -q -y libxcrypt-compat yum-utils"
     retry_eval 5 "dnf config-manager --set-enabled devel && dnf update -q -y" #to make redhat-lsb-core available for rocky 9
   fi
 
+  #no redhat-lsb-release for rockylinux >=10
+  if ! is_rocky_version_ge $OS 10; then
+    retry_eval 5 "dnf update -q -y && dnf install -q -y redhat-lsb-core"
+  fi
+
+
+  if is_rocky_version_ge $OS 10; then
+    retry_eval 5 "dnf update -q -y && dnf install -q -y libxcrypt-compat"
+  fi
+
   if [[ "$PKG_FORMAT" == "rpm" ]]; then
-    retry_eval 5 "dnf update -q -y && dnf install -q -y epel-release wget zstd findutils gcc cmake make rpm-build redhat-lsb-core libarchive"
+    retry_eval 5 "dnf update -q -y && dnf install -q -y epel-release wget zstd findutils gcc cmake make rpm-build libarchive"
   else
     retry_eval 5 "apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release"
   fi

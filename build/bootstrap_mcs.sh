@@ -23,7 +23,7 @@ COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 DEFAULT_MARIA_BUILD_PATH=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
-DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9")
+DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9" "rocky:10")
 
 GCC_VERSION="11"
 MDB_CMAKE_FLAGS=()
@@ -123,7 +123,7 @@ install_deps() {
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
       graphviz devscripts ccache equivs eatmydata curl python3"
 
-    if [[ "$OS" == *"rockylinux:8"* || "$OS" == *"rocky:8"* ]]; then
+    if is_rocky_version $OS 8; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
       dnf install -y libarchive cmake  ${RPM_BUILD_DEPS}"
         if [[ $GCC_TOOLSET = false ]]; then
@@ -131,9 +131,8 @@ install_deps() {
         else
             command="$command && dnf install -y gcc-toolset-${GCC_VERSION} && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable"
         fi
-    elif
-        [[ "$OS" == "rockylinux:9"* || "$OS" == "rocky:9"* ]]
-    then
+
+    elif is_rocky_version_ge $OS 9; then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
       dnf install -y pcre2-devel gcc gcc-c++ curl-minimal ${RPM_BUILD_DEPS}"
 
