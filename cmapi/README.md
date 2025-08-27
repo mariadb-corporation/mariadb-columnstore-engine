@@ -2,13 +2,13 @@
 [![Build Status](https://ci.columnstore.mariadb.net/api/badges/mariadb-corporation/mariadb-columnstore-cmapi/status.svg)](https://ci.columnstore.mariadb.net/mariadb-corporation/mariadb-columnstore-cmapi)
 
 ## Overview
-This RESTfull server enables multi-node setups for MCS.
+This RESTful server enables multi-node setups for MCS.
 
 ## Requirements
 
 See requirements.txt file.
 
-All the Python packages prerequisits are shipped with a pre-built Python enterpreter.
+All the Python packages prerequisites are shipped with a pre-built Python interpreter.
 
 ## Usage
 

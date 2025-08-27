@@ -1,0 +1,19 @@
+# Direct, top-level runtime dependencies for cmapi
+# Compile with: pip-compile --output-file=requirements.txt requirements.in
+
+aiohttp==3.11.16
+awscli==1.38.28
+CherryPy==18.10.0
+cryptography==43.0.3
+furl==2.1.4
+gsutil==5.33
+lxml==5.3.2
+psutil==7.0.0
+pyotp==2.9.0
+requests==2.32.3
+# required for CherryPy RoutesDispatcher,
+# but CherryPy itself has no such dependency
+Routes==2.5.1
+typer==0.15.2
+sentry-sdk==2.34.1
+

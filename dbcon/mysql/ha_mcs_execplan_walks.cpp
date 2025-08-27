@@ -815,6 +815,12 @@ void gp_walk(const Item* item, void* arg)
     }
   }
 
+  // Clean up allocated objects if a fatal parse error occurred
+  if (gwip->fatalParseError)
+  {
+    clearDeleteStacks(*gwip);
+  }
+
   return;
 }
 
