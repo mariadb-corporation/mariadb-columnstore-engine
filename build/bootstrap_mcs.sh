@@ -312,6 +312,14 @@ modify_packaging() {
     # Bypass of debian version list check in autobake
     if [[ $PKG_FORMAT == "deb" ]]; then
         sed -i 's|.*-d storage/columnstore.*|elif [[ -d storage/columnstore/columnstore/debian ]]|' debian/autobake-deb.sh
+
+        # If Ninja is requested, ensure debian/rules invokes dh_auto_configure with Ninja generator
+        if [[ $USE_NINJA = true ]]; then
+            if ! grep -q 'DEB_CMAKE_GENERATOR=Ninja' debian/rules 2>/dev/null; then
+                echo "Adding Ninja generator to debian/rules by force"
+                sed -i '/NO_UPDATE_BUILD_VERSION=1 \\/a\    DEB_CMAKE_GENERATOR=Ninja CMAKE_GENERATOR=Ninja \\' debian/rules || true
+            fi
+        fi
     fi
 
     # patch to avoid fakeroot, which is using LD_PRELOAD for libfakeroot.so
