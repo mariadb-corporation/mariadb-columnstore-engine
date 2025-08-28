@@ -657,6 +657,19 @@ build_binary() {
     if [[ $USE_NINJA = true ]]; then
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" -- -d stats
         generate_ninja_timing_report
+        # Detect duplicate outputs in Ninja graph and write a report
+        if command -v awk >/dev/null 2>&1; then
+            local dup_report="${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}/ninja_duplicates.txt"
+            awk '/^build /{out=$2; cnt[out]++} END{for(k in cnt) if(cnt[k]>1) print cnt[k], k}' "$MARIA_BUILD_PATH/build.ninja" | sort -nr >"$dup_report" 2>/dev/null || true
+            # Include full build edges for any duplicates found
+            if [[ -s "$dup_report" ]]; then
+                local dup_edges="${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}/ninja_duplicate_edges.txt"
+                while read -r n out; do
+                    printf '\n=== %s producers for %s ===\n' "$n" "$out" >>"$dup_edges"
+                    awk -v target="$out" 'BEGIN{p=0} /^build /{p=0} $0 ~ "^build "target":"{p=1; print; next} p && $0 ~ /^  /{print}' "$MARIA_BUILD_PATH/build.ninja" >>"$dup_edges"
+                done <"$dup_report"
+            fi
+        fi
     else
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
     fi
