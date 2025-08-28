@@ -171,23 +171,26 @@ if [[ $USE_NINJA = true ]] && ! command -v ninja >/dev/null 2>&1; then
     exit 2
 fi
 
-generate_ninja_svg() {
-    # Export dependency graph as SVG near build log when possible
+generate_ninja_timing_report() {
     if [[ $USE_NINJA = true ]]; then
-        if ! command -v ninja >/dev/null 2>&1; then
-            return
-        fi
-        if ! command -v dot >/dev/null 2>&1; then
-            warn "graphviz 'dot' not found; skipping ninja graph export"
+        local log_file="$MARIA_BUILD_PATH/.ninja_log"
+        if [[ ! -f "$log_file" ]]; then
+            warn ".ninja_log not found; skipping timing report"
             return
         fi
         local out_dir=${BUILD_REPORT_DIR:-$MARIA_BUILD_PATH}
         mkdir -p "$out_dir" || true
-        local dot_file="$out_dir/ninja_graph.dot"
-        local svg_file="$out_dir/ninja_graph.svg"
-        message "Exporting Ninja dependency graph to $svg_file"
-        ninja -C "$MARIA_BUILD_PATH" -t graph all >"$dot_file" 2>/dev/null || true
-        dot -Tsvg "$dot_file" -o "$svg_file" 2>/dev/null || true
+        local report_file="$out_dir/ninja_timing.txt"
+        local top_file="$out_dir/ninja_top_edges.txt"
+        message "Writing Ninja timing report to $report_file"
+        # Aggregate durations by logical group (boost vs top-level dirs)
+        awk -F'\t' 'NR>1 {start=$1+0; end=$2+0; out=$5; dur=end-start; path=out; sub(/^\.\//,"",path); if (path ~ /(^|\/)\.boost\// || path ~ /external_boost/) grp="boost"; else { split(path,a,"/"); grp=a[1]; } sum[grp]+=dur; cnt[grp]++ } END { for (g in sum) printf "%8.2fs  %7d  %s\n", sum[g]/1000, cnt[g], g | "sort -nr" }' "$log_file" >"$report_file" 2>/dev/null || true
+        # Top slowest edges
+        awk -F'\t' 'NR>1 {d=($2+0)-($1+0); printf "%8.3fs  %s\n", d/1000, $5 }' "$log_file" | sort -nr | head -50 >"$top_file" 2>/dev/null || true
+
+        cp -f "$log_file" "$out_dir/ninja_log" 2>/dev/null || true
+        cp -f "$report_file" "$out_dir/ninja_timing" 2>/dev/null || true
+        cp -f "$top_file" "$out_dir/ninja_top_edges" 2>/dev/null || true
     fi
 }
 
@@ -642,7 +645,7 @@ build_binary() {
 
     if [[ $USE_NINJA = true ]]; then
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" -- -d stats
-        generate_ninja_svg
+        generate_ninja_timing_report
     else
         ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
     fi
