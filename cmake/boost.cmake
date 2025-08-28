@@ -74,7 +74,7 @@ ExternalProject_Add(
     #   ${INSTALL_LOCATION}/lib in one stream
     # - CMake metadata (if present): copied from <BINARY_DIR>/stage/lib/cmake
     # Result: significantly faster "install" step in CI while keeping CPU low (no compression)
-    INSTALL_COMMAND /bin/sh -c "mkdir -p '${INSTALL_LOCATION}/include' '${INSTALL_LOCATION}/lib' '${INSTALL_LOCATION}/lib/cmake' && tar -C '<SOURCE_DIR>' -cf - boost | tar -C '${INSTALL_LOCATION}/include' -xf - && tar -C '<BINARY_DIR>/stage/lib' -cf - . | tar -C '${INSTALL_LOCATION}/lib' -xf - && if [ -d '<BINARY_DIR>/stage/lib/cmake' ]; then tar -C '<BINARY_DIR>/stage/lib/cmake' -cf - . | tar -C '${INSTALL_LOCATION}/lib/cmake' -xf -; fi"
+    INSTALL_COMMAND /bin/sh -c "mkdir -p '${INSTALL_LOCATION}/include' '${INSTALL_LOCATION}/lib' '${INSTALL_LOCATION}/lib/cmake' && tar -C '<SOURCE_DIR>' -cf - boost | tar -C '${INSTALL_LOCATION}/include' -xf - && tar -C '<BINARY_DIR>/stage/lib' -cf - . | tar -C '${INSTALL_LOCATION}/lib' -xf - && [ -d '<BINARY_DIR>/stage/lib/cmake' ] && tar -C '<BINARY_DIR>/stage/lib/cmake' -cf - . | tar -C '${INSTALL_LOCATION}/lib/cmake' -xf - || true"
     ${LOG_BOOST_INSTEAD_OF_SCREEN}
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
