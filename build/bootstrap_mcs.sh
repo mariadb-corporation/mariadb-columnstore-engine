@@ -602,6 +602,15 @@ build_package() {
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
         export DH_BUILD_DDEBS="1"
         export BUILDPACKAGE_FLAGS="-b"
+        # Conditionally enable Ninja for Debian debhelper CMake flows
+        if [[ $USE_NINJA = true ]]; then
+            export DEB_CMAKE_GENERATOR="Ninja"
+            export CMAKE_GENERATOR="Ninja"
+        else
+            # Ensure we don't leak a prior setting
+            unset DEB_CMAKE_GENERATOR
+            unset CMAKE_GENERATOR
+        fi
         command="mk-build-deps debian/control -t 'apt-get -y -o Debug::pkgProblemResolver=yes --no-install-recommends' -r -i && \
        CMAKEFLAGS=\"${MDB_CMAKE_FLAGS[@]}\" debian/autobake-deb.sh"
     fi
@@ -634,6 +643,8 @@ build_binary() {
         warn "Erasing cmake cache"
         rm -f "$MARIA_BUILD_PATH/CMakeCache.txt"
         rm -rf "$MARIA_BUILD_PATH/CMakeFiles"
+        # Also remove generator artifacts to avoid Ninja/Make collisions
+        rm -f "$MARIA_BUILD_PATH/Makefile" "$MARIA_BUILD_PATH/build.ninja" "$MARIA_BUILD_PATH/.ninja_log" "$MARIA_BUILD_PATH/.ninja_deps"
     fi
 
     message "Configuring cmake silently"
