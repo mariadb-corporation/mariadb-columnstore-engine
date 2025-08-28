@@ -220,6 +220,7 @@ class AggregateColumn : public ReturnedColumn
    * Overloaded stream operator
    */
   const std::string toString() const override;
+  const std::string toString(bool compact) const;
   std::string toCppCode(IncludeSet& includes) const override;
 
   /**

@@ -58,6 +58,7 @@ set(FLAGS_ALL
     -msse4.2
     -DHAVE_CONFIG_H
     -DBOOST_BIND_GLOBAL_PLACEHOLDERS
+    -Wno-suggest-override
 )
 if(COLUMNSTORE_WITH_LIBCPP)
     list(APPEND FLAGS_ALL -stdlib=libc++)

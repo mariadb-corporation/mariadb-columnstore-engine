@@ -1,0 +1,55 @@
+module columnstore 1.0;
+
+require {
+    type tmpfs_t;
+    type var_lib_t;
+    type mysqld_var_run_t;
+    type mysqld_t;
+    type user_home_t;
+    type fs_t;
+    type ipp_port_t;
+    type unreserved_port_t;
+    class file { getattr map open read write };
+    class filesystem associate;
+    class tcp_socket { name_connect bind listen };
+}
+
+# Define new types for ColumnStore
+type columnstore_t;
+type columnstore_db_t;
+type columnstore_tmp_t;
+
+type columnstore_exec_t;
+
+
+
+# Type attributes
+domain_type(columnstore_t)
+files_type(columnstore_db_t)
+files_type(columnstore_tmp_t)
+
+
+
+# ColumnStore permissions
+allow columnstore_t columnstore_db_t:file { getattr map open read write };
+allow columnstore_t columnstore_tmp_t:file { getattr map open read write };
+allow columnstore_t columnstore_tmp_t:filesystem associate;
+allow columnstore_t mysqld_var_run_t:file map;
+allow columnstore_t self:file map;
+
+# Allow MariaDB to read ColumnStore database files
+allow mysqld_t columnstore_db_t:file { open read };
+
+allow mysqld_t tmpfs_t:file { read write open getattr map};
+allow mysqld_t var_lib_t:file { read open };
+allow mysqld_t user_home_t:file { read open };
+allow mysqld_t columnstore_db_t:file { read open };
+
+allow mysqld_t fs_t:filesystem associate;
+
+
+# MariaDB to ColumnStore network access
+
+allow mysqld_t unreserved_port_t:tcp_socket name_connect;
+
+allow mysqld_t ipp_port_t:tcp_socket { name_connect bind listen };

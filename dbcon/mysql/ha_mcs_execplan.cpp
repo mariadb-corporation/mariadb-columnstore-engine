@@ -2223,8 +2223,10 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
   ci->expressionId = 0;
 }
 
-void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& /*gwi*/)
+void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
 {
+  // Clean up any allocated objects in the work stacks to prevent memory leaks
+  clearDeleteStacks(gwi);
   setError(thd, errcode, errmsg);
 }
 
@@ -2236,6 +2238,8 @@ int setErrorAndReturn(gp_walk_info& gwi)
   // processing.
   if (gwi.thd->derived_tables_processing)
   {
+    // Clean up work stacks even for derived table processing to prevent leaks
+    clearDeleteStacks(gwi);
     gwi.cs_vtable_is_update_with_derive = true;
     return -1;
   }
@@ -7126,7 +7130,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     if (funcFieldVec.size() != 0 && !gwi.fatalParseError)
     {
       string emsg("Fatal parse error in vtable mode: Unsupported Items in union or sub select unit");
-      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg);
+      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
       return ER_CHECK_NOT_IMPLEMENTED;
     }
   }

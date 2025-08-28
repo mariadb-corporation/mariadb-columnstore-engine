@@ -205,6 +205,7 @@ class SimpleColumn : public ReturnedColumn
   void unserialize(messageqcpp::ByteStream&) override;
 
   const std::string toString() const override;
+  const std::string toString(bool compact) const;
   std::string toCppCode(IncludeSet& includes) const override;
   /** @brief Do a deep, strict (as opposed to semantic) equivalence test
    *

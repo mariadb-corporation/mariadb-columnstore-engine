@@ -22,6 +22,7 @@
  ***********************************************************************/
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 using namespace std;
 
 #include <boost/uuid/uuid_io.hpp>
@@ -35,6 +36,9 @@ using namespace messageqcpp;
 #include "returnedcolumn.h"
 #include "simplecolumn.h"
 #include "querystats.h"
+#include "simplefilter.h"
+#include "operator.h"
+#include <boost/core/demangle.hpp>
 
 #include "querytele.h"
 #include "utils/pron/pron.h"
@@ -197,12 +201,140 @@ std::string endlWithIndent(const size_t ident)
 {
   ostringstream output;
   output << endl;
-  output << std::string(ident, ' ');
+
+  for (size_t i = 0; i < ident; i++)
+    output << " ";
+
   return output.str();
 }
 
+// Iterative tree printer that preserves vertical branches for multi-line nodes
+static void printIndentedFilterTreeImpl(const ParseTree* root, ostringstream& output, size_t indent,
+                                        const std::vector<bool>& rootAncestors, bool rootIsLast)
+{
+  // Stack holds frames: (node, ancestorHasNext, isLastAtLevel)
+  struct Frame
+  {
+    const ParseTree* node;
+    std::vector<bool> ancestors;
+    bool isLast;
+  };
+
+  std::vector<Frame> stack;
+  stack.push_back(Frame{root, rootAncestors, rootIsLast});
+
+  while (!stack.empty())
+  {
+    Frame frame = std::move(stack.back());
+    stack.pop_back();
+
+    const ParseTree* node = frame.node;
+    const std::vector<bool>& ancestorHasNext = frame.ancestors;
+    const bool isLastAtLevel = frame.isLast;
+
+    if (!node)
+    {
+      // Build prefix for a null placeholder
+      std::string base;
+      for (bool hasNext : ancestorHasNext)
+        base += hasNext ? "│   " : "    ";
+      std::string nodePrefix = base + (isLastAtLevel ? "└── " : "├── ");
+      output << endlWithIndent(indent) << nodePrefix << "(null)";
+      continue;
+    }
+
+    // Gather children in left-to-right order
+    std::vector<const ParseTree*> children;
+    if (node->left())
+      children.push_back(node->left());
+    if (node->right())
+      children.push_back(node->right());
+
+    // Helper to build prefixes
+    auto makePrefixes = [&](bool isLast)
+    {
+      std::string base;
+      for (bool hasNext : ancestorHasNext)
+        base += hasNext ? "│   " : "    ";
+      std::string first = base + (isLast ? "└── " : "├── ");
+      std::string cont = base + (isLast ? "    " : "│   ");
+      return std::pair<std::string, std::string>(first, cont);
+    };
+
+    // Build node content string
+    TreeNode* data = node->data();
+    std::string nodeContent;
+    if (data)
+    {
+      if (auto sf = dynamic_cast<SimpleFilter*>(data))
+      {
+        nodeContent = sf->toString(true);
+      }
+      else if (auto op = dynamic_cast<Operator*>(data))
+      {
+        nodeContent = op->toString();
+      }
+      else
+      {
+        nodeContent = boost::core::demangle(typeid(*data).name()) + ": " + data->toString();
+      }
+    }
+    else
+    {
+      nodeContent = "(null data)";
+    }
+
+    // Print current node content
+    if (ancestorHasNext.empty())
+    {
+      // Root: print without branch glyphs
+      std::istringstream contentStream(nodeContent);
+      std::string line;
+      while (std::getline(contentStream, line))
+        output << endlWithIndent(indent) << line;
+    }
+    else
+    {
+      auto prefixes = makePrefixes(isLastAtLevel);
+      std::istringstream contentStream(nodeContent);
+      std::string line;
+      bool firstLine = true;
+      while (std::getline(contentStream, line))
+      {
+        if (firstLine)
+        {
+          output << endlWithIndent(indent) << prefixes.first << line;
+          firstLine = false;
+        }
+        else
+        {
+          output << endlWithIndent(indent) << prefixes.second << line;
+        }
+      }
+    }
+
+    // Push children onto stack in reverse order to process left child first
+    for (size_t i = children.size(); i-- > 0;)
+    {
+      bool childIsLast = (i == children.size() - 1);
+      std::vector<bool> nextAncestors = ancestorHasNext;
+      // For children, push whether THIS node has a next sibling; this keeps the vertical bar under this node
+      // if we are not the last at our level.
+      nextAncestors.push_back(!isLastAtLevel);
+      stack.push_back(Frame{children[i], std::move(nextAncestors), childIsLast});
+    }
+  }
+}
+
+void printIndentedFilterTree(const ParseTree* tree, ostringstream& output, size_t indent)
+{
+  // Start with empty ancestor vector and indicate root is last at its (virtual) level
+  std::vector<bool> ancestors;  // empty => root
+  printIndentedFilterTreeImpl(tree, output, indent, ancestors, true);
+}
+
 void CalpontSelectExecutionPlan::printSubCSEP(const size_t& ident, ostringstream& output,
-                                           CalpontSelectExecutionPlan*& plan) const
+                                              CalpontSelectExecutionPlan*& plan) const
 {
   if (plan)
   {
@@ -243,7 +375,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   for (unsigned int i = 0; i < retCols.size(); i++)
   {
-    output << endlWithIndent(ident+2) << *retCols[i]; // WIP replace with constant
+    output << endlWithIndent(ident + 2) << *retCols[i];  // WIP replace with constant
 
     if (retCols[i]->colSource() & SELECT_SUB)
     {
@@ -257,7 +389,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   // From Clause
   CalpontSelectExecutionPlan::TableList tables = tableList();
-  output << endlWithIndent(ident) <<">>From Tables";
+  output << endlWithIndent(ident) << ">>From Tables";
   seq = 0;
 
   for (unsigned int i = 0; i < tables.size(); i++)
@@ -265,7 +397,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     // derived table
     if (tables[i].schema.length() == 0 && tables[i].table.length() == 0)
     {
-      output << endlWithIndent(ident+2) << "derived table - " << tables[i].alias;
+      output << endlWithIndent(ident + 2) << "derived table - " << tables[i].alias;
       CalpontSelectExecutionPlan* plan =
           dynamic_cast<CalpontSelectExecutionPlan*>(fDerivedTableList[seq++].get());
 
@@ -273,7 +405,7 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
     }
     else
     {
-      output << endlWithIndent(ident+2) << tables[i];
+      output << endlWithIndent(ident + 2) << tables[i];
     }
   }
 
@@ -282,8 +414,8 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
 
   if (filters() != nullptr)
   {
-    output << endlWithIndent(ident + 2);
-    filters()->walk(ParseTree::print, output);
+    output << endlWithIndent(ident + 2) << "Filter Tree:";
+    printIndentedFilterTree(filters(), output, ident + 4);
   }
   else
   {
@@ -308,8 +440,9 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
   // Having
   if (having() != nullptr)
   {
-    output << endlWithIndent(ident) << ">>Having" << endlWithIndent(ident + 2);
-    having()->walk(ParseTree::print, output);
+    output << endlWithIndent(ident) << ">>Having";
+    output << endlWithIndent(ident + 2) << "Having Tree:";
+    printIndentedFilterTree(having(), output, ident + 4);
   }
 
   // Order by columns
@@ -863,11 +996,12 @@ void CalpontSelectExecutionPlan::pron(std::string&& pron)
   fPron = pron;
 }
 
-// This routine doesn't copy derived table list, union vector, select subqueries, subquery list, and subselects.
+// This routine doesn't copy derived table list, union vector, select subqueries, subquery list, and
+// subselects.
 execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
 {
   execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
-  
+
   // Copy simple members
   newPlan->fLocalQuery = fLocalQuery;
   newPlan->fTableAlias = fTableAlias;
@@ -908,7 +1042,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   newPlan->fTimeZone = fTimeZone;
   newPlan->fPron = fPron;
   newPlan->fWithRollup = fWithRollup;
-  
+
   // Deep copy of ReturnedColumnList
   ReturnedColumnList newReturnedCols;
   for (const auto& col : fReturnedCols)
@@ -917,15 +1051,15 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newReturnedCols.push_back(SRCP(col->clone()));
   }
   newPlan->returnedCols(newReturnedCols);
-  
+
   // Deep copy of filters
   if (fFilters)
     newPlan->filters(new ParseTree(*fFilters));
-  
+
   // Deep copy of filter token list
   newPlan->filterTokenList(fFilterTokenList);
   newPlan->havingTokenList(fHavingTokenList);
-  
+
   // Deep copy of group by columns
   GroupByColumnList newGroupByCols;
   for (const auto& col : fGroupByCols)
@@ -934,11 +1068,11 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newGroupByCols.push_back(SRCP(col->clone()));
   }
   newPlan->groupByCols(newGroupByCols);
-  
+
   // Deep copy of having clause
   if (fHaving)
     newPlan->having(new ParseTree(*fHaving));
-  
+
   // Deep copy of order by columns
   OrderByColumnList newOrderByCols;
   for (const auto& col : fOrderByCols)
@@ -947,7 +1081,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newOrderByCols.push_back(SRCP(col->clone()));
   }
   newPlan->orderByCols(newOrderByCols);
-  
+
   // Deep copy of column map
   ColumnMap newColumnMap;
   for (const auto& entry : fColumnMap)
@@ -956,13 +1090,13 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
       newColumnMap.insert(ColumnMap::value_type(entry.first, SRCP(entry.second->clone())));
   }
   newPlan->columnMap(newColumnMap);
-  
+
   // Copy RM parameters
   newPlan->rmParms(frmParms);
-  
+
   // Deep copy of table list
   newPlan->tableList(fTableList);
-  
+
   return newPlan;
 }
 

@@ -1,0 +1,8 @@
+# Direct, top-level development/testing dependencies
+# Compile with: pip-compile --output-file=requirements-dev.txt requirements-dev.in
+
+pytest==8.3.5
+fabric==3.2.2
+# Tooling
+pip-tools
+

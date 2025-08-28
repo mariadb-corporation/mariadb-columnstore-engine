@@ -292,6 +292,26 @@ const string SimpleColumn::toString() const
   return output.str();
 }
 
+const string SimpleColumn::toString(bool compact) const
+{
+  if (!compact)
+  {
+    // Use the original detailed format
+    return toString();
+  }
+
+  ostringstream output;
+
+  // Compact format for tree display - let tree printer handle indentation
+  output << "Column: " << data();
+  datatypes::Charset cs(fResultType.charsetNumber);
+  output << endl
+         << "Info: " << schemaName() << "." << tableName() << "." << columnName()
+         << " (Type: " << colDataTypeToString(fResultType.colDataType) << ", OID: " << oid() << ")";
+
+  return output.str();
+}
+
 string SimpleColumn::toCppCode(IncludeSet& includes) const
 {
   includes.insert("simplecolumn.h");
