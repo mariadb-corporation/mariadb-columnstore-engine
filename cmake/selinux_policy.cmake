@@ -63,38 +63,3 @@ install(
     COMPONENT columnstore-engine
 )
 
-# Register RPM post-install and post-uninstall scripts for the component
-set(_selinux_post "${CMAKE_CURRENT_LIST_DIR}/../build/selinux_policy_rpm_post.sh")
-set(_selinux_postun "${CMAKE_CURRENT_LIST_DIR}/../build/selinux_policy_rpm_postun.sh")
-
-# POST_INSTALL: preserve existing script if set by wrapping it
-if(EXISTS "${_selinux_post}")
-    if(DEFINED CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE
-       AND CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE
-    )
-        set(_orig_post "${CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE}")
-        set(_wrap_post "${SELINUX_BUILD_DIR}/post_install_wrapper.sh")
-        file(WRITE "${_wrap_post}" "#!/bin/sh\n\n'${_orig_post}' \"$@\" || true\n'${_selinux_post}' \"$@\" || true\n")
-        execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x "${_wrap_post}")
-        set(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE "${_wrap_post}")
-    else()
-        set(CPACK_RPM_columnstore-engine_POST_INSTALL_SCRIPT_FILE "${_selinux_post}")
-    endif()
-endif()
-
-# POST_UNINSTALL: preserve existing script if set by wrapping it
-if(EXISTS "${_selinux_postun}")
-    if(DEFINED CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE
-       AND CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE
-    )
-        set(_orig_postun "${CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE}")
-        set(_wrap_postun "${SELINUX_BUILD_DIR}/post_uninstall_wrapper.sh")
-        file(WRITE "${_wrap_postun}"
-             "#!/bin/sh\n\n'${_orig_postun}' \"$@\" || true\n'${_selinux_postun}' \"$@\" || true\n"
-        )
-        execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x "${_wrap_postun}")
-        set(CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE "${_wrap_postun}")
-    else()
-        set(CPACK_RPM_columnstore-engine_POST_UNINSTALL_SCRIPT_FILE "${_selinux_postun}")
-    endif()
-endif()
