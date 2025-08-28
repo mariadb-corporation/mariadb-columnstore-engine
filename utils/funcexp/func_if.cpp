@@ -110,16 +110,12 @@ CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp,
   // The result type given by the connector may not be right if there's derived table (MySQL bug?)
   // We want to double check on our own.
   // If any parm is of string type, the result type should be string.
-  CalpontSystemCatalog::ColType ct1 = fp[1]->data()->resultType();
-  CalpontSystemCatalog::ColType ct2 = fp[2]->data()->resultType();
-  // Special handling for datetime types - if one parameter is datetime and the other
-  // could be NULL, prefer the datetime type
-  if (ct1.colDataType == CalpontSystemCatalog::CHAR ||
-      ct1.colDataType == CalpontSystemCatalog::VARCHAR ||
-      ct1.colDataType == CalpontSystemCatalog::TEXT ||
-      ct2.colDataType == CalpontSystemCatalog::CHAR ||
-      ct2.colDataType == CalpontSystemCatalog::TEXT ||
-      ct2.colDataType == CalpontSystemCatalog::VARCHAR)
+  if (fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+      fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR ||
+      fp[1]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
+      fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::CHAR ||
+      fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::TEXT ||
+      fp[2]->data()->resultType().colDataType == CalpontSystemCatalog::VARCHAR)
   {
     CalpontSystemCatalog::ColType ct;
     ct.colDataType = CalpontSystemCatalog::VARCHAR;
@@ -127,25 +123,10 @@ CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp,
     resultType = ct;
     return ct;
   }
-  else if (ct1.colDataType == CalpontSystemCatalog::DATETIME ||
-      ct1.colDataType == CalpontSystemCatalog::DATE ||
-      ct1.colDataType == CalpontSystemCatalog::TIME ||
-      ct1.colDataType == CalpontSystemCatalog::TIMESTAMP)
-  {
-    resultType = ct1;
-    return ct1;
-  }
-  else if (ct2.colDataType == CalpontSystemCatalog::DATETIME ||
-           ct2.colDataType == CalpontSystemCatalog::DATE ||
-           ct2.colDataType == CalpontSystemCatalog::TIME ||
-           ct2.colDataType == CalpontSystemCatalog::TIMESTAMP)
-  {
-    resultType = ct2;
-    return ct2;
-  }
-  CalpontSystemCatalog::ColType ct = ct1;
+
+  CalpontSystemCatalog::ColType ct = fp[1]->data()->resultType();
   PredicateOperator op;
-  op.setOpType(ct, ct2);
+  op.setOpType(ct, fp[2]->data()->resultType());
   ct = op.operationType();
   resultType = ct;
   return ct;

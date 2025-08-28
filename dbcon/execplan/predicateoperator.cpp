@@ -151,8 +151,8 @@ void PredicateOperator::setOpType(Type& l, Type& r)
       case execplan::CalpontSystemCatalog::DATE: fOperationType = l; break;
 
       default:
-        fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
-        fOperationType.colWidth = 8;
+        fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
+        fOperationType.colWidth = 255;
         break;
     }
   }
@@ -187,8 +187,8 @@ void PredicateOperator::setOpType(Type& l, Type& r)
       case execplan::CalpontSystemCatalog::DATE: fOperationType = r; break;
 
       default:
-        fOperationType.colDataType = execplan::CalpontSystemCatalog::DOUBLE;
-        fOperationType.colWidth = 8;
+        fOperationType.colDataType = execplan::CalpontSystemCatalog::VARCHAR;
+        fOperationType.colWidth = 255;
         break;
     }
   }
