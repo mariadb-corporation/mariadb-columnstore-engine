@@ -544,7 +544,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_LOG: "info",
                SCCACHE_ERROR_LOG: "/mdb/" + builddir + "/" + result + "/sccache.log",
                PATH: "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin",
-               BUILD_REPORT_DIR: "/drone/src/" + result,
+               BUILD_REPORT_DIR: "/mdb/" + builddir + "/" + result,
              },
 
              # errorprone if we pass --custom-cmake-flags twice, the last one will win
