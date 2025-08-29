@@ -1,10 +1,9 @@
-"""Async sibling of TracedSession"""
-
+"""Async sibling of TracedSession."""
 from typing import Any
 
 import aiohttp
 
-from cmapi_server.tracer import get_tracer
+from tracing.tracer import get_tracer
 
 
 class TracedAsyncSession(aiohttp.ClientSession):
@@ -23,10 +22,7 @@ class TracedAsyncSession(aiohttp.ClientSession):
         with tracer.start_as_current_span(span_name, kind="CLIENT") as span:
             span.set_attribute("http.method", method)
             span.set_attribute("http.url", url_text)
-            try:
-                tracer.inject_traceparent(headers)
-            except Exception:
-                pass
+            tracer.inject_outbound_headers(headers)
             try:
                 response = await super()._request(method, str_or_url, *args, **kwargs)
             except Exception as exc:
@@ -39,5 +35,6 @@ class TracedAsyncSession(aiohttp.ClientSession):
 
 def create_traced_async_session(**kwargs: Any) -> TracedAsyncSession:
     return TracedAsyncSession(**kwargs)
+
 
 

@@ -7,7 +7,7 @@ import cherrypy
 from cherrypy import _cperror
 
 from cmapi_server.constants import CMAPI_LOG_CONF_PATH
-from cmapi_server.tracer import get_tracer
+from tracing.tracer import get_tracer
 
 
 class AddIpFilter(logging.Filter):
@@ -27,13 +27,13 @@ def install_trace_record_factory() -> None:
 
     def factory(*args, **kwargs):  # type: ignore[no-untyped-def]
         record = current_factory(*args, **kwargs)
-        try:
-            trace_id, span_id, parent_span_id = get_tracer().current_trace_ids()
-            record.trace_params = (
-                f" rid={trace_id} sid={span_id} psid={parent_span_id}"
-            )
-        except Exception:
-            record.trace_params = " rid= sid= psid="
+        trace_id, span_id, parent_span_id = get_tracer().current_trace_ids()
+        if trace_id and span_id:
+            record.trace_params = f'rid={trace_id} sid={span_id}'
+            if parent_span_id:
+                record.trace_params += f' psid={parent_span_id}'
+        else:
+            record.trace_params = ""
         return record
 
     logging.setLogRecordFactory(factory)

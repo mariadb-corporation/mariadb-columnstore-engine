@@ -14,17 +14,18 @@ from typing import Optional
 
 import requests
 from lxml import etree
+from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
+    CMAPI_CONF_PATH,
+    CMAPI_SINGLE_NODE_XML,
+    DEFAULT_MCS_CONF_PATH,
+    LOCALHOSTS,
     MCS_DATA_PATH,
 )
-from cmapi_server.traced_session import get_traced_session
 from cmapi_server.managers.network import NetworkManager
-from cmapi_server.tracer import get_tracer
-from mcs_node_control.models.node_config import NodeConfig
-
+from tracing.traced_session import get_traced_session
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'

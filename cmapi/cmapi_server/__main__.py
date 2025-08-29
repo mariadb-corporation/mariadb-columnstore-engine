@@ -16,9 +16,11 @@ from cherrypy.process import plugins
 # TODO: fix dispatcher choose logic because code executing in endpoints.py
 #       while import process, this cause module logger misconfiguration
 from cmapi_server.logging_management import config_cmapi_server_logging
-from cmapi_server.sentry import maybe_init_sentry, register_sentry_cherrypy_tool
+from tracing.sentry import maybe_init_sentry
+from tracing.traceparent_backend import TraceparentBackend
+from tracing.tracer import get_tracer
 config_cmapi_server_logging()
-from cmapi_server.trace_tool import register_tracing_tools
+from tracing.trace_tool import register_tracing_tools
 
 from cmapi_server import helpers
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
@@ -143,10 +145,8 @@ if __name__ == '__main__':
     helpers.cmapi_config_check()
 
     register_tracing_tools()
-    # Init Sentry if DSN is present
-    sentry_active = maybe_init_sentry()
-    if sentry_active:
-        register_sentry_cherrypy_tool()
+    get_tracer().register_backend(TraceparentBackend())  # Register default tracing backend
+    maybe_init_sentry()  # Init Sentry if DSN is present
 
     CertificateManager.create_self_signed_certificate_if_not_exist()
     CertificateManager.renew_certificate()
@@ -159,8 +159,6 @@ if __name__ == '__main__':
         'tools.trace.on': True,
         'tools.trace_end.on': True,
     }
-    if sentry_active:
-        root_config["tools.sentry.on"] = True
 
     app.config.update({
         '/': root_config,

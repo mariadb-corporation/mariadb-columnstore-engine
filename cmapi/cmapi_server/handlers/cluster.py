@@ -4,21 +4,30 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from cmapi_server.traced_session import get_traced_session
+from mcs_node_control.models.misc import get_dbrm_master
+from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH,
+    CMAPI_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
-    broadcast_new_config, get_active_nodes, get_dbroots, get_config_parser,
-    get_current_key, get_version, update_revision_and_manager,
+    broadcast_new_config,
+    get_active_nodes,
+    get_config_parser,
+    get_current_key,
+    get_dbroots,
+    get_version,
+    update_revision_and_manager,
 )
 from cmapi_server.node_manipulation import (
-    add_node, add_dbroot, remove_node, switch_node_maintenance,
+    add_dbroot,
+    add_node,
+    remove_node,
+    switch_node_maintenance,
 )
-from mcs_node_control.models.misc import get_dbrm_master
-from mcs_node_control.models.node_config import NodeConfig
+from tracing.traced_session import get_traced_session
 
 
 class ClusterAction(Enum):
@@ -50,7 +59,7 @@ def toggle_cluster_state(
     broadcast_new_config(config, distribute_secrets=True)
 
 
-class ClusterHandler():
+class ClusterHandler:
     """Class for handling MCS Cluster operations."""
 
     @staticmethod

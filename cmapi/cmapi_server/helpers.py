@@ -19,8 +19,8 @@ from urllib.parse import urlencode, urlunparse
 import aiohttp
 import lxml.objectify
 import requests
-from cmapi_server.traced_session import get_traced_session
-from cmapi_server.traced_aiohttp import create_traced_async_session
+from tracing.traced_session import get_traced_session
+from tracing.traced_aiohttp import create_traced_async_session
 
 from cmapi_server.exceptions import CMAPIBasicError
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584

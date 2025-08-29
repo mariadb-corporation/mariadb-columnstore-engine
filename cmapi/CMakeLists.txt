@@ -72,6 +72,7 @@ install(
               cmapi_server
               engine_files
               mcs_cluster_tool
+              tracing
     DESTINATION ${CMAPI_DIR}
     USE_SOURCE_PERMISSIONS
     PATTERN "test" EXCLUDE
