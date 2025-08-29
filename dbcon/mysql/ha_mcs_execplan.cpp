@@ -892,6 +892,9 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
     }
   }
 
+  // Ensure temporary objects accumulated during planning are cleaned up on success
+  clearDeleteStacks(gwi);
+
   return 0;
 }
 
@@ -7420,6 +7423,9 @@ int cp_get_table_plan(THD* thd, SCSEP& csep, cal_table_info& ti, long timeZone)
 
   // @bug 3321. Set max number of blocks in a dictionary file to be scanned for filtering
   csep->stringScanThreshold(get_string_scan_threshold(gwi->thd));
+
+  // Always clear gp_walk_info work stacks on success, regardless of ownership
+  clearDeleteStacks(*gwi);
 
   if (allocated)
   {
