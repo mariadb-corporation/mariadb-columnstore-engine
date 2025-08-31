@@ -6208,23 +6208,24 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
        We therefore do not allow limit set to 1 here for such queries.
     */
     if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS &&
-        gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS &&
-        select_lex.master_unit()->global_parameters()->limit_params.explicit_limit)
+        gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS)
     {
-      if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
-      {
-        Item_int* offset =
-            (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
-        csep->limitStart(offset->val_int());
-      }
+      if (select_lex.master_unit()->global_parameters()->limit_params.explicit_limit) {
+        if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
+        {
+          Item_int* offset =
+              (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.offset_limit;
+          csep->limitStart(offset->val_int());
+        }
 
-      if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
-      {
-        Item_int* select =
-            (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
-        csep->limitNum(select->val_int());
-        // MCOL-894 Activate parallel ORDER BY
-        csep->orderByThreads(get_orderby_threads(gwi.thd));
+        if (select_lex.master_unit()->global_parameters()->limit_params.select_limit)
+        {
+          Item_int* select =
+              (Item_int*)select_lex.master_unit()->global_parameters()->limit_params.select_limit;
+          csep->limitNum(select->val_int());
+          // MCOL-894 Activate parallel ORDER BY
+          csep->orderByThreads(get_orderby_threads(gwi.thd));
+        }
       }
     }
   }
@@ -6878,82 +6879,85 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
     }
   }
 
-  // re-visit the first of ordercol list
-  ordercol = static_cast<ORDER*>(order_list.first);
-
-  for (; ordercol; ordercol = ordercol->next)
+  if (!unionSel)
   {
-    ReturnedColumn* rc = NULL;
+    // re-visit the first of ordercol list
+    ordercol = static_cast<ORDER*>(order_list.first);
 
-    if (ordercol->in_field_list && ordercol->counter_used)
+    for (; ordercol; ordercol = ordercol->next)
     {
-      rc = gwi.returnedCols[ordercol->counter - 1]->clone();
-      rc->orderPos(ordercol->counter - 1);
-      // can not be optimized off if used in order by with counter.
-      // set with self derived table alias if it's derived table
-      gwi.returnedCols[ordercol->counter - 1]->incRefCount();
-    }
-    else
-    {
-      Item* ord_item = *(ordercol->item);
+      ReturnedColumn* rc = NULL;
 
-      // ignore not_used column on order by.
-      if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
-          ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
+      if (ordercol->in_field_list && ordercol->counter_used)
       {
-        continue;
-      }
-      else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
-      {
-        // DRRTUY This section looks useless b/c there is no
-        // way to put constant INT into an ORDER BY list
-        rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
-      }
-      else if (ord_item->type() == Item::SUBSELECT_ITEM)
-      {
-        gwi.fatalParseError = true;
-      }
-      else if ((ord_item->type() == Item::FUNC_ITEM) &&
-               (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
-      {
-        push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
-                     "COLLATE is ignored in ColumnStore");
-        continue;
+        rc = gwi.returnedCols[ordercol->counter - 1]->clone();
+        rc->orderPos(ordercol->counter - 1);
+        // can not be optimized off if used in order by with counter.
+        // set with self derived table alias if it's derived table
+        gwi.returnedCols[ordercol->counter - 1]->incRefCount();
       }
       else
       {
-        rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+        Item* ord_item = *(ordercol->item);
 
-        rc = wrapIntoAggregate(rc, gwi, ord_item);
+        // ignore not_used column on order by.
+        if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
+            ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
+        {
+          continue;
+        }
+        else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
+        {
+          // DRRTUY This section looks useless b/c there is no
+          // way to put constant INT into an ORDER BY list
+          rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
+        }
+        else if (ord_item->type() == Item::SUBSELECT_ITEM)
+        {
+          gwi.fatalParseError = true;
+        }
+        else if ((ord_item->type() == Item::FUNC_ITEM) &&
+                 (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
+        {
+          push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
+                       "COLLATE is ignored in ColumnStore");
+          continue;
+        }
+        else
+        {
+          rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
+
+          rc = wrapIntoAggregate(rc, gwi, ord_item);
+        }
+        // @bug5501 try item_ptr if item can not be fixed. For some
+        // weird dml statement state, item can not be fixed but the
+        // infomation is available in item_ptr.
+        if (!rc || gwi.fatalParseError)
+        {
+          Item* item_ptr = ordercol->item_ptr;
+
+          while (item_ptr->type() == Item::REF_ITEM)
+            item_ptr = *(((Item_ref*)item_ptr)->ref);
+
+          rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
+        }
+
+        if (!rc)
+        {
+          string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+          gwi.parseErrorText = emsg;
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
       }
-      // @bug5501 try item_ptr if item can not be fixed. For some
-      // weird dml statement state, item can not be fixed but the
-      // infomation is available in item_ptr.
-      if (!rc || gwi.fatalParseError)
-      {
-        Item* item_ptr = ordercol->item_ptr;
 
-        while (item_ptr->type() == Item::REF_ITEM)
-          item_ptr = *(((Item_ref*)item_ptr)->ref);
+      if (ordercol->direction == ORDER::ORDER_ASC)
+        rc->asc(true);
+      else
+        rc->asc(false);
 
-        rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
-      }
-
-      if (!rc)
-      {
-        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-        gwi.parseErrorText = emsg;
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
+      gwi.orderByCols.push_back(SRCP(rc));
     }
-
-    if (ordercol->direction == ORDER::ORDER_ASC)
-      rc->asc(true);
-    else
-      rc->asc(false);
-
-    gwi.orderByCols.push_back(SRCP(rc));
   }
 
   // make sure columnmap, returnedcols and count(*) arg_list are not empty
