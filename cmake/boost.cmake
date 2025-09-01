@@ -62,9 +62,19 @@ ExternalProject_Add(
     UPDATE_COMMAND ""
     PATCH_COMMAND ${CMAKE_COMMAND} -E chdir <SOURCE_DIR> patch -p1 -i
                   ${CMAKE_SOURCE_DIR}/storage/columnstore/columnstore/cmake/boost.1.88.named_proxy.hpp.patch
-    BUILD_COMMAND ./b2 -q ${_b2args}
+    # Build Boost with b2 and "stage" artifacts into <BINARY_DIR>/stage/
+    # "stage" is a Boost.Build (b2) target that places the built libraries under
+    # stage/lib (and related dirs) without performing a full installation.
+    BUILD_COMMAND ./b2 -q ${_b2args} stage
     BUILD_IN_SOURCE TRUE
-    INSTALL_COMMAND ./b2 -q install ${_b2args}
+    # Install optimization: use tar streaming instead of thousands of per-file copies
+    # - Headers: copied from the Boost source tree (<SOURCE_DIR>/boost) to
+    #   ${INSTALL_LOCATION}/include via tar | tar pipeline to reduce syscall/log overhead
+    # - Libraries: copied from staged outputs (<BINARY_DIR>/stage/lib) to
+    #   ${INSTALL_LOCATION}/lib in one stream
+    # - CMake metadata (if present): copied from <BINARY_DIR>/stage/lib/cmake
+    # Result: significantly faster "install" step in CI while keeping CPU low (no compression)
+    INSTALL_COMMAND /bin/sh -c "mkdir -p '${INSTALL_LOCATION}/include' '${INSTALL_LOCATION}/lib' '${INSTALL_LOCATION}/lib/cmake' && tar -C '<SOURCE_DIR>' -cf - boost | tar -C '${INSTALL_LOCATION}/include' -xf - && tar -C '<BINARY_DIR>/stage/lib' -cf - . | tar -C '${INSTALL_LOCATION}/lib' -xf - && ( [ -d '<BINARY_DIR>/stage/lib/cmake' ] && tar -C '<BINARY_DIR>/stage/lib/cmake' -cf - . | tar -C '${INSTALL_LOCATION}/lib/cmake' -xf - || true )"
     ${LOG_BOOST_INSTEAD_OF_SCREEN}
     EXCLUDE_FROM_ALL TRUE
     ${byproducts}
