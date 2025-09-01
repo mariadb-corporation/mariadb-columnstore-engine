@@ -79,8 +79,8 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
       [&ctx](const auto& table)
       {
         cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
-        return (!table.isColumnstore() &&
-                ctx.getGwi().tableStatisticsMap.find(schemaAndTableName) != ctx.getGwi().tableStatisticsMap.end());
+        return (!table.isColumnstore() && ctx.getGwi().tableStatisticsMap.find(schemaAndTableName) !=
+                                              ctx.getGwi().tableStatisticsMap.end());
       });
 }
 

@@ -35,29 +35,61 @@ class RBOptimizerContext
 {
  public:
   RBOptimizerContext() = delete;
-  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules, uint cesOptimizationParallelFactor = 50)
-   : gwi_(walk_info), thd_(thd), logRules_(logRules), cesOptimizationParallelFactor_(cesOptimizationParallelFactor)
+  RBOptimizerContext(cal_impl_if::gp_walk_info& walk_info, THD& thd, bool logRules,
+                     uint cesOptimizationParallelFactor = 50)
+   : gwi_(walk_info)
+   , thd_(thd)
+   , logRules_(logRules)
+   , cesOptimizationParallelFactor_(cesOptimizationParallelFactor)
   {
   }
 
   // Accessors
-  cal_impl_if::gp_walk_info& getGwi() { return gwi_; }
-  THD& getThd() { return thd_; }
-  uint64_t getUniqueId() const { return uniqueId_; }
-  void incrementUniqueId() { ++uniqueId_; }
-  bool logRulesEnabled() const { return logRules_; }
-  uint getCesOptimizationParallelFactor() const { return cesOptimizationParallelFactor_; }
+  cal_impl_if::gp_walk_info& getGwi()
+  {
+    return gwi_;
+  }
+  THD& getThd()
+  {
+    return thd_;
+  }
+  uint64_t getUniqueId() const
+  {
+    return uniqueId_;
+  }
+  void incrementUniqueId()
+  {
+    ++uniqueId_;
+  }
+  bool logRulesEnabled() const
+  {
+    return logRules_;
+  }
+  uint getCesOptimizationParallelFactor() const
+  {
+    return cesOptimizationParallelFactor_;
+  }
 
   // Applied rules API
-  void addAppliedRule(const std::string& name) { appliedRules_.push_back(name); }
-  const std::vector<std::string>& getAppliedRules() const { return appliedRules_; }
-  bool hasAppliedRules() const { return !appliedRules_.empty(); }
+  void addAppliedRule(const std::string& name)
+  {
+    appliedRules_.push_back(name);
+  }
+  const std::vector<std::string>& getAppliedRules() const
+  {
+    return appliedRules_;
+  }
+  bool hasAppliedRules() const
+  {
+    return !appliedRules_.empty();
+  }
   std::string serializeAppliedRules() const
   {
     std::string out;
     for (size_t i = 0; i < appliedRules_.size(); ++i)
     {
-      if (i) out += ",";
+      if (i)
+        out += ",";
       out += appliedRules_[i];
     }
     return out;

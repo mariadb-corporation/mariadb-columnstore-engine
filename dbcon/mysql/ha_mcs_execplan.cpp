@@ -129,7 +129,6 @@ static void store_query_plan(execplan::SCSEP& csep, PlanType planType)
   }
 }
 
-
 static void store_applied_rules(const std::string rboRules)
 {
   cal_connection_info* ci = ensure_conn_info();

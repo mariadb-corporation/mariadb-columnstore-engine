@@ -978,8 +978,8 @@ extern "C"
       return 0;
     }
 
-    if (l > TraceSize)
-      l = TraceSize;
+    if (l > TraceSize * 100)
+      l = TraceSize * 100;
 
     *length = l;
     return out->c_str();
