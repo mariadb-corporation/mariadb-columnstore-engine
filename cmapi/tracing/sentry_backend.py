@@ -93,11 +93,6 @@ class SentryBackend(TracerBackend):
             scope.set_tag('http.method', method)
         if path:
             scope.set_tag('http.path', path)
-            # TODO: remove this
-            logger.info(
-                "Sentry transaction started name=%s sampled=%s",
-                name, getattr(transaction, 'sampled', None)
-            )
 
     @swallow_exceptions
     def on_request_finished(self, status_code: Optional[int]) -> None:
@@ -110,7 +105,5 @@ class SentryBackend(TracerBackend):
         transaction.__exit__(None, None, None)
         # Clear transaction in this context
         self._current_transaction.set(None)
-        # TODO: remove this
-        logger.info("Sentry transaction finished status=%s", status_code)
 
 

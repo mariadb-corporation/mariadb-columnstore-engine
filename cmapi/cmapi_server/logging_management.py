@@ -145,6 +145,7 @@ def config_cmapi_server_logging():
     # Ensure trace_params is available on every record
     install_trace_record_factory()
     dict_config(CMAPI_LOG_CONF_PATH)
+    disable_unwanted_loggers()
 
 
 def change_loggers_level(level: str):
@@ -160,3 +161,6 @@ def change_loggers_level(level: str):
     loggers.append(logging.getLogger())  # add RootLogger
     for logger in loggers:
         logger.setLevel(level)
+
+def disable_unwanted_loggers():
+    logging.getLogger("urllib3").setLevel(logging.WARNING)

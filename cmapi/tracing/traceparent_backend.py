@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from tracing.tracer import TracerBackend, TraceSpan
 from tracing.utils import swallow_exceptions
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("tracing")
 
 
 class TraceparentBackend(TracerBackend):
