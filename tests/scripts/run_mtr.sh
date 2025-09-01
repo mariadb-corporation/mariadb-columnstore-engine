@@ -23,6 +23,8 @@ optparse.define short=t long=test_full_name desc="Testname with suite as like bu
 optparse.define short=f long=full desc="Run full MTR" variable=RUN_FULL default=false value=true
 optparse.define short=r long=record desc="Record the result" variable=RECORD default=false value=true
 optparse.define short=e long=no-extern desc="Run with --extern" variable=EXTERN default=false value=true
+optparse.define short=c long=color desc="run with unbufer to colorize output" variable=UNBUFFER default=false value=true
+
 
 source $(optparse.build)
 
@@ -103,7 +105,11 @@ run_suite() {
 
     message "Running suite $SUITE_NAME with test $TEST_NAME and --extern=${EXTERN_EFFECTIVE}"
 
-    ./mtr --force $EXTERN_FLAG $RECORD_FLAG --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
+    if [[ $UNBUFFER == true ]]; then
+        UNBUFFER_PREFIX="unbuffer"
+    fi
+
+    $UNBUFFER_PREFIX ./mtr --force $EXTERN_FLAG $RECORD_FLAG --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
     # dump analyses.
     systemctl stop mariadb
     systemctl start mariadb
