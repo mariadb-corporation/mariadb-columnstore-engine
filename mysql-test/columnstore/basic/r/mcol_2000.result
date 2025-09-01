@@ -20,17 +20,17 @@ l date,
 m datetime,
 o time,
 s char(17) character set utf8,
-t varchar(17) character set utf8mb4,
+t varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
 w blob(10),
 x tinyblob,
 y blob,
 z mediumblob,
 aa longblob,
 bb text(17) character set utf8,
-cc tinytext character set utf8mb4,
-dd text character set utf8mb4,
-ee mediumtext character set utf8mb4,
-ff longtext character set utf8mb4
+cc tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+dd text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+ee mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+ff longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
 ) default charset=koi8r ENGINE=InnoDB;
 create table copy1 like orig;
 alter table copy1 engine=columnstore;
@@ -53,17 +53,17 @@ orig	CREATE TABLE `orig` (
   `m` datetime DEFAULT NULL,
   `o` time DEFAULT NULL,
   `s` char(17) CHARACTER SET utf8mb3 DEFAULT NULL,
-  `t` varchar(17) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `t` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `w` tinyblob DEFAULT NULL,
   `x` tinyblob DEFAULT NULL,
   `y` blob DEFAULT NULL,
   `z` mediumblob DEFAULT NULL,
   `aa` longblob DEFAULT NULL,
   `bb` tinytext CHARACTER SET utf8mb3 DEFAULT NULL,
-  `cc` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `dd` text CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ee` mediumtext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ff` longtext CHARACTER SET utf8mb4 DEFAULT NULL
+  `cc` tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `dd` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ee` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ff` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=koi8r
 show create table copy1;
 Table	Create Table
@@ -82,17 +82,17 @@ copy1	CREATE TABLE `copy1` (
   `m` datetime DEFAULT NULL,
   `o` time DEFAULT NULL,
   `s` char(17) CHARACTER SET utf8mb3 DEFAULT NULL,
-  `t` varchar(17) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `t` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `w` tinyblob DEFAULT NULL,
   `x` tinyblob DEFAULT NULL,
   `y` blob DEFAULT NULL,
   `z` mediumblob DEFAULT NULL,
   `aa` longblob DEFAULT NULL,
   `bb` tinytext CHARACTER SET utf8mb3 DEFAULT NULL,
-  `cc` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `dd` text CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ee` mediumtext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ff` longtext CHARACTER SET utf8mb4 DEFAULT NULL
+  `cc` tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `dd` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ee` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ff` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=koi8r
 show create table copy2;
 Table	Create Table
@@ -111,17 +111,17 @@ copy2	CREATE TABLE `copy2` (
   `m` datetime DEFAULT NULL,
   `o` time DEFAULT NULL,
   `s` char(17) CHARACTER SET utf8mb3 DEFAULT NULL,
-  `t` varchar(17) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `t` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `w` tinyblob DEFAULT NULL,
   `x` tinyblob DEFAULT NULL,
   `y` blob DEFAULT NULL,
   `z` mediumblob DEFAULT NULL,
   `aa` longblob DEFAULT NULL,
   `bb` tinytext CHARACTER SET utf8mb3 DEFAULT NULL,
-  `cc` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `dd` text CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ee` mediumtext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ff` longtext CHARACTER SET utf8mb4 DEFAULT NULL
+  `cc` tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `dd` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ee` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ff` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=koi8r
 show create table copy3;
 Table	Create Table
@@ -140,17 +140,17 @@ copy3	CREATE TABLE `copy3` (
   `m` datetime DEFAULT NULL,
   `o` time DEFAULT NULL,
   `s` char(17) DEFAULT NULL,
-  `t` varchar(17) CHARACTER SET utf8mb4 DEFAULT NULL,
+  `t` varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `w` tinyblob DEFAULT NULL,
   `x` tinyblob DEFAULT NULL,
   `y` blob DEFAULT NULL,
   `z` mediumblob DEFAULT NULL,
   `aa` longblob DEFAULT NULL,
   `bb` tinytext DEFAULT NULL,
-  `cc` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `dd` text CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ee` mediumtext CHARACTER SET utf8mb4 DEFAULT NULL,
-  `ff` longtext CHARACTER SET utf8mb4 DEFAULT NULL
+  `cc` tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `dd` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ee` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ff` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci
 drop table orig;
 drop table copy1;

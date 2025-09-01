@@ -46,17 +46,17 @@ create table orig (a integer not null,
                    m datetime,
                    o time,
                    s char(17) character set utf8,
-                   t varchar(17) character set utf8mb4,
+                   t varchar(17) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
                    w blob(10),
                    x tinyblob,
                    y blob,
                    z mediumblob,
                    aa longblob,
                    bb text(17) character set utf8,
-                   cc tinytext character set utf8mb4,
-                   dd text character set utf8mb4,
-                   ee mediumtext character set utf8mb4,
-                   ff longtext character set utf8mb4
+                   cc tinytext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+                   dd text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+                   ee mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+                   ff longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin
                    ) default charset=koi8r ENGINE=InnoDB;
 
 create table copy1 like orig;
