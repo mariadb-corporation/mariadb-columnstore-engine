@@ -1,9 +1,6 @@
 CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 DROP DATABASE IF EXISTS rbo_parallel_ces;
 CREATE DATABASE rbo_parallel_ces;
 USE rbo_parallel_ces;
