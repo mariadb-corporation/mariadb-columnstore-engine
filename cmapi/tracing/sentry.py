@@ -7,6 +7,7 @@ from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from tracing.sentry_backend import SentryBackend
 from tracing.tracer import get_tracer
+from cmapi_server.managers.application import AppManager
 
 SENTRY_ACTIVE = False
 
@@ -44,14 +45,24 @@ def maybe_init_sentry() -> bool:
             event_level=logging.ERROR,
         )
 
+        # Compose release string: cmapi-version(+shortrev)
+        version = AppManager.get_version()
+        shortrev = (AppManager.get_git_revision() or '').strip()
+        shortrev = shortrev[:12] if shortrev else ''
+        release = version if not shortrev else f"{version}+{shortrev}"
+
         sentry_sdk.init(
             dsn=dsn,
             environment=environment,
             sample_rate=1.0,
             traces_sample_rate=1.0,
             integrations=[sentry_logging],
-            debug=True,
+            release=release,
         )
+        # Add tags for easier filtering in Sentry
+        if shortrev:
+            sentry_sdk.set_tag("git_revision", shortrev)
+        sentry_sdk.set_tag("cmapi_version", version)
         SENTRY_ACTIVE = True
         # Register backend to mirror our internal spans into Sentry
         get_tracer().register_backend(SentryBackend())
