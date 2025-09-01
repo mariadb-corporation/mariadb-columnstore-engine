@@ -1,10 +1,8 @@
 #!/bin/bash
 
-
 SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../)
 MARIADB_SOURCE_PATH=$(realpath $SCRIPT_LOCATION/../../../../../)
-
 
 VERSION_GREATER_THAN_10=$(mariadb -N -s -e 'SELECT (sys.version_major(), sys.version_minor(), sys.version_patch()) >= (11, 4, 0);')
 
@@ -13,7 +11,6 @@ if [[ $VERSION_GREATER_THAN_10 == '1' ]]; then
     SERVERNAME="mariadb"
 fi
 
-
 COLUMNSTORE_MTR_SOURCE=$(realpath $COLUMNSTORE_SOURCE_PATH/mysql-test/columnstore)
 INSTALLED_MTR_PATH="/usr/share/${SERVERNAME}/${SERVERNAME}-test/"
 PATCHNAME=$(realpath $SCRIPT_LOCATION)/mtr_warn.patch
@@ -21,20 +18,27 @@ CURRENT_DIR=$(pwd)
 
 source $COLUMNSTORE_SOURCE_PATH/build/utils.sh
 
-
 optparse.define short=s long=suite desc="whole suite to run" variable=SUITE_NAME
 optparse.define short=t long=test_full_name desc="Testname with suite as like bugfixes.mcol-4899" variable=TEST_FULL_NAME default=""
 optparse.define short=f long=full desc="Run full MTR" variable=RUN_FULL default=false value=true
 optparse.define short=r long=record desc="Record the result" variable=RECORD default=false value=true
-optparse.define short=e long=no-extern desc="Run without --extern" variable=EXTERN default=true value=false
+optparse.define short=e long=no-extern desc="Run with --extern" variable=EXTERN default=false value=true
 
 source $(optparse.build)
+
+# Detect if the user explicitly specified -e/--no-extern
+EXTERN_SPECIFIED=false
+for arg in "$@"; do
+    if [[ "$arg" == "-e" || "$arg" == "--no-extern" ]]; then
+        EXTERN_SPECIFIED=true
+        break
+    fi
+done
 
 mariadb -e "create database if not exists test;"
 SOCKET=$(mariadb -e "show variables like 'socket';" | grep socket | cut -f2)
 
 export ASAN_OPTIONS=abort_on_error=1:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=1,detect_stack_use_after_return=1,atexit=false,log_path=/core/asan.hz
-
 
 # needed when run MTR tests locally, see mariadb-test-run.pl:417, mtr functions
 # are added to the database mtr only when --extern is not specified
@@ -69,21 +73,36 @@ if [[ -n $TEST_FULL_NAME ]]; then
     TEST_NAME="${TEST_FULL_NAME#*.}"
 fi
 
-
 run_suite() {
     ls /core >$CURRENT_DIR/mtr.$1.cores-before
 
-    if [[ $EXTERN == true ]]; then
+    # Decide effective extern per suite:
+    # - If user explicitly set --extern (-e), honor it for all suites
+    # - If not specified, force no extern for basic, bugfixes, and future suites
+    EXTERN_EFFECTIVE=$EXTERN
+    if [[ $EXTERN_SPECIFIED == false ]]; then
+        case "$1" in
+        basic | bugfixes | future)
+            EXTERN_EFFECTIVE=false
+            ;;
+        esac
+    fi
+
+    if [[ $EXTERN_EFFECTIVE == true ]]; then
         EXTERN_FLAG="--extern=socket=${SOCKET}"
     else
-        EXTERN_FLAG=""
+        EXTERN_FLAG="--mysqld=--plugin-load-add=ha_columnstore"
     fi
 
     if [[ $RECORD == true ]]; then
         RECORD_FLAG="--record"
+        warn "Test results are RECORDED"
     else
         RECORD_FLAG=""
     fi
+
+    message "Running suite $SUITE_NAME with test $TEST_NAME and --extern=${EXTERN_EFFECTIVE}"
+
     ./mtr --force $EXTERN_FLAG $RECORD_FLAG --max-test-fail=0 --testcase-timeout=60 --suite=columnstore/$1 $2 | tee $CURRENT_DIR/mtr.$1.log 2>&1
     # dump analyses.
     systemctl stop mariadb
@@ -95,7 +114,6 @@ run_suite() {
 }
 
 add_mtr_warn_functions
-
 
 if [[ $RUN_FULL == true ]]; then
     message "Running FULL MTR"
@@ -109,7 +127,6 @@ if [[ $RUN_FULL == true ]]; then
     run_suite oracle
     run_suite 1pmonly
 else
-    message "Running suite $SUITE_NAME with test $TEST_NAME"
     run_suite $SUITE_NAME $TEST_NAME
 fi
 

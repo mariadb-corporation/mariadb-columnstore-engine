@@ -1,96 +1,57 @@
---source ../include/have_columnstore.inc
---source include/have_innodb.inc
---source ../include/functions.inc
---source ../include/cross_engine.inc
-
-
-# -------------------------------------------------------------- #
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-# -------------------------------------------------------------- #
---exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
---exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
-# -------------------------------------------------------------- #
-# Create corresponding in the server
-# -------------------------------------------------------------- #
-
---disable_warnings
 CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
 FLUSH PRIVILEGES;
-
-
-
-
-
---disable_warnings
+CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+FLUSH PRIVILEGES;
 DROP DATABASE IF EXISTS rbo_parallel_ces;
---enable_warnings
-
 CREATE DATABASE rbo_parallel_ces;
 USE rbo_parallel_ces;
-
-# Turn on plan logging to capture CSEP strings
 SELECT calsettrace(1);
-
-# Test table in InnoDB (routed to ColumnStore via CES)
+calsettrace(1)
+0
 CREATE TABLE Ti (col1 INT, col2 INT, col3 INT) ENGINE=InnoDB;
-
-# Populate with 100 rows
 INSERT INTO Ti (col1, col2, col3)
 SELECT seq, seq+1, seq+2 FROM (SELECT seq FROM seq_1_to_100) AS numbers;
-
-# Generate statistics, limit histogram size
 SET @@histogram_size=10;
 ANALYZE TABLE Ti PERSISTENT FOR ALL;
-
-# Index to make basic stats available
+Table	Op	Msg_type	Msg_text
+rbo_parallel_ces.Ti	analyze	status	Engine-independent statistics collected
+rbo_parallel_ces.Ti	analyze	status	OK
 CREATE INDEX excellent_index ON Ti(col1);
-
-# Enable RBO
 SET @@columnstore_unstable_optimizer=ON;
 SET @@optimizer_switch='derived_merge=off';
-
-# First run with parallel factor 5
 SET @@columnstore_ces_optimization_parallel_factor=5;
-
-# Execute a query to build and store plans
 SELECT SUM(col1) FROM Ti;
-
-# Snapshot plans into variables for readability
+SUM(col1)
+5050
 SET @orig_plan := mcsgetplan('original');
 SET @opt_plan := mcsgetplan('optimized');
 SET @rbo_rules := mcsgetplan('rules');
-
-# Validate plan contents using stored plans
-# Count Union Units by looking for opening unit blocks after the marker '--- Union Unit ---'
 SET @uu_tail := SUBSTRING_INDEX(@orig_plan, '--- Union Unit ---', -1);
 SET @unit_open := CONCAT(CHAR(10),'    {',CHAR(10));
 SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_original;
-
+unions_original
+0.0000
 SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
 SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_5;
-
-# Ensure rule was applied
+unions_optimized_5
+5.0000
 SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
-
-# Increase factor to 15 but expect 10 unions due to histogram_size cap
+rule_parallel_ces_applied
+1
 SET @@columnstore_ces_optimization_parallel_factor=15;
-
-# Re-execute to rebuild plan with new factor
 SELECT SUM(col1) FROM Ti;
-
+SUM(col1)
+5050
 SET @opt_plan := mcsgetplan('optimized');
 SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
 SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_15;
-
-# Cleanup
+unions_optimized_15
+10.0000
 SELECT calsettrace(0);
+calsettrace(0)
+1
 DROP DATABASE rbo_parallel_ces;
-
---source ../include/drop_functions.inc
---source ../include/drop_cross_engine.inc
+REVOKE ALL PRIVILEGES ON *.* FROM 'cejuser'@'localhost';
+DROP USER 'cejuser'@'localhost';

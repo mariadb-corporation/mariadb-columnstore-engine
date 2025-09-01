@@ -4,6 +4,8 @@
 # -------------------------------------------------------------- #
 --exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
 --exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+--exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
+
 # -------------------------------------------------------------- #
 # Create corresponding in the server
 # -------------------------------------------------------------- #
