@@ -7,6 +7,11 @@ local servers = {
   [current_branch]: ["10.6-enterprise"],
 };
 
+local extra_servers = {
+  [current_branch]: ["11.4-enterprise"],
+};
+
+
 local platforms = {
   [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
@@ -19,12 +24,13 @@ local builddir = "verylongdirnameforverystrangecpackbehavior";
 
 local get_build_command(command) = "bash /mdb/" + builddir + "/storage/columnstore/columnstore/build/" + command + " ";
 
-local clang(version) = [get_build_command("install_clang_deb.sh " + version),
-                        get_build_command("update-clang-version.sh " + version + " 100"),
-                        get_build_command("install_libc++.sh " + version),
-                        "export CC=/usr/bin/clang",
-                        "export CXX=/usr/bin/clang++"
-                        ];
+local clang(version) = [
+  get_build_command("install_clang_deb.sh " + version),
+  get_build_command("update-clang-version.sh " + version + " 100"),
+  get_build_command("install_libc++.sh " + version),
+  "export CC=/usr/bin/clang",
+  "export CXX=/usr/bin/clang++",
+];
 
 local customEnvCommandsMap = {
   "clang-20": clang("20"),
@@ -36,9 +42,9 @@ local customEnvCommands(envkey, builddir) =
 
 
 local customBootstrapParamsForExisitingPipelines(envkey) =
-  # errorprone if we pass --custom-cmake-flags twice, the last one will win
+  // errorprone if we pass --custom-cmake-flags twice, the last one will win
   local customBootstrapMap = {
-    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+    //'ubuntu:24.04': "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
@@ -48,8 +54,8 @@ local customBootstrapParamsForAdditionalPipelinesMap = {
   TSAN: "--tsan",
   UBSan: "--ubsan",
   MSan: "--msan",
-  "libcpp": "--libcpp --skip-unit-tests",
-  "gcc-toolset": "--gcc-toolset-for-rocky-8"
+  libcpp: "--libcpp --skip-unit-tests",
+  "gcc-toolset": "--gcc-toolset-for-rocky-8",
 };
 
 local customBuildFlags(buildKey) =
@@ -91,9 +97,11 @@ local upgrade_test_lists = {
     },
 };
 
-local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link + "\\e]8;;\\e\\\\'";
-local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
-      make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
+local make_clickable_link(link) = "echo -e '\\e]8;;" + link + "\\e\\\\" + link + "\\e]8;;\\e\\\\'";
+local echo_running_on = [
+  "echo running on ${DRONE_STAGE_MACHINE}",
+  make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime"),
+];
 
 local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[]) = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
@@ -104,8 +112,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local brancht = if (branch == "**") then "" else branch + "-",
   local platformKey = std.strReplace(std.strReplace(platform, ":", ""), "/", "-"),
   local result = platformKey +
-     (if customBuildEnvCommandsMapKey != "" then "_" + customBuildEnvCommandsMapKey else "") +
-     (if customBootstrapParamsKey != "" then "_" + customBootstrapParamsKey else ""),
+                 (if customBuildEnvCommandsMapKey != "" then "_" + customBuildEnvCommandsMapKey else "") +
+                 (if customBootstrapParamsKey != "" then "_" + customBootstrapParamsKey else ""),
 
   local packages_url = "https://cspkg.s3.amazonaws.com/" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server,
   local publish_pkg_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result + "/",
@@ -140,19 +148,19 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "sleep 10",
       "ls -lR " + result,
 
-     //clean old versions of .deb/.rpm files
-     "source /mdb/" + builddir + "/storage/columnstore/columnstore/VERSION && " +
-     "CURRENT_VERSION=${COLUMNSTORE_VERSION_MAJOR}.${COLUMNSTORE_VERSION_MINOR}.${COLUMNSTORE_VERSION_PATCH} && " +
-     "aws s3 rm s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + "/ " +
-     "--recursive " +
-     "--exclude \"*\" " +
-     // include only debs/rpms with columnstore in names
-     "--include \"*columnstore*.deb\" " +
-     "--include \"*columnstore*.rpm\" " +
-     // but do not delete the ones matching CURRENT_VERSION
-     "--exclude \"*${CURRENT_VERSION}*.deb\" " +
-     "--exclude \"*${CURRENT_VERSION}*.rpm\" " +
-     "--only-show-errors",
+      //clean old versions of .deb/.rpm files
+      "source /mdb/" + builddir + "/storage/columnstore/columnstore/VERSION && " +
+      "CURRENT_VERSION=${COLUMNSTORE_VERSION_MAJOR}.${COLUMNSTORE_VERSION_MINOR}.${COLUMNSTORE_VERSION_PATCH} && " +
+      "aws s3 rm s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + "/ " +
+      "--recursive " +
+      '--exclude "*" ' +
+      // include only debs/rpms with columnstore in names
+      '--include "*columnstore*.deb" ' +
+      '--include "*columnstore*.rpm" ' +
+      // but do not delete the ones matching CURRENT_VERSION
+      '--exclude "*${CURRENT_VERSION}*.deb" ' +
+      '--exclude "*${CURRENT_VERSION}*.rpm" ' +
+      "--only-show-errors",
 
       "aws s3 sync " + result + "/" + " s3://cspkg/" + branchp + eventp + "/" + server + "/" + arch + "/" + result + " --only-show-errors",
       'echo "Data uploaded to: ' + publish_pkg_url + '"',
@@ -207,14 +215,14 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     " --result-path " + result +
     " --packages-url " + packages_url +
     " --do-setup " + std.toString(do_setup) +
-    (if result=="ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +
+    (if result == "ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +
     '"',
 
   local reportTestStage(containerName, result, stage) =
     'sh -c "apk add bash && ' + get_build_command("report_test_stage.sh") +
-    ' --container-name ' + containerName +
-    ' --result-path ' + result +
-    ' --stage ' + stage + '"',
+    " --container-name " + containerName +
+    " --result-path " + result +
+    " --stage " + stage + '"',
 
 
   _volumes:: {
@@ -235,7 +243,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true),
       get_build_command("run_smoke.sh") +
-      ' --container-name ' + getContainerName("smoke"),
+      " --container-name " + getContainerName("smoke"),
     ],
   },
   smokelog:: {
@@ -263,14 +271,15 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("upgrade") + version, result, false),
 
-      execInnerDocker('bash -c "./upgrade_setup_' + pkg_format + '.sh '
-          + version + ' '
-          + result + ' '
-          + arch + ' '
-          + repo_pkg_url_no_res
-          + ' $${UPGRADE_TOKEN}"',
+      execInnerDocker(
+        'bash -c "./upgrade_setup_' + pkg_format + ".sh "
+        + version + " "
+        + result + " "
+        + arch + " "
+        + repo_pkg_url_no_res
+        + ' $${UPGRADE_TOKEN}"',
         getContainerName("upgrade") + version
-      )
+      ),
     ],
   },
   upgradelog:: {
@@ -279,16 +288,16 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:28.2.2",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands:
-       ["echo"] +
-         std.map(
-           function(ver)
-             reportTestStage(
-               getContainerName("upgrade") + ver,
-               result,
-               "upgrade_" + ver
-             ),
-           mdb_server_versions
-         ),
+      ["echo"] +
+      std.map(
+        function(ver)
+          reportTestStage(
+            getContainerName("upgrade") + ver,
+            result,
+            "upgrade_" + ver
+          ),
+        mdb_server_versions
+      ),
     when: {
       status: ["success", "failure"],
     },
@@ -306,13 +315,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       prepareTestContainer(getContainerName("mtr"), result, true),
       'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
-      'apk add bash &&' +
+      "apk add bash &&" +
       get_build_command("run_mtr.sh") +
-      ' --container-name ' + getContainerName("mtr") +
-      ' --distro ' + platform +
-      ' --suite-list $${MTR_SUITE_LIST}' +
-      ' --triggering-event ' + event
-      + if std.endsWith(result, 'ASan') then ' --run-as-extern' else '',
+      " --container-name " + getContainerName("mtr") +
+      " --distro " + platform +
+      " --suite-list $${MTR_SUITE_LIST}" +
+      " --triggering-event " + event +
+      if std.endsWith(result, "ASan") then " --run-as-extern" else "",
     ],
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
@@ -331,7 +340,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
   },
-  regression(name, depends_on, ):: {
+  regression(name, depends_on,):: {
     name: name,
     depends_on: depends_on,
     image: "docker:git",
@@ -506,18 +515,18 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SERVER_SHA: "${SERVER_SHA:-" + server + "}",
              },
              commands: echo_running_on +
-             [
-              "echo $$SERVER_REF",
-               "echo $$SERVER_REMOTE",
-               "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
-               'git config --global url."https://github.com/".insteadOf git@github.com:',
-               'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
-               "git reset --hard $$SERVER_SHA",
-               "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
-               "git config cmake.update-submodules no",
-               "rm -rf storage/columnstore/columnstore",
-               "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore/columnstore",
-             ],
+                       [
+                         "echo $$SERVER_REF",
+                         "echo $$SERVER_REMOTE",
+                         "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
+                         'git config --global url."https://github.com/".insteadOf git@github.com:',
+                         'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+                         "git reset --hard $$SERVER_SHA",
+                         "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
+                         "git config cmake.update-submodules no",
+                         "rm -rf storage/columnstore/columnstore",
+                         "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore/columnstore",
+                       ],
            },
            {
              name: "build",
@@ -540,22 +549,22 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SCCACHE_S3_KEY_PREFIX: result + branch + server + arch,
              },
 
-             # errorprone if we pass --custom-cmake-flags twice, the last one will win
+             // errorprone if we pass --custom-cmake-flags twice, the last one will win
              commands: [
                          "mkdir /mdb/" + builddir + "/" + result,
                        ]
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
                        [
-                        'bash -c "set -o pipefail && ' +
+                         'bash -c "set -o pipefail && ' +
                          get_build_command("bootstrap_mcs.sh") +
                          "--build-type RelWithDebInfo " +
                          "--distro " + platform + " " +
                          "--build-packages --install-deps --sccache " +
                          "--build-path " + "/mdb/" + builddir + "/builddir " +
-                          " " + customBootstrapParamsForExisitingPipelines(platform) +
-                          " " + customBuildFlags(customBootstrapParamsKey) +
-                          " | " + get_build_command("ansi2txt.sh") +
-                          "/mdb/" + builddir + "/" + result + '/build.log "',
+                         " " + customBootstrapParamsForExisitingPipelines(platform) +
+                         " " + customBuildFlags(customBootstrapParamsKey) +
+                         " | " + get_build_command("ansi2txt.sh") +
+                         "/mdb/" + builddir + "/" + result + '/build.log "',
                        ],
            },
            {
@@ -636,59 +645,73 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 };
 
 
-local AllPipelines = [
-  Pipeline(b, p, e, a, s)
-  for b in std.objectFields(platforms)
-  for p in platforms[b]
-  for s in servers[b]
-  for e in events
-  for a in archs
-] +
-[
-  Pipeline(any_branch, p, "custom", a, server)
-  for p in platforms[current_branch]
-  for server in servers[current_branch]
-  for a in archs
-] +
-[
-  Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for buildenv in std.objectFields(customEnvCommandsMap)
-  for triggeringEvent in events
-  for server in servers[current_branch]
-] +
-// last argument is to ignore mtr and regression failures
-[
-  Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for flag in ["libcpp"]
-  for envcommand in ["clang-20"]
-  for triggeringEvent in events
-  for server in servers[current_branch]
-] +
-// last argument is to ignore mtr and regression failures
-[
-  Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["ubuntu:24.04"]
-  for flag in ["ASan", "UBSan"]
-  for triggeringEvent in events
-  for server in servers[current_branch]
-] +
-[
-  Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-  for a in ["amd64"]
-  for b in std.objectFields(platforms)
-  for platform in ["rockylinux:8"]
-  for flag in ["gcc-toolset"]
-  for triggeringEvent in events
-  for server in servers[current_branch]
-];
+local AllPipelines =
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["rockylinux:8"]
+    for flag in ["gcc-toolset"]
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ] +
+  [
+    Pipeline(b, p, e, a, s)
+    for b in std.objectFields(platforms)
+    for p in platforms[b]
+    for s in servers[b]
+    for e in events
+    for a in archs
+  ] +
+  [
+    Pipeline(any_branch, p, "custom", a, server)
+    for p in platforms[current_branch]
+    for server in servers[current_branch]
+    for a in archs
+  ] +
+  // clang
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["ubuntu:24.04"]
+    for buildenv in std.objectFields(customEnvCommandsMap)
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ] +
+  // last argument is to ignore mtr and regression failures
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression", "mtr"])
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["ubuntu:24.04", "rockylinux:9"]
+    for triggeringEvent in events
+    for server in extra_servers[current_branch]
+  ] +
+  // // last argument is to ignore mtr and regression failures
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["ubuntu:24.04"]
+    for flag in ["libcpp"]
+    for envcommand in ["clang-20"]
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ] +
+  // last argument is to ignore mtr and regression failures
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["ubuntu:24.04"]
+    for flag in ["ASan", "UBSan"]
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ] +
+
+  [];
+
 
 local FinalPipeline(branch, event) = {
   kind: "pipeline",
@@ -716,7 +739,6 @@ local FinalPipeline(branch, event) = {
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
   depends_on: std.map(function(p) p.name, AllPipelines),
 };
-
 
 
 AllPipelines +
