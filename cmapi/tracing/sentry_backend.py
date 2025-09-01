@@ -82,8 +82,10 @@ class SentryBackend(TracerBackend):
     @swallow_exceptions
     def on_incoming_request(self, headers: Dict[str, str], method: str, path: str) -> None:
         name = f"{method} {path}" if method or path else "http.server"
-        transaction = sentry_sdk.continue_trace(headers or {}, op='http.server', name=name)
-        # Store transaction in context var to ensure we can finish it later
+        # Continue from incoming headers, then START the transaction per SDK v2
+        continued = sentry_sdk.continue_trace(headers or {}, op='http.server', name=name)
+        transaction = sentry_sdk.start_transaction(transaction=continued)
+        # Store started transaction in context var and make current (enter)
         self._current_transaction.set(transaction)
         transaction.__enter__()
         scope = sentry_sdk.Hub.current.scope
