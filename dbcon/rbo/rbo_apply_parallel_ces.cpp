@@ -441,6 +441,8 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
   }
 
   {
+    derivedCSEP->tableAlias(tableAlias, true);
+
     auto additionalUnionVec = makeUnionFromTable(
         *derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
 

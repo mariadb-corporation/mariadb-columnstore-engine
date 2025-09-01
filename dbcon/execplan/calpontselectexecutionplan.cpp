@@ -1182,10 +1182,15 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObH
   // Deep copy of column map
   for (const auto& entry : fColumnMap)
   {
-    // WIP only relevant RCs must be copied
-    if (entry.second)
+    auto tableAlias = entry.second->singleTable();
+    // TODO We insert multiple times if there are multiple SCs for the same RC.
+    if (tableAlias && targetTableAlias.weakerEq(*tableAlias))
     {
-      newColumnMap.insert({entry.first, SRCP(entry.second->clone())});
+      auto it = fColumnMap.find(entry.first);
+      if (it == fColumnMap.end())
+      {
+        newColumnMap.insert({entry.first, SRCP(entry.second->clone())});
+      }
     }
   }
 
