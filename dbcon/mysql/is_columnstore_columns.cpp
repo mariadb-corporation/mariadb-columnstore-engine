@@ -62,11 +62,24 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   InformationSchemaCond isCond;
 
   execplan::CalpontSystemCatalog csc;
-  const std::vector<
-      std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >
-      catalog_tables = csc.getTables();
-
+  // Use FE path for syscat queries issued from mysqld
   csc.identity(execplan::CalpontSystemCatalog::FE);
+
+  std::vector<
+      std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >
+      catalog_tables;
+  try
+  {
+    catalog_tables = csc.getTables("", lower_case_table_names);
+  }
+  catch (IDBExcept&)
+  {
+    return 1;
+  }
+  catch (std::exception&)
+  {
+    return 1;
+  }
 
   if (cond)
   {

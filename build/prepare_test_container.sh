@@ -130,7 +130,8 @@ prepare_container() {
     if [[ "$RESULT" == *rocky* ]]; then
         execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
     else
-        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym'
+        #TODO think about server version!
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym mariadb-test-dbgsym '
     fi
 
     sleep 5
