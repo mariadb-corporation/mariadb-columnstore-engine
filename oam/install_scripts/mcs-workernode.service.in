@@ -13,7 +13,7 @@ LimitCORE=@CORE_DUMPS@
 
 Environment="@WORKERNODE_ALLOC_CONFIG@"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i
-ExecStopPre=@ENGINE_BINDIR@/mcs-prestop-workernode.sh
+ExecStop=/usr/bin/env bash -c "@ENGINE_BINDIR@/mcs-prestop-workernode.sh; /bin/kill -TERM $MAINPID"
 ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
 
