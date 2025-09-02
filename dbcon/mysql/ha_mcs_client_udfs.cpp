@@ -1006,21 +1006,6 @@ extern "C"
   {
   }
 
-  const char* calgetplan(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length, char* is_null,
-                         char* error)
-  {
-    return mcsgetplan(initid, args, result, length, is_null, error);
-  }
-
-  my_bool calgetplan_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
-  {
-    return mcsgetplan_init(initid, args, message);
-  }
-
-  void calgetplan_deinit(UDF_INIT* /*initid*/)
-  {
-  }
-
   my_bool getversion_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
