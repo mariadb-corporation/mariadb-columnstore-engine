@@ -35,6 +35,8 @@ using namespace querytele;
 #include "resourcemanager.h"
 #include "tupleunion.h"
 
+#include "m_string.h"
+
 using namespace std;
 using namespace std::tr1;
 using namespace boost;
@@ -124,20 +126,19 @@ namespace
 
   void normalizeIntToStringWithScale(const Row& in, Row* out, uint32_t i) 
   {
-    ostringstream os;
     double d = in.getIntField(i);
     d /= exp10(in.getScale(i));
-    os.precision(15);
-    os << d;
-    utils::NullString ns(os.str());
+    char buf[datatypes::INT128MAXPRECISION + 1];
+    my_bool error = 0;
+    auto len = my_gcvt(d, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
+    idbassert(error == 0 && len <= sizeof(buf));
+    utils::NullString ns(buf);
     out->setStringField(ns, i);
   }
 
   void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
-    ostringstream os;
-    os << in.getIntField(i);
-    utils::NullString ns(os.str());
+    utils::NullString ns(std::to_string(in.getIntField(i)));
     out->setStringField(ns, i);
   }
 
@@ -203,20 +204,19 @@ namespace
 
   void normalizeUintToStringWithScale(const Row& in, Row* out, uint32_t i) 
   {
-    ostringstream os;
     double d = in.getUintField(i);
     d /= exp10(in.getScale(i));
-    os.precision(15);
-    os << d;
-    utils::NullString ns(os.str());
+    char buf[datatypes::INT128MAXPRECISION + 1];
+    my_bool error = 0;
+    auto len = my_gcvt(d, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
+    idbassert(error == 0 && len <= sizeof(buf));
+    utils::NullString ns(buf);
     out->setStringField(ns, i);
   }
 
   void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i) 
   {
-    ostringstream os;
-    os << in.getUintField(i);
-    utils::NullString ns(os.str());
+    utils::NullString ns(std::to_string(in.getUintField(i)));
     out->setStringField(ns, i);
   }
 
@@ -514,20 +514,22 @@ namespace
   void normalizeXFloatToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
-    ostringstream os;
-    os.precision(15);  // to match mysql's output
-    os << val;
-    utils::NullString ns(os.str());
+    char buf[datatypes::INT128MAXPRECISION + 1];
+    my_bool error = 0;
+    auto len = my_gcvt(val, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
+    idbassert(error == 0 && len <= sizeof(buf));
+    utils::NullString ns(buf);
     out->setStringField(ns, i);
   }
 
   void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
-    ostringstream os;
-    os.precision(15);  // to match mysql's output
-    os << val;
-    utils::NullString ns(os.str());
+    char buf[datatypes::INT128MAXPRECISION + 1];
+    my_bool error = 0;
+    auto len = my_gcvt(val, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
+    idbassert(error == 0 && len <= sizeof(buf));
+    utils::NullString ns(buf);
     out->setStringField(ns, i);
   }
 
@@ -599,6 +601,7 @@ namespace
 
   void normalizeLongDoubleToString(const Row& in, Row* out, uint32_t i) 
   {
+    // FIXME: ostream output looks like '1.234e+56' while MDB output is '1.234e56'
     long double val = in.getLongDoubleField(i);
     ostringstream os;
     os.precision(15);  // to match mysql's output
