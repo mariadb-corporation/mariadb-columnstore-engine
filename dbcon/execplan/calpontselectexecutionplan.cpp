@@ -84,7 +84,7 @@ CalpontSelectExecutionPlan::CalpontSelectExecutionPlan(int location)
  , fLimitNum(-1)
  , fHasOrderBy(false)
  , fStringScanThreshold(ULONG_MAX)
- , fQueryType(SELECT)
+ , fQueryType(IDBQueryType::SELECT)
  , fPriority(querystats::DEFAULT_USER_PRIORITY_LEVEL)
  , fStringTableThreshold(20)
  , fOrderByThreads(1)
@@ -491,27 +491,20 @@ string CalpontSelectExecutionPlan::toString(const size_t ident) const
   return output.str();
 }
 
-string CalpontSelectExecutionPlan::queryTypeToString(const uint32_t queryType)
+string CalpontSelectExecutionPlan::queryTypeToString(const IDBQueryType queryType)
 {
   switch (queryType)
   {
-    case SELECT: return "SELECT";
-
-    case UPDATE: return "UPDATE";
-
-    case DELETE: return "DELETE";
-
-    case INSERT_SELECT: return "INSERT_SELECT";
-
-    case CREATE_TABLE: return "CREATE_TABLE";
-
-    case DROP_TABLE: return "DROP_TABLE";
-
-    case ALTER_TABLE: return "ALTER_TABLE";
-
-    case INSERT: return "INSERT";
-
-    case LOAD_DATA_INFILE: return "LOAD_DATA_INFILE";
+    case IDBQueryType::SELECT: return "SELECT";
+    case IDBQueryType::UPDATE: return "UPDATE";
+    case IDBQueryType::DELETE: return "DELETE";
+    case IDBQueryType::INSERT_SELECT: return "INSERT_SELECT";
+    case IDBQueryType::CREATE_TABLE: return "CREATE_TABLE";
+    case IDBQueryType::DROP_TABLE: return "DROP_TABLE";
+    case IDBQueryType::ALTER_TABLE: return "ALTER_TABLE";
+    case IDBQueryType::INSERT: return "INSERT";
+    case IDBQueryType::LOAD_DATA_INFILE: return "LOAD_DATA_INFILE";
+    case IDBQueryType::UNION: return "UNION";
   }
 
   return "UNKNOWN";

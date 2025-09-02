@@ -42,11 +42,7 @@ using namespace boost;
 #include "mcsanalyzetableexecutionplan.h"
 #include "calpontsystemcatalog.h"
 #include "dbrm.h"
-#include "filter.h"
 #include "simplefilter.h"
-#include "constantfilter.h"
-#include "existsfilter.h"
-#include "selectfilter.h"
 #include "returnedcolumn.h"
 #include "aggregatecolumn.h"
 #include "windowfunctioncolumn.h"
@@ -57,7 +53,6 @@ using namespace boost;
 #include "pseudocolumn.h"
 #include "simplecolumn.h"
 #include "rowcolumn.h"
-#include "treenodeimpl.h"
 #include "udafcolumn.h"
 using namespace execplan;
 
@@ -73,11 +68,9 @@ using namespace logging;
 #include "primitivestep.h"
 #include "jl_logger.h"
 #include "jlf_execplantojoblist.h"
-#include "rowaggregation.h"
 #include "tuplehashjoin.h"
 #include "tupleunion.h"
 #include "expressionstep.h"
-#include "tupleconstantstep.h"
 #include "tuplehavingstep.h"
 #include "windowfunctionstep.h"
 #include "tupleannexstep.h"
@@ -1944,6 +1937,43 @@ void makeAnalyzeTableJobSteps(MCSAnalyzeTableExecutionPlan* caep, JobInfo& jobIn
   }
 }
 
+void fixUnionExpressionCol(ParseTree* tree, void* obj)
+{
+  if (tree->left() || tree->right())
+  {
+    return;
+  }
+  auto* ac = dynamic_cast<ArithmeticColumn*>(tree->data());
+  if (ac && ac->expression())
+  {
+    ac->expression()->walk(fixUnionExpressionCol, obj);
+    ac->setSimpleColumnList();
+    return;
+  }
+  auto* fc = dynamic_cast<FunctionColumn*>(tree->data());
+  if (fc && !fc->functionParms().empty())
+  {
+    for (auto& parm : fc->functionParms())
+    {
+      parm->walk(fixUnionExpressionCol, obj);
+    }
+    fc->setSimpleColumnList();
+    return;
+  }
+  auto* csep = static_cast<CalpontSelectExecutionPlan*>(obj);
+  auto* rc = dynamic_cast<ReturnedColumn*>(tree->data());
+  if (rc)
+  {
+    if (dynamic_cast<ConstantColumn*>(rc) || rc->orderPos() == -1ull)
+    {
+      return;
+    }
+    auto* newrc = csep->returnedCols()[rc->orderPos()]->clone();
+    csep->returnedCols()[rc->orderPos()]->incRefCount();
+    tree->data(newrc);
+  }
+}
+
 }  // namespace
 
 namespace joblist
@@ -1985,43 +2015,6 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
   makeVtableModeSteps(csep, jobInfo, querySteps, projectSteps, deliverySteps);
 }
 
-void fixUnionExpressionCol(ParseTree* tree, void* obj)
-{
-  if (tree->left() || tree->right())
-  {
-    return;
-  }
-  auto* ac = dynamic_cast<ArithmeticColumn*>(tree->data());
-  if (ac && ac->expression())
-  {
-    ac->expression()->walk(fixUnionExpressionCol, obj);
-    ac->setSimpleColumnList();
-    return;
-  }
-  auto* fc = dynamic_cast<FunctionColumn*>(tree->data());
-  if (fc && !fc->functionParms().empty())
-  {
-    for (auto& parm : fc->functionParms())
-    {
-      parm->walk(fixUnionExpressionCol, obj);
-    }
-    fc->setSimpleColumnList();
-    return;
-  }
-  auto* csep = static_cast<CalpontSelectExecutionPlan*>(obj);
-  auto* rc = dynamic_cast<ReturnedColumn*>(tree->data());
-  if (rc)
-  {
-    if (dynamic_cast<ConstantColumn*>(rc) || rc->orderPos() == -1ull)
-    {
-      return;
-    }
-    auto* newrc = csep->returnedCols()[rc->orderPos()]->clone();
-    csep->returnedCols()[rc->orderPos()]->incRefCount();
-    tree->data(newrc);
-  }
-}
-
 void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVector& querySteps,
                        JobStepVector& /*projectSteps*/, DeliveredTableMap& deliverySteps)
 {
@@ -2030,7 +2023,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
   uint32_t unionRetColsCount = csep->returnedCols().size();
   JobStepVector unionFeeders;
 
-  std::decay_t<decltype(csep->orderByCols())> expOrderByCols;
+  std::remove_cv_t<std::remove_reference_t<decltype(csep->orderByCols())>> expOrderByCols;
   for (auto& obc : csep->orderByCols())
   {
     if (obc->orderPos() != -1ull)
@@ -2091,6 +2084,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
   uint16_t stepNo = jobInfo.subId * 10000;
   numberSteps(querySteps, stepNo, jobInfo.traceFlags);
   deliverySteps[execplan::CNX_VTABLE_ID] = unionStep;
+
   if (!csep->orderByCols().empty() || csep->limitStart() != 0 || csep->limitNum() != -1ull)
   {
     jobInfo.limitStart = csep->limitStart();
@@ -2139,45 +2133,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
     }
     doProject(csep->returnedCols(), jobInfo);
     checkReturnedColumns(csep, jobInfo);
-    auto* tas = new TupleAnnexStep(jobInfo);
-    jobInfo.annexStep.reset(tas);
-    tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
-    if (!jobInfo.orderByColVec.empty())
-    {
-      tas->addOrderBy(new LimitedOrderBy());
-      if (jobInfo.orderByThreads > 1)
-      {
-        tas->setParallelOp();
-      }
-      tas->setMaxThreads(jobInfo.orderByThreads);
-    }
-    auto* tds = dynamic_cast<TupleDeliveryStep*>(unionStep.get());
-    RowGroup rg = tds->getDeliveredRowGroup();
-
-    AnyDataListSPtr spdlIn(new AnyDataList());
-    RowGroupDL* dlIn;
-    if (!jobInfo.orderByColVec.empty())
-      dlIn = new RowGroupDL(jobInfo.orderByThreads, jobInfo.fifoSize);
-    else
-      dlIn = new RowGroupDL(1, jobInfo.fifoSize);
-    dlIn->OID(CNX_VTABLE_ID);
-    spdlIn->rowGroupDL(dlIn);
-    JobStepAssociation jsaIn;
-    jsaIn.outAdd(spdlIn);
-    dynamic_cast<JobStep*>(tds)->outputAssociation(jsaIn);
-    jobInfo.annexStep->inputAssociation(jsaIn);
-
-    AnyDataListSPtr spdlOut(new AnyDataList());
-    RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
-    dlOut->OID(CNX_VTABLE_ID);
-    spdlOut->rowGroupDL(dlOut);
-    JobStepAssociation jsaOut;
-    jsaOut.outAdd(spdlOut);
-    jobInfo.annexStep->outputAssociation(jsaOut);
-
-    querySteps.push_back(jobInfo.annexStep);
-    dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get())->initialize(rg, jobInfo);
-    deliverySteps[CNX_VTABLE_ID] = jobInfo.annexStep;
+    addAnnexStep(querySteps, deliverySteps, jobInfo, IDBQueryType::UNION);
   }
 }
 }  // namespace joblist

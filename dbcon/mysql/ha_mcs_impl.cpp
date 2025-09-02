@@ -30,8 +30,7 @@
 #include <sstream>
 #include <cerrno>
 #include <cstring>
-#include <time.h>
-#include <cassert>
+#include <ctime>
 #include <vector>
 #include <map>
 #include <limits>
@@ -41,7 +40,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread.hpp>
 
-#include "mcs_basic_types.h"
 #include "idb_mysql.h"
 
 #define NEED_CALPONT_INTERFACE
@@ -68,7 +66,6 @@ using namespace messageqcpp;
 
 #include "dmlpackage.h"
 #include "calpontdmlpackage.h"
-#include "insertdmlpackage.h"
 #include "vendordmlstatement.h"
 #include "calpontdmlfactory.h"
 using namespace dmlpackage;
@@ -88,28 +85,19 @@ using namespace BRM;
 #include "querystats.h"
 using namespace querystats;
 
-#include "calpontselectexecutionplan.h"
 #include "mcsanalyzetableexecutionplan.h"
 #include "calpontsystemcatalog.h"
 #include "simplecolumn_int.h"
 #include "simplecolumn_decimal.h"
-#include "aggregatecolumn.h"
 #include "constantcolumn.h"
 #include "simplefilter.h"
-#include "constantfilter.h"
-#include "functioncolumn.h"
-#include "arithmeticcolumn.h"
 #include "arithmeticoperator.h"
-#include "logicoperator.h"
 #include "predicateoperator.h"
 #include "rowcolumn.h"
-#include "selectfilter.h"
 using namespace execplan;
 
-#include "joblisttypes.h"
 using namespace joblist;
 
-#include "cacheutils.h"
 
 #include "errorcodes.h"
 #include "idberrorinfo.h"
@@ -118,13 +106,10 @@ using namespace logging;
 
 #include "resourcemanager.h"
 
-#include "funcexp.h"
 #include "functor.h"
 using namespace funcexp;
 
 #include "installdir.h"
-#include "columnstoreversion.h"
-#include "ha_mcs_sysvars.h"
 
 #include "ha_mcs_datatype.h"
 #include "statistics.h"
@@ -139,7 +124,7 @@ extern bool nonConstFunc(Item_func* ifp);
 
 void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
 {
-  for (auto& [schemaAndTableName, aColumnStatisticsMap]: aTableStatisticsMap)
+  for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatisticsMap)
   {
     auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
     if (tableStatisticsMapIt == tableStatisticsMap.end())
@@ -148,7 +133,7 @@ void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisti
     }
     else
     {
-      for (auto& [columnName, histogram]: aColumnStatisticsMap)
+      for (auto& [columnName, histogram] : aColumnStatisticsMap)
       {
         tableStatisticsMapIt->second[columnName] = histogram;
       }
@@ -156,7 +141,8 @@ void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisti
   }
 }
 
-std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(
+    SchemaAndTableName& schemaAndTableName)
 {
   auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
   if (tableStatisticsMapIt == tableStatisticsMap.end())
@@ -167,7 +153,7 @@ std::optional<ColumnStatisticsMap> gp_walk_info::findStatisticsForATable(SchemaA
   return {tableStatisticsMapIt->second};
 }
 
-}
+}  // namespace cal_impl_if
 
 namespace
 {
@@ -927,7 +913,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     Item_field* item;
     List_iterator_fast<Item> field_it(thd->lex->first_select_lex()->item_list);
     List_iterator_fast<Item> value_it(thd->lex->value_list);
-    updateCP->queryType(CalpontSelectExecutionPlan::UPDATE);
+    updateCP->queryType(IDBQueryType::UPDATE);
     ci->stats.fQueryType = updateCP->queryType();
     tr1::unordered_set<string> timeStampColumnNames;
 
@@ -1211,7 +1197,7 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
 #endif
   else
   {
-    updateCP->queryType(CalpontSelectExecutionPlan::DELETE);
+    updateCP->queryType(IDBQueryType::DELETE);
     ci->stats.fQueryType = updateCP->queryType();
   }
 
@@ -3383,11 +3369,13 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     }
 
     if ((thd->lex)->sql_command == SQLCOM_INSERT)
-      ci->stats.fQueryType =
-          CalpontSelectExecutionPlan::queryTypeToString(CalpontSelectExecutionPlan::INSERT);
+    {
+      ci->stats.fQueryType = CalpontSelectExecutionPlan::queryTypeToString(IDBQueryType::INSERT);
+    }
     else if ((thd->lex)->sql_command == SQLCOM_LOAD)
-      ci->stats.fQueryType =
-          CalpontSelectExecutionPlan::queryTypeToString(CalpontSelectExecutionPlan::LOAD_DATA_INFILE);
+    {
+      ci->stats.fQueryType = CalpontSelectExecutionPlan::queryTypeToString(IDBQueryType::LOAD_DATA_INFILE);
+    }
 
     //@Bug 4387. Check BRM status before start statement.
     boost::scoped_ptr<DBRM> dbrmp(new DBRM());

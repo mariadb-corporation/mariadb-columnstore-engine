@@ -8,7 +8,6 @@
 
 #include "errorids.h"
 #include "idberrorinfo.h"
-#include "exceptclasses.h"
 using namespace logging;
 
 #include "pseudocolumn.h"
@@ -423,7 +422,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
   if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
     return nullOnError(gwi, funcName);
 
-  SimpleColumn* sc = buildSimpleColumn(field, gwi, false);
+  SimpleColumn* sc = buildSimpleColumn(field, gwi);
 
   if (!sc)
     return nullOnError(gwi, funcName);

@@ -499,67 +499,7 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
     deliverySteps[CNX_VTABLE_ID] = ws;
   }
 
-  // TODO MCOL-894 we don't need to run sorting|distinct
-  // every time
-  //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
-  //            (jobInfo.constantCol == CONST_COL_EXIST) ||
-  //            (jobInfo.hasDistinct))
-  //    {
-  if (jobInfo.annexStep.get() == NULL)
-    jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
-
-  TupleAnnexStep* tas = dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get());
-  tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
-
-  if (jobInfo.orderByColVec.size() > 0)
-  {
-    tas->addOrderBy(new LimitedOrderBy());
-    if (jobInfo.orderByThreads > 1)
-      tas->setParallelOp();
-    tas->setMaxThreads(jobInfo.orderByThreads);
-  }
-
-  if (jobInfo.constantCol == CONST_COL_EXIST)
-    tas->addConstant(new TupleConstantStep(jobInfo));
-
-  if (jobInfo.hasDistinct)
-    tas->setDistinct();
-
-  //    }
-
-  if (jobInfo.annexStep)
-  {
-    TupleDeliveryStep* ds = dynamic_cast<TupleDeliveryStep*>(deliverySteps[CNX_VTABLE_ID].get());
-    RowGroup rg2 = ds->getDeliveredRowGroup();
-
-    if (jobInfo.trace)
-      cout << "Output RowGroup 2: " << rg2.toString() << endl;
-
-    AnyDataListSPtr spdlIn(new AnyDataList());
-    RowGroupDL* dlIn;
-    if (jobInfo.orderByColVec.size() > 0)
-      dlIn = new RowGroupDL(jobInfo.orderByThreads, jobInfo.fifoSize);
-    else
-      dlIn = new RowGroupDL(1, jobInfo.fifoSize);
-    dlIn->OID(CNX_VTABLE_ID);
-    spdlIn->rowGroupDL(dlIn);
-    JobStepAssociation jsaIn;
-    jsaIn.outAdd(spdlIn);
-    dynamic_cast<JobStep*>(ds)->outputAssociation(jsaIn);
-    jobInfo.annexStep->inputAssociation(jsaIn);
-
-    AnyDataListSPtr spdlOut(new AnyDataList());
-    RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
-    dlOut->OID(CNX_VTABLE_ID);
-    spdlOut->rowGroupDL(dlOut);
-    JobStepAssociation jsaOut;
-    jsaOut.outAdd(spdlOut);
-    jobInfo.annexStep->outputAssociation(jsaOut);
-
-    querySteps.push_back(jobInfo.annexStep);
-    dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get())->initialize(rg2, jobInfo);
-    deliverySteps[CNX_VTABLE_ID] = jobInfo.annexStep;
-  }
+  addAnnexStep(querySteps, deliverySteps, jobInfo);
 
   // Check if constant false
   if (jobInfo.constantFalse)
@@ -4407,6 +4347,78 @@ void makeNoTableJobStep(JobStepVector& querySteps, JobStepVector& projectSteps,
 
 namespace joblist
 {
+
+void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
+                  IDBQueryType queryType)
+{
+  // TODO MCOL-894 we don't need to run sorting|distinct
+  // every time
+  //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
+  //            (jobInfo.constantCol == CONST_COL_EXIST) ||
+  //            (jobInfo.hasDistinct))
+  //    {
+  if (!jobInfo.annexStep)
+  {
+    jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
+  }
+
+  auto* tas = dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get());
+  tas->setLimit(jobInfo.limitStart, jobInfo.limitCount);
+
+  if (!jobInfo.orderByColVec.empty())
+  {
+    tas->addOrderBy(new LimitedOrderBy());
+    if (jobInfo.orderByThreads > 1)
+      tas->setParallelOp();
+    tas->setMaxThreads(jobInfo.orderByThreads);
+  }
+
+  if (queryType != IDBQueryType::UNION)
+  {
+    if (jobInfo.constantCol == CONST_COL_EXIST)
+      tas->addConstant(new TupleConstantStep(jobInfo));
+
+    if (jobInfo.hasDistinct)
+      tas->setDistinct();
+  }
+  //    }
+
+  auto* tds = dynamic_cast<TupleDeliveryStep*>(deliverySteps[CNX_VTABLE_ID].get());
+  RowGroup rg = tds->getDeliveredRowGroup();
+
+  if (jobInfo.trace)
+    cout << "Output RowGroup 2: " << rg.toString() << endl;
+
+  AnyDataListSPtr spdlIn(new AnyDataList());
+  RowGroupDL* dlIn;
+  if (jobInfo.orderByColVec.empty())
+  {
+    dlIn = new RowGroupDL(1, jobInfo.fifoSize);
+  }
+  else
+  {
+    dlIn = new RowGroupDL(jobInfo.orderByThreads, jobInfo.fifoSize);
+  }
+  dlIn->OID(CNX_VTABLE_ID);
+  spdlIn->rowGroupDL(dlIn);
+  JobStepAssociation jsaIn;
+  jsaIn.outAdd(spdlIn);
+  dynamic_cast<JobStep*>(tds)->outputAssociation(jsaIn);
+  jobInfo.annexStep->inputAssociation(jsaIn);
+
+  AnyDataListSPtr spdlOut(new AnyDataList());
+  RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+  dlOut->OID(CNX_VTABLE_ID);
+  spdlOut->rowGroupDL(dlOut);
+  JobStepAssociation jsaOut;
+  jsaOut.outAdd(spdlOut);
+  jobInfo.annexStep->outputAssociation(jsaOut);
+
+  querySteps.push_back(jobInfo.annexStep);
+  dynamic_cast<TupleAnnexStep*>(jobInfo.annexStep.get())->initialize(rg, jobInfo);
+  deliverySteps[CNX_VTABLE_ID] = jobInfo.annexStep;
+}
+
 void associateTupleJobSteps(JobStepVector& querySteps, JobStepVector& projectSteps,
                             DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
                             const bool overrideLargeSideEstimate)

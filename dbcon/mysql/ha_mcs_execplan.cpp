@@ -60,7 +60,6 @@ using namespace logging;
 #include "ha_subquery.h"
 #include "ha_mcs_pushdown.h"
 #include "ha_tzinfo.h"
-#include "ha_mcs_logging.h"
 using namespace cal_impl_if;
 
 #include "aggregatecolumn.h"
@@ -70,7 +69,6 @@ using namespace cal_impl_if;
 #include "calpontsystemcatalog.h"
 #include "constantcolumn.h"
 #include "constantfilter.h"
-#include "existsfilter.h"
 #include "functioncolumn.h"
 #include "groupconcatcolumn.h"
 #include "intervalcolumn.h"
@@ -80,10 +78,8 @@ using namespace cal_impl_if;
 #include "rewrites.h"
 #include "rowcolumn.h"
 #include "rulebased_optimizer.h"
-#include "selectfilter.h"
 #include "simplecolumn_decimal.h"
 #include "simplecolumn_int.h"
-#include "simplecolumn_uint.h"
 #include "simplefilter.h"
 #include "udafcolumn.h"
 using namespace execplan;
@@ -2736,7 +2732,7 @@ ReturnedColumn* buildReturnedColumnNull(gp_walk_info& gwi)
 }
 
 ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& nonSupport, bool /*isRefItem*/,
-                                        bool isUnion)
+                                        IDBQueryType queryType)
 {
   ReturnedColumn* rc = NULL;
 
@@ -2758,7 +2754,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
     {
       Item_field* ifp = (Item_field*)item;
 
-      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi, isUnion), gwi, ifp);
+      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi, queryType), gwi, ifp);
     }
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
     case Item::CONST_ITEM:
@@ -2797,10 +2793,10 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       }
 
       if (func_name == "+" || func_name == "-" || func_name == "*" || func_name == "/")
-        return buildArithmeticColumn(ifp, gwi, nonSupport, isUnion);
+        return buildArithmeticColumn(ifp, gwi, nonSupport, queryType);
       else
       {
-        return buildFunctionColumn(ifp, gwi, nonSupport, false, isUnion);
+        return buildFunctionColumn(ifp, gwi, nonSupport, false, queryType);
       }
     }
 
@@ -2817,13 +2813,13 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
       {
         case Item::SUM_FUNC_ITEM: return buildAggregateColumn(*(ref->ref), gwi);
 
-        case Item::FIELD_ITEM: return buildReturnedColumn(*(ref->ref), gwi, nonSupport, false, isUnion);
+        case Item::FIELD_ITEM: return buildReturnedColumn(*(ref->ref), gwi, nonSupport, false, queryType);
 
         case Item::REF_ITEM:
-          return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport, false, isUnion);
+          return buildReturnedColumn(*(((Item_ref*)(*(ref->ref)))->ref), gwi, nonSupport, false, queryType);
 
         case Item::FUNC_ITEM:
-          return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport, false, isUnion);
+          return buildFunctionColumn((Item_func*)(*(ref->ref)), gwi, nonSupport, false, queryType);
 
         case Item::WINDOW_FUNC_ITEM: return buildWindowFunctionColumn(*(ref->ref), gwi, nonSupport);
 
@@ -2835,7 +2831,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
         default:
           if (ref->ref_type() == Item_ref::DIRECT_REF)
           {
-            return buildReturnedColumn(ref->real_item(), gwi, nonSupport, false, isUnion);
+            return buildReturnedColumn(ref->real_item(), gwi, nonSupport, false, queryType);
           }
           gwi.fatalParseError = true;
           gwi.parseErrorText = "Unknown REF item";
@@ -2925,11 +2921,11 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
   return rc;
 }
 ReturnedColumn* buildReturnedColumn(Item* item, gp_walk_info& gwi, bool& nonSupport, bool isRefItem,
-                                    bool isUnion)
+                                    IDBQueryType queryType)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
-  ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem, isUnion);
+  ReturnedColumn* rc = buildReturnedColumnBody(item, gwi, nonSupport, isRefItem, queryType);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
@@ -2963,7 +2959,8 @@ ReturnedColumn* buildBooleanConstantColumn(Item* item, gp_walk_info& gwi, bool& 
   return cc;
 }
 
-ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
+ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
+                                          IDBQueryType queryType)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -2992,7 +2989,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
     if (gwi.clauseType == SELECT || /*gwi.clauseType == HAVING || */ gwi.clauseType == GROUP_BY ||
         gwi.clauseType == FROM)  // select list
     {
-      lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
+      lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType));
 
       if (!lhs->data() && (sfitempp[0]->type() == Item::FUNC_ITEM))
       {
@@ -3007,12 +3004,12 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
         gwi.fatalParseError = false;
 
         // ReturnedColumn* rc = buildAggFrmTempField(sfitempp[0], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType);
         if (rc)
           lhs = new ParseTree(rc);
       }
 
-      rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
+      rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, queryType));
 
       if (!rhs->data() && (sfitempp[1]->type() == Item::FUNC_ITEM))
       {
@@ -3027,7 +3024,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
         gwi.fatalParseError = false;
 
         // ReturnedColumn* rc = buildAggFrmTempField(sfitempp[1], gwi);
-        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion);
+        ReturnedColumn* rc = buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, queryType);
         if (rc)
           rhs = new ParseTree(rc);
       }
@@ -3038,7 +3035,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.ptWorkStack.empty())
         {
-          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
+          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, queryType));
         }
         else
         {
@@ -3050,7 +3047,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.rcWorkStack.empty())
         {
-          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, isUnion));
+          rhs = new ParseTree(buildReturnedColumn(sfitempp[1], gwi, nonSupport, false, queryType));
         }
         else
         {
@@ -3063,7 +3060,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.ptWorkStack.empty())
         {
-          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
+          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType));
         }
         else
         {
@@ -3075,7 +3072,7 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
       {
         if (gwi.rcWorkStack.empty())
         {
-          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
+          lhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType));
         }
         else
         {
@@ -3108,13 +3105,13 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
 
     if (gwi.clauseType == SELECT || gwi.clauseType == HAVING || gwi.clauseType == GROUP_BY)  // select clause
     {
-      rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
+      rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType));
     }
     else
     {
       if (gwi.rcWorkStack.empty())
       {
-        rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, isUnion));
+        rhs = new ParseTree(buildReturnedColumn(sfitempp[0], gwi, nonSupport, false, queryType));
       }
       else
       {
@@ -3236,17 +3233,18 @@ ReturnedColumn* buildArithmeticColumnBody(Item_func* item, gp_walk_info& gwi, bo
   }
   return ac;
 }
-ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
+ReturnedColumn* buildArithmeticColumn(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
+                                      IDBQueryType queryType)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(item, gwi);
-  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport, isUnion);
+  ReturnedColumn* rc = buildArithmeticColumnBody(item, gwi, nonSupport, queryType);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
 ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport,
-                                        bool selectBetweenIn, bool isUnion)
+                                        bool selectBetweenIn, IDBQueryType queryType)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -3309,12 +3307,12 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   // Arithmetic exp
   if (funcName == "+" || funcName == "-" || funcName == "*" || funcName == "/")
   {
-    return buildArithmeticColumn(ifp, gwi, nonSupport, isUnion);
+    return buildArithmeticColumn(ifp, gwi, nonSupport, queryType);
   }
 
   else if (funcName == "case")
   {
-    fc = buildCaseFunction(ifp, gwi, nonSupport, isUnion);
+    fc = buildCaseFunction(ifp, gwi, nonSupport, queryType);
   }
 
   else if ((funcName == "charset" || funcName == "collation") && ifp->argument_count() == 1 &&
@@ -3489,7 +3487,7 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
           rc = buildBooleanConstantColumn(ifp->arguments()[i], gwi, nonSupport);
         else
         {
-          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, false, isUnion);
+          rc = buildReturnedColumn(ifp->arguments()[i], gwi, nonSupport, false, queryType);
         }
 
         // MCOL-1510 It must be a temp table field, so find the corresponding column.
@@ -3857,16 +3855,17 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
   return fc;
 }
 ReturnedColumn* buildFunctionColumn(Item_func* ifp, gp_walk_info& gwi, bool& nonSupport, bool selectBetweenIn,
-                                    bool isUnion)
+                                    IDBQueryType queryType)
 {
   bool disableWrapping = gwi.disableWrapping;
   gwi.disableWrapping = gwi.disableWrapping || itemDisablesWrapping(ifp, gwi);
-  ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn, isUnion);
+  ReturnedColumn* rc = buildFunctionColumnBody(ifp, gwi, nonSupport, selectBetweenIn, queryType);
   gwi.disableWrapping = disableWrapping;
   return rc;
 }
 
-FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport, bool isUnion)
+FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonSupport,
+                                  IDBQueryType queryType)
 {
   if (get_fe_conn_info_ptr() == NULL)
   {
@@ -3949,7 +3948,7 @@ FunctionColumn* buildCaseFunction(Item_func* item, gp_walk_info& gwi, bool& nonS
       // rwWorkStack or ptWorkStack.
       // For example, simple predicates, such as 1=1 or 1=0, land in the
       // ptWorkStack but other stuff might land in the rwWorkStack
-      ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport, false, isUnion);
+      ReturnedColumn* parm = buildReturnedColumn(item->arguments()[i], gwi, nonSupport, false, queryType);
 
       if (parm)
       {
@@ -4089,7 +4088,7 @@ ConstantColumn* buildDecimalColumn(const Item* idp, const std::string& valStr, g
   return cc;
 }
 
-SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi, bool isUnion)
+SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi, IDBQueryType queryType)
 {
   if (!gwi.csc)
   {
@@ -4104,7 +4103,7 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi, bool isUnion
       strcmp(ifp->cached_table->db.str, "information_schema") == 0)
     isInformationSchema = true;
 
-  if (isUnion && !isInformationSchema)
+  if (queryType == IDBQueryType::UNION && !isInformationSchema)
   {
     auto* rc = gwi.returnedCols[ifp->field->field_index]->clone();
     rc->orderPos(ifp->field->field_index);
@@ -4569,7 +4568,7 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
           case Item::FIELD_ITEM:
           {
             Item_field* ifp = static_cast<Item_field*>(sfitemp);
-            SimpleColumn* sc = buildSimpleColumn(ifp, gwi, false);
+            SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
             if (!sc)
             {
@@ -5686,7 +5685,7 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
     {
       Item_field* ifp = (Item_field*)groupItem;
       // this GB col could be an alias of F&E on the SELECT clause, not necessarily a field.
-      ReturnedColumn* rc = buildSimpleColumn(ifp, gwi, false);
+      ReturnedColumn* rc = buildSimpleColumn(ifp, gwi);
       SimpleColumn* sc = dynamic_cast<SimpleColumn*>(rc);
 
       if (sc)
@@ -6210,7 +6209,8 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
     if (gwi.subSelectType != CalpontSelectExecutionPlan::IN_SUBS &&
         gwi.subSelectType != CalpontSelectExecutionPlan::EXISTS_SUBS)
     {
-      if (select_lex.master_unit()->global_parameters()->limit_params.explicit_limit) {
+      if (select_lex.master_unit()->global_parameters()->limit_params.explicit_limit)
+      {
         if (select_lex.master_unit()->global_parameters()->limit_params.offset_limit)
         {
           Item_int* offset =
@@ -6434,7 +6434,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
           collectAllCols(gwi, ifp);
           break;
         }
-        SimpleColumn* sc = buildSimpleColumn(ifp, gwi, false);
+        SimpleColumn* sc = buildSimpleColumn(ifp, gwi);
 
         if (sc)
         {
@@ -6840,6 +6840,85 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
   return 0;
 }
 
+int processOrderByCol(const ORDER* ordercol, gp_walk_info& gwi, IDBQueryType queryType = IDBQueryType::SELECT)
+{
+  ReturnedColumn* rc = nullptr;
+
+  if (ordercol->in_field_list && (ordercol->counter_used || ((*ordercol->item)->type() == Item::FIELD_ITEM &&
+                                                             queryType == IDBQueryType::UNION)))
+  {
+    auto* ifp = dynamic_cast<Item_field*>(*ordercol->item);
+    auto pos = ordercol->counter_used ? ordercol->counter - 1 : ifp->field->field_index;
+    rc = gwi.returnedCols[pos]->clone();
+    rc->orderPos(pos);
+    // can not be optimized off if used in order by with counter.
+    // set with self derived table alias if it's derived table
+    gwi.returnedCols[pos]->incRefCount();
+  }
+  else
+  {
+    Item* ord_item = *ordercol->item;
+
+    // ignore not_used column on order by.
+    if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
+        ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
+    {
+      return 0;
+    }
+    else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
+    {
+      // DRRTUY This section looks useless b/c there is no
+      // way to put constant INT into an ORDER BY list
+      rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
+    }
+    else if (ord_item->type() == Item::SUBSELECT_ITEM)
+    {
+      gwi.fatalParseError = true;
+    }
+    else if ((ord_item->type() == Item::FUNC_ITEM) &&
+             (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
+    {
+      push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
+                   "COLLATE is ignored in ColumnStore");
+      return 0;
+    }
+    else
+    {
+      rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError, false, queryType);
+
+      rc = wrapIntoAggregate(rc, gwi, ord_item);
+    }
+    // @bug5501 try item_ptr if item can not be fixed. For some
+    // weird dml statement state, item can not be fixed but the
+    // infomation is available in item_ptr.
+    if (!rc || gwi.fatalParseError)
+    {
+      Item* item_ptr = ordercol->item_ptr;
+
+      while (item_ptr->type() == Item::REF_ITEM)
+        item_ptr = *((Item_ref*)item_ptr)->ref;
+
+      rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError, false, queryType);
+    }
+
+    if (!rc)
+    {
+      string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
+      gwi.parseErrorText = emsg;
+      setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
+      return ER_CHECK_NOT_IMPLEMENTED;
+    }
+  }
+
+  if (ordercol->direction == ORDER::ORDER_ASC)
+    rc->asc(true);
+  else
+    rc->asc(false);
+
+  gwi.orderByCols.emplace_back(rc);
+  return 0;
+}
+
 /*@brief  Process ORDER BY part of a query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -6886,77 +6965,11 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 
     for (; ordercol; ordercol = ordercol->next)
     {
-      ReturnedColumn* rc = NULL;
-
-      if (ordercol->in_field_list && ordercol->counter_used)
+      if (auto ret = processOrderByCol(ordercol, gwi); ret != 0)
       {
-        rc = gwi.returnedCols[ordercol->counter - 1]->clone();
-        rc->orderPos(ordercol->counter - 1);
-        // can not be optimized off if used in order by with counter.
-        // set with self derived table alias if it's derived table
-        gwi.returnedCols[ordercol->counter - 1]->incRefCount();
+        // Errors have already been reported.
+        return ret;
       }
-      else
-      {
-        Item* ord_item = *(ordercol->item);
-
-        // ignore not_used column on order by.
-        if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
-            ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
-        {
-          continue;
-        }
-        else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
-        {
-          // DRRTUY This section looks useless b/c there is no
-          // way to put constant INT into an ORDER BY list
-          rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
-        }
-        else if (ord_item->type() == Item::SUBSELECT_ITEM)
-        {
-          gwi.fatalParseError = true;
-        }
-        else if ((ord_item->type() == Item::FUNC_ITEM) &&
-                 (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
-        {
-          push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
-                       "COLLATE is ignored in ColumnStore");
-          continue;
-        }
-        else
-        {
-          rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError);
-
-          rc = wrapIntoAggregate(rc, gwi, ord_item);
-        }
-        // @bug5501 try item_ptr if item can not be fixed. For some
-        // weird dml statement state, item can not be fixed but the
-        // infomation is available in item_ptr.
-        if (!rc || gwi.fatalParseError)
-        {
-          Item* item_ptr = ordercol->item_ptr;
-
-          while (item_ptr->type() == Item::REF_ITEM)
-            item_ptr = *(((Item_ref*)item_ptr)->ref);
-
-          rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError);
-        }
-
-        if (!rc)
-        {
-          string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-          gwi.parseErrorText = emsg;
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
-        }
-      }
-
-      if (ordercol->direction == ORDER::ORDER_ASC)
-        rc->asc(true);
-      else
-        rc->asc(false);
-
-      gwi.orderByCols.push_back(SRCP(rc));
     }
   }
 
@@ -7042,80 +7055,11 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 
       for (; ordercol; ordercol = ordercol->next)
       {
-        ReturnedColumn* rc = NULL;
-
-        if (ordercol->in_field_list && ordercol->item &&
-            (ordercol->counter_used || (*ordercol->item)->type() == Item::FIELD_ITEM))
+        if (auto ret = processOrderByCol(ordercol, gwi, IDBQueryType::UNION); ret != 0)
         {
-          auto* ifp = dynamic_cast<Item_field*>(*ordercol->item);
-          auto pos = ordercol->counter_used ? ordercol->counter - 1 : ifp->field->field_index;
-          rc = gwi.returnedCols[pos]->clone();
-          rc->orderPos(pos);
-          // can not be optimized off if used in order by with counter.
-          // set with self derived table alias if it's derived table
-          gwi.returnedCols[pos]->incRefCount();
+          // Errors have already been reported.
+          return ret;
         }
-        else
-        {
-          Item* ord_item = *(ordercol->item);
-
-          // ignore not_used column on order by.
-          if ((ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT) &&
-              ord_item->full_name() && !strcmp(ord_item->full_name(), "Not_used"))
-          {
-            continue;
-          }
-          else if (ord_item->type() == Item::CONST_ITEM && ord_item->cmp_type() == INT_RESULT)
-          {
-            // DRRTUY This section looks useless b/c there is no
-            // way to put constant INT into an ORDER BY list
-            rc = gwi.returnedCols[((Item_int*)ord_item)->val_int() - 1]->clone();
-          }
-          else if (ord_item->type() == Item::SUBSELECT_ITEM)
-          {
-            gwi.fatalParseError = true;
-          }
-          else if ((ord_item->type() == Item::FUNC_ITEM) &&
-                   (((Item_func*)ord_item)->functype() == Item_func::COLLATE_FUNC))
-          {
-            push_warning(gwi.thd, Sql_condition::WARN_LEVEL_NOTE, WARN_OPTION_IGNORED,
-                         "COLLATE is ignored in ColumnStore");
-            continue;
-          }
-          else
-          {
-            rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError, false, true);
-
-            rc = wrapIntoAggregate(rc, gwi, ord_item);
-          }
-          // @bug5501 try item_ptr if item can not be fixed. For some
-          // weird dml statement state, item can not be fixed but the
-          // infomation is available in item_ptr.
-          if (!rc || gwi.fatalParseError)
-          {
-            Item* item_ptr = ordercol->item_ptr;
-
-            while (item_ptr->type() == Item::REF_ITEM)
-              item_ptr = *(((Item_ref*)item_ptr)->ref);
-
-            rc = buildReturnedColumn(item_ptr, gwi, gwi.fatalParseError, false, true);
-          }
-
-          if (!rc)
-          {
-            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY);
-            gwi.parseErrorText = emsg;
-            setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, emsg, gwi);
-            return ER_CHECK_NOT_IMPLEMENTED;
-          }
-        }
-
-        if (ordercol->direction == ORDER::ORDER_ASC)
-          rc->asc(true);
-        else
-          rc->asc(false);
-
-        gwi.orderByCols.push_back(SRCP(rc));
       }
     }
 
@@ -7212,7 +7156,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   for (uint32_t i = 0; i < funcFieldVec.size(); i++)
   {
-    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi, false);
+    SimpleColumn* sc = buildSimpleColumn(funcFieldVec[i], gwi);
 
     if (!sc || gwi.fatalParseError)
     {
@@ -7269,7 +7213,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
 
   SRCP minSc;  // min width projected column. for count(*) use
 
-  bool unionSel = (!isUnion && select_lex.master_unit()->is_unit_op()) ? true : false;
+  bool unionSel = !isUnion && select_lex.master_unit()->is_unit_op();
 
   gwi.clauseType = GROUP_BY;
   // Group by list. not valid for union main query
