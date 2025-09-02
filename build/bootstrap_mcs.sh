@@ -115,7 +115,7 @@ install_deps() {
     RPM_BUILD_DEPS="lz4 lz4-devel systemd-devel git make libaio-devel openssl-devel boost-devel bison \
       snappy-devel flex libcurl-devel libxml2-devel ncurses-devel automake libtool policycoreutils-devel \
       rpm-build lsof iproute pam-devel perl-DBI cracklib-devel expect createrepo python3 checkpolicy \
-      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel"
+      cppunit-devel cmake3 libxcrypt-devel xz-devel zlib-devel libzstd-devel glibc-devel zstd"
 
     DEB_BUILD_DEPS="build-essential automake libboost-all-dev \
       bison cmake libncurses5-dev python3 libaio-dev libsystemd-dev libpcre2-dev libperl-dev libssl-dev libxml2-dev \
@@ -531,7 +531,44 @@ build_package() {
     cd $MDB_SOURCE_PATH
 
     if [[ $PKG_FORMAT == "rpm" ]]; then
-        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
+        # Enable detailed rpmbuild timing and verbose output
+        # - rpmbuild --time prints per-section durations (only affects final rpmbuild step)
+        # - -vv provides verbose output for debugging
+        # RPM payload compression optimization:
+        # - '_binary_payload w19T.zstdio' = compress binary files with zstd, level 19, threaded
+        # - '_source_payload w19T.zstdio' = compress source files with zstd, level 19, threaded
+        # - 'w19T' format: w=zstd, 19=compression level, T=threaded compression
+        export CPACK_RPM_RPMBUILD_OPTIONS="--time -vv --define '_binary_payload w19T.zstdio' --define '_source_payload w19T.zstdio'"
+        export CPACK_RPM_COMPRESSION_TYPE="zstd"
+
+        # Optimize RPM build performance
+        export CPACK_RPM_PACKAGE_RELOCATABLE="OFF"
+        export CPACK_RPM_PACKAGE_DEBUG="ON"
+        export CPACK_THREADS=$(nproc)
+
+        # Use faster compression settings for zstd
+        export ZSTD_CLEVEL=3
+        export ZSTD_NBTHREADS=$(nproc)
+
+        # Enable parallel file processing where possible
+        export MAKEFLAGS="-j$(nproc)"
+
+        echo "=== RPM Build Started at $(date) ==="
+        time_start=$(date +%s)
+
+        echo "=== CMAKE Configuration Phase ==="
+        time cmake "${MDB_CMAKE_FLAGS[@]}"
+        cmake_end=$(date +%s)
+        echo "CMAKE configuration took: $((cmake_end - time_start)) seconds"
+
+        echo "=== Package Build Phase ==="
+        time make -j$(nproc) package
+        package_end=$(date +%s)
+        echo "Package build took: $((package_end - cmake_end)) seconds"
+
+        echo "=== Total RPM Build Time: $((package_end - time_start)) seconds ==="
+
+        command="true"
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
