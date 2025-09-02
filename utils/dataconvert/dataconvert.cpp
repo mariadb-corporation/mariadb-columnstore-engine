@@ -2949,7 +2949,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UINT:
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UDECIMAL:
-
+        {
           if (type.scale != 0 && (unionedType.scale != 0 || isDecimal(unionedType.colDataType)))
           {
             const unsigned int digitsBeforeDecimal = type.precision - type.scale;
@@ -3012,7 +3012,7 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
           }
 
           break;
-
+        }
         case datatypes::SystemCatalog::DATE:
           unionedType.colDataType = datatypes::SystemCatalog::CHAR;
           unionedType.colWidth = 20;
@@ -3042,10 +3042,6 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UFLOAT:
         case datatypes::SystemCatalog::UDOUBLE:
         case datatypes::SystemCatalog::LONGDOUBLE:
-          if (datatypes::isWideDecimalType(type.colDataType, type.colWidth))
-            unionedType = type;
-          break;
-
         default: break;
       }
 
@@ -3249,19 +3245,11 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UBIGINT:
         case datatypes::SystemCatalog::UFLOAT:
         case datatypes::SystemCatalog::UDOUBLE:
+        case datatypes::SystemCatalog::DECIMAL:
+        case datatypes::SystemCatalog::UDECIMAL:
           unionedType.colDataType = datatypes::SystemCatalog::DOUBLE;
           unionedType.scale = 0;
           unionedType.colWidth = sizeof(double);
-          break;
-
-        case datatypes::SystemCatalog::DECIMAL:
-        case datatypes::SystemCatalog::UDECIMAL:
-          if (unionedType.colWidth != datatypes::MAXDECIMALWIDTH)
-          {
-            unionedType.colDataType = datatypes::SystemCatalog::DOUBLE;
-            unionedType.scale = 0;
-            unionedType.colWidth = sizeof(double);
-          }
           break;
 
         default: break;
@@ -3313,21 +3301,12 @@ void DataConvert::joinColTypeForUnion(datatypes::SystemCatalog::TypeHolderStd& u
         case datatypes::SystemCatalog::UFLOAT:
         case datatypes::SystemCatalog::UDOUBLE:
         case datatypes::SystemCatalog::LONGDOUBLE:
+        case datatypes::SystemCatalog::DECIMAL:
+        case datatypes::SystemCatalog::UDECIMAL:
           unionedType.colDataType = datatypes::SystemCatalog::LONGDOUBLE;
           unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
           unionedType.colWidth = sizeof(long double);
           unionedType.precision = -1;
-          break;
-
-        case datatypes::SystemCatalog::DECIMAL:
-        case datatypes::SystemCatalog::UDECIMAL:
-          if (unionedType.colWidth != datatypes::MAXDECIMALWIDTH)
-          {
-            unionedType.colDataType = datatypes::SystemCatalog::LONGDOUBLE;
-            unionedType.scale = (type.scale > unionedType.scale) ? type.scale : unionedType.scale;
-            unionedType.colWidth = sizeof(long double);
-            unionedType.precision = -1;
-          }
           break;
 
         default: break;
