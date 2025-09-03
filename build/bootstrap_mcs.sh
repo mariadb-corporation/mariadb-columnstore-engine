@@ -442,7 +442,15 @@ construct_cmake_flags() {
 
     if [[ $SCCACHE = true ]]; then
         warn "Use sccache"
-        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+        # Use full path to ensure sccache is found during RPM builds
+        MDB_CMAKE_FLAGS+=(-DCMAKE_C_COMPILER_LAUNCHER=/usr/local/bin/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/sccache)
+
+        message "Sccache binary check:"
+        ls -la /usr/local/bin/sccache || warn "sccache binary not found"
+        /usr/local/bin/sccache --version || warn "sccache version failed"
+
+        message "Starting sccache server:"
+        /usr/local/bin/sccache --start-server 2>&1 || warn "Failed to start sccache server"
     fi
 
     if [[ $RUN_BENCHMARKS = true ]]; then
@@ -531,7 +539,13 @@ build_package() {
     cd $MDB_SOURCE_PATH
 
     if [[ $PKG_FORMAT == "rpm" ]]; then
-        command="cmake ${MDB_CMAKE_FLAGS[@]} && make -j\$(nproc) package"
+        message "Configuring cmake for RPM package"
+        MDB_CMAKE_FLAGS+=(-DCPACK_PACKAGE_DIRECTORY=$MARIA_BUILD_PATH/..)
+
+        cmake "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH"
+        check_errorcode
+        message "Building RPM package"
+        command="cmake --build \"$MARIA_BUILD_PATH\" -j$(nproc) --target package"
     else
         export DEBIAN_FRONTEND="noninteractive"
         export DEB_BUILD_OPTIONS="parallel=$(nproc)"
@@ -827,7 +841,8 @@ if [[ $BUILD_PACKAGES = true ]]; then
     exit_code=$?
 
     if [[ $SCCACHE = true ]]; then
-        sccache --show-adv-stats
+        message "Final sccache statistics:"
+        /usr/local/bin/sccache --show-adv-stats
     fi
 
     exit $exit_code
