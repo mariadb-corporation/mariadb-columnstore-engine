@@ -56,8 +56,9 @@ app.command(
         'Provides useful functions to review and troubleshoot the MCS cluster.'
     )
 )(tools_commands.review)
-
-
+app.add_typer(
+    tools_commands.sentry_app, name='sentry', rich_help_panel='Tools commands', hidden=True
+)
 @app.command(
         name='help-all', help='Show help for all commands in man page style.',
         add_help_option=False
