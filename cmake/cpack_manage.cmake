@@ -28,7 +28,7 @@ macro(columnstore_add_rpm_deps)
     columnstore_append_for_cpack(CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES ${ARGN})
 endmacro()
 
-if(NOT COLUMNSTORE_MAINTAINER_MODE)
+if(NOT COLUMNSTORE_MAINTAINER)
     return()
 endif()
 
