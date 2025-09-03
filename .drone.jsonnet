@@ -563,7 +563,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                          "--build-path " + "/mdb/" + builddir + "/builddir " +
                          " " + customBootstrapParamsForExisitingPipelines(platform) +
                          " " + customBuildFlags(customBootstrapParamsKey) +
-                         " | " + get_build_command("ansi2txt.sh") +
+                         " 2>&1 | " + get_build_command("ansi2txt.sh") +
                          "/mdb/" + builddir + "/" + result + '/build.log "',
                        ],
            },
