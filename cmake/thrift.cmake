@@ -68,6 +68,7 @@ ExternalProject_Add(
                -DCMAKE_EXE_LINKER_FLAGS=${linkflags}
                -DCMAKE_SHARED_LINKER_FLAGS=${linkflags}
                -DCMAKE_MODULE_LINKER_FLAGS=${linkflags}
+               -DCMAKE_INSTALL_MESSAGE=NEVER
     BUILD_BYPRODUCTS "${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${CMAKE_STATIC_LIBRARY_SUFFIX}"
     EXCLUDE_FROM_ALL TRUE
 )

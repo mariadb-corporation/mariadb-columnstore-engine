@@ -1,3 +1,7 @@
+if(NOT COLUMNSTORE_MAINTAINER_MODE)
+    return()
+endif()
+
 macro(columnstore_append_for_cpack var_name)
     # Get current value from parent scope or use empty string
     if(DEFINED ${var_name})

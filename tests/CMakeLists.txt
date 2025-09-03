@@ -22,6 +22,7 @@ if(WITH_UNITTESTS)
         GIT_REPOSITORY https://github.com/google/googletest
         GIT_TAG release-1.12.0
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_INSTALL_LOCATION} -DBUILD_SHARED_LIBS=ON
+                   -DCMAKE_INSTALL_MESSAGE=NEVER
                    -DCMAKE_CXX_FLAGS:STRING=${cxxflags} -DCMAKE_EXE_LINKER_FLAGS=${linkflags}
                    -DCMAKE_SHARED_LINKER_FLAGS=${linkflags} -DCMAKE_MODULE_LINKER_FLAGS=${linkflags}
     )
