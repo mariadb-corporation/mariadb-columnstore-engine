@@ -41,15 +41,15 @@ CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL,NULL),(1,'ddd'),(2,'bbb'),(3,'fffff'),(4,'eee'),(5,'a'),(6,'ccc'),(7,'ggg');
 INSERT INTO t2 VALUES (NULL,NULL),(1,'ooo'),(3,'iii'),(5,'hhh'),(7,'nnnnn'),(9,'kkkk'),(11,'mm'),(13,'j');
 
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 ASC;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 1 DESC;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 2 DESC; 
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 3 DESC;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 ASC;
-SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 4 DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t1.t1_int, t2.t2_int, t1.t1_char, t2.t2_char;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC, t2.t2_int ASC, t1.t1_char ASC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC, t2.t2_int DESC, t1.t1_char DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t1.t1_char, t1.t1_int, t2.t2_int;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC, t1.t1_int DESC, t2.t2_int DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_int, t1.t1_int, t2.t2_char;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC, t1.t1_int DESC, t2.t2_char DESC;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC, t2.t2_int, t1.t1_int;
+SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC, t2.t2_int DESC, t1.t1_int DESC;
 --error ER_BAD_FIELD_ERROR
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY -1;
 --error ER_BAD_FIELD_ERROR
@@ -57,23 +57,23 @@ SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 0;
 --error ER_BAD_FIELD_ERROR
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 5;
 
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
-SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC, t2.t2_int DESC, t1.t1_char DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC, t2.t2_int ASC, t1.t1_char ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC, t1.t1_int DESC, t2.t2_int DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC, t1.t1_int ASC, t2.t2_int ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC, t1.t1_int DESC, t2.t2_char DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC, t1.t1_int ASC, t2.t2_char ASC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC, t2.t2_int DESC, t1.t1_int DESC;
+SELECT * FROM t1 LEFT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC, t2.t2_int ASC, t1.t1_int ASC;
 
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC;
-SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int DESC, t2.t2_int DESC, t1.t1_char DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_int ASC, t2.t2_int ASC, t1.t1_char ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char DESC, t1.t1_int DESC, t2.t2_int DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t1.t1_char ASC, t1.t1_int ASC, t2.t2_int ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC, t1.t1_int DESC, t2.t2_char DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_int ASC, t1.t1_int ASC, t2.t2_char ASC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC, t2.t2_int DESC, t1.t1_int DESC;
+SELECT * FROM t1 RIGHT JOIN t2 ON t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC, t2.t2_int ASC, t1.t1_int ASC;
 
 # Clean UP
 DROP USER 'cejuser'@'localhost';

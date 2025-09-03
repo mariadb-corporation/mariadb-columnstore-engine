@@ -15,6 +15,7 @@ USE mcs34_db1;
 #Test with mixed datatypes
 CREATE TABLE t1
 (
+  id INT,
   t1_tinyint TINYINT DEFAULT 0,
   t1_int INT DEFAULT NULL,
   t1_bigint BIGINT,
@@ -27,85 +28,83 @@ CREATE TABLE t1
   t1_datetime DATETIME
 )ENGINE=Columnstore;
 
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(203685477580676, -3.797693231E+108, -7.402866E+18, repeat('b',100), repeat('b',100), 'b', '2387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime) 
- VALUES(303685477580676, -4.797693231, -8.402866, repeat('b',101), repeat('b',101), 'b', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime) 
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30.123');
-INSERT INTO t1 (t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
- VALUES(403685477580676, +54.797693231, +8.402866, repeat('2',102), repeat('d',102), 'd', '4387-11-08 11:22:30.123');
-INSERT INTO t1  VALUES(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(1, 203685477580676, -3.797693231E+108, -7.402866E+18, repeat('b',100), repeat('b',100), 'b', '2387-11-08 11:22:30');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(2, 303685477580676, -4.797693231, -8.402866, repeat('b',101), repeat('b',101), 'b', '3387-11-08 11:22:30');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(3, 403685477580676, +54.797693231, +8.402866, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:30');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(4, 403685477580677, +54.797693232, +8.402867, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:31');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(5, 403685477580678, +54.797693233, +8.402868, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:32');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(6, 403685477580679, +54.797693234, +8.402869, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:33');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(7, 403685477580680, +54.797693235, +8.402870, repeat('c',101), repeat('c',101), 'c', '3387-11-08 11:22:34');
+INSERT INTO t1 (id, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_datetime)
+ VALUES(8, 503685477580676, +64.797693231, +9.402866, repeat('2',102), repeat('d',102), 'd', '4387-11-08 11:22:30');
+INSERT INTO t1 VALUES(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 
-SELECT * FROM t1;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1,2,3,4,5,8,9,10, id;
 
-SELECT * FROM t1 ORDER BY t1_tinyint;
-SELECT * FROM t1 ORDER BY t1_tinyint ASC;
-SELECT * FROM t1 ORDER BY t1_tinyint DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_int;
-SELECT * FROM t1 ORDER BY t1_int ASC;
-SELECT * FROM t1 ORDER BY t1_int DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 2, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 2 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 2 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_bigint;
-SELECT * FROM t1 ORDER BY t1_bigint ASC;
-SELECT * FROM t1 ORDER BY t1_bigint DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 3, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 3 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 3 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_double;
-SELECT * FROM t1 ORDER BY t1_double ASC;
-SELECT * FROM t1 ORDER BY t1_double DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_float;
-SELECT * FROM t1 ORDER BY t1_float ASC;
-SELECT * FROM t1 ORDER BY t1_float DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 5, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 5 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 5 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_blob;
-SELECT * FROM t1 ORDER BY t1_blob ASC;
-SELECT * FROM t1 ORDER BY t1_blob DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_text;
-SELECT * FROM t1 ORDER BY t1_text ASC;
-SELECT * FROM t1 ORDER BY t1_text DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 7, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 7 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 7 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_char;
-SELECT * FROM t1 ORDER BY t1_char ASC;
-SELECT * FROM t1 ORDER BY t1_char DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 8, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 8 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 8 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_varchar;
-SELECT * FROM t1 ORDER BY t1_varchar ASC;
-SELECT * FROM t1 ORDER BY t1_varchar DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_datetime;
-SELECT * FROM t1 ORDER BY t1_datetime ASC;
-SELECT * FROM t1 ORDER BY t1_datetime DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 10, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 10 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 10 DESC, id ASC;
 
 #ORDER BY multiple columns
-SELECT * FROM t1 ORDER BY t1_tinyint, t1_int, t1_bigint;
-SELECT * FROM t1 ORDER BY t1_tinyint, t1_int, t1_bigint ASC;
-SELECT * FROM t1 ORDER BY t1_tinyint, t1_int, t1_bigint DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1, 2, 3, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1, 2, 3 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 1, 2, 3 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_double, t1_float;
-SELECT * FROM t1 ORDER BY t1_double, t1_float ASC;
-SELECT * FROM t1 ORDER BY t1_double, t1_float DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4, 5, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4, 5 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 4, 5 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_blob, t1_text, t1_char;
-SELECT * FROM t1 ORDER BY t1_blob, t1_text, t1_char ASC;
-SELECT * FROM t1 ORDER BY t1_blob, t1_text, t1_char DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6, 7, 8, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6, 7, 8 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 6, 7, 8 DESC, id ASC;
 
-SELECT * FROM t1 ORDER BY t1_varchar, t1_datetime;
-SELECT * FROM t1 ORDER BY t1_varchar, t1_datetime ASC;
-SELECT * FROM t1 ORDER BY t1_varchar, t1_datetime DESC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9, 10, id;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9, 10 ASC, id ASC;
+SELECT t1_tinyint, t1_int, t1_bigint, t1_double, t1_float, t1_blob, t1_text, t1_char, t1_varchar, t1_datetime FROM t1 ORDER BY 9, 10 DESC, id ASC;
 
 #Clean up
 DROP DATABASE IF EXISTS mcs34_db1;

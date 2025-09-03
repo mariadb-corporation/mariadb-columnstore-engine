@@ -112,7 +112,7 @@ a
 1
 2
 3
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2);
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by cs1.a, cs2.b, cs2.c;
 a	b	c
 1	1	100
 1	1	101
@@ -120,11 +120,11 @@ a	b	c
 3	3	300
 3	3	301
 3	3	302
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1 order by cs1.a, cs2.b, cs2.c;
 a	b	c
 1	1	100
 1	1	101
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by cs1.a, cs2.b, cs2.c;
 a	b	c
 1	1	100
 1	1	101
@@ -348,21 +348,21 @@ select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1
 a	d
 1	100
 3	302
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2);
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by cs1.a, cs1.d, cs2.b, cs2.c;
 a	d	b	c
 1	100	1	100
 1	100	1	101
 3	302	3	300
 3	302	3	301
 3	302	3	302
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by cs1.a, cs1.d, cs2.b, cs2.c;
 a	d	b	c
 1	100	1	100
 1	100	1	101
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by cs1.a, cs1.d, cs2.b, cs2.c;
 a	d	b	c
-1	100	1	101
 1	100	1	100
+1	100	1	101
 drop table cs1;
 create table cs1 (a int);
 insert into cs1 values (1), (2), (3), (4), (null);

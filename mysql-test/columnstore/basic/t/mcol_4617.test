@@ -69,13 +69,11 @@ select * from cs1 where a in (select t1.b from cs2 t1, cs2 t2 where t1.b=t2.b an
 select * from cs1 where a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
 
 ### Outer query containing joins
---sorted_result
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2);
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) order by cs1.a, cs2.b, cs2.c;
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select b from cs2) and cs1.a=1 order by cs1.a, cs2.b, cs2.c;
 
 ### Both IN subquery and outer queries containing joins
---sorted_result
-select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+select * from cs1 join cs2 on cs1.a=cs2.b and cs1.a in (select t1.b from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by cs1.a, cs2.b, cs2.c;
 
 ## NOT IN subquery
 ### Basic tests
@@ -217,13 +215,11 @@ select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1, cs2 t2 where t1.
 select * from cs1 where (a,d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.c=t2.c);
 
 ### Outer query containing joins
---sorted_result
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2);
---sorted_result
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) order by cs1.a, cs1.d, cs2.b, cs2.c;
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select b,c from cs2) and cs1.a=1 order by cs1.a, cs1.d, cs2.b, cs2.c;
 
 ### Both IN subquery and outer queries containing joins
-select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1);
+select * from cs1 join cs2 on cs1.a=cs2.b and (cs1.a,cs1.d) in (select t1.b,t1.c from cs2 t1 join cs2 t2 on t1.b=t2.b and t1.b=1) order by cs1.a, cs1.d, cs2.b, cs2.c;
 
 # Prepared statement tests
 drop table cs1;
