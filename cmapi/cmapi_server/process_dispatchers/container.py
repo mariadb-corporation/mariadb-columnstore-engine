@@ -13,6 +13,7 @@ import psutil
 from cmapi_server.constants import (
     IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS,
 )
+from cmapi_server.process_dispatchers import utils as dispatcher_utils
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
@@ -223,15 +224,7 @@ class ContainerDispatcher(BaseDispatcher):
             # These stale locks can occur if the controllernode couldn't stop correctly
             #  and they cause mcs-savebrm.py to hang
 
-            logger.debug('Pre-stop: inspecting and resetting shmem locks.')
-            prestop_path = os.path.join(MCS_INSTALL_BIN, 'mcs-prestop-workernode.sh')
-            prestop_logpath = cls._create_mcs_process_logfile(
-                'mcs-prestop-workernode.log'
-            )
-            with open(prestop_logpath, 'a', encoding='utf-8') as prestop_logfh:
-                _success, _ = cls.exec_command(
-                    prestop_path, stdout=prestop_logfh
-                )
+            dispatcher_utils.reset_shmem_locks(logger)
 
             # start mcs-savebrm.py before stoping workernode
             logger.debug('Waiting to save BRM.')
