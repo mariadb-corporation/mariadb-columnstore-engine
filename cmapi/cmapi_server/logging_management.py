@@ -7,6 +7,7 @@ import cherrypy
 from cherrypy import _cperror
 
 from cmapi_server.constants import CMAPI_LOG_CONF_PATH
+from tracing.tracer import get_tracer
 
 
 class AddIpFilter(logging.Filter):
@@ -14,6 +15,28 @@ class AddIpFilter(logging.Filter):
     def filter(self, record):
         record.ip = cherrypy.request.remote.name or cherrypy.request.remote.ip
         return True
+
+
+def install_trace_record_factory() -> None:
+    """Install a LogRecord factory that adds 'trace_params' field.
+    'trace_params' will be an empty string if there is no active trace/span
+      (like in MainThread, where there is no incoming requests).
+    Otherwise it will contain trace parameters.
+    """
+    current_factory = logging.getLogRecordFactory()
+
+    def factory(*args, **kwargs):  # type: ignore[no-untyped-def]
+        record = current_factory(*args, **kwargs)
+        trace_id, span_id, parent_span_id = get_tracer().current_trace_ids()
+        if trace_id and span_id:
+            record.trace_params = f'rid={trace_id} sid={span_id}'
+            if parent_span_id:
+                record.trace_params += f' psid={parent_span_id}'
+        else:
+            record.trace_params = ""
+        return record
+
+    logging.setLogRecordFactory(factory)
 
 
 def custom_cherrypy_error(
@@ -119,7 +142,10 @@ def config_cmapi_server_logging():
     cherrypy._cplogging.LogManager.access_log_format = (
         '{h} ACCESS "{r}" code {s}, bytes {b}, user-agent "{a}"'
     )
+    # Ensure trace_params is available on every record
+    install_trace_record_factory()
     dict_config(CMAPI_LOG_CONF_PATH)
+    disable_unwanted_loggers()
 
 
 def change_loggers_level(level: str):
@@ -135,3 +161,6 @@ def change_loggers_level(level: str):
     loggers.append(logging.getLogger())  # add RootLogger
     for logger in loggers:
         logger.setLevel(level)
+
+def disable_unwanted_loggers():
+    logging.getLogger("urllib3").setLevel(logging.WARNING)

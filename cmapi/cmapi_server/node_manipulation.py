@@ -14,15 +14,18 @@ from typing import Optional
 
 import requests
 from lxml import etree
+from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CMAPI_SINGLE_NODE_XML, DEFAULT_MCS_CONF_PATH, LOCALHOSTS,
+    CMAPI_CONF_PATH,
+    CMAPI_SINGLE_NODE_XML,
+    DEFAULT_MCS_CONF_PATH,
+    LOCALHOSTS,
     MCS_DATA_PATH,
 )
 from cmapi_server.managers.network import NetworkManager
-from mcs_node_control.models.node_config import NodeConfig
-
+from tracing.traced_session import get_traced_session
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -617,7 +620,9 @@ def _rebalance_dbroots(root, test_mode=False):
                     headers = {'x-api-key': key}
                     url = f"https://{node_ip}:8640/cmapi/{version}/node/new_primary"
                     try:
-                        r = requests.get(url, verify = False, headers = headers, timeout = 10)
+                        r = get_traced_session().request(
+                            'GET', url, verify=False, headers=headers, timeout=10
+                        )
                         r.raise_for_status()
                         r = r.json()
                         is_primary = r['is_primary']

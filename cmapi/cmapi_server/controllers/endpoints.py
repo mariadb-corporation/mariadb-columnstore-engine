@@ -481,8 +481,8 @@ class ConfigController:
 
             attempts = 0
             # TODO: FIX IT. If got (False, False) result, for eg in case
-            #       when there are no special CEJ user set, this check loop
-            #       is useless and do nothing.
+            #       when special CEJ user is not set, this check loop
+            #       is useless and does nothing.
             try:
                 ready, retry = system_ready(mcs_config_filename)
             except CEJError as cej_error:
@@ -495,7 +495,7 @@ class ConfigController:
                     attempts +=1
                     if attempts >= 10:
                         module_logger.debug(
-                            'Timed out waiting for node to be ready.'
+                            'Timed out waiting for this node to become ready.'
                         )
                         break
                     time.sleep(1)

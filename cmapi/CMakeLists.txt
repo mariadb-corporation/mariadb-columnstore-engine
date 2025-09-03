@@ -21,6 +21,17 @@ include(columnstore_version)
 
 set(CMAPI_PACKAGE_VERSION "${CMAPI_VERSION_MAJOR}.${CMAPI_VERSION_MINOR}.${CMAPI_VERSION_PATCH}")
 
+# Git revision to embed into VERSION (may be provided via -DCMAPI_GIT_REVISION or env)
+if(NOT DEFINED CMAPI_GIT_REVISION OR "${CMAPI_GIT_REVISION}" STREQUAL "")
+    if(DEFINED ENV{CMAPI_GIT_REVISION} AND NOT "$ENV{CMAPI_GIT_REVISION}" STREQUAL "")
+        set(CMAPI_GIT_REVISION "$ENV{CMAPI_GIT_REVISION}")
+    elseif(DEFINED ENV{DRONE_COMMIT} AND NOT "$ENV{DRONE_COMMIT}" STREQUAL "")
+        set(CMAPI_GIT_REVISION "$ENV{DRONE_COMMIT}")
+    else()
+        set(CMAPI_GIT_REVISION "unknown")
+    endif()
+endif()
+
 set(CMAPI_USER "root")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MariaDB ColumnStore CMAPI: cluster management API and command line tool.")
@@ -72,6 +83,7 @@ install(
               cmapi_server
               engine_files
               mcs_cluster_tool
+              tracing
     DESTINATION ${CMAPI_DIR}
     USE_SOURCE_PERMISSIONS
     PATTERN "test" EXCLUDE

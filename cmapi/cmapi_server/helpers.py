@@ -11,7 +11,6 @@ import os
 import socket
 import time
 from collections import namedtuple
-from functools import partial
 from random import random
 from shutil import copyfile
 from typing import Tuple, Optional
@@ -20,6 +19,8 @@ from urllib.parse import urlencode, urlunparse
 import aiohttp
 import lxml.objectify
 import requests
+from tracing.traced_session import get_traced_session
+from tracing.traced_aiohttp import create_traced_async_session
 
 from cmapi_server.exceptions import CMAPIBasicError
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
@@ -153,9 +154,9 @@ def start_transaction(
                     body['timeout'] = (
                         final_time - datetime.datetime.now()
                     ).seconds
-                    r = requests.put(
-                        url, verify=False, headers=headers, json=body,
-                        timeout=10
+                    r = get_traced_session().request(
+                        'PUT', url, verify=False, headers=headers,
+                        json=body, timeout=10
                     )
 
                     # a 4xx error from our endpoint;
@@ -219,8 +220,9 @@ def rollback_txn_attempt(key, version, txnid, nodes):
         url = f"https://{node}:8640/cmapi/{version}/node/rollback"
         for retry in range(5):
             try:
-                r = requests.put(
-                    url, verify=False, headers=headers, json=body, timeout=5
+                r = get_traced_session().request(
+                    'PUT', url, verify=False, headers=headers,
+                    json=body, timeout=5
                 )
                 r.raise_for_status()
             except requests.Timeout:
@@ -274,7 +276,10 @@ def commit_transaction(
         url = f"https://{node}:8640/cmapi/{version}/node/commit"
         for retry in range(5):
             try:
-                r = requests.put(url, verify = False, headers = headers, json = body, timeout = 5)
+                r = get_traced_session().request(
+                    'PUT', url, verify=False, headers=headers,
+                    json=body, timeout=5
+                )
                 r.raise_for_status()
             except requests.Timeout as e:
                 logging.warning(f"commit_transaction(): timeout on node {node}")
@@ -373,7 +378,7 @@ def broadcast_new_config(
         url = f'https://{node}:8640/cmapi/{version}/node/config'
         resp_json: dict = dict()
 
-        async with aiohttp.ClientSession() as session:
+        async with create_traced_async_session() as session:
             try:
                 async with session.put(
                     url, headers=headers, json=body, ssl=False, timeout=120
@@ -656,7 +661,7 @@ def get_current_config_file(
         headers = {'x-api-key' : key}
         url = f'https://{node}:8640/cmapi/{get_version()}/node/config'
         try:
-            r = requests.get(url, verify=False, headers=headers, timeout=5)
+            r = get_traced_session().request('GET', url, verify=False, headers=headers, timeout=5)
             r.raise_for_status()
             config = r.json()['config']
         except Exception as e:
@@ -767,14 +772,17 @@ def if_primary_restart(
     success = False
     while not success and datetime.datetime.now() < endtime:
         try:
-            response = requests.put(url, verify = False, headers = headers, json = body, timeout = 60)
+            response = get_traced_session().request(
+                'PUT', url, verify=False, headers=headers,
+                json=body, timeout=60
+            )
             response.raise_for_status()
             success = True
         except Exception as e:
             logging.warning(f"if_primary_restart(): failed to start the cluster, got {str(e)}")
             time.sleep(10)
     if not success:
-        logging.error(f"if_primary_restart(): failed to start the cluster.  Manual intervention is required.")
+        logging.error("if_primary_restart(): failed to start the cluster.  Manual intervention is required.")
 
 
 def get_cej_info(config_root):

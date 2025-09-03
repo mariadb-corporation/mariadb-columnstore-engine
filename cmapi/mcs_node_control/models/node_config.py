@@ -262,15 +262,12 @@ class NodeConfig:
             )
             raise
 
-    def in_active_nodes(self, root):
+    def in_active_nodes(self, root) -> bool:
         my_names = set(self.get_network_addresses_and_names())
-        active_nodes = [
-            node.text for node in root.findall("./ActiveNodes/Node")
-        ]
-        for node in active_nodes:
-            if node in my_names:
-                return True
-        return False
+        active_nodes = {node.text for node in root.findall("./ActiveNodes/Node")}
+        am_i_active = bool(my_names.intersection(active_nodes))
+        module_logger.debug("Active nodes: %s, my names: %s, am i active: %s", active_nodes, my_names, am_i_active)
+        return am_i_active
 
     def get_current_pm_num(self, root):
         # Find this node in the Module* tags, return the module number

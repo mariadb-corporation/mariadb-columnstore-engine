@@ -4,12 +4,15 @@ from typing import Any, Dict, Optional, Union
 import pyotp
 import requests
 
-from cmapi_server.controllers.dispatcher import _version
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY,
+    CMAPI_CONF_PATH,
+    CURRENT_NODE_CMAPI_URL,
+    SECRET_KEY,
 )
+from cmapi_server.controllers.dispatcher import _version
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import get_config_parser, get_current_key
+from tracing.traced_session import get_traced_session
 
 
 class ClusterControllerClient:
@@ -141,7 +144,7 @@ class ClusterControllerClient:
             headers['Content-Type'] = 'application/json'
             data = {'in_transaction': True, **(data or {})}
         try:
-            response = requests.request(
+            response = get_traced_session().request(
                 method, url, headers=headers, json=data,
                 timeout=self.request_timeout, verify=False
             )
@@ -151,24 +154,26 @@ class ClusterControllerClient:
         except requests.HTTPError as exc:
             resp = exc.response
             error_msg = str(exc)
-            if resp.status_code == 422:
+            if resp is not None and resp.status_code == 422:
                 # in this case we think cmapi server returned some value but
                 # had error during running endpoint handler code
                 try:
-                    resp_json = response.json()
+                    resp_json = resp.json()
                     error_msg = resp_json.get('error', resp_json)
                 except requests.exceptions.JSONDecodeError:
-                    error_msg = response.text
+                    error_msg = resp.text
             message = (
-                f'API client got an exception in request to {exc.request.url} '
-                f'with code {resp.status_code} and error: {error_msg}'
+                f'API client got an exception in request to {exc.request.url if exc.request else url} '
+                f'with code {resp.status_code if resp is not None else "?"} and error: {error_msg}'
             )
             logging.error(message)
             raise CMAPIBasicError(message)
         except requests.exceptions.RequestException as exc:
+            request_url = getattr(exc.request, 'url', url)
+            response_status = getattr(getattr(exc, 'response', None), 'status_code', '?')
             message = (
                 'API client got an undefined error in request to '
-                f'{exc.request.url} with code {exc.response.status_code} and '
+                f'{request_url} with code {response_status} and '
                 f'error: {str(exc)}'
             )
             logging.error(message)

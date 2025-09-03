@@ -11,10 +11,12 @@ from typing_extensions import Annotated
 
 from cmapi_server.constants import (
     MCS_DATA_PATH, MCS_SECRETS_FILENAME, REQUEST_TIMEOUT, TRANSACTION_TIMEOUT,
+    CMAPI_CONF_PATH,
 )
 from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
+from cmapi_server.helpers import get_config_parser
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from mcs_cluster_tool.constants import MCS_COLUMNSTORE_REVIEW_SH
@@ -379,4 +381,115 @@ def review(
     success, _ = BaseDispatcher.exec_command(cmd, stdout=sys.stdout)
     if not success:
         raise typer.Exit(code=1)
+    raise typer.Exit(code=0)
+
+
+# Sentry subcommand app
+sentry_app = typer.Typer(help='Manage Sentry DSN configuration for error tracking.')
+
+
+@sentry_app.command()
+@handle_output
+def show():
+    """Show current Sentry DSN configuration."""
+    try:
+        # Read existing config
+        cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+        
+        if not cfg_parser.has_section('Sentry'):
+            typer.echo('Sentry is disabled (no configuration found).', color='yellow')
+            raise typer.Exit(code=0)
+        
+        dsn = cfg_parser.get('Sentry', 'dsn', fallback='').strip().strip("'\"")
+        environment = cfg_parser.get('Sentry', 'environment', fallback='development').strip().strip("'\"")
+        
+        if not dsn:
+            typer.echo('Sentry is disabled (DSN is empty).', color='yellow')
+        else:
+            typer.echo('Sentry is enabled:', color='green')
+            typer.echo(f'  DSN: {dsn}')
+            typer.echo(f'  Environment: {environment}')
+        
+    except Exception as e:
+        typer.echo(f'Error reading configuration: {str(e)}', color='red')
+        raise typer.Exit(code=1)
+    
+    raise typer.Exit(code=0)
+
+
+@sentry_app.command()
+@handle_output
+def enable(
+    dsn: Annotated[
+        str,
+        typer.Argument(
+            help='Sentry DSN URL to enable for error tracking.',
+        )
+    ],
+    environment: Annotated[
+        str,
+        typer.Option(
+            '--environment', '-e',
+            help='Sentry environment name (default: development).',
+        )
+    ] = 'development'
+):
+    """Enable Sentry error tracking with the provided DSN."""
+    if not dsn:
+        typer.echo('DSN cannot be empty.', color='red')
+        raise typer.Exit(code=1)
+    
+    try:
+        # Read existing config
+        cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+        
+        # Add or update Sentry section
+        if not cfg_parser.has_section('Sentry'):
+            cfg_parser.add_section('Sentry')
+        
+        cfg_parser.set('Sentry', 'dsn', f"'{dsn}'")
+        cfg_parser.set('Sentry', 'environment', f"'{environment}'")
+        
+        # Write config back to file
+        with open(CMAPI_CONF_PATH, 'w') as config_file:
+            cfg_parser.write(config_file)
+        
+        typer.echo('Sentry error tracking enabled successfully.', color='green')
+        typer.echo(f'DSN: {dsn}', color='green')
+        typer.echo(f'Environment: {environment}', color='green')
+        typer.echo('Note: Restart cmapi service for changes to take effect.', color='yellow')
+        
+    except Exception as e:
+        typer.echo(f'Error updating configuration: {str(e)}', color='red')
+        raise typer.Exit(code=1)
+    
+    raise typer.Exit(code=0)
+
+
+@sentry_app.command()
+@handle_output
+def disable():
+    """Disable Sentry error tracking by removing the configuration."""
+    try:
+        # Read existing config
+        cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+        
+        if not cfg_parser.has_section('Sentry'):
+            typer.echo('Sentry is already disabled (no configuration found).', color='yellow')
+            raise typer.Exit(code=0)
+        
+        # Remove the entire Sentry section
+        cfg_parser.remove_section('Sentry')
+        
+        # Write config back to file
+        with open(CMAPI_CONF_PATH, 'w') as config_file:
+            cfg_parser.write(config_file)
+        
+        typer.echo('Sentry error tracking disabled successfully.', color='green')
+        typer.echo('Note: Restart cmapi service for changes to take effect.', color='yellow')
+        
+    except Exception as e:
+        typer.echo(f'Error updating configuration: {str(e)}', color='red')
+        raise typer.Exit(code=1)
+    
     raise typer.Exit(code=0)

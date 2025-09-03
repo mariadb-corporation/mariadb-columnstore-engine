@@ -4,21 +4,30 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-import requests
+from mcs_node_control.models.misc import get_dbrm_master
+from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH,
+    CMAPI_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
-    broadcast_new_config, get_active_nodes, get_dbroots, get_config_parser,
-    get_current_key, get_version, update_revision_and_manager,
+    broadcast_new_config,
+    get_active_nodes,
+    get_config_parser,
+    get_current_key,
+    get_dbroots,
+    get_version,
+    update_revision_and_manager,
 )
 from cmapi_server.node_manipulation import (
-    add_node, add_dbroot, remove_node, switch_node_maintenance,
+    add_dbroot,
+    add_node,
+    remove_node,
+    switch_node_maintenance,
 )
-from mcs_node_control.models.misc import get_dbrm_master
-from mcs_node_control.models.node_config import NodeConfig
+from tracing.traced_session import get_traced_session
 
 
 class ClusterAction(Enum):
@@ -50,7 +59,7 @@ def toggle_cluster_state(
     broadcast_new_config(config, distribute_secrets=True)
 
 
-class ClusterHandler():
+class ClusterHandler:
     """Class for handling MCS Cluster operations."""
 
     @staticmethod
@@ -78,7 +87,7 @@ class ClusterHandler():
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{get_version()}/node/status'
             try:
-                r = requests.get(url, verify=False, headers=headers)
+                r = get_traced_session().request('GET', url, verify=False, headers=headers)
                 r.raise_for_status()
                 r_json = r.json()
                 if len(r_json.get('services', 0)) == 0:
@@ -277,7 +286,7 @@ class ClusterHandler():
         payload['cluster_mode'] = mode
 
         try:
-            r = requests.put(url, headers=headers, json=payload, verify=False)
+            r = get_traced_session().request('PUT', url, headers=headers, json=payload, verify=False)
             r.raise_for_status()
             response['cluster-mode'] = mode
         except Exception as err:
@@ -330,7 +339,7 @@ class ClusterHandler():
             logger.debug(f'Setting new api key to "{node}".')
             url = f'https://{node}:8640/cmapi/{get_version()}/node/apikey-set'
             try:
-                resp = requests.put(url, verify=False, json=body)
+                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers={})
                 resp.raise_for_status()
                 r_json = resp.json()
                 if active_nodes_count > 0:
@@ -383,7 +392,7 @@ class ClusterHandler():
             logger.debug(f'Setting new log level to "{node}".')
             url = f'https://{node}:8640/cmapi/{get_version()}/node/log-level'
             try:
-                resp = requests.put(url, verify=False, json=body)
+                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers={})
                 resp.raise_for_status()
                 r_json = resp.json()
                 if active_nodes_count > 0:
