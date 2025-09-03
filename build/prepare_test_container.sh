@@ -5,10 +5,11 @@ set -eo pipefail
 
 SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
+MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 
 source "$SCRIPT_LOCATION"/utils.sh
 
-echo "Arguments received: $@"
+message "Arguments received: $@"
 
 optparse.define short=c long=container-name desc="Name of the Docker container to run tests in" variable=CONTAINER_NAME
 optparse.define short=i long=docker-image desc="Docker image name to start container from" variable=DOCKER_IMAGE
@@ -25,7 +26,7 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 if [[ -z "${CONTAINER_NAME:-}" || -z "${DOCKER_IMAGE:-}" || -z "${RESULT:-}" || -z "${DO_SETUP:-}" || -z "${PACKAGES_URL:-}" ]]; then
-    echo "Please provide --container-name, --docker-image, --result-path, --packages-url and --do-setup parameters, e.g. ./prepare_test_stage.sh --container-name smoke11212 --docker-image detravi/ubuntu:24.04 --result-path ubuntu24.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/91/10.6-enterprise --do-setup true"
+    warn "Please provide --container-name, --docker-image, --result-path, --packages-url and --do-setup parameters, e.g. ./prepare_test_stage.sh --container-name smoke11212 --docker-image detravi/ubuntu:24.04 --result-path ubuntu24.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/91/10.6-enterprise --do-setup true"
     exit 1
 fi
 
@@ -62,7 +63,7 @@ start_container() {
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
         docker_run_args+=(--shm-size=500m --memory 15g)
     else
-        echo "Unknown container type: $CONTAINER_NAME"
+        error "Unknown container type: $CONTAINER_NAME"
         exit 1
     fi
 
@@ -126,16 +127,24 @@ prepare_container() {
     execInnerDocker "$CONTAINER_NAME" 'sysctl -w kernel.core_pattern="/core/%E_${RESULT}_core_dump.%p"'
 
     #Install columnstore in container
-    echo "Installing columnstore..."
+    message "Installing columnstore..."
+    SERVER_VERSION=$(grep -E 'MYSQL_VERSION_(MAJOR|MINOR)' $MDB_SOURCE_PATH/VERSION | cut -d'=' -f2 | paste -sd. -)
+    message "Server version of build is $SERVER_VERSION"
+
     if [[ "$RESULT" == *rocky* ]]; then
         execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
     else
-        #TODO think about server version!
-        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym mariadb-test-dbgsym '
+
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-test-dbgsym'
+        if [[ $SERVER_VERSION == '10.6' ]]; then
+            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt install -y mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym'
+        else
+            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt install -y mariadb-client-dbgsym mariadb-client-core-dbgsym mariadb-server-dbgsym mariadb-server-core-dbgsym'
+        fi
     fi
 
     sleep 5
-    echo "PrepareTestStage completed in $CONTAINER_NAME"
+    message "PrepareTestStage completed in $CONTAINER_NAME"
 }
 
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
