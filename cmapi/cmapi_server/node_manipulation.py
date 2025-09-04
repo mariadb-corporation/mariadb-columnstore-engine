@@ -602,6 +602,19 @@ def _get_existing_db_roots(root: etree.Element) -> list[int]:
     return existing_dbroots
 
 
+def get_dbroots_paths(root: etree.Element) -> list[str]:
+    """Get all the existing dbroot IDs from the config file"""
+    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
+    # Going to scan from 1-99 instead
+    sysconf_node = root.find('./SystemConfig')
+    dbroots_paths = []
+    for num in range(1, 100):
+        dbroot_node = sysconf_node.find(f'./DBRoot{num}')
+        if dbroot_node is not None:
+            dbroots_paths.append(dbroot_node.text)
+    return dbroots_paths
+
+
 def _rebalance_dbroots(root, test_mode=False):
     # TODO: add code to detect whether we are using shared storage or not.  If not, exit
     # without doing anything.

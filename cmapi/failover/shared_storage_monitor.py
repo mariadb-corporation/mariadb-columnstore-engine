@@ -10,7 +10,7 @@ from cmapi_server.helpers import broadcast_stateful_config
 from cmapi_server.managers.application import (
     AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel, StatefulVersionModel,
 )
-from cmapi_server.node_manipulation import get_existing_db_roots
+from cmapi_server.node_manipulation import get_dbroots_paths
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -38,13 +38,18 @@ class SharedStorageMonitor:
         self._runner.join()
 
     def monitor(self):
+        self._logger.info('Starting shared storage monitor.')
         while not self._die:
             try:
-                self._logger.info('Starting shared storage monitor.')
+                self._logger.info('Shared storage monitor running check.')
                 self._monitor()
             except Exception:
                 self._logger.error('Shared storage monitor caught an exception.', exc_info=True)
             if not self._die:
+                self._logger.info(
+                    'Shared storage monitor finished check, sleeping '
+                    f'{self.check_interval} seconds.'
+                )
                 time.sleep(self.check_interval)
         self._logger.info('Shared storage monitor exited normally')
 
@@ -77,7 +82,7 @@ class SharedStorageMonitor:
 
     def _check_listed_dbroots_exist(self):
         c_root = self._node_config.get_current_config_root()
-        dbroots = get_existing_db_roots(c_root)
+        dbroots = get_dbroots_paths(c_root)
         if not dbroots:
             self._logger.error('No DBRoots found, cannot check shared storage.')
             return False
@@ -91,7 +96,7 @@ class SharedStorageMonitor:
         dbroots_available: bool = False
         shared_storage_on: bool = False
         if not self._node_config.is_primary_node():
-            # skip check if this node is not primary
+            self._logger.debug('This node is not primary, skipping shared storage check.')
             return
         dbroots_available = self._check_listed_dbroots_exist()
         if not dbroots_available:
