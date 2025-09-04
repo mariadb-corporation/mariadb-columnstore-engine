@@ -168,7 +168,7 @@ class SystemdDispatcher(BaseDispatcher):
             # Run pre-stop lock reset before saving BRM
             # These stale locks can occur if the controllernode couldn't stop correctly
             #  and they cause mcs-savebrm.py to hang
-            dispatcher_utils.reset_shmem_locks(logging.getLogger(__name__))
+            dispatcher_utils.release_shmem_locks(logging.getLogger(__name__))
 
             service_name = f'{service_name}@1.service {service_name}@2.service'
             cls._workernode_enable(False, use_sudo)
