@@ -82,6 +82,15 @@ namespace
     return ival;
   }
 
+  NullString formatDouble(double val)
+  {
+    char buf[datatypes::INT128MAXPRECISION + 1];
+    my_bool error = 0;
+    auto len = my_gcvt(val, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
+    idbassert(error == 0 && len <= sizeof(buf));
+    return {buf, len};
+  }
+
   void normalizeIntToIntNoScale(const Row& in, Row* out, uint32_t i) 
   {
     out->setIntField(in.getIntField(i), i); 
@@ -128,12 +137,7 @@ namespace
   {
     double d = in.getIntField(i);
     d /= exp10(in.getScale(i));
-    char buf[datatypes::INT128MAXPRECISION + 1];
-    my_bool error = 0;
-    auto len = my_gcvt(d, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
-    idbassert(error == 0 && len <= sizeof(buf));
-    utils::NullString ns(buf);
-    out->setStringField(ns, i);
+    out->setStringField(formatDouble(d), i);
   }
 
   void normalizeIntToStringNoScale(const Row& in, Row* out, uint32_t i) 
@@ -206,12 +210,7 @@ namespace
   {
     double d = in.getUintField(i);
     d /= exp10(in.getScale(i));
-    char buf[datatypes::INT128MAXPRECISION + 1];
-    my_bool error = 0;
-    auto len = my_gcvt(d, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
-    idbassert(error == 0 && len <= sizeof(buf));
-    utils::NullString ns(buf);
-    out->setStringField(ns, i);
+    out->setStringField(formatDouble(d), i);
   }
 
   void normalizeUintToStringNoScale(const Row& in, Row* out, uint32_t i) 
@@ -514,23 +513,13 @@ namespace
   void normalizeXFloatToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getFloatField(i);
-    char buf[datatypes::INT128MAXPRECISION + 1];
-    my_bool error = 0;
-    auto len = my_gcvt(val, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
-    idbassert(error == 0 && len <= sizeof(buf));
-    utils::NullString ns(buf);
-    out->setStringField(ns, i);
+    out->setStringField(formatDouble(val), i);
   }
 
   void normalizeXDoubleToString(const Row& in, Row* out, uint32_t i) 
   {
     double val = in.getDoubleField(i);
-    char buf[datatypes::INT128MAXPRECISION + 1];
-    my_bool error = 0;
-    auto len = my_gcvt(val, MY_GCVT_ARG_DOUBLE, sizeof(buf) - 1, buf, &error);
-    idbassert(error == 0 && len <= sizeof(buf));
-    utils::NullString ns(buf);
-    out->setStringField(ns, i);
+    out->setStringField(formatDouble(val), i);
   }
 
   void normalizeXFloatToWideXDecimal(const Row& in, Row* out, uint32_t i) 

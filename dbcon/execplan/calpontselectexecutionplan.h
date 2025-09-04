@@ -57,7 +57,6 @@ enum RM_PARMS
 
 // query type of select plan.
 // TODO: move it somewhere?
-#undef DELETE  // Windows defines this...
 enum class IDBQueryType : uint32_t
 {
   SELECT,
