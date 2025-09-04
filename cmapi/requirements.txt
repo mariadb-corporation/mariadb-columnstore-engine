@@ -35,7 +35,9 @@ botocore==1.37.28
 cachetools==5.5.2
     # via google-auth
 certifi==2025.8.3
-    # via requests
+    # via
+    #   requests
+    #   sentry-sdk
 cffi==1.17.1
     # via cryptography
 charset-normalizer==3.4.3
@@ -196,6 +198,8 @@ rsa==4.7.2
     #   oauth2client
 s3transfer==0.11.5
     # via awscli
+sentry-sdk==2.34.1
+    # via -r requirements.in
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -228,6 +232,7 @@ urllib3==1.26.20
     # via
     #   botocore
     #   requests
+    #   sentry-sdk
 yarl==1.20.1
     # via aiohttp
 zc-lockfile==3.0.post1
