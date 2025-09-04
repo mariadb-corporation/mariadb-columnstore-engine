@@ -15,11 +15,11 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 
 **Commands**:
 
-* `backup`: Backup Columnstore and/or MariDB data.
+* `backup`: Backup Columnstore and/or MariaDB server data.
 * `dbrm_backup`: Columnstore DBRM Backup.
-* `restore`: Restore Columnstore (and/or MariaDB) data.
+* `restore`: Restore Columnstore (and/or MariaDB server) data.
 * `dbrm_restore`: Restore Columnstore DBRM data.
-* `cskeys`: Generates a random AES encryption key and init vector and writes them to disk.
+* `cskeys`: Generate a random AES encryption key and init vector and write them to disk.
 * `cspasswd`: Encrypt a Columnstore plaintext password.
 * `bootstrap-single-node`: Bootstrap a single node (localhost)...
 * `review`: Provides useful functions to review and troubleshoot the MCS cluster.
@@ -31,11 +31,11 @@ $ mcs [OPTIONS] COMMAND [ARGS]...
 * `node`: Cluster nodes management.
 * `set`: Set cluster parameters.
 * `cluster`: MariaDB Columnstore cluster management...
-* `cmapi`: CMAPI itself related commands.
+* `cmapi`: Commands related to CMAPI itself.
 
 ## `mcs backup`
 
-Backup Columnstore and/or MariDB data.
+Backup Columnstore and/or MariaDB data.
 
 **Usage**:
 
@@ -654,7 +654,7 @@ $ mcs cluster set log-level [OPTIONS]
 
 ## `mcs cmapi`
 
-CMAPI itself related commands.
+Commands related to CMAPI itself.
 
 **Usage**:
 

@@ -39,7 +39,7 @@ app.command(
 app.command(
     'cskeys', rich_help_panel='Tools commands',
     short_help=(
-        'Generates a random AES encryption key and init vector and writes '
+        'Generate a random AES encryption key and init vector and write '
         'them to disk.'
     )
 )(tools_commands.cskeys)

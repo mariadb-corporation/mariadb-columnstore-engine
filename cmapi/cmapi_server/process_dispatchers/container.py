@@ -13,7 +13,7 @@ import psutil
 from cmapi_server.constants import (
     IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS,
 )
-from cmapi_server.process_dispatchers import utils as dispatcher_utils
+from cmapi_server.process_dispatchers.locks import release_shmem_locks
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
@@ -223,7 +223,7 @@ class ContainerDispatcher(BaseDispatcher):
             # Run pre-stop lock reset before saving BRM
             # These stale locks can occur if the controllernode couldn't stop correctly
             #  and they cause mcs-savebrm.py to hang
-            dispatcher_utils.release_shmem_locks(logger)
+            locks.release_shmem_locks(logger)
 
             # start mcs-savebrm.py before stoping workernode
             logger.debug('Waiting to save BRM.')

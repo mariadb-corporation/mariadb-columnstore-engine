@@ -14,7 +14,7 @@ from mcs_cluster_tool.decorators import handle_output
 
 logger = logging.getLogger('mcs_cli')
 app = typer.Typer(
-    help='CMAPI itself related commands.'
+    help='Commands related to CMAPI itself.'
 )
 
 

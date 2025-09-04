@@ -284,7 +284,7 @@ def backup(
         )
     ] = None,
 ):
-    """Backup Columnstore and/or MariDB data."""
+    """Backup Columnstore and/or MariaDB data."""
 
     # Local Storage Examples:
     #     ./$0 backup -bl /tmp/backups/ -bd Local -s LocalStorage
