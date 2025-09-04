@@ -444,6 +444,12 @@ void DiskJoinStep::joinFcn(const uint32_t threadID)
   smallNullMem[0].reset(new uint8_t[smallNullRow.getSize()]);
   smallNullRow.setData(rowgroup::Row::Pointer(smallNullMem[0].get()));
   smallNullRow.initToNull();
+  funcexp::FuncExpWrapper localFE2;
+  if (thjs->fe2)
+  {
+    // Make thread's own copy to prevent a possible race condition when evaluating expressions
+    localFE2 = *thjs->fe2;
+  }
 
   try
   {
@@ -462,8 +468,8 @@ void DiskJoinStep::joinFcn(const uint32_t threadID)
       {
         l_largeRG.setData(largeData.get());
         thjs->joinOneRG(0, joinResults, l_largeRG, l_outputRG, l_largeRow, l_joinFERow, l_outputRow, baseRow,
-                        joinMatches, smallRowTemplates, outputDL.get(), &joiners, &colMappings, &fergMappings,
-                        &smallNullMem);
+                        joinMatches, smallRowTemplates, outputDL.get(), thjs->fe2 ? &localFE2 : nullptr,
+                        &joiners, &colMappings, &fergMappings, &smallNullMem);
 
         if (joinResults.size())
           outputResult(joinResults);

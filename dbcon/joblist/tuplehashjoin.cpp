@@ -1576,7 +1576,7 @@ void TupleHashJoinStep::joinRunnerFcn(uint32_t threadID)
       joinerRunnerInputRecordsStats[threadID] += local_inputRG.getRowCount();
 
       joinOneRG(threadID, joinedRowData, local_inputRG, local_outputRG, largeRow, joinFERow, joinedRow,
-                baseRow, joinMatches, smallRowTemplates, outputDL);
+                baseRow, joinMatches, smallRowTemplates, outputDL, fe2 ? &local_fe : nullptr);
     }
 
     if (fe2)
@@ -1718,7 +1718,8 @@ void TupleHashJoinStep::grabSomeWork(vector<RGData>* work)
 void TupleHashJoinStep::joinOneRG(
     uint32_t threadID, vector<RGData>& out, RowGroup& inputRG, RowGroup& joinOutput, Row& largeSideRow,
     Row& joinFERow, Row& joinedRow, Row& baseRow, vector<vector<Row::Pointer> >& joinMatches,
-    std::shared_ptr<Row[]>& smallRowTemplates, RowGroupDL* outputDL,
+    std::shared_ptr<Row[]>& smallRowTemplates, RowGroupDL* lOutputDL,
+    FuncExpWrapper* localFE2,
     // disk-join support vars.  This param list is insane; refactor attempt would be nice at some point.
     vector<std::shared_ptr<joiner::TupleJoiner> >* tjoiners,
     std::shared_ptr<std::shared_ptr<int[]>[]>* rgMappings,
@@ -1836,7 +1837,7 @@ void TupleHashJoinStep::joinOneRG(
       applyMapping((*rgMappings)[smallSideCount], largeSideRow, &baseRow);
       baseRow.setRid(largeSideRow.getRelRid());
       generateJoinResultSet(threadID, joinMatches, baseRow, *rgMappings, 0, joinOutput, joinedData, out,
-                            smallRowTemplates, joinedRow, outputDL);
+                            smallRowTemplates, joinedRow, lOutputDL, localFE2);
     }
   }
 
@@ -1850,7 +1851,7 @@ void TupleHashJoinStep::generateJoinResultSet(const uint32_t threadID,
                                               const uint32_t depth, RowGroup& l_outputRG, RGData& rgData,
                                               vector<RGData>& outputData,
                                               const std::shared_ptr<Row[]>& smallRows, Row& joinedRow,
-                                              RowGroupDL* dlp)
+                                              RowGroupDL* dlp, FuncExpWrapper* localFE2)
 {
   uint32_t i;
   Row& smallRow = smallRows[depth];
@@ -1863,7 +1864,7 @@ void TupleHashJoinStep::generateJoinResultSet(const uint32_t threadID,
       smallRow.setPointer(joinerOutput[depth][i]);
       applyMapping(mappings[depth], smallRow, &baseRow);
       generateJoinResultSet(threadID, joinerOutput, baseRow, mappings, depth + 1, l_outputRG, rgData,
-                            outputData, smallRows, joinedRow, dlp);
+                            outputData, smallRows, joinedRow, dlp, localFE2);
     }
   }
   else
@@ -1887,7 +1888,7 @@ void TupleHashJoinStep::generateJoinResultSet(const uint32_t threadID,
         if (UNLIKELY(outputData.size() > flushThreshold || !getMemory(l_outputRG.getSizeWithStrings())))
         {
           // MCOL-5512
-          if (fe2)
+          if (localFE2)
           {
             RowGroup l_fe2RG;
             Row fe2InRow;
@@ -1900,7 +1901,7 @@ void TupleHashJoinStep::generateJoinResultSet(const uint32_t threadID,
             // WIP do we remove previosuly pushed(line 1825) rgData
             // replacing it with a new FE2 rgdata added by processFE2?
             // Generates a new RGData w/o accounting its memory consumption
-            processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, fe2.get());
+            processFE2(l_outputRG, l_fe2RG, fe2InRow, fe2OutRow, &outputData, localFE2);
           }
           // Don't let the join results buffer get out of control.
           sendResult(outputData);

@@ -545,7 +545,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
                              rowgroup::RowGroup& outputRG, rowgroup::RGData& rgData,
                              std::vector<rowgroup::RGData>& outputData,
                              const std::shared_ptr<rowgroup::Row[]>& smallRows, rowgroup::Row& joinedRow,
-                             RowGroupDL* outputDL);
+                             RowGroupDL* outputDL, funcexp::FuncExpWrapper* localFE2);
   void grabSomeWork(std::vector<rowgroup::RGData>* work);
   void sendResult(const std::vector<rowgroup::RGData>& res);
   void processFE2(rowgroup::RowGroup& input, rowgroup::RowGroup& output, rowgroup::Row& inRow,
@@ -555,7 +555,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
                  rowgroup::RowGroup& joinOutput, rowgroup::Row& largeSideRow, rowgroup::Row& joinFERow,
                  rowgroup::Row& joinedRow, rowgroup::Row& baseRow,
                  std::vector<std::vector<rowgroup::Row::Pointer>>& joinMatches,
-                 std::shared_ptr<rowgroup::Row[]>& smallRowTemplates, RowGroupDL* outputDL,
+                 std::shared_ptr<rowgroup::Row[]>& smallRowTemplates, RowGroupDL* lOutputDL,
+                 funcexp::FuncExpWrapper* localFE2,
                  std::vector<std::shared_ptr<joiner::TupleJoiner>>* joiners = nullptr,
                  std::shared_ptr<std::shared_ptr<int[]>[]>* rgMappings = nullptr,
                  std::shared_ptr<std::shared_ptr<int[]>[]>* feMappings = nullptr,
