@@ -26,6 +26,9 @@ from cmapi_server.constants import (
 )
 from cmapi_server.controllers.error import APIError
 from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
+from cmapi_server.controllers.request_models import (
+    ConfigPutRequestRootModel, StatefulConfigPutRequestModel,
+)
 from cmapi_server.handlers.cej import CEJError, CEJPasswordHandler
 from cmapi_server.handlers.cluster import ClusterHandler
 from cmapi_server.helpers import (
@@ -41,7 +44,7 @@ from cmapi_server.helpers import (
 )
 from cmapi_server.logging_management import change_loggers_level
 from cmapi_server.managers.application import (
-    AppManager, AppStatefulConfig, StatefulConfigModel, StatefulVersionModel,
+    AppManager, AppStatefulConfig, StatefulConfigModel
 )
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.transaction import TransactionManager
@@ -350,66 +353,49 @@ class ConfigController:
                 'PUT /config called outside of an operation.'
             )
 
+        try:
+            wrapper = ConfigPutRequestRootModel.model_validate(cherrypy.request.json)
+            # the actual StatefulConfigPutRequestModel or FullConfigPutRequestModel
+            req_model = wrapper.root
+        except ValidationError as exp:
+            raise_422_error(
+                module_logger, func_name, f'Mandatory attribute is missing: {exp.errors()}'
+            )
+
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
-        request_body = cherrypy.request.json
-        request_revision = request_body.get('revision', None)
-        request_manager = request_body.get('manager', None)
-        request_timeout = request_body.get('timeout', None)
-        only_stateful_config = request_body.get('only_stateful_config', False)
-        request_stateful_config = request_body.get('stateful_config_dict', None)
 
         #TODO: remove is_test
         # is_test = True means this should not save
         # the config file or apply the changes
-        is_test = request_body.get('test', False)
-        if only_stateful_config:
-            # if stateful config is provided, we do not need other params
-            mandatory = (request_timeout, request_stateful_config)
-        else:
-            mandatory = (request_revision, request_manager, request_timeout)
-        if None in mandatory:
-            raise_422_error(
-                module_logger, func_name, 'Mandatory attribute is missing.')
+        is_test = req_model.test
 
         # if stateful config is provided, we just need to fast apply only stateful config
-        if request_stateful_config:
-            try:
-                request_stateful_config = StatefulConfigModel.model_validate(
-                    request_body.get('stateful_config_dict')
-                )
-            except ValidationError as exp:
-                raise_422_error(module_logger, func_name,f'Invalid request body: {exp.errors()}')
+        success = AppStatefulConfig.apply_update(req_model.stateful_config_dict)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term {req_model.stateful_config_dict.version.term} '
+                f'and seq {req_model.stateful_config_dict.version.seq}.'
+            )
 
-            success = AppStatefulConfig.apply_update(request_stateful_config)
-            if not success:
-                logging.info('Stateful config update was stale.')
-            else:
-                logging.info(
-                    f'Stateful config updated with term  {request_stateful_config.version.term} '
-                    f'and seq {request_stateful_config.version.seq}.'
-                )
-
-        if only_stateful_config:
+        if isinstance(req_model, StatefulConfigPutRequestModel):
             return {'timestamp': str(datetime.now()), 'success': success}
 
-        request_mode = request_body.get('cluster_mode', None)
-        xml_config = request_body.get('config', None)
-        sm_config = request_body.get('sm_config', None)
-        mcs_config_filename = request_body.get(
-            'mcs_config_filename', DEFAULT_MCS_CONF_PATH
-        )
-        sm_config_filename = request_body.get(
-            'sm_config_filename', DEFAULT_SM_CONF_PATH
-        )
-        secrets = request_body.get('secrets', None)
-
+        request_mode = req_model.cluster_mode
+        xml_config = req_model.config
+        sm_config = req_model.sm_config
+        mcs_config_filename = req_model.mcs_config_filename
+        sm_config_filename = req_model.sm_config_filename
+        secrets = req_model.secrets
+        request_timeout = req_model.timeout
         operation_params = (request_mode, xml_config, secrets)
         # if no operation to apply, return 422
         if not any(operation_params):
             raise_422_error(
                 module_logger, func_name,
-                'Mandatory attribute is missing.'
+                'Mandatory operation attribute is missing.'
             )
 
         request_headers = cherrypy.request.headers
