@@ -313,6 +313,18 @@ class SystemCatalog
       }
     }
 
+    bool isTemporal() const
+    {
+      switch (colDataType)
+      {
+        case datatypes::SystemCatalog::DATE:
+        case datatypes::SystemCatalog::DATETIME:
+        case datatypes::SystemCatalog::TIMESTAMP:
+        case datatypes::SystemCatalog::TIME: return true;
+        default: return false;
+      }
+    }
+
     bool isSignedInteger() const
     {
       switch (colDataType)

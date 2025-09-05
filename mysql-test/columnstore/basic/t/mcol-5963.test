@@ -1,0 +1,110 @@
+-- source ../include/have_columnstore.inc
+-- source include/have_innodb.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5963;
+--enable_warnings
+
+CREATE DATABASE mcol5963;
+
+USE mcol5963;
+
+create table FOO(foo datetime) engine = columnstore;
+insert into FOO(foo) values ('2025-08-27 15:26:25');
+ 
+select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
+select if(0 = 1, null, foo) from FOO;
+select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, null, "text");
+
+drop table FOO;
+
+# InnoDB comparison for DATETIME
+create table FOO(foo datetime) engine = innodb;
+insert into FOO(foo) values ('2025-08-27 15:26:25');
+
+select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
+select if(0 = 1, null, foo) from FOO;
+select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, null, "text");
+
+drop table FOO;
+
+# Additional temporal types: DATE
+create table FOO_DATE(foo date) engine = columnstore;
+insert into FOO_DATE(foo) values ('2025-08-27');
+
+select if(0 = 1, true, foo) from FOO_DATE;
+select if(0 = 1, 5, foo) from FOO_DATE;
+select if(0 = 1, null, foo) from FOO_DATE;
+
+drop table FOO_DATE;
+
+# InnoDB comparison for DATE
+create table FOO_DATE(foo date) engine = innodb;
+insert into FOO_DATE(foo) values ('2025-08-27');
+
+select if(0 = 1, true, foo) from FOO_DATE;
+select if(0 = 1, 5, foo) from FOO_DATE;
+select if(0 = 1, null, foo) from FOO_DATE;
+
+drop table FOO_DATE;
+
+# Additional temporal types: TIME
+
+create table FOO_TIME(foo time) engine = columnstore;
+insert into FOO_TIME(foo) values ('15:26:25');
+
+select if(0 = 1, true, foo) from FOO_TIME;
+select if(0 = 1, 5, foo) from FOO_TIME;
+select if(0 = 1, null, foo) from FOO_TIME;
+drop table FOO_TIME;
+
+# InnoDB comparison for TIME
+create table FOO_TIME(foo time) engine = innodb;
+insert into FOO_TIME(foo) values ('15:26:25');
+
+select if(0 = 1, true, foo) from FOO_TIME;
+select if(0 = 1, 5, foo) from FOO_TIME;
+select if(0 = 1, null, foo) from FOO_TIME;
+
+drop table FOO_TIME;
+
+# Additional temporal types: TIMESTAMP
+create table FOO_TS(foo timestamp) engine = columnstore;
+
+insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, true, foo) from FOO_TS;
+select if(0 = 1, 5, foo) from FOO_TS;
+select if(0 = 1, null, foo) from FOO_TS;
+
+drop table FOO_TS;
+
+# InnoDB comparison for TIMESTAMP
+create table FOO_TS(foo timestamp) engine = innodb;
+insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
+
+select if(0 = 1, true, foo) from FOO_TS;
+select if(0 = 1, 5, foo) from FOO_TS;
+select if(0 = 1, null, foo) from FOO_TS;
+
+drop table FOO_TS;
+
+create table FOO(foo varchar(30)) engine = columnstore;
+insert into FOO(foo) values ("text1");
+
+select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, NULL, foo) from FOO;
+
+drop table FOO;
+
+create table FOO(foo int) engine = columnstore;
+insert into FOO(foo) values (123);
+
+select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, NULL, foo) from FOO;
+
+drop table FOO;
+DROP DATABASE mcol5963;
