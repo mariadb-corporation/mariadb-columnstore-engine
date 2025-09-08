@@ -223,7 +223,7 @@ class ContainerDispatcher(BaseDispatcher):
             # Run pre-stop lock reset before saving BRM
             # These stale locks can occur if the controllernode couldn't stop correctly
             #  and they cause mcs-savebrm.py to hang
-            locks.release_shmem_locks(logger)
+            release_shmem_locks(logger)
 
             # start mcs-savebrm.py before stoping workernode
             logger.debug('Waiting to save BRM.')
