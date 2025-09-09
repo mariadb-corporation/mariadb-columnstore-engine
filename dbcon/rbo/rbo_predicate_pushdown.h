@@ -20,11 +20,17 @@
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <dbcon/mysql/idb_mysql.h>
+#include <dbcon/mysql/ha_mcs_impl_if.h>
 
 #include "execplan/calpontselectexecutionplan.h"
 #include "rulebased_optimizer.h"
 
-namespace optimizer {
-  bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-  bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-}
+namespace optimizer
+{
+bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan::ParseTree*& n,
+                                      std::map<std::string, execplan::ParseTree*>& obj,
+                                      execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
+
+}  // namespace optimizer

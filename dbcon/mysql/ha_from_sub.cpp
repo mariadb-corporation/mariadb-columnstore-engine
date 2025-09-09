@@ -220,6 +220,7 @@ SCSEP FromSubQuery::transform()
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
   gwi.viewName = fGwip.viewName;
+  gwi.isRecursiveWithTable = fGwip.isRecursiveWithTable;
   csep->derivedTbAlias(fAlias);  // always lower case
   csep->derivedTbView(fGwip.viewName.alias, lower_case_table_names);
 
@@ -243,4 +244,40 @@ SCSEP FromSubQuery::transform()
   return csep;
 }
 
+SCSEP FromSubQuery::transform(bool b)
+{
+  assert(fFromSub);
+  SCSEP csep(new CalpontSelectExecutionPlan());
+  csep->sessionID(fGwip.sessionid);
+  csep->location(CalpontSelectExecutionPlan::FROM);
+  csep->subType(CalpontSelectExecutionPlan::FROM_SUBS);
+
+  // gwi for the sub query
+  gp_walk_info gwi(fGwip.timeZone, fGwip.subQueriesChain);
+  gwi.thd = fGwip.thd;
+  gwi.subQuery = this;
+  gwi.viewName = fGwip.viewName;
+  gwi.isRecursiveWithTable = fGwip.isRecursiveWithTable;
+  csep->derivedTbAlias(fAlias);  // always lower case
+  csep->derivedTbView(fGwip.viewName.alias, lower_case_table_names);
+
+  if (getSelectPlan(gwi, *fFromSub, csep, b) != 0)
+  {
+    fGwip.fatalParseError = true;
+
+    if (!gwi.parseErrorText.empty())
+      fGwip.parseErrorText = gwi.parseErrorText;
+    else
+      fGwip.parseErrorText = "Error occurred in FromSubQuery::transform()";
+
+    csep.reset();
+    return csep;
+  }
+
+  // Insert column statistics
+  fGwip.mergeTableStatistics(gwi.tableStatistics);
+
+  fGwip.subselectList.push_back(csep);
+  return csep;
+}
 }  // namespace cal_impl_if

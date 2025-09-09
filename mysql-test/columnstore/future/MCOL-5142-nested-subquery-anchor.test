@@ -1,0 +1,54 @@
+--disable_warnings
+DROP DATABASE IF EXISTS NESTED_SUBQUERY_TEST;
+--enable_warnings
+
+CREATE DATABASE NESTED_SUBQUERY_TEST;
+
+USE NESTED_SUBQUERY_TEST;
+
+CREATE TABLE employees (
+    id INT NOT NULL,
+    name VARCHAR(100),
+    manager_id INT,
+    department_id INT
+) ENGINE = ColumnStore;
+
+CREATE TABLE departments (
+    id INT NOT NULL,
+    name VARCHAR(100)
+) ENGINE = ColumnStore;
+
+INSERT INTO departments (id, name) VALUES
+(101, 'Sales'),
+(102, 'Engineering'),
+(103, 'Marketing');
+
+INSERT INTO employees (id, name, manager_id, department_id) VALUES
+(1, 'Alice', NULL, 101),
+(2, 'Bob', 1, 101),
+(3, 'Charlie', 1, 102),
+(4, 'David', 2, 101),
+(5, 'Eve', 3, 102),
+(6, 'Frank', 3, 103);
+
+WITH RECURSIVE sales_hierarchy AS (
+    SELECT id, name, manager_id, 0 AS level, department_id
+    FROM employees
+    WHERE department_id IN (SELECT id FROM departments WHERE name = 'Sales')
+    AND manager_id IS NULL
+
+    UNION ALL
+
+    SELECT
+        e.id,
+        e.name,
+        e.manager_id,
+        eh.level + 1,
+        e.department_id
+    FROM employees AS e
+    JOIN sales_hierarchy eh ON e.manager_id = eh.id
+)
+SELECT * FROM sales_hierarchy;
+
+DROP DATABASE NESTED_SUBQUERY_TEST;
+

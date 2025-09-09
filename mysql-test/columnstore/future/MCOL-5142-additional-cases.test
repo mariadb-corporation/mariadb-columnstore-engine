@@ -1,0 +1,178 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5142_COMP;
+--enable_warnings
+
+CREATE DATABASE MCOL5142_COMP;
+
+USE MCOL5142_COMP;
+
+# FAILING TEST CASES (bugs)
+
+# Cyclic recursion tests
+CREATE TABLE t_cycle (id INT, next_id INT) ENGINE=ColumnStore;
+INSERT INTO t_cycle VALUES (1, 2), (2, 3), (3, 1);
+
+SET @@max_recursive_iterations = 10;
+
+# Cyclic recursion with SELECT * - non-deterministic behavior, seems to ignore max_recursive_iterations value
+# may hang or return 1000, 1 or other number of rows
+WITH RECURSIVE cte AS (
+  SELECT id, next_id FROM t_cycle WHERE id = 1
+  UNION ALL
+  SELECT t.id, t.next_id
+  FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT * FROM cte LIMIT 100;
+
+# Cyclic recursion with aggregate functions - fails with ERROR 1815
+--error 1815
+WITH RECURSIVE cte AS (
+  SELECT id, next_id FROM t_cycle WHERE id = 1
+  UNION ALL
+  SELECT t.id, t.next_id
+  FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT COUNT(*) FROM cte;
+
+# Cyclic recursion with column projection - fails with ERROR 1815
+--error 1815
+WITH RECURSIVE cte AS (
+  SELECT id, next_id FROM t_cycle WHERE id = 1
+  UNION ALL
+  SELECT t.id, t.next_id
+  FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT id FROM cte LIMIT 20;
+
+SET @@max_recursive_iterations = 1000;
+
+# ============================================================
+# WORKING TEST CASES
+# ============================================================
+
+#Prohibited clauses in recursive part - correctly fail with expected errors
+
+CREATE TABLE t_base (id INT, val INT) ENGINE=ColumnStore;
+INSERT INTO t_base VALUES (1, 10), (2, 20);
+
+# GROUP BY in recursive part -> Should fail
+--error 4008
+WITH RECURSIVE cte AS (
+  SELECT id, val FROM t_base
+  UNION ALL
+  SELECT t.id, SUM(t.val)
+  FROM t_base t JOIN cte c ON t.id = c.id + 1
+  GROUP BY t.id
+)
+SELECT * FROM cte;
+
+
+#ORDER BY in recursive part -> Should fail
+--error 1250
+WITH RECURSIVE cte AS (
+  SELECT id, val FROM t_base
+  UNION ALL
+  SELECT t.id, t.val
+  FROM t_base t JOIN cte c ON t.id = c.id + 1
+  ORDER BY t.val
+)
+SELECT * FROM cte;
+
+
+# Window Function in recursive part -> Should fail
+--error 4008
+WITH RECURSIVE cte AS (
+  SELECT id, val FROM t_base
+  UNION ALL
+  SELECT t.id, ROW_NUMBER() OVER (ORDER BY t.val)
+  FROM t_base t JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+
+#empty tables
+CREATE TABLE t_empty_1 (id INT) ENGINE=ColumnStore;
+CREATE TABLE t_empty_2 (id INT) ENGINE=ColumnStore;
+
+WITH RECURSIVE cte AS (
+  SELECT id FROM t_empty_1
+  UNION ALL
+  SELECT t.id FROM t_empty_2 t JOIN cte c ON t.id = c.id
+)
+SELECT * FROM cte;
+
+# Linear recursion - works
+CREATE TABLE t_linear (id INT) ENGINE=ColumnStore;
+INSERT INTO t_linear VALUES (1), (2), (3);
+
+WITH RECURSIVE cte AS (
+  SELECT id
+  FROM t_linear
+  WHERE id = 1
+  UNION ALL
+  SELECT t.id
+  FROM t_linear t
+  JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+
+WITH RECURSIVE cte AS (
+  SELECT id
+  FROM t_linear
+  WHERE id = 1
+  UNION ALL
+  SELECT t.id
+  FROM t_linear t
+  JOIN cte c ON t.id = c.id + 1
+)
+SELECT COUNT(*) FROM cte;
+
+# JOIN with external table inside recursive CTE - works
+CREATE TABLE t_external (id INT, multiplier INT) ENGINE=ColumnStore;
+INSERT INTO t_external VALUES (1, 2), (2, 3), (3, 4);
+
+WITH RECURSIVE cte AS (
+  SELECT t_linear.id, t_linear.id AS val
+  FROM t_linear
+  WHERE id = 1
+  UNION ALL
+  SELECT t_linear.id, t_linear.id * t_external.multiplier
+  FROM t_linear
+  JOIN cte c ON t_linear.id = c.id + 1
+  JOIN t_external ON t_external.id = t_linear.id
+)
+SELECT * FROM cte;
+
+# Empty anchor set
+CREATE TABLE t_empty_anchor (id INT) ENGINE=ColumnStore;
+INSERT INTO t_empty_anchor VALUES (1), (2), (3);
+
+WITH RECURSIVE cte AS (
+  SELECT id
+  FROM t_empty_anchor
+  WHERE id = 999
+  UNION ALL
+  SELECT t.id
+  FROM t_empty_anchor t
+  JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+
+#Multiple independent recursive CTEs
+
+WITH RECURSIVE
+  cte1 AS (
+    SELECT 1 AS n
+    UNION ALL
+    SELECT n + 1 FROM cte1 WHERE n < 3
+  ),
+  cte2 AS (
+    SELECT 10 AS m
+    UNION ALL
+    SELECT m + 10 FROM cte2 WHERE m < 30
+  )
+SELECT 'cte1' AS source, n AS value FROM cte1
+UNION ALL
+SELECT 'cte2' AS source, m AS value FROM cte2
+ORDER BY source, value;
+
+DROP DATABASE MCOL5142_COMP;

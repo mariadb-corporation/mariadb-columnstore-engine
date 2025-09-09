@@ -83,7 +83,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   }
 
   inline void dropToken() {};
-  inline void dropToken(uint32_t){};
+  inline void dropToken(uint32_t) {};
 
   // Counters that reflect how many many times this FIFO blocked on reads/writes
   uint64_t blockedWriteCount() const;

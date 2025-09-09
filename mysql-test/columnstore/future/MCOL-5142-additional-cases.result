@@ -1,0 +1,150 @@
+DROP DATABASE IF EXISTS MCOL5142_COMP;
+CREATE DATABASE MCOL5142_COMP;
+USE MCOL5142_COMP;
+CREATE TABLE t_cycle (id INT, next_id INT) ENGINE=ColumnStore;
+INSERT INTO t_cycle VALUES (1, 2), (2, 3), (3, 1);
+SET @@max_recursive_iterations = 10;
+WITH RECURSIVE cte AS (
+SELECT id, next_id FROM t_cycle WHERE id = 1
+UNION ALL
+SELECT t.id, t.next_id
+FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT * FROM cte LIMIT 100;
+id	next_id
+1	2
+WITH RECURSIVE cte AS (
+SELECT id, next_id FROM t_cycle WHERE id = 1
+UNION ALL
+SELECT t.id, t.next_id
+FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT COUNT(*) FROM cte;
+ERROR HY000: Internal error: No key found.
+WITH RECURSIVE cte AS (
+SELECT id, next_id FROM t_cycle WHERE id = 1
+UNION ALL
+SELECT t.id, t.next_id
+FROM t_cycle t JOIN cte c ON t.id = c.next_id
+)
+SELECT id FROM cte LIMIT 20;
+ERROR HY000: Internal error: No key found.
+SET @@max_recursive_iterations = 1000;
+CREATE TABLE t_base (id INT, val INT) ENGINE=ColumnStore;
+INSERT INTO t_base VALUES (1, 10), (2, 20);
+WITH RECURSIVE cte AS (
+SELECT id, val FROM t_base
+UNION ALL
+SELECT t.id, SUM(t.val)
+FROM t_base t JOIN cte c ON t.id = c.id + 1
+GROUP BY t.id
+)
+SELECT * FROM cte;
+ERROR HY000: Restrictions imposed on recursive definitions are violated for table 'cte'
+WITH RECURSIVE cte AS (
+SELECT id, val FROM t_base
+UNION ALL
+SELECT t.id, t.val
+FROM t_base t JOIN cte c ON t.id = c.id + 1
+ORDER BY t.val
+)
+SELECT * FROM cte;
+ERROR 42000: Table 't' from one of the SELECTs cannot be used in ORDER BY
+WITH RECURSIVE cte AS (
+SELECT id, val FROM t_base
+UNION ALL
+SELECT t.id, ROW_NUMBER() OVER (ORDER BY t.val)
+FROM t_base t JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+ERROR HY000: Restrictions imposed on recursive definitions are violated for table 'cte'
+CREATE TABLE t_empty_1 (id INT) ENGINE=ColumnStore;
+CREATE TABLE t_empty_2 (id INT) ENGINE=ColumnStore;
+WITH RECURSIVE cte AS (
+SELECT id FROM t_empty_1
+UNION ALL
+SELECT t.id FROM t_empty_2 t JOIN cte c ON t.id = c.id
+)
+SELECT * FROM cte;
+id
+CREATE TABLE t_linear (id INT) ENGINE=ColumnStore;
+INSERT INTO t_linear VALUES (1), (2), (3);
+WITH RECURSIVE cte AS (
+SELECT id
+FROM t_linear
+WHERE id = 1
+UNION ALL
+SELECT t.id
+FROM t_linear t
+JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+id
+1
+2
+3
+WITH RECURSIVE cte AS (
+SELECT id
+FROM t_linear
+WHERE id = 1
+UNION ALL
+SELECT t.id
+FROM t_linear t
+JOIN cte c ON t.id = c.id + 1
+)
+SELECT COUNT(*) FROM cte;
+COUNT(*)
+3
+CREATE TABLE t_external (id INT, multiplier INT) ENGINE=ColumnStore;
+INSERT INTO t_external VALUES (1, 2), (2, 3), (3, 4);
+WITH RECURSIVE cte AS (
+SELECT t_linear.id, t_linear.id AS val
+FROM t_linear
+WHERE id = 1
+UNION ALL
+SELECT t_linear.id, t_linear.id * t_external.multiplier
+FROM t_linear
+JOIN cte c ON t_linear.id = c.id + 1
+JOIN t_external ON t_external.id = t_linear.id
+)
+SELECT * FROM cte;
+id	val
+1	1
+2	6
+3	12
+CREATE TABLE t_empty_anchor (id INT) ENGINE=ColumnStore;
+INSERT INTO t_empty_anchor VALUES (1), (2), (3);
+WITH RECURSIVE cte AS (
+SELECT id
+FROM t_empty_anchor
+WHERE id = 999
+UNION ALL
+SELECT t.id
+FROM t_empty_anchor t
+JOIN cte c ON t.id = c.id + 1
+)
+SELECT * FROM cte;
+id
+WITH RECURSIVE
+cte1 AS (
+SELECT 1 AS n
+UNION ALL
+SELECT n + 1 FROM cte1 WHERE n < 3
+),
+cte2 AS (
+SELECT 10 AS m
+UNION ALL
+SELECT m + 10 FROM cte2 WHERE m < 30
+)
+SELECT 'cte1' AS source, n AS value FROM cte1
+UNION ALL
+SELECT 'cte2' AS source, m AS value FROM cte2
+ORDER BY source, value;
+source	value
+cte1	1
+cte1	2
+cte1	3
+cte2	10
+cte2	20
+cte2	30
+DROP DATABASE MCOL5142_COMP;

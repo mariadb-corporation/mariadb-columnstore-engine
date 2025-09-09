@@ -1,0 +1,73 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MULTI_TABLE_TEST;
+--enable_warnings
+
+CREATE DATABASE MULTI_TABLE_TEST;
+
+USE MULTI_TABLE_TEST;
+
+CREATE TABLE products (
+    product_id INT NOT NULL,
+    product_name VARCHAR(100)
+) ENGINE = ColumnStore;
+
+CREATE TABLE components (
+    component_id INT NOT NULL,
+    component_name VARCHAR(100),
+    parent_product_id INT
+) ENGINE = ColumnStore;
+
+CREATE TABLE suppliers (
+    supplier_id INT NOT NULL,
+    supplier_name VARCHAR(100),
+    component_id INT
+) ENGINE = ColumnStore;
+
+INSERT INTO products (product_id, product_name) VALUES
+(10, 'Smartphone');
+
+INSERT INTO components (component_id, component_name, parent_product_id) VALUES
+(100, 'Screen', 10),
+(101, 'Battery', 10),
+(200, 'Glass Panel', 100),
+(201, 'LCD', 100),
+(202, 'Connector', 101);
+
+INSERT INTO suppliers (supplier_id, supplier_name, component_id) VALUES
+(1000, 'Supplier A', 200),
+(1001, 'Supplier B', 201),
+(1002, 'Supplier C', 202);
+
+WITH RECURSIVE product_tree AS (
+    SELECT
+        p.product_id AS root_id,
+        p.product_name AS root_name,
+        c.component_id,
+        c.component_name,
+        c.parent_product_id,
+        1 AS level
+    FROM products p
+    JOIN components c ON p.product_id = c.parent_product_id
+
+    UNION ALL
+
+    SELECT
+        pt.root_id,
+        pt.root_name,
+        c.component_id,
+        c.component_name,
+        c.parent_product_id,
+        pt.level + 1
+    FROM components c
+    JOIN product_tree pt ON c.parent_product_id = pt.component_id
+)
+SELECT
+    pt.root_name AS product,
+    pt.component_name AS component,
+    s.supplier_name AS supplier,
+    pt.level
+FROM product_tree pt
+JOIN suppliers s ON pt.component_id = s.component_id;
+
+DROP DATABASE MULTI_TABLE_TEST;
+
