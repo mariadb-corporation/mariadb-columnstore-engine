@@ -106,7 +106,10 @@ void first_cond_optimization_flag_toggle(SELECT_LEX* select_lex, void (*func)(SE
       {
         for (SELECT_LEX* sl = unit->first_select(); sl; sl = sl->next_select())
         {
-          first_cond_optimization_flag_toggle(sl, func);
+          if (sl->get_table_list())
+          {
+            first_cond_optimization_flag_toggle(sl, func);
+          }
         }
       }
     }

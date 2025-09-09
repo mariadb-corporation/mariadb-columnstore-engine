@@ -228,6 +228,8 @@ class FromSubQuery : public SubQuery
   }
   execplan::SCSEP transform();
 
+  execplan::SCSEP transform(bool b);
+
  private:
   SELECT_LEX* fFromSub;
   std::string fAlias;

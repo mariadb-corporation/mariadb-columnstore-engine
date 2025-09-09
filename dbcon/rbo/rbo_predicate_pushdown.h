@@ -23,8 +23,15 @@
 
 #include "execplan/calpontselectexecutionplan.h"
 #include "rulebased_optimizer.h"
+#include "ha_mcs_impl_if.h"
 
-namespace optimizer {
-  bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-  bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
-}
+namespace optimizer
+{
+bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep);
+bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx);
+
+execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan::ParseTree*& n,
+                                      std::map<std::string, execplan::ParseTree*>& obj,
+                                      execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
+
+}  // namespace optimizer
