@@ -276,6 +276,9 @@ execplan::ParseTree* ScalarSub::buildParseTree(PredicateOperator* op)
     return NULL;
   }
 
+  // Insert column statistics
+  fGwip.mergeTableStatistics(gwi.tableStatisticsMap);
+
   fGwip.subselectList.push_back(csep);
 
   // remove outer query tables
