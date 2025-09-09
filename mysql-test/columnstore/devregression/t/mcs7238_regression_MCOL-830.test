@@ -5,6 +5,9 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+
+--source ../include/cross_engine.inc
+
 #
 USE tpch1;
 #
@@ -31,4 +34,7 @@ DROP TABLE test.mcol830a;
 DROP TABLE test.mcol830b;
 --enable_warnings
 #
+
+
+--source ../include/drop_cross_engine.inc
 
