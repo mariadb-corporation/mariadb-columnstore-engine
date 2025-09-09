@@ -364,7 +364,8 @@ void item_check(Item* item, bool* unsupported_feature)
 
 bool check_user_var(SELECT_LEX* select_lex)
 {
-  if (!select_lex) {
+  if (!select_lex)
+  {
     // There are definitely no user vars if select_lex is null
     return false;
   }
@@ -878,7 +879,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       // Unset select_lex::first_cond_optimization
       if (select_lex->first_cond_optimization)
       {
-        first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
+        // first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
       }
     }
   }
