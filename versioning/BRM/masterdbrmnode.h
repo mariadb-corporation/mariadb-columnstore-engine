@@ -258,6 +258,9 @@ class MasterDBRMNode
   volatile bool die, halting;
   bool reloadCmd;
   mutable bool readOnly;
+  // Maximum time to wait for worker responses/reconfigure before forcing read-only
+  // Loaded from Columnstore.xml: SystemConfig/DBRMUnresponsiveTimeout (default: 300 seconds)
+  struct timespec haltTimeout;
   mutable bool waitToFinishJobs{false};
   struct timespec MSG_TIMEOUT;
 };

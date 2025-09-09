@@ -107,6 +107,16 @@ MasterDBRMNode::MasterDBRMNode()
     MSG_TIMEOUT.tv_sec = secondsToWait;
   else
     MSG_TIMEOUT.tv_sec = 20;
+
+  // Configurable unresponsive timeout (default 300 seconds)
+  haltTimeout = {300, 0};
+  std::string unrespStr = config->getConfig("SystemConfig", "DBRMUnresponsiveTimeout");
+  int unrespSecs = config->fromText(unrespStr);
+  if (unrespSecs > 0)
+  {
+    haltTimeout.tv_sec = unrespSecs;
+    haltTimeout.tv_nsec = 0;
+  }
 }
 
 MasterDBRMNode::~MasterDBRMNode()
@@ -534,16 +544,16 @@ void MasterDBRMNode::msgProcessor()
   retrycmd:
     uint32_t haltloops = 0;
 
-    while (halting && ++haltloops < static_cast<uint32_t>(FIVE_MIN_TIMEOUT.tv_sec))
+  while (halting && ++haltloops < static_cast<uint32_t>(haltTimeout.tv_sec))
       sleep(1);
 
     slaveLock.lock();
 
-    if (haltloops == FIVE_MIN_TIMEOUT.tv_sec)
+    if (haltloops == static_cast<uint32_t>(haltTimeout.tv_sec))
     {
       ostringstream os;
       os << "A node is unresponsive for cmd = " << (uint32_t)cmd << ", no reconfigure in at least "
-         << FIVE_MIN_TIMEOUT.tv_sec << " seconds.  Setting read-only mode.";
+         << haltTimeout.tv_sec << " seconds.  Setting read-only mode.";
       log(os.str());
       readOnly = true;
       halting = false;
@@ -832,7 +842,9 @@ int MasterDBRMNode::gatherResponses(uint8_t cmd, uint32_t cmdMsgLength, vector<B
     {
       // can't just block for 5 mins
       timespec newtimeout = {10, 0};
-      uint32_t ntRetries = FIVE_MIN_TIMEOUT.tv_sec / newtimeout.tv_sec;
+  uint32_t ntRetries = (newtimeout.tv_sec > 0) ? (haltTimeout.tv_sec / newtimeout.tv_sec) : 0;
+      if (ntRetries == 0)
+        ntRetries = 1;
       uint32_t retries = 0;
 
       while (++retries < ntRetries && tmp->length() == 0 && !halting)

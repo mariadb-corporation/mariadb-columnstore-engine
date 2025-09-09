@@ -429,7 +429,7 @@ EXPORT void log(const std::string& msg, logging::LOG_TYPE = logging::LOG_TYPE_CR
 EXPORT void log_errno(const std::string& msg, logging::LOG_TYPE = logging::LOG_TYPE_CRITICAL);
 EXPORT void errString(int rc, std::string& errMsg);
 
-const struct timespec FIVE_MIN_TIMEOUT = {300, 0};
+// Note: Unresponsive timeouts are now configurable in the master and not defined here.
 
 /* Function identifiers used for master-slave communication.
 
