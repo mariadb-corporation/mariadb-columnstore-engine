@@ -1692,6 +1692,12 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
   {
     // Convert "a <=> b" to (a = b OR (a IS NULL AND b IS NULL))"
     idbassert(gwip->rcWorkStack.size() >= 2);
+    if(std::strcmp(ifp->func_name(), "<=>") == 0)
+    {
+      gwip->fatalParseError= true;
+      gwip->parseErrorText = "<=> (null-safe equal) is not supported in Columnstore";
+      return false;
+    }
     ReturnedColumn* rhs = gwip->rcWorkStack.top();
     gwip->rcWorkStack.pop();
     ReturnedColumn* lhs = gwip->rcWorkStack.top();
