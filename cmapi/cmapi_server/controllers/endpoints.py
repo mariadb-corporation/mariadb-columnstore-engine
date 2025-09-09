@@ -369,6 +369,26 @@ class ConfigController:
         # is_test = True means this should not save
         # the config file or apply the changes
         is_test = req_model.test
+        if req_model.type == 'set_mode':
+            # TODO: move it to separate endpoint
+            request_timeout = req_model.timeout
+            request_cluster_mode = req_model.cluster_mode
+            current_mode = set_cluster_mode(request_cluster_mode)
+            if current_mode == request_cluster_mode:
+                # Normal exit
+                request_response = {'timestamp': str(datetime.now())}
+                module_logger.debug(
+                    f'{func_name} returns {str(request_response)}'
+                )
+                return request_response
+            else:
+                raise_422_error(
+                    module_logger, func_name,
+                    (
+                        f'Error occured setting cluster to "{request_cluster_mode}" '
+                        f'mode, got "{current_mode}"'
+                    )
+                )
 
         # if stateful config is provided, we just need to fast apply only stateful config
         success = AppStatefulConfig.apply_update(req_model.stateful_config_dict)
@@ -427,25 +447,7 @@ class ConfigController:
         node_config = NodeConfig()
         if is_test:
             return request_response
-        if request_mode is not None:
-            current_mode = set_cluster_mode(
-                request_mode, config_filename=mcs_config_filename
-            )
-            if current_mode == request_mode:
-                # Normal exit
-                module_logger.debug(
-                    f'{func_name} returns {str(request_response)}'
-                )
-                return request_response
-            else:
-                raise_422_error(
-                    module_logger, func_name,
-                    (
-                        f'Error occured setting cluster to "{request_mode}" '
-                        f'mode, got "{current_mode}"'
-                    )
-                )
-        elif xml_config is not None:
+        if xml_config is not None:
             node_config.apply_config(
                 config_filename=mcs_config_filename,
                 xml_string=xml_config,
@@ -1330,19 +1332,27 @@ class NodeController:
 
         success = True
         file_path_obj = Path(file_path)
+        logging.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
         if not file_path_obj.exists():
             success = False
+            logging.debug(f'Shared file {file_path} does not exist.')
         else:
             with file_path_obj.open(mode='rb') as file_to_check:
                 data = file_to_check.read()
                 calculated_md5 = hashlib.md5(data).hexdigest()
             if calculated_md5 != check_sum:
+                logging.debug(
+                    f'Shared file at {file_path} md5 {calculated_md5} does not match given md5 {check_sum}.'
+                )
                 success = False
+        if success:
+            logging.debug(f'Shared file {file_path} md5 matches {check_sum}.')
 
         response = {
             'timestamp': str(datetime.now()),
             'success': success
         }
+        logging.debug(f'{func_name} returns {str(response)}')
         return response
 
     @cherrypy.tools.timeit()

@@ -115,3 +115,8 @@ TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
 
 # API version
 _version = '0.4.0'
+
+
+class ClusterModeEnum(str, Enum):
+    READONLY = 'readonly'
+    READWRITE = 'readwrite'

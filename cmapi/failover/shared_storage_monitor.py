@@ -16,7 +16,7 @@ from mcs_node_control.models.node_config import NodeConfig
 
 class SharedStorageMonitor:
 
-    def __init__(self, check_interval: int = 300):
+    def __init__(self, check_interval: int = 10):
         self._die = False
         self._logger = logging.getLogger('shared_storage_monitor')
         self._runner = None
@@ -73,6 +73,8 @@ class SharedStorageMonitor:
             shared_storage_on = False
         active_nodes_count = int(response.get('active_nodes_count', 0))
         if active_nodes_count < 2:
+            # we can't reliably detect shared storage state with less than 2 nodes
+            # in cluster, so we do not change the flag in this case
             logging.debug(
                 'Less than 2 nodes in cluster, no need to change flag of shared storage.'
             )

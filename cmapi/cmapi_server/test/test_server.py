@@ -220,7 +220,7 @@ class ConfigPutTestCase(BaseServerTestCase):
     def test_no_active_operation(self):
         """Test no active operation. skip_setUp"""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
@@ -243,7 +243,7 @@ class ConfigPutTestCase(BaseServerTestCase):
         )
         self.assertEqual(r.status_code, 200)
         body = {
-            'revision': 42,
+            'revision': '42',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
             'mcs_config_filename': self.mcs_config_filename
@@ -257,7 +257,7 @@ class ConfigPutTestCase(BaseServerTestCase):
         )
         body = {
             'manager': '1.1.1.1',
-            'revision': 42,
+            'revision': '42',
             'config': "<Columnstore>...</Columnstore>",
             'mcs_config_filename': self.mcs_config_filename
         }
@@ -270,7 +270,7 @@ class ConfigPutTestCase(BaseServerTestCase):
         )
         body = {
             'manager': '1.1.1.1',
-            'revision': 42,
+            'revision': '42',
             'timeout': 42,
             'mcs_config_filename': self.mcs_config_filename
         }
@@ -285,7 +285,7 @@ class ConfigPutTestCase(BaseServerTestCase):
     def test_no_auth(self):
         """Test no auth."""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
@@ -307,7 +307,7 @@ class ConfigPutTestCase(BaseServerTestCase):
     def test_wrong_cluster_mode(self):
         """Test wrong cluster mode."""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'cluster_mode': 'somemode',
@@ -325,7 +325,7 @@ class ConfigPutTestCase(BaseServerTestCase):
         """Test set mode."""
         mode = 'readwrite'
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'cluster_mode': mode,
@@ -358,7 +358,7 @@ class ConfigPutTestCase(BaseServerTestCase):
         config_file = Path(self.mcs_config_filename)
         config = config_file.read_text()
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 15,
             'config': config,

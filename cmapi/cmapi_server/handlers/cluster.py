@@ -2,6 +2,7 @@
 import configparser
 import hashlib
 import logging
+import os
 import tempfile
 from datetime import datetime
 from enum import Enum
@@ -291,7 +292,8 @@ class ClusterHandler:
             raise CMAPIBasicError('No master found in the cluster.')
         else:
             master = master['IPAddr']
-            payload = {'cluster_mode': mode}
+            payload: dict = {}
+            payload['cluster_mode'] = mode
             url = f'https://{master}:8640/cmapi/{get_version()}/node/config'
 
         nc = NodeConfig()
@@ -447,13 +449,17 @@ class ClusterHandler:
             file_dir = '/var/lib/columnstore/storagemanager/metadata/data1'
 
         with tempfile.NamedTemporaryFile(
-            mode='wb+', delete=True, dir=file_dir, prefix='mcs_test_shared_'
+            mode='wb+', delete=True, dir=file_dir, prefix='mcs_test_shared'
         ) as temp_file:
             file_data = rb'File to check shared storage working.'
             temp_file.write(file_data)
-            tmp_file_md5 = hashlib.md5(file_data).hexdigest()
+            # Make sure data is on disk/visible to other nodes before checks
+            temp_file.flush()
+            os.fsync(temp_file.fileno())
             tmp_file_path = temp_file.name
-            logging.debug(f'Temporary file created at: {tmp_file_path}')
+            logging.debug(f'Temporary file to check shared storage created at: {tmp_file_path}')
+            tmp_file_md5 = hashlib.md5(file_data).hexdigest()
+            logging.debug(f'Temporary file md5: {tmp_file_md5}')
             for node in active_nodes:
                 logging.debug(f'Checking shared file on {node!r}.')
                 client = NodeControllerClient(
@@ -484,7 +490,7 @@ class ClusterHandler:
             'shared_storage': shared_storage,
             'partially_failed': partially_failed,
             'active_nodes_count': len(active_nodes),
-            **all_responses
+            'nodes_responses': {**all_responses}
         }
 
         logging.debug(
