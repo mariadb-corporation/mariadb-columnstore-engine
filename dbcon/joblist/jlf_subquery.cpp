@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stack>
 #include <iterator>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -748,6 +748,10 @@ int doFromSubquery(CalpontExecutionPlan* ep, const string& alias, const string& 
   SJSTEP subQueryStep = transformer.makeSubQueryStep(csep, true);
   subQueryStep->view(view);
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
+  if (csep->isRecursiveQuery())
+  {
+    dynamic_cast<SubAdapterStep*>(subAd.get())->isRecursiveStep(true);
+  }
   jobInfo.selectAndFromSubs.push_back(subAd);
 
   return CNX_VTABLE_ID;
@@ -870,6 +874,10 @@ SJSTEP doUnionSub(CalpontExecutionPlan* ep, JobInfo& jobInfo)
   transformer.setVarbinaryOK();
   SJSTEP subQueryStep = transformer.makeSubQueryStep(csep, false);
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
+  if (csep->isRecursiveQuery())
+  {
+    dynamic_cast<SubAdapterStep*>(subAd.get())->isRecursiveStep(true);
+  }
   return subAd;
 }
 

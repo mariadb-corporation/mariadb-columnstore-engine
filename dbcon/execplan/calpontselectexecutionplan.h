@@ -23,6 +23,7 @@
 /** @file */
 
 #pragma once
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <iosfwd>
@@ -496,7 +497,12 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     return fDerivedTableList;
   }
-  void derivedTableList(const SelectList& derivedTableList)
+
+  SelectList& derivedTableList()
+  {
+    return fDerivedTableList;
+  }
+  void derivedTableList(SelectList& derivedTableList)
   {
     fDerivedTableList = derivedTableList;
   }
@@ -523,10 +529,12 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     fUnionVec = unionVec;
   }
+
   const SelectList& unionVec() const
   {
     return fUnionVec;
   }
+
   SelectList& unionVec()
   {
     return fUnionVec;
@@ -765,6 +773,46 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
     return fTimeZone;
   }
 
+  void isRecursiveWithTable(bool b)
+  {
+    fIsRecursiveWithTable = b;
+  }
+
+  bool isRecursiveWithTable()
+  {
+    return fIsRecursiveWithTable;
+  }
+
+  void isRecursiveQuery(bool b)
+  {
+    fIsRecursiveQuery = b;
+  }
+
+  bool isRecursiveQuery()
+  {
+    return fIsRecursiveQuery;
+  }
+
+  void containsRecursiveQuery(bool b)
+  {
+    fContainsRecursiveQuery = b;
+  }
+
+  bool containsRecursiveQuery()
+  {
+    return fContainsRecursiveQuery;
+  }
+
+  void maxRecursiveDepth(uint32_t i)
+  {
+    fMaxRecursiveDepth = i;
+  }
+
+  int maxRecursiveDepth()
+  {
+    return fMaxRecursiveDepth;
+  }
+
   /**
    * The serialization interface
    */
@@ -985,6 +1033,11 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * A flag to compute subtotals, related to GROUP BY operation.
    */
   bool fWithRollup;
+  bool fIsRecursiveWithTable = false;
+  bool fIsRecursiveQuery = false;
+  bool fContainsRecursiveQuery = false;
+
+  uint32_t fMaxRecursiveDepth;
 };
 
 /**

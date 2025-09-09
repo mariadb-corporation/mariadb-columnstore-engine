@@ -5262,7 +5262,202 @@ SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& 
 
   return SJSTEP(unionStep);
 }
+SJSTEP recursiveUnionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo,
+                             JobStepVector& recurQueries, uint32_t keyCount)
+{
+  vector<RowGroup> inputRGs;
+  vector<bool> distinct;
+  uint64_t colCount = jobInfo.deliveredCols.size();
 
+  vector<uint32_t> oids;
+  vector<uint32_t> keys;
+  vector<uint32_t> scale;
+  vector<uint32_t> precision;
+  vector<uint32_t> width;
+  vector<CalpontSystemCatalog::ColDataType> types;
+  vector<uint32_t> csNums;
+  JobStepAssociation jsaToUnion;
+
+  // bug4388, share code with connector for column type coversion
+  vector<vector<CalpontSystemCatalog::ColType>> queryColTypes;
+
+  for (uint64_t j = 0; j < colCount; ++j)
+    queryColTypes.push_back(vector<CalpontSystemCatalog::ColType>(queries.size() + recurQueries.size()));
+
+  for (uint64_t i = 0; i < queries.size(); i++)
+  {
+    SJSTEP& spjs = queries[i];
+    TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
+
+    if (tds == NULL)
+    {
+      throw runtime_error("Not a deliverable step.");
+    }
+
+    const RowGroup& rg = tds->getDeliveredRowGroup();
+    inputRGs.push_back(rg);
+
+    const vector<uint32_t>& scaleIn = rg.getScale();
+    const vector<uint32_t>& precisionIn = rg.getPrecision();
+    const vector<CalpontSystemCatalog::ColDataType>& typesIn = rg.getColTypes();
+    const vector<uint32_t>& csNumsIn = rg.getCharsetNumbers();
+
+    for (uint64_t j = 0; j < colCount; ++j)
+    {
+      queryColTypes[j][i].colDataType = typesIn[j];
+      queryColTypes[j][i].charsetNumber = csNumsIn[j];
+      queryColTypes[j][i].scale = scaleIn[j];
+      queryColTypes[j][i].precision = precisionIn[j];
+      queryColTypes[j][i].colWidth = rg.getColumnWidth(j);
+    }
+
+    if (i == 0)
+    {
+      const vector<uint32_t>& oidsIn = rg.getOIDs();
+      const vector<uint32_t>& keysIn = rg.getKeys();
+      oids.insert(oids.end(), oidsIn.begin(), oidsIn.begin() + colCount);
+      keys.insert(keys.end(), keysIn.begin(), keysIn.begin() + colCount);
+    }
+
+    // if all union types are UNION_ALL, distinctUnionNum is 0.
+    distinct.push_back(distinctUnionNum > i);
+
+    AnyDataListSPtr spdl(new AnyDataList());
+    RowGroupDL* dl = new RowGroupDL(1, jobInfo.fifoSize);
+    spdl->rowGroupDL(dl);
+    dl->OID(CNX_VTABLE_ID);
+    JobStepAssociation jsa;
+    jsa.outAdd(spdl);
+    spjs->outputAssociation(jsa);
+    jsaToUnion.outAdd(spdl);
+  }
+
+  for (uint64_t i = 0; i < recurQueries.size(); i++)
+  {
+    SJSTEP spjs = recurQueries[i];
+    TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
+
+    if (tds == NULL)
+    {
+      throw runtime_error("Not a deliverable step.");
+    }
+
+    const RowGroup& rg = tds->getDeliveredRowGroup();
+    inputRGs.push_back(rg);
+
+    const vector<uint32_t>& scaleIn = rg.getScale();
+    const vector<uint32_t>& precisionIn = rg.getPrecision();
+    const vector<CalpontSystemCatalog::ColDataType>& typesIn = rg.getColTypes();
+    const vector<uint32_t>& csNumsIn = rg.getCharsetNumbers();
+
+    for (uint64_t j = 0; j < colCount; ++j)
+    {
+      queryColTypes[j][i + queries.size()].colDataType = typesIn[j];
+      queryColTypes[j][i + queries.size()].charsetNumber = csNumsIn[j];
+      queryColTypes[j][i + queries.size()].scale = scaleIn[j];
+      queryColTypes[j][i + queries.size()].precision = precisionIn[j];
+      queryColTypes[j][i + queries.size()].colWidth = rg.getColumnWidth(j);
+    }
+
+    // if all union types are UNION_ALL, distinctUnionNum is 0.
+    distinct.push_back(distinctUnionNum > i);
+
+    // mostly should have initialised DLs hence the change
+    if (i < recurQueries.size() - 1)
+    {
+      AnyDataListSPtr spdl = spjs->outputAssociation().outAt(0);
+      spdl->rowGroupDL()->setNumConsumers(2);
+      jsaToUnion.outAdd(spdl);
+    }
+    else
+    {
+      AnyDataListSPtr spdl(new AnyDataList());
+      RowGroupDL* dl = new RowGroupDL(1, jobInfo.fifoSize);
+      spdl->rowGroupDL(dl);
+      dl->OID(CNX_VTABLE_ID);
+      JobStepAssociation jsa;
+      jsa.outAdd(spdl);
+      spjs->outputAssociation(jsa);
+      jsaToUnion.outAdd(spdl);
+    }
+  }
+
+  AnyDataListSPtr spdl(new AnyDataList());
+  RowGroupDL* dl = new RowGroupDL(1, jobInfo.fifoSize);
+  spdl->rowGroupDL(dl);
+  dl->OID(CNX_VTABLE_ID);
+  JobStepAssociation jsa;
+  jsa.outAdd(spdl);
+  TupleRecursiveUnion* unionStep = new TupleRecursiveUnion(CNX_VTABLE_ID, jobInfo, keyCount);
+  unionStep->inputAssociation(jsaToUnion);
+  unionStep->outputAssociation(jsa);
+
+  // This return code in the call to convertUnionColType() below would
+  // always be 0. This is because convertUnionColType() is also called
+  // in the connector code in getSelectPlan() which handle
+  // the non-zero return code scenarios from this function call and error
+  // out, in which case, the execution does not even get to ExeMgr.
+  unsigned int dummyUnionedTypeRc = 0;
+
+  // get unioned column types
+  for (uint64_t j = 0; j < colCount; ++j)
+  {
+    CalpontSystemCatalog::ColType colType =
+        CalpontSystemCatalog::ColType::convertUnionColType(queryColTypes[j], dummyUnionedTypeRc);
+    types.push_back(colType.colDataType);
+    csNums.push_back(colType.charsetNumber);
+    scale.push_back(colType.scale);
+    precision.push_back(colType.precision);
+    width.push_back(colType.colWidth);
+  }
+
+  vector<uint32_t> pos;
+  pos.push_back(2);
+
+  for (uint64_t i = 0; i < oids.size(); ++i)
+    pos.push_back(pos[i] + width[i]);
+
+  unionStep->setInputRowGroups(inputRGs);
+  unionStep->setDistinctFlags(distinct);
+  unionStep->setOutputRowGroup(
+      RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold));
+
+  // Fix for bug 4388 adjusts the result type at connector side, this workaround is obsolete.
+  // bug 3067, update the returned column types.
+  // This is a workaround as the connector always uses the first query' returned columns.
+  // ct.colDataType = types[i];
+  // ct.scale = scale[i];
+  // ct.colWidth = width[i];
+
+  for (size_t i = 0; i < jobInfo.deliveredCols.size(); i++)
+  {
+    CalpontSystemCatalog::ColType ct = jobInfo.deliveredCols[i]->resultType();
+    // XXX remove after connector change
+    ct.colDataType = types[i];
+    ct.scale = scale[i];
+    ct.colWidth = width[i];
+
+    // varchar/varbinary column width has been fudged, see fudgeWidth in jlf_common.cpp.
+    if (ct.colDataType == CalpontSystemCatalog::VARCHAR)
+      ct.colWidth--;
+    else if (ct.colDataType == CalpontSystemCatalog::VARBINARY)
+      ct.colWidth -= 2;
+
+    jobInfo.deliveredCols[i]->resultType(ct);
+  }
+
+  if (jobInfo.trace)
+  {
+    cout << boldStart << "\ninput RGs: (distinct=" << distinctUnionNum << ")\n" << boldStop;
+
+    for (vector<RowGroup>::iterator i = inputRGs.begin(); i != inputRGs.end(); i++)
+      cout << i->toString() << endl << endl;
+
+    cout << boldStart << "output RG:\n" << boldStop << unionStep->getDeliveredRowGroup().toString() << endl;
+  }
+
+  return SJSTEP(unionStep);
+}
 }  // namespace joblist
 
 #ifdef __clang__

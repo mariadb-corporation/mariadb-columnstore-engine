@@ -5315,22 +5315,94 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
     {
       // Until we handle recursive cte:
       // Checking here ensures we catch all with clauses in the query.
-      if (table_ptr->is_recursive_with_table())
-      {
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = "Recursive CTE";
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
+      /*
 
+      refer to sql_union.cc, exec_recursive for a sample implementation
+
+      might just work by setting isUnion to true, then calling get select again.
+      need to set relevant meta data.
+
+      needs to write all to the first table, probably can be achieved
+      */
       string viewName = getViewName(table_ptr);
       if (lower_case_table_names)
       {
         boost::algorithm::to_lower(viewName);
       }
+      if (table_ptr->is_recursive_with_table())
+      {
+        dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())->containsRecursiveQuery(true);
+        SELECT_LEX* start = table_ptr->derived->first_select();
+        // SELECT_LEX* end = NULL;
+        dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())
+            ->maxRecursiveDepth(gwi.thd->variables.max_recursive_iterations);
+        // CalpontSelectExecutionPlan::SelectList unionVec;
+        // bool unionSel = true;
+        // uint8_t distUnionNum = 0;
+        SCSEP anchor_plan = NULL;
+
+#ifdef DEBUG_WALK_COND
+
+        if (gwi.recursiveWithTableName == table_ptr->table_name.str)
+        {
+          cerr << "RECURSIVE TABLE: " << gwi.recursiveWithTableName << endl;
+        }
+
+#endif
+
+        FromSubQuery* fromSub = new FromSubQuery(gwi, start);
+        string alias(table_ptr->alias.str);
+        if (lower_case_table_names)
+        {
+          boost::algorithm::to_lower(alias);
+        }
+        fromSub->alias(alias);
+
+        CalpontSystemCatalog::TableAliasName tn =
+            make_aliasview("", table_ptr->table_name.str, alias, viewName);
+        // @bug 3852. check return execplan
+        anchor_plan = fromSub->transform(isUnion);
+        if (!anchor_plan)
+        {
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
+          CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
+          return ER_INTERNAL_ERROR;
+        }
+        dynamic_cast<CalpontSelectExecutionPlan*>(anchor_plan.get())->isRecursiveWithTable(true);
+
+        gwi.derivedTbList.push_back(anchor_plan);
+        gwi.tbList.push_back(tn);
+        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", table_ptr->table_name.str, alias);
+        gwi.tableMap[tan] = make_pair(0, table_ptr);
+        // MCOL-2178 isUnion member only assigned, never used
+        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+        start = table_ptr->derived->first_select();
+
+        // if (with_element->with_anchor)
+        //   end = with_element->first_recursive;
+
+        if (!anchor_plan)
+        {
+          setError(gwi.thd, ER_INTERNAL_ERROR, "No Anchor Query", gwi);
+          CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
+          return ER_INTERNAL_ERROR;
+        }
+
+        // if (table_ptr->view)
+        // {
+        //   gwi.parseErrorText = "Recursive CTE view";
+        // }
+        // else
+        // {
+        //   gwi.parseErrorText = "Recursive CTE";
+        // }
+
+        // setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        // return ER_CHECK_NOT_IMPLEMENTED;
+      }
 
       // @todo process from subquery
-      if (table_ptr->derived)
+      else if (table_ptr->derived)
       {
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
         FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
@@ -5341,7 +5413,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         }
         fromSub->alias(alias);
 
-        CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
+        CalpontSystemCatalog::TableAliasName tn =
+            make_aliasview("", table_ptr->table_name.str, alias, viewName);
         // @bug 3852. check return execplan
         SCSEP plan = fromSub->transform();
 
@@ -5352,10 +5425,17 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
           return ER_INTERNAL_ERROR;
         }
 
+        if (plan->containsRecursiveQuery())
+        {
+          csep->containsRecursiveQuery(true);
+        }
+
         gwi.derivedTbList.push_back(plan);
         gwi.tbList.push_back(tn);
-        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
+        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", table_ptr->table_name.str, alias);
         gwi.tableMap[tan] = make_pair(0, table_ptr);
+        // MCOL-2178 isUnion member only assigned, never used
+        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
       }
       else if (table_ptr->view)
       {
@@ -5392,12 +5472,9 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         CalpontSystemCatalog::TableAliasName tn =
             make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore,
                            lower_case_table_names);
-        execplan::Partitions parts = getPartitions(table_ptr);
-        tn.partitions = parts;
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable(
             table_ptr->db.str, table_name, table_ptr->alias.str, columnStore, lower_case_table_names);
-        tan.partitions = parts;
         gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
         cerr << tn << endl;
@@ -5461,6 +5538,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
+    // MCOL-2178 isUnion member only assigned, never used
+    // MIGR::infinidb_vtable.isUnion = true;
     CalpontSelectExecutionPlan::SelectList unionVec;
     SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
     unionSel = true;
@@ -5488,6 +5567,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       // distinct union num
       if (sl == select_lex.master_unit()->union_distinct)
         distUnionNum = unionVec.size();
+      // if (sl->get_table_list()->is_recursive_with_table())
+      //   break;
     }
 
     csep->unionVec(unionVec);

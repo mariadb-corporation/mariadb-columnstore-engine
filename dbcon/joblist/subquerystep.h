@@ -215,6 +215,16 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
     return fSubStep;
   }
 
+  void isRecursiveStep(bool b)
+  {
+    fIsRecursiveStep = b;
+  }
+
+  bool isRecursiveStep()
+  {
+    return fIsRecursiveStep;
+  }
+
   /** @brief add filters (expression steps)
    */
   void addExpression(const JobStepVector&, JobInfo&);
@@ -251,6 +261,8 @@ class SubAdapterStep : public JobStep, public TupleDeliveryStep
   RowGroupDL* fOutputDL;
   uint64_t fInputIterator;
   uint64_t fOutputIterator;
+
+  bool fIsRecursiveStep = false;
 
   class Runner
   {
