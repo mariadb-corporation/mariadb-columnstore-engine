@@ -51,6 +51,6 @@ add_library(execplan SHARED ${execplan_LIB_SRCS})
 
 add_dependencies(execplan loggingcpp)
 
-target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${MARIADB_STRING_LIBS} ${ENGINE_DT_LIB})
+target_link_libraries(execplan ${NETSNMP_LIBRARIES} ${ENGINE_DT_LIB})
 
 install(TARGETS execplan DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)

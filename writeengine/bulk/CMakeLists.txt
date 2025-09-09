@@ -36,7 +36,7 @@ REMOVE_DEFINITIONS(-D_FILE_OFFSET_BITS=64)
 
 ########### next target ###############
 
-set(cpimport.bin_SRCS cpimport.cpp)
+set(cpimport.bin_SRCS cpimport.cpp ../../build/asan_options.cpp)
 
 add_executable(cpimport.bin ${cpimport.bin_SRCS})
 add_dependencies(cpimport.bin marias3)

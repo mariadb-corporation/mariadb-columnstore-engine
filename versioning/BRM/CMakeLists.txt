@@ -37,14 +37,14 @@ add_dependencies(brm loggingcpp)
 
 install(TARGETS brm DESTINATION ${ENGINE_LIBDIR} COMPONENT columnstore-engine)
 
-
+target_link_libraries(brm ddlpackage)
 ########### next target ###############
 
 set(controllernode_SRCS masternode.cpp masterdbrmnode.cpp ../../utils/common/crashtrace.cpp)
 
 add_executable(controllernode ${controllernode_SRCS})
 
-target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} )
+target_link_libraries(controllernode ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS})
 
 install(TARGETS controllernode DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
 
