@@ -260,4 +260,9 @@ void ReturnedColumn::setSimpleColumnList()
   fSimpleColumnList.clear();
 }
 
+void ReturnedColumn::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+}
+
 }  // namespace execplan

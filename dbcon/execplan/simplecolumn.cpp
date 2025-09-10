@@ -91,6 +91,48 @@ void getSimpleCols(execplan::ParseTree* n, void* obj)
   }
 }
 
+void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
+{
+  vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
+  TreeNode* tn = n->data();
+  SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
+  FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
+  ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
+  SimpleFilter* sf = dynamic_cast<SimpleFilter*>(tn);
+  ConstantFilter* cf = dynamic_cast<ConstantFilter*>(tn);
+  AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
+
+  if (sc)
+  {
+    list->push_back(sc);
+  }
+  else if (fc)
+  {
+    fc->setSimpleColumnListExtended();
+    list->insert(list->end(), fc->simpleColumnListExtended().begin(), fc->simpleColumnListExtended().end());
+  }
+  else if (ac)
+  {
+    ac->setSimpleColumnListExtended();
+    list->insert(list->end(), ac->simpleColumnListExtended().begin(), ac->simpleColumnListExtended().end());
+  }
+  else if (agc)
+  {
+    agc->setSimpleColumnListExtended();
+    list->insert(list->end(), agc->simpleColumnListExtended().begin(), agc->simpleColumnListExtended().end());
+  }
+  else if (sf)
+  {
+    sf->setSimpleColumnListExtended();
+    list->insert(list->end(), sf->simpleColumnListExtended().begin(), sf->simpleColumnListExtended().end());
+  }
+  else if (cf)
+  {
+    cf->setSimpleColumnListExtended();
+    list->insert(list->end(), cf->simpleColumnListExtended().begin(), cf->simpleColumnListExtended().end());
+  }
+}
+
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList& derivedColList)
 {
   ParseTree* lhs = n->left();
@@ -779,6 +821,18 @@ void SimpleColumn::setSimpleColumnList()
   else
   {
     fSimpleColumnList.back() = this;
+  }
+}
+
+void SimpleColumn::setSimpleColumnListExtended()
+{
+  if (fSimpleColumnListExtended.empty())
+  {
+    fSimpleColumnListExtended.push_back(this);
+  }
+  else
+  {
+    fSimpleColumnListExtended.back() = this;
   }
 }
 

@@ -159,12 +159,9 @@ class FunctionColumn : public ReturnedColumn
   bool hasWindowFunc() override;
   void setDerivedTable() override;
   void replaceRealCol(std::vector<SRCP>&) override;
-  virtual const std::vector<SimpleColumn*>& simpleColumnList() const override
-  {
-    return fSimpleColumnList;
-  }
 
   void setSimpleColumnList() override;
+  void setSimpleColumnListExtended() override;
   /**
    * Return the tableAlias name of the table that the column arguments belong to.
    *

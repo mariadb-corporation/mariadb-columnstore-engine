@@ -246,8 +246,10 @@ class SimpleFilter : public Filter
 
   // get all simple columns involved in this column
   const std::vector<SimpleColumn*>& simpleColumnList();
+  const std::vector<SimpleColumn*>& simpleColumnListExtended();
   // walk through the simple filter operands to re-populate fSimpleColumnList
   void setSimpleColumnList();
+  void setSimpleColumnListExtended();
   // walk through the simple filter operands to check existence of aggregate
   bool hasAggregate();
 
@@ -265,6 +267,7 @@ class SimpleFilter : public Filter
 
  private:
   std::vector<SimpleColumn*> fSimpleColumnList;
+  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;
 };

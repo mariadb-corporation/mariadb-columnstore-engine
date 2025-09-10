@@ -287,12 +287,19 @@ class ReturnedColumn : public TreeNode
     return fSimpleColumnList;
   }
 
+  virtual const std::vector<SimpleColumn*>& simpleColumnListExtended() const
+  {
+    return fSimpleColumnListExtended;
+  }
+
   /* @brief traverse this ReturnedColumn and re-populate fSimpleColumnList.
    *
    * @note all ReturnedColumns that may have simple column arguments added
    * to the list need to implement this function.
    */
   virtual void setSimpleColumnList();
+
+  virtual void setSimpleColumnListExtended();
 
   // get all aggregate column list in this expression
   const std::vector<AggregateColumn*>& aggColumnList() const
@@ -342,7 +349,10 @@ class ReturnedColumn : public TreeNode
   uint64_t fOrderPos;    /// for order by and group by column
   uint64_t fColSource;   /// from which subquery
   int64_t fColPosition;  /// the column position in the source subquery
+  // The difference b/w the two vectors is that the second one is used to store SCs
+  // are are used by AggegateColumn.
   std::vector<SimpleColumn*> fSimpleColumnList;
+  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;
   bool fHasAggregate;  /// connector internal use. no need to serialize

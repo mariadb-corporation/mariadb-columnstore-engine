@@ -447,6 +447,12 @@ void ArithmeticColumn::setSimpleColumnList()
   fExpression->walk(getSimpleCols, &fSimpleColumnList);
 }
 
+void ArithmeticColumn::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+  fExpression->walk(getSimpleColsExtended, &fSimpleColumnListExtended);
+}
+
 std::optional<CalpontSystemCatalog::TableAliasName> ArithmeticColumn::singleTable()
 {
   setSimpleColumnList();

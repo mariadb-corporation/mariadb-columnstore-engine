@@ -46,7 +46,6 @@ using namespace boost;
 #include "functor_str.h"
 using namespace funcexp;
 
-
 namespace execplan
 {
 /**
@@ -141,7 +140,8 @@ string FunctionColumn::toCppCode(IncludeSet& includes) const
 
   auto fFuncParmsInString = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
 
-  ss << "FunctionColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fFuncParmsInString) << ", " << sessionID() << ")";
+  ss << "FunctionColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fFuncParmsInString) << ", "
+     << sessionID() << ")";
 
   return ss.str();
 }
@@ -519,6 +519,14 @@ void FunctionColumn::setSimpleColumnList()
 
   for (uint i = 0; i < fFunctionParms.size(); i++)
     fFunctionParms[i]->walk(getSimpleCols, &fSimpleColumnList);
+}
+
+void FunctionColumn::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+
+  for (uint i = 0; i < fFunctionParms.size(); i++)
+    fFunctionParms[i]->walk(getSimpleColsExtended, &fSimpleColumnListExtended);
 }
 
 std::optional<CalpontSystemCatalog::TableAliasName> FunctionColumn::singleTable()

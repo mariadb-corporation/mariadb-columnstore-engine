@@ -266,7 +266,7 @@ class SimpleColumn : public ReturnedColumn
   std::optional<CalpontSystemCatalog::TableAliasName> singleTable() override;
 
   void setSimpleColumnList() override;
-
+  void setSimpleColumnListExtended() override;
 
  protected:
   /**
@@ -407,8 +407,10 @@ std::ostream& operator<<(std::ostream& output, const SimpleColumn& rhs);
  * utility function to extract all simple columns from a parse tree
  */
 void getSimpleCols(ParseTree* n, void* obj);
+void getSimpleColsExtended(execplan::ParseTree* n, void* obj);
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList&);
 
-std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(std::vector<SimpleColumn*> simpleColumnList);
+std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(
+    std::vector<SimpleColumn*> simpleColumnList);
 
 }  // namespace execplan
