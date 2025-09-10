@@ -138,39 +138,26 @@ AggregateColumn::AggregateColumn(const AggregateColumn& rhs, const uint32_t sess
  * Methods
  */
 
-void AggregateColumn::setSimpleColumnList()
-{
-  fSimpleColumnList.clear();
-  return setSimpleColumnList_(false);
-}
-
 void AggregateColumn::setSimpleColumnListExtended()
 {
   fSimpleColumnListExtended.clear();
-  return setSimpleColumnList_(true);
+  return setSimpleColumnListExtended_();
 }
 
-void AggregateColumn::setSimpleColumnList_(const bool extractSCsfromAggCol)
+void AggregateColumn::setSimpleColumnListExtended_()
 {
   for (const auto& parm : aggParms())
   {
     if (!parm)
       continue;
 
-    auto aggParmsAsSCVec = (extractSCsfromAggCol) ? getSCsFromRCForExtended(parm) : getSCsFromRC(parm);
+    auto aggParmsAsSCVec = getSCsFromRCForExtended(parm);
 
     for (auto* sc : aggParmsAsSCVec)
     {
       if (sc)
       {
-        if (extractSCsfromAggCol)
-        {
-          fSimpleColumnListExtended.push_back(sc);
-        }
-        else
-        {
-          fSimpleColumnList.push_back(sc);
-        }
+        fSimpleColumnListExtended.push_back(sc);
       }
     }
   }

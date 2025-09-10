@@ -544,13 +544,6 @@ void updateSCsUsingWalkers(optimizer::TableAliasToNewAliasAndSCPositionsMap& tab
   {
     tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap);
   }
-
-  std::vector<execplan::SimpleColumn*> simpleColumnsFromAgg;
-  pt->walk(execplan::getAggCols, &simpleColumnsFromAgg);
-  for (auto* sc : simpleColumnsFromAgg)
-  {
-    tryToUpdateScToUseRewrittenDerived(sc, tableAliasToSCPositionsMap);
-  }
 }
 
 // This routine takes tableAliasToSCPositionsMap and extraSCs and correlate extraSCs with positions.

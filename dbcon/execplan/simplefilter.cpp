@@ -857,19 +857,21 @@ void SimpleFilter::setSimpleColumnListExtended()
   else if (fLhs)
   {
     fLhs->setSimpleColumnListExtended();
-    fSimpleColumnList.insert(fSimpleColumnList.end(), fLhs->simpleColumnListExtended().begin(),
-                             fLhs->simpleColumnListExtended().end());
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fLhs->simpleColumnListExtended().begin(),
+                                     fLhs->simpleColumnListExtended().end());
   }
 
   if (rsc)
   {
-    fSimpleColumnList.push_back(rsc);
+    fSimpleColumnListExtended.push_back(rsc);
   }
   else if (fRhs)
   {
     fRhs->setSimpleColumnListExtended();
-    fSimpleColumnList.insert(fSimpleColumnList.end(), fRhs->simpleColumnListExtended().begin(),
-                             fRhs->simpleColumnListExtended().end());
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fRhs->simpleColumnListExtended().begin(),
+                                     fRhs->simpleColumnListExtended().end());
   }
 }
 
