@@ -355,7 +355,8 @@ class ConfigController:
 
         try:
             wrapper = ConfigPutRequestRootModel.model_validate(cherrypy.request.json)
-            # the actual StatefulConfigPutRequestModel or FullConfigPutRequestModel
+            # the actual StatefulConfigPutRequestModel or FullConfigPutRequestModel or
+            # PutConfigSetModeRequestModel
             req_model = wrapper.root
         except ValidationError as exp:
             raise_422_error(
@@ -413,10 +414,7 @@ class ConfigController:
         operation_params = (request_mode, xml_config, secrets)
         # if no operation to apply, return 422
         if not any(operation_params):
-            raise_422_error(
-                module_logger, func_name,
-                'Mandatory operation attribute is missing.'
-            )
+            raise_422_error(module_logger, func_name, 'Mandatory operation attribute is missing.')
 
         request_headers = cherrypy.request.headers
         request_manager_address = request_headers.get('Remote-Addr', None)
