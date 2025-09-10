@@ -116,12 +116,16 @@ class MariaDBHasher
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
   {
-    cs->hash_sort((const uchar*)str, length, &mPart1, &mPart2);
+    // my_hash_sort expects a valid pointer even if length == 0. Substitute empty string for nullptr.
+    const char* safe = str ? str : "";
+    cs->hash_sort((const uchar*)safe, length, &mPart1, &mPart2);
     return *this;
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const utils::ConstString& str)
   {
-    return add(cs, str.str(), str.length());
+    // utils::ConstString guarantees length==0 when pointer is nullptr.
+    // Still, ensure non-null pointer is passed to hash_sort.
+    return add(cs, str.str() ? str.str() : "", str.length());
   }
   uint32_t finalize() const
   {

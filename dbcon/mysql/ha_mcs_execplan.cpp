@@ -1288,23 +1288,28 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
   // (lhs = rhs) OR (isnull(lhs) AND isnull(rhs))
   if (std::string(ifp->func_name()) == "<=>" && ifp->argument_count() == 2)
   {
-    // Build ReturnedColumns for lhs and rhs
-    ReturnedColumn* lhs = buildReturnedColumn(ifp->arguments()[0], *gwip, gwip->fatalParseError);
-    if (gwip->fatalParseError || !lhs)
-      return false;
-    ReturnedColumn* rhs = buildReturnedColumn(ifp->arguments()[1], *gwip, gwip->fatalParseError);
-    if (gwip->fatalParseError || !rhs)
-      return false;
+    // Use operands from rcWorkStack as in standard relational ops
+    idbassert(gwip->rcWorkStack.size() >= 2);
+    ReturnedColumn* rhs = gwip->rcWorkStack.top();
+    gwip->rcWorkStack.pop();
+    ReturnedColumn* lhs = gwip->rcWorkStack.top();
+    gwip->rcWorkStack.pop();
 
-    // SimpleFilter for lhs = rhs
-    SimpleFilter* sf_eq = new SimpleFilter();
-    sf_eq->timeZone(gwip->timeZone);
+    // Build equality via buildEqualityPredicate() so it is registered as an equi-join edge
+    std::vector<Item*> itemList;
+    for (uint32_t i = 0; i < ifp->argument_count(); i++)
+      itemList.push_back(ifp->arguments()[i]);
+
     boost::shared_ptr<Operator> op_eq(new PredicateOperator("="));
-    // Set operation type from operands
-    op_eq->setOpType(lhs->resultType(), rhs->resultType());
-    sf_eq->op(op_eq);
-    sf_eq->lhs(lhs->clone());
-    sf_eq->rhs(rhs->clone());
+    if (!buildEqualityPredicate(lhs->clone(), rhs->clone(), gwip, op_eq,
+                                Item_func::EQ_FUNC, itemList, /*isInSubs=*/false))
+    {
+      return false;
+    }
+    // equality is now on ptWorkStack
+    idbassert(!gwip->ptWorkStack.empty());
+    ParseTree* eq_pt = gwip->ptWorkStack.top();
+    gwip->ptWorkStack.pop();
 
     // isnull(lhs)
     SimpleFilter* sf_isnull_lhs = new SimpleFilter();
@@ -1333,7 +1338,7 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     // OR( lhs = rhs, AND(...) )
     ParseTree* pt_or = new ParseTree(new LogicOperator("or"));
-    pt_or->left(new ParseTree(sf_eq));
+    pt_or->left(eq_pt);
     pt_or->right(pt_and);
 
     gwip->ptWorkStack.push(pt_or);

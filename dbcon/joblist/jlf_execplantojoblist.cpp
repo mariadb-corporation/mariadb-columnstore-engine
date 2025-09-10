@@ -3251,7 +3251,65 @@ void doOR(ParseTree* n, JobInfo& jobInfo, bool tryCombine)
 
   if (jsv.empty())
   {
-    // OR is processed as an expression
+    // Try to extract equi-join edges hidden inside OR before degrading to expression
+    // Traverse the subtree and collect SimpleFilter nodes that are '=' between two SimpleColumns from different tables
+    std::set<std::pair<uint32_t, uint32_t>> addedPairs;
+    JobStepVector joinStepsFromOr;
+
+    std::stack<ParseTree*> st;
+    st.push(n);
+    while (!st.empty())
+    {
+      ParseTree* cur = st.top();
+      st.pop();
+      if (!cur)
+        continue;
+
+      // Always traverse children
+      if (cur->right()) st.push(cur->right());
+      if (cur->left()) st.push(cur->left());
+
+      SimpleFilter* sf = dynamic_cast<SimpleFilter*>(cur->data());
+      if (!sf)
+        continue;
+
+      // Only '='
+      const Operator* op = sf->op().get();
+      if (!op || !(*op == opeq))
+        continue;
+
+      // Both sides must be simple columns and belong to different tables/views/aliases
+      SimpleColumn* sc1 = dynamic_cast<SimpleColumn*>(sf->lhs());
+      SimpleColumn* sc2 = dynamic_cast<SimpleColumn*>(sf->rhs());
+      if (!sc1 || !sc2)
+        continue;
+
+      if (sc1->tableName() == sc2->tableName() && sc1->tableAlias() == sc2->tableAlias() &&
+          sc1->viewName() == sc2->viewName())
+        continue;  // same table: not a join edge
+
+      // Build a stable pair key to avoid duplicates
+      uint32_t tid1 = getTableKey(jobInfo, tableOid(sc1, jobInfo.csc), sc1->tableAlias(), sc1->schemaName(),
+                                  sc1->viewName(), sc1->partitions());
+      uint32_t tid2 = getTableKey(jobInfo, tableOid(sc2, jobInfo.csc), sc2->tableAlias(), sc2->schemaName(),
+                                  sc2->viewName(), sc2->partitions());
+      std::pair<uint32_t, uint32_t> edge = (tid1 < tid2) ? std::make_pair(tid1, tid2)
+                                                         : std::make_pair(tid2, tid1);
+
+      if (addedPairs.insert(edge).second)
+      {
+        // Create a join step for this equality to populate the join graph
+        SOP sop(new PredicateOperator("="));
+        JobStepVector oneJoin = doJoin(sc1, sc2, jobInfo, sop, sf);
+        joinStepsFromOr.insert(joinStepsFromOr.end(), oneJoin.begin(), oneJoin.end());
+      }
+    }
+
+    // First, add any extracted join steps (if any), then add the expression to preserve semantics
+    if (!joinStepsFromOr.empty())
+      JLF_ExecPlanToJobList::addJobSteps(joinStepsFromOr, jobInfo, false);
+
+    // OR is processed as an expression for actual filtering semantics
     jsv = doExpressionFilter(n, jobInfo);
   }
 
