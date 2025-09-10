@@ -1,0 +1,57 @@
+==== utf8 ====
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar a JOIN t_varchar2 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar a JOIN t_varchar b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'
+==== latin1 ====
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_l1 a JOIN t_varchar2_l1 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_l1 a JOIN t_varchar_l1 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'
+==== utf8mb4 ====
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_u8m4 a JOIN t_varchar2_u8m4 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_u8m4 a JOIN t_varchar_u8m4 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+QUOTE(a.v)	QUOTE(b.v)
+''	''
+'-5'	'-5'
+'0'	'0'
+'1'	'1'
+'123'	'123'
+'3.14'	'3.14'
+'abc'	'abc'

@@ -1,0 +1,119 @@
+--echo ==== utf8 ====
+--disable_warnings
+DROP TABLE IF EXISTS t_varchar;
+DROP TABLE IF EXISTS t_varchar2;
+--enable_warnings
+
+CREATE TABLE t_varchar (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET utf8 COLLATE utf8_bin;
+
+INSERT INTO t_varchar (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+CREATE TABLE t_varchar2 (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET utf8 COLLATE utf8_bin;
+
+INSERT INTO t_varchar2 (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar a JOIN t_varchar2 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar a JOIN t_varchar b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+
+DROP TABLE t_varchar;
+DROP TABLE t_varchar2;
+
+--echo ==== latin1 ====
+--disable_warnings
+DROP TABLE IF EXISTS t_varchar_l1;
+DROP TABLE IF EXISTS t_varchar2_l1;
+--enable_warnings
+
+CREATE TABLE t_varchar_l1 (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET latin1 COLLATE latin1_bin;
+
+INSERT INTO t_varchar_l1 (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+CREATE TABLE t_varchar2_l1 (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET latin1 COLLATE latin1_bin;
+
+INSERT INTO t_varchar2_l1 (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_l1 a JOIN t_varchar2_l1 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_l1 a JOIN t_varchar_l1 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+
+DROP TABLE t_varchar_l1;
+DROP TABLE t_varchar2_l1;
+
+--echo ==== utf8mb4 ====
+--disable_warnings
+DROP TABLE IF EXISTS t_varchar_u8m4;
+DROP TABLE IF EXISTS t_varchar2_u8m4;
+--enable_warnings
+
+CREATE TABLE t_varchar_u8m4 (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+
+INSERT INTO t_varchar_u8m4 (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+CREATE TABLE t_varchar2_u8m4 (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+
+INSERT INTO t_varchar2_u8m4 (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_u8m4 a JOIN t_varchar2_u8m4 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+SELECT QUOTE(a.v), QUOTE(b.v) FROM t_varchar_u8m4 a JOIN t_varchar_u8m4 b ON a.v = b.v ORDER BY a.v IS NULL, a.v, b.v;
+
+DROP TABLE t_varchar_u8m4;
+DROP TABLE t_varchar2_u8m4;
