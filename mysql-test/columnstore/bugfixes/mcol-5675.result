@@ -1,0 +1,71 @@
+DROP DATABASE IF EXISTS mcol_5675;
+CREATE DATABASE mcol_5675;
+USE mcol_5675;
+CREATE TABLE t_varchar (
+v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE;
+INSERT INTO t_varchar (v) VALUES
+(NULL),
+(''),
+('0'),
+('1'),
+('123'),
+('-5'),
+('3.14'),
+('abc');
+SELECT v IS NULL AS is_null, IF(v, 1, 0) AS bool_from_v
+FROM t_varchar
+ORDER BY v IS NULL, v;
+is_null	bool_from_v
+0	0
+0	1
+0	0
+0	1
+0	1
+0	1
+0	0
+1	0
+SELECT v, v + 0 AS plus0_int, v + 0.0 AS plus0_float
+FROM t_varchar
+ORDER BY v IS NULL, v;
+v	plus0_int	plus0_float
+	0	0
+-5	-5	-5
+0	0	0
+1	1	1
+123	123	123
+3.14	3.14	3.14
+abc	0	0
+NULL	NULL	NULL
+SELECT v, ROUND(v + 0.0, 0) AS rounded
+FROM t_varchar
+ORDER BY v IS NULL, v;
+v	rounded
+	0
+-5	-5
+0	0
+1	1
+123	123
+3.14	3
+abc	0
+NULL	NULL
+SELECT v, (v <=> 0) FROM t_varchar ORDER BY v IS NULL, v;
+ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<=>' isn't supported.
+SELECT v FROM t_varchar WHERE v <=> '0' ORDER BY v;
+v
+0
+SELECT v FROM t_varchar WHERE v <=> 123 ORDER BY v;
+v
+123
+SELECT v FROM t_varchar WHERE v <=> '' ORDER BY v;
+v
+
+SELECT v FROM t_varchar WHERE v <=> NULL ORDER BY v IS NULL, v;
+v
+NULL
+SELECT a.v, b.v
+FROM t_varchar a
+JOIN t_varchar b ON a.v <=> b.v
+ORDER BY a.v IS NULL, a.v, b.v;
+ERROR HY000: Internal error: MCS-1000: 'a' and 'b' are not joined.
+DROP DATABASE mcol_5675;

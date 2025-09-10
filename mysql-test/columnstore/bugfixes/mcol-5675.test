@@ -1,0 +1,58 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5675;
+--enable_warnings
+CREATE DATABASE mcol_5675;
+USE mcol_5675;
+
+# Exercise safe string-to-numeric conversions on ColumnStore string columns
+# Ensure NULLs and empty strings do not crash and evaluate to numeric 0
+CREATE TABLE t_varchar (
+  v VARCHAR(10) NULL
+) ENGINE=COLUMNSTORE;
+
+INSERT INTO t_varchar (v) VALUES
+  (NULL),
+  (''),
+  ('0'),
+  ('1'),
+  ('123'),
+  ('-5'),
+  ('3.14'),
+  ('abc');
+
+# Boolean context evaluation (uses internal atoi/atof conversions)
+SELECT v IS NULL AS is_null, IF(v, 1, 0) AS bool_from_v
+FROM t_varchar
+ORDER BY v IS NULL, v;
+
+# Arithmetic with implicit numeric conversion
+SELECT v, v + 0 AS plus0_int, v + 0.0 AS plus0_float
+FROM t_varchar
+ORDER BY v IS NULL, v;
+
+# Rounding path via floating conversion
+SELECT v, ROUND(v + 0.0, 0) AS rounded
+FROM t_varchar
+ORDER BY v IS NULL, v;
+
+# Null-safe comparisons
+# ColumnStore currently does not support '<=>' in the projection list; assert the engine error
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT v, (v <=> 0) FROM t_varchar ORDER BY v IS NULL, v;
+
+# ColumnStore supports '<=>' in predicates (WHERE). Validate behavior
+SELECT v FROM t_varchar WHERE v <=> '0' ORDER BY v;
+SELECT v FROM t_varchar WHERE v <=> 123 ORDER BY v;
+SELECT v FROM t_varchar WHERE v <=> '' ORDER BY v;
+SELECT v FROM t_varchar WHERE v <=> NULL ORDER BY v IS NULL, v;
+
+# Join using NULL-safe operator in ON clause
+--error 1815
+SELECT a.v, b.v
+FROM t_varchar a
+JOIN t_varchar b ON a.v <=> b.v
+ORDER BY a.v IS NULL, a.v, b.v;
+
+# cleanup
+DROP DATABASE mcol_5675;
