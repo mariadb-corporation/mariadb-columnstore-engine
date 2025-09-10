@@ -1284,6 +1284,62 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
   }
 
+  // Handle NULL-safe equality '<=>' by rewriting into
+  // (lhs = rhs) OR (isnull(lhs) AND isnull(rhs))
+  if (std::string(ifp->func_name()) == "<=>" && ifp->argument_count() == 2)
+  {
+    // Build ReturnedColumns for lhs and rhs
+    ReturnedColumn* lhs = buildReturnedColumn(ifp->arguments()[0], *gwip, gwip->fatalParseError);
+    if (gwip->fatalParseError || !lhs)
+      return false;
+    ReturnedColumn* rhs = buildReturnedColumn(ifp->arguments()[1], *gwip, gwip->fatalParseError);
+    if (gwip->fatalParseError || !rhs)
+      return false;
+
+    // SimpleFilter for lhs = rhs
+    SimpleFilter* sf_eq = new SimpleFilter();
+    sf_eq->timeZone(gwip->timeZone);
+    boost::shared_ptr<Operator> op_eq(new PredicateOperator("="));
+    // Set operation type from operands
+    op_eq->setOpType(lhs->resultType(), rhs->resultType());
+    sf_eq->op(op_eq);
+    sf_eq->lhs(lhs->clone());
+    sf_eq->rhs(rhs->clone());
+
+    // isnull(lhs)
+    SimpleFilter* sf_isnull_lhs = new SimpleFilter();
+    sf_isnull_lhs->timeZone(gwip->timeZone);
+    boost::shared_ptr<Operator> op_isnull_lhs(new PredicateOperator("isnull"));
+    op_isnull_lhs->operationType(lhs->resultType());
+    sf_isnull_lhs->op(op_isnull_lhs);
+    // yes, these are backwards in ConstPredicate, but here we need lhs value as first arg
+    // We implement isnull by putting tested expr on lhs and a NULL placeholder on rhs
+    sf_isnull_lhs->lhs(lhs->clone());
+    sf_isnull_lhs->rhs(new ConstantColumn("", ConstantColumn::NULLDATA));
+
+    // isnull(rhs)
+    SimpleFilter* sf_isnull_rhs = new SimpleFilter();
+    sf_isnull_rhs->timeZone(gwip->timeZone);
+    boost::shared_ptr<Operator> op_isnull_rhs(new PredicateOperator("isnull"));
+    op_isnull_rhs->operationType(rhs->resultType());
+    sf_isnull_rhs->op(op_isnull_rhs);
+    sf_isnull_rhs->lhs(rhs->clone());
+    sf_isnull_rhs->rhs(new ConstantColumn("", ConstantColumn::NULLDATA));
+
+    // AND(isnull(lhs), isnull(rhs))
+    ParseTree* pt_and = new ParseTree(new LogicOperator("and"));
+    pt_and->left(new ParseTree(sf_isnull_lhs));
+    pt_and->right(new ParseTree(sf_isnull_rhs));
+
+    // OR( lhs = rhs, AND(...) )
+    ParseTree* pt_or = new ParseTree(new LogicOperator("or"));
+    pt_or->left(new ParseTree(sf_eq));
+    pt_or->right(pt_and);
+
+    gwip->ptWorkStack.push(pt_or);
+    return true;
+  }
+
   if (ifp->functype() == Item_func::BETWEEN)
   {
     idbassert(gwip->rcWorkStack.size() >= 3);

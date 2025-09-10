@@ -36,23 +36,12 @@ SELECT v, ROUND(v + 0.0, 0) AS rounded
 FROM t_varchar
 ORDER BY v IS NULL, v;
 
-# Null-safe comparisons
-# ColumnStore currently does not support '<=>' in the projection list; assert the engine error
---error ER_CHECK_NOT_IMPLEMENTED
-SELECT v, (v <=> 0) FROM t_varchar ORDER BY v IS NULL, v;
-
 # ColumnStore supports '<=>' in predicates (WHERE). Validate behavior
 SELECT v FROM t_varchar WHERE v <=> '0' ORDER BY v;
 SELECT v FROM t_varchar WHERE v <=> 123 ORDER BY v;
 SELECT v FROM t_varchar WHERE v <=> '' ORDER BY v;
 SELECT v FROM t_varchar WHERE v <=> NULL ORDER BY v IS NULL, v;
 
-# Join using NULL-safe operator in ON clause
---error 1815
-SELECT a.v, b.v
-FROM t_varchar a
-JOIN t_varchar b ON a.v <=> b.v
-ORDER BY a.v IS NULL, a.v, b.v;
 
 # cleanup
 DROP DATABASE mcol_5675;

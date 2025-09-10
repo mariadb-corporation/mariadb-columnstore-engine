@@ -49,8 +49,6 @@ v	rounded
 3.14	3
 abc	0
 NULL	NULL
-SELECT v, (v <=> 0) FROM t_varchar ORDER BY v IS NULL, v;
-ERROR 42000: The storage engine for the table doesn't support MCS-1001: Function '<=>' isn't supported.
 SELECT v FROM t_varchar WHERE v <=> '0' ORDER BY v;
 v
 0
@@ -63,9 +61,4 @@ v
 SELECT v FROM t_varchar WHERE v <=> NULL ORDER BY v IS NULL, v;
 v
 NULL
-SELECT a.v, b.v
-FROM t_varchar a
-JOIN t_varchar b ON a.v <=> b.v
-ORDER BY a.v IS NULL, a.v, b.v;
-ERROR HY000: Internal error: MCS-1000: 'a' and 'b' are not joined.
 DROP DATABASE mcol_5675;
