@@ -283,14 +283,8 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
 
   // Get parallel factor from context
   size_t maxParallelFactor = ctx.getCesOptimizationParallelFactor();
-  std::cout << "populateRangeBounds() columnStatistics->buckets.size() "
-            << columnStatistics->get_json_histogram().size() << std::endl;
-  std::cout << "Session ces_optimization_parallel_factor: " << maxParallelFactor << std::endl;
   size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), maxParallelFactor);
   size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
-
-  std::cout << "Number of union units: " << numberOfUnionUnits << std::endl;
-  std::cout << "Number of buckets per union unit: " << numberOfBucketsPerUnionUnit << std::endl;
 
   // Loop over buckets to produce filter ranges
   // NB Currently Histogram_json_hb has the last bucket that has end as its start
@@ -324,22 +318,7 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   // Ensure the first bound starts from the minimal representable value to avoid dropping values
   if (!bounds.empty())
   {
-    T originalFirstLower = bounds.front().first;
     bounds.front().first = std::numeric_limits<T>::lowest();
-    std::cout << "Adjusted first bound lower from " << originalFirstLower << " to " << bounds.front().first
-              << std::endl;
-  }
-
-  for (auto& bucket : columnStatistics->get_json_histogram())
-  {
-    T currentLowerBound = static_cast<T>(decodeU64(bucket.start_value));
-    std::cout << "Bucket: " << currentLowerBound << std::endl;
-  }
-  // Note: last bound now uses histogram's last end endpoint to cover the tail.
-
-  for (auto& bound : bounds)
-  {
-    std::cout << "Bound: " << bound.first << " " << bound.second << std::endl;
   }
 
   return bounds;

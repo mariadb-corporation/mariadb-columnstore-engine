@@ -266,11 +266,6 @@ struct gp_walk_info
   std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
   {
     auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-    for (auto& [schemaAndTableName, columnStatisticsMap] : tableStatisticsMap)
-    {
-      std::cout << "Table " << schemaAndTableName.schema << "." << schemaAndTableName.table
-                << " has statistics " << columnStatisticsMap.size() << std::endl;
-    }
 
     if (tableStatisticsMapIt == tableStatisticsMap.end())
     {

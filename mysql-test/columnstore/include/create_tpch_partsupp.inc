@@ -1,0 +1,8 @@
+CREATE TABLE `partsupp` (
+  `PS_PARTKEY` int(11) NOT NULL,
+  `PS_SUPPKEY` int(11) NOT NULL,
+  `PS_AVAILQTY` int(11) NOT NULL,
+  `PS_SUPPLYCOST` decimal(15,2) NOT NULL,
+  `PS_COMMENT` varchar(199) NOT NULL,
+  KEY `I1` (`PS_PARTKEY`,`PS_SUPPKEY`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;

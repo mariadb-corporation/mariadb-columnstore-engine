@@ -1,0 +1,48 @@
+CREATE TABLE `lineitem` (
+  `L_ORDERKEY` int(11) NOT NULL,
+  `L_PARTKEY` int(11) NOT NULL,
+  `L_SUPPKEY` int(11) NOT NULL,
+  `L_LINENUMBER` int(11) NOT NULL,
+  `L_QUANTITY` decimal(15,2) NOT NULL,
+  `L_EXTENDEDPRICE` decimal(15,2) NOT NULL,
+  `L_DISCOUNT` decimal(15,2) NOT NULL,
+  `L_TAX` decimal(15,2) NOT NULL,
+  `L_RETURNFLAG` char(1) NOT NULL,
+  `L_LINESTATUS` char(1) NOT NULL,
+  `L_SHIPDATE` date NOT NULL,
+  `L_COMMITDATE` date NOT NULL,
+  `L_RECEIPTDATE` date NOT NULL,
+  `L_SHIPINSTRUCT` char(25) NOT NULL,
+  `L_SHIPMODE` char(10) NOT NULL,
+  `L_COMMENT` varchar(44) NOT NULL,
+  `recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0,
+  KEY `L_ORDERKEY` (`L_ORDERKEY`,`L_SUPPKEY`,`recdate_gt_commitdate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+
+INSERT INTO `lineitem` (
+    `L_ORDERKEY`, `L_PARTKEY`, `L_SUPPKEY`, `L_LINENUMBER`, 
+    `L_QUANTITY`, `L_EXTENDEDPRICE`, `L_DISCOUNT`, `L_TAX`,
+    `L_RETURNFLAG`, `L_LINESTATUS`, `L_SHIPDATE`, `L_COMMITDATE`, `L_RECEIPTDATE`,
+    `L_SHIPINSTRUCT`, `L_SHIPMODE`, `L_COMMENT`, `recdate_gt_commitdate`
+) VALUES
+(32, 197921, 441, 2, 32.00, 64605.44, 0.02, 0.00, 'N', 'O', '1995-08-14', '1995-10-07', '1995-08-27', 'COLLECT COD', 'AIR', 'lithely regular deposits. fluffily', 0),
+(3, 128449, 3474, 3, 27.00, 39890.88, 0.06, 0.07, 'A', 'F', '1994-01-16', '1993-11-22', '1994-01-23', 'DELIVER IN PERSON', 'SHIP', 'nal foxes wake. ', 1),
+(4, 88035, 5560, 1, 30.00, 30690.90, 0.03, 0.08, 'N', 'O', '1996-01-10', '1995-12-14', '1996-01-18', 'DELIVER IN PERSON', 'REG AIR', '- quickly regular packages sleep. idly', 1),
+(5, 123927, 3928, 2, 26.00, 50723.92, 0.07, 0.08, 'R', 'F', '1994-10-16', '1994-09-25', '1994-10-19', 'NONE', 'FOB', 'sts use slyly quickly special instruc', 1),
+(7, 182052, 9607, 1, 12.00, 13608.60, 0.07, 0.03, 'N', 'O', '1996-05-07', '1996-03-13', '1996-06-03', 'TAKE BACK RETURN', 'FOB', 'ss pinto beans wake against th', 1),
+(34, 88362, 871, 1, 13.00, 17554.68, 0.00, 0.07, 'N', 'O', '1998-10-23', '1998-09-14', '1998-11-06', 'NONE', 'REG AIR', 'nic accounts. deposits are alon', 1),
+(1, 155190, 7706, 1, 17.00, 21168.23, 0.04, 0.02, 'N', 'O', '1996-03-13', '1996-02-12', '1996-03-22', 'DELIVER IN PERSON', 'TRUCK', 'egular courts above the', 1),
+(33, 137469, 9983, 3, 5.00, 7532.30, 0.05, 0.03, 'A', 'F', '1993-12-09', '1993-12-25', '1993-12-23', 'TAKE BACK RETURN', 'AIR', '. stealthily bold exc', 0),
+(151872, 939, 940, 2, 42.00, 77277.06, 0.01, 0.00, 'N', 'O', '1995-09-30', '1995-09-28', '1995-10-27', 'TAKE BACK RETURN', 'TRUCK', 'ly slyly fina', 1),
+(77632, 966, 967, 4, 11.00, 20536.56, 0.04, 0.03, 'N', 'O', '1995-09-28', '1995-09-22', '1995-10-24', 'NONE', 'FOB', 'nts was furi', 1),
+(26439, 1085, 1086, 3, 3.00, 2958.24, 0.03, 0.00, 'N', 'O', '1995-09-30', '1995-12-04', '1995-10-22', 'DELIVER IN PERSON', 'TRUCK', 'ackages wake slyly a', 0),
+(98599, 1239, 8740, 2, 48.00, 54731.04, 0.09, 0.06, 'N', 'O', '1995-09-24', '1995-08-26', '1995-10-02', 'TAKE BACK RETURN', 'TRUCK', 'ake always p', 1),
+(95301, 1343, 8844, 2, 33.00, 41063.22, 0.00, 0.01, 'N', 'O', '1995-09-09', '1995-11-01', '1995-09-28', 'TAKE BACK RETURN', 'FOB', 'carefully regular requests. requests', 0),
+(83008, 2988, 2989, 2, 12.00, 22691.76, 0.06, 0.07, 'N', 'O', '1995-09-15', '1995-09-24', '1995-10-09', 'NONE', 'RAIL', 'into beans do', 1),
+(117665, 3024, 3025, 4, 10.00, 9270.20, 0.02, 0.01, 'N', 'O', '1995-09-17', '1995-08-26', '1995-10-12', 'COLLECT COD', 'AIR', 'about the slyly even req', 1),
+(163746, 3126, 8127, 4, 45.00, 46310.40, 0.02, 0.00, 'N', 'O', '1995-09-21', '1995-09-17', '1995-10-01', 'DELIVER IN PERSON', 'RAIL', 'ggle. regular de', 1),
+(161669, 3142, 8143, 3, 42.00, 43895.88, 0.06, 0.06, 'N', 'O', '1995-09-29', '1995-09-09', '1995-10-29', 'COLLECT COD', 'RAIL', 'ts. unusual accounts gro', 1),
+(81826, 3357, 8358, 5, 5.00, 6301.75, 0.05, 0.04, 'N', 'O', '1995-09-06', '1995-06-14', '1995-09-19', 'TAKE BACK RETURN', 'FOB', 'y final pains x-ray blithely. pen', 1),
+(118849, 3625, 6126, 5, 24.00, 36686.88, 0.09, 0.01, 'N', 'O', '1995-09-24', '1995-09-23', '1995-09-27', 'COLLECT COD', 'RAIL', 'c requests. furiously stealthy theodoli', 1),
+(135239, 4119, 1620, 5, 36.00, 36831.96, 0.05, 0.03, 'N', 'O', '1995-09-06', '1995-07-16', '1995-09-09', 'COLLECT COD', 'AIR', ' after the accounts. qu', 1),
+(30944, 4466, 9467, 1, 47.00, 64411.62, 0.02, 0.02, 'N', 'O', '1995-09-27', '1995-08-03', '1995-10-11', 'COLLECT COD', 'FOB', 'k platelets nag. slyly regular instructio', 1);

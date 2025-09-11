@@ -5265,19 +5265,14 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
   {
     {
       Field* field = table_ptr->table->key_info[j].key_part[0].field;
-      std::cout << "j index " << j << " i column " << 0 << " fieldnr "
-                << table_ptr->table->key_info[j].key_part[0].fieldnr << " " << field->field_name.str;
       if (field->read_stats)
       {
         auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
         if (histogram)
         {
-          std::cout << " has stats with " << histogram->get_json_histogram().size() << " buckets";
           SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
           auto sc =
               std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
-          std::cout << "sc with stats !!!!! " << sc->toString() << std::endl;
-
           auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
           if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
           {
@@ -5297,12 +5292,7 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
             }
           }
         }
-        else
-        {
-          std::cout << " no stats ";
-        }
       }
-      std::cout << std::endl;
     }
   }
 }
@@ -7659,7 +7649,7 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   derivedTableOptimization(&gwi, csep);
 
   {
-    optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn(), get_ces_optimization_parallel_factor(thd));
+    optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn(), get_query_accel_parallel_factor(thd));
     // TODO RBO can crash or fail leaving CSEP in an invalid state, so there must be a valid CSEP copy
     // TBD There is a tradeoff b/w copy per rule and copy per optimizer run.
     bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx, get_unstable_optimizer(&ctx.getThd()));

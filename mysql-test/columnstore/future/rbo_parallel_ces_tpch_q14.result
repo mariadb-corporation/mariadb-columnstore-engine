@@ -1,0 +1,136 @@
+DROP DATABASE IF EXISTS rbo_parallel_ces_tpch;
+CREATE DATABASE rbo_parallel_ces_tpch;
+USE rbo_parallel_ces_tpch;
+SELECT calsettrace(1);
+calsettrace(1)
+0
+CREATE TABLE `lineitem` (
+`L_ORDERKEY` int(11) NOT NULL,
+`L_PARTKEY` int(11) NOT NULL,
+`L_SUPPKEY` int(11) NOT NULL,
+`L_LINENUMBER` int(11) NOT NULL,
+`L_QUANTITY` decimal(15,2) NOT NULL,
+`L_EXTENDEDPRICE` decimal(15,2) NOT NULL,
+`L_DISCOUNT` decimal(15,2) NOT NULL,
+`L_TAX` decimal(15,2) NOT NULL,
+`L_RETURNFLAG` char(1) NOT NULL,
+`L_LINESTATUS` char(1) NOT NULL,
+`L_SHIPDATE` date NOT NULL,
+`L_COMMITDATE` date NOT NULL,
+`L_RECEIPTDATE` date NOT NULL,
+`L_SHIPINSTRUCT` char(25) NOT NULL,
+`L_SHIPMODE` char(10) NOT NULL,
+`L_COMMENT` varchar(44) NOT NULL,
+`recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0,
+KEY `L_ORDERKEY` (`L_ORDERKEY`,`L_SUPPKEY`,`recdate_gt_commitdate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+INSERT INTO `lineitem` (
+`L_ORDERKEY`, `L_PARTKEY`, `L_SUPPKEY`, `L_LINENUMBER`, 
+`L_QUANTITY`, `L_EXTENDEDPRICE`, `L_DISCOUNT`, `L_TAX`,
+`L_RETURNFLAG`, `L_LINESTATUS`, `L_SHIPDATE`, `L_COMMITDATE`, `L_RECEIPTDATE`,
+`L_SHIPINSTRUCT`, `L_SHIPMODE`, `L_COMMENT`, `recdate_gt_commitdate`
+) VALUES
+(32, 197921, 441, 2, 32.00, 64605.44, 0.02, 0.00, 'N', 'O', '1995-08-14', '1995-10-07', '1995-08-27', 'COLLECT COD', 'AIR', 'lithely regular deposits. fluffily', 0),
+(3, 128449, 3474, 3, 27.00, 39890.88, 0.06, 0.07, 'A', 'F', '1994-01-16', '1993-11-22', '1994-01-23', 'DELIVER IN PERSON', 'SHIP', 'nal foxes wake. ', 1),
+(4, 88035, 5560, 1, 30.00, 30690.90, 0.03, 0.08, 'N', 'O', '1996-01-10', '1995-12-14', '1996-01-18', 'DELIVER IN PERSON', 'REG AIR', '- quickly regular packages sleep. idly', 1),
+(5, 123927, 3928, 2, 26.00, 50723.92, 0.07, 0.08, 'R', 'F', '1994-10-16', '1994-09-25', '1994-10-19', 'NONE', 'FOB', 'sts use slyly quickly special instruc', 1),
+(7, 182052, 9607, 1, 12.00, 13608.60, 0.07, 0.03, 'N', 'O', '1996-05-07', '1996-03-13', '1996-06-03', 'TAKE BACK RETURN', 'FOB', 'ss pinto beans wake against th', 1),
+(34, 88362, 871, 1, 13.00, 17554.68, 0.00, 0.07, 'N', 'O', '1998-10-23', '1998-09-14', '1998-11-06', 'NONE', 'REG AIR', 'nic accounts. deposits are alon', 1),
+(1, 155190, 7706, 1, 17.00, 21168.23, 0.04, 0.02, 'N', 'O', '1996-03-13', '1996-02-12', '1996-03-22', 'DELIVER IN PERSON', 'TRUCK', 'egular courts above the', 1),
+(33, 137469, 9983, 3, 5.00, 7532.30, 0.05, 0.03, 'A', 'F', '1993-12-09', '1993-12-25', '1993-12-23', 'TAKE BACK RETURN', 'AIR', '. stealthily bold exc', 0),
+(151872, 939, 940, 2, 42.00, 77277.06, 0.01, 0.00, 'N', 'O', '1995-09-30', '1995-09-28', '1995-10-27', 'TAKE BACK RETURN', 'TRUCK', 'ly slyly fina', 1),
+(77632, 966, 967, 4, 11.00, 20536.56, 0.04, 0.03, 'N', 'O', '1995-09-28', '1995-09-22', '1995-10-24', 'NONE', 'FOB', 'nts was furi', 1),
+(26439, 1085, 1086, 3, 3.00, 2958.24, 0.03, 0.00, 'N', 'O', '1995-09-30', '1995-12-04', '1995-10-22', 'DELIVER IN PERSON', 'TRUCK', 'ackages wake slyly a', 0),
+(98599, 1239, 8740, 2, 48.00, 54731.04, 0.09, 0.06, 'N', 'O', '1995-09-24', '1995-08-26', '1995-10-02', 'TAKE BACK RETURN', 'TRUCK', 'ake always p', 1),
+(95301, 1343, 8844, 2, 33.00, 41063.22, 0.00, 0.01, 'N', 'O', '1995-09-09', '1995-11-01', '1995-09-28', 'TAKE BACK RETURN', 'FOB', 'carefully regular requests. requests', 0),
+(83008, 2988, 2989, 2, 12.00, 22691.76, 0.06, 0.07, 'N', 'O', '1995-09-15', '1995-09-24', '1995-10-09', 'NONE', 'RAIL', 'into beans do', 1),
+(117665, 3024, 3025, 4, 10.00, 9270.20, 0.02, 0.01, 'N', 'O', '1995-09-17', '1995-08-26', '1995-10-12', 'COLLECT COD', 'AIR', 'about the slyly even req', 1),
+(163746, 3126, 8127, 4, 45.00, 46310.40, 0.02, 0.00, 'N', 'O', '1995-09-21', '1995-09-17', '1995-10-01', 'DELIVER IN PERSON', 'RAIL', 'ggle. regular de', 1),
+(161669, 3142, 8143, 3, 42.00, 43895.88, 0.06, 0.06, 'N', 'O', '1995-09-29', '1995-09-09', '1995-10-29', 'COLLECT COD', 'RAIL', 'ts. unusual accounts gro', 1),
+(81826, 3357, 8358, 5, 5.00, 6301.75, 0.05, 0.04, 'N', 'O', '1995-09-06', '1995-06-14', '1995-09-19', 'TAKE BACK RETURN', 'FOB', 'y final pains x-ray blithely. pen', 1),
+(118849, 3625, 6126, 5, 24.00, 36686.88, 0.09, 0.01, 'N', 'O', '1995-09-24', '1995-09-23', '1995-09-27', 'COLLECT COD', 'RAIL', 'c requests. furiously stealthy theodoli', 1),
+(135239, 4119, 1620, 5, 36.00, 36831.96, 0.05, 0.03, 'N', 'O', '1995-09-06', '1995-07-16', '1995-09-09', 'COLLECT COD', 'AIR', ' after the accounts. qu', 1),
+(30944, 4466, 9467, 1, 47.00, 64411.62, 0.02, 0.02, 'N', 'O', '1995-09-27', '1995-08-03', '1995-10-11', 'COLLECT COD', 'FOB', 'k platelets nag. slyly regular instructio', 1);
+CREATE TABLE `part` (
+`P_PARTKEY` int(11) NOT NULL,
+`P_NAME` varchar(55) NOT NULL,
+`P_MFGR` char(25) NOT NULL,
+`P_BRAND` char(10) NOT NULL,
+`P_TYPE` varchar(25) NOT NULL,
+`P_SIZE` int(11) NOT NULL,
+`P_CONTAINER` char(10) NOT NULL,
+`P_RETAILPRICE` decimal(15,2) NOT NULL,
+`P_COMMENT` varchar(23) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+INSERT INTO `part` (
+`P_PARTKEY`, `P_NAME`, `P_MFGR`, `P_BRAND`, `P_TYPE`, 
+`P_SIZE`, `P_CONTAINER`, `P_RETAILPRICE`, `P_COMMENT`
+) VALUES
+(939, 'salmon magenta orange coral aquamarine', 'Manufacturer#1', 'Brand#14', 'PROMO BURNISHED BRASS', 41, 'WRAP PACK', 1839.93, 'ages wake doggedly of'),
+(966, 'turquoise antique brown violet plum', 'Manufacturer#4', 'Brand#42', 'PROMO BURNISHED TIN', 24, 'MED CAN', 1866.96, ' the carefully'),
+(1085, 'floral frosted seashell light red', 'Manufacturer#4', 'Brand#45', 'PROMO PLATED COPPER', 26, 'LG CAN', 986.08, 'anent notornis about'),
+(1239, 'purple dodger lime peach burnished', 'Manufacturer#5', 'Brand#51', 'PROMO BURNISHED STEEL', 24, 'LG CASE', 1140.23, 'structions? quickly i'),
+(1343, 'navy metallic green cornsilk blue', 'Manufacturer#3', 'Brand#31', 'PROMO BURNISHED TIN', 11, 'WRAP PKG', 1244.34, 'cuses'),
+(2988, 'medium white firebrick cream sky', 'Manufacturer#3', 'Brand#33', 'PROMO POLISHED COPPER', 3, 'MED DRUM', 1890.98, '. boldly pendin'),
+(3024, 'lemon burnished goldenrod khaki saddle', 'Manufacturer#1', 'Brand#15', 'PROMO BURNISHED COPPER', 10, 'MED PACK', 927.02, ', eve'),
+(3126, 'chiffon azure orange seashell blanched', 'Manufacturer#3', 'Brand#34', 'PROMO POLISHED COPPER', 1, 'LG DRUM', 1029.12, 'special dolphins al'),
+(3142, 'papaya dim beige salmon pink', 'Manufacturer#3', 'Brand#33', 'PROMO BRUSHED STEEL', 50, 'SM CAN', 1045.14, 'quests. slyly'),
+(3357, 'violet dim metallic lemon spring', 'Manufacturer#3', 'Brand#32', 'PROMO ANODIZED COPPER', 40, 'SM CASE', 1260.35, 'lent pl'),
+(3625, 'indian peach coral brown linen', 'Manufacturer#5', 'Brand#54', 'PROMO PLATED TIN', 50, 'MED CASE', 1528.62, 'ccounts cajole ca'),
+(4119, 'blanched salmon gainsboro grey coral', 'Manufacturer#4', 'Brand#43', 'PROMO BRUSHED BRASS', 40, 'JUMBO PACK', 1023.11, 'dependencies wa'),
+(4466, 'black white chocolate blue drab', 'Manufacturer#2', 'Brand#21', 'PROMO ANODIZED NICKEL', 22, 'SM CAN', 1370.46, 'r the regular braids:'),
+(88035, 'cornsilk navajo cornflower metallic midnight', 'Manufacturer#4', 'Brand#45', 'PROMO BRUSHED NICKEL', 16, 'JUMBO DRUM', 1023.03, 'ly even theodolites a'),
+(88362, 'ivory dodger thistle royal olive', 'Manufacturer#2', 'Brand#21', 'ECONOMY POLISHED STEEL', 39, 'WRAP BAG', 1350.36, 'even requests.'),
+(123927, 'firebrick powder light chiffon violet', 'Manufacturer#1', 'Brand#14', 'MEDIUM PLATED TIN', 41, 'WRAP CAN', 1950.92, 'ackages. blithely'),
+(128449, 'cream linen salmon smoke blue', 'Manufacturer#2', 'Brand#25', 'STANDARD BURNISHED BRASS', 10, 'WRAP BOX', 1477.44, 'nal, regular inst'),
+(137469, 'steel royal frosted peru sienna', 'Manufacturer#4', 'Brand#42', 'ECONOMY BURNISHED COPPER', 17, 'LG PKG', 1506.46, 'unts aft'),
+(155190, 'chocolate lace cornflower rosy light', 'Manufacturer#4', 'Brand#44', 'PROMO BRUSHED NICKEL', 9, 'JUMBO JAR', 1245.19, 'sly unusual orbits use'),
+(182052, 'blue floral drab yellow dark', 'Manufacturer#5', 'Brand#52', 'MEDIUM PLATED COPPER', 38, 'JUMBO PKG', 1134.05, 'ic, regular foxes. bo'),
+(197921, 'goldenrod yellow royal salmon linen', 'Manufacturer#5', 'Brand#53', 'MEDIUM BRUSHED BRASS', 10, 'WRAP DRUM', 2018.92, 'r the quickl');
+set histogram_size=2;
+ANALYZE TABLE lineitem PERSISTENT FOR COLUMNS(l_orderkey) INDEXES();
+Table	Op	Msg_type	Msg_text
+rbo_parallel_ces_tpch.lineitem	analyze	status	Engine-independent statistics collected
+rbo_parallel_ces_tpch.lineitem	analyze	status	OK
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
+select
+100.00 * sum(case
+when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+else 0
+end) / sum(l_extendedprice * (1 - l_discount)) as promo_revenue
+from
+lineitem,
+part
+where
+l_partkey = p_partkey
+and l_shipdate >= date '1995-09-01'
+	and l_shipdate < date '1995-09-01' + interval '1' month
+order by sum(case
+when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+else 0
+end);
+promo_revenue
+100.0000000000
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+rule_parallel_ces_applied
+1
+SET @opt_plan := mcs_get_plan('optimized');
+set @rewritten_derived_name = 'derived table - $added_sub_rbo_parallel_ces_tpch_lineitem_0';
+set @original_table_name = '.lineitem(lineitem/) engineType=ForeignEngine';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) AS rewritten_derived_table_count;
+rewritten_derived_table_count
+1.0000
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
+original_table_count
+3.0000
+SELECT calsettrace(0);
+calsettrace(0)
+1
+DROP DATABASE rbo_parallel_ces_tpch;
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;

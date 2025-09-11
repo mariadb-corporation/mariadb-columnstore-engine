@@ -28,11 +28,10 @@ ANALYZE TABLE Ti PERSISTENT FOR ALL;
 CREATE INDEX excellent_index ON Ti(col1);
 
 # Enable RBO
-SET @@columnstore_unstable_optimizer=ON;
-SET @@optimizer_switch='derived_merge=off';
+--source ../include/enable_rbo_parallel_ces.inc
 
 # First run with parallel factor 5
-SET @@columnstore_ces_optimization_parallel_factor=5;
+SET @@columnstore_query_accel_parallel_factor=5;
 
 # Execute a query to build and store plans
 SELECT SUM(col1) FROM Ti;
@@ -55,7 +54,7 @@ SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/
 SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
 
 # Increase factor to 15 but expect 10 unions due to histogram_size cap
-SET @@columnstore_ces_optimization_parallel_factor=15;
+SET @@columnstore_query_accel_parallel_factor=15;
 
 # Re-execute to rebuild plan with new factor
 SELECT SUM(col1) FROM Ti;
@@ -68,5 +67,6 @@ SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/
 SELECT calsettrace(0);
 DROP DATABASE rbo_parallel_ces;
 
+--source ../include/disable_rbo_parallel_ces.inc
 --source ../include/drop_functions.inc
 --source ../include/drop_cross_engine.inc

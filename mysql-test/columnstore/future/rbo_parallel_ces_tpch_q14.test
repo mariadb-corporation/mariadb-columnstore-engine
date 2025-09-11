@@ -1,0 +1,62 @@
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+--source ../include/functions.inc
+--source ../include/cross_engine.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS rbo_parallel_ces_tpch;
+--enable_warnings
+
+CREATE DATABASE rbo_parallel_ces_tpch;
+USE rbo_parallel_ces_tpch;
+
+# Turn on plan logging to capture CSEP strings
+SELECT calsettrace(1);
+
+--source ../include/create_tpch_lineitem.inc
+--source ../include/create_tpch_part.inc
+
+set histogram_size=2;
+ANALYZE TABLE lineitem PERSISTENT FOR COLUMNS(l_orderkey) INDEXES();
+
+--source ../include/enable_rbo_parallel_ces.inc
+
+select
+	100.00 * sum(case
+		when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+		else 0
+	end) / sum(l_extendedprice * (1 - l_discount)) as promo_revenue
+from
+	lineitem,
+	part
+where
+	l_partkey = p_partkey
+	and l_shipdate >= date '1995-09-01'
+	and l_shipdate < date '1995-09-01' + interval '1' month
+	order by sum(case
+		when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+		else 0
+	end);
+
+# Snapshot plans into variables for readability
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+
+# Ensure rule was applied
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+
+SET @opt_plan := mcs_get_plan('optimized');
+set @rewritten_derived_name = 'derived table - $added_sub_rbo_parallel_ces_tpch_lineitem_0';
+set @original_table_name = '.lineitem(lineitem/) engineType=ForeignEngine';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) AS rewritten_derived_table_count;
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
+
+# Cleanup
+SELECT calsettrace(0);
+DROP DATABASE rbo_parallel_ces_tpch;
+
+--source ../include/disable_rbo_parallel_ces.inc
+--source ../include/drop_functions.inc
+--source ../include/drop_cross_engine.inc

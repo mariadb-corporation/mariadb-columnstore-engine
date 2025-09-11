@@ -81,8 +81,8 @@ void set_select_handler_in_stored_procedures(THD* thd, bool value);
 uint get_orderby_threads(THD* thd);
 void set_orderby_threads(THD* thd, uint value);
 
-uint get_ces_optimization_parallel_factor(THD* thd);
-void set_ces_optimization_parallel_factor(THD* thd, uint value);
+uint get_query_accel_parallel_factor(THD* thd);
+void set_query_accel_parallel_factor(THD* thd, uint value);
 
 bool get_use_decimal_scale(THD* thd);
 void set_use_decimal_scale(THD* thd, bool value);

@@ -1153,11 +1153,7 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObH
       }
     }
   }
-  if (newReturnedCols.empty())
-  {
-    std::cout << "cloneForTableWORecursiveSelects(): there are no Returned Columns after table filtering."
-              << std::endl;
-  }
+
   newPlan->returnedCols(newReturnedCols);
 
   // Deep copy of filters

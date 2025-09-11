@@ -1,0 +1,67 @@
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+--source ../include/functions.inc
+--source ../include/cross_engine.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS rbo_parallel_ces_tpch;
+--enable_warnings
+
+CREATE DATABASE rbo_parallel_ces_tpch;
+USE rbo_parallel_ces_tpch;
+
+# Turn on plan logging to capture CSEP strings
+SELECT calsettrace(1);
+
+# Enable RBO
+--source ../include/enable_rbo_parallel_ces.inc
+
+--source ../include/create_tpch_lineitem.inc
+
+set histogram_size=2;
+ANALYZE TABLE lineitem PERSISTENT FOR COLUMNS(l_orderkey) INDEXES();
+
+--source ../include/enable_rbo_parallel_ces.inc
+
+select
+	l_returnflag,
+	l_linestatus,
+	sum(l_quantity) as sum_qty,
+	sum(l_extendedprice) as sum_base_price,
+	sum(l_extendedprice * (1 - l_discount)) as sum_disc_price,
+	sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) as sum_charge,
+	avg(l_quantity) as avg_qty,
+	avg(l_extendedprice) as avg_price,
+	avg(l_discount) as avg_disc,
+	count(*) as count_order
+from
+	lineitem
+where
+	l_shipdate <= date '1998-12-01' - interval '90' day
+group by
+	l_returnflag,
+	l_linestatus
+order by
+	l_returnflag,
+	l_linestatus;
+
+# Snapshot plans into variables for readability
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+
+# Ensure rule was applied
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+
+SET @opt_plan := mcs_get_plan('optimized');
+set @rewritten_derived_name = 'derived table - $added_sub_rbo_parallel_ces_tpch_lineitem_0';
+set @original_table_name = '.lineitem(lineitem/) engineType=ForeignEngine';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) AS rewritten_derived_table_count;
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
+
+# Cleanup
+SELECT calsettrace(0);
+DROP DATABASE rbo_parallel_ces_tpch;
+
+--source ../include/disable_rbo_parallel_ces.inc
+--source ../include/drop_functions.inc
+--source ../include/drop_cross_engine.inc

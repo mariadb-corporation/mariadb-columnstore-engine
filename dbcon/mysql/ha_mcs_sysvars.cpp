@@ -87,9 +87,9 @@ static MYSQL_THDVAR_UINT(orderby_threads, PLUGIN_VAR_RQCMDARG,
 
 static constexpr uint DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR = 50;
 
-static MYSQL_THDVAR_UINT(ces_optimization_parallel_factor, PLUGIN_VAR_RQCMDARG,
-                         "Maximum parallel factor for parallel CES optimization. (default to 50)", NULL, NULL, DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR, 1,
-                         1000, 1);
+static MYSQL_THDVAR_UINT(query_accel_parallel_factor, PLUGIN_VAR_RQCMDARG,
+                         "Maximum parallel factor for parallel CES optimization. (default to 50)", NULL, NULL,
+                         DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR, 1, 1000, 1);
 
 // legacy system variables
 static MYSQL_THDVAR_ULONG(decimal_scale, PLUGIN_VAR_RQCMDARG,
@@ -228,56 +228,55 @@ static MYSQL_THDVAR_ULONG(max_allowed_in_values, PLUGIN_VAR_RQCMDARG,
 
 static my_bool innodb_queries_use_mcs;
 static MYSQL_SYSVAR_BOOL(innodb_queries_use_mcs, innodb_queries_use_mcs,
-                      PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
-                      "Direct all InnoDB-only queries into MCS via Select Handler.", NULL, NULL, FALSE);
+                         PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
+                         "Direct all InnoDB-only queries into MCS via Select Handler.", NULL, NULL, FALSE);
 static MYSQL_THDVAR_BOOL(unstable_optimizer, PLUGIN_VAR_RQCMDARG,
-                        "Apply optimizer rules after translation from SELECT_LEX/UNION", NULL, NULL, FALSE);
-                        
-st_mysql_sys_var* mcs_system_variables[] = {
-    MYSQL_SYSVAR(compression_type),
-    MYSQL_SYSVAR(fe_conn_info_ptr),
-    MYSQL_SYSVAR(original_optimizer_flags),
-    MYSQL_SYSVAR(original_option_bits),
-    MYSQL_SYSVAR(select_handler),
-    MYSQL_SYSVAR(derived_handler),
-    MYSQL_SYSVAR(select_handler_in_stored_procedures),
-    MYSQL_SYSVAR(orderby_threads),
-    MYSQL_SYSVAR(ces_optimization_parallel_factor),
-    MYSQL_SYSVAR(decimal_scale),
-    MYSQL_SYSVAR(use_decimal_scale),
-    MYSQL_SYSVAR(ordered_only),
-    MYSQL_SYSVAR(string_scan_threshold),
-    MYSQL_SYSVAR(stringtable_threshold),
-    MYSQL_SYSVAR(diskjoin_smallsidelimit),
-    MYSQL_SYSVAR(diskjoin_largesidelimit),
-    MYSQL_SYSVAR(diskjoin_bucketsize),
-    MYSQL_SYSVAR(diskjoin_max_partition_tree_depth),
-    MYSQL_SYSVAR(diskjoin_force_run),
-    MYSQL_SYSVAR(max_pm_join_result_count),
-    MYSQL_SYSVAR(um_mem_limit),
-    MYSQL_SYSVAR(double_for_decimal_math),
-    MYSQL_SYSVAR(decimal_overflow_check),
-    MYSQL_SYSVAR(local_query),
-    MYSQL_SYSVAR(use_import_for_batchinsert),
-    MYSQL_SYSVAR(import_for_batchinsert_delimiter),
-    MYSQL_SYSVAR(import_for_batchinsert_enclosed_by),
-    MYSQL_SYSVAR(varbin_always_hex),
-    MYSQL_SYSVAR(replication_slave),
-    MYSQL_SYSVAR(cache_inserts),
-    MYSQL_SYSVAR(cache_use_import),
-    MYSQL_SYSVAR(cache_flush_threshold),
-    MYSQL_SYSVAR(cmapi_host),
-    MYSQL_SYSVAR(cmapi_port),
-    MYSQL_SYSVAR(cmapi_version),
-    MYSQL_SYSVAR(cmapi_key),
-    MYSQL_SYSVAR(s3_key),
-    MYSQL_SYSVAR(s3_secret),
-    MYSQL_SYSVAR(s3_region),
-    MYSQL_SYSVAR(pron),
-    MYSQL_SYSVAR(max_allowed_in_values),
-    MYSQL_SYSVAR(innodb_queries_use_mcs),
-    MYSQL_SYSVAR(unstable_optimizer),
-    NULL};
+                         "Apply optimizer rules after translation from SELECT_LEX/UNION", NULL, NULL, FALSE);
+
+st_mysql_sys_var* mcs_system_variables[] = {MYSQL_SYSVAR(compression_type),
+                                            MYSQL_SYSVAR(fe_conn_info_ptr),
+                                            MYSQL_SYSVAR(original_optimizer_flags),
+                                            MYSQL_SYSVAR(original_option_bits),
+                                            MYSQL_SYSVAR(select_handler),
+                                            MYSQL_SYSVAR(derived_handler),
+                                            MYSQL_SYSVAR(select_handler_in_stored_procedures),
+                                            MYSQL_SYSVAR(orderby_threads),
+                                            MYSQL_SYSVAR(query_accel_parallel_factor),
+                                            MYSQL_SYSVAR(decimal_scale),
+                                            MYSQL_SYSVAR(use_decimal_scale),
+                                            MYSQL_SYSVAR(ordered_only),
+                                            MYSQL_SYSVAR(string_scan_threshold),
+                                            MYSQL_SYSVAR(stringtable_threshold),
+                                            MYSQL_SYSVAR(diskjoin_smallsidelimit),
+                                            MYSQL_SYSVAR(diskjoin_largesidelimit),
+                                            MYSQL_SYSVAR(diskjoin_bucketsize),
+                                            MYSQL_SYSVAR(diskjoin_max_partition_tree_depth),
+                                            MYSQL_SYSVAR(diskjoin_force_run),
+                                            MYSQL_SYSVAR(max_pm_join_result_count),
+                                            MYSQL_SYSVAR(um_mem_limit),
+                                            MYSQL_SYSVAR(double_for_decimal_math),
+                                            MYSQL_SYSVAR(decimal_overflow_check),
+                                            MYSQL_SYSVAR(local_query),
+                                            MYSQL_SYSVAR(use_import_for_batchinsert),
+                                            MYSQL_SYSVAR(import_for_batchinsert_delimiter),
+                                            MYSQL_SYSVAR(import_for_batchinsert_enclosed_by),
+                                            MYSQL_SYSVAR(varbin_always_hex),
+                                            MYSQL_SYSVAR(replication_slave),
+                                            MYSQL_SYSVAR(cache_inserts),
+                                            MYSQL_SYSVAR(cache_use_import),
+                                            MYSQL_SYSVAR(cache_flush_threshold),
+                                            MYSQL_SYSVAR(cmapi_host),
+                                            MYSQL_SYSVAR(cmapi_port),
+                                            MYSQL_SYSVAR(cmapi_version),
+                                            MYSQL_SYSVAR(cmapi_key),
+                                            MYSQL_SYSVAR(s3_key),
+                                            MYSQL_SYSVAR(s3_secret),
+                                            MYSQL_SYSVAR(s3_region),
+                                            MYSQL_SYSVAR(pron),
+                                            MYSQL_SYSVAR(max_allowed_in_values),
+                                            MYSQL_SYSVAR(innodb_queries_use_mcs),
+                                            MYSQL_SYSVAR(unstable_optimizer),
+                                            NULL};
 
 st_mysql_show_var mcs_status_variables[] = {{"columnstore_version", (char*)&cs_version, SHOW_CHAR},
                                             {"columnstore_commit_hash", (char*)&cs_commit_hash, SHOW_CHAR},
@@ -375,13 +374,13 @@ void set_orderby_threads(THD* thd, uint value)
   THDVAR(thd, orderby_threads) = value;
 }
 
-uint get_ces_optimization_parallel_factor(THD* thd)
+uint get_query_accel_parallel_factor(THD* thd)
 {
-  return (thd == NULL) ? DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR : THDVAR(thd, ces_optimization_parallel_factor);
+  return (thd == NULL) ? DEFAULT_CES_OPTIMIZATION_PARALLEL_FACTOR : THDVAR(thd, query_accel_parallel_factor);
 }
-void set_ces_optimization_parallel_factor(THD* thd, uint value)
+void set_query_accel_parallel_factor(THD* thd, uint value)
 {
-  THDVAR(thd, ces_optimization_parallel_factor) = value;
+  THDVAR(thd, query_accel_parallel_factor) = value;
 }
 
 bool get_use_decimal_scale(THD* thd)
