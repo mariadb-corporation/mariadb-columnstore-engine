@@ -930,8 +930,8 @@ extern "C"
   //   0 or 'original'  -> pre-RBO plan
   //   1 or 'optimized' -> post-RBO plan
   //   2 or 'rules'     -> comma-separated applied RBO rules
-  const char* mcsgetplan(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*result*/, unsigned long* length,
-                         char* is_null, char* /*error*/)
+  const char* mcs_get_plan(UDF_INIT* /*initid*/, UDF_ARGS* args, char* /*result*/, unsigned long* length,
+                           char* is_null, char* /*error*/)
   {
     if (get_fe_conn_info_ptr() == NULL)
     {
@@ -985,7 +985,7 @@ extern "C"
     return out->c_str();
   }
 
-  my_bool mcsgetplan_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
+  my_bool mcs_get_plan_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
     if (args->arg_count > 1)
     {
@@ -1002,7 +1002,7 @@ extern "C"
     return 0;
   }
 
-  void mcsgetplan_deinit(UDF_INIT* /*initid*/)
+  void mcs_get_plan_deinit(UDF_INIT* /*initid*/)
   {
   }
 

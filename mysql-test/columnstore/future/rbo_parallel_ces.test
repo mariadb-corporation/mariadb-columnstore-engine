@@ -38,9 +38,9 @@ SET @@columnstore_ces_optimization_parallel_factor=5;
 SELECT SUM(col1) FROM Ti;
 
 # Snapshot plans into variables for readability
-SET @orig_plan := mcsgetplan('original');
-SET @opt_plan := mcsgetplan('optimized');
-SET @rbo_rules := mcsgetplan('rules');
+SET @orig_plan := mcs_get_plan('original');
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
 
 # Validate plan contents using stored plans
 # Count Union Units by looking for opening unit blocks after the marker '--- Union Unit ---'
@@ -60,7 +60,7 @@ SET @@columnstore_ces_optimization_parallel_factor=15;
 # Re-execute to rebuild plan with new factor
 SELECT SUM(col1) FROM Ti;
 
-SET @opt_plan := mcsgetplan('optimized');
+SET @opt_plan := mcs_get_plan('optimized');
 SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
 SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_15;
 
