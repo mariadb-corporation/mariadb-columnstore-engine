@@ -123,7 +123,7 @@ def add_node(
 def remove_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    deactivate_only: bool = True,
+    deactivate_only: bool = False,
     use_rebalance_dbroots: bool = True, **kwargs
 ):
     """Remove node from a cluster.
