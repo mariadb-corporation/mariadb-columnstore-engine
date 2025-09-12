@@ -29,8 +29,8 @@ std::string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   }
 
   std::string out;
-  // Write compact canonical JSON (stable ordering may vary vs server, but Glaze keeps object insertion order)
-  if (auto werr = glz::write_json(value, out))
+
+  if (auto werr = writeJson(value, out))
   {
     isNull = true;
     return "";

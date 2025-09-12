@@ -71,7 +71,7 @@ std::string Func_json_object::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   }
 
   std::string out;
-  if (auto w = glz::write_json(obj, out))
+  if (auto w = writeJson(obj, out))
   {
     isNull = true;
     return "";

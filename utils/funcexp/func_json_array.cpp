@@ -19,6 +19,8 @@ std::string Func_json_array::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     return "[]";
 
   glz::json_t arr;
+  // Ensure the variant holds an array before accessing it
+  arr = std::vector<glz::json_t>{};
   auto& a = arr.get_array();
   a.reserve(fp.size());
 
@@ -51,7 +53,7 @@ std::string Func_json_array::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   }
 
   std::string out;
-  if (auto w = glz::write_json(arr, out))
+  if (auto w = writeJson(arr, out))
   {
     isNull = true;
     return "";

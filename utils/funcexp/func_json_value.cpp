@@ -51,7 +51,7 @@ std::string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   if (value.is_number())
   {
     std::string out;
-    if (auto w = glz::write_json(value, out))
+    if (auto w = writeJson(value, out))
     {
       isNull = true;
       return "";

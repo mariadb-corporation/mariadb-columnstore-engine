@@ -26,7 +26,7 @@ std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   // Use Glaze to emit a JSON-escaped, quoted string
   const std::string_view sv = js.unsafeStringRef();
   std::string out;
-  if (auto err = glz::write_json(sv, out))
+  if (auto err = writeJson(sv, out))
   {
     isNull = true;
     return "";

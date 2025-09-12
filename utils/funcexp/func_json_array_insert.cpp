@@ -70,6 +70,8 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
       if (!parent->is_array())
       {
         glz::json_t arr;
+        // Initialize as array variant before using get_array()
+        arr = std::vector<glz::json_t>{};
         arr.get_array().push_back(*parent);
         *parent = std::move(arr);
       }
@@ -85,9 +87,8 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
       arr.insert(arr.begin() + idx, value);
     }
   }
-
   std::string out;
-  if (auto w = glz::write_json(doc, out))
+  if (auto w = writeJson(doc, out))
   {
     isNull = true;
     return "";

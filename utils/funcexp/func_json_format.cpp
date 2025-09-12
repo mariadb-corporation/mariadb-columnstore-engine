@@ -52,7 +52,7 @@ std::string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
   std::string out;
   // Current Glaze in dependency offers two-argument write_json; use that and check for errors
-  if (auto werr = glz::write_json(value, out))
+  if (auto werr = writeJson(value, out))
   {
     isNull = true;
     return "";

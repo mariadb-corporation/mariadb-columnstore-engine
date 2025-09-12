@@ -60,6 +60,8 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
       else
       {
         glz::json_t arr;
+        // Initialize as array variant before using get_array()
+        arr = std::vector<glz::json_t>{};
         arr.get_array().push_back(*node);
         arr.get_array().push_back(value);
         *node = std::move(arr);
@@ -68,7 +70,7 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
   }
 
   std::string out;
-  if (auto w = glz::write_json(doc, out))
+  if (auto w = writeJson(doc, out))
   {
     isNull = true;
     return "";

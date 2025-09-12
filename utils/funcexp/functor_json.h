@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 #define PREFER_MY_CONFIG_H
 #include <mariadb.h>
@@ -543,4 +542,8 @@ class Func_json_extract : public Func_Str
   int doExtract(rowgroup::Row& row, FunctionParm& fp, json_value_types* type, std::string& retJS,
                 bool compareWhole);
 };
+
+#define writeJson(value, buffer) \
+  glz::write<glz::opts{.prettify = true, .new_lines_in_arrays = false}>(value, buffer)
+
 }  // namespace funcexp

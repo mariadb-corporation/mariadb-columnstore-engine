@@ -116,7 +116,7 @@ int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_valu
   }
 
   retJS.clear();
-  if (auto w = glz::write_json(out_json, retJS))
+  if (auto w = writeJson(out_json, retJS))
     return 1;
 
   return 0;

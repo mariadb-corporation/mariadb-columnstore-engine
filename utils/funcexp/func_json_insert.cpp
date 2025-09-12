@@ -178,7 +178,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   }
 
   std::string out;
-  if (auto w = glz::write_json(doc, out))
+  if (auto w = writeJson(doc, out))
   {
     isNull = true;
     return "";

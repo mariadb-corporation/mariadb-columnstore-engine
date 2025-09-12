@@ -59,6 +59,7 @@ std::string Func_json_query::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   }
 
   std::string out;
+  // No prettify here
   if (auto w = glz::write_json(*selected, out))
   {
     isNull = true;

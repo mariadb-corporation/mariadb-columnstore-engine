@@ -1,5 +1,4 @@
 #include <glaze/glaze.hpp>
-
 #include "functor_json.h"
 #include "rowgroup.h"
 #include "glaze_path.h"

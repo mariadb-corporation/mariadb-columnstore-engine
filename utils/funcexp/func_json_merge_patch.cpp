@@ -87,7 +87,7 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
   }
 
   std::string out;
-  if (auto w = glz::write_json(target, out))
+  if (auto w = writeJson(target, out))
   {
     isNull = true;
     return "";
