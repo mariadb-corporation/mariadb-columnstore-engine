@@ -76,13 +76,19 @@ std::string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
   }
 
   glz::json_t out;
+  // Ensure variant holds an array before accessing it
+  out = std::vector<glz::json_t>{};
   auto& arr = out.get_array();
   arr.reserve(keys.size());
-  for (auto& k : keys)
-    arr.emplace_back(k);
+  for (const auto& k : keys)
+  {
+    // push JSON string values
+    arr.emplace_back(std::string{k});
+  }
+
 
   std::string ret;
-  if (auto w = glz::write_json(out, ret))
+  if (auto w = glz::write<glz::opts{.prettify = true, .new_lines_in_arrays=false}>(out, ret))
   {
     isNull = true;
     return "";
