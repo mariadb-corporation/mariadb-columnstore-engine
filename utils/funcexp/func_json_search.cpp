@@ -1,6 +1,8 @@
+#include <glaze/glaze.hpp>
+#include <algorithm>
+#include <cctype>
 #include "functor_json.h"
 #include "constantcolumn.h"
-#include <glaze/glaze.hpp>
 #include "glaze_path.h"
 #include "rowgroup.h"
 
@@ -26,8 +28,23 @@ static bool match_wild(const std::string& s, const std::string& pat, char escape
       char pc = pat[j];
       if (pc == escape && j + 1 < pat.size())
       {
+        // Treat next character as a literal
         ++j;
         pc = pat[j];
+        if (i < s.size() && s[i] == pc)
+        {
+          ++i;
+          ++j;
+          continue;
+        }
+        // Mismatch after escape: backtrack if we had a previous '%'
+        if (star_j != std::string::npos)
+        {
+          i = ++star_i;
+          j = star_j;
+          continue;
+        }
+        return false;
       }
       if (pc == '%')
       {
@@ -55,6 +72,7 @@ static bool match_wild(const std::string& s, const std::string& pat, char escape
     char pc = pat[j];
     if (pc == escape && j + 1 < pat.size())
     {
+      // skip escaped literal at pattern tail
       j += 2;
       continue;
     }
@@ -65,14 +83,18 @@ static bool match_wild(const std::string& s, const std::string& pat, char escape
   return true;
 }
 
-// (removed unused collect_paths)
 
 static void find_string_matches(const glz::json_t& node, const std::string& base, const std::string& pat,
                                 char escape, std::vector<std::string>& out)
 {
   if (node.is_string())
   {
-    if (match_wild(node.get_string(), pat, escape))
+    // Case-insensitive comparison: lowercase both
+    std::string s = node.get_string();
+    std::string p = pat;
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(p.begin(), p.end(), p.begin(), [](unsigned char c) { return std::tolower(c); });
+    if (match_wild(s, p, escape))
       out.push_back(base);
     return;
   }
@@ -201,7 +223,12 @@ build:
   }
   else
   {
-    // Return array of JSON string paths
+    // 'all' mode: if exactly one match, return a single JSON string (ColumnStore semantics)
+    if (matches_paths.size() == 1)
+    {
+      return std::string{"\""} + matches_paths.front() + "\"";
+    }
+    // Otherwise, return array of JSON string paths
     std::string out = "[";
     for (size_t i = 0; i < matches_paths.size(); ++i)
     {
