@@ -16,21 +16,7 @@ macro(SET_FLAGS_RELEASE)
     endforeach()
 endmacro()
 
-# C++ standard {
-if(have_CXX__std_c__20)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-else()
-    my_check_cxx_compiler_flag("-std=c++2a")
-    if(have_CXX__std_c__2a)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
-    else()
-        message_once(CS_NO_CXX20 "C++ Compiler does not understand -std=c++20")
-        return()
-    endif()
-endif()
-
-unset(CMAKE_CXX_STANDARD)
-# } end C++ standard
+set(CMAKE_CXX_STANDARD 23)
 
 # Hacks to keep alive with MariaDB server {
 string(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
@@ -59,6 +45,7 @@ set(FLAGS_ALL
     -DHAVE_CONFIG_H
     -DBOOST_BIND_GLOBAL_PLACEHOLDERS
     -Wno-suggest-override
+    -foperator-names
 )
 if(COLUMNSTORE_WITH_LIBCPP)
     list(APPEND FLAGS_ALL -stdlib=libc++)

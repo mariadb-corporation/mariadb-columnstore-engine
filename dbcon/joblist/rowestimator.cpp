@@ -188,7 +188,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
                                      uint32_t distinctValues, char cpStatus,
                                      const execplan::CalpontSystemCatalog::ColType& ct)
 {
-  float factor = 1.0;
+  float128_t factor = 1.0;
 
   switch (op)
   {
@@ -255,7 +255,7 @@ float RowEstimator::estimateOpFactor(const T& min, const T& max, const T& value,
     factor = 1.0;
   }
 
-  return factor;
+  return float(factor);
 }
 
 // Estimate the percentage of rows that will be returned for a particular extent.

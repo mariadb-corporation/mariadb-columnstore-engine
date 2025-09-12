@@ -24,11 +24,18 @@
 #include "datatypes/mcs_int128.h"
 #include "simd_sse.h"
 #include "simd_arm.h"
+
 #if defined(__x86_64__)
 #define TESTS_USING_SSE 1
-using float64_t = double;
-using float32_t = float;
 #endif
+
+// Use standard double/float to match SIMD specializations consistently.
+// Name them with an mcs_ prefix to avoid ambiguity with std::float64_t when
+// 'using namespace std;' is in effect.
+using mcs_float64_t = double;
+using mcs_float32_t = float;
+
+
 #ifdef __aarch64__
 #define TESTS_USING_ARM 1
 #endif
@@ -41,10 +48,19 @@ class SimdProcessorTypedTest : public testing::Test
  public:
   using IntegralType = T;
 #if TESTS_USING_SSE
-  using SimdType =
-      std::conditional_t<std::is_same<T, float>::value, simd::vi128f_wr,
-                         std::conditional_t<std::is_same<T, double>::value, simd::vi128d_wr, simd::vi128_wr>>;
-  using Proc = typename simd::SimdFilterProcessor<SimdType, T>;
+  using IsF32 = std::integral_constant<bool,
+      std::is_floating_point<T>::value && sizeof(T) == sizeof(float)>;
+  using IsF64 = std::integral_constant<bool,
+      std::is_floating_point<T>::value && sizeof(T) == sizeof(double)>;
+  using SimdType = std::conditional_t<
+      IsF32::value,
+      simd::vi128f_wr,
+      std::conditional_t<IsF64::value, simd::vi128d_wr, simd::vi128_wr>>;
+  using ScalarForProc = std::conditional_t<
+      IsF32::value,
+      float,
+      std::conditional_t<IsF64::value, double, T>>;
+  using Proc = typename simd::SimdFilterProcessor<SimdType, ScalarForProc>;
 #else
   using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, T>;
 #endif
@@ -445,7 +461,7 @@ TEST(SimdProcessorTest, Uint64)
 }
 TEST(SimdProcessorTest, Float64)
 {
-  using IntegralType = float64_t;
+  using IntegralType = mcs_float64_t;
   IntegralType l[2]{-5.0, 12.5620};
   IntegralType r[2]{2.9, 1};
   IntegralType minlr[8]{-5.0, 1};
@@ -482,7 +498,7 @@ TEST(SimdProcessorTest, Float64)
 }
 TEST(SimdProcessorTest, Float32)
 {
-  using IntegralType = float32_t;
+  using IntegralType = mcs_float32_t;
   IntegralType l[4]{82, 102, -5.6, 9.5};
   IntegralType r[4]{2.0, 1, -5.7, 6};
   IntegralType minlr[8]{2.0, 1, -5.7, 6};

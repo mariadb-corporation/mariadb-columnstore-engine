@@ -1128,7 +1128,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
               // Currently, distinct only works on the first parameter.
               if (k == 0 && fDistinct)
               {
-                std::pair<static_any::any, uint64_t> val = make_pair(valIn.isNull() ? nullptr : valIn.safeString(""), 1);
+                std::pair<static_any::any, uint64_t> val = make_pair(valIn.safeString(""), 1);
                 std::pair<DistinctMap::iterator, bool> distinct;
                 distinct = fDistinctMap.insert(val);
                 if (distinct.second == false)
@@ -1139,7 +1139,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
                 }
               }
 
-              datum.columnData = valIn.isNull() ? nullptr : valIn.safeString("");
+              datum.columnData = valIn.safeString("");
               break;
             }
 

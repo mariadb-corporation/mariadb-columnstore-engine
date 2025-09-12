@@ -25,14 +25,20 @@
 #include <string>
 #include "mcs_numeric_limits.h"
 
-#ifdef __aarch64__
-using float128_t = long double;
+#if defined(__STDCPP_FLOAT128_T__)
+#  if defined(__has_include) && __has_include(<stdfloat>)
+#    include <stdfloat>
+#  endif
+  using float128_t = std::float128_t;
+#elif defined(__aarch64__)
+  using float128_t = long double;
 #else
-using float128_t = __float128;
+  using float128_t = __float128;
 #endif
 
 namespace datatypes
 {
+
 /* Main union type we use to manipulate the floating-point type.  */
 typedef union
 {
