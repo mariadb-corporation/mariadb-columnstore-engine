@@ -1,0 +1,89 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS json_general;
+--enable_warnings
+
+CREATE DATABASE json_general;
+USE json_general;
+
+--echo JSON General sanity tests for ColumnStore funcexp (Glaze-based)
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (j text) engine=columnstore;
+INSERT INTO t1 VALUES ('{"a":1, "b":[1,2,3], "s":"foo", "o":{"k":2}}');
+
+--echo JSON_VALID
+SELECT JSON_VALID('{"a":1}') AS v1, JSON_VALID('{bad') AS v2;
+
+--echo JSON_TYPE
+SELECT JSON_TYPE('{"a":1}') AS t1, JSON_TYPE('[1]') AS t2, JSON_TYPE('"x"') AS t3, JSON_TYPE('1') AS t4, JSON_TYPE('true') AS t5, JSON_TYPE('null') AS t6;
+
+--echo JSON_NORMALIZE (compact canonical)
+SELECT JSON_NORMALIZE(' { "b":2, "a":1 }') AS norm1;
+
+--echo JSON_OBJECT and JSON_ARRAY
+SELECT JSON_OBJECT('a',1,'b','x') AS obj1;
+SELECT JSON_ARRAY(1,'x','{"k":2}') AS arr1;
+
+--echo JSON_MERGE_PRESERVE
+SELECT JSON_MERGE_PRESERVE('{"a":1}', '{"b":2}') AS m1;
+
+--echo JSON_MERGE_PATCH
+SELECT JSON_MERGE_PATCH('{"a":1,"b":2}', '{"b":null, "c":3}') AS mp1;
+
+--echo JSON_CONTAINS
+SELECT JSON_CONTAINS('{"a":1,"b":[1,2,3]}', '{"a":1}') AS c1,
+       JSON_CONTAINS('{"a":1}', '{"a":2}') AS c2;
+
+--echo JSON_CONTAINS_PATH ONE/ALL
+SELECT JSON_CONTAINS_PATH('{"a":1,"b":[{"x":1},{"y":2}]}', 'one', '$.b[*].x', '$.a') AS cp_one,
+       JSON_CONTAINS_PATH('{"a":1,"b":[{"x":1},{"y":2}]}', 'all', '$.b[*].x', '$.a') AS cp_all;
+
+--echo JSON_EXISTS
+SELECT JSON_EXISTS('{"a":{"k":2}}', '$.a.k') AS e1, JSON_EXISTS('{"a":{"k":2}}', '$.a.z') AS e2;
+
+--echo JSON_QUERY (returns complex)
+SELECT JSON_QUERY('{"a":{"k":2},"b":[1,2]}', '$.a') AS q1;
+
+--echo JSON_VALUE (returns scalar)
+SELECT JSON_VALUE('{"a":{"k":2},"b":[1,2]}', '$.a.k') AS v_scalar;
+
+--echo JSON_EXTRACT basic and wildcard
+SELECT JSON_EXTRACT('{"a":1,"b":[1,2,3]}', '$.b[1]') AS ex1,
+       JSON_EXTRACT('{"a":1,"b":[1,2,3]}', '$.b[*]') AS ex2;
+
+--echo JSON_ARRAY_APPEND (append 4 to all b arrays)
+SELECT JSON_ARRAY_APPEND('{"b":[1,2]}', '$.b', '4') AS aa1;
+
+--echo JSON_ARRAY_INSERT (insert at index 1)
+SELECT JSON_ARRAY_INSERT('{"b":[1,3]}', '$.b[1]', '2') AS ai1;
+
+--echo JSON_REMOVE (remove key and index)
+SELECT JSON_REMOVE('{"a":1,"b":[1,2,3]}', '$.a', '$.b[0]') AS rm1;
+
+--echo JSON_SEARCH with ONE
+SELECT JSON_SEARCH('{"a":"hello","b":["x","hell"]}', 'one', 'hel%') AS js1;
+
+--echo JSON_EQUALS
+SELECT JSON_EQUALS('{"x":1,"y":2}', '{"x":1,"y":2}') AS jeq1,
+       JSON_EQUALS('{"x":1}', '{"x":2}') AS jeq2;
+
+--echo JSON_OVERLAPS
+SELECT JSON_OVERLAPS('{"a":1,"b":2}', '{"b":2}') AS jo1,
+       JSON_OVERLAPS('[1,2,3]', '[3,4]') AS jo2,
+       JSON_OVERLAPS('1', '[0,1,2]') AS jo3;
+
+--echo JSON_DEPTH
+SELECT JSON_DEPTH('{"a":[{"k":1},2]}') AS jd1;
+
+--echo JSON_LENGTH
+SELECT JSON_LENGTH('{"a":[1,2,3]}') AS jl1,
+       JSON_LENGTH('[1,2,3,4]') AS jl2,
+       JSON_LENGTH('1') AS jl3;
+
+DROP TABLE t1;
+
+DROP DATABASE json_general;
