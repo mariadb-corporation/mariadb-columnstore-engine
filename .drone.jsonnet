@@ -394,7 +394,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     depends_on: ["publish pkg", "publish cmapi build"],
     image: "alpine/git:2.49.0",
     environment: {
-      DOCKER_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
+      DOCKER_BRANCH_REF: "rockylinux9_image",
       DOCKER_REF_AUX: branch_ref,
     },
     commands: [
