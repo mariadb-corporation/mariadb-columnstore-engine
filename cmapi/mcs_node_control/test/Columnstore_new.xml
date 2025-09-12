@@ -240,6 +240,7 @@
         <DBRMRoot>$INSTALLDIR/data1/systemFiles/dbrm/BRM_saves</DBRMRoot>
         <TableLockSaveFile>$INSTALLDIR/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
         <DBRMTimeOut>20</DBRMTimeOut> <!-- in seconds -->
+        <DBRMUnresponsiveTimeout>300</DBRMUnresponsiveTimeout>
         <DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
         <WaitPeriod>10</WaitPeriod> <!-- in seconds -->
         <CalpontHome>$INSTALLDIR</CalpontHome>
