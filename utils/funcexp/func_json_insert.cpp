@@ -1,21 +1,14 @@
+#include <glaze/glaze.hpp>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
 
-#include "dataconvert.h"
-using namespace dataconvert;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_insert::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_insert::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -23,223 +16,173 @@ CalpontSystemCatalog::ColType Func_json_insert::operationType(FunctionParm& fp,
 std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                         execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
-  const bool isInsertMode = mode == INSERT || mode == SET;
-  const bool isReplaceMode = mode == REPLACE || mode == SET;
-
-  json_engine_t jsEg;
-
-  int jsErr = 0;
-  json_string_t keyName;
-  const CHARSET_INFO* cs = getCharset(fp[0]);
-  json_string_set_cs(&keyName, cs);
-
-  initJSPaths(paths, fp, 1, 2);
-
-  // Save the result of each merge and the result of the final merge separately
-  std::string retJS;
-  utils::NullString tmpJS(js);
-  for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js.unsafeStringRef()))
   {
-    const char* rawJS = tmpJS.str();
-    const size_t jsLen = tmpJS.length();
-
-    JSONPath& path = paths[j];
-    const json_path_step_t* lastStep;
-    const char* valEnd;
-
-    if (!path.parsed)
-    {
-      if (parseJSPath(path, row, fp[i], false))
-        goto error;
-
-      path.p.last_step--;
-    }
-
-    initJSEngine(jsEg, cs, tmpJS);
-    if (path.p.last_step < path.p.steps)
-      goto v_found;
-
-    if (path.p.last_step >= path.p.steps && locateJSPath(jsEg, path, &jsErr))
-    {
-      if (jsErr)
-        goto error;
-      continue;
-    }
-
-    if (json_read_value(&jsEg))
-      goto error;
-
-    lastStep = path.p.last_step + 1;
-    if (lastStep->type & JSON_PATH_ARRAY)
-    {
-      IntType itemSize = 0;
-
-      if (jsEg.value_type != JSON_VALUE_ARRAY)
-      {
-        const uchar* valStart = jsEg.value_begin;
-        bool isArrAutoWrap;
-
-        if (isInsertMode)
-        {
-          if (isReplaceMode)
-            isArrAutoWrap = lastStep->n_item > 0;
-          else
-          {
-            if (lastStep->n_item == 0)
-              continue;
-            isArrAutoWrap = true;
-          }
-        }
-        else
-        {
-          if (lastStep->n_item)
-            continue;
-          isArrAutoWrap = false;
-        }
-
-        retJS.clear();
-        /* Wrap the value as an array. */
-        retJS.append(rawJS, (const char*)valStart - rawJS);
-        if (isArrAutoWrap)
-          retJS.append("[");
-
-        if (jsEg.value_type == JSON_VALUE_OBJECT)
-        {
-          if (json_skip_level(&jsEg))
-            goto error;
-        }
-
-        if (isArrAutoWrap)
-          retJS.append((const char*)valStart, jsEg.s.c_str - valStart);
-        retJS.append(", ");
-        if (appendJSValue(retJS, cs, row, fp[i + 1]))
-          goto error;
-        if (isArrAutoWrap)
-          retJS.append("]");
-        retJS.append((const char*)jsEg.s.c_str, rawJS + jsLen - (const char*)jsEg.s.c_str);
-
-        goto continue_point;
-      }
-
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
-      {
-        switch (jsEg.state)
-        {
-          case JST_VALUE:
-            if (itemSize == lastStep->n_item)
-              goto v_found;
-            itemSize++;
-            if (json_skip_array_item(&jsEg))
-              goto error;
-            break;
-          default: break;
-        }
-      }
-
-      if (unlikely(jsEg.s.error))
-        goto error;
-
-      if (!isInsertMode)
-        continue;
-
-      valEnd = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
-      retJS.clear();
-      retJS.append(rawJS, valEnd - rawJS);
-      if (itemSize > 0)
-        retJS.append(", ");
-      if (appendJSValue(retJS, cs, row, fp[i + 1]))
-        goto error;
-      retJS.append(valEnd, rawJS + jsLen - valEnd);
-    }
-    else /*JSON_PATH_KEY*/
-    {
-      IntType keySize = 0;
-
-      if (jsEg.value_type != JSON_VALUE_OBJECT)
-        continue;
-
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_OBJ_END)
-      {
-        switch (jsEg.state)
-        {
-          case JST_KEY:
-            json_string_set_str(&keyName, lastStep->key, lastStep->key_end);
-            if (json_key_matches(&jsEg, &keyName))
-              goto v_found;
-            keySize++;
-            if (json_skip_key(&jsEg))
-              goto error;
-            break;
-          default: break;
-        }
-      }
-
-      if (unlikely(jsEg.s.error))
-        goto error;
-
-      if (!isInsertMode)
-        continue;
-
-      valEnd = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
-
-      retJS.clear();
-      retJS.append(rawJS, valEnd - rawJS);
-
-      if (keySize > 0)
-        retJS.append(", ");
-
-      retJS.append("\"");
-      retJS.append((const char*)lastStep->key, lastStep->key_end - lastStep->key);
-      retJS.append("\":");
-
-      if (appendJSValue(retJS, cs, row, fp[i + 1]))
-        goto error;
-      retJS.append(valEnd, rawJS + jsLen - valEnd);
-    }
-
-    goto continue_point;
-
-  v_found:
-
-    if (!isReplaceMode)
-      continue;
-
-    if (json_read_value(&jsEg))
-      goto error;
-
-    valEnd = (const char*)jsEg.value_begin;
-    retJS.clear();
-    if (!json_value_scalar(&jsEg))
-    {
-      if (json_skip_level(&jsEg))
-        goto error;
-    }
-
-    retJS.append(rawJS, valEnd - rawJS);
-    if (appendJSValue(retJS, cs, row, fp[i + 1]))
-      goto error;
-    retJS.append((const char*)jsEg.s.c_str, rawJS + jsLen - (const char*)jsEg.s.c_str);
-
-  continue_point:
-    // tmpJS save the json string for next loop
-    tmpJS.assign(retJS);
-    retJS.clear();
+    isNull = true;
+    return "";
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
-  retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
-    goto error;
+  const bool isInsertMode = (mode == INSERT) || (mode == SET);
+  const bool isReplaceMode = (mode == REPLACE) || (mode == SET);
 
-  isNull = false;
-  return retJS;
+  // process pairs: path, value
+  for (size_t i = 1; i + 1 < fp.size(); i += 2)
+  {
+    bool pNull = false, vNull = false;
+    const auto p_ns = fp[i]->data()->getStrVal(row, pNull);
+    const auto v_ns = fp[i + 1]->data()->getStrVal(row, vNull);
+    if (pNull || vNull)
+    {
+      isNull = true;
+      return "";
+    }
 
-error:
-  isNull = true;
-  return "";
+    glz::json_t value;
+    if (auto ev = glz::read_json(value, v_ns.unsafeStringRef()))
+    {
+      isNull = true;
+      return "";
+    }
+
+    std::vector<funcexp::glaze_path::Step> steps;
+    if (!funcexp::glaze_path::parse(p_ns.unsafeStringRef(), steps))
+    {
+      isNull = true;
+      return "";
+    }
+
+    // Only constrain wildcards on parent steps; last step may be wildcard
+    bool parent_has_illegal = false;
+    for (size_t si = 0; si + 1 < steps.size(); ++si)
+    {
+      const auto& s = steps[si];
+      if (s.kind != funcexp::glaze_path::StepKind::Key && s.kind != funcexp::glaze_path::StepKind::Index)
+        parent_has_illegal = true;
+    }
+    if (parent_has_illegal)
+    {
+      isNull = true;
+      return "";
+    }
+
+    if (steps.empty())
+    {
+      isNull = true;
+      return "";
+    }
+
+    funcexp::glaze_path::Step last = steps.back();
+    steps.pop_back();
+
+    // Find all parent matches (wildcards/recursive supported)
+    std::vector<glz::json_t*> parents;
+    funcexp::glaze_path::find_matches_mutable_steps(doc, steps, parents);
+
+    if (parents.empty())
+    {
+      // If no parents matched, skip this pair (no-op)
+      continue;
+    }
+
+    for (auto* cur : parents)
+    {
+      // Apply at last step for each matched parent
+      if (last.kind == funcexp::glaze_path::StepKind::Key)
+      {
+        if (!cur->is_object())
+        {
+          isNull = true;
+          return "";
+        }
+        auto& obj = cur->get_object();
+        auto it = obj.find(last.key);
+        bool exists = (it != obj.end());
+        if (isReplaceMode && exists)
+        {
+          it->second = value;
+        }
+        else if (isInsertMode && !exists)
+        {
+          obj.emplace(last.key, value);
+        }
+        // SET semantics covered by the above
+      }
+      else if (last.kind == funcexp::glaze_path::StepKind::Index)
+      {
+        if (!cur->is_array())
+        {
+          // If parent is not array, wrap into array first to permit insert
+          glz::json_t arr;
+          arr.get_array().push_back(*cur);
+          *cur = std::move(arr);
+        }
+        auto& arr = cur->get_array();
+        int idx = last.index;
+        if (idx < 0)
+          idx = static_cast<int>(arr.size()) + idx;
+
+        if (isReplaceMode && idx >= 0 && static_cast<size_t>(idx) < arr.size())
+        {
+          arr[static_cast<size_t>(idx)] = value;
+        }
+        else if (isInsertMode)
+        {
+          // insert at index or append if index == size
+          if (idx < 0 || static_cast<size_t>(idx) > arr.size())
+          {
+            isNull = true;
+            return "";
+          }
+          arr.insert(arr.begin() + idx, value);
+        }
+      }
+      else if (last.kind == funcexp::glaze_path::StepKind::KeyWildcard)
+      {
+        // Apply to all keys in object for REPLACE/SET; INSERT has no effect
+        if (!cur->is_object())
+          continue;
+        if (isReplaceMode)
+        {
+          auto& obj = cur->get_object();
+          for (auto& [k, v] : obj)
+            v = value;
+        }
+      }
+      else if (last.kind == funcexp::glaze_path::StepKind::IndexWildcard)
+      {
+        // For arrays: REPLACE/SET replace all elements; INSERT appends value once
+        if (!cur->is_array())
+        {
+          // For non-array parent, wrap then proceed as append/replace
+          glz::json_t arr;
+          arr.get_array().push_back(*cur);
+          *cur = std::move(arr);
+        }
+        auto& arr = cur->get_array();
+        if (isReplaceMode)
+        {
+          for (auto& el : arr)
+            el = value;
+        }
+        else if (isInsertMode)
+        {
+          arr.push_back(value);
+        }
+      }
+    }
+  }
+
+  std::string out;
+  if (auto w = glz::write_json(doc, out))
+  {
+    isNull = true;
+    return "";
+  }
+  return out;
 }
 }  // namespace funcexp

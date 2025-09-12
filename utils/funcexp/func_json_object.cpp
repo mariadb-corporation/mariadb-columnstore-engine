@@ -1,26 +1,14 @@
 #include <string_view>
-using namespace std;
-
+#include <glaze/glaze.hpp>
 #include "functor_json.h"
-#include "functioncolumn.h"
-using namespace execplan;
 
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
-
 #include "mcs_datatype.h"
-using namespace datatypes;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_object::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& resultType)
+execplan::CalpontSystemCatalog::ColType Func_json_object::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
 {
   return fp.size() > 0 ? fp[0]->data()->resultType() : resultType;
 }
@@ -31,24 +19,63 @@ std::string Func_json_object::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   if (fp.size() == 0)
     return "{}";
 
-  const CHARSET_INFO* retCS = type.getCharset();
-  std::string ret("{");
+  glz::json_t obj;
+  auto& o = obj.get_object();
 
-  if (appendJSKeyName(ret, retCS, row, fp[0]) || appendJSValue(ret, retCS, row, fp[1]))
-    goto error;
-
-  for (size_t i = 2; i < fp.size(); i += 2)
+  auto add_pair = [&](size_t keyIdx, size_t valIdx) -> bool
   {
-    ret.append(", ");
-    if (appendJSKeyName(ret, retCS, row, fp[i]) || appendJSValue(ret, retCS, row, fp[i + 1]))
-      goto error;
+    bool keyNull = false, valNull = false;
+    const auto key_ns = fp[keyIdx]->data()->getStrVal(row, keyNull);
+    const auto val_ns = fp[valIdx]->data()->getStrVal(row, valNull);
+    std::string key = keyNull ? std::string("") : key_ns.safeString("");
+
+    if (valNull)
+    {
+      o[key] = glz::json_t{};  // null
+      return true;
+    }
+
+    // Check value type to decide quoting
+    auto& valType = fp[valIdx]->data()->resultType();
+    if (isCharType(valType.colDataType))
+    {
+      o[key] = glz::json_t{val_ns.safeString("")};
+      return true;
+    }
+
+    // Try parse as JSON; fallback to string if parsing fails
+    glz::json_t v;
+    if (auto e = glz::read_json(v, val_ns.unsafeStringRef()))
+    {
+      o[key] = glz::json_t{val_ns.safeString("")};
+    }
+    else
+    {
+      o[key] = std::move(v);
+    }
+    return true;
+  };
+
+  if (!add_pair(0, 1))
+  {
+    isNull = true;
+    return "";
+  }
+  for (size_t i = 2; i + 1 < fp.size(); i += 2)
+  {
+    if (!add_pair(i, i + 1))
+    {
+      isNull = true;
+      return "";
+    }
   }
 
-  ret.append("}");
-  return ret;
-
-error:
-  isNull = true;
-  return "";
+  std::string out;
+  if (auto w = glz::write_json(obj, out))
+  {
+    isNull = true;
+    return "";
+  }
+  return out;
 }
 }  // namespace funcexp

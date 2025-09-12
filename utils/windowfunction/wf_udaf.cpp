@@ -17,7 +17,7 @@
   51 Franklin St., Fifth Floor, Boston, MA 02110, USA
  *************************************************************************************/
 
-//#define NDEBUG
+// #define NDEBUG
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -454,7 +454,7 @@ bool WF_udaf::dropValues(int64_t b, int64_t e)
 
             if (cc)
             {
-              valIn = cc->getStrVal(fRow, isNull); // XXX: we probably need to change Distinctmap.
+              valIn = cc->getStrVal(fRow, isNull);  // XXX: we probably need to change Distinctmap.
             }
             else
             {
@@ -1117,7 +1117,7 @@ void WF_udaf::operator()(int64_t b, int64_t e, int64_t c)
 
               if (cc)
               {
-                valIn = cc->getStrVal(fRow, isNull); // XXX: the same problem with distinct.
+                valIn = cc->getStrVal(fRow, isNull);  // XXX: the same problem with distinct.
               }
               else
               {

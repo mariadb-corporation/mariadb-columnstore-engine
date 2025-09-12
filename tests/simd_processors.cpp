@@ -35,7 +35,6 @@
 using mcs_float64_t = double;
 using mcs_float32_t = float;
 
-
 #ifdef __aarch64__
 #define TESTS_USING_ARM 1
 #endif
@@ -48,18 +47,11 @@ class SimdProcessorTypedTest : public testing::Test
  public:
   using IntegralType = T;
 #if TESTS_USING_SSE
-  using IsF32 = std::integral_constant<bool,
-      std::is_floating_point<T>::value && sizeof(T) == sizeof(float)>;
-  using IsF64 = std::integral_constant<bool,
-      std::is_floating_point<T>::value && sizeof(T) == sizeof(double)>;
-  using SimdType = std::conditional_t<
-      IsF32::value,
-      simd::vi128f_wr,
-      std::conditional_t<IsF64::value, simd::vi128d_wr, simd::vi128_wr>>;
-  using ScalarForProc = std::conditional_t<
-      IsF32::value,
-      float,
-      std::conditional_t<IsF64::value, double, T>>;
+  using IsF32 = std::integral_constant<bool, std::is_floating_point<T>::value && sizeof(T) == sizeof(float)>;
+  using IsF64 = std::integral_constant<bool, std::is_floating_point<T>::value && sizeof(T) == sizeof(double)>;
+  using SimdType = std::conditional_t<IsF32::value, simd::vi128f_wr,
+                                      std::conditional_t<IsF64::value, simd::vi128d_wr, simd::vi128_wr>>;
+  using ScalarForProc = std::conditional_t<IsF32::value, float, std::conditional_t<IsF64::value, double, T>>;
   using Proc = typename simd::SimdFilterProcessor<SimdType, ScalarForProc>;
 #else
   using Proc = typename simd::SimdFilterProcessor<typename simd::TypeToVecWrapperType<T>::WrapperType, T>;

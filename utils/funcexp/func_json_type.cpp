@@ -1,53 +1,55 @@
+#include <glaze/glaze.hpp>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_type::operationType(FunctionParm& fp,
-                                                            CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_type::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
 std::string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                 execplan::CalpontSystemCatalog::ColType& /*type*/)
+                                      execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
-  json_engine_t jsEg;
-  std::string result;
-
-  initJSEngine(jsEg, getCharset(fp[0]), js);
-
-  if (json_read_value(&jsEg))
+  const std::string_view sv{js.unsafeStringRef().data(), js.unsafeStringRef().size()};
+  glz::json_t value;
+  if (auto err = glz::read_json(value, sv))
   {
     isNull = true;
     return "";
   }
 
-  switch (jsEg.value_type)
+  if (value.is_object())
+    return "OBJECT";
+  if (value.is_array())
+    return "ARRAY";
+  if (value.is_string())
+    return "STRING";
+  if (value.is_number())
   {
-    case JSON_VALUE_OBJECT: result = "OBJECT"; break;
-    case JSON_VALUE_ARRAY: result = "ARRAY"; break;
-    case JSON_VALUE_STRING: result = "STRING"; break;
-    case JSON_VALUE_NUMBER: result = (jsEg.num_flags & JSON_NUM_FRAC_PART) ? "DOUBLE" : "INTEGER"; break;
-    case JSON_VALUE_TRUE:
-    case JSON_VALUE_FALSE: result = "BOOLEAN"; break;
-    default: result = "NULL"; break;
+    // Determine integer vs floating by canonical serialization
+    std::string tmp;
+    if (auto werr = glz::write_json(value, tmp))
+    {
+      isNull = true;
+      return "";
+    }
+    for (char ch : tmp)
+    {
+      if (ch == '.' || ch == 'e' || ch == 'E')
+        return "DOUBLE";
+    }
+    return "INTEGER";
   }
-
-  return result;
+  if (value.is_boolean())
+    return "BOOLEAN";
+  return "NULL";
 }
 }  // namespace funcexp

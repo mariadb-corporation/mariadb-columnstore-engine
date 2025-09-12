@@ -1,26 +1,14 @@
+// Include Glaze first to avoid specialization-after-instantiation
+#include <glaze/glaze.hpp>
 #include <string_view>
-using namespace std;
 
 #include "functor_json.h"
-#include "functioncolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "mcs_datatype.h"
-using namespace datatypes;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_quote::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_quote::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -35,13 +23,14 @@ std::string Func_json_quote::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     return "";
   }
 
-  std::string ret("\"");
-
-  isNull = appendEscapedJS(ret, &my_charset_utf8mb4_bin, js, getCharset(fp[0]));
-  if (isNull)
+  // Use Glaze to emit a JSON-escaped, quoted string
+  const std::string_view sv = js.unsafeStringRef();
+  std::string out;
+  if (auto err = glz::write_json(sv, out))
+  {
+    isNull = true;
     return "";
-  ret.append("\"");
-
-  return ret;
+  }
+  return out;
 }
 }  // namespace funcexp

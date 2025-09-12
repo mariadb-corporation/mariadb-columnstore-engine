@@ -138,7 +138,6 @@ set(funcexp_LIB_SRCS
     func_weekday.cpp
     func_year.cpp
     func_yearweek.cpp
-    jsonhelpers.cpp
     sql_crypt.cpp
 )
 
@@ -150,6 +149,7 @@ columnstore_link(
     pron
     loggingcpp
     dataconvert
+    glaze::glaze
     ${MARIADB_STRING_LIBS}
     ${NETSNMP_LIBRARIES}
 )

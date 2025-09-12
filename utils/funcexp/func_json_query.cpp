@@ -1,48 +1,17 @@
+// Include Glaze first
+#include <glaze/glaze.hpp>
+#include <cctype>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
-using namespace execplan;
 
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
+#include "glaze_path.h"
 
 namespace funcexp
 {
 
-class QueryJSONPathWrapper : public JSONPathWrapper
-{
-  bool checkAndGetValue(JSONEgWrapper* je, std::string& res, int* error) override
-  {
-    return je->checkAndGetComplexVal(res, error);
-  }
-};
-
-bool JSONEgWrapper::checkAndGetComplexVal(std::string& ret, int* error)
-{
-  if (json_value_scalar(this))
-  {
-    /* We skip scalar values. */
-    if (json_scan_next(this))
-      *error = 1;
-    return true;
-  }
-
-  const uchar* tmpValue = value;
-  if (json_skip_level(this))
-  {
-    *error = 1;
-    return true;
-  }
-
-  ret.append((const char*)value, s.c_str - tmpValue);
-  return false;
-}
-
-CalpontSystemCatalog::ColType Func_json_query::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_query::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -50,9 +19,52 @@ CalpontSystemCatalog::ColType Func_json_query::operationType(FunctionParm& fp,
 std::string Func_json_query::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  std::string ret;
-  QueryJSONPathWrapper qpw;
-  isNull = qpw.extract(ret, row, fp[0], fp[1]);
-  return isNull ? "" : ret;
+  bool nullDoc = false, nullPath = false;
+  const auto js = fp[0]->data()->getStrVal(row, nullDoc);
+  const auto path_ns = fp[1]->data()->getStrVal(row, nullPath);
+  if (nullDoc || nullPath)
+  {
+    isNull = true;
+    return "";
+  }
+
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js.unsafeStringRef()))
+  {
+    isNull = true;
+    return "";
+  }
+
+  std::vector<const glz::json_t*> matches;
+  if (!glaze_path::find_matches(doc, path_ns.unsafeStringRef(), matches) || matches.empty())
+  {
+    isNull = true;
+    return "";
+  }
+
+  // Prefer the first complex (object/array) match; otherwise NULL
+  const glz::json_t* selected = nullptr;
+  for (const auto* m : matches)
+  {
+    if (m->is_object() || m->is_array())
+    {
+      selected = m;
+      break;
+    }
+  }
+  if (!selected)
+  {
+    isNull = true;
+    return "";
+  }
+
+  std::string out;
+  if (auto w = glz::write_json(*selected, out))
+  {
+    isNull = true;
+    return "";
+  }
+  return out;
 }
+
 }  // namespace funcexp

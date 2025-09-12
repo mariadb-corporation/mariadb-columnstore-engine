@@ -1,21 +1,13 @@
+#include <glaze/glaze.hpp>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_array_insert::operationType(
-    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_array_insert::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -23,120 +15,84 @@ CalpontSystemCatalog::ColType Func_json_array_insert::operationType(
 std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                               execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
 
-  const CHARSET_INFO* cs = getCharset(fp[0]);
-
-  json_engine_t jsEg;
-  std::string retJS;
-  retJS.reserve(js.length() + 8);
-
-  initJSPaths(paths, fp, 1, 2);
-
-  utils::NullString tmpJS(js);
-  for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js_ns.unsafeStringRef()))
   {
-    const char* rawJS = tmpJS.str();
-    const size_t jsLen = tmpJS.length();
-    JSONPath& path = paths[j];
-    if (!path.parsed)
-    {
-      if (parseJSPath(path, row, fp[i]) || path.p.last_step - 1 < path.p.steps ||
-          path.p.last_step->type != JSON_PATH_ARRAY)
-      {
-        if (path.p.s.error == 0)
-          path.p.s.error = SHOULD_END_WITH_ARRAY;
-        goto error;
-      }
-      path.p.last_step--;
-    }
-
-    initJSEngine(jsEg, cs, tmpJS);
-
-    path.currStep = path.p.steps;
-
-    int jsErr = 0;
-    if (locateJSPath(jsEg, path, &jsErr))
-    {
-      if (jsErr)
-        goto error;
-
-      // Can't find the array to insert.
-      continue;
-    }
-
-    if (json_read_value(&jsEg))
-      goto error;
-
-    if (jsEg.value_type != JSON_VALUE_ARRAY)
-    {
-      /* Must be an array. */
-      continue;
-    }
-
-    const char* itemPos = 0;
-    IntType itemSize = 0;
-
-    while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
-    {
-      DBUG_ASSERT(jsEg.state == JST_VALUE);
-      if (itemSize == path.p.last_step[1].n_item)
-      {
-        itemPos = (const char*)jsEg.s.c_str;
-        break;
-      }
-      itemSize++;
-
-      if (json_read_value(&jsEg) || (!json_value_scalar(&jsEg) && json_skip_level(&jsEg)))
-        goto error;
-    }
-
-    if (unlikely(jsEg.s.error || *jsEg.killed_ptr))
-      goto error;
-
-    if (itemPos)
-    {
-      retJS.append(rawJS, itemPos - rawJS);
-      if (itemSize > 0)
-        retJS.append(" ");
-      if (appendJSValue(retJS, cs, row, fp[i + 1]))
-        goto error;
-      retJS.append(",");
-      if (itemSize == 0)
-        retJS.append(" ");
-      retJS.append(itemPos, rawJS + jsLen - itemPos);
-    }
-    else
-    {
-      /* Insert position wasn't found - append to the array. */
-      DBUG_ASSERT(jsEg.state == JST_ARRAY_END);
-      itemPos = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
-      retJS.append(rawJS, itemPos - rawJS);
-      if (itemSize > 0)
-        retJS.append(", ");
-      if (appendJSValue(retJS, cs, row, fp[i + 1]))
-        goto error;
-      retJS.append(itemPos, rawJS + jsLen - itemPos);
-    }
-
-    // tmpJS save the json string for next loop
-    tmpJS.assign(retJS);
-    retJS.clear();
+    isNull = true;
+    return "";
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
-  retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
-    goto error;
+  for (size_t i = 1; i + 1 < fp.size(); i += 2)
+  {
+    bool pNull = false, vNull = false;
+    const auto p_ns = fp[i]->data()->getStrVal(row, pNull);
+    const auto v_ns = fp[i + 1]->data()->getStrVal(row, vNull);
+    if (pNull || vNull)
+    {
+      isNull = true;
+      return "";
+    }
 
-  isNull = false;
-  return retJS;
+    glz::json_t value;
+    if (auto ev = glz::read_json(value, v_ns.unsafeStringRef()))
+    {
+      isNull = true;
+      return "";
+    }
 
-error:
-  isNull = true;
-  return "";
+    // Parse path and require it ends with an array index step
+    std::vector<funcexp::glaze_path::Step> steps;
+    if (!funcexp::glaze_path::parse(p_ns.unsafeStringRef(), steps))
+    {
+      isNull = true;
+      return "";
+    }
+    if (steps.empty() || steps.back().kind != funcexp::glaze_path::StepKind::Index)
+    {
+      isNull = true;
+      return "";
+    }
+
+    // Split into parent and index
+    auto last = steps.back();
+    steps.pop_back();
+
+    std::vector<glz::json_t*> parents;
+    funcexp::glaze_path::find_matches_mutable_steps(doc, steps, parents);
+
+    for (auto* parent : parents)
+    {
+      // Ensure parent is an array, or wrap into array first
+      if (!parent->is_array())
+      {
+        glz::json_t arr;
+        arr.get_array().push_back(*parent);
+        *parent = std::move(arr);
+      }
+      auto& arr = parent->get_array();
+      int idx = last.index;
+      if (idx < 0)
+        idx = static_cast<int>(arr.size()) + idx;
+      if (idx < 0 || static_cast<size_t>(idx) > arr.size())
+      {
+        isNull = true;
+        return "";
+      }
+      arr.insert(arr.begin() + idx, value);
+    }
+  }
+
+  std::string out;
+  if (auto w = glz::write_json(doc, out))
+  {
+    isNull = true;
+    return "";
+  }
+  return out;
 }
 
 }  // namespace funcexp

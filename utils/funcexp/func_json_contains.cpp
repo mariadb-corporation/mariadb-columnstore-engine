@@ -1,154 +1,90 @@
+#include <glaze/glaze.hpp>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
 #include "rowgroup.h"
-using namespace execplan;
-using namespace rowgroup;
-
-#include "dataconvert.h"
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace
 {
-static bool checkContains(json_engine_t* jsEg, json_engine_t* valEg)
+static bool contains_json(const glz::json_t& doc, const glz::json_t& val)
 {
-  json_engine_t localJsEg;
-  bool isEgSet;
-
-  switch (jsEg->value_type)
+  if (doc.is_object())
   {
-    case JSON_VALUE_OBJECT:
+    if (!val.is_object())
+      return false;
+    const auto& D = doc.get_object();
+    const auto& V = val.get_object();
+    for (const auto& [k, vv] : V)
     {
-      json_string_t keyName;
-
-      if (valEg->value_type != JSON_VALUE_OBJECT)
+      auto it = D.find(k);
+      if (it == D.end())
         return false;
-
-      localJsEg = *jsEg;
-      isEgSet = false;
-      json_string_set_cs(&keyName, valEg->s.cs);
-      while (json_scan_next(valEg) == 0 && valEg->state != JST_OBJ_END)
-      {
-        const uchar *keyStart, *keyEnd;
-
-        DBUG_ASSERT(valEg->state == JST_KEY);
-        keyStart = valEg->s.c_str;
-        do
-        {
-          keyEnd = valEg->s.c_str;
-        } while (json_read_keyname_chr(valEg) == 0);
-
-        if (unlikely(valEg->s.error) || json_read_value(valEg))
-          return false;
-
-        if (isEgSet)
-          *jsEg = localJsEg;
-        else
-          isEgSet = true;
-
-        json_string_set_str(&keyName, keyStart, keyEnd);
-        if (!findKeyInObject(jsEg, &keyName) || json_read_value(jsEg) || !checkContains(jsEg, valEg))
-          return false;
-      }
-
-      return valEg->state == JST_OBJ_END && !json_skip_level(jsEg);
+      if (!contains_json(it->second, vv))
+        return false;
     }
-    case JSON_VALUE_ARRAY:
-      if (valEg->value_type != JSON_VALUE_ARRAY)
-      {
-        localJsEg = *valEg;
-        isEgSet = false;
-        while (json_scan_next(jsEg) == 0 && jsEg->state != JST_ARRAY_END)
-        {
-          int currLevel, isScaler;
-          DBUG_ASSERT(jsEg->state == JST_VALUE);
-          if (json_read_value(jsEg))
-            return false;
-
-          if (!(isScaler = json_value_scalar(jsEg)))
-            currLevel = json_get_level(jsEg);
-
-          if (isEgSet)
-            *valEg = localJsEg;
-          else
-            isEgSet = true;
-
-          if (checkContains(jsEg, valEg))
-          {
-            if (json_skip_level(jsEg))
-              return false;
-            return true;
-          }
-          if (unlikely(valEg->s.error) || unlikely(jsEg->s.error) ||
-              (!isScaler && json_skip_to_level(jsEg, currLevel)))
-            return false;
-        }
-        return false;
-      }
-      /* else */
-      localJsEg = *jsEg;
-      isEgSet = false;
-      while (json_scan_next(valEg) == 0 && valEg->state != JST_ARRAY_END)
-      {
-        DBUG_ASSERT(valEg->state == JST_VALUE);
-        if (json_read_value(valEg))
-          return false;
-
-        if (isEgSet)
-          *jsEg = localJsEg;
-        else
-          isEgSet = true;
-        if (!checkContains(jsEg, valEg))
-          return false;
-      }
-
-      return valEg->state == JST_ARRAY_END;
-
-    case JSON_VALUE_STRING:
-      if (valEg->value_type != JSON_VALUE_STRING)
-        return false;
-      /*
-         TODO: make proper json-json comparison here that takes excipient
-               into account.
-       */
-      return valEg->value_len == jsEg->value_len && memcmp(valEg->value, jsEg->value, valEg->value_len) == 0;
-    case JSON_VALUE_NUMBER:
-      if (valEg->value_type == JSON_VALUE_NUMBER)
-      {
-        double jsEgVal, valEgVal;
-        char* end;
-        int err;
-
-        jsEgVal = jsEg->s.cs->strntod((char*)jsEg->value, jsEg->value_len, &end, &err);
-        ;
-        valEgVal = valEg->s.cs->strntod((char*)valEg->value, valEg->value_len, &end, &err);
-        ;
-
-        return (fabs(jsEgVal - valEgVal) < 1e-12);
-      }
-      else
-        return false;
-
-    default: break;
+    return true;
   }
-
-  /*
-    We have these not mentioned in the 'switch' above:
-
-    case JSON_VALUE_TRUE:
-    case JSON_VALUE_FALSE:
-    case JSON_VALUE_NULL:
-  */
-  return valEg->value_type == jsEg->value_type;
+  if (doc.is_array())
+  {
+    const auto& A = doc.get_array();
+    if (val.is_array())
+    {
+      // Every element in val must be contained by some element in doc array
+      for (const auto& vv : val.get_array())
+      {
+        bool any = false;
+        for (const auto& dv : A)
+        {
+          if (contains_json(dv, vv))
+          {
+            any = true;
+            break;
+          }
+        }
+        if (!any)
+          return false;
+      }
+      return true;
+    }
+    // val is not array: any element contains val
+    for (const auto& dv : A)
+      if (contains_json(dv, val))
+        return true;
+    return false;
+  }
+  if (doc.is_string())
+  {
+    return val.is_string() && doc.get_string() == val.get_string();
+  }
+  if (doc.is_boolean())
+  {
+    return val.is_boolean() && doc.get_boolean() == val.get_boolean();
+  }
+  if (doc.is_null())
+  {
+    return val.is_null();
+  }
+  if (doc.is_number() && val.is_number())
+  {
+    std::string sd, sv;
+    if (auto ed = glz::write_json(doc, sd))
+      return false;
+    if (auto ev = glz::write_json(val, sv))
+      return false;
+    char* endd = nullptr;
+    char* endv = nullptr;
+    double dd = std::strtod(sd.c_str(), &endd);
+    double dv = std::strtod(sv.c_str(), &endv);
+    return std::fabs(dd - dv) < 1e-12;
+  }
+  return false;
 }
 }  // namespace
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_contains::operationType(FunctionParm& fp,
-                                                                CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_contains::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -156,58 +92,51 @@ CalpontSystemCatalog::ColType Func_json_contains::operationType(FunctionParm& fp
 /**
  * getBoolVal API definition
  */
-bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                    CalpontSystemCatalog::ColType& /*type*/)
+bool Func_json_contains::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                    execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   bool isNullJS = false, isNullVal = false;
-  const auto& js = fp[0]->data()->getStrVal(row, isNullJS);
-  const auto& val = fp[1]->data()->getStrVal(row, isNullVal);
+  const auto js_ns = fp[0]->data()->getStrVal(row, isNullJS);
+  const auto val_ns = fp[1]->data()->getStrVal(row, isNullVal);
   if (isNullJS || isNullVal)
   {
     isNull = true;
     return false;
   }
 
-  bool result = false;
-
-  if (!arg2Parsed)
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js_ns.unsafeStringRef()))
   {
-    if (!arg2Const)
-    {
-      ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(fp[1]->data());
-      arg2Const = (constCol != nullptr);
-    }
-    arg2Val = val;
-    arg2Parsed = arg2Const;
+    isNull = true;
+    return false;
+  }
+  glz::json_t needle;
+  if (auto e2 = glz::read_json(needle, val_ns.unsafeStringRef()))
+  {
+    isNull = true;
+    return false;
   }
 
-  json_engine_t jsEg;
-  initJSEngine(jsEg, getCharset(fp[0]), js);
-
+  // Optional path: use first match; if none, return NULL (match prior behavior)
   if (fp.size() > 2)
   {
-    if (!path.parsed && parseJSPath(path, row, fp[2], false))
-      goto error;
-
-    if (locateJSPath(jsEg, path))
-      goto error;
+    bool pNull = false;
+    const auto p = fp[2]->data()->getStrVal(row, pNull);
+    if (pNull)
+    {
+      isNull = true;
+      return false;
+    }
+    std::vector<const glz::json_t*> matches;
+    if (!glaze_path::find_matches(doc, p.unsafeStringRef(), matches) || matches.empty())
+    {
+      isNull = true;
+      return false;
+    }
+    doc = *matches.front();
   }
 
-  json_engine_t valEg;
-  initJSEngine(valEg, getCharset(fp[1]), arg2Val);
-
-  if (json_read_value(&jsEg) || json_read_value(&valEg))
-    goto error;
-
-  result = checkContains(&jsEg, &valEg);
-
-  if (unlikely(jsEg.s.error || valEg.s.error))
-    goto error;
-
+  bool result = contains_json(doc, needle);
   return result;
-
-error:
-  isNull = true;
-  return false;
 }
 }  // namespace funcexp

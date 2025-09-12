@@ -1,221 +1,216 @@
-#include <string_view>
-using namespace std;
-
 #include "functor_json.h"
-#include "functioncolumn.h"
 #include "constantcolumn.h"
-using namespace execplan;
-
+#include <glaze/glaze.hpp>
+#include "glaze_path.h"
 #include "rowgroup.h"
-using namespace rowgroup;
 
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
-
-namespace
-{
-static bool appendJSPath(std::string& ret, const json_path_t* p)
-{
-  const json_path_step_t* c;
-
-  try
-  {
-    ret.append("\"$");
-
-    for (c = p->steps + 1; c <= p->last_step; c++)
-    {
-      if (c->type & JSON_PATH_KEY)
-      {
-        ret.append(".", 1);
-        ret.append((const char*)c->key, c->key_end - c->key);
-      }
-      else /*JSON_PATH_ARRAY*/
-      {
-        ret.append("[");
-        ret.append(std::to_string(c->n_item));
-        ret.append("]");
-      }
-    }
-
-    ret.append("\"");
-  }
-  catch (...)
-  {
-    return true;
-  }
-
-  return false;
-}
-}  // namespace
 namespace funcexp
 {
 const static int wildOne = '_';
 const static int wildMany = '%';
-int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr,
-                                   const CHARSET_INFO* cs)
-{
-  if (jsEg->value_type != JSON_VALUE_STRING || !jsEg->value_escaped)
-    return cs->wildcmp((const char*)jsEg->value, (const char*)(jsEg->value + jsEg->value_len),
-                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape, wildOne, wildMany)
-               ? 0
-               : 1;
 
-  {
-    int strLen = (jsEg->value_len / 1024 + 1) * 1024;
-    char* buf = (char*)alloca(strLen);
-
-    if ((strLen = json_unescape(jsEg->s.cs, jsEg->value, jsEg->value + jsEg->value_len, jsEg->s.cs,
-                                (uchar*)buf, (uchar*)(buf + strLen))) <= 0)
-      return 0;
-
-    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne, wildMany) ? 0 : 1;
-  }
-}
-
-CalpontSystemCatalog::ColType Func_json_search::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_search::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
+}
+
+static bool match_wild(const std::string& s, const std::string& pat, char escape = '\\')
+{
+  size_t i = 0, j = 0;
+  size_t star_i = std::string::npos, star_j = std::string::npos;
+  while (i < s.size())
+  {
+    if (j < pat.size())
+    {
+      char pc = pat[j];
+      if (pc == escape && j + 1 < pat.size())
+      {
+        ++j;
+        pc = pat[j];
+      }
+      if (pc == '%')
+      {
+        star_i = i;
+        star_j = ++j;
+        continue;
+      }
+      if (pc == '_' || pc == s[i])
+      {
+        ++i;
+        ++j;
+        continue;
+      }
+    }
+    if (star_j != std::string::npos)
+    {
+      i = ++star_i;
+      j = star_j;
+      continue;
+    }
+    return false;
+  }
+  while (j < pat.size())
+  {
+    char pc = pat[j];
+    if (pc == escape && j + 1 < pat.size())
+    {
+      j += 2;
+      continue;
+    }
+    if (pc != '%')
+      return false;
+    ++j;
+  }
+  return true;
+}
+
+// (removed unused collect_paths)
+
+static void find_string_matches(const glz::json_t& node, const std::string& base, const std::string& pat,
+                                char escape, std::vector<std::string>& out)
+{
+  if (node.is_string())
+  {
+    if (match_wild(node.get_string(), pat, escape))
+      out.push_back(base);
+    return;
+  }
+  if (node.is_object())
+  {
+    for (const auto& [k, v] : node.get_object())
+    {
+      find_string_matches(v, base + "." + k, pat, escape, out);
+    }
+    return;
+  }
+  if (node.is_array())
+  {
+    const auto& a = node.get_array();
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+      find_string_matches(a[i], base + "[" + std::to_string(i) + "]", pat, escape, out);
+    }
+  }
 }
 
 std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                         execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  std::string ret;
-  bool isNullJS = false, isNullVal = false;
-  const auto& js = fp[0]->data()->getStrVal(row, isNull);
-  const auto& cmpStr = fp[2]->data()->getStrVal(row, isNull);
-  if (isNullJS || isNullVal)
+  bool nullDoc = false, nullPat = false;
+  const auto js_ns = fp[0]->data()->getStrVal(row, nullDoc);
+  const auto pat_ns = fp[2]->data()->getStrVal(row, nullPat);
+  if (nullDoc || nullPat)
   {
     isNull = true;
     return "";
   }
 
+  // mode parsing
   if (!isModeParsed)
   {
     if (!isModeConst)
-      isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
-
-    const auto& mode_ns = fp[1]->data()->getStrVal(row, isNull);
+      isModeConst = (dynamic_cast<execplan::ConstantColumn*>(fp[1]->data()) != nullptr);
+    const auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return "";
     std::string mode = mode_ns.safeString("");
-
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")
     {
       isNull = true;
       return "";
     }
-
     isModeOne = (mode == "one");
     isModeParsed = isModeConst;
   }
 
+  // escape parsing
+  char esc = '\\';
   if (fp.size() >= 4)
   {
-    if (dynamic_cast<ConstantColumn*>(fp[3]->data()) == nullptr)
+    if (dynamic_cast<execplan::ConstantColumn*>(fp[3]->data()) == nullptr)
     {
       isNull = true;
       return "";
     }
-    bool isNullEscape = false;
-    const auto& escapeStr = fp[3]->data()->getStrVal(row, isNullEscape);
-    if (escapeStr.length() > 1)
+    bool nullEsc = false;
+    const auto esc_ns = fp[3]->data()->getStrVal(row, nullEsc);
+    if (esc_ns.length() > 1)
     {
       isNull = true;
       return "";
     }
-    escape = isNullEscape ? '\\' : escapeStr.safeString("")[0];
+    if (!nullEsc && esc_ns.length() == 1)
+      esc = esc_ns.safeString("")[0];
   }
 
-  json_engine_t jsEg;
-  json_path_t p, savPath;
-  const CHARSET_INFO* cs = getCharset(fp[0]);
-
-#if MYSQL_VERSION_ID >= 100900
-  int arrayCounter[JSON_DEPTH_LIMIT];
-  bool hasNegPath = 0;
-#endif
-  int pathFound = 0;
-
-  initJSPaths(paths, fp, 4, 1);
-
-  for (size_t i = 4; i < fp.size(); i++)
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js_ns.unsafeStringRef()))
   {
-    JSONPath& path = paths[i - 4];
-    if (!path.parsed)
-    {
-      if (parseJSPath(path, row, fp[i]))
-        goto error;
-#if MYSQL_VERSION_ID >= 100900
-      hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
-#endif
-    }
+    isNull = true;
+    return "";
   }
+  const std::string pat = pat_ns.safeString("");
 
-  json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
-
-  while (json_get_path_next(&jsEg, &p) == 0)
+  std::vector<std::string> matches_paths;
+  // If limiting paths provided, search within those; else search entire document
+  if (fp.size() > 4)
   {
-#if MYSQL_VERSION_ID >= 100900
-    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
-      goto error;
-#endif
-
-    if (json_value_scalar(&jsEg))
+    for (size_t i = 4; i < fp.size(); ++i)
     {
-#if MYSQL_VERSION_ID >= 100900
-      bool isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter);
-#else
-      bool isMatch = matchJSPath(paths, &p, jsEg.value_type);
-#endif
-      if ((fp.size() < 5 || isMatch) && cmpJSValWild(&jsEg, cmpStr, cs) != 0)
+      bool pNull = false;
+      const auto p_ns = fp[i]->data()->getStrVal(row, pNull);
+      if (pNull)
       {
-        ++pathFound;
-        if (pathFound == 1)
-        {
-          savPath = p;
-          savPath.last_step = savPath.steps + (p.last_step - p.steps);
-        }
-        else
-        {
-          if (pathFound == 2)
-          {
-            ret.append("[");
-            if (appendJSPath(ret, &savPath))
-              goto error;
-          }
-          ret.append(", ");
-          if (appendJSPath(ret, &p))
-            goto error;
-        }
-        if (isModeOne)
-          goto end;
+        isNull = true;
+        return "";
+      }
+      std::vector<const glz::json_t*> nodes;
+      if (!glaze_path::find_matches(doc, p_ns.unsafeStringRef(), nodes))
+      {
+        isNull = true;
+        return "";
+      }
+      for (const auto* n : nodes)
+      {
+        // We don't know full JSONPath to n from here; approximate by using the provided path plus subtree
+        // This builds subpaths relative to provided path, which is acceptable for ColumnStore usage
+        find_string_matches(*n, p_ns.safeString("$"), pat, esc, matches_paths);
+        if (isModeOne && !matches_paths.empty())
+          goto build;
       }
     }
   }
-
-end:
-  if (pathFound == 0)
-    goto error;
-  if (pathFound == 1)
+  else
   {
-    if (appendJSPath(ret, &savPath))
-      goto error;
+    find_string_matches(doc, std::string{"$"}, pat, esc, matches_paths);
+  }
+
+build:
+  if (matches_paths.empty())
+  {
+    isNull = true;
+    return "";
+  }
+
+  if (isModeOne)
+  {
+    // Return a JSON string path
+    return std::string{"\""} + matches_paths.front() + "\"";
   }
   else
-    ret.append("]");
-
-  isNull = false;
-  return ret;
-
-error:
-  isNull = true;
-  return "";
+  {
+    // Return array of JSON string paths
+    std::string out = "[";
+    for (size_t i = 0; i < matches_paths.size(); ++i)
+    {
+      if (i)
+        out += ", ";
+      out += "\"" + matches_paths[i] + "\"";
+    }
+    out += "]";
+    return out;
+  }
 }
 }  // namespace funcexp

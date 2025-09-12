@@ -1,23 +1,13 @@
+#include <glaze/glaze.hpp>
 #include <string>
-using namespace std;
 
 #include "functor_json.h"
-#include "functioncolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
-
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_array::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& resultType)
+execplan::CalpontSystemCatalog::ColType Func_json_array::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& resultType)
 {
   return fp.size() > 0 ? fp[0]->data()->resultType() : resultType;
 }
@@ -28,25 +18,45 @@ std::string Func_json_array::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   if (fp.size() == 0)
     return "[]";
 
-  const CHARSET_INFO* retCS = type.getCharset();
-  std::string ret("[");
+  glz::json_t arr;
+  auto& a = arr.get_array();
+  a.reserve(fp.size());
 
-  if (appendJSValue(ret, retCS, row, fp[0]))
-    goto error;
-
-  for (size_t i = 1; i < fp.size(); i++)
+  for (size_t i = 0; i < fp.size(); ++i)
   {
-    ret.append(", ");
-    if (appendJSValue(ret, retCS, row, fp[i]))
-      goto error;
+    bool argNull = false;
+    const auto ns = fp[i]->data()->getStrVal(row, argNull);
+    if (argNull)
+    {
+      a.emplace_back();  // null
+      continue;
+    }
+
+    auto& valType = fp[i]->data()->resultType();
+    if (isCharType(valType.colDataType))
+    {
+      a.emplace_back(ns.safeString(""));
+      continue;
+    }
+
+    glz::json_t v;
+    if (auto e = glz::read_json(v, ns.unsafeStringRef()))
+    {
+      a.emplace_back(ns.safeString(""));
+    }
+    else
+    {
+      a.emplace_back(std::move(v));
+    }
   }
 
-  ret.append("]");
-  return ret;
-
-error:
-  isNull = true;
-  return "";
+  std::string out;
+  if (auto w = glz::write_json(arr, out))
+  {
+    isNull = true;
+    return "";
+  }
+  return out;
 }
 
 }  // namespace funcexp

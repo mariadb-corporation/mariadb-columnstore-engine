@@ -1,23 +1,19 @@
-#include <string_view>
-using namespace std;
-
+// Include Glaze first to avoid specialization-after-instantiation
+#include <glaze/glaze.hpp>
 #include "functor_json.h"
-#include "functioncolumn.h"
-using namespace execplan;
 
+#include <string>
 #include "rowgroup.h"
-using namespace rowgroup;
 
-#include "joblisttypes.h"
-using namespace joblist;
+static constexpr int LOCAL_TAB_SIZE_LIMIT = 8;
 
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+// Glaze JSON
+#include <glaze/glaze.hpp>
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_format::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_format::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -41,21 +37,28 @@ std::string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
       if (tabSize < 0)
         tabSize = 0;
-      else if (tabSize > TAB_SIZE_LIMIT)
-        tabSize = TAB_SIZE_LIMIT;
+      else if (tabSize > LOCAL_TAB_SIZE_LIMIT)
+        tabSize = LOCAL_TAB_SIZE_LIMIT;
     }
   }
 
-  json_engine_t jsEg;
-  initJSEngine(jsEg, getCharset(fp[0]), js);
-  std::string ret;
-  if (doFormat(&jsEg, ret, fmt, tabSize))
+  const std::string_view sv{js.unsafeStringRef().data(), js.unsafeStringRef().size()};
+  glz::json_t value;
+  if (auto err = glz::read_json(value, sv))
+  {
+    isNull = true;
+    return "";
+  }
+
+  std::string out;
+  // Current Glaze in dependency offers two-argument write_json; use that and check for errors
+  if (auto werr = glz::write_json(value, out))
   {
     isNull = true;
     return "";
   }
 
   isNull = false;
-  return ret;
+  return out;
 }
 }  // namespace funcexp

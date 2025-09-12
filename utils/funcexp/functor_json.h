@@ -5,8 +5,6 @@
 #include <mariadb.h>
 #include <mysql.h>
 #include <my_sys.h>
-#include <json_lib.h>
-
 #include "collation.h"
 #include "functor_bool.h"
 #include "functor_int.h"
@@ -14,44 +12,19 @@
 
 namespace funcexp
 {
-// The json_path_t wrapper include some flags
-struct JSONPath
+// Local replacement for former json_lib json_value_types
+enum json_value_types
 {
- public:
-  JSONPath() : constant(false), parsed(false), currStep(nullptr)
-  {
-  }
-  json_path_t p{};
-  bool constant;  // check if the argument is constant
-  bool parsed;    // check if the argument is parsed
-  json_path_step_t* currStep;
+  JSON_VALUE_NULL = 0,
+  JSON_VALUE_OBJECT,
+  JSON_VALUE_ARRAY,
+  JSON_VALUE_STRING,
+  JSON_VALUE_NUMBER,
+  JSON_VALUE_TRUE,
+  JSON_VALUE_FALSE,
+  JSON_VALUE_UNINITIALIZED
 };
 
-class JSONEgWrapper : public json_engine_t
-{
- public:
-  JSONEgWrapper(CHARSET_INFO* cs, const uchar* str, const uchar* end)
-  {
-    json_scan_start(this, cs, str, end);
-  }
-  JSONEgWrapper(const std::string& str, CHARSET_INFO* cs)
-   : JSONEgWrapper(cs, (const uchar*)str.data(), (const uchar*)str.data() + str.size())
-  {
-  }
-  bool checkAndGetScalar(std::string& ret, int* error);
-  bool checkAndGetComplexVal(std::string& ret, int* error);
-};
-
-class JSONPathWrapper : public JSONPath
-{
- protected:
-  virtual ~JSONPathWrapper() = default;
-  virtual bool checkAndGetValue(JSONEgWrapper* je, std::string& ret, int* error) = 0;
-
- public:
-  bool extract(std::string& ret, rowgroup::Row& row, execplan::SPTP& funcParmJS,
-               execplan::SPTP& funcParmPath);
-};
 /** @brief Func_json_valid class
  */
 class Func_json_valid : public Func_Bool
@@ -90,9 +63,6 @@ class Func_json_depth : public Func_Int
  */
 class Func_json_length : public Func_Int
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_length() : Func_Int("json_length")
   {
@@ -194,9 +164,6 @@ class Func_json_array : public Func_Str
  */
 class Func_json_keys : public Func_Str
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_keys() : Func_Str("json_keys")
   {
@@ -213,9 +180,6 @@ class Func_json_keys : public Func_Str
  */
 class Func_json_exists : public Func_Bool
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_exists() : Func_Bool("json_exists")
   {
@@ -233,9 +197,6 @@ class Func_json_exists : public Func_Bool
  */
 class Func_json_quote : public Func_Str
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_quote() : Func_Str("json_quote")
   {
@@ -253,9 +214,6 @@ class Func_json_quote : public Func_Str
  */
 class Func_json_unquote : public Func_Str
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_unquote() : Func_Str("json_unquote")
   {
@@ -380,7 +338,6 @@ class Func_json_query : public Func_Str
 class Func_json_contains : public Func_Bool
 {
  protected:
-  JSONPath path;
   bool arg2Const;
   bool arg2Parsed;  // argument 2 is a constant or has been parsed
   utils::NullString arg2Val;
@@ -401,9 +358,6 @@ class Func_json_contains : public Func_Bool
  */
 class Func_json_array_append : public Func_Str
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
   Func_json_array_append() : Func_Str("json_array_append")
   {
@@ -423,9 +377,6 @@ class Func_json_array_append : public Func_Str
  */
 class Func_json_array_insert : public Func_Str
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
   Func_json_array_insert() : Func_Str("json_array_insert")
   {
@@ -454,7 +405,6 @@ class Func_json_insert : public Func_Str
 
  protected:
   MODE mode;
-  std::vector<JSONPath> paths;
 
  public:
   Func_json_insert() : Func_Str("json_insert"), mode(INSERT)
@@ -488,9 +438,6 @@ class Func_json_insert : public Func_Str
  */
 class Func_json_remove : public Func_Str
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
   Func_json_remove() : Func_Str("json_remove")
   {
@@ -509,7 +456,6 @@ class Func_json_remove : public Func_Str
 class Func_json_contains_path : public Func_Bool
 {
  protected:
-  std::vector<JSONPath> paths;
   std::vector<bool> hasFound;
   bool isModeOne;
   bool isModeConst;
@@ -533,9 +479,6 @@ class Func_json_contains_path : public Func_Bool
  */
 class Func_json_overlaps : public Func_Bool
 {
- protected:
-  JSONPath path;
-
  public:
   Func_json_overlaps() : Func_Bool("json_overlaps")
   {
@@ -553,7 +496,6 @@ class Func_json_overlaps : public Func_Bool
 class Func_json_search : public Func_Str
 {
  protected:
-  std::vector<JSONPath> paths;
   bool isModeParsed;
   bool isModeConst;
   bool isModeOne;
@@ -571,17 +513,11 @@ class Func_json_search : public Func_Str
 
   std::string getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                         execplan::CalpontSystemCatalog::ColType& type) override;
-
- private:
-  int cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs);
 };
 /** @brief Func_json_extract_string class
  */
 class Func_json_extract : public Func_Str
 {
- protected:
-  std::vector<JSONPath> paths;
-
  public:
   Func_json_extract() : Func_Str("json_extract")
   {

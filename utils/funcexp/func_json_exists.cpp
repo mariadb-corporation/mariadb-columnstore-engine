@@ -1,19 +1,14 @@
+// Include Glaze first
+#include <glaze/glaze.hpp>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
 #include "rowgroup.h"
-using namespace execplan;
-using namespace rowgroup;
-
-#include "dataconvert.h"
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_exists::operationType(FunctionParm& fp,
-                                                              CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_exists::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -21,31 +16,34 @@ CalpontSystemCatalog::ColType Func_json_exists::operationType(FunctionParm& fp,
 /**
  * getBoolVal API definition
  */
-bool Func_json_exists::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                  CalpontSystemCatalog::ColType& /*type*/)
+bool Func_json_exists::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                  execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
-  int jsErr = 0;
-  json_engine_t jsEg;
-  initJSEngine(jsEg, getCharset(fp[0]), js);
-
-  if (!path.parsed && parseJSPath(path, row, fp[1]))
-    goto error;
-
-  if (locateJSPath(jsEg, path, &jsErr))
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js.unsafeStringRef()))
   {
-    if (jsErr)
-      goto error;
+    isNull = true;
     return false;
   }
 
-  return true;
+  bool pNull = false;
+  const auto path_ns = fp[1]->data()->getStrVal(row, pNull);
+  if (pNull)
+  {
+    isNull = true;
+    return false;
+  }
 
-error:
-  isNull = true;
-  return false;
+  std::vector<const glz::json_t*> matches;
+  if (!glaze_path::find_matches(doc, path_ns.unsafeStringRef(), matches))
+  {
+    isNull = true;
+    return false;
+  }
+  return !matches.empty();
 }
 }  // namespace funcexp

@@ -1,162 +1,139 @@
-#include <type_traits>
+// Glaze first
+#include <glaze/glaze.hpp>
+
+#include <cctype>
 #include "functor_json.h"
-#include "functioncolumn.h"
+#include "glaze_path.h"
 #include "rowgroup.h"
 #include "treenode.h"
-using namespace execplan;
-using namespace rowgroup;
-
-#include "dataconvert.h"
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "mcs_decimal.h"
 
 namespace funcexp
 {
-int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* type, std::string& retJS,
-                                 bool compareWhole = true)
+namespace
+{
+static json_value_types map_type(const glz::json_t& v)
+{
+  if (v.is_object())
+    return JSON_VALUE_OBJECT;
+  if (v.is_array())
+    return JSON_VALUE_ARRAY;
+  if (v.is_string())
+    return JSON_VALUE_STRING;
+  if (v.is_number())
+    return JSON_VALUE_NUMBER;
+  if (v.is_boolean())
+    return v.get_boolean() ? JSON_VALUE_TRUE : JSON_VALUE_FALSE;
+  return JSON_VALUE_NULL;
+}
+}  // namespace
+
+int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_value_types* type,
+                                 std::string& retJS, bool compareWhole)
 {
   bool isNull = false;
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 1;
-  const char* rawJS = js.str();
-  json_engine_t jsEg, savJSEg;
-  json_path_t p;
-  const uchar* value;
-  bool notFirstVal = false;
-  size_t valLen;
-  bool mayMulVal;
-  int wildcards;
-  bool isMatch;
-#if MYSQL_VERSION_ID >= 100900
-  int arrayCounter[JSON_DEPTH_LIMIT];
-  bool hasNegPath = false;
-#endif
+
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js.unsafeStringRef()))
+    return 1;
+
   const size_t argSize = fp.size();
-  std::string tmp;
+  if (argSize <= 1)
+    return 1;
 
-  initJSPaths(paths, fp, 1, 1);
+  // Multiple paths -> array of results (null for not found), now with wildcards and recursive descent
+  std::vector<glz::json_t> results;
+  results.reserve(argSize - 1);
 
-  for (size_t i = 1; i < argSize; i++)
+  size_t found_count = 0;
+  for (size_t i = 1; i < argSize; ++i)
   {
-    JSONPath& path = paths[i - 1];
-    path.p.types_used = JSON_PATH_KEY_NULL;
-    if (!path.parsed && parseJSPath(path, row, fp[i]))
-      return 1;
-
-#if MYSQL_VERSION_ID >= 100900
-    hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
-#endif
-  }
-
-#if MYSQL_VERSION_ID >= 100900
-  wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD | JSON_PATH_ARRAY_RANGE);
-#else
-  wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD);
-#endif
-  mayMulVal = argSize > 2 || (paths[0].p.types_used & wildcards);
-
-  *type = mayMulVal ? JSON_VALUE_ARRAY : JSON_VALUE_NULL;
-
-  if (compareWhole)
-  {
-    retJS.clear();
-    if (mayMulVal)
-      retJS.append("[");
-  }
-
-  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.length(), &p);
-
-  while (json_get_path_next(&jsEg, &p) == 0)
-  {
-#if MYSQL_VERSION_ID >= 100900
-    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
-      return 1;
-#endif
-
-#if MYSQL_VERSION_ID >= 100900
-    isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter, false);
-#else
-    isMatch = matchJSPath(paths, &p, jsEg.value_type, nullptr, false);
-#endif
-    if (!isMatch)
-      continue;
-
-    value = jsEg.value_begin;
-    if (*type == JSON_VALUE_NULL)
-      *type = jsEg.value_type;
-
-    /* we only care about the first found value */
-    if (!compareWhole)
+    bool pNull = false;
+    const auto pstr_ns = fp[i]->data()->getStrVal(row, pNull);
+    if (pNull)
     {
-      retJS = js.safeString("");
-      return 0;
+      results.emplace_back();
+      continue;
     }
 
-    if (json_value_scalar(&jsEg))
-      valLen = jsEg.value_end - value;
+    std::vector<const glz::json_t*> matches;
+    if (!glaze_path::find_matches(doc, pstr_ns.unsafeStringRef(), matches))
+    {
+      results.emplace_back();
+      continue;
+    }
+
+    if (matches.empty())
+    {
+      results.emplace_back();
+      continue;
+    }
+
+    if (compareWhole)
+    {
+      // For compareWhole: if a single match and single path, emit the value; else emit array of matches
+      if (argSize - 1 == 1 && matches.size() == 1)
+      {
+        results.push_back(*matches.front());
+        ++found_count;
+      }
+      else
+      {
+        glz::json_t arr;
+        auto& a = arr.get_array();
+        a.reserve(matches.size());
+        for (auto* m : matches)
+          a.push_back(*m);
+        results.push_back(std::move(arr));
+        ++found_count;
+      }
+    }
     else
     {
-      if (mayMulVal)
-        savJSEg = jsEg;
-      if (json_skip_level(&jsEg))
-        return 1;
-      valLen = jsEg.s.c_str - value;
-      if (mayMulVal)
-        jsEg = savJSEg;
-    }
-
-    if (notFirstVal)
-      retJS.append(", ");
-    retJS.append((const char*)value, valLen);
-
-    notFirstVal = true;
-
-    if (!mayMulVal)
-    {
-      /* Loop to the end of the JSON just to make sure it's valid. */
-      while (json_get_path_next(&jsEg, &p) == 0)
-      {
-      }
-      break;
+      // For scalar conversions: pick the first match
+      results.push_back(*matches.front());
+      ++found_count;
     }
   }
 
-  if (unlikely(jsEg.s.error))
+  if (found_count == 0)
     return 1;
 
-  if (!notFirstVal)
-    /* Nothing was found. */
-    return 1;
-
-  if (mayMulVal)
-    retJS.append("]");
-
-  utils::NullString retJS_ns(retJS);
-  initJSEngine(jsEg, getCharset(fp[0]), retJS_ns);
-  if (doFormat(&jsEg, tmp, Func_json_format::LOOSE))
-    return 1;
+  // If only one path and compareWhole true and results[0] not an array-of-matches, return value directly
+  glz::json_t out_json;
+  if (results.size() == 1 && compareWhole)
+  {
+    out_json = results[0];
+    *type = map_type(out_json);
+  }
+  else
+  {
+    out_json.get_array() = std::move(results);
+    *type = JSON_VALUE_ARRAY;
+  }
 
   retJS.clear();
-  retJS.swap(tmp);
+  if (auto w = glz::write_json(out_json, retJS))
+    return 1;
 
   return 0;
 }
 
-CalpontSystemCatalog::ColType Func_json_extract::operationType(FunctionParm& fp,
-                                                               CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_extract::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
 
-std::string Func_json_extract::getStrVal(Row& row, FunctionParm& fp, bool& isNull,
-                                         CalpontSystemCatalog::ColType& /*type*/)
+std::string Func_json_extract::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                         execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   std::string retJS;
   json_value_types valType;
-  if (doExtract(row, fp, &valType, retJS) == 0)
+  if (doExtract(row, fp, &valType, retJS, true) == 0)
     return retJS;
 
   isNull = true;
@@ -171,19 +148,15 @@ int64_t Func_json_extract::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool&
   int64_t ret = 0;
   if (doExtract(row, fp, &valType, retJS, false) == 0)
   {
-    switch (valType)
+    if (valType == JSON_VALUE_TRUE)
+      return 1;
+    if (valType == JSON_VALUE_NUMBER || valType == JSON_VALUE_STRING)
     {
-      case JSON_VALUE_NUMBER:
-      case JSON_VALUE_STRING:
-      {
-        char* end;
-        int err;
-        ret = getCharset(fp[0])->strntoll(retJS.data(), retJS.size(), 10, &end, &err);
-        break;
-      }
-      case JSON_VALUE_TRUE: ret = 1; break;
-      default: break;
-    };
+      char* end;
+      int err;
+      const CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
+      ret = cs->strntoll(retJS.data(), retJS.size(), 10, &end, &err);
+    }
   }
 
   return ret;
@@ -197,26 +170,22 @@ double Func_json_extract::getDoubleVal(rowgroup::Row& row, FunctionParm& fp, boo
   double ret = 0.0;
   if (doExtract(row, fp, &valType, retJS, false) == 0)
   {
-    switch (valType)
+    if (valType == JSON_VALUE_TRUE)
+      return 1.0;
+    if (valType == JSON_VALUE_NUMBER || valType == JSON_VALUE_STRING)
     {
-      case JSON_VALUE_NUMBER:
-      case JSON_VALUE_STRING:
-      {
-        char* end;
-        int err;
-        ret = getCharset(fp[0])->strntod(retJS.data(), retJS.size(), &end, &err);
-        break;
-      }
-      case JSON_VALUE_TRUE: ret = 1.0; break;
-      default: break;
-    };
+      char* end;
+      int err;
+      const CHARSET_INFO* cs = fp[0]->data()->resultType().getCharset();
+      ret = cs->strntod(retJS.data(), retJS.size(), &end, &err);
+    }
   }
 
   return ret;
 }
 
-execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                                       execplan::CalpontSystemCatalog::ColType& /*type*/)
+datatypes::Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                                    execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   json_value_types valType;
   std::string retJS;
@@ -227,7 +196,7 @@ execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, Funct
     {
       case JSON_VALUE_STRING:
       case JSON_VALUE_NUMBER: return fp[0]->data()->getDecimalVal(row, isNull);
-      case JSON_VALUE_TRUE: return IDB_Decimal(1, 0, 1);
+      case JSON_VALUE_TRUE: return datatypes::Decimal(1, 0, 1);
       case JSON_VALUE_OBJECT:
       case JSON_VALUE_ARRAY:
       case JSON_VALUE_FALSE:
@@ -236,6 +205,6 @@ execplan::IDB_Decimal Func_json_extract::getDecimalVal(rowgroup::Row& row, Funct
     };
   }
 
-  return IDB_Decimal(0, 0, 1);
+  return datatypes::Decimal(0, 0, 1);
 }
 }  // namespace funcexp

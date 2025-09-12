@@ -1,23 +1,15 @@
-#include <string_view>
+#include <glaze/glaze.hpp>
 #include <algorithm>
-using namespace std;
 
 #include "functor_json.h"
-#include "functioncolumn.h"
 #include "constantcolumn.h"
 #include "rowgroup.h"
-using namespace execplan;
-using namespace rowgroup;
-
-#include "dataconvert.h"
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace funcexp
 {
-CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
-    FunctionParm& fp, CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
@@ -25,30 +17,30 @@ CalpontSystemCatalog::ColType Func_json_contains_path::operationType(
 /**
  * getBoolVal API definition
  */
-bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
-                                         CalpontSystemCatalog::ColType& /*type*/)
+bool Func_json_contains_path::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                         execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   const auto& js_ns = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return false;
 
-  const std::string_view js = js_ns.unsafeStringRef();
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js_ns.unsafeStringRef()))
+  {
+    isNull = true;
+    return false;
+  }
 
-#if MYSQL_VERSION_ID >= 100900
-  int arrayCounters[JSON_DEPTH_LIMIT];
-  bool hasNegPath = false;
-#endif
-  const int argSize = fp.size() - 2;
-
+  // Parse mode once (const optimization preserved)
   if (!isModeParsed)
   {
     if (!isModeConst)
-      isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
+      isModeConst = (dynamic_cast<execplan::ConstantColumn*>(fp[1]->data()) != nullptr);
 
     auto mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
       return false;
-    std::string mode = mode_ns.unsafeStringRef();
+    std::string mode = mode_ns.safeString("");
 
     transform(mode.begin(), mode.end(), mode.begin(), ::tolower);
     if (mode != "one" && mode != "all")
@@ -61,84 +53,58 @@ bool Func_json_contains_path::getBoolVal(Row& row, FunctionParm& fp, bool& isNul
     isModeParsed = isModeConst;
   }
 
-  initJSPaths(paths, fp, 2, 1);
-  if (paths.size() == 0)
-    hasFound.assign(argSize, false);
-
-  for (size_t i = 2; i < fp.size(); i++)
+  const int argSize = fp.size() - 2;
+  if (argSize <= 0)
   {
-    JSONPath& path = paths[i - 2];
+    isNull = true;
+    return false;
+  }
 
-    if (!path.parsed)
+  if (isModeOne)
+  {
+    // True if any path has at least one match
+    for (size_t i = 2; i < fp.size(); ++i)
     {
-      if (parseJSPath(path, row, fp[i]))
+      bool pNull = false;
+      const auto p = fp[i]->data()->getStrVal(row, pNull);
+      if (pNull)
       {
         isNull = true;
         return false;
       }
-#if MYSQL_VERSION_ID >= 100900
-      hasNegPath |= path.p.types_used & JSON_PATH_NEGATIVE_INDEX;
-#endif
-    }
-  }
-
-  json_engine_t jsEg;
-  json_path_t p;
-  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)js.data(), (const uchar*)js.data() + js.size(),
-                      &p);
-
-  bool result = false;
-  int needFound = 0;
-
-  if (!isModeOne)
-  {
-    hasFound.assign(argSize, false);
-    needFound = argSize;
-  }
-
-  while (json_get_path_next(&jsEg, &p) == 0)
-  {
-#if MYSQL_VERSION_ID >= 100900
-    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounters + (p.last_step - p.steps)))
-    {
-      result = true;
-      break;
-    }
-#endif
-
-    for (int restSize = argSize, curr = 0; restSize > 0; restSize--, curr++)
-    {
-      JSONPath& path = paths[curr];
-#if MYSQL_VERSION_ID >= 100900
-      int cmp = cmpJSPath(&path.p, &p, jsEg.value_type, arrayCounters);
-#else
-      int cmp = cmpJSPath(&path.p, &p, jsEg.value_type);
-#endif
-      if (cmp >= 0)
+      std::vector<const glz::json_t*> matches;
+      if (!glaze_path::find_matches(doc, p.unsafeStringRef(), matches))
       {
-        if (isModeOne)
-        {
-          result = true;
-          break;
-        }
-        /* mode_all */
-        if (hasFound[restSize - 1])
-          continue; /* already found */
-        if (--needFound == 0)
-        {
-          result = true;
-          break;
-        }
-        hasFound[restSize - 1] = true;
+        isNull = true;
+        return false;  // path parse error
       }
+      if (!matches.empty())
+        return true;
     }
+    return false;
   }
-
-  if (likely(jsEg.s.error == 0))
-    return result;
-
-  isNull = true;
-  return false;
+  else
+  {
+    // True only if all paths have at least one match
+    for (size_t i = 2; i < fp.size(); ++i)
+    {
+      bool pNull = false;
+      const auto p = fp[i]->data()->getStrVal(row, pNull);
+      if (pNull)
+      {
+        isNull = true;
+        return false;
+      }
+      std::vector<const glz::json_t*> matches;
+      if (!glaze_path::find_matches(doc, p.unsafeStringRef(), matches))
+      {
+        isNull = true;
+        return false;  // path parse error
+      }
+      if (matches.empty())
+        return false;
+    }
+    return true;
+  }
 }
 }  // namespace funcexp

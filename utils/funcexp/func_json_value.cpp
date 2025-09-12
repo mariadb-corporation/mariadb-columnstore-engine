@@ -1,128 +1,69 @@
+#include <glaze/glaze.hpp>
+#include <cctype>
+
 #include "functor_json.h"
-#include "functioncolumn.h"
-#include "constantcolumn.h"
-using namespace execplan;
-
 #include "rowgroup.h"
-using namespace rowgroup;
 
-#include "joblisttypes.h"
-using namespace joblist;
-
-#include "jsonhelpers.h"
-using namespace funcexp::helpers;
+#include "glaze_path.h"
 
 namespace funcexp
 {
-bool JSONEgWrapper::checkAndGetScalar(std::string& ret, int* error)
-{
-  CHARSET_INFO* cs;
-  const uchar* js;
-  uint jsLen;
-
-  if (!json_value_scalar(this))
-  {
-    /* We only look for scalar values! */
-    if (json_skip_level(this) || json_scan_next(this))
-      *error = 1;
-    return true;
-  }
-
-  if (value_type == JSON_VALUE_TRUE || value_type == JSON_VALUE_FALSE)
-  {
-    cs = &my_charset_utf8mb4_bin;
-    js = (const uchar*)((value_type == JSON_VALUE_TRUE) ? "1" : "0");
-    jsLen = 1;
-  }
-  else
-  {
-    cs = s.cs;
-    js = value;
-    jsLen = value_len;
-  }
-
-  int strLen = jsLen * cs->mbmaxlen;
-
-  char* buf = (char*)alloca(jsLen + strLen);
-  if ((strLen = json_unescape(cs, js, js + jsLen, cs, (uchar*)buf, (uchar*)buf + jsLen + strLen)) > 0)
-  {
-    buf[strLen] = '\0';
-    ret.append(buf);
-    return 0;
-  }
-
-  return strLen;
-}
-
-/*
-  Returns NULL, not an error if the found value
-  is not a scalar.
-*/
-bool JSONPathWrapper::extract(std::string& ret, rowgroup::Row& row, execplan::SPTP& funcParamJS,
-                              execplan::SPTP& funcParamPath)
-{
-  bool isNullJS = false, isNullPath = false;
-
-  const utils::NullString& js = funcParamJS->data()->getStrVal(row, isNullJS);
-  const utils::NullString& sjsp = funcParamPath->data()->getStrVal(row, isNullPath);
-  if (isNullJS || isNullPath)
-    return true;
-
-  int error = 0;
-
-  if (json_path_setup(&p, getCharset(funcParamPath), (const uchar*)sjsp.str(), (const uchar*)sjsp.end()))
-    return true;
-
-  JSONEgWrapper je(getCharset(funcParamJS), reinterpret_cast<const uchar*>(js.str()),
-                   reinterpret_cast<const uchar*>(js.end()));
-
-  currStep = p.steps;
-
-  do
-  {
-    if (error)
-      return true;
-
-    IntType arrayCounters[JSON_DEPTH_LIMIT];
-    if (json_find_path(&je, &p, &currStep, arrayCounters))
-      return true;
-
-    if (json_read_value(&je))
-      return true;
-
-  } while (unlikely(checkAndGetValue(&je, ret, &error)));
-
-  return false;
-}
-
-CalpontSystemCatalog::ColType Func_json_value::operationType(FunctionParm& fp,
-                                                             CalpontSystemCatalog::ColType& /*resultType*/)
+execplan::CalpontSystemCatalog::ColType Func_json_value::operationType(
+    FunctionParm& fp, execplan::CalpontSystemCatalog::ColType& /*resultType*/)
 {
   return fp[0]->data()->resultType();
 }
-
-class JSONPathWrapperValue : public JSONPathWrapper
-{
- public:
-  JSONPathWrapperValue()
-  {
-  }
-  virtual ~JSONPathWrapperValue()
-  {
-  }
-
-  bool checkAndGetValue(JSONEgWrapper* je, std::string& res, int* error) override
-  {
-    return je->checkAndGetScalar(res, error);
-  }
-};
-
 std::string Func_json_value::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
-  std::string ret;
-  JSONPathWrapperValue pw;
-  isNull = pw.extract(ret, row, fp[0], fp[1]);
-  return isNull ? "" : ret;
+  // Expect JSON doc and a single path argument
+  bool nullDoc = false, nullPath = false;
+  const auto js = fp[0]->data()->getStrVal(row, nullDoc);
+  const auto path_ns = fp[1]->data()->getStrVal(row, nullPath);
+  if (nullDoc || nullPath)
+  {
+    isNull = true;
+    return "";
+  }
+
+  glz::json_t doc;
+  if (auto e = glz::read_json(doc, js.unsafeStringRef()))
+  {
+    isNull = true;
+    return "";
+  }
+
+  std::vector<const glz::json_t*> matches;
+  if (!glaze_path::find_matches(doc, path_ns.unsafeStringRef(), matches) || matches.empty())
+  {
+    isNull = true;
+    return "";
+  }
+
+  const glz::json_t& value = *matches.front();
+
+  // Only scalars produce a result
+  if (value.is_string())
+  {
+    // return raw unescaped string
+    return value.get_string();
+  }
+  if (value.is_number())
+  {
+    std::string out;
+    if (auto w = glz::write_json(value, out))
+    {
+      isNull = true;
+      return "";
+    }
+    return out;
+  }
+  if (value.is_boolean())
+  {
+    return value.get_boolean() ? "1" : "0";
+  }
+
+  isNull = true;
+  return "";
 }
 }  // namespace funcexp
