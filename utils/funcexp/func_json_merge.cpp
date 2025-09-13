@@ -28,7 +28,7 @@ static void merge_in_place(glz::json_t& a, const glz::json_t& b)
   }
 
   // Anything else becomes an array concatenation
-  glz::json_t arr;
+  glz::json_t arr = std::vector<glz::json_t>{};
   arr.get_array().reserve((a.is_array() ? a.get_array().size() : 1) +
                           (b.is_array() ? b.get_array().size() : 1));
   if (a.is_array())

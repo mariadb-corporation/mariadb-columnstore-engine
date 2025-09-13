@@ -69,9 +69,7 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
       // Ensure parent is an array, or wrap into array first
       if (!parent->is_array())
       {
-        glz::json_t arr;
-        // Initialize as array variant before using get_array()
-        arr = std::vector<glz::json_t>{};
+        glz::json_t arr = std::vector<glz::json_t>{};
         arr.get_array().push_back(*parent);
         *parent = std::move(arr);
       }

@@ -44,6 +44,38 @@ bool Func_json_exists::getBoolVal(rowgroup::Row& row, FunctionParm& fp, bool& is
     isNull = true;
     return false;
   }
-  return !matches.empty();
+  if (!matches.empty())
+    return true;
+
+  // Special-case: allow indexing into strings for existence checks, e.g. $.key1[0]
+  // If the direct match was empty, check whether the last step is an Index on a string parent
+  std::vector<glaze_path::Step> steps;
+  if (!glaze_path::parse(path_ns.unsafeStringRef(), steps) || steps.empty())
+    return false;
+  if (steps.size() < 2)
+    return false;
+
+  glaze_path::Step last = steps.back();
+  if (last.kind != glaze_path::StepKind::Index)
+    return false;
+  steps.pop_back();
+
+  std::vector<const glz::json_t*> parents;
+  glaze_path::match_impl(doc, steps, 0, parents);
+  for (const auto* p : parents)
+  {
+    if (p && p->is_string())
+    {
+      int64_t len = static_cast<int64_t>(p->get_string().size());
+      int idx = last.index;
+      if (last.from_end)
+        idx = static_cast<int>(len) - 1 - idx;
+      if (idx < 0)
+        idx = static_cast<int>(len) + idx;
+      if (idx >= 0 && idx < len)
+        return true;
+    }
+  }
+  return false;
 }
 }  // namespace funcexp

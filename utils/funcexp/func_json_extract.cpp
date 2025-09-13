@@ -75,9 +75,7 @@ int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_valu
       }
       else
       {
-        glz::json_t arr;
-        // Ensure variant holds an array before accessing it
-        arr = std::vector<glz::json_t>{};
+        glz::json_t arr = std::vector<glz::json_t>{};
         auto& a = arr.get_array();
         a.reserve(matches.size());
         for (auto* m : matches)
