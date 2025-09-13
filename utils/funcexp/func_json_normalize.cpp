@@ -30,7 +30,7 @@ std::string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp,
 
   std::string out;
 
-  if (auto werr = writeJson(value, out))
+  if (auto werr =  glz::write_json(value, out))
   {
     isNull = true;
     return "";

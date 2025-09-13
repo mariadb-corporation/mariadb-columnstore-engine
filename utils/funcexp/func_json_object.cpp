@@ -14,12 +14,12 @@ execplan::CalpontSystemCatalog::ColType Func_json_object::operationType(
 }
 
 std::string Func_json_object::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
-                                        execplan::CalpontSystemCatalog::ColType& type)
+                                        execplan::CalpontSystemCatalog::ColType& /*type*/)
 {
   if (fp.size() == 0)
     return "{}";
 
-  glz::json_t obj;
+  glz::json_t obj = glz::json_t::object_t{};
   auto& o = obj.get_object();
 
   auto add_pair = [&](size_t keyIdx, size_t valIdx) -> bool
