@@ -25,13 +25,13 @@ done
 
 select_pkg_format ${DISTRO}
 
-if [[ "$PKG_FORMAT" == "rpm" ]]; then
-    SOCKET_PATH="/var/lib/mysql/mysql.sock"
-    MTR_PATH="/usr/share/mysql-test"
-else
-    SOCKET_PATH="/run/mysqld/mysqld.sock"
-    MTR_PATH="/usr/share/mysql/mysql-test"
-fi
+# Determine server name (mysql vs mariadb) and correct paths based on version >= 11.4
+# We query inside the primary container (mcs1) after it starts.
+
+SERVERNAME="mysql"
+VERSION_GE_114=""
+SOCKET_PATH=""
+MTR_PATH=""
 
 message "Running multinode mtr tests..."
 
@@ -42,7 +42,29 @@ sed -i "/^MAXSCALE=/s|=.*|=false|" .env
 
 docker-compose up -d
 docker exec mcs1 provision mcs1 mcs2 mcs3
-docker cp ../mysql-test/columnstore mcs1:"${MTR_PATH}/suite/"
+
+# Detect MariaDB version >= 11.4 and socket path inside the container
+VERSION_GE_114=$(docker exec -t mcs1 bash -lc "mariadb -N -s -e 'SELECT (sys.version_major(), sys.version_minor(), sys.version_patch()) >= (11, 4, 0);'" | tr -d '\r')
+if [[ "${VERSION_GE_114}" == "1" ]]; then
+  SERVERNAME="mariadb"
+fi
+
+if [[ "${PKG_FORMAT}" == "rpm" ]]; then
+  MTR_PATH="/usr/share/${SERVERNAME}-test"
+else
+  MTR_PATH="/usr/share/${SERVERNAME}/${SERVERNAME}-test"
+fi
+
+SOCKET_PATH=$(docker exec -t mcs1 bash -lc "mariadb -N -B -e \"SHOW VARIABLES LIKE 'socket'\" | awk '{print \$2}'" | tr -d '\r')
+
+message "Multinode MTR path: ${MTR_PATH}, socket: ${SOCKET_PATH}, version >=11.4: ${VERSION_GE_114}"
+
+if [[ "${VERSION_GE_114}" != "1" ]]; then
+  message "Copying local columnstore suite into container (server < 11.4)"
+  docker cp ../mysql-test/columnstore mcs1:"${MTR_PATH}/suite/"
+else
+  message "Skipping suite copy (server >= 11.4, tests expected in package)"
+fi
 docker exec -t mcs1 chown -R mysql:mysql "${MTR_PATH}"
 docker exec -t mcs1 mariadb -e "CREATE DATABASE IF NOT EXISTS test;"
 
