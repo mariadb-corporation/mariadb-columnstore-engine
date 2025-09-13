@@ -1,4 +1,3 @@
---source ../include/disable_before_10.9.inc
 --source ../include/have_columnstore.inc
 --disable_warnings
 DROP DATABASE IF EXISTS json_range_expr_db;

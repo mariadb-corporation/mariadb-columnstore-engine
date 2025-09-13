@@ -9,12 +9,17 @@
 namespace funcexp {
 namespace glaze_path {
 
-enum class StepKind { Key, KeyWildcard, Index, IndexWildcard, RecursiveDescent };
+enum class StepKind { Key, KeyWildcard, Index, IndexWildcard, IndexRange, RecursiveDescent };
 
 struct Step {
   StepKind kind{StepKind::Key};
   std::string key; // for Key
-  int index{0};    // for Index (may be negative)
+  // For Index
+  int index{0};    // direct index (may be negative)
+  bool from_end{false}; // when true, index represents offset from end: last-index
+  // For IndexRange
+  int start_index{0}; bool start_from_end{false};
+  int end_index{0};   bool end_from_end{false};
 };
 
 // Parse a simplified MariaDB/MySQL-like JSON path supporting:
@@ -54,23 +59,62 @@ inline bool parse(std::string_view p, std::vector<Step>& out) {
     }
     if (p[i] == '[') {
       ++i;
-      if (!at_end() && p[i] == '*') {
-        ++i;
-        if (at_end() || p[i] != ']') return false;
-        ++i;
-        out.push_back(Step{StepKind::IndexWildcard, std::string(), 0});
+      // capture until ']'
+      size_t content_start = i;
+      while (!at_end() && p[i] != ']') ++i;
+      if (at_end()) return false;
+      std::string content = std::string(p.substr(content_start, i - content_start));
+      ++i; // consume ']'
+      // trim spaces
+      auto trim = [](std::string& s){
+        size_t a = 0; while (a < s.size() && std::isspace(static_cast<unsigned char>(s[a]))) ++a;
+        size_t b = s.size(); while (b > a && std::isspace(static_cast<unsigned char>(s[b-1]))) --b;
+        s = s.substr(a, b - a);
+      };
+      trim(content);
+      if (content == "*") {
+        Step st; st.kind = StepKind::IndexWildcard;
+        out.push_back(st);
         continue;
       }
-      // parse index possibly negative
-      size_t start = i;
-      if (!at_end() && p[i] == '-') ++i;
-      size_t num_start = i;
-      while (!at_end() && std::isdigit(static_cast<unsigned char>(p[i]))) ++i;
-      if (num_start == i) return false;
-      int idx = std::stoi(std::string(p.substr(start, i - start)));
-      if (at_end() || p[i] != ']') return false;
-      ++i;
-      out.push_back(Step{StepKind::Index, std::string(), idx});
+      // helper to parse single index token: number | last | last-N
+      auto parse_index_token = [&](const std::string& tok, int& idx, bool& from_end)->bool{
+        std::string t = tok; trim(t);
+        if (t.rfind("last", 0) == 0) {
+          from_end = true;
+          idx = 0;
+          if (t.size() > 4) {
+            if (t[4] != '-' || t.size() == 5) return false;
+            std::string off = t.substr(5);
+            if (off.empty()) return false;
+            for (char c : off) if (!std::isdigit(static_cast<unsigned char>(c))) return false;
+            idx = std::stoi(off);
+          }
+          return true;
+        }
+        // numeric index (may start with '-')
+        if (t.empty()) return false;
+        size_t k = 0; if (t[0] == '-') ++k; if (k >= t.size()) return false;
+        for (; k < t.size(); ++k) if (!std::isdigit(static_cast<unsigned char>(t[k]))) return false;
+        from_end = false; idx = std::stoi(t);
+        return true;
+      };
+      // check for range "a to b"
+      auto pos_to = content.find("to");
+      if (pos_to != std::string::npos) {
+        std::string left = content.substr(0, pos_to);
+        std::string right = content.substr(pos_to + 2);
+        trim(left); trim(right);
+        Step st; st.kind = StepKind::IndexRange;
+        if (!parse_index_token(left, st.start_index, st.start_from_end)) return false;
+        if (!parse_index_token(right, st.end_index, st.end_from_end)) return false;
+        out.push_back(st);
+        continue;
+      }
+      // single index (supports last / last-N)
+      Step st; st.kind = StepKind::Index;
+      if (!parse_index_token(content, st.index, st.from_end)) return false;
+      out.push_back(st);
       continue;
     }
     // bare key at root without leading dot
@@ -116,9 +160,40 @@ inline void match_impl(const glz::json_t& node, const std::vector<Step>& steps, 
       if (node.is_array()) {
         const auto& arr = node.get_array();
         int idx = st.index;
+        // Resolve from_end (last - offset)
+        if (st.from_end) idx = static_cast<int>(arr.size()) - 1 - idx;
+        // Resolve negative index as size + idx
         if (idx < 0) idx = static_cast<int>(arr.size()) + idx;
         if (idx >= 0 && static_cast<size_t>(idx) < arr.size())
           match_impl(arr[static_cast<size_t>(idx)], steps, pos + 1, out);
+      }
+      break;
+    case StepKind::IndexRange:
+      if (node.is_array()) {
+        const auto& arr = node.get_array();
+        auto sz = static_cast<int>(arr.size());
+        int s = st.start_index;
+        int e = st.end_index;
+        if (st.start_from_end) s = sz - 1 - s; // last - offset
+        if (st.end_from_end)   e = sz - 1 - e;
+        if (s < 0) s = sz + s;
+        if (e < 0) e = sz + e;
+        // clamp
+        if (s < 0) {
+          s = 0;
+        }
+        if (e < 0) {
+          e = 0;
+        }
+        if (s >= sz) {
+          s = sz - 1;
+        }
+        if (e >= sz) {
+          e = sz - 1;
+        }
+        if (s <= e) {
+          for (int i = s; i <= e; ++i) match_impl(arr[static_cast<size_t>(i)], steps, pos + 1, out);
+        }
       }
       break;
     case StepKind::IndexWildcard:
@@ -172,9 +247,37 @@ inline void match_impl_mut(glz::json_t& node, const std::vector<Step>& steps, si
       if (node.is_array()) {
         auto& arr = node.get_array();
         int idx = st.index;
+        if (st.from_end) idx = static_cast<int>(arr.size()) - 1 - idx;
         if (idx < 0) idx = static_cast<int>(arr.size()) + idx;
         if (idx >= 0 && static_cast<size_t>(idx) < arr.size())
           match_impl_mut(arr[static_cast<size_t>(idx)], steps, pos + 1, out);
+      }
+      break;
+    case StepKind::IndexRange:
+      if (node.is_array()) {
+        auto& arr = node.get_array();
+        auto sz = static_cast<int>(arr.size());
+        int s = st.start_index;
+        int e = st.end_index;
+        if (st.start_from_end) s = sz - 1 - s;
+        if (st.end_from_end)   e = sz - 1 - e;
+        if (s < 0) s = sz + s;
+        if (e < 0) e = sz + e;
+        if (s < 0) {
+          s = 0;
+        }
+        if (e < 0) {
+          e = 0;
+        }
+        if (s >= sz) {
+          s = sz - 1;
+        }
+        if (e >= sz) {
+          e = sz - 1;
+        }
+        if (s <= e) {
+          for (int i = s; i <= e; ++i) match_impl_mut(arr[static_cast<size_t>(i)], steps, pos + 1, out);
+        }
       }
       break;
     case StepKind::IndexWildcard:

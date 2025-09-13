@@ -54,28 +54,21 @@ int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_valu
     bool pNull = false;
     const auto pstr_ns = fp[i]->data()->getStrVal(row, pNull);
     if (pNull)
-    {
-      results.emplace_back();
-      continue;
-    }
+      continue;  // skip this path entirely
 
     std::vector<const glz::json_t*> matches;
     if (!glaze_path::find_matches(doc, pstr_ns.unsafeStringRef(), matches))
-    {
-      results.emplace_back();
-      continue;
-    }
+      continue;  // skip invalid path
 
     if (matches.empty())
-    {
-      results.emplace_back();
-      continue;
-    }
+      continue;  // skip paths with no matches
 
     if (compareWhole)
     {
-      // For compareWhole: if a single match and single path, emit the value; else emit array of matches
-      if (argSize - 1 == 1 && matches.size() == 1)
+      // For compareWhole:
+      // - If exactly one match for this path, push the value directly
+      // - If multiple matches (due to wildcards), push an array of matches
+      if (matches.size() == 1)
       {
         results.push_back(*matches.front());
         ++found_count;
@@ -83,6 +76,8 @@ int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_valu
       else
       {
         glz::json_t arr;
+        // Ensure variant holds an array before accessing it
+        arr = std::vector<glz::json_t>{};
         auto& a = arr.get_array();
         a.reserve(matches.size());
         for (auto* m : matches)
@@ -111,6 +106,8 @@ int Func_json_extract::doExtract(rowgroup::Row& row, FunctionParm& fp, json_valu
   }
   else
   {
+    // Ensure variant holds an array before assigning
+    out_json = std::vector<glz::json_t>{};
     out_json.get_array() = std::move(results);
     *type = JSON_VALUE_ARRAY;
   }

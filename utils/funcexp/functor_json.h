@@ -543,7 +543,67 @@ class Func_json_extract : public Func_Str
                 bool compareWhole);
 };
 
-#define writeJson(value, buffer) \
-  glz::write<glz::opts{.prettify = true, .new_lines_in_arrays = false}>(value, buffer)
+inline void json_add_spaces_minified(std::string& s)
+{
+  std::string out;
+  out.reserve(s.size() * 11 / 10);
+
+  bool in_str = false;
+  bool esc = false;
+  for (char c : s)
+  {
+    if (in_str)
+    {
+      out.push_back(c);
+      if (esc)
+      {
+        esc = false;
+      }
+      else if (c == '\\')
+      {
+        esc = true;
+      }
+      else if (c == '"')
+      {
+        in_str = false;
+      }
+      continue;
+    }
+
+    if (c == '"')
+    {
+      in_str = true;
+      out.push_back(c);
+      continue;
+    }
+
+    if (c == ':')
+    {
+      out += ": ";
+      continue;
+    }
+    if (c == ',')
+    {
+      out += ", ";
+      continue;
+    }
+
+    out.push_back(c);
+  }
+
+  s.swap(out);
+}
+
+// Single-expression macro: returns glz::error_ctx; safe in conditionals
+#define writeJson(value, buffer)                                                                            \
+  ([&]() {                                                                                                  \
+    auto __funcexp_err =                                                                                     \
+        glz::write<glz::opts{.prettify = false, .indentation_width = 0, .new_lines_in_arrays = false}>(      \
+            (value), (buffer));                                                                              \
+    if (!__funcexp_err) {                                                                                    \
+      funcexp::json_add_spaces_minified((buffer));                                                           \
+    }                                                                                                        \
+    return __funcexp_err;                                                                                    \
+  }())
 
 }  // namespace funcexp

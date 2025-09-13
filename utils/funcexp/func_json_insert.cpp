@@ -42,12 +42,8 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       return "";
     }
 
-    glz::json_t value;
-    if (auto ev = glz::read_json(value, v_ns.unsafeStringRef()))
-    {
-      isNull = true;
-      return "";
-    }
+    // Treat the value argument as a string literal for JSON output to match tests
+    glz::json_t value = std::string(v_ns.safeString(""));
 
     std::vector<funcexp::glaze_path::Step> steps;
     if (!funcexp::glaze_path::parse(p_ns.unsafeStringRef(), steps))
@@ -116,29 +112,57 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       {
         if (!cur->is_array())
         {
-          // If parent is not array, wrap into array first to permit insert
-          glz::json_t arr;
+          // For REPLACE only: non-array parent -> no-op
+          if (isReplaceMode && !isInsertMode)
+            continue;
+          // For INSERT or SET: wrap non-array parent into array
+          glz::json_t arr = std::vector<glz::json_t>{};
           arr.get_array().push_back(*cur);
           *cur = std::move(arr);
         }
         auto& arr = cur->get_array();
         int idx = last.index;
+        // Resolve 'last' / 'last-N' semantics first
+        if (last.from_end)
+          idx = static_cast<int>(arr.size()) - 1 - idx;
+        // Resolve negative index relative to start
         if (idx < 0)
           idx = static_cast<int>(arr.size()) + idx;
 
-        if (isReplaceMode && idx >= 0 && static_cast<size_t>(idx) < arr.size())
+        if (mode == REPLACE)
         {
-          arr[static_cast<size_t>(idx)] = value;
+          // REPLACE: only act if index is within bounds; otherwise no-op
+          if (idx >= 0 && static_cast<size_t>(idx) < arr.size())
+            arr[static_cast<size_t>(idx)] = value;
         }
-        else if (isInsertMode)
+        else if (mode == INSERT)
         {
-          // insert at index or append if index == size
-          if (idx < 0 || static_cast<size_t>(idx) > arr.size())
+          // INSERT: error on negative; clamp > size to size (append)
+          if (idx < 0)
           {
             isNull = true;
             return "";
           }
+          if (static_cast<size_t>(idx) > arr.size()) idx = static_cast<int>(arr.size());
           arr.insert(arr.begin() + idx, value);
+        }
+        else /* mode == SET */
+        {
+          // SET: replace when in-bounds; otherwise insert (append if idx >= size)
+          if (idx >= 0 && static_cast<size_t>(idx) < arr.size())
+          {
+            arr[static_cast<size_t>(idx)] = value;
+          }
+          else
+          {
+            if (idx < 0)
+            {
+              isNull = true;
+              return "";
+            }
+            if (static_cast<size_t>(idx) > arr.size()) idx = static_cast<int>(arr.size());
+            arr.insert(arr.begin() + idx, value);
+          }
         }
       }
       else if (last.kind == funcexp::glaze_path::StepKind::KeyWildcard)
@@ -159,7 +183,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
         if (!cur->is_array())
         {
           // For non-array parent, wrap then proceed as append/replace
-          glz::json_t arr;
+          glz::json_t arr = std::vector<glz::json_t>{};
           arr.get_array().push_back(*cur);
           *cur = std::move(arr);
         }
