@@ -1,7 +1,10 @@
 #
 #This test verifies show databases and tables with engine=columnstore.
 #
---source ../include/older_11.2.inc
+# Temporary tables are visible in the "show tables" for server >= 11.2
+# https://mariadb.com/docs/server/reference/sql-statements/administrative-sql-statements/show/show-tables
+#
+--source ../include/newer_11.2.inc
 -- source ../include/have_columnstore.inc
 --source ../include/detect_maxscale.inc
 -- source include/have_innodb.inc

@@ -2,7 +2,7 @@
 # Test CREATE TABLE with all data types supported in Columnstore
 # Author: Bharath, bharath.bokka@mariadb.com
 #
---source ../include/older_10.10.inc
+--source ../include/newer_10.10.inc
 -- source ../include/have_columnstore.inc
 --source ../include/charset.inc
 

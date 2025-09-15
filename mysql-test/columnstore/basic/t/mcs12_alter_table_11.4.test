@@ -1,7 +1,7 @@
 #
 # Test ALTER TABLE schemas in various possible ways.
 #
---source ../include/older_10.10.inc
+--source ../include/newer_10.10.inc
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
 -- source ../include/check_maxscale.inc

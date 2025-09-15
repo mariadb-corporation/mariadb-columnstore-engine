@@ -1,77 +1,77 @@
-#
-#This test verifies show databases and tables with engine=columnstore.
-#
---source ../include/older_11.2.inc
--- source ../include/have_columnstore.inc
---source ../include/detect_maxscale.inc
--- source include/have_innodb.inc
--- source ../include/check_maxscale.inc
-
-
---disable_warnings
 DROP DATABASE IF EXISTS mcs11_db1;
 DROP DATABASE IF EXISTS mcs11_db2;
---enable_warnings
-
 CREATE DATABASE mcs11_db1;
 CREATE SCHEMA mcs11_db2;
---sorted_result
 SHOW DATABASES LIKE 'mcs11%';
---sorted_result
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
 SHOW SCHEMAS LIKE 'mcs11%';
-
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
 SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
 USE mcs11_db2;
---sorted_result
 SHOW TABLES;
-
+Tables_in_mcs11_db2
 CREATE TABLE mcs11_db1.t1 (id INT) engine=innodb;
 CREATE TABLE mcs11_db1.t2 (id INT) engine=columnstore;
---sorted_result
 SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
+t1
+t2
 USE mcs11_db1;
---sorted_result
 SHOW TABLES;
-
+Tables_in_mcs11_db1
+t1
+t2
 USE mcs11_db2;
 CREATE TABLE t1 (id INT) engine=innodb;
 CREATE TABLE t2 (id INT) engine=columnstore;
 CREATE TEMPORARY TABLE tmp1 (id INT) engine=innodb;
---error 1050
 CREATE TEMPORARY TABLE tmp1 (id INT) engine=columnstore;
---sorted_result
+ERROR 42S01: Table 'tmp1' already exists
 SHOW TABLES;
---sorted_result
+Tables_in_mcs11_db2
+t1
+t2
+tmp1
 SHOW TABLES IN mcs11_db2;
-
-# Test from parallel connections
---disable_query_log
-if ($maxscale == 1)
-{
-  connect(addconroot1, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
-  connect(addconroot2, 127.0.0.1, testUser, 'ct570c3521fCCR#ef',,4006);
-}
-if ($maxscale == 0)
-{
-  connect (addconroot1, localhost, root,,);
-  connect (addconroot2, localhost, root,,);
-}
---enable_query_log
+Tables_in_mcs11_db2
+t1
+t2
+tmp1
 connection addconroot1;
---sorted_result
 SHOW DATABASES LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
 SHOW TABLES IN mcs11_db1;
+Tables_in_mcs11_db1
+t1
+t2
 USE mcs11_db1;
 SHOW TABLES;
+Tables_in_mcs11_db1
+t1
+t2
 connection addconroot2;
 SHOW SCHEMAS LIKE 'mcs11%';
+Database (mcs11%)
+mcs11_db1
+mcs11_db2
 SHOW TABLES IN mcs11_db2;
+Tables_in_mcs11_db2
+t1
+t2
 USE mcs11_db2;
 SHOW TABLES;
-
+Tables_in_mcs11_db2
+t1
+t2
 connection default;
 disconnect addconroot1;
 disconnect addconroot2;
 DROP DATABASE IF EXISTS mcs11_db1;
 DROP DATABASE IF EXISTS mcs11_db2;
-
