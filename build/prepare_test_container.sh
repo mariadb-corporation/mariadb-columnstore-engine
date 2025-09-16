@@ -54,13 +54,13 @@ start_container() {
     if [[ "$CONTAINER_NAME" == *smoke* ]]; then
         docker_run_args+=(--memory 3g)
     elif [[ "$CONTAINER_NAME" == *mtr* ]]; then
-        docker_run_args+=(--shm-size=500m --memory 8g --env MYSQL_TEST_DIR="$MTR_PATH")
+        docker_run_args+=(--shm-size=500m --memory 12g --env MYSQL_TEST_DIR="$MTR_PATH")
     elif [[ "$CONTAINER_NAME" == *cmapi* ]]; then
         docker_run_args+=(--env PYTHONPATH="${PYTHONPATH}")
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
         docker_run_args+=(--env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup:ro)
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
-        docker_run_args+=(--shm-size=500m --memory 12g)
+        docker_run_args+=(--shm-size=500m --memory 15g)
     else
         echo "Unknown container type: $CONTAINER_NAME"
         exit 1

@@ -604,3 +604,58 @@ change_ubuntu_mirror_in_docker() {
 
   execInnerDocker "$container_name" "$docker_funcs; change_ubuntu_mirror ${region}"
 }
+
+is_rocky_version() {
+  local image="$1"
+  local version="$2"
+
+  if [[ -z "$image" ]]; then
+    echo "Usage: is_rocky_version <image> [version]"
+    return 1
+  fi
+
+  if [[ "$image" == *"rockylinux"* || "$image" == *"rocky"* ]]; then
+    if [[ -n "$version" ]]; then
+      if [[ "$image" == *":$version"* ]]; then
+        return 0 # matches Rocky Linux with version
+      else
+        return 1 # Rocky Linux but wrong version
+      fi
+    else
+      return 0 # matches Rocky Linux, any version
+    fi
+  fi
+
+  return 1 # not Rocky Linux
+}
+
+is_rocky_version_ge() {
+  local image="$1"
+  local min_version="$2"
+
+  if [[ -z "$image" || -z "$min_version" ]]; then
+    echo "Usage: is_rocky_version_ge <image> <min_version>"
+    return 1
+  fi
+
+  # First check if it's Rocky Linux at all
+  if ! is_rocky_version "$image"; then
+    return 1
+  fi
+
+  # Extract the version from the tag (after colon)
+  local tag="${image##*:}"
+  if [[ "$tag" == "$image" ]]; then
+    return 1 # no tag -> cannot compare
+  fi
+
+  # Major version (before dot if any)
+  local major="${tag%%.*}"
+
+  if [[ "$major" =~ ^[0-9]+$ && "$min_version" =~ ^[0-9]+$ ]]; then
+    ((major >= min_version))
+    return $?
+  fi
+
+  return 1
+}

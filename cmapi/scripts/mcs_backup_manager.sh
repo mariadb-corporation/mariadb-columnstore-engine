@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.15
+# Version: 3.17
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.15"
+mcs_bk_manager_version="3.17"
 start=$(date +%s)
 action=$1
 
@@ -200,6 +200,7 @@ load_default_backup_variables() {
    
     # Number of DBroots
     # Integer usually 1 or 3
+    DBROOT_COUNT=1
     DBROOT_COUNT=$(xmllint --xpath "string(//DBRootCount)" $CS_CONFIGS_PATH/Columnstore.xml)
     ASSIGNED_DBROOT=$(xmllint --xpath "string(//ModuleDBRootID$PM_NUMBER-1-3)" $CS_CONFIGS_PATH/Columnstore.xml)
 }
@@ -715,7 +716,7 @@ validation_prechecks_for_backup() {
             if [ ! -d $backup_location ]; then
                 handle_early_exit_on_backup "[X] Backup directory ($backup_location) DOES NOT exist ( -bl <directory> ) \n\n" true; 
             fi
-                 echo "today:::::  $today"
+             
             if [ "$today" == "auto_most_recent" ]; then 
                 auto_select_most_recent_backup_for_incremental
             fi
@@ -1062,7 +1063,8 @@ issue_write_locks()
         printf " - Issuing read-only lock to Columnstore Engine ...   ";
         if ! $columnstore_online; then 
             printf "Skip since offline\n";
-        elif [ $DBROOT_COUNT == "1" ] && [[ -n "$startreadonly_exists" ]]; then
+        
+        elif [[ -n "$startreadonly_exists" ]]; then
             if dbrmctl startreadonly ; then
                 if ! $skip_polls; then 
                     cs_read_only_wait_loop
@@ -1147,7 +1149,7 @@ poll_check_no_active_cpimports() {
             break
         else 
             printf "."
-            if ! $quiet; then printf "\n$active_cpimports"; fi;
+            if ! $quiet; then printf "\n$active_cpimports\n - Waiting for cpimports to finish ..."; fi;
             sleep "$poll_interval"
             ((attempts++))
         fi
@@ -1310,7 +1312,6 @@ clear_read_lock() {
     fi
 
     if [ $pm == "pm1" ]; then
-
         # Clear CS Lock
         printf " - Clearing read-only lock on Columnstore Engine ...  "; 
         if ! $columnstore_online; then 
@@ -1362,6 +1363,21 @@ handle_ctrl_c_backup() {
     handle_early_exit_on_backup
 }
 
+handle_ctrl_c_dbrm_backup() {
+    echo "Ctrl+C captured. handle_early_exit_on_dbrm_backup..."
+    handle_early_exit_on_dbrm_backup
+}
+
+# $1 is the error message
+# $2 is false by default, meaning you need to clear the read lock, true means locks dont exist or not needed to be cleared
+handle_early_exit_on_dbrm_backup() {
+    $skip_clear_locks=${2:-false}
+    if ! $skip_clear_locks; then clear_read_lock; fi;
+    printf "\nDBRM Backup Failed: $1\n"
+    alert "$1"
+    exit 1;
+}
+
 alert() {
     # echo "Not implemented yet"
     # slack, email, webhook curl endpoint etc.
@@ -1398,8 +1414,66 @@ wait_on_rsync()
     done
 }
 
+# retry_failed_rsync uses this to retry rsync for any failed rsyncs
+# @param $1 - retry depth/attempt
+retry_failed_rsync() {
+    
+    local next_depth=$(( $1 + 1 ))
+    local retry_rsync_log="mcs-failed-rsync-attempt-$1.log"
+    local new_retry_rsync_log="mcs-failed-rsync-attempt-$next_depth.log"
+
+    # confirm retry depth
+    if [ -z "$1" ]; then
+        echo "No retry depth specified, exiting"
+        return 1
+    fi
+
+    # Check if max retry depth reached
+    if [ "$1" -gt "$max_retries" ]; then
+        echo "Max retry dept of $max_retries reached ... exiting"
+        return 1
+    fi
+
+    # Check if retry log exists
+    if [ -f "$retry_rsync_log" ]; then
+        printf "\n%-s\n" "Retrying failed rsyncs... Attempt #$1"
+        while IFS= read -r line; do
+            source=$(echo "$line" | sed -n 's/.*Failed Source: \(.*\)  Copy to Location:.*/\1/p')
+            target=$(echo "$line" | sed -n 's/.*Copy to Location: \(.*\)$/\1/p')
+            # Remove folder from target else rsync will nest folders improperly
+            target_base=$(dirname "$target")
+
+            # additional_rsync_flags
+            printf " - rsync $parallel_rsync_flags %-s %-s  ..." "$source" "$target_base"
+            if rsync $parallel_rsync_flags "$source" "$target_base"; then
+                printf " Done\n"
+            else
+                echo "Failed Source: $source  Copy to Location: $target" >> "$new_retry_rsync_log"
+                printf " Failed\n"
+            fi
+
+        done < "$retry_rsync_log"
+    else
+        echo "Retry log ($retry_rsync_log) does not exist   ... returning error"
+        return 1
+    fi
+    
+    # If any rsync failed, retry again
+    if [ -f "$new_retry_rsync_log" ]; then
+        retry_failed_rsync $next_depth
+    fi
+
+    # Cleanup 
+    if [ -f $retry_rsync_log ]; then rm $retry_rsync_log; fi;
+}
+
 initiate_rsyncs() {
     local dbrootToSync=$1
+    retry_rsync_log="mcs-failed-rsync-attempt-1.log"
+    max_retries=10
+    if [ -f $retry_rsync_log ]; then rm -rf $retry_rsync_log; fi;
+    
+    # Separate flags for parallel rsync from additional_rsync_flags - never have verbose rsync for parallel
     parallel_rsync_flags=" -a "
     if $incremental ; then parallel_rsync_flags+=" --inplace --no-whole-file --delete"; fi;
     
@@ -1408,6 +1482,31 @@ initiate_rsyncs() {
     #jobs
     wait_on_rsync true 2 0 $dbrootToSync
     wait
+
+    # Check if any rsync failed and retry rsync for that folder
+    if [ -f $retry_rsync_log ]; then
+        retry_failed_rsync 1
+        if [ $? -eq 0 ]; then
+            if [ -f $retry_rsync_log ]; then rm $retry_rsync_log; fi;
+        fi
+        
+        # if a file with mcs-failed-rsync-attempt-*.log exists, report it
+        if ls mcs-failed-rsync-attempt-*.log 1> /dev/null 2>&1; then
+            printf "\n%-s\n" "Could not rsync some directories, please manually triage ... $(date)"
+            # Print the file name and the contents of the log files in bash
+            for file in mcs-failed-rsync-attempt-*.log; do
+                mv -f $file $file.$today
+                printf "%-s\n" "File: $file.$today"
+                while IFS= read -r line; do
+                    source=$(echo "$line" | sed -n 's/.*Failed Source: \(.*\)  Copy to Location:.*/\1/p')
+                    target=$(echo "$line" | sed -n 's/.*Copy to Location: \(.*\)$/\1/p')
+                    printf "   %-s:  Source Size: %-s     Failed Target Size: %-s \n" "$(date)" "$(du -sb $source)" "$(du -sb $target)"
+ 
+                done < "$file.$today"
+            done
+            handle_early_exit_on_backup "\n\n[!] Rsync failed for some directories, please check the logs above\nConsider an incremental backup to continue where it left off: --incremental auto_most_recent \n"
+        fi
+    fi
 }
 
 # A recursive function that increments depthCurrent+1 each directory it goes deeper and issuing rsync on each directory remaining at the target depth  
@@ -1442,8 +1541,8 @@ deepParallelRsync() {
                 if ls $fullFilePath | xargs -P $PARALLEL_THREADS -I {} rsync $parallel_rsync_flags $fullFilePath/{} $backup_location$today/$relativePath/$fileName ; then
                     echo "   + Completed: $backup_location$today/$relativePath/$fileName"
                 else 
-                    echo "Failed: $backup_location$today/$relativePath/$fileName"
-                    exit 1;
+                    echo "Failed Source: $fullFilePath  Copy to Location: $backup_location$today/$relativePath/$fileName" >> $retry_rsync_log
+                    echo "Failed Source: $fullFilePath  Copy to Location: $backup_location$today/$relativePath/$fileName  ... added to $retry_rsync_log"
                 fi
                 
             else
@@ -1500,6 +1599,7 @@ human_readable_time() {
 }
 
 run_backup() {  
+    trap handle_ctrl_c_backup SIGINT
     backup_start=$(date +%s) 
     if [ $storage == "LocalStorage" ]; then 
         if [ $backup_destination == "Local" ]; then
@@ -1537,7 +1637,7 @@ run_backup() {
                         printf " - Parallel Rsync CS Data$i...       \n"
                         initiate_rsyncs $i
                         columnstore_backup_end=$(date +%s)
-                        printf " Done $(human_readable_time $((columnstore_backup_end-columnstore_backup_start))) \n"       
+                        printf " - Parallel Rsync CS Data$i            Done $(human_readable_time $((columnstore_backup_end-columnstore_backup_start))) \n"       
                     else
                         printf " - Syncing Columnstore Data$i...      "
                         eval "rsync $additional_rsync_flags /var/lib/columnstore/data$i/* $backup_location$today/data$i/ $extra_cmd_args";
@@ -1770,7 +1870,6 @@ run_backup() {
 
         printf "\nS3 Backup\n"
         # consistency check - wait for assigned journal dir to be empty
-        trap handle_ctrl_c_backup SIGINT
         i=1
         j_counts=$(find $cs_journal/data$ASSIGNED_DBROOT/* -type f 2>/dev/null | wc -l)
         max_wait=180
@@ -2325,7 +2424,7 @@ print_restore_variables()
         echo "Scp:                $scp"
         echo "Storage:            $storage"
         echo "Load Date:          $load_date"
-        echo "timestamp:          $(date +%m-%d-%Y-%H%M%S)"
+        echo "timestamp:          $(date)"
         echo "DB Root Count:      $DBROOT_COUNT"
         echo "PM:                 $pm"
         echo "PM Number:          $pm_number"
@@ -2334,7 +2433,7 @@ print_restore_variables()
         echo "Backup Location:    $backup_location"  
         echo "Storage:            $storage"
         echo "Load Date:          $load_date"
-        echo "timestamp:          $(date +%m-%d-%Y-%H%M%S)"
+        echo "timestamp:          $(date)"
         echo "PM:                 $pm"
         echo "PM Number:          $pm_number"
         echo "Active bucket:      $( grep -m 1 "^bucket =" $STORAGEMANGER_CNF)"
@@ -2994,37 +3093,72 @@ run_restore()
 }
 
 load_default_dbrm_variables() {
+    # Fixed Paths
+    CS_CONFIGS_PATH="/etc/columnstore"
+    DBRM_PATH="/var/lib/columnstore/data1/systemFiles/dbrm"
+    STORAGEMANAGER_PATH="/var/lib/columnstore/storagemanager"
+    STORAGEMANGER_CNF="$CS_CONFIGS_PATH/storagemanager.cnf"
+
      # Default variables
     backup_base_name="dbrm_backup"
     backup_interval_minutes=90
     retention_days=0
     backup_location=/tmp/dbrm_backups
-    STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
     skip_storage_manager=false
-    mode="once"
+    dbrm_backup_mode="once"
     quiet=false
-    
+    skip_save_brm=false
+    skip_locks=false
+    skip_polls=false
+    poll_interval=3
+    poll_max_wait=60;
     list_dbrm_backups=false
-    dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then 
-        dbrm_dir="/var/lib/columnstore/storagemanager"
+        DBRM_PATH="/var/lib/columnstore/storagemanager"
     fi
+    today=$(date +%m-%d-%Y)
+
+    # PM and PM number
+    if [ ! -f /var/lib/columnstore/local/module ]; then  
+        pm="pm1"; 
+    else 
+        pm=$(cat /var/lib/columnstore/local/module);  
+    fi;
+    PM_NUMBER=$(echo "$pm" | tr -dc '0-9')
+    if [[ -z $PM_NUMBER ]]; then PM_NUMBER=1; fi;
+
+    # Tracks if flush read lock has been run
+    read_lock=false
+    columnstore_online=false
+    confirm_xmllint_installed
+    # Number of DBroots
+    # Integer usually 1 or 3
+    DBROOT_COUNT=$(xmllint --xpath "string(//DBRootCount)" $CS_CONFIGS_PATH/Columnstore.xml)
+    ASSIGNED_DBROOT=$(xmllint --xpath "string(//ModuleDBRootID$PM_NUMBER-1-3)" $CS_CONFIGS_PATH/Columnstore.xml)
+
+    # defaults affecting issue_write_locks but dont mean anything for dbrm_backup
+    skip_mdb=false
+    mode="direct"
 }
 
 load_default_dbrm_restore_variables() {
+    # Fixed Paths
+    CS_CONFIGS_PATH="/etc/columnstore"
+    DBRM_PATH="/var/lib/columnstore/data1/systemFiles/dbrm"
+    STORAGEMANAGER_PATH="/var/lib/columnstore/storagemanager"
+    STORAGEMANGER_CNF="$CS_CONFIGS_PATH/storagemanager.cnf"
+
     auto_start=true
     backup_location="/tmp/dbrm_backups"
-    STORAGEMANGER_CNF="/etc/columnstore/storagemanager.cnf"
     storage=$(grep -m 1 "^service = " $STORAGEMANGER_CNF | awk '{print $3}')
     backup_folder_to_restore=""
     skip_dbrm_backup=false
     skip_storage_manager=false
     list_dbrm_backups=false
 
-    dbrm_dir="/var/lib/columnstore/data1/systemFiles/dbrm"
     if [ "$storage" == "S3" ]; then 
-        dbrm_dir="/var/lib/columnstore/storagemanager"
+        DBRM_PATH="/var/lib/columnstore/storagemanager"
     fi
 }
 
@@ -3032,13 +3166,19 @@ print_dbrm_backup_help_text() {
     echo "
     Columnstore DBRM Backup
 
-        -m   | --mode                  ['loop','once']; Determines if this script runs in a forever loop sleeping -i minutes or just once 
-        -i   | --interval              Number of minutes to sleep when --mode loop 
-        -r   | --retention-days        Retain dbrm backups created within the last X days, the rest are deleted
-        -bl  | --backup-location       Path of where to save the dbrm backups on disk
-        -nb  | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
-        -ssm | --skip-storage-manager  skip backing up storagemanager directory
-        -li  | --list                  List available dbrm backups in the backup location
+        -m     | --mode                  ['loop','once']; Determines if this script runs in a forever loop sleeping -i minutes or just once 
+        -i     | --interval              Number of minutes to sleep when --mode loop 
+        -r     | --retention-days        Retain dbrm backups created within the last X days, the rest are deleted
+        -bl    | --backup-location       Path of where to save the dbrm backups on disk
+        -nb    | --name-backup           Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S
+        -ssm   | --skip-storage-manager  Skip backing up storagemanager directory
+        -sbrm  | --skip-save-brm         Skip saving brm prior to running a dbrm backup - ideal for dirty backups
+        -slock | --skip-locks            Skip issuing flush read locks to dbrms
+        -spoll | --skip-polls            Skip polling to confirm locks are released
+        -pi    | --poll-interval         Number of seconds to wait between polls to confirm
+        -pmw   | --poll-max-wait         Max number of minutes for polling checks for writes to wait before exiting as a failed dbrm backup attempt
+        -q     | --quiet                 Suppress non-error output
+        -li    | --list                  List available dbrm backups in the backup location
 
         Default: ./$0 dbrm_backup -m once --retention-days 0 --backup-location /tmp/dbrm_backups
 
@@ -3099,7 +3239,7 @@ parse_dbrms_variables() {
                 shift # past value
                 ;;
             -m|--mode)
-                mode="$2"
+                dbrm_backup_mode="$2"
                 shift # past argument
                 shift # past value
                 ;;
@@ -3115,6 +3255,28 @@ parse_dbrms_variables() {
             -q | --quiet)
                 quiet=true
                 shift # past argument
+                ;;
+            -sbrm| --skip-save-brm)
+                skip_save_brm=true
+                shift # past argument
+                ;;
+            -slock| --skip-locks)
+                skip_locks=true
+                shift # past argument
+                ;;
+            -spoll| --skip-polls)
+                skip_polls=true
+                shift # past argument
+                ;;
+            -pi| --poll-interval)
+                poll_interval="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -pmw| --poll-max-wait)
+                poll_max_wait="$2"
+                shift # past argument
+                shift # past value
                 ;;
             -li | --list)
                 list_dbrm_backups=true
@@ -3132,6 +3294,9 @@ parse_dbrms_variables() {
     done
 
     confirm_integer_else_fail "$retention_days" "Retention"
+
+    
+
 }
 
 parse_dbrm_restore_variables() {
@@ -3215,19 +3380,19 @@ confirm_numerical_or_decimal_else_fail() {
 }
 
 validation_prechecks_for_dbrm_backup() {
-
+    echo "Prechecks"
     # Confirm storage not empty
     if [ -z "$storage" ]; then printf "[!] Empty storage: \ncheck: grep -m 1 \"^service = \" \$STORAGEMANGER_CNF | awk '{print \$3}' \n\n"; fi;
 
     # Check mode type
     errors=""
-    case $mode in
+    case $dbrm_backup_mode in
         once)
              errors+="" ;;
         loop)
              errors+="" ;;
         *)  # unknown option
-            printf "\nunknown mode: $mode\n"
+            printf "\nunknown mode: $dbrm_backup_mode\n"
             printf "Only 'once' & 'loop' allowed\n\n"
             print_dbrm_backup_help_text
             exit 2;
@@ -3235,6 +3400,24 @@ validation_prechecks_for_dbrm_backup() {
 
     # Check numbers
     confirm_numerical_or_decimal_else_fail "$backup_interval_minutes" "Interval"
+
+    # Poll Variable Checks
+    confirm_integer_else_fail "$poll_interval" "poll_interval"
+    confirm_integer_else_fail "$poll_max_wait" "poll_max_wait"
+    max_poll_attempts=$((poll_max_wait * 60 / poll_interval))
+    if [ "$max_poll_attempts" -lt 1 ]; then max_poll_attempts=1; fi;
+
+    # Detect if columnstore online
+    if [ "$mode" != "direct" ] && [ "$mode" != "indirect" ] ; then printf "\n[!!!] Invalid field --mode: $mode\n"; exit 1; fi
+    if [ $mode == "direct" ]; then
+        if [ -z $(pidof PrimProc) ] || [ -z $(pidof WriteEngineServer) ]; then 
+            printf " - Columnstore is OFFLINE \n"; 
+            export columnstore_online=false; 
+        else 
+            printf " - Columnstore is ONLINE - safer if offline (but not required to be offline) \n"; 
+            export columnstore_online=true; 
+        fi
+    fi;
 
     # Check backup location exists
     if [ ! -d $backup_location ]; then 
@@ -3396,23 +3579,28 @@ process_dbrm_backup() {
 
     load_default_dbrm_variables
     parse_dbrms_variables "$@";
-
     handle_list_dbrm_backups
-
+    
     if ! $quiet ; then
 
         printf "\nDBRM Backup\n"; 
         echo "--------------------------------------------------------------------------"
+        echo "Skips:  save_brm($skip_save_brm)   Locks($skip_locks)  Polls($skip_polls) "
         if [ "$storage" == "S3" ]; then echo "Skips:  Storagemanager($skip_storage_manager)"; fi;
         echo "--------------------------------------------------------------------------"
-        printf "CS Storage:  $storage\n"; 
-        printf "Source:      $dbrm_dir\n"; 
-        printf "Backups:     $backup_location\n"; 
+        printf "CS Storage:     $storage\n"; 
+        printf "Source:         $DBRM_PATH\n"; 
+        printf "Backups:        $backup_location\n"; 
         if [ "$mode" == "loop" ]; then 
-            printf "Interval:    $backup_interval_minutes minutes\n"; 
+            printf "Interval:       $backup_interval_minutes minutes\n"; 
         fi;
-        printf "Retention:   $retention_days day(s)\n"
-        printf "Mode:        $mode\n"
+        printf "Retention:      $retention_days day(s)\n"
+        printf "Mode:           $dbrm_backup_mode\n"
+        if ! $skip_polls && ! $skip_locks ; then 
+            printf "Poll Interval:  $poll_interval seconds\n"
+            printf "Poll Max Wait:  $poll_max_wait seconds\n"
+        fi;
+
         echo "--------------------------------------------------------------------------"
     fi;
 
@@ -3424,17 +3612,22 @@ process_dbrm_backup() {
         timestamp=$(date +%Y%m%d_%H%M%S)
         backup_folder="$backup_location/${backup_base_name}_${timestamp}"
         mkdir -p "$backup_folder"
+
+        issue_write_locks;
+        run_save_brm
+        trap handle_ctrl_c_dbrm_backup SIGINT
         
+        printf "\nDBRM Backup\n"
         # Copy files to the backup directory
         if [[ $skip_storage_manager == false || $storage == "LocalStorage" ]]; then
-            print_if_not_quiet " - copying $dbrm_dir ...";
-            cp -arp "$dbrm_dir"/* "$backup_folder"
+            print_if_not_quiet " - Copying $DBRM_PATH ...";
+            cp -arp "$DBRM_PATH"/* "$backup_folder"
             print_if_not_quiet " Done\n";
         fi
 
         if [ "$storage" == "S3" ]; then
             # smcat em files to disk
-            print_if_not_quiet " - copying DBRMs from bucket ...";
+            print_if_not_quiet " - Copying DBRMs from bucket ...";
             mkdir $backup_folder/dbrms/
             smls /data1/systemFiles/dbrm 2>/dev/null > $backup_folder/dbrms/dbrms.txt
             smcat /data1/systemFiles/dbrm/BRM_saves_current  2>/dev/null > $backup_folder/dbrms/BRM_saves_current
@@ -3462,9 +3655,10 @@ process_dbrm_backup() {
             print_if_not_quiet " Done\n";
         fi;
 
-        printf "Created: $backup_folder\n"
-        
-        if [ "$mode" == "once" ]; then  
+        clear_read_lock
+        printf "\nCreated: $backup_folder\n"
+
+        if [ "$dbrm_backup_mode" == "once" ]; then  
             end=$(date +%s)
             runtime=$((end-start))
             if ! $quiet; then  printf "\nRuntime: $runtime\n"; fi;
@@ -3837,12 +4031,12 @@ process_s3_dbrm_restore() {
 
     printf "\nPreparing\n"
     printf "%-${printf_offset}s ..." " - Clearing storagemanager caches"
-    if [ ! -d "$dbrm_dir/cache" ]; then
-        echo "Directory $dbrm_dir/cache does not exist."
+    if [ ! -d "$DBRM_PATH/cache" ]; then
+        echo "Directory $DBRM_PATH/cache does not exist."
         exit 1
     fi
-    for cache_dir in "${dbrm_dir}/cache"/*; do
-        if [ -d "${dbrm_dir}/cache/${cache_dir}" ]; then
+    for cache_dir in "${DBRM_PATH}/cache"/*; do
+        if [ -d "${DBRM_PATH}/cache/${cache_dir}" ]; then
             echo "   - Removing Cache: $cache_dir"
         else
             printf "."
@@ -3945,32 +4139,32 @@ process_localstorage_dbrm_restore() {
 
     printf "\nBefore DBRMs Restore\n"
     echo "--------------------------------------------------------------------------"
-    ls -la "${dbrm_dir}" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current"
+    ls -la "${DBRM_PATH}" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current"
     printf " - Clearing active DBRMs ... "
-    if rm -rf $dbrm_dir ; then
+    if rm -rf $DBRM_PATH ; then
         printf "Done\n"
     else 
-        echo "Failed to delete files in $dbrm_dir "
+        echo "Failed to delete files in $DBRM_PATH "
         exit 1; 
     fi
 
     printf "\nRestoring DBRMs\n"
     echo "--------------------------------------------------------------------------"
     printf " - Desired EM: $em_file_full_path\n"
-    printf " - Copying DBRMs: \"${backup_location}/${backup_folder_to_restore_dbrms}\" -> \"$dbrm_dir\" \n"
-    cp -arp "${backup_location}/${backup_folder_to_restore_dbrms}" $dbrm_dir
+    printf " - Copying DBRMs: \"${backup_location}/${backup_folder_to_restore_dbrms}\" -> \"$DBRM_PATH\" \n"
+    cp -arp "${backup_location}/${backup_folder_to_restore_dbrms}" $DBRM_PATH
     
 
     if [ "$prefix" != "BRM_saves" ]; then
         printf " - Restoring Prefix: $prefix \n"
         vbbm_name="${prefix}_vbbm"
         vss_name="${prefix}_vss"
-        cp -arpf "${dbrm_dir}/$em_file_name" "${dbrm_dir}/BRM_saves_em"
-        cp -arpf "${dbrm_dir}/$vbbm_name"    "${dbrm_dir}/BRM_saves_vbbm"
-        cp -arpf "${dbrm_dir}/$vss_name"     "${dbrm_dir}/BRM_saves_vss"
+        cp -arpf "${DBRM_PATH}/$em_file_name" "${DBRM_PATH}/BRM_saves_em"
+        cp -arpf "${DBRM_PATH}/$vbbm_name"    "${DBRM_PATH}/BRM_saves_vbbm"
+        cp -arpf "${DBRM_PATH}/$vss_name"     "${DBRM_PATH}/BRM_saves_vss"
     fi
-    echo "BRM_saves" > "${dbrm_dir}/BRM_saves_current"
-    chown -R mysql:mysql "${dbrm_dir}"
+    echo "BRM_saves" > "${DBRM_PATH}/BRM_saves_current"
+    chown -R mysql:mysql "${DBRM_PATH}"
     clearShm
     sleep 2
 
@@ -3978,7 +4172,7 @@ process_localstorage_dbrm_restore() {
     
     printf "\nAfter DBRM Restore\n"
     echo "--------------------------------------------------------------------------"
-    ls -la "${dbrm_dir}" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current"
+    ls -la "${DBRM_PATH}" | grep -E "BRM_saves_em|BRM_saves_vbbm|BRM_saves_vss|BRM_saves_journal|BRM_saves_current"
 
     if $auto_start; then
         printf "\nStartup\n"

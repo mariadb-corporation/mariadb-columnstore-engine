@@ -25,6 +25,7 @@
 #include "logicoperator.h"
 #include "rowcolumn.h"
 #include "simplefilter.h"
+#include "pseudocolumn.h"
 
 using namespace std;
 
@@ -250,9 +251,8 @@ void gp_walk(const Item* item, void* arg)
     {
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
-
       std::string funcName = ifp->func_name();
-
+      
       if (!gwip->condPush)
       {
         if (!ifp->fixed())
@@ -348,6 +348,15 @@ void gp_walk(const Item* item, void* arg)
       if (!gwip->fatalParseError && !(parseInfo & AGG_BIT) && !(parseInfo & SUB_BIT) && !nonConstFunc(ifp) &&
           !(parseInfo & AF_BIT) && tmpVec.size() == 0 && ifp->functype() != Item_func::MULT_EQUAL_FUNC)
       {
+        if(ifp->functype() == Item_func::UDF_FUNC &&
+           execplan::PseudoColumn::pseudoNameToType(funcName) != execplan::PSEUDO_UNKNOWN &&
+           ifp->arguments()[0] != nullptr && ifp->arguments()[0]->type() != Item::FUNC_ITEM)
+        {
+          gwip->fatalParseError = true;
+          gwip->parseErrorText =
+                logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DATATYPE_NOT_SUPPORT, funcName);
+          return;
+        }
         ValStrStdString valStr(ifp);
 
         execplan::ConstantColumn* cc = buildConstantColumnMaybeNullFromValStr(ifp, valStr, *gwip);
@@ -806,6 +815,12 @@ void gp_walk(const Item* item, void* arg)
     }
   }
 
+  // Clean up allocated objects if a fatal parse error occurred
+  if (gwip->fatalParseError)
+  {
+    clearDeleteStacks(*gwip);
+  }
+
   return;
 }
 
@@ -980,7 +995,7 @@ void parse_item(Item* item, vector<Item_field*>& field_vec, bool& hasNonSupportI
       // ERR_CORRELATED_SUB_OR
       string parseErrorText =
           logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NON_SUPPORT_SUB_QUERY_TYPE);
-      setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText);
+      setError(gwi->thd, ER_CHECK_NOT_IMPLEMENTED, parseErrorText, *gwi);
       break;
     }
 
