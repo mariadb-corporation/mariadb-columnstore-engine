@@ -1725,6 +1725,75 @@ void BatchPrimitiveProcessor::execute(messageqcpp::SBS& bs)
         RowGroup largeSideRowGroup = outputRG;
         largeSideRowGroup.setData(&largeSideRGData);
 
+        boost::unique_lock<boost::mutex> lock(bloomFilterMutex);
+        bloomFilterCondition.wait(lock, 
+          [this] { return bloomFiltersReady[getUniqueID()]; }
+        );
+
+        if (!bloomFilters.empty())
+        {
+          std::vector<bool> keepRows(ridCount, false);
+          uint32_t newRidCount = 0;
+          Row r;
+          outputRG.initRow(&r);
+          
+          for (uint32_t i = 0; i < ridCount; i++)
+          {
+            outputRG.getRow(i, &r);
+            bool keepRow = true;
+            
+            for (uint32_t j = 0; j < joinerCount && keepRow; j++)
+            {  
+              if (bloomFilters[j] && (*bloomFilters[j])[0].has_value() && typelessJoin[j])
+              {
+                uint32_t hash = r.hashTypeless(tlLargeSideKeyColumns[j], mSmallSideKeyColumnsPtr,
+                                              mSmallSideRGPtr ? &mSmallSideRGPtr->getColWidths() : nullptr);
+          
+                if (!(*bloomFilters[j])[0]->probe(hash))
+                {
+                  keepRow = false;
+                }
+              }
+            }
+          
+            if (keepRow)
+            {
+              keepRows[i] = true;
+              newRidCount++;
+            }
+          }
+
+          uint32_t writePos = 0;
+          for (uint32_t i = 0; i < ridCount; i++)
+          {
+            if (keepRows[i])
+            {
+              if (writePos != i)
+              {
+                relRids[writePos] = relRids[i];
+                values[writePos] = values[i];
+                if (mJOINHasSkewedKeyColumn)
+                  wide128Values[writePos] = wide128Values[i];
+        
+                Row sourceRow, targetRow;
+                outputRG.initRow(&sourceRow);
+                outputRG.initRow(&targetRow);
+                outputRG.getRow(i, &sourceRow);
+                outputRG.getRow(writePos, &targetRow);
+                copyRow(sourceRow, &targetRow);
+              }
+              writePos++;
+            }
+          }
+            
+          ridCount = newRidCount;
+          outputRG.setRowCount(ridCount);
+            
+          largeSideRGData = outputRG.duplicate();
+          largeSideRowGroup = outputRG;
+          largeSideRowGroup.setData(&largeSideRGData);
+        }
+
         do  // while (startRid > 0)
         {
           utils::setThreadName("BPPJoin_1");
@@ -2697,20 +2766,21 @@ void BatchPrimitiveProcessor::buildVSSCache(uint32_t loopCount)
 
 void BatchPrimitiveProcessor::addBloomFilters([[maybe_unused]] messageqcpp::ByteStream& bs)
 {
-  bs.advance(sizeof(ISMPacketHeader) + 4 * sizeof(uint32_t));
+  bs.advance(sizeof(ISMPacketHeader) + 3 * sizeof(uint32_t));
+  uint32_t msgUniqueID;
+  bs >> msgUniqueID;
 
   size_t bfSize = 0;
   bs >> bfSize;
   
   bloomFilters.resize(bfSize);
-
   for (size_t j = 0; j < bfSize; ++j)
   {
     for (size_t i = 0; i < 2; ++i)
     {
       uint8_t hasBloomFilter = 0;
       bs >> hasBloomFilter;
-
+      
       if (hasBloomFilter)
       {
         if (!bloomFilters[j])
@@ -2719,10 +2789,14 @@ void BatchPrimitiveProcessor::addBloomFilters([[maybe_unused]] messageqcpp::Byte
         (*bloomFilters[j]).at(i).emplace();
         (*bloomFilters[j]).at(i)->deserialize(bs);
       }
-      
     }
   }
 
+  {
+    boost::unique_lock<boost::mutex> lock(bloomFilterMutex);
+    bloomFiltersReady[msgUniqueID] = true;
+  }
+  bloomFilterCondition.notify_all();
 }
 
 }  // namespace primitiveprocessor

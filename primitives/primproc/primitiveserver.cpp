@@ -2086,9 +2086,8 @@ struct ReadThread
         boost::shared_ptr<FairThreadPool::Functor> functor;
         functor.reset(new BPPHandler::BloomFilter(fBPPHandler, sbs));
 
-        PriorityThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
-        OOBProcPool->addJob(job);
-
+        FairThreadPool::Job job(uniqueID, stepID, txnId, functor, outIos, weight, priority, id);
+        procPool->addJob(job);
 
         break;
       }

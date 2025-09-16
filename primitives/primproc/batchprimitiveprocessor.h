@@ -438,6 +438,11 @@ class BatchPrimitiveProcessor
   uint32_t weight_;
 
   // Blocked Bloom Filter
+  private:
+  std::unordered_map<uint32_t, bool> bloomFiltersReady;
+  boost::mutex bloomFilterMutex;
+  boost::condition_variable bloomFilterCondition;
+
   std::vector<joblist::BloomFilters> bloomFilters;
   public:
   void addBloomFilters(messageqcpp::ByteStream& bs);

@@ -1484,8 +1484,7 @@ void TupleBPS::run()
       if (tjoiners[0]->inPM())
         serializeJoiner();
       
-      if (tjoiners[0]->inUM() && !bloomFilters.empty())
-        serializeBloomFilters();
+      serializeBloomFilters();
     }
 
     prepCasualPartitioning();
