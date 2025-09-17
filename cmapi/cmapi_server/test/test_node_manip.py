@@ -7,6 +7,9 @@ from lxml import etree
 from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server import node_manipulation
+from cmapi_server.managers.application import (
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel
+)
 from cmapi_server.constants import MCS_DATA_PATH
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.node_manipulation import (
@@ -323,6 +326,25 @@ class NodeManipTester(BaseNodeManipTestCase):
         with MockResolutionBuilder().add_mapping(bad_hostname, '10.0.0.5', bidirectional=False).build():
             with self.assertRaises(CMAPIBasicError):
                 node_manipulation.add_node(bad_hostname, tmp_mcs_config_filename, self.tmp_files[0])
+
+    def test_rebalance_noop_when_shared_storage_off(self):
+        # Ensure shared storage flag is False
+        current_cfg = AppStatefulConfig.get_config_copy()
+        if current_cfg.flags.shared_storage_on:
+            new_cfg = StatefulConfigModel(
+                version=current_cfg.version.next_seq(),
+                flags=StatefulFlagsModel(shared_storage_on=False)
+            )
+            AppStatefulConfig.apply_update(new_cfg)
+
+        nc = NodeConfig()
+        root = nc.get_current_config_root(tmp_mcs_config_filename)
+        smc_before = etree.tostring(root.find('./SystemModuleConfig'))
+
+        node_manipulation._rebalance_dbroots(root)
+
+        smc_after = etree.tostring(root.find('./SystemModuleConfig'))
+        self.assertEqual(smc_before, smc_after)
 
 
 class TestDBRootsManipulation(unittest.TestCase):

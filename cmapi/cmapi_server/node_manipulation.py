@@ -26,7 +26,9 @@ from cmapi_server.constants import (
     LOCALHOSTS,
     MCS_DATA_PATH,
 )
+from cmapi_server.managers.application import AppStatefulConfig
 from cmapi_server.managers.network import NetworkManager
+
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -240,10 +242,10 @@ def rebalance_dbroots(
     """Rebalance dbroots between nodes.
 
     :param input_config_filename: input mcs config path, defaults to None
-    :type input_config_filename: Optional[str], optional
     :param output_config_filename: oputput mcs config path, defaults to None
-    :type output_config_filename: Optional[str], optional
-    :rases: Exception if error happens while rebalancing.
+    :raises: Exception if error happens while rebalancing.
+
+    TODO: never used? May be better to replace direct usage of _rebalance_dbroots by this
     """
     node_config = NodeConfig()
     if input_config_filename is None:
@@ -615,25 +617,15 @@ def get_dbroots_paths(root: etree.Element) -> list[str]:
     return dbroots_paths
 
 
-def _rebalance_dbroots(root, test_mode=False):
-    # TODO: add code to detect whether we are using shared storage or not.  If not, exit
-    # without doing anything.
+def _rebalance_dbroots(root):
+    """Rebalance DBRoots across nodes in the xml config.
 
-    '''
-    this will be a pita
-    identify unassigned dbroots
-    assign those to the node with the fewest dbroots
+    Notes:
+    - This is safe only when the cluster uses shared storage. On local storage,
+      reassigning DBRoots in the config without moving data is unsafe.
+    - When shared storage is OFF (state comes from AppStatefulConfig), this
+      function becomes a no-op unless explicitly overridden via ``test_mode``.
 
-    then,
-    id the nodes with the most dbroots and the least dbroots
-    when most - least <= 1, we're done
-    else, move a dbroot from the node with the most to the one with the least
-
-    Not going to try to be clever about the alg.  We're dealing with small lists.
-    Aiming for simplicity and comprehensibility.
-    '''
-
-    '''
     Borderline hack here.  We are going to remove dbroot1 from its current host so that
     it will always look for the current replication master and always resolve the discrepancy
     between what maxscale and what cmapi choose for the primary/master node.
@@ -653,7 +645,35 @@ def _rebalance_dbroots(root, test_mode=False):
         5) make it the primary node
 
     Once we are done with the constraint discovery process, we should refactor this.
-    '''
+    """
+
+    # If the cluster is not using shared storage, rebalancing DBRoots would be
+    # invalid and potentially dangerous. Respect the stateful flag maintained
+    # by the failover/shared-storage monitors and bail out early.
+    if not AppStatefulConfig.is_shared_storage():
+        logging.info('Shared storage is OFF; skipping DBRoots rebalance.')
+        return
+
+    # Overview of the simple balancing approach:
+    # - Identify unassigned DBRoots and assign to the node with fewest DBRoots.
+    # - Then, identify the nodes with the most DBRoots and the least DBRoots.
+    #   When most - least <= 1, we're done
+    #   Else, move a DBRoot from the node with the most to the one with the least
+    # Not going to try to be clever about the alg.  We're dealing with small lists.
+    # Aiming for simplicity and comprehensibility.
+
+    # Ensure DBRoot 1 is unassigned initially. This forces placement logic to
+    # consider the (new) replication master, aligning primary node selection
+    # with MaxScale to avoid schema sync issues.
+
+
+    # If the cluster is not using shared storage, rebalancing dbroots would
+    # be invalid and potentially dangerous. Respect the stateful flag that is
+    # maintained by the shared-storage monitors and bail out early.
+    if not AppStatefulConfig.is_shared_storage():
+        logging.info('Shared storage is OFF; skipping DBRoots rebalance.')
+        return
+
     unassign_dbroot1(root)
 
     current_mapping = get_current_dbroot_mapping(root)
@@ -663,30 +683,28 @@ def _rebalance_dbroots(root, test_mode=False):
     # assign the unassigned dbroots
     unassigned_dbroots = set(existing_dbroots) - set(current_mapping[0])
 
-    '''
-    If dbroot 1 is in the unassigned list, then we need to put it on the node that will be the next
-    primary node.  Need to choose the same node as maxscale here.  For now, we will wait until
-    maxscale does the replication reconfig, then choose the new master.  Later,
-    we will choose the node using the same method that maxscale does to avoid
-    the need to go through the mariadb client.
 
-    If this process goes on longer than 1 min, then we will assume there is no maxscale,
-    so this should choose where dbroot 1 should go itself.
-    '''
+    # If dbroot 1 is in the unassigned list, then we need to put it on the node that will be
+    # the next primary node.  Need to choose the same node as maxscale here.  For now,
+    # we will wait until maxscale does the replication reconfig, then choose the new master.
+    # Later, we will choose the node using the same method that maxscale does to avoid
+    # the need to go through the mariadb client.
+    # If this process goes on longer than 1 min, then we will assume there is no maxscale,
+    # so this should choose where dbroot 1 should go itself.
     if 1 in unassigned_dbroots:
-        logging.info("Waiting for Maxscale to choose the new repl master...")
-        smc_node = root.find("./SystemModuleConfig")
+        logging.info('Waiting for Maxscale to choose the new repl master...')
+        smc_node = root.find('./SystemModuleConfig')
         # Maybe iterate over the list of ModuleHostName tags instead
-        pm_count = int(smc_node.find("./ModuleCount3").text)
+        pm_count = int(smc_node.find('./ModuleCount3').text)
         found_master = False
-        final_time = datetime.datetime.now() + datetime.timedelta(seconds = 30)
+        final_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
         # skip this if in test mode.
         retry = True
-        while not found_master and datetime.datetime.now() < final_time and not test_mode:
+        while not found_master and datetime.datetime.now() < final_time:
             for node_num in range(1, pm_count + 1):
-                node_ip = smc_node.find(f"./ModuleIPAddr{node_num}-1-3").text
-                node_name = smc_node.find(f"./ModuleHostName{node_num}-1-3").text
+                node_ip = smc_node.find(f'./ModuleIPAddr{node_num}-1-3').text
+                node_name = smc_node.find(f'./ModuleHostName{node_num}-1-3').text
                 if pm_count == 1:
                     found_master = True
                 else:
@@ -694,7 +712,7 @@ def _rebalance_dbroots(root, test_mode=False):
                     key = helpers.get_current_key(cfg_parser)
                     version = helpers.get_version()
                     headers = {'x-api-key': key}
-                    url = f"https://{node_ip}:8640/cmapi/{version}/node/new_primary"
+                    url = f'https://{node_ip}:8640/cmapi/{version}/node/new_primary'
                     try:
                         r = get_traced_session().request(
                             'GET', url, verify=False, headers=headers, timeout=10
@@ -717,7 +735,7 @@ def _rebalance_dbroots(root, test_mode=False):
 
                 if not found_master:
                     if not retry:
-                        logging.info("There was an error retrieving replication master")
+                        logging.info('There was an error retrieving replication master')
                         break
                     else:
                         continue
@@ -725,20 +743,21 @@ def _rebalance_dbroots(root, test_mode=False):
                 # assign dbroot 1 to this node, put at the front of the list
                 current_mapping[node_num].insert(0, 1)
                 unassigned_dbroots.remove(1)
-                logging.info(f"The new replication master is {node_name}")
+                logging.info(f'The new replication master is {node_name}')
                 break
             if not found_master:
-                logging.info("New repl master has not been chosen yet")
+                logging.info('New repl master has not been chosen yet')
                 time.sleep(1)
         if not found_master:
-            logging.info("Maxscale has not reconfigured repl master, continuing...")
+            logging.info('Maxscale has not reconfigured repl master, continuing...')
 
     for dbroot in unassigned_dbroots:
         (_min, min_index) = _find_min_max_length(current_mapping)[0]
         if dbroot != 1:
             current_mapping[min_index].append(dbroot)
         else:
-            # make dbroot 1 move only if the new node goes down by putting it at the front of the list
+            # make dbroot 1 move only if the new node goes down by putting it at the front of the
+            # list
             current_mapping[min_index].insert(0, dbroot)
 
     # balance the distribution
@@ -748,18 +767,20 @@ def _rebalance_dbroots(root, test_mode=False):
         ((_min, min_index), (_max, max_index)) = _find_min_max_length(current_mapping)
 
     # write the new mapping
-    sysconf_node = root.find("./SystemModuleConfig")
+    sysconf_node = root.find('./SystemModuleConfig')
     for i in range(1, len(current_mapping)):
-        dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{i}-3")
+        dbroot_count_node = sysconf_node.find(f'./ModuleDBRootCount{i}-3')
         # delete the original assignments for node i
         for dbroot_num in range(1, int(dbroot_count_node.text) + 1):
-            old_node = sysconf_node.find(f"./ModuleDBRootID{i}-{dbroot_num}-3")
+            old_node = sysconf_node.find(f'./ModuleDBRootID{i}-{dbroot_num}-3')
             sysconf_node.remove(old_node)
 
         # write the new assignments for node i
         dbroot_count_node.text = str(len(current_mapping[i]))
         for dbroot_num in range(len(current_mapping[i])):
-            etree.SubElement(sysconf_node, f"ModuleDBRootID{i}-{dbroot_num+1}-3").text = str(current_mapping[i][dbroot_num])
+            etree.SubElement(sysconf_node, f'ModuleDBRootID{i}-{dbroot_num+1}-3').text = str(
+                current_mapping[i][dbroot_num]
+            )
 
 
 # returns ((min, index-of-min), (max, index-of-max))
