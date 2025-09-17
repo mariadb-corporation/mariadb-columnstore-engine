@@ -117,7 +117,10 @@ class NodeMonitor:
             # remove nodes from history that have been removed from the cluster
             self._removeRemovedNodes(desiredNodes)
 
-            # if there are less than 3 nodes in the cluster, do nothing
+            # if there are less than 3 nodes in the cluster or shared storage is OFF,
+            # failover must not perform any actions. Keep the thread alive but idle,
+            # so that when conditions change (e.g., shared storage becomes available),
+            # the monitor can resume work without restart.
             if len(desiredNodes) < 3 or not AppStatefulConfig.is_shared_storage():
                 if not logged_idleness_msg:
                     self._logger.info(
@@ -126,6 +129,9 @@ class NodeMonitor:
                     )
                     logged_idleness_msg = True
                     logged_active_msg = False
+                # skip the rest of the loop to avoid sending heartbeats or performing any failover
+                # actions while inactive.
+                continue
             elif not logged_active_msg:
                 self._logger.info(
                     'Failover support is active, '
