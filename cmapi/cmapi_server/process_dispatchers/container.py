@@ -14,6 +14,7 @@ from cmapi_server.constants import (
     IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS
 )
 from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.process_dispatchers.locks import release_shmem_locks
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
 
@@ -216,6 +217,11 @@ class ContainerDispatcher(BaseDispatcher):
         service_proc = cls._get_proc_object(service)
 
         if service == 'workernode':
+            # Run pre-stop lock reset before saving BRM
+            # These stale locks can occur if the controllernode couldn't stop correctly
+            #  and they cause mcs-savebrm.py to hang
+            release_shmem_locks(logger)
+
             # start mcs-savebrm.py before stoping workernode
             logger.debug('Waiting to save BRM.')
             savebrm_path = os.path.join(MCS_INSTALL_BIN, 'mcs-savebrm.py')
@@ -286,6 +292,7 @@ class ContainerDispatcher(BaseDispatcher):
 
         ...TODO: for next releases. Additional error handling.
         """
+        stop_success = True
         if cls.is_service_running(service):
             # TODO: retry?
             stop_success = cls.stop(service, is_primary, use_sudo)
