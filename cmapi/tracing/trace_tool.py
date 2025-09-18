@@ -2,11 +2,19 @@
 CherryPy tool that uses the tracer to start a span for each request.
 """
 import socket
+import json
+import logging
 from typing import Dict
 
 import cherrypy
 
 from tracing.tracer import get_tracer
+
+logger = logging.getLogger("tracer")
+
+# Limit for raw JSON string preview (in characters)
+_PREVIEW_MAX_CHARS = 512
+
 
 def _on_request_start() -> None:
     req = cherrypy.request
@@ -38,6 +46,7 @@ def _on_request_start() -> None:
     span.set_attribute('instance.hostname', socket.gethostname())
     safe_headers = {k: v for k, v in headers.items() if k.lower() not in {'authorization', 'x-api-key'}}
     span.set_attribute('sentry.incoming_headers', safe_headers)
+    _record_incoming_json_preview(req, span)
     req._trace_span_ctx = ctx
     req._trace_span = span
 
@@ -70,4 +79,30 @@ def register_tracing_tools() -> None:
     cherrypy.tools.trace_end = cherrypy.Tool("on_end_resource", _on_request_end, priority=80)
 
 
+def _record_incoming_json_preview(req, span) -> None:
+    """If request Content-Type is JSON, attach a compact preview to span.
 
+    Attempts to read the body and then restore the stream position so request handling isn't affected.
+    """
+    try:
+        content_type = str(getattr(req, 'headers', {}).get('Content-Type', '') or '')
+        span.set_attribute('http.request.content_type', content_type)
+        if 'json' not in content_type.lower():
+            return
+        try:
+            parsed_json = getattr(req, 'json', None)
+        except Exception:
+            parsed_json = None
+        if parsed_json is None:
+            logger.info("Skipping JSON preview: request.json is not available")
+            return
+        try:
+            normalized = json.dumps(parsed_json, ensure_ascii=False, sort_keys=True)
+            if len(normalized) > _PREVIEW_MAX_CHARS:
+                normalized = normalized[:_PREVIEW_MAX_CHARS] + '...<truncated>'
+            span.set_attribute('http.request.json', normalized)
+            span.set_attribute('http.request.body.size', len(normalized))
+        except Exception:
+            logger.exception("Failed to serialize request.json for preview")
+    except Exception:
+        logger.exception("Failed to record incoming JSON preview")
