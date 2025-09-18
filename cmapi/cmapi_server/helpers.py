@@ -613,13 +613,32 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
-        node_fqdn = socket.gethostbyaddr(hostname)[0]
+        try:
+            node_fqdn = socket.gethostbyaddr(hostname)[0]
+        except (socket.herror, socket.gaierror, OSError) as e:
+            # Fallback if reverse lookup fails
+            logging.warning(
+                'get_dbroots(): reverse lookup failed for %r: %s. Using original hostname.',
+                hostname, e
+            )
+            node_fqdn = hostname
 
         if node in LOCALHOSTS and hostname != 'localhost':
-            node = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                node = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning(
+                    'get_dbroots(): reverse lookup failed for local hostname: %s. Using socket.gethostname().',
+                    e
+                )
+                node = socket.gethostname()
         elif node not in LOCALHOSTS and hostname == 'localhost':
             # hostname will only be loclahost if we are in one node cluster
-            hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning('get_dbroots(): reverse lookup failed for "localhost": %s.', e)
+                hostname = socket.gethostname()
 
 
         if node == ip_addr or node == hostname or node == node_fqdn:

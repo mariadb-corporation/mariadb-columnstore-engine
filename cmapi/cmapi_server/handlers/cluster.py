@@ -8,6 +8,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
+import requests
+
 from mcs_node_control.models.misc import get_dbrm_master
 from mcs_node_control.models.node_config import NodeConfig
 from tracing.traced_session import get_traced_session
@@ -93,20 +95,48 @@ class ClusterHandler:
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{get_version()}/node/status'
             try:
-                r = get_traced_session().request('GET', url, verify=False, headers=headers)
+                r = get_traced_session().request(
+                    'GET', url, verify=False, headers=headers, timeout=REQUEST_TIMEOUT
+                )
                 r.raise_for_status()
                 r_json = r.json()
                 if len(r_json.get('services', 0)) == 0:
                     r_json['dbrm_mode'] = 'offline'
                     r_json['cluster_mode'] = 'offline'
-
+                # add node state field ('online' if services not empty and mode not offline)
+                services = r_json.get('services', [])
+                node_state = (
+                    'offline'
+                    if not services or r_json.get('cluster_mode') == 'offline'
+                    else 'online'
+                )
+                r_json['state'] = node_state
                 response[f'{str(node)}'] = r_json
                 num_nodes += 1
-            except Exception as err:
-                raise CMAPIBasicError(
-                    f'Got an error retrieving status from node {node}'
-                ) from err
+            except (requests.exceptions.RequestException, ValueError) as err:
+                # Do not fail the whole request: record node as unreachable
+                logger.error('Error retrieving status from node %s: %s', node, str(err))
+                try:
+                    node_dbroots = sorted(get_dbroots(node, config))
+                except Exception as e:
+                    logger.warning(
+                        'ClusterHandler.status: failed to obtain dbroots for node %s: %s. Using empty list.',
+                        node, e
+                    )
+                    node_dbroots = []
+                response[str(node)] = {
+                    'timestamp': str(datetime.now()),
+                    'uptime': None,
+                    'dbrm_mode': 'offline',
+                    'cluster_mode': 'offline',
+                    'dbroots': node_dbroots,
+                    'module_id': 0,
+                    'services': [],
+                    'state': 'offline',
+                    'error': f'Unreachable: {err.__class__.__name__}'
+                }
 
+        # num_nodes stays as number of reachable nodes
         response['num_nodes'] = num_nodes
         logger.debug('Successfully finished getting cluster status.')
         return response
