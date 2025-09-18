@@ -8,7 +8,7 @@ from cmapi_server.constants import REQUEST_TIMEOUT
 from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.helpers import broadcast_stateful_config
 from cmapi_server.managers.application import (
-    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel, StatefulVersionModel,
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel,
 )
 from cmapi_server.node_manipulation import get_dbroots_paths
 from mcs_node_control.models.node_config import NodeConfig

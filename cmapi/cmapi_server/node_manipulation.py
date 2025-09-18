@@ -324,30 +324,30 @@ def move_primary_node(
 
 
 def find_dbroot1(root):
-    smc_node = root.find("./SystemModuleConfig")
-    pm_count = int(smc_node.find("./ModuleCount3").text)
+    smc_node = root.find('./SystemModuleConfig')
+    pm_count = int(smc_node.find('./ModuleCount3').text)
     for pm_num in range(1, pm_count + 1):
-        dbroot_count = int(smc_node.find(f"./ModuleDBRootCount{pm_num}-3").text)
+        dbroot_count = int(smc_node.find(f'./ModuleDBRootCount{pm_num}-3').text)
         for dbroot_num in range(1, dbroot_count + 1):
-            dbroot = smc_node.find(f"./ModuleDBRootID{pm_num}-{dbroot_num}-3").text
-            if dbroot == "1":
-                name = smc_node.find(f"ModuleHostName{pm_num}-1-3").text
-                addr = smc_node.find(f"ModuleIPAddr{pm_num}-1-3").text
+            dbroot = smc_node.find(f'./ModuleDBRootID{pm_num}-{dbroot_num}-3').text
+            if dbroot == '1':
+                name = smc_node.find(f'ModuleHostName{pm_num}-1-3').text
+                addr = smc_node.find(f'ModuleIPAddr{pm_num}-1-3').text
                 return (name, addr)
-    raise NodeNotFoundException("Could not find dbroot 1 in the list of dbroot assignments!")
+    raise NodeNotFoundException('Could not find dbroot 1 in the list of dbroot assignments!')
 
 
 def _move_primary_node(root):
-    '''
-    Verify new_primary is in the list of active nodes
+    """Move primary node to the node that has dbroot 1.
 
-    Change ExeMgr1
-    Change CEJ
-    Change DMLProc
-    Change DDLProc
-    Change Contollernode
-    Change PrimaryNode
-    '''
+    Verify new_primary is in the list of active nodes
+        - Change ExeMgr1
+        - Change CEJ
+        - Change DMLProc
+        - Change DDLProc
+        - Change ControllerNode
+        - Change PrimaryNode
+    """
 
     hostname, ip4 = new_primary = find_dbroot1(root)
     logging.info(f"_move_primary_node(): dbroot 1 is assigned to {new_primary}")
@@ -408,7 +408,7 @@ def _add_active_node(root, node):
 
 
 def __remove_helper(parent_node, node):
-    nodes = list(parent_node.findall("./Node"))
+    nodes = list(parent_node.findall('./Node'))
     for n in nodes:
         if n.text == node:
             parent_node.remove(n)
@@ -561,16 +561,16 @@ def is_master():
 
 
 def unassign_dbroot1(root):
-    smc_node = root.find("./SystemModuleConfig")
-    pm_count = int(smc_node.find("./ModuleCount3").text)
+    smc_node = root.find('./SystemModuleConfig')
+    pm_count = int(smc_node.find('./ModuleCount3').text)
     owner_id = 0
     for i in range(1, pm_count + 1):
-        dbroot_count_node = smc_node.find(f"./ModuleDBRootCount{i}-3")
+        dbroot_count_node = smc_node.find(f'./ModuleDBRootCount{i}-3')
         dbroot_count = int(dbroot_count_node.text)
         dbroot_list = []
         for j in range(1, dbroot_count + 1):
-            dbroot = smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
-            if dbroot == "1":
+            dbroot = smc_node.find(f'./ModuleDBRootID{i}-{j}-3').text
+            if dbroot == '1':
                 owner_id = i                  # this node has dbroot 1
             else:
                 dbroot_list.append(dbroot)    # the dbroot assignments to keep
@@ -581,13 +581,13 @@ def unassign_dbroot1(root):
 
     # remove the dbroot entries for node owner_id
     for i in range(1, dbroot_count + 1):
-        doomed_node = smc_node.find(f"./ModuleDBRootID{owner_id}-{i}-3")
+        doomed_node = smc_node.find(f'./ModuleDBRootID{owner_id}-{i}-3')
         smc_node.remove(doomed_node)
     # create the new dbroot entries
     dbroot_count_node.text = str(len(dbroot_list))
     i = 1
     for dbroot in dbroot_list:
-        etree.SubElement(smc_node, f"ModuleDBRootID{owner_id}-{i}-3").text = dbroot
+        etree.SubElement(smc_node, f'ModuleDBRootID{owner_id}-{i}-3').text = dbroot
         i += 1
 
 
@@ -646,13 +646,6 @@ def _rebalance_dbroots(root):
 
     Once we are done with the constraint discovery process, we should refactor this.
     """
-
-    # If the cluster is not using shared storage, rebalancing DBRoots would be
-    # invalid and potentially dangerous. Respect the stateful flag maintained
-    # by the failover/shared-storage monitors and bail out early.
-    if not AppStatefulConfig.is_shared_storage():
-        logging.info('Shared storage is OFF; skipping DBRoots rebalance.')
-        return
 
     # Overview of the simple balancing approach:
     # - Identify unassigned DBRoots and assign to the node with fewest DBRoots.
