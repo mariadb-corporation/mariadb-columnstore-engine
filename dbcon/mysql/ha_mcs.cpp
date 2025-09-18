@@ -77,11 +77,6 @@ pthread_mutex_t mcs_mutex;
 #endif
 #define DEBUG_RETURN return
 
-#if MYSQL_VERSION_ID >= 110500
-/* because of renames in the handler class */
-#define rows_changed rows_stats.updated
-#endif
-
 /**
   @brief
   Function we use in the creation of our hash to get key.
@@ -335,7 +330,7 @@ int ha_mcs::write_row(const uchar* buf)
   int rc;
   try
   {
-    rc = ha_mcs_impl_write_row(buf, table, rows_changed, time_zone);
+    rc = ha_mcs_impl_write_row(buf, table, rows_inserted(), time_zone);
   }
   catch (std::runtime_error& e)
   {
@@ -2008,7 +2003,7 @@ int ha_mcs_cache::flush_insert_cache()
     copied_rows++;
     if ((error = parent::write_row(record)))
       goto end;
-    rows_changed++;
+    rows_inserted()++;
   }
   if (error == HA_ERR_END_OF_FILE)
     error = 0;

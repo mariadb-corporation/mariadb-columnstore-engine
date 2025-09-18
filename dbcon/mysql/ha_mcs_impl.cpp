@@ -2891,7 +2891,7 @@ int ha_mcs_impl_delete_table(const char* name)
   int rc = ha_mcs_impl_delete_table_(dbName, name, *ci);
   return rc;
 }
-int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed, long timeZone)
+int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_inserted, long timeZone)
 {
   THD* thd = current_thd;
 
@@ -2921,7 +2921,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
 
   // At the beginning of insert, make sure there are no
   // left-over values from a previously possibly failed insert.
-  if (rows_changed == 0)
+  if (rows_inserted == 0)
     ci->tableValuesMap.clear();
 
   if (ci->alterTableState > 0)
