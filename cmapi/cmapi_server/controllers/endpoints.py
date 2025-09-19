@@ -43,6 +43,24 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 module_logger = logging.getLogger('cmapi_server')
 
 
+def disable_json(input: bool = False, output: bool = False):
+    """JSON input/output is enabled by default, this decorator
+      lets you disable JSON input/output/both of them for some endpoint.
+
+    Args:
+        input: If True, disables request JSON parsing
+        output: If True, disables JSON response rendering
+    """
+    def decorator(func):
+        if not hasattr(func, '_cp_config'):
+            func._cp_config = {}
+        if input:
+            func._cp_config['tools.json_in.on'] = False
+        if output:
+            func._cp_config['tools.json_out.on'] = False
+        return func
+    return decorator
+
 def log_begin(logger, func_name):
     logger.debug(f"{func_name} starts")
 
@@ -223,8 +241,8 @@ cherrypy.tools.timeit = TimingTool()
 
 class StatusController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_status(self):
         """
         Handler for /status (GET)
@@ -253,7 +271,7 @@ class StatusController:
         return status_response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_primary(self):
         """
         Handler for /primary (GET)
@@ -272,7 +290,7 @@ class StatusController:
         return get_master_response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_new_primary(self):
         """
         Handler for /new_primary (GET)
@@ -292,8 +310,8 @@ class StatusController:
 
 class ConfigController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_config(self):
         """
         Handler for /config (GET)
@@ -521,8 +539,6 @@ class ConfigController:
 
 class BeginController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     @cherrypy.tools.active_operation()  # pylint: disable=no-member
     def put_begin(self):
@@ -566,8 +582,6 @@ IP address.")
 
 class CommitController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_commit(self):
         """
@@ -608,8 +622,6 @@ class CommitController:
 
 class RollbackController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_rollback(self):
         """
@@ -654,7 +666,6 @@ class RollbackController:
 
 class StartController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_start(self):
         func_name = 'put_start'
@@ -685,8 +696,6 @@ class StartController:
 
 class ShutdownController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_shutdown(self):
         func_name = 'put_shutdown'
@@ -794,27 +803,31 @@ class ExtentMapController:
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_em(self):
         return self.get_brm_bytes('em')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_journal(self):
         return self.get_brm_bytes('journal')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_vss(self):
         return self.get_brm_bytes('vss')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_vbbm(self):
         return self.get_brm_bytes('vbbm')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_footprint(self):
         # Dummy footprint
         result = {'em': '00f62e18637e1708b080b076ea6aa9b0',
@@ -1032,9 +1045,8 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_status(self):
         func_name = 'get_status'
         log_begin(module_logger, func_name)
@@ -1203,7 +1215,7 @@ class LoggingConfigController:
 
 class AppController():
 
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def ready(self):
         if AppManager.started:
             return {'started': True}
@@ -1249,8 +1261,8 @@ class NodeProcessController():
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_process_running(self, process_name):
         """Handler for /node/is_process_running (GET) endpoint."""
         func_name = 'get_process_running'

@@ -240,19 +240,20 @@ class MCSProcessManager:
         """
         logging.info(f'Waiting for DMLProc to stop in {timeout} seconds')
         dmlproc_stopped = False
-        while timeout > 0:
+        seconds_left = timeout
+        while seconds_left > 0:
             logging.info(
-                f'Waiting for DMLProc to stop. Seconds left {timeout}.'
+                f'Waiting for DMLProc to stop. Seconds left {seconds_left}.'
             )
             if not Process.check_process_alive('DMLProc'):
                 logging.info('DMLProc gracefully stopped by DBRM command.')
                 dmlproc_stopped = True
                 break
             sleep(1)
-            timeout -= 1
+            seconds_left -= 1
         else:
             logging.error(
-                f'DMLProc did not stopped gracefully by DBRM command within '
+                f'DMLProc was not stopped gracefully by DBRM command within '
                 f'{timeout} seconds. Will be stopped directly.'
             )
         return dmlproc_stopped
