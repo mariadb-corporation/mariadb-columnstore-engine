@@ -3,8 +3,11 @@ import fcntl
 import logging
 import socket
 import struct
+from dataclasses import dataclass
 from ipaddress import ip_address
 from typing import Optional
+
+from cmapi_server.exceptions import CMAPIBasicError
 
 try:
     import psutil
@@ -13,10 +16,26 @@ except ImportError:
     psutil = None
     _PSUTIL_AVAILABLE = False
 
-from cmapi_server.exceptions import CMAPIBasicError
-
 
 SIOCGIFADDR = 0x8915  # SIOCGIFADDR "socket ioctl get interface address"
+
+
+@dataclass
+class ResolvedAddress:
+    """Typed container for an IP/hostname resolution result.
+    """
+    ip: str                   # Canonical IPv4 address selected for this node
+    hostname: Optional[str]   # Primary hostname (or None if not available)
+
+
+@dataclass
+class AllResolvedAddresses:
+    """Full resolution result including all related IPs and hostnames.
+    """
+    ip: str                   # Canonical IPv4 (primary)
+    hostname: Optional[str]   # Primary hostname (if any)
+    all_ips: list[str]        # All resolved non-loopback IPv4 addresses
+    all_hostnames: list[str]  # All reverse-resolved hostnames (may be empty)
 
 
 class NetworkManager:
@@ -250,31 +269,93 @@ class NetworkManager:
         return True
 
     @classmethod
-    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, str]:
-        """Resolve input string to an (IP, hostname) pair.
+    def resolve_ip_and_hostname(cls, input_str: str, only_ipv4: bool = True) -> ResolvedAddress:
+        """Resolve input string to a single canonical (ip, hostname) pair.
 
         :param input_str: Input which may be an IP address or a hostname
         :type input_str: str
-        :return: A tuple containing (ip, hostname)
-        :rtype: tuple[str, str]
+        :return: A ResolvedAddress with canonical ip/hostname
         :raises CMAPIBasicError: if hostname resolution yields no IPs
         """
         ip: str = ''
-        hostname: str = None
+        hostname: Optional[str] = None
 
         if cls.is_ip(input_str):
             ip = input_str
-            hostname = cls.get_hostname(input_str)
+            hostname = cls.get_hostname(ip)
         else:
             hostname = input_str
             ip_list = cls.resolve_hostname_to_ip(
                 input_str,
+                only_ipv4=only_ipv4,
                 exclude_loopback=not cls.is_only_loopback_hostname(input_str)
             )
             if not ip_list:
                 raise CMAPIBasicError(f'No IPs found for {hostname!r}')
             ip = ip_list[0]
-        return ip, hostname
+        return ResolvedAddress(ip=ip, hostname=hostname)
+
+    @classmethod
+    def resolve_all(cls, input_str: str, only_ipv4: bool = True) -> AllResolvedAddresses:
+        """Resolve input to full sets of related IPs and hostnames.
+
+        Aggregates all non-loopback IPv4s and all reverse-resolved hostnames.
+        The primary ip/hostname correspond to resolve_ip_and_hostname().
+        """
+        primary = cls.resolve_ip_and_hostname(input_str, only_ipv4=only_ipv4)
+        ip = primary.ip
+        hostname = primary.hostname
+
+        all_ips: list[str] = []
+        all_hostnames: list[str] = []
+
+        if cls.is_ip(input_str):
+            # Collect all non-loopback IPv4s from reverse-resolved hostnames
+            related_ips: set[str] = set()
+            names_ordered: list[str] = []
+            seen_names: set[str] = set()
+            for name in cls.get_hostnames_by_ip(ip):
+                name_norm = name.rstrip('.')
+                if name_norm not in seen_names:
+                    seen_names.add(name_norm)
+                    names_ordered.append(name_norm)
+                for resolved_ip in cls.resolve_hostname_to_ip(
+                    name, only_ipv4=only_ipv4, exclude_loopback=True
+                ):
+                    related_ips.add(resolved_ip)
+            all_ips = [ip] + [
+                x for x in sorted(related_ips, key=lambda s: ip_address(s)) if x != ip
+            ]
+            all_hostnames = names_ordered
+            if hostname and hostname not in all_hostnames:
+                all_hostnames.insert(0, hostname)
+        else:
+            # For hostname input, include all A records; canonical is the first
+            ip_list = cls.resolve_hostname_to_ip(
+                input_str,
+                only_ipv4=only_ipv4,
+                exclude_loopback=not cls.is_only_loopback_hostname(input_str)
+            )
+            all_ips = ip_list
+            # Aggregate reverse hostnames from all resolved IPs
+            seen: set[str] = set()
+            names: list[str] = []
+            for ip_candidate in ip_list:
+                for n in cls.get_hostnames_by_ip(ip_candidate):
+                    n_norm = n.rstrip('.')
+                    if n_norm not in seen:
+                        seen.add(n_norm)
+                        names.append(n_norm)
+            if hostname and hostname not in names:
+                names.insert(0, hostname)
+            all_hostnames = names
+
+        return AllResolvedAddresses(
+            ip=ip,
+            hostname=hostname,
+            all_ips=all_ips,
+            all_hostnames=all_hostnames,
+        )
 
     @classmethod
     def validate_hostname_fwd_rev(cls, hostname: str) -> None:

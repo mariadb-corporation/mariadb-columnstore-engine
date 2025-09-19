@@ -7,7 +7,6 @@ import datetime
 import logging
 import os
 import shutil
-import socket
 import subprocess
 import time
 from typing import Optional
@@ -27,7 +26,7 @@ from cmapi_server.constants import (
     LOCALHOSTS_IPS,
     MCS_DATA_PATH,
 )
-from cmapi_server.managers.network import NetworkManager
+from cmapi_server.managers.network import NetworkManager, ResolvedAddress
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -68,7 +67,7 @@ def add_node(
     output_config_filename: Optional[str] = None,
     use_rebalance_dbroots: bool = True
 ):
-    """Add node to a cluster.
+    """Add node to the cluster.
 
     Check whether or not '127.0.0.1' or 'localhost' are in the config file, and
     if so, replace those instances with this node's external hostname
@@ -102,14 +101,16 @@ def add_node(
     if not NetworkManager.is_ip(node) and not NetworkManager.is_only_loopback_hostname(node):
         NetworkManager.validate_hostname_fwd_rev(node)
 
+    resolved = NetworkManager.resolve_ip_and_hostname(node)
+
     try:
         if not _replace_localhost(c_root, node):
-            pm_num = _add_node_to_PMS(c_root, node)
-            _add_WES(c_root, pm_num, node)
-            _add_DBRM_Worker(c_root, node)
-            _add_Module_entries(c_root, node)
-            _add_active_node(c_root, node)
-            _add_node_to_ExeMgrs(c_root, node)
+            pm_num = _add_node_to_PMS(c_root, resolved)
+            _add_WES(c_root, pm_num, resolved)
+            _add_DBRM_Worker(c_root, resolved)
+            _add_Module_entries(c_root, resolved)
+            _add_active_node(c_root, resolved)
+            _add_node_to_ExeMgrs(c_root, resolved)
             if use_rebalance_dbroots:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
@@ -132,7 +133,7 @@ def remove_node(
     deactivate_only: bool = False,
     use_rebalance_dbroots: bool = True, **kwargs
 ):
-    """Remove node from a cluster.
+    """Remove node from the cluster.
 
     - Rebuild the PMS section w/o node
     - Remove the DBRM_Worker entry
@@ -161,21 +162,23 @@ def remove_node(
     node_config = NodeConfig()
     c_root = node_config.get_current_config_root(input_config_filename)
 
+    resolved = NetworkManager.resolve_ip_and_hostname(node)
+
     try:
         active_nodes = helpers.get_active_nodes(input_config_filename)
 
         if len(active_nodes) > 1:
-            pm_num = _remove_node_from_PMS(c_root, node)
+            pm_num = _remove_node_from_PMS(c_root, resolved)
             _remove_WES(c_root, pm_num)
-            _remove_DBRM_Worker(c_root, node)
-            _remove_Module_entries(c_root, node)
-            _remove_from_ExeMgrs(c_root, node)
+            _remove_DBRM_Worker(c_root, resolved)
+            _remove_Module_entries(c_root, resolved)
+            _remove_from_ExeMgrs(c_root, resolved)
 
             if deactivate_only:
-                _deactivate_node(c_root, node)
+                _deactivate_node(c_root, resolved)
             else:
                 # TODO: unspecific name, need to think of a better one
-                _remove_node(c_root, node)
+                _remove_node(c_root, resolved)
 
             if use_rebalance_dbroots:
                 _rebalance_dbroots(c_root)
@@ -347,13 +350,14 @@ def _move_primary_node(root):
     root.find("./PrimaryNode").text = new_primary[0]
 
 
-def _add_active_node(root, node):
+def _add_active_node(root, resolved: ResolvedAddress):
     '''
     if in inactiveNodes, delete it there
     if not in desiredNodes, add it there
     if not in activeNodes, add it there
     '''
 
+    node = resolved.hostname or resolved.ip
     nodes = root.findall("./DesiredNodes/Node")
     found = False
     for n in nodes:
@@ -383,17 +387,19 @@ def __remove_helper(parent_node, node):
             parent_node.remove(n)
 
 
-def _remove_node(root, node):
+def _remove_node(root, resolved: ResolvedAddress):
     '''
     remove node from DesiredNodes, InactiveNodes, and ActiveNodes
     '''
 
+    node = resolved.hostname or resolved.ip
     for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
         __remove_helper(n, node)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
-def _deactivate_node(root, node):
+def _deactivate_node(root, resolved: ResolvedAddress):
+    node = resolved.hostname or resolved.ip
     __remove_helper(root.find("./ActiveNodes"), node)
     inactive_nodes = root.find("./InactiveNodes")
     etree.SubElement(inactive_nodes, "Node").text = node
@@ -734,7 +740,7 @@ def get_current_dbroot_mapping(root):
     return current_mapping
 
 
-def _remove_Module_entries(root, node):
+def _remove_Module_entries(root, resolved: ResolvedAddress):
     '''
         figure out which module_id node is
         store info from the other modules
@@ -755,11 +761,15 @@ def _remove_Module_entries(root, node):
     for num in range(1, current_module_count + 1):
         m_ip_node = smc_node.find(f"./ModuleIPAddr{num}-1-3")
         m_name_node = smc_node.find(f"./ModuleHostName{num}-1-3")
-        if node == m_ip_node.text or node == m_name_node.text:
+        # Match by either IP or hostname from resolved
+        if (resolved.ip == m_ip_node.text) or (resolved.hostname and resolved.hostname == m_name_node.text):
             node_module_id = num
             break
     if node_module_id == 0:
-        logging.warning(f"remove_module_entries(): did not find node {node} in the Module* entries of the config file")
+        missing = resolved.hostname or resolved.ip
+        logging.warning(
+            f"remove_module_entries(): did not find node {missing} in the Module* entries of the config file"
+        )
         return
 
     # Get the existing info except for node, remove the existing nodes
@@ -776,7 +786,7 @@ def _remove_Module_entries(root, node):
             dbroots.append(dbr_node.text)
             smc_node.remove(dbr_node)
 
-        if node != m_ip_node.text and node != m_name_node.text:
+        if (resolved.ip != m_ip_node.text) and (not resolved.hostname or resolved.hostname != m_name_node.text):
             new_module_info.append((m_ip_node.text, m_name_node.text, dbroots))
 
         smc_node.remove(m_ip_node)
@@ -844,19 +854,20 @@ def _remove_WES(root, pm_num):
         etree.SubElement(wes, "Port").text = "8630"
 
 
-def _remove_DBRM_Worker(root, node):
+def _remove_DBRM_Worker(root, resolved: ResolvedAddress):
     '''
     regenerate the DBRM_Worker list without node
     update NumWorkers
     '''
 
+    node_ip = resolved.ip
     num = 1
     workers = []
     while True:
         w_node = root.find(f"./DBRM_Worker{num}")
         if w_node is not None:
             addr = w_node.find("./IPAddr").text
-            if addr != "0.0.0.0" and addr != node:
+            if addr != "0.0.0.0" and addr != node_ip:
                 workers.append(addr)
             root.remove(w_node)
         else:
@@ -870,8 +881,9 @@ def _remove_DBRM_Worker(root, node):
     root.find("./DBRM_Controller/NumWorkers").text = str(len(workers))
 
 
-def _remove_from_ExeMgrs(root, node):
+def _remove_from_ExeMgrs(root, resolved: ResolvedAddress):
     """Remove the corresponding ExeMgrX section from the config."""
+    node_name = resolved.hostname or resolved.ip
     num = 1
     ems = []
     # TODO: use loop by nodes count instead of "while True"
@@ -879,7 +891,7 @@ def _remove_from_ExeMgrs(root, node):
         em_node = root.find(f"./ExeMgr{num}")
         if em_node is not None:
             addr = em_node.find("./IPAddr").text
-            if addr != "0.0.0.0" and addr != node:
+            if addr != "0.0.0.0" and addr != node_name:
                 ems.append(addr)
             root.remove(em_node)
         else:
@@ -893,7 +905,7 @@ def _remove_from_ExeMgrs(root, node):
         etree.SubElement(em_node, "Module").text = "unassigned"
 
 
-def _remove_node_from_PMS(root, node):
+def _remove_node_from_PMS(root, resolved: ResolvedAddress):
     '''
     find the PM number we're removing
     replace existing PMS entries
@@ -909,7 +921,7 @@ def _remove_node_from_PMS(root, node):
     pm_num = 0
     for num in range(1, pm_count+1):
         addr = root.find(f"./PMS{num}/IPAddr")
-        if addr.text != node:
+        if addr.text != resolved.ip:
             pm_list.append(addr.text)
         else:
             pm_num = num
@@ -930,7 +942,7 @@ def _remove_node_from_PMS(root, node):
     # generate new list
     pm_count = len(pm_list)
     count_node.text = str(pm_count)
-    pm_list.append(node)
+    pm_list.append(resolved.ip)
     for num in range(pm_count*connections_per_pm):
         pmsnode = etree.SubElement(root, f"PMS{num+1}")
         addrnode = etree.SubElement(pmsnode, "IPAddr")
@@ -940,7 +952,7 @@ def _remove_node_from_PMS(root, node):
 
     return pm_num
 
-def _add_Module_entries(root, node: str) -> None:
+def _add_Module_entries(root, resolved: ResolvedAddress) -> None:
     '''
     get new node id
     add ModuleIPAddr, ModuleHostName, ModuleDBRootCount (don't set ModuleDBRootID* here)
@@ -951,7 +963,8 @@ def _add_Module_entries(root, node: str) -> None:
     # XXXPAT: No guarantee these are the values used in the rest of the system.
     # TODO: what should we do with complicated network configs where node has
     #       several ips and\or several hostnames
-    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    ip4 = resolved.ip
+    hostname = resolved.hostname or resolved.ip
     logging.info(f'Using ip address {ip4} and hostname {hostname}')
 
     smc_node = root.find('./SystemModuleConfig')
@@ -970,10 +983,9 @@ def _add_Module_entries(root, node: str) -> None:
         # update the addr
         if curr_ip_node is not None and curr_ip_node.text == ip4:
             logging.info(f'Found ip address already at ModuleIPAddr{i}-1-3')
-            if curr_name_node != hostname:
-                new_ip_addr = NetworkManager.resolve_hostname_to_ip(
-                    curr_name_node
-                )
+            if curr_name_node is None or curr_name_node.text != hostname:
+                resolved_list = NetworkManager.resolve_hostname_to_ip(curr_name_node.text) if curr_name_node is not None else []
+                new_ip_addr = resolved_list[0] if resolved_list else (curr_name_node.text if curr_name_node is not None else hostname)
                 logging.info(
                     'Hostname doesn\'t match, updating address to '
                     f'{new_ip_addr!r}'
@@ -999,13 +1011,13 @@ def _add_Module_entries(root, node: str) -> None:
     nnid_node.text = str(nnid + 1)
 
 
-def _add_WES(root, pm_num, node):
+def _add_WES(root, pm_num, resolved: ResolvedAddress):
     wes_node = etree.SubElement(root, f"pm{pm_num}_WriteEngineServer")
-    etree.SubElement(wes_node, "IPAddr").text = node
+    etree.SubElement(wes_node, "IPAddr").text = resolved.ip
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
-def _add_DBRM_Worker(root, node):
+def _add_DBRM_Worker(root, resolved: ResolvedAddress):
     '''
     find the highest numbered DBRM_Worker entry, or one that isn't used atm
     prune unused entries
@@ -1014,6 +1026,7 @@ def _add_DBRM_Worker(root, node):
 
     num = 1
     already_exists = False
+    node = resolved.ip
     while True:
         e_node = root.find(f"./DBRM_Worker{num}")
         if e_node is None:
@@ -1037,26 +1050,27 @@ def _add_DBRM_Worker(root, node):
     num_workers_node.text = str(num_workers)
 
 
-def _add_node_to_ExeMgrs(root, node):
+def _add_node_to_ExeMgrs(root, resolved: ResolvedAddress):
     """Find the highest numbered ExeMgr entry, add this node at the end."""
     num = 1
+    node_name = resolved.hostname or resolved.ip
     while True:
         e_node = root.find(f"./ExeMgr{num}")
         if e_node is None:
             break
         addr = e_node.find("./IPAddr")
-        if addr.text == node:
-            logging.info(f"_add_node_to_ExeMgrs(): node {node} already exists")
+        if addr.text == node_name:
+            logging.info(f"_add_node_to_ExeMgrs(): node {node_name} already exists")
             return
         num += 1
     e_node = etree.SubElement(root, f"ExeMgr{num}")
     addr_node = etree.SubElement(e_node, "IPAddr")
-    addr_node.text = node
+    addr_node.text = node_name
     port_node = etree.SubElement(e_node, "Port")
     port_node.text = EXEMGR_NODE_PORT
 
 
-def _add_node_to_PMS(root, node):
+def _add_node_to_PMS(root, resolved: ResolvedAddress):
     '''
     the PMS section is a sequential list of connections descriptions
 
@@ -1076,8 +1090,8 @@ def _add_node_to_PMS(root, node):
     new_pm_num = 0
     for num in range(1, pm_count+1):
         addr = root.find(f'./PMS{num}/IPAddr')
-        if addr.text == node and new_pm_num == 0:
-            logging.info(f'_add_node_to_PMS(): node {node} already exists')
+        if addr.text == resolved.ip and new_pm_num == 0:
+            logging.info(f'_add_node_to_PMS(): node {resolved.ip} already exists')
             new_pm_num = num
         else:
             pm_list[num] = addr.text
@@ -1096,7 +1110,7 @@ def _add_node_to_PMS(root, node):
     if new_pm_num == 0:
         pm_count += 1
         count_node.text = str(pm_count)
-        pm_list[pm_count] = node
+        pm_list[pm_count] = resolved.ip
         new_pm_num = pm_count
     for num in range(pm_count):
         pmsnode = etree.SubElement(root, f'PMS{num+1}')
@@ -1117,16 +1131,11 @@ def _replace_localhost(root, node):
         )
         return False
 
-    # TODO use NetworkManager functionality here
-    # getaddrinfo returns list of 5-tuples (..., sockaddr)
-    # use sockaddr to retrieve ip, sockaddr = (address, port) for AF_INET
-    ipaddr = socket.getaddrinfo(node, 8640, family=socket.AF_INET)[0][-1][0]
-    # signifies that node is an IP addr already
-    if ipaddr == node:
-        # use the primary hostname if given an ip addr
-        hostname = socket.gethostbyaddr(ipaddr)[0]
-    else:
-        hostname = node   # use whatever name they gave us
+    # Resolve the provided node to a canonical IPv4 and hostname using NetworkManager
+    resolved = NetworkManager.resolve_all(node, only_ipv4=True)
+    ipaddr = resolved.ip
+    hostname = resolved.hostname or node
+    logging.debug('Resolved "%s" to %s', node, resolved)
     logging.info(
         f'add_node(): replacing 127.0.0.1/localhost with {ipaddr}/{hostname} '
         f'as this node\'s name. Be sure {hostname} resolves to {ipaddr} on '
@@ -1151,7 +1160,7 @@ def _replace_localhost(root, node):
             path = _get_node_path_or_tag(n)
             n.text = ipaddr
             logging.debug(
-                "_replace_localhost: %s: replaced localhost IP '%s' with '%s'",
+                "%s: replaced localhost IP '%s' with '%s'",
                 path, old_val, ipaddr
             )
 
@@ -1162,14 +1171,14 @@ def _replace_localhost(root, node):
             path = _get_node_path_or_tag(n)
             n.text = hostname
             logging.debug(
-                "_replace_localhost: %s: replaced localhost hostname '%s' with '%s'",
+                "%s: replaced localhost hostname '%s' with '%s'",
                 path, old_val, hostname
             )
 
     old_val = controller_host.text
     controller_host.text = hostname # keep controllernode as fqdn
     logging.debug(
-        "_replace_localhost: set DBRM_Controller/IPAddr from '%s' to hostname '%s'",
+        "_replace_localhost: replaced DBRM_Controller/IPAddr '%s' with '%s'",
         old_val, hostname
     )
 
