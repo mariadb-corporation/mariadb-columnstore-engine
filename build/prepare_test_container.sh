@@ -121,6 +121,8 @@ prepare_container() {
     else
         change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
         execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt install -y rustup || true'
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'rustup install 1.85.0 && cargo install tpchgen-cli'
     fi
 
     # Configure core dump naming pattern
