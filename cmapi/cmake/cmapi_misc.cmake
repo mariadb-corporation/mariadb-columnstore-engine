@@ -11,6 +11,20 @@ macro(MYSQL_GET_CONFIG_VALUE keyword var)
 endmacro()
 
 function(get_linux_lsb_release_information)
+    # If caller predefines ID and VERSION, honor them and return early
+    # We do it to be able to build packages for distros different from the host
+    if(DEFINED LSB_RELEASE_ID_SHORT AND NOT "${LSB_RELEASE_ID_SHORT}" STREQUAL ""
+       AND DEFINED LSB_RELEASE_VERSION_SHORT AND NOT "${LSB_RELEASE_VERSION_SHORT}" STREQUAL "")
+        string(TOLOWER "${LSB_RELEASE_ID_SHORT}" LSB_RELEASE_ID_SHORT)
+        message(STATUS "LSB_RELEASE_ID_SHORT ${LSB_RELEASE_ID_SHORT}")
+        message(STATUS "LSB_RELEASE_VERSION_SHORT ${LSB_RELEASE_VERSION_SHORT}")
+        message(STATUS "LSB_RELEASE_CODENAME_SHORT ${LSB_RELEASE_CODENAME_SHORT}")
+        set(LSB_RELEASE_ID_SHORT "${LSB_RELEASE_ID_SHORT}" PARENT_SCOPE)
+        set(LSB_RELEASE_VERSION_SHORT "${LSB_RELEASE_VERSION_SHORT}" PARENT_SCOPE)
+        set(LSB_RELEASE_CODENAME_SHORT "${LSB_RELEASE_CODENAME_SHORT}" PARENT_SCOPE)
+        return()
+    endif()
+
     # Try lsb_release first
     find_program(LSB_RELEASE_EXEC lsb_release)
 

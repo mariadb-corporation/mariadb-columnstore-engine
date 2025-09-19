@@ -13,6 +13,8 @@ MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 source "$SCRIPT_LOCATION"/utils.sh
 
 optparse.define short=d long=distro desc="distro" variable=OS
+optparse.define short=m long=mdb-source-path desc="Path to external MariaDB Server source (used as -DSERVER_DIR)" variable=MDB_SOURCE_PATH default="$MDB_SOURCE_PATH"
+optparse.define short=t long=target-distro desc="Override target distro used in package filename, format: <id>:<version> (e.g. debian:12, ubuntu:22.04, rocky:9)" variable=TARGET_DISTRO
 source $(optparse.build)
 echo "Arguments received: $@"
 
@@ -27,6 +29,11 @@ if [[ -z "${OS:-}" ]]; then
 fi
 
 select_pkg_format ${OS}
+
+if [[ ! -d "$MDB_SOURCE_PATH" ]]; then
+  error "MDB source path does not exist or is not a directory: $MDB_SOURCE_PATH"
+  exit 1
+fi
 
 if [[ "$(arch)" == "arm64" || "$(arch)" == "aarch64" ]]; then
   export CC=gcc
@@ -100,7 +107,21 @@ build_cmapi() {
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
   ./cleanup.sh
   CMAPI_GIT_REVISION_ARG="$(get_cmapi_git_revision)"
-  cmake -D"${PKG_FORMAT^^}"=1 -DSERVER_DIR="$MDB_SOURCE_PATH" -DCMAPI_GIT_REVISION="$CMAPI_GIT_REVISION_ARG" . && make package
+  # Prepare optional CMake overrides for target distro
+  local cmake_overrides=()
+  if [[ -n "${TARGET_DISTRO:-}" ]]; then
+    # Expect format id:version
+    local target_id="${TARGET_DISTRO%%:*}"
+    local target_ver="${TARGET_DISTRO#*:}"
+    if [[ -z "$target_id" || -z "$target_ver" || "$TARGET_DISTRO" != *:* ]]; then
+      error "--target-distro must be in format <id>:<version>, e.g., debian:12 or ubuntu:22.04"
+      exit 1
+    fi
+    target_id=$(echo "$target_id" | tr '[:upper:]' '[:lower:]')
+    cmake_overrides+=( -DLSB_RELEASE_ID_SHORT="$target_id" -DLSB_RELEASE_VERSION_SHORT="$target_ver" )
+    message "Overriding target distro for packaging: id='$target_id' version='$target_ver'"
+  fi
+  cmake -D"${PKG_FORMAT^^}"=1 -DSERVER_DIR="$MDB_SOURCE_PATH" -DCMAPI_GIT_REVISION="$CMAPI_GIT_REVISION_ARG" "${cmake_overrides[@]}" . && make package
 }
 install_deps
 build_cmapi
