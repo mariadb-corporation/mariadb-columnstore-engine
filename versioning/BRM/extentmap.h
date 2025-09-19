@@ -269,13 +269,14 @@ class ExtentMapRBTreeImpl
   static void refreshShmWithLock()
   {
     boost::mutex::scoped_lock lk(fInstanceMutex);
-    return refreshShm();
+    refreshShm();
   }
 
   static void refreshShm()
   {
     if (fInstance)
     {
+	    idblog("delete");
       delete fInstance;
       fInstance = NULL;
     }

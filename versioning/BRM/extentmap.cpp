@@ -260,6 +260,7 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, 
     return fInstance;
   }
 
+  idblog("allocated");
   fInstance = new ExtentMapRBTreeImpl(key, size, readOnly);
   return fInstance;
 }

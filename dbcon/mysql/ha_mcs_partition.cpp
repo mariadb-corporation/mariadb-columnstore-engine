@@ -570,6 +570,7 @@ extern "C"
       void calshowpartitions_deinit(UDF_INIT* initid)
   {
     delete[] initid->ptr;
+    BRM::DBRM::refreshShmWithLock();
   }
 
       const char* calshowpartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
@@ -694,6 +695,8 @@ extern "C"
     initid->ptr = new char[output.str().length() + 1];
     memcpy(initid->ptr, output.str().c_str(), output.str().length());
     *length = output.str().length();
+    idblog("should delete");
+    BRM::DBRM::refreshShmWithLock();
     return initid->ptr;
   }
 
