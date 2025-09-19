@@ -11,6 +11,7 @@ import struct
 import subprocess
 import sys
 import time
+from typing import Optional
 import xml.etree.ElementTree as ET
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -23,6 +24,8 @@ MCS_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
 SM_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
 MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
+CLEAR_SHMEM_READ_LOCKS = os.path.join(MCS_BIN_DIR, 'mcs-shmem-locks -i 0 -u -r')
+CLEAR_SHMEM_WRITE_LOCKS = os.path.join(MCS_BIN_DIR, 'mcs-shmem-locks -i 0 -u -w')
 EM_FILE_SUFFIX = '_em'
 EM_FILE_SIZE_THRESHOLD = 1000
 HALF_A_MINUTE = 30
@@ -68,7 +71,7 @@ def cmapi_available():
     :return: is CMAPI running or not
     :rtype: bool
     """
-    logging.debug('Detecting CMAPI is up and running.')
+    logging.info('Detecting CMAPI is up and running.')
     url = 'https://{}:{}/notfound'.format(LOCALHOST, API_PORT)
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
@@ -128,7 +131,7 @@ def is_primary_fallback(current_hostname):
     :return: is node primary
     :rtype: bool
     """
-    logging.debug(
+    logging.info(
         'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
     )
     hostnames = set()
@@ -139,7 +142,7 @@ def is_primary_fallback(current_hostname):
             hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
         except:
             pass
-    logging.debug('Found hostnames {}.'.format(hostnames))
+    logging.info('Found hostnames {}.'.format(hostnames))
     return current_hostname in LOCALHOSTS or current_hostname in hostnames
 
 
@@ -316,62 +319,64 @@ def get_save_brm_path_prefix(a_mcs_config_root):
     return get_save_brm_dir_path(a_mcs_config_root) + '/' + BRM_BACKUP_PATH_PART.format(epoch_prefix)
 
 
-def call_save_brm(path):
-    """Calls save_brm first and then tries to call it with local path. 
+def call_executable_with_params_and_result(executable: str, result: str) -> Optional[str]:
+    """Calls executable and return optional result
 
-    :param file_path: xml config XML root
-    :rtype: None
+    :param executable: executable to call
+    :param result: result to return
+    :rtype: Optional[str]
     """
-    savebrm_cmd = SAVEBRM + ' ' + path
     try:
-        subprocess.check_call(savebrm_cmd, shell=True)
+        subprocess.check_call(executable, shell=True)
     except subprocess.CalledProcessError as exc:
-        logging.error('The call to {} exits with {}.'.format(savebrm_cmd, exc.returncode))
+        logging.error('The call to {} exits with {}.'.format(executable, exc.returncode))
         return None
     except OSError:
-        logging.error('Os error while calling savebrm', exc_info=True)
+        logging.error('Os error while calling {}.'.format(executable), exc_info=True)
         return None
-    return path
+    return result
 
 
-def call_save_brm_locally(a_mcs_config_root):
-    """Calls save_brm first and then tries to call it with local path. 
+def clear_shmem_locks() -> Optional[str]:
+    """Clears shmem locks before save_brm call 
+
+    :rtype: Optional[str]
+    """
+    logging.info('Clear shmem read locks.')
+    if call_executable_with_params_and_result(CLEAR_SHMEM_READ_LOCKS, 'Clear shmem read locks') is None:
+        return None
+    logging.info('Clear shmem write locks.')
+    return call_executable_with_params_and_result(CLEAR_SHMEM_WRITE_LOCKS, 'Clear shmem write locks')
+
+
+def call_save_brm(path) -> Optional[str]:
+    """Calls save_brm with a path. 
+
+    :param path: path to save_brm
+    :rtype: Optional[str]
+    """
+    savebrm_cmd = SAVEBRM + ' ' + path
+    return call_executable_with_params_and_result(savebrm_cmd, path)
+
+
+def call_save_brm_locally(a_mcs_config_root) -> Optional[str]:
+    """Calls save_brm with a local path. 
 
     :param file_path: xml config XML root
-    :rtype: None
+    :rtype: Optional[str]
     """
     local_path = get_save_brm_path_prefix(a_mcs_config_root)
     return call_save_brm(local_path)
 
 
-def call_save_brm_with_local_fallback(a_mcs_config_root):
-    """Calls save_brm first and then tries to call it with local path. 
-
-    :param file_path: xml config XML root
-    :rtype: None
-    """
-    try:
-        subprocess.check_call(SAVEBRM, shell=True)
-    except subprocess.CalledProcessError as exc:
-        logging.error('The primary call to {} exits with {}.'.format(exc.cmd, exc.returncode))
-        backup_path = get_save_brm_path_prefix(a_mcs_config_root)
-        logging.debug('Back up BRM files locally to {}.'.format(backup_path))
-        backup_cmd = SAVEBRM + ' ' + backup_path
-        try:
-            subprocess.check_call(backup_cmd, shell=True)
-        except subprocess.CalledProcessError:
-            logging.error('The backup call to {} exits with {}.'.format(exc.cmd, exc.returncode))
-        except OSError:
-            logging.error('Os error while calling savebrm during the backup', exc_info=True)
-
-        sys.exit(1)
-    except OSError:
-        logging.error('Os error while calling savebrm', exc_info=True)
-        sys.exit(1)
-
-
 if __name__ == '__main__':
+    # Configure logging to show INFO level messages
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
+    
     mcs_config_root = get_config_root_from_file(MCS_CONFIG_PATH)
+    if clear_shmem_locks() is None:
+        logging.error('Exiting with error.')
+        sys.exit(1)
     # config_root can be None
     if is_node_primary(mcs_config_root):
         em_local_path_prefix = call_save_brm_locally(mcs_config_root)
@@ -383,5 +388,12 @@ if __name__ == '__main__':
         clean_up_backup_brm_files(get_save_brm_dir_path(mcs_config_root))
 
         call_save_brm(DEFAULT_EM_LOCAL_PATH_PREFIX)
+    else:
+        # Node is not primary. Call save_brm locally to save a copy of BRM localy
+        logging.error('Node is not primary. Call save_brm locally')
+        em_local_path_prefix = call_save_brm_locally(mcs_config_root)
+        if not em_local_path_prefix or em_is_empty(em_local_path_prefix):
+            logging.error('Exiting with error.')
+            sys.exit(1)
 
     sys.exit(0)
