@@ -32,6 +32,8 @@ class NodeManipTester(BaseNodeManipTestCase):
     REMOTE_IP = '203.0.113.5'
 
     def test_add_remove_node(self):
+        # Toggle shared storage as requested and remember to restore it back.
+        original_shared_storage = self._set_shared_storage(True)
         self.tmp_files = (
             './test-output0.xml', './test-output1.xml', './test-output2.xml'
         )
@@ -88,6 +90,7 @@ class NodeManipTester(BaseNodeManipTestCase):
         # TODO: Fix node_manipulation add_node logic and _replace_localhost
         # node = root.find('./PMS2/IPAddr')
         # self.assertEqual(node, None)
+        _ = self._set_shared_storage(original_shared_storage)
 
     def test_add_remove_read_replica_node(self):
         """add_node(read_replica=True) should add a read replica node into the config,
@@ -169,6 +172,8 @@ class NodeManipTester(BaseNodeManipTestCase):
             mock_update_dbroots_of_read_replicas.assert_not_called()
 
     def test_add_dbroots_nodes_rebalance(self):
+        # Toggle shared storage as requested and remember to restore it back.
+        original_shared_storage = self._set_shared_storage(True)
         self.tmp_files = (
             './extra-dbroots-0.xml', './extra-dbroots-1.xml', './extra-dbroots-2.xml'
         )

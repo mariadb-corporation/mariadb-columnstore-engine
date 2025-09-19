@@ -1,7 +1,6 @@
 import datetime
 import socket
 import time
-import unittest
 from contextlib import contextmanager
 
 import cherrypy
@@ -11,6 +10,7 @@ from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.failover_agent import FailoverAgent
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.mock_resolution import MockResolutionBuilder
+from cmapi_server.test.unittest_global import BaseNodeManipTestCase
 
 from ..agent_comm import AgentComm
 
@@ -19,6 +19,7 @@ config_filename = './cmapi_server/cmapi_server.conf'
 
 @contextmanager
 def start_server():
+    # TODO: review and replace with run_server() from unittest_global.py
     CertificateManager.create_self_signed_certificate_if_not_exist()
 
     app = cherrypy.tree.mount(root = None, config = config_filename)
@@ -40,7 +41,7 @@ def start_server():
     cherrypy.engine.block()
 
 
-class TestAgentComm(unittest.TestCase):
+class TestAgentComm(BaseNodeManipTestCase):
 
     def test_with_agent_base(self):
         agent = AgentComm()
@@ -78,15 +79,17 @@ class TestAgentComm(unittest.TestCase):
 
     # This is the beginnings of an integration test, will need perms to modify the real config file
     def test_with_failover_agent(self):
+        # Toggle shared storage as requested and remember to restore it back.
+        original_shared_storage = self._set_shared_storage(True)
 
-        print("\n\n")   # make a little whitespace between tests
+        print('\n\n')   # make a little whitespace between tests
 
         # check for existence of and permissions to write to the real config file
         try:
-            f = open("/etc/columnstore/Columnstore.xml", "a")
+            f = open('/etc/columnstore/Columnstore.xml', 'a')
             f.close()
         except PermissionError:
-            print(f"Skipping {__name__}, got a permissions error opening /etc/columnstore/Columnstore.xml for writing")
+            print(f'Skipping {__name__}, got a permissions error opening /etc/columnstore/Columnstore.xml for writing')
             return
 
         success = False
@@ -115,8 +118,8 @@ class TestAgentComm(unittest.TestCase):
                     agentcomm.designatePrimaryNode(socket.gethostname())
 
                 health = agent.getNodeHealth()
-                agent.raiseAlarm("Hello world!")
-                print("Waiting up to 30s for queued events to be processed and removed")
+                agent.raiseAlarm('Hello world!')
+                print('Waiting up to 30s for queued events to be processed and removed')
                 stop_time = datetime.datetime.now() + datetime.timedelta(seconds = 30)
 
                 while datetime.datetime.now() < stop_time and not success:
@@ -124,10 +127,10 @@ class TestAgentComm(unittest.TestCase):
                     if sizes != (0, 0):
                         time.sleep(1)
                     else:
-                        print("Event queue & deduper are now empty")
+                        print('Event queue & deduper are now empty')
                         success = True
                 if not success:
-                    raise Exception("The event queue or de-duper did not empty within 30s")
+                    raise Exception('The event queue or de-duper did not empty within 30s')
                 agentcomm.die()
             except Exception as e:
                 agentcomm.die()
@@ -137,7 +140,8 @@ class TestAgentComm(unittest.TestCase):
 
             # clean up the config file, remove mysql.com
             txnid = helpers.start_transaction()
-            node_manipulation.remove_node("mysql.com")
+            node_manipulation.remove_node('mysql.com')
             helpers.update_revision_and_manager()
             helpers.broadcast_new_config()
             helpers.commit_transaction(txnid)
+            _ = self._set_shared_storage(original_shared_storage)

@@ -3,13 +3,11 @@ import logging
 from mcs_node_control.models.node_config import NodeConfig
 
 from cmapi_server.failover_agent import FailoverAgent
-from cmapi_server.managers.application import (
-    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel
-)
 from cmapi_server.managers.network import NetworkManager
 from cmapi_server.node_manipulation import add_node, remove_node
 from cmapi_server.test.mock_resolution import simple_resolution_mock, make_local_resolution_builder
 from cmapi_server.test.unittest_global import BaseNodeManipTestCase, tmp_mcs_config_filename
+
 
 logging.basicConfig(level='DEBUG')
 
@@ -19,21 +17,6 @@ class TestFailoverAgent(BaseNodeManipTestCase):
     REMOTE_NODE = 'remote.node'
     LOCAL_IP = '104.17.191.14'
     REMOTE_IP = '203.0.113.5'
-
-    def _set_shared_storage(self, target_value: bool) -> bool:
-        """Set shared_storage_on flag to target_value, return original value.
-
-        If the current value already equals target_value, no update is applied.
-        """
-        current_cfg = AppStatefulConfig.get_config_copy()
-        original_value = current_cfg.flags.shared_storage_on
-        if original_value != target_value:
-            new_cfg = StatefulConfigModel(
-                version=current_cfg.version.next_seq(),
-                flags=StatefulFlagsModel(shared_storage_on=target_value),
-            )
-            AppStatefulConfig.apply_update(new_cfg)
-        return original_value
 
     def _activate_add_remove_scenario(self, shared_storage_on: bool, use_rebalance_dbroots: bool):
         """Common flow used by activate-nodes tests with minimal duplication.
@@ -91,14 +74,7 @@ class TestFailoverAgent(BaseNodeManipTestCase):
             )
         finally:
             # Restore original shared storage flag to avoid cross-test side effects
-            if original_shared_storage != shared_storage_on:
-                current_cfg = AppStatefulConfig.get_config_copy()
-                AppStatefulConfig.apply_update(
-                    StatefulConfigModel(
-                        version=current_cfg.version.next_seq(),
-                        flags=StatefulFlagsModel(shared_storage_on=original_shared_storage),
-                    )
-                )
+            _ = self._set_shared_storage(original_shared_storage)
 
     def test_activate_nodes_shared_storage_off(self):
         """Shared storage OFF (default in single-node), no rebalance."""

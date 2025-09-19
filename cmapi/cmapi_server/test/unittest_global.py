@@ -10,6 +10,9 @@ from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.logging_management import config_cmapi_server_logging
+from cmapi_server.managers.application import (
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel
+)
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
 
@@ -109,6 +112,21 @@ class BaseNodeManipTestCase(unittest.TestCase):
                 os.remove(tmp_file)
         if os.path.exists(tmp_mcs_config_filename):
             os.remove(tmp_mcs_config_filename)
+
+    def _set_shared_storage(self, target_value: bool) -> bool:
+        """Set shared_storage_on flag to target_value, return original value.
+
+        If the current value already equals target_value, no update is applied.
+        """
+        current_cfg = AppStatefulConfig.get_config_copy()
+        original_value = current_cfg.flags.shared_storage_on
+        if original_value != target_value:
+            new_cfg = StatefulConfigModel(
+                version=current_cfg.version.next_seq(),
+                flags=StatefulFlagsModel(shared_storage_on=target_value),
+            )
+            AppStatefulConfig.apply_update(new_cfg)
+        return original_value
 
 
 class BaseProcessDispatcherCase(unittest.TestCase):
