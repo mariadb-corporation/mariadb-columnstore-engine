@@ -39,6 +39,16 @@ std::string getShmemLocksList()
   return oss.str();
 }
 
+int resetAllLocks()
+{
+  for (size_t i = 0; i < RWLockNames.size(); ++i)
+  {
+    auto rwlock = RWLock(0x10000 * i);
+    rwlock.reset();
+  }
+  return 0;
+}
+
 int viewLock(uint8_t lockId)
 {
   size_t minLockId = (lockId > 0) ? lockId : 1;
@@ -112,6 +122,7 @@ int main(int argc, char** argv)
   bool write = false;
   bool lock = false;
   bool unlock = false;
+  bool resetAll = false;
 
   po::options_description desc(
       "A tool to operate or view shmem locks. If neither read nor write operation is specified, the tool "
@@ -122,12 +133,14 @@ int main(int argc, char** argv)
 
   // clang-format off
   desc.add_options()("help", "produce help message")
-      ("lock-id,i", po::value<int>(&lockId)->required(), lockid_description.c_str())
+      ("lock-id,i", po::value<int>(&lockId)->default_value(RWLockNames.size()), lockid_description.c_str())
       ("read-lock,r", po::bool_switch(&read)->default_value(false), "Use read lock.")
       ("write-lock,w", po::bool_switch(&write)->default_value(false), "Use write lock.")
       ("lock,l", po::bool_switch(&lock)->default_value(false), "Lock the corresponding shmem lock.")
       ("unlock,u", po::bool_switch(&unlock)->default_value(false), "Unlock the corresponding shmem write lock.")
-      ("debug,d", po::bool_switch(&debug)->default_value(false), "Print extra output.");
+      ("debug,d", po::bool_switch(&debug)->default_value(false), "Print extra output.")
+      ("reset-all,a", po::bool_switch(&resetAll)->default_value(false), "Reset all shmem locks.");
+
   // clang-format on
 
   po::variables_map vm;
@@ -139,11 +152,28 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  conflicting_options(vm, "reset-all", "lock-id");
   conflicting_options(vm, "lock", "unlock");
   conflicting_options(vm, "read-lock", "write-lock");
-  check_value<int>(vm, "lock-id", 0, RWLockNames.size());
+  
+  // Only require lock-id validation if reset-all is not used
+  if (!resetAll && (vm.count("lock-id") && !vm["lock-id"].defaulted()))
+  {
+    check_value<int>(vm, "lock-id", 0, RWLockNames.size());
+  }
+  
+  // Require lock-id for operations other than reset-all
+  if (!resetAll && !vm.count("lock-id"))
+  {
+    throw std::logic_error("lock-id is required when not using reset-all");
+  }
 
   po::notify(vm);
+
+  if (resetAll)
+  {
+    return resetAllLocks();
+  }
 
   if (!read && !write)
   {
