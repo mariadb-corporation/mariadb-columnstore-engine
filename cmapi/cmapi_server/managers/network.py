@@ -7,6 +7,9 @@ from dataclasses import dataclass
 from ipaddress import ip_address
 from typing import Optional
 
+import dns.resolver
+import dns.reversename
+
 from cmapi_server.exceptions import CMAPIBasicError
 
 try:
@@ -225,6 +228,24 @@ class NetworkManager:
         :return: Hostname if it exists, otherwise None
         :rtype: Optional[str]
         """
+        # Prefer DNS-based reverse lookup to avoid local aliases from /etc/hosts
+        try:
+            rev_name = dns.reversename.from_address(ip_addr)
+            answers = dns.resolver.resolve(rev_name, 'PTR', lifetime=2.0)
+            # Collect candidate names and filter by forward A records containing ip_addr
+            for rdata in answers:
+                candidate = str(rdata).rstrip('.')
+                try:
+                    a_answers = dns.resolver.resolve(candidate, 'A', lifetime=2.0)
+                    a_ips = {str(a) for a in a_answers}
+                    if ip_addr in a_ips:
+                        return candidate
+                except Exception:
+                    logging.exception('DNS forward lookup failed for candidate: %s', candidate)
+                    continue
+        except Exception:
+            logging.exception('DNS reverse lookup failed for address: %s, falling back to gethostbyaddr', ip_addr)
+
         try:
             hostnames = socket.gethostbyaddr(ip_addr)
             return hostnames[0]
@@ -238,6 +259,29 @@ class NetworkManager:
 
         :return: List of hostnames (may be empty if reverse lookup fails)
         """
+        # Prefer DNS-based reverse lookup to avoid local aliases from /etc/hosts
+        try:
+            rev_name = dns.reversename.from_address(ip_addr)
+            answers = dns.resolver.resolve(rev_name, 'PTR', lifetime=2.0)
+            seen = set()
+            names: list[str] = []
+            for rdata in answers:
+                candidate = str(rdata).rstrip('.')
+                if candidate in seen:
+                    continue
+                try:
+                    a_answers = dns.resolver.resolve(candidate, 'A', lifetime=2.0)
+                    a_ips = {str(a) for a in a_answers}
+                    if ip_addr in a_ips:
+                        seen.add(candidate)
+                        names.append(candidate)
+                except Exception:
+                    logging.exception('DNS forward lookup failed for candidate: %s', candidate)
+                    continue
+            return names
+        except Exception:
+            logging.exception('DNS reverse lookup failed for address: %s, falling back to gethostbyaddr', ip_addr)
+
         try:
             primary, aliases, _ = socket.gethostbyaddr(ip_addr)
             seen = set()

@@ -132,6 +132,7 @@ def start_transaction(
         # resolve localhost addrs
         for node in tmp_active_nodes:
             if node in ['127.0.0.1', 'localhost', '::1']:
+                # TODO switch to NetworkManager
                 active_nodes.add(socket.gethostbyname(socket.gethostname()))
             else:
                 active_nodes.add(node)
@@ -586,12 +587,15 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
+        # TODO switch to NetworkManager
         node_fqdn = socket.gethostbyaddr(hostname)[0]
 
         if node in LOCALHOSTS and hostname != 'localhost':
+            # TODO switch to NetworkManager
             node = socket.gethostbyaddr(socket.gethostname())[0]
         elif node not in LOCALHOSTS and hostname == 'localhost':
-            # hostname will only be loclahost if we are in one node cluster
+            # TODO switch to NetworkManager
+            # hostname will only be localhost if we are in one node cluster
             hostname = socket.gethostbyaddr(socket.gethostname())[0]
 
 

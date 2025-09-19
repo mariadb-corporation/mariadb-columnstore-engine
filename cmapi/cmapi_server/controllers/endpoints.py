@@ -255,6 +255,7 @@ class StatusController:
             socket.gethostname()
         )
         #TODO: add localhost condition check and another way to get FQDN
+        # TODO switch to NetworkManager
         node_fqdn = socket.gethostbyaddr(hostname)[0]
 
         status_response = {
@@ -410,6 +411,7 @@ class ConfigController:
         request_manager_address = dequote(request_manager_address).lower()
 
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
+            # TODO switch to NetworkManager
             request_manager_address = socket.gethostbyname(
                 socket.gethostname()
             )
@@ -561,6 +563,7 @@ class BeginController:
 IP address.")
         txn_manager_address = dequote(txn_manager_address).lower()
         if txn_manager_address in ['127.0.0.1', 'localhost', '::1']:
+            # TODO switch to NetworkManager
             txn_manager_address = socket.gethostbyname(socket.gethostname())
         if txn_id is None or txn_timeout is None or txn_manager_address is None:
             raise_422_error(module_logger, func_name, "id or timeout is not set.")
@@ -608,6 +611,7 @@ class CommitController:
         txn_manager_address = dequote(txn_manager_address).lower()
         request_manager_address = dequote(request_manager_address).lower()
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
+            # TODO switch to NetworkManager
             request_manager_address = socket.gethostbyname(socket.gethostname())
         # txn is active
         app.config['txn']['id'] = 0
@@ -644,6 +648,7 @@ class RollbackController:
         txn_manager_address = dequote(txn_manager_address).lower()
         request_manager_address = dequote(request_manager_address).lower()
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
+            # TODO switch to NetworkManager
             request_manager_address = socket.gethostbyname(socket.gethostname())
 
         #TODO: add restart processes flag?

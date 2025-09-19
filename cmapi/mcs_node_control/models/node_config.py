@@ -393,6 +393,7 @@ class NodeConfig:
                     for addr in addrs:
                         yield(addr)
                         try:
+                            # TODO switch to NetworkManager
                             (host, aliases, _) = socket.gethostbyaddr(addr)
                         except:
                             continue
@@ -450,6 +451,7 @@ class NodeConfig:
             module_logger.error(f'{func_name} Columnstore.xml has unknown value in SystemModuleConfig.\
 ModuleIPAddr{current_module_id}-1-3.')
             raise RuntimeError('net_address is None.')
+        # TODO switch to NetworkManager
         if socket.gethostbyname(net_address) in self.get_network_addresses():
             return current_module_id
 
@@ -457,6 +459,7 @@ ModuleIPAddr{current_module_id}-1-3.')
         # This fires for a added node when node id changes from 1 to something
         for module_entry in self.get_modules_addresses(new_root):
             if module_entry['addr'] is not None:
+                # TODO switch to NetworkManager
                 net_addr = socket.gethostbyname(module_entry['addr'])
                 if net_addr in self.get_network_addresses():
                     module_logger.debug(f'{func_name} New module id \
