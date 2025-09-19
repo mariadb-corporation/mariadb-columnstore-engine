@@ -44,13 +44,18 @@ SECRET_KEY = 'MCSIsTheBestEver'  # not just a random string! (base32)
 
 # network constants
 # according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
-LOCALHOSTS = (
+LOCALHOSTS_IPS = {
     '127.0.0.1',
+    '::1',
+}
+
+LOCALHOSTS_HOSTNAMES = {
     'localhost', 'localhost.localdomain',
     'localhost4', 'localhost4.localdomain4',
-    '::1',
     'localhost6', 'localhost6.localdomain6',
-)
+}
+
+LOCALHOSTS = LOCALHOSTS_IPS.union(LOCALHOSTS_HOSTNAMES)
 
 CMAPI_INSTALL_PATH = '/usr/share/columnstore/cmapi/'
 CMAPI_PYTHON_BIN = os.path.join(CMAPI_INSTALL_PATH, "python/bin/python3")

@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 import cherrypy
 
-from cmapi.tracing.utils import swallow_exceptions
+from tracing.utils import swallow_exceptions
 from tracing.tracer import get_tracer
 
 logger = logging.getLogger("tracer")
@@ -82,7 +82,7 @@ def _on_request_end() -> None:
 
 
 def register_tracing_tools() -> None:
-    cherrypy.tools.trace = cherrypy.Tool("on_start_resource", _on_request_start, priority=10)
+    cherrypy.tools.trace = cherrypy.Tool("on_start_resource", _on_request_start, priority=70)
     cherrypy.tools.trace_end = cherrypy.Tool("on_end_resource", _on_request_end, priority=80)
 
 @swallow_exceptions

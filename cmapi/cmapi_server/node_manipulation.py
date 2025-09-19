@@ -23,6 +23,8 @@ from cmapi_server.constants import (
     CMAPI_SINGLE_NODE_XML,
     DEFAULT_MCS_CONF_PATH,
     LOCALHOSTS,
+    LOCALHOSTS_HOSTNAMES,
+    LOCALHOSTS_IPS,
     MCS_DATA_PATH,
 )
 from cmapi_server.managers.network import NetworkManager
@@ -1115,6 +1117,7 @@ def _replace_localhost(root, node):
         )
         return False
 
+    # TODO use NetworkManager functionality here
     # getaddrinfo returns list of 5-tuples (..., sockaddr)
     # use sockaddr to retrieve ip, sockaddr = (address, port) for AF_INET
     ipaddr = socket.getaddrinfo(node, 8640, family=socket.AF_INET)[0][-1][0]
@@ -1130,25 +1133,53 @@ def _replace_localhost(root, node):
          'all other nodes in the cluster.'
     )
 
-    nodes_to_reassign = [
-        n for n in root.findall('.//') if n.text in LOCALHOSTS
+    nodes_with_ips_to_reassign = [
+        n for n in root.findall('.//') if n.text in LOCALHOSTS_IPS
+    ]
+    nodes_with_hostnames_to_reassign = [
+        n for n in root.findall('.//') if n.text in LOCALHOSTS_HOSTNAMES
     ]
 
     # Host field is contained within CrossEngineSupport User and QueryTele.
     # Leave these values as default (will be local IP)
     exclude = ['Host']
-    for n in nodes_to_reassign:
-        if 'ModuleIPAddr' in n.tag:
-            n.text = ipaddr
-        elif 'ModuleHostName' in n.tag:
-            n.text = hostname
-        elif n.tag not in exclude:
-            # if tag is neither ip nor hostname, then save as node
-            n.text = node
 
+    # Replace elements that originally contained a localhost IP with the resolved IP
+    for n in nodes_with_ips_to_reassign:
+        if n.tag not in exclude:
+            old_val = n.text
+            path = _get_node_path_or_tag(n)
+            n.text = ipaddr
+            logging.debug(
+                "_replace_localhost: %s: replaced localhost IP '%s' with '%s'",
+                path, old_val, ipaddr
+            )
+
+    # Replace elements that originally contained a localhost hostname with the resolved hostname
+    for n in nodes_with_hostnames_to_reassign:
+        if n.tag not in exclude:
+            old_val = n.text
+            path = _get_node_path_or_tag(n)
+            n.text = hostname
+            logging.debug(
+                "_replace_localhost: %s: replaced localhost hostname '%s' with '%s'",
+                path, old_val, hostname
+            )
+
+    old_val = controller_host.text
     controller_host.text = hostname # keep controllernode as fqdn
+    logging.debug(
+        "_replace_localhost: set DBRM_Controller/IPAddr from '%s' to hostname '%s'",
+        old_val, hostname
+    )
 
     return True
+
+def _get_node_path_or_tag(node) -> str:
+    try:
+        return node.getroottree().getpath(node)
+    except Exception:
+        return node.tag
 
 # New Exception types
 class NodeNotFoundException(Exception):

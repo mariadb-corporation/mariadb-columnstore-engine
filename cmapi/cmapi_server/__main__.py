@@ -159,6 +159,8 @@ if __name__ == '__main__':
         # Enable tracing tools
         'tools.trace.on': True,
         'tools.trace_end.on': True,
+        # Ensure JSON bodies are parsed and available as cherrypy.request.json
+        'tools.json_in.on': True,
     }
 
     app.config.update({
