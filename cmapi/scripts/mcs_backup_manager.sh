@@ -13,7 +13,7 @@
 #
 ########################################################################
 # Documentation:  bash mcs_backup_manager.sh help
-# Version: 3.17
+# Version: 3.18
 # 
 # Backup Example
 #   LocalStorage: sudo ./mcs_backup_manager.sh backup
@@ -26,7 +26,7 @@
 #   S3:           sudo ./mcs_backup_manager.sh restore -bb s3://my-cs-backups -l <date> 
 # 
 ########################################################################
-mcs_bk_manager_version="3.17"
+mcs_bk_manager_version="3.18"
 start=$(date +%s)
 action=$1
 
@@ -1065,6 +1065,7 @@ issue_write_locks()
             printf "Skip since offline\n";
         
         elif [[ -n "$startreadonly_exists" ]]; then
+            printf "startreadonly "
             if dbrmctl startreadonly ; then
                 if ! $skip_polls; then 
                     cs_read_only_wait_loop
@@ -3421,7 +3422,7 @@ validation_prechecks_for_dbrm_backup() {
 
     # Check backup location exists
     if [ ! -d $backup_location ]; then 
-        echo "Created: $backup_location"
+        echo " - Created: $backup_location"
         mkdir "$backup_location"; 
     fi;
 
@@ -3951,7 +3952,7 @@ process_dbrm_restore() {
     # Take an automated backup
     if [[ $skip_dbrm_backup == false ]]; then
         printf " - Saving a DBRM backup before restoring ... \n"
-        if ! process_dbrm_backup -bl $backup_location -r 0 -nb dbrms_before_restore_backup --quiet ; then 
+        if ! process_dbrm_backup -bl $backup_location -r 0 -nb dbrms_before_restore_backup -slock --quiet ; then 
             echo "[!!] Failed to take a DBRM backup before restoring"
             echo "exiting ..."
             exit 1;
