@@ -541,11 +541,11 @@ TYPED_TEST(KeyTypeFloatTest, KeyTypeLessAsc)
   sorting::SortingThreads prevPhaseSorting;
   size_t bufUnitSize = this->rg_.getColumnWidth(0) + 1;
   size_t keysNumber = this->rg_.getRowCount();
-  std::vector<std::unique_ptr<uint8_t>> keyBufsVec;
+  std::vector<std::unique_ptr<uint8_t[]>> keyBufsVec;
   std::vector<KeyType> keys;
   for (size_t i = 0; i < keysNumber; ++i)
   {
-    keyBufsVec.emplace_back(std::unique_ptr<uint8_t>(new uint8_t[bufUnitSize]));
+    keyBufsVec.emplace_back(std::make_unique<uint8_t[]>(bufUnitSize));
     std::memset(keyBufsVec.back().get(), 0, bufUnitSize);
     keys.emplace_back(KeyType(this->rg_, this->keysCols_, {0, i, 0}, keyBufsVec.back().get()));
   }
@@ -1985,7 +1985,8 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadAsc)
   // utf8_general_ci = 33, 'a' == 'a '
   uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
   for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
-           [&bufUnitSizeNoNull, this](const uint32_t width) {
+           [&bufUnitSizeNoNull, this](const uint32_t width)
+           {
              bufUnitSizeNoNull +=
                  (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
            });
@@ -2035,7 +2036,8 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadDsc)
   keysCols_ = {{0, isAsc}, {1, isAsc}};
   uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
   for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
-           [&bufUnitSizeNoNull, this](const uint32_t width) {
+           [&bufUnitSizeNoNull, this](const uint32_t width)
+           {
              bufUnitSizeNoNull +=
                  (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
            });
@@ -2087,7 +2089,8 @@ TEST_F(KeyTypeCompositeKeyTest, KeyTypeCtorVarcharPadAscLess)
   // utf8_general_ci = 33, 'a' == 'a '
   uint32_t bufUnitSizeNoNull = 0;  // not NULL byte
   for_each(rg_.getColWidths().begin(), rg_.getColWidths().end(),
-           [&bufUnitSizeNoNull, this](const uint32_t width) {
+           [&bufUnitSizeNoNull, this](const uint32_t width)
+           {
              bufUnitSizeNoNull +=
                  (width <= rg_.getStringTableThreshold()) ? width : rg_.getStringTableThreshold();
            });
@@ -2249,7 +2252,7 @@ TEST_F(HeapOrderByTest, HeapOrderByCtor)
     prevPhasThreads.back()->getRGDatas().push_back(rgData);
     prevPhasThreads.back()->getMutPermutation().swap(perm);
   }
-  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
+  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, prevPhasThreads,
                 heapSizeHalf, ranges);
   PermutationVec right = {PermutationType{0, 0, 0}, PermutationType{0, 9, 0}, PermutationType{0, 8, 0},
                           PermutationType{0, 9, 3}, PermutationType{0, 7, 0}, PermutationType{0, 9, 1},
@@ -2302,7 +2305,7 @@ TEST_F(HeapOrderByTest, HeapOrderByCtorOddSourceThreadsNumber)
     prevPhasThreads.back()->getRGDatas().push_back(rgData);
     prevPhasThreads.back()->getMutPermutation().swap(perm);
   }
-  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
+  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, prevPhasThreads,
                 heapSizeHalf, ranges);
   PermutationVec right = {
       PermutationType{0, 0, 0},
@@ -2374,7 +2377,7 @@ TEST_F(HeapOrderByTest, HeapOrderBy_getTopPermuteFromHeapLarge)
     prevPhasThreads.back()->getRGDatas().push_back(rgData);
     prevPhasThreads.back()->getMutPermutation().swap(perm);
   }
-  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, 1, prevPhasThreads,
+  HeapOrderBy h(rg_, keysAndDirections, 0, std::numeric_limits<size_t>::max(), mm, prevPhasThreads,
                 heapSizeHalf, ranges);
 
   PermutationType p;

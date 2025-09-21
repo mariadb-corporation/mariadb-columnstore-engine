@@ -2080,8 +2080,6 @@ void CircularOuterJoinGraphTransformer::analyzeJoinGraph(uint32_t currentTable, 
   std::sort(adjacentListWeighted.begin(), adjacentListWeighted.end(),
             [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
             { return a.second < b.second; });
-            [](const std::pair<uint32_t, int64_t>& a, const std::pair<uint32_t, int64_t>& b)
-            { return a.second < b.second; });
 
   // For each weighted adjacent node.
   for (const auto& adjNodeWeighted : adjacentListWeighted)

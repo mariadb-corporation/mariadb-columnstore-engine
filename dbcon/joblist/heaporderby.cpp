@@ -135,7 +135,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* valueBuf = reinterpret_cast<const uint8_t*>(&v);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::DOUBLENULL);
         bool isNeitherNullOrSpecial =
-            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !isnan(v) && !isinf(v);
+            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !std::isnan(v) && !std::isinf(v);
         *pos++ = (!isAsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
                           : static_cast<uint8_t>(isNeitherNullOrSpecial);
 
@@ -163,7 +163,7 @@ KeyType::KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAnd
         const uint8_t* valueBuf = reinterpret_cast<const uint8_t*>(&v);
         const uint8_t* nullValuePtr = reinterpret_cast<const uint8_t*>(&joblist::FLOATNULL);
         bool isNeitherNullOrSpecial =
-            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !isnan(v) && !isinf(v);
+            (memcmp(nullValuePtr, valueBuf, columnWidth) != 0) && !std::isnan(v) && !std::isinf(v);
         *pos++ = (!isAsc) ? static_cast<uint8_t>(!isNeitherNullOrSpecial)
                           : static_cast<uint8_t>(isNeitherNullOrSpecial);
 
@@ -461,8 +461,8 @@ bool KeyType::less(const KeyType& r, rowgroup::RowGroup& rg, const joblist::Orde
 
 HeapOrderBy::HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKeysType& sortingKeyCols,
                          const size_t limitStart, const size_t limitCount, joblist::MemManager* mm,
-                         const uint32_t threadId, const sorting::SortingThreads& prevPhaseSortingThreads,
-                         const uint32_t threadNum, const sorting::ValueRangesVector& ranges)
+                         const sorting::SortingThreads& prevPhaseSortingThreads, const uint32_t threadNum,
+                         const sorting::ValueRangesVector& ranges)
  : start_(limitStart)
  , count_(limitCount)
  , recordsLeftInRanges_(0)
@@ -666,9 +666,9 @@ size_t HeapOrderBy::getData(rowgroup::RGData& data, const SortingThreads& prevPh
   return rowsToReturn;
 }
 
-const string HeapOrderBy::toString() const
+const std::string HeapOrderBy::toString() const
 {
-  ostringstream oss;
+  std::ostringstream oss;
   oss << "HeapOrderBy   cols: ";
   for (auto [rgColumnID, sortDirection] : jobListorderByRGColumnIDs_)
   {
@@ -676,14 +676,14 @@ const string HeapOrderBy::toString() const
   }
   oss << " offset-" << start_ << " count-" << count_;
 
-  oss << endl;
+  oss << std::endl;
 
   return oss.str();
 }
 
-const string HeapOrderBy::heapToString(const SortingThreads& prevPhaseThreads)
+const std::string HeapOrderBy::heapToString(const SortingThreads& prevPhaseThreads)
 {
-  ostringstream oss;
+  std::ostringstream oss;
   oss << std::endl;
   for (size_t i = 1; i < heap_.size(); ++i)
   {
@@ -701,7 +701,7 @@ const string HeapOrderBy::heapToString(const SortingThreads& prevPhaseThreads)
 
     oss << " (" << p.threadID << "," << p.rgdataID << "," << p.rowID << ") ";
   }
-  oss << endl;
+  oss << std::endl;
 
   return oss.str();
 }

@@ -34,14 +34,15 @@ using HeapPermutations = std::vector<PermutationVec>;
 using ColumnsValues = std::vector<utils::ConstString>;
 struct KeyType
 {
-  KeyType(rowgroup::RowGroup& rg, uint8_t* keyBuf)
+  // WIP
+  KeyType(rowgroup::RowGroup& /*rg*/, uint8_t* keyBuf)
   {
     key_ = keyBuf;
   };
   KeyType(rowgroup::RowGroup& rg, const joblist::OrderByKeysType& colsAndDirection,
           const sorting::PermutationType p, uint8_t* buf);
-  KeyType(uint8_t* buf) : key_(buf){};
-  ~KeyType(){};
+  KeyType(uint8_t* buf) : key_(buf) {};
+  ~KeyType() {};
 
   const uint8_t* key() const
   {
@@ -70,8 +71,8 @@ class HeapOrderBy
   static constexpr PermutationType ImpossiblePermute = {0xFFFFFFFF, 0xFFFFFF, 0xFF};
   HeapOrderBy(const rowgroup::RowGroup& rg, const joblist::OrderByKeysType& sortingKeyCols,
               const size_t limitStart, const size_t limitCount, joblist::MemManager* mm,
-              const uint32_t threadId, const sorting::SortingThreads& prevPhaseSorting,
-              const uint32_t threadNum, const sorting::ValueRangesVector& ranges);
+              const sorting::SortingThreads& prevPhaseSorting, const uint32_t threadNum,
+              const sorting::ValueRangesVector& ranges);
   ~HeapOrderBy()
   {
     mm_->release((heap_.size() + 1) * keyBytesSize_);
@@ -98,7 +99,7 @@ class HeapOrderBy
   {
     return heap_;
   }
-  const string heapToString(const SortingThreads& prevPhaseThreads);
+  const std::string heapToString(const SortingThreads& prevPhaseThreads);
 
  protected:
   uint64_t start_;

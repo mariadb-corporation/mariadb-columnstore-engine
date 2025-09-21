@@ -646,8 +646,8 @@ void TupleAnnexStep::executeNoOrderByWithDistinct()
   {
     auto errorCode = ERR_TNS_DISTINCT_IS_TOO_BIG;
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeNoOrderByWithDistinct()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeNoOrderByWithDistinct()");
   }
   catch (...)
   {
@@ -755,8 +755,8 @@ void TupleAnnexStep::executeWithOrderBy()
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeWithOrderBy()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeWithOrderBy()");
   }
   catch (...)
   {
@@ -956,10 +956,10 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-  requires(!UsesCollationCmp<EncodedKeyType>) bool
-directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
-                  const sorting::PermutationType leftPerm, const EncodedKeyType target,
-                  const datatypes::Charset& cs)
+  requires(!UsesCollationCmp<EncodedKeyType>)
+bool directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                       const sorting::PermutationType leftPerm, const EncodedKeyType target,
+                       const datatypes::Charset& /*cs*/)
 {
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
   EncodedKeyType leftValue =
@@ -974,10 +974,10 @@ directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const
 
 template <bool isAscDirection, datatypes::SystemCatalog::ColDataType ColType, typename StorageType,
           typename EncodedKeyType>
-  requires std::is_same<EncodedKeyType, utils::ConstString>::value bool
-directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
-                  const sorting::PermutationType leftPerm, const EncodedKeyType target,
-                  const datatypes::Charset& cs)
+  requires std::is_same<EncodedKeyType, utils::ConstString>::value
+bool directionAwareCmp(rowgroup::RGDataVector& rgDatas, rowgroup::RowGroup& rg, const uint32_t columnId,
+                       const sorting::PermutationType leftPerm, const EncodedKeyType target,
+                       const datatypes::Charset& cs)
 {
   rg.setData(&(rgDatas[leftPerm.rgdataID]));
   EncodedKeyType leftValue =
@@ -1193,25 +1193,25 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     size_t right = step;
     LowerBoundsVec lowerBounds;
     assert(sortingThreads.size() == maxThreads);
-    for_each(
-        sortingThreads.begin(), sortingThreads.end(),  // used as a counter only
-        [&perm, &rg, &left, &right, &sorting, &nullValue, &storageNull, &lowerBounds, columnId, step](auto& u)
-        {
-          // eliminate NULLs if possible
-          rg.setData(&(sorting->getRGDatas()[perm[left].rgdataID]));
-          auto lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, perm[left].rowID);
-          // WIP case when left goes over perm.size
-          while (left < perm.size() &&
-                 sorting::isNull<EncodedKeyType, StorageType>(lb, nullValue, storageNull))
-          {
-            auto p = perm[++left];
-            rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-            lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID);
-          }
-          lowerBounds.push_back(lb);
-          left = right + ((perm.empty()) ? 0 : 1);
-          right = std::min(right + step, perm.size());
-        });
+    for_each(sortingThreads.begin(), sortingThreads.end(),  // used as a counter only
+             [&perm, &rg, &left, &right, &sorting, &nullValue, &storageNull, &lowerBounds, columnId,
+              step](auto& /*u*/)
+             {
+               // eliminate NULLs if possible
+               rg.setData(&(sorting->getRGDatas()[perm[left].rgdataID]));
+               auto lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, perm[left].rowID);
+               // WIP case when left goes over perm.size
+               while (left < perm.size() &&
+                      sorting::isNull<EncodedKeyType, StorageType>(lb, nullValue, storageNull))
+               {
+                 auto p = perm[++left];
+                 rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+                 lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID);
+               }
+               lowerBounds.push_back(lb);
+               left = right + ((perm.empty()) ? 0 : 1);
+               right = std::min(right + step, perm.size());
+             });
     lowerBoundsMatrix.push_back(lowerBounds);
   }
 
@@ -1655,7 +1655,7 @@ void TupleAnnexStep::finalizeHeapOrderBy(const uint32_t idA, const sorting::Valu
   auto& rg = firstPhaseThreads.front()->getRGRef();
   auto sortingKeyColumns = firstPhaseThreads.front()->getSortingColumns();
   auto* mm = firstPhaseThreads.front()->getMM()->clone();
-  sorting::HeapOrderBy sorting(rg, sortingKeyColumns, fLimitStart, fLimitCount, mm, idA, firstPhaseThreads,
+  sorting::HeapOrderBy sorting(rg, sortingKeyColumns, fLimitStart, fLimitCount, mm, firstPhaseThreads,
                                fMaxThreads, ranges);
 
   // std::cout << " first HeapMerge id " << id << std::endl;
@@ -1847,8 +1847,8 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::finalizeParallelOrderByDistinct()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::finalizeParallelOrderByDistinct()");
   }
   catch (...)
   {
@@ -2046,8 +2046,8 @@ void TupleAnnexStep::finalizeParallelOrderBy()
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::finalizeParallelOrderBy()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::finalizeParallelOrderBy()");
   }
   catch (...)
   {
@@ -2261,8 +2261,8 @@ void TupleAnnexStep::executeParallelOrderBy(uint64_t id)
   {
     auto errorCode = fOrderBy->getErrorCode();
     auto newException = IDBExcept(errorCode);
-    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS, logging::ERR_ALWAYS_CRITICAL,
-                    "TupleAnnexStep::executeParallelOrderBy()");
+    handleException(std::make_exception_ptr(newException), logging::ERR_IN_PROCESS,
+                    logging::ERR_ALWAYS_CRITICAL, "TupleAnnexStep::executeParallelOrderBy()");
   }
   catch (...)
   {
