@@ -235,7 +235,7 @@ ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::fInstance = nullptr;
 
 /*static*/
 ExtentMapRBTreeImpl* ExtentMapRBTreeImpl::makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly,
-                                                                  bool& emLocked,
+                                                                  std::atomic<bool>& emLocked,
                                                                   const MasterSegmentTable* emSegTable)
 {
   boost::mutex::scoped_lock lk(fInstanceMutex);

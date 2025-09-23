@@ -263,7 +263,8 @@ class ExtentMapRBTreeImpl
  public:
   ~ExtentMapRBTreeImpl() = default;
 
-  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly, bool& emLocked,
+  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly,
+                                                      std::atomic<bool>& emLocked,
                                                       const MasterSegmentTable* emSegTable = nullptr);
 
   static void refreshShmWithLock()
