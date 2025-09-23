@@ -422,6 +422,14 @@ BRMManagedShmImplRBTree::BRMManagedShmImplRBTree(unsigned key, off_t size, bool 
 
 BRMManagedShmImplRBTree::~BRMManagedShmImplRBTree()
 {
+  // Ensure we unmap the managed shared memory segment when the wrapper
+  // is destroyed. This prevents leaks when refreshShmWithLock() deletes
+  // singleton instances that own this object.
+  if (fShmSegment)
+  {
+    delete fShmSegment;
+    fShmSegment = nullptr;
+  }
 }
 
 void BRMManagedShmImplRBTree::setReadOnly()
