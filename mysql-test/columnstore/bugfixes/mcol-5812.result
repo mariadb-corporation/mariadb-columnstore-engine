@@ -1,4 +1,5 @@
 DROP DATABASE IF EXISTS mcol5812;
+SET collation_server = 'utf8mb4_general_ci';
 CREATE DATABASE mcol5812;
 USE mcol5812;
 CREATE TABLE `cs_test_exclude` (
