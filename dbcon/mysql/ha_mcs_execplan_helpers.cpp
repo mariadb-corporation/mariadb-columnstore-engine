@@ -30,6 +30,8 @@ bool nonConstFunc(Item_func* ifp)
   {
     if (ifp->arguments()[i]->type() == Item::FUNC_ITEM && nonConstFunc(((Item_func*)ifp->arguments()[i])))
       return true;
+    if (ifp->arguments()[i]->type() == Item::CACHE_ITEM)
+      return true;
   }
 
   return false;

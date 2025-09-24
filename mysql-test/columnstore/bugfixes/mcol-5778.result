@@ -1,0 +1,16 @@
+DROP DATABASE IF EXISTS mcol5778;
+CREATE DATABASE mcol5778;
+USE mcol5778;
+create table test ( a double, b double ) engine=columnstore;
+insert into test values (100,100);
+select sum(a)/NULLIF(sum(b),0) from test;
+sum(a)/NULLIF(sum(b),0)
+1
+select sum(a)/NULLIF(b,0) from test;
+sum(a)/NULLIF(b,0)
+1
+select sum(a)/NULLIF(100,0) from test;
+sum(a)/NULLIF(100,0)
+1
+drop table test;
+DROP DATABASE mcol5778;
