@@ -1,0 +1,106 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_distinct_test;
+--enable_warnings
+
+CREATE DATABASE mcs_distinct_test;
+USE mcs_distinct_test;
+
+CREATE TABLE t1 (col1 INT, col2 CHAR(5)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES
+    (NULL, NULL),
+    (1,'a'),
+    (1,'b'),
+    (1,'c'),
+    (2,'dd'),
+    (3,'eee');
+
+CREATE TABLE t2(col1 INT) ENGINE=ColumnStore;
+
+CREATE TABLE t3 (name VARCHAR(255)) ENGINE=ColumnStore;
+INSERT INTO t3 VALUES ('aa'),('ab'),('ac'),('ad'),('ae');
+
+CREATE TABLE t4 (col1 INT, col3 VARCHAR(10)) ENGINE=ColumnStore;
+INSERT INTO t4 VALUES (1,'x'), (2,'y'), (3,'z');
+
+CREATE TABLE t5 (a INT, b INT, c VARCHAR(5)) ENGINE=ColumnStore;
+INSERT INTO t5 VALUES
+    (1,1,'x'), (1,2,'x'), (2,1,'y'), (2,2,'y'), (3,1,'z');
+
+CREATE TABLE t6 (num INT) ENGINE=ColumnStore;
+INSERT INTO t6 VALUES (1),(2),(3),(4),(5),(6);
+
+CREATE TABLE t7a (id INT, val INT) ENGINE=ColumnStore;
+CREATE TABLE t7b (id INT, extra INT) ENGINE=ColumnStore;
+INSERT INTO t7a VALUES (1,100),(2,200),(3,300);
+INSERT INTO t7b VALUES (1,10),(2,20),(4,40);
+
+CREATE TABLE t8 (id INT, cat CHAR(1)) ENGINE=ColumnStore;
+INSERT INTO t8 VALUES (1,'A'),(2,'B'),(3,'A'),(4,'C');
+
+#without optimiser
+SET columnstore_unstable_optimizer=0;
+
+SELECT COUNT(DISTINCT col1) FROM t1;
+SELECT COUNT(DISTINCT col2) FROM t1;
+SELECT DISTINCT col1 FROM t1 ORDER BY col1;
+SELECT DISTINCT col1 FROM t1 ORDER BY col1 DESC;
+SELECT DISTINCT col2 FROM t1 ORDER BY col2;
+
+INSERT INTO t2 SELECT DISTINCT col1 FROM t1 ORDER BY col1;
+SELECT * FROM t2 ORDER BY col1;
+
+SELECT DISTINCT * FROM t3 ORDER BY name;
+SELECT DISTINCT name FROM t3 ORDER BY name LIMIT 2;
+SELECT DISTINCT 1 FROM t3 LIMIT 3;
+
+SELECT DISTINCT t1.col1 FROM t1 JOIN t4 ON t1.col1 = t4.col1 ORDER BY t1.col1;
+
+SELECT DISTINCT a, b FROM t5 ORDER BY a,b;
+SELECT DISTINCT a, c FROM t5 ORDER BY a,c;
+SELECT DISTINCT b, c FROM t5 ORDER BY b,c;
+
+SELECT DISTINCT MOD(num,2) AS mod2 FROM t6 ORDER BY mod2;
+SELECT DISTINCT num+10 AS num10 FROM t6 ORDER BY num10;
+
+SELECT DISTINCT a.id, a.val, b.extra
+FROM t7a a JOIN t7b b ON a.id = b.id
+ORDER BY a.id, b.extra;
+
+SELECT DISTINCT cat FROM t8 ORDER BY cat LIMIT 2;
+SELECT DISTINCT id, cat FROM t8 WHERE id > 1 ORDER BY id;
+
+#with optimiser
+SET columnstore_unstable_optimizer=1;
+
+SELECT COUNT(DISTINCT col1) FROM t1;
+SELECT COUNT(DISTINCT col2) FROM t1;
+SELECT DISTINCT col1 FROM t1 ORDER BY col1;
+SELECT DISTINCT col1 FROM t1 ORDER BY col1 DESC;
+SELECT DISTINCT col2 FROM t1 ORDER BY col2;
+
+INSERT INTO t2 SELECT DISTINCT col1 FROM t1 ORDER BY col1;
+SELECT * FROM t2 ORDER BY col1;
+
+SELECT DISTINCT * FROM t3 ORDER BY name;
+SELECT DISTINCT name FROM t3 ORDER BY name LIMIT 2;
+SELECT DISTINCT 1 FROM t3 LIMIT 3;
+
+SELECT DISTINCT t1.col1 FROM t1 JOIN t4 ON t1.col1 = t4.col1 ORDER BY t1.col1;
+
+SELECT DISTINCT a, b FROM t5 ORDER BY a,b;
+SELECT DISTINCT a, c FROM t5 ORDER BY a,c;
+SELECT DISTINCT b, c FROM t5 ORDER BY b,c;
+
+SELECT DISTINCT MOD(num,2) AS mod2 FROM t6 ORDER BY mod2;
+SELECT DISTINCT num+10 AS num10 FROM t6 ORDER BY num10;
+
+SELECT DISTINCT a.id, a.val, b.extra
+FROM t7a a JOIN t7b b ON a.id = b.id
+ORDER BY a.id, b.extra;
+
+SELECT DISTINCT cat FROM t8 ORDER BY cat LIMIT 2;
+SELECT DISTINCT id, cat FROM t8 WHERE id > 1 ORDER BY id;
+
+DROP DATABASE mcs_distinct_test;
