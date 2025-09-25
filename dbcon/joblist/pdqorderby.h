@@ -173,14 +173,14 @@ EncodedKeyType getNullValue(uint8_t type)
 
 template <typename EncodedKeyType>
 concept IsConstString = requires {
-                          requires std::is_same<EncodedKeyType, utils::ConstString>::value ||
-                                       std::is_same<EncodedKeyType, utils::ShortConstString>::value;
-                        };
+  requires std::is_same<EncodedKeyType, utils::ConstString>::value ||
+               std::is_same<EncodedKeyType, utils::ShortConstString>::value;
+};
 template <typename EncodedKeyType>
 concept NotConstString = requires {
-                           requires !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
-                                      std::is_same<EncodedKeyType, utils::ShortConstString>::value);
-                         };
+  requires !(std::is_same<EncodedKeyType, utils::ConstString>::value ||
+             std::is_same<EncodedKeyType, utils::ShortConstString>::value);
+};
 
 bool isDictColumn(datatypes::SystemCatalog::ColDataType colType, auto columnWidth)
 {
@@ -206,7 +206,8 @@ template <bool FalseCheck>
 concept IsFalse = requires { requires FalseCheck == false; };
 
 class PDQOrderBy;
-using SortingThreads = std::vector<std::unique_ptr<PDQOrderBy>>;
+using PDQSortingThread = std::unique_ptr<PDQOrderBy>;
+using SortingThreads = std::vector<PDQSortingThread>;
 struct PermutationType
 {
   uint64_t rgdataID : 32 {}, rowID : 24 {}, threadID : 8 {};
@@ -224,38 +225,38 @@ using PermutationVecIter = PermutationVec::iterator;
 
 template <typename EncodedKeyType, typename StorageType>
   requires(!(std::is_integral<StorageType>::value || std::is_floating_point<StorageType>::value) &&
-           sorting::IsConstString<EncodedKeyType>) bool
-isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+           sorting::IsConstString<EncodedKeyType>)
+bool isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
 {
   return value.isNull();
 }
 
 template <typename EncodedKeyType, typename StorageType>
-  requires(
-      (std::is_integral<EncodedKeyType>::value || std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
-      (std::is_integral<StorageType>::value || std::is_same<StorageType, datatypes::TSInt128>::value)) bool
-isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+  requires((std::is_integral<EncodedKeyType>::value ||
+            std::is_same<EncodedKeyType, datatypes::TSInt128>::value) &&
+           (std::is_integral<StorageType>::value || std::is_same<StorageType, datatypes::TSInt128>::value))
+bool isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
 {
   return value == null;
 }
 
 template <typename EncodedKeyType, typename StorageType>
-  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value) bool
-isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull)
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, double>::value)
+bool isNull(const EncodedKeyType value, const uint64_t null, const uint64_t storageNull)
 {
   return std::memcmp(&value, &null, sizeof(uint64_t)) == 0;
 }
 
 template <typename EncodedKeyType, typename StorageType>
-  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value) bool
-isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull)
+  requires(std::is_floating_point<StorageType>::value && std::is_same<StorageType, float>::value)
+bool isNull(const EncodedKeyType value, const uint32_t null, const uint32_t storageNull)
 {
   return std::memcmp(&value, &null, sizeof(uint32_t)) == 0;
 }
 
 template <typename EncodedKeyType, typename StorageType>
-  requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value) bool
-isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
+  requires(sorting::IsConstString<EncodedKeyType> && std::is_integral<StorageType>::value)
+bool isNull(const EncodedKeyType value, const EncodedKeyType null, const StorageType storageNull)
 {
   const StorageType v = *reinterpret_cast<const StorageType*>(value.str());
   return v == storageNull;
@@ -292,16 +293,16 @@ class PDQOrderBy
 
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
-    requires IsFalse<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
-                          joblist::OrderByKeysType columns, PermutationVec&& permutation,
-                          Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
+    requires IsFalse<IsFirst>
+  bool exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
+                               joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                               Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
   template <bool IsFirst, datatypes::SystemCatalog::ColDataType, typename StorageType,
             typename EncodedKeyType>
-    requires IsTrue<IsFirst> bool
-  exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
-                          joblist::OrderByKeysType columns, PermutationVec&& permutation,
-                          Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
+    requires IsTrue<IsFirst>
+  bool exchangeSortByColumnCF_(const uint32_t id, const uint32_t columnId, const bool sortDirection,
+                               joblist::OrderByKeysType columns, PermutationVec&& permutation,
+                               Ranges2SortQueue&& ranges2Sort, const SortingThreads& prevPhaseThreads);
   template <datatypes::SystemCatalog::ColDataType ColType, typename StorageType, typename EncodedKeyType>
   void initialPermutationKeysNulls(const uint32_t id, const uint32_t columnID, const bool nullsFirst,
                                    std::vector<EncodedKeyType>& keys, PermutationVec& permutation,

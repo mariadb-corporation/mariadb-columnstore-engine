@@ -270,9 +270,18 @@ bool PDQOrderBy::sortByColumnCF(const uint32_t id, joblist::OrderByKeysType colu
                                                        std::move(permutation), std::move(ranges2Sort),
                                                        prevPhaseThreads);
       }
+      else if (columnWidth == 4) // WIP
+      {
+        using StorageType = datatypes::WidthToSIntegralType<4>::type;
+        using EncodedKeyType = StorageType;
+        return exchangeSortByColumnCF_<IsFirst, execplan::CalpontSystemCatalog::DECIMAL, StorageType,
+                                       EncodedKeyType>(id, columnId, sortDirection, columns,
+                                                       std::move(permutation), std::move(ranges2Sort),
+                                                       prevPhaseThreads);
+      }
       else
       {
-        throw logging::NotImplementedExcept("sortByColumnCF(): U-/DECIMAL has an unexpected width" +
+        throw logging::NotImplementedExcept("sortByColumnCF(): U-/DECIMAL has an unexpected width " +
                                             std::to_string(columnWidth));
       }
     }

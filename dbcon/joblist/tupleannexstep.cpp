@@ -930,26 +930,56 @@ void TupleAnnexStep::executePDQOrderBy(const uint32_t id)
     more = fInputDL->next(fInputIterator, &rgDataIn);
   // Count finished sorting threads under mutex and run final
   // sort step when the last thread converges
+  // TODO replace with atomic acquire/release counter
   parallelOrderByMutex_.lock();
   ++fFinishedThreads;
   if (fFinishedThreads == fMaxThreads)
   {
     // WIP Replace this vector with vector of RGDatas?
-    // This ref lives as long as TAS this lives.
+    // INV: firstPhaseThreads ref scope is shorter than TAS scope.
     const sorting::SortingThreads& firstPhaseThreads = firstPhaseflatOrderBys_;
-    auto perThreadRangesMatrix = calculatePivots4phase2(firstPhaseThreads);
-    assert(perThreadRangesMatrix.size() == fMaxThreads);
-    fRunnersList.push_back(jobstepThreadPool.invoke(
-        [this, perThreadRangesMatrix, &firstPhaseThreads]()
-        { this->finalizeHeapOrderBy(1, perThreadRangesMatrix[0], firstPhaseThreads); }));
-    for (uint32_t i = 2; i <= fMaxThreads; ++i)
+
+    size_t numberOfSortingWithData = std::accumulate(firstPhaseThreads.begin(), firstPhaseThreads.end(), 0,
+                                                     [](size_t acc, const sorting::PDQSortingThread& sorting)
+                                                     { return acc + !sorting->getRGDatas().empty(); });
+    if (numberOfSortingWithData <= 1)
     {
-      fRunnersList.push_back(jobstepThreadPool.invoke(
-          [this, i, perThreadRangesMatrix, &firstPhaseThreads]()
-          { this->finalizePDQOrderBy(i, perThreadRangesMatrix, firstPhaseThreads); }));
+      RGData rgDataOut;
+      rowgroup::RowGroup rowGroupOut{fRowGroupOut};
+      for (const sorting::PDQSortingThread& sorting : firstPhaseThreads)
+      {
+        if (!sorting->getRGDatas().empty())
+        {
+          while (sorting->getData(rgDataOut, firstPhaseflatOrderBys_) && !cancelled())
+          {
+            rowGroupOut.setData(&rgDataOut);
+            auto rows = rowGroupOut.getRowCount();
+            if (rows > 0)
+            {
+              fOutputDL->insert(rgDataOut);
+            }
+          }
+        }
+      }
+      fOutputDL->endOfInput();
     }
-    // Merge finalizer threads' rgDatas from separate outputDLs into a common outputDL
-    fRunnersList.push_back(jobstepThreadPool.invoke([this]() { this->joinOutputDLs(); }));
+    else
+    {
+      auto perThreadRangesMatrix = calculatePivots4phase2(firstPhaseThreads);
+      assert(perThreadRangesMatrix.size() == fMaxThreads);
+      // push 1st of the 2nd phase threads as HeapOrderBy with the first range
+      fRunnersList.push_back(jobstepThreadPool.invoke(
+          [this, perThreadRangesMatrix, &firstPhaseThreads]()
+          { this->finalizeHeapOrderBy(1, perThreadRangesMatrix[0], firstPhaseThreads); }));
+      for (uint32_t i = 2; i <= fMaxThreads; ++i)
+      {
+        fRunnersList.push_back(jobstepThreadPool.invoke(
+            [this, i, perThreadRangesMatrix, &firstPhaseThreads]()
+            { this->finalizePDQOrderBy(i, perThreadRangesMatrix, firstPhaseThreads); }));
+      }
+      // Merge finalizer threads' rgDatas from separate outputDLs into a common outputDL
+      fRunnersList.push_back(jobstepThreadPool.invoke([this]() { this->joinOutputDLs(); }));
+    }
   }
   parallelOrderByMutex_.unlock();
 }
@@ -1193,25 +1223,25 @@ const sorting::ValueRangesMatrix calculateStats(const sorting::SortingThreads& s
     size_t right = step;
     LowerBoundsVec lowerBounds;
     assert(sortingThreads.size() == maxThreads);
-    for_each(sortingThreads.begin(), sortingThreads.end(),  // used as a counter only
-             [&perm, &rg, &left, &right, &sorting, &nullValue, &storageNull, &lowerBounds, columnId,
-              step](auto& /*u*/)
-             {
-               // eliminate NULLs if possible
-               rg.setData(&(sorting->getRGDatas()[perm[left].rgdataID]));
-               auto lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, perm[left].rowID);
-               // WIP case when left goes over perm.size
-               while (left < perm.size() &&
-                      sorting::isNull<EncodedKeyType, StorageType>(lb, nullValue, storageNull))
-               {
-                 auto p = perm[++left];
-                 rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
-                 lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID);
-               }
-               lowerBounds.push_back(lb);
-               left = right + ((perm.empty()) ? 0 : 1);
-               right = std::min(right + step, perm.size());
-             });
+    // Here for perm size == 2 algo produces vector with 1 lb and this breaks inv future.
+    // TBD internal while doesn't need to check for left < perm.size() inv
+    // b/c it is changed once in the end of the loop.
+    for (size_t i = 0; i < sortingThreads.size() && left < perm.size(); ++i)
+    {
+      // eliminate NULLs if possible
+      rg.setData(&(sorting->getRGDatas()[perm[left].rgdataID]));
+      auto lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, perm[left].rowID);
+      // WIP case when left goes over perm.size
+      while (left < perm.size() && sorting::isNull<EncodedKeyType, StorageType>(lb, nullValue, storageNull))
+      {
+        auto p = perm[++left];
+        rg.setData(&(sorting->getRGDatas()[p.rgdataID]));
+        lb = rg.getColumnValue<ColType, StorageType, EncodedKeyType>(columnId, p.rowID);
+      }
+      lowerBounds.push_back(lb);
+      left = right + ((perm.empty()) ? 0 : 1);
+      right = std::min(right + step, perm.size());
+    }
     lowerBoundsMatrix.push_back(lowerBounds);
   }
 
