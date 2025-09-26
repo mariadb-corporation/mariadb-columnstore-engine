@@ -281,8 +281,9 @@ def add_dbroot(input_config_filename = None, output_config_filename = None, host
     else:
         c_root = node_config.get_current_config_root(config_filename = input_config_filename)
 
+    ip4, _ = NetworkManager.resolve_ip_and_hostname(host) if host else (None, None)
     try:
-        ret = _add_dbroot(c_root, host)
+        ret = _add_dbroot(c_root, ip4)
     except Exception as e:
         logging.error(f"add_dbroot(): Caught exception: '{str(e)}', did not modify the config file")
         raise
