@@ -2594,6 +2594,93 @@ void ExtentMap::createStripeColumnExtents(const vector<CreateStripeColumnExtents
 }
 
 //------------------------------------------------------------------------------
+// Creates a "stripe" of hidden extents for columns in a table (in DBRoot).
+// These extents are marked as EXTENTOUTOFSERVICE and are not visible to
+// normal query operations until makePartitionVisible() is called.
+//------------------------------------------------------------------------------
+void ExtentMap::createHiddenStripeColumnExtents(const vector<CreateStripeColumnExtentsArgIn>& cols,
+                                                uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
+                                                vector<CreateStripeColumnExtentsArgOut>& extents)
+{
+  LBID_t startLbid;
+  int allocSize;
+  uint32_t startBlkOffset;
+
+  grabEMEntryTable(WRITE);
+  grabEMIndex(WRITE);
+  grabFreeList(WRITE);
+
+  OID_t baselineOID = -1;
+  uint16_t baselineSegmentNum = -1;
+  uint32_t baselinePartNum = -1;
+
+  for (uint32_t i = 0; i < cols.size(); i++)
+  {
+    createColumnExtent_DBroot(cols[i].oid, cols[i].width, dbRoot, cols[i].colDataType, partitionNum,
+                              segmentNum, startLbid, allocSize, startBlkOffset, false);
+
+    auto emIter = fExtentMapRBTree->find(startLbid);
+    if (emIter != fExtentMapRBTree->end())
+    {
+      makeUndoRecordRBTree(UndoRecordType::DEFAULT, emIter->second);
+      emIter->second.status = EXTENTOUTOFSERVICE;
+    }
+
+    if (i == 0)
+    {
+      baselineOID = cols[i].oid;
+      baselinePartNum = partitionNum;
+      baselineSegmentNum = segmentNum;
+    }
+    else if ((partitionNum != baselinePartNum) || (segmentNum != baselineSegmentNum))
+    {
+      ostringstream oss;
+      oss << "ExtentMap::createHiddenStripeColumnExtents(): "
+             "Inconsistent segment extent creation: "
+          << "DBRoot: " << dbRoot << "OID1: " << baselineOID << "; Part#: " << baselinePartNum
+          << "; Seg#: " << baselineSegmentNum << " <versus> OID2: " << cols[i].oid
+          << "; Part#: " << partitionNum << "; Seg#: " << segmentNum;
+      log(oss.str(), logging::LOG_TYPE_CRITICAL);
+      throw invalid_argument(oss.str());
+    }
+
+    CreateStripeColumnExtentsArgOut extentInfo;
+    extentInfo.startLbid = startLbid;
+    extentInfo.allocSize = allocSize;
+    extentInfo.startBlkOffset = startBlkOffset;
+    extents.push_back(extentInfo);
+  }
+}
+
+//------------------------------------------------------------------------------
+// Makes a hidden partition visible to normal query operations by changing
+// the status of all extents from EXTENTOUTOFSERVICE to EXTENTAVAILABLE.
+//------------------------------------------------------------------------------
+void ExtentMap::makePartitionVisible(const set<OID_t>& oids, uint16_t dbRoot, uint32_t partitionNum)
+{
+  grabEMEntryTable(WRITE);
+
+  for (const auto& oid : oids)
+  {
+    const auto lbids = fPExtMapIndexImpl_->find(dbRoot, oid);
+    auto emIterators = getEmIteratorsByLbids(lbids);
+    
+    for (auto& emIter : emIterators)
+    {
+      EMEntry& emEntry = emIter->second;
+      if (emEntry.partitionNum == partitionNum && emEntry.dbRoot == dbRoot && 
+          emEntry.status == EXTENTOUTOFSERVICE)
+      {
+        makeUndoRecordRBTree(UndoRecordType::DEFAULT, emEntry);
+        emEntry.status = EXTENTAVAILABLE;
+      }
+    }
+  }
+
+  releaseEMEntryTable(WRITE);
+}
+
+//------------------------------------------------------------------------------
 // Creates an extent for a column file on the specified DBRoot.  This is the
 // external API function referenced by the dbrm wrapper class.
 // required input:

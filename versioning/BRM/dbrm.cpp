@@ -992,6 +992,114 @@ int DBRM::createStripeColumnExtents(const std::vector<CreateStripeColumnExtentsA
 }
 
 //------------------------------------------------------------------------------
+// Send a request to create hidden stripe column extents
+//------------------------------------------------------------------------------
+int DBRM::createHiddenStripeColumnExtents(const std::vector<CreateStripeColumnExtentsArgIn>& cols, uint16_t dbRoot,
+                                          uint32_t& partitionNum, uint16_t& segmentNum,
+                                          std::vector<CreateStripeColumnExtentsArgOut>& extents) DBRM_THROW
+{
+#ifdef BRM_INFO
+
+  if (fDebug)
+  {
+    TRACER_WRITELATER("createHiddenStripeColumnExtents");
+    TRACER_WRITE;
+  }
+
+#endif
+
+  ByteStream command, response;
+  uint8_t err;
+  uint16_t tmp16;
+  uint32_t tmp32;
+
+  command << CREATE_HIDDEN_STRIPE_COLUMN_EXTENTS;
+  serializeInlineVector(command, cols);
+  command << dbRoot << partitionNum;
+
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+    return err;
+
+  if (response.length() == 0)
+    return ERR_NETWORK;
+
+  try
+  {
+    response >> err;
+
+    if (err != 0)
+      return (int)err;
+
+    response >> tmp32;
+    partitionNum = tmp32;
+    response >> tmp16;
+    segmentNum = tmp16;
+    deserializeInlineVector(response, extents);
+  }
+  catch (exception& e)
+  {
+    cerr << e.what() << endl;
+    return ERR_FAILURE;
+  }
+
+  CHECK_EMPTY(response);
+  return 0;
+}
+
+//------------------------------------------------------------------------------
+// Send a request to make a hidden partition visible
+//------------------------------------------------------------------------------
+int DBRM::makePartitionVisible(const std::set<OID_t>& oids, uint16_t dbRoot, uint32_t partitionNum) DBRM_THROW
+{
+#ifdef BRM_INFO
+
+  if (fDebug)
+  {
+    TRACER_WRITELATER("makePartitionVisible");
+    TRACER_WRITE;
+  }
+
+#endif
+
+  ByteStream command, response;
+  uint8_t err;
+
+  command << MAKE_PARTITION_VISIBLE;
+  command << static_cast<uint32_t>(oids.size());
+  for (const auto& oid : oids)
+  {
+    command << oid;
+  }
+  command << dbRoot << partitionNum;
+
+  err = send_recv(command, response);
+
+  if (err != ERR_OK)
+    return err;
+
+  if (response.length() == 0)
+    return ERR_NETWORK;
+
+  try
+  {
+    response >> err;
+
+    if (err != 0)
+      return (int)err;
+  }
+  catch (exception& e)
+  {
+    cerr << e.what() << endl;
+    return ERR_FAILURE;
+  }
+
+  CHECK_EMPTY(response);
+  return 0;
+}
+
+//------------------------------------------------------------------------------
 // Send a request to create a column extent for the specified OID and DBRoot.
 //------------------------------------------------------------------------------
 int DBRM::createColumnExtent_DBroot(OID_t oid, uint32_t colWidth, uint16_t dbRoot, uint32_t& partitionNum,

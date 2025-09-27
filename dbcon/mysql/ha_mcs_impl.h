@@ -80,4 +80,7 @@ extern std::string ha_mcs_impl_analyze_partition_bloat(cal_impl_if::cal_connecti
                                                         const std::string& partition);
 extern std::string ha_mcs_impl_analyze_table_bloat(cal_impl_if::cal_connection_info& ci,
                                                     execplan::CalpontSystemCatalog::TableName& tablename);
+extern std::string ha_mcs_impl_vacuum_partition(cal_impl_if::cal_connection_info& ci,
+                                                 execplan::CalpontSystemCatalog::TableName& tablename,
+                                                 const std::string& partition);
 #endif

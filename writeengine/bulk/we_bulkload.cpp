@@ -34,6 +34,7 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
+#include <stdexcept>
 
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -48,6 +49,7 @@
 #include "we_config.h"
 #include "we_dbrootextenttracker.h"
 #include "writeengine.h"
+#include "extentmap.h"
 #include "sys/time.h"
 #include "sys/types.h"
 #include "dataconvert.h"
@@ -630,14 +632,26 @@ int BulkLoad::preProcess(Job& job, int tableNo, std::shared_ptr<TableInfo>& tabl
 
     if (i == 0)  // select starting DBRoot/segment for column[0]
     {
-      std::string trkErrMsg;
-      rc =
-          pDBRootExtentTracker->selectFirstSegFile(dbRootExtent, bNoStartExtentOnThisPM, bEmptyPM, trkErrMsg);
-
-      if (rc != NO_ERROR)
+      if (hasTargetPartition())  // Use specified target partition
       {
-        fLog.logMsg(trkErrMsg, rc, MSGLVL_ERROR);
-        return rc;
+        rc = setTargetDBRootExtent(dbRootExtent, curJobCol.mapOid);
+        if (rc != NO_ERROR)
+        {
+          fLog.logMsg("Failed to set target partition", rc, MSGLVL_ERROR);
+          return rc;
+        }
+      }
+      else  // Use automatic selection
+      {
+        std::string trkErrMsg;
+        rc =
+            pDBRootExtentTracker->selectFirstSegFile(dbRootExtent, bNoStartExtentOnThisPM, bEmptyPM, trkErrMsg);
+
+        if (rc != NO_ERROR)
+        {
+          fLog.logMsg(trkErrMsg, rc, MSGLVL_ERROR);
+          return rc;
+        }
       }
     }
     else  // select starting DBRoot/segment based on column[0] selection
@@ -1611,6 +1625,134 @@ void BulkLoad::setDefaultJobUUID()
 {
   if (fUUID.is_nil())
     fUUID = boost::uuids::random_generator()();
+}
+
+//------------------------------------------------------------------------------
+// Set DBRootExtentInfo from target partition triple
+//------------------------------------------------------------------------------
+int BulkLoad::setTargetDBRootExtent(DBRootExtentInfo& dbRootExtent, OID columnOid)
+{
+  if (!fHasTargetPartition)
+    return ERR_INVALID_PARAM;
+    
+  // Set the basic partition info from target
+  dbRootExtent.fPartition = fTargetPartition.pp;      // physical partition
+  dbRootExtent.fDbRoot = fTargetPartition.dbroot;     // DBRoot
+  dbRootExtent.fSegment = fTargetPartition.seg;       // segment
+  
+  // Get extent information from BRM for this specific partition
+  std::vector<BRM::EMEntry> extents;
+  
+  try
+  {
+    // Get all extents for this OID on the target DBRoot
+    int rc = BRMWrapper::getInstance()->getExtents_dbroot(columnOid, extents, fTargetPartition.dbroot);
+    
+    if (rc != 0)
+    {
+      fLog.logMsg("Failed to get extents for target DBRoot", rc, MSGLVL_ERROR);
+      return rc;
+    }
+    
+    // Find extent with matching partition and segment
+    bool extentFound = false;
+    for (const auto& extent : extents)
+    {
+      if (extent.partitionNum == fTargetPartition.pp && 
+          extent.segmentNum == fTargetPartition.seg)
+      {
+        dbRootExtent.fStartLbid = extent.range.start;
+        dbRootExtent.fLocalHwm = extent.HWM;
+        
+        // Handle different extent states
+        if (extent.status == 2)  // EXTENTOUTOFSERVICE
+        {
+          // This is a hidden partition created by createHiddenStripeColumnExtents
+          // We can write to it directly since it's already allocated
+          dbRootExtent.fState = DBROOT_EXTENT_PARTIAL_EXTENT;
+          fLog.logMsg("Found hidden (out-of-service) target partition - ready for data loading", 
+                     NO_ERROR, MSGLVL_INFO1);
+        }
+        else if (extent.status == 0)  // EXTENTAVAILABLE
+        {
+          // This is a normal available extent
+          dbRootExtent.fState = DBROOT_EXTENT_PARTIAL_EXTENT;
+          fLog.logMsg("Found available target partition", NO_ERROR, MSGLVL_INFO1);
+        }
+        else
+        {
+          // Other status (e.g., invalid) - handle as error
+          fLog.logMsg("Target partition exists but has invalid status: " + 
+                     std::to_string(extent.status), ERR_INVALID_PARAM, MSGLVL_ERROR);
+          return ERR_INVALID_PARAM;
+        }
+        
+        extentFound = true;
+        break;
+      }
+    }
+    
+    if (!extentFound)
+    {
+      // This shouldn't happen for maintenance tasks using pre-created partitions
+      fLog.logMsg("Target partition not found - this may indicate the partition was not pre-created", 
+                 ERR_BRM_LOOKUP_START_LBID, MSGLVL_ERROR);
+      return ERR_BRM_LOOKUP_START_LBID;
+    }
+    
+    // Get total blocks for this DBRoot (approximate)
+    dbRootExtent.fDBRootTotalBlocks = 0;
+    
+    fLog.logMsg("Using target partition: " + fTargetPartition.toString(), 
+               NO_ERROR, MSGLVL_INFO1);
+    
+    return NO_ERROR;
+  }
+  catch (const std::exception& e)
+  {
+    fLog.logMsg(std::string("Failed to setup target partition: ") + e.what(), 
+               ERR_BRM_LOOKUP_START_LBID, MSGLVL_ERROR);
+    return ERR_BRM_LOOKUP_START_LBID;
+  }
+}
+
+//------------------------------------------------------------------------------
+// Parse and set target partition triple using LogicalPartition
+//------------------------------------------------------------------------------
+void BulkLoad::setTargetPartitionTriple(const std::string& partitionTriple)
+{
+  fHasTargetPartition = false;
+  
+  if (partitionTriple.empty())
+    return;
+  
+  try
+  {
+    // Use the existing LogicalPartition parsing
+    std::istringstream iss(partitionTriple);
+    iss >> fTargetPartition;
+    
+    if (iss.fail())
+    {
+      throw std::runtime_error("Failed to parse partition triple format");
+    }
+    
+    // Basic validation - LogicalPartition uses (uint16_t)-1 and (uint32_t)-1 as invalid values
+    if (fTargetPartition.pp == (uint32_t)-1 || 
+        fTargetPartition.seg == (uint16_t)-1 || 
+        fTargetPartition.dbroot == (uint16_t)-1)
+    {
+      throw std::runtime_error("Invalid partition values detected");
+    }
+    
+    fHasTargetPartition = true;
+  }
+  catch (const std::exception& e)
+  {
+    std::ostringstream oss;
+    oss << "Failed to parse partition triple '" << partitionTriple << "': " << e.what();
+    throw std::runtime_error(oss.str());
+  }
 }
 
 }  // namespace WriteEngine
