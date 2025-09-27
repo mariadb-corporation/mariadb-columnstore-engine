@@ -28,6 +28,7 @@
 #include <unordered.h>
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include <cerrno>
 #include <cstring>
 
@@ -1077,6 +1078,158 @@ std::string ha_mcs_impl_analyze_partition_bloat(cal_impl_if::cal_connection_info
   return analysisResult;
 }
 
+std::string ha_mcs_impl_vacuum_partition(cal_impl_if::cal_connection_info& ci,
+                                         execplan::CalpontSystemCatalog::TableName& tablename,
+                                         const std::string& partition)
+{
+  THD* thd = current_thd;
+  ulong sessionID = tid2sid(thd->thread_id);
+  std::string result;
+
+  try
+  {
+    // Parse partition triplet string: "dbroot.segment.partition"
+    uint16_t dbRoot;
+    uint16_t segmentNum;
+    uint32_t partitionNum;
+    
+    std::istringstream ss(partition);
+    std::string item;
+    std::vector<std::string> tokens;
+    
+    while (std::getline(ss, item, '.')) {
+      tokens.push_back(item);
+    }
+    
+    if (tokens.size() != 3) {
+      return "Error: Invalid partition triplet format. Expected: dbroot.segment.partition";
+    }
+    
+    try
+    {
+      dbRoot = static_cast<uint16_t>(std::stoul(tokens[0]));
+      segmentNum = static_cast<uint16_t>(std::stoul(tokens[1]));
+      partitionNum = std::stoul(tokens[2]);
+    }
+    catch (const std::exception&)
+    {
+      return "Error: Invalid numeric values in partition triplet";
+    }
+
+    // Get system catalog
+    boost::shared_ptr<execplan::CalpontSystemCatalog> systemCatalogPtr =
+        execplan::CalpontSystemCatalog::makeCalpontSystemCatalog(sessionID);
+    systemCatalogPtr->identity(execplan::CalpontSystemCatalog::EC);
+
+    // Get table information
+    execplan::CalpontSystemCatalog::TableName sysCatalogTableName;
+    sysCatalogTableName.schema = tablename.schema;
+    sysCatalogTableName.table = tablename.table;
+
+    // Check if table exists
+    execplan::CalpontSystemCatalog::RIDList ridList;
+    try
+    {
+      ridList = systemCatalogPtr->columnRIDs(sysCatalogTableName);
+    }
+    catch (const std::exception& ex)
+    {
+      return std::string("Error: Table not found - ") + ex.what();
+    }
+
+    if (ridList.empty())
+    {
+      return "Error: Table has no columns";
+    }
+
+    // Get AUX column OID
+    execplan::CalpontSystemCatalog::OID auxColumnOid = systemCatalogPtr->tableAUXColumnOID(sysCatalogTableName);
+
+    // Build column list for createHiddenStripeColumnExtents
+    std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
+
+    // Add regular columns
+    for (const auto& roPair : ridList)
+    {
+      BRM::CreateStripeColumnExtentsArgIn colArg;
+      colArg.oid = roPair.objnum;
+      
+      execplan::CalpontSystemCatalog::ColType colType = systemCatalogPtr->colType(roPair.objnum);
+      colArg.colDataType = colType.colDataType;
+      
+      // Set width based on whether it's a dictionary column
+      if (colType.ddn.dictOID > 3000)
+      {
+        colArg.width = 8; // Dictionary columns use 8-byte tokens
+      }
+      else
+      {
+        colArg.width = colType.colWidth;
+      }
+      
+      cols.push_back(colArg);
+    }
+
+    // Add AUX column if it exists
+    if (auxColumnOid > 3000)
+    {
+      BRM::CreateStripeColumnExtentsArgIn auxColArg;
+      auxColArg.oid = auxColumnOid;
+      execplan::CalpontSystemCatalog::ColType auxColType = systemCatalogPtr->colType(auxColumnOid);
+      auxColArg.colDataType = auxColType.colDataType;
+      auxColArg.width = auxColType.colWidth;
+      cols.push_back(auxColArg);
+    }
+
+    std::vector<BRM::CreateStripeColumnExtentsArgOut> extents;
+
+    // Store original values for comparison
+    uint16_t originalSegmentNum = segmentNum;
+    uint32_t originalPartitionNum = partitionNum;
+    
+    // Call createHiddenStripeColumnExtents
+    BRM::DBRM dbrm;
+    int rc = dbrm.createHiddenStripeColumnExtents(cols, dbRoot, partitionNum, segmentNum, extents);
+
+    if (rc != 0)
+    {
+      std::ostringstream oss;
+      oss << "Error: Failed to create hidden stripe column extents, error code: " << rc;
+      return oss.str();
+    }
+
+    // Build success message
+    std::ostringstream successMsg;
+    successMsg << "Successfully created hidden partition on DBRoot " << dbRoot;
+    
+    // Check if the function used our requested values or assigned different ones
+    if (partitionNum != originalPartitionNum || segmentNum != originalSegmentNum)
+    {
+      successMsg << " (requested: " << originalPartitionNum << "." << originalSegmentNum 
+                 << ", assigned: " << partitionNum << "." << segmentNum << ")";
+    }
+    else
+    {
+      successMsg << " at partition " << partitionNum << ", segment " << segmentNum;
+    }
+    
+    successMsg << " with " << extents.size() << " extents";
+
+    result = successMsg.str();
+  }
+  catch (const std::exception& ex)
+  {
+    std::ostringstream errorMsg;
+    errorMsg << "Error: " << ex.what();
+    result = errorMsg.str();
+  }
+  catch (...)
+  {
+    result = "Error: Unknown exception occurred during vacuum partition operation";
+  }
+
+  return result;
+}
 
 std::string ha_mcs_impl_analyze_table_bloat(cal_impl_if::cal_connection_info& ci,
                                                execplan::CalpontSystemCatalog::TableName& tablename)

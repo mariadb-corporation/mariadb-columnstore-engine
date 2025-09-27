@@ -293,6 +293,10 @@ void SlaveComm::processCommand(ByteStream& msg)
   {
     case CREATE_STRIPE_COLUMN_EXTENTS: do_createStripeColumnExtents(msg); break;
 
+    case CREATE_HIDDEN_STRIPE_COLUMN_EXTENTS: do_createHiddenStripeColumnExtents(msg); break;
+
+    case MAKE_PARTITION_VISIBLE: do_makePartitionVisible(msg); break;
+
     case CREATE_COLUMN_EXTENT_DBROOT: do_createColumnExtent_DBroot(msg); break;
 
     case CREATE_COLUMN_EXTENT_EXACT_FILE: do_createColumnExtentExactFile(msg); break;
@@ -430,6 +434,113 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
     takeSnapshot = true;
   else
     doSaveDelta = true;
+}
+
+//------------------------------------------------------------------------------
+// Process a request to create hidden stripe column extents
+//------------------------------------------------------------------------------
+void SlaveComm::do_createHiddenStripeColumnExtents(ByteStream& msg)
+{
+  int err;
+  uint16_t tmp16;
+  uint16_t tmp32;
+  uint16_t dbRoot;
+  uint32_t partitionNum;
+  uint16_t segmentNum;
+  std::vector<CreateStripeColumnExtentsArgIn> cols;
+  std::vector<CreateStripeColumnExtentsArgOut> extents;
+  ByteStream reply;
+
+#ifdef BRM_VERBOSE
+  cerr << "WorkerComm: do_createHiddenStripeColumnExtents()" << endl;
+#endif
+
+  deserializeInlineVector(msg, cols);
+  msg >> tmp16;
+  dbRoot = tmp16;
+  msg >> tmp32;
+  partitionNum = tmp32;
+
+  if (printOnly)
+  {
+    cout << "createHiddenStripeColumnExtents().  " << "DBRoot=" << dbRoot << "; Part#=" << partitionNum << endl;
+
+    for (uint32_t i = 0; i < cols.size(); i++)
+      cout << "HiddenStripeColExt arg " << i + 1 << ": oid=" << cols[i].oid << " width=" << cols[i].width << endl;
+
+    return;
+  }
+
+  err = slave->createHiddenStripeColumnExtents(cols, dbRoot, partitionNum, segmentNum, extents);
+  reply << (uint8_t)err;
+
+  if (err == ERR_OK)
+  {
+    reply << partitionNum;
+    reply << segmentNum;
+    serializeInlineVector(reply, extents);
+  }
+
+#ifdef BRM_VERBOSE
+  cerr << "WorkerComm: do_createHiddenStripeColumnExtents() err code is " << err << endl;
+#endif
+
+  if (!standalone)
+    master.write(reply);
+
+  // see bug 3596.  Need to make sure a snapshot file exists.
+  if ((cols.size() > 0) && (cols[0].oid < 3000))
+    takeSnapshot = true;
+  else
+    doSaveDelta = true;
+}
+
+//------------------------------------------------------------------------------
+// Process a request to make a hidden partition visible
+//------------------------------------------------------------------------------
+void SlaveComm::do_makePartitionVisible(ByteStream& msg)
+{
+  int err;
+  uint32_t numOids;
+  uint32_t partitionNum;
+  uint16_t dbRoot;
+  std::set<OID_t> oids;
+  ByteStream reply;
+
+#ifdef BRM_VERBOSE
+  cerr << "WorkerComm: do_makePartitionVisible()" << endl;
+#endif
+
+  msg >> numOids;
+  for (uint32_t i = 0; i < numOids; i++)
+  {
+    OID_t oid;
+    msg >> oid;
+    oids.insert(oid);
+  }
+  msg >> dbRoot;
+  msg >> partitionNum;
+
+  if (printOnly)
+  {
+    cout << "makePartitionVisible().  " << "DBRoot=" << dbRoot << "; Part#=" << partitionNum << "; OIDs: ";
+    for (const auto& oid : oids)
+      cout << oid << " ";
+    cout << endl;
+    return;
+  }
+
+  err = slave->makePartitionVisible(oids, dbRoot, partitionNum);
+  reply << (uint8_t)err;
+
+#ifdef BRM_VERBOSE
+  cerr << "WorkerComm: do_makePartitionVisible() err code is " << err << endl;
+#endif
+
+  if (!standalone)
+    master.write(reply);
+
+  doSaveDelta = true;
 }
 
 //------------------------------------------------------------------------------
