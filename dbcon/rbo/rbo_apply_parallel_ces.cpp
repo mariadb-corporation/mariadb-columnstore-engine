@@ -238,11 +238,12 @@ std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyC
   }
 
   // TODO take some column and some stats for it!!!
-  for (auto& [columnName, scAndStatisticsVec] : tableColumnsStatisticsIt->second)
+  for (auto& [columnName, columnStatistics] : tableColumnsStatisticsIt->second)
   {
-    auto& [sc, columnStatisticsVec] = scAndStatisticsVec;
-    auto* columnStatistics = chooseStatisticsToUse(columnStatisticsVec);
-    return {{sc, columnStatistics}};
+    auto& sc = columnStatistics.getColumn();
+    auto& columnStatisticsVec = columnStatistics.getHistograms();
+    auto* bestColumnStatistics = chooseStatisticsToUse(columnStatisticsVec);
+    return {{sc, bestColumnStatistics}};
   }
 
   return std::nullopt;
@@ -262,7 +263,7 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
 // Returns optional with bounds if successful, nullopt otherwise
 template <typename T>
 std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics,
-                                                                 optimizer::RBOptimizerContext& ctx)
+                                                                 size_t& maxParallelFactor)
 {
   details::FilterRangeBounds<T> bounds;
 
@@ -280,7 +281,6 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   };
 
   // Get parallel factor from context
-  size_t maxParallelFactor = ctx.getCesOptimizationParallelFactor();
   size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), maxParallelFactor);
   size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
 
@@ -343,7 +343,8 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
 
   // TODO char and other numerical types support
-  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics, ctx);
+  size_t configuredMaxParallelFactor = ctx.getCesOptimizationParallelFactor();
+  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics, configuredMaxParallelFactor);
   if (!boundsOpt.has_value())
   {
     return unionVec;

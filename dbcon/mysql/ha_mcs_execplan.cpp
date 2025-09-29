@@ -5287,7 +5287,7 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
             }
             else
             {
-              auto columnStatisticsVec = columnStatisticsMapIt->second.second;
+              auto& columnStatisticsVec = columnStatisticsMapIt->second.getHistograms();
               columnStatisticsVec.push_back(histogram);
             }
           }
