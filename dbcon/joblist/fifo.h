@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <vector>
 #include <iostream>
 #include <atomic>
@@ -83,7 +84,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   }
 
   inline void dropToken() {};
-  inline void dropToken(uint32_t){};
+  inline void dropToken(uint32_t) {};
 
   // Counters that reflect how many many times this FIFO blocked on reads/writes
   uint64_t blockedWriteCount() const;
@@ -143,6 +144,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   // false if there is no more data.  Similar to next(), but
   // does not return data.
   bool more(uint64_t id);
+  bool flush(bool waitIfBlocked);
 
  protected:
  private:
@@ -154,6 +156,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   uint64_t* cpos;
   uint64_t cDone;
   uint64_t fMaxElements;
+  uint64_t fConsumerMaxElements;
   uint64_t cWaiting;
   uint64_t fTotSize;
   bool fInOrder;
@@ -189,6 +192,7 @@ template <typename element_t>
 FIFO<element_t>::FIFO(uint32_t con, uint32_t max) : DataListImpl<std::vector<element_t>, element_t>(con)
 {
   fMaxElements = max;
+  fConsumerMaxElements = max;
   pBuffer = 0;
   cBuffer = 0;
   cpos = new uint64_t[con];
@@ -241,6 +245,7 @@ bool FIFO<element_t>::swapBuffers(bool waitIfBlocked)
       finishedConsuming.wait(scoped);
   }
 
+  fConsumerMaxElements = ppos;
   tmp = pBuffer;
   pBuffer = cBuffer;
   cBuffer = tmp;
@@ -255,6 +260,12 @@ bool FIFO<element_t>::swapBuffers(bool waitIfBlocked)
   }
 
   return false;
+}
+
+template <typename element_t>
+bool FIFO<element_t>::flush(bool waitIfBlocked)
+{
+  return swapBuffers(waitIfBlocked);
 }
 
 template <typename element_t>
@@ -329,18 +340,18 @@ bool FIFO<element_t>::waitForSwap(uint64_t id)
 
 #ifdef ONE_CS
 
-  if (cpos[id] == fMaxElements)
+  if (cpos[id] == fConsumerMaxElements)
     if (++cDone == base::numConsumers)
       finishedConsuming.notify_all()
 #endif
-          while (cpos[id] == fMaxElements && !base::noMoreInput)
+          while (cpos[id] == fConsumerMaxElements && !base::noMoreInput)
       {
         ++cWaiting;
         blockedNextReadCount++;
         moreData.wait(scoped);
       }
 
-  if (cpos[id] == fMaxElements)
+  if (cpos[id] == fConsumerMaxElements)
   {
     // Before we free the lock, let's check to see if all our consumers
     // are finished, in which case we can delete our data buffers.
@@ -362,7 +373,7 @@ template <typename element_t>
 bool FIFO<element_t>::more(uint64_t id)
 {
   boost::mutex::scoped_lock scoped(base::mutex);
-  return !(cpos[id] == fMaxElements && base::noMoreInput);
+  return !(cpos[id] == fConsumerMaxElements && base::noMoreInput);
 }
 
 template <typename element_t>
@@ -380,7 +391,7 @@ inline bool FIFO<element_t>::next(uint64_t id, element_t* out)
   base::mutex.lock();
   fConsumptionStarted = true;
 
-  if (cpos[id] >= fMaxElements)
+  if (cpos[id] >= fConsumerMaxElements)
   {
     base::mutex.unlock();
     if (!waitForSwap(id))
@@ -392,7 +403,7 @@ inline bool FIFO<element_t>::next(uint64_t id, element_t* out)
 
 #ifndef ONE_CS
 
-  if (cpos[id] == fMaxElements)
+  if (cpos[id] == fConsumerMaxElements)
   {
     base::mutex.unlock();
     signalPs();
@@ -416,6 +427,7 @@ void FIFO<element_t>::endOfInput()
       finishedConsuming.wait(scoped);
 
     fMaxElements = ppos;
+    fConsumerMaxElements = ppos;
     tmp = pBuffer;
     pBuffer = cBuffer;
     cBuffer = tmp;
