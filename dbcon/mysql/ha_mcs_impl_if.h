@@ -119,9 +119,31 @@ typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
+
+struct ColumnStatistics
+{
+  ColumnStatistics(execplan::SimpleColumn column, std::vector<Histogram_json_hb*> histograms)
+   : column(column), histograms(histograms)
+  {
+  }
+  ColumnStatistics() = default;
+
+  execplan::SimpleColumn column;
+  std::vector<Histogram_json_hb*> histograms;
+
+  std::vector<Histogram_json_hb*>& getHistograms()
+  {
+    return histograms;
+  }
+
+  execplan::SimpleColumn& getColumn()
+  {
+    return column;
+  }
+};
+
 using ColumnName = std::string;
-using ColumnStatisticsMap =
-    std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
+using ColumnStatisticsMap = std::unordered_map<ColumnName, ColumnStatistics>;
 using TableStatisticsMap =
     std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 

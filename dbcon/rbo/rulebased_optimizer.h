@@ -145,4 +145,4 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, RBOptimizerContext
 std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
                                       const RBOptimizerContext& ctx);
 
-}
+}  // namespace optimizer
