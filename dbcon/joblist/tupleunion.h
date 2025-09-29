@@ -288,7 +288,7 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
                    uint32_t& tmpOutputRowCount);
   void normalize(const rowgroup::Row& in, rowgroup::Row* out, const normalizeFunctionsT& normalizeFunctions);
   void writeNull(rowgroup::Row* out, uint32_t col);
-  bool readInput(uint32_t);
+  void readInput(uint32_t);
   void formatMiniStats();
 
   execplan::CalpontSystemCatalog::OID fTableOID;
@@ -315,14 +315,7 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
     void operator()()
     {
       utils::setThreadName("TUSRunner");
-
-      RowGroupDL* dl = tu->inputs[index];
-      uint32_t it = dl->getIterator();
-      rowgroup::RGData tmp;
-      while (dl->next(it, &tmp))
-      {
-        // discard rows
-      }
+      tu->readInput(index);
     }
   };
   std::vector<uint64_t> runners;  // thread pool handles

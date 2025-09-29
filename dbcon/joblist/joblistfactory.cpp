@@ -2158,7 +2158,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       currRecur->isRecursiveQuery(true);
     }
     baseRecur = new CalpontSelectExecutionPlan(*currRecur);
-    uint32_t depth = (currRecur->maxRecursiveDepth() <= 100) ? csep->maxRecursiveDepth() : 100;
+    uint32_t depth = (currRecur->maxRecursiveDepth() <= 100) ? csep->maxRecursiveDepth() : 10;
     // uint32_t depth = 100;
     for (uint32 i = 0; i < depth; ++i)
     {
