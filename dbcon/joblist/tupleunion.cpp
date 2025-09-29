@@ -1963,7 +1963,7 @@ void TupleRecursiveUnion::setDistinctFlags(const vector<bool>& v)
   distinctFlags = v;
 }
 
-bool TupleRecursiveUnion::readInput(uint32_t which)
+void TupleRecursiveUnion::readInput(uint32_t which)
 {
   /* The handling of the output got a little kludgey with the string table enhancement.
    * When there is no distinct check, the outputs are all generated independently of
@@ -1973,8 +1973,6 @@ bool TupleRecursiveUnion::readInput(uint32_t which)
    * store 8-byte offsets in rowMemory rather than 16-bytes for absolute pointers.
    */
 
-  // recursive union returns a boolean if there's the program should continue with the outer loop
-  isStablised = false;
   RowGroupDL* dl = NULL;
   bool more = true;
   RGData inRGData, outRGData, *tmpRGData;
@@ -2014,11 +2012,6 @@ bool TupleRecursiveUnion::readInput(uint32_t which)
 
     if (dlTimes.FirstReadTime().tv_sec == 0)
       dlTimes.setFirstReadTime();
-
-    if (!more)
-    {
-      isStablised = true;
-    }
 
     if (fStartTime == -1)
     {
@@ -2119,7 +2112,7 @@ bool TupleRecursiveUnion::readInput(uint32_t which)
   catch (...)
   {
     handleException(std::current_exception(), logging::unionStepErr, logging::ERR_UNION_TOO_BIG,
-                    "TupleRecursiveUnion::readInput()");
+                    "TupleUnion::readInput()");
     status(logging::unionStepErr);
     abort();
   }
@@ -2145,7 +2138,7 @@ bool TupleRecursiveUnion::readInput(uint32_t which)
         output->insert(outRGData);
     }
 
-    if (++runnersDone == fInputJobStepAssociation.outSize() || isStablised)
+    if (++runnersDone == fInputJobStepAssociation.outSize())
     {
       output->endOfInput();
 
@@ -2172,12 +2165,226 @@ bool TupleRecursiveUnion::readInput(uint32_t which)
         fExtendedInfo += logStr.str();
         formatMiniStats();
       }
-      return false;
     }
-    return true;
   }
 }
 
+// bool TupleRecursiveUnion::readInput(uint32_t which)
+// {
+//   /* The handling of the output got a little kludgey with the string table enhancement.
+//    * When there is no distinct check, the outputs are all generated independently of
+//    * each other locally in this fcn.  When there is a distinct check, threads
+//    * share the output, which is built in the 'rowMemory' vector rather than in
+//    * thread-local memory.  Building the result in a common space allows us to
+//    * store 8-byte offsets in rowMemory rather than 16-bytes for absolute pointers.
+//    */
+//
+//   // recursive union returns a boolean if there's the program should continue with the outer loop
+//   isStablised = false;
+//   RowGroupDL* dl = NULL;
+//   bool more = true;
+//   RGData inRGData, outRGData, *tmpRGData;
+//   uint32_t it = numeric_limits<uint32_t>::max();
+//   RowGroup l_inputRG, l_outputRG, l_tmpRG;
+//   Row inRow, outRow, tmpRow;
+//   bool distinct;
+//   uint64_t memUsageBefore, memUsageAfter, memDiff;
+//   l_outputRG = outputRG;
+//   dl = inputs[which];
+//   l_inputRG = inputRGs[which];
+//   l_inputRG.initRow(&inRow);
+//   l_outputRG.initRow(&outRow);
+//   distinct = distinctFlags[which];
+//
+//   if (distinct)
+//   {
+//     l_tmpRG = outputRG;
+//     tmpRGData = &normalizedData[which];
+//     l_tmpRG.initRow(&tmpRow);
+//     l_tmpRG.setData(tmpRGData);
+//     l_tmpRG.resetRowGroup(0);
+//     l_tmpRG.getRow(0, &tmpRow);
+//   }
+//   else
+//   {
+//     outRGData = RGData(l_outputRG);
+//     l_outputRG.setData(&outRGData);
+//     l_outputRG.resetRowGroup(0);
+//     l_outputRG.getRow(0, &outRow);
+//   }
+//
+//   try
+//   {
+//     it = dl->getIterator();
+//     more = dl->next(it, &inRGData);
+//
+//     if (dlTimes.FirstReadTime().tv_sec == 0)
+//       dlTimes.setFirstReadTime();
+//
+//     if (!more)
+//     {
+//       isStablised = true;
+//     }
+//
+//     if (fStartTime == -1)
+//     {
+//       StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_START, 1);
+//       postStepStartTele(sts);
+//     }
+//
+//     while (more && !cancelled())
+//     {
+//       /*
+//           normalize each row
+//             if distinct flag is set
+//                   copy the row into the output and test for uniqueness
+//                     if unique, increment the row count
+//             else
+//               copy the row into the output & inc row count
+//       */
+//       l_inputRG.setData(&inRGData);
+//       l_inputRG.getRow(0, &inRow);
+//
+//       if (distinct)
+//       {
+//         memDiff = 0;
+//         l_tmpRG.resetRowGroup(0);
+//         l_tmpRG.getRow(0, &tmpRow);
+//         l_tmpRG.setRowCount(l_inputRG.getRowCount());
+//
+//         const normalizeFunctionsT normalizeFunctions = inferNormalizeFunctions(inRow, &tmpRow, fTimeZone);
+//         for (uint32_t i = 0; i < l_inputRG.getRowCount(); i++, inRow.nextRow(), tmpRow.nextRow())
+//           normalize(inRow, &tmpRow, normalizeFunctions);
+//
+//         l_tmpRG.getRow(0, &tmpRow);
+//         {
+//           boost::mutex::scoped_lock lk(uniquerMutex);
+//           getOutput(&l_outputRG, &outRow, &outRGData);
+//           memUsageBefore = allocator.getMemUsage();
+//
+//           uint32_t tmpOutputRowCount = l_outputRG.getRowCount();
+//           const uint32_t tmpRGRowCount = l_tmpRG.getRowCount();
+//           for (uint32_t i = 0; i < tmpRGRowCount; i++, tmpRow.nextRow())
+//           {
+//             pair<Uniquer_t::iterator, bool> inserted;
+//             inserted = uniquer->insert(RowPosition(which | RowPosition::normalizedFlag, i));
+//
+//             if (inserted.second)
+//             {
+//               copyRow(tmpRow, &outRow);
+//               const_cast<RowPosition&>(*(inserted.first)) =
+//                   RowPosition(rowMemory.size() - 1, tmpOutputRowCount);
+//               memDiff += outRow.getRealSize();
+//               addToOutput(&outRow, &l_outputRG, true, outRGData, tmpOutputRowCount);
+//               fRowsReturned++;
+//             }
+//           }
+//
+//           l_outputRG.setRowCount(tmpOutputRowCount);
+//
+//           memUsageAfter = allocator.getMemUsage();
+//           memDiff += (memUsageAfter - memUsageBefore);
+//         }
+//
+//         if (rm->getMemory(memDiff, sessionMemLimit))
+//         {
+//           memUsage += memDiff;
+//         }
+//         else
+//         {
+//           fLogger->logMessage(logging::LOG_TYPE_INFO, logging::ERR_UNION_TOO_BIG);
+//
+//           if (status() == 0)  // preserve existing error code
+//           {
+//             errorMessage(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_UNION_TOO_BIG));
+//             status(logging::ERR_UNION_TOO_BIG);
+//           }
+//
+//           abort();
+//         }
+//       }
+//       else
+//       {
+//         const normalizeFunctionsT normalizeFunctions = inferNormalizeFunctions(inRow, &outRow, fTimeZone);
+//         const uint32_t inputRGRowCount = l_inputRG.getRowCount();
+//         uint32_t tmpOutputRowCount = l_outputRG.getRowCount();
+//
+//         for (uint32_t i = 0; i < inputRGRowCount; i++, inRow.nextRow())
+//         {
+//           normalize(inRow, &outRow, normalizeFunctions);
+//           addToOutput(&outRow, &l_outputRG, false, outRGData, tmpOutputRowCount);
+//         }
+//
+//         fRowsReturned += inputRGRowCount;
+//         l_outputRG.setRowCount(tmpOutputRowCount);
+//       }
+//
+//       more = dl->next(it, &inRGData);
+//     }
+//   }
+//   catch (...)
+//   {
+//     handleException(std::current_exception(), logging::unionStepErr, logging::ERR_UNION_TOO_BIG,
+//                     "TupleRecursiveUnion::readInput()");
+//     status(logging::unionStepErr);
+//     abort();
+//   }
+//
+//   /* make sure that the input was drained before exiting.  This can happen if the
+//   query was aborted */
+//   if (dl && it != numeric_limits<uint32_t>::max())
+//     while (more)
+//       more = dl->next(it, &inRGData);
+//
+//   {
+//     boost::mutex::scoped_lock lock1(uniquerMutex);
+//     boost::mutex::scoped_lock lock2(sMutex);
+//
+//     if (!distinct && l_outputRG.getRowCount() > 0)
+//       output->insert(outRGData);
+//
+//     if (distinct)
+//     {
+//       getOutput(&l_outputRG, &outRow, &outRGData);
+//
+//       if (++distinctDone == distinctCount && l_outputRG.getRowCount() > 0)
+//         output->insert(outRGData);
+//     }
+//
+//     if (++runnersDone == fInputJobStepAssociation.outSize() || isStablised)
+//     {
+//       output->endOfInput();
+//
+//       StepTeleStats sts(fQueryUuid, fStepUuid, StepTeleStats::ST_SUMMARY, 1, 1, fRowsReturned);
+//       postStepSummaryTele(sts);
+//
+//       if (traceOn())
+//       {
+//         dlTimes.setLastReadTime();
+//         dlTimes.setEndOfInputTime();
+//
+//         time_t t = time(0);
+//         char timeString[50];
+//         ctime_r(&t, timeString);
+//         timeString[strlen(timeString) - 1] = '\0';
+//         ostringstream logStr;
+//         logStr << "ses:" << fSessionId << " st: " << fStepId << " finished at " << timeString
+//                << "; total rows returned-" << fRowsReturned << endl
+//                << "\t1st read " << dlTimes.FirstReadTimeString() << "; EOI " <<
+//                dlTimes.EndOfInputTimeString()
+//                << "; runtime-" << JSTimeStamp::tsdiffstr(dlTimes.EndOfInputTime(), dlTimes.FirstReadTime())
+//                << "s;\n\tUUID " << uuids::to_string(fStepUuid) << endl
+//                << "\tJob completion status " << status() << endl;
+//         logEnd(logStr.str().c_str());
+//         fExtendedInfo += logStr.str();
+//         formatMiniStats();
+//       }
+//       return false;
+//     }
+//     return true;
+//   }
+// }
+//
 uint32_t TupleRecursiveUnion::nextBand(messageqcpp::ByteStream& bs)
 {
   RGData mem;
@@ -2301,28 +2508,36 @@ void TupleRecursiveUnion::run()
     }
   }
 
+  // for (i = 0; i < inputs.size(); i++)
+  // {
+  // bool more = readInput(i);
+  // if (!more)
+  // {
+  //   // Drain all remaining inputs so they don’t block upstream producers
+  //
+  //   // runners.reserve(inputs.size() - i - 1);
+  //   for (uint32_t j = i + 1; j < inputs.size(); j++)
+  //   {
+  //     // runners.push_back(jobstepThreadPool.invoke(Runner(this, j)));
+  //
+  //     RowGroupDL* dl = inputs[j];
+  //     uint32_t it = dl->getIterator();
+  //     rowgroup::RGData tmp;
+  //     while (dl->next(it, &tmp))
+  //     {
+  //       // discard rows
+  //     }
+  //   }
+  //   break;  // we’re stabilized, stop real work
+  // }
+  //
+  // }
+
+  runners.reserve(inputs.size());
+
   for (i = 0; i < inputs.size(); i++)
   {
-    bool more = readInput(i);
-    if (!more)
-    {
-      // Drain all remaining inputs so they don’t block upstream producers
-
-      // runners.reserve(inputs.size() - i - 1);
-      for (uint32_t j = i + 1; j < inputs.size(); j++)
-      {
-        // runners.push_back(jobstepThreadPool.invoke(Runner(this, j)));
-
-        RowGroupDL* dl = inputs[j];
-        uint32_t it = dl->getIterator();
-        rowgroup::RGData tmp;
-        while (dl->next(it, &tmp))
-        {
-          // discard rows
-        }
-      }
-      break;  // we’re stabilized, stop real work
-    }
+    runners.push_back(jobstepThreadPool.invoke(Runner(this, i)));
   }
 }
 
