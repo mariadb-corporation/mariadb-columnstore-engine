@@ -61,7 +61,7 @@ class TestFailoverAgent(BaseNodeManipTestCase):
             self.assertEqual(node.text, self.REMOTE_IP)
             node = root.find('./pm2_WriteEngineServer/IPAddr')
             self.assertEqual(node.text, self.REMOTE_IP)
-            
+
             # Note: when shared storage is off by default in a single node setup,
             # disabling use_rebalance_dbroots avoids requiring dbroot 1 presence during
             # _move_primary. In the shared storage ON scenario, we enable rebalancing to validate
@@ -94,6 +94,7 @@ class TestFailoverAgent(BaseNodeManipTestCase):
         self.tmp_files = (
             './deactivate0.xml','./deactivate1.xml', './deactivate2.xml'
         )
+        original_shared_storage = self._set_shared_storage(True)
         with (
             make_local_resolution_builder()
             .add_mapping(self.LOCAL_NODE, self.LOCAL_IP, bidirectional=True)
@@ -136,6 +137,8 @@ class TestFailoverAgent(BaseNodeManipTestCase):
             self.assertFalse(node.text == self.LOCAL_NODE)
             if node.tag in ['IPAddr', 'Node']:
                 self.assertEqual(node.text, self.REMOTE_IP)
+
+        _ = self._set_shared_storage(original_shared_storage)
 
     def test_designatePrimaryNode(self):
         self.tmp_files = (
