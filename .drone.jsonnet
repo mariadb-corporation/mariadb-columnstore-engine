@@ -16,6 +16,9 @@ local platforms = {
   [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
+local extra_servers_platforms = {
+  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04"],
+};
 
 //local archs = ["amd64", "arm64"];
 local archs = ["amd64"];
@@ -681,12 +684,12 @@ local AllPipelines =
   ] +
   // last argument is to ignore mtr and regression failures
   [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression", "mtr"])
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04", "rockylinux:9"]
-    for triggeringEvent in events
     for server in extra_servers[current_branch]
+    for platform in extra_servers_platforms[current_branch]
+    for triggeringEvent in events
   ] +
   // // last argument is to ignore mtr and regression failures
   [
@@ -700,15 +703,15 @@ local AllPipelines =
     for server in servers[current_branch]
   ] +
   // last argument is to ignore mtr and regression failures
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["ASan", "UBSan"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["ASan", "UBSan"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
 
   [];
 

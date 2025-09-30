@@ -33,11 +33,13 @@ fi
 select_pkg_format ${RESULT}
 
 start_container() {
+    message Starting $DOCKER_IMAGE
     if [[ $PKG_FORMAT == "rpm" ]]; then
         SYSTEMD_PATH="/usr/lib/systemd/systemd"
         MTR_PATH="/usr/share/mysql-test"
     else
-        SYSTEMD_PATH="systemd"
+        # Debian/Ubuntu based
+        SYSTEMD_PATH="/lib/systemd/systemd"
         MTR_PATH="/usr/share/mysql/mysql-test"
     fi
 
@@ -47,6 +49,7 @@ start_container() {
         --env DEBIAN_FRONTEND=noninteractive
         --env MCS_USE_S3_STORAGE=0
         --name "$CONTAINER_NAME"
+        --cgroupns=host
         --ulimit core=-1
         --privileged
         --detach
@@ -67,7 +70,20 @@ start_container() {
         exit 1
     fi
 
-    docker_run_args+=("$DOCKER_IMAGE" "$SYSTEMD_PATH" --unit=basic.target)
+    # Debian/Ubuntu: systemd expects cgroups and tmpfs for /run
+    if [[ $PKG_FORMAT == "deb" ]]; then
+        docker_run_args+=(--tmpfs /run --tmpfs /run/lock)
+    fi
+    # Debian 13: mount cgroup hierarchy (writable, systemd needs to manage cgroups)
+    if [[ $DOCKER_IMAGE == *"debian:13"* ]]; then
+        docker_run_args+=(--volume /sys/fs/cgroup:/sys/fs/cgroup)
+    fi
+
+    # Add image - must come after all docker run options
+    docker_run_args+=("$DOCKER_IMAGE")
+
+    # Always run systemd as PID 1 to enable systemctl-based waiting
+    docker_run_args+=("$SYSTEMD_PATH" --unit=basic.target)
 
     docker run "${docker_run_args[@]}"
     sleep 5
@@ -120,7 +136,7 @@ prepare_container() {
         execInnerDockerWithRetry "$CONTAINER_NAME" 'yum --nobest update -y && yum --nobest install -y cracklib-dicts diffutils elfutils epel-release expect findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
     else
         change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
-        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
+        execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname lz4 patch procps rsyslog sudo tar wget'
     fi
 
     # Configure core dump naming pattern

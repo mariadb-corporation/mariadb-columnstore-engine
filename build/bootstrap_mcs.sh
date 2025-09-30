@@ -23,7 +23,7 @@ COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 DEFAULT_MARIA_BUILD_PATH=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
-DISTRO_OPTIONS=("ubuntu:20.04" "ubuntu:22.04" "ubuntu:24.04" "debian:11" "debian:12" "rockylinux:8" "rockylinux:9" "rocky:10")
+DISTRO_OPTIONS=("ubuntu:22.04" "ubuntu:24.04" "debian:12" "debian:13" "rockylinux:8" "rockylinux:9" "rocky:10")
 
 GCC_VERSION="11"
 MDB_CMAKE_FLAGS=()
@@ -137,7 +137,7 @@ install_deps() {
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
       dnf install -y pcre2-devel gcc gcc-c++ curl-minimal ${RPM_BUILD_DEPS}"
 
-    elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
+    elif [[ $PKG_FORMAT == "deb" ]]; then
         command="apt-get -y update && apt-get -y install ${DEB_BUILD_DEPS}"
     else
         echo "Unsupported OS: $OS"
@@ -475,12 +475,10 @@ construct_cmake_flags() {
     if [[ "$OS" == *"rocky"* ]]; then
         OS_VERSION=${OS//[^0-9]/}
         MDB_CMAKE_FLAGS+=(-DRPM=rockylinux${OS_VERSION})
-    elif [[ "$OS" == "debian:11" ]]; then
-        CODENAME="bullseye"
     elif [[ "$OS" == "debian:12" ]]; then
         CODENAME="bookworm"
-    elif [[ "$OS" == "ubuntu:20.04" ]]; then
-        CODENAME="focal"
+    elif [[ "$OS" == "debian:13" ]]; then
+        CODENAME="trixie"
     elif [[ "$OS" == "ubuntu:22.04" ]]; then
         CODENAME="jammy"
     elif [[ "$OS" == "ubuntu:24.04" ]]; then
@@ -772,7 +770,7 @@ install() {
 
     cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/install_scripts/*.service /lib/systemd/system/
 
-    if [[ "$OS" = *"ubuntu"* || "$OS" = *"debian"* ]]; then
+    if [[ $PKG_FORMAT == "deb" ]]; then
         make_dir /usr/share/mysql
         make_dir /etc/mysql/
         cp "$MDB_SOURCE_PATH"/debian/additions/debian-start.inc.sh /usr/share/mysql/debian-start.inc.sh
