@@ -212,6 +212,8 @@ class NodeManipTester(BaseNodeManipTestCase):
         ):
             node_manipulation.remove_node(hostname, self.tmp_files[1], self.tmp_files[2], test_mode=True)
 
+        _ = self._set_shared_storage(original_shared_storage)
+
     def test_add_dbroot(self):
         self.tmp_files = (
             './dbroot-test0.xml', './dbroot-test1.xml', './dbroot-test2.xml',
