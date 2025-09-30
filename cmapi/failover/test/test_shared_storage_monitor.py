@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 # pylint: disable=protected-access
 
-from cmapi.failover.shared_storage_monitor import SharedStorageMonitor
-from cmapi.failover.heartbeat_history import HBHistory
+from failover.shared_storage_monitor import SharedStorageMonitor
+from failover.heartbeat_history import HBHistory
 
 
 class SharedStorageMonitorTestCase(unittest.TestCase):
