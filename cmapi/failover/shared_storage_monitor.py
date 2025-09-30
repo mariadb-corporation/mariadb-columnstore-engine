@@ -32,16 +32,26 @@ class SharedStorageMonitor:
         self._hb_history = hb_history
 
     def __del__(self):
-        self.stop()
+        try:
+            if getattr(self, '_runner', None):
+                self.stop()
+        except Exception:   # pylint: disable=broad-except
+            pass
 
     def start(self):
         self._die = False
-        self._runner = threading.Thread(target=self.monitor, name='SharedStorageMonitor')
+        if self._runner and self._runner.is_alive():
+            self._logger.debug('Shared storage monitor already running.')
+            return
+        self._runner = threading.Thread(target=self.monitor, name='SharedStorageMonitor', daemon=True)
         self._runner.start()
 
     def stop(self):
         self._die = True
-        self._runner.join()
+        if self._runner and threading.current_thread() is not self._runner:
+            self._runner.join(timeout=self.check_interval + 2)
+            if self._runner.is_alive():
+                self._logger.warning('Shared storage monitor thread did not exit promptly.')
 
     def monitor(self):
         self._logger.info('Starting shared storage monitor.')
