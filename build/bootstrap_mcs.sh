@@ -39,6 +39,7 @@ optparse.define short=c long=cloud desc="Enable cloud storage" variable=CLOUD_ST
 optparse.define short=C long=force-cmake-reconfig desc="Force cmake reconfigure" variable=FORCE_CMAKE_CONFIG default=false value=true
 optparse.define short=d long=distro desc="Choose your OS: ${DISTRO_OPTIONS[*]}" variable=OS
 optparse.define short=D long=install-deps desc="Install dependences" variable=INSTALL_DEPS default=false value=true
+optparse.define short=E long=set-cross-engine desc="Add sross engine join credentials" variable=CROSS_ENGINE_CREDS default=false value=true
 optparse.define short=F long=custom-cmake-flags desc="Add custom cmake flags" variable=CUSTOM_CMAKE_FLAGS
 optparse.define short=f long=do-not-freeze-revision desc="Disable revision freezing, or do not set 'update none' for columnstore submodule in MDB repository" variable=DO_NOT_FREEZE_REVISION default=false value=true
 optparse.define short=g long=alien desc="Turn off maintainer mode (ex. -Werror)" variable=MAINTAINER_MODE default=true value=false
@@ -588,7 +589,7 @@ build_binary() {
     message "Configuring cmake silently"
     ${CMAKE_BIN_NAME} "${MDB_CMAKE_FLAGS[@]}" -S"$MDB_SOURCE_PATH" -B"$MARIA_BUILD_PATH" | spinner
     message_split
-    # check_debian_install_file // will be uncommented later
+    check_debian_install_file
     generate_svgs
 
     ${CMAKE_BIN_NAME} --build "$MARIA_BUILD_PATH" -j "$CPUS" | onelinearizator
@@ -826,6 +827,22 @@ smoke() {
     fi
 }
 
+add_crossengine_creds() {
+    if [[ $CROSS_ENGINE_CREDS = false || $NO_CLEAN = true ]]; then
+        return
+    fi
+
+    message "Adding crossengine creds"
+
+    mcsSetConfig CrossEngineSupport User 'cejuser'
+    mcsSetConfig CrossEngineSupport Password 'Vagrant1|0000001'
+
+    mariadb -e "CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+                GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+                FLUSH PRIVILEGES;"
+
+}
+
 if [[ $DO_NOT_FREEZE_REVISION = false ]]; then
     disable_git_restore_frozen_revision
 fi
@@ -856,6 +873,7 @@ run_unit_tests
 run_microbenchmarks_tests
 install
 start_service
+add_crossengine_creds
 smoke
 
 message_splitted "FINISHED"

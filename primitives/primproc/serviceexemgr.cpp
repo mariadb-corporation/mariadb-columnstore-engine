@@ -237,7 +237,7 @@ const std::string ServiceExeMgr::prettyPrintMiniInfo(const std::string& in)
 
       std::string part(*iter3);
 
-      if (j != 0 && i == 8)
+      if (j != 0 && i == 8 && part.size() >= 3)
         part.resize(part.size() - 3);
 
       assert(i < header_parts);

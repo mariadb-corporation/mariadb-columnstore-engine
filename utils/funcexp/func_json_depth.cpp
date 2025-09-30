@@ -1,5 +1,6 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
+#include "json_lib.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -29,7 +30,6 @@ int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   int depth = 0, currDepth = 0;
   bool incDepth = true;
 
-  json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
 
   do

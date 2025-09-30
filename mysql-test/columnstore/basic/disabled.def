@@ -7,3 +7,6 @@ mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
 udf_calshowpartitions : unstable values for min/max in the output(sometimes N/A, sometimes numbers) 2022-07-26 roman.nozdrin@mariadb.com
 mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 pron : pron is not threadsfe and doesn't work with PrimProc TDB: leonid.fedorov@mariadb.com
+ctype_extent_koi8u : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
+ctype_extent_latin1 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
+ctype_extent_utf8mb3 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com

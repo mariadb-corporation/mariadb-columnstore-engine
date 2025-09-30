@@ -1,0 +1,219 @@
+DROP DATABASE IF EXISTS rbo_parallel_ces_tpch;
+CREATE DATABASE rbo_parallel_ces_tpch;
+USE rbo_parallel_ces_tpch;
+SELECT calsettrace(1);
+calsettrace(1)
+0
+CREATE TABLE `lineitem` (
+`L_ORDERKEY` int(11) NOT NULL,
+`L_PARTKEY` int(11) NOT NULL,
+`L_SUPPKEY` int(11) NOT NULL,
+`L_LINENUMBER` int(11) NOT NULL,
+`L_QUANTITY` decimal(15,2) NOT NULL,
+`L_EXTENDEDPRICE` decimal(15,2) NOT NULL,
+`L_DISCOUNT` decimal(15,2) NOT NULL,
+`L_TAX` decimal(15,2) NOT NULL,
+`L_RETURNFLAG` char(1) NOT NULL,
+`L_LINESTATUS` char(1) NOT NULL,
+`L_SHIPDATE` date NOT NULL,
+`L_COMMITDATE` date NOT NULL,
+`L_RECEIPTDATE` date NOT NULL,
+`L_SHIPINSTRUCT` char(25) NOT NULL,
+`L_SHIPMODE` char(10) NOT NULL,
+`L_COMMENT` varchar(44) NOT NULL,
+`recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0,
+KEY `L_ORDERKEY` (`L_ORDERKEY`,`L_SUPPKEY`,`recdate_gt_commitdate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+INSERT INTO `lineitem` (
+`L_ORDERKEY`, `L_PARTKEY`, `L_SUPPKEY`, `L_LINENUMBER`, 
+`L_QUANTITY`, `L_EXTENDEDPRICE`, `L_DISCOUNT`, `L_TAX`,
+`L_RETURNFLAG`, `L_LINESTATUS`, `L_SHIPDATE`, `L_COMMITDATE`, `L_RECEIPTDATE`,
+`L_SHIPINSTRUCT`, `L_SHIPMODE`, `L_COMMENT`, `recdate_gt_commitdate`
+) VALUES
+(32, 197921, 441, 2, 32.00, 64605.44, 0.02, 0.00, 'N', 'O', '1995-08-14', '1995-10-07', '1995-08-27', 'COLLECT COD', 'AIR', 'lithely regular deposits. fluffily', 0),
+(3, 128449, 3474, 3, 27.00, 39890.88, 0.06, 0.07, 'A', 'F', '1994-01-16', '1993-11-22', '1994-01-23', 'DELIVER IN PERSON', 'SHIP', 'nal foxes wake. ', 1),
+(4, 88035, 5560, 1, 30.00, 30690.90, 0.03, 0.08, 'N', 'O', '1996-01-10', '1995-12-14', '1996-01-18', 'DELIVER IN PERSON', 'REG AIR', '- quickly regular packages sleep. idly', 1),
+(5, 123927, 3928, 2, 26.00, 50723.92, 0.07, 0.08, 'R', 'F', '1994-10-16', '1994-09-25', '1994-10-19', 'NONE', 'FOB', 'sts use slyly quickly special instruc', 1),
+(7, 182052, 9607, 1, 12.00, 13608.60, 0.07, 0.03, 'N', 'O', '1996-05-07', '1996-03-13', '1996-06-03', 'TAKE BACK RETURN', 'FOB', 'ss pinto beans wake against th', 1),
+(34, 88362, 871, 1, 13.00, 17554.68, 0.00, 0.07, 'N', 'O', '1998-10-23', '1998-09-14', '1998-11-06', 'NONE', 'REG AIR', 'nic accounts. deposits are alon', 1),
+(1, 155190, 7706, 1, 17.00, 21168.23, 0.04, 0.02, 'N', 'O', '1996-03-13', '1996-02-12', '1996-03-22', 'DELIVER IN PERSON', 'TRUCK', 'egular courts above the', 1),
+(33, 137469, 9983, 3, 5.00, 7532.30, 0.05, 0.03, 'A', 'F', '1993-12-09', '1993-12-25', '1993-12-23', 'TAKE BACK RETURN', 'AIR', '. stealthily bold exc', 0),
+(151872, 939, 940, 2, 42.00, 77277.06, 0.01, 0.00, 'N', 'O', '1995-09-30', '1995-09-28', '1995-10-27', 'TAKE BACK RETURN', 'TRUCK', 'ly slyly fina', 1),
+(77632, 966, 967, 4, 11.00, 20536.56, 0.04, 0.03, 'N', 'O', '1995-09-28', '1995-09-22', '1995-10-24', 'NONE', 'FOB', 'nts was furi', 1),
+(26439, 1085, 1086, 3, 3.00, 2958.24, 0.03, 0.00, 'N', 'O', '1995-09-30', '1995-12-04', '1995-10-22', 'DELIVER IN PERSON', 'TRUCK', 'ackages wake slyly a', 0),
+(98599, 1239, 8740, 2, 48.00, 54731.04, 0.09, 0.06, 'N', 'O', '1995-09-24', '1995-08-26', '1995-10-02', 'TAKE BACK RETURN', 'TRUCK', 'ake always p', 1),
+(95301, 1343, 8844, 2, 33.00, 41063.22, 0.00, 0.01, 'N', 'O', '1995-09-09', '1995-11-01', '1995-09-28', 'TAKE BACK RETURN', 'FOB', 'carefully regular requests. requests', 0),
+(83008, 2988, 2989, 2, 12.00, 22691.76, 0.06, 0.07, 'N', 'O', '1995-09-15', '1995-09-24', '1995-10-09', 'NONE', 'RAIL', 'into beans do', 1),
+(117665, 3024, 3025, 4, 10.00, 9270.20, 0.02, 0.01, 'N', 'O', '1995-09-17', '1995-08-26', '1995-10-12', 'COLLECT COD', 'AIR', 'about the slyly even req', 1),
+(163746, 3126, 8127, 4, 45.00, 46310.40, 0.02, 0.00, 'N', 'O', '1995-09-21', '1995-09-17', '1995-10-01', 'DELIVER IN PERSON', 'RAIL', 'ggle. regular de', 1),
+(161669, 3142, 8143, 3, 42.00, 43895.88, 0.06, 0.06, 'N', 'O', '1995-09-29', '1995-09-09', '1995-10-29', 'COLLECT COD', 'RAIL', 'ts. unusual accounts gro', 1),
+(81826, 3357, 8358, 5, 5.00, 6301.75, 0.05, 0.04, 'N', 'O', '1995-09-06', '1995-06-14', '1995-09-19', 'TAKE BACK RETURN', 'FOB', 'y final pains x-ray blithely. pen', 1),
+(118849, 3625, 6126, 5, 24.00, 36686.88, 0.09, 0.01, 'N', 'O', '1995-09-24', '1995-09-23', '1995-09-27', 'COLLECT COD', 'RAIL', 'c requests. furiously stealthy theodoli', 1),
+(135239, 4119, 1620, 5, 36.00, 36831.96, 0.05, 0.03, 'N', 'O', '1995-09-06', '1995-07-16', '1995-09-09', 'COLLECT COD', 'AIR', ' after the accounts. qu', 1),
+(30944, 4466, 9467, 1, 47.00, 64411.62, 0.02, 0.02, 'N', 'O', '1995-09-27', '1995-08-03', '1995-10-11', 'COLLECT COD', 'FOB', 'k platelets nag. slyly regular instructio', 1),
+(1001, 2217, 2218, 1, 500.00, 5000.00, 0.05, 0.02, 'A', 'F', '1994-03-15', '1994-02-10', '1994-03-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1002, 2217, 2218, 2, 500.00, 5000.00, 0.05, 0.02, 'A', 'F', '1994-06-15', '1994-05-10', '1994-06-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1003, 2217, 9718, 1, 100.00, 1000.00, 0.05, 0.02, 'A', 'F', '1994-04-15', '1994-03-10', '1994-04-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1004, 2217, 9718, 2, 100.00, 1000.00, 0.05, 0.02, 'A', 'F', '1994-07-15', '1994-06-10', '1994-07-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1005, 4668, 7169, 1, 750.00, 7500.00, 0.05, 0.02, 'A', 'F', '1994-05-15', '1994-04-10', '1994-05-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1006, 4668, 7169, 2, 750.00, 7500.00, 0.05, 0.02, 'A', 'F', '1994-08-15', '1994-07-10', '1994-08-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1007, 4918, 2419, 1, 400.00, 4000.00, 0.05, 0.02, 'A', 'F', '1994-09-15', '1994-08-10', '1994-09-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1008, 4918, 2419, 2, 400.00, 4000.00, 0.05, 0.02, 'A', 'F', '1994-10-15', '1994-09-10', '1994-10-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1009, 6092, 6093, 1, 600.00, 6000.00, 0.05, 0.02, 'A', 'F', '1994-11-15', '1994-10-10', '1994-11-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1010, 6092, 6093, 2, 600.00, 6000.00, 0.05, 0.02, 'A', 'F', '1994-12-15', '1994-11-10', '1994-12-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1011, 7281, 2282, 1, 140.00, 1400.00, 0.05, 0.02, 'A', 'F', '1994-01-15', '1994-01-10', '1994-01-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1012, 7281, 2282, 2, 140.00, 1400.00, 0.05, 0.02, 'A', 'F', '1994-02-15', '1994-02-10', '1994-02-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1013, 8184, 3185, 1, 500.00, 5000.00, 0.05, 0.02, 'A', 'F', '1994-03-15', '1994-02-10', '1994-03-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1014, 8184, 3185, 2, 500.00, 5000.00, 0.05, 0.02, 'A', 'F', '1994-04-15', '1994-03-10', '1994-04-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1015, 9703, 2204, 1, 550.00, 5500.00, 0.05, 0.02, 'A', 'F', '1994-05-15', '1994-04-10', '1994-05-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1016, 9703, 2204, 2, 550.00, 5500.00, 0.05, 0.02, 'A', 'F', '1994-06-15', '1994-05-10', '1994-06-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1017, 10297, 2799, 1, 250.00, 2500.00, 0.05, 0.02, 'A', 'F', '1994-07-15', '1994-06-10', '1994-07-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1018, 10297, 2799, 2, 250.00, 2500.00, 0.05, 0.02, 'A', 'F', '1994-08-15', '1994-07-10', '1994-08-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1019, 10297, 5300, 1, 35.00, 350.00, 0.05, 0.02, 'A', 'F', '1994-09-15', '1994-08-10', '1994-09-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0),
+(1020, 10297, 5300, 2, 35.00, 350.00, 0.05, 0.02, 'A', 'F', '1994-10-15', '1994-09-10', '1994-10-20', 'DELIVER IN PERSON', 'TRUCK', 'forest part delivery', 0);
+CREATE TABLE `part` (
+`P_PARTKEY` int(11) NOT NULL,
+`P_NAME` varchar(55) NOT NULL,
+`P_MFGR` char(25) NOT NULL,
+`P_BRAND` char(10) NOT NULL,
+`P_TYPE` varchar(25) NOT NULL,
+`P_SIZE` int(11) NOT NULL,
+`P_CONTAINER` char(10) NOT NULL,
+`P_RETAILPRICE` decimal(15,2) NOT NULL,
+`P_COMMENT` varchar(23) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+INSERT INTO `part` (
+`P_PARTKEY`, `P_NAME`, `P_MFGR`, `P_BRAND`, `P_TYPE`, 
+`P_SIZE`, `P_CONTAINER`, `P_RETAILPRICE`, `P_COMMENT`
+) VALUES
+(939, 'salmon magenta orange coral aquamarine', 'Manufacturer#1', 'Brand#14', 'PROMO BURNISHED BRASS', 41, 'WRAP PACK', 1839.93, 'ages wake doggedly of'),
+(966, 'turquoise antique brown violet plum', 'Manufacturer#4', 'Brand#42', 'PROMO BURNISHED TIN', 24, 'MED CAN', 1866.96, ' the carefully'),
+(1085, 'floral frosted seashell light red', 'Manufacturer#4', 'Brand#45', 'PROMO PLATED COPPER', 26, 'LG CAN', 986.08, 'anent notornis about'),
+(1239, 'purple dodger lime peach burnished', 'Manufacturer#5', 'Brand#51', 'PROMO BURNISHED STEEL', 24, 'LG CASE', 1140.23, 'structions? quickly i'),
+(1343, 'navy metallic green cornsilk blue', 'Manufacturer#3', 'Brand#31', 'PROMO BURNISHED TIN', 11, 'WRAP PKG', 1244.34, 'cuses'),
+(2988, 'medium white firebrick cream sky', 'Manufacturer#3', 'Brand#33', 'PROMO POLISHED COPPER', 3, 'MED DRUM', 1890.98, '. boldly pendin'),
+(3024, 'lemon burnished goldenrod khaki saddle', 'Manufacturer#1', 'Brand#15', 'PROMO BURNISHED COPPER', 10, 'MED PACK', 927.02, ', eve'),
+(3126, 'chiffon azure orange seashell blanched', 'Manufacturer#3', 'Brand#34', 'PROMO POLISHED COPPER', 1, 'LG DRUM', 1029.12, 'special dolphins al'),
+(3142, 'papaya dim beige salmon pink', 'Manufacturer#3', 'Brand#33', 'PROMO BRUSHED STEEL', 50, 'SM CAN', 1045.14, 'quests. slyly'),
+(3357, 'violet dim metallic lemon spring', 'Manufacturer#3', 'Brand#32', 'PROMO ANODIZED COPPER', 40, 'SM CASE', 1260.35, 'lent pl'),
+(3625, 'indian peach coral brown linen', 'Manufacturer#5', 'Brand#54', 'PROMO PLATED TIN', 50, 'MED CASE', 1528.62, 'ccounts cajole ca'),
+(4119, 'blanched salmon gainsboro grey coral', 'Manufacturer#4', 'Brand#43', 'PROMO BRUSHED BRASS', 40, 'JUMBO PACK', 1023.11, 'dependencies wa'),
+(4466, 'black white chocolate blue drab', 'Manufacturer#2', 'Brand#21', 'PROMO ANODIZED NICKEL', 22, 'SM CAN', 1370.46, 'r the regular braids:'),
+(88035, 'cornsilk navajo cornflower metallic midnight', 'Manufacturer#4', 'Brand#45', 'PROMO BRUSHED NICKEL', 16, 'JUMBO DRUM', 1023.03, 'ly even theodolites a'),
+(88362, 'ivory dodger thistle royal olive', 'Manufacturer#2', 'Brand#21', 'ECONOMY POLISHED STEEL', 39, 'WRAP BAG', 1350.36, 'even requests.'),
+(123927, 'firebrick powder light chiffon violet', 'Manufacturer#1', 'Brand#14', 'MEDIUM PLATED TIN', 41, 'WRAP CAN', 1950.92, 'ackages. blithely'),
+(128449, 'cream linen salmon smoke blue', 'Manufacturer#2', 'Brand#25', 'STANDARD BURNISHED BRASS', 10, 'WRAP BOX', 1477.44, 'nal, regular inst'),
+(137469, 'steel royal frosted peru sienna', 'Manufacturer#4', 'Brand#42', 'ECONOMY BURNISHED COPPER', 17, 'LG PKG', 1506.46, 'unts aft'),
+(155190, 'chocolate lace cornflower rosy light', 'Manufacturer#4', 'Brand#44', 'PROMO BRUSHED NICKEL', 9, 'JUMBO JAR', 1245.19, 'sly unusual orbits use'),
+(182052, 'blue floral drab yellow dark', 'Manufacturer#5', 'Brand#52', 'MEDIUM PLATED COPPER', 38, 'JUMBO PKG', 1134.05, 'ic, regular foxes. bo'),
+(197921, 'goldenrod yellow royal salmon linen', 'Manufacturer#5', 'Brand#53', 'MEDIUM BRUSHED BRASS', 10, 'WRAP DRUM', 2018.92, 'r the quickl'),
+(2217, 'forest lavender snow thistle peru', 'Manufacturer#4', 'Brand#41', 'PROMO BURNISHED NICKEL', 47, 'SM PKG', 1119.21, 'regular'),
+(4354, 'forest navajo medium salmon mint', 'Manufacturer#4', 'Brand#45', 'PROMO BURNISHED BRASS', 16, 'WRAP PKG', 1258.35, 'deposits are'),
+(4668, 'forest lemon metallic blush orange', 'Manufacturer#3', 'Brand#35', 'STANDARD PLATED COPPER', 9, 'LG DRUM', 1572.66, 'es thrash qui'),
+(4918, 'forest orange midnight green cornflower', 'Manufacturer#5', 'Brand#53', 'ECONOMY BRUSHED TIN', 45, 'LG BAG', 1822.91, 'egular ideas hagg'),
+(6092, 'forest goldenrod deep maroon misty', 'Manufacturer#3', 'Brand#34', 'PROMO ANODIZED STEEL', 22, 'JUMBO JAR', 998.09, 'ns run f'),
+(7281, 'forest lime wheat chartreuse violet', 'Manufacturer#4', 'Brand#41', 'PROMO ANODIZED COPPER', 9, 'JUMBO CAN', 1188.28, ' ironic depende'),
+(8184, 'forest powder medium saddle bisque', 'Manufacturer#5', 'Brand#54', 'STANDARD POLISHED COPPER', 22, 'MED BAG', 1092.18, 'ven accounts ac'),
+(9703, 'forest steel deep lemon goldenrod', 'Manufacturer#3', 'Brand#34', 'STANDARD ANODIZED COPPER', 45, 'SM BAG', 1612.70, 'symptot'),
+(10297, 'forest tomato grey linen plum', 'Manufacturer#2', 'Brand#22', 'ECONOMY BRUSHED NICKEL', 33, 'MED PACK', 1207.29, 'equests nag slyly b'),
+(10439, 'forest salmon red saddle hot', 'Manufacturer#4', 'Brand#43', 'SMALL PLATED STEEL', 32, 'JUMBO PACK', 1349.43, ', pending theodo'),
+(10920, 'forest sandy salmon lace sienna', 'Manufacturer#4', 'Brand#41', 'ECONOMY ANODIZED TIN', 39, 'JUMBO DRUM', 1830.92, 'ly idly close pl'),
+(11926, 'forest red peru blush dodger', 'Manufacturer#2', 'Brand#21', 'LARGE BRUSHED TIN', 6, 'SM CASE', 1837.92, 'ironic waters nag'),
+(11946, 'forest rose metallic spring peru', 'Manufacturer#2', 'Brand#23', 'STANDARD BRUSHED BRASS', 25, 'SM PKG', 1857.94, 'ccounts.'),
+(12395, 'forest steel blue mint gainsboro', 'Manufacturer#4', 'Brand#44', 'MEDIUM BRUSHED STEEL', 44, 'LG PKG', 1307.39, 'fily ex'),
+(12924, 'forest royal magenta rose sky', 'Manufacturer#3', 'Brand#31', 'LARGE BRUSHED BRASS', 49, 'WRAP BOX', 1836.92, 'eas unwind quickly c'),
+(13592, 'forest dodger orchid gainsboro azure', 'Manufacturer#4', 'Brand#43', 'MEDIUM BRUSHED BRASS', 6, 'WRAP CAN', 1505.59, 'account'),
+(13607, 'forest blanched plum white cornsilk', 'Manufacturer#5', 'Brand#54', 'STANDARD ANODIZED STEEL', 2, 'WRAP DRUM', 1520.60, 'y regular'),
+(14029, 'forest bisque azure ghost indian', 'Manufacturer#5', 'Brand#52', 'ECONOMY ANODIZED STEEL', 3, 'SM DRUM', 943.02, 'yly bold foxes'),
+(15784, 'forest puff azure misty dodger', 'Manufacturer#2', 'Brand#21', 'PROMO BURNISHED COPPER', 33, 'SM JAR', 1699.78, 'ly ironic accounts'),
+(16108, 'forest pale floral blue dim', 'Manufacturer#3', 'Brand#34', 'MEDIUM BRUSHED BRASS', 4, 'MED BOX', 1024.10, 'l accounts do boos'),
+(2217, 'forest lavender snow thistle peru', 'Manufacturer#4', 'Brand#41', 'PROMO BURNISHED NICKEL', 47, 'SM PKG', 1119.21, 'regular'),
+(4668, 'forest lemon metallic blush orange', 'Manufacturer#3', 'Brand#35', 'STANDARD PLATED COPPER', 9, 'LG DRUM', 1572.66, 'es thrash qui'),
+(4918, 'forest orange midnight green cornflower', 'Manufacturer#5', 'Brand#53', 'ECONOMY BRUSHED TIN', 45, 'LG BAG', 1822.91, 'egular ideas hagg'),
+(6092, 'forest goldenrod deep maroon misty', 'Manufacturer#3', 'Brand#34', 'PROMO ANODIZED STEEL', 22, 'JUMBO JAR', 998.09, 'ns run f'),
+(6216, 'forest beige red blush deep', 'Manufacturer#5', 'Brand#51', 'MEDIUM BRUSHED BRASS', 47, 'MED JAR', 1122.21, 'ly about the furiou'),
+(6729, 'forest mint cyan goldenrod azure', 'Manufacturer#1', 'Brand#12', 'LARGE BURNISHED TIN', 36, 'LG BOX', 1635.72, 'ong the warthogs i'),
+(7281, 'forest lime wheat chartreuse violet', 'Manufacturer#4', 'Brand#41', 'PROMO ANODIZED COPPER', 9, 'JUMBO CAN', 1188.28, ' ironic depende'),
+(8184, 'forest powder medium saddle bisque', 'Manufacturer#5', 'Brand#54', 'STANDARD POLISHED COPPER', 22, 'MED BAG', 1092.18, 'ven accounts ac'),
+(9703, 'forest steel deep lemon goldenrod', 'Manufacturer#3', 'Brand#34', 'STANDARD ANODIZED COPPER', 45, 'SM BAG', 1612.70, 'symptot'),
+(10297, 'forest tomato grey linen plum', 'Manufacturer#2', 'Brand#22', 'ECONOMY BRUSHED NICKEL', 33, 'MED PACK', 1207.29, 'equests nag slyly b'),
+(10370, 'forest orchid deep antique peru', 'Manufacturer#2', 'Brand#22', 'SMALL PLATED TIN', 9, 'WRAP CASE', 1280.37, 'final instruction'),
+(10439, 'forest salmon red saddle hot', 'Manufacturer#4', 'Brand#43', 'SMALL PLATED STEEL', 32, 'JUMBO PACK', 1349.43, ', pending theodo'),
+(10920, 'forest sandy salmon lace sienna', 'Manufacturer#4', 'Brand#41', 'ECONOMY ANODIZED TIN', 39, 'JUMBO DRUM', 1830.92, 'ly idly close pl'),
+(11244, 'forest pink snow saddle sienna', 'Manufacturer#3', 'Brand#33', 'PROMO BRUSHED NICKEL', 22, 'JUMBO DRUM', 1155.24, 'ep slyly deposits.'),
+(11512, 'forest light peru coral thistle', 'Manufacturer#5', 'Brand#53', 'SMALL BRUSHED STEEL', 21, 'MED PKG', 1423.51, 'inal forges. carefull'),
+(11926, 'forest red peru blush dodger', 'Manufacturer#2', 'Brand#21', 'LARGE BRUSHED TIN', 6, 'SM CASE', 1837.92, 'ironic waters nag'),
+(11946, 'forest rose metallic spring peru', 'Manufacturer#2', 'Brand#23', 'STANDARD BRUSHED BRASS', 25, 'SM PKG', 1857.94, 'ccounts.'),
+(12020, 'forest lavender mint navy blush', 'Manufacturer#3', 'Brand#35', 'PROMO BURNISHED STEEL', 21, 'WRAP CASE', 932.02, 'er th'),
+(12395, 'forest steel blue mint gainsboro', 'Manufacturer#4', 'Brand#44', 'MEDIUM BRUSHED STEEL', 44, 'LG PKG', 1307.39, 'fily ex'),
+(12924, 'forest royal magenta rose sky', 'Manufacturer#3', 'Brand#31', 'LARGE BRUSHED BRASS', 49, 'WRAP BOX', 1836.92, 'eas unwind quickly c'),
+(13379, 'forest moccasin gainsboro slate lemon', 'Manufacturer#2', 'Brand#25', 'MEDIUM ANODIZED BRASS', 39, 'MED JAR', 1292.37, 'refully final pint'),
+(13592, 'forest dodger orchid gainsboro azure', 'Manufacturer#4', 'Brand#43', 'MEDIUM BRUSHED BRASS', 6, 'WRAP CAN', 1505.59, 'account'),
+(13607, 'forest blanched plum white cornsilk', 'Manufacturer#5', 'Brand#54', 'STANDARD ANODIZED STEEL', 2, 'WRAP DRUM', 1520.60, 'y regular'),
+(14029, 'forest bisque azure ghost indian', 'Manufacturer#5', 'Brand#52', 'ECONOMY ANODIZED STEEL', 3, 'SM DRUM', 943.02, 'yly bold foxes'),
+(14200, 'forest thistle black grey ghost', 'Manufacturer#3', 'Brand#31', 'PROMO PLATED STEEL', 1, 'MED DRUM', 1114.20, 'each blithe'),
+(15784, 'forest puff azure misty dodger', 'Manufacturer#2', 'Brand#21', 'PROMO BURNISHED COPPER', 33, 'SM JAR', 1699.78, 'ly ironic accounts'),
+(16024, 'forest purple navajo lavender misty', 'Manufacturer#3', 'Brand#35', 'ECONOMY ANODIZED BRASS', 16, 'LG JAR', 940.02, 'xes sle'),
+(16108, 'forest pale floral blue dim', 'Manufacturer#3', 'Brand#34', 'MEDIUM BRUSHED BRASS', 4, 'MED BOX', 1024.10, 'l accounts do boos'),
+(16377, 'forest moccasin ghost blanched olive', 'Manufacturer#5', 'Brand#55', 'PROMO BRUSHED STEEL', 37, 'WRAP CASE', 1293.37, ' blithely fin'),
+(16697, 'forest tomato misty rose dim', 'Manufacturer#4', 'Brand#45', 'ECONOMY PLATED NICKEL', 9, 'MED BAG', 1613.69, ' haggle blith'),
+(17300, 'forest sky light violet chartreuse', 'Manufacturer#3', 'Brand#31', 'MEDIUM BRUSHED STEEL', 1, 'WRAP PKG', 1217.30, 'ickly even'),
+(17310, 'forest dim royal sandy plum', 'Manufacturer#3', 'Brand#32', 'MEDIUM ANODIZED STEEL', 8, 'JUMBO BOX', 1227.31, 'instructions wake. b'),
+(17692, 'forest burlywood tomato drab rosy', 'Manufacturer#5', 'Brand#55', 'SMALL BURNISHED TIN', 3, 'LG JAR', 1609.69, 'fluff'),
+(17925, 'forest cream blush turquoise saddle', 'Manufacturer#2', 'Brand#21', 'STANDARD POLISHED COPPER', 24, 'MED BAG', 1842.92, ' even pinto beans da'),
+(18227, 'forest lavender orchid blush mint', 'Manufacturer#2', 'Brand#22', 'ECONOMY BURNISHED TIN', 35, 'LG BAG', 1145.22, 'l courts. quickly ir'),
+(18370, 'forest rose smoke salmon slate', 'Manufacturer#1', 'Brand#12', 'MEDIUM BURNISHED BRASS', 3, 'WRAP PKG', 1288.37, 'e carefully'),
+(20294, 'forest lace seashell purple blanched', 'Manufacturer#3', 'Brand#33', 'ECONOMY BURNISHED BRASS', 43, 'JUMBO CASE', 1214.29, 'owly r'),
+(20421, 'forest chartreuse pink azure indian', 'Manufacturer#4', 'Brand#41', 'MEDIUM BURNISHED TIN', 43, 'SM JAR', 1341.42, 'ular r'),
+(21654, 'forest brown lace snow honeydew', 'Manufacturer#4', 'Brand#44', 'LARGE BRUSHED COPPER', 32, 'SM PACK', 1575.65, 's nag'),
+(21801, 'forest thistle light lemon gainsboro', 'Manufacturer#4', 'Brand#42', 'ECONOMY PLATED COPPER', 24, 'LG JAR', 1722.80, 'ncies w'),
+(23023, 'forest indian turquoise medium pink', 'Manufacturer#2', 'Brand#21', 'LARGE BURNISHED TIN', 14, 'MED CAN', 946.02, 'ly. even, pendi'),
+(23200, 'forest dodger hot tan cornflower', 'Manufacturer#4', 'Brand#41', 'SMALL BURNISHED TIN', 17, 'JUMBO PACK', 1123.20, 'ackages.'),
+(25122, 'forest pale orange cyan red', 'Manufacturer#4', 'Brand#45', 'LARGE PLATED TIN', 31, 'MED DRUM', 1047.12, 'ill cajole a');
+set histogram_size=2;
+ANALYZE TABLE lineitem PERSISTENT FOR COLUMNS(l_orderkey) INDEXES();
+Table	Op	Msg_type	Msg_text
+rbo_parallel_ces_tpch.lineitem	analyze	status	Engine-independent statistics collected
+rbo_parallel_ces_tpch.lineitem	analyze	status	OK
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
+select
+100.00 * sum(case
+when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+else 0
+end) / sum(l_extendedprice * (1 - l_discount)) as promo_revenue
+from
+lineitem,
+part
+where
+l_partkey = p_partkey
+and l_shipdate >= date '1995-09-01'
+	and l_shipdate < date '1995-09-01' + interval '1' month
+order by sum(case
+when p_type like 'PROMO%'
+			then l_extendedprice * (1 - l_discount)
+else 0
+end);
+promo_revenue
+100.0000000000
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+rule_parallel_ces_applied
+1
+SET @opt_plan := mcs_get_plan('optimized');
+set @rewritten_derived_name = 'derived table - $added_sub_rbo_parallel_ces_tpch_lineitem_0';
+set @original_table_name = '.lineitem(lineitem/) engineType=ForeignEngine';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) AS rewritten_derived_table_count;
+rewritten_derived_table_count
+1.0000
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
+original_table_count
+3.0000
+SELECT calsettrace(0);
+calsettrace(0)
+1
+DROP DATABASE rbo_parallel_ces_tpch;
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;

@@ -294,11 +294,11 @@ const string SimpleFilter::toString(bool compact) const
   else
   {
     // For other operand types, show them compactly
-    output << endl << "LHS: " << fLhs->data();
+    output << endl << "LHS: " << fLhs->toString();
   }
 
-  output << endl << "Op: " << fOp->data();
-  output << endl << "RHS: " << fRhs->data();
+  output << endl << "Op: " << fOp->toString();
+  output << endl << "RHS: " << fRhs->toString();
 
   return output.str();
 }
@@ -810,6 +810,11 @@ const std::vector<SimpleColumn*>& SimpleFilter::simpleColumnList()
   return fSimpleColumnList;
 }
 
+const std::vector<SimpleColumn*>& SimpleFilter::simpleColumnListExtended()
+{
+  return fSimpleColumnListExtended;
+}
+
 void SimpleFilter::setSimpleColumnList()
 {
   SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);
@@ -836,6 +841,37 @@ void SimpleFilter::setSimpleColumnList()
     fRhs->setSimpleColumnList();
     fSimpleColumnList.insert(fSimpleColumnList.end(), fRhs->simpleColumnList().begin(),
                              fRhs->simpleColumnList().end());
+  }
+}
+
+void SimpleFilter::setSimpleColumnListExtended()
+{
+  SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);
+  SimpleColumn* rsc = dynamic_cast<SimpleColumn*>(fRhs);
+  fSimpleColumnListExtended.clear();
+
+  if (lsc)
+  {
+    fSimpleColumnListExtended.push_back(lsc);
+  }
+  else if (fLhs)
+  {
+    fLhs->setSimpleColumnListExtended();
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fLhs->simpleColumnListExtended().begin(),
+                                     fLhs->simpleColumnListExtended().end());
+  }
+
+  if (rsc)
+  {
+    fSimpleColumnListExtended.push_back(rsc);
+  }
+  else if (fRhs)
+  {
+    fRhs->setSimpleColumnListExtended();
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fRhs->simpleColumnListExtended().begin(),
+                                     fRhs->simpleColumnListExtended().end());
   }
 }
 

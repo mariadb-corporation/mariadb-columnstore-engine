@@ -13,8 +13,10 @@ CREATE DATABASE MCOL_5175;
 USE MCOL_5175;
 
 create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8;
+--replace_regex /utf8mb3_uca1400_ai_ci/utf8mb3_general_ci/
 show create table testtext2;
 alter table testtext2 add column myvalue2 text;
+--replace_regex /utf8mb3_uca1400_ai_ci/utf8mb3_general_ci/
 show create table testtext2;
 insert into testtext2 (myvalue2) VALUES ('myvalue');
 select * from testtext2;

@@ -1,6 +1,7 @@
 #include "functor_json.h"
 #include "functioncolumn.h"
 #include "constantcolumn.h"
+#include "json_lib.h"
 #include "rowgroup.h"
 using namespace execplan;
 using namespace rowgroup;
@@ -29,9 +30,8 @@ bool Func_json_exists::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
     return false;
 
   int jsErr = 0;
-  json_engine_t jsEg;
-  initJSEngine(jsEg, getCharset(fp[0]), js);
 
+  initJSEngine(jsEg, getCharset(fp[0]), js);
   if (!path.parsed && parseJSPath(path, row, fp[1]))
     goto error;
 

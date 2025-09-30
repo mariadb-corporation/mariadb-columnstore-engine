@@ -262,6 +262,8 @@ class Config
   void checkAndReloadConfig();
 };
 
+bool parseBooleanParamValue(const std::string& s);
+
 }  // namespace config
 
 #undef EXPORT

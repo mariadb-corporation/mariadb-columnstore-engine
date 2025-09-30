@@ -1,4 +1,5 @@
 import json
+import logging
 
 import cherrypy
 
@@ -13,6 +14,7 @@ from cmapi_server.controllers.s3dataload import S3DataLoadController
 
 _version = '0.4.0'
 dispatcher = cherrypy.dispatch.RoutesDispatcher()
+logger = logging.getLogger(__name__)
 
 
 # /_version/status (GET)
@@ -280,3 +282,18 @@ def jsonify_error(status, message, traceback, version): \
     cherrypy.response.status = status
 
     return response_body
+
+
+def jsonify_404(status, message, traceback, version):
+    # pylint: disable=unused-argument
+    """Specialized renderer for 404 Not Found that logs context, then renders JSON.
+    """
+    try:
+        req = cherrypy.request
+        method = getattr(req, 'method', '')
+        path = getattr(req, 'path_info', '') or '/'
+        remote_ip = getattr(getattr(req, 'remote', None), 'ip', '') or '?'
+        logger.error("404 Not Found: %s %s from %s", method, path, remote_ip)
+    except Exception:
+        pass
+    return jsonify_error(status, message, traceback, version)

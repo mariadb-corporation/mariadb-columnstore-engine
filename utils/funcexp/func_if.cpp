@@ -28,6 +28,7 @@ using namespace std;
 #include "functor_all.h"
 #include "functioncolumn.h"
 #include "predicateoperator.h"
+#include "constantcolumn.h"
 using namespace execplan;
 
 #include "rowgroup.h"
@@ -124,9 +125,58 @@ CalpontSystemCatalog::ColType Func_if::operationType(FunctionParm& fp,
     return ct;
   }
 
-  CalpontSystemCatalog::ColType ct = fp[1]->data()->resultType();
+  // Special handling: if one branch is a NULL constant and the other is a temporal type,
+  // the result type must be that temporal type. Otherwise PredicateOperator might promote
+  // to a non-temporal type causing zero-date conversions.
+  auto chooseTemporalIfOtherIsNull = [](const CalpontSystemCatalog::ColType& other,
+                                        bool maybeNullIsNullConst,
+                                        CalpontSystemCatalog::ColType& out) -> bool {
+    if (!maybeNullIsNullConst)
+      return false;
+    out = other;
+    return other.isTemporal();
+  };
+
+  bool isNullConst1 = false, isNullConst2 = false;
+  if (auto cc1 = dynamic_cast<execplan::ConstantColumn*>(fp[1]->data()))
+  {
+    isNullConst1 = cc1->isNull();
+  }
+  if (auto cc2 = dynamic_cast<execplan::ConstantColumn*>(fp[2]->data()))
+  {
+    isNullConst2 = cc2->isNull();
+  }
+
+  auto rt1 = fp[1]->data()->resultType();
+  auto rt2 = fp[2]->data()->resultType();
+
+  CalpontSystemCatalog::ColType chosen;
+  if (chooseTemporalIfOtherIsNull(rt2, isNullConst1, chosen))
+  {
+    resultType = chosen;
+    return chosen;
+  }
+  if (chooseTemporalIfOtherIsNull(rt1, isNullConst2, chosen))
+  {
+    resultType = chosen;
+    return chosen;
+  }
+
+  // If exactly one side is temporal and the other side is not string, prefer temporal type.
+  if (rt1.isTemporal() && !rt2.isTemporal() && !datatypes::isCharType(rt2.colDataType))
+  {
+    resultType = rt1;
+    return rt1;
+  }
+  if (rt2.isTemporal() && !rt1.isTemporal() && !datatypes::isCharType(rt1.colDataType))
+  {
+    resultType = rt2;
+    return rt2;
+  }
+
   PredicateOperator op;
-  op.setOpType(ct, fp[2]->data()->resultType());
+  op.setOpType(rt1, rt2);
+  CalpontSystemCatalog::ColType ct;
   ct = op.operationType();
   resultType = ct;
   return ct;

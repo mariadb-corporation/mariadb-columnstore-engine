@@ -447,24 +447,16 @@ void ArithmeticColumn::setSimpleColumnList()
   fExpression->walk(getSimpleCols, &fSimpleColumnList);
 }
 
-bool ArithmeticColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
+void ArithmeticColumn::setSimpleColumnListExtended()
 {
-  tan.clear();
+  fSimpleColumnListExtended.clear();
+  fExpression->walk(getSimpleColsExtended, &fSimpleColumnListExtended);
+}
+
+std::optional<CalpontSystemCatalog::TableAliasName> ArithmeticColumn::singleTable()
+{
   setSimpleColumnList();
-
-  for (uint32_t i = 0; i < fSimpleColumnList.size(); i++)
-  {
-    CalpontSystemCatalog::TableAliasName stan(
-        fSimpleColumnList[i]->schemaName(), fSimpleColumnList[i]->tableName(),
-        fSimpleColumnList[i]->tableAlias(), fSimpleColumnList[i]->viewName());
-
-    if (tan.table.empty())
-      tan = stan;
-    else if (stan != tan)
-      return false;
-  }
-
-  return true;
+  return sameTableCheck(fSimpleColumnList);
 }
 
 }  // namespace execplan

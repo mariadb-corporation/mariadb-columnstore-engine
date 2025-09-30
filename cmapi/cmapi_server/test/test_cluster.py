@@ -6,13 +6,15 @@ from shutil import copyfile
 
 import requests
 
+from cmapi_server.constants import MCSProgs
 from cmapi_server.controllers.dispatcher import _version
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.test.unittest_global import (
-    BaseServerTestCase, MCS_CONFIG_FILEPATH, COPY_MCS_CONFIG_FILEPATH,
+    COPY_MCS_CONFIG_FILEPATH,
+    MCS_CONFIG_FILEPATH,
     TEST_MCS_CONFIG_FILEPATH,
+    BaseServerTestCase,
 )
-
 
 logging.basicConfig(level='DEBUG')
 requests.urllib3.disable_warnings()
@@ -109,7 +111,7 @@ class ClusterShutdownTestCase(BaseClusterTestCase):
             controllernode = subprocess.check_output(
                 ['pgrep', 'controllernode']
             )
-        except Exception as e:
+        except Exception:
             controllernode = None
         self.assertIsNotNone(controllernode)
 
@@ -125,7 +127,7 @@ class ClusterShutdownTestCase(BaseClusterTestCase):
             controllernode = subprocess.check_output(
                 ['pgrep', 'controllernode']
             )
-        except Exception as e:
+        except Exception:
             controllernode = None
         self.assertIsNone(controllernode)
 
@@ -197,9 +199,9 @@ class ClusterAddNodeTestCase(BaseClusterTestCase):
         )
         self.assertEqual(resp.status_code, 200)
 
-        # Check Columntore started
+        # Check Columnstore started
         controllernode = subprocess.check_output(
-            ['pgrep', 'controllernode'])
+            ['pgrep', MCSProgs.CONTROLLER_NODE])
         self.assertIsNotNone(controllernode)
 
 

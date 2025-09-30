@@ -46,7 +46,6 @@ using namespace boost;
 #include "functor_str.h"
 using namespace funcexp;
 
-
 namespace execplan
 {
 /**
@@ -141,7 +140,8 @@ string FunctionColumn::toCppCode(IncludeSet& includes) const
 
   auto fFuncParmsInString = fData.substr(fFunctionName.size() + 1, fData.size() - fFunctionName.size() - 2);
 
-  ss << "FunctionColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fFuncParmsInString) << ", " << sessionID() << ")";
+  ss << "FunctionColumn(" << std::quoted(fFunctionName) << ", " << std::quoted(fFuncParmsInString) << ", "
+     << sessionID() << ")";
 
   return ss.str();
 }
@@ -354,25 +354,25 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
     fFunctor = fDynamicFunctor = new Func_json_contains();
 
   if (dynamic_cast<Func_json_array_append*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_append();
+    fFunctor = fDynamicFunctor = new Func_json_array_append(fFunctionParms);
 
   if (dynamic_cast<Func_json_array_insert*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_insert();
+    fFunctor = fDynamicFunctor = new Func_json_array_insert(fFunctionParms);
 
   if (auto f = dynamic_cast<Func_json_insert*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_insert(f->getMode());
+    fFunctor = fDynamicFunctor = new Func_json_insert(fFunctionParms, f->getMode());
 
   if (dynamic_cast<Func_json_remove*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_remove();
+    fFunctor = fDynamicFunctor = new Func_json_remove(fFunctionParms);
 
   if (dynamic_cast<Func_json_contains_path*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_contains_path();
+    fFunctor = fDynamicFunctor = new Func_json_contains_path(fFunctionParms);
 
   if (dynamic_cast<Func_json_search*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_search();
+    fFunctor = fDynamicFunctor = new Func_json_search(fFunctionParms);
 
   if (dynamic_cast<Func_json_extract*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_extract();
+    fFunctor = fDynamicFunctor = new Func_json_extract(fFunctionParms);
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const
@@ -521,24 +521,18 @@ void FunctionColumn::setSimpleColumnList()
     fFunctionParms[i]->walk(getSimpleCols, &fSimpleColumnList);
 }
 
-bool FunctionColumn::singleTable(CalpontSystemCatalog::TableAliasName& tan)
+void FunctionColumn::setSimpleColumnListExtended()
 {
-  tan.clear();
+  fSimpleColumnListExtended.clear();
+
+  for (uint i = 0; i < fFunctionParms.size(); i++)
+    fFunctionParms[i]->walk(getSimpleColsExtended, &fSimpleColumnListExtended);
+}
+
+std::optional<CalpontSystemCatalog::TableAliasName> FunctionColumn::singleTable()
+{
   setSimpleColumnList();
-
-  for (uint i = 0; i < fSimpleColumnList.size(); i++)
-  {
-    CalpontSystemCatalog::TableAliasName stan(
-        fSimpleColumnList[i]->schemaName(), fSimpleColumnList[i]->tableName(),
-        fSimpleColumnList[i]->tableAlias(), fSimpleColumnList[i]->viewName());
-
-    if (tan.table.empty())
-      tan = stan;
-    else if (stan != tan)
-      return false;
-  }
-
-  return true;
+  return sameTableCheck(fSimpleColumnList);
 }
 
 }  // namespace execplan

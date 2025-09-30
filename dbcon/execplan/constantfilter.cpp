@@ -331,4 +331,22 @@ void ConstantFilter::setSimpleColumnList()
   }
 }
 
+const std::vector<SimpleColumn*>& ConstantFilter::simpleColumnListExtended()
+{
+  return fSimpleColumnListExtended;
+}
+
+void ConstantFilter::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+
+  for (uint32_t i = 0; i < fFilterList.size(); i++)
+  {
+    fFilterList[i]->setSimpleColumnListExtended();
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fFilterList[i]->simpleColumnListExtended().begin(),
+                                     fFilterList[i]->simpleColumnListExtended().end());
+  }
+}
+
 }  // namespace execplan

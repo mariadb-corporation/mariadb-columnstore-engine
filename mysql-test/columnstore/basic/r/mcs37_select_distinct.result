@@ -11,10 +11,10 @@ COUNT(DISTINCT col2)
 5
 SELECT DISTINCT col1 FROM t1;
 col1
-NULL
 1
 2
 3
+NULL
 SELECT DISTINCT col1 FROM t1 ORDER BY col1 DESC;
 col1
 3
@@ -33,10 +33,10 @@ CREATE TABLE t2(col1 INT)ENGINE=Columnstore;
 INSERT INTO t2 SELECT DISTINCT col1 FROM t1;
 SELECT * FROM t2;
 col1
-NULL
 1
 2
 3
+NULL
 CREATE TABLE t3 (name varchar(255));
 INSERT INTO t3 VALUES ('aa'),('ab'),('ac'),('ad'),('ae');
 SELECT DISTINCT * FROM t3;
@@ -46,7 +46,7 @@ ab
 ac
 ad
 ae
-SELECT DISTINCT name FROM t3 LIMIT 2;
+SELECT DISTINCT name FROM t3 ORDER BY name LIMIT 2;
 name
 aa
 ab

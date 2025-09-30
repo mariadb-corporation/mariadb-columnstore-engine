@@ -83,6 +83,18 @@ void getAggCols(execplan::ParseTree* n, void* obj)
   }
 }
 
+const std::vector<SimpleColumn*>& getSCsFromRCForExtended(const SRCP& srcp)
+{
+  srcp->setSimpleColumnListExtended();
+  return srcp->simpleColumnListExtended();
+}
+
+const std::vector<SimpleColumn*>& getSCsFromRC(const SRCP& srcp)
+{
+  srcp->setSimpleColumnList();
+  return srcp->simpleColumnList();
+}
+
 /**
  * Constructors/Destructors
  */
@@ -125,6 +137,31 @@ AggregateColumn::AggregateColumn(const AggregateColumn& rhs, const uint32_t sess
 /**
  * Methods
  */
+
+void AggregateColumn::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+  return setSimpleColumnListExtended_();
+}
+
+void AggregateColumn::setSimpleColumnListExtended_()
+{
+  for (const auto& parm : aggParms())
+  {
+    if (!parm)
+      continue;
+
+    auto aggParmsAsSCVec = getSCsFromRCForExtended(parm);
+
+    for (auto* sc : aggParmsAsSCVec)
+    {
+      if (sc)
+      {
+        fSimpleColumnListExtended.push_back(sc);
+      }
+    }
+  }
+}
 
 const string AggregateColumn::toString() const
 {

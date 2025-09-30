@@ -326,8 +326,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
     bytestream << (uint32_t)dbRoot;
     tableDef.serialize(bytestream);
     boost::shared_ptr<messageqcpp::ByteStream> bsIn;
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
     // MCOL-66 The DBRM can't handle concurrent DDL
     boost::mutex::scoped_lock lk(dbrmMutex);
 
@@ -450,7 +449,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
 
     bytestream << (uint32_t)dbRoot;
     tableDef.serialize(bytestream);
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     try
     {
@@ -666,7 +665,7 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
       return result;
     }
 
-    pmNum = (*dbRootPMMap)[useDBRoot];
+    pmNum = oamcache->getOwnerPM(useDBRoot);
 
     try
     {

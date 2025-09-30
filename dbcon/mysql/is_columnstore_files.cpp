@@ -33,6 +33,7 @@
 #include "we_brm.h"
 #include "bytestream.h"
 #include "liboamcpp.h"
+#include "oamcache.h"
 #include "messagequeue.h"
 #include "messagequeuepool.h"
 #include "we_messages.h"
@@ -119,7 +120,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
   off_t compressedFileSize = 0;
   we_config.initConfigCache();
   messageqcpp::MessageQueueClient* msgQueueClient;
-  oam::Oam oam_instance;
+  oam::OamCache* oamcache = oam::OamCache::makeOamCache();
   int pmId = 0;
   int rc;
 
@@ -141,7 +142,7 @@ static int generate_result(BRM::OID_t oid, BRM::DBRM* emp, TABLE* table, THD* th
 
     try
     {
-      oam_instance.getDbrootPmConfig(iter->dbRoot, pmId);
+      pmId = oamcache->getOwnerPM(iter->dbRoot);
     }
     catch (std::runtime_error&)
     {

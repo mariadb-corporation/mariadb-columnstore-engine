@@ -31,7 +31,7 @@ extern int ha_mcs_impl_open(const char* name, int mode, uint32_t test_if_locked)
 extern int ha_mcs_impl_close(void);
 extern int ha_mcs_impl_rnd_next(uchar* buf, TABLE* table, long timeZone);
 extern int ha_mcs_impl_rnd_end(TABLE* table, bool is_derived_hand = false);
-extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed, long timeZone);
+extern int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_inserted, long timeZone);
 extern void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_insert = false);
 extern int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table);
 extern int ha_mcs_impl_rename_table(const char* from, const char* to);

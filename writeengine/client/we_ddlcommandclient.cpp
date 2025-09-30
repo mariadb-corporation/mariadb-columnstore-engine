@@ -37,6 +37,7 @@ namespace WriteEngine
 WE_DDLCommandClient::WE_DDLCommandClient()
 {
   fWEClient = new WEClients(WEClients::DDLPROC);
+  fOamCache = oam::OamCache::makeOamCache();
 }
 
 WE_DDLCommandClient::~WE_DDLCommandClient()
@@ -64,7 +65,7 @@ uint8_t WE_DDLCommandClient::UpdateSyscolumnNextval(uint32_t columnOid, uint64_t
 
   try
   {
-    fOam.getDbrootPmConfig(dbRoot, pmNum);
+    pmNum = fOamCache->getOwnerPM(dbRoot);
     fWEClient->write(command, pmNum);
 
     while (1)

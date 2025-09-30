@@ -164,6 +164,11 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
    * Clones this CSEP without recursive selects for optimizer purposes
    */
   execplan::SCSEP cloneWORecursiveSelects();
+
+  execplan::SCSEP cloneForTableWORecursiveSelectsGbObHaving(
+      const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias, const bool withFilters = true);
+
+  SCSEP clone();
   /**
    * Access and mutator methods
    */
@@ -491,7 +496,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   {
     return fDerivedTableList;
   }
-  void derivedTableList(SelectList& derivedTableList)
+  void derivedTableList(const SelectList& derivedTableList)
   {
     fDerivedTableList = derivedTableList;
   }
@@ -942,6 +947,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   bool fHasOrderBy = false;
 
   // for Select clause subquery
+  // Populated from derived found in projection list.
   SelectList fSelectSubList;
 
   // @bug3321, for string scan blocks
@@ -958,6 +964,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   uint32_t fOrderByThreads = 1;
 
   // Derived table involved in the query. For derived table optimization
+  // Populated from derived found in filters.
   std::vector<SCSEP> fSubSelectList;
 
   boost::uuids::uuid fUuid{};

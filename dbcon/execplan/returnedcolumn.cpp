@@ -100,6 +100,7 @@ ReturnedColumn::ReturnedColumn(const ReturnedColumn& rhs, const uint32_t session
  , fSessionID(sessionID)
  , fSequence(rhs.fSequence)
  , fCardinality(rhs.fCardinality)
+ , fAlias(rhs.alias())
  , fDistinct(rhs.fDistinct)
  , fJoinInfo(rhs.fJoinInfo)
  , fAsc(rhs.fAsc)
@@ -258,6 +259,11 @@ string ReturnedColumn::toCppCode(IncludeSet& includes) const
 void ReturnedColumn::setSimpleColumnList()
 {
   fSimpleColumnList.clear();
+}
+
+void ReturnedColumn::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
 }
 
 }  // namespace execplan

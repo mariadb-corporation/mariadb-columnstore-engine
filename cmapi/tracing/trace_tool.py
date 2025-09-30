@@ -8,7 +8,6 @@ import cherrypy
 
 from tracing.tracer import get_tracer
 
-
 def _on_request_start() -> None:
     req = cherrypy.request
     tracer = get_tracer()
@@ -22,20 +21,27 @@ def _on_request_start() -> None:
     trace_id, parent_span_id = tracer.extract_traceparent(headers)
     tracer.set_incoming_context(trace_id, parent_span_id)
 
-    span_name = f"{getattr(req, 'method', 'HTTP')} {getattr(req, 'path_info', '/')}"
+    requester_host = getattr(getattr(req, 'remote', None), 'ip', '')
+
+    method = getattr(req, 'method', 'HTTP')
+    path = getattr(req, 'path_info', '/')
+    if requester_host:
+        span_name = f"{requester_host} --> {method} {path}"
+    else:
+        span_name = f"{method} {path}"
 
     ctx = tracer.start_as_current_span(span_name, kind="SERVER")
     span = ctx.__enter__()
     span.set_attribute('http.method', getattr(req, 'method', ''))
     span.set_attribute('http.path', getattr(req, 'path_info', ''))
-    span.set_attribute('client.ip', getattr(getattr(req, 'remote', None), 'ip', ''))
+    span.set_attribute('client.ip', requester_host)
     span.set_attribute('instance.hostname', socket.gethostname())
     safe_headers = {k: v for k, v in headers.items() if k.lower() not in {'authorization', 'x-api-key'}}
     span.set_attribute('sentry.incoming_headers', safe_headers)
     req._trace_span_ctx = ctx
     req._trace_span = span
 
-    tracer.inject_traceparent(cherrypy.response.headers)  # type: ignore[arg-type]
+    tracer.inject_traceparent(cherrypy.response.headers)
 
 
 def _on_request_end() -> None:

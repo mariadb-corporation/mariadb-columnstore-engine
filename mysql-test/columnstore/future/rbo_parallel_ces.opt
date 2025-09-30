@@ -1,0 +1,3 @@
+--skip-partition=0
+--skip-sequence=0
+--columnstore_innodb_queries_use_mcs=on

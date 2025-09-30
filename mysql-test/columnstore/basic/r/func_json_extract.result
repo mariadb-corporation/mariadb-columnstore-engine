@@ -8,26 +8,22 @@ USE json_extract_db;
 # Single path expression
 
 CREATE TABLE t1(j LONGTEXT, p LONGTEXT) ENGINE = COLUMNSTORE;
-SET
-@json = '[1, "val2", [3.1, -4]]';
-INSERT INTO
-t1
-VALUES
-(@json, '$[0]'),
-(@json, '$[1]'),
-(@json, '$[2]'),
-(@json, '$[3]'),
-(@json, '$[2][0]'),
-(@json, '$[2][1]'),
-(@json, '$[2][10]'),
-(@json, '$'),
-('1', '$'),
-('[10, 20, [30, 40], 1, 10]', '$[1]'),
-('{"key1":"asd", "key2":[2,3]}', "$.key1"),
-('{"key0":true, "key1":"qwe"}', "$.key1"),
-('[10, 20, [30, 40]]', '$[2][*]'),
-('[10, 20, [{"a":3}, 30, 40]]', '$[2][*]'),
-(json_object('foo', 'foobar'), '$');
+SET @json = '[1, "val2", [3.1, -4]]';
+INSERT INTO t1 VALUES (@json, '$[0]');
+INSERT INTO t1 VALUES (@json, '$[1]');
+INSERT INTO t1 VALUES (@json, '$[2]');
+INSERT INTO t1 VALUES (@json, '$[3]');
+INSERT INTO t1 VALUES (@json, '$[2][0]');
+INSERT INTO t1 VALUES (@json, '$[2][1]');
+INSERT INTO t1 VALUES (@json, '$[2][10]');
+INSERT INTO t1 VALUES (@json, '$');
+INSERT INTO t1 VALUES ('1', '$');
+INSERT INTO t1 VALUES ('[10, 20, [30, 40], 1, 10]', '$[1]');
+INSERT INTO t1 VALUES ('{"key1":"asd", "key2":[2,3]}', "$.key1");
+INSERT INTO t1 VALUES ('{"key0":true, "key1":"qwe"}', "$.key1");
+INSERT INTO t1 VALUES ('[10, 20, [30, 40]]', '$[2][*]');
+INSERT INTO t1 VALUES ('[10, 20, [{"a":3}, 30, 40]]', '$[2][*]');
+INSERT INTO t1 VALUES (json_object('foo', 'foobar'), '$');
 SELECT
 j,
 p,
@@ -54,22 +50,11 @@ j	p	result
 # Multiple path expression
 
 CREATE TABLE t2(j LONGTEXT, p1 LONGTEXT, p2 LONGTEXT) ENGINE = COLUMNSTORE;
-INSERT INTO
-t2
-VALUES
-(
-'{"key1":"asd", "key2":[2,3]}',
-"$.keyX",
-"$.keyY"
-      ),
-(
-'{"key1":"asd", "key2":[2,3]}',
-"$.key1",
-"$.key2"
-      ),
-('{"key1":5, "key2":[2,3]}', "$.key1", "$.key2"),
-('[10, 20, [30, 40], 1, 10]', '$[1]', '$[25]'),
-('[{"a": [3, 4]}, {"b": 2}]', '$[0].a', '$[1].a');
+INSERT INTO t2 VALUES ('{"key1":"asd", "key2":[2,3]}', "$.keyX", "$.keyY");
+INSERT INTO t2 VALUES ('{"key1":"asd", "key2":[2,3]}', "$.key1", "$.key2");
+INSERT INTO t2 VALUES ('{"key1":5, "key2":[2,3]}', "$.key1", "$.key2");
+INSERT INTO t2 VALUES ('[10, 20, [30, 40], 1, 10]', '$[1]', '$[25]');
+INSERT INTO t2 VALUES ('[{"a": [3, 4]}, {"b": 2}]', '$[0].a', '$[1].a');
 SELECT
 j,
 p1,

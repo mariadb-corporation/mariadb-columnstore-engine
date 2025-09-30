@@ -50,5 +50,3 @@ def parse_traceparent(header: str) -> Optional[Tuple[str, str, str]]:
     except Exception:
         logger.exception("Failed to parse traceparent: %s", header)
         return None
-
-

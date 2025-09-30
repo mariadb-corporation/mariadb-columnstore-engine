@@ -1732,7 +1732,7 @@ void ExtentMap::load(const string& filename, bool /*fixFL*/)
 
   if (!in)
   {
-    log_errno("ExtentMap::load(): open");
+    log_errno("ExtentMap::load(): can't open file " + filename);
     releaseFreeList(WRITE);
     releaseEMIndex(WRITE);
     releaseEMEntryTable(WRITE);
@@ -6178,10 +6178,8 @@ unsigned ExtentMap::getDbRootCount()
 void ExtentMap::getPmDbRoots(int pm, vector<int>& dbRootVec)
 {
   oam::OamCache* oamcache = oam::OamCache::makeOamCache();
-  oam::OamCache::PMDbrootsMap_t pmDbroots = oamcache->getPMToDbrootsMap();
 
-  dbRootVec.clear();
-  dbRootVec = (*pmDbroots)[pm];
+  dbRootVec = oamcache->getPMDBRoots(pm);
 }
 
 DBRootVec ExtentMap::getAllDbRoots()
@@ -6189,13 +6187,11 @@ DBRootVec ExtentMap::getAllDbRoots()
   DBRootVec dbRootResultVec;
   oam::OamCache* oamcache = oam::OamCache::makeOamCache();
   // NB The routine uses int for dbroot id that contradicts with the type used here, namely uint16_t
-  oam::OamCache::PMDbrootsMap_t pmDbroots = oamcache->getPMToDbrootsMap();
-  auto& pmDbrootsRef = *pmDbroots;
+  auto pmDbroots = oamcache->getAllDBRoots();
 
-  for (auto& pmDBRootPair : pmDbrootsRef)
+  for (auto& DBRoot : pmDbroots)
   {
-    for (auto dbRootId : pmDBRootPair.second)
-      dbRootResultVec.push_back(dbRootId);
+    dbRootResultVec.push_back(DBRoot);
   }
   return dbRootResultVec;
 }

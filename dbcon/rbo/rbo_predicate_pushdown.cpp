@@ -29,18 +29,17 @@
 namespace optimizer
 {
 
-   using DerivedToFiltersMap = std::map<std::string, execplan::ParseTree*>;
+using DerivedToFiltersMap = std::map<std::string, execplan::ParseTree*>;
 
-bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep)
+bool predicatePushdownFilter(execplan::CalpontSelectExecutionPlan& csep,
+                             optimizer::RBOptimizerContext& /*ctx*/)
 {
   // The original rule match contains questionable decision to filter out
   // queries that contains any UNION UNIT with only derived tables.
   // See ha_from_sub.cpp before MCS 23.10.7 for more details and @bug6156.
   // All tables are derived thus nothing to optimize.
-  return !
-  csep.tableList().empty();
+  return !csep.tableList().empty();
 }
-
 
 void setDerivedTable(execplan::ParseTree* n)
 {
@@ -76,8 +75,9 @@ void setDerivedTable(execplan::ParseTree* n)
   }
 }
 
-execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan::ParseTree*& n, DerivedToFiltersMap& filterMap,
-                            const execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList)
+execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan::ParseTree*& n,
+                                      DerivedToFiltersMap& filterMap,
+                                      const execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList)
 {
   if (!(n->derivedTable().empty()))
   {
@@ -87,7 +87,8 @@ execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan:
 
     for (uint i = 0; i < derivedTbList.size(); i++)
     {
-      execplan::CalpontSelectExecutionPlan* plan = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedTbList[i].get());
+      execplan::CalpontSelectExecutionPlan* plan =
+          dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedTbList[i].get());
 
       if (plan->derivedTbAlias() == n->derivedTable())
       {
@@ -160,82 +161,83 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
    * that OR involving derived table are emptied and null candidate of each
    * stacked filter needs to be reset (not null)
    */
-   execplan::ParseTree* pt = csep.filters();
-   DerivedToFiltersMap derivedTbFilterMap;
-   auto& derivedTbList = csep.derivedTableList();
-   bool hasBeenApplied = false;
+  execplan::ParseTree* pt = csep.filters();
+  DerivedToFiltersMap derivedTbFilterMap;
+  auto& derivedTbList = csep.derivedTableList();
+  bool hasBeenApplied = false;
 
-   if (pt)
-   {
-     pt->walk(setDerivedTable);
-     setDerivedFilter(&ctx.gwi, pt, derivedTbFilterMap, derivedTbList);
-     csep.filters(pt);
-   }
- 
-   // AND the filters of individual stack to the derived table filter tree
-   // @todo union filters.
-   // @todo outer join complication
-   for (uint i = 0; i < derivedTbList.size(); i++)
-   {
-     execplan::CalpontSelectExecutionPlan* plan = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedTbList[i].get());
-     execplan::CalpontSelectExecutionPlan::ReturnedColumnList derivedColList = plan->returnedCols();
-     auto mapIt = derivedTbFilterMap.find(plan->derivedTbAlias());
- 
-     if (mapIt != derivedTbFilterMap.end())
-     {
-       // replace all derived column of this filter with real column from
-       // derived table projection list.
-       execplan::ParseTree* mainFilter = new execplan::ParseTree();
-       mainFilter->copyTree(*(mapIt->second));
-       replaceRefCol(mainFilter, derivedColList);
-       execplan::ParseTree* derivedFilter = plan->filters();
- 
-       if (derivedFilter)
-       {
-         execplan::LogicOperator* op = new execplan::LogicOperator("and");
-         execplan::ParseTree* filter = new execplan::ParseTree(op);
-         filter->left(derivedFilter);
-         filter->right(mainFilter);
-         plan->filters(filter);
-       }
-       else
-       {
-         plan->filters(mainFilter);
-       }
- 
-       // union filter handling
-       for (uint j = 0; j < plan->unionVec().size(); j++)
-       {
-         execplan::CalpontSelectExecutionPlan* unionPlan =
-             reinterpret_cast<execplan::CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
-         execplan::CalpontSelectExecutionPlan::ReturnedColumnList unionColList = unionPlan->returnedCols();
-         execplan::ParseTree* mainFilterForUnion = new execplan::ParseTree();
-         mainFilterForUnion->copyTree(*(mapIt->second));
-         replaceRefCol(mainFilterForUnion, unionColList);
-         execplan::ParseTree* unionFilter = unionPlan->filters();
- 
-         if (unionFilter)
-         {
-           execplan::LogicOperator* op = new execplan::LogicOperator("and");
-           execplan::ParseTree* filter = new execplan::ParseTree(op);
-           filter->left(unionFilter);
-           filter->right(mainFilterForUnion);
-           unionPlan->filters(filter);
-         }
-         else
-         {
-           unionPlan->filters(mainFilterForUnion);
-         }
-       }
-       hasBeenApplied = true;
-     }
-   }
- 
-   // clean derivedTbFilterMap because all the filters are copied
-   for (auto mapIt = derivedTbFilterMap.begin(); mapIt != derivedTbFilterMap.end(); ++mapIt)
-   {
+  if (pt)
+  {
+    pt->walk(setDerivedTable);
+    setDerivedFilter(&ctx.getGwi(), pt, derivedTbFilterMap, derivedTbList);
+    csep.filters(pt);
+  }
+
+  // AND the filters of individual stack to the derived table filter tree
+  // @todo union filters.
+  // @todo outer join complication
+  for (uint i = 0; i < derivedTbList.size(); i++)
+  {
+    execplan::CalpontSelectExecutionPlan* plan =
+        dynamic_cast<execplan::CalpontSelectExecutionPlan*>(derivedTbList[i].get());
+    execplan::CalpontSelectExecutionPlan::ReturnedColumnList derivedColList = plan->returnedCols();
+    auto mapIt = derivedTbFilterMap.find(plan->derivedTbAlias());
+
+    if (mapIt != derivedTbFilterMap.end())
+    {
+      // replace all derived column of this filter with real column from
+      // derived table projection list.
+      execplan::ParseTree* mainFilter = new execplan::ParseTree();
+      mainFilter->copyTree(*(mapIt->second));
+      replaceRefCol(mainFilter, derivedColList);
+      execplan::ParseTree* derivedFilter = plan->filters();
+
+      if (derivedFilter)
+      {
+        execplan::LogicOperator* op = new execplan::LogicOperator("and");
+        execplan::ParseTree* filter = new execplan::ParseTree(op);
+        filter->left(derivedFilter);
+        filter->right(mainFilter);
+        plan->filters(filter);
+      }
+      else
+      {
+        plan->filters(mainFilter);
+      }
+
+      // union filter handling
+      for (uint j = 0; j < plan->unionVec().size(); j++)
+      {
+        execplan::CalpontSelectExecutionPlan* unionPlan =
+            reinterpret_cast<execplan::CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
+        execplan::CalpontSelectExecutionPlan::ReturnedColumnList unionColList = unionPlan->returnedCols();
+        execplan::ParseTree* mainFilterForUnion = new execplan::ParseTree();
+        mainFilterForUnion->copyTree(*(mapIt->second));
+        replaceRefCol(mainFilterForUnion, unionColList);
+        execplan::ParseTree* unionFilter = unionPlan->filters();
+
+        if (unionFilter)
+        {
+          execplan::LogicOperator* op = new execplan::LogicOperator("and");
+          execplan::ParseTree* filter = new execplan::ParseTree(op);
+          filter->left(unionFilter);
+          filter->right(mainFilterForUnion);
+          unionPlan->filters(filter);
+        }
+        else
+        {
+          unionPlan->filters(mainFilterForUnion);
+        }
+      }
+      hasBeenApplied = true;
+    }
+  }
+
+  // clean derivedTbFilterMap because all the filters are copied
+  for (auto mapIt = derivedTbFilterMap.begin(); mapIt != derivedTbFilterMap.end(); ++mapIt)
+  {
     delete (*mapIt).second;
-   }
+  }
 
   return hasBeenApplied;
 }

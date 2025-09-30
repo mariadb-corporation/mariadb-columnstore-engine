@@ -23,6 +23,7 @@
 /** @file */
 
 #pragma once
+#include <optional>
 #include <string>
 #include <iosfwd>
 #include <vector>
@@ -48,6 +49,7 @@ class Row;
 namespace execplan
 {
 // Join info bit mask
+const uint64_t NO_JOIN = 0x0000;
 // const uint64_t JOIN_OUTER = 0x0001;
 const uint64_t JOIN_SEMI = 0x0002;
 const uint64_t JOIN_ANTI = 0x0004;
@@ -285,12 +287,19 @@ class ReturnedColumn : public TreeNode
     return fSimpleColumnList;
   }
 
+  virtual const std::vector<SimpleColumn*>& simpleColumnListExtended() const
+  {
+    return fSimpleColumnListExtended;
+  }
+
   /* @brief traverse this ReturnedColumn and re-populate fSimpleColumnList.
    *
    * @note all ReturnedColumns that may have simple column arguments added
-   * to the list need to implement thhis function.
+   * to the list need to implement this function.
    */
   virtual void setSimpleColumnList();
+
+  virtual void setSimpleColumnListExtended();
 
   // get all aggregate column list in this expression
   const std::vector<AggregateColumn*>& aggColumnList() const
@@ -321,9 +330,9 @@ class ReturnedColumn : public TreeNode
    * @return true, if all arguments belong to one table
    *         false, if multiple tables are involved in the function
    */
-  virtual bool singleTable(CalpontSystemCatalog::TableAliasName& /*tan*/)
+  virtual std::optional<CalpontSystemCatalog::TableAliasName> singleTable()
   {
-    return false;
+    return std::nullopt;
   }
 
  protected:
@@ -340,7 +349,10 @@ class ReturnedColumn : public TreeNode
   uint64_t fOrderPos;    /// for order by and group by column
   uint64_t fColSource;   /// from which subquery
   int64_t fColPosition;  /// the column position in the source subquery
+  // The difference b/w the two vectors is that the second one is used to store SCs
+  // are are used by AggegateColumn.
   std::vector<SimpleColumn*> fSimpleColumnList;
+  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;
   bool fHasAggregate;  /// connector internal use. no need to serialize

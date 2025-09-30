@@ -101,7 +101,6 @@ void derivedTableOptimization(gp_walk_info* gwip, SCSEP& csep)
 
       for (int64_t i = cols.size() - 1; i >= 0; i--)
       {
-        // if (cols[i]->derivedTable().empty())
         if (cols[i]->refCount() == 0)
         {
           if (cols[i]->derivedRefCol())

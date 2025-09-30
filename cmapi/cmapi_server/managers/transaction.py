@@ -107,10 +107,10 @@ class TransactionManager(ContextDecorator):
         try:
             rollback_transaction(self.txn_id, nodes=nodes)
             self.active_transaction = False
-            logging.debug(f'Success rollback of transaction "{self.txn_id}".')
+            logging.debug(f'Successful rollback of transaction "{self.txn_id}".')
         except Exception:
             logging.error(
-                f'Error while rollback transaction "{self.txn_id}"',
+                f'Error while rolling back transaction "{self.txn_id}"',
                 exc_info=True
             )
 

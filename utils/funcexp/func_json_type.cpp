@@ -26,7 +26,6 @@ std::string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
   if (isNull)
     return "";
 
-  json_engine_t jsEg;
   std::string result;
 
   initJSEngine(jsEg, getCharset(fp[0]), js);

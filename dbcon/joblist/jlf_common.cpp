@@ -67,8 +67,6 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
     return iter->second;
 
   uint32_t newId = jobInfo.keyInfo->nextKey++;
-  // cout << "new id: " << newId << " -- " << o << ", " << pi << ", " << nm << ", " << vw << ", " << sn << ",
-  // " << subId << endl;
   jobInfo.keyInfo->tupleKeyMap[id] = newId;
   jobInfo.keyInfo->tupleKeyVec.push_back(id);
   jobInfo.keyInfo->tupleKeyToTableOid.insert(make_pair(newId, t));

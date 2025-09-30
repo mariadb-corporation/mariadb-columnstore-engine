@@ -26,6 +26,7 @@
 using namespace std;
 
 #include "selectfilter.h"
+#include "simplecolumn.h"
 #include "bytestream.h"
 #include "objectreader.h"
 
@@ -62,7 +63,8 @@ const string SelectFilter::toString() const
 {
   ostringstream oss;
   oss << "SelectFilter "
-      << "returnedColPos=" << fReturnedColPos << endl;
+      << "returnedColPos=" << fReturnedColPos 
+      << " correlated " << fCorrelated << endl;
 
   for (uint32_t i = 0; i < fCols.size(); i++)
     oss << fCols[i]->toString();
@@ -213,5 +215,33 @@ bool SelectFilter::operator!=(const TreeNode* t) const
 {
   return (!(*this == t));
 }
+
+
+void SelectFilter::setSimpleColumnListExtended()
+{
+  fSimpleColumnListExtended.clear();
+  for (auto col : fCols)
+  {
+    col->setSimpleColumnListExtended();
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     col->simpleColumnListExtended().begin(),
+                                     col->simpleColumnListExtended().end());
+  }
+  if (fCorrelated)
+  {
+    auto* subFilters = fSub->filters();
+    if (subFilters)
+    {
+      std::vector<execplan::SimpleColumn*> simpleColumns;
+      subFilters->walk(execplan::getSimpleColsExtended, &simpleColumns);
+      fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                       simpleColumns.begin(),
+                                       simpleColumns.end());
+    }
+  }
+}
+
+const std::vector<SimpleColumn*>& SelectFilter::simpleColumnListExtended()
+{ return fSimpleColumnListExtended; }
 
 }  // namespace execplan

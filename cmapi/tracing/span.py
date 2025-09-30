@@ -43,4 +43,12 @@ class TraceSpan:
     def record_exception(self, exc: BaseException) -> None:
         self.tracer._notify_exception(self, exc)
 
+    def to_flat_dict(self) -> Dict[str, Any]:
+        fd = self.__dict__.copy()
+        fd['span_name'] = fd.pop('name')  # name field is reserved in log records
+        # Remove non-serializable references
+        fd.pop('tracer', None)
+        attributes = fd.pop("attributes")
+        fd.update(attributes)
+        return fd
 

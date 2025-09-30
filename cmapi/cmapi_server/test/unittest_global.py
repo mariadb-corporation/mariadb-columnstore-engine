@@ -2,36 +2,32 @@ import logging
 import os
 import unittest
 from contextlib import contextmanager
-from datetime import datetime, timedelta
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
 import cherrypy
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
-
 from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.logging_management import config_cmapi_server_logging
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
 
 
 TEST_API_KEY = 'somekey123'
 MCS_CONFIG_FILEPATH = '/etc/columnstore/Columnstore.xml'
-COPY_MCS_CONFIG_FILEPATH = './cmapi_server/test/original_Columnstore.xml'
-TEST_MCS_CONFIG_FILEPATH = './cmapi_server/test/CS-config-test.xml'
+# Use absolute paths relative to this test package so tests work regardless of CWD
+_TEST_DIR = os.path.dirname(__file__)
+COPY_MCS_CONFIG_FILEPATH = os.path.join(_TEST_DIR, 'original_Columnstore.xml')
+TEST_MCS_CONFIG_FILEPATH = os.path.join(_TEST_DIR, 'CS-config-test.xml')
 # TODO:
 #       - rename after fix in all places
 #       - fix path to abs
-mcs_config_filename = './cmapi_server/test/CS-config-test.xml'
-tmp_mcs_config_filename = './cmapi_server/test/tmp.xml'
-cmapi_config_filename = './cmapi_server/cmapi_server.conf'
-tmp_cmapi_config_filename = './cmapi_server/test/tmp.conf'
+mcs_config_filename = os.path.join(_TEST_DIR, 'CS-config-test.xml')
+tmp_mcs_config_filename = os.path.join(_TEST_DIR, 'tmp.xml')
+cmapi_config_filename = os.path.join(os.path.dirname(_TEST_DIR), 'cmapi_server.conf')
+tmp_cmapi_config_filename = os.path.join(_TEST_DIR, 'tmp.conf')
+single_node_xml = os.path.join(_TEST_DIR, '..', 'SingleNode.xml')
 # constants for process dispatchers
 DDL_SERVICE = 'mcs-ddlproc'
 CONTROLLERNODE_SERVICE = 'mcs-controllernode.service'
@@ -80,6 +76,7 @@ class BaseServerTestCase(unittest.TestCase):
             )
             copyfile(cmapi_config_filename, self.cmapi_config_filename)
             copyfile(TEST_MCS_CONFIG_FILEPATH, self.mcs_config_filename)
+            config_cmapi_server_logging()
             self.app = cherrypy.tree.mount(
                 root=None, config=self.cmapi_config_filename
             )
@@ -100,7 +97,7 @@ class BaseServerTestCase(unittest.TestCase):
 
 
 class BaseNodeManipTestCase(unittest.TestCase):
-    NEW_NODE_NAME = 'mysql.com'  # something that has a DNS entry everywhere
+    NEW_NODE_NAME = 'node.hostname'
 
     def setUp(self):
         self.tmp_files = []

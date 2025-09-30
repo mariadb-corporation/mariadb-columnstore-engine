@@ -96,6 +96,41 @@ using namespace std;
 
 namespace cal_impl_if
 {
+// Helper utilities to store plan strings and applied rules into cal_connection_info
+
+enum class PlanType
+{
+  Original,
+  Optimized
+};
+
+static cal_connection_info* ensure_conn_info()
+{
+  if (get_fe_conn_info_ptr() == NULL)
+  {
+    set_fe_conn_info_ptr((void*)new cal_connection_info());
+    thd_set_ha_data(current_thd, mcs_hton, get_fe_conn_info_ptr());
+  }
+  return static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
+}
+
+static void store_query_plan(execplan::SCSEP& csep, PlanType planType)
+{
+  cal_connection_info* ci = ensure_conn_info();
+  switch (planType)
+  {
+    case PlanType::Original: ci->queryPlanOriginal = csep->toString(); break;
+    case PlanType::Optimized: ci->queryPlanOptimized = csep->toString(); break;
+    default: break;
+  }
+}
+
+static void store_applied_rules(const std::string rboRules)
+{
+  cal_connection_info* ci = ensure_conn_info();
+  ci->rboAppliedRules = rboRules;
+}
+
 // This is taken from Item_cond::fix_fields in sql/item_cmpfunc.cc.
 void calculateNotNullTables(const std::vector<COND*>& condList, table_map& not_null_tables)
 {
@@ -1225,19 +1260,20 @@ bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedCol
 
   if (sop->op() == OP_EQ)
   {
-    CalpontSystemCatalog::TableAliasName tan_lhs;
-    CalpontSystemCatalog::TableAliasName tan_rhs;
-    bool outerjoin = (rhs->singleTable(tan_rhs) && lhs->singleTable(tan_lhs));
+    auto tan_rhs = rhs->singleTable();
+    auto tan_lhs = lhs->singleTable();
+
+    bool outerjoin = (tan_rhs && tan_lhs);
 
     // @bug 1632. Alias should be taken account to the identity of tables for selfjoin to work
-    if (outerjoin && tan_lhs != tan_rhs)  // join
+    if (outerjoin && *tan_lhs != *tan_rhs)  // join
     {
       if (!gwip->condPush)  // vtable
       {
         if (!gwip->innerTables.empty())
         {
-          checkOuterTableColumn(gwip, tan_lhs, lhs);
-          checkOuterTableColumn(gwip, tan_rhs, rhs);
+          checkOuterTableColumn(gwip, *tan_lhs, lhs);
+          checkOuterTableColumn(gwip, *tan_rhs, rhs);
         }
 
         if (funcType == Item_func::EQ_FUNC)
@@ -2646,6 +2682,38 @@ CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item)
       break;
   }
   ct.charsetNumber = item->collation.collation->number;
+  return ct;
+}
+
+// Simplified version to support QA-specific RBO re-write rule.
+// TBD turn into template to merge with colType_MysqlToIDB for Item
+CalpontSystemCatalog::ColType colType_MysqlToIDB(const Field* field)
+{
+  CalpontSystemCatalog::ColType ct;
+  ct.precision = 4;
+
+  switch (field->result_type())
+  {
+    case INT_RESULT:
+      if (field->is_unsigned())
+      {
+        ct.colDataType = CalpontSystemCatalog::UBIGINT;
+      }
+      else
+      {
+        ct.colDataType = CalpontSystemCatalog::BIGINT;
+      }
+
+      ct.colWidth = 8;
+      break;
+
+    case STRING_RESULT: ct.colDataType = CalpontSystemCatalog::VARCHAR;
+
+    default:
+      IDEBUG(cerr << "colType_MysqlToIDB:: Unknown result type of MySQL " << item->result_type() << endl);
+      break;
+  }
+  ct.charsetNumber = field->charset()->number;
   return ct;
 }
 
@@ -4198,6 +4266,62 @@ SimpleColumn* buildSimpleColumn(Item_field* ifp, gp_walk_info& gwi, IDBQueryType
   return sc;
 }
 
+SimpleColumn* buildSimpleColumnFromFieldForStatistics(Field* field, gp_walk_info& gwi)
+{
+  if (!gwi.csc)
+  {
+    gwi.csc = CalpontSystemCatalog::makeCalpontSystemCatalog(gwi.sessionid);
+    gwi.csc->identity(CalpontSystemCatalog::FE);
+  }
+
+  CalpontSystemCatalog::ColType ct;
+  datatypes::SimpleColumnParam prm(gwi.sessionid, true);
+
+  try
+  {
+    // check foreign engine
+    if (field->table)
+      prm.columnStore(ha_mcs_common::isMCSTable(field->table));
+
+    if (prm.columnStore())
+    {
+      ct = gwi.csc->colType(gwi.csc->lookupOID(
+          make_tcn(field->table->s->db.str, field->table->s->table_name.str, field->field_name.str)));
+    }
+    else
+    {
+      ct = colType_MysqlToIDB(field);
+    }
+  }
+  catch (std::exception& ex)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = ex.what();
+    return NULL;
+  }
+
+  const datatypes::DatabaseQualifiedColumnName name(field->table->s->db.str, field->table->s->table_name.str,
+                                                    field->field_name.str);
+  const datatypes::TypeHandler* h = ct.typeHandler();
+  SimpleColumn* sc = h->newSimpleColumn(name, ct, prm);
+
+  sc->resultType(ct);
+  sc->charsetNumber(field->charset()->number);
+  string tbname(field->table->s->table_name.str);
+
+  // Note: differs with the original buildSimpleColumn
+  sc->tableAlias(field->table->alias.c_ptr(), lower_case_table_names);
+
+  sc->alias(field->field_name.str);
+  sc->isColumnStore(prm.columnStore());
+  sc->timeZone(gwi.timeZone);
+
+  sc->oid(field->field_index + 1);  // ExeMgr requires offset started from 1
+  // TODO add partitions support here
+
+  return sc;
+}
+
 ParseTree* buildParseTree(Item* item, gp_walk_info& gwi, bool& /*nonSupport*/)
 {
   ParseTree* pt = 0;
@@ -5130,6 +5254,54 @@ void setExecutionParams(gp_walk_info& gwi, SCSEP& csep)
     csep->umMemLimit(get_um_mem_limit(gwi.thd) * 1024ULL * 1024);
 }
 
+// Loop over indexes available for a table to find and extract corresponding Engine Independent column
+// statistics for the first column of the index if any. Statistics are stored in a GWI context. Mock for
+// ES 10.6
+// TODO clean up extra logging when the feature is ready
+#if MYSQL_VERSION_ID >= 110406
+void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
+{
+  for (uint j = 0; j < table_ptr->table->s->keys; j++)
+  {
+    {
+      Field* field = table_ptr->table->key_info[j].key_part[0].field;
+      if (field->read_stats)
+      {
+        auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
+        if (histogram)
+        {
+          SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
+          auto sc =
+              std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
+          auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
+          if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
+          {
+            gwi.tableStatisticsMap[tableName][field->field_name.str] = {*sc, {histogram}};
+          }
+          else
+          {
+            auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
+            if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
+            {
+              tableStatisticsMapIt->second[field->field_name.str] = {*sc, {histogram}};
+            }
+            else
+            {
+              auto columnStatisticsVec = columnStatisticsMapIt->second.second;
+              columnStatisticsVec.push_back(histogram);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+#else
+void extractColumnStatistics(TABLE_LIST* /*table_ptr*/, gp_walk_info& /*gwi*/)
+{
+}
+#endif
+
 /*@brief  Process FROM part of the query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -5221,9 +5393,15 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
         // trigger system catalog cache
         if (columnStore)
+        {
           gwi.csc->columnRIDs(
               make_table(table_ptr->db.str, table_ptr->table_name.str, lower_case_table_names), true);
-
+        }
+        else
+        {
+          // TODO move extractColumnStatistics up when statistics is supported in MCS
+          extractColumnStatistics(table_ptr, gwi);
+        }
         string table_name = table_ptr->table_name.str;
 
         // @bug5523
@@ -6304,40 +6482,6 @@ int processLimitAndOffset(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep
   return 0;
 }
 
-// Loop over available indexes to find and extract corresponding EI column statistics
-// for the first column of the index if any.
-// Statistics is stored in GWI context.
-// Mock for ES 10.6
-#if MYSQL_VERSION_ID >= 120401
-void extractColumnStatistics(Item_field* ifp, gp_walk_info& gwi)
-{
-  for (uint j = 0; j < ifp->field->table->s->keys; j++)
-  {
-    for (uint i = 0; i < ifp->field->table->s->key_info[j].usable_key_parts; i++)
-    {
-      if (ifp->field->table->s->key_info[j].key_part[i].fieldnr == ifp->field->field_index + 1)
-      {
-        if (i == 0 && ifp->field->read_stats)
-        {
-          assert(ifp->field->table->s);
-          auto* histogram = dynamic_cast<Histogram_json_hb*>(ifp->field->read_stats->histogram);
-          if (histogram)
-          {
-            SchemaAndTableName tableName = {ifp->field->table->s->db.str,
-                                            ifp->field->table->s->table_name.str};
-            gwi.tableStatisticsMap[tableName][ifp->field->field_name.str] = *histogram;
-          }
-        }
-      }
-    }
-  }
-}
-#else
-void extractColumnStatistics(Item_field* /*ifp*/, gp_walk_info& /*gwi*/)
-{
-}
-#endif
-
 /*@brief  Process SELECT part of a query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -6427,7 +6571,6 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       case Item::FIELD_ITEM:
       {
         Item_field* ifp = (Item_field*)item;
-        extractColumnStatistics(ifp, gwi);
         // Handle * case
         if (ifp->field_name.length && string(ifp->field_name.str) == "*")
         {
@@ -7499,12 +7642,21 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
   }
 
+  // Store original (pre-RBO) plan string for UDFs
+  store_query_plan(csep, PlanType::Original);
+
   // Derived table projection list optimization.
   derivedTableOptimization(&gwi, csep);
 
   {
-    optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn());
-    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx);
+    optimizer::RBOptimizerContext ctx(gwi, *thd, csep->traceOn(), get_query_accel_parallel_factor(thd));
+    // TODO RBO can crash or fail leaving CSEP in an invalid state, so there must be a valid CSEP copy
+    // TBD There is a tradeoff b/w copy per rule and copy per optimizer run.
+    bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx, get_unstable_optimizer(&ctx.getThd()));
+
+    // Store optimized plan and applied rules
+    store_query_plan(csep, PlanType::Optimized);
+    store_applied_rules(ctx.serializeAppliedRules());
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;

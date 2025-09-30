@@ -2,6 +2,7 @@
 # Test FROM_UNIXTIME function in the machine time zone independent way.
 #
 -- source ../include/have_columnstore.inc
+--source ../include/disable_11.8.inc
 
 #
 # Get reference values from MariaDB

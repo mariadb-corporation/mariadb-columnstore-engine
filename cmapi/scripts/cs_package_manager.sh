@@ -4299,7 +4299,7 @@ download_dev() {
     DEV_DEB_INCLUDE=""
     if $USE_DEV_PACKAGES; then
         DEV_RPM_INCLUDE='--include "MariaDB-devel-*.rpm"'
-        DEV_DEB_INCLUDE='--include "libmariadb-dev*.deb"'
+        DEV_DEB_INCLUDE='--include "libmariadb-dev*.deb" --include "libmariadb-dev-compat*.deb"'
     fi
 
     case $distro_info in
@@ -4331,7 +4331,7 @@ download_dev() {
                     --include "jemalloc*" \
                     --exclude "*debug*" --no-sign-request
             else
-               aws s3 cp $s3_path/ . --recursive --exclude "*" \
+                aws s3 cp $s3_path/ . --recursive --exclude "*" \
                     --include "MariaDB-server-*.rpm" \
                     --include "MariaDB-common-*.rpm" \
                     --include "MariaDB-columnstore-cmapi-*.rpm" \
@@ -4359,32 +4359,33 @@ download_dev() {
                 aws s3 cp $s3_path/ .  --exclude "*" --include "*.deb" --recursive --no-sign-request
             fi
 
-            if [ "$remove_debug" == true ]; then
-                aws s3 cp $s3_path/ . --recursive --exclude "*" \
-                    --include "mariadb-server*.deb" \
-                    --include "mariadb-common*.deb" \
-                    --include "mariadb-columnstore-cmapi*.deb" \
-                    --include "mariadb-plugin-columnstore*.deb" \
-                    --include "mysql-common*.deb" \
-                    --include "mariadb-client*.deb" \
-                    --include "libmariadb3_*.deb" \
-                    $DEV_DEB_INCLUDE \
-                    --include "galera*"  \
-                    --include "jemalloc*" \
-                    --exclude "*debug*" --no-sign-request
-            else
-                aws s3 cp $s3_path/ . --recursive --exclude "*" \
-                    --include "mariadb-server*.deb" \
-                    --include "mariadb-common*.deb" \
-                    --include "mariadb-columnstore-cmapi*.deb" \
-                    --include "mariadb-plugin-columnstore*.deb" \
-                    --include "mysql-common*.deb" \
-                    --include "mariadb-client*.deb" \
-                    --include "libmariadb3_*.deb" \
-                    $DEV_DEB_INCLUDE \
-                    --include "galera*"  \
-                    --include "jemalloc*" --no-sign-request
+            AWS_ARGS=("s3" "cp" "$s3_path/" "." "--recursive" "--exclude" "*")
+            AWS_ARGS+=(
+                "--include" "mariadb-server*.deb"
+                "--include" "mariadb-common*.deb"
+                "--include" "mariadb-columnstore-cmapi*.deb"
+                "--include" "mariadb-plugin-columnstore*.deb"
+                "--include" "mysql-common*.deb"
+                "--include" "mariadb-client*.deb"
+                "--include" "libmariadb3_*.deb"
+                "--include" "galera*"
+                "--include" "jemalloc*"
+            )
+            # Optional dev headers
+            if $USE_DEV_PACKAGES; then
+                AWS_ARGS+=(
+                    "--include" "libmariadb-dev*.deb"
+                    "--include" "libmariadb-dev-compat*.deb"
+                )
             fi
+            # Exclude debug if requested
+            if [ "$remove_debug" == true ]; then
+                AWS_ARGS+=("--exclude" "*debug*")
+            fi
+            # Always add no-sign-request
+            AWS_ARGS+=("--no-sign-request")
+
+            aws "${AWS_ARGS[@]}"
 
             ;;
         *)  # unknown option

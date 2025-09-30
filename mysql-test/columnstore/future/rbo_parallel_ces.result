@@ -1,0 +1,51 @@
+DROP DATABASE IF EXISTS rbo_parallel_ces;
+CREATE DATABASE rbo_parallel_ces;
+USE rbo_parallel_ces;
+SELECT calsettrace(1);
+calsettrace(1)
+0
+CREATE TABLE Ti (col1 INT, col2 INT, col3 INT) ENGINE=InnoDB;
+INSERT INTO Ti (col1, col2, col3)
+SELECT seq, seq+1, seq+2 FROM (SELECT seq FROM seq_1_to_100) AS numbers;
+SET @@histogram_size=10;
+ANALYZE TABLE Ti PERSISTENT FOR ALL;
+Table	Op	Msg_type	Msg_text
+rbo_parallel_ces.Ti	analyze	status	Engine-independent statistics collected
+rbo_parallel_ces.Ti	analyze	status	OK
+CREATE INDEX excellent_index ON Ti(col1);
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
+SET @@columnstore_query_accel_parallel_factor=5;
+SELECT SUM(col1) FROM Ti;
+SUM(col1)
+5050
+SET @orig_plan := mcs_get_plan('original');
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+SET @uu_tail := SUBSTRING_INDEX(@orig_plan, '--- Union Unit ---', -1);
+SET @unit_open := CONCAT(CHAR(10),'    {',CHAR(10));
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_original;
+unions_original
+0.0000
+SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_5;
+unions_optimized_5
+5.0000
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+rule_parallel_ces_applied
+1
+SET @@columnstore_query_accel_parallel_factor=15;
+SELECT SUM(col1) FROM Ti;
+SUM(col1)
+5050
+SET @opt_plan := mcs_get_plan('optimized');
+SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_15;
+unions_optimized_15
+10.0000
+SELECT calsettrace(0);
+calsettrace(0)
+1
+DROP DATABASE rbo_parallel_ces;
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;

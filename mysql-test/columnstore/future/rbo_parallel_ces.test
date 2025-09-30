@@ -1,0 +1,72 @@
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+--source ../include/functions.inc
+--source ../include/cross_engine.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS rbo_parallel_ces;
+--enable_warnings
+
+CREATE DATABASE rbo_parallel_ces;
+USE rbo_parallel_ces;
+
+# Turn on plan logging to capture CSEP strings
+SELECT calsettrace(1);
+
+# Test table in InnoDB (routed to ColumnStore via CES)
+CREATE TABLE Ti (col1 INT, col2 INT, col3 INT) ENGINE=InnoDB;
+
+# Populate with 100 rows
+INSERT INTO Ti (col1, col2, col3)
+SELECT seq, seq+1, seq+2 FROM (SELECT seq FROM seq_1_to_100) AS numbers;
+
+# Generate statistics, limit histogram size
+SET @@histogram_size=10;
+ANALYZE TABLE Ti PERSISTENT FOR ALL;
+
+# Index to make basic stats available
+CREATE INDEX excellent_index ON Ti(col1);
+
+# Enable RBO
+--source ../include/enable_rbo_parallel_ces.inc
+
+# First run with parallel factor 5
+SET @@columnstore_query_accel_parallel_factor=5;
+
+# Execute a query to build and store plans
+SELECT SUM(col1) FROM Ti;
+
+# Snapshot plans into variables for readability
+SET @orig_plan := mcs_get_plan('original');
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+
+# Validate plan contents using stored plans
+# Count Union Units by looking for opening unit blocks after the marker '--- Union Unit ---'
+SET @uu_tail := SUBSTRING_INDEX(@orig_plan, '--- Union Unit ---', -1);
+SET @unit_open := CONCAT(CHAR(10),'    {',CHAR(10));
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_original;
+
+SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_5;
+
+# Ensure rule was applied
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+
+# Increase factor to 15 but expect 10 unions due to histogram_size cap
+SET @@columnstore_query_accel_parallel_factor=15;
+
+# Re-execute to rebuild plan with new factor
+SELECT SUM(col1) FROM Ti;
+
+SET @opt_plan := mcs_get_plan('optimized');
+SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);
+SELECT (CHAR_LENGTH(@uu_tail) - CHAR_LENGTH(REPLACE(@uu_tail, @unit_open, '')))/CHAR_LENGTH(@unit_open) AS unions_optimized_15;
+
+# Cleanup
+SELECT calsettrace(0);
+DROP DATABASE rbo_parallel_ces;
+
+--source ../include/disable_rbo_parallel_ces.inc
+--source ../include/drop_functions.inc
+--source ../include/drop_cross_engine.inc

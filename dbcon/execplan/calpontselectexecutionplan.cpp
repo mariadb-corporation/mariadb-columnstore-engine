@@ -1093,4 +1093,153 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneWORecursiveSelects()
   return newPlan;
 }
 
+// This clone must return CSEP w/o sub-selects, group by, order by, having limit.
+execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObHaving(
+    const execplan::CalpontSystemCatalog::TableAliasName& targetTableAlias, const bool withFilters)
+{
+  execplan::SCSEP newPlan(new CalpontSelectExecutionPlan(fLocation));
+
+  // Copy simple members
+  newPlan->fLocalQuery = fLocalQuery;
+  newPlan->fTableAlias = fTableAlias;
+  newPlan->fLocation = fLocation;
+  newPlan->fDependent = fDependent;
+  newPlan->fData = fData;
+  newPlan->fSessionID = fSessionID;
+  newPlan->fTxnID = fTxnID;
+  newPlan->fVerID = fVerID;
+  newPlan->fSchemaName = fSchemaName;
+  newPlan->fTableName = fTableName;
+  newPlan->fTraceFlags = fTraceFlags;
+  newPlan->fStatementID = fStatementID;
+  newPlan->fDistinct = fDistinct;
+  newPlan->fOverrideLargeSideEstimate = fOverrideLargeSideEstimate;
+  newPlan->fDistinctUnionNum = fDistinctUnionNum;
+  newPlan->fSubType = fSubType;
+  newPlan->fDerivedTbAlias = fDerivedTbAlias;
+  newPlan->fDerivedTbView = fDerivedTbView;
+  newPlan->fStringScanThreshold = fStringScanThreshold;
+  newPlan->fQueryType = fQueryType;
+  newPlan->fPriority = fPriority;
+  newPlan->fStringTableThreshold = fStringTableThreshold;
+  newPlan->fSpecHandlerProcessed = fSpecHandlerProcessed;
+  newPlan->fOrderByThreads = fOrderByThreads;
+  newPlan->fUuid = fUuid;
+  newPlan->fDJSSmallSideLimit = fDJSSmallSideLimit;
+  newPlan->fDJSLargeSideLimit = fDJSLargeSideLimit;
+  newPlan->fDJSPartitionSize = fDJSPartitionSize;
+  newPlan->fDJSMaxPartitionTreeDepth = fDJSMaxPartitionTreeDepth;
+  newPlan->fDJSForceRun = fDJSForceRun;
+  newPlan->fMaxPmJoinResultCount = fMaxPmJoinResultCount;
+  newPlan->fUMMemLimit = fUMMemLimit;
+  newPlan->fIsDML = fIsDML;
+  newPlan->fTimeZone = fTimeZone;
+  newPlan->fPron = fPron;
+  newPlan->fWithRollup = fWithRollup;
+
+  // Deep copy of ReturnedColumnList
+  ReturnedColumnList newReturnedCols;
+
+  for (const auto& rc : fReturnedCols)
+  {
+    rc->setSimpleColumnList();
+    for (auto* simpleColumn : rc->simpleColumnList())
+    {
+      auto tableAlias = simpleColumn->singleTable();
+      if (tableAlias && targetTableAlias.weakerEq(*tableAlias))
+      {
+        // TODO We insert multiple times if there are multiple SCs for the same RC.
+        newReturnedCols.push_back(SRCP(rc->clone()));
+      }
+    }
+  }
+
+  newPlan->returnedCols(newReturnedCols);
+
+  // Deep copy of filters
+  // WIP only filters that apply to the target table must be left intact
+  // replace all irrelevant branches with true
+  if (fFilters && withFilters)
+  {
+    newPlan->filters(new ParseTree(*fFilters));
+  }
+
+  // Deep copy of filter token list
+  newPlan->filterTokenList(fFilterTokenList);
+
+  ColumnMap newColumnMap;
+  // Deep copy of column map
+  for (const auto& entry : fColumnMap)
+  {
+    auto tableAlias = entry.second->singleTable();
+    // TODO We insert multiple times if there are multiple SCs for the same RC.
+    if (tableAlias && targetTableAlias.weakerEq(*tableAlias))
+    {
+      auto it = fColumnMap.find(entry.first);
+      if (it == fColumnMap.end())
+      {
+        newColumnMap.insert({entry.first, SRCP(entry.second->clone())});
+      }
+    }
+  }
+
+  newPlan->columnMap(newColumnMap);
+
+  // Copy RM parameters
+  newPlan->rmParms(frmParms);
+
+  // Deep copy of table list
+  // INV the target table must be contained in the original TableList in this CSEP
+  TableList newTableList{targetTableAlias};
+
+  newPlan->tableList(newTableList);
+
+  return newPlan;
+}
+
+SCSEP CalpontSelectExecutionPlan::clone()
+{
+  auto newPlan = cloneWORecursiveSelects();
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSubSelects)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSubSelects.push_back(subCSEP->clone());
+  }
+
+  newPlan->fDerivedTableList.clear();
+  for (const auto& drvTable: fDerivedTableList)
+  {
+    auto* drvCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(drvTable.get());
+    idbassert_s(drvCSEP != nullptr, "derivedTable is not a CalpontSelectExecutionPlan");
+    newPlan->fDerivedTableList.push_back(drvCSEP->clone());
+  }
+
+  newPlan->fUnionVec.clear();
+  for (const auto& subPlan : fUnionVec)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "unionVec is not a CalpontSelectExecutionPlan");
+    newPlan->fUnionVec.push_back(subCSEP->clone());
+  }
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSelectSubList)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSelectSubList.push_back(subCSEP->clone());
+  }
+
+  newPlan->fSubSelectList.clear();
+  for (const auto& subPlan : fSubSelectList)
+  {
+    newPlan->fSubSelectList.push_back(subPlan->clone());
+  }
+
+  return newPlan;
+}
+
 }  // namespace execplan

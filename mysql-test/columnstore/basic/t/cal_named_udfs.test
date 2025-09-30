@@ -20,6 +20,7 @@ select calgetversion()=mcsgetversion();
 select calviewtablelock("t1");
 select calcleartablelock(0);
 select callastinsertid("t1");
+--replace_regex /(Running SQL statements 1)/Running SQL statements 0/
 select calgetsqlcount();
 
 DROP TABLE t1;

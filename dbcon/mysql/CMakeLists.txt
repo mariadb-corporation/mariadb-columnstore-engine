@@ -42,9 +42,6 @@ set(libcalmysql_SRCS
     is_columnstore_files.cpp
     is_columnstore_extents.cpp
     columnstore_dataload.cpp
-    rulebased_optimizer.cpp
-    rbo_apply_parallel_ces.cpp
-    rbo_predicate_pushdown.cpp
 )
 
 set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
@@ -61,6 +58,7 @@ if(COMMAND mysql_add_plugin)
         MODULE_ONLY
         ${disabled}
         LINK_LIBRARIES
+        rbo
         ${ENGINE_LDFLAGS}
         ${PLUGIN_EXEC_LIBS}
         ${PLUGIN_WRITE_LIBS}
@@ -88,6 +86,7 @@ else()
 
     columnstore_link(
         ha_columnstore
+        rbo
         ${S3API_DEPS}
         ${ENGINE_LDFLAGS}
         ${ENGINE_WRITE_LIBS}

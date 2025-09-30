@@ -77,7 +77,10 @@ def setup_logging(verbose: bool = False) -> None:
     add_logging_level('TRACE', 5)
     dict_config(MCS_CLI_LOG_CONF_PATH)
     if verbose:
-        enable_console_logging(logging.getLogger())
+        for logger_name in ("", "mcs_cli"):
+            logger = logging.getLogger(logger_name)
+            logger.setLevel(logging.DEBUG)
+            enable_console_logging(logger)
 
 
 if __name__ == '__main__':

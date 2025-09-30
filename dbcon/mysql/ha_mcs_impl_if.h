@@ -120,7 +120,8 @@ typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, 
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 using ColumnName = std::string;
-using ColumnStatisticsMap = std::unordered_map<ColumnName, Histogram_json_hb>;
+using ColumnStatisticsMap =
+    std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
 using TableStatisticsMap =
     std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
 
@@ -262,7 +263,17 @@ struct gp_walk_info
   ~gp_walk_info();
 
   void mergeTableStatistics(const TableStatisticsMap& tableStatisticsMap);
-  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName);
+  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  {
+    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
+
+    if (tableStatisticsMapIt == tableStatisticsMap.end())
+    {
+      return std::nullopt;
+    }
+
+    return {tableStatisticsMapIt->second};
+  }
 };
 
 struct SubQueryChainHolder;
@@ -388,6 +399,9 @@ struct cal_connection_info
   bool isCacheInsert;
   std::string extendedStats;
   std::string miniStats;
+  std::string queryPlanOriginal;   // CSEP string before RBO
+  std::string queryPlanOptimized;  // CSEP string after RBO
+  std::string rboAppliedRules;     // Comma-separated list of applied RBO rules
   messageqcpp::MessageQueueClient* dmlProc;
   ha_rows rowsHaveInserted;
   ColNameList colNameList;

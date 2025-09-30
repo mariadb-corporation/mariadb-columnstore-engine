@@ -47,11 +47,15 @@ CREATE TABLE t4 (a varchar(15)) ENGINE=InnoDB charset=latin2;
 SHOW CREATE TABLE t4;
 ALTER TABLE t4 ENGINE=columnstore;
 
+--replace_regex /utf8mb3_uca1400_ai_ci/utf8mb3_general_ci/
 SHOW CREATE TABLE t1;
+--replace_regex /CHARACTER SET utf8mb3 COLLATE utf8mb3_uca1400_ai_ci //
 SHOW CREATE TABLE t2;
+--replace_regex /utf8mb3_uca1400_ai_ci/utf8mb3_general_ci/
 SHOW CREATE TABLE t3;
 SHOW CREATE TABLE t4;
 
+--replace_regex /2048/33/
 SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
 WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4')
 ORDER BY tablename, columnname, charsetnum;

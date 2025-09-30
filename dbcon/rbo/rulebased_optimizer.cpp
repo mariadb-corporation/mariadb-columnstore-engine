@@ -15,48 +15,80 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-
 #include "rulebased_optimizer.h"
 
+#include "configcpp.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
-#include "execplan/simplecolumn.h"
-#include "existsfilter.h"
-#include "logicoperator.h"
-#include "operator.h"
 #include "predicateoperator.h"
-#include "simplefilter.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_predicate_pushdown.h"
+#include "rbo_apply_rewrite_distinct.h"
+#include "utils/pron/pron.h"
+
+#include "calpontsystemcatalog.h"
+#include "functioncolumn.h"
 
 namespace optimizer
 {
+
+std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                      const RBOptimizerContext& ctx)
+{
+  static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
+  return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
+         std::to_string(ctx.getUniqueId());
+}
 
 // Apply a list of rules to a CSEP
 bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules,
                            optimizer::RBOptimizerContext& ctx)
 {
   bool changed = false;
+  config::Config* cfg = config::Config::makeConfig();
+  const auto& pronMap = utils::Pron::instance().pron();
+
   for (const auto& rule : rules)
   {
-    changed |= rule.apply(root, ctx);
+    bool apply_rule = true;
+    try
+    {
+      const std::string val = cfg->getConfig("OptimizerRules", rule.getName());
+      apply_rule = config::parseBooleanParamValue(val);
+
+      const std::string k1 = std::string("OptimizerRules.") + rule.getName();
+      // PRON params override the config file
+      auto it = pronMap.find(k1);
+      if (it != pronMap.end())
+      {
+        apply_rule = config::parseBooleanParamValue(it->second);
+      }
+    }
+    catch (...)
+    {
+      // Missing section/name or other config issues – keep default behavior
+    }
+    if (apply_rule)
+    {
+      changed |= rule.apply(root, ctx);
+    }
   }
   return changed;
 }
 
 // high level API call for optimizer
-bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx)
+bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx,
+                  bool useUnstableOptimizer)
 {
   std::vector<optimizer::Rule> rules;
-
-  if (get_unstable_optimizer(&ctx.thd))
+  if (useUnstableOptimizer)
   {
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
+
+    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+                                    optimizer::applyRewriteDistinct};
+    rules.push_back(rewriteDistinct);
   }
 
   optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
@@ -76,9 +108,14 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
-    if (ctx.logRules && changedThisRound)
+    if (ctx.logRulesEnabled() && changedThisRound)
     {
       std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
+    }
+    if (changedThisRound)
+    {
+      // Record rule application
+      ctx.addAppliedRule(name);
     }
   } while (changedThisRound && !applyOnlyOnce);
 
@@ -98,16 +135,6 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
 
-    // Walk nested derived
-    for (auto& table : current->derivedTableList())
-    {
-      auto* csepPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(table.get());
-      if (csepPtr)
-      {
-        planStack.push(csepPtr);
-      }
-    }
-
     // Walk nested UNION UNITS
     for (auto& unionUnit : current->unionVec())
     {
@@ -118,7 +145,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       }
     }
 
-    // Walk nested subselect in filters, e.g. SEMI-JOIN
+    // Walk nested subselect in filters, e.g. SEMI-JOIN and also derived tables
     for (auto& subselect : current->subSelectList())
     {
       auto* subselectPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subselect.get());
@@ -130,10 +157,10 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
     // TODO add walking nested subselect in projection. See CSEP::fSelectSubList
 
-    if (mayApply(*current))
+    if (mayApply(*current, ctx))
     {
       rewrite |= applyRule(*current, ctx);
-      ++ctx.uniqueId;
+      ctx.incrementUniqueId();
     }
   }
 

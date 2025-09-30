@@ -24,7 +24,7 @@ from tracing.trace_tool import register_tracing_tools
 
 from cmapi_server import helpers
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
-from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error, jsonify_404
 from cmapi_server.failover_agent import FailoverAgent
 from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.process import MCSProcessManager
@@ -155,6 +155,7 @@ if __name__ == '__main__':
     root_config = {
         "request.dispatch": dispatcher,
         "error_page.default": jsonify_error,
+        "error_page.404": jsonify_404,
         # Enable tracing tools
         'tools.trace.on': True,
         'tools.trace_end.on': True,

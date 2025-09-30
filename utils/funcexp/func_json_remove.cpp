@@ -28,17 +28,14 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   if (isNull)
     return "";
 
-  json_engine_t jsEg;
-
   int jsErr = 0;
   json_string_t keyName;
   const CHARSET_INFO* cs = getCharset(fp[0]);
   json_string_set_cs(&keyName, cs);
 
-  initJSPaths(paths, fp, 1, 1);
-
   std::string retJS;
   utils::NullString tmpJS(js);
+
   for (size_t i = 1, j = 0; i < fp.size(); i++, j++)
   {
     const char* rawJS = tmpJS.str();
@@ -49,13 +46,25 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     const char *remStart = nullptr, *remEnd = nullptr;
     IntType itemSize = 0;
 
+#if MYSQL_VERSION_ID >= 120200
+    json_path_step_t *curr_last_step= nullptr;
+#endif
+
     if (!path.parsed)
     {
       if (parseJSPath(path, row, fp[i], false))
         goto error;
 
-      path.p.last_step--;
+#if MYSQL_VERSION_ID >= 120200
+      path.p.last_step_idx--;
+      curr_last_step= reinterpret_cast<json_path_step_t*>
+                                    (mem_root_dynamic_array_get_val(&path.p.steps,
+                                                                    path.p.last_step_idx));
+      if (curr_last_step < reinterpret_cast<json_path_step_t*>(path.p.steps.buffer))
+#else
+       path.p.last_step--;
       if (path.p.last_step < path.p.steps)
+#endif
       {
         path.p.s.error = TRIVIAL_PATH_NOT_ALLOWED;
         goto error;
@@ -64,7 +73,11 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
     initJSEngine(jsEg, cs, tmpJS);
 
+#if MYSQL_VERSION_ID >= 120200
+    if (curr_last_step < reinterpret_cast<json_path_step_t*>(path.p.steps.buffer))
+#else
     if (path.p.last_step < path.p.steps)
+#endif
       goto v_found;
 
     if (locateJSPath(jsEg, path, &jsErr) && jsErr)
@@ -73,7 +86,12 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     if (json_read_value(&jsEg))
       goto error;
 
+#if MYSQL_VERSION_ID >= 120200
+    lastStep = curr_last_step + 1;
+#else
     lastStep = path.p.last_step + 1;
+#endif
+
     if (lastStep->type & JSON_PATH_ARRAY)
     {
       if (jsEg.value_type != JSON_VALUE_ARRAY)

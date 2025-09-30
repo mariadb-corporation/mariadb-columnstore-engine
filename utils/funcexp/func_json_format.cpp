@@ -46,9 +46,9 @@ std::string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
   }
 
-  json_engine_t jsEg;
   initJSEngine(jsEg, getCharset(fp[0]), js);
-  std::string ret;
+
+  string ret;
   if (doFormat(&jsEg, ret, fmt, tabSize))
   {
     isNull = true;

@@ -170,6 +170,9 @@ class SelectFilter : public Filter
    */
   bool operator!=(const SelectFilter& t) const;
 
+  void setSimpleColumnListExtended();
+  const std::vector<SimpleColumn*>& simpleColumnListExtended();
+
  private:
   // default okay?
   // SelectFilter& operator=(const SelectFilter& rhs);
@@ -180,6 +183,7 @@ class SelectFilter : public Filter
   bool fCorrelated;
   std::string fData;
   uint64_t fReturnedColPos;  // offset in fSub->returnedColList to indicate the start of projection
+  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
 };
 
 std::ostream& operator<<(std::ostream& output, const SelectFilter& rhs);

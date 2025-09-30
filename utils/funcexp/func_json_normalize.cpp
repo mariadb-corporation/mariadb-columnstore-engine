@@ -36,7 +36,11 @@ std::string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp,
   if (init_dynamic_string(str.get(), NULL, 0, 0))
     goto error;
 
+#if MYSQL_VERSION_ID >= 120200
+  if (json_normalize(str.get(), js.data(), js.size(), getCharset(fp[0]), NULL, &jsEg, &array))
+#else
   if (json_normalize(str.get(), js.data(), js.size(), getCharset(fp[0])))
+#endif
     goto error;
 
   return str->str;

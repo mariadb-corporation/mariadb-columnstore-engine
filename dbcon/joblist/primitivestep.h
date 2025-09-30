@@ -61,6 +61,7 @@
 #include "rowgroup.h"
 #include "rowaggregation.h"
 #include "funcexpwrapper.h"
+#include "oamcache.h"
 
 namespace joblist
 {
@@ -1458,7 +1459,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint32_t blocksPerJob;
 
   /* Pseudo column filter processing.  Think about refactoring into a separate class. */
-  bool processPseudoColFilters(uint32_t extentIndex, boost::shared_ptr<std::map<int, int>> dbRootPMMap) const;
+  bool processPseudoColFilters(uint32_t extentIndex, oam::OamCache* oamCache) const;
   template <typename T>
   bool processOneFilterType(int8_t colWidth, T value, uint32_t type) const;
   template <typename T>
@@ -1472,6 +1473,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   bool compareRange(uint8_t COP, int64_t min, int64_t max, int64_t val) const;
   bool hasPCFilter, hasPMFilter, hasRIDFilter, hasSegmentFilter, hasDBRootFilter, hasSegmentDirFilter,
       hasPartitionFilter, hasMaxFilter, hasMinFilter, hasLBIDFilter, hasExtentIDFilter;
+  int findClosestPM(const std::map<int, std::set<int>>& dbrootConnMap, int dbroot);
 };
 
 /** @brief class FilterStep

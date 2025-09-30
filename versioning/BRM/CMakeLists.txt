@@ -59,13 +59,6 @@ columnstore_link(dbrmctl ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS
 
 # ########## next target ###############
 
-set(reset_locks_SRCS reset_locks.cpp)
-
-columnstore_executable(reset_locks ${reset_locks_SRCS})
-columnstore_link(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-# ########## next target ###############
-
 set(rollback_SRCS rollback.cpp)
 
 columnstore_executable(rollback ${rollback_SRCS})

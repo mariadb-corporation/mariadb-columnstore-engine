@@ -138,6 +138,10 @@ def start_transaction(
         # this copy will be updated if an optional node can't be reached
         real_active_nodes = set(active_nodes)
         logging.trace(f'Active nodes on start transaction {active_nodes}')
+
+        if not len(active_nodes):
+            logging.warning('No active nodes found, transaction start will not have any effect')
+
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{version}/node/begin'
             node_success = False
@@ -385,7 +389,7 @@ def broadcast_new_config(
                 ) as response:
                     resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node {node} config put successfull.')
+                logging.info(f'Node {node} config put successful.')
             except aiohttp.ClientResponseError as err:
                 # TODO: may be better to check if resp status is 422 cause
                 #       it's like a signal that cmapi server raised it in
@@ -583,6 +587,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     dbroots = []
     smc_node = root.find('./SystemModuleConfig')
     mod_count = int(smc_node.find('./ModuleCount3').text)
+
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
@@ -602,6 +607,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
+
     return dbroots
 
 
