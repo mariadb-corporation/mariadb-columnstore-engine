@@ -2,6 +2,7 @@ import logging
 import time
 import threading
 from pathlib import Path
+from typing import Optional
 
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.constants import REQUEST_TIMEOUT
@@ -24,6 +25,9 @@ class SharedStorageMonitor:
         self._cluster_api_client = ClusterControllerClient(request_timeout=REQUEST_TIMEOUT)
         self.check_interval = check_interval
         self.last_check_time = 0
+        # Track nodes that were unreachable during the last check to avoid
+        # flipping the shared storage flag based on partial visibility.
+        self._last_unreachable_nodes: set[str] = set()
 
     def __del__(self):
         self.stop()
@@ -43,7 +47,7 @@ class SharedStorageMonitor:
             try:
                 self._logger.info('Shared storage monitor running check.')
                 self._monitor()
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 self._logger.error('Shared storage monitor caught an exception.', exc_info=True)
             if not self._die:
                 self._logger.info(
@@ -53,18 +57,18 @@ class SharedStorageMonitor:
                 time.sleep(self.check_interval)
         self._logger.info('Shared storage monitor exited normally')
 
-    def _check_shared_storage(self) -> bool:
+    def _check_shared_storage(self) -> Optional[bool]:
         try:
             response = self._cluster_api_client.check_shared_storage()
         except CMAPIBasicError as err:
             self._logger.error(f'Error while calling cluster shared storage check: {err.message}')
-            return False
-        except Exception:
+            return None
+        except Exception:  # pylint: disable=broad-except
             self._logger.error(
                 'Unexpected error while calling cluster shared storage check.',
                 exc_info=True
             )
-            return False
+            return None
         shared_storage_on = response.get('shared_storage', None)
         if shared_storage_on is None:
             self._logger.error(
@@ -78,9 +82,28 @@ class SharedStorageMonitor:
             logging.debug(
                 'Less than 2 nodes in cluster, no need to change flag of shared storage.'
             )
-            return False
-        else:
-            return shared_storage_on
+            return None
+
+        # If some nodes were unreachable during the check, treat the result as
+        # inconclusive and do not update the stateful flag. This avoids flipping
+        # shared_storage_off when a node is simply down/unreachable.
+        nodes_errors = response.get('nodes_errors') or {}
+        if nodes_errors:
+            self._last_unreachable_nodes = set(nodes_errors.keys())
+            self._logger.warning(
+                'Shared storage check has unreachable nodes; deferring decision. '
+                f'Nodes: {sorted(self._last_unreachable_nodes)}'
+            )
+            return None
+
+        # No unreachable nodes; clear any previously tracked ones.
+        if self._last_unreachable_nodes:
+            self._logger.info(
+                'Previously unreachable nodes are now reachable; clearing state.'
+            )
+            self._last_unreachable_nodes.clear()
+
+        return shared_storage_on
 
     def _check_listed_dbroots_exist(self):
         c_root = self._node_config.get_current_config_root()
@@ -96,29 +119,37 @@ class SharedStorageMonitor:
 
     def _monitor(self):
         dbroots_available: bool = False
-        shared_storage_on: bool = False
+        shared_storage_on_result = None
         if not self._node_config.is_primary_node():
             self._logger.debug('This node is not primary, skipping shared storage check.')
             return
         dbroots_available = self._check_listed_dbroots_exist()
         if not dbroots_available:
             self._logger.info('DBRoots are not available, no need to api check shared storage.')
-            shared_storage_on = False
+            shared_storage_on_result = False
         else:
-            shared_storage_on = self._check_shared_storage()
+            shared_storage_on_result = self._check_shared_storage()
 
         current_stateful_config: StatefulConfigModel = AppStatefulConfig.get_config_copy()
         current_shared_storage_on: bool = current_stateful_config.flags.shared_storage_on
-        if not current_shared_storage_on != shared_storage_on:
+        # If result is None, the check was inconclusive (e.g., some nodes unreachable);
+        # keep the current flag unchanged and exit.
+        if shared_storage_on_result is None:
+            self._logger.debug(
+                f'Shared storage check inconclusive; Keeping current state: {current_shared_storage_on}'
+            )
+            return
+
+        if not current_shared_storage_on != bool(shared_storage_on_result):
             self._logger.debug(f'Shared storage state is unchanged: {current_shared_storage_on}')
         else:
             self._logger.info(
                 f'Shared storage state changed from {current_shared_storage_on} '
-                f'to {shared_storage_on}. Updating stateful config.'
+                f'to {bool(shared_storage_on_result)}. Updating stateful config.'
             )
             new_stateful_config = StatefulConfigModel(
                 version=current_stateful_config.version.next_seq(),
-                flags=StatefulFlagsModel(shared_storage_on=shared_storage_on)
+                flags=StatefulFlagsModel(shared_storage_on=bool(shared_storage_on_result))
             )
             new_stateful_config_dict = new_stateful_config.model_dump(mode='json')
             broadcast_stateful_config(stateful_config_dict=new_stateful_config_dict)

@@ -4,6 +4,7 @@ import hashlib
 import logging
 import os
 import tempfile
+import time
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -19,7 +20,6 @@ from cmapi_server.constants import (
 )
 from cmapi_server.exceptions import CMAPIBasicError, exc_to_cmapi_error
 from cmapi_server.controllers.api_clients import NodeControllerClient
-from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
     broadcast_new_config,
     get_active_nodes,
@@ -468,6 +468,7 @@ class ClusterHandler:
         tmp_file_path: str
         active_nodes = get_active_nodes()
         all_responses: dict = dict()
+        nodes_errors: dict = dict()
         sm_parser = configparser.ConfigParser()
         sm_config_str = NodeConfig().get_current_sm_config()
         sm_parser.read_string(sm_config_str)
@@ -496,31 +497,52 @@ class ClusterHandler:
                     request_timeout=REQUEST_TIMEOUT,
                     base_url=f'https://{node}:{CMAPI_PORT}'
                 )
-                node_response = client.check_shared_file(
-                    file_path=tmp_file_path, check_sum=tmp_file_md5
-                )
-                logging.debug(f'Finished checking file on {node!r}')
-                all_responses[node] = node_response
+                last_err_msg = None
+                for attempt in range(2):
+                    try:
+                        node_response = client.check_shared_file(
+                            file_path=tmp_file_path, check_sum=tmp_file_md5
+                        )
+                        logging.debug(f'Finished checking file on {node!r}')
+                        all_responses[node] = node_response
+                        break
+                    except CMAPIBasicError as err:  # per-node failure must not abort the whole check
+                        last_err_msg = err.message
+                        if attempt == 0:
+                            time.sleep(1)
+                        continue
+                else:
+                    # Retries exhausted
+                    logging.warning(
+                        f'Error checking shared file on {node!r}: {last_err_msg}',
+                        exc_info=True
+                    )
+                    nodes_errors[node] = last_err_msg or 'unknown error'
 
         nodes_success_responses = [
-            v['success'] for v in all_responses.values()
+            v.get('success', False) for v in all_responses.values()
         ]
         if nodes_success_responses:
             shared_storage = all(nodes_success_responses)
         else:
             # no nodes in cluster case
             shared_storage = False
+        # Consider partial failures either when not all successful among reachable
+        # or when some nodes were unreachable (nodes_errors present).
         partially_failed = False
-        if len(active_nodes) > 2 and not shared_storage:
-            # case when some nodes got shared file, and some are not
-            partially_failed =  sum(nodes_success_responses) > 1
+        if len(active_nodes) > 2:
+            if nodes_errors:
+                partially_failed = True
+            elif nodes_success_responses and not all(nodes_success_responses):
+                partially_failed = True
 
         response = {
             'timestamp': str(datetime.now()),
             'shared_storage': shared_storage,
             'partially_failed': partially_failed,
             'active_nodes_count': len(active_nodes),
-            'nodes_responses': {**all_responses}
+            'nodes_responses': {**all_responses},
+            'nodes_errors': {**nodes_errors}
         }
 
         logging.debug(
