@@ -62,5 +62,7 @@ SELECT t4_int FROM t4 WHERE EXISTS (SELECT t2_int FROM t2 WHERE t4.t4_int = t2.t
 SELECT t4_int FROM t4 WHERE NOT EXISTS (SELECT t2_int FROM t2 WHERE t4.t4_int = t2.t2_int);
 	
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs79_db;

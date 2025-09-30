@@ -131,5 +131,7 @@ SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t3_int, 'Integer' AS Ta
 SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;	
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs80_db;

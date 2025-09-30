@@ -150,5 +150,7 @@ DROP VIEW v1,v2;
 DROP TABLE tt,t2,t1;
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs63_db;
