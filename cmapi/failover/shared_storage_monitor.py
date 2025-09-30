@@ -2,22 +2,23 @@ import logging
 import time
 import threading
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.constants import REQUEST_TIMEOUT
 from cmapi_server.controllers.api_clients import ClusterControllerClient
-from cmapi_server.helpers import broadcast_stateful_config
+from cmapi_server.helpers import broadcast_stateful_config, get_active_nodes
 from cmapi_server.managers.application import (
     AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel,
 )
 from cmapi_server.node_manipulation import get_dbroots_paths
 from mcs_node_control.models.node_config import NodeConfig
+from .heartbeat_history import HBHistory
 
 
 class SharedStorageMonitor:
 
-    def __init__(self, check_interval: int = 10):
+    def __init__(self, check_interval: int = 5, hb_history: Optional[HBHistory] = None):
         self._die = False
         self._logger = logging.getLogger('shared_storage_monitor')
         self._runner = None
@@ -28,6 +29,7 @@ class SharedStorageMonitor:
         # Track nodes that were unreachable during the last check to avoid
         # flipping the shared storage flag based on partial visibility.
         self._last_unreachable_nodes: set[str] = set()
+        self._hb_history = hb_history
 
     def __del__(self):
         self.stop()
@@ -57,9 +59,44 @@ class SharedStorageMonitor:
                 time.sleep(self.check_interval)
         self._logger.info('Shared storage monitor exited normally')
 
-    def _check_shared_storage(self) -> Optional[bool]:
+    def _retrieve_unstable_nodes(self) -> List[str]:
+        """Skip nodes whose latest stable heartbeat sample is NoResponse.
+
+        We only consider the most recent finalized sample (currentTick - lateWindow),
+        avoiding partial/in-flight samples. If that value is NoResponse, we
+        temporarily exclude the node from the shared-storage check for this cycle.
+        """
+        if not self._hb_history:
+            return []
         try:
-            response = self._cluster_api_client.check_shared_storage()
+            active_nodes = get_active_nodes()
+        except Exception:  # pylint: disable=broad-except
+            # If we cannot load active nodes, be safe and skip none.
+            return []
+
+        unstable_nodes: list[str] = []
+        # We only need one stable sample; ask for 1 recent finalized value.
+        lookback = 1
+        for node in active_nodes:
+            # Use GoodResponse as default to avoid over-skipping brand new nodes.
+            hist = self._hb_history.getNodeHistory(node, lookback, HBHistory.GoodResponse)
+            if not hist:
+                continue
+            if hist[-1] == HBHistory.NoResponse:
+                unstable_nodes.append(node)
+        return unstable_nodes
+
+    def _check_shared_storage(self) -> Optional[bool]:
+        extra_payload = {}
+        # Compute skip list based on recent heartbeat instability (if available)
+        skip_nodes = self._retrieve_unstable_nodes()
+        if skip_nodes:
+            self._logger.debug(
+                f'Shared storage check will skip unstable nodes (HB drop): {sorted(skip_nodes)}'
+            )
+            extra_payload['skip_nodes'] = skip_nodes
+        try:
+            response = self._cluster_api_client.check_shared_storage(extra=extra_payload)
         except CMAPIBasicError as err:
             self._logger.error(f'Error while calling cluster shared storage check: {err.message}')
             return None

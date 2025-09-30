@@ -460,13 +460,16 @@ class ClusterHandler:
         return response
 
     @staticmethod
-    def check_shared_storage() -> dict:
+    def check_shared_storage(skip_nodes: Optional[list[str]] = None) -> dict:
         """Check shared storage.
 
         :return: status result
         """
         tmp_file_path: str
         active_nodes = get_active_nodes()
+        if skip_nodes:
+            # Remove any nodes the caller asked us to skip (e.g., unstable HB)
+            active_nodes = [n for n in active_nodes if n not in set(skip_nodes)]
         all_responses: dict = dict()
         nodes_errors: dict = dict()
         sm_parser = configparser.ConfigParser()

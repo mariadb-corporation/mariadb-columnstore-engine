@@ -1144,8 +1144,12 @@ class ClusterController:
         """Handler for /cluster/check-shared-storage/ (PUT) endpoint."""
         func_name = 'check_shared_storage'
         log_begin(module_logger, func_name)
+        # Optional skip list provided by caller (e.g., failover monitor)
+        request = cherrypy.request
+        request_body = request.json or {}
+        skip_nodes = request_body.get('skip_nodes', [])
         try:
-            response = ClusterHandler.check_shared_storage()
+            response = ClusterHandler.check_shared_storage(skip_nodes)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
         except Exception:

@@ -33,7 +33,9 @@ class NodeMonitor:
         # not used yet, KI-V-SS for V1 [old comment from Patrick]
         self.flakyNodeThreshold = flakyNodeThreshold
         self.myName = self._config.who_am_I()
-        self.shared_storage_monitor = SharedStorageMonitor()
+        # Pass heartbeat history to shared storage monitor so it can skip
+        # nodes that just dropped from Good to NoResponse.
+        self.shared_storage_monitor = SharedStorageMonitor(hb_history=self._hbHistory)
         #self._logger.info("Using {} as my name".format(self.myName))
 
     def __del__(self):
