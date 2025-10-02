@@ -1,0 +1,38 @@
+--source ../include/have_columnstore.inc
+--source ../include/functions.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS test_empty_date;
+--enable_warnings
+
+CREATE DATABASE test_empty_date;
+USE test_empty_date;
+
+CREATE TABLE td (d DATE) ENGINE=ColumnStore;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('td','d');
+SELECT MIN(d) FROM td;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('td','d');
+
+--echo # Test with DATETIME as well
+CREATE TABLE tdt (dt DATETIME) ENGINE=ColumnStore;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('tdt','dt');
+SELECT MIN(dt) FROM tdt;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('tdt','dt');
+
+
+--echo # Test with TIMESTAMP
+CREATE TABLE tts (ts TIMESTAMP) ENGINE=ColumnStore;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('tts','ts');
+SELECT MIN(ts) FROM tts;
+--replace_regex / 0\.0\.. / 0.0.1 /
+SELECT calShowPartitions('tts','ts');
+
+DROP DATABASE test_empty_date;
+
+--source ../include/drop_functions.inc
+

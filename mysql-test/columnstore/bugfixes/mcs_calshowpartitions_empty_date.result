@@ -1,0 +1,42 @@
+DROP DATABASE IF EXISTS test_empty_date;
+CREATE DATABASE test_empty_date;
+USE test_empty_date;
+CREATE TABLE td (d DATE) ENGINE=ColumnStore;
+SELECT calShowPartitions('td','d');
+calShowPartitions('td','d')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+SELECT MIN(d) FROM td;
+MIN(d)
+NULL
+SELECT calShowPartitions('td','d');
+calShowPartitions('td','d')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+# Test with DATETIME as well
+CREATE TABLE tdt (dt DATETIME) ENGINE=ColumnStore;
+SELECT calShowPartitions('tdt','dt');
+calShowPartitions('tdt','dt')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+SELECT MIN(dt) FROM tdt;
+MIN(dt)
+NULL
+SELECT calShowPartitions('tdt','dt');
+calShowPartitions('tdt','dt')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+# Test with TIMESTAMP
+CREATE TABLE tts (ts TIMESTAMP) ENGINE=ColumnStore;
+SELECT calShowPartitions('tts','ts');
+calShowPartitions('tts','ts')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+SELECT MIN(ts) FROM tts;
+MIN(ts)
+NULL
+SELECT calShowPartitions('tts','ts');
+calShowPartitions('tts','ts')
+Part#     Min                           Max                           Status
+  0.0.1     N/A                           N/A                           Enabled
+DROP DATABASE test_empty_date;

@@ -745,6 +745,11 @@ class MinMaxInfo
                                  : greaterThan<int64_t, int64_t>(mm.min, mm.max);
     }
   }
+  bool isEmptyOrNullSInt32() const
+  {
+    return min == std::numeric_limits<int32_t>::max() && max == std::numeric_limits<int32_t>::min();
+
+  }
   bool isEmptyOrNullSInt64() const
   {
     return min == std::numeric_limits<int64_t>::max() && max == std::numeric_limits<int64_t>::min();
@@ -2414,10 +2419,7 @@ class TypeHandlerTemporal : public TypeHandler
 {
  public:
   std::string formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
-                                  const MinMaxInfo& i) const override
-  {
-    return formatPartitionInfoSInt64(attr, i);
-  }
+                                  const MinMaxInfo& i) const override;
   execplan::SimpleColumn* newSimpleColumn(const DatabaseQualifiedColumnName& name,
                                           SystemCatalog::TypeHolderStd& ct,
                                           const SimpleColumnParam& prm) const override;
