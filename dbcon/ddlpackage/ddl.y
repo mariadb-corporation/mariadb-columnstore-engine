@@ -56,7 +56,7 @@ int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
-void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_cs, myf utf8_flag)
+void postprocess_column_information(SchemaObject* elem, const CHARSET_INFO* def_cs, myf utf8_flag)
 {
     auto* column = dynamic_cast<ColumnDef*>(elem);
 
@@ -103,6 +103,17 @@ void fix_column_length_and_charset(SchemaObject* elem, const CHARSET_INFO* def_c
             column->fType->fLength = 65535;
         else
             column->fType->fLength = 16777215;
+    }
+    if (column->fType->fType == DDL_JSON)
+    {
+        CHARSET_INFO* cs = &my_charset_utf8mb4_bin;
+
+        column->fType->fCharset = cs->cs_name.str;
+        column->fType->fCollate = cs->coll_name.str;
+        column->fType->fCharsetNum = cs->number;
+
+        column->fType->fLength = 16777215;
+        column->fConstraints.push_back(new ColumnConstraintDef(DDL_VALIDATE_JSON));
     }
 }
 %}
@@ -155,7 +166,7 @@ CHARACTER CHECK CLOB COLUMN
 BOOL BOOLEAN
 COLUMNS COMMENT CONSTRAINT CONSTRAINTS CREATE CURRENT_USER DATETIME DEC
 DECIMAL DEFAULT DEFERRABLE DEFERRED IDB_DELETE DROP ENGINE
-FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER KEY LONGBLOB LONGTEXT
+FOREIGN FULL IMMEDIATE INDEX INITIALLY IDB_INT INTEGER JSON KEY LONGBLOB LONGTEXT
 MATCH MAX_ROWS MEDIUMBLOB MEDIUMTEXT MEDIUMINT
 MIN_ROWS MODIFY NO NOT NULL_TOK NUMBER NUMERIC ON PARTIAL PRECISION PRIMARY
 REFERENCES RENAME RESTRICT SET SMALLINT TABLE TEXT TINYBLOB TINYTEXT
@@ -355,7 +366,7 @@ create_table_statement:
 	{
         for (auto* elem : *$6)
         {
-            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
+            postprocess_column_information(elem, x->default_table_charset, x->utf8_flag);
         }
 		$$ = new CreateTableStatement(new TableDef($4, $6, $8));
 	}
@@ -719,17 +730,17 @@ ata_add_column:
     /* See the documentation for SchemaObject for an explanation of why we are using
      * dynamic_cast here.
      */
-	ADD column_def { fix_column_length_and_charset($2, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
-	| ADD COLUMN column_def { fix_column_length_and_charset($3, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
+	ADD column_def { postprocess_column_information($2, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($2));}
+	| ADD COLUMN column_def { postprocess_column_information($3, x->default_table_charset, x->utf8_flag); $$ = new AtaAddColumn(dynamic_cast<ColumnDef*>($3));}
 	| ADD '(' table_element_list ')' {
         for (auto* elem : *$3) {
-            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
+            postprocess_column_information(elem, x->default_table_charset, x->utf8_flag);
         }
         $$ = new AtaAddColumns($3);
     }
 	| ADD COLUMN '(' table_element_list ')' {
         for (auto* elem : *$4) {
-            fix_column_length_and_charset(elem, x->default_table_charset, x->utf8_flag);
+            postprocess_column_information(elem, x->default_table_charset, x->utf8_flag);
         }
         $$ = new AtaAddColumns($4);
     }
@@ -1065,6 +1076,11 @@ text_type:
 	| LONGTEXT
 	{
 		$$ = new ColumnType(DDL_TEXT);
+		$$->fLength = 16777215;
+	}
+	| JSON
+	{
+		$$ = new ColumnType(DDL_JSON);
 		$$->fLength = 16777215;
 	}
 	;

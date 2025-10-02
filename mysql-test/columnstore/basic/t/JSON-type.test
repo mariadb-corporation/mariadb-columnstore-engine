@@ -1,0 +1,17 @@
+--disable_warnings
+DROP DATABASE IF EXISTS JSON_type;
+--enable_warnings
+CREATE DATABASE JSON_type;
+USE JSON_type;
+CREATE TABLE tj(j JSON) ENGINE=COLUMNSTORE;
+--error 4025
+INSERT INTO tj(j) VALUES ('()'); # invalid
+INSERT INTO tj(j) VALUES ('[]'), ('{}'), ('"a"'); # valid
+SELECT * FROM tj WHERE j = '"A"'; # empty set.
+SELECT * FROM tj WHERE j = '"a"'; # single row.
+INSERT INTO tj(j) VALUES ('{"a":"b", "b":"a"}');
+SELECT * FROM tj WHERE j = '{"b":"a","a":"b"}'; # empty set, comparison is not structural.
+# UPDATE is not tested because it does not work.
+#UPDATE tj SET j = CONCAT(j,'()');
+DROP DATABASE JSON_type;
+

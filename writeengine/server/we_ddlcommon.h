@@ -178,7 +178,8 @@ inline int convertDataType(int dataType)
 
     case ddlpackage::DDL_BLOB: calpontDataType = execplan::CalpontSystemCatalog::BLOB; break;
 
-    case ddlpackage::DDL_TEXT: calpontDataType = execplan::CalpontSystemCatalog::TEXT; break;
+    case ddlpackage::DDL_TEXT:
+    case ddlpackage::DDL_JSON: calpontDataType = execplan::CalpontSystemCatalog::TEXT; break;
 
     case ddlpackage::DDL_UNSIGNED_TINYINT: calpontDataType = execplan::CalpontSystemCatalog::UTINYINT; break;
 
