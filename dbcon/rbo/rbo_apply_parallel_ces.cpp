@@ -73,14 +73,13 @@ bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep)
 bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep,
                                               optimizer::RBOptimizerContext& ctx)
 {
-  return std::any_of(
-      csep.tableList().begin(), csep.tableList().end(),
-      [&ctx](const auto& table)
-      {
-        cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
-        return (!table.isColumnstore() && ctx.getGwi().tableStatisticsMap.find(schemaAndTableName) !=
-                                              ctx.getGwi().tableStatisticsMap.end());
-      });
+  return std::any_of(csep.tableList().begin(), csep.tableList().end(),
+                     [&ctx](const auto& table)
+                     {
+                       cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
+                       return (!table.isColumnstore() &&
+                               ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName));
+                     });
 }
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
@@ -230,15 +229,14 @@ std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyC
 {
   cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
 
-  auto tableColumnsStatisticsIt = ctx.getGwi().tableStatisticsMap.find(schemaAndTableName);
-  if (tableColumnsStatisticsIt == ctx.getGwi().tableStatisticsMap.end() ||
-      tableColumnsStatisticsIt->second.empty())
+  auto tableColumnsStatistics = ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName);
+  if (!tableColumnsStatistics)
   {
     return std::nullopt;
   }
 
   // TODO take some column and some stats for it!!!
-  for (auto& [columnName, columnStatistics] : tableColumnsStatisticsIt->second)
+  for (auto& [columnName, columnStatistics] : tableColumnsStatistics.value())
   {
     auto& sc = columnStatistics.getColumn();
     auto& columnStatisticsVec = columnStatistics.getHistograms();
