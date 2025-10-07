@@ -98,7 +98,6 @@ using namespace execplan;
 
 using namespace joblist;
 
-
 #include "errorcodes.h"
 #include "idberrorinfo.h"
 #include "errorids.h"
@@ -122,23 +121,9 @@ namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
 
-void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
+void gp_walk_info::mergeTableStatistics(const TableStatistics& aTableStatistics)
 {
-  for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatisticsMap)
-  {
-    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-    if (tableStatisticsMapIt == tableStatisticsMap.end())
-    {
-      tableStatisticsMap[schemaAndTableName] = aColumnStatisticsMap;
-    }
-    else
-    {
-      for (auto& [columnName, histogram] : aColumnStatisticsMap)
-      {
-        tableStatisticsMapIt->second[columnName] = histogram;
-      }
-    }
-  }
+  return tableStatistics.mergeTableStatistics(aTableStatistics);
 }
 
 }  // namespace cal_impl_if

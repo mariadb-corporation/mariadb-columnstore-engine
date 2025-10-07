@@ -5267,31 +5267,11 @@ void extractColumnStatistics(TABLE_LIST* table_ptr, gp_walk_info& gwi)
       Field* field = table_ptr->table->key_info[j].key_part[0].field;
       if (field->read_stats)
       {
-        auto* histogram = dynamic_cast<Histogram_json_hb*>(field->read_stats->histogram);
-        if (histogram)
-        {
-          SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
-          auto sc =
-              std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
-          auto tableStatisticsMapIt = gwi.tableStatisticsMap.find(tableName);
-          if (tableStatisticsMapIt == gwi.tableStatisticsMap.end())
-          {
-            gwi.tableStatisticsMap[tableName][field->field_name.str] = {*sc, {histogram}};
-          }
-          else
-          {
-            auto columnStatisticsMapIt = tableStatisticsMapIt->second.find(field->field_name.str);
-            if (columnStatisticsMapIt == tableStatisticsMapIt->second.end())
-            {
-              tableStatisticsMapIt->second[field->field_name.str] = {*sc, {histogram}};
-            }
-            else
-            {
-              auto& columnStatisticsVec = columnStatisticsMapIt->second.getHistograms();
-              columnStatisticsVec.push_back(histogram);
-            }
-          }
-        }
+        SchemaAndTableName tableName = {field->table->s->db.str, field->table->s->table_name.str};
+        auto sc =
+            std::unique_ptr<execplan::SimpleColumn>(buildSimpleColumnFromFieldForStatistics(field, gwi));
+        assert(field->field_name.str);
+        gwi.tableStatistics.createOrUpdate(tableName, field->field_name.str, *sc, field->read_stats);
       }
     }
   }

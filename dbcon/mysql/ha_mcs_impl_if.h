@@ -122,14 +122,11 @@ typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 
 struct ColumnStatistics
 {
-  ColumnStatistics(execplan::SimpleColumn column, std::vector<Histogram_json_hb*> histograms)
+  ColumnStatistics(execplan::SimpleColumn& column, std::vector<Histogram_json_hb*> histograms)
    : column(column), histograms(histograms)
   {
   }
   ColumnStatistics() = default;
-
-  execplan::SimpleColumn column;
-  std::vector<Histogram_json_hb*> histograms;
 
   std::vector<Histogram_json_hb*>& getHistograms()
   {
@@ -140,12 +137,81 @@ struct ColumnStatistics
   {
     return column;
   }
+
+  execplan::SimpleColumn column;
+  std::vector<Histogram_json_hb*> histograms;
+  Field* min{nullptr};
+  Field* max{nullptr};
 };
 
 using ColumnName = std::string;
+using MDBColumnStatistics = Column_statistics;
 using ColumnStatisticsMap = std::unordered_map<ColumnName, ColumnStatistics>;
 using TableStatisticsMap =
     std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+
+struct TableStatistics
+{
+  TableStatistics() = default;
+
+  void createOrUpdate(SchemaAndTableName tableName, const char* fieldName, execplan::SimpleColumn& sc,
+                      MDBColumnStatistics* statistics)
+  {
+    auto* histogram = dynamic_cast<Histogram_json_hb*>(statistics->histogram);
+
+    auto tableStatisticsIt = tableStatistics_.find(tableName);
+    if (tableStatisticsIt == tableStatistics_.end())
+    {
+      tableStatistics_[tableName][fieldName] = {sc, {histogram}};
+    }
+    else
+    {
+      auto columnStatisticsMapIt = tableStatisticsIt->second.find(fieldName);
+      if (columnStatisticsMapIt == tableStatisticsIt->second.end())
+      {
+        tableStatisticsIt->second[fieldName] = {sc, {histogram}};
+      }
+      else
+      {
+        auto& columnStatisticsVec = columnStatisticsMapIt->second.getHistograms();
+        columnStatisticsVec.push_back(histogram);
+      }
+    }
+  }
+
+  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  {
+    auto tableStatisticsIt = tableStatistics_.find(schemaAndTableName);
+
+    if (tableStatisticsIt == tableStatistics_.end())
+    {
+      return std::nullopt;
+    }
+
+    return {tableStatisticsIt->second};
+  }
+
+  void mergeTableStatistics(const TableStatistics& aTableStatistics)
+  {
+    for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatistics.tableStatistics_)
+    {
+      auto tableStatisticsIt = tableStatistics_.find(schemaAndTableName);
+      if (tableStatisticsIt == tableStatistics_.end())
+      {
+        tableStatistics_[schemaAndTableName] = aColumnStatisticsMap;
+      }
+      else
+      {
+        for (auto& [columnName, histogram] : aColumnStatisticsMap)
+        {
+          tableStatisticsIt->second[columnName] = histogram;
+        }
+      }
+    }
+  }
+
+  TableStatisticsMap tableStatistics_;
+};
 
 // This structure is used to store MDB AST -> CSEP translation context.
 // There is a column statistics for some columns in a query.
@@ -161,7 +227,7 @@ struct gp_walk_info
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
   std::vector<Item*> extSelAggColsItems;
   execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
-  TableStatisticsMap tableStatisticsMap;
+  TableStatistics tableStatistics;
   // This vector temporarily hold the projection columns to be added
   // to the returnedCols vector for subquery processing. It will be appended
   // to the end of returnedCols when the processing is finished.
@@ -252,7 +318,7 @@ struct gp_walk_info
   SubQuery** subQueriesChain;
 
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
-   : tableStatisticsMap({})
+   : tableStatistics({})
    , sessionid(0)
    , fatalParseError(false)
    , condPush(false)
@@ -284,17 +350,10 @@ struct gp_walk_info
   }
   ~gp_walk_info();
 
-  void mergeTableStatistics(const TableStatisticsMap& tableStatisticsMap);
+  void mergeTableStatistics(const TableStatistics& tableStatistics);
   std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
   {
-    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-
-    if (tableStatisticsMapIt == tableStatisticsMap.end())
-    {
-      return std::nullopt;
-    }
-
-    return {tableStatisticsMapIt->second};
+    return tableStatistics.findStatisticsForATable(schemaAndTableName);
   }
 };
 
