@@ -13,8 +13,11 @@ psutil==7.0.0
 pyotp==2.9.0
 requests==2.32.3
 # required for CherryPy RoutesDispatcher,
-# but CherryPy itself has no such a dependency
+# but CherryPy itself has no such dependency
 Routes==2.5.1
 typer==0.15.2
 pydantic==2.11.7
 sentry-sdk==2.34.1
+# State checks
+mr_kot==0.8.1
+mr_kot_fs_validators==0.1.0

@@ -9,6 +9,7 @@ select = [
     "B",  # flake8-bugbear: common bugs and anti-patterns
     "UP", # pyupgrade: use modern Python syntax
     "N",  # pep8-naming: naming conventions
+    "Q",  # flake8-quotes: enforce quote style
 ]
 
 ignore = []
@@ -24,3 +25,8 @@ quote-style = "single"
 [tool.ruff.lint.isort]
 force-single-line = false
 combine-as-imports = true
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "single"
+docstring-quotes = "double"
