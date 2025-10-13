@@ -144,7 +144,7 @@ more-itertools==10.7.0
     #   cherrypy
     #   jaraco-functools
     #   jaraco-text
-mr-kot==0.8.1
+mr-kot==0.8.3
     # via -r requirements.in
 mr-kot-fs-validators==0.1.0
     # via -r requirements.in

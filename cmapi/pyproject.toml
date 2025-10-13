@@ -23,6 +23,7 @@ exclude = [
 quote-style = "single"
 
 [tool.ruff.lint.isort]
+known-first-party = ["cmapi_server", "failover", "mcs_node_control", "tracing"]
 force-single-line = false
 combine-as-imports = true
 
