@@ -429,24 +429,25 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
 
         bs >> largeSideRG;
         bs >> joinedRG;
-        for (i = 0; i < joinerCount; i++)
-        {
-          if (!typelessJoin[i])
-          {
-            continue;
-	  }
-          for (uint j = 0; j < processorThreads; ++j)
-          {
-            auto tlHasher = TupleJoiner::TypelessDataHasher(&outputRG, &tlLargeSideKeyColumns[i],
-                                                            mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
-            auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG, &tlLargeSideKeyColumns[i],
-                                                                    mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
-            tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator,
-                                               utils::STLPoolAllocator<TLJoiner::value_type>(resourceManager)));
-          }
-	}
-
       }
+
+      for (i = 0; i < joinerCount; i++)
+      {
+        if (!typelessJoin[i])
+        {
+          continue;
+        }
+        for (uint j = 0; j < processorThreads; ++j)
+        {
+          auto tlHasher = TupleJoiner::TypelessDataHasher(&outputRG, &tlLargeSideKeyColumns[i],
+                                                          mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
+          auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG, &tlLargeSideKeyColumns[i],
+                                                                  mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
+          tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator,
+                                             utils::STLPoolAllocator<TLJoiner::value_type>(resourceManager)));
+        }
+      }
+
     }
 
     pthread_mutex_unlock(&objLock);
