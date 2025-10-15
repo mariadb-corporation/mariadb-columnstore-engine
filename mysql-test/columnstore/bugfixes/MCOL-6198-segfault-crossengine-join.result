@@ -1,0 +1,17 @@
+DROP DATABASE IF EXISTS MCOL_6198;
+CREATE DATABASE MCOL_6198;
+SELECT 
+v.c36 AS hst,
+m.p6 AS g,
+COALESCE(g0.eg_id,'MARIA') AS g01,
+COALESCE(g1.eg_id,'MARIA') AS g02,
+SUM(v.c758 * m.p42 / 100 + v.c759 * m.p42 / 100 + v.c760 * m.p42 / 100) AS sval
+FROM 
+c AS v 
+JOIN p m on (v.c4 = m.a4)
+LEFT OUTER JOIN group_g01 AS g0 ON g0.key_id=m.p6 
+LEFT OUTER JOIN group_g02 AS g1 ON g1.key_id=m.p6 
+WHERE 
+1=1 
+GROUP BY c36,p6,g01,g02;
+DROP DATABASE MCOL_6198;
