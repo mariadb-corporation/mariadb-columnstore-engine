@@ -2422,7 +2422,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
     bpp->hasJoinFEFilters = hasJoinFEFilters;
     bpp->hasSmallOuterJoin = hasSmallOuterJoin;
     bpp->mJOINHasSkewedKeyColumn = mJOINHasSkewedKeyColumn;
-    bpp->mSmallSideKeyColumnsPtr = mSmallSideKeyColumnsPtr;
+    bpp->mSmallSideKeyColumnsPtr = &(*bpp->tlSmallSideKeyColumns);
     if (!getTupleJoinRowGroupData && mJOINHasSkewedKeyColumn)
     {
       idbassert(!smallSideRGs.empty());
