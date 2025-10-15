@@ -370,7 +370,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
         }
         else
         {
-          auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<TLJoiner::value_type>();
 
           deserializeVector<uint32_t>(bs, tlLargeSideKeyColumns[i]);
           bs >> tlSmallSideKeyLengths[i];
@@ -386,15 +385,6 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
             mSmallSideKeyColumnsPtr = &(*tlSmallSideKeyColumns);
             smallSideRGRecvd = true;
           }
-
-          for (uint j = 0; j < processorThreads; ++j)
-          {
-            auto tlHasher = TupleJoiner::TypelessDataHasher(&outputRG, &tlLargeSideKeyColumns[i],
-                                                            mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
-            auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG, &tlLargeSideKeyColumns[i],
-                                                                    mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
-            tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator, allocator));
-          }
         }
       }
 
@@ -408,6 +398,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       {
         deserializeVector(bs, smallSideRGs);
         idbassert(smallSideRGs.size() == joinerCount);
+        mSmallSideRGPtr = mSmallSideRGPtr ? &smallSideRGs[0] : nullptr;
         smallSideRowLengths.reset(new uint32_t[joinerCount]);
         smallSideRowData.reset(new RGData[joinerCount]);
         smallNullRowData.reset(new RGData[joinerCount]);
@@ -438,6 +429,25 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
         bs >> largeSideRG;
         bs >> joinedRG;
       }
+
+      auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<TLJoiner::value_type>();
+
+      for (i = 0; i < joinerCount; i++)
+      {
+        if (!typelessJoin[i])
+        {
+          continue;
+        }
+        for (uint j = 0; j < processorThreads; ++j)
+        {
+          auto tlHasher = TupleJoiner::TypelessDataHasher(&outputRG, &tlLargeSideKeyColumns[i],
+                                                          mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
+          auto tlComparator = TupleJoiner::TypelessDataComparator(&outputRG, &tlLargeSideKeyColumns[i],
+                                                                  mSmallSideKeyColumnsPtr, mSmallSideRGPtr);
+          tlJoiners[i][j].reset(new TLJoiner(10, tlHasher, tlComparator, allocator));
+        }
+      }
+
     }
 
     pthread_mutex_unlock(&objLock);
@@ -2400,8 +2410,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
     bpp->hasJoinFEFilters = hasJoinFEFilters;
     bpp->hasSmallOuterJoin = hasSmallOuterJoin;
     bpp->mJOINHasSkewedKeyColumn = mJOINHasSkewedKeyColumn;
-    bpp->mSmallSideRGPtr = mSmallSideRGPtr;
-    bpp->mSmallSideKeyColumnsPtr = mSmallSideKeyColumnsPtr;
+    bpp->mSmallSideKeyColumnsPtr = &(*bpp->tlSmallSideKeyColumns);
     if (!getTupleJoinRowGroupData && mJOINHasSkewedKeyColumn)
     {
       idbassert(!smallSideRGs.empty());
@@ -2428,6 +2437,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
       bpp->smallNullPointers = smallNullPointers;
       bpp->joinedRG = joinedRG;
     }
+    bpp->mSmallSideRGPtr = &bpp->smallSideRGs[0];
 
 #ifdef __FreeBSD__
     pthread_mutex_unlock(&bpp->objLock);
