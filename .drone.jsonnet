@@ -649,15 +649,15 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
 
 local AllPipelines =
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["rockylinux:8"]
-    for flag in ["gcc-toolset"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
+//  [
+//    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+//    for a in ["amd64"]
+//    for b in std.objectFields(platforms)
+//    for platform in ["rockylinux:8"]
+//    for flag in ["gcc-toolset"]
+//    for triggeringEvent in events
+//    for server in servers[current_branch]
+//  ] +
   [
     Pipeline(b, p, e, a, s)
     for b in std.objectFields(platforms)
