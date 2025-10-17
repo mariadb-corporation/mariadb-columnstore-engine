@@ -154,7 +154,6 @@ class MariaDBESRepoManager:
         :raises CMAPIBasicError: no latest version matched with latest tested
         :raises CMAPIBasicError: if request error
         :return: latest MDB version matched with latest tested major
-        :rtype: str
         """
         try:
             # Download the keyring file
@@ -174,7 +173,7 @@ class MariaDBESRepoManager:
             )
             latest_version_num = sorted(latest_version_nums, reverse=True)[0]
             logging.debug(
-                'Succesfully got latest MBD version number: '
+                'Succesfully got latest MDB version number: '
                 f'{latest_version_num}'
             )
         except requests.RequestException as exc:

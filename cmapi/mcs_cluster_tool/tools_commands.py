@@ -19,8 +19,12 @@ from rich.table import Table
 
 
 from cmapi_server.constants import (
-    MCS_DATA_PATH, MCS_SECRETS_FILENAME, REQUEST_TIMEOUT, TRANSACTION_TIMEOUT,
-    CMAPI_CONF_PATH, CMAPI_PORT,
+    CMAPI_CONF_PATH,
+    CMAPI_PORT,
+    MCS_DATA_PATH,
+    MCS_SECRETS_FILENAME,
+    REQUEST_TIMEOUT,
+    TRANSACTION_TIMEOUT,
 )
 from cmapi_server.controllers.api_clients import (
     AppControllerClient, ClusterControllerClient, NodeControllerClient

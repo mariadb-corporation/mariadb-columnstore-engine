@@ -159,6 +159,7 @@ def stop(
         #       could affect put_config (helpers.py broadcast_config) operation
         timeout = 0
 
+    #TODO: bypass timeout here
     resp = client.shutdown_cluster({'in_transaction': True})
     return {'timestamp': start_time}
 

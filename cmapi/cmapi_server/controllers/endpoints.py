@@ -17,10 +17,18 @@ from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
 from cmapi_server.constants import (
-    CMAPI_PACKAGE_NAME, CMAPI_PORT, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX, MCS_BRM_CURRENT_PATH, MCS_EM_PATH,
-    MDB_CS_PACKAGE_NAME, MDB_SERVER_PACKAGE_NAME, REQUEST_TIMEOUT,
-    S3_BRM_CURRENT_PATH, SECRET_KEY,
+    CMAPI_PACKAGE_NAME,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    REQUEST_TIMEOUT,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
 )
 from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server import helpers
@@ -728,7 +736,7 @@ class ShutdownController:
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
         request_body = cherrypy.request.json
-        timeout = request_body.get('timeout', 0)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         node_config = NodeConfig()
         try:
             MCSProcessManager.stop_node(
@@ -897,7 +905,7 @@ class ClusterController:
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', None)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
@@ -907,7 +915,7 @@ class ClusterController:
                 with TransactionManager():
                     response = ClusterHandler.shutdown(config, timeout)
             else:
-                response = ClusterHandler.shutdown(config)
+                response = ClusterHandler.shutdown(config, timeout)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -1597,7 +1605,7 @@ class NodeProcessController():
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', 10)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
 
         if force:
