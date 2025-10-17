@@ -70,6 +70,8 @@ SELECT t1_dt, DAYNAME(t1_dt), DAYOFWEEK(t1_dt), WEEKDAY(t1_dt) FROM t1;
 SELECT t1_d, DAYNAME(t1_d), DAYOFWEEK(t1_d), WEEKDAY(t1_d) FROM t1;
 
 SELECT t1_dt, EXTRACT(SECOND FROM t1_dt) 'SECOND', EXTRACT(DAY_HOUR FROM t1_dt) 'DAY_HOUR', EXTRACT(HOUR FROM t1_dt) 'HOUR', EXTRACT(MINUTE FROM t1_dt) 'MINUTE' FROM t1; 
+# please note that server's 613566753 is much more nonsensical than our new 1.
+# returning NULL would be even more sensible.
 SELECT t1_dt, EXTRACT(DAY FROM t1_dt) 'DAY', EXTRACT(YEAR FROM t1_dt) 'YEAR', EXTRACT(MONTH FROM t1_dt) 'MONTH', EXTRACT(WEEK FROM t1_dt) 'WEEK' FROM t1;
 
 SELECT t1_dt, MONTH(t1_dt) FROM t1;
@@ -82,6 +84,8 @@ SELECT t1_d, t1_dt, TIMESTAMPDIFF(DAY, t1_d, t1_dt) FROM t1;
 SELECT t1_d, t1_dt, TIMESTAMPDIFF(MINUTE, t1_d, t1_dt) FROM t1;
 SELECT t1_d, t1_dt, TIMESTAMPDIFF(SECOND, t1_d, t1_dt) FROM t1;
 
+# please note that server's 613566753 is much more nonsensical than our new 1.
+# returning NULL would be even more sensible.
 SELECT t1_d, WEEK(t1_d), t1_dt, WEEK(t1_dt) FROM t1;
 SELECT t1_d, YEAR(t1_d), t1_dt, YEAR(t1_dt) FROM t1;
 

@@ -125,7 +125,7 @@ inline uint32_t calc_mysql_daynr(uint32_t year, uint32_t month, uint32_t day)
   int y = year;
   long delsum;
 
-  if (!dataconvert::isDateValid(day, month, year))
+  if (!dataconvert::isDateValid(day, month, year) || (day == 0 && month == 0 && year == 0))
     return 0;
 
   delsum = (long)(365 * y + 31 * ((int)month - 1) + (int)day);
@@ -204,10 +204,13 @@ inline void get_date_from_mysql_daynr(long daynr, dataconvert::DateTime& dateTim
 //   else:
 //       0 = Monday, 1 = Tuesday, ..., 6 = Sunday
 // This is a mirror of calc_weekday, at a later date we should use sql_time.h
-inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst)
+inline uint32_t calc_mysql_weekday(uint32_t year, uint32_t month, uint32_t day, bool sundayFirst, bool& isNull)
 {
-  if (!dataconvert::isDateValid(day, month, year))
+  if (!dataconvert::isDateValid(day, month, year) || (day == 0 && month == 0 && year == 0))
+  {
+    isNull = true;
     return 0;
+  }
 
   uint32_t daynr = calc_mysql_daynr(year, month, day);
   return ((int)((daynr + 5L + (sundayFirst ? 1L : 0L)) % 7));
@@ -252,7 +255,8 @@ inline uint32_t calc_mysql_week(uint32_t year, uint32_t month, uint32_t day, int
   bool week_year = modeflags & WEEK_NO_ZERO;
   bool first_weekday = modeflags & WEEK_GT_THREE_DAYS;
 
-  uint32_t weekday = calc_mysql_weekday(year, 1, 1, !monday_first);
+  bool isNullDummy = false;
+  uint32_t weekday = calc_mysql_weekday(year, 1, 1, !monday_first, isNullDummy);
 
   if (weekyear)
   {
@@ -351,7 +355,7 @@ inline bool calc_time_diff(int64_t time1, int64_t time2, int l_sign, long long* 
 
   days -= l_sign * calc_mysql_daynr(year2, month2, day2);
 
-  microseconds = ((long long)days * (long)(86400) + (long long)(hour1 * 3600L + min1 * 60L + sec1) -
+  microseconds = (int128_t(days) * (86400) + (long long)(hour1 * 3600L + min1 * 60L + sec1) -
                   l_sign * (long long)(hour2 * 3600L + min2 * 60L + sec2)) *
                      (long long)(1000000) +
                  (long long)msec1 - l_sign * (long long)msec2;
@@ -683,7 +687,7 @@ inline string longDoubleToString(long double ld)
 
 uint64_t dateAdd(uint64_t time, const std::string& expr, execplan::IntervalColumn::interval_type unit,
                  bool dateType, execplan::OpType funcType);
-const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&);
+const std::string IDB_date_format(const dataconvert::DateTime&, const std::string&, bool& isNull);
 const std::string timediff(int64_t, int64_t, bool isDateTime = true);
 const char* convNumToStr(int64_t, char*, int);
 

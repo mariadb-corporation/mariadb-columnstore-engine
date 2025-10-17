@@ -389,19 +389,36 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
         //@Bug 3101 - GCC 4.5.1 optimizes too aggressively here. Mark as volatile.
         volatile int128_t p = 1;
 
+        if (isNull)
+          break;
+
         if (!isNull && parm.size() > 1)  // round(X, D)
         {
           int128_t nvp = p;
           d = parm[1]->data()->getIntVal(row, isNull);
 
-          if (!isNull)
-            helpers::decimalPlaceDec(d, nvp, decimal.scale);
+          if (isNull)
+            break;
+
+          int64_t expectedScale = decimal.scale - d;
+
+          // prevent overflow.
+          if (expectedScale > datatypes::INT128MAXPRECISION)
+          {
+            decimal.s128Value = 0;
+            break;
+          }
+
+          // also do not allow for incorrect behavior due to underflow.
+          if (expectedScale < 0)
+          {
+            d += expectedScale;
+          }
+          helpers::decimalPlaceDec(d, nvp, decimal.scale);
 
           p = nvp;
         }
 
-        if (isNull)
-          break;
 
         if (d < -datatypes::INT128MAXPRECISION)
         {

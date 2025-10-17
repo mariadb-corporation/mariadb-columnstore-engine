@@ -275,8 +275,9 @@ class FuncExpTest : public CppUnit::TestFixture
     for (unsigned i = 0; i < sizeof(date_tests) / sizeof(DateCheck); i++)
     {
       boost::gregorian::date d(date_tests[i].date.year, date_tests[i].date.month, date_tests[i].date.day);
+      bool isNullDummy = false;
       uint32_t dayofweek = helpers::calc_mysql_weekday(date_tests[i].date.year, date_tests[i].date.month,
-                                                       date_tests[i].date.day, false);
+                                                       date_tests[i].date.day, false, isNullDummy);
 
       bool check = (strcmp(helpers::weekdayFullNames[dayofweek].c_str(), date_tests[i].dayname) == 0);
 

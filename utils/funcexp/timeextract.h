@@ -69,7 +69,8 @@ class TimeExtractor
 
       uint32_t yearfirst = helpers::calc_mysql_daynr(dateTime.year, 1, 1);
       // figure out which day of week Jan-01 is
-      uint32_t firstweekday = helpers::calc_mysql_weekday(dateTime.year, 1, 1, sundayFirst);
+      bool isNullDummy = false;
+      uint32_t firstweekday = helpers::calc_mysql_weekday(dateTime.year, 1, 1, sundayFirst, isNullDummy);
 
       // calculate the offset to the first week starting day
       uint32_t firstoffset = firstweekday ? (7 - firstweekday) : 0;
