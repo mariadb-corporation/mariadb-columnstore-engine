@@ -1,9 +1,9 @@
-DROP DATABASE IF EXISTS JSON_type;
-CREATE DATABASE JSON_type;
-USE JSON_type;
+DROP DATABASE IF EXISTS json_type;
+CREATE DATABASE json_type;
+USE json_type;
 CREATE TABLE tj(j JSON) ENGINE=COLUMNSTORE;
 INSERT INTO tj(j) VALUES ('()');
-ERROR 23000: CONSTRAINT `tj.j` failed for `JSON_type`.`tj`
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
 INSERT INTO tj(j) VALUES ('[]'), ('{}'), ('"a"');
 SELECT * FROM tj WHERE j = '"A"';
 j
@@ -13,4 +13,4 @@ j
 INSERT INTO tj(j) VALUES ('{"a":"b", "b":"a"}');
 SELECT * FROM tj WHERE j = '{"b":"a","a":"b"}';
 j
-DROP DATABASE JSON_type;
+DROP DATABASE json_type;
