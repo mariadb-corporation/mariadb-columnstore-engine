@@ -19,5 +19,5 @@ typer==0.15.2
 pydantic==2.11.7
 sentry-sdk==2.34.1
 # Invariant checks
-mr_kot==0.8.3
+mr_kot==0.8.5
 mr_kot_fs_validators==0.1.0

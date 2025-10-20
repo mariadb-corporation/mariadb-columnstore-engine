@@ -153,7 +153,10 @@ if __name__ == '__main__':
     CertificateManager.renew_certificate()
 
     # Run checks, if some of them fail -- log and exit
-    run_invariant_checks()
+    diag = run_invariant_checks()
+    if diag:
+        logging.error('Invariant checks failed, exiting')
+        sys.exit(1)
 
     app = cherrypy.tree.mount(root=None, config=CMAPI_CONF_PATH)
     root_config = {
