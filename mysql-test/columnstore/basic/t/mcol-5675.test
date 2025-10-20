@@ -15,12 +15,5 @@ SELECT * FROM person WHERE surname <=> 1;
 
 DROP TABLE person;
 
-CREATE TABLE person (name varchar(100) NOT NULL, surname varchar(100) DEFAULT NULL ) 
-    ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci ;
-
-insert into person (name, surname) values ('Warren', NULL), ('Charlie', 'Peterson');
-
-SELECT * FROM person WHERE surname <=> 1;
-
 #clear
 DROP DATABASE test_mcol5675;

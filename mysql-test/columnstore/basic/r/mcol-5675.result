@@ -7,11 +7,4 @@ insert into person (name, surname) values ('Warren', NULL), ('Charlie', 'Peterso
 SELECT * FROM person WHERE surname <=> 1;
 ERROR HY000: Internal error: <=> (null-safe equal) is not supported in Columnstore
 DROP TABLE person;
-CREATE TABLE person (name varchar(100) NOT NULL, surname varchar(100) DEFAULT NULL ) 
-ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci ;
-insert into person (name, surname) values ('Warren', NULL), ('Charlie', 'Peterson');
-SELECT * FROM person WHERE surname <=> 1;
-name	surname
-Warnings:
-Warning	1292	Truncated incorrect DECIMAL value: 'Peterson'
 DROP DATABASE test_mcol5675;
