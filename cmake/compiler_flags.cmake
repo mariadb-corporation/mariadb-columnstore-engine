@@ -95,6 +95,14 @@ set(GNU_FLAGS # suppressed warnings
 set(ASAN_FLAGS -U_FORTIFY_SOURCE -fsanitize=address -fsanitize-address-use-after-scope -fPIC)
 # } end Sanitizers
 
+# Check if built with enterprise configuration
+if(MYSQL_SERVER_SUFFIX STREQUAL "-enterprise")
+    message(STATUS "ColumnStore: Compiling with ENTERPRISE features enabled")
+    my_check_and_set_compiler_flag("-DCOLUMNSTORE_COMPILED_WITH_ENTERPRISE")
+else()
+    message(STATUS "ColumnStore: Compiling with COMMUNITY features")
+endif()
+
 # configured by cmake/configureEngine.cmake {
 if(MASK_LONGDOUBLE)
     my_check_and_set_compiler_flag("-DMASK_LONGDOUBLE")
