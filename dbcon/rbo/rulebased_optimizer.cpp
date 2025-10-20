@@ -76,6 +76,15 @@ bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std
   return changed;
 }
 
+bool isEnterprise()
+{
+#ifdef COLUMNSTORE_COMPILED_WITH_ENTERPRISE
+  return true;
+#else
+  return false;
+#endif
+}
+
 // high level API call for optimizer
 bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimizerContext& ctx,
                   bool useUnstableOptimizer)
@@ -83,8 +92,11 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
   std::vector<optimizer::Rule> rules;
   if (useUnstableOptimizer)
   {
-    optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
-    rules.push_back(parallelCES);
+    if (isEnterprise())
+    {
+      optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
+      rules.push_back(parallelCES);
+    }
 
     optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
                                     optimizer::applyRewriteDistinct};
