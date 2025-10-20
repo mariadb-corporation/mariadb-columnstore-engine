@@ -5,7 +5,29 @@ CREATE DATABASE json_type;
 USE json_type;
 CREATE TABLE tj(j JSON) ENGINE=COLUMNSTORE;
 --error 4025
-INSERT INTO tj(j) VALUES ('()'); # invalid
+INSERT INTO tj(j) VALUES ('()');
+--error 4025
+INSERT INTO tj(j) VALUES ('{');
+--error 4025
+INSERT INTO tj(j) VALUES ('[1, 2,');
+--error 4025
+INSERT INTO tj(j) VALUES ('"unclosed string');
+--error 4025
+INSERT INTO tj(j) VALUES ('{"key": value}');
+--error 4025
+INSERT INTO tj(j) VALUES ('');
+
+# batch insert with mix of valid and invalid, should fail entirely
+--error 4025
+INSERT INTO tj(j) VALUES ('{"good":1}'), ('bad'), ('[]');
+
+INSERT INTO tj(j) VALUES ('{"nested": [1, true, null]}');
+INSERT INTO tj(j) VALUES ('[ "hello", 42, false ]');
+INSERT INTO tj(j) VALUES (NULL);
+SELECT * FROM tj WHERE j IS NULL;
+INSERT INTO tj(j) VALUES ('null');
+SELECT * FROM tj WHERE j = 'null';
+
 INSERT INTO tj(j) VALUES ('[]'), ('{}'), ('"a"'); # valid
 SELECT * FROM tj WHERE j = '"A"'; # empty set.
 SELECT * FROM tj WHERE j = '"a"'; # single row.

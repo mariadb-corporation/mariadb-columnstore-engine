@@ -4,6 +4,28 @@ USE json_type;
 CREATE TABLE tj(j JSON) ENGINE=COLUMNSTORE;
 INSERT INTO tj(j) VALUES ('()');
 ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('{');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('[1, 2,');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('"unclosed string');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('{"key": value}');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('{"good":1}'), ('bad'), ('[]');
+ERROR 23000: CONSTRAINT `tj.j` failed for `json_type`.`tj`
+INSERT INTO tj(j) VALUES ('{"nested": [1, true, null]}');
+INSERT INTO tj(j) VALUES ('[ "hello", 42, false ]');
+INSERT INTO tj(j) VALUES (NULL);
+SELECT * FROM tj WHERE j IS NULL;
+j
+NULL
+INSERT INTO tj(j) VALUES ('null');
+SELECT * FROM tj WHERE j = 'null';
+j
+null
 INSERT INTO tj(j) VALUES ('[]'), ('{}'), ('"a"');
 SELECT * FROM tj WHERE j = '"A"';
 j
