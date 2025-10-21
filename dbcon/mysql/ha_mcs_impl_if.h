@@ -122,8 +122,9 @@ typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 
 struct ColumnStatistics
 {
-  ColumnStatistics(execplan::SimpleColumn& column, std::vector<Histogram_json_hb*> histograms)
-   : column(column), histograms(histograms)
+  ColumnStatistics(execplan::SimpleColumn& column, std::vector<Histogram_json_hb*> histograms,
+                   Field* minValue, Field* maxValue)
+   : column(column), histograms(histograms), minValue(minValue), maxValue(maxValue)
   {
   }
   ColumnStatistics() = default;
@@ -133,15 +134,33 @@ struct ColumnStatistics
     return histograms;
   }
 
+  const Histogram_json_hb* getHistogram() const
+  {
+    if (histograms.empty())
+      return nullptr;
+    return histograms.front();
+  }
+
   execplan::SimpleColumn& getColumn()
   {
     return column;
   }
 
+  std::optional<int64_t> getIntMinValue() const
+  {
+    return (minValue) ? std::optional<int64_t>(minValue->val_int()) : std::nullopt;
+  }
+
+  std::optional<int64_t> getIntMaxValue() const
+  {
+    return (maxValue) ? std::optional<int64_t>(maxValue->val_int()) : std::nullopt;
+  }
+
+ private:
   execplan::SimpleColumn column;
   std::vector<Histogram_json_hb*> histograms;
-  Field* min{nullptr};
-  Field* max{nullptr};
+  Field* minValue{nullptr};
+  Field* maxValue{nullptr};
 };
 
 using ColumnName = std::string;
@@ -162,14 +181,23 @@ struct TableStatistics
     auto tableStatisticsIt = tableStatistics_.find(tableName);
     if (tableStatisticsIt == tableStatistics_.end())
     {
-      tableStatistics_[tableName][fieldName] = {sc, {histogram}};
+      if (histogram)
+      {
+        tableStatistics_[tableName][fieldName] = {
+            sc, {histogram}, statistics->min_value, statistics->max_value};
+      }
+      else
+      {
+        tableStatistics_[tableName][fieldName] = {sc, {}, statistics->min_value, statistics->max_value};
+      }
     }
     else
     {
       auto columnStatisticsMapIt = tableStatisticsIt->second.find(fieldName);
       if (columnStatisticsMapIt == tableStatisticsIt->second.end())
       {
-        tableStatisticsIt->second[fieldName] = {sc, {histogram}};
+        tableStatisticsIt->second[fieldName] = {
+            sc, {histogram}, statistics->min_value, statistics->max_value};
       }
       else
       {
@@ -202,6 +230,8 @@ struct TableStatistics
       }
       else
       {
+        // Note: This algo overwrites histograms but shouldn't be a problem b/c
+        // statistics can't change.
         for (auto& [columnName, histogram] : aColumnStatisticsMap)
         {
           tableStatisticsIt->second[columnName] = histogram;
@@ -210,6 +240,7 @@ struct TableStatistics
     }
   }
 
+ private:
   TableStatisticsMap tableStatistics_;
 };
 

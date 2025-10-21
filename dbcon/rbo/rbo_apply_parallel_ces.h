@@ -91,11 +91,6 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
                                               execplan::CalpontSystemCatalog::TableAliasName& targetTable,
                                               optimizer::RBOptimizerContext& ctx);
 
-std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
-    execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx);
-
-Histogram_json_hb* chooseStatisticsToUse(const std::vector<Histogram_json_hb*>& statisticsVec);
-
 }  // namespace details
 
 // Main functions
