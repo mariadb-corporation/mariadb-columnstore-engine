@@ -207,7 +207,7 @@ struct TableStatistics
     }
   }
 
-  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  std::optional<ColumnStatisticsMap*> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
   {
     auto tableStatisticsIt = tableStatistics_.find(schemaAndTableName);
 
@@ -216,7 +216,7 @@ struct TableStatistics
       return std::nullopt;
     }
 
-    return {tableStatisticsIt->second};
+    return {&tableStatisticsIt->second};
   }
 
   void mergeTableStatistics(const TableStatistics& aTableStatistics)
@@ -382,7 +382,7 @@ struct gp_walk_info
   ~gp_walk_info();
 
   void mergeTableStatistics(const TableStatistics& tableStatistics);
-  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  std::optional<ColumnStatisticsMap*> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
   {
     return tableStatistics.findStatisticsForATable(schemaAndTableName);
   }
