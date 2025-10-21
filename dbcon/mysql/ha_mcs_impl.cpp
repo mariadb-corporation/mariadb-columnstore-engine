@@ -333,6 +333,7 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
     if (ti.tpl_scan_ctx->rowsreturned == 0 &&
         (ti.tpl_scan_ctx->traceFlags & execplan::CalpontSelectExecutionPlan::TRACE_TUPLE_OFF))
     {
+      std::cout << "rowGroup->toString() " << rowGroup->toString() << std::endl;
       for (uint32_t i = 0; i < rowGroup->getColumnCount(); i++)
       {
         int oid = rowGroup->getOIDs()[i];

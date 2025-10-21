@@ -216,15 +216,9 @@ execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPl
   return nullptr;
 }
 
-// TBD
-Histogram_json_hb* chooseStatisticsToUse(std::vector<Histogram_json_hb*>& columnStatisticsVec)
-{
-  return columnStatisticsVec.front();
-}
-
 // Looking for a projected column that comes first in an available index and has EI statistics
 // INV nullptr signifies that no suitable column was found
-std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
+cal_impl_if::ColumnStatistics* chooseKeyColumnAndStatistics(
     execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx)
 {
   cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
@@ -232,19 +226,17 @@ std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyC
   auto tableColumnsStatistics = ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName);
   if (!tableColumnsStatistics)
   {
-    return std::nullopt;
+    return nullptr;
   }
 
-  // TODO take some column and some stats for it!!!
+  // TODO this algo now returns the first column and stats
+  // for it but it should consider all column available
   for (auto& [columnName, columnStatistics] : tableColumnsStatistics.value())
   {
-    auto& sc = columnStatistics.getColumn();
-    auto& columnStatisticsVec = columnStatistics.getHistograms();
-    auto* bestColumnStatistics = chooseStatisticsToUse(columnStatisticsVec);
-    return {{sc, bestColumnStatistics}};
+    return &columnStatistics;
   }
 
-  return std::nullopt;
+  return nullptr;
 }
 }  // namespace details
 
@@ -257,37 +249,32 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
   return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
 }
 
-// Populates range bounds based on column statistics
-// Returns optional with bounds if successful, nullopt otherwise
+uint64_t decodeU64(const std::string& bytes)
+{
+  uint64_t v = 0;
+  const size_t n = std::min<size_t>(bytes.size(), sizeof(uint64_t));
+  if (n)
+    std::memcpy(&v, bytes.data(), n);
+  return v;
+}
+
 template <typename T>
-std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics,
-                                                                 size_t& maxParallelFactor)
+std::optional<details::FilterRangeBounds<T>> populateRangeBoundsFromHistogram(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t maxParallelFactor)
 {
   details::FilterRangeBounds<T> bounds;
-
-  // Guard: empty histogram
-  if (!columnStatistics || columnStatistics->get_json_histogram().empty())
-    return std::nullopt;
-
-  auto decodeU64 = [](const std::string& bytes) -> uint64_t
-  {
-    uint64_t v = 0;
-    const size_t n = std::min<size_t>(bytes.size(), sizeof(uint64_t));
-    if (n)
-      std::memcpy(&v, bytes.data(), n);
-    return v;
-  };
+  auto* histogram = columnStatistics.getHistogram();
 
   // Get parallel factor from context
-  size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), maxParallelFactor);
-  size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
+  size_t numberOfUnionUnits = std::min(histogram->get_json_histogram().size(), maxParallelFactor);
+  size_t numberOfBucketsPerUnionUnit = histogram->get_json_histogram().size() / numberOfUnionUnits;
 
   // Loop over buckets to produce filter ranges
   // NB Currently Histogram_json_hb has the last bucket that has end as its start
   for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
-    auto bucket = columnStatistics->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
-    auto endBucket = columnStatistics->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    auto bucket = histogram->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = histogram->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
     T currentLowerBound = static_cast<T>(decodeU64(bucket->start_value));
     T currentUpperBound = static_cast<T>(decodeU64(endBucket->start_value));
     bounds.push_back({currentLowerBound, currentUpperBound});
@@ -297,15 +284,15 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   if (numberOfUnionUnits >= 1)
   {
     auto lastChunkIndex = (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
-    if (lastChunkIndex < columnStatistics->get_json_histogram().size())
+    if (lastChunkIndex < histogram->get_json_histogram().size())
     {
-      auto lastStartBucket = columnStatistics->get_json_histogram().begin() + lastChunkIndex;
+      auto lastStartBucket = histogram->get_json_histogram().begin() + lastChunkIndex;
       T finalLowerBound = static_cast<T>(decodeU64(lastStartBucket->start_value));
 
       T finalUpperBound = std::numeric_limits<T>::max();
-      if (!columnStatistics->get_last_bucket_end_endp().empty())
+      if (!histogram->get_last_bucket_end_endp().empty())
       {
-        finalUpperBound = static_cast<T>(decodeU64(columnStatistics->get_last_bucket_end_endp()));
+        finalUpperBound = static_cast<T>(decodeU64(histogram->get_last_bucket_end_endp()));
       }
       bounds.push_back({finalLowerBound, finalUpperBound});
     }
@@ -320,6 +307,56 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   return bounds;
 }
 
+template <typename T>
+std::optional<details::FilterRangeBounds<T>> populateRangeBoundsFromEquallyDistributedRange(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t maxParallelFactor)
+{
+  auto minValue = columnStatistics.getIntMinValue().value();
+  auto maxValue = columnStatistics.getIntMaxValue().value();
+
+  assert(maxValue >= minValue);
+  auto distance = maxValue - minValue;
+  auto step = distance / maxParallelFactor;
+
+  details::FilterRangeBounds<T> bounds;
+  for (size_t i = 0; i < maxParallelFactor; ++i)
+  {
+    bounds.push_back({minValue + i * step, minValue + (i + 1) * step});
+  }
+
+  if (!bounds.empty())
+  {
+    bounds.front().first = std::numeric_limits<T>::lowest();
+    bounds.back().second = maxValue;
+  }
+
+  return bounds;
+}
+
+// Populates range bounds based on column statistics
+// Returns optional with bounds if successful, nullopt otherwise
+template <typename T>
+std::optional<details::FilterRangeBounds<T>> populateRangeBounds(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t& maxParallelFactor)
+{
+  auto* histogram = columnStatistics.getHistogram();
+
+  // Guard: empty histogram or no min/max values
+  if (histogram && histogram->get_json_histogram().empty())
+  {
+    return populateRangeBoundsFromHistogram<T>(columnStatistics, maxParallelFactor);
+  }
+
+  auto minValue = columnStatistics.getIntMinValue();
+  auto maxValue = columnStatistics.getIntMaxValue();
+  if (minValue && maxValue)
+  {
+    return populateRangeBoundsFromEquallyDistributedRange<T>(columnStatistics, maxParallelFactor);
+  }
+
+  return std::nullopt;
+}
+
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
@@ -329,15 +366,16 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   // SC type controls an integral type used to produce suitable filters. The continuation of this function
   // should become a template function based on SC type.
-  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
-  if (!keyColumnAndStatistics)
+  auto columnStatisticsPtr = chooseKeyColumnAndStatistics(table, ctx);
+  if (!columnStatisticsPtr)
   {
     return unionVec;
   }
 
-  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+  auto& columnStatistics = *columnStatisticsPtr;
+  auto& keyColumn = columnStatistics.getColumn();
 
-  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
+  // std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
   std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
 
   // TODO char and other numerical types support
