@@ -180,58 +180,22 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
 
 // Looking for a projected column that comes first in an available index and has EI statistics
 // INV nullptr signifies that no suitable column was found
-execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep,
-                                              execplan::CalpontSystemCatalog::TableAliasName& targetTable,
-                                              optimizer::RBOptimizerContext& ctx)
-{
-  // TODO supply a list of suitable columns from a higher level
-  for (auto& rc : csep.returnedCols())
-  {
-    // TODO extract SC from RC
-    auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-    if (simpleColumn)
-    {
-      execplan::CalpontSystemCatalog::TableAliasName rcTable(
-          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "", false);
-      if (!targetTable.weakerEq(rcTable))
-      {
-        continue;
-      }
-      cal_impl_if::SchemaAndTableName schemaAndTableName = {simpleColumn->schemaName(),
-                                                            simpleColumn->tableName()};
-
-      auto columnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
-      if (!columnStatistics)
-      {
-        continue;
-      }
-      auto columnStatisticsIt = columnStatistics->find(simpleColumn->columnName());
-      if (columnStatisticsIt != columnStatistics->end())
-      {
-        return simpleColumn;
-      }
-    }
-  }
-
-  return nullptr;
-}
-
-// Looking for a projected column that comes first in an available index and has EI statistics
-// INV nullptr signifies that no suitable column was found
 cal_impl_if::ColumnStatistics* chooseKeyColumnAndStatistics(
     execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx)
 {
   cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
 
-  auto tableColumnsStatistics = ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName);
-  if (!tableColumnsStatistics)
+  auto tableColumnsStatisticsOpt = ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName);
+  if (!tableColumnsStatisticsOpt)
   {
     return nullptr;
   }
 
+  auto tableColumnsStatistics = tableColumnsStatisticsOpt.value();
+
   // TODO this algo now returns the first column and stats
   // for it but it should consider all column available
-  for (auto& [columnName, columnStatistics] : tableColumnsStatistics.value())
+  for (auto& [columnName, columnStatistics] : *tableColumnsStatistics)
   {
     return &columnStatistics;
   }
