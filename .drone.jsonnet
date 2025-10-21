@@ -68,7 +68,7 @@ local customBuildFlags(buildKey) =
 local any_branch = "**";
 
 
-local mtr_suite_list = "basic,bugfixes";
+local mtr_suite_list = "autopilot";
 local mtr_full_set = "basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly";
 
 local upgrade_test_lists = {

@@ -11,6 +11,7 @@
 --source ../include/detect_maxscale.inc
 #
 --disable_warnings
+SELECT sleep(3600);
 DROP DATABASE IF EXISTS mcs4007_db;
 --enable_warnings
 #
