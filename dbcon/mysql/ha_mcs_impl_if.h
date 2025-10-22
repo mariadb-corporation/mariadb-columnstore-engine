@@ -146,14 +146,34 @@ struct ColumnStatistics
     return column;
   }
 
+  bool hasMinValue() const
+  {
+    return minValue != nullptr;
+  }
+
+  bool hasMaxValue() const
+  {
+    return maxValue != nullptr;
+  }
+
   std::optional<int64_t> getIntMinValue() const
   {
     return (minValue) ? std::optional<int64_t>(minValue->val_int()) : std::nullopt;
   }
 
+  std::optional<uint64_t> getUIntMinValue() const
+  {
+    return (minValue) ? std::optional<uint64_t>(minValue->val_uint()) : std::nullopt;
+  }
+
   std::optional<int64_t> getIntMaxValue() const
   {
     return (maxValue) ? std::optional<int64_t>(maxValue->val_int()) : std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMaxValue() const
+  {
+    return (maxValue) ? std::optional<uint64_t>(maxValue->val_uint()) : std::nullopt;
   }
 
  private:
