@@ -41,11 +41,10 @@ namespace joiner
 constexpr const size_t DEFAULT_BUCKET_COUNT = 10;
 
 template <typename HashTable>
-std::unique_ptr<HashTable> makeHashMap(size_t bucketCount, ResourceManager* resourceManager)
+std::unique_ptr<HashTable> makeHashMap(size_t /*bucketCount*/, ResourceManager* /*resourceManager*/)
 {
-  return std::unique_ptr<HashTable>(new HashTable(bucketCount, TupleJoiner::hasher(),
-                                                  typename HashTable::key_equal(),
-                                                  utils::STLPoolAllocator<typename HashTable::value_type>(resourceManager)));
+  // boost::unordered_flat_map doesn't need bucket_count or allocator in constructor
+  return std::unique_ptr<HashTable>(new HashTable());
 }
 
 void TupleJoiner::initRowsVector()
@@ -290,7 +289,19 @@ void TupleJoiner::bucketsToTables(buckets_t* buckets, hash_table_t& tables)
           done = false;
           continue;
         }
-        tables[i]->insert(buckets[i].begin(), buckets[i].end());
+        // Insert each pair into the vector-based flat_map
+        for (auto& p : buckets[i])
+        {
+          auto it = tables[i]->find(p.first);
+          if (it != tables[i]->end())
+            it->second.push_back(p.second);
+          else
+          {
+            std::vector<typename std::decay<decltype(p.second)>::type> vec;
+            vec.push_back(p.second);
+            tables[i]->emplace(p.first, std::move(vec));
+          }
+        }
       }
 
       wasProductive = true;
@@ -440,7 +451,15 @@ void TupleJoiner::insert(Row& r, bool zeroTheRid)
       if (td.len > 0)
       {
         uint bucket = bucketPicker((char*)td.data, td.len, bpSeed) & bucketMask;
-        ht[bucket]->insert(pair<TypelessData, Row::Pointer>(td, r.getPointer()));
+        auto it = ht[bucket]->find(td);
+        if (it != ht[bucket]->end())
+          it->second.push_back(r.getPointer());
+        else
+        {
+          std::vector<Row::Pointer> vec;
+          vec.push_back(r.getPointer());
+          ht[bucket]->emplace(td, std::move(vec));
+        }
       }
     }
     else if (r.getColType(smallKeyColumns[0]) == execplan::CalpontSystemCatalog::LONGDOUBLE)
@@ -448,10 +467,16 @@ void TupleJoiner::insert(Row& r, bool zeroTheRid)
       long double smallKey = r.getLongDoubleField(smallKeyColumns[0]);
       uint bucket = bucketPicker((char*)&smallKey, 10, bpSeed) &
                     bucketMask;  // change if we decide to support windows again
-      if (UNLIKELY(smallKey == joblist::LONGDOUBLENULL))
-        ld[bucket]->insert(pair<long double, Row::Pointer>(joblist::LONGDOUBLENULL, r.getPointer()));
+      long double key = UNLIKELY(smallKey == joblist::LONGDOUBLENULL) ? joblist::LONGDOUBLENULL : smallKey;
+      auto it = ld[bucket]->find(key);
+      if (it != ld[bucket]->end())
+        it->second.push_back(r.getPointer());
       else
-        ld[bucket]->insert(pair<long double, Row::Pointer>(smallKey, r.getPointer()));
+      {
+        std::vector<Row::Pointer> vec;
+        vec.push_back(r.getPointer());
+        ld[bucket]->emplace(key, std::move(vec));
+      }
     }
     else if (!smallRG.usesStringTable())
     {
@@ -462,10 +487,16 @@ void TupleJoiner::insert(Row& r, bool zeroTheRid)
       else
         smallKey = (int64_t)r.getUintField(smallKeyColumns[0]);
       uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
-      if (UNLIKELY(smallKey == nullValueForJoinColumn))
-        h[bucket]->insert(pair<int64_t, uint8_t*>(getJoinNullValue(), r.getData()));
+      int64_t key = UNLIKELY(smallKey == nullValueForJoinColumn) ? getJoinNullValue() : smallKey;
+      auto it = h[bucket]->find(key);
+      if (it != h[bucket]->end())
+        it->second.push_back(r.getData());
       else
-        h[bucket]->insert(pair<int64_t, uint8_t*>(smallKey, r.getData()));  // Normal path for integers
+      {
+        std::vector<uint8_t*> vec;
+        vec.push_back(r.getData());
+        h[bucket]->emplace(key, std::move(vec));
+      }
     }
     else
     {
@@ -476,10 +507,16 @@ void TupleJoiner::insert(Row& r, bool zeroTheRid)
       else
         smallKey = (int64_t)r.getUintField(smallKeyColumns[0]);
       uint bucket = bucketPicker((char*)&smallKey, sizeof(smallKey), bpSeed) & bucketMask;
-      if (UNLIKELY(smallKey == nullValueForJoinColumn))
-        sth[bucket]->insert(pair<int64_t, Row::Pointer>(getJoinNullValue(), r.getPointer()));
+      int64_t key = UNLIKELY(smallKey == nullValueForJoinColumn) ? getJoinNullValue() : smallKey;
+      auto it = sth[bucket]->find(key);
+      if (it != sth[bucket]->end())
+        it->second.push_back(r.getPointer());
       else
-        sth[bucket]->insert(pair<int64_t, Row::Pointer>(smallKey, r.getPointer()));
+      {
+        std::vector<Row::Pointer> vec;
+        vec.push_back(r.getPointer());
+        sth[bucket]->emplace(key, std::move(vec));
+      }
     }
   }
   else
@@ -510,8 +547,6 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
     if (UNLIKELY(typelessJoin))
     {
       TypelessData largeKey;
-      thIterator it;
-      pair<thIterator, thIterator> range;
 
       largeKey = makeTypelessKey(largeSideRow, largeKeyColumns, keyLength, &tmpKeyAlloc[threadID], smallRG,
                                  smallKeyColumns);
@@ -519,31 +554,30 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
         return;
 
       uint bucket = bucketPicker((char*)largeKey.data, largeKey.len, bpSeed) & bucketMask;
-      range = ht[bucket]->equal_range(largeKey);
+      auto it = ht[bucket]->find(largeKey);
 
-      if (range.first == range.second && !(joinType & (LARGEOUTER | MATCHNULLS)))
+      if (it == ht[bucket]->end() && !(joinType & (LARGEOUTER | MATCHNULLS)))
         return;
 
-      for (; range.first != range.second; ++range.first)
-        matches->push_back(range.first->second);
+      if (it != ht[bucket]->end())
+        for (auto& val : it->second)
+          matches->push_back(val);
     }
     else if (largeSideRow.getColType(largeKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE && !ld.empty())
     {
       // This is a compare of two long double
       long double largeKey;
-      ldIterator it;
-      pair<ldIterator, ldIterator> range;
-      Row r;
 
       largeKey = largeSideRow.getLongDoubleField(largeKeyColumns[0]);
       uint bucket = bucketPicker((char*)&largeKey, 10, bpSeed) & bucketMask;
-      range = ld[bucket]->equal_range(largeKey);
+      auto it = ld[bucket]->find(largeKey);
 
-      if (range.first == range.second && !(joinType & (LARGEOUTER | MATCHNULLS)))
+      if (it == ld[bucket]->end() && !(joinType & (LARGEOUTER | MATCHNULLS)))
         return;
-      for (; range.first != range.second; ++range.first)
+      if (it != ld[bucket]->end())
       {
-        matches->push_back(range.first->second);
+        for (auto& val : it->second)
+          matches->push_back(val);
       }
     }
     else if (!smallRG.usesStringTable())
@@ -568,37 +602,40 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
         // Compare against long double
         long double ldKey = largeKey;
         uint bucket = bucketPicker((char*)&ldKey, 10, bpSeed) & bucketMask;
-        auto range = ld[bucket]->equal_range(ldKey);
+        auto it = ld[bucket]->find(ldKey);
 
-        if (range.first == range.second && !(joinType & (LARGEOUTER | MATCHNULLS)))
+        if (it == ld[bucket]->end() && !(joinType & (LARGEOUTER | MATCHNULLS)))
           return;
 
-        for (; range.first != range.second; ++range.first)
-          matches->push_back(range.first->second);
+        if (it != ld[bucket]->end())
+          for (auto& val : it->second)
+            matches->push_back(val);
       }
       else
       {
         uint bucket = bucketPicker((char*)&largeKey, sizeof(largeKey), bpSeed) & bucketMask;
-        auto range = h[bucket]->equal_range(largeKey);
+        auto it = h[bucket]->find(largeKey);
 
-        if (range.first == range.second && !(joinType & (LARGEOUTER | MATCHNULLS)))
+        if (it == h[bucket]->end() && !(joinType & (LARGEOUTER | MATCHNULLS)))
           return;
 
-        for (; range.first != range.second; ++range.first)
-          matches->emplace_back(rowgroup::Row::Pointer(range.first->second));
+        if (it != h[bucket]->end())
+          for (auto& val : it->second)
+            matches->emplace_back(rowgroup::Row::Pointer(val));
       }
     }
     else
     {
       int64_t largeKey = largeSideRow.getIntField(largeKeyColumns[0]);
       uint bucket = bucketPicker((char*)&largeKey, sizeof(largeKey), bpSeed) & bucketMask;
-      auto range = sth[bucket]->equal_range(largeKey);
+      auto it = sth[bucket]->find(largeKey);
 
-      if (range.first == range.second && !(joinType & (LARGEOUTER | MATCHNULLS)))
+      if (it == sth[bucket]->end() && !(joinType & (LARGEOUTER | MATCHNULLS)))
         return;
 
-      for (; range.first != range.second; ++range.first)
-        matches->push_back(range.first->second);
+      if (it != sth[bucket]->end())
+        for (auto& val : it->second)
+          matches->push_back(val);
     }
   }
 
@@ -614,28 +651,31 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
     {
       uint bucket = bucketPicker((char*)&(joblist::LONGDOUBLENULL), sizeof(joblist::LONGDOUBLENULL), bpSeed) &
                     bucketMask;
-      pair<ldIterator, ldIterator> range = ld[bucket]->equal_range(joblist::LONGDOUBLENULL);
+      auto it = ld[bucket]->find(joblist::LONGDOUBLENULL);
 
-      for (; range.first != range.second; ++range.first)
-        matches->push_back(range.first->second);
+      if (it != ld[bucket]->end())
+        for (auto& val : it->second)
+          matches->push_back(val);
     }
     else if (!smallRG.usesStringTable())
     {
       auto nullVal = getJoinNullValue();
       uint bucket = bucketPicker((char*)&nullVal, sizeof(nullVal), bpSeed) & bucketMask;
-      pair<iterator, iterator> range = h[bucket]->equal_range(nullVal);
+      auto it = h[bucket]->find(nullVal);
 
-      for (; range.first != range.second; ++range.first)
-        matches->emplace_back(rowgroup::Row::Pointer(range.first->second));
+      if (it != h[bucket]->end())
+        for (auto& val : it->second)
+          matches->emplace_back(rowgroup::Row::Pointer(val));
     }
     else
     {
       auto nullVal = getJoinNullValue();
       uint bucket = bucketPicker((char*)&nullVal, sizeof(nullVal), bpSeed) & bucketMask;
-      pair<sthash_t::iterator, sthash_t::iterator> range = sth[bucket]->equal_range(nullVal);
+      auto it = sth[bucket]->find(nullVal);
 
-      for (; range.first != range.second; ++range.first)
-        matches->push_back(range.first->second);
+      if (it != sth[bucket]->end())
+        for (auto& val : it->second)
+          matches->push_back(val);
     }
   }
 
@@ -651,7 +691,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
         for (uint i = 0; i < bucketCount; i++)
           for (it = ld[i]->begin(); it != ld[i]->end(); ++it)
-            matches->push_back(it->second);
+            for (auto& val : it->second)
+              matches->push_back(val);
       }
       else if (!smallRG.usesStringTable())
       {
@@ -659,7 +700,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
         for (uint i = 0; i < bucketCount; i++)
           for (it = h[i]->begin(); it != h[i]->end(); ++it)
-            matches->emplace_back(rowgroup::Row::Pointer(it->second));
+            for (auto& val : it->second)
+              matches->emplace_back(rowgroup::Row::Pointer(val));
       }
       else
       {
@@ -667,7 +709,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
         for (uint i = 0; i < bucketCount; i++)
           for (it = sth[i]->begin(); it != sth[i]->end(); ++it)
-            matches->push_back(it->second);
+            for (auto& val : it->second)
+              matches->push_back(val);
       }
     }
     else
@@ -676,7 +719,8 @@ void TupleJoiner::match(rowgroup::Row& largeSideRow, uint32_t largeRowIndex, uin
 
       for (uint i = 0; i < bucketCount; i++)
         for (it = ht[i]->begin(); it != ht[i]->end(); ++it)
-          matches->push_back(it->second);
+          for (auto& val : it->second)
+            matches->push_back(val);
     }
   }
 }
@@ -726,6 +770,7 @@ void TupleJoiner::doneInserting()
     rowCount = size();
 
     uint bucket = 0;
+    size_t vecIdx = 0;
     if (joinAlg == PM)
       pmpos = 0;
     else if (typelessJoin)
@@ -743,31 +788,71 @@ void TupleJoiner::doneInserting()
         smallRow.setPointer((*rows)[pmpos++]);
       else if (typelessJoin)
       {
-        while (thit == ht[bucket]->end())
-          thit = ht[++bucket]->begin();
-        smallRow.setPointer(thit->second);
-        ++thit;
+        while (thit == ht[bucket]->end() || vecIdx >= thit->second.size())
+        {
+          if (thit != ht[bucket]->end() && vecIdx >= thit->second.size())
+          {
+            ++thit;
+            vecIdx = 0;
+          }
+          if (thit == ht[bucket]->end())
+          {
+            thit = ht[++bucket]->begin();
+            vecIdx = 0;
+          }
+        }
+        smallRow.setPointer(thit->second[vecIdx++]);
       }
       else if (isLongDouble(smallSideColType))
       {
-        while (ldit == ld[bucket]->end())
-          ldit = ld[++bucket]->begin();
-        smallRow.setPointer(ldit->second);
-        ++ldit;
+        while (ldit == ld[bucket]->end() || vecIdx >= ldit->second.size())
+        {
+          if (ldit != ld[bucket]->end() && vecIdx >= ldit->second.size())
+          {
+            ++ldit;
+            vecIdx = 0;
+          }
+          if (ldit == ld[bucket]->end())
+          {
+            ldit = ld[++bucket]->begin();
+            vecIdx = 0;
+          }
+        }
+        smallRow.setPointer(ldit->second[vecIdx++]);
       }
       else if (!smallRG.usesStringTable())
       {
-        while (hit == h[bucket]->end())
-          hit = h[++bucket]->begin();
-        smallRow.setPointer(rowgroup::Row::Pointer(hit->second));
-        ++hit;
+        while (hit == h[bucket]->end() || vecIdx >= hit->second.size())
+        {
+          if (hit != h[bucket]->end() && vecIdx >= hit->second.size())
+          {
+            ++hit;
+            vecIdx = 0;
+          }
+          if (hit == h[bucket]->end())
+          {
+            hit = h[++bucket]->begin();
+            vecIdx = 0;
+          }
+        }
+        smallRow.setPointer(rowgroup::Row::Pointer(hit->second[vecIdx++]));
       }
       else
       {
-        while (sthit == sth[bucket]->end())
-          sthit = sth[++bucket]->begin();
-        smallRow.setPointer(sthit->second);
-        ++sthit;
+        while (sthit == sth[bucket]->end() || vecIdx >= sthit->second.size())
+        {
+          if (sthit != sth[bucket]->end() && vecIdx >= sthit->second.size())
+          {
+            ++sthit;
+            vecIdx = 0;
+          }
+          if (sthit == sth[bucket]->end())
+          {
+            sthit = sth[++bucket]->begin();
+            vecIdx = 0;
+          }
+        }
+        smallRow.setPointer(sthit->second[vecIdx++]);
       }
 
       if (isLongDouble(smallSideColType))
@@ -1023,10 +1108,13 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
       for (uint i = 0; i < bucketCount; i++)
         for (it = ht[i]->begin(); it != ht[i]->end(); ++it)
         {
-          smallR.setPointer(it->second);
+          for (auto& val : it->second)
+          {
+            smallR.setPointer(val);
 
-          if (!smallR.isMarked())
-            out->push_back(it->second);
+            if (!smallR.isMarked())
+              out->push_back(val);
+          }
         }
     }
     else if (smallRG.getColType(smallKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE)
@@ -1036,10 +1124,13 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
       for (uint i = 0; i < bucketCount; i++)
         for (it = ld[i]->begin(); it != ld[i]->end(); ++it)
         {
-          smallR.setPointer(it->second);
+          for (auto& val : it->second)
+          {
+            smallR.setPointer(val);
 
-          if (!smallR.isMarked())
-            out->push_back(it->second);
+            if (!smallR.isMarked())
+              out->push_back(val);
+          }
         }
     }
     else if (!smallRG.usesStringTable())
@@ -1049,10 +1140,13 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
       for (uint i = 0; i < bucketCount; i++)
         for (it = h[i]->begin(); it != h[i]->end(); ++it)
         {
-          smallR.setPointer(rowgroup::Row::Pointer(it->second));
+          for (auto& val : it->second)
+          {
+            smallR.setPointer(rowgroup::Row::Pointer(val));
 
-          if (!smallR.isMarked())
-            out->emplace_back(rowgroup::Row::Pointer(it->second));
+            if (!smallR.isMarked())
+              out->emplace_back(rowgroup::Row::Pointer(val));
+          }
         }
     }
     else
@@ -1062,10 +1156,13 @@ void TupleJoiner::getUnmarkedRows(vector<Row::Pointer>* out)
       for (uint i = 0; i < bucketCount; i++)
         for (it = sth[i]->begin(); it != sth[i]->end(); ++it)
         {
-          smallR.setPointer(it->second);
+          for (auto& val : it->second)
+          {
+            smallR.setPointer(val);
 
-          if (!smallR.isMarked())
-            out->push_back(it->second);
+            if (!smallR.isMarked())
+              out->push_back(val);
+          }
         }
     }
   }
@@ -1198,14 +1295,28 @@ size_t TupleJoiner::size() const
   {
     size_t ret = 0;
     for (uint i = 0; i < bucketCount; i++)
+    {
       if (UNLIKELY(typelessJoin))
-        ret += ht[i]->size();
+      {
+        for (auto& kv : *ht[i])
+          ret += kv.second.size();
+      }
       else if (smallRG.getColType(smallKeyColumns[0]) == CalpontSystemCatalog::LONGDOUBLE)
-        ret += ld[i]->size();
+      {
+        for (auto& kv : *ld[i])
+          ret += kv.second.size();
+      }
       else if (!smallRG.usesStringTable())
-        ret += h[i]->size();
+      {
+        for (auto& kv : *h[i])
+          ret += kv.second.size();
+      }
       else
-        ret += sth[i]->size();
+      {
+        for (auto& kv : *sth[i])
+          ret += kv.second.size();
+      }
+    }
     return ret;
   }
 

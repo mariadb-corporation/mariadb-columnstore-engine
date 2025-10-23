@@ -39,6 +39,7 @@
 #include "columnwidth.h"
 #include "mcs_string.h"
 
+
 namespace joiner
 {
 uint32_t calculateKeyLength(const std::vector<uint32_t>& aKeyColumnsIds, const rowgroup::RowGroup& aRowGroup,
@@ -475,13 +476,11 @@ class TupleJoiner
   void clearHashMaps();
 
  private:
-  template <typename K, typename V>
-  using HashMapTemplate =
-      std::unordered_multimap<K, V, hasher, std::equal_to<K>, utils::STLPoolAllocator<std::pair<const K, V>>>;
-  using hash_t = HashMapTemplate<int64_t, uint8_t*>;
-  using sthash_t = HashMapTemplate<int64_t, rowgroup::Row::Pointer>;
-  using typelesshash_t = HashMapTemplate<TypelessData, rowgroup::Row::Pointer>;
-  using ldhash_t = HashMapTemplate<long double, rowgroup::Row::Pointer>;
+  // Use boost::hash for standard types, custom hasher for TypelessData
+  using hash_t = boost::unordered_flat_map<int64_t, std::vector<uint8_t*>>;
+  using sthash_t = boost::unordered_flat_map<int64_t, std::vector<rowgroup::Row::Pointer>>;
+  using typelesshash_t = boost::unordered_flat_map<TypelessData, std::vector<rowgroup::Row::Pointer>, hasher, std::equal_to<TypelessData>>;
+  using ldhash_t = boost::unordered_flat_map<long double, std::vector<rowgroup::Row::Pointer>>;
 
   typedef hash_t::iterator iterator;
   typedef typelesshash_t::iterator thIterator;

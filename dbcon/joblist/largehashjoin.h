@@ -33,6 +33,7 @@
 #include <vector>
 #include <list>
 #include <unordered.h>
+#include <boost/unordered/unordered_flat_map.hpp>
 
 #include <boost/thread.hpp>
 #include <boost/scoped_array.hpp>
@@ -107,13 +108,12 @@ class HashJoin
   // than a list of ElementType to reduce memory utilization and to increase the performance of loading the
   // map. typedef std::tr1::unordered_map<typename element_t::second_type, std::list<element_t>,
   // HjHasher<element_t> > hash_t;
-  typedef
-      typename std::tr1::unordered_multimap<typename element_t::second_type, typename element_t::first_type>
-          hash_t;
-  typedef typename std::tr1::unordered_multimap<typename element_t::second_type,
-                                                typename element_t::first_type>::iterator hashIter_t;
-  typedef typename std::tr1::unordered_multimap<typename element_t::second_type,
-                                                typename element_t::first_type>::value_type hashPair_t;
+  // Now using boost::unordered_flat_map with vector for better cache locality
+  typedef typename boost::unordered_flat_map<typename element_t::second_type,
+                                             std::vector<typename element_t::first_type>>
+      hash_t;
+  typedef typename hash_t::iterator hashIter_t;
+  typedef typename hash_t::value_type hashPair_t;
 
   // allow each thread to have its own pointers
   struct control_struct
@@ -503,9 +503,18 @@ void HashJoin<element_t>::createHash(BucketDL<element_t>* srcBucketDL, hash_t* d
 
     try
     {
-      // std::list<element_t> tmp(1,e);
-      destHashTbl->insert(
-          std::pair<typename element_t::second_type, typename element_t::first_type>(e.second, e.first));
+      // For boost::unordered_flat_map, we store vectors of values
+      auto it = destHashTbl->find(e.second);
+      if (it != destHashTbl->end())
+      {
+        it->second.push_back(e.first);
+      }
+      else
+      {
+        std::vector<typename element_t::first_type> vec;
+        vec.push_back(e.first);
+        destHashTbl->emplace(e.second, std::move(vec));
+      }
     }
     catch (exception& exc)
     {

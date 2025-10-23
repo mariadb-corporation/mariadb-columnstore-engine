@@ -20,6 +20,7 @@
 #include <iostream>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
 
 #include <unordered.h>
 
@@ -50,9 +51,8 @@ class Joiner
 {
  public:
   //		typedef std::tr1::unordered_multimap<uint64_t, uint64_t> hash_t;
-  typedef std::tr1::unordered_multimap<uint64_t, uint64_t, std::tr1::hash<uint64_t>, std::equal_to<uint64_t>,
-                                       utils::SimpleAllocator<std::pair<uint64_t const, uint64_t> > >
-      hash_t;
+  // Using boost::unordered_flat_map with vector for multimap behavior
+  typedef boost::unordered_flat_map<uint64_t, std::vector<uint64_t>> hash_t;
 
   typedef hash_t::iterator iterator;
 
@@ -74,7 +74,17 @@ class Joiner
   }
   inline void insert(const joblist::ElementType& e)
   {
-    h->insert(std::pair<uint64_t, uint64_t>(e.second, e.first));
+    auto it = h->find(e.second);
+    if (it != h->end())
+    {
+      it->second.push_back(e.first);
+    }
+    else
+    {
+      std::vector<uint64_t> vec;
+      vec.push_back(e.first);
+      h->emplace(e.second, std::move(vec));
+    }
   }
   void doneInserting();
   boost::shared_ptr<std::vector<joblist::ElementType> > getSmallSide();
@@ -83,19 +93,17 @@ class Joiner
   /* Used by the UM */
   inline bool match(const joblist::ElementType& large)
   {
-    std::pair<iterator, iterator> range;
     iterator it = h->find(large.second);
 
     if (it == h->end())
       return _includeAll;
-    else if (it->second & MSB)
+    else if (!it->second.empty() && (it->second[0] & MSB))
       return true;
     else
     {
-      range = h->equal_range(large.second);
-
-      for (; range.first != range.second; ++range.first)
-        range.first->second |= MSB;
+      // Mark all values in the vector
+      for (auto& val : it->second)
+        val |= MSB;
 
       return true;
     }
@@ -103,31 +111,32 @@ class Joiner
 
   inline void mark(const joblist::ElementType& large)
   {
-    std::pair<iterator, iterator> range;
+    iterator it = h->find(large.second);
 
-    range = h->equal_range(large.second);
-
-    for (; range.first != range.second; ++range.first)
-      range.first->second |= MSB;
+    if (it != h->end())
+    {
+      for (auto& val : it->second)
+        val |= MSB;
+    }
   }
 
   /* Used by the PM */
   inline bool getNewMatches(const uint64_t value, std::vector<joblist::ElementType>* newMatches)
   {
-    std::pair<iterator, iterator> range;
     iterator it = h->find(value);
 
     if (it == h->end())
       return _includeAll;
-    else if (it->second & MSB)
+    else if (!it->second.empty() && (it->second[0] & MSB))
       return true;
     else
     {
-      newMatches->push_back(joblist::ElementType(it->second | MSB, value));
-      range = h->equal_range(value);
-
-      for (; range.first != range.second; ++range.first)
-        range.first->second |= MSB;
+      // Add all values to newMatches and mark them
+      for (auto& val : it->second)
+      {
+        newMatches->push_back(joblist::ElementType(val | MSB, value));
+        val |= MSB;
+      }
 
       return true;
     }
