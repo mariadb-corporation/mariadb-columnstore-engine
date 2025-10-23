@@ -420,6 +420,7 @@ void preProcessFunctionOnAggregation(const vector<SimpleColumn*>& scs, const vec
 
 void checkReturnedColumns(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
+  jobInfo.nonConstCols.reserve(jobInfo.deliveredCols.size());
   for (uint64_t i = 0; i < jobInfo.deliveredCols.size(); i++)
   {
     if (NULL == dynamic_cast<const ConstantColumn*>(jobInfo.deliveredCols[i].get()))

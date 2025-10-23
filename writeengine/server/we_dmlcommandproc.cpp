@@ -502,6 +502,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
       // First gather HWM BRM information for all columns
       std::vector<int> colWidths;
+      colWidths.reserve(ridList.size());
 
       for (unsigned i = 0; i < ridList.size(); i++)
       {
@@ -609,6 +610,7 @@ uint8_t WE_DMLCommandProc::processSingleInsert(messageqcpp::ByteStream& bs, std:
 
   std::map<uint32_t, uint32_t> oids;
   std::vector<BRM::OID_t> oidsToFlush;
+  oidsToFlush.reserve(colStructs.size() + dctnryStructList.size());
 
   for (unsigned i = 0; i < colStructs.size(); i++)
   {
@@ -950,6 +952,7 @@ uint8_t WE_DMLCommandProc::processBatchInsert(messageqcpp::ByteStream& bs, std::
 
       // First gather HWM BRM information for all columns
       std::vector<int> colWidths;
+      colWidths.reserve(ridList.size() + 1);  // +1 for potential AUX column
       for (unsigned i = 0; i < ridList.size(); i++)
       {
         rc = BRMWrapper::getInstance()->getDbRootHWMInfo(ridList[i].objnum, dbRootHWMInfoColVec[i]);

@@ -3119,6 +3119,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
       //@bug 6122 Check how many columns have not null constraint. columnn with not null constraint will not
       // show up in header.
       unsigned int numberNotNull = 0;
+      ci->columnTypes.reserve(colrids.size());
 
       for (unsigned int j = 0; j < colrids.size(); j++)
       {

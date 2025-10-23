@@ -1392,6 +1392,7 @@ int WriteEngineWrapper::insertColumnRecs(
     if (bFirstExtentOnThisPM)
     {
       std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
+      cols.reserve(colStructList.size());
       BRM::CreateStripeColumnExtentsArgIn createStripeColumnExtentsArgIn;
 
       for (i = 0; i < colStructList.size(); i++)
@@ -2202,6 +2203,7 @@ int WriteEngineWrapper::insertColumnRecsBinary(
     {
       // cout << "bFirstExtentOnThisPM is " << bFirstExtentOnThisPM << endl;
       std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
+      cols.reserve(colStructList.size());
       BRM::CreateStripeColumnExtentsArgIn createStripeColumnExtentsArgIn;
 
       for (i = 0; i < colStructList.size(); i++)

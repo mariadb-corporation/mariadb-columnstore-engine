@@ -329,7 +329,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(std::exception& ex)
+    catch (std::exception& ex)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -338,7 +338,7 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
       fLog.logMsg(oss.str(), rc, MSGLVL_ERROR);
       return rc;
     }
-    catch(...)
+    catch (...)
     {
       rc = ERR_UNKNOWN;
       std::ostringstream oss;
@@ -352,10 +352,10 @@ int BulkLoad::loadJobInfo(const string& fullName, bool bUseTempJobFile, int argc
     // tableAUXColOid = 0
     if (tableAUXColOid > 3000)
     {
-      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING,
-        execplan::AUX_COL_WIDTH, execplan::AUX_COL_WIDTH,
-        execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_COMPRESSION_TYPE,
-        execplan::AUX_COL_MINVALUE, execplan::AUX_COL_MAXVALUE, true, 1);
+      JobColumn curColumn("aux", tableAUXColOid, execplan::AUX_COL_DATATYPE_STRING, execplan::AUX_COL_WIDTH,
+                          execplan::AUX_COL_WIDTH, execplan::AUX_COL_COMPRESSION_TYPE,
+                          execplan::AUX_COL_COMPRESSION_TYPE, execplan::AUX_COL_MINVALUE,
+                          execplan::AUX_COL_MAXVALUE, true, 1);
       curColumn.fFldColRelation = BULK_FLDCOL_COLUMN_DEFAULT;
       curJob.jobTableList[i].colList.push_back(curColumn);
       JobFieldRef fieldRef(BULK_FLDCOL_COLUMN_DEFAULT, curJob.jobTableList[i].colList.size() - 1);
@@ -711,7 +711,8 @@ int BulkLoad::preProcess(Job& job, int tableNo, std::shared_ptr<TableInfo>& tabl
                                       tableInfo.get());
     // tableInfo->rbMetaWriter());
     else
-      info = new ColumnInfo(&fLog, i, job.jobTableList[tableNo].colList[i], pDBRootExtentTracker, tableInfo.get());
+      info = new ColumnInfo(&fLog, i, job.jobTableList[tableNo].colList[i], pDBRootExtentTracker,
+                            tableInfo.get());
 
     if (pwd)
       info->setUIDGID(pwd->pw_uid, pwd->pw_gid);
@@ -877,7 +878,8 @@ int BulkLoad::preProcessAutoInc(const std::string& fullTableName, ColumnInfo* co
 //    NO_ERROR if success
 //    other if fail
 //------------------------------------------------------------------------------
-int BulkLoad::preProcessHwmLbid(const ColumnInfo* info, int /*minWidth*/, uint32_t partition, uint16_t segment,
+int BulkLoad::preProcessHwmLbid(const ColumnInfo* info, int /*minWidth*/, uint32_t partition,
+                                uint16_t segment,
                                 HWM& hwm,                   // input/output
                                 BRM::LBID_t& lbid,          // output
                                 bool& bSkippedToNewExtent)  // output
@@ -1020,11 +1022,13 @@ int BulkLoad::processJob()
   // Validate the existence of the import data files
   //--------------------------------------------------------------------------
   std::vector<std::shared_ptr<TableInfo>> tables;
+  tables.reserve(curJob.jobTableList.size());
 
   for (i = 0; i < curJob.jobTableList.size(); i++)
   {
-    std::shared_ptr<TableInfo> tableInfo(new TableInfo(&fLog, fTxnID, fProcessName, curJob.jobTableList[i].mapOid,
-                                         curJob.jobTableList[i].tblName, fKeepRbMetaFiles));
+    std::shared_ptr<TableInfo> tableInfo(new TableInfo(&fLog, fTxnID, fProcessName,
+                                                       curJob.jobTableList[i].mapOid,
+                                                       curJob.jobTableList[i].tblName, fKeepRbMetaFiles));
 
     if ((fBulkMode == BULK_MODE_REMOTE_SINGLE_SRC) || (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC))
       tableInfo->setBulkLoadMode(fBulkMode, fBRMRptFileName);
@@ -1364,7 +1368,6 @@ int BulkLoad::buildImportDataFileList(const std::string& location, const std::st
       fullPath = location;
       fullPath += token;
     }
-
 
     // If running mode2, then support a filename with wildcards
     if (fBulkMode == BULK_MODE_REMOTE_MULTIPLE_SRC)

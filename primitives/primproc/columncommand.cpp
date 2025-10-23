@@ -954,6 +954,12 @@ void ColumnCommand::getLBIDList(uint32_t loopCount, vector<int64_t>* lbids)
 {
   int64_t firstLBID = lbid, lastLBID = firstLBID + (loopCount * colType.colWidth) - 1, i;
 
+  // Reserve space for all LBIDs we'll add
+  size_t lbidCount = (loopCount * colType.colWidth);
+  if (hasAuxCol_)
+    lbidCount += (loopCount * execplan::AUX_COL_WIDTH);
+  lbids->reserve(lbids->size() + lbidCount);
+
   for (i = firstLBID; i <= lastLBID; i++)
     lbids->push_back(i);
 

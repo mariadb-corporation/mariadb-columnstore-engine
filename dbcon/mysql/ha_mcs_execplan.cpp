@@ -6936,6 +6936,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
     for (uint32_t i = 0; i < gwi.returnedCols.size(); i++)
     {
       vector<CalpontSystemCatalog::ColType> coltypes;
+      coltypes.reserve(csep->unionVec().size());
 
       for (uint32_t j = 0; j < csep->unionVec().size(); j++)
       {

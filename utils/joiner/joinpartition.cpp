@@ -327,6 +327,8 @@ bool JoinPartition::canConvertToSplitMode()
   RGData rgData;
   uint64_t totalRowCount = 0;
   std::unordered_map<uint32_t, uint32_t> rowDist;
+  // Reserve space for hash distribution (one entry per bucket)
+  rowDist.reserve(bucketCount);
 
   nextSmallOffset = 0;
   while (1)

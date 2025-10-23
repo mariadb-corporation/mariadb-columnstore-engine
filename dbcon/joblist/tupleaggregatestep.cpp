@@ -994,6 +994,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   // collect the projected column info, prepare for aggregation
   vector<uint32_t> width;
+  width.reserve(keysProj.size());
   map<uint32_t, int> projColPosMap;
 
   for (uint64_t i = 0; i < keysProj.size(); i++)
@@ -1004,6 +1005,7 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   // for groupby column
   map<uint32_t, int> groupbyMap;
+  groupBy.reserve(jobInfo.groupByColVec.size() + jobInfo.distinctColVec.size());
 
   for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
   {
@@ -1029,6 +1031,16 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
   // populate the aggregate rowgroup
   AGG_MAP aggFuncMap;
   uint64_t outIdx = 0;
+
+  // Reserve space for all aggregate vectors
+  oidsAgg.reserve(returnedColVec.size());
+  keysAgg.reserve(returnedColVec.size());
+  scaleAgg.reserve(returnedColVec.size());
+  precisionAgg.reserve(returnedColVec.size());
+  typeAgg.reserve(returnedColVec.size());
+  csNumAgg.reserve(returnedColVec.size());
+  widthAgg.reserve(returnedColVec.size());
+  functionVec.reserve(returnedColVec.size());
 
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
@@ -1519,6 +1531,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
   // check if there are any aggregate columns
   vector<pair<uint32_t, int>> aggColVec;
   vector<std::pair<uint32_t, int>>& returnedColVec = jobInfo.returnedColVec;
+  aggColVec.reserve(returnedColVec.size());
 
   for (uint64_t i = 0; i < returnedColVec.size(); i++)
   {
@@ -1566,6 +1579,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
   // collect the projected column info, prepare for aggregation
   vector<uint32_t> width;
+  width.reserve(keysProj.size());
   for (uint64_t i = 0; i < keysProj.size(); i++)
   {
     width.push_back(projRG.getColumnWidth(i));
@@ -1580,6 +1594,7 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
     // collect the projected column info, prepare for aggregation
     map<uint32_t, int> projColPosMap;
 
+    widthProj.reserve(keysProj.size());
     for (uint64_t i = 0; i < keysProj.size(); i++)
     {
       projColPosMap.insert(make_pair(keysProj[i], i));
@@ -1588,6 +1603,28 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
 
     // column index for aggregate rowgroup
     uint64_t colAgg = 0;
+
+    // Reserve space for all aggregate vectors
+    size_t reserveSize = returnedColVec.size();
+    oidsAgg.reserve(reserveSize);
+    keysAgg.reserve(reserveSize);
+    scaleAgg.reserve(reserveSize);
+    precisionAgg.reserve(reserveSize);
+    typeAgg.reserve(reserveSize);
+    csNumAgg.reserve(reserveSize);
+    widthAgg.reserve(reserveSize);
+    oidsAggDist.reserve(reserveSize);
+    keysAggDist.reserve(reserveSize);
+    scaleAggDist.reserve(reserveSize);
+    precisionAggDist.reserve(reserveSize);
+    typeAggDist.reserve(reserveSize);
+    csNumAggDist.reserve(reserveSize);
+    widthAggDist.reserve(reserveSize);
+    groupBy.reserve(jobInfo.groupByColVec.size() + jobInfo.distinctColVec.size());
+    groupByNoDist.reserve(jobInfo.groupByColVec.size());
+    functionVec1.reserve(reserveSize);
+    functionVec2.reserve(reserveSize);
+    functionNoDistVec.reserve(reserveSize);
 
     // for groupby column
     for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
@@ -2919,6 +2956,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
   vector<pair<uint32_t, int>> aggColVec;
   set<uint32_t> avgSet;
   vector<std::pair<uint32_t, int>>& returnedColVec = jobInfo.returnedColVec;
+  aggColVec.reserve(returnedColVec.size());
   // For UDAF
   uint32_t projColsUDAFIdx = 0;
   uint32_t udafcParamIdx = 0;
@@ -2977,6 +3015,7 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     // project only unique oids, but they may be repeated in aggregation
     // collect the projected column info, prepare for aggregation
     vector<uint32_t> width;
+    width.reserve(keysProj.size());
     map<uint32_t, int> projColPosMap;
 
     for (uint64_t i = 0; i < keysProj.size(); i++)
@@ -2987,6 +3026,18 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
 
     // column index for PM aggregate rowgroup
     uint64_t colAggPm = 0;
+
+    // Reserve space for PM aggregate vectors
+    size_t reserveSize = returnedColVec.size() + jobInfo.groupByColVec.size();
+    oidsAggPm.reserve(reserveSize);
+    keysAggPm.reserve(reserveSize);
+    scaleAggPm.reserve(reserveSize);
+    precisionAggPm.reserve(reserveSize);
+    typeAggPm.reserve(reserveSize);
+    csNumAggPm.reserve(reserveSize);
+    widthAggPm.reserve(reserveSize);
+    groupByPm.reserve(jobInfo.groupByColVec.size());
+    functionVecPm.reserve(reserveSize);
 
     // for groupby column
     for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
@@ -3877,6 +3928,7 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
     // project only unique oids, but they may be repeated in aggregation
     // collect the projected column info, prepare for aggregation
     vector<uint32_t> width;
+    width.reserve(keysProj.size());
     map<uint32_t, int> projColPosMap;
 
     for (uint64_t i = 0; i < keysProj.size(); i++)
