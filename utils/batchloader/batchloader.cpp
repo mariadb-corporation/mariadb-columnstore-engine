@@ -461,6 +461,7 @@ void BatchLoader::buildBatchDistSeqVector(uint32_t StartPm)
     aPms = fPMs;
   else
   {
+    aPms.reserve(1 + fPMs.size());  // Reserve for StartPm + all potential PMs
     aPms.push_back(StartPm);
     uint32_t aLast = fPMs.back();
     uint32_t aFirst = fPMs.front();

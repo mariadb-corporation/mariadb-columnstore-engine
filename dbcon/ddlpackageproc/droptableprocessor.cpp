@@ -315,6 +315,8 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
     Oam oam;
 
     // Save qualified tablename, all column, dictionary OIDs, and transaction ID into a file in ASCII format
+    // Reserve space for OIDs
+    oidList.reserve(tableColRidList.size() + dictOIDList.size());
     for (unsigned i = 0; i < tableColRidList.size(); i++)
     {
       if (tableColRidList[i].objnum > 3000)
@@ -965,6 +967,9 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackageInternal(ddlpa
 
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
 
+    // Reserve space for OIDs (columns + aux column + dictionaries)
+    columnOidList.reserve(tableColRidList.size() + 1);
+    allOidList.reserve(tableColRidList.size() + 1 + dictOIDList.size());
     for (unsigned i = 0; i < tableColRidList.size(); i++)
     {
       if (tableColRidList[i].objnum > 3000)

@@ -629,6 +629,7 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
     vector<int64_t> fields;
     fields.push_back(ridx);  // result
     const RetColsVector& parms = wc->functionParms();
+    fields.reserve(1 + parms.size());
 
     for (uint64_t i = 0; i < parms.size(); i++)  // arguments
     {
@@ -641,9 +642,13 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
 
     // partition & order by
     const RetColsVector& partitions = wc->partitions();
+    const RetColsVector& orders = wc->orderBy().fOrders;
     vector<uint64_t> eqIdx;
+    eqIdx.reserve(partitions.size());
     vector<uint64_t> peerIdx;
+    peerIdx.reserve(orders.size());
     vector<IdbSortSpec> sorts;
+    sorts.reserve(partitions.size() + orders.size());
 
     for (uint64_t i = 0; i < partitions.size(); i++)
     {
@@ -656,8 +661,6 @@ void WindowFunctionStep::initialize(const RowGroup& rg, JobInfo& jobInfo)
       eqIdx.push_back(idx);
       sorts.push_back(IdbSortSpec(idx, partitions[i]->asc(), partitions[i]->nullsFirst()));
     }
-
-    const RetColsVector& orders = wc->orderBy().fOrders;
 
     for (uint64_t i = 0; i < orders.size(); i++)
     {

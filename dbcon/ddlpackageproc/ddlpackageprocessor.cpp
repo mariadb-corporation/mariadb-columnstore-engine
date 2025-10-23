@@ -459,6 +459,11 @@ void DDLPackageProcessor::flushPrimprocCache(std::vector<execplan::CalpontSystem
       }
 
       blockList.clear();
+      // Reserve space for all LBIDs in ranges
+      size_t totalSize = 0;
+      for (it = lbidRanges.begin(); it != lbidRanges.end(); it++)
+        totalSize += it->size;
+      blockList.reserve(totalSize);
 
       for (it = lbidRanges.begin(); it != lbidRanges.end(); it++)
       {

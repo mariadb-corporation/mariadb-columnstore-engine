@@ -363,6 +363,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
 
   // deserialize column Oid and dictionary oid
   vector<uint32_t> coloids;
+  coloids.reserve(columnSize);
   vector<uint32_t> dictoids;
 
   for (i = 0; i < columnSize; ++i)
@@ -372,6 +373,7 @@ uint8_t WE_DDLCommandProc::writeCreateSyscolumn(ByteStream& bs, std::string& err
   }
 
   bs >> dictSize;
+  dictoids.reserve(dictSize);
 
   for (i = 0; i < dictSize; ++i)
   {
@@ -2089,6 +2091,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnAuto(ByteStream& bs, std::string& err)
   dctnryStructList.push_back(dctnryStruct);
   cscColTypeList.push_back(column.colType);
 
+  aColList.reserve(roList.size());
   for (unsigned int i = 0; i < roList.size(); i++)
   {
     aColList.push_back(colTuple);
@@ -2276,6 +2279,7 @@ uint8_t WE_DDLCommandProc::updateSyscolumnNextvalCol(ByteStream& bs, std::string
   dctnryStructList.push_back(dctnryStruct);
   cscColTypeList.push_back(column.colType);
 
+  aColList.reserve(roList.size());
   for (unsigned int i = 0; i < roList.size(); i++)
   {
     aColList.push_back(colTuple);
@@ -2449,6 +2453,7 @@ uint8_t WE_DDLCommandProc::updateSystableEntryForSysColumn(int32_t /*sessionID*/
   dctnryStructList.push_back(dctnryStruct);
   cscColTypeList.push_back(column.colType);
 
+  aColList.reserve(roList.size());
   for (unsigned int i = 0; i < roList.size(); i++)
   {
     aColList.push_back(colTuple);

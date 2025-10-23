@@ -167,6 +167,7 @@ void CalpontSelectExecutionPlan::filterTokenList(FilterTokenList& filterTokenLis
 
   Parser parser;
   std::vector<Token> tokens;
+  tokens.reserve(filterTokenList.size());
   Token t;
 
   for (unsigned int i = 0; i < filterTokenList.size(); i++)
@@ -185,6 +186,7 @@ void CalpontSelectExecutionPlan::havingTokenList(const FilterTokenList& havingTo
 
   Parser parser;
   std::vector<Token> tokens;
+  tokens.reserve(havingTokenList.size());
   Token t;
 
   for (unsigned int i = 0; i < havingTokenList.size(); i++)
