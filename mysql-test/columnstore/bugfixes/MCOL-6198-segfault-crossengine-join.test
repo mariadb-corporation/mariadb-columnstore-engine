@@ -4,11 +4,11 @@
 -- source include/have_innodb.inc
 
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL_6198;
-CREATE DATABASE MCOL_6198;
+DROP DATABASE IF EXISTS mcol_6198;
+CREATE DATABASE mcol_6198;
 --disable_query_log
 --disable_result_log
-USE MCOL_6198;
+USE mcol_6198;
 #
 # Enable cross engine join
 # Configure user and password in Columnstore.xml file
@@ -1194,13 +1194,13 @@ END
 ==STOP==
 --delimiter ;
 
-call filltablecol("MCOL_6198","c",100000);
-call filltablecol("MCOL_6198","c",100000);
+call filltablecol("mcol_6198","c",100000);
+call filltablecol("mcol_6198","c",100000);
 
-call filltablecol("MCOL_6198","p",100000);
-call filltablecol("MCOL_6198","p",100000);
-call filltablecol("MCOL_6198","p",100000);
-call filltablecol("MCOL_6198","p",100000);
+call filltablecol("mcol_6198","p",100000);
+call filltablecol("mcol_6198","p",100000);
+call filltablecol("mcol_6198","p",100000);
+call filltablecol("mcol_6198","p",100000);
 
 
 CREATE TABLE group_g01(key_id BIGINT, eg_id VARCHAR(40)) ENGINE=innoDB;
@@ -1231,4 +1231,4 @@ DROP USER 'cejuser'@'localhost';
 --enable_result_log
 --enable_warnings
 
-DROP DATABASE MCOL_6198;
+DROP DATABASE mcol_6198;
