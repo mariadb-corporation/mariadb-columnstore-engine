@@ -56,6 +56,13 @@ int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
+static const char reserved_prefix[] = "__mcs_reserved_";
+bool has_reserved_prefix(const char* name) {
+    int i;
+    for(i=0;name[i] && reserved_prefix[i] && name[i] == reserved_prefix[i]; i++) { }
+    return !reserved_prefix[i]; // EOL is zero.
+} /* has_reserved_prefix */
+
 void postprocess_column_information(SchemaObject* elem, const CHARSET_INFO* def_cs, myf utf8_flag)
 {
     auto* column = dynamic_cast<ColumnDef*>(elem);
@@ -749,7 +756,7 @@ ata_add_column:
 column_name:
     TIME
 	|DATE
-	|ident
+	|ident { if (has_reserved_prefix($$)) { YYERROR("column name starts with reserved prefix"); } }
 	;
 
 constraint_name:
