@@ -31,6 +31,7 @@ from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.invariant_checks import run_invariant_checks
 from failover.node_monitor import NodeMonitor
+from failover.config import Config
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig
 
@@ -96,7 +97,8 @@ class FailoverBackgroundThread(plugins.SimplePlugin):
 
     def __init__(self, bus, turned_on):
         super().__init__(bus)
-        self.node_monitor = NodeMonitor(agent=FailoverAgent())
+        sampling_interval = Config().getFailoverTimeoutSeconds()
+        self.node_monitor = NodeMonitor(agent=FailoverAgent(), samplingInterval=sampling_interval)
         self.running = False
         self.turned_on = turned_on
         if self.turned_on:

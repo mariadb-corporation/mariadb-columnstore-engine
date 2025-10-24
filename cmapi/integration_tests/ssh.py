@@ -2,10 +2,9 @@ import concurrent.futures
 import json
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from fabric import Connection
-
 
 from dataclasses import dataclass, field
 
@@ -75,8 +74,8 @@ class ClusterConfig:
 def run_on_all_hosts_parallel(
       hosts: list[RemoteHost],
       func: Callable[[RemoteHost], Any],
-      timeout: float | None = None,
-      max_workers: int | None = None,
+      timeout: Optional[float] = None,
+      max_workers: Optional[int] = None,
     ) -> dict[str, Any]:
     """
     Run a function on all hosts in parallel.
