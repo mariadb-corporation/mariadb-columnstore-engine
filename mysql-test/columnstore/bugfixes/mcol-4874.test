@@ -53,5 +53,7 @@ JOIN
 USING (col1);
 
 # Cleanup
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE `mcol_4874`;
