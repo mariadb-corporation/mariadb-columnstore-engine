@@ -160,6 +160,7 @@ enum DDL_CONSTRAINTS
   DDL_REFERENCES,
   DDL_NOT_NULL,
   DDL_AUTO_INCREMENT,
+  DDL_VALIDATE_JSON,
   DDL_INVALID_CONSTRAINT
 };
 /** @brief
@@ -170,7 +171,8 @@ const std::string ConstraintString[] = {"primary",
                                         "unique",
                                         "references",
                                         "not_null",
-                                        "auto_increment"
+                                        "auto_increment",
+                                        "validate_json",
                                         ""};
 
 /** @brief Datatype List
@@ -210,6 +212,7 @@ enum DDL_DATATYPES
   DDL_TEXT,
   DDL_TIME,
   DDL_TIMESTAMP,
+  DDL_JSON,
   DDL_INVALID_DATATYPE
 };
 
@@ -956,6 +959,7 @@ struct ColumnType
 
   /** @brief Is the TEXT column has explicit defined length, ie TEXT(1717) */
   bool fExplicitLength;
+
 };
 
 /** @brief A column constraint definition.

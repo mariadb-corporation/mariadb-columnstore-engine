@@ -195,9 +195,10 @@ execplan::CalpontSystemCatalog::ColDataType DDLPackageProcessor::convertDataType
 
     case ddlpackage::DDL_BLOB: colDataType = CalpontSystemCatalog::BLOB; break;
 
-    case ddlpackage::DDL_TEXT: colDataType = CalpontSystemCatalog::TEXT; break;
+    case ddlpackage::DDL_TEXT:
+    case ddlpackage::DDL_JSON: colDataType = CalpontSystemCatalog::TEXT; break;
 
-    default: throw runtime_error("Unsupported datatype!");
+    default: throw runtime_error("Unsupported DDL datatype!");
   }
 
   return colDataType;
@@ -227,6 +228,8 @@ std::string DDLPackageProcessor::buildTableConstraintName(const int oid, ddlpack
     case ddlpackage::DDL_CHECK: prefix = "ck_"; break;
 
     case ddlpackage::DDL_NOT_NULL: prefix = "nk_"; break;
+
+    case ddlpackage::DDL_VALIDATE_JSON: prefix = "jk_"; break;
 
     default: throw runtime_error("Unsupported constraint type!"); break;
   }
@@ -261,6 +264,8 @@ std::string DDLPackageProcessor::buildColumnConstraintName(const std::string& sc
 
     case ddlpackage::DDL_NOT_NULL: prefix = "nk_"; break;
 
+    case ddlpackage::DDL_VALIDATE_JSON: prefix = "jk_"; break;
+
     default: throw runtime_error("Unsupported constraint type!"); break;
   }
 
@@ -287,6 +292,8 @@ char DDLPackageProcessor::getConstraintCode(ddlpackage::DDL_CONSTRAINTS type)
     case ddlpackage::DDL_CHECK: constraint_type = 'c'; break;
 
     case ddlpackage::DDL_NOT_NULL: constraint_type = 'n'; break;
+
+    case ddlpackage::DDL_VALIDATE_JSON: constraint_type = 'j'; break;
 
     default: constraint_type = '0'; break;
   }

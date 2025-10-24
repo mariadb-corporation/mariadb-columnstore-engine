@@ -23,6 +23,7 @@
 #include <sstream>
 #include <cerrno>
 #include <cstring>
+#include <limits>
 
 #include <utility>
 #include <cassert>
@@ -427,6 +428,7 @@ const TypeHandler* TypeHandler::find_by_ddltype(const ddlpackage::ColumnType& ct
     case ddlpackage::DDL_CLOB: return &mcs_type_handler_clob;
     case ddlpackage::DDL_BLOB: return &mcs_type_handler_blob;
     case ddlpackage::DDL_TEXT: return &mcs_type_handler_text;
+    case ddlpackage::DDL_JSON: return &mcs_type_handler_text;
 
     case ddlpackage::DDL_UNSIGNED_TINYINT: return &mcs_type_handler_uint8;
     case ddlpackage::DDL_UNSIGNED_SMALLINT: return &mcs_type_handler_uint16;
@@ -780,6 +782,32 @@ string TypeHandlerVarchar::formatPartitionInfo(const SystemCatalog::TypeAttribut
   if (attr.colWidth <= 7)
     return formatPartitionInfoSmallCharVarchar(attr, pi);
   return formatPartitionInfoSInt64(attr, pi);
+}
+
+string TypeHandlerTemporal::formatPartitionInfo(const SystemCatalog::TypeAttributesStd& attr,
+                                                const MinMaxInfo& pi) const
+{
+  ostringstreamL output;
+  // Check for empty/null partition
+  // For 4-byte temporal types (DATE), check int32 sentinels
+  // For 8-byte temporal types (DATETIME/TIMESTAMP), check int64 sentinels
+  bool isEmpty = false;
+
+  if (attr.colWidth == 4)
+  {
+    isEmpty = pi.isEmptyOrNullSInt32();
+  }
+  else
+  {
+    isEmpty = pi.isEmptyOrNullSInt64();
+  }
+
+  if (isEmpty)
+    output << setw(30) << "N/A" << setw(30) << "N/A";
+  else
+    output << setw(30) << format(SimpleValueSInt64(pi.min), attr) << setw(30)
+           << format(SimpleValueSInt64(pi.max), attr);
+  return output.str();
 }
 
 /****************************************************************************/

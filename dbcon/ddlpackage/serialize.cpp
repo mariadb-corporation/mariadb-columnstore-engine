@@ -1167,6 +1167,7 @@ int ColumnType::serialize(ByteStream& bytestream)
   messageqcpp::ByteStream::octbyte nextVal = fNextvalue;
   messageqcpp::ByteStream::quadbyte charsetNum = fCharsetNum;
 
+
   // write column types
   bytestream << ftype;
   bytestream << length;

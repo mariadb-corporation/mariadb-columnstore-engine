@@ -17,8 +17,6 @@ CREATE TABLE t1(t1_enum ENUM('one','two','three'))ENGINE=Columnstore;
 CREATE TABLE t2(t2_binary BINARY(3))ENGINE=Columnstore;
 --error 1178
 CREATE TABLE t3(t3_set SET('a','b'))ENGINE=Columnstore;
---error 1178
-CREATE TABLE t4(t4_json JSON)ENGINE=Columnstore;
 
 # with unsupported table name
 --error 1178

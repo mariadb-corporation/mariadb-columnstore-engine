@@ -21,6 +21,23 @@
 #include "ha_mcs_sysvars.h"
 #include "mcsconfig.h"
 
+#if MYSQL_VERSION_ID >= 110800
+#define DEFINE_TYPELIB(A) { \
+    array_elements(A) - 1,  \
+    #A,                     \
+    A,                      \
+    nullptr,                \
+    nullptr                 \
+  }
+#else
+#define DEFINE_TYPELIB(A) { \
+    array_elements(A) - 1,  \
+    #A,                     \
+    A,                      \
+    nullptr                 \
+  }
+#endif
+
 const char* mcs_compression_type_names[] = {"SNAPPY",  // 0
                                             "SNAPPY",  // 1
                                             "SNAPPY",  // 2
@@ -29,9 +46,7 @@ const char* mcs_compression_type_names[] = {"SNAPPY",  // 0
 #endif
                                             NullS};
 
-static TYPELIB mcs_compression_type_names_lib = {array_elements(mcs_compression_type_names) - 1,
-                                                 "mcs_compression_type_names", mcs_compression_type_names,
-                                                 NULL};
+static TYPELIB mcs_compression_type_names_lib = DEFINE_TYPELIB(mcs_compression_type_names);
 
 // compression type
 static MYSQL_THDVAR_ENUM(compression_type, PLUGIN_VAR_RQCMDARG,
@@ -63,9 +78,7 @@ static MYSQL_THDVAR_ULONGLONG(original_option_bits, PLUGIN_VAR_NOSYSVAR | PLUGIN
 
 const char* mcs_select_handler_mode_values[] = {"OFF", "ON", "AUTO", NullS};
 
-static TYPELIB mcs_select_handler_mode_values_lib = {array_elements(mcs_select_handler_mode_values) - 1,
-                                                     "mcs_select_handler_mode_values",
-                                                     mcs_select_handler_mode_values, NULL};
+static TYPELIB mcs_select_handler_mode_values_lib = DEFINE_TYPELIB(mcs_select_handler_mode_values);
 
 static MYSQL_THDVAR_ENUM(select_handler, PLUGIN_VAR_RQCMDARG,
                          "Set the MCS select_handler to Disabled, Enabled, or Automatic",
@@ -178,9 +191,8 @@ static MYSQL_THDVAR_ULONG(import_for_batchinsert_enclosed_by, PLUGIN_VAR_RQCMDAR
 
 const char* mcs_use_import_for_batchinsert_mode_values[] = {"OFF", "ON", "ALWAYS", NullS};
 
-static TYPELIB mcs_use_import_for_batchinsert_mode_values_lib = {
-    array_elements(mcs_use_import_for_batchinsert_mode_values) - 1,
-    "mcs_use_import_for_batchinsert_mode_values", mcs_use_import_for_batchinsert_mode_values, NULL};
+static TYPELIB mcs_use_import_for_batchinsert_mode_values_lib =
+  DEFINE_TYPELIB(mcs_use_import_for_batchinsert_mode_values);
 
 static MYSQL_THDVAR_ENUM(use_import_for_batchinsert, PLUGIN_VAR_RQCMDARG,
                          "LOAD DATA INFILE and INSERT..SELECT will use cpimport internally",
@@ -694,3 +706,5 @@ bool get_innodb_queries_uses_mcs()
 {
   return SYSVAR(innodb_queries_use_mcs);
 }
+
+#undef DEFINE_TYPELIB

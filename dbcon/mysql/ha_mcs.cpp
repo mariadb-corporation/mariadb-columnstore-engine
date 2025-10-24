@@ -77,6 +77,15 @@ pthread_mutex_t mcs_mutex;
 #endif
 #define DEBUG_RETURN return
 
+bool isEnterprise()
+{
+#ifdef COLUMNSTORE_COMPILED_WITH_ENTERPRISE
+  return true;
+#else
+  return false;
+#endif
+}
+
 /**
   @brief
   Function we use in the creation of our hash to get key.
@@ -1866,7 +1875,7 @@ static int columnstore_init_func(void* p)
   mcs_hton->create_unit = create_columnstore_unit_handler;
   mcs_hton->db_type = DB_TYPE_AUTOASSIGN;
 
-  if (get_innodb_queries_uses_mcs())
+  if (isEnterprise() && get_innodb_queries_uses_mcs())
   {
     std::cerr << "Columnstore: innodb_queries_uses_mcs is set, redirecting all InnoDB queries to Columnstore."
               << std::endl;
