@@ -25,7 +25,6 @@
 
 #include "rulebased_optimizer.h"
 
-#include "aggregatecolumn.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
@@ -36,7 +35,6 @@
 #include "returnedcolumn.h"
 #include "simplefilter.h"
 #include "existsfilter.h"
-#include "sql_statistics.h"
 
 namespace optimizer
 {
@@ -327,15 +325,13 @@ template <typename T>
 std::optional<details::FilterRangeBounds<T>> populateRangeBounds(
     cal_impl_if::ColumnStatistics& columnStatistics, size_t& maxParallelFactor)
 {
-  auto* histogram = columnStatistics.getHistogram();
-
   // Guard: empty histogram or no min/max values
-  if (histogram && !histogram->get_json_histogram().empty())
+  if (columnStatistics.hasNonEmptyHistogram())
   {
     return populateRangeBoundsFromHistogram<T>(columnStatistics, maxParallelFactor);
   }
 
-  if (columnStatistics.hasMinValue() && columnStatistics.hasMaxValue())
+  if (columnStatistics.hasMinAndMaxRangeValues())
   {
     return populateRangeBoundsFromEquallyDistributedRange<T>(columnStatistics, maxParallelFactor);
   }

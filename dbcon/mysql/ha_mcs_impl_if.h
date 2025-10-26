@@ -120,18 +120,51 @@ typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, 
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
 
-struct ColumnStatistics
+class ColumnStatistics;
+using MDBColumnStatistics = Column_statistics;
+using ColumnName = std::string;
+using ColumnStatisticsMap = std::unordered_map<ColumnName, ColumnStatistics>;
+using TableStatisticsMap =
+    std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+
+#if MYSQL_VERSION_ID >= 110406
+class ColumnStatistics
 {
-  ColumnStatistics(execplan::SimpleColumn& column, std::vector<Histogram_json_hb*> histograms,
-                   Field* minValue, Field* maxValue)
-   : column(column), histograms(histograms), minValue(minValue), maxValue(maxValue)
+ public:
+  ColumnStatistics(execplan::SimpleColumn& column, MDBColumnStatistics* mdbStatisticsWithHistogram)
+   : column(column)
   {
+    Histogram_json_hb* histogram = dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram);
+    if (histogram)
+    {
+      histograms.push_back(histogram);
+    }
+    if (mdbStatisticsWithHistogram->min_max_values_are_provided())
+    {
+      minValue = mdbStatisticsWithHistogram->min_value;
+      maxValue = mdbStatisticsWithHistogram->max_value;
+    }
   }
   ColumnStatistics() = default;
 
-  std::vector<Histogram_json_hb*>& getHistograms()
+  static bool hasHistogramOrMinAndMaxRangeValues(MDBColumnStatistics* mdbStatisticsWithHistogram)
   {
-    return histograms;
+    return dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram) != nullptr ||
+           mdbStatisticsWithHistogram->min_max_values_are_provided();
+  }
+
+  void addHistogram(MDBColumnStatistics* mdbStatisticsWithHistogram)
+  {
+    Histogram_json_hb* histogram = dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram);
+    if (histogram)
+    {
+      histograms.push_back(histogram);
+    }
+    if (mdbStatisticsWithHistogram->min_max_values_are_provided())
+    {
+      minValue = mdbStatisticsWithHistogram->min_value;
+      maxValue = mdbStatisticsWithHistogram->max_value;
+    }
   }
 
   const Histogram_json_hb* getHistogram() const
@@ -139,6 +172,17 @@ struct ColumnStatistics
     if (histograms.empty())
       return nullptr;
     return histograms.front();
+  }
+
+  bool hasNonEmptyHistogram() const
+  {
+    auto histogram = getHistogram();
+    return histogram && !histogram->get_json_histogram().empty();
+  }
+
+  bool hasMinAndMaxRangeValues() const
+  {
+    return hasMinValue() && hasMaxValue();
   }
 
   execplan::SimpleColumn& getColumn()
@@ -182,12 +226,68 @@ struct ColumnStatistics
   Field* minValue{nullptr};
   Field* maxValue{nullptr};
 };
+#else
+class ColumnStatistics
+{
+ public:
+  ColumnStatistics(execplan::SimpleColumn& /*column*/, MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+  }
+  ColumnStatistics() = default;
 
-using ColumnName = std::string;
-using MDBColumnStatistics = Column_statistics;
-using ColumnStatisticsMap = std::unordered_map<ColumnName, ColumnStatistics>;
-using TableStatisticsMap =
-    std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+  static bool hasHistogramOrMinAndMaxRangeValues(MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+    return false;
+  }
+
+  execplan::SimpleColumn& getColumn()
+  {
+    return column;
+  }
+
+  const Histogram_json_hb* getHistogram() const
+  {
+    return nullptr;
+  }
+
+  void addHistogram(MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+  }
+
+  bool hasMinAndMaxRangeValues() const
+  {
+    return false;
+  }
+
+  bool hasNonEmptyHistogram() const
+  {
+    return false;
+  }
+
+  std::optional<int64_t> getIntMinValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMinValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<int64_t> getIntMaxValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMaxValue() const
+  {
+    return std::nullopt;
+  }
+
+ private:
+  execplan::SimpleColumn column;
+};
+#endif
 
 struct TableStatistics
 {
@@ -196,33 +296,28 @@ struct TableStatistics
   void createOrUpdate(SchemaAndTableName tableName, const char* fieldName, execplan::SimpleColumn& sc,
                       MDBColumnStatistics* statistics)
   {
-    auto* histogram = dynamic_cast<Histogram_json_hb*>(statistics->histogram);
+    if (!ColumnStatistics::hasHistogramOrMinAndMaxRangeValues(statistics))
+    {
+      return;
+    }
 
     auto tableStatisticsIt = tableStatistics_.find(tableName);
-    if (tableStatisticsIt == tableStatistics_.end())
     {
-      if (histogram)
+      if (tableStatisticsIt == tableStatistics_.end())
       {
-        tableStatistics_[tableName][fieldName] = {
-            sc, {histogram}, statistics->min_value, statistics->max_value};
+        tableStatistics_[tableName][fieldName] = {sc, statistics};
       }
       else
       {
-        tableStatistics_[tableName][fieldName] = {sc, {}, statistics->min_value, statistics->max_value};
-      }
-    }
-    else
-    {
-      auto columnStatisticsMapIt = tableStatisticsIt->second.find(fieldName);
-      if (columnStatisticsMapIt == tableStatisticsIt->second.end())
-      {
-        tableStatisticsIt->second[fieldName] = {
-            sc, {histogram}, statistics->min_value, statistics->max_value};
-      }
-      else
-      {
-        auto& columnStatisticsVec = columnStatisticsMapIt->second.getHistograms();
-        columnStatisticsVec.push_back(histogram);
+        auto columnStatisticsMapIt = tableStatisticsIt->second.find(fieldName);
+        if (columnStatisticsMapIt == tableStatisticsIt->second.end())
+        {
+          tableStatisticsIt->second[fieldName] = {sc, statistics};
+        }
+        else
+        {
+          columnStatisticsMapIt->second.addHistogram(statistics);
+        }
       }
     }
   }

@@ -21,7 +21,6 @@
 #include <my_config.h>
 #include <dbcon/mysql/idb_mysql.h>
 
-#include <optional>
 #include <vector>
 
 #include "execplan/calpontselectexecutionplan.h"
