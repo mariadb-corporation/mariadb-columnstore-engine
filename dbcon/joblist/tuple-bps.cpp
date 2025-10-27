@@ -1679,7 +1679,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
       condvar.notify_all();
 
     // Send not more than fMaxOutstandingRequests jobs out. min(blocksPerJob) = 16
-    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie)
+    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie.load())
     {
       sendWaiting = true;
       condvarWakeupProducer.wait(tplLock);
@@ -2843,7 +2843,7 @@ const string TupleBPS::toString() const
   if (bop == BOP_OR)
     oss << " BOP_OR ";
 
-  if (fDie)
+  if (fDie.load())
     oss << " aborting " << msgsSent << "/" << msgsRecvd << " " << uniqueID << " ";
 
   if (fOutputJobStepAssociation.outSize() > 0)
@@ -3357,7 +3357,7 @@ void TupleBPS::dec(DistributedEngineComm* dec)
 
 void TupleBPS::abort_nolock()
 {
-  if (fDie)
+  if (fDie.load())
     return;
 
   JobStep::abort();

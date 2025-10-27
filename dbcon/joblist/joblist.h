@@ -25,6 +25,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <atomic>
+#include <iostream>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "calpontsystemcatalog.h"
@@ -163,7 +166,7 @@ class JobList
   EXPORT virtual void abort();
   EXPORT virtual bool aborted()
   {
-    return (fAborted != 0);
+    return (fAborted.load() != 0);
   }
 
   std::string toString() const;
@@ -209,7 +212,7 @@ class JobList
   std::string fMiniInfo;
   std::vector<SJLP> subqueryJoblists;
 
-  volatile uint32_t fAborted;
+  std::atomic<uint32_t> fAborted;
 
   uint32_t fPriority;  // higher #s = higher priority
 };

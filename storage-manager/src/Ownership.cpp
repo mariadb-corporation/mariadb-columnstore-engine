@@ -141,9 +141,9 @@ bf::path Ownership::get(const bf::path& p, bool getOwnership)
 
 #define DELETE(p, f) ::unlink((metadataPrefix / p / f).string().c_str());
 
-void Ownership::touchFlushing(const bf::path& prefix, volatile bool* doneFlushing) const
+void Ownership::touchFlushing(const bf::path& prefix, std::atomic<bool>* doneFlushing) const
 {
-  while (!*doneFlushing)
+  while (!doneFlushing->load())
   {
     TOUCH(prefix, "FLUSHING");
     try
@@ -182,13 +182,13 @@ void Ownership::releaseOwnership(const bf::path& p, bool isDtor)
 
   s.unlock();
 
-  volatile bool done = false;
+  std::atomic<bool> done{false};
 
   // start flushing
   boost::thread xfer([this, &p, &done] { this->touchFlushing(p, &done); });
   Synchronizer::get()->dropPrefix(p);
   Cache::get()->dropPrefix(p);
-  done = true;
+  done.store(true);
   xfer.interrupt();
   xfer.join();
 
@@ -271,14 +271,14 @@ void Ownership::takeOwnership(const bf::path& p)
   _takeOwnership(p);
 }
 
-Ownership::Monitor::Monitor(Ownership* _owner) : owner(_owner), stop(false)
+Ownership::Monitor::Monitor(Ownership* _owner) : owner(_owner), stop{false}
 {
   thread = boost::thread([this] { this->watchForInterlopers(); });
 }
 
 Ownership::Monitor::~Monitor()
 {
-  stop = true;
+  stop.store(true);
   thread.interrupt();
   thread.join();
 }
@@ -291,14 +291,14 @@ void Ownership::Monitor::watchForInterlopers()
   char buf[80];
   vector<bf::path> releaseList;
 
-  while (!stop)
+  while (!stop.load())
   {
     releaseList.clear();
     boost::unique_lock<boost::mutex> s(owner->mutex);
 
     for (auto& prefix : owner->ownedPrefixes)
     {
-      if (stop)
+      if (stop.load())
         break;
       if (prefix.second == false)
         continue;
@@ -318,7 +318,7 @@ void Ownership::Monitor::watchForInterlopers()
 
     for (auto& prefix : releaseList)
       owner->releaseOwnership(prefix);
-    if (stop)
+    if (stop.load())
       break;
     try
     {

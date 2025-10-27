@@ -472,7 +472,7 @@ class ColumnInfo : public WeUIDGID
   // For autoincrement column only... Tracks latest autoincrement value used
   long long fAutoIncLastValue;
 
-  volatile int64_t fSaturatedRowCnt;  // No. of rows with saturated values
+  std::atomic<int64_t> fSaturatedRowCnt;  // No. of rows with saturated values
 
   // List of segment files updated during an import; used to track infor-
   // mation necessary to update the ExtentMap at the "end" of the import.
@@ -517,7 +517,7 @@ inline int64_t ColumnInfo::getFileSize() const
 
 inline void ColumnInfo::incSaturatedCnt(int64_t satIncCnt)
 {
-  (void)atomicops::atomicAdd(&fSaturatedRowCnt, satIncCnt);
+  fSaturatedRowCnt.fetch_add(satIncCnt, std::memory_order_relaxed);
 }
 
 inline bool ColumnInfo::isAbbrevExtent()
@@ -537,7 +537,7 @@ inline void ColumnInfo::printCPInfo(JobColumn column)
 
 inline long long ColumnInfo::saturatedCnt()
 {
-  return fSaturatedRowCnt;
+  return fSaturatedRowCnt.load(std::memory_order_relaxed);
 }
 
 inline void ColumnInfo::relativeColWidthFactor(int colWidFactor)

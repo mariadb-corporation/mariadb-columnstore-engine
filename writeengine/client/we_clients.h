@@ -138,15 +138,15 @@ class WEClients
   /* To keep some state associated with the connection */
   struct MQE
   {
-    MQE(uint32_t pCount) : ackSocketIndex(0), pmCount(pCount)
+    MQE(uint32_t pCount, boost::mutex* lock = nullptr, boost::condition* cond = nullptr)
+     : queue(lock, cond), ackSocketIndex(0), pmCount(pCount), unackedWork(pCount)
     {
-      unackedWork.reset(new volatile uint32_t[pmCount]);
-      memset((void*)unackedWork.get(), 0, pmCount * sizeof(uint32_t));
+      // unackedWork vector is default-initialized to 0
     }
     WESMsgQueue queue;
     uint32_t ackSocketIndex;
-    boost::scoped_array<volatile uint32_t> unackedWork;
     uint32_t pmCount;
+    std::vector<std::atomic<uint32_t>> unackedWork;
   };
 
   // The mapping of session ids to StepMsgQueueLists
@@ -168,7 +168,7 @@ class WEClients
   boost::mutex fMlock;   // sessionMessages mutex
   std::vector<boost::shared_ptr<boost::mutex> > fWlock;  // WES socket write mutexes
   bool fBusy;
-  volatile uint32_t closingConnection;
+  std::atomic<uint32_t> closingConnection;
   uint32_t pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
 

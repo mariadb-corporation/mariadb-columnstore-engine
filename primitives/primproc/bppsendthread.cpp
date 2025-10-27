@@ -52,22 +52,22 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
   if (sizeTooBig())
   {
     std::unique_lock<std::mutex> sl1(respondLock);
-    while (currentByteSize >= queueBytesThresh && msgQueue.size() > 3 && !die)
+    while (currentByteSize.load() >= queueBytesThresh && msgQueue.size() > 3 && !die.load())
     {
       fProcessorPool->incBlockedThreads();
       okToRespond.wait(sl1);
       fProcessorPool->decBlockedThreads();
     }
   }
-  if (die)
+  if (die.load())
     return;
 
   std::unique_lock<std::mutex> sl(msgQueueLock);
 
-  if (gotException)
+  if (gotException.load())
     throw std::runtime_error(exceptionString);
 
-  (void)atomicops::atomicAdd<uint64_t>(&currentByteSize, msg.msg->lengthWithHdrOverhead());
+  currentByteSize.fetch_add(msg.msg->lengthWithHdrOverhead(), std::memory_order_relaxed);
   msgQueue.push(msg);
 
   if (!sawAllConnections && newConnection)
@@ -87,7 +87,7 @@ void BPPSendThread::sendResult(const Msg_t& msg, bool newConnection)
     }
   }
 
-  if (mainThreadWaiting)
+  if (mainThreadWaiting.load())
     queueNotEmpty.notify_one();
 }
 
@@ -97,19 +97,19 @@ void BPPSendThread::sendResults(const std::vector<Msg_t>& msgs, bool newConnecti
   if (sizeTooBig())
   {
     std::unique_lock<std::mutex> sl1(respondLock);
-    while (currentByteSize >= queueBytesThresh && msgQueue.size() > 3 && !die)
+    while (currentByteSize.load() >= queueBytesThresh && msgQueue.size() > 3 && !die.load())
     {
       fProcessorPool->incBlockedThreads();
       okToRespond.wait(sl1);
       fProcessorPool->decBlockedThreads();
     }
   }
-  if (die)
+  if (die.load())
     return;
 
   std::unique_lock<std::mutex> sl(msgQueueLock);
 
-  if (gotException)
+  if (gotException.load())
     throw std::runtime_error(exceptionString);
 
   if (!sawAllConnections && newConnection)
@@ -132,11 +132,11 @@ void BPPSendThread::sendResults(const std::vector<Msg_t>& msgs, bool newConnecti
 
   for (uint32_t i = 0; i < msgs.size(); i++)
   {
-    (void)atomicops::atomicAdd<uint64_t>(&currentByteSize, msgs[i].msg->lengthWithHdrOverhead());
+    currentByteSize.fetch_add(msgs[i].msg->lengthWithHdrOverhead(), std::memory_order_relaxed);
     msgQueue.push(msgs[i]);
   }
 
-  if (mainThreadWaiting)
+  if (mainThreadWaiting.load())
     queueNotEmpty.notify_one();
 }
 
@@ -145,14 +145,14 @@ void BPPSendThread::sendMore(int num)
   std::unique_lock<std::mutex> sl(ackLock);
 
   if (num == -1)
-    fcEnabled = false;
+    fcEnabled.store(false, std::memory_order_relaxed);
   else if (num == 0)
   {
-    fcEnabled = true;
-    msgsLeft = 0;
+    fcEnabled.store(true, std::memory_order_relaxed);
+    msgsLeft.store(0, std::memory_order_relaxed);
   }
   else
-    (void)atomicops::atomicAdd(&msgsLeft, num);
+    msgsLeft.fetch_add(num, std::memory_order_relaxed);
 
   sl.unlock();
   if (waiting)
@@ -161,7 +161,7 @@ void BPPSendThread::sendMore(int num)
 
 bool BPPSendThread::flowControlEnabled()
 {
-  return fcEnabled;
+  return fcEnabled.load();
 }
 
 void BPPSendThread::mainLoop()
@@ -175,15 +175,15 @@ void BPPSendThread::mainLoop()
 
   msg.reset(new Msg_t[msgCap]);
 
-  while (!die)
+  while (!die.load())
   {
     std::unique_lock<std::mutex> sl(msgQueueLock);
 
-    if (msgQueue.empty() && !die)
+    if (msgQueue.empty() && !die.load())
     {
-      mainThreadWaiting = true;
+      mainThreadWaiting.store(true, std::memory_order_relaxed);
       queueNotEmpty.wait(sl);
-      mainThreadWaiting = false;
+      mainThreadWaiting.store(false, std::memory_order_relaxed);
       continue;
     }
 
@@ -202,14 +202,14 @@ void BPPSendThread::mainLoop()
      * i how many msgs are sent by 1 run of the loop, limited by msgCount or msgsLeft. */
     msgsSent = 0;
 
-    while (msgsSent < msgCount && !die)
+    while (msgsSent < msgCount && !die.load())
     {
       uint64_t bsSize;
 
-      if (msgsLeft <= 0 && fcEnabled && !die)
+      if (msgsLeft.load() <= 0 && fcEnabled.load() && !die.load())
       {
         std::unique_lock<std::mutex> sl2(ackLock);
-        while (msgsLeft <= 0 && fcEnabled && !die)
+        while (msgsLeft.load() <= 0 && fcEnabled.load() && !die.load())
         {
           waiting = true;
           okToSend.wait(sl2);
@@ -217,7 +217,7 @@ void BPPSendThread::mainLoop()
         }
       }
 
-      for (i = 0; msgsSent < msgCount && ((fcEnabled && msgsLeft > 0) || !fcEnabled) && !die; msgsSent++, i++)
+      for (i = 0; msgsSent < msgCount && ((fcEnabled.load() && msgsLeft.load() > 0) || !fcEnabled.load()) && !die.load(); msgsSent++, i++)
       {
         if (doLoadBalancing)
         {
@@ -249,17 +249,17 @@ void BPPSendThread::mainLoop()
           {
             sl.lock();
             exceptionString = e.what();
-            gotException = true;
+            gotException.store(true, std::memory_order_relaxed);
             return;
           }
         }
 
-        (void)atomicops::atomicDec(&msgsLeft);
-        (void)atomicops::atomicSub(&currentByteSize, bsSize);
+        msgsLeft.fetch_sub(1, std::memory_order_relaxed);
+        currentByteSize.fetch_sub(bsSize, std::memory_order_relaxed);
         msg[msgsSent].msg.reset();
       }
 
-      if (fProcessorPool->blockedThreadCount() > 0 && currentByteSize < queueBytesThresh)
+      if (fProcessorPool->blockedThreadCount() > 0 && currentByteSize.load() < queueBytesThresh)
       {
         okToRespond.notify_one();
       }
@@ -273,7 +273,7 @@ void BPPSendThread::abort()
   std::lock_guard<std::mutex> sl2(ackLock);
   std::lock_guard<std::mutex> sl3(respondLock);
 
-  die = true;
+  die.store(true, std::memory_order_relaxed);
 
   queueNotEmpty.notify_all();
   okToSend.notify_all();

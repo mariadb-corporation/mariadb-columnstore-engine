@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #if 0  // defined(_MSC_VER) && defined(WE_BULKSTATUS_DLLEXPORT)
 #define EXPORT __declspec(dllexport)
 #else
@@ -48,12 +50,10 @@ class BulkStatus
 
  private:
   /* @brief Global job status flag.
-   * Declared volatile to insure that all threads see when this flag is
-   * changed.  We don't worry about using a mutex since we are just using
-   * as a flag.  Making the variable volatile should suffice, to make it
-   * work with multiple threads.
+   * Using std::atomic to ensure thread-safe access without requiring a mutex.
+   * atomic provides proper memory ordering guarantees for multi-threaded access.
    */
-  static volatile int fJobStatus;
+  static std::atomic<int> fJobStatus;
 };
 
 }  // namespace WriteEngine
