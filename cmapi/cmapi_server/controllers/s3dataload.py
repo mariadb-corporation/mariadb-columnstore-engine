@@ -23,8 +23,6 @@ def response_error(text):
 
 
 class S3DataLoadController:
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def load_s3data(self):
         """

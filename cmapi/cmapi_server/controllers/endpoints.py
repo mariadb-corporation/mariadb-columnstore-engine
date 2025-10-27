@@ -44,13 +44,13 @@ from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.controllers.decorators import disable_json
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 
 module_logger = logging.getLogger('cmapi_server')
-
 
 def log_begin(logger, func_name):
     logger.debug(f"{func_name} starts")
@@ -232,8 +232,8 @@ cherrypy.tools.timeit = TimingTool()
 
 class StatusController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_status(self):
         """
         Handler for /status (GET)
@@ -262,7 +262,7 @@ class StatusController:
         return status_response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_primary(self):
         """
         Handler for /primary (GET)
@@ -281,7 +281,7 @@ class StatusController:
         return get_master_response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_new_primary(self):
         """
         Handler for /new_primary (GET)
@@ -301,8 +301,8 @@ class StatusController:
 
 class ConfigController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_config(self):
         """
         Handler for /config (GET)
@@ -328,8 +328,6 @@ class ConfigController:
         return config_response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_config(self):
         """
@@ -540,8 +538,6 @@ class ConfigController:
 
 class BeginController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     @cherrypy.tools.active_operation()  # pylint: disable=no-member
     def put_begin(self):
@@ -585,8 +581,6 @@ IP address.")
 
 class CommitController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_commit(self):
         """
@@ -627,8 +621,6 @@ class CommitController:
 
 class RollbackController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_rollback(self):
         """
@@ -673,7 +665,6 @@ class RollbackController:
 
 class StartController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_start(self):
         func_name = 'put_start'
@@ -705,8 +696,6 @@ class StartController:
 
 class ShutdownController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_shutdown(self):
         func_name = 'put_shutdown'
@@ -814,27 +803,31 @@ class ExtentMapController:
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_em(self):
         return self.get_brm_bytes('em')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_journal(self):
         return self.get_brm_bytes('journal')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_vss(self):
         return self.get_brm_bytes('vss')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True, output=True)
     def get_vbbm(self):
         return self.get_brm_bytes('vbbm')
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def get_footprint(self):
         # Dummy footprint
         result = {'em': '00f62e18637e1708b080b076ea6aa9b0',
@@ -850,8 +843,6 @@ class ClusterController:
         "request.methods_with_bodies": ("POST", "PUT", "PATCH", "DELETE")
     }
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_start(self):
         func_name = 'put_start'
@@ -875,8 +866,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_shutdown(self):
         func_name = 'put_shutdown'
@@ -903,8 +892,6 @@ class ClusterController:
 
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def start_mariadb(self):
         """Handler for /cluster/start-mariadb (PUT) endpoint."""
@@ -940,8 +927,6 @@ class ClusterController:
 
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def stop_mariadb(self):
         """Handler for /cluster/stop-mariadb (PUT) endpoint."""
@@ -976,8 +961,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_mode_set(self):
         func_name = 'put_mode_set'
@@ -1002,8 +985,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_add_node(self):
         func_name = 'add_node'
@@ -1030,8 +1011,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def delete_remove_node(self):
         func_name = 'remove_node'
@@ -1057,8 +1036,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_scan_for_attached_dbroots(self):
         '''TODO: Based on doc, endpoint not exposed'''
@@ -1074,8 +1051,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_failover_master(self):
         '''TODO: Based on doc, endpoint not exposed'''
@@ -1092,8 +1067,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_move_dbroot(self):
         '''TODO: Based on doc, endpoint not exposed'''
@@ -1110,8 +1083,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_decommission_node(self):
         '''TODO: Based on doc, endpoint not exposed'''
@@ -1127,8 +1098,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def get_status(self):
         func_name = 'get_status'
@@ -1143,7 +1112,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     def get_versions(self):
         """Handler for /cluster/versions (GET) endpoint."""
         func_name = 'cluster_get_versions'
@@ -1197,8 +1165,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def install_repo(self):
         """Handler for /cluster/install-repo (PUT) endpoint.
@@ -1246,8 +1212,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def preupgrade_backup(self):
         """Handler for /cluster/preupgrade-backup (PUT) endpoint."""
@@ -1277,8 +1241,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def upgrade_mdb_mcs(self):
         """Handler for /cluster/upgrade-mdb-mcs (PUT) endpoint."""
@@ -1318,8 +1280,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def upgrade_cmapi(self):
         """Handler for /cluster/upgrade-cmapi (PUT) endpoint."""
@@ -1355,8 +1315,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def get_health(self):
         func_name = 'get_health'
@@ -1383,8 +1341,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def set_api_key(self):
         """Handler for /cluster/apikey-set (PUT)
 
@@ -1417,8 +1373,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def set_log_level(self):
         """Handler for /cluster/log-level (PUT)
 
@@ -1446,8 +1400,6 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def check_shared_storage(self):
         """Handler for /cluster/check-shared-storage/ (PUT) endpoint."""
@@ -1472,8 +1424,6 @@ class ClusterController:
 
 class ApiKeyController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def set_api_key(self):
         """Handler for /node/apikey-set (PUT)
 
@@ -1528,8 +1478,6 @@ class ApiKeyController:
 
 class LoggingConfigController:
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     def set_log_level(self):
         """Handler for /node/log-level (PUT)
 
@@ -1562,7 +1510,7 @@ class LoggingConfigController:
 
 class AppController():
 
-    @cherrypy.tools.json_out()
+    @disable_json(input=True)
     def ready(self):
         if AppManager.started:
             return {'started': True}
@@ -1573,8 +1521,6 @@ class AppController():
 class NodeProcessController():
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_stop_dmlproc(self):
         """Handler for /node/stop_dmlproc (PUT) endpoint."""
@@ -1608,8 +1554,8 @@ class NodeProcessController():
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @disable_json(input=True)
     def get_process_running(self, process_name):
         """Handler for /node/is_process_running (GET) endpoint."""
         func_name = 'get_process_running'
@@ -1629,7 +1575,6 @@ class NodeProcessController():
 class NodeController:
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     def get_versions(self):
         """Handler for /node/versions (GET) endpoint."""
         func_name = 'get_node_versions'
@@ -1651,7 +1596,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def latest_mdb_version(self):
         """Handler for /node/latest-mdb-version (GET) endpoint."""
@@ -1669,7 +1613,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def validate_mdb_version(self, token, mariadb_version):
         """Handler for /node/validate-mdb-version (GET) endpoint."""
@@ -1696,7 +1639,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def validate_es_token(self, token):
         """Handler for /node/validate-es-token (GET) endpoint."""
@@ -1717,8 +1659,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def start_mariadb(self):
         """Handler for /node/start_mariadb (PUT) endpoint."""
@@ -1742,8 +1682,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def stop_mariadb(self):
         """Handler for /node/stop_mariadb (PUT) endpoint."""
@@ -1767,8 +1705,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def install_repo(self):
         """Handler for /node/install-repo (PUT) endpoint."""
@@ -1800,7 +1736,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def repo_pkg_versions(self):
         """Handler for /node/repo-pkg-versions (GET) endpoint."""
@@ -1845,8 +1780,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def preupgrade_backup(self):
         """Handler for /node/preupgrade-backup (PUT) endpoint."""
@@ -1867,8 +1800,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def upgrade_mdb_mcs(self):
         """Handler for /node/upgrade-mdb-mcs (PUT) endpoint."""
@@ -1904,8 +1835,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def kick_cmapi_upgrade(self):
         """Handler for /node/kick-cmapi-upgrade (PUT) endpoint."""
@@ -1928,7 +1857,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def check_shared_file(self, file_path, check_sum):
         func_name = 'check_shared_file'
@@ -1966,8 +1894,6 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
-    @cherrypy.tools.json_in()
-    @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_stateful_config(self):
         """Handler for /node/stateful-config (PUT) endpoint.

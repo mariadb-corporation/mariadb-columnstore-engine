@@ -159,6 +159,9 @@ if __name__ == '__main__':
         # Enable tracing tools
         'tools.trace.on': True,
         'tools.trace_end.on': True,
+        # Enable JSON for input/output by default; endpoints can opt out via disable_json decorator
+        'tools.json_in.on': True,
+        'tools.json_out.on': True,
     }
 
     app.config.update({
