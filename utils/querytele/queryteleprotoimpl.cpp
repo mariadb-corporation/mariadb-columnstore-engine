@@ -58,7 +58,7 @@ TsTeleQueue<querytele::StepTele> stQueue;
 TsTeleQueue<querytele::QueryTele> qtQueue;
 TsTeleQueue<querytele::ImportTele> itQueue;
 
-volatile bool isInited = false;
+std::atomic<bool> isInited{false};
 boost::mutex initMux;
 
 std::shared_ptr<att::TSocket> fSocket;
@@ -337,9 +337,7 @@ QueryTeleProtoImpl::QueryTeleProtoImpl(const QueryTeleServerParms& sp) : fServer
 
   boost::mutex::scoped_lock lk(initMux);
 
-  atomicops::atomicMb();
-
-  if (isInited)
+  if (isInited.load(std::memory_order_acquire))
     return;
 
   fSocket.reset(new att::TSocket(fServerParms.host, fServerParms.port));
@@ -348,8 +346,7 @@ QueryTeleProtoImpl::QueryTeleProtoImpl(const QueryTeleServerParms& sp) : fServer
 
   consThd = new boost::thread(&TeleConsumer);
 
-  atomicops::atomicMb();
-  isInited = true;
+  isInited.store(true, std::memory_order_release);
 }
 
 int QueryTeleProtoImpl::enqStepTele(const StepTele& stdata)

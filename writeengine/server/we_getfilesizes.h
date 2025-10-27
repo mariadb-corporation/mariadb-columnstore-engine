@@ -55,13 +55,12 @@ class ActiveThreadCounter
 
     for (;;)
     {
-      atomicops::atomicMb();
-      atc = factiveThreadCount;
+      atc = factiveThreadCount.load(std::memory_order_relaxed);
 
       if (atc <= 0)  // hopefully atc will never be < 0!
         return;
 
-      if (atomicops::atomicCAS(&factiveThreadCount, atc, (atc - 1)))
+      if (factiveThreadCount.compare_exchange_weak(atc, atc - 1, std::memory_order_relaxed))
         return;
 
       atomicops::atomicYield();
@@ -70,14 +69,14 @@ class ActiveThreadCounter
 
   uint32_t cur()
   {
-    return factiveThreadCount;
+    return factiveThreadCount.load(std::memory_order_relaxed);
   }
 
  private:
   ActiveThreadCounter(const ActiveThreadCounter& rhs);
   ActiveThreadCounter& operator=(const ActiveThreadCounter& rhs);
 
-  volatile int32_t factiveThreadCount;
+  std::atomic<int32_t> factiveThreadCount;
 };
 
 }  // namespace WriteEngine

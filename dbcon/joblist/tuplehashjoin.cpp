@@ -675,7 +675,7 @@ void TupleHashJoinStep::hjRunner()
     errorMessage("too many threads");
     status(logging::threadResourceErr);
     errorLogging(emsg, logging::threadResourceErr);
-    fDie = true;
+    fDie.store(true, std::memory_order_relaxed);
     deliverMutex.unlock();
   }
 

@@ -25,9 +25,11 @@
 #include <set>
 #include <vector>
 #include <cstdio>
+#include <atomic>
 
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
+#include "boost/thread.hpp"
 
 #include "brmtypes.h"
 #include "we_redistributedef.h"
@@ -133,8 +135,8 @@ class RedistributeWorkerThread
   // uint64_t                      fSegPerRoot;
 
   static boost::mutex fActionMutex;
-  static volatile bool fStopAction;
-  static volatile bool fCommitted;
+  static std::atomic<bool> fStopAction;
+  static std::atomic<bool> fCommitted;
   static std::string fWesInUse;
 };
 
