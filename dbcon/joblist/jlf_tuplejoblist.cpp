@@ -5426,6 +5426,7 @@ SJSTEP recursiveUnionQueries(JobStepVector& queries, uint64_t distinctUnionNum, 
   unionStep->setOutputRowGroup(
       RowGroup(oids.size(), pos, oids, keys, types, csNums, scale, precision, jobInfo.stringTableThreshold));
 
+  unionStep->recursiveSteps(recurQueries);
   // Fix for bug 4388 adjusts the result type at connector side, this workaround is obsolete.
   // bug 3067, update the returned column types.
   // This is a workaround as the connector always uses the first query' returned columns.

@@ -2019,6 +2019,11 @@ void TupleRecursiveUnion::readInput(uint32_t which)
       postStepStartTele(sts);
     }
 
+    if (!more)
+    {
+      fRecursiveSteps[0]->abort();
+    }
+
     while (more && !cancelled())
     {
       /*

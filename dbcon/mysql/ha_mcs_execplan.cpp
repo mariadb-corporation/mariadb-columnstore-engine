@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include <limits>
+#include "idberrorinfo.h"
 #include "messagelog.h"
 
 #include <string.h>
@@ -41,6 +42,7 @@
 #include <boost/thread.hpp>
 
 #include "errorids.h"
+#include "mysqld_error.h"
 using namespace logging;
 
 #define PREFER_MY_CONFIG_H
@@ -5843,6 +5845,14 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
     return ER_CHECK_NOT_IMPLEMENTED;
   }
 
+  if (gwi.isRecursiveWithTable)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, "GROUP BY clause");
+    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+    return ER_CHECK_NOT_IMPLEMENTED;
+  }
+
   gwi.hasWindowFunc = hasWindowFunc;
   groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
@@ -7128,7 +7138,13 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 {
   SQL_I_List<ORDER> order_list = select_lex.order_list;
   ORDER* ordercol = static_cast<ORDER*>(order_list.first);
-
+  if (gwi.isRecursiveWithTable)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY, "WITH RECURSIVE");
+    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+    return ER_CHECK_NOT_IMPLEMENTED;
+  }
   // check if window functions are in order by. InfiniDB process order by list if
   // window functions are involved, either in order by or projection.
   for (; ordercol; ordercol = ordercol->next)
