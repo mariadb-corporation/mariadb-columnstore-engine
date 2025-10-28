@@ -17,7 +17,7 @@ local platforms = {
 };
 
 local extra_servers_platforms = {
-  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "debian:13", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
 //local archs = ["amd64", "arm64"];
