@@ -74,6 +74,7 @@ using namespace rowgroup;
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/version.hpp>
+#include "internal_names.h"
 
 #undef BAIL_IF_0
 #if 1
@@ -1502,6 +1503,14 @@ const CalpontSystemCatalog::TableColName CalpontSystemCatalog::colName(const OID
 #endif
   fOIDmap[tableColName] = oid;
 
+  return tableColName;
+}
+const CalpontSystemCatalog::TableColName CalpontSystemCatalog::auxColName(const std::string& schema, const std::string& tableName)
+{
+  TableColName tableColName;
+  tableColName.schema = schema;
+  tableColName.table = tableName;
+  tableColName.column = MCS_INTERNAL_COL_NAME_PREFIX "aux";
   return tableColName;
 }
 const CalpontSystemCatalog::TableColName CalpontSystemCatalog::dictColName(const OID& oid)

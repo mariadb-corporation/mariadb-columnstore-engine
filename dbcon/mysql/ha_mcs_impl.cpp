@@ -4629,7 +4629,7 @@ extern "C"
   my_bool mcs_aux_count_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message)
   {
     bool invalid = args->arg_count < 1 || args->arg_count > 3;
-    for(int i=0; !invalid && i < args->arg_count; i++)
+    for(uint32_t i=0; !invalid && i < args->arg_count; i++)
     {
       invalid = invalid || args->arg_type[i] != STRING_RESULT;
     }
@@ -4667,7 +4667,7 @@ extern "C"
     {
       std::string temp = args->args[1];
       bool is_part = true;
-      for(int i=0;is_part && i<temp.length();i++)
+      for(uint32_t i=0;is_part && i<temp.length();i++)
       {
         int c = part[i];
         is_part = c == '.' || (c >= '0' && c <= '9');
@@ -4718,38 +4718,41 @@ extern "C"
     long timeZoneOffset;
     dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
   
-    // Create simple column for our AUX column.
+    // Create aggregate column for our AUX column.
     {
       execplan::SRCP returnedColumn;
-      const auto objNum = ZZZ;
+      //OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
+      const auto objNum = csc->tableAUXColumnOID(table_name, lower_case_table_names);
       auto tableColName = csc->colName(objNum);
       auto colType = csc->colType(objNum);
   
-      if (!isSupportedToAnalyze(colType))
-        continue;
+      execplan::AggregateColumn* aggColumn = new execplan::AggregateColumn();
+      aggColumn->aggOp(Aggregatecolumn::SUM);
+      aggColumn->columnName(tableColName.column);
+      aggColumn->tableName(tableColName.table, lower_case_table_names);
+      aggColumn->schemaName(tableColName.schema, lower_case_table_names);
+      aggColumn->oid(objNum);
+      aggColumn->alias("SUM(" + tableColName.column + "(");
+      aggColumn->resultType(colType);
+      aggColumn->timeZone(timeZoneOffset);
   
-      execplan::SimpleColumn* simpleColumn = new execplan::SimpleColumn();
-      simpleColumn->columnName(tableColName.column);
-      simpleColumn->tableName(tableColName.table, lower_case_table_names);
-      simpleColumn->schemaName(tableColName.schema, lower_case_table_names);
-      simpleColumn->oid(objNum);
-      simpleColumn->alias(tableColName.column);
-      simpleColumn->resultType(colType);
-      simpleColumn->timeZone(timeZoneOffset);
-  
-      returnedColumn.reset(simpleColumn);
+      returnedColumn.reset(aggColumn);
       returnedColumnList.push_back(returnedColumn);
-      columnMap.insert(execplan::MCSAnalyzeTableExecutionPlan::ColumnMap::value_type(simpleColumn->columnName(),
+      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(aggColumn->columnName(),
                                                                                      returnedColumn));
+
     }
   
     // Create execution plan and initialize it with `returned columns` and `column map`.
-    std::shared_ptr<execplan::MCSAnalyzeTableExecutionPlan> caep(
-        new execplan::MCSAnalyzeTableExecutionPlan(returnedColumnList, columnMap));
+    std::shared_ptr<execplan::CalpontSelectExecutionPlan> caep(
+        new execplan::CalpontSelectExecutionPlan());
   
-    caep->schemaName(table->s->db.str, lower_case_table_names);
-    caep->tableName(table->s->table_name.str, lower_case_table_names);
+    caep->schemaName(table_name.schema, lower_case_table_names);
+    caep->tableName(table_name.table, lower_case_table_names);
     caep->timeZone(timeZoneOffset);
+
+    csep->returnedColumns(returnedColumnList);
+    csep->columnMap(columnMap);
   
     SessionManager sm;
     BRM::TxnID txnID;
@@ -4777,9 +4780,6 @@ extern "C"
       set_fe_conn_info_ptr(reinterpret_cast<void*>(new cal_connection_info(), thd));
       thd_set_ha_data(thd, mcs_hton, get_fe_conn_info_ptr());
     }
-  
-    cal_connection_info* ci = reinterpret_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-    idbassert(ci != 0);
   
     try
     {

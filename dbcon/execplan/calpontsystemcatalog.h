@@ -601,6 +601,13 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
    * return the table column name for a given OID:
    */
   const TableColName colName(const OID& oid);
+
+  /** returns the table column name for an AUX column
+   *
+   * return the table's AUX column name for a given table:
+   */
+  const TableColName auxColName(const std::string& schema, const std::string& tableName);
+
   /** returns the table column name for a dictionary column
    *
    * return the table column name for a given OID:

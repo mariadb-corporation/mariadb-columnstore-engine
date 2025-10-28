@@ -45,6 +45,8 @@
 
 #include "ddl-gram.h"
 
+#include "internal_names.h"
+
 #include "mariadb_my_sys.h" // CHARSET_INFO
 
 #define scanner x->scanner
@@ -56,7 +58,7 @@ int ddllex(YYSTYPE* ddllval, void* yyscanner);
 void ddlerror(struct pass_to_bison* x, char const *s);
 char* copy_string(const char *str);
 
-static const char reserved_prefix[] = "__mcs_reserved_";
+static const char reserved_prefix[] = MCS_INTERNAL_COL_NAME_PREFIX;
 bool has_reserved_prefix(const char* name) {
     int i;
     for(i=0;name[i] && reserved_prefix[i] && name[i] == reserved_prefix[i]; i++) { }
@@ -756,7 +758,7 @@ ata_add_column:
 column_name:
     TIME
 	|DATE
-	|ident { if (has_reserved_prefix($$)) { YYERROR("column name starts with reserved prefix"); } }
+	|ident { $$ = $1; if (has_reserved_prefix($$)) { YYERROR; } }
 	;
 
 constraint_name:
