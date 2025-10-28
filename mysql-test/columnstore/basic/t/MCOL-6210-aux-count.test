@@ -1,0 +1,11 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL6210;
+--enable_warnings
+CREATE DATABASE MCOL6210;
+USE MCOL6210;
+CREATE TABLE t1(x integer) ENGINE=Columnstore;
+INSERT INTO t1(x) VALUES (1),(2),(3),(4);
+SELECT mcs_aux_count('MCOL6210', 't1');
+DELETE FROM t1 WHERE 1 = x MOD 2;
+SELECT mcs_aux_count('MCOL6210', 't1');
+DROP DATABASE MCOL6210;

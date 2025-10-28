@@ -87,6 +87,7 @@ using namespace querystats;
 
 #include "mcsanalyzetableexecutionplan.h"
 #include "calpontsystemcatalog.h"
+#include "aggregatecolumn.h"
 #include "simplecolumn_int.h"
 #include "simplecolumn_decimal.h"
 #include "constantcolumn.h"
@@ -1917,8 +1918,8 @@ bool initializeCalConnectionInfo(cal_connection_info* ci, THD* thd,
 }
 
 bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
-                               std::shared_ptr<execplan::MCSAnalyzeTableExecutionPlan> caep,
-                               cal_connection_info* ci, THD* thd)
+                               boost::shared_ptr<CalpontExecutionPlan> cep,
+                               cal_connection_info* /*ci*/, THD* thd)
 {
   ByteStream msg;
   try
@@ -1926,10 +1927,9 @@ bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
     msg << qb;
     hndl->exeMgr->write(msg);
     msg.restart();
-    caep->rmParms(ci->rmParms);
 
     // Send the execution plan.
-    caep->serialize(msg);
+    cep->serialize(msg);
     hndl->exeMgr->write(msg);
 
     // Get the status from ExeMgr.
@@ -2009,7 +2009,7 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
   }
 
   // Create execution plan and initialize it with `returned columns` and `column map`.
-  std::shared_ptr<execplan::MCSAnalyzeTableExecutionPlan> caep(
+  boost::shared_ptr<execplan::MCSAnalyzeTableExecutionPlan> caep(
       new execplan::MCSAnalyzeTableExecutionPlan(returnedColumnList, columnMap));
 
   caep->schemaName(table->s->db.str, lower_case_table_names);
@@ -2081,6 +2081,7 @@ int ha_mcs_impl_analyze(THD* thd, TABLE* table)
   {
     ByteStream::quadbyte qb = ANALYZE_TABLE_EXECUTE;
     // Serialize and the send the `anlyze table` execution plan.
+    caep->rmParms(ci->rmParms);
     if (!sendExecutionPlanToExeMgr(hndl, qb, caep, ci, thd))
       goto error;
   }
@@ -4646,9 +4647,6 @@ extern "C"
     delete[] initid->ptr;
   }
 
-//bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
-//                               std::shared_ptr<execplan::MCSAnalyzeTableExecutionPlan> caep,
-//                               cal_connection_info* ci, THD* thd)
   long long mcs_aux_count(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                 char* /*is_null*/, char* /*error*/)
   {
@@ -4720,38 +4718,46 @@ extern "C"
   
     // Create aggregate column for our AUX column.
     {
-      execplan::SRCP returnedColumn;
+      execplan::SRCP returnedColumn, parm;
       //OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
       const auto objNum = csc->tableAUXColumnOID(table_name, lower_case_table_names);
       auto tableColName = csc->colName(objNum);
       auto colType = csc->colType(objNum);
   
       execplan::AggregateColumn* aggColumn = new execplan::AggregateColumn();
-      aggColumn->aggOp(Aggregatecolumn::SUM);
-      aggColumn->columnName(tableColName.column);
-      aggColumn->tableName(tableColName.table, lower_case_table_names);
-      aggColumn->schemaName(tableColName.schema, lower_case_table_names);
-      aggColumn->oid(objNum);
+      aggColumn->aggOp(AggregateColumn::SUM);
       aggColumn->alias("SUM(" + tableColName.column + "(");
       aggColumn->resultType(colType);
       aggColumn->timeZone(timeZoneOffset);
-  
+      execplan::SimpleColumn* parmColumn = new execplan::SimpleColumn();
+      parmColumn->columnName(tableColName.column);
+      parmColumn->tableName(tableColName.table, lower_case_table_names);
+      parmColumn->schemaName(tableColName.schema, lower_case_table_names);
+      parmColumn->oid(objNum);
+      parmColumn->resultType(colType);
+      parmColumn->timeZone(timeZoneOffset);
+
+      parm.reset(parmColumn);
+      aggColumn->aggParms().push_back(parm);
+
       returnedColumn.reset(aggColumn);
       returnedColumnList.push_back(returnedColumn);
-      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(aggColumn->columnName(),
-                                                                                     returnedColumn));
+      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(parmColumn->columnName(),
+                                                                                     parmColumn));
+//      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(aggColumn->columnName(),
+//                                                                                     returnedColumn));
 
     }
   
     // Create execution plan and initialize it with `returned columns` and `column map`.
-    std::shared_ptr<execplan::CalpontSelectExecutionPlan> caep(
+    boost::shared_ptr<execplan::CalpontSelectExecutionPlan> csep(
         new execplan::CalpontSelectExecutionPlan());
   
-    caep->schemaName(table_name.schema, lower_case_table_names);
-    caep->tableName(table_name.table, lower_case_table_names);
-    caep->timeZone(timeZoneOffset);
+    csep->schemaName(table_name.schema, lower_case_table_names);
+    csep->tableName(table_name.table, lower_case_table_names);
+    csep->timeZone(timeZoneOffset);
 
-    csep->returnedColumns(returnedColumnList);
+    csep->returnedCols(returnedColumnList);
     csep->columnMap(columnMap);
   
     SessionManager sm;
@@ -4767,13 +4773,13 @@ extern "C"
     QueryContext verID;
     verID = sm.verID();
   
-    caep->txnID(txnID.id);
-    caep->verID(verID);
-    caep->sessionID(sessionID);
+    csep->txnID(txnID.id);
+    csep->verID(verID);
+    csep->sessionID(sessionID);
   
     string query;
     query.assign(idb_mysql_query_str(thd));
-    caep->data(query);
+    csep->data(query);
   
     if (!get_fe_conn_info_ptr())
     {
@@ -4783,7 +4789,7 @@ extern "C"
   
     try
     {
-      caep->priority(ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
+      csep->priority(ci->stats.userPriority(ci->stats.fHost, ci->stats.fUser));
     }
     catch (std::exception& e)
     {
@@ -4797,13 +4803,13 @@ extern "C"
       return 0;
     }
   
-    caep->traceFlags(ci->traceFlags);
+    csep->traceFlags(ci->traceFlags);
   
     cal_table_info ti;
     sm::cpsm_conhdl_t* hndl;
   
     bool localQuery = (get_local_query(thd) > 0 ? true : false);
-    caep->localQuery(localQuery);
+    csep->localQuery(localQuery);
   
     // Try to initialize connection.
     if (!initializeCalConnectionInfo(ci, thd, csc, sessionID, localQuery))
@@ -4811,17 +4817,19 @@ extern "C"
   
     hndl = ci->cal_conn_hndl;
   
-    if (caep->traceOn())
-      std::cout << caep->toString() << std::endl;
+    if (csep->traceOn())
+      std::cout << csep->toString() << std::endl;
     {
-      ByteStream::quadbyte qb = ANALYZE_TABLE_EXECUTE;
-      // Serialize and the send the `anlyze table` execution plan.
-      if (!sendExecutionPlanToExeMgr(hndl, qb, caep, ci, thd))
+      ByteStream::quadbyte qb = 4;
+
+      csep->rmParms(ci->rmParms);
+      // Serialize and the send the SELECT SUM(aux) execution plan.
+      if (!sendExecutionPlanToExeMgr(hndl, qb, csep, ci, thd))
         goto error;
     }
   
     ci->rmParms.clear();
-    ci->tableMap[table] = ti;
+    //ci->tableMap[table] = ti;
   
     return 0;
   
