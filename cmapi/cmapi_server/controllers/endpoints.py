@@ -453,7 +453,7 @@ class ConfigController:
             if diag:
                 raise_422_error(
                     module_logger, func_name,
-                    f'Invariant checks failed. Details: {diag.strip()}',
+                    f'Invariant checks failed. Details:\n{diag.strip()}',
                     exc_info=False
                 )
 

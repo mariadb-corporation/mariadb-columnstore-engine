@@ -2,8 +2,8 @@ import logging
 import os
 from typing import Optional, Tuple
 
-from mr_kot import Runner, Status, check, check_all, fact, parametrize
-from mr_kot_fs_validators import GroupIs, HasMode, IsDir, OwnerIs
+from mr_kot import Runner, Status, any_of, check, check_all, fact, parametrize
+from mr_kot_fs_validators import Exists, GroupIs, HasMode, IsDir, OwnerIs
 
 from cmapi_server import helpers
 from cmapi_server.constants import MCS_DATA_PATH
@@ -76,6 +76,7 @@ REQUIRED_LOCAL_DIRS = [
 def required_dirs_perms(dir: str) -> Tuple[Status, str]:
     status, ev = check_all(
         dir,
+        Exists(),
         IsDir(),
         HasMode('1755'),
     )
@@ -87,7 +88,10 @@ def required_dirs_ownership(dir: str) -> Tuple[Status, str]:
     # Check ownership only when not in containers
     status, ev = check_all(
         dir,
-        OwnerIs('mysql'),
-        GroupIs('mysql'),
+        Exists(),
+        # The correct owner is mysql, but i've seen mariadb as owner of the mountpoint,
+        #   so we allow both
+        any_of(OwnerIs('mysql'), OwnerIs('mariadb')),
+        any_of(GroupIs('mysql'), GroupIs('mariadb')),
     )
     return (status, ev)
