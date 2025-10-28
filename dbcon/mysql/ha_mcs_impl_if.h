@@ -415,6 +415,7 @@ struct gp_walk_info
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
+  bool isRecursiveWithTable = false;
   SubQuery* lastSub;
   std::vector<View*> viewList;
   std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;

@@ -27,6 +27,7 @@
 //
 //
 
+#include "joblist.h"
 #include "jobstep.h"
 #include <unordered.h>
 
@@ -273,6 +274,11 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
 
   uint32_t nextBand(messageqcpp::ByteStream& bs) override;
 
+  void recursiveSteps(JobStepVector jsv)
+  {
+    fRecursiveSteps = jsv;
+  }
+
  private:
   struct RowPosition
   {
@@ -305,6 +311,8 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
   RowGroupDL* output;
   uint32_t outputIt;
 
+  JobStepVector fRecursiveSteps;
+
   struct Runner
   {
     TupleRecursiveUnion* tu;
@@ -314,7 +322,7 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
     }
     void operator()()
     {
-      utils::setThreadName("TUSRunner");
+      utils::setThreadName("TRUSRunner");
       tu->readInput(index);
     }
   };
