@@ -220,6 +220,7 @@ SCSEP FromSubQuery::transform()
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
   gwi.viewName = fGwip.viewName;
+  gwi.isRecursiveWithTable = fGwip.isRecursiveWithTable;
   csep->derivedTbAlias(fAlias);  // always lower case
   csep->derivedTbView(fGwip.viewName.alias, lower_case_table_names);
 
@@ -256,7 +257,7 @@ SCSEP FromSubQuery::transform(bool b)
   gwi.thd = fGwip.thd;
   gwi.subQuery = this;
   gwi.viewName = fGwip.viewName;
-  gwi.isRecursiveWithTable = true;
+  gwi.isRecursiveWithTable = fGwip.isRecursiveWithTable;
   csep->derivedTbAlias(fAlias);  // always lower case
   csep->derivedTbView(fGwip.viewName.alias, lower_case_table_names);
 
