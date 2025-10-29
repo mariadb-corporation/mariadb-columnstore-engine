@@ -493,6 +493,31 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
+  multinode_mtrlog:: {
+    name: "multinode-mtrlog",
+    depends_on: ["mtr"],
+    image: "docker:28.2.2",
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    when: {
+      status: ["success", "failure"],
+    },
+    commands: [
+      "apk add bash",
+      "mkdir -p /drone/src/" + result + "/mtr-multinode/mcs1 /drone/src/" + result + "/mtr-multinode/mcs2 /drone/src/" + result + "/mtr-multinode/mcs3",
+      "docker cp mcs1:/var/log/mariadb/columnstore/cmapi_server.log /drone/src/" + result + "/mtr-multinode/mcs1/ 2>/dev/null || true",
+      "docker cp mcs1:/var/log/mariadb/columnstore/debug.log /drone/src/" + result + "/mtr-multinode/mcs1/ 2>/dev/null || true",
+      "docker exec -t mcs1 journalctl -u mariadb --no-pager > /drone/src/" + result + "/mtr-multinode/mcs1/journalctl_mariadb.log 2>&1 || true",
+      "docker cp mcs2:/var/log/mariadb/columnstore/cmapi_server.log /drone/src/" + result + "/mtr-multinode/mcs2/ 2>/dev/null || true",
+      "docker cp mcs2:/var/log/mariadb/columnstore/debug.log /drone/src/" + result + "/mtr-multinode/mcs2/ 2>/dev/null || true",
+      "docker exec -t mcs2 journalctl -u mariadb --no-pager > /drone/src/" + result + "/mtr-multinode/mcs2/journalctl_mariadb.log 2>&1 || true",
+      "docker cp mcs3:/var/log/mariadb/columnstore/cmapi_server.log /drone/src/" + result + "/mtr-multinode/mcs3/ 2>/dev/null || true",
+      "docker cp mcs3:/var/log/mariadb/columnstore/debug.log /drone/src/" + result + "/mtr-multinode/mcs3/ 2>/dev/null || true",
+      "docker exec -t mcs3 journalctl -u mariadb --no-pager > /drone/src/" + result + "/mtr-multinode/mcs3/journalctl_mariadb.log 2>&1 || true",
+      "docker cp mcs1:/usr/share/mysql-test/var/log /drone/src/" + result + "/mtr-multinode/mcs1/mtr-logs 2>/dev/null || true",
+      "ls -lR /drone/src/" + result + "/mtr-multinode",
+    ],
+  },
+
   kind: "pipeline",
   type: "docker",
   name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParamsKey, customBuildEnvCommandsMapKey]),
@@ -632,7 +657,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
-         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +

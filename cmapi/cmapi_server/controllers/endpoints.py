@@ -44,6 +44,7 @@ from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.invariant_checks import run_invariant_checks
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -447,6 +448,15 @@ class ConfigController:
                 sm_config_filename=sm_config_filename,
                 sm_config_string=sm_config
             )
+
+            diag = run_invariant_checks()
+            if diag:
+                raise_422_error(
+                    module_logger, func_name,
+                    f'Invariant checks failed. Details:\n{diag.strip()}',
+                    exc_info=False
+                )
+
             # TODO: change stop/start to restart option.
             try:
                 MCSProcessManager.stop_node(

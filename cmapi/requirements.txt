@@ -144,6 +144,10 @@ more-itertools==10.7.0
     #   cherrypy
     #   jaraco-functools
     #   jaraco-text
+mr-kot==0.9.2
+    # via -r requirements.in
+mr-kot-fs-validators==0.2.0
+    # via -r requirements.in
 multidict==6.6.4
     # via
     #   aiohttp

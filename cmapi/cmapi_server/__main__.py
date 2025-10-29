@@ -29,6 +29,7 @@ from cmapi_server.failover_agent import FailoverAgent
 from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.invariant_checks import run_invariant_checks
 from failover.node_monitor import NodeMonitor
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig
@@ -150,6 +151,12 @@ if __name__ == '__main__':
 
     CertificateManager.create_self_signed_certificate_if_not_exist()
     CertificateManager.renew_certificate()
+
+    # Run checks, if some of them fail -- log and exit
+    diag = run_invariant_checks()
+    if diag:
+        logging.error('Invariant checks failed, exiting')
+        sys.exit(1)
 
     app = cherrypy.tree.mount(root=None, config=CMAPI_CONF_PATH)
     root_config = {
