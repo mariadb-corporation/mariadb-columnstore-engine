@@ -5303,6 +5303,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         // uint8_t distUnionNum = 0;
         SCSEP anchor_plan = NULL;
 
+        gwi.isRecursiveWithTable = true;
 #ifdef DEBUG_WALK_COND
 
         if (gwi.recursiveWithTableName == table_ptr->table_name.str)
@@ -5845,16 +5846,16 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
     return ER_CHECK_NOT_IMPLEMENTED;
   }
 
-  if (gwi.isRecursiveWithTable)
+  gwi.hasWindowFunc = hasWindowFunc;
+  groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+  if (gwi.isRecursiveWithTable && groupcol)
   {
     gwi.fatalParseError = true;
     gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, "GROUP BY clause");
     setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
     return ER_CHECK_NOT_IMPLEMENTED;
   }
-
-  gwi.hasWindowFunc = hasWindowFunc;
-  groupcol = static_cast<ORDER*>(select_lex.group_list.first);
 
   gwi.disableWrapping = true;
   for (; groupcol; groupcol = groupcol->next)
@@ -7138,15 +7139,16 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 {
   SQL_I_List<ORDER> order_list = select_lex.order_list;
   ORDER* ordercol = static_cast<ORDER*>(order_list.first);
-  if (gwi.isRecursiveWithTable)
+  // check if window functions are in order by. InfiniDB process order by list if
+  // window functions are involved, either in order by or projection.
+  if (gwi.isRecursiveWithTable && ordercol)
   {
     gwi.fatalParseError = true;
     gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY, "WITH RECURSIVE");
     setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
     return ER_CHECK_NOT_IMPLEMENTED;
   }
-  // check if window functions are in order by. InfiniDB process order by list if
-  // window functions are involved, either in order by or projection.
+
   for (; ordercol; ordercol = ordercol->next)
   {
     if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)

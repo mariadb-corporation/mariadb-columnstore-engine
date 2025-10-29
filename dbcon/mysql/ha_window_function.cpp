@@ -21,6 +21,7 @@
  *
  *
  ***********************************************************************/
+#include <cstddef>
 #define PREFER_MY_CONFIG_H
 #include <my_config.h>
 #include <iostream>
@@ -307,6 +308,13 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
   // String str;
   // item->print(&str, QT_INFINIDB_NO_QUOTE);
   // cout << str.c_ptr() << endl;
+  if (gwi.isRecursiveWithTable)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = "Window Functions not supported in recursive CTE";
+    return NULL;
+  }
+
   if (get_fe_conn_info_ptr() == NULL)
   {
     set_fe_conn_info_ptr((void*)new cal_connection_info());
@@ -539,7 +547,7 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
 
         srcp->asc(orderCol->direction == ORDER::ORDER_ASC ? true : false);
         //					srcp->nullsFirst(orderCol->nulls); // nulls 2-default, 1-nulls
-        //first, 0-nulls last
+        // first, 0-nulls last
         srcp->nullsFirst(orderCol->direction == ORDER::ORDER_ASC
                              ? 1
                              : 0);  // WINDOWS TODO: implement NULLS FIRST/LAST in 10.2 front end
