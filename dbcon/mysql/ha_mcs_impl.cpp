@@ -4622,6 +4622,24 @@ internal_error:
 
 extern "C"
 {
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
   /**
    * MCS_AUX_COUNT([schema,] table_name [, partition_code])
    * Returns SELECT COUNT(aux_column) FROM table WHERE table.partition = partition_code;
@@ -4717,37 +4735,37 @@ extern "C"
     dataconvert::timeZoneToOffset(timeZone, strlen(timeZone), &timeZoneOffset);
   
     // Create aggregate column for our AUX column.
-    {
-      execplan::SRCP returnedColumn, parm;
-      //OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
-      const auto objNum = csc->tableAUXColumnOID(table_name, lower_case_table_names);
-      auto tableColName = csc->colName(objNum);
-      auto colType = csc->colType(objNum);
-  
-      execplan::AggregateColumn* aggColumn = new execplan::AggregateColumn();
-      aggColumn->aggOp(AggregateColumn::SUM);
-      aggColumn->alias("SUM(" + tableColName.column + "(");
-      aggColumn->resultType(colType);
-      aggColumn->timeZone(timeZoneOffset);
-      execplan::SimpleColumn* parmColumn = new execplan::SimpleColumn();
-      parmColumn->columnName(tableColName.column);
-      parmColumn->tableName(tableColName.table, lower_case_table_names);
-      parmColumn->schemaName(tableColName.schema, lower_case_table_names);
-      parmColumn->oid(objNum);
-      parmColumn->resultType(colType);
-      parmColumn->timeZone(timeZoneOffset);
+    execplan::SRCP returnedColumn, parm;
+    //OID tableAUXColumnOID(const TableName& tableName, int lower_case_table_names = 0);
+    const auto objNum = csc->tableAUXColumnOID(table_name, lower_case_table_names);
+    auto tableColName = csc->auxColName(schema, table);
+    auto colType = csc->colType(objNum);
 
-      parm.reset(parmColumn);
-      aggColumn->aggParms().push_back(parm);
+    execplan::AggregateColumn* aggColumn = new execplan::AggregateColumn();
+    aggColumn->aggOp(AggregateColumn::SUM);
+    aggColumn->alias("SUM(" + tableColName.column + "(");
+    aggColumn->resultType(colType);
+    aggColumn->timeZone(timeZoneOffset);
 
-      returnedColumn.reset(aggColumn);
-      returnedColumnList.push_back(returnedColumn);
-      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(parmColumn->columnName(),
-                                                                                     parmColumn));
+    execplan::SimpleColumn* parmColumn = new execplan::SimpleColumn();
+    parmColumn->columnName(tableColName.column);
+    parmColumn->tableName(tableColName.table, lower_case_table_names);
+    parmColumn->schemaName(tableColName.schema, lower_case_table_names);
+    parmColumn->oid(objNum);
+    parmColumn->resultType(colType);
+    parmColumn->timeZone(timeZoneOffset);
+
+    parm.reset(parmColumn);
+    aggColumn->aggParms().push_back(parm);
+
+    returnedColumn.reset(aggColumn);
+    returnedColumnList.push_back(returnedColumn);
+    returnedColumnList.push_back(parm);
+    columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(parmColumn->columnName(),
+                                                                                     parm));
 //      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(aggColumn->columnName(),
 //                                                                                     returnedColumn));
 
-    }
   
     // Create execution plan and initialize it with `returned columns` and `column map`.
     boost::shared_ptr<execplan::CalpontSelectExecutionPlan> csep(
@@ -4830,7 +4848,8 @@ extern "C"
   
     ci->rmParms.clear();
     //ci->tableMap[table] = ti;
-  
+ 
+    idblog("success"); 
     return 0;
   
 error:
@@ -4841,8 +4860,9 @@ error:
       ci->cal_conn_hndl = 0;
     }
   
-      return -1;
-    }
+    idblog("failure"); 
+    return -1;
+  }
 } // extern "C"
 
 // vim:sw=4 ts=4:
