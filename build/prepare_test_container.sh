@@ -58,7 +58,7 @@ start_container() {
     if [[ "$CONTAINER_NAME" == *smoke* ]]; then
         docker_run_args+=(--memory 3g)
     elif [[ "$CONTAINER_NAME" == *mtr* ]]; then
-        docker_run_args+=(--shm-size=500m --memory 13g --env MYSQL_TEST_DIR="$MTR_PATH")
+        docker_run_args+=(--shm-size=500m --memory 15g --env MYSQL_TEST_DIR="$MTR_PATH")
     elif [[ "$CONTAINER_NAME" == *cmapi* ]]; then
         docker_run_args+=(--env PYTHONPATH="${PYTHONPATH}")
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
