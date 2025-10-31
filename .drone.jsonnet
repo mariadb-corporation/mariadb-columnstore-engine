@@ -485,7 +485,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       MCS_IMAGE_NAME: "mariadb/enterprise-columnstore-dev:" + container_tags[0],
     },
     commands: [
-      "echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin",
       "apk add bash && " +
       get_build_command("run_multi_node_mtr.sh") +
       " --columnstore-image-name $${MCS_IMAGE_NAME} " +
