@@ -85,46 +85,27 @@ fi
 # Check if docker folder exists and has required files
 if [[ ! -d "docker" ]] || [[ ! -f "docker/Dockerfile" ]]; then
     message "Docker folder not found or incomplete, cloning mariadb-columnstore-docker repository..."
-
-    DOCKER_REF="${DOCKER_REF:-}"
-    DOCKER_BRANCH_REF="${DRONE_SOURCE_BRANCH:-stable-23.10}"
-    DOCKER_REF_AUX="stable-23.10"
-    
-    message "Checking for branch: $DOCKER_BRANCH_REF"
-    
-    # Try to find matching branch in docker repository
-    if [[ -z "$DOCKER_REF" ]]; then
-        DOCKER_REF=$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --heads --sort origin "refs/heads/$DOCKER_BRANCH_REF" 2>/dev/null | grep -E -o "[^/]+$" || true)
-    fi
-    
-    # Fall back to default branch if no match found
-    if [[ -z "$DOCKER_REF" ]]; then
-        DOCKER_REF="$DOCKER_REF_AUX"
-    fi
-    
-    message "Cloning docker repository from branch: $DOCKER_REF"
-    
-    # Remove existing docker folder if it exists to avoid git clone conflicts
-    if [[ -d "docker" ]]; then
-        message "Removing incomplete docker folder..."
-        rm -rf docker
-    fi
-    
-    # Clone the docker repository
-    git clone --branch "$DOCKER_REF" --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker
-    
-    # Create empty .secrets file
-    touch docker/.secrets
-    
-    message "Docker repository cloned successfully"
+    "$SCRIPT_LOCATION"/clone_docker_repo.sh
 fi
 
 cd docker
+
+# Clean up any existing containers from previous runs
+if docker ps -a --format '{{.Names}}' | grep -q -E '^(mcs1|mcs2|mcs3)$'; then
+    message "Found existing containers from previous run, cleaning up..."
+    $DOCKER_COMPOSE down -v 2>/dev/null || true
+    docker rm -f mcs1 mcs2 mcs3 2>/dev/null || true
+    message "Cleanup completed"
+fi
+
 cp .env_example .env
 sed -i "/^MCS_IMAGE_NAME=/s|=.*|=${MCS_IMAGE_NAME}|" .env
 sed -i "/^MAXSCALE=/s|=.*|=false|" .env
 
+message "Starting containers..."
 $DOCKER_COMPOSE up -d
+
+message "Provisioning cluster..."
 docker exec mcs1 provision mcs1 mcs2 mcs3
 docker cp ../mysql-test/columnstore mcs1:"${MTR_PATH}/suite/"
 docker exec -t mcs1 chown -R mysql:mysql "${MTR_PATH}"
