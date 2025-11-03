@@ -30,6 +30,14 @@ class CEJError(CMAPIBasicError):
     """
 
 
+class ResolutionError(CMAPIBasicError):
+    """Errors related to DNS resolution"""
+
+
+class ResolutionPolicyViolationError(CMAPIBasicError):
+    """Errors where results are rejected by the current resolving policy."""
+
+
 @contextmanager
 def exc_to_cmapi_error(prefix: Optional[str] = None) -> Iterator[None]:
     """Context manager to standardize error wrapping into CMAPIBasicError.

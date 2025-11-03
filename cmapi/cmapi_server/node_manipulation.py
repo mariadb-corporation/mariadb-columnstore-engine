@@ -28,6 +28,7 @@ from cmapi_server.constants import (
 )
 from cmapi_server.managers.application import AppStatefulConfig
 from cmapi_server.managers.network import NetworkManager
+from cmapi_server.managers.host_identity import get_host_address_manager
 
 
 PMS_NODE_PORT = '8620'
@@ -101,6 +102,11 @@ def add_node(
     c_root = node_config.get_current_config_root(input_config_filename)
 
     logging.info('Adding node %s', node)
+
+    host_identity = get_host_address_manager().get_identity(node)
+    logging.debug('Resolved %s to %s', node, host_identity)
+    # TODO use host identity instead of node
+
     # If a hostname (not IP) is provided, ensure fwd/rev DNS consistency.
     # Skip validation for localhost aliases to preserve legacy single-node flows.
     if not NetworkManager.is_ip(node) and not NetworkManager.is_only_loopback_hostname(node):
