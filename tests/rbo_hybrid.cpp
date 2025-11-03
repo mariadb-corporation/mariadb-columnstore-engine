@@ -85,14 +85,14 @@ class RBOHybridTest : public ::testing::Test
         cal_impl_if::SchemaAndTableName,
         std::map<std::string, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>,
         cal_impl_if::SchemaAndTableNameHash>
-        tableStatisticsMap;
+        tableStatistics;
 
     // Helper method to find statistics for a table
     std::map<std::string, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>*
     findStatisticsForATable(const cal_impl_if::SchemaAndTableName& schemaAndTable)
     {
-      auto it = tableStatisticsMap.find(schemaAndTable);
-      return (it != tableStatisticsMap.end()) ? &(it->second) : nullptr;
+      auto it = tableStatistics.find(schemaAndTable);
+      return (it != tableStatistics.end()) ? &(it->second) : nullptr;
     }
   };
 
@@ -116,7 +116,7 @@ class RBOHybridTest : public ::testing::Test
       cal_impl_if::SchemaAndTableName schemaAndTable = {schema, table};
       execplan::SimpleColumn simpleCol;  // Mock column
       std::vector<Histogram_json_hb*> histograms = {histogram};
-      mockGWI.tableStatisticsMap[schemaAndTable][column] = std::make_pair(simpleCol, histograms);
+      mockGWI.tableStatistics[schemaAndTable][column] = std::make_pair(simpleCol, histograms);
     }
 
     // Get the mock gateway info for testing helper functions

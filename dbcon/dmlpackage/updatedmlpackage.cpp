@@ -138,6 +138,8 @@ int UpdateDMLPackage::buildFromSqlStatement(SqlStatement& sqlStatement)
 
   // Push one row always and let the filter happen on the proc side.
   Row* rowPtr = new Row();
+  // Reserve space for columns
+  rowPtr->get_ColumnList().reserve(updateStmt.fColAssignmentListPtr->size());
   ColumnAssignmentList::const_iterator iter = updateStmt.fColAssignmentListPtr->begin();
 
   while (iter != updateStmt.fColAssignmentListPtr->end())
@@ -176,6 +178,8 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
   initializeTable();
 
   std::vector<std::string> dataList;
+  // Reserve space: each row has rowid + columns * 2 (name + value)
+  dataList.reserve(rows * (1 + columns * 2));
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep(":,");
   tokenizer tokens(buffer, sep);
@@ -186,11 +190,15 @@ int UpdateDMLPackage::buildFromBuffer(std::string& buffer, int columns, int rows
   }
 
   int n = 0;
+  // Reserve space for rows
+  fTable->get_RowList().reserve(rows);
 
   for (int i = 0; i < rows; i++)
   {
     // get a new row
     Row* aRowPtr = new Row();
+    // Reserve space for columns
+    aRowPtr->get_ColumnList().reserve(columns);
     std::string colName;
     std::string colValue;
     // get row ID from the buffer
@@ -229,6 +237,8 @@ int UpdateDMLPackage::buildFromMysqlBuffer(ColNameList& colNameList, TableValues
 
   initializeTable();
   Row* aRowPtr = new Row();
+  // Reserve space for columns
+  aRowPtr->get_ColumnList().reserve(columns);
   std::string colName;
   ColValuesList colValList;
 
@@ -259,6 +269,8 @@ void UpdateDMLPackage::buildUpdateFromMysqlBuffer(UpdateSqlStatement& updateStmt
 
   // Push one row always and let the filter happen on the proc side.
   Row* rowPtr = new Row();
+  // Reserve space for columns
+  rowPtr->get_ColumnList().reserve(updateStmt.fColAssignmentListPtr->size());
   ColumnAssignmentList::const_iterator iter = updateStmt.fColAssignmentListPtr->begin();
 
   while (iter != updateStmt.fColAssignmentListPtr->end())

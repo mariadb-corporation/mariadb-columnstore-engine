@@ -125,6 +125,8 @@ int AlterTableStatement::unserialize(ByteStream& bytestream)
   // read alter action list
   quadbyte action_count;
   bytestream >> action_count;
+  // Reserve space for actions
+  fActions.reserve(action_count);
 
   for (unsigned int i = 0; i < action_count; i++)
   {
@@ -749,6 +751,8 @@ int AtaDropColumns::unserialize(ByteStream& bytestream)
 
   quadbyte count;
   bytestream >> count;
+  // Reserve space for columns
+  fColumns.reserve(count);
   string colName;
 
   while (count--)
@@ -1628,6 +1632,8 @@ int TableDef::unserialize(ByteStream& bytestream)
   // read column constraint list
   quadbyte count;
   bytestream >> count;
+  // Reserve space for constraints
+  fConstraints.reserve(count);
   TableConstraintDef* constraint;
 
   while (count-- > 0)

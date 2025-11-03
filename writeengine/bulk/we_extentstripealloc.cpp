@@ -155,6 +155,7 @@ int ExtentStripeAlloc::allocateExtent(OID oid, uint16_t dbRoot,
     fLog->logMsg(oss1.str(), MSGLVL_INFO2);
 
     std::vector<BRM::CreateStripeColumnExtentsArgIn> cols;
+    cols.reserve(fColOIDs.size());
     std::vector<BRM::CreateStripeColumnExtentsArgOut> extents;
 
     for (unsigned int j = 0; j < fColOIDs.size(); ++j)

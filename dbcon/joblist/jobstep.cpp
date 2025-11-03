@@ -113,6 +113,47 @@ JobStep::JobStep(const JobInfo& j)
 }
 
 //------------------------------------------------------------------------------
+// Copy constructor - needed because fDie is std::atomic which is not copyable
+//------------------------------------------------------------------------------
+JobStep::JobStep(const JobStep& rhs)
+ : fInputJobStepAssociation(rhs.fInputJobStepAssociation)
+ , fOutputJobStepAssociation(rhs.fOutputJobStepAssociation)
+ , fSessionId(rhs.fSessionId)
+ , fTxnId(rhs.fTxnId)
+ , fVerId(rhs.fVerId)
+ , fStatementId(rhs.fStatementId)
+ , fStepId(rhs.fStepId)
+ , fTupleId(rhs.fTupleId)
+ , fAlias(rhs.fAlias)
+ , fView(rhs.fView)
+ , fPartitions(rhs.fPartitions)
+ , fName(rhs.fName)
+ , fSchema(rhs.fSchema)
+ , fTraceFlags(rhs.fTraceFlags)
+ , fCardinality(rhs.fCardinality)
+ , fDelayedRunFlag(rhs.fDelayedRunFlag)
+ , fDelivery(rhs.fDelivery)
+ , fOnClauseFilter(rhs.fOnClauseFilter)
+ , fDie(rhs.fDie.load(std::memory_order_relaxed))
+ , fWaitToRunStepCnt(rhs.fWaitToRunStepCnt)
+ , fExtendedInfo(rhs.fExtendedInfo)
+ , fMiniInfo(rhs.fMiniInfo)
+ , fPriority(rhs.fPriority)
+ , fErrorInfo(rhs.fErrorInfo)
+ , fLogger(rhs.fLogger)
+ , fLocalQuery(rhs.fLocalQuery)
+ , fQueryUuid(rhs.fQueryUuid)
+ , fStepUuid(rhs.fStepUuid)
+ , fQtc(rhs.fQtc)
+ , fProgress(rhs.fProgress)
+ , fStartTime(rhs.fStartTime)
+ , fLastStepTeleTime(rhs.fLastStepTeleTime)
+ , fTimeZone(rhs.fTimeZone)
+ , fMaxPmJoinResultCount(rhs.fMaxPmJoinResultCount)
+{
+}
+
+//------------------------------------------------------------------------------
 // Log a syslog msg for the start of this specified job step
 //------------------------------------------------------------------------------
 void JobStep::syslogStartStep(uint32_t subSystem, const string& stepName) const

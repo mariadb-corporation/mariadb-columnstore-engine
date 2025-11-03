@@ -24,6 +24,8 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <atomic>
+#include <boost/thread.hpp>
 
 #include "boost/shared_ptr.hpp"
 #include "boost/thread/mutex.hpp"
@@ -119,7 +121,7 @@ class RedistributeControlThread
   RedistributeControl* fControl;
 
   static boost::mutex fActionMutex;
-  static volatile bool fStopAction;
+  static std::atomic<bool> fStopAction;
   static std::string fWesInUse;
 };
 

@@ -1234,6 +1234,8 @@ class RowGroupStorage
   void getTmpFilePrefixes(std::vector<std::string>& prefixes) const
   {
     char buf[PATH_MAX];
+    // Reserve space for 2 prefixes
+    prefixes.reserve(prefixes.size() + 2);
     snprintf(buf, sizeof(buf), "Agg-p%u-t%p-rg", getpid(), fUniqId);
     prefixes.emplace_back(buf);
 

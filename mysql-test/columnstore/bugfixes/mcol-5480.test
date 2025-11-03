@@ -6,6 +6,7 @@
 --source ../include/detect_maxscale.inc
 
 let $DATADIR=`SELECT @@datadir`;
+SET time_zone = '+00:00';
 
 --disable_warnings
 DROP DATABASE IF EXISTS mcol_5480;

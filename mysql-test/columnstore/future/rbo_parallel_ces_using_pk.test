@@ -1,0 +1,48 @@
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+--source ../include/functions.inc
+--source ../include/cross_engine.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS rbo_parallel_ces_using_pk;
+--enable_warnings
+
+CREATE DATABASE rbo_parallel_ces_using_pk;
+USE rbo_parallel_ces_using_pk;
+
+# Turn on plan logging to capture CSEP strings
+SELECT calsettrace(1);
+
+--source ../include/create_tpch_lineitem.inc
+
+ALTER TABLE lineitem DROP INDEX `L_ORDERKEY`;
+ALTER TABLE lineitem ADD PRIMARY KEY (`l_orderkey`);
+
+set histogram_size=4;
+ANALYZE TABLE lineitem PERSISTENT FOR ALL;
+
+--source ../include/enable_rbo_parallel_ces.inc
+
+set columnstore_query_accel_parallel_factor=2;
+select count(*) from lineitem ;
+
+# Snapshot plans into variables for readability
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+
+# Ensure rule was applied
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+
+SET @opt_plan := mcs_get_plan('optimized');
+set @rewritten_derived_name = 'derived table - $added_sub_rbo_parallel_ces_using_pk_lineitem_0';
+set @original_table_name = '.lineitem(lineitem/) engineType=ForeignEngine';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) AS rewritten_derived_table_count;
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
+
+# Cleanup
+SELECT calsettrace(0);
+DROP DATABASE rbo_parallel_ces_using_pk;
+
+--source ../include/disable_rbo_parallel_ces.inc
+--source ../include/drop_functions.inc
+--source ../include/drop_cross_engine.inc

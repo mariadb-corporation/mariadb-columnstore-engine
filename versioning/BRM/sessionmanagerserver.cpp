@@ -86,7 +86,7 @@ const uint32_t SessionManagerServer::SS_FORCE =
 const uint32_t SessionManagerServer::SS_QUERY_READY =
     1 << 6;  // Set by ProcManager when system is ready for queries
 
-SessionManagerServer::SessionManagerServer() : unique32(0), unique64(0)
+SessionManagerServer::SessionManagerServer() : unique32{0}, unique64{0}
 {
   config::Config* conf;
   string stmp;

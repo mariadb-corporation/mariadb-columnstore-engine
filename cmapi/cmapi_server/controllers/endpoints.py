@@ -16,10 +16,18 @@ from mcs_node_control.models.node_status import NodeStatus
 from pydantic import ValidationError
 
 from cmapi_server.constants import (
-    CMAPI_PACKAGE_NAME, CMAPI_PORT, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX, MCS_BRM_CURRENT_PATH, MCS_EM_PATH,
-    MDB_CS_PACKAGE_NAME, MDB_SERVER_PACKAGE_NAME, REQUEST_TIMEOUT,
-    S3_BRM_CURRENT_PATH, SECRET_KEY,
+    CMAPI_PACKAGE_NAME,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    REQUEST_TIMEOUT,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
 )
 from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server.controllers.error import APIError
@@ -44,6 +52,7 @@ from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.invariant_checks import run_invariant_checks
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -447,6 +456,15 @@ class ConfigController:
                 sm_config_filename=sm_config_filename,
                 sm_config_string=sm_config
             )
+
+            diag = run_invariant_checks()
+            if diag:
+                raise_422_error(
+                    module_logger, func_name,
+                    f'Invariant checks failed. Details:\n{diag.strip()}',
+                    exc_info=False
+                )
+
             # TODO: change stop/start to restart option.
             try:
                 MCSProcessManager.stop_node(
@@ -715,7 +733,7 @@ class ShutdownController:
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
         request_body = cherrypy.request.json
-        timeout = request_body.get('timeout', 0)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         node_config = NodeConfig()
         try:
             MCSProcessManager.stop_node(
@@ -884,7 +902,7 @@ class ClusterController:
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', None)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
@@ -894,7 +912,7 @@ class ClusterController:
                 with TransactionManager():
                     response = ClusterHandler.shutdown(config, timeout)
             else:
-                response = ClusterHandler.shutdown(config)
+                response = ClusterHandler.shutdown(config, timeout)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -1584,7 +1602,7 @@ class NodeProcessController():
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', 10)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
 
         if force:

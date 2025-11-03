@@ -572,6 +572,7 @@ int ColumnBufferCompressed::saveCompressionHeaders()
     compress::CompressInterface::setLBIDByIndex(hdrBuf, fColInfo->getLastUpdatedLBID(), 0);
 
   std::vector<uint64_t> ptrs;
+  ptrs.reserve(fChunkPtrs.size() + 1);  // +1 for the final ptr after the loop
 
   for (unsigned i = 0; i < fChunkPtrs.size(); i++)
   {

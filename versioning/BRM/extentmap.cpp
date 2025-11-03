@@ -1412,6 +1412,7 @@ int ExtentMap::getMaxMin(const LBID_t lbid, T& max, T& min, int32_t& seqNum)
 std::vector<EMEntry> ExtentMap::getEmIdentsByLbids(const bi::vector<LBID_t>& lbids)
 {
   std::vector<EMEntry> emEntries;
+  emEntries.reserve(lbids.size());
   for (auto lbid : lbids)
   {
     auto emIt = findByLBID(lbid);
@@ -1427,6 +1428,7 @@ std::vector<ExtentMapRBTree::iterator> ExtentMap::getEmIteratorsByLbids(const bi
 {
   // ExtentMapRBTree::iterator
   std::vector<ExtentMapRBTree::iterator> emEntries;
+  emEntries.reserve(lbids.size());
   for (auto lbid : lbids)
   {
     auto emIt = findByLBID(lbid);
