@@ -9,6 +9,7 @@ from cmapi_server.controllers.endpoints import (
     CommitController, ConfigController, ExtentMapController,
     LoggingConfigController, NodeController, NodeProcessController,
     RollbackController, ShutdownController, StartController, StatusController,
+    CmapiConfigController,
 )
 from cmapi_server.controllers.s3dataload import S3DataLoadController
 
@@ -205,7 +206,7 @@ dispatcher.connect(
 )
 
 
-# /_version/cluster/node/ (POST, PUT)
+# /_version/cluster/load_s3data (POST, PUT)
 dispatcher.connect(name = 'cluster_load_s3data',
                    route = f'/cmapi/{_version}/cluster/load_s3data',
                    action = 'load_s3data',
@@ -482,8 +483,16 @@ dispatcher.connect(
     conditions = {'method': ['PUT']}
 )
 
+# /_version/cmapi_config (PATCH)
+dispatcher.connect(
+    name = 'cmapi_config',
+    route = f'/cmapi/{_version}/cmapi_config',
+    action = 'patch_cmapi_config',
+    controller = CmapiConfigController(),
+    conditions = {'method': ['PATCH']}
+)
 
-def jsonify_error(status, message, traceback, version): \
+def jsonify_error(status, message, traceback, version):
     # pylint: disable=unused-argument
     """JSONify all CherryPy error responses (created by raising the
     cherrypy.HTTPError exception)

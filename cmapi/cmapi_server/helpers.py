@@ -18,6 +18,7 @@ from urllib.parse import urlencode, urlunparse
 
 import aiohttp
 import lxml.objectify
+from lxml import etree
 import requests
 from tracing.traced_session import get_traced_session
 from tracing.traced_aiohttp import create_traced_async_session
@@ -52,6 +53,14 @@ def get_id() -> int:
     ..TODO: need to change transaction id format and generation method?
     """
     return int(random() * 1000000)
+
+
+def get_or_create_child_xml_node(parent, name: str):
+    """Get a direct child by tag name or create it if missing."""
+    node = parent.find(f'./{name}')
+    if node is None:
+        node = etree.SubElement(parent, name)
+    return node
 
 
 def start_transaction(

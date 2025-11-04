@@ -1,11 +1,8 @@
-import configparser
 import logging
 import threading
 from os.path import getmtime
 
-import lxml
-
-from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH
+from cmapi_server.constants import DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS, DEFAULT_MCS_CONF_PATH
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -18,6 +15,7 @@ class Config:
     _inactive_nodes = []
     _primary_node = ''
     _my_name = None  # derived from config file
+    _failover_sampling_interval = DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS
 
     config_lock = threading.Lock()
     last_mtime = 0
@@ -66,6 +64,13 @@ class Config:
         self.config_lock.acquire()
         self.check_reload()
         ret = self._primary_node
+        self.config_lock.release()
+        return ret
+
+    def getFailoverTimeoutSeconds(self) -> int:
+        self.config_lock.acquire()
+        self.check_reload()
+        ret = self._failover_sampling_interval
         self.config_lock.release()
         return ret
 
@@ -157,4 +162,11 @@ class Config:
         self._primary_node = primary_node
         self.last_mtime = last_mtime
         self._my_name = my_name
+
+        sampling_interval_node = root.find('./CMAPIConfig/FailoverSamplingIntervalSeconds')
+        if sampling_interval_node is not None and sampling_interval_node.text is not None:
+            self._failover_sampling_interval = int(sampling_interval_node.text)
+        else:
+            self._failover_sampling_interval = DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS
+
         return True

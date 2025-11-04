@@ -26,12 +26,14 @@ def run_server():
     CertificateManager.create_self_signed_certificate_if_not_exist()
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
-    yield
-    cherrypy.engine.exit()
-    cherrypy.engine.block()
+    try:
+        yield
+    finally:
+        cherrypy.engine.exit()
+        cherrypy.engine.block()
 
 
-def get_current_key():
+def get_current_key() -> str:
     app_config = configparser.ConfigParser()
     try:
         with open(cmapi_config_filename, 'r') as _config_file:
