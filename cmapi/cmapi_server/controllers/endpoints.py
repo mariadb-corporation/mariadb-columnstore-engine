@@ -2,6 +2,7 @@ import logging
 import hashlib
 import socket
 import subprocess
+import threading
 import time
 from copy import deepcopy
 from datetime import datetime
@@ -446,6 +447,13 @@ class ConfigController:
             request_manager_address = socket.gethostbyname(
                 socket.gethostname()
             )
+
+        # Enforce that only the transaction owner can apply config
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, func_name,
+                'PUT /config is allowed only for the operation owner.'
+            )
         request_response = {'timestamp': str(datetime.now())}
 
         if secrets:
@@ -456,107 +464,130 @@ class ConfigController:
         if is_test:
             return request_response
         if xml_config is not None:
-            node_config.apply_config(
-                config_filename=mcs_config_filename,
-                xml_string=xml_config,
-                sm_config_filename=sm_config_filename,
-                sm_config_string=sm_config
-            )
+            # Acquire a per-node, per-transaction config lock to serialize
+            # heavy config application on this node.
+            locks = app.config['txn'].setdefault('locks', {})
+            config_lock = locks.get('config_lock')
+            if config_lock is None:
+                config_lock = threading.Lock()
+                locks['config_lock'] = config_lock
 
-            diag = run_invariant_checks()
-            if diag:
+            module_logger.debug('Acquiring config lock for put_config.')
+            acquired = config_lock.acquire(blocking=False)
+            if not acquired:
+                module_logger.info('Config apply rejected: another config apply is in progress.')
                 raise_422_error(
-                    module_logger, func_name,
-                    f'Invariant checks failed. Details:\n{diag.strip()}',
-                    exc_info=False
+                    module_logger, func_name, 'Config apply already in progress on this node.'
                 )
-
-            # TODO: change stop/start to restart option.
+            app.config['txn']['config_in_progress'] = True
             try:
-                MCSProcessManager.stop_node(
-                    is_primary=node_config.is_primary_node(),
-                    use_sudo=use_sudo,
-                    timeout=request_timeout,
-                )
-            except CMAPIBasicError as err:
-                raise_422_error(
-                    module_logger, func_name,
-                    f'Error while stopping node. Details: {err.message}.',
-                    exc_info=False
+                node_config.apply_config(
+                    config_filename=mcs_config_filename,
+                    xml_string=xml_config,
+                    sm_config_filename=sm_config_filename,
+                    sm_config_string=sm_config
                 )
 
-            # if not in the list of active nodes,
-            # then do not start the services
-            new_root = node_config.get_current_config_root(
-                mcs_config_filename
-            )
-            if in_maintenance_state():
-                module_logger.info(
-                    'Maintenance state is active in new config. '
-                    'MCS processes should not be started.'
-                )
-                cherrypy.engine.publish('failover', False)
-                # skip all other operations below
-                return request_response
-            else:
-                cherrypy.engine.publish('failover', True)
-            if node_config.in_active_nodes(new_root):
+                diag = run_invariant_checks()
+                if diag:
+                    raise_422_error(
+                        module_logger, func_name,
+                        f'Invariant checks failed. Details:\n{diag.strip()}',
+                        exc_info=False
+                    )
+
+                # TODO: change stop/start to restart option.
                 try:
-                    MCSProcessManager.start_node(
+                    MCSProcessManager.stop_node(
                         is_primary=node_config.is_primary_node(),
                         use_sudo=use_sudo,
-                        is_read_replica=node_config.am_i_read_replica(),
+                        timeout=request_timeout,
                     )
                 except CMAPIBasicError as err:
                     raise_422_error(
                         module_logger, func_name,
-                        (
-                            'Error while starting node. '
-                            f'Details: {err.message}'
-                        ),
+                        f'Error while stopping node. Details: {err.message}.',
                         exc_info=False
                     )
-            else:
-                module_logger.info(
-                    'This node is not in the current ActiveNodes section. '
-                    'Not starting Columnstore processes.'
-                )
 
-            attempts = 0
-            # TODO: FIX IT. If got (False, False) result, for eg in case
-            #       when special CEJ user is not set, this check loop
-            #       is useless and does nothing.
-            try:
-                ready, retry = system_ready(mcs_config_filename)
-            except CEJError as cej_error:
-                raise_422_error(
-                    module_logger, func_name, cej_error.message
+                # if not in the list of active nodes,
+                # then do not start the services
+                new_root = node_config.get_current_config_root(
+                    mcs_config_filename
                 )
-
-            while not ready:
-                if retry:
-                    attempts +=1
-                    if attempts >= 10:
-                        module_logger.debug(
-                            'Timed out waiting for this node to become ready.'
-                        )
-                        break
-                    time.sleep(1)
+                if in_maintenance_state():
+                    module_logger.info(
+                        'Maintenance state is active in new config. '
+                        'MCS processes should not be started.'
+                    )
+                    cherrypy.engine.publish('failover', False)
+                    # skip all other operations below
+                    return request_response
                 else:
-                    break
+                    cherrypy.engine.publish('failover', True)
+                if node_config.in_active_nodes(new_root):
+                    try:
+                        MCSProcessManager.start_node(
+                            is_primary=node_config.is_primary_node(),
+                            use_sudo=use_sudo,
+                            is_read_replica=node_config.am_i_read_replica(),
+                        )
+                    except CMAPIBasicError as err:
+                        raise_422_error(
+                            module_logger, func_name,
+                            (
+                                'Error while starting node. '
+                                f'Details: {err.message}'
+                            ),
+                            exc_info=False
+                        )
+                else:
+                    module_logger.info(
+                        'This node is not in the current ActiveNodes section. '
+                        'Not starting Columnstore processes.'
+                    )
+
+                attempts = 0
+                # TODO: FIX IT. If got (False, False) result, for eg in case
+                #       when special CEJ user is not set, this check loop
+                #       is useless and does nothing.
                 try:
                     ready, retry = system_ready(mcs_config_filename)
                 except CEJError as cej_error:
                     raise_422_error(
                         module_logger, func_name, cej_error.message
                     )
-            else:
-                module_logger.debug(f'Node is ready to accept queries.')
 
-            app.config['txn']['config_changed'] = True
+                while not ready:
+                    if retry:
+                        attempts +=1
+                        if attempts >= 10:
+                            module_logger.debug(
+                                'Timed out waiting for this node to become ready.'
+                            )
+                            break
+                        time.sleep(1)
+                    else:
+                        break
+                    try:
+                        ready, retry = system_ready(mcs_config_filename)
+                    except CEJError as cej_error:
+                        raise_422_error(
+                            module_logger, func_name, cej_error.message
+                        )
+                else:
+                    module_logger.debug(f'Node is ready to accept queries.')
 
-            # We might want to raise error
-            return request_response
+                app.config['txn']['config_changed'] = True
+
+                # We might want to raise error
+                return request_response
+            finally:
+                app.config['txn']['config_in_progress'] = False
+                try:
+                    config_lock.release()
+                except RuntimeError:
+                    pass
 
         # Unexpected exit
         raise_422_error(module_logger, func_name, 'Unknown error.')
@@ -598,6 +629,9 @@ IP address.")
                 'timeout': int(datetime.now().timestamp()) + txn_timeout,
                 'manager_address': txn_manager_address,
                 'config_changed': False,
+                # serialization helpers
+                'locks': {},
+                'config_in_progress': False,
             },
         })
 
@@ -638,6 +672,12 @@ class CommitController:
         request_manager_address = dequote(request_manager_address).lower()
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
             request_manager_address = socket.gethostbyname(socket.gethostname())
+        # enforce only operation owner can commit
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, func_name,
+                'PUT /commit is allowed only for the operation owner.'
+            )
         # txn is active
         app.config['txn']['id'] = 0
         app.config['txn']['timeout'] = 0
@@ -676,6 +716,13 @@ class RollbackController:
         request_manager_address = dequote(request_manager_address).lower()
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
             request_manager_address = socket.gethostbyname(socket.gethostname())
+
+        # enforce only operation owner can rollback
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, 'put_rollback',
+                'PUT /rollback is allowed only for the operation owner.'
+            )
 
         #TODO: add restart processes flag?
         # txn is active
