@@ -396,23 +396,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     name: "dockerfile",
     depends_on: ["publish pkg", "publish cmapi build"],
     image: "alpine/git:2.49.0",
+    volumes: [pipeline._volumes.mdb],
     environment: {
-      DOCKER_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
-      DOCKER_REF_AUX: branch_ref,
+      DRONE_SOURCE_BRANCH: "${DRONE_SOURCE_BRANCH}",
     },
     commands: [
-      // compute branch.
-      'echo "$$DOCKER_REF"',
-      'echo "$$DOCKER_BRANCH_REF"',
-      // if DOCKER_REF is empty, try to see whether docker repository has a branch named as one we PR.
-      'export DOCKER_REF=$${DOCKER_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-docker --h --sort origin "refs/heads/$$DOCKER_BRANCH_REF" | grep -E -o "[^/]+$$")}',
-      'echo "$$DOCKER_REF"',
-      // DOCKER_REF can be empty if there is no appropriate branch in docker repository.
-      // assign what is appropriate by default.
-      "export DOCKER_REF=$${DOCKER_REF:-$$DOCKER_REF_AUX}",
-      'echo "$$DOCKER_REF"',
-      "git clone --branch $$DOCKER_REF --depth 1 https://github.com/mariadb-corporation/mariadb-columnstore-docker docker",
-      "touch docker/.secrets",
+      "apk add bash && " +
+      get_build_command("clone_docker_repo.sh"),
     ],
   },
   dockerhub:: {
@@ -485,7 +475,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       MCS_IMAGE_NAME: "mariadb/enterprise-columnstore-dev:" + container_tags[0],
     },
     commands: [
-      "echo $$DOCKER_PASSWORD | docker login --username $$DOCKER_LOGIN --password-stdin",
       "apk add bash && " +
       get_build_command("run_multi_node_mtr.sh") +
       " --columnstore-image-name $${MCS_IMAGE_NAME} " +

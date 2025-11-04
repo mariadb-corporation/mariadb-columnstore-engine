@@ -145,7 +145,7 @@ boost::mutex bppLock;
 boost::mutex djMutex;                             // lock for djLock, lol.
 std::map<uint64_t, boost::shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
-volatile int32_t asyncCounter;
+std::atomic<int32_t> asyncCounter;
 const int asyncMax = 20;  // current number of asynchronous loads
 
 struct preFetchCond
@@ -858,8 +858,8 @@ struct AsynchLoader
     {
       sendThread->abort();
       cerr << "AsynchLoader caught loadBlock exception: " << ex.what() << endl;
-      idbassert(asyncCounter > 0);
-      (void)atomicops::atomicDec(&asyncCounter);
+      idbassert(asyncCounter.load() > 0);
+      asyncCounter.fetch_sub(1, std::memory_order_relaxed);
       mutex->lock();
       --(*busyLoaders);
       mutex->unlock();
@@ -874,8 +874,8 @@ struct AsynchLoader
       sendThread->abort();
       cerr << "AsynchLoader caught unknown exception: " << endl;
       // FIXME Use a locked processor primitive?
-      idbassert(asyncCounter > 0);
-      (void)atomicops::atomicDec(&asyncCounter);
+      idbassert(asyncCounter.load() > 0);
+      asyncCounter.fetch_sub(1, std::memory_order_relaxed);
       mutex->lock();
       --(*busyLoaders);
       mutex->unlock();
@@ -885,8 +885,8 @@ struct AsynchLoader
       return;
     }
 
-    idbassert(asyncCounter > 0);
-    (void)atomicops::atomicDec(&asyncCounter);
+    idbassert(asyncCounter.load() > 0);
+    asyncCounter.fetch_sub(1, std::memory_order_relaxed);
     mutex->lock();
 
     if (cached)
@@ -943,12 +943,10 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
     return;
 
   /* a quick and easy stand-in for a threadpool for loaders */
-  atomicops::atomicMb();
-
-  if (asyncCounter >= asyncMax)
+  if (asyncCounter.load(std::memory_order_relaxed) >= asyncMax)
     return;
 
-  (void)atomicops::atomicInc(&asyncCounter);
+  asyncCounter.fetch_add(1, std::memory_order_relaxed);
 
   boost::mutex::scoped_lock sl(*m);
 
@@ -961,8 +959,8 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
   catch (boost::thread_resource_error& e)
   {
     cerr << "AsynchLoader: caught a thread resource error, need to lower asyncMax\n";
-    idbassert(asyncCounter > 0);
-    (void)atomicops::atomicDec(&asyncCounter);
+    idbassert(asyncCounter.load() > 0);
+    asyncCounter.fetch_sub(1, std::memory_order_relaxed);
   }
 }
 
@@ -2272,7 +2270,7 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
   // that can reschedule jobs, and an unlimited non-blocking queue
   fOOBPool.reset(new threadpool::PriorityThreadPool(1, 5, 0, 0, 1));
 
-  asyncCounter = 0;
+  asyncCounter.store(0, std::memory_order_relaxed);
 
   brm = new DBRM();
 

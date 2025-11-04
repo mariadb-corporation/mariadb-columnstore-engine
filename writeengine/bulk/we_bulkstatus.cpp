@@ -30,5 +30,5 @@
 namespace WriteEngine
 {
 /*static*/
-volatile int BulkStatus::fJobStatus = EXIT_SUCCESS;
+std::atomic<int> BulkStatus::fJobStatus{EXIT_SUCCESS};
 }  // namespace WriteEngine

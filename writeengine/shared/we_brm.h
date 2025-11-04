@@ -465,7 +465,7 @@ class BRMWrapper : public WEObj
   // Private data members
   //--------------------------------------------------------------------------
 
-  static BRMWrapper* volatile m_instance;
+  static std::atomic<BRMWrapper*> m_instance;
   static thread_local int m_brmRc;
   static boost::mutex m_instanceCreateMutex;
 

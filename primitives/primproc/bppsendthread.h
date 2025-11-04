@@ -26,6 +26,7 @@
 
 #include "fair_threadpool.h"
 #include "umsocketselector.h"
+#include <atomic>
 #include <queue>
 #include <set>
 #include <condition_variable>
@@ -103,12 +104,12 @@ class BPPSendThread
   std::queue<Msg_t> msgQueue;
   std::mutex msgQueueLock;
   std::condition_variable queueNotEmpty;
-  volatile bool die = false;
-  volatile bool gotException = false;
-  volatile bool mainThreadWaiting = false;
+  std::atomic<bool> die{false};
+  std::atomic<bool> gotException{false};
+  std::atomic<bool> mainThreadWaiting{false};
   std::string exceptionString;
   uint32_t queueMsgThresh = 0;
-  volatile int32_t msgsLeft = -1;
+  std::atomic<int32_t> msgsLeft{-1};
   bool waiting = false;
   std::mutex ackLock;
   std::condition_variable okToSend;
@@ -136,10 +137,10 @@ class BPPSendThread
   std::set<Connection_t> connections_s;
   std::vector<Connection_t> connections_v;
   bool sawAllConnections = false;
-  volatile bool fcEnabled = false;
+  std::atomic<bool> fcEnabled{false};
 
   /* secondary queue size restriction based on byte size */
-  volatile uint64_t currentByteSize = 0;
+  std::atomic<uint64_t> currentByteSize{0};
   uint64_t queueBytesThresh;
   // Used to tell the ThreadPool It should consider additional threads because a
   // queue full event has happened and a thread has been blocked.
