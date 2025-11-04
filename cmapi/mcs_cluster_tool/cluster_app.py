@@ -332,11 +332,14 @@ def remove(nodes: Optional[List[str]] = typer.Option(
 ):
     """Remove nodes from the Columnstore cluster."""
     result = []
-    with TransactionManager(
-        timeout=timedelta(days=1).total_seconds(), handle_signals=True,
-        remove_nodes=nodes
-    ):
-        for node in nodes:
+    # Remove nodes one at a time, each in its own transaction.
+    # This ensures that broadcast_new_config only sends to nodes
+    # that are part of the current transaction.
+    for node in nodes:
+        with TransactionManager(
+            timeout=timedelta(days=1).total_seconds(), handle_signals=True,
+            remove_nodes=[node]
+        ):
             result.append(client.remove_node(node))
     return result
 
