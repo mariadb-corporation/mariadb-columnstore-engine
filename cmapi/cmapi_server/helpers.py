@@ -188,7 +188,7 @@ def start_transaction(
                     # conditions where that is the desired behavior here.
                     if int(r.status_code / 100) == 4:
                         logging.debug(
-                             'Got a 4xx error while beginning transaction '
+                             'Got a {r.status_code} error while beginning transaction '
                             f'with response text {r.text}'
                         )
                         break  # TODO: useless, got break in finally statement
