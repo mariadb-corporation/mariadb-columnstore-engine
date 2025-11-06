@@ -16,6 +16,7 @@ DROP DATABASE IF EXISTS ssb1;
 DROP DATABASE IF EXISTS dml;
 DROP DATABASE IF EXISTS autopilot;
 DROP DATABASE IF EXISTS outerjoin;
+DROP DATABASE IF EXISTS tpchqa;
 CREATE DATABASE IF NOT EXISTS test;
 --enable_warnings
 #
@@ -66,6 +67,7 @@ USE outerjoin;
 --source ../include/dbt3/ldiTables1m.inc
 --source ../include/dbt3/countTables.inc
 --source ../include/autopilot_create_outerjoin_tables.inc
+
 #
 # Set table name to case insensitive
 --exec if test -f /etc/my.cnf.d/server.cnf; then sed -i 's/\[mysqld\]/\[mysqld\]\nlower_case_table_names=1/g' /etc/my.cnf.d/server.cnf; fi
