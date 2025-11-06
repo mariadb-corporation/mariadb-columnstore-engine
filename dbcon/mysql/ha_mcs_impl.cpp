@@ -1917,6 +1917,12 @@ bool initializeCalConnectionInfo(cal_connection_info* ci, THD* thd,
   return true;
 }
 
+static void sendQB(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb)
+{
+  ByteStream msg;
+  msg << qb;
+  hndl->exeMgr->write(msg);
+}
 bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
                                boost::shared_ptr<CalpontExecutionPlan> cep,
                                cal_connection_info* /*ci*/, THD* thd)
@@ -1924,9 +1930,7 @@ bool sendExecutionPlanToExeMgr(sm::cpsm_conhdl_t* hndl, ByteStream::quadbyte qb,
   ByteStream msg;
   try
   {
-    msg << qb;
-    hndl->exeMgr->write(msg);
-    msg.restart();
+    sendQB(hndl, qb);
 
     // Send the execution plan.
     cep->serialize(msg);
@@ -4668,6 +4672,7 @@ extern "C"
   long long mcs_aux_count(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                 char* /*is_null*/, char* /*error*/)
   {
+    long long rc = 0;
     std::string schema, table, part;
     if (args->arg_count == 1) // simplest case of single table.
     {
@@ -4713,7 +4718,8 @@ extern "C"
     tableName.schema = schema;
     tableName.table = table;
 
-    if (lower_case_table_names) {
+    if (lower_case_table_names)
+    {
         boost::algorithm::to_lower(tableName.schema);
         boost::algorithm::to_lower(tableName.table);
     }
@@ -4743,7 +4749,7 @@ extern "C"
 
     execplan::AggregateColumn* aggColumn = new execplan::AggregateColumn();
     aggColumn->aggOp(AggregateColumn::SUM);
-    aggColumn->alias("SUM(" + tableColName.column + "(");
+    aggColumn->alias("SUM(" + tableColName.column + ")");
     aggColumn->resultType(colType);
     aggColumn->timeZone(timeZoneOffset);
 
@@ -4757,10 +4763,14 @@ extern "C"
 
     parm.reset(parmColumn);
     aggColumn->aggParms().push_back(parm);
+    CalpontSystemCatalog::TableAliasName tn =
+                         make_aliastable(tableColName.schema, tableColName.table, "", true, lower_case_table_names);
+    std::vector<CalpontSystemCatalog::TableAliasName> tbList;
+    tbList.push_back(tn);
 
     returnedColumn.reset(aggColumn);
     returnedColumnList.push_back(returnedColumn);
-    returnedColumnList.push_back(parm);
+//    returnedColumnList.push_back(parm);
     columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(parmColumn->columnName(),
                                                                                      parm));
 //      columnMap.insert(execplan::CalpontSelectExecutionPlan::ColumnMap::value_type(aggColumn->columnName(),
@@ -4777,6 +4787,8 @@ extern "C"
 
     csep->returnedCols(returnedColumnList);
     csep->columnMap(columnMap);
+
+    csep->tableList(tbList);
   
     SessionManager sm;
     BRM::TxnID txnID;
@@ -4798,6 +4810,7 @@ extern "C"
     string query;
     query.assign(idb_mysql_query_str(thd));
     csep->data(query);
+    idblog("constructed csep: " << csep->toString());
   
     if (!get_fe_conn_info_ptr())
     {
@@ -4818,22 +4831,30 @@ extern "C"
     if (thd->killed == KILL_QUERY || thd->killed == KILL_QUERY_HARD)
     {
       force_close_fep_conn(thd, ci);
-      return 0;
+      rc = -1;
+finalize: 
+      if (ci->cal_conn_hndl)
+      {
+        sendQB(ci->cal_conn_hndl, 0);
+
+        sm::sm_cleanup(ci->cal_conn_hndl);
+        ci->cal_conn_hndl = 0;
+      }
+  
+      return rc;
     }
   
     csep->traceFlags(ci->traceFlags);
-  
-    cal_table_info ti;
-    sm::cpsm_conhdl_t* hndl;
   
     bool localQuery = (get_local_query(thd) > 0 ? true : false);
     csep->localQuery(localQuery);
   
     // Try to initialize connection.
     if (!initializeCalConnectionInfo(ci, thd, csc, sessionID, localQuery))
-      goto error;
-  
-    hndl = ci->cal_conn_hndl;
+    {
+      rc = -1;
+      goto finalize;
+    }
   
     if (csep->traceOn())
       std::cout << csep->toString() << std::endl;
@@ -4842,26 +4863,193 @@ extern "C"
 
       csep->rmParms(ci->rmParms);
       // Serialize and the send the SELECT SUM(aux) execution plan.
-      if (!sendExecutionPlanToExeMgr(hndl, qb, csep, ci, thd))
-        goto error;
+      if (!sendExecutionPlanToExeMgr(ci->cal_conn_hndl, qb, csep, ci, thd))
+      {
+        rc = -1;
+        idblog("failure"); 
+        goto finalize;
+      }
     }
   
     ci->rmParms.clear();
     //ci->tableMap[table] = ti;
- 
-    idblog("success"); 
-    return 0;
-  
-error:
-  
-    if (ci->cal_conn_hndl)
+
+    sm::tableid_t tableid = execplan::IDB_VTABLE_ID;
+    sm::sp_cpsm_tplh_t tpl_ctx;
+    sm::sp_cpsm_tplsch_t tpl_scan_ctx;
+
+    if (!tpl_ctx || !tpl_scan_ctx || (ci->cal_conn_hndl && ci->cal_conn_hndl->queryState == sm::NO_QUERY))
     {
-      sm::sm_cleanup(ci->cal_conn_hndl);
-      ci->cal_conn_hndl = 0;
+      if (tpl_ctx == 0)
+      {
+        tpl_ctx.reset(new sm::cpsm_tplh_t());
+        tpl_scan_ctx = sm::sp_cpsm_tplsch_t(new sm::cpsm_tplsch_t());
+      }
+
+      // make sure rowgroup is null so the new meta data can be taken. This is for some case mysql
+      // call rnd_init for a table more than once.
+      tpl_scan_ctx->rowGroup = nullptr;
+
+      rc = -1;
+      try
+      {
+        sm::tpl_open(tableid, tpl_ctx, ci->cal_conn_hndl);
+        sm::tpl_scan_open(tableid, tpl_scan_ctx, ci->cal_conn_hndl);
+      }
+      catch (std::exception& e)
+      {
+        uint32_t sessionID = tid2sid(thd->thread_id);
+        string emsg = "table can not be opened: " + string(e.what());
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        goto finalize;
+      }
+      catch (...)
+      {
+        uint32_t sessionID = tid2sid(thd->thread_id);
+        string emsg = "table can not be opened";
+        setError(thd, ER_INTERNAL_ERROR, emsg);
+        CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+        goto finalize;
+      }
+
+      tpl_scan_ctx->traceFlags = ci->traceFlags;
+
+      if ((tpl_scan_ctx->ctp).size() == 0)
+      {
+        uint32_t num_attr = 1;
+
+        for (uint32_t i = 0; i < num_attr; i++)
+        {
+          CalpontSystemCatalog::ColType ctype;
+          tpl_scan_ctx->ctp.push_back(ctype);
+        }
+      }
+      ci->cal_conn_hndl->queryState = sm::QUERY_IN_PROCESS;
     }
+
+    if (!tpl_ctx || !tpl_scan_ctx)
+    {
+      uint32_t sessionID = tid2sid(thd->thread_id);
+      CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+      goto finalize;
+    }
+
+
+    int retCode = 0;
+    try
+    {
+      retCode = HA_ERR_END_OF_FILE;
+      int num_attr = 1;
+      sm::status_t sm_stat;
+
+      try
+      {
+        if (ci->cal_conn_hndl)
+        {
+          sm_stat = sm::tpl_scan_fetch(tpl_scan_ctx, ci->cal_conn_hndl, (int*)(&current_thd->killed));
+        }
+        else
+          throw runtime_error("internal error");
+      }
+      catch (std::exception& ex)
+      {
+        // @bug 2244. Always log this msg for now, as we try to track down when/why we are
+        //			losing socket connection with ExeMgr
+        // #ifdef INFINIDB_DEBUG
+        //tpl_scan_fetch_LogException(ti, ci, &ex);
+        // #endif
+        sm_stat = sm::CALPONT_INTERNAL_ERROR;
+      }
+      catch (...)
+      {
+        // @bug 2244. Always log this msg for now, as we try to track down when/why we are
+        //			losing socket connection with ExeMgr
+        // #ifdef INFINIDB_DEBUG
+        //tpl_scan_fetch_LogException(ti, ci, 0);
+        // #endif
+        sm_stat = sm::CALPONT_INTERNAL_ERROR;
+      }
+
+      if (sm_stat == sm::STATUS_OK)
+      {
+        std::vector<CalpontSystemCatalog::ColType>& colTypes = tpl_scan_ctx->ctp;
   
-    idblog("failure"); 
-    return -1;
+        std::shared_ptr<RowGroup> rowGroup = tpl_scan_ctx->rowGroup;
+  
+        rowgroup::Row row;
+        rowGroup->initRow(&row);
+        rowGroup->getRow(tpl_scan_ctx->rowsreturned, &row);
+  
+        rc = row.getIntField(0);
+        retCode = 0;
+      }
+      else if (sm_stat == sm::SQL_NOT_FOUND)
+      {
+        IDEBUG(cerr << "fetchNextRow done for table " << ti.msTablePtr->s->table_name.str << " rows = " << ti.c
+                    << endl);
+        retCode = HA_ERR_END_OF_FILE;
+      }
+      else if (sm_stat == sm::CALPONT_INTERNAL_ERROR)
+      {
+        retCode = ER_INTERNAL_ERROR;
+        ci->rc = retCode;
+      }
+      else if ((uint32_t)sm_stat == logging::ERR_LOST_CONN_EXEMGR)
+      {
+        retCode = logging::ERR_LOST_CONN_EXEMGR;
+        ci->rc = retCode;
+      }
+      else if (sm_stat == sm::SQL_KILLED)
+      {
+        // query was aborted by the user. treat it the same as limit query. close
+        // connection after rnd_close.
+        retCode = HA_ERR_END_OF_FILE;
+        ci->rc = retCode;
+      }
+      else
+      {
+        retCode = sm_stat;
+        ci->rc = retCode;
+      }
+
+    }
+    catch (std::exception& e)
+    {
+      uint32_t sessionID = tid2sid(thd->thread_id);
+      string emsg = string("Error while fetching from ExeMgr: ") + e.what();
+      setError(thd, ER_INTERNAL_ERROR, emsg);
+      CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+      retCode = ER_INTERNAL_ERROR;
+      goto finalize;
+    }
+
+
+    if (retCode != 0)
+    {
+      string emsg;
+
+      // remove this check when all error handling migrated to the new framework.
+      if (rc >= 1000)
+        emsg = tpl_scan_ctx->errMsg;
+      else
+      {
+        logging::ErrorCodes errorcodes;
+        emsg = errorcodes.errorString(rc);
+      }
+
+      uint32_t sessionID = tid2sid(thd->thread_id);
+      setError(thd, ER_INTERNAL_ERROR, emsg);
+      ci->stats.fErrorNo = retCode;
+      CalpontSystemCatalog::removeCalpontSystemCatalog(sessionID);
+      retCode = ER_INTERNAL_ERROR;
+      goto finalize;
+    }
+
+    idblog("success");
+
+    goto finalize;
+  
   }
 } // extern "C"
 

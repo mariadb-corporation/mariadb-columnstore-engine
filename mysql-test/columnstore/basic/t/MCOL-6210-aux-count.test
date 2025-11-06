@@ -11,3 +11,4 @@ SELECT mcs_aux_count('MCOL6210', 't1');
 DELETE FROM t1 WHERE 1 = x MOD 2;
 SELECT mcs_aux_count('MCOL6210', 't1');
 DROP DATABASE MCOL6210;
+--source ../include/drop_functions.inc
