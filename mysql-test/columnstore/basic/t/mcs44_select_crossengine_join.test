@@ -51,5 +51,7 @@ SELECT * FROM t1;
 SELECT * FROM t2;
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs44_db;

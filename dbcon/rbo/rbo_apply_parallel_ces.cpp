@@ -25,7 +25,6 @@
 
 #include "rulebased_optimizer.h"
 
-#include "aggregatecolumn.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
@@ -73,14 +72,13 @@ bool someAreForeignTables(execplan::CalpontSelectExecutionPlan& csep)
 bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPlan& csep,
                                               optimizer::RBOptimizerContext& ctx)
 {
-  return std::any_of(
-      csep.tableList().begin(), csep.tableList().end(),
-      [&ctx](const auto& table)
-      {
-        cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
-        return (!table.isColumnstore() && ctx.getGwi().tableStatisticsMap.find(schemaAndTableName) !=
-                                              ctx.getGwi().tableStatisticsMap.end());
-      });
+  return std::any_of(csep.tableList().begin(), csep.tableList().end(),
+                     [&ctx](const auto& table)
+                     {
+                       cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
+                       return (!table.isColumnstore() &&
+                               ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName));
+                     });
 }
 
 // This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
@@ -181,68 +179,24 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
 
 // Looking for a projected column that comes first in an available index and has EI statistics
 // INV nullptr signifies that no suitable column was found
-execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep,
-                                              execplan::CalpontSystemCatalog::TableAliasName& targetTable,
-                                              optimizer::RBOptimizerContext& ctx)
-{
-  // TODO supply a list of suitable columns from a higher level
-  for (auto& rc : csep.returnedCols())
-  {
-    // TODO extract SC from RC
-    auto* simpleColumn = dynamic_cast<execplan::SimpleColumn*>(rc.get());
-    if (simpleColumn)
-    {
-      execplan::CalpontSystemCatalog::TableAliasName rcTable(
-          simpleColumn->schemaName(), simpleColumn->tableName(), simpleColumn->tableAlias(), "", false);
-      if (!targetTable.weakerEq(rcTable))
-      {
-        continue;
-      }
-      cal_impl_if::SchemaAndTableName schemaAndTableName = {simpleColumn->schemaName(),
-                                                            simpleColumn->tableName()};
-
-      auto columnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
-      if (!columnStatistics)
-      {
-        continue;
-      }
-      auto columnStatisticsIt = columnStatistics->find(simpleColumn->columnName());
-      if (columnStatisticsIt != columnStatistics->end())
-      {
-        return simpleColumn;
-      }
-    }
-  }
-
-  return nullptr;
-}
-
-// TBD
-Histogram_json_hb* chooseStatisticsToUse(std::vector<Histogram_json_hb*>& columnStatisticsVec)
-{
-  return columnStatisticsVec.front();
-}
-
-// Looking for a projected column that comes first in an available index and has EI statistics
-// INV nullptr signifies that no suitable column was found
-std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
+std::optional<cal_impl_if::ColumnStatistics*> chooseKeyColumnAndStatistics(
     execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx)
 {
   cal_impl_if::SchemaAndTableName schemaAndTableName = {targetTable.schema, targetTable.table};
 
-  auto tableColumnsStatisticsIt = ctx.getGwi().tableStatisticsMap.find(schemaAndTableName);
-  if (tableColumnsStatisticsIt == ctx.getGwi().tableStatisticsMap.end() ||
-      tableColumnsStatisticsIt->second.empty())
+  auto tableColumnsStatisticsOpt = ctx.getGwi().tableStatistics.findStatisticsForATable(schemaAndTableName);
+  if (!tableColumnsStatisticsOpt)
   {
     return std::nullopt;
   }
 
-  // TODO take some column and some stats for it!!!
-  for (auto& [columnName, scAndStatisticsVec] : tableColumnsStatisticsIt->second)
+  auto tableColumnsStatistics = tableColumnsStatisticsOpt.value();
+
+  // TODO this algo now returns the first column and stats
+  // for it but it should consider all columns available
+  for (auto& [columnName, columnStatistics] : *tableColumnsStatistics)
   {
-    auto& [sc, columnStatisticsVec] = scAndStatisticsVec;
-    auto* columnStatistics = chooseStatisticsToUse(columnStatisticsVec);
-    return {{sc, columnStatistics}};
+    return {&columnStatistics};
   }
 
   return std::nullopt;
@@ -258,38 +212,35 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
   return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
 }
 
-// Populates range bounds based on column statistics
-// Returns optional with bounds if successful, nullopt otherwise
+uint64_t decodeU64(const std::string& bytes)
+{
+  uint64_t v = 0;
+  const size_t n = std::min<size_t>(bytes.size(), sizeof(uint64_t));
+  if (n)
+    std::memcpy(&v, bytes.data(), n);
+  return v;
+}
+
+// Populates range bounds based on histogram.
+// INV histogram != nullptr && histogram->get_json_histogram().empty() is enforced in the caller.
 template <typename T>
-std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_hb* columnStatistics,
-                                                                 optimizer::RBOptimizerContext& ctx)
+std::optional<details::FilterRangeBounds<T>> populateRangeBoundsFromHistogram(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t maxParallelFactor)
 {
   details::FilterRangeBounds<T> bounds;
-
-  // Guard: empty histogram
-  if (!columnStatistics || columnStatistics->get_json_histogram().empty())
-    return std::nullopt;
-
-  auto decodeU64 = [](const std::string& bytes) -> uint64_t
-  {
-    uint64_t v = 0;
-    const size_t n = std::min<size_t>(bytes.size(), sizeof(uint64_t));
-    if (n)
-      std::memcpy(&v, bytes.data(), n);
-    return v;
-  };
+  auto* histogram = columnStatistics.getHistogram();
 
   // Get parallel factor from context
-  size_t maxParallelFactor = ctx.getCesOptimizationParallelFactor();
-  size_t numberOfUnionUnits = std::min(columnStatistics->get_json_histogram().size(), maxParallelFactor);
-  size_t numberOfBucketsPerUnionUnit = columnStatistics->get_json_histogram().size() / numberOfUnionUnits;
+  // TODO These calls are abstraction leak from MDB so better replace with own structs.
+  size_t numberOfUnionUnits = std::min(histogram->get_json_histogram().size(), maxParallelFactor);
+  size_t numberOfBucketsPerUnionUnit = histogram->get_json_histogram().size() / numberOfUnionUnits;
 
   // Loop over buckets to produce filter ranges
   // NB Currently Histogram_json_hb has the last bucket that has end as its start
   for (size_t i = 0; i < numberOfUnionUnits - 1; ++i)
   {
-    auto bucket = columnStatistics->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
-    auto endBucket = columnStatistics->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
+    auto bucket = histogram->get_json_histogram().begin() + i * numberOfBucketsPerUnionUnit;
+    auto endBucket = histogram->get_json_histogram().begin() + (i + 1) * numberOfBucketsPerUnionUnit;
     T currentLowerBound = static_cast<T>(decodeU64(bucket->start_value));
     T currentUpperBound = static_cast<T>(decodeU64(endBucket->start_value));
     bounds.push_back({currentLowerBound, currentUpperBound});
@@ -299,15 +250,15 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   if (numberOfUnionUnits >= 1)
   {
     auto lastChunkIndex = (numberOfUnionUnits - 1) * numberOfBucketsPerUnionUnit;
-    if (lastChunkIndex < columnStatistics->get_json_histogram().size())
+    if (lastChunkIndex < histogram->get_json_histogram().size())
     {
-      auto lastStartBucket = columnStatistics->get_json_histogram().begin() + lastChunkIndex;
+      auto lastStartBucket = histogram->get_json_histogram().begin() + lastChunkIndex;
       T finalLowerBound = static_cast<T>(decodeU64(lastStartBucket->start_value));
 
       T finalUpperBound = std::numeric_limits<T>::max();
-      if (!columnStatistics->get_last_bucket_end_endp().empty())
+      if (!histogram->get_last_bucket_end_endp().empty())
       {
-        finalUpperBound = static_cast<T>(decodeU64(columnStatistics->get_last_bucket_end_endp()));
+        finalUpperBound = static_cast<T>(decodeU64(histogram->get_last_bucket_end_endp()));
       }
       bounds.push_back({finalLowerBound, finalUpperBound});
     }
@@ -322,6 +273,72 @@ std::optional<details::FilterRangeBounds<T>> populateRangeBounds(Histogram_json_
   return bounds;
 }
 
+// Populates range bounds based on min/max assuming that the column values are uniformly distributed.
+// This statistics is used for PK columns in engine-independent stats in MDB.
+// NB The current version supports only numeric columns up to BIGNT.
+template <typename T>
+std::optional<details::FilterRangeBounds<T>> populateRangeBoundsFromEquallyDistributedRange(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t maxParallelFactor)
+{
+  // TODOThis should be protected by constexpr checks on types, mb concepts.
+  T minValue = 0;
+  T maxValue = 0;
+
+  // TODO consider to move into a ColumnStatistics method.
+  if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>)
+  {
+    minValue = columnStatistics.getUIntMinValue().value();
+    maxValue = columnStatistics.getUIntMaxValue().value();
+  }
+  else if constexpr (std::is_integral_v<T> && std::is_signed_v<T>)
+  {
+    minValue = columnStatistics.getIntMinValue().value();
+    maxValue = columnStatistics.getIntMaxValue().value();
+  }
+
+  if (minValue >= maxValue)
+  {
+    return std::nullopt;
+  }
+
+  auto distance = maxValue - minValue;
+  auto step = distance / maxParallelFactor;
+
+  details::FilterRangeBounds<T> bounds;
+  for (size_t i = 0; i < maxParallelFactor; ++i)
+  {
+    bounds.push_back({minValue + i * step, minValue + (i + 1) * step});
+  }
+
+  if (!bounds.empty())
+  {
+    bounds.front().first = std::numeric_limits<T>::lowest();
+    bounds.back().second = maxValue;
+  }
+
+  return bounds;
+}
+
+// Populates range bounds based on column statistics
+// Returns optional with bounds if successful, nullopt otherwise
+template <typename T>
+std::optional<details::FilterRangeBounds<T>> populateRangeBounds(
+    cal_impl_if::ColumnStatistics& columnStatistics, size_t& maxParallelFactor)
+{
+  // Guard: empty histogram or no min/max values
+  if (columnStatistics.hasNonEmptyHistogram())
+  {
+    return populateRangeBoundsFromHistogram<T>(columnStatistics, maxParallelFactor);
+  }
+
+  if (columnStatistics.hasMinAndMaxRangeValues())
+  {
+    return populateRangeBoundsFromEquallyDistributedRange<T>(columnStatistics, maxParallelFactor);
+  }
+
+  return std::nullopt;
+}
+
 // TODO char and other numerical types support
 execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     execplan::CalpontSelectExecutionPlan& csep, execplan::CalpontSystemCatalog::TableAliasName& table,
@@ -331,26 +348,27 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
 
   // SC type controls an integral type used to produce suitable filters. The continuation of this function
   // should become a template function based on SC type.
-  auto keyColumnAndStatistics = chooseKeyColumnAndStatistics(table, ctx);
-  if (!keyColumnAndStatistics)
+  auto columnStatisticsOpt = chooseKeyColumnAndStatistics(table, ctx);
+  if (!columnStatisticsOpt)
   {
     return unionVec;
   }
 
-  auto& [keyColumn, columnStatistics] = keyColumnAndStatistics.value();
+  auto& columnStatistics = *columnStatisticsOpt.value();
+  auto& keyColumn = columnStatistics.getColumn();
 
-  std::cout << "makeUnionFromTable keyColumn " << keyColumn.toString() << std::endl;
-  std::cout << "makeUnionFromTable RC front " << csep.returnedCols().front()->toString() << std::endl;
+  size_t configuredMaxParallelFactor = ctx.getCesOptimizationParallelFactor();
 
   // TODO char and other numerical types support
-  auto boundsOpt = populateRangeBounds<uint64_t>(columnStatistics, ctx);
+  // TODO signed numerical types support
+  using SCIntegralType = uint64_t;
+  auto boundsOpt = populateRangeBounds<SCIntegralType>(columnStatistics, configuredMaxParallelFactor);
   if (!boundsOpt.has_value())
   {
     return unionVec;
   }
 
   auto& bounds = boundsOpt.value();
-  std::cout << "Bounds generated: " << bounds.size() << std::endl;
 
   // These bounds produce low <= col < high
   if (bounds.size() > 1)
@@ -376,7 +394,6 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
     clonedCSEP->filters(filter);
     unionVec.push_back(clonedCSEP);
   }
-  std::cout << "Union units created: " << unionVec.size() << std::endl;
 
   return unionVec;
 }

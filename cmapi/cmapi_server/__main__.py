@@ -6,6 +6,7 @@ CherryPy-based webservice daemon with background threads
 
 import logging
 import os
+import sys
 import threading
 import time
 from datetime import datetime
@@ -19,19 +20,21 @@ from cmapi_server.logging_management import config_cmapi_server_logging
 from tracing.sentry import maybe_init_sentry
 from tracing.traceparent_backend import TraceparentBackend
 from tracing.tracer import get_tracer
-config_cmapi_server_logging()
-from tracing.trace_tool import register_tracing_tools
 
+config_cmapi_server_logging()
 from cmapi_server import helpers
-from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
-from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error, jsonify_404
+from cmapi_server.constants import CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_404, jsonify_error
 from cmapi_server.failover_agent import FailoverAgent
+from cmapi_server.invariant_checks import run_invariant_checks
 from cmapi_server.managers.application import AppManager
-from cmapi_server.managers.process import MCSProcessManager
 from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.managers.process import MCSProcessManager
 from failover.node_monitor import NodeMonitor
+from failover.config import Config
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig
+from tracing.trace_tool import register_tracing_tools
 
 
 def worker(app):
@@ -95,7 +98,8 @@ class FailoverBackgroundThread(plugins.SimplePlugin):
 
     def __init__(self, bus, turned_on):
         super().__init__(bus)
-        self.node_monitor = NodeMonitor(agent=FailoverAgent())
+        sampling_interval = Config().getFailoverTimeoutSeconds()
+        self.node_monitor = NodeMonitor(agent=FailoverAgent(), samplingInterval=sampling_interval)
         self.running = False
         self.turned_on = turned_on
         if self.turned_on:
@@ -150,6 +154,12 @@ if __name__ == '__main__':
 
     CertificateManager.create_self_signed_certificate_if_not_exist()
     CertificateManager.renew_certificate()
+
+    # Run checks, if some of them fail -- log and exit
+    diag = run_invariant_checks()
+    if diag:
+        logging.error('Invariant checks failed, exiting')
+        sys.exit(1)
 
     app = cherrypy.tree.mount(root=None, config=CMAPI_CONF_PATH)
     root_config = {

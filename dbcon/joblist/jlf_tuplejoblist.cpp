@@ -246,9 +246,30 @@ void constructJoinedRowGroup(RowGroup& rg, uint32_t large, uint32_t prev, bool r
   if (root == false)  // not root
   {
     vector<uint32_t>& joinKeys = jobInfo.tableJoinMap[make_pair(large, prev)].fLeftKeys;
+    // Reserve space for vectors (estimate based on join keys + tables)
+    size_t estimatedSize = joinKeys.size() + tableSet.size() * 8;  // rough estimate
+    pos.reserve(estimatedSize + 1);
+    oids.reserve(estimatedSize);
+    keys.reserve(estimatedSize);
+    scale.reserve(estimatedSize);
+    precision.reserve(estimatedSize);
+    types.reserve(estimatedSize);
+    csNums.reserve(estimatedSize);
 
     for (vector<uint32_t>::iterator i = joinKeys.begin(); i != joinKeys.end(); i++)
       addColumnToRG(*i, pos, oids, keys, scale, precision, types, csNums, jobInfo);
+  }
+  else
+  {
+    // Reserve space for vectors when root
+    size_t estimatedSize = tableSet.size() * 8;  // rough estimate
+    pos.reserve(estimatedSize + 1);
+    oids.reserve(estimatedSize);
+    keys.reserve(estimatedSize);
+    scale.reserve(estimatedSize);
+    precision.reserve(estimatedSize);
+    types.reserve(estimatedSize);
+    csNums.reserve(estimatedSize);
   }
 
   // -- followed by the columns in select or expression
@@ -346,6 +367,16 @@ void adjustLastStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps,
   vector<CalpontSystemCatalog::ColDataType> types;
   vector<uint32_t> csNums;
   pos.push_back(2);
+
+  // Reserve space for all vectors
+  size_t vSize = v.size();
+  pos.reserve(vSize + 1);
+  oids.reserve(vSize);
+  keys.reserve(vSize);
+  types.reserve(vSize);
+  csNums.reserve(vSize);
+  scale.reserve(vSize);
+  precision.reserve(vSize);
 
   for (unsigned i = 0; i < v.size(); i++)
   {
@@ -602,6 +633,16 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
   psv.insert(psv.begin(), keySteps.begin(), keySteps.end());  // add joinkeys to project
   psv.insert(psv.end(), expSteps.begin(), expSteps.end());    // add expressions to project
   set<uint32_t> seenCols;                                     // columns already processed
+
+  // Reserve space for output rowgroup vectors (psv.size() + fjKeys is upper bound)
+  size_t estimatedSize = psv.size() + fjKeys.size();
+  pos.reserve(estimatedSize + 1);
+  oids.reserve(estimatedSize);
+  keys.reserve(estimatedSize);
+  scale.reserve(estimatedSize);
+  precision.reserve(estimatedSize);
+  types.reserve(estimatedSize);
+  csNums.reserve(estimatedSize);
 
   // for passthru conversion
   // passthru is disabled (default lastTupleId to -1) unless the TupleBPS::bop is BOP_AND.
@@ -1293,6 +1334,16 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
         vector<CalpontSystemCatalog::ColDataType> types;
         vector<uint32_t> csNums;
         pos.push_back(2);
+
+        // Reserve space for all vectors
+        size_t tisSize = tis.size();
+        pos.reserve(tisSize + 1);
+        oids.reserve(tisSize);
+        keys.reserve(tisSize);
+        types.reserve(tisSize);
+        csNums.reserve(tisSize);
+        scale.reserve(tisSize);
+        precision.reserve(tisSize);
 
         for (unsigned i = 0; i < tis.size(); i++)
         {

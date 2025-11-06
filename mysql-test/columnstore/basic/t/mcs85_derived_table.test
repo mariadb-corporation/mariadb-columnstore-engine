@@ -61,5 +61,7 @@ SELECT t4.a, t.a FROM t4 LEFT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY t
 SELECT t4.a, t.a FROM t4 RIGHT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY t.a, t4.a;
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs85_db;

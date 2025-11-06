@@ -46,7 +46,12 @@ class Tracer:
         self._backends.clear()
 
     @contextmanager
-    def start_as_current_span(self, name: str, kind: str = "INTERNAL") -> Iterator[TraceSpan]:
+    def start_as_current_span(
+        self,
+        name: str,
+        kind: str = "INTERNAL",
+        attributes: Optional[Dict[str, Any]] = None,
+    ) -> Iterator[TraceSpan]:
         trace_id = _current_trace_id.get() or rand_16_hex()
         parent_span = _current_span_id.get()
         new_span_id = rand_8_hex()
@@ -63,7 +68,7 @@ class Tracer:
             trace_id=trace_id,
             span_id=new_span_id,
             parent_span_id=parent_span,
-            attributes={"span.kind": kind, "span.name": name},
+            attributes={"span.kind": kind, "span.name": name, **(attributes or {})},
             tracer=self,
         )
 

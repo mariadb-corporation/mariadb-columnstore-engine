@@ -195,7 +195,7 @@ execplan::ParseTree* InSub::transform()
   }
 
   // Insert column statistics
-  fGwip.mergeTableStatistics(gwi.tableStatisticsMap);
+  fGwip.mergeTableStatistics(gwi.tableStatistics);
 
   // remove outer query tables
   CalpontSelectExecutionPlan::TableList tblist;

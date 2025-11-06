@@ -119,11 +119,245 @@ typedef dmlpackage::TableValuesMap TableValuesMap;
 typedef std::map<execplan::CalpontSystemCatalog::TableAliasName, std::pair<int, TABLE_LIST*>> TableMap;
 typedef std::tr1::unordered_map<TABLE_LIST*, std::vector<COND*>> TableOnExprList;
 typedef std::tr1::unordered_map<TABLE_LIST*, uint> TableOuterJoinMap;
+
+class ColumnStatistics;
+using MDBColumnStatistics = Column_statistics;
 using ColumnName = std::string;
-using ColumnStatisticsMap =
-    std::unordered_map<ColumnName, std::pair<execplan::SimpleColumn, std::vector<Histogram_json_hb*>>>;
+using ColumnStatisticsMap = std::unordered_map<ColumnName, ColumnStatistics>;
 using TableStatisticsMap =
     std::unordered_map<SchemaAndTableName, ColumnStatisticsMap, SchemaAndTableNameHash>;
+
+#if MYSQL_VERSION_ID >= 110406
+class ColumnStatistics
+{
+ public:
+  ColumnStatistics(execplan::SimpleColumn& column, MDBColumnStatistics* mdbStatisticsWithHistogram)
+   : column(column)
+  {
+    Histogram_json_hb* histogram = dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram);
+    if (histogram)
+    {
+      histograms.push_back(histogram);
+    }
+    if (mdbStatisticsWithHistogram->min_max_values_are_provided())
+    {
+      minValue = mdbStatisticsWithHistogram->min_value;
+      maxValue = mdbStatisticsWithHistogram->max_value;
+    }
+  }
+  ColumnStatistics() = default;
+
+  static bool hasHistogramOrMinAndMaxRangeValues(MDBColumnStatistics* mdbStatisticsWithHistogram)
+  {
+    return dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram) != nullptr ||
+           mdbStatisticsWithHistogram->min_max_values_are_provided();
+  }
+
+  void addHistogram(MDBColumnStatistics* mdbStatisticsWithHistogram)
+  {
+    Histogram_json_hb* histogram = dynamic_cast<Histogram_json_hb*>(mdbStatisticsWithHistogram->histogram);
+    if (histogram)
+    {
+      histograms.push_back(histogram);
+    }
+    if (mdbStatisticsWithHistogram->min_max_values_are_provided())
+    {
+      minValue = mdbStatisticsWithHistogram->min_value;
+      maxValue = mdbStatisticsWithHistogram->max_value;
+    }
+  }
+
+  const Histogram_json_hb* getHistogram() const
+  {
+    if (histograms.empty())
+      return nullptr;
+    return histograms.front();
+  }
+
+  bool hasNonEmptyHistogram() const
+  {
+    auto histogram = getHistogram();
+    return histogram && !histogram->get_json_histogram().empty();
+  }
+
+  bool hasMinAndMaxRangeValues() const
+  {
+    return hasMinValue() && hasMaxValue();
+  }
+
+  execplan::SimpleColumn& getColumn()
+  {
+    return column;
+  }
+
+  bool hasMinValue() const
+  {
+    return minValue != nullptr;
+  }
+
+  bool hasMaxValue() const
+  {
+    return maxValue != nullptr;
+  }
+
+  std::optional<int64_t> getIntMinValue() const
+  {
+    return (minValue) ? std::optional<int64_t>(minValue->val_int()) : std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMinValue() const
+  {
+    return (minValue) ? std::optional<uint64_t>(minValue->val_uint()) : std::nullopt;
+  }
+
+  std::optional<int64_t> getIntMaxValue() const
+  {
+    return (maxValue) ? std::optional<int64_t>(maxValue->val_int()) : std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMaxValue() const
+  {
+    return (maxValue) ? std::optional<uint64_t>(maxValue->val_uint()) : std::nullopt;
+  }
+
+ private:
+  execplan::SimpleColumn column;
+  std::vector<Histogram_json_hb*> histograms;
+  Field* minValue{nullptr};
+  Field* maxValue{nullptr};
+};
+#else
+class ColumnStatistics
+{
+ public:
+  ColumnStatistics(execplan::SimpleColumn& /*column*/, MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+  }
+  ColumnStatistics() = default;
+
+  static bool hasHistogramOrMinAndMaxRangeValues(MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+    return false;
+  }
+
+  execplan::SimpleColumn& getColumn()
+  {
+    return column;
+  }
+
+  const Histogram_json_hb* getHistogram() const
+  {
+    return nullptr;
+  }
+
+  void addHistogram(MDBColumnStatistics* /*mdbStatisticsWithHistogram*/)
+  {
+  }
+
+  bool hasMinAndMaxRangeValues() const
+  {
+    return false;
+  }
+
+  bool hasNonEmptyHistogram() const
+  {
+    return false;
+  }
+
+  std::optional<int64_t> getIntMinValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMinValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<int64_t> getIntMaxValue() const
+  {
+    return std::nullopt;
+  }
+
+  std::optional<uint64_t> getUIntMaxValue() const
+  {
+    return std::nullopt;
+  }
+
+ private:
+  execplan::SimpleColumn column;
+};
+#endif
+
+struct TableStatistics
+{
+  TableStatistics() = default;
+
+  void createOrUpdate(SchemaAndTableName tableName, const char* fieldName, execplan::SimpleColumn& sc,
+                      MDBColumnStatistics* statistics)
+  {
+    if (!ColumnStatistics::hasHistogramOrMinAndMaxRangeValues(statistics))
+    {
+      return;
+    }
+
+    auto tableStatisticsIt = tableStatistics_.find(tableName);
+    {
+      if (tableStatisticsIt == tableStatistics_.end())
+      {
+        tableStatistics_[tableName][fieldName] = {sc, statistics};
+      }
+      else
+      {
+        auto columnStatisticsMapIt = tableStatisticsIt->second.find(fieldName);
+        if (columnStatisticsMapIt == tableStatisticsIt->second.end())
+        {
+          tableStatisticsIt->second[fieldName] = {sc, statistics};
+        }
+        else
+        {
+          columnStatisticsMapIt->second.addHistogram(statistics);
+        }
+      }
+    }
+  }
+
+  std::optional<ColumnStatisticsMap*> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  {
+    auto tableStatisticsIt = tableStatistics_.find(schemaAndTableName);
+
+    if (tableStatisticsIt == tableStatistics_.end())
+    {
+      return std::nullopt;
+    }
+
+    return {&tableStatisticsIt->second};
+  }
+
+  void mergeTableStatistics(const TableStatistics& aTableStatistics)
+  {
+    for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatistics.tableStatistics_)
+    {
+      auto tableStatisticsIt = tableStatistics_.find(schemaAndTableName);
+      if (tableStatisticsIt == tableStatistics_.end())
+      {
+        tableStatistics_[schemaAndTableName] = aColumnStatisticsMap;
+      }
+      else
+      {
+        // Note: This algo overwrites histograms but shouldn't be a problem b/c
+        // statistics can't change.
+        for (auto& [columnName, histogram] : aColumnStatisticsMap)
+        {
+          tableStatisticsIt->second[columnName] = histogram;
+        }
+      }
+    }
+  }
+
+ private:
+  TableStatisticsMap tableStatistics_;
+};
 
 // This structure is used to store MDB AST -> CSEP translation context.
 // There is a column statistics for some columns in a query.
@@ -139,7 +373,7 @@ struct gp_walk_info
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList orderByCols;
   std::vector<Item*> extSelAggColsItems;
   execplan::CalpontSelectExecutionPlan::ColumnMap columnMap;
-  TableStatisticsMap tableStatisticsMap;
+  TableStatistics tableStatistics;
   // This vector temporarily hold the projection columns to be added
   // to the returnedCols vector for subquery processing. It will be appended
   // to the end of returnedCols when the processing is finished.
@@ -230,7 +464,7 @@ struct gp_walk_info
   SubQuery** subQueriesChain;
 
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
-   : tableStatisticsMap({})
+   : tableStatistics({})
    , sessionid(0)
    , fatalParseError(false)
    , condPush(false)
@@ -262,17 +496,10 @@ struct gp_walk_info
   }
   ~gp_walk_info();
 
-  void mergeTableStatistics(const TableStatisticsMap& tableStatisticsMap);
-  std::optional<ColumnStatisticsMap> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
+  void mergeTableStatistics(const TableStatistics& tableStatistics);
+  std::optional<ColumnStatisticsMap*> findStatisticsForATable(SchemaAndTableName& schemaAndTableName)
   {
-    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-
-    if (tableStatisticsMapIt == tableStatisticsMap.end())
-    {
-      return std::nullopt;
-    }
-
-    return {tableStatisticsMapIt->second};
+    return tableStatistics.findStatisticsForATable(schemaAndTableName);
   }
 };
 

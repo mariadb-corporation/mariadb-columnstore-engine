@@ -98,7 +98,6 @@ using namespace execplan;
 
 using namespace joblist;
 
-
 #include "errorcodes.h"
 #include "idberrorinfo.h"
 #include "errorids.h"
@@ -122,23 +121,9 @@ namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
 
-void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
+void gp_walk_info::mergeTableStatistics(const TableStatistics& aTableStatistics)
 {
-  for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatisticsMap)
-  {
-    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-    if (tableStatisticsMapIt == tableStatisticsMap.end())
-    {
-      tableStatisticsMap[schemaAndTableName] = aColumnStatisticsMap;
-    }
-    else
-    {
-      for (auto& [columnName, histogram] : aColumnStatisticsMap)
-      {
-        tableStatisticsMapIt->second[columnName] = histogram;
-      }
-    }
-  }
+  return tableStatistics.mergeTableStatistics(aTableStatistics);
 }
 
 }  // namespace cal_impl_if
@@ -3134,6 +3119,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
       //@bug 6122 Check how many columns have not null constraint. columnn with not null constraint will not
       // show up in header.
       unsigned int numberNotNull = 0;
+      ci->columnTypes.reserve(colrids.size());
 
       for (unsigned int j = 0; j < colrids.size(); j++)
       {

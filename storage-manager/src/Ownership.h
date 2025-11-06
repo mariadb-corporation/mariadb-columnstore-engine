@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <boost/filesystem/path.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
@@ -46,7 +47,7 @@ class Ownership : public boost::noncopyable
   boost::filesystem::path metadataPrefix;
   SMLogging* logger;
 
-  void touchFlushing(const boost::filesystem::path&, volatile bool*) const;
+  void touchFlushing(const boost::filesystem::path&, std::atomic<bool>*) const;
   void takeOwnership(const boost::filesystem::path&);
   void releaseOwnership(const boost::filesystem::path&, bool isDtor = false);
   void _takeOwnership(const boost::filesystem::path&);
@@ -57,7 +58,7 @@ class Ownership : public boost::noncopyable
     ~Monitor();
     boost::thread thread;
     Ownership* owner;
-    volatile bool stop;
+    std::atomic<bool> stop;
     void watchForInterlopers();
   };
 

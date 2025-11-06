@@ -6335,6 +6335,13 @@ vector<CalpontSystemCatalog::OID> getAllSysCatOIDs()
   vector<CalpontSystemCatalog::OID> ret;
   CalpontSystemCatalog::OID oid;
 
+  // Reserve space for all OIDs from all system catalogs
+  size_t totalSize = (SYSTABLE_MAX - SYSTABLE_BASE - 1) +
+                     (SYSCOLUMN_MAX - SYSCOLUMN_BASE - 1) +
+                     (SYSTABLE_DICT_MAX - SYSTABLE_DICT_BASE - 1) +
+                     (SYSCOLUMN_DICT_MAX - SYSCOLUMN_DICT_BASE - 1);
+  ret.reserve(totalSize);
+
   for (oid = SYSTABLE_BASE + 1; oid < SYSTABLE_MAX; oid++)
     ret.push_back(oid);
 

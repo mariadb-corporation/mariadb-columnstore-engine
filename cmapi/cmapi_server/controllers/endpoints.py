@@ -6,24 +6,35 @@ import time
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import cherrypy
 import pyotp
 import requests
+from pydantic import BaseModel, Field, ValidationError, model_validator
+
 from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
-from pydantic import ValidationError
-
 from cmapi_server.constants import (
-    CMAPI_PACKAGE_NAME, CMAPI_PORT, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX, MCS_BRM_CURRENT_PATH, MCS_EM_PATH,
-    MDB_CS_PACKAGE_NAME, MDB_SERVER_PACKAGE_NAME, REQUEST_TIMEOUT,
-    S3_BRM_CURRENT_PATH, SECRET_KEY,
+    CMAPI_PACKAGE_NAME,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    REQUEST_TIMEOUT,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
 )
 from cmapi_server.controllers.api_clients import NodeControllerClient
+from cmapi_server import helpers
 from cmapi_server.controllers.error import APIError
 from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
+from cmapi_server.exceptions import validate_or_422, exc_to_422
 from cmapi_server.controllers.request_models import (
     ConfigPutRequestRootModel, StatefulConfigPutRequestModel,
 )
@@ -44,6 +55,7 @@ from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.invariant_checks import run_invariant_checks
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -447,6 +459,15 @@ class ConfigController:
                 sm_config_filename=sm_config_filename,
                 sm_config_string=sm_config
             )
+
+            diag = run_invariant_checks()
+            if diag:
+                raise_422_error(
+                    module_logger, func_name,
+                    f'Invariant checks failed. Details:\n{diag.strip()}',
+                    exc_info=False
+                )
+
             # TODO: change stop/start to restart option.
             try:
                 MCSProcessManager.stop_node(
@@ -715,7 +736,7 @@ class ShutdownController:
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
         request_body = cherrypy.request.json
-        timeout = request_body.get('timeout', 0)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         node_config = NodeConfig()
         try:
             MCSProcessManager.stop_node(
@@ -884,7 +905,7 @@ class ClusterController:
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', None)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
@@ -894,7 +915,7 @@ class ClusterController:
                 with TransactionManager():
                     response = ClusterHandler.shutdown(config, timeout)
             else:
-                response = ClusterHandler.shutdown(config)
+                response = ClusterHandler.shutdown(config, timeout)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -1584,7 +1605,7 @@ class NodeProcessController():
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', 10)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
 
         if force:
@@ -1979,12 +2000,13 @@ class NodeController:
         log_begin(module_logger, func_name)
 
         request_body = cherrypy.request.json
-        try:
-            request_stateful_config = StatefulConfigModel.model_validate(
-                request_body.get('stateful_config_dict')
-            )
-        except ValidationError as exp:
-            raise_422_error(module_logger, func_name,f'Invalid request body: {exp.errors()}')
+        request_stateful_config = validate_or_422(
+            StatefulConfigModel,
+            request_body.get('stateful_config_dict'),
+            module_logger,
+            func_name,
+            prefix='Invalid request body',
+        )
 
         success = AppStatefulConfig.apply_update(request_stateful_config)
         if not success:
@@ -1996,3 +2018,52 @@ class NodeController:
             )
 
         return {'timestamp': str(datetime.now()), 'success': success}
+
+
+class CmapiConfigPatchModel(BaseModel):
+    failover_sampling_interval_seconds: Optional[int] = Field(default=None, ge=1)
+
+    @model_validator(mode='after')
+    def ensure_any_present(self):
+        if self.failover_sampling_interval_seconds is None:
+            raise ValueError('At least one field must be provided')
+        return self
+
+
+class CmapiConfigController:
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def patch_cmapi_config(self):
+        """Update our own CMAPI config section in Columnstore.xml"""
+        func_name = 'patch_cmapi_config'
+        log_begin(module_logger, func_name)
+
+        req_model = validate_or_422(
+            CmapiConfigPatchModel,
+            cherrypy.request.json,
+            module_logger,
+            func_name,
+            prefix='Invalid payload',
+        )
+
+        # Update Columnstore.xml under <CMAPIConfig>
+        nc = NodeConfig()
+        with nc.modify_config(DEFAULT_MCS_CONF_PATH) as root:
+            cmapi_node = helpers.get_or_create_child_xml_node(root, 'CMAPIConfig')
+
+            # Failover sampling interval
+            if req_model.failover_sampling_interval_seconds is not None:
+                node = helpers.get_or_create_child_xml_node(cmapi_node, 'FailoverSamplingIntervalSeconds')
+                node.text = str(req_model.failover_sampling_interval_seconds)
+
+        with exc_to_422(module_logger, func_name, prefix='Failed to bump config revision'):
+            helpers.update_revision_and_manager(input_config_filename=DEFAULT_MCS_CONF_PATH)
+
+        # Broadcast updated config
+        with cmapi_error_to_422(module_logger, func_name):
+            with TransactionManager() as txn:
+                helpers.broadcast_new_config(nodes=txn.success_txn_nodes)
+
+        return {'timestamp': str(datetime.now())}

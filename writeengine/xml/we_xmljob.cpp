@@ -757,6 +757,12 @@ void XMLJob::postProcessTableNode()
     bValidateNoDefColWithoutDefValue = true;
     int tableNo = fJob.jobTableList.size() - 1;
 
+    // Reserve space for default columns
+    fJob.jobTableList[tableNo].colList.reserve(fJob.jobTableList[tableNo].colList.size() +
+                                               fDefaultColumns.size());
+    fJob.jobTableList[tableNo].fFldRefs.reserve(fJob.jobTableList[tableNo].fFldRefs.size() +
+                                                fDefaultColumns.size());
+
     for (unsigned k = 0; k < fDefaultColumns.size(); k++)
     {
       // Add to list of db columns to be loaded

@@ -79,5 +79,7 @@ CREATE TABLE mcs19_db.t1;
 connection default;
 SET default_storage_engine=default;
 DROP DATABASE mcs19_db;
+--disable_warnings
 DROP USER 'user'@'localhost';
 DROP USER 'user1'@'localhost';
+--enable_warnings

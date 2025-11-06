@@ -428,6 +428,7 @@ const TypeHandler* TypeHandler::find_by_ddltype(const ddlpackage::ColumnType& ct
     case ddlpackage::DDL_CLOB: return &mcs_type_handler_clob;
     case ddlpackage::DDL_BLOB: return &mcs_type_handler_blob;
     case ddlpackage::DDL_TEXT: return &mcs_type_handler_text;
+    case ddlpackage::DDL_JSON: return &mcs_type_handler_text;
 
     case ddlpackage::DDL_UNSIGNED_TINYINT: return &mcs_type_handler_uint8;
     case ddlpackage::DDL_UNSIGNED_SMALLINT: return &mcs_type_handler_uint16;

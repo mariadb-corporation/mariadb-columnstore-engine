@@ -42,6 +42,8 @@ CMAPI_CONF_PATH = os.path.join(MCS_ETC_PATH, CMAPI_CONFIG_FILENAME)
 # TOTP secret key
 SECRET_KEY = 'MCSIsTheBestEver'  # not just a random string! (base32)
 
+DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS = 30
+
 
 # network constants
 # according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
@@ -114,7 +116,10 @@ MCS_BACKUP_MANAGER_SH = os.path.join(MCS_INSTALL_BIN, 'mcs_backup_manager.sh')
 CMAPI_PORT = 8640  #TODO: use it in all places
 CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
 REQUEST_TIMEOUT: float = 30.0
-TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
+
+DMLPROC_SHUTDOWN_TIMEOUT: float = 300.0  # 5 minutes, should be less then LONG_REQUEST_TIMEOUT
+LONG_REQUEST_TIMEOUT: float = 400.0  # should be less than TRANSACTION_TIMEOUT
+TRANSACTION_TIMEOUT: float = 600.0  # 10 minutes
 
 # API version
 _version = '0.4.0'

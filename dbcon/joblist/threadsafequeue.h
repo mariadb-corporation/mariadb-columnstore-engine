@@ -22,6 +22,7 @@
 /** @file */
 #pragma once
 
+#include <atomic>
 #include <unistd.h>
 #include <queue>
 #include <stdexcept>
@@ -325,7 +326,7 @@ class ThreadSafeQueue
   impl_type fImpl;
   SPBM fPimplLock;
   SPBC fPimplCond;
-  volatile bool fShutdown;
+  std::atomic<bool> fShutdown;
   T fBs0;
   size_t bytes;
   uint32_t zeroCount;  // counts the # of times read_some returned 0

@@ -2,7 +2,9 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Optional
+from typing import Optional, TypeVar, Any
+
+from pydantic import BaseModel, ValidationError
 
 from cmapi_server.controllers.error import APIError
 
@@ -58,3 +60,26 @@ def cmapi_error_to_422(logger, func_name: str) -> Iterator[None]:
         # mirror raise_422_error behavior locally to avoid circular imports
         logger.error(f'{func_name} {err.message}', exc_info=False)
         raise APIError(422, err.message) from err
+
+
+T = TypeVar('T', bound=BaseModel)
+
+def validate_or_422(
+    model: type[T], payload: Any, logger, func_name: str,
+    prefix: Optional[str] = 'Invalid request body',
+) -> T:
+    """Validate payload with Pydantic model or raise HTTP 422 APIError."""
+    try:
+        return model.model_validate(payload)
+    except ValidationError as exp:
+        msg = f"{prefix}: {exp.errors()}" if prefix else str(exp.errors())
+        logger.error(f"{func_name} {msg}", exc_info=False)
+        raise APIError(422, msg) from exp
+
+
+@contextmanager
+def exc_to_422(logger, func_name: str, prefix: Optional[str] = None) -> Iterator[None]:
+    """Convert any exception into HTTP 422"""
+    with cmapi_error_to_422(logger, func_name):
+        with exc_to_cmapi_error(prefix=prefix):
+            yield

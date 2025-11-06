@@ -337,6 +337,10 @@ class SimpleColumn : public ReturnedColumn
   double getDoubleVal(rowgroup::Row& row, bool& isNull) override
   {
     evaluate(row, isNull);
+    if (isNull)
+    {
+      return 0;
+    }
     return TreeNode::getDoubleVal();
   }
 

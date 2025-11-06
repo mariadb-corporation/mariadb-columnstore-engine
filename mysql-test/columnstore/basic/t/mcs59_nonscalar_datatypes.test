@@ -15,8 +15,6 @@ USE mcs59_db;
 CREATE TABLE t_enum(col ENUM('min','max','avg'))ENGINE=Columnstore;
 --error ER_CHECK_NOT_IMPLEMENTED
 CREATE TABLE t_set(col SET('x','y','z'))ENGINE=Columnstore;
---error ER_CHECK_NOT_IMPLEMENTED
-CREATE TABLE t_json(col JSON)ENGINE=Columnstore;
 
 # Clean UP
 DROP DATABASE mcs59_db;

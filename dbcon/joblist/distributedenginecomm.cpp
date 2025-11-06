@@ -219,7 +219,7 @@ void DistributedEngineComm::reset()
 }
 
 DistributedEngineComm::DistributedEngineComm(ResourceManager* rm, bool isExeMgr)
- : fRm(rm), pmCount(0), fIsExeMgr(isExeMgr)
+ : fRm(rm), pmCount{0}, fIsExeMgr(isExeMgr)
 {
   if (fIsExeMgr)
   {
@@ -369,9 +369,8 @@ int32_t DistributedEngineComm::Setup()
 
   fWlock.swap(newLocks);
   fPmConnections.swap(newClients);
-  // memory barrier to prevent the pmCount assignment migrating upward
-  atomicops::atomicMb();
-  pmCount = newPmCount;
+  // atomic store with release semantics ensures all previous writes are visible
+  pmCount.store(newPmCount, std::memory_order_release);
 
   newLocks.clear();
   newClients.clear();
@@ -432,18 +431,18 @@ Error:
   for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
   {
     map_tok->second->queue.clear();
-    (void)atomicops::atomicInc(&map_tok->second->unackedWork[0]);
+    map_tok->second->unackedWork[0].fetch_add(1, std::memory_order_relaxed);
     map_tok->second->queue.push(sbs);
   }
   lk.unlock();
 
   if (fIsExeMgr)
   {
-    decltype(pmCount) originalPMCount = pmCount;
+    uint32_t originalPMCount = pmCount.load(std::memory_order_relaxed);
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
     auto rc = Setup();
-    if (rc || originalPMCount != pmCount)
+    if (rc || originalPMCount != pmCount.load(std::memory_order_relaxed))
     {
       ostringstream os;
       os << "DEC: lost connection to " << client->addr2String();
@@ -461,9 +460,7 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
   condition* cond = new condition();
   uint32_t firstPMInterleavedConnectionId =
       key % (fPmConnections.size() / pmCount) * fDECConnectionsPerQuery * pmCount % fPmConnections.size();
-  boost::shared_ptr<MQE> mqe(new MQE(pmCount, firstPMInterleavedConnectionId, flowControlEnableBytesThresh));
-
-  mqe->queue = StepMsgQueue(lock, cond);
+  boost::shared_ptr<MQE> mqe(new MQE(pmCount, firstPMInterleavedConnectionId, flowControlEnableBytesThresh, lock, cond));
   mqe->sendACKs = sendACKs;
   mqe->throttled = false;
 
@@ -757,7 +754,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
       uint64_t totalUnackedWork = 0;
 
       for (uint32_t i = 0; i < pmCount; ++i)
-        totalUnackedWork += mqe->unackedWork[i];
+        totalUnackedWork += mqe->unackedWork[i].load(std::memory_order_relaxed);
 
       if (totalUnackedWork == 0)
       {
@@ -784,9 +781,9 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
    * the locking env, mqe->unackedWork can only grow; whatever gets latched in this fcn
    * is a safe minimum at the point of use. */
 
-  if (mqe->unackedWork[nextIndex] >= maxAck)
+  if (mqe->unackedWork[nextIndex].load(std::memory_order_relaxed) >= maxAck)
   {
-    (void)atomicops::atomicSub(&mqe->unackedWork[nextIndex], maxAck);
+    mqe->unackedWork[nextIndex].fetch_sub(maxAck, std::memory_order_relaxed);
     *sockIndex = nextIndex;
     // FIXME: we're going to truncate here from 32 to 16 bits. Hopefully this will always fit...
     *numToAck = maxAck;
@@ -800,12 +797,12 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
   {
     for (int i = pmCount - 1; i >= 0; --i)
     {
-      uint32_t curVal = mqe->unackedWork[nextIndex];
+      uint32_t curVal = mqe->unackedWork[nextIndex].load(std::memory_order_relaxed);
       uint32_t unackedWork = (curVal > maxAck ? maxAck : curVal);
 
       if (unackedWork > 0)
       {
-        (void)atomicops::atomicSub(&mqe->unackedWork[nextIndex], unackedWork);
+        mqe->unackedWork[nextIndex].fetch_sub(unackedWork, std::memory_order_relaxed);
         *sockIndex = nextIndex;
         *numToAck = unackedWork;
 
@@ -822,7 +819,7 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
     cerr << "DEC::nextPMToACK(): Couldn't find a PM to ACK! ";
 
     for (int i = pmCount - 1; i >= 0; --i)
-      cerr << mqe->unackedWork[i] << " ";
+      cerr << mqe->unackedWork[i].load(std::memory_order_relaxed) << " ";
 
     cerr << " max: " << maxAck;
     cerr << endl;
@@ -986,7 +983,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
 
   if (pmCount > 0)
   {
-    (void)atomicops::atomicInc(&mqe->unackedWork[connIndex % pmCount]);
+    mqe->unackedWork[connIndex % pmCount].fetch_add(1, std::memory_order_relaxed);
   }
 
   TSQSize_t queueSize = mqe->queue.push(sbs);
@@ -1108,7 +1105,7 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
     {
       map_tok->second->queue.clear();
-      (void)atomicops::atomicInc(&map_tok->second->unackedWork[0]);
+      map_tok->second->unackedWork[0].fetch_add(1, std::memory_order_relaxed);
       map_tok->second->queue.push(sbs);
     }
 
@@ -1153,7 +1150,8 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
                             }
                             if (tempConns.size() == fPmConnections.size()) return 0;
                             fPmConnections.swap(tempConns);
-                            pmCount = (pmCount == 0 ? 0 : pmCount - 1);
+                            uint32_t oldCount = pmCount.load(std::memory_order_relaxed);
+                            pmCount.store((oldCount == 0 ? 0 : oldCount - 1), std::memory_order_relaxed);
                     }
     // send alarm
     ALARMManager alarmMgr;
@@ -1219,12 +1217,12 @@ Stats DistributedEngineComm::getNetworkStats(uint32_t uniqueID)
 }
 
 DistributedEngineComm::MQE::MQE(const uint32_t pCount, const uint32_t initialInterleaverValue,
-                                const uint64_t flowControlEnableBytesThresh)
- : ackSocketIndex(0), pmCount(pCount), hasBigMsgs(false), targetQueueSize(flowControlEnableBytesThresh)
+                                const uint64_t flowControlEnableBytesThresh,
+                                boost::mutex* lock, boost::condition* cond)
+ : queue(lock, cond), ackSocketIndex(0), pmCount(pCount), hasBigMsgs(false), targetQueueSize(flowControlEnableBytesThresh), unackedWork(pCount)
 {
-  unackedWork.reset(new volatile uint32_t[pmCount]);
+  // unackedWork vector is default-initialized to 0
   interleaver.reset(new uint32_t[pmCount]);
-  memset((void*)unackedWork.get(), 0, pmCount * sizeof(uint32_t));
   uint32_t interleaverValue = initialInterleaverValue;
   initialConnectionId = initialInterleaverValue;
   for (size_t pmId = 0; pmId < pmCount; ++pmId)
