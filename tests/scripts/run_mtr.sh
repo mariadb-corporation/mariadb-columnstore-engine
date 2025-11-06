@@ -93,7 +93,8 @@ run_suite() {
     if [[ $EXTERN_EFFECTIVE == true ]]; then
         EXTERN_FLAG="--extern=socket=${SOCKET}"
     else
-        EXTERN_FLAG="--mysqld=--plugin-load-add=ha_columnstore"
+        # Don't override mysqld params - let suite.opt and test.opt files work
+        EXTERN_FLAG=""
     fi
 
     if [[ $RECORD == true ]]; then
