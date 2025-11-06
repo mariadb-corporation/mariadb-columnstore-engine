@@ -43,14 +43,16 @@ constexpr const size_t DEFAULT_BUCKET_COUNT = 10;
 template <typename HashTable>
 std::unique_ptr<HashTable> makeHashMap(size_t bucketCount, ResourceManager* resourceManager)
 {
+  auto alloc = resourceManager->getAllocator<utils::PoolAllocatorBufType>(allocators::AllocMode::NO_CHECK);
   return std::unique_ptr<HashTable>(new HashTable(bucketCount, TupleJoiner::hasher(),
                                                   typename HashTable::key_equal(),
-                                                  utils::STLPoolAllocator<typename HashTable::value_type>(resourceManager)));
+                                                  utils::STLPoolAllocator<typename HashTable::value_type>(alloc)));
 }
 
 void TupleJoiner::initRowsVector()
 {
-  rows.reset(new RowPointersVec(resourceManager_->getAllocator<rowgroup::Row::Pointer>()));
+  rows.reset(new RowPointersVec(resourceManager_->getAllocator<rowgroup::Row::Pointer>(allocators::AllocMode::NO_CHECK)));
+  rows->reserve(rowgroup::rgCommonSize);
 }
 
 void TupleJoiner::initHashMaps(uint32_t& smallJoinColumn)
@@ -244,7 +246,7 @@ TupleJoiner::TupleJoiner(const rowgroup::RowGroup& smallInput, const rowgroup::R
   // TODO: make it explicit to avoid future confusion.
   for (i = 0; i < (uint)numCores; i++)
   {
-    auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+    auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
     storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
   }
 }
@@ -869,7 +871,7 @@ void TupleJoiner::setInUM()
   {
     for (i = 0; i < threadCount; i++)
     {
-      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
       tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
     }
   }
@@ -923,7 +925,7 @@ void TupleJoiner::setInUM(vector<RGData>& rgs)
   {
     for (i = 0; i < threadCount; i++)
     {
-      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
       tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
     }
   }
@@ -980,7 +982,7 @@ void TupleJoiner::setThreadCount(uint32_t cnt)
   {
     for (uint32_t i = 0; i < threadCount; i++)
     {
-      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
       tmpKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength, true));
     }
   }
@@ -1856,7 +1858,7 @@ std::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
   {
     for (int i = 0; i < numCores; i++)
     {
-      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>();
+      auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
       storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
     }
   }

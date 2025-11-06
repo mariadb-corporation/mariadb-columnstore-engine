@@ -53,7 +53,7 @@ class CountingAllocatorTest : public ::testing::Test
   // Constructor
   CountingAllocatorTest()
    : allocatedMemory(MemoryAllowance)
-   , allocator(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 100)
+   , allocator(&allocatedMemory, allocators::AllocMode::STRICT, MemoryAllowance / 100, MemoryAllowance / 100)
   {
   }
 
@@ -113,7 +113,7 @@ TEST_F(CountingAllocatorTest, AllocatorEquality)
 TEST_F(CountingAllocatorTest, AllocateSharedUsesAllocator)
 {
   // Create a shared_ptr using allocate_shared with the custom allocator
-  CountingAllocator<TestClass> allocatorSmallerStep(&allocatedMemory,
+  CountingAllocator<TestClass> allocatorSmallerStep(&allocatedMemory, allocators::AllocMode::STRICT,
                                                     MemoryAllowance / 1000, MemoryAllowance / 100);
   std::shared_ptr<TestClass> ptr1 = std::allocate_shared<TestClass>(allocatorSmallerStep, 100);
   std::shared_ptr<TestClass> ptr2 = std::allocate_shared<TestClass>(allocatorSmallerStep, 100);
@@ -146,7 +146,7 @@ TEST_F(CountingAllocatorTest, AllocateSharedUsesAllocator)
   buf.reset();
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 
-  CountingAllocator<RGDataBufType> allocator1(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 100);
+  CountingAllocator<RGDataBufType> allocator1(&allocatedMemory, allocators::AllocMode::STRICT, MemoryAllowance / 100, MemoryAllowance / 100);
   std::optional<CountingAllocator<RGDataBufType>> allocator2(allocator1);
   auto buf1 = boost::allocate_shared<RGDataBufType>(*allocator2, allocSize);
   EXPECT_LE(allocatedMemory.load(), MemoryAllowance - allocSize);
@@ -164,7 +164,7 @@ TEST_F(CountingAllocatorTest, ThreadSafety)
   auto worker = [this]()
   {
     std::vector<TestClass*> ptrs;
-    CountingAllocator<TestClass> allocatorLocal(&allocatedMemory, MemoryAllowance / 1000,
+    CountingAllocator<TestClass> allocatorLocal(&allocatedMemory, allocators::AllocMode::STRICT, MemoryAllowance / 1000,
                                                 MemoryAllowance / 100);
     for (std::size_t i = 0; i < allocationsPerThread; ++i)
     {

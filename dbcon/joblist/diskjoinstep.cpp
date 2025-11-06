@@ -525,11 +525,11 @@ void DiskJoinStep::joinFcn(const uint32_t threadID)
               // cout << "inserting a full RG" << endl;
               if (thjs)
               {
-                if (!thjs->getMemory(l_outputRG.getMaxDataSizeWithStrings()))
+                if (!thjs->getMemory(l_outputRG.getSizeWithStrings()))
                 {
                   // FIXME: This is also looks wrong.
                   // calculate guess of size required for error message
-                  uint64_t memReqd = (l_outputRG.getMaxDataSizeWithStrings()) / 1048576;
+                  uint64_t memReqd = (l_outputRG.getSizeWithStrings()) / 1048576;
                   Message::Args args;
                   args.add(memReqd);
                   args.add(thjs->resourceManager->getConfiguredUMMemLimit() / 1048576);
