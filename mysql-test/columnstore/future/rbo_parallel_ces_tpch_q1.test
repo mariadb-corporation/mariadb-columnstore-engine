@@ -1,5 +1,6 @@
 --source ../include/have_columnstore.inc
 --source include/have_innodb.inc
+--source ../include/newer_11.4.6.inc
 --source ../include/functions.inc
 --source ../include/cross_engine.inc
 
