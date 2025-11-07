@@ -233,15 +233,13 @@ class DistributedEngineComm
   /* To keep some state associated with the connection.  These aren't copyable. */
   struct MQE : public boost::noncopyable
   {
-    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue, const uint64_t recvQueueSize);
+    MQE(const uint32_t pmCount, const uint32_t initialInterleaverValue, const uint64_t recvQueueSize,
+        boost::mutex* lock = nullptr, boost::condition* cond = nullptr);
     uint32_t getNextConnectionId(const size_t pmIndex, const size_t pmConnectionsNumber,
                                  const uint32_t DECConnectionsPerQuery);
     messageqcpp::Stats stats;
     StepMsgQueue queue;
     uint32_t ackSocketIndex;
-    boost::scoped_array<volatile uint32_t> unackedWork;
-    boost::scoped_array<uint32_t> interleaver;
-    uint32_t initialConnectionId;
     uint32_t pmCount;
     // non-BPP primitives don't do ACKs
     bool sendACKs;
@@ -256,6 +254,9 @@ class DistributedEngineComm
     bool hasBigMsgs;
 
     uint64_t targetQueueSize;
+    std::vector<std::atomic<uint32_t>> unackedWork;
+    boost::scoped_array<uint32_t> interleaver;
+    uint32_t initialConnectionId;
   };
 
   // The mapping of session ids to StepMsgQueueLists
@@ -287,7 +288,7 @@ class DistributedEngineComm
   std::mutex fMlock;     // sessionMessages mutex
   std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
   bool fBusy;
-  volatile uint32_t pmCount;
+  std::atomic<uint32_t> pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
   boost::mutex fSetupMutex;
 

@@ -29,6 +29,7 @@
 
 /** @file */
 
+#include <atomic>
 #include <sstream>
 #include <vector>
 #include <list>
@@ -135,12 +136,12 @@ class HashJoin
     uint32_t thrIdx;
     TimeSet timeset;
     JSTimeStamp dlTimes;
-    volatile bool* die;
+    std::atomic<bool>* die;
   } thrParams_t;
 
   HashJoin(joblist::BDLWrapper<element_t>& set1, joblist::BDLWrapper<element_t>& set2,
            joblist::DataList<element_t>* result1, joblist::DataList<element_t>* result2, JoinType joinType,
-           JSTimeStamp* dlTimes, const SErrorInfo& status, uint32_t sessionId, volatile bool* die);
+           JSTimeStamp* dlTimes, const SErrorInfo& status, uint32_t sessionId, std::atomic<bool>* die);
 
   HashJoin();
   HashJoin(const HashJoin& hj);
@@ -213,7 +214,7 @@ class HashJoin
   void createHash(BucketDL<element_t>* bdlptr, hash_t* destHashTbl, const uint32_t idx,
                   bool populateResult,                   // true if bdlptr is opposite an outer join
                   joblist::DataList<element_t>* result,  // populated if populateResult true
-                  JSTimeStamp& thrDlTimes, volatile bool* die);
+                  JSTimeStamp& thrDlTimes, std::atomic<bool>* die);
   void init();
   TimeSet* getTimeSet()
   {
@@ -252,7 +253,7 @@ class HashJoin
   TimeSet fTimeSet;
   SErrorInfo fStatus;
   uint32_t fSessionId;
-  volatile bool* die;
+  std::atomic<bool>* die;
 };
 
 template <typename element_t>
@@ -264,7 +265,7 @@ template <typename element_t>
 HashJoin<element_t>::HashJoin(joblist::BDLWrapper<element_t>& set1, joblist::BDLWrapper<element_t>& set2,
                               joblist::DataList<element_t>* result1, joblist::DataList<element_t>* result2,
                               JoinType joinType, JSTimeStamp* dlt, const SErrorInfo& status,
-                              uint32_t sessionId, volatile bool* d)
+                              uint32_t sessionId, std::atomic<bool>* d)
  : fTimeSet(), fStatus(status), fSessionId(sessionId)
 {
   fSet1 = set1;
@@ -466,7 +467,7 @@ template <typename element_t>
 void HashJoin<element_t>::createHash(BucketDL<element_t>* srcBucketDL, hash_t* destHashTbl,
                                      const uint32_t bucketNum, bool populateResult,
                                      joblist::DataList<element_t>* result, JSTimeStamp& thrDlTimes,
-                                     volatile bool* die)
+                                     std::atomic<bool>* die)
 {
   bool more;
   element_t e;
@@ -487,7 +488,7 @@ void HashJoin<element_t>::createHash(BucketDL<element_t>* srcBucketDL, hash_t* d
     thrDlTimes.setFirstReadTime();
   }
 
-  for (; more & !(*die); more = srcBucketDL->next(bucketNum, bucketIter, &e))
+  for (; more & !die->load(); more = srcBucketDL->next(bucketNum, bucketIter, &e))
   {
 #ifdef DEBUG
     cout << "createHash() bkt " << bucketNum << " idx " << idx << " find(" << e.second << ")" << endl;

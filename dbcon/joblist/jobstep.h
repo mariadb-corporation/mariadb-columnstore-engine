@@ -125,14 +125,10 @@ struct JobInfo;
 class JobStep
 {
  public:
-  /** constructor
-   */
-  JobStep()
-  {
-  }
+  JobStep() = default;
   JobStep(const JobInfo&);
-  /** destructor
-   */
+  JobStep(const JobStep& rhs);
+
   virtual ~JobStep()
   { /*pthread_mutex_destroy(&mutex);*/
   }
@@ -141,7 +137,7 @@ class JobStep
   virtual void run() = 0;
   virtual void abort()
   {
-    fDie = true;
+    fDie.store(true, std::memory_order_relaxed);
   }
   /** @brief virtual void join method
    */
@@ -385,7 +381,7 @@ class JobStep
 
   bool cancelled()
   {
-    return (fErrorInfo->errCode > 0 || fDie);
+    return (fErrorInfo->errCode > 0 || fDie.load());
   }
 
   virtual bool stringTableFriendly()
@@ -478,7 +474,7 @@ class JobStep
   bool fDelayedRunFlag;
   bool fDelivery;
   bool fOnClauseFilter;
-  volatile bool fDie;
+  std::atomic<bool> fDie;
   uint32_t fWaitToRunStepCnt;
   std::string fExtendedInfo;
   std::string fMiniInfo;

@@ -28,6 +28,7 @@
 
 #include <vector>
 #include <iostream>
+#include <atomic>
 #include <boost/thread.hpp>
 #include <boost/thread/condition.hpp>
 #include <stdexcept>
@@ -157,7 +158,7 @@ class FIFO : public DataListImpl<std::vector<element_t>, element_t>
   uint64_t fTotSize;
   bool fInOrder;
   uint64_t fConsumerFinishedCount;
-  volatile bool fConsumptionStarted;
+  std::atomic<bool> fConsumptionStarted;
   uint32_t fElementMode;
   uint64_t fNumFiles;
   uint64_t fNumBytes;
