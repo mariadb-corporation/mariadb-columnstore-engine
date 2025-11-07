@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -255,7 +258,8 @@ class MasterDBRMNode
   std::condition_variable cpimportJobsCond;
   int runners, NumWorkers;
   ThreadParams* params;
-  volatile bool die, halting;
+  std::atomic<bool> die;
+  std::atomic<bool> halting;
   bool reloadCmd;
   mutable bool readOnly;
   mutable bool waitToFinishJobs{false};

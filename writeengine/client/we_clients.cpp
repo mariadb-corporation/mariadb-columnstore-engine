@@ -158,9 +158,8 @@ struct QueueShutdown
 
 namespace WriteEngine
 {
-WEClients::WEClients(int PrgmID) : fPrgmID(PrgmID), pmCount(0)
+WEClients::WEClients(int PrgmID) : fPrgmID(PrgmID), closingConnection{0}, pmCount(0)
 {
-  closingConnection = 0;
   Setup();
 }
 
@@ -290,7 +289,7 @@ void WEClients::Setup()
 int WEClients::Close()
 {
   makeBusy(false);
-  closingConnection = 1;
+  closingConnection.store(1, std::memory_order_relaxed);
   ByteStream bs;
   bs << (ByteStream::byte)WE_SVR_CLOSE_CONNECTION;
   write_to_all(bs);
@@ -329,7 +328,7 @@ void WEClients::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t co
       }
       else  // got zero bytes on read, nothing more will come
       {
-        if (closingConnection > 0)
+        if (closingConnection.load() > 0)
         {
           return;
         }
@@ -363,7 +362,7 @@ Error:
   for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
   {
     map_tok->second->queue.clear();
-    (void)atomicops::atomicInc(&map_tok->second->unackedWork[0]);
+    map_tok->second->unackedWork[0].fetch_add(1, std::memory_order_relaxed);
     map_tok->second->queue.push(sbs);
   }
 
@@ -398,9 +397,7 @@ void WEClients::addQueue(uint32_t key)
 
   boost::mutex* lock = new boost::mutex();
   condition* cond = new condition();
-  boost::shared_ptr<MQE> mqe(new MQE(pmCount));
-
-  mqe->queue = WESMsgQueue(lock, cond);
+  boost::shared_ptr<MQE> mqe(new MQE(pmCount, lock, cond));
 
   boost::mutex::scoped_lock lk(fMlock);
   b = fSessionMessages.insert(pair<uint32_t, boost::shared_ptr<MQE> >(key, mqe)).second;
@@ -534,7 +531,7 @@ void WEClients::addDataToOutput(SBS sbs, uint32_t connIndex)
 
   if (pmCount > 0)
   {
-    atomicops::atomicInc(&mqe->unackedWork[connIndex % pmCount]);
+    mqe->unackedWork[connIndex % pmCount].fetch_add(1, std::memory_order_relaxed);
   }
 
   (void)mqe->queue.push(sbs);

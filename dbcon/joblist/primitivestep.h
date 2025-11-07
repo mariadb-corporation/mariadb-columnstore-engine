@@ -1259,7 +1259,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   uint64_t totalMsgs;
   uint64_t msgsSent;
   uint64_t msgsRecvd;
-  volatile bool finishedSending;
+  std::atomic<bool> finishedSending;
   bool firstRead;
   bool sendWaiting;
   uint32_t recvWaiting;

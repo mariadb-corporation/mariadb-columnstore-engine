@@ -66,13 +66,13 @@ namespace redistribute
 {
 // static variables
 boost::mutex RedistributeControlThread::fActionMutex;
-volatile bool RedistributeControlThread::fStopAction = false;
+std::atomic<bool> RedistributeControlThread::fStopAction{false};
 string RedistributeControlThread::fWesInUse;
 
 void RedistributeControlThread::setStopAction(bool s)
 {
   boost::mutex::scoped_lock lock(fActionMutex);
-  fStopAction = s;
+  fStopAction.store(s, std::memory_order_relaxed);
 }
 
 RedistributeControlThread::RedistributeControlThread(uint32_t act)

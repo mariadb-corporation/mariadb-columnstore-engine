@@ -26,9 +26,10 @@
 
 #pragma once
 
+#include <atomic>
+#include <string>
+#include <set>
 #include <map>
-#include <condition_variable>
-
 #include <unordered_set>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -209,7 +210,7 @@ class SessionManagerServer
    */
   uint32_t getUnique32()
   {
-    return atomicops::atomicInc(&unique32);
+    return unique32.fetch_add(1, std::memory_order_relaxed) + 1;
   }
 
   /**
@@ -217,7 +218,7 @@ class SessionManagerServer
    */
   uint64_t getUnique64()
   {
-    return atomicops::atomicInc(&unique64);
+    return unique64.fetch_add(1, std::memory_order_relaxed) + 1;
   }
 
   /** @brief Resets the semaphores to their original state.  For testing only.
@@ -274,8 +275,8 @@ class SessionManagerServer
   void finishTransaction(TxnID& txn);
   void saveSMTxnIDAndState();
 
-  volatile uint32_t unique32;
-  volatile uint64_t unique64;
+  std::atomic<uint32_t> unique32;
+  std::atomic<uint64_t> unique64;
 
   int maxTxns;  // the maximum number of concurrent transactions
   std::string txnidFilename;

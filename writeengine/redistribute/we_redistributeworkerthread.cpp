@@ -73,8 +73,8 @@ namespace redistribute
 {
 // static variables
 boost::mutex RedistributeWorkerThread::fActionMutex;
-volatile bool RedistributeWorkerThread::fStopAction = false;
-volatile bool RedistributeWorkerThread::fCommitted = false;
+std::atomic<bool> RedistributeWorkerThread::fStopAction{false};
+std::atomic<bool> RedistributeWorkerThread::fCommitted{false};
 string RedistributeWorkerThread::fWesInUse;
 
 RedistributeWorkerThread::RedistributeWorkerThread(ByteStream& bs, IOSocket& ios)

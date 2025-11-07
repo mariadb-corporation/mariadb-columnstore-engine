@@ -54,7 +54,7 @@ namespace
 boost::mutex CacheOpsMutex;
 
 // This global is updated only w/ atomic ops
-volatile uint32_t MultiReturnCode;
+std::atomic<uint32_t> MultiReturnCode;
 
 int32_t extractRespCode(const ByteStream& bs)
 {
@@ -97,7 +97,10 @@ class CacheOpThread
     }
 
     if (rc != 0)
-      atomicops::atomicCAS<uint32_t>(&MultiReturnCode, 0, 1);
+    {
+      uint32_t expected = 0;
+      MultiReturnCode.compare_exchange_strong(expected, 1, std::memory_order_relaxed);
+    }
   }
 
  private:
@@ -125,7 +128,7 @@ int sendToAll(const ByteStream& outBs)
 
   thread_group tg;
   int rc = 0;
-  MultiReturnCode = 0;
+  MultiReturnCode.store(0, std::memory_order_relaxed);
 
   for (int i = 0; i < cnt; i++)
   {
@@ -136,7 +139,7 @@ int sendToAll(const ByteStream& outBs)
 
   tg.join_all();
 
-  if (MultiReturnCode != 0)
+  if (MultiReturnCode.load(std::memory_order_relaxed) != 0)
     rc = -1;
 
   return rc;

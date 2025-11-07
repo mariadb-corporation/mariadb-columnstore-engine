@@ -74,7 +74,7 @@ struct JSJoiner
 };
 
 JobList::JobList(bool isEM)
- : fIsRunning(false), fIsExeMgr(isEM), fPmsConnected(0), projectingTableOID(0), fAborted(0), fPriority(50)
+ : fIsRunning(false), fIsExeMgr(isEM), fPmsConnected(0), projectingTableOID(0), fAborted{0}, fPriority(50)
 {
 }
 
@@ -626,7 +626,8 @@ void JobList::abort()
   uint32_t i;
 
   // If we're not currently aborting, then start aborting...
-  if (atomicops::atomicCAS<uint32_t>(&fAborted, 0, 1))
+  uint32_t expected = 0;
+  if (fAborted.compare_exchange_strong(expected, 1, std::memory_order_relaxed))
   {
     for (i = 0; i < fQuery.size(); i++)
       fQuery[i]->abort();
@@ -639,7 +640,8 @@ void JobList::abort()
 void JobList::abortOnLimit(JobStep* js)
 {
   // If we're not currently aborting, then start aborting...
-  if (atomicops::atomicCAS<uint32_t>(&fAborted, 0, 1))
+  uint32_t expected = 0;
+  if (fAborted.compare_exchange_strong(expected, 1, std::memory_order_relaxed))
   {
     // @bug4848, enhance and unify limit handling.
     for (uint32_t i = 0; i < fQuery.size(); i++)
@@ -680,7 +682,7 @@ TupleJobList::~TupleJobList()
 
 void TupleJobList::abort()
 {
-  if (fAborted == 0 && fIsRunning)
+  if (fAborted.load() == 0 && fIsRunning)
   {
     JobList::abort();
     messageqcpp::ByteStream bs;

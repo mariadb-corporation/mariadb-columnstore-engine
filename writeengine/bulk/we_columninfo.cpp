@@ -152,7 +152,7 @@ ColumnInfo::ColumnInfo(Log* logger, int idIn, const JobColumn& columnIn, DBRootE
  , fMaxNumRowsPerSegFile(0)
  , fStore(0)
  , fAutoIncLastValue(0)
- , fSaturatedRowCnt(0)
+ , fSaturatedRowCnt{0}
  , fpTableInfo(pTableInfo)
  , fAutoIncMgr(0)
  , fDbRootExtTrk(pDBRootExtTrk)
