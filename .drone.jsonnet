@@ -697,14 +697,14 @@ local AllPipelines =
   //   for server in servers[current_branch]
   // ] +
   // // last argument is to ignore mtr and regression failures
-  // [
-  //   Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
-  //   for a in ["amd64"]
-  //   for b in std.objectFields(platforms)
-  //   for server in extra_servers[current_branch]
-  //   for platform in extra_servers_platforms[current_branch]
-  //   for triggeringEvent in events
-  // ] +
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+    for b in std.objectFields(platforms)
+    for server in extra_servers[current_branch]
+    for platform in extra_servers_platforms[current_branch]
+    for triggeringEvent in events
+    for a in archs
+  ] +
   // // // last argument is to ignore mtr and regression failures
   // [
   //   Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
