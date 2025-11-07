@@ -77,6 +77,7 @@ def set(
     url = build_url(
         base_url='localhost', port=8640,
         path=f'cmapi/{version}/cmapi_config',
+        query_params={},
     )
     headers = {'x-api-key': api_key}
     body = {}
