@@ -116,10 +116,7 @@ MCS_BACKUP_MANAGER_SH = os.path.join(MCS_INSTALL_BIN, 'mcs_backup_manager.sh')
 CMAPI_PORT = 8640  #TODO: use it in all places
 CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
 REQUEST_TIMEOUT: float = 30.0
-
-DMLPROC_SHUTDOWN_TIMEOUT: float = 300.0  # 5 minutes, should be less then LONG_REQUEST_TIMEOUT
-LONG_REQUEST_TIMEOUT: float = 400.0  # should be less than TRANSACTION_TIMEOUT
-TRANSACTION_TIMEOUT: float = 600.0  # 10 minutes
+TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
 
 # API version
 _version = '0.4.0'

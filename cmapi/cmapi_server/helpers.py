@@ -28,15 +28,8 @@ from cmapi_server.exceptions import CMAPIBasicError
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH,
-    CMAPI_DEFAULT_CONF_PATH,
-    DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH,
-    DMLPROC_SHUTDOWN_TIMEOUT,
-    LOCALHOSTS,
-    LONG_REQUEST_TIMEOUT,
-    TRANSACTION_TIMEOUT,
-    _version
+    CMAPI_CONF_PATH, CMAPI_DEFAULT_CONF_PATH, DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH, LOCALHOSTS, _version
 )
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.process import MCSProcessManager
@@ -70,7 +63,7 @@ def start_transaction(
     remove_nodes: Optional[list] = None,
     optional_nodes: Optional[list] = None,
     txn_id: Optional[int] = None,
-    timeout: float = TRANSACTION_TIMEOUT
+    timeout: float = 300.0
 ):
     """Start internal CMAPI transaction.
 
@@ -94,7 +87,7 @@ def start_transaction(
     :param txn_id: id for transaction to start, defaults to None
     :type txn_id: Optional[int], optional
     :param timeout: time in seconds for cmapi transaction lock before it ends
-                    automatically, defaults to TRANSACTION_TIMEOUT
+                    automatically, defaults to 300
     :type timeout: float, optional
     :return: (success, txn_id, nodes)
     :rtype: tuple[bool, int, list[str]]
@@ -331,7 +324,8 @@ def broadcast_new_config(
                                defaults to DEFAULT_SM_CONF_PATH
     :param test_mode: for test purposes, defaults to False TODO: remove
     :param nodes: nodes list for config put, defaults to None
-    :param timeout: timeout passing to gracefully stop DMLProc process,
+    :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
+                    releases. Could affect all logic of broadcacting new config
     :param distribute_secrets: flag to distribute secrets to nodes
     :param stateful_config_dict: stateful config update dict to distribute to nodes
     :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
@@ -347,7 +341,7 @@ def broadcast_new_config(
     headers = {'x-api-key': key}
     if stateful_config_dict:
         body = {
-            'timeout': DMLPROC_SHUTDOWN_TIMEOUT if timeout is None else timeout,
+            'timeout': 300,
             'stateful_config_dict': stateful_config_dict,
             'only_stateful_config': True,
         }
@@ -363,7 +357,7 @@ def broadcast_new_config(
         body = {
             'manager': root.find('./ClusterManager').text,
             'revision': root.find('./ConfigRevision').text,
-            'timeout': DMLPROC_SHUTDOWN_TIMEOUT if timeout is None else timeout,
+            'timeout': 300,
             'config': config_text,
             'mcs_config_filename': cs_config_filename,
             'sm_config_filename': sm_config_filename,
@@ -401,7 +395,7 @@ def broadcast_new_config(
         async with create_traced_async_session() as session:
             try:
                 async with session.put(
-                    url, headers=headers, json=body, ssl=False, timeout=LONG_REQUEST_TIMEOUT
+                    url, headers=headers, json=body, ssl=False, timeout=120
                 ) as response:
                     resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
