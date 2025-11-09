@@ -97,23 +97,21 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
       return IDB_Decimal(datatypes::TSInt128((int128_t)mod), d.scale, datatypes::INT128MAXPRECISION);
     }
   }
-  IDB_Decimal div = parm[1]->data()->getDecimalVal(row, isNull);
+  int64_t div = parm[1]->data()->getIntVal(row, isNull);
 
-  if (div.value == 0)
+  if (div == 0)
   {
     isNull = true;
     return IDB_Decimal();
   }
 
   IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+  int64_t value = d.value / static_cast<int64_t>(pow(10.0, d.scale));
+  int lefto = d.value % (int)pow(10.0, d.scale);
 
-  int scale = std::max(d.scale, div.scale);
-  int128_t val_d = d.value * helpers::powerOf10_c[scale - d.scale];
-  int128_t val_div = div.value * helpers::powerOf10_c[scale - div.scale];
-
-  int64_t mod = val_d % val_div;
-
-  return IDB_Decimal(mod, scale, div.precision);
+  int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
+  // It is misterious but precision is set to 0!
+  return IDB_Decimal(mod, d.scale, 0);
 }
 
 double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
