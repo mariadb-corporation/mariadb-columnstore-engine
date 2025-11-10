@@ -1281,7 +1281,7 @@ class TupleBPS : public BatchPrimitive, public TupleDeliveryStep
   boost::condition condvarWakeupProducer, condvar;
 
   std::vector<bool> scanFlags;  // use to keep track of which extents to eliminate from this step
-  bool BPPIsAllocated;
+  std::atomic<bool> BPPIsAllocated;
   uint32_t uniqueID;
   ResourceManager* fRm;
 
