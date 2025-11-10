@@ -105,7 +105,6 @@ def add_node(
 
     host_identity = get_host_address_manager().get_identity(node)
     logging.debug('Resolved %s to %s', node, host_identity)
-    # TODO use host identity instead of node
 
     # If a hostname (not IP) is provided, ensure fwd/rev DNS consistency.
     # Skip validation for localhost aliases to preserve legacy single-node flows.
@@ -114,7 +113,7 @@ def add_node(
 
     try:
         if not _replace_localhost(c_root, node):
-            ip4, _ = NetworkManager.resolve_ip_and_hostname(node)
+            ip4 = host_identity.primary_ip
             pm_num = _add_node_to_PMS(c_root, ip4)
 
             if not read_replica:
@@ -1211,16 +1210,8 @@ def _replace_localhost(root: etree.Element, node: str) -> bool:
         )
         return False
 
-    # TODO use NetworkManager here
-    # getaddrinfo returns list of 5-tuples (..., sockaddr)
-    # use sockaddr to retrieve ip, sockaddr = (address, port) for AF_INET
-    ipaddr = socket.getaddrinfo(node, 8640, family=socket.AF_INET)[0][-1][0]
-    # signifies that node is an IP addr already
-    if ipaddr == node:
-        # use the primary hostname if given an ip addr
-        hostname = socket.gethostbyaddr(ipaddr)[0]
-    else:
-        hostname = node   # use whatever name they gave us
+    host_identity = get_host_address_manager().get_identity(node)
+    ipaddr, hostname = host_identity.primary_ip, host_identity.primary_name
     logging.info(
         f'add_node(): replacing 127.0.0.1/localhost with {ipaddr}/{hostname} '
         f'as this node\'s name. Be sure {hostname} resolves to {ipaddr} on '
@@ -1241,11 +1232,11 @@ def _replace_localhost(root: etree.Element, node: str) -> bool:
 
         if 'ModuleIPAddr' in n.tag:
             n.text = ipaddr
-            logging.info(f"Replaced %s (was %s) with IP %s", path, old_val, ipaddr)
+            logging.info("Replaced %s (was %s) with IP %s", path, old_val, ipaddr)
             continue
         if 'ModuleHostName' in n.tag:
             n.text = hostname
-            logging.info(f"Replaced %s (was %s) with hostname %s", path, old_val, hostname)
+            logging.info("Replaced %s (was %s) with hostname %s", path, old_val, hostname)
             continue
 
         # Generic fields: replace localhost IPs with ipaddr, hostnames with hostname
@@ -1254,15 +1245,15 @@ def _replace_localhost(root: etree.Element, node: str) -> bool:
             new_val = ipaddr if is_local_ip else hostname
             if is_local_ip:
                 new_val = ipaddr
-                logging.info(f"Replaced %s (was %s) with IP %s", path, old_val, new_val)
+                logging.info("Replaced %s (was %s) with IP %s", path, old_val, new_val)
             else:
                 new_val = hostname
-                logging.info(f"Replaced %s (was %s) with hostname %s", path, old_val, new_val)
+                logging.info("Replaced %s (was %s) with hostname %s", path, old_val, new_val)
             n.text = new_val
 
     old_controller = controller_host.text
     controller_host.text = hostname # keep controllernode as fqdn
-    logging.info(f"Replaced %s (was %s) with hostname %s", './DBRM_Controller/IPAddr', old_controller, hostname)
+    logging.info("Replaced %s (was %s) with hostname %s", './DBRM_Controller/IPAddr', old_controller, hostname)
 
     return True
 

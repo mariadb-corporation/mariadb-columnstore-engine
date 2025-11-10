@@ -2,9 +2,9 @@ import hashlib
 import ipaddress
 import logging
 import socket
-import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Optional, Union
 
@@ -104,7 +104,25 @@ class HostIdentity:
     primary_ip: str
     primary_name: Optional[str]
     unique_key: str  # unique id of this host, will be used later for aliases
-    observed_at: float = field(default_factory=lambda: time.time())
+    observed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self) -> str:
+        parts: list[str] = [
+            f'input={self.input!r}',
+            f'primary_ip={self.primary_ip!r}',
+        ]
+        if self.primary_name is not None:
+            parts.append(f'primary_name={self.primary_name!r}')
+        if self.addresses != [self.primary_ip]:
+            parts.append(f'addresses={self.addresses!r}')
+        if self.names != [self.primary_name]:
+            parts.append(f'names={self.names!r}')
+        parts.append(f'unique_key={self.unique_key}')
+        parts.append(f'observed_at={self.observed_at.replace(microsecond=0).isoformat()!r}')
+        return 'HostIdentity(' + ', '.join(parts) + ')'
+
+    def __str__(self) -> str:
+        return repr(self)
 
     @staticmethod
     def from_policy(input: str, policy: ResolutionPolicy, ips: Sequence[IPAddress], names: Sequence[str]) -> 'HostIdentity':

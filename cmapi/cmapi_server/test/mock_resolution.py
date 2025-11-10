@@ -28,7 +28,7 @@ class MockResolutionBuilder:
     def __init__(self):
         # Forward: hostname -> ip
         self._forward: Dict[str, str] = {}
-        # Reverse: ip -> (primary_hostname, alias_list)
+        # Reverse: ip -> (primary_name, alias_list)
         self._reverse: Dict[str, Tuple[str, List[str]]] = {}
         # Defaults used when no explicit mapping is provided
         self._default_ip: Optional[str] = None
