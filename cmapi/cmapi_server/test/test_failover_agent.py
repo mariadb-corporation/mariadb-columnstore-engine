@@ -1,13 +1,10 @@
 import logging
 
-from mcs_node_control.models.node_config import NodeConfig
-
 from cmapi_server.failover_agent import FailoverAgent
-from cmapi_server.managers.network import NetworkManager
 from cmapi_server.node_manipulation import add_node, remove_node
-from cmapi_server.test.mock_resolution import simple_resolution_mock, make_local_resolution_builder
+from cmapi_server.test.mock_resolution import make_local_resolution_builder
 from cmapi_server.test.unittest_global import BaseNodeManipTestCase, tmp_mcs_config_filename
-
+from mcs_node_control.models.node_config import NodeConfig
 
 logging.basicConfig(level='DEBUG')
 

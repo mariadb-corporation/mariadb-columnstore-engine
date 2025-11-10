@@ -73,6 +73,79 @@ class MockResolutionBuilder:
         self._default_hostname = hostname
         return self
 
+    def build(self):
+
+        @contextmanager
+        def _ctx():
+            patches = [
+                # Patch socket-level resolvers (NetworkManager uses these under the hood)
+                patch('socket.getaddrinfo', side_effect=self._fake_getaddrinfo),
+                patch('socket.gethostbyname', side_effect=self._fake_gethostbyname),
+                patch('socket.gethostbyaddr', side_effect=self._fake_gethostbyaddr),
+                # Patch local identity to be synthetic; avoid real system calls
+                patch('socket.gethostname', return_value=CUR_HOST_HOSTNAME),
+                patch('socket.getfqdn', return_value=CUR_HOST_HOSTNAME),
+                # Patch NetworkManager local IP discovery (it uses psutil or system libs,
+                #   proper mocking would be too complex)
+                patch('cmapi_server.managers.network.NetworkManager.get_current_node_ips', return_value=[CUR_HOST_IP, DEFAULT_LOCALHOST_IP]),
+                # Patch HostAddressManager DNS abstraction methods
+                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_resolve_ipv4',
+                      side_effect=self._fake_dns_resolve_ipv4),
+                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_resolve_ipv6',
+                      side_effect=self._fake_dns_resolve_ipv6),
+                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_reverse',
+                      side_effect=self._fake_dns_reverse),
+            ]
+            with ExitStack() as stack:
+                for p in patches:
+                    stack.enter_context(p)
+                yield
+
+        return _ctx()
+
+    def _fake_getaddrinfo(self, host, port, family=socket.AF_UNSPEC, type=0, proto=0, flags=0):
+        # Only handle AF_INET calls; otherwise, simulate failure
+        if family not in (socket.AF_UNSPEC, socket.AF_INET):
+            raise socket.gaierror
+        # For localhost, return loopback first and include CUR_HOST_IP as secondary
+        if host == DEFAULT_LOCALHOST_HOSTNAME:
+            return [
+                (socket.AF_INET, socket.SOCK_STREAM, 6, '', (DEFAULT_LOCALHOST_IP, port)),
+                (socket.AF_INET, socket.SOCK_STREAM, 6, '', (CUR_HOST_IP, port)),
+            ]
+        ip, _ = self._resolve_forward(host)
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, '', (ip, port))]
+
+    def _fake_gethostbyname(self, name: str) -> str:
+        ip, _ = self._resolve_forward(name)
+        return ip
+
+    def _fake_gethostbyaddr(self, addr: str):
+        # If no reverse record was set, simulate reverse lookup failure
+        if addr not in self._reverse:
+            raise socket.herror
+        primary, aliases = self._reverse[addr]
+        return (primary, aliases, [addr])
+
+    # HostIdentityManager DNS abstraction mocks
+    def _fake_dns_resolve_ipv4(self, hostname: str) -> List[str]:
+        # Return mapped IPv4 for provided hostname, or empty list if unknown
+        ip = self._forward.get(hostname)
+        return [ip] if ip else []
+
+    def _fake_dns_resolve_ipv6(self, hostname: str) -> List[str]:
+        # Keep IPv6 disabled by default in tests for determinism
+        return []
+
+    def _fake_dns_reverse(self, ip_text: str) -> List[str]:
+        # Return PTR names (primary + aliases) from reverse map, lowercase
+        rec = self._reverse.get(ip_text)
+        if not rec:
+            return []
+        primary, aliases = rec
+        names = [primary, *aliases]
+        return [n.rstrip('.').lower() for n in names if n]
+
     def _resolve_forward(self, host: str) -> Tuple[str, str]:
         """Resolve hostname or IP to (ip, hostname) using mappings/defaults."""
         # If input looks like an IP, return it with reverse or default hostname
@@ -100,50 +173,6 @@ class MockResolutionBuilder:
 
         # As a last resort, echo back (host, host)
         return host, host
-
-    def build(self):
-
-        def _fake_getaddrinfo(host, port, family=socket.AF_UNSPEC, type=0, proto=0, flags=0):
-            # Only handle AF_INET calls; otherwise, simulate failure
-            if family not in (socket.AF_UNSPEC, socket.AF_INET):
-                raise socket.gaierror
-            # For localhost, return loopback first and include CUR_HOST_IP as secondary
-            if host == DEFAULT_LOCALHOST_HOSTNAME:
-                return [
-                    (socket.AF_INET, socket.SOCK_STREAM, 6, '', (DEFAULT_LOCALHOST_IP, port)),
-                    (socket.AF_INET, socket.SOCK_STREAM, 6, '', (CUR_HOST_IP, port)),
-                ]
-            ip, _ = self._resolve_forward(host)
-            return [(socket.AF_INET, socket.SOCK_STREAM, 6, '', (ip, port))]
-
-        def _fake_gethostbyname(name: str) -> str:
-            ip, _ = self._resolve_forward(name)
-            return ip
-
-        def _fake_gethostbyaddr(addr: str):
-            # If no reverse record was set, simulate reverse lookup failure
-            if addr not in self._reverse:
-                raise socket.herror
-            primary, aliases = self._reverse[addr]
-            return (primary, aliases, [addr])
-
-        @contextmanager
-        def _ctx():
-            patches = [
-                # Patch socket-level resolvers (NetworkManager uses these under the hood)
-                patch('socket.getaddrinfo', side_effect=_fake_getaddrinfo),
-                patch('socket.gethostbyname', side_effect=_fake_gethostbyname),
-                patch('socket.gethostbyaddr', side_effect=_fake_gethostbyaddr),
-                # Patch local identity to be synthetic; avoid real system calls
-                patch('socket.gethostname', return_value=CUR_HOST_HOSTNAME),
-                patch('socket.getfqdn', return_value=CUR_HOST_HOSTNAME),
-            ]
-            with ExitStack() as stack:
-                for p in patches:
-                    stack.enter_context(p)
-                yield
-
-        return _ctx()
 
 
 def simple_resolution_mock(hostname: str, ip: str):

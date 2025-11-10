@@ -250,42 +250,85 @@ class HostAddressManager:
 
     def _resolve_dns(self, hostname: str) -> tuple[list[IPAddress], list[str]]:
         """Resolve the given hostname using DNS and return (addresses, names)."""
-        resolver = dns.resolver.Resolver(configure=True)
-
-        # IPv4
-        a_records: list[IPAddress] = []
+        ipv4_texts: list[str] = []
+        ipv6_texts: list[str] = []
         try:
-            for a_rdata in resolver.resolve(hostname, 'A', raise_on_no_answer=False):
-                a_records.append(ipaddress.ip_address(a_rdata.to_text()))
+            ipv4_texts = self._dns_resolve_ipv4(hostname)
+        except dns.resolver.NoAnswer:
+            logger.debug('IPv4 lookup returned no records for %s', hostname)
+            ipv4_texts = []
         except Exception:
-            logger.exception('A lookup failed for %s', hostname)
-
-        # IPv6
-        aaaa_records: list[IPAddress] = []
+            logger.exception('IPv4 lookup unexpected failure for %s', hostname)
+            raise
         if self._policy.allow_ipv6:
             try:
-                for aaaa_rdata in resolver.resolve(hostname, 'AAAA', raise_on_no_answer=False):
-                    aaaa_records.append(ipaddress.ip_address(aaaa_rdata.to_text()))
+                ipv6_texts = self._dns_resolve_ipv6(hostname)
+            except dns.resolver.NoAnswer:
+                logger.debug('IPv6 lookup returned no records for %s', hostname)
+                ipv6_texts = []
             except Exception:
-                logger.exception('AAAA lookup failed for %s', hostname)
+                logger.exception('IPv6 lookup unexpected failure for %s', hostname)
+                raise
+
+        addrs: list[IPAddress] = []
+        for t in ipv4_texts:
+            try:
+                addrs.append(ipaddress.ip_address(t))
+            except ValueError:
+                continue
+        for t in ipv6_texts:
+            try:
+                addrs.append(ipaddress.ip_address(t))
+            except ValueError:
+                continue
 
         names = [hostname]
-        return a_records + aaaa_records, names
+        return addrs, names
 
     def _reverse_dns_names(self, ip: IPAddress) -> list[str]:
         """Fetch PTR names for an IP via DNS."""
         try:
-            reverse_name = dns.reversename.from_address(str(ip))
-            answer = dns.resolver.resolve(reverse_name, 'PTR', raise_on_no_answer=False)
-            names: list[str] = []
-            for ptr_rdata in answer:
+            return self._dns_reverse(str(ip))
+        except dns.resolver.NoAnswer:
+            logger.debug('PTR lookup returned no records for %s', ip)
+            return []
+        except Exception:
+            logger.exception('PTR lookup unexpected failure for %s', ip)
+            raise
+
+    # DNS abstraction methods for easier mocking
+    def _dns_resolve_ipv4(self, hostname: str) -> list[str]:
+        resolver = dns.resolver.Resolver(configure=True)
+        results: list[str] = []
+        for rdata in resolver.resolve(hostname, 'A', raise_on_no_answer=False):
+            try:
+                results.append(rdata.to_text())
+            except Exception:
+                continue
+        return results
+
+    def _dns_resolve_ipv6(self, hostname: str) -> list[str]:
+        resolver = dns.resolver.Resolver(configure=True)
+        results: list[str] = []
+        for rdata in resolver.resolve(hostname, 'AAAA', raise_on_no_answer=False):
+            try:
+                results.append(rdata.to_text())
+            except Exception:
+                continue
+        return results
+
+    def _dns_reverse(self, ip_text: str) -> list[str]:
+        reverse_name = dns.reversename.from_address(ip_text)
+        answer = dns.resolver.resolve(reverse_name, 'PTR', raise_on_no_answer=False)
+        names: list[str] = []
+        for ptr_rdata in answer:
+            try:
                 fqdn_name = str(ptr_rdata.target).rstrip('.').lower()
                 if _is_fqdn(fqdn_name):
                     names.append(fqdn_name)
-            return names
-        except Exception:
-            logger.exception('PTR lookup failed for %s', ip)
-            return []
+            except Exception:
+                continue
+        return names
 
     def _contains_private(self, addrs: list[str]) -> bool:
         """Return True if any resolvable address string is a private IP."""
