@@ -47,16 +47,23 @@ CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
 int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
-  double val1 = parm[0]->data()->getDoubleVal(row, isNull);
-  double val2 = parm[1]->data()->getDoubleVal(row, isNull);
+  IDB_Decimal val1 = parm[0]->data()->getDecimalVal(row, isNull);
+  IDB_Decimal val2 = parm[1]->data()->getDecimalVal(row, isNull);
 
-  if (val2 == 0 || val2 == NAN)
+  if (val2.value == 0)
   {
     isNull = true;
     return 0;
   }
   // MCOL-179 InnoDB doesn't round or convert to int before dividing.
-  return static_cast<int64_t>(val1 / val2);
+  int scale = std::max(val1.scale, val2.scale);
+
+  int128_t new_val1 = val1.value * pow(10, scale - val1.scale);
+  int128_t new_val2 = val2.value * pow(10, scale - val2.scale);
+
+  int128_t result = new_val1 / new_val2;
+  return static_cast<int64_t>(result);
+      
 
 #if 0
     int64_t int_val2 = (int64_t)(val2 > 0 ? val2 + 0.5 : val2 - 0.5);

@@ -106,12 +106,22 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
   }
 
   IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-  int64_t value = d.value / static_cast<int64_t>(pow(10.0, d.scale));
-  int lefto = d.value % (int)pow(10.0, d.scale);
+  IDB_Decimal d1 = parm[1]->data()->getDecimalVal(row, isNull);
 
-  int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
-  // It is misterious but precision is set to 0!
-  return IDB_Decimal(mod, d.scale, 0);
+  int scale = std::max(d.scale, d1.scale);
+
+// Find precision and make equal
+  int64_t d_prec = d.precision - d.scale;
+  int64_t d1_prec = d1.precision - d1.scale;
+  int64_t fixed_prec = std::max(d_prec, d1_prec) + scale;
+
+  int128_t val_d = d.value * pow(10, scale - d.scale);
+  int128_t val_d1 = d1.value * pow(10, scale - d1.scale);
+
+  int64_t mod = val_d % val_d1;
+
+  return IDB_Decimal(mod, scale, fixed_prec);
+
 }
 
 double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
