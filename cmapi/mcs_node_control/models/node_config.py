@@ -433,7 +433,9 @@ class NodeConfig:
             root = self.get_current_config_root()
 
         primary_address = self.get_dbrm_conn_info(root)['IPAddr']
-        return primary_address in self.get_network_addresses_and_names()
+        is_primary = primary_address in self.get_network_addresses_and_names()
+        module_logger.debug('is_primary: %s, primary_address: %s', is_primary, primary_address)
+        return is_primary
 
     def is_single_node(self,
                        root=None):
