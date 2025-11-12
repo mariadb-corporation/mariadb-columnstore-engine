@@ -187,7 +187,7 @@ struct TypeToVecWrapperType<T, typename std::enable_if<std::is_unsigned_v<T>>::t
 };
 
 template <typename T>
-struct TypeToVecWrapperType<T, typename std::enable_if<std::is_signed_v<T> && !is_floating_point_v<T>>::type>
+struct TypeToVecWrapperType<T, typename std::enable_if<std::is_signed_v<T> && !std::is_floating_point_v<T>>::type>
  : WidthToSVecWrapperType<sizeof(T)>
 {
 };
