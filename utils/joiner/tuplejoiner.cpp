@@ -1859,7 +1859,7 @@ std::shared_ptr<TupleJoiner> TupleJoiner::copyForDiskJoin()
     for (int i = 0; i < numCores; i++)
     {
       auto alloc = resourceManager_->getAllocator<utils::FixedAllocatorBufType>(allocators::AllocMode::NO_CHECK);
-      storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
+      ret->storedKeyAlloc.emplace_back(FixedAllocator(alloc, keyLength));
     }
   }
 
