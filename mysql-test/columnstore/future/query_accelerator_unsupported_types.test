@@ -1,0 +1,95 @@
+--source ../include/have_columnstore.inc
+--source include/have_innodb.inc
+--source ../include/newer_11.4.6.inc
+--source ../include/functions.inc
+--source ../include/cross_engine.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS qa_unsupported_types;
+--enable_warnings
+
+CREATE DATABASE qa_unsupported_types;
+USE qa_unsupported_types;
+
+SELECT calsettrace(1);
+
+CREATE TABLE test_types (
+    id INT PRIMARY KEY,
+    binary_col BINARY(10),
+    varbinary_col VARBINARY(20),
+    enum_col ENUM('small', 'medium', 'large', 'xlarge'),
+    set_col SET('read', 'write', 'execute'),
+    inet4_col INET4,
+    inet6_col INET6,
+    regular_varchar VARCHAR(50),
+    regular_int INT
+) ENGINE=InnoDB;
+
+INSERT INTO test_types VALUES 
+    (1, 0x48656C6C6F, 0x576F726C64, 'small', 'read', '192.168.1.1', '2001:db8::1', 'test1', 100),
+    (2, 0x4461746131, 0x4461746132, 'medium', 'read,write', '10.0.0.1', 'fe80::1', 'test2', 200),
+    (3, 0x4461746133, 0x4461746134, 'large', 'write,execute', '172.16.0.1', '::1', 'test3', 300),
+    (4, 0x4461746135, 0x4461746136, 'xlarge', 'read,write,execute', '8.8.8.8', '2001:4860:4860::8888', 'test4', 400);
+
+SET @@histogram_size=4;
+ANALYZE TABLE test_types PERSISTENT FOR COLUMNS (id) INDEXES();
+
+--source ../include/enable_rbo_parallel_ces.inc
+
+SET @@columnstore_query_accel_parallel_factor=2;
+
+SELECT * FROM test_types ORDER BY id;
+
+SELECT id, enum_col, regular_varchar FROM test_types WHERE enum_col = 'medium' ORDER BY id;
+
+SELECT id, set_col, regular_int FROM test_types WHERE set_col LIKE '%write%' ORDER BY id;
+
+SELECT id, inet4_col AS ip4, regular_varchar 
+FROM test_types 
+WHERE inet4_col LIKE '192.%' 
+ORDER BY id;
+
+
+SELECT id, inet6_col AS ip6, regular_int
+FROM test_types 
+WHERE inet6_col LIKE '2001:%'
+ORDER BY id;
+
+SELECT enum_col, COUNT(*) as cnt, SUM(regular_int) as total
+FROM test_types
+GROUP BY enum_col
+ORDER BY enum_col;
+
+CREATE TABLE test_types2 (
+    id INT PRIMARY KEY,
+    ref_id INT,
+    description VARCHAR(100)
+) ENGINE=InnoDB;
+
+INSERT INTO test_types2 VALUES
+    (1, 1, 'Reference to small'),
+    (2, 2, 'Reference to medium'),
+    (3, 3, 'Reference to large');
+
+SET @@histogram_size=3;
+ANALYZE TABLE test_types2 PERSISTENT FOR COLUMNS (id) INDEXES();
+
+SELECT t1.id, t1.enum_col, t2.description
+FROM test_types t1
+JOIN test_types2 t2 ON t1.id = t2.ref_id
+ORDER BY t1.id;
+
+SET @opt_plan := mcs_get_plan('optimized');
+SET @rbo_rules := mcs_get_plan('rules');
+
+SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
+
+SET @rewritten_derived_name = 'derived table - $added_sub_qa_unsupported_types_test_types_0';
+SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @rewritten_derived_name, ''))) / CHAR_LENGTH(@rewritten_derived_name) > 0 AS has_rewritten_derived_table;
+
+SELECT calsettrace(0);
+DROP DATABASE qa_unsupported_types;
+
+--source ../include/disable_rbo_parallel_ces.inc
+--source ../include/drop_functions.inc
+--source ../include/drop_cross_engine.inc
