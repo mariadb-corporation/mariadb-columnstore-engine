@@ -1,0 +1,50 @@
+DROP DATABASE IF EXISTS group_by_ambiguous_test;
+CREATE DATABASE group_by_ambiguous_test;
+USE group_by_ambiguous_test;
+CREATE TABLE `test2` (
+`id` INT UNSIGNED NOT NULL,
+`GBP` DOUBLE UNSIGNED NOT NULL,
+`cat_id` INT UNSIGNED NOT NULL,
+`cat_id_level_0` INT UNSIGNED NOT NULL
+) ENGINE=Columnstore;
+INSERT INTO test2 VALUES (1, 100.5, 10, 20);
+INSERT INTO test2 VALUES (2, 200.5, 10, 30);
+INSERT INTO test2 VALUES (3, 300.5, 20, 20);
+#
+# Test case: GROUP BY with ambiguous column reference
+# This should not throw a ColumnStore error, but resolve to the table column (SQL standard)
+#
+SELECT cat_id_level_0 AS entity_id, SUM(GBP) AS spend, cat_id_level_0 AS cat_id
+FROM test2
+GROUP BY cat_id;
+entity_id	spend	cat_id
+20	300.5	20
+30	301	30
+Warnings:
+Warning	1052	Column 'cat_id' in GROUP BY is ambiguous
+DROP TABLE test2;
+#
+# Test case: GROUP BY with alias that matches a column but points to different column
+#
+CREATE TABLE t1 (col1 int, col2 varchar(5), col_t1 int) ENGINE=Columnstore;
+INSERT INTO t1 VALUES(10,'hello',10);
+INSERT INTO t1 VALUES(20,'hello',20);
+INSERT INTO t1 VALUES(30,'hello',30);
+INSERT INTO t1 VALUES(10,'bye',10);
+INSERT INTO t1 VALUES(10,'sam',10);
+INSERT INTO t1 VALUES(10,'bob',10);
+# GROUP BY col2 is ambiguous: matches both table column and SELECT alias
+# SQL standard: prefers table column col2 (varchar) over alias
+SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2 ORDER BY col2;
+col2
+10
+10
+10
+60
+Warnings:
+Warning	1052	Column 'col2' in GROUP BY is ambiguous
+#
+# Cleanup
+#
+DROP TABLE t1;
+DROP DATABASE group_by_ambiguous_test;
