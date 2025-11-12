@@ -1,3 +1,7 @@
+if(NOT RPM)
+    return()
+endif()
+
 macro(columnstore_append_for_cpack var_name)
     # Get current value from parent scope or use empty string
     if(DEFINED ${var_name})
@@ -56,3 +60,20 @@ set(CPACK_PROJECT_CONFIG_FILE
 )
 
 columnstore_add_rpm_deps("snappy" "jemalloc" "procps-ng" "gawk")
+
+
+SET(ignored
+    "%ignore /usr"
+    "%ignore /usr/local"
+    "%ignore /bin"
+    "%ignore /lib"
+    "%ignore /usr/sbin"
+    "%ignore /usr/lib64/mysql"
+    "%ignore /usr/lib64/mysql/plugin"
+    "%ignore /etc/my.cnf.d"
+    "%ignore /var/lib"
+    "%ignore /var"
+)
+
+SET(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored})
+INCLUDE (CPack)
