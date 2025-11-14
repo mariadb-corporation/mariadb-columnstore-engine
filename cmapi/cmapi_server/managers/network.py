@@ -3,9 +3,8 @@ import fcntl
 import logging
 import socket
 import struct
-from dataclasses import dataclass
 from ipaddress import ip_address
-from typing import List, Optional, cast
+from typing import Optional
 
 from cmapi_server.exceptions import CMAPIBasicError
 
@@ -277,44 +276,3 @@ class NetworkManager:
                 raise CMAPIBasicError(f'No IPs found for {hostname!r}')
             ip = ip_list[0]
         return ip, hostname
-
-    @classmethod
-    def validate_hostname_fwd_rev(cls, hostname: str) -> None:
-        """Validate forward and reverse DNS for a hostname.
-
-        Checks that hostname resolves to one or more usable IPs and that at
-        least one of those IPs reverse-resolves back to the provided hostname
-        (either an exact match or an FQDN starting with the hostname are accepted).
-
-        :raises CMAPIBasicError: if validation fails
-        """
-        exclude_loopback = not cls.is_only_loopback_hostname(hostname)
-        ips = cls.resolve_hostname_to_ips(
-            hostname,
-            only_ipv4=True,
-            exclude_loopback=exclude_loopback,
-        )
-
-        if not ips:
-            raise CMAPIBasicError(
-                f"Hostname {hostname!r} did not resolve to any usable IPs. "
-                "Please fix DNS or add the host by IP."
-            )
-
-        wanted = hostname.rstrip('.').lower()
-        for ip in ips:
-            rev_names = cls.get_hostnames_by_ip(ip)
-            for rev in rev_names:
-                rev_norm = rev.rstrip('.').lower()
-                # Accept exact match ("db1" == "db1") or FQDN starting with the short hostname
-                # e.g. user provided "db1" and PTR returns "db1.example.com"
-                if rev_norm == wanted or rev_norm.startswith(wanted + '.'):
-                    return
-
-        raise CMAPIBasicError(
-            'Forward/reverse DNS check failed: '
-            f"hostname {hostname!r} resolved to {ips}, but none of these IPs "
-            f"reverse-resolve back to {hostname!r}. Consider adding the host by IP, "
-            'or fix DNS so that at least one IP has a PTR/record mapping back to '
-            'the provided hostname.'
-        )

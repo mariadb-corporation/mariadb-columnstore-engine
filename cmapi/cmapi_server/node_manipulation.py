@@ -7,15 +7,12 @@ import datetime
 import logging
 import os
 import shutil
-import socket
 import subprocess
 import time
 from typing import Optional
 
 import requests
 from lxml import etree
-from mcs_node_control.models.node_config import NodeConfig
-from tracing.traced_session import get_traced_session
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
@@ -26,10 +23,12 @@ from cmapi_server.constants import (
     LOCALHOSTS,
     MCS_DATA_PATH,
 )
+from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.managers.application import AppStatefulConfig
-from cmapi_server.managers.network import NetworkManager
 from cmapi_server.managers.host_identity import get_host_address_manager
-
+from cmapi_server.managers.network import NetworkManager
+from mcs_node_control.models.node_config import NodeConfig
+from tracing.traced_session import get_traced_session
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -103,13 +102,22 @@ def add_node(
 
     logging.info('Adding node %s', node)
 
-    host_identity = get_host_address_manager().get_identity(node)
+    addr_mgr = get_host_address_manager()
+    host_identity = addr_mgr.get_identity(node)
     logging.debug('Resolved %s to %s', node, host_identity)
 
     # If a hostname (not IP) is provided, ensure fwd/rev DNS consistency.
     # Skip validation for localhost aliases to preserve legacy single-node flows.
     if not NetworkManager.is_ip(node) and not NetworkManager.is_only_loopback_hostname(node):
-        NetworkManager.validate_hostname_fwd_rev(node)
+        _, ok = addr_mgr.check_hostname_rev_lookup(node)
+        if not ok:
+            raise CMAPIBasicError(
+                f'''Forward/reverse DNS check failed:
+                hostname {node!r} resolved to {host_identity.ips}, but none of these IPs
+                reverse-resolve back to {node!r}. Consider adding the host by IP,
+                or fix DNS so that at least one IP has a PTR/record mapping back to
+                the provided hostname.'''
+            )
 
     try:
         if not _replace_localhost(c_root, node):

@@ -99,7 +99,7 @@ class ResolutionPolicy:
 class HostIdentity:
     """Normalized result of host resolution (after policy is enforced)"""
     input: str
-    addresses: list[str]
+    ips: list[str]
     names: list[str]
     primary_ip: str
     primary_name: Optional[str]
@@ -113,11 +113,11 @@ class HostIdentity:
         ]
         if self.primary_name is not None:
             parts.append(f'primary_name={self.primary_name!r}')
-        if self.addresses != [self.primary_ip]:
-            parts.append(f'addresses={self.addresses!r}')
+        if self.ips != [self.primary_ip]:
+            parts.append(f'ips={self.ips!r}')
         if self.names != [self.primary_name]:
             parts.append(f'names={self.names!r}')
-        parts.append(f'unique_key={self.unique_key}')
+        parts.append(f'unique_key={self.unique_key[:4]}')
         parts.append(f'observed_at={self.observed_at.replace(microsecond=0).isoformat()!r}')
         return 'HostIdentity(' + ', '.join(parts) + ')'
 
@@ -145,7 +145,7 @@ class HostIdentity:
         primary_name = names[0] if names else None
         return HostIdentity(
             input=input,
-            addresses=addresses,
+            ips=addresses,
             names=list(names),
             primary_ip=primary_ip,
             primary_name=primary_name,
@@ -265,6 +265,33 @@ class HostAddressManager:
                 logger.exception('Local identity candidate failed resolution: %s', candidate)
                 continue
         raise ResolutionPolicyViolationError('Could not determine any acceptable local IP addresses under current policy.')
+
+    def check_hostname_rev_lookup(self, hostname: str) -> tuple[HostIdentity, bool]:
+        """Resolve hostname and check that at least one of its IPs resolves back to it.
+
+        Returns identity and boolean, true means that roundtrip check was successful.
+        """
+        identity = self.get_identity(hostname)
+
+        normalized = hostname.strip().lower()
+        if not normalized:
+            return identity, False
+
+        for ip_text in identity.ips:
+            try:
+                ip_obj = ipaddress.ip_address(ip_text)
+            except ValueError:
+                continue
+            try:
+                reverse_names = self._reverse_dns_names(ip_obj)
+            except Exception:
+                continue
+            if normalized in reverse_names:
+                logger.debug('Roundtrip check passed for %s: %s', hostname, ip_obj)
+                return identity, True
+
+        logger.warning('Roundtrip check failed for %s', hostname)
+        return identity, False
 
     def _resolve_dns(self, hostname: str) -> tuple[list[IPAddress], list[str]]:
         """Resolve the given hostname using DNS and return (addresses, names)."""
