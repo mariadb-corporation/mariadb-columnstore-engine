@@ -131,7 +131,8 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   else if (selectFilter)
   {
     selectFilter->setSimpleColumnListExtended();
-    list->insert(list->end(), selectFilter->simpleColumnListExtended().begin(), selectFilter->simpleColumnListExtended().end());
+    list->insert(list->end(), selectFilter->simpleColumnListExtended().begin(),
+                 selectFilter->simpleColumnListExtended().end());
   }
   else if (cf)
   {
@@ -859,6 +860,39 @@ std::optional<CalpontSystemCatalog::TableAliasName> sameTableCheck(
   }
 
   return tan;
+}
+
+std::string getSimpleColumnAlias(const ReturnedColumn& origCol, int64_t colPos)
+{
+  std::string alias = origCol.alias();
+  if (alias.empty())
+  {
+    if (auto* sc = dynamic_cast<const SimpleColumn*>(&origCol); sc)
+    {
+      alias = sc->columnName();
+    }
+    else if (auto* fc = dynamic_cast<const FunctionColumn*>(&origCol); fc)
+    {
+      alias = fc->functionName();
+    }
+    else if (auto* ac = dynamic_cast<const AggregateColumn*>(&origCol); ac)
+    {
+      alias = ac->functionName();
+    }
+    else if (auto* wc = dynamic_cast<const WindowFunctionColumn*>(&origCol); wc)
+    {
+      alias = wc->functionName();
+    }
+  }
+  if (alias.empty())
+  {
+    alias = "`$col_" + std::to_string(colPos) + "`";
+  }
+  if (alias[0] != '`')
+  {
+    alias = "`" + alias + "`";
+  }
+  return alias;
 }
 
 }  // namespace execplan

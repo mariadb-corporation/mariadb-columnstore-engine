@@ -161,8 +161,7 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackageInternal(
         int32_t sessionId = fSessionID;
         std::string processName("DMLProc");
         int i = 0;
-        OamCache* oamcache = OamCache::makeOamCache();
-        std::vector<int> pmList = oamcache->getModuleIds();
+        std::vector<int> pmList = oamcache()->getModuleIds();
         std::vector<uint32_t> pms;
 
         for (unsigned i = 0; i < pmList.size(); i++)
@@ -437,8 +436,7 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
   uint64_t rowsProcessed = 0;
   uint32_t dbroot = 1;
   bool metaData = false;
-  oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-  std::vector<int> fPMs = oamCache->getModuleIds();
+  std::vector<int> fPMs = oamcache()->getModuleIds();
   std::map<unsigned, bool> pmState;
   string emsg;
   string emsgStr;
@@ -726,7 +724,7 @@ bool UpdatePackageProcessor::processRowgroup(ByteStream& aRowGroup, DMLResult& r
 {
   bool rc = false;
   // cout << "Get dbroot " << dbroot << endl;
-  uint32_t pmNum = (*fDbRootPMMap)[dbroot];
+  uint32_t pmNum = oamcache()->getOwnerPM(dbroot);
 
   ByteStream bytestream;
   bytestream << (uint8_t)WE_SVR_UPDATE;

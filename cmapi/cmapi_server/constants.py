@@ -3,8 +3,9 @@
 TODO: move main constant paths here and replace in files in next releases.
 """
 import os
+from dataclasses import dataclass
+from enum import Enum
 from typing import NamedTuple
-
 
 # default MARIADB ColumnStore config path
 MCS_ETC_PATH = '/etc/columnstore'
@@ -41,16 +42,22 @@ CMAPI_CONF_PATH = os.path.join(MCS_ETC_PATH, CMAPI_CONFIG_FILENAME)
 # TOTP secret key
 SECRET_KEY = 'MCSIsTheBestEver'  # not just a random string! (base32)
 
+DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS = 30
+
 
 # network constants
 # according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
-LOCALHOSTS = (
+
+LOCALHOST_IPS = {
     '127.0.0.1',
+    '::1',
+}
+LOCALHOST_HOSTNAMES = {
     'localhost', 'localhost.localdomain',
     'localhost4', 'localhost4.localdomain4',
-    '::1',
     'localhost6', 'localhost6.localdomain6',
-)
+}
+LOCALHOSTS = LOCALHOST_IPS.union(LOCALHOST_HOSTNAMES)
 
 CMAPI_INSTALL_PATH = '/usr/share/columnstore/cmapi/'
 CMAPI_PYTHON_BIN = os.path.join(CMAPI_INSTALL_PATH, "python/bin/python3")
@@ -59,6 +66,15 @@ CMAPI_PYTHON_BINARY_DEPS_PATH = os.path.join(CMAPI_PYTHON_DEPS_PATH, "bin")
 CMAPI_SINGLE_NODE_XML = os.path.join(
     CMAPI_INSTALL_PATH, 'cmapi_server/SingleNode.xml'
 )
+
+class MCSProgs(str, Enum):
+    STORAGE_MANAGER = 'StorageManager'
+    WORKER_NODE = 'workernode'
+    CONTROLLER_NODE = 'controllernode'
+    PRIM_PROC = 'PrimProc'
+    WRITE_ENGINE_SERVER = 'WriteEngineServer'
+    DML_PROC = 'DMLProc'
+    DDL_PROC = 'DDLProc'
 
 # constants for dispatchers
 class ProgInfo(NamedTuple):
@@ -73,17 +89,16 @@ class ProgInfo(NamedTuple):
 # on top level of process handling
 # mcs-storagemanager starts conditionally inside mcs-loadbrm, but should be
 # stopped using cmapi
-ALL_MCS_PROGS = {
+ALL_MCS_PROGS: dict[MCSProgs, ProgInfo] = {
     # workernode starts on primary and non primary node with 1 or 2 added
     # to subcommand (DBRM_Worker1 - on primary, DBRM_Worker2 - non primary)
-    'StorageManager': ProgInfo(15, 'mcs-storagemanager', '', False, 1),
-    'workernode': ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
-    'controllernode': ProgInfo(11, 'mcs-controllernode', 'fg', True),
-    'PrimProc': ProgInfo(5, 'mcs-primproc', '', False, 1),
-    'ExeMgr': ProgInfo(9, 'mcs-exemgr', '', False, 1),
-    'WriteEngineServer': ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
-    'DMLProc': ProgInfo(3, 'mcs-dmlproc', '', False),
-    'DDLProc': ProgInfo(1, 'mcs-ddlproc', '', False),
+    MCSProgs.STORAGE_MANAGER: ProgInfo(15, 'mcs-storagemanager', '', False, 1),
+    MCSProgs.WORKER_NODE: ProgInfo(13, 'mcs-workernode', 'DBRM_Worker{}', False, 1),
+    MCSProgs.CONTROLLER_NODE: ProgInfo(11, 'mcs-controllernode', 'fg', True),
+    MCSProgs.PRIM_PROC: ProgInfo(5, 'mcs-primproc', '', False, 1),
+    MCSProgs.WRITE_ENGINE_SERVER: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
+    MCSProgs.DML_PROC: ProgInfo(3, 'mcs-dmlproc', '', False),
+    MCSProgs.DDL_PROC: ProgInfo(1, 'mcs-ddlproc', '', False),
 }
 
 # constants for docker container dispatcher
@@ -94,9 +109,76 @@ MCS_LOG_PATH = '/var/log/mariadb/columnstore'
 
 # BRM shmem lock inspection/reset tool
 SHMEM_LOCKS_PATH = os.path.join(MCS_INSTALL_BIN, 'mcs-shmem-locks')
+# mcs and cmapi constanst shared
+MCS_BACKUP_MANAGER_SH = os.path.join(MCS_INSTALL_BIN, 'mcs_backup_manager.sh')
 
 # client constants
 CMAPI_PORT = 8640  #TODO: use it in all places
 CURRENT_NODE_CMAPI_URL = f'https://localhost:{CMAPI_PORT}'
 REQUEST_TIMEOUT: float = 30.0
 TRANSACTION_TIMEOUT: float = 300.0  # 5 minutes
+
+# API version
+_version = '0.4.0'
+
+# constants for packages and repositories
+SUPPORTED_DISTROS = (
+    'ubuntu',
+    'debian',
+    'centos',
+    'rhel',
+    'rocky',
+)
+SUPPORTED_ARCHITECTURES = ('x86_64', 'amd64', 'aarch64', 'arm64')
+
+@dataclass(frozen=True)
+class MultiDistroNamer:
+    rhel: str
+    deb: str
+
+MDB_SERVER_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-server',
+    deb='mariadb-server'
+)
+MDB_CS_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-columnstore-engine',
+    deb='mariadb-plugin-columnstore'
+)
+CMAPI_PACKAGE_NAME = MultiDistroNamer(
+    rhel='MariaDB-columnstore-cmapi',
+    deb='mariadb-columnstore-cmapi'
+)
+ES_REPO = MultiDistroNamer(
+    rhel=(
+'''[mariadb-es-main]
+name = MariaDB Enterprise Server
+baseurl = https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/rpm/rhel/{os_major_version}/{arch}
+gpgkey = {gpg_key_url}
+gpgcheck = 1
+enabled = 1
+module_hotfixes = 1
+'''
+    ),
+    deb='deb [arch=amd64,arm64] https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/deb {os_version} main'
+)
+ES_REPO_PRIORITY_PREFS = '''
+Package: *
+Pin: origin dlm.mariadb.com
+Pin-Priority: 1700
+'''
+ES_VERIFY_URL = MultiDistroNamer(
+    rhel='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/rpm/rhel/{os_major_version}/{arch}/repodata/repomd.xml',
+    deb='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/deb/dists/{os_version}/Release'
+)
+MDB_GPG_KEY_URL = 'https://supplychain.mariadb.com/MariaDB-Enterprise-GPG-KEY'
+ES_TOKEN_VERIFY_URL = 'https://dlm.mariadb.com/browse/{token}/mariadb_enterprise_server/'
+MDB_LATEST_TESTED_MAJOR = '10.6'
+MDB_LATEST_RELEASES_URL = 'https://dlm.mariadb.com/rest/releases/mariadb_enterprise_server/'
+PKG_GET_VER_CMD = MultiDistroNamer(
+    rhel="rpm -q --queryformat '%{{VERSION}}' {package_name}",
+    deb="dpkg-query -f '${{Version}}' -W {package_name}"
+)
+
+class ClusterModeEnum(str, Enum):
+    READONLY = 'readonly'
+    READWRITE = 'readwrite'

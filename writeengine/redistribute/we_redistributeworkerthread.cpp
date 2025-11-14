@@ -72,8 +72,8 @@ namespace redistribute
 {
 // static variables
 boost::mutex RedistributeWorkerThread::fActionMutex;
-volatile bool RedistributeWorkerThread::fStopAction = false;
-volatile bool RedistributeWorkerThread::fCommitted = false;
+std::atomic<bool> RedistributeWorkerThread::fStopAction{false};
+std::atomic<bool> RedistributeWorkerThread::fCommitted{false};
 string RedistributeWorkerThread::fWesInUse;
 
 RedistributeWorkerThread::RedistributeWorkerThread(ByteStream& bs, IOSocket& ios)
@@ -134,11 +134,10 @@ void RedistributeWorkerThread::handleRequest()
       {
         memcpy(&fPlanEntry, fBs.buf(), sizeof(RedistributePlanEntry));
         fBs.advance(sizeof(RedistributePlanEntry));
-        OamCache::dbRootPMMap_t dbrootToPM = fOamCache->getDBRootToPMMap();
         fMyId.first = fPlanEntry.source;
-        fMyId.second = (*dbrootToPM)[fMyId.first];
+        fMyId.second = fOamCache->getOwnerPM(fMyId.first);
         fPeerId.first = fPlanEntry.destination;
-        fPeerId.second = (*dbrootToPM)[fPeerId.first];
+        fPeerId.second = fOamCache->getOwnerPM(fPeerId.first);
 
         if (grabTableLock() == 0)
         {

@@ -79,5 +79,7 @@ UPDATE idb dest JOIN mcs src ON dest.a=src.a SET dest.b = dest.b + src.b + 100;
 SELECT * FROM idb;
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs45_db;

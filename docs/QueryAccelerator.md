@@ -1,11 +1,11 @@
-# What is Query Accelarator
+# What is Query Accelerator
 
-Query Accelarator is a feature that allows MariaDB to use ColumnStore to execute queries that are otherwise executed by InnoDB.
+Query Accelerator is a feature that allows MariaDB to use ColumnStore to execute queries that are otherwise executed by InnoDB.
 Under the hood Columnstore:
 - receives a query
 - searches for applicable Engine Independent statistics for InnoDB table index column
 - applies RBO rule to transform its InnoDB tables into a number of UNIONs over non-overlapping ranges of a suitable InnoDB table index
-- retrives the data in parallel from MariaDB and runs it using Columnstore runtime
+- retrieves the data in parallel from MariaDB and runs it using Columnstore runtime
 
 # How to enable Query Accelerator
 
@@ -26,11 +26,11 @@ analyze table <table_name> persistent for columns (<column_name>) indexes();
 
 - `columnstore_unstable_optimizer`: enables unstable optimizer that is required for Query Accelerator RBO rule
 - `columnstore_select_handler`: enables/disables ColumnStore processing for InnoDB tables
-- `columnstore_query_accel_parallel_factor` : controls the number of parallel ranges to be used for Query Accelerator
+- `columnstore_query_accel_parallel_factor`: controls the number of parallel ranges to be used for Query Accelerator
 
 Watch out `max_connections`. If you set `columnstore_query_accel_parallel_factor` to a high value, you may need to increase `max_connections` to avoid connection pool exhaustion.
 
-# How to verify QA is being used
-There are two ways to verify QA is being used:
+# How to verify Query Accelerator is being used
+There are two ways to verify Query Accelerator is being used:
 1. Use `select mcs_get_plan('rules')` to get a list of the rules that were applied to the query.
 2. Look for patterns like `derived table - $added_sub_#db_name_#table_name_X` in the optimized plan using `select mcs_get_plan('optimized')`. 

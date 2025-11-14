@@ -4,7 +4,7 @@ import configparser
 from pathlib import Path
 from datetime import datetime
 
-from cmapi_server.controllers.dispatcher import _version
+from cmapi_server.constants import _version
 
 config_filename = './cmapi_server/cmapi_server.conf'
 
@@ -38,7 +38,7 @@ config_file = Path(config_path)
 config = config_file.read_text()
 
 body = {
-    'revision': 42,
+    'revision': '42',
     'manager': '1.1.1.1',
     'timeout': 0,
     'config': config,

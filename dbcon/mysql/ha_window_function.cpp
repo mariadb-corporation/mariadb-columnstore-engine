@@ -327,6 +327,8 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
   CalpontSystemCatalog::ColType ct;  // For return type
   // arguments
   vector<SRCP> funcParms;
+  // Reserve space for arguments (may add more constants later in switch statement)
+  funcParms.reserve(item_sum->argument_count() + 3);
 
   for (uint32_t i = 0; i < item_sum->argument_count(); i++)
   {

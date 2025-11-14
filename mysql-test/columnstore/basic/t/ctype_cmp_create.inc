@@ -1,6 +1,8 @@
 --source default_storage_engine_by_combination.inc
 
 --disable_query_log
+SET character_set_connection = 'utf8';
+SET collation_connection = 'utf8mb3_general_ci';
 --eval SET @mysqltest_file='$MYSQLTEST_FILE';
 SET @mysqltest_file=regexp_replace(@mysqltest_file, '^(.*)/([a-z0-9_]*)([.]test$)','\\2');
 --enable_query_log
@@ -28,8 +30,9 @@ DELIMITER ;$$
 
 
 DELIMITER $$;
-CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8,
-                                val VARCHAR(64) CHARACTER SET utf8)
+CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8 COLLATE utf8mb3_general_ci,
+                                val VARCHAR(64) CHARACTER SET utf8 COLLATE utf8mb3_general_ci)
+
 BEGIN
   DECLARE query TEXT DEFAULT 'SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1=''VAL''';
   SET query=REPLACE(query,'=',op);

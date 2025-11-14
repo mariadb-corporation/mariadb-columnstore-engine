@@ -80,7 +80,6 @@ versioning/BRM/controllernode
 versioning/BRM/copylocktest
 versioning/BRM/dbrmctl
 versioning/BRM/load_brm
-versioning/BRM/reset_locks
 versioning/BRM/rollback
 versioning/BRM/save_brm
 versioning/BRM/tablelocktest

@@ -350,7 +350,7 @@ int DMLPackageProcessor::rollBackTransaction(uint64_t uniqueId, BRM::TxnID txnID
 
     while (1)
     {
-      if (msgRecived == fWEClient->getPmCount())
+      if (msgRecived == fWEClient->getRWConnectionsCount())
         break;
 
       fWEClient->read(uniqueId, bsIn);

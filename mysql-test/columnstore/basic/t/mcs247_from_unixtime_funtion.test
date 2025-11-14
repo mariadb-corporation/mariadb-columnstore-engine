@@ -3,6 +3,7 @@
 # Author: Bharath, bharath.bokka@mariadb.com
 #
 -- source ../include/have_columnstore.inc
+--source ../include/disable_11.8.inc
 
 if (!`SELECT from_unixtime(3600*24)='1970-01-02 00:00:00'`)
 {

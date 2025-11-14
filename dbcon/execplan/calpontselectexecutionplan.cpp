@@ -167,6 +167,7 @@ void CalpontSelectExecutionPlan::filterTokenList(FilterTokenList& filterTokenLis
 
   Parser parser;
   std::vector<Token> tokens;
+  tokens.reserve(filterTokenList.size());
   Token t;
 
   for (unsigned int i = 0; i < filterTokenList.size(); i++)
@@ -185,6 +186,7 @@ void CalpontSelectExecutionPlan::havingTokenList(const FilterTokenList& havingTo
 
   Parser parser;
   std::vector<Token> tokens;
+  tokens.reserve(havingTokenList.size());
   Token t;
 
   for (unsigned int i = 0; i < havingTokenList.size(); i++)
@@ -1193,6 +1195,51 @@ execplan::SCSEP CalpontSelectExecutionPlan::cloneForTableWORecursiveSelectsGbObH
   TableList newTableList{targetTableAlias};
 
   newPlan->tableList(newTableList);
+
+  return newPlan;
+}
+
+SCSEP CalpontSelectExecutionPlan::clone()
+{
+  auto newPlan = cloneWORecursiveSelects();
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSubSelects)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSubSelects.push_back(subCSEP->clone());
+  }
+
+  newPlan->fDerivedTableList.clear();
+  for (const auto& drvTable: fDerivedTableList)
+  {
+    auto* drvCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(drvTable.get());
+    idbassert_s(drvCSEP != nullptr, "derivedTable is not a CalpontSelectExecutionPlan");
+    newPlan->fDerivedTableList.push_back(drvCSEP->clone());
+  }
+
+  newPlan->fUnionVec.clear();
+  for (const auto& subPlan : fUnionVec)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "unionVec is not a CalpontSelectExecutionPlan");
+    newPlan->fUnionVec.push_back(subCSEP->clone());
+  }
+
+  newPlan->fSelectSubList.clear();
+  for (const auto& subPlan : fSelectSubList)
+  {
+    auto* subCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(subPlan.get());
+    idbassert_s(subCSEP != nullptr, "subPlan is not a CalpontSelectExecutionPlan");
+    newPlan->fSelectSubList.push_back(subCSEP->clone());
+  }
+
+  newPlan->fSubSelectList.clear();
+  for (const auto& subPlan : fSubSelectList)
+  {
+    newPlan->fSubSelectList.push_back(subPlan->clone());
+  }
 
   return newPlan;
 }

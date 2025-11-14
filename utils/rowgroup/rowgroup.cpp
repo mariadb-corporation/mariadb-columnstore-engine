@@ -1599,6 +1599,16 @@ RowGroup& RowGroup::operator+=(const RowGroup& rhs)
   forceInline.swap(tmp);
 
   columnCount += rhs.columnCount;
+  // Reserve space for all vectors that will be appended
+  oids.reserve(oids.size() + rhs.oids.size());
+  keys.reserve(keys.size() + rhs.keys.size());
+  types.reserve(types.size() + rhs.types.size());
+  charsetNumbers.reserve(charsetNumbers.size() + rhs.charsetNumbers.size());
+  charsets.reserve(charsets.size() + rhs.charsets.size());
+  scale.reserve(scale.size() + rhs.scale.size());
+  precision.reserve(precision.size() + rhs.precision.size());
+  colWidths.reserve(colWidths.size() + rhs.colWidths.size());
+
   oids.insert(oids.end(), rhs.oids.begin(), rhs.oids.end());
   keys.insert(keys.end(), rhs.keys.begin(), rhs.keys.end());
   types.insert(types.end(), rhs.types.begin(), rhs.types.end());
@@ -1610,6 +1620,12 @@ RowGroup& RowGroup::operator+=(const RowGroup& rhs)
 
   //    +4  +4  +8       +2 +4  +8
   // (2, 6, 10, 18) + (2, 4, 8, 16) = (2, 6, 10, 18, 20, 24, 32)
+  // Reserve space for additional offsets from rhs (starting from index 1)
+  if (rhs.stOffsets.size() > 1)
+  {
+    stOffsets.reserve(stOffsets.size() + rhs.stOffsets.size() - 1);
+    oldOffsets.reserve(oldOffsets.size() + rhs.oldOffsets.size() - 1);
+  }
   for (i = 1; i < rhs.stOffsets.size(); i++)
   {
     stOffsets.push_back(stOffsets.back() + rhs.stOffsets[i] - rhs.stOffsets[i - 1]);

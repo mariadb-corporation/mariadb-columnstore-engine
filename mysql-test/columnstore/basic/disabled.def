@@ -1,4 +1,5 @@
 mcs80_set_operations : BUG#MCOL-4273 2020-08-27 susil.behera@mariadb.com
+mcs82_update_join: unstable MCOL-6201 2025-10-06 roman.nozdrin@mariadb.com
 mcs211_idbExtentId_function : 2021-07-12 david.halla@mariadb.com
 mcs212_idbExtentMax_function : 2020-11-30 bharath.bokka@mariadb.com
 mcs213_idbExtentMin_function : 2020-11-30 bharath.bokka@mariadb.com
@@ -7,3 +8,6 @@ mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
 udf_calshowpartitions : unstable values for min/max in the output(sometimes N/A, sometimes numbers) 2022-07-26 roman.nozdrin@mariadb.com
 mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 pron : pron is not threadsfe and doesn't work with PrimProc TDB: leonid.fedorov@mariadb.com
+ctype_extent_koi8u : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
+ctype_extent_latin1 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
+ctype_extent_utf8mb3 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com

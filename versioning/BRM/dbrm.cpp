@@ -4144,13 +4144,12 @@ uint64_t DBRM::getTableLock(const vector<uint32_t>& pmList, uint32_t tableOID, s
   uint32_t tmp32;
   vector<uint32_t> dbRootsList;
   OamCache* oamcache = OamCache::makeOamCache();
-  OamCache::PMDbrootsMap_t pmDbroots = oamcache->getPMToDbrootsMap();
   int moduleId = 0;
 
   for (uint32_t i = 0; i < pmList.size(); i++)
   {
     moduleId = pmList[i];
-    vector<int> dbroots = (*pmDbroots)[moduleId];
+    vector<int> dbroots = oamcache->getPMDBRoots(moduleId);
 
     for (uint32_t j = 0; j < dbroots.size(); j++)
       dbRootsList.push_back((uint32_t)dbroots[j]);

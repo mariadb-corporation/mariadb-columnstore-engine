@@ -5,9 +5,9 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
+from cmapi_server.managers.application import AppManager
 from tracing.sentry_backend import SentryBackend
 from tracing.tracer import get_tracer
-from cmapi_server.managers.application import AppManager
 
 SENTRY_ACTIVE = False
 

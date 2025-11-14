@@ -154,6 +154,8 @@ int DeleteDMLPackage::buildFromBuffer(std::string& buffer, int /*columns*/, int 
   initializeTable();
 
   std::vector<std::string> dataList;
+  // Reserve space for row IDs
+  dataList.reserve(rows);
   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
   boost::char_separator<char> sep(":");
   tokenizer tokens(buffer, sep);

@@ -769,7 +769,8 @@ void TupleJoiner::doneInserting()
         smallRow.setPointer(sthit->second);
         ++sthit;
       }
-
+      // Reserve space up to uniqueLimit+1 to avoid reallocations during unique value tracking
+      uniquer.reserve(std::min(uniqueLimit + 1, rowCount));
       if (isLongDouble(smallSideColType))
       {
         double dval = (double)roundl(smallRow.getLongDoubleField(smallSideColIdx));

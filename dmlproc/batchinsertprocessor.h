@@ -68,6 +68,7 @@ class BatchInsertProc
   void setHwm();
   void receiveAllMsg();
   void receiveOutstandingMsg();
+  uint32_t selectNextPM();
 
  private:
   SP_PKG fInsertPkgQueue;

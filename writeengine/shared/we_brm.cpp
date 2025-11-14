@@ -56,7 +56,7 @@ using namespace execplan;
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
-BRMWrapper* volatile BRMWrapper::m_instance = NULL;
+std::atomic<BRMWrapper*> BRMWrapper::m_instance{nullptr};
 std::atomic<bool> BRMWrapper::finishReported(false);
 thread_local int BRMWrapper::m_brmRc = 0;
 boost::mutex BRMWrapper::m_instanceCreateMutex;
@@ -298,22 +298,19 @@ int BRMWrapper::getFboOffset(const uint64_t lbid, int& oid, uint16_t& dbRoot, ui
 //------------------------------------------------------------------------------
 BRMWrapper* BRMWrapper::getInstance()
 {
-  if (m_instance == 0)
+  BRMWrapper* tmp = m_instance.load(std::memory_order_acquire);
+  if (tmp == nullptr)
   {
     boost::mutex::scoped_lock lock(m_instanceCreateMutex);
-
-    if (m_instance == 0)
+    tmp = m_instance.load(std::memory_order_relaxed);
+    if (tmp == nullptr)
     {
-      BRMWrapper* tmp = new BRMWrapper();
-
-      // Memory barrier makes sure the m_instance assignment is not
-      // mingled with the constructor code
-      atomicops::atomicMb();
-      m_instance = tmp;
+      tmp = new BRMWrapper();
+      m_instance.store(tmp, std::memory_order_release);
     }
   }
 
-  return m_instance;
+  return tmp;
 }
 
 //------------------------------------------------------------------------------

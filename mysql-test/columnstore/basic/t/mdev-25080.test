@@ -3,6 +3,7 @@
 --echo # in outer select to foreign engines
 
 --source ../include/have_columnstore.inc
+--source ../include/disable_11.8.inc
 
 if (!$MASTER_MYPORT)
 {
@@ -201,6 +202,8 @@ DELETE FROM t1; DELETE FROM t2;
 SELECT a FROM (SELECT a FROM t1 UNION SELECT a FROM t2) AS sub ORDER BY a;
 EXPLAIN SELECT a FROM (SELECT a FROM t1 UNION SELECT a FROM t2) AS sub ORDER BY a;
 
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP TABLE t1, t2, t3, t4;
 DROP DATABASE mdev25080;

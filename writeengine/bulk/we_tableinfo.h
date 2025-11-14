@@ -21,6 +21,7 @@
  *******************************************************************************/
 #pragma once
 
+#include <atomic>
 #include <sys/time.h>
 #include <fstream>
 #include <utility>
@@ -69,10 +70,10 @@ class TableInfo : public WeUIDGID
   //   to read import files.  Comes from
   //   writeBufferSize tag in job xml file
   char fColDelim;             // Used to delimit col values in a row
-  volatile Status fStatusTI;  // Status of table.  Made volatile to
-  //   insure BulkLoad methods can access
-  //   (thru getStatusTI()) correctly w/o
-  //   having to go through a mutex lock.
+  std::atomic<Status> fStatusTI;  // Status of table.  Using atomic to
+  //   ensure BulkLoad methods can access
+  //   correctly across threads with proper
+  //   memory ordering guarantees.
   int fReadBufCount;  // Number of read buffers
   //   (size of fBuffers vector)
   unsigned fNumberOfColumns;  // Number of ColumnInfo objs in this tbl
@@ -134,7 +135,7 @@ class TableInfo : public WeUIDGID
                                    // to use for TIMESTAMP data type. For example,
                                    // for EST which is UTC-5:00, offset will be -18000s.
 
-  volatile bool fTableLocked;  // Do we have db table lock
+  std::atomic<bool> fTableLocked;  // Do we have db table lock
 
   bool fReadFromStdin;    // Read import file from STDIN
   bool fReadFromS3;       // Read import file from S3

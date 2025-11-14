@@ -15,28 +15,30 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
    MA 02110-1301, USA. */
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-
 #include "rulebased_optimizer.h"
 
 #include "configcpp.h"
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
-#include "execplan/simplecolumn.h"
-#include "existsfilter.h"
-#include "logicoperator.h"
-#include "operator.h"
 #include "predicateoperator.h"
-#include "simplefilter.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_predicate_pushdown.h"
+#include "rbo_apply_rewrite_distinct.h"
 #include "utils/pron/pron.h"
+
+#include "calpontsystemcatalog.h"
+#include "functioncolumn.h"
 
 namespace optimizer
 {
+
+std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
+                                      const RBOptimizerContext& ctx)
+{
+  static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
+  return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
+         std::to_string(ctx.getUniqueId());
+}
 
 // Apply a list of rules to a CSEP
 bool optimizeCSEPWithRules(execplan::CalpontSelectExecutionPlan& root, const std::vector<Rule>& rules,
@@ -83,6 +85,10 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
   {
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
+
+    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+                                    optimizer::applyRewriteDistinct};
+    rules.push_back(rewriteDistinct);
   }
 
   optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,

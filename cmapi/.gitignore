@@ -89,8 +89,9 @@ ubuntu20.04
 buildinfo.txt
 
 # Self-signed certificates
-cmapi_server/self-signed.crt
-cmapi_server/self-signed.key
+self-signed.crt
+self-signed.key
+
 # Comes in handy if you build packages locally
 pp
 mcs
@@ -98,3 +99,6 @@ mcs_aws
 mcs_gsutil
 _CPack_Packages/
 venv/
+
+*.log
+*.puml

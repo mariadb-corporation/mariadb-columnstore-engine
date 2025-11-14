@@ -65,13 +65,13 @@ namespace redistribute
 {
 // static variables
 boost::mutex RedistributeControlThread::fActionMutex;
-volatile bool RedistributeControlThread::fStopAction = false;
+std::atomic<bool> RedistributeControlThread::fStopAction{false};
 string RedistributeControlThread::fWesInUse;
 
 void RedistributeControlThread::setStopAction(bool s)
 {
   boost::mutex::scoped_lock lock(fActionMutex);
-  fStopAction = s;
+  fStopAction.store(s, std::memory_order_relaxed);
 }
 
 RedistributeControlThread::RedistributeControlThread(uint32_t act)
@@ -758,8 +758,7 @@ int RedistributeControlThread::executeRedistributePlan()
 int RedistributeControlThread::connectToWes(int dbroot)
 {
   int ret = 0;
-  OamCache::dbRootPMMap_t dbrootToPM = fOamCache->getDBRootToPMMap();
-  int pmId = (*dbrootToPM)[dbroot];
+  int pmId = fOamCache->getOwnerPM(dbroot);
   ostringstream oss;
   oss << "pm" << pmId << "_WriteEngineServer";
 

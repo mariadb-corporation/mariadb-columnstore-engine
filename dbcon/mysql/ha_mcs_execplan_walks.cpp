@@ -70,6 +70,31 @@ class RecursionCounter
   cal_impl_if::gp_walk_info* fgwip;
 };
 
+// RAII guard to automatically clean up work stacks on error.
+// If a fatal parse error occurs, this ensures allocated objects
+// are deleted when the guard goes out of scope, preventing memory leaks.
+class CleanupGuard
+{
+ private:
+  CleanupGuard() = delete;
+  CleanupGuard(const CleanupGuard&) = delete;
+  CleanupGuard& operator=(const CleanupGuard&) = delete;
+
+ public:
+  explicit CleanupGuard(cal_impl_if::gp_walk_info* gwip) : fgwip(gwip)
+  {
+  }
+  ~CleanupGuard()
+  {
+    if (fgwip->fatalParseError)
+    {
+      clearDeleteStacks(*fgwip);
+    }
+  }
+
+  cal_impl_if::gp_walk_info* fgwip;
+};
+
 bool isSecondArgumentConstItem(Item_func* ifp)
 {
   return (ifp->argument_count() == 2 && ifp->arguments()[1]->type() == Item::CONST_ITEM);
@@ -88,6 +113,9 @@ void gp_walk(const Item* item, void* arg)
 {
   cal_impl_if::gp_walk_info* gwip = static_cast<cal_impl_if::gp_walk_info*>(arg);
   idbassert(gwip);
+
+  // RAII guard: automatically cleans up work stacks on error when guard goes out of scope
+  CleanupGuard cleanup(gwip);
 
   // Bailout...
   if (gwip->fatalParseError)
@@ -815,12 +843,7 @@ void gp_walk(const Item* item, void* arg)
     }
   }
 
-  // Clean up allocated objects if a fatal parse error occurred
-  if (gwip->fatalParseError)
-  {
-    clearDeleteStacks(*gwip);
-  }
-
+  // CleanupGuard will automatically clean up if fatalParseError is set
   return;
 }
 

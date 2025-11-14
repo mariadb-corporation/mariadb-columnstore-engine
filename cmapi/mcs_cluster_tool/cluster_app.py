@@ -198,6 +198,13 @@ def add(
             'node IP, name or FQDN. '
             'Can be used multiple times to add several nodes at a time.'
         )
+    ),
+    read_replica: bool = typer.Option(
+        False,
+        '--read-replica',
+        help=(
+            'Add node (or nodes, if more than one is passed) as read replicas.'
+        )
     )
 ):
     """Add nodes to the Columnstore cluster."""
@@ -207,7 +214,9 @@ def add(
         extra_nodes=nodes
     ):
         for node in nodes:
-            result.append(client.add_node({'node': node}))
+            result.append(
+                client.add_node({'node': node, 'read_replica': read_replica})
+            )
     return result
 
 

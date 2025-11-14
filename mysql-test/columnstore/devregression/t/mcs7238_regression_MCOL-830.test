@@ -5,6 +5,7 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--source ../include/disable_11.8.inc
 
 --source ../include/cross_engine.inc
 

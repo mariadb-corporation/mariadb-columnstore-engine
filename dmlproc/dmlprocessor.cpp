@@ -1404,7 +1404,9 @@ void DMLProcessor::operator()()
       messageqcpp::ByteStream::byte status = 255;
       messageqcpp::ByteStream::octbyte rowCount = 0;
 
-      if (fDbrm->getSystemState(stateFlags) >
+      int rr = fDbrm->getSystemState(stateFlags);
+
+      if (rr >
           0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
       {
         messageqcpp::ByteStream results;
@@ -1845,7 +1847,7 @@ void DMLProcessor::operator()()
 
 void RollbackTransactionProcessor::processBulkRollback(BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm,
                                                        uint64_t uniqueId,
-                                                       OamCache::dbRootPMMap_t& dbRootPMMap,
+                                                       OamCache* oamcache,
                                                        bool& lockReleased)
 {
   // Take over ownership of stale lock.
@@ -1884,7 +1886,7 @@ void RollbackTransactionProcessor::processBulkRollback(BRM::TableLockInfo lockIn
 
   for (uint32_t i = 0; i < lockInfo.dbrootList.size(); i++)
   {
-    pmId = (*dbRootPMMap)[lockInfo.dbrootList[i]];
+    pmId = oamcache->getOwnerPM(lockInfo.dbrootList[i]);
     pmSet.insert(pmId);
   }
 

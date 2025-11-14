@@ -243,6 +243,7 @@
         <TableLockSaveFile>/var/lib/columnstore/data1/systemFiles/dbrm/tablelocks</TableLockSaveFile>
         <DBRMTimeOut>20</DBRMTimeOut>
         <!-- in seconds -->
+        <DBRMUnresponsiveTimeout>300</DBRMUnresponsiveTimeout>
         <DBRMSnapshotInterval>100000</DBRMSnapshotInterval>
         <!-- default SWSDL max element save size -->
         <WaitPeriod>10</WaitPeriod>

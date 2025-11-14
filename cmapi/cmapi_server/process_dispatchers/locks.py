@@ -109,6 +109,8 @@ def release_shmem_locks(logger: logging.Logger, max_iterations: int = 5) -> bool
         active_total = sum(s.readers + s.writers for s in states)
         waiting_total = sum(s.readers_waiting + s.writers_waiting for s in states)
         if active_total == 0 and waiting_total == 0:
+            attempts_descr = "" if not attempt else f" after {attempt} attempts"
+            logger.info('No active or waiting shmem locks remain%s', attempts_descr)
             return True
 
         logger.debug(

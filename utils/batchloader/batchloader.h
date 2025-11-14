@@ -119,8 +119,7 @@ class BatchLoader
   uint32_t fFirstPm;
   execplan::CalpontSystemCatalog::SCN fSessionId;
   uint32_t fTableOid;
-  oam::OamCache::PMDbrootsMap_t fPmDbrootMap;
-  oam::OamCache::dbRootPMMap_t fDbrootPMmap;
+  oam::OamCache* fOamCache;
 };
 
 }  // namespace batchloader

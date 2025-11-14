@@ -3,7 +3,7 @@
 --disable_warnings
 DROP DATABASE IF EXISTS mcol5812;
 --enable_warnings
-
+SET collation_server = 'utf8mb4_general_ci';
 CREATE DATABASE mcol5812;
 USE mcol5812;
 

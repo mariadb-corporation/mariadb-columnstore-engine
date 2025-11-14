@@ -59,6 +59,16 @@ class ha_mcs : public handler
   int impl_external_lock(THD* thd, TABLE* table, int lock_type);
   int impl_rnd_init(TABLE* table, const std::vector<COND*>& condStack);
 
+protected:
+  ha_rows& rows_inserted()
+  {
+#if MYSQL_VERSION_ID >= 110500
+    return rows_stats.inserted;
+#else
+    return rows_changed;
+#endif
+  }
+
  public:
   ha_mcs(handlerton* hton, TABLE_SHARE* table_arg);
   ~ha_mcs() override = default;

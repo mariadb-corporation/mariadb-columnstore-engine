@@ -117,13 +117,16 @@ def add_logging_level(level_name, level_num, method_name=None):
 def enable_console_logging(logger: logging.Logger) -> None:
     """Enable logging to console for passed logger by adding a StreamHandler to it"""
     console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(logger.handlers[0].formatter)
     logger.addHandler(console_handler)
 
 
 def config_cmapi_server_logging():
     # add custom level TRACE only for develop purposes
     # could be activated using API endpoints or cli tool without relaunching
-    add_logging_level('TRACE', 5)
+    if not hasattr(logging, 'TRACE'):
+        add_logging_level('TRACE', 5)
     cherrypy._cplogging.LogManager.error = custom_cherrypy_error
     # reconfigure cherrypy.access log message format
     # Default access_log_format '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
@@ -158,7 +161,7 @@ def change_loggers_level(level: str):
         logger.setLevel(level)
 
 def disable_unwanted_loggers():
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 
 class JsonFormatter(logging.Formatter):

@@ -11,11 +11,9 @@ import requests
 requests.packages.urllib3.disable_warnings()
 
 from cmapi_server.constants import (
-    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH
+    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH, _version
 )
-from cmapi_server.controllers.dispatcher import (
-    dispatcher, jsonify_error,_version
-)
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.unittest_global import (
     cmapi_config_filename, tmp_cmapi_config_filename
@@ -28,12 +26,14 @@ def run_server():
     CertificateManager.create_self_signed_certificate_if_not_exist()
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
-    yield
-    cherrypy.engine.exit()
-    cherrypy.engine.block()
+    try:
+        yield
+    finally:
+        cherrypy.engine.exit()
+        cherrypy.engine.block()
 
 
-def get_current_key():
+def get_current_key() -> str:
     app_config = configparser.ConfigParser()
     try:
         with open(cmapi_config_filename, 'r') as _config_file:

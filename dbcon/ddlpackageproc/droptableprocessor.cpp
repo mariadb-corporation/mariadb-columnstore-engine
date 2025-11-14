@@ -315,6 +315,8 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
     Oam oam;
 
     // Save qualified tablename, all column, dictionary OIDs, and transaction ID into a file in ASCII format
+    // Reserve space for OIDs
+    oidList.reserve(tableColRidList.size() + dictOIDList.size());
     for (unsigned i = 0; i < tableColRidList.size(); i++)
     {
       if (tableColRidList[i].objnum > 3000)
@@ -359,8 +361,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
       return result;
     }
 
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     try
     {
@@ -464,7 +465,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
       return result;
     }
 
-    pmNum = (*dbRootPMMap)[dbRoot];
+    pmNum = oamcache->getOwnerPM(dbRoot);
 
     try
     {
@@ -966,6 +967,9 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackageInternal(ddlpa
 
     dictOIDList = systemCatalogPtr->dictOIDs(userTableName);
 
+    // Reserve space for OIDs (columns + aux column + dictionaries)
+    columnOidList.reserve(tableColRidList.size() + 1);
+    allOidList.reserve(tableColRidList.size() + 1 + dictOIDList.size());
     for (unsigned i = 0; i < tableColRidList.size(); i++)
     {
       if (tableColRidList[i].objnum > 3000)
@@ -1275,8 +1279,7 @@ TruncTableProcessor::DDLResult TruncTableProcessor::processPackageInternal(ddlpa
       bytestream << (uint32_t)colType.compressionType;
     }
 
-    boost::shared_ptr<std::map<int, int> > dbRootPMMap = oamcache->getDBRootToPMMap();
-    pmNum = (*dbRootPMMap)[useDBRoot];
+    pmNum = oamcache->getOwnerPM(useDBRoot);
 
     try
     {

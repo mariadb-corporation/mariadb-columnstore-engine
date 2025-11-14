@@ -480,11 +480,12 @@ TupleBPS::TupleBPS(const pColStep& rhs, const JobInfo& jobInfo)
   fTraceFlags = rhs.fTraceFlags;
   fBPP->setTraceFlags(fTraceFlags);
   fBPP->setOutputType(ROW_GROUP);
-  finishedSending = sendWaiting = false;
+  finishedSending.store(false, std::memory_order_relaxed);
+  sendWaiting = false;
   fNumBlksSkipped = 0;
   fPhysicalIO = 0;
   fCacheIO = 0;
-  BPPIsAllocated = false;
+  BPPIsAllocated.store(false, std::memory_order_relaxed);
   uniqueID = UniqueNumberGenerator::instance()->getUnique32();
   fBPP->setUniqueID(uniqueID);
   fBPP->setUuid(fStepUuid);
@@ -611,7 +612,8 @@ TupleBPS::TupleBPS(const pColScanStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fColWidth = fColType.colWidth;
   lbidList = rhs.lbidList;
 
-  finishedSending = sendWaiting = false;
+  finishedSending.store(false, std::memory_order_relaxed);
+  sendWaiting = false;
   firstRead = true;
   fSwallowRows = false;
   recvExited = 0;
@@ -685,12 +687,13 @@ TupleBPS::TupleBPS(const PassThruStep& rhs, const JobInfo& jobInfo) : BatchPrimi
   fTraceFlags = rhs.fTraceFlags;
   fBPP->setTraceFlags(fTraceFlags);
   fBPP->setOutputType(ROW_GROUP);
-  finishedSending = sendWaiting = false;
+  finishedSending.store(false, std::memory_order_relaxed);
+  sendWaiting = false;
   fSwallowRows = false;
   fNumBlksSkipped = 0;
   fPhysicalIO = 0;
   fCacheIO = 0;
-  BPPIsAllocated = false;
+  BPPIsAllocated.store(false, std::memory_order_relaxed);
   uniqueID = UniqueNumberGenerator::instance()->getUnique32();
   fBPP->setUniqueID(uniqueID);
   fBPP->setUuid(fStepUuid);
@@ -742,7 +745,8 @@ TupleBPS::TupleBPS(const pDictionaryStep& rhs, const JobInfo& jobInfo)
   alias(rhs.alias());
   view(rhs.view());
   name(rhs.name());
-  finishedSending = sendWaiting = false;
+  finishedSending.store(false, std::memory_order_relaxed);
+  sendWaiting = false;
   recvExited = 0;
   fBPP.reset(new BatchPrimitiveProcessorJL(fRm));
   initializeConfigParms();
@@ -787,7 +791,8 @@ TupleBPS::~TupleBPS()
   {
     fDec->removeDECEventListener(this);
 
-    if (BPPIsAllocated)
+    bool wasBPPAllocated = BPPIsAllocated.exchange(false, std::memory_order_acq_rel);
+    if (wasBPPAllocated)
     {
       SBS sbs{new ByteStream()};
       fBPP->destroyBPP(*sbs);
@@ -1477,7 +1482,7 @@ void TupleBPS::run()
     fBPP->priority(priority());
     fBPP->createBPP(*sbs);
     fDec->write(uniqueID, sbs);
-    BPPIsAllocated = true;
+    BPPIsAllocated.store(true, std::memory_order_release);
 
     if (doJoin && tjoiners[0]->inPM())
       serializeJoiner();
@@ -1520,7 +1525,8 @@ void TupleBPS::join()
 
     jobstepThreadPool.join(fProducerThreads);
 
-    if (BPPIsAllocated)
+    bool wasBPPAllocated = BPPIsAllocated.exchange(false, std::memory_order_acq_rel);
+    if (wasBPPAllocated)
     {
       SBS sbs{new ByteStream()};
       fDec->removeDECEventListener(this);
@@ -1536,7 +1542,6 @@ void TupleBPS::join()
                         "TupleBPS::join()");
       }
 
-      BPPIsAllocated = false;
       fDec->removeQueue(uniqueID);
       tjoiners.clear();
     }
@@ -1561,9 +1566,12 @@ void TupleBPS::sendError(uint16_t status)
   }
 
   fBPP->reset();
-  finishedSending = true;
-  condvar.notify_all();
-  condvarWakeupProducer.notify_all();
+  {
+    boost::unique_lock<boost::mutex> lock(tplMutex);
+    finishedSending.store(true, std::memory_order_release);
+    condvar.notify_all();
+    condvarWakeupProducer.notify_all();
+  }
 }
 
 uint32_t TupleBPS::nextBand(ByteStream& bs)
@@ -1679,7 +1687,7 @@ void TupleBPS::sendJobs(const vector<Job>& jobs)
       condvar.notify_all();
 
     // Send not more than fMaxOutstandingRequests jobs out. min(blocksPerJob) = 16
-    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie)
+    while ((msgsSent - msgsRecvd > fMaxOutstandingRequests * (blocksPerJob >> 1)) && !fDie.load())
     {
       sendWaiting = true;
       condvarWakeupProducer.wait(tplLock);
@@ -1936,7 +1944,7 @@ bool TupleBPS::processLBIDFilter(const EMEntry& emEntry) const
 }
 
 bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
-                                       boost::shared_ptr<map<int, int>> dbRootPMMap) const
+                                       oam::OamCache* oamCache) const
 {
   if (!hasPCFilter)
     return true;
@@ -1946,7 +1954,7 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
   if (bop == BOP_AND)
   {
     /* All Pseudocolumns have been promoted to 8-bytes except the casual partitioning filters */
-    return (!hasPMFilter || processOneFilterType(8, (*dbRootPMMap)[emEntry.dbRoot], PSEUDO_PM)) &&
+    return (!hasPMFilter || processOneFilterType(8, oamCache->getClosestPM(emEntry.dbRoot), PSEUDO_PM)) &&
            (!hasSegmentFilter || processOneFilterType(8, emEntry.segmentNum, PSEUDO_SEGMENT)) &&
            (!hasDBRootFilter || processOneFilterType(8, emEntry.dbRoot, PSEUDO_DBROOT)) &&
            (!hasSegmentDirFilter || processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR)) &&
@@ -1971,7 +1979,7 @@ bool TupleBPS::processPseudoColFilters(uint32_t extentIndex,
   }
   else
   {
-    return (hasPMFilter && processOneFilterType(8, (*dbRootPMMap)[emEntry.dbRoot], PSEUDO_PM)) ||
+    return (hasPMFilter && processOneFilterType(8, oamCache->getClosestPM(emEntry.dbRoot), PSEUDO_PM)) ||
            (hasSegmentFilter && processOneFilterType(8, emEntry.segmentNum, PSEUDO_SEGMENT)) ||
            (hasDBRootFilter && processOneFilterType(8, emEntry.dbRoot, PSEUDO_DBROOT)) ||
            (hasSegmentDirFilter && processOneFilterType(8, emEntry.partitionNum, PSEUDO_SEGMENTDIR)) ||
@@ -2004,8 +2012,6 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
   uint32_t blocksToScan;
   LBID_t startingLBID;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-  boost::shared_ptr<map<int, int>> dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
-  boost::shared_ptr<map<int, int>> dbRootPMMap = oamCache->getDBRootToPMMap();
   int localPMId = oamCache->getLocalPMId();
 
   idbassert(ffirstStepType == SCAN);
@@ -2043,7 +2049,7 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       continue;
     }
 
-    if (!processPseudoColFilters(i, dbRootPMMap))
+    if (!processPseudoColFilters(i, oamCache))
     {
       fNumBlksSkipped += lbidsToScan;
       continue;
@@ -2066,20 +2072,19 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
         throw IDBExcept(ERR_LOCAL_QUERY_UM);
       }
 
-      if (dbRootPMMap->find(scannedExtents[i].dbRoot)->second != localPMId)
+      if (!oamCache->isAccessibleBy(scannedExtents[i].dbRoot, localPMId))
         continue;
     }
 
     // a necessary DB root is offline
-    if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+    if (oamCache->isOffline(scannedExtents[i].dbRoot))
     {
       // MCOL-259 force a reload of the xml. This usualy fixes it.
       Logger log;
       log.logMessage(logging::LOG_TYPE_WARNING, "forcing reload of columnstore.xml for dbRootConnectionMap");
       oamCache->forceReload();
-      dbRootConnectionMap = oamCache->getDBRootToConnectionMap();
 
-      if (dbRootConnectionMap->find(scannedExtents[i].dbRoot) == dbRootConnectionMap->end())
+      if (oamCache->isOffline(scannedExtents[i].dbRoot))
       {
         log.logMessage(logging::LOG_TYPE_WARNING, "dbroot still not in dbRootConnectionMap");
         throw IDBExcept(ERR_DATA_OFFLINE);
@@ -2106,9 +2111,10 @@ void TupleBPS::makeJobs(vector<Job>* jobs)
       fBPP->setLBID(startingLBID, scannedExtents[i]);
       fBPP->setCount(blocksThisJob);
       bs.reset(new ByteStream());
-      fBPP->runBPP(*bs, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], isExeMgrDEC);
+      int connIndex = oamCache->getClosestConnection(scannedExtents[i].dbRoot);
+      fBPP->runBPP(*bs, connIndex, isExeMgrDEC);
       jobs->push_back(
-          Job(scannedExtents[i].dbRoot, (*dbRootConnectionMap)[scannedExtents[i].dbRoot], blocksThisJob, bs));
+          Job(scannedExtents[i].dbRoot, connIndex, blocksThisJob, bs));
       blocksToScan -= blocksThisJob;
       startingLBID += fColType.colWidth * blocksThisJob;
       fBPP->reset();
@@ -2140,10 +2146,12 @@ void TupleBPS::sendPrimitiveMessages()
   }
 
 abort:
-  boost::unique_lock<boost::mutex> tplLock(tplMutex);
-  finishedSending = true;
-  condvar.notify_all();
-  tplLock.unlock();
+  {
+    boost::unique_lock<boost::mutex> lock(tplMutex);
+    finishedSending.store(true, std::memory_order_release);
+    condvar.notify_all();
+    condvarWakeupProducer.notify_all();
+  }
 }
 
 void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::ByteStream>>& bsv,
@@ -2197,7 +2205,7 @@ void TupleBPS::processByteStreamVector(vector<boost::shared_ptr<messageqcpp::Byt
       }
 
       // Sets `fDie` to true, so other threads can check `cancelled()`.
-      abort_nolock();
+      abort();
       return;
     }
 
@@ -2413,14 +2421,14 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     while (1)
     {
       // sync with the send side
-      while (!finishedSending && msgsSent == msgsRecvd)
+      while (!finishedSending.load(std::memory_order_acquire) && msgsSent == msgsRecvd)
       {
         recvWaiting++;
         condvar.wait(tplLock);
         recvWaiting--;
       }
 
-      if (msgsSent == msgsRecvd && finishedSending)
+      if (msgsSent == msgsRecvd && finishedSending.load(std::memory_order_acquire))
       {
         break;
       }
@@ -2581,7 +2589,11 @@ void TupleBPS::receiveMultiPrimitiveMessages()
   {
     handleException(std::current_exception(), logging::ERR_TUPLE_BPS, logging::ERR_ALWAYS_CRITICAL,
                     "st: " + std::to_string(fStepId) + " TupleBPS::receiveMultiPrimitiveMessages()");
-    abort_nolock();
+    // Unlock if we hold the lock (exception could occur when lock is not held)
+    if (tplLock.owns_lock())
+      tplLock.unlock();
+    abort();  // Sets fDie, notifies all waiting threads
+    return;   // Exit - cannot trust data state after exception
   }
 
   // We have one thread here and do not need to notify any waiting producer threads, because we are done with
@@ -2682,14 +2694,14 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
     SBS sbs{new ByteStream()};
 
+    bool wasBPPAllocated = BPPIsAllocated.exchange(false, std::memory_order_acq_rel);
     try
     {
-      if (BPPIsAllocated)
+      if (wasBPPAllocated)
       {
         fDec->removeDECEventListener(this);
         fBPP->destroyBPP(*sbs);
         fDec->write(uniqueID, sbs);
-        BPPIsAllocated = false;
       }
     }
     // catch and do nothing. Let it continue with the clean up and profiling
@@ -2845,7 +2857,7 @@ const string TupleBPS::toString() const
   if (bop == BOP_OR)
     oss << " BOP_OR ";
 
-  if (fDie)
+  if (fDie.load())
     oss << " aborting " << msgsSent << "/" << msgsRecvd << " " << uniqueID << " ";
 
   if (fOutputJobStepAssociation.outSize() > 0)
@@ -3359,12 +3371,14 @@ void TupleBPS::dec(DistributedEngineComm* dec)
 
 void TupleBPS::abort_nolock()
 {
-  if (fDie)
+  if (fDie.load())
     return;
 
   JobStep::abort();
 
-  if (fDec && BPPIsAllocated)
+  // Use atomic exchange to ensure only one thread performs cleanup
+  bool wasBPPAllocated = BPPIsAllocated.exchange(false, std::memory_order_acq_rel);
+  if (fDec && wasBPPAllocated)
   {
     SBS sbs{new ByteStream()};
     fBPP->abortProcessing(sbs.get());
@@ -3380,18 +3394,18 @@ void TupleBPS::abort_nolock()
       // front-end already.  Nothing to do here.
     }
 
-    BPPIsAllocated = false;
     fDec->shutdownQueue(uniqueID);
   }
-
-  condvarWakeupProducer.notify_all();
-  condvar.notify_all();
 }
 
 void TupleBPS::abort()
 {
-  boost::mutex::scoped_lock scoped(boost::mutex);
   abort_nolock();
+
+  // Notify waiting threads with proper mutex synchronization
+  boost::unique_lock<boost::mutex> lock(tplMutex);
+  condvarWakeupProducer.notify_all();
+  condvar.notify_all();
 }
 
 template bool TupleBPS::processOneFilterType<int64_t>(int8_t colWidth, int64_t value, uint32_t type) const;

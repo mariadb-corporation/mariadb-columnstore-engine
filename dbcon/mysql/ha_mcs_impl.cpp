@@ -98,7 +98,6 @@ using namespace execplan;
 
 using namespace joblist;
 
-
 #include "errorcodes.h"
 #include "idberrorinfo.h"
 #include "errorids.h"
@@ -122,23 +121,9 @@ namespace cal_impl_if
 {
 extern bool nonConstFunc(Item_func* ifp);
 
-void gp_walk_info::mergeTableStatistics(const TableStatisticsMap& aTableStatisticsMap)
+void gp_walk_info::mergeTableStatistics(const TableStatistics& aTableStatistics)
 {
-  for (auto& [schemaAndTableName, aColumnStatisticsMap] : aTableStatisticsMap)
-  {
-    auto tableStatisticsMapIt = tableStatisticsMap.find(schemaAndTableName);
-    if (tableStatisticsMapIt == tableStatisticsMap.end())
-    {
-      tableStatisticsMap[schemaAndTableName] = aColumnStatisticsMap;
-    }
-    else
-    {
-      for (auto& [columnName, histogram] : aColumnStatisticsMap)
-      {
-        tableStatisticsMapIt->second[columnName] = histogram;
-      }
-    }
-  }
+  return tableStatistics.mergeTableStatistics(aTableStatistics);
 }
 
 }  // namespace cal_impl_if
@@ -2891,7 +2876,7 @@ int ha_mcs_impl_delete_table(const char* name)
   int rc = ha_mcs_impl_delete_table_(dbName, name, *ci);
   return rc;
 }
-int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed, long timeZone)
+int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_inserted, long timeZone)
 {
   THD* thd = current_thd;
 
@@ -2921,7 +2906,7 @@ int ha_mcs_impl_write_row(const uchar* buf, TABLE* table, uint64_t rows_changed,
 
   // At the beginning of insert, make sure there are no
   // left-over values from a previously possibly failed insert.
-  if (rows_changed == 0)
+  if (rows_inserted == 0)
     ci->tableValuesMap.clear();
 
   if (ci->alterTableState > 0)
@@ -3134,6 +3119,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
       //@bug 6122 Check how many columns have not null constraint. columnn with not null constraint will not
       // show up in header.
       unsigned int numberNotNull = 0;
+      ci->columnTypes.reserve(colrids.size());
 
       for (unsigned int j = 0; j < colrids.size(); j++)
       {

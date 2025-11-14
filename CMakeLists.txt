@@ -87,6 +87,7 @@ foreach(component ${COMPONENTS})
     add_subdirectory(${component})
 endforeach()
 
+add_dependencies(rbo GenError)
 add_dependencies(udf_mysql GenError)
 add_dependencies(funcexp GenError)
 add_dependencies(oamcpp GenError)

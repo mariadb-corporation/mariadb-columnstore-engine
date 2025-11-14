@@ -4,14 +4,33 @@
 #
 #    dev_tools/piptools.sh compile-all
 #
+aiohttp==3.11.16
+awscli==1.38.28
+CherryPy==18.10.0
+cryptography==43.0.3
+distro==1.9.0
+furl==2.1.4
+gsutil==5.33
+lxml==5.3.2
+psutil==7.0.0
+pyotp==2.9.0
+requests==2.32.3
+# required for CherryPy RoutesDispatcher,
+# but CherryPy itself has no such a dependency
+Routes==2.5.1
+typer==0.15.2
+
+# indirect dependencies
 aiohappyeyeballs==2.6.1
     # via aiohttp
 aiohttp==3.11.16
     # via
     #   -r requirements.in
     #   google-auth
-aiosignal==1.3.2
+aiosignal==1.4.0
     # via aiohttp
+annotated-types==0.7.0
+    # via pydantic
 argcomplete==3.6.2
     # via gsutil
 async-timeout==5.0.1
@@ -32,13 +51,13 @@ botocore==1.37.28
     #   s3transfer
 cachetools==5.5.2
     # via google-auth
-certifi==2025.1.31
+certifi==2025.8.3
     # via
     #   requests
     #   sentry-sdk
 cffi==1.17.1
     # via cryptography
-charset-normalizer==3.4.1
+charset-normalizer==3.4.3
     # via requests
 cheroot==10.0.1
     # via cherrypy
@@ -54,13 +73,15 @@ cryptography==43.0.3
     # via
     #   -r requirements.in
     #   pyopenssl
+distro==1.9.0
+    # via -r requirements.in
 docutils==0.16
     # via awscli
-fasteners==0.19
+fasteners==0.20
     # via
     #   google-apitools
     #   gsutil
-frozenlist==1.5.0
+frozenlist==1.7.0
     # via
     #   aiohttp
     #   aiosignal
@@ -96,11 +117,11 @@ idna==3.10
     # via
     #   requests
     #   yarl
-jaraco-collections==5.1.0
+jaraco-collections==5.2.1
     # via cherrypy
 jaraco-context==6.0.1
     # via jaraco-text
-jaraco-functools==4.1.0
+jaraco-functools==4.3.0
     # via
     #   cheroot
     #   jaraco-text
@@ -117,13 +138,17 @@ mdurl==0.1.2
     # via markdown-it-py
 monotonic==1.6
     # via gsutil
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   cheroot
     #   cherrypy
     #   jaraco-functools
     #   jaraco-text
-multidict==6.3.2
+mr-kot==0.9.2
+    # via -r requirements.in
+mr-kot-fs-validators==0.2.0
+    # via -r requirements.in
+multidict==6.6.4
     # via
     #   aiohttp
     #   yarl
@@ -133,9 +158,9 @@ oauth2client==4.1.3
     #   google-apitools
 orderedmultidict==1.0.1
     # via furl
-portend==3.2.0
+portend==3.2.1
     # via cherrypy
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
@@ -152,7 +177,11 @@ pyasn1-modules==0.4.2
     #   oauth2client
 pycparser==2.22
     # via cffi
-pygments==2.19.1
+pydantic==2.11.7
+    # via -r requirements.in
+pydantic-core==2.33.2
+    # via pydantic
+pygments==2.19.2
     # via rich
 pyopenssl==24.2.1
     # via
@@ -180,7 +209,7 @@ retry-decorator==1.1.1
     # via
     #   gcs-oauth2-boto-plugin
     #   gsutil
-rich==14.0.0
+rich==14.1.0
     # via typer
 routes==2.5.1
     # via -r requirements.in
@@ -190,7 +219,7 @@ rsa==4.7.2
     #   gcs-oauth2-boto-plugin
     #   google-auth
     #   oauth2client
-s3transfer==0.11.4
+s3transfer==0.11.5
     # via awscli
 sentry-sdk==2.34.1
     # via -r requirements.in
@@ -208,21 +237,26 @@ six==1.17.0
     #   python-dateutil
     #   pyu2f
     #   routes
-tempora==5.8.0
+tempora==5.8.1
     # via portend
 typer==0.15.2
     # via -r requirements.in
-typing-extensions==4.13.1
+typing-extensions==4.14.1
     # via
+    #   aiosignal
     #   multidict
-    #   rich
+    #   pydantic
+    #   pydantic-core
     #   typer
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
 urllib3==1.26.20
     # via
     #   botocore
     #   requests
     #   sentry-sdk
-yarl==1.19.0
+yarl==1.20.1
     # via aiohttp
 zc-lockfile==3.0.post1
     # via cherrypy

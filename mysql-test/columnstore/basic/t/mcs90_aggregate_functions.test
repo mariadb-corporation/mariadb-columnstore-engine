@@ -67,5 +67,7 @@ SELECT t1.b, MAX(t1.a) FROM t1 JOIN t3 ON t1.a = t3.a GROUP BY t1.b ORDER BY 1;
 SELECT t1.b, MIN(t1.a) FROM t1 JOIN t3 ON t1.a = t3.a GROUP BY t1.b ORDER BY 1;
 
 # Clean UP
+--disable_warnings
 DROP USER 'cejuser'@'localhost';
+--enable_warnings
 DROP DATABASE mcs90_db;

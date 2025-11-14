@@ -125,7 +125,7 @@ CalpontSystemCatalog::ColDataType convertDataType(const ddlpackage::ColumnType& 
   const datatypes::TypeHandler* h = datatypes::TypeHandler::find_by_ddltype(ct);
   if (!h)
   {
-    throw runtime_error("Unsupported datatype!");
+    throw runtime_error("Unsupported datatype to convert from!");
     return CalpontSystemCatalog::UNDEFINED;
   }
   return h->code();
@@ -822,10 +822,11 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
 
         if (createTable->fTableDef->fColumns[i]->fConstraints.size() > 0)
         {
-          // support default value and NOT NULL constraint
+          // support default value, JSON validation and NOT NULL constraint
           for (uint32_t j = 0; j < createTable->fTableDef->fColumns[i]->fConstraints.size(); j++)
           {
-            if (createTable->fTableDef->fColumns[i]->fConstraints[j]->fConstraintType != DDL_NOT_NULL)
+            auto ctype = createTable->fTableDef->fColumns[i]->fConstraints[j]->fConstraintType;
+            if (ctype != DDL_NOT_NULL && ctype != DDL_VALIDATE_JSON)
             {
               rc = 1;
               thd->get_stmt_da()->set_overwrite_status(true);
@@ -1226,7 +1227,8 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
             // support default value and NOT NULL constraint
             for (uint32_t j = 0; j < addColumnPtr->fColumnDef->fConstraints.size(); j++)
             {
-              if (addColumnPtr->fColumnDef->fConstraints[j]->fConstraintType != DDL_NOT_NULL)
+              auto ctype = addColumnPtr->fColumnDef->fConstraints[j]->fConstraintType;
+              if (ctype != DDL_NOT_NULL && ctype != DDL_VALIDATE_JSON)
               {
                 rc = 1;
                 thd->get_stmt_da()->set_overwrite_status(true);
@@ -1359,6 +1361,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
           }
 
           // For TIMESTAMP, if no constraint is given, default to NOT NULL
+	  // XXX: see same code conditionally enabled for specific MariaDB version.
           if (addColumnPtr->fColumnDef->fType->fType == ddlpackage::DDL_TIMESTAMP &&
               addColumnPtr->fColumnDef->fConstraints.empty())
           {
@@ -1611,7 +1614,8 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
             //@Bug 5274. support default value and NOT NULL constraint
             for (uint32_t j = 0; j < addColumnsPtr->fColumns[0]->fConstraints.size(); j++)
             {
-              if (addColumnsPtr->fColumns[0]->fConstraints[j]->fConstraintType != DDL_NOT_NULL)
+              auto ctype = addColumnsPtr->fColumns[0]->fConstraints[j]->fConstraintType;
+              if (ctype != DDL_NOT_NULL && ctype != DDL_VALIDATE_JSON)
               {
                 rc = 1;
                 thd->get_stmt_da()->set_overwrite_status(true);
@@ -1744,6 +1748,7 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
           }
 
           // For TIMESTAMP, if no constraint is given, default to NOT NULL
+	  // XXX: please see conditional to MariaDB version enablement of similar code.
           if (addColumnsPtr->fColumns[0]->fType->fType == ddlpackage::DDL_TIMESTAMP &&
               addColumnsPtr->fColumns[0]->fConstraints.empty())
           {
@@ -2072,6 +2077,16 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
                   ci->isAlter = false;
                   return rc;
                 }
+              }
+	      else if (renameColumnsPtr->fConstraints[j]->fConstraintType == DDL_VALIDATE_JSON)
+              {
+                rc = 1;
+                thd->get_stmt_da()->set_overwrite_status(true);
+                thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
+                                        (IDBErrorInfo::instance()->errorMsg(ERR_CONSTRAINTS)).c_str());
+                ci->alterTableState = cal_connection_info::NOT_ALTER;
+                ci->isAlter = false;
+                return rc;
               }
               else
               {

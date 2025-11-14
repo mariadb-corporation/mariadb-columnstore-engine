@@ -125,6 +125,7 @@ class JobStep
    */
   JobStep() = default;
   explicit JobStep(const JobInfo&);
+  JobStep(const JobStep&);
   /** destructor
    */
   virtual ~JobStep()
@@ -135,7 +136,7 @@ class JobStep
   virtual void run() = 0;
   virtual void abort()
   {
-    fDie = true;
+    fDie.store(true, std::memory_order_relaxed);
   }
   /** @brief virtual void join method
    */
@@ -388,7 +389,7 @@ class JobStep
 
   bool cancelled()
   {
-    return (fErrorInfo->errCode > 0 || fDie);
+    return (fErrorInfo->errCode > 0 || fDie.load());
   }
 
   virtual bool stringTableFriendly()
@@ -482,7 +483,7 @@ class JobStep
   bool fDelayedRunFlag;
   bool fDelivery;
   bool fOnClauseFilter;
-  volatile bool fDie;
+  std::atomic<bool> fDie;
   uint32_t fWaitToRunStepCnt;
   std::string fExtendedInfo;
   std::string fMiniInfo;

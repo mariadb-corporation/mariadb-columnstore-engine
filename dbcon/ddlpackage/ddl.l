@@ -134,6 +134,7 @@ INDEX {return INDEX;}
 INITIALLY {return INITIALLY;}
 INT {return IDB_INT;}
 INTEGER {return INTEGER;}
+JSON { return JSON; }
 KEY {return KEY;}
 MATCH {return MATCH;}
 MAX_ROWS {return MAX_ROWS;}

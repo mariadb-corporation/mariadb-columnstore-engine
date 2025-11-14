@@ -21,7 +21,6 @@
 #include <my_config.h>
 #include <dbcon/mysql/idb_mysql.h>
 
-#include <optional>
 #include <vector>
 
 #include "execplan/calpontselectexecutionplan.h"
@@ -90,11 +89,6 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
 execplan::SimpleColumn* findSuitableKeyColumn(execplan::CalpontSelectExecutionPlan& csep,
                                               execplan::CalpontSystemCatalog::TableAliasName& targetTable,
                                               optimizer::RBOptimizerContext& ctx);
-
-std::optional<std::pair<execplan::SimpleColumn&, Histogram_json_hb*>> chooseKeyColumnAndStatistics(
-    execplan::CalpontSystemCatalog::TableAliasName& targetTable, optimizer::RBOptimizerContext& ctx);
-
-Histogram_json_hb* chooseStatisticsToUse(const std::vector<Histogram_json_hb*>& statisticsVec);
 
 }  // namespace details
 

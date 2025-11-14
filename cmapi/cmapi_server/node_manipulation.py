@@ -15,17 +15,20 @@ from typing import Optional
 import requests
 from lxml import etree
 from mcs_node_control.models.node_config import NodeConfig
+from tracing.traced_session import get_traced_session
 
 from cmapi_server import helpers
 from cmapi_server.constants import (
     CMAPI_CONF_PATH,
     CMAPI_SINGLE_NODE_XML,
     DEFAULT_MCS_CONF_PATH,
+    LOCALHOST_IPS,
     LOCALHOSTS,
     MCS_DATA_PATH,
 )
+from cmapi_server.managers.application import AppStatefulConfig
 from cmapi_server.managers.network import NetworkManager
-from tracing.traced_session import get_traced_session
+
 
 PMS_NODE_PORT = '8620'
 EXEMGR_NODE_PORT = '8601'
@@ -65,7 +68,8 @@ def switch_node_maintenance(
 def add_node(
     node: str, input_config_filename: str = DEFAULT_MCS_CONF_PATH,
     output_config_filename: Optional[str] = None,
-    use_rebalance_dbroots: bool = True
+    use_rebalance_dbroots: bool = True,
+    read_replica: bool = False,
 ):
     """Add node to a cluster.
 
@@ -96,17 +100,33 @@ def add_node(
     node_config = NodeConfig()
     c_root = node_config.get_current_config_root(input_config_filename)
 
+    logging.info('Adding node %s', node)
+    # If a hostname (not IP) is provided, ensure fwd/rev DNS consistency.
+    # Skip validation for localhost aliases to preserve legacy single-node flows.
+    if not NetworkManager.is_ip(node) and not NetworkManager.is_only_loopback_hostname(node):
+        NetworkManager.validate_hostname_fwd_rev(node)
+
     try:
         if not _replace_localhost(c_root, node):
-            pm_num = _add_node_to_PMS(c_root, node)
-            _add_WES(c_root, pm_num, node)
-            _add_DBRM_Worker(c_root, node)
-            _add_Module_entries(c_root, node)
-            _add_active_node(c_root, node)
-            _add_node_to_ExeMgrs(c_root, node)
+            ip4, _ = NetworkManager.resolve_ip_and_hostname(node)
+            pm_num = _add_node_to_PMS(c_root, ip4)
+
+            if not read_replica:
+                _add_WES(c_root, pm_num, ip4)
+            else:
+                logging.info('Node is read replica, skipping WES addition.')
+
+            _add_DBRM_Worker(c_root, ip4)
+            _add_Module_entries(c_root, ip4)
+            _add_active_node(c_root, ip4)
+            _add_node_to_ExeMgrs(c_root, ip4)
             if use_rebalance_dbroots:
-                _rebalance_dbroots(c_root)
-                _move_primary_node(c_root)
+                if not read_replica:
+                    _rebalance_dbroots(c_root)
+                    _move_primary_node(c_root)
+
+            if NodeConfig().get_read_replicas(c_root):
+                update_dbroots_of_read_replicas(c_root)
     except Exception:
         logging.error(
             'Caught exception while adding node, config file is unchanged',
@@ -154,26 +174,36 @@ def remove_node(
     """
     node_config = NodeConfig()
     c_root = node_config.get_current_config_root(input_config_filename)
+    logging.info('Removing node %s', node)
 
     try:
         active_nodes = helpers.get_active_nodes(input_config_filename)
 
+        ip4, _ = NetworkManager.resolve_ip_and_hostname(node)
+
         if len(active_nodes) > 1:
-            pm_num = _remove_node_from_PMS(c_root, node)
-            _remove_WES(c_root, pm_num)
-            _remove_DBRM_Worker(c_root, node)
-            _remove_Module_entries(c_root, node)
-            _remove_from_ExeMgrs(c_root, node)
+            pm_num = _remove_node_from_PMS(c_root, ip4)
+
+            is_read_replica = ip4 in node_config.get_read_replicas(c_root)
+            if not is_read_replica:
+                _remove_WES(c_root, pm_num)
+
+            _remove_DBRM_Worker(c_root, ip4)
+            _remove_Module_entries(c_root, ip4)
+            _remove_from_ExeMgrs(c_root, ip4)
 
             if deactivate_only:
-                _deactivate_node(c_root, node)
+                _deactivate_node(c_root, ip4)
             else:
                 # TODO: unspecific name, need to think of a better one
                 _remove_node(c_root, node)
 
-            if use_rebalance_dbroots:
+            if use_rebalance_dbroots and not is_read_replica:
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
+
+            if NodeConfig().get_read_replicas(c_root):
+                update_dbroots_of_read_replicas(c_root)
         else:
             # TODO:
             #   - IMO undefined behaviour here. Removing one single node
@@ -212,10 +242,10 @@ def rebalance_dbroots(
     """Rebalance dbroots between nodes.
 
     :param input_config_filename: input mcs config path, defaults to None
-    :type input_config_filename: Optional[str], optional
     :param output_config_filename: oputput mcs config path, defaults to None
-    :type output_config_filename: Optional[str], optional
-    :rases: Exception if error happens while rebalancing.
+    :raises: Exception if error happens while rebalancing.
+
+    TODO: never used? May be better to replace direct usage of _rebalance_dbroots by this
     """
     node_config = NodeConfig()
     if input_config_filename is None:
@@ -243,19 +273,20 @@ def rebalance_dbroots(
 # all params are optional.  If node_id is unset, it will add a dbroot but not attach it to a node.
 # if node_id is set, it will attach the new dbroot to that node.  Node_id should be either
 # 'pm1' 'PM1' or '1'.  Those three all refer to node 1 as identified by the Module* entries in the
-# config file.  TBD whether we need a different identifier for the node.  Maybe the hostname instead.
+# config file.  TBD whether we need a different identifier for the node.  Maybe the hostname instead
 #
 # returns the id of the new dbroot on success
 # raises an exception on error
-def add_dbroot(input_config_filename = None, output_config_filename = None, host = None):
+def add_dbroot(input_config_filename = None, output_config_filename = None, host = None) -> int:
     node_config = NodeConfig()
     if input_config_filename is None:
         c_root = node_config.get_current_config_root()
     else:
         c_root = node_config.get_current_config_root(config_filename = input_config_filename)
 
+    ip4, _ = NetworkManager.resolve_ip_and_hostname(host) if host else (None, None)
     try:
-        ret = _add_dbroot(c_root, host)
+        ret = _add_dbroot(c_root, ip4)
     except Exception as e:
         logging.error(f"add_dbroot(): Caught exception: '{str(e)}', did not modify the config file")
         raise
@@ -293,52 +324,52 @@ def move_primary_node(
 
 
 def find_dbroot1(root):
-    smc_node = root.find("./SystemModuleConfig")
-    pm_count = int(smc_node.find("./ModuleCount3").text)
+    smc_node = root.find('./SystemModuleConfig')
+    pm_count = int(smc_node.find('./ModuleCount3').text)
     for pm_num in range(1, pm_count + 1):
-        dbroot_count = int(smc_node.find(f"./ModuleDBRootCount{pm_num}-3").text)
+        dbroot_count = int(smc_node.find(f'./ModuleDBRootCount{pm_num}-3').text)
         for dbroot_num in range(1, dbroot_count + 1):
-            dbroot = smc_node.find(f"./ModuleDBRootID{pm_num}-{dbroot_num}-3").text
-            if dbroot == "1":
-                name = smc_node.find(f"ModuleHostName{pm_num}-1-3").text
-                addr = smc_node.find(f"ModuleIPAddr{pm_num}-1-3").text
+            dbroot = smc_node.find(f'./ModuleDBRootID{pm_num}-{dbroot_num}-3').text
+            if dbroot == '1':
+                name = smc_node.find(f'ModuleHostName{pm_num}-1-3').text
+                addr = smc_node.find(f'ModuleIPAddr{pm_num}-1-3').text
                 return (name, addr)
-    raise NodeNotFoundException("Could not find dbroot 1 in the list of dbroot assignments!")
+    raise NodeNotFoundException('Could not find dbroot 1 in the list of dbroot assignments!')
 
 
 def _move_primary_node(root):
-    '''
+    """Move primary node to the node that has dbroot 1.
+
     Verify new_primary is in the list of active nodes
+        - Change ExeMgr1
+        - Change CEJ
+        - Change DMLProc
+        - Change DDLProc
+        - Change ControllerNode
+        - Change PrimaryNode
+    """
 
-    Change ExeMgr1
-    Change CEJ
-    Change DMLProc
-    Change DDLProc
-    Change Contollernode
-    Change PrimaryNode
-    '''
-
-    new_primary = find_dbroot1(root)
+    hostname, ip4 = new_primary = find_dbroot1(root)
     logging.info(f"_move_primary_node(): dbroot 1 is assigned to {new_primary}")
     active_nodes = root.findall("./ActiveNodes/Node")
     found = False
     for node in active_nodes:
-        if node.text in new_primary:
+        if node.text in (hostname, ip4):
             found = True
             break
     if not found:
-        raise NodeNotFoundException(f"{new_primary} is not in the list of active nodes")
+        raise NodeNotFoundException(f"{(hostname, ip4)} is not in the list of active nodes")
 
-    root.find("./ExeMgr1/IPAddr").text = new_primary[0]
-    root.find("./DMLProc/IPAddr").text = new_primary[0]
-    root.find("./DDLProc/IPAddr").text = new_primary[0]
+    root.find("./ExeMgr1/IPAddr").text = ip4
+    root.find("./DMLProc/IPAddr").text = ip4
+    root.find("./DDLProc/IPAddr").text = ip4
     # keep controllernode as hostname
     # b/c if IP used got troubles on a SKYSQL side
     # on the other hand if hostname/fqdn used customers with wrong address
     # resolving can got troubles on their side
     # related issues: MCOL-4804, MCOL-4440, MCOL-5017, DBAAS-7442
-    root.find("./DBRM_Controller/IPAddr").text = new_primary[0]
-    root.find("./PrimaryNode").text = new_primary[0]
+    root.find("./DBRM_Controller/IPAddr").text = hostname
+    root.find("./PrimaryNode").text = hostname
 
 
 def _add_active_node(root, node):
@@ -346,32 +377,38 @@ def _add_active_node(root, node):
     if in inactiveNodes, delete it there
     if not in desiredNodes, add it there
     if not in activeNodes, add it there
+
+    We keep IP address for consistency. If hostname is used (for example, in old configs),
+    we replace it with the IP address.
     '''
 
-    nodes = root.findall("./DesiredNodes/Node")
-    found = False
-    for n in nodes:
-        if n.text == node:
-            found = True
-    if not found:
-        desired_nodes = root.find("./DesiredNodes")
-        etree.SubElement(desired_nodes, "Node").text = node
+    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    # If reverse lookup failed, hostname may be None. Use the IP as a
+    # fallback so removal by hostname also works consistently.
+    if hostname is None:
+        hostname = ip4
 
-    __remove_helper(root.find("./InactiveNodes"), node)
+    # Remove both hostname and IP form before adding IP to avoid checking if
+    #   some of them is already there. Then we add by IP
+    desired_nodes = root.find("./DesiredNodes")
+    __remove_helper(desired_nodes, hostname)
+    __remove_helper(desired_nodes, ip4)
+    etree.SubElement(desired_nodes, "Node").text = ip4
 
+    # The same with active nodes
     active_nodes = root.find("./ActiveNodes")
-    nodes = active_nodes.findall("./Node")
-    found = False
-    for n in nodes:
-        if n.text == node:
-            found = True
-            break
-    if not found:
-        etree.SubElement(active_nodes, "Node").text = node
+    __remove_helper(active_nodes, hostname)
+    __remove_helper(active_nodes, ip4)
+    etree.SubElement(active_nodes, "Node").text = ip4
+
+    # Remove from Inactive
+    inactive_nodes = root.find("./InactiveNodes")
+    __remove_helper(inactive_nodes, hostname)
+    __remove_helper(inactive_nodes, ip4)
 
 
 def __remove_helper(parent_node, node):
-    nodes = list(parent_node.findall("./Node"))
+    nodes = list(parent_node.findall('./Node'))
     for n in nodes:
         if n.text == node:
             parent_node.remove(n)
@@ -379,18 +416,40 @@ def __remove_helper(parent_node, node):
 
 def _remove_node(root, node):
     '''
-    remove node from DesiredNodes, InactiveNodes, and ActiveNodes
+    remove node from DesiredNodes, InactiveNodes, ActiveNodes
     '''
-
-    for n in (root.find("./DesiredNodes"), root.find("./InactiveNodes"), root.find("./ActiveNodes")):
-        __remove_helper(n, node)
+    # Remove both hostname and IPv4 forms
+    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    # If reverse lookup failed, normalize hostname to ip so we always try
+    # removing both variants from lists.
+    if hostname is None:
+        hostname = ip4
+    for lst in (
+        root.find("./DesiredNodes"),
+        root.find("./InactiveNodes"),
+        root.find("./ActiveNodes"),
+    ):
+        __remove_helper(lst, hostname)
+        __remove_helper(lst, ip4)
 
 
 # This moves a node from ActiveNodes to InactiveNodes
 def _deactivate_node(root, node):
-    __remove_helper(root.find("./ActiveNodes"), node)
+    """Move node from ActiveNodes to InactiveNodes. Store as IPv4."""
+    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    if hostname is None:
+        hostname = ip4
+
+    active_nodes = root.find("./ActiveNodes")
+    __remove_helper(active_nodes, hostname)
+    __remove_helper(active_nodes, ip4)
+
+    # Remove both hostname and IP form before adding IP to avoid checking if
+    #   some of them is already there. Then we add by IP
     inactive_nodes = root.find("./InactiveNodes")
-    etree.SubElement(inactive_nodes, "Node").text = node
+    __remove_helper(inactive_nodes, hostname)
+    __remove_helper(inactive_nodes, ip4)
+    etree.SubElement(inactive_nodes, "Node").text = ip4
 
 
 def _add_dbroot(root, host) -> int:
@@ -502,16 +561,16 @@ def is_master():
 
 
 def unassign_dbroot1(root):
-    smc_node = root.find("./SystemModuleConfig")
-    pm_count = int(smc_node.find("./ModuleCount3").text)
+    smc_node = root.find('./SystemModuleConfig')
+    pm_count = int(smc_node.find('./ModuleCount3').text)
     owner_id = 0
     for i in range(1, pm_count + 1):
-        dbroot_count_node = smc_node.find(f"./ModuleDBRootCount{i}-3")
+        dbroot_count_node = smc_node.find(f'./ModuleDBRootCount{i}-3')
         dbroot_count = int(dbroot_count_node.text)
         dbroot_list = []
         for j in range(1, dbroot_count + 1):
-            dbroot = smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
-            if dbroot == "1":
+            dbroot = smc_node.find(f'./ModuleDBRootID{i}-{j}-3').text
+            if dbroot == '1':
                 owner_id = i                  # this node has dbroot 1
             else:
                 dbroot_list.append(dbroot)    # the dbroot assignments to keep
@@ -522,35 +581,51 @@ def unassign_dbroot1(root):
 
     # remove the dbroot entries for node owner_id
     for i in range(1, dbroot_count + 1):
-        doomed_node = smc_node.find(f"./ModuleDBRootID{owner_id}-{i}-3")
+        doomed_node = smc_node.find(f'./ModuleDBRootID{owner_id}-{i}-3')
         smc_node.remove(doomed_node)
     # create the new dbroot entries
     dbroot_count_node.text = str(len(dbroot_list))
     i = 1
     for dbroot in dbroot_list:
-        etree.SubElement(smc_node, f"ModuleDBRootID{owner_id}-{i}-3").text = dbroot
+        etree.SubElement(smc_node, f'ModuleDBRootID{owner_id}-{i}-3').text = dbroot
         i += 1
 
 
-def _rebalance_dbroots(root, test_mode=False):
-    # TODO: add code to detect whether we are using shared storage or not.  If not, exit
-    # without doing anything.
+def _get_existing_db_roots(root: etree.Element) -> list[int]:
+    '''Get all the existing dbroot IDs from the config file'''
+    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
+    # Going to scan from 1-99 instead
+    sysconf_node = root.find("./SystemConfig")
+    existing_dbroots = []
+    for num in range(1, 100):
+        node = sysconf_node.find(f"./DBRoot{num}")
+        if node is not None:
+            existing_dbroots.append(num)
+    return existing_dbroots
 
-    '''
-    this will be a pita
-    identify unassigned dbroots
-    assign those to the node with the fewest dbroots
 
-    then,
-    id the nodes with the most dbroots and the least dbroots
-    when most - least <= 1, we're done
-    else, move a dbroot from the node with the most to the one with the least
+def get_dbroots_paths(root: etree.Element) -> list[str]:
+    """Get all the existing dbroot IDs from the config file"""
+    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
+    # Going to scan from 1-99 instead
+    sysconf_node = root.find('./SystemConfig')
+    dbroots_paths = []
+    for num in range(1, 100):
+        dbroot_node = sysconf_node.find(f'./DBRoot{num}')
+        if dbroot_node is not None:
+            dbroots_paths.append(dbroot_node.text)
+    return dbroots_paths
 
-    Not going to try to be clever about the alg.  We're dealing with small lists.
-    Aiming for simplicity and comprehensibility.
-    '''
 
-    '''
+def _rebalance_dbroots(root):
+    """Rebalance DBRoots across nodes in the xml config.
+
+    Notes:
+    - This is safe only when the cluster uses shared storage. On local storage,
+      reassigning DBRoots in the config without moving data is unsafe.
+    - When shared storage is OFF (state comes from AppStatefulConfig), this
+      function becomes a no-op unless explicitly overridden via ``test_mode``.
+
     Borderline hack here.  We are going to remove dbroot1 from its current host so that
     it will always look for the current replication master and always resolve the discrepancy
     between what maxscale and what cmapi choose for the primary/master node.
@@ -570,47 +645,59 @@ def _rebalance_dbroots(root, test_mode=False):
         5) make it the primary node
 
     Once we are done with the constraint discovery process, we should refactor this.
-    '''
+    """
+
+    # Overview of the simple balancing approach:
+    # - Identify unassigned DBRoots and assign to the node with fewest DBRoots.
+    # - Then, identify the nodes with the most DBRoots and the least DBRoots.
+    #   When most - least <= 1, we're done
+    #   Else, move a DBRoot from the node with the most to the one with the least
+    # Not going to try to be clever about the alg.  We're dealing with small lists.
+    # Aiming for simplicity and comprehensibility.
+
+    # Ensure DBRoot 1 is unassigned initially. This forces placement logic to
+    # consider the (new) replication master, aligning primary node selection
+    # with MaxScale to avoid schema sync issues.
+
+
+    # If the cluster is not using shared storage, rebalancing dbroots would
+    # be invalid and potentially dangerous. Respect the stateful flag that is
+    # maintained by the shared-storage monitors and bail out early.
+    if not AppStatefulConfig.is_shared_storage():
+        logging.info('Shared storage is OFF; skipping DBRoots rebalance.')
+        return
+
     unassign_dbroot1(root)
 
     current_mapping = get_current_dbroot_mapping(root)
     sysconf_node = root.find("./SystemConfig")
-
-    # There can be holes in the dbroot numbering, so can't just scan from [1-dbroot_count]
-    # Going to scan from 1-99 instead.
-    existing_dbroots = []
-    for num in range(1, 100):
-        node = sysconf_node.find(f"./DBRoot{num}")
-        if node is not None:
-            existing_dbroots.append(num)
+    existing_dbroots = _get_existing_db_roots(root)
 
     # assign the unassigned dbroots
     unassigned_dbroots = set(existing_dbroots) - set(current_mapping[0])
 
-    '''
-    If dbroot 1 is in the unassigned list, then we need to put it on the node that will be the next
-    primary node.  Need to choose the same node as maxscale here.  For now, we will wait until
-    maxscale does the replication reconfig, then choose the new master.  Later,
-    we will choose the node using the same method that maxscale does to avoid
-    the need to go through the mariadb client.
 
-    If this process goes on longer than 1 min, then we will assume there is no maxscale,
-    so this should choose where dbroot 1 should go itself.
-    '''
+    # If dbroot 1 is in the unassigned list, then we need to put it on the node that will be
+    # the next primary node.  Need to choose the same node as maxscale here.  For now,
+    # we will wait until maxscale does the replication reconfig, then choose the new master.
+    # Later, we will choose the node using the same method that maxscale does to avoid
+    # the need to go through the mariadb client.
+    # If this process goes on longer than 1 min, then we will assume there is no maxscale,
+    # so this should choose where dbroot 1 should go itself.
     if 1 in unassigned_dbroots:
-        logging.info("Waiting for Maxscale to choose the new repl master...")
-        smc_node = root.find("./SystemModuleConfig")
+        logging.info('Waiting for Maxscale to choose the new repl master...')
+        smc_node = root.find('./SystemModuleConfig')
         # Maybe iterate over the list of ModuleHostName tags instead
-        pm_count = int(smc_node.find("./ModuleCount3").text)
+        pm_count = int(smc_node.find('./ModuleCount3').text)
         found_master = False
-        final_time = datetime.datetime.now() + datetime.timedelta(seconds = 30)
+        final_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
         # skip this if in test mode.
         retry = True
-        while not found_master and datetime.datetime.now() < final_time and not test_mode:
+        while not found_master and datetime.datetime.now() < final_time:
             for node_num in range(1, pm_count + 1):
-                node_ip = smc_node.find(f"./ModuleIPAddr{node_num}-1-3").text
-                node_name = smc_node.find(f"./ModuleHostName{node_num}-1-3").text
+                node_ip = smc_node.find(f'./ModuleIPAddr{node_num}-1-3').text
+                node_name = smc_node.find(f'./ModuleHostName{node_num}-1-3').text
                 if pm_count == 1:
                     found_master = True
                 else:
@@ -618,7 +705,7 @@ def _rebalance_dbroots(root, test_mode=False):
                     key = helpers.get_current_key(cfg_parser)
                     version = helpers.get_version()
                     headers = {'x-api-key': key}
-                    url = f"https://{node_ip}:8640/cmapi/{version}/node/new_primary"
+                    url = f'https://{node_ip}:8640/cmapi/{version}/node/new_primary'
                     try:
                         r = get_traced_session().request(
                             'GET', url, verify=False, headers=headers, timeout=10
@@ -636,12 +723,12 @@ def _rebalance_dbroots(root, test_mode=False):
                         # timed out
                         # possible node is not ready, leave retry as-is
                         pass
-                    except Exception as e:
+                    except Exception:
                         retry = False
 
                 if not found_master:
                     if not retry:
-                        logging.info("There was an error retrieving replication master")
+                        logging.info('There was an error retrieving replication master')
                         break
                     else:
                         continue
@@ -649,20 +736,21 @@ def _rebalance_dbroots(root, test_mode=False):
                 # assign dbroot 1 to this node, put at the front of the list
                 current_mapping[node_num].insert(0, 1)
                 unassigned_dbroots.remove(1)
-                logging.info(f"The new replication master is {node_name}")
+                logging.info(f'The new replication master is {node_name}')
                 break
             if not found_master:
-                logging.info("New repl master has not been chosen yet")
+                logging.info('New repl master has not been chosen yet')
                 time.sleep(1)
         if not found_master:
-            logging.info("Maxscale has not reconfigured repl master, continuing...")
+            logging.info('Maxscale has not reconfigured repl master, continuing...')
 
     for dbroot in unassigned_dbroots:
         (_min, min_index) = _find_min_max_length(current_mapping)[0]
         if dbroot != 1:
             current_mapping[min_index].append(dbroot)
         else:
-            # make dbroot 1 move only if the new node goes down by putting it at the front of the list
+            # make dbroot 1 move only if the new node goes down by putting it at the front of the
+            # list
             current_mapping[min_index].insert(0, dbroot)
 
     # balance the distribution
@@ -672,18 +760,20 @@ def _rebalance_dbroots(root, test_mode=False):
         ((_min, min_index), (_max, max_index)) = _find_min_max_length(current_mapping)
 
     # write the new mapping
-    sysconf_node = root.find("./SystemModuleConfig")
+    sysconf_node = root.find('./SystemModuleConfig')
     for i in range(1, len(current_mapping)):
-        dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{i}-3")
+        dbroot_count_node = sysconf_node.find(f'./ModuleDBRootCount{i}-3')
         # delete the original assignments for node i
         for dbroot_num in range(1, int(dbroot_count_node.text) + 1):
-            old_node = sysconf_node.find(f"./ModuleDBRootID{i}-{dbroot_num}-3")
+            old_node = sysconf_node.find(f'./ModuleDBRootID{i}-{dbroot_num}-3')
             sysconf_node.remove(old_node)
 
         # write the new assignments for node i
         dbroot_count_node.text = str(len(current_mapping[i]))
         for dbroot_num in range(len(current_mapping[i])):
-            etree.SubElement(sysconf_node, f"ModuleDBRootID{i}-{dbroot_num+1}-3").text = str(current_mapping[i][dbroot_num])
+            etree.SubElement(sysconf_node, f'ModuleDBRootID{i}-{dbroot_num+1}-3').text = str(
+                current_mapping[i][dbroot_num]
+            )
 
 
 # returns ((min, index-of-min), (max, index-of-max))
@@ -946,6 +1036,9 @@ def _add_Module_entries(root, node: str) -> None:
     # TODO: what should we do with complicated network configs where node has
     #       several ips and\or several hostnames
     ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    if hostname is None:
+        logging.warning(f'Could not resolve hostname for {node}, using IP address as hostname')
+        hostname = ip4
     logging.info(f'Using ip address {ip4} and hostname {hostname}')
 
     smc_node = root.find('./SystemModuleConfig')
@@ -959,20 +1052,17 @@ def _add_Module_entries(root, node: str) -> None:
         curr_ip_node = smc_node.find(f'./ModuleIPAddr{i}-1-3')
         curr_name_node = smc_node.find(f'./ModuleHostName{i}-1-3')
         # TODO: NETWORK: seems it's useless even in very rare cases.
-        #       Even simplier to rewrite resolved IP an Hostname
+        #       Even simpler to rewrite resolved IP an Hostname
         # if we find a matching IP address, but it has a different hostname,
         # update the addr
         if curr_ip_node is not None and curr_ip_node.text == ip4:
-            logging.info(f'Found ip address already at ModuleIPAddr{i}-1-3')
-            if curr_name_node != hostname:
-                new_ip_addr = NetworkManager.resolve_hostname_to_ip(
-                    curr_name_node
-                )
+            logging.info(f'Found ip address %s already at ModuleIPAddr{i}-1-3', ip4)
+            if curr_name_node.text != hostname:
                 logging.info(
                     'Hostname doesn\'t match, updating address to '
-                    f'{new_ip_addr!r}'
+                    f'{ip4!r} / {hostname!r}'
                 )
-                smc_node.find(f'ModuleHostName{i}-1-3').text = new_ip_addr
+                smc_node.find(f'ModuleHostName{i}-1-3').text = hostname
             else:
                 logging.info('No update for ModuleIPAddr{i}-1-3 is necessary')
                 return
@@ -994,8 +1084,13 @@ def _add_Module_entries(root, node: str) -> None:
 
 
 def _add_WES(root, pm_num, node):
+    """Add WriteEngineServer entry for a PM, storing canonical IPv4 address.
+    `node` may be a hostname or an IP; we normalize to IPv4 to avoid
+    mismatches when comparing against ModuleIPAddr entries.
+    """
+    ip4, _hostname = NetworkManager.resolve_ip_and_hostname(node)
     wes_node = etree.SubElement(root, f"pm{pm_num}_WriteEngineServer")
-    etree.SubElement(wes_node, "IPAddr").text = node
+    etree.SubElement(wes_node, "IPAddr").text = ip4
     etree.SubElement(wes_node, "Port").text = "8630"
 
 
@@ -1070,11 +1165,10 @@ def _add_node_to_PMS(root, node):
     new_pm_num = 0
     for num in range(1, pm_count+1):
         addr = root.find(f'./PMS{num}/IPAddr')
+        pm_list[num] = addr.text
         if addr.text == node and new_pm_num == 0:
             logging.info(f'_add_node_to_PMS(): node {node} already exists')
             new_pm_num = num
-        else:
-            pm_list[num] = addr.text
 
     # remove the existing PMS entries
     num = 1
@@ -1101,7 +1195,7 @@ def _add_node_to_PMS(root, node):
 
     return new_pm_num
 
-def _replace_localhost(root, node):
+def _replace_localhost(root: etree.Element, node: str) -> bool:
     # if DBRM_Controller/IPAddr is 127.0.0.1 or localhost,
     # then replace all instances, else do nothing.
     controller_host = root.find('./DBRM_Controller/IPAddr')
@@ -1111,6 +1205,7 @@ def _replace_localhost(root, node):
         )
         return False
 
+    # TODO use NetworkManager here
     # getaddrinfo returns list of 5-tuples (..., sockaddr)
     # use sockaddr to retrieve ip, sockaddr = (address, port) for AF_INET
     ipaddr = socket.getaddrinfo(node, 8640, family=socket.AF_INET)[0][-1][0]
@@ -1126,26 +1221,121 @@ def _replace_localhost(root, node):
          'all other nodes in the cluster.'
     )
 
-    nodes_to_reassign = [
-        n for n in root.findall('.//') if n.text in LOCALHOSTS
-    ]
+    nodes_to_reassign = [n for n in root.findall('.//') if n.text in LOCALHOSTS]
 
     # Host field is contained within CrossEngineSupport User and QueryTele.
     # Leave these values as default (will be local IP)
     exclude = ['Host']
     for n in nodes_to_reassign:
+        try:
+            path = root.getroottree().getpath(n)
+        except Exception:
+            path = n.tag
+        old_val = n.text
+
         if 'ModuleIPAddr' in n.tag:
             n.text = ipaddr
-        elif 'ModuleHostName' in n.tag:
+            logging.info(f"Replaced %s (was %s) with IP %s", path, old_val, ipaddr)
+            continue
+        if 'ModuleHostName' in n.tag:
             n.text = hostname
-        elif n.tag not in exclude:
-            # if tag is neither ip nor hostname, then save as node
-            n.text = node
+            logging.info(f"Replaced %s (was %s) with hostname %s", path, old_val, hostname)
+            continue
 
+        # Generic fields: replace localhost IPs with ipaddr, hostnames with hostname
+        if n.tag not in exclude:
+            is_local_ip = old_val in LOCALHOST_IPS
+            new_val = ipaddr if is_local_ip else hostname
+            if is_local_ip:
+                new_val = ipaddr
+                logging.info(f"Replaced %s (was %s) with IP %s", path, old_val, new_val)
+            else:
+                new_val = hostname
+                logging.info(f"Replaced %s (was %s) with hostname %s", path, old_val, new_val)
+            n.text = new_val
+
+    old_controller = controller_host.text
     controller_host.text = hostname # keep controllernode as fqdn
+    logging.info(f"Replaced %s (was %s) with hostname %s", './DBRM_Controller/IPAddr', old_controller, hostname)
 
     return True
 
 # New Exception types
 class NodeNotFoundException(Exception):
     pass
+
+
+def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
+    """Get a mapping of PM module numbers to their IP addresses"""
+    module_num_to_addr = {}
+    smc_node = root.find("./SystemModuleConfig")
+    mod_count = int(smc_node.find("./ModuleCount3").text)
+    for i in range(1, mod_count + 1):
+        ip_addr = smc_node.find(f"./ModuleIPAddr{i}-1-3").text
+        module_num_to_addr[i] = ip_addr
+    return module_num_to_addr
+
+
+def update_dbroots_of_read_replicas(root: etree.Element) -> None:
+    """Read replicas do not have their own dbroots, but they must have all the
+    dbroots of the other nodes. Sets the list of dbroots of each read replica to
+    the list of all dbroots in the cluster.
+    """
+    nc = NodeConfig()
+    pm_num_to_addr = get_pm_module_num_to_addr_map(root)
+    for read_replica in nc.get_read_replicas(root):
+        # Get PM num by IP address
+        this_ip_pm_num = None
+        for pm_num, pm_addr in pm_num_to_addr.items():
+            if pm_addr == read_replica:
+                this_ip_pm_num = pm_num
+                break
+
+        if this_ip_pm_num is not None:
+            # Add dbroots of other nodes to this read replica
+            add_dbroots_of_other_nodes(root, this_ip_pm_num)
+        else:  # This should not happen
+            err_msg = f"Could not find PM number for read replica {read_replica}"
+            logging.error(err_msg)
+            raise NodeNotFoundException(err_msg)
+
+
+def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
+    """Adds all the dbroots listed in the config to this read replica"""
+    existing_dbroots = _get_existing_db_roots(root)
+    sysconf_node = root.find("./SystemModuleConfig")
+
+    # Remove existing dbroots from this module
+    remove_dbroots_of_node(root, module_num)
+
+    # Write node's dbroot count
+    dbroot_count_node = etree.SubElement(
+        sysconf_node, f"ModuleDBRootCount{module_num}-3"
+    )
+    dbroot_count_node.text = str(len(existing_dbroots))
+
+    # Write new dbroot IDs to the module mapping
+    for i, dbroot_id in enumerate(existing_dbroots, start=1):
+        dbroot_id_node = etree.SubElement(
+            sysconf_node, f"ModuleDBRootID{module_num}-{i}-3"
+        )
+        dbroot_id_node.text = str(dbroot_id)
+
+    logging.info(
+        "Added %d dbroots to read replica %d: %s",
+        len(existing_dbroots), module_num, sorted(existing_dbroots)
+    )
+
+
+def remove_dbroots_of_node(root: etree.Element, module_num: int) -> None:
+    """Removes all the dbroots listed in the config from this read replica"""
+    sysconf_node = root.find("./SystemModuleConfig")
+    dbroot_count_node = sysconf_node.find(f"./ModuleDBRootCount{module_num}-3")
+    if dbroot_count_node is not None:
+        sysconf_node.remove(dbroot_count_node)
+
+    # Remove existing dbroot IDs
+    for i in range(1, 100):
+        dbroot_id_node = sysconf_node.find(f"./ModuleDBRootID{module_num}-{i}-3")
+        if dbroot_id_node is not None:
+            sysconf_node.remove(dbroot_id_node)

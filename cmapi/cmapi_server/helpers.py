@@ -13,11 +13,12 @@ import time
 from collections import namedtuple
 from random import random
 from shutil import copyfile
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
 from urllib.parse import urlencode, urlunparse
 
 import aiohttp
 import lxml.objectify
+from lxml import etree
 import requests
 from tracing.traced_session import get_traced_session
 from tracing.traced_aiohttp import create_traced_async_session
@@ -28,10 +29,11 @@ requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, CMAPI_DEFAULT_CONF_PATH, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, LOCALHOSTS
+    DEFAULT_SM_CONF_PATH, LOCALHOSTS, _version
 )
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.application import AppStatefulConfig
 from mcs_node_control.models.node_config import NodeConfig
 
 
@@ -44,6 +46,14 @@ def get_id() -> int:
     ..TODO: need to change transaction id format and generation method?
     """
     return int(random() * 1000000)
+
+
+def get_or_create_child_xml_node(parent, name: str):
+    """Get a direct child by tag name or create it if missing."""
+    node = parent.find(f'./{name}')
+    if node is None:
+        node = etree.SubElement(parent, name)
+    return node
 
 
 def start_transaction(
@@ -138,6 +148,10 @@ def start_transaction(
         # this copy will be updated if an optional node can't be reached
         real_active_nodes = set(active_nodes)
         logging.trace(f'Active nodes on start transaction {active_nodes}')
+
+        if not len(active_nodes):
+            logging.warning('No active nodes found, transaction start will not have any effect')
+
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{version}/node/begin'
             node_success = False
@@ -167,7 +181,7 @@ def start_transaction(
                     # conditions where that is the desired behavior here.
                     if int(r.status_code / 100) == 4:
                         logging.debug(
-                             'Got a 4xx error while beginning transaction '
+                             'Got a {r.status_code} error while beginning transaction '
                             f'with response text {r.text}'
                         )
                         break  # TODO: useless, got break in finally statement
@@ -297,28 +311,23 @@ def broadcast_new_config(
     test_mode: bool = False,
     nodes: Optional[list] = None,
     timeout: Optional[int] = None,
-    distribute_secrets: bool = False
+    distribute_secrets: bool = False,
+    stateful_config_dict: Optional[dict[str, Any]] = None
 ) -> None:
     """Send new config to nodes. Now in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
-    :type cs_config_filename: str, optional
     :param cmapi_config_filename: cmapi config path,
                                   defaults to CMAPI_CONF_PATH
-    :type cmapi_config_filename: str, optional
     :param sm_config_filename: storage manager config path,
                                defaults to DEFAULT_SM_CONF_PATH
-    :type sm_config_filename: str, optional
     :param test_mode: for test purposes, defaults to False TODO: remove
-    :type test_mode: bool, optional
     :param nodes: nodes list for config put, defaults to None
-    :type nodes: Optional[list], optional
     :param timeout: timeout passing to gracefully stop DMLProc TODO: for next
                     releases. Could affect all logic of broadcacting new config
-    :type timeout: Optional[int], optional
     :param distribute_secrets: flag to distribute secrets to nodes
-    :type distribute_secrets: bool
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
     :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
@@ -329,24 +338,32 @@ def broadcast_new_config(
     if nodes is None:
         nodes = get_active_nodes(cs_config_filename)
 
-    nc = NodeConfig()
-    root = nc.get_current_config_root(config_filename=cs_config_filename)
-    with open(cs_config_filename) as f:
-        config_text = f.read()
-
-    with open(sm_config_filename) as f:
-        sm_config_text = f.read()
-
     headers = {'x-api-key': key}
-    body = {
-        'manager': root.find('./ClusterManager').text,
-        'revision': root.find('./ConfigRevision').text,
-        'timeout': 300,
-        'config': config_text,
-        'cs_config_filename': cs_config_filename,
-        'sm_config_filename': sm_config_filename,
-        'sm_config': sm_config_text
-    }
+    if stateful_config_dict:
+        body = {
+            'timeout': 300,
+            'stateful_config_dict': stateful_config_dict,
+            'only_stateful_config': True,
+        }
+    else:
+        nc = NodeConfig()
+        root = nc.get_current_config_root(config_filename=cs_config_filename)
+        with open(cs_config_filename, mode='r', encoding='utf-8') as f:
+            config_text = f.read()
+
+        with open(sm_config_filename, mode='r', encoding='utf-8') as f:
+            sm_config_text = f.read()
+
+        body = {
+            'manager': root.find('./ClusterManager').text,
+            'revision': root.find('./ConfigRevision').text,
+            'timeout': 300,
+            'config': config_text,
+            'mcs_config_filename': cs_config_filename,
+            'sm_config_filename': sm_config_filename,
+            'sm_config': sm_config_text,
+            'stateful_config_dict': AppStatefulConfig.to_dict(),
+        }
 
     if distribute_secrets:
         # TODO: do not restart cluster when put xml config only with
@@ -365,11 +382,8 @@ def broadcast_new_config(
         """Update remote node config asyncronously.
 
         :param node: node ip address or hostname
-        :type node: str
         :param headers: headers for request
-        :type headers: dict
         :param body: request body
-        :type body: dict
         :raises CMAPIBasicError: If request failed by status code
         :raises CMAPIBasicError: If request failed by some undefined error
         :raises CMAPIBasicError: If request failed by timeout
@@ -385,7 +399,7 @@ def broadcast_new_config(
                 ) as response:
                     resp_json =  await response.json(encoding='utf-8')
                     response.raise_for_status()
-                logging.info(f'Node {node} config put successfull.')
+                logging.info(f'Node {node} config put successful.')
             except aiohttp.ClientResponseError as err:
                 # TODO: may be better to check if resp status is 422 cause
                 #       it's like a signal that cmapi server raised it in
@@ -437,6 +451,27 @@ def broadcast_new_config(
             f'Broadcasting config to nodes failed with errors: {errors_str}'
         )
         raise CMAPIBasicError(final_message)
+
+
+def broadcast_stateful_config(stateful_config_dict: dict[str, Any]) -> None:
+    """Broadcast new stateful config to nodes.
+
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
+    """
+
+    try:
+        broadcast_new_config(stateful_config_dict=stateful_config_dict)
+    except CMAPIBasicError as err:
+        message = (
+            f'Failed to broadcast new stateful config dict: {stateful_config_dict}, '
+            f'got error: {err.message}'
+        )
+        logging.error(message)
+        return
+    else:
+        logging.debug(
+            f'Successfully broadcasted new stateful config dict: {stateful_config_dict}'
+        )
 
 
 # Might be more appropriate to put these in node_manipulation?
@@ -572,7 +607,6 @@ def get_current_key(config_parser):
 
 
 def get_version():
-    from cmapi_server.controllers.dispatcher import _version
     return _version
 
 
@@ -583,16 +617,36 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     dbroots = []
     smc_node = root.find('./SystemModuleConfig')
     mod_count = int(smc_node.find('./ModuleCount3').text)
+
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
-        node_fqdn = socket.gethostbyaddr(hostname)[0]
+        try:
+            node_fqdn = socket.gethostbyaddr(hostname)[0]
+        except (socket.herror, socket.gaierror, OSError) as e:
+            # Fallback if reverse lookup fails
+            logging.warning(
+                'get_dbroots(): reverse lookup failed for %r: %s. Using original hostname.',
+                hostname, e
+            )
+            node_fqdn = hostname
 
         if node in LOCALHOSTS and hostname != 'localhost':
-            node = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                node = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning(
+                    'get_dbroots(): reverse lookup failed for local hostname: %s. Using socket.gethostname().',
+                    e
+                )
+                node = socket.gethostname()
         elif node not in LOCALHOSTS and hostname == 'localhost':
             # hostname will only be loclahost if we are in one node cluster
-            hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning('get_dbroots(): reverse lookup failed for "localhost": %s.', e)
+                hostname = socket.gethostname()
 
 
         if node == ip_addr or node == hostname or node == node_fqdn:
@@ -602,6 +656,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
+
     return dbroots
 
 

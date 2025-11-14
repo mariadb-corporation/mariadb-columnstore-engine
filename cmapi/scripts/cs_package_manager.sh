@@ -6,7 +6,7 @@ enterprise_token=""
 dev_drone_key=""
 ci_user=""
 ci_pwd=""
-cs_pkg_manager_version="3.11"
+cs_pkg_manager_version="3.12"
 USE_DEV_PACKAGES=false
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
@@ -2099,22 +2099,14 @@ name=Drone Repository
 baseurl="$drone_http"
 gpgcheck=0
 enabled=1
+module_hotfixes = 1
     " > /etc/yum.repos.d/drone.repo
     yum clean all
     # yum makecache
     # yum list --disablerepo="*" --enablerepo="drone"
 
-    # ALL RPMS:  aws s3 cp $s3_path/ . --recursive --exclude "debuginfo" --include "*.rpm"
-    aws s3 cp $s3_path/ . --recursive --exclude "*" --include "MariaDB-server*" --exclude "*debug*" --no-sign-request
-
-    # Confirm Downloaded server rpm
-    if ! ls MariaDB-server-*.rpm 1> /dev/null 2>&1; then
-        echo "Error: No MariaDB-server RPMs were found."
-        exit 1
-    fi
-
     # Install MariaDB Server
-    if ! yum install MariaDB-server-*.rpm -y; then
+    if ! yum install MariaDB-server -y; then
         printf "\n[!] Failed to install MariaDB-server \n\n"
         exit 1;
     fi

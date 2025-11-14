@@ -3,8 +3,11 @@ import fcntl
 import logging
 import socket
 import struct
+from dataclasses import dataclass
 from ipaddress import ip_address
-from typing import Optional
+from typing import List, Optional, cast
+
+from cmapi_server.exceptions import CMAPIBasicError
 
 try:
     import psutil
@@ -13,7 +16,6 @@ except ImportError:
     psutil = None
     _PSUTIL_AVAILABLE = False
 
-from cmapi_server.exceptions import CMAPIBasicError
 
 
 SIOCGIFADDR = 0x8915  # SIOCGIFADDR "socket ioctl get interface address"
@@ -47,7 +49,7 @@ class NetworkManager:
             return False
 
     @classmethod
-    def resolve_hostname_to_ip(
+    def resolve_hostname_to_ips(
         cls,
         hostname: str,
         only_ipv4: bool = True,
@@ -210,8 +212,27 @@ class NetworkManager:
             hostnames = socket.gethostbyaddr(ip_addr)
             return hostnames[0]
         except socket.herror:
-            logging.error(f'No hostname found for address: {ip_addr!r}')
+            logging.error('No hostname found for address: %s', ip_addr)
             return None
+
+    @classmethod
+    def get_hostnames_by_ip(cls, ip_addr: str) -> list[str]:
+        """Get all hostnames for a given IP address.
+
+        :return: List of hostnames (may be empty if reverse lookup fails)
+        """
+        try:
+            primary, aliases, _ = socket.gethostbyaddr(ip_addr)
+            seen = set()
+            names = []
+            for n in [primary, *aliases]:
+                if n not in seen:
+                    seen.add(n)
+                    names.append(n)
+            return names
+        except socket.herror:
+            logging.error('No hostname found for address: %s', ip_addr)
+            return []
 
     @classmethod
     def is_only_loopback_hostname(cls, hostname: str) -> bool:
@@ -222,7 +243,7 @@ class NetworkManager:
         :return: True if all resolved IPs are loopback, False otherwise
         :rtype: bool
         """
-        ips = cls.resolve_hostname_to_ip(hostname)
+        ips = cls.resolve_hostname_to_ips(hostname)
         if not ips:
             return False
         for ip in ips:
@@ -231,7 +252,7 @@ class NetworkManager:
         return True
 
     @classmethod
-    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, str]:
+    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, Optional[str]]:
         """Resolve input string to an (IP, hostname) pair.
 
         :param input_str: Input which may be an IP address or a hostname
@@ -241,14 +262,14 @@ class NetworkManager:
         :raises CMAPIBasicError: if hostname resolution yields no IPs
         """
         ip: str = ''
-        hostname: str = None
+        hostname: Optional[str] = None
 
         if cls.is_ip(input_str):
             ip = input_str
             hostname = cls.get_hostname(input_str)
         else:
             hostname = input_str
-            ip_list = cls.resolve_hostname_to_ip(
+            ip_list = cls.resolve_hostname_to_ips(
                 input_str,
                 exclude_loopback=not cls.is_only_loopback_hostname(input_str)
             )
@@ -256,3 +277,44 @@ class NetworkManager:
                 raise CMAPIBasicError(f'No IPs found for {hostname!r}')
             ip = ip_list[0]
         return ip, hostname
+
+    @classmethod
+    def validate_hostname_fwd_rev(cls, hostname: str) -> None:
+        """Validate forward and reverse DNS for a hostname.
+
+        Checks that hostname resolves to one or more usable IPs and that at
+        least one of those IPs reverse-resolves back to the provided hostname
+        (either an exact match or an FQDN starting with the hostname are accepted).
+
+        :raises CMAPIBasicError: if validation fails
+        """
+        exclude_loopback = not cls.is_only_loopback_hostname(hostname)
+        ips = cls.resolve_hostname_to_ips(
+            hostname,
+            only_ipv4=True,
+            exclude_loopback=exclude_loopback,
+        )
+
+        if not ips:
+            raise CMAPIBasicError(
+                f"Hostname {hostname!r} did not resolve to any usable IPs. "
+                "Please fix DNS or add the host by IP."
+            )
+
+        wanted = hostname.rstrip('.').lower()
+        for ip in ips:
+            rev_names = cls.get_hostnames_by_ip(ip)
+            for rev in rev_names:
+                rev_norm = rev.rstrip('.').lower()
+                # Accept exact match ("db1" == "db1") or FQDN starting with the short hostname
+                # e.g. user provided "db1" and PTR returns "db1.example.com"
+                if rev_norm == wanted or rev_norm.startswith(wanted + '.'):
+                    return
+
+        raise CMAPIBasicError(
+            'Forward/reverse DNS check failed: '
+            f"hostname {hostname!r} resolved to {ips}, but none of these IPs "
+            f"reverse-resolve back to {hostname!r}. Consider adding the host by IP, "
+            'or fix DNS so that at least one IP has a PTR/record mapping back to '
+            'the provided hostname.'
+        )

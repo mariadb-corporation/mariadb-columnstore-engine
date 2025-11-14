@@ -1,0 +1,21 @@
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5778;
+--enable_warnings
+
+CREATE DATABASE mcol5778;
+
+USE mcol5778;
+
+create table test ( a double, b double ) engine=columnstore;
+insert into test values (100,100);
+
+select sum(a)/NULLIF(sum(b),0) from test;
+
+select sum(a)/NULLIF(b,0) from test;
+
+select sum(a)/NULLIF(100,0) from test;
+
+drop table test;
+DROP DATABASE mcol5778;

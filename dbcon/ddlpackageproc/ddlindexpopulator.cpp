@@ -148,6 +148,9 @@ void DDLIndexPopulator::makeCsep(CalpontSelectExecutionPlan& csep)
   string tableName(fTable.fSchema + "." + fTable.fName + ".");
 
   ColumnNameList::const_iterator cend = fColNames.end();
+  // Reserve space for column list and OIDs
+  colList.reserve(fColNames.size());
+  fOidList.reserve(fColNames.size());
 
   for (ColumnNameList::const_iterator cname = fColNames.begin(); cname != cend; ++cname)
   {
@@ -199,6 +202,8 @@ void DDLIndexPopulator::addColumnData(const execplan::ColumnResult* cr,
                                       const CalpontSystemCatalog::ColType colType, int added)
 {
   WriteEngine::IdxTupleList tupleList;
+  // Reserve space for tuples
+  tupleList.reserve(cr->dataCount());
   WriteEngine::IdxTuple tuple;
 
   for (int i = 0; i < cr->dataCount(); ++i)
