@@ -192,7 +192,8 @@ def remove_node(
     try:
         active_nodes = helpers.get_active_nodes(input_config_filename)
 
-        ip4, _ = NetworkManager.resolve_ip_and_hostname(node)
+        host_identity = get_host_address_manager().get_identity(node)
+        ip4 = host_identity.primary_ip
 
         if len(active_nodes) > 1:
             pm_num = _remove_node_from_PMS(c_root, ip4)
@@ -297,7 +298,11 @@ def add_dbroot(input_config_filename = None, output_config_filename = None, host
     else:
         c_root = node_config.get_current_config_root(config_filename = input_config_filename)
 
-    ip4, _ = NetworkManager.resolve_ip_and_hostname(host) if host else (None, None)
+    if host:
+        host_identity = get_host_address_manager().get_identity(host)
+        ip4 = host_identity.primary_ip
+    else:
+        ip4 = None
     try:
         ret = _add_dbroot(c_root, ip4)
     except Exception as e:
@@ -395,11 +400,9 @@ def _add_active_node(root, node):
     we replace it with the IP address.
     '''
 
-    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
-    # If reverse lookup failed, hostname may be None. Use the IP as a
-    # fallback so removal by hostname also works consistently.
-    if hostname is None:
-        hostname = ip4
+    host_identity = get_host_address_manager().get_identity(node)
+    ip4 = host_identity.primary_ip
+    hostname = host_identity.effective_hostname
 
     # Remove both hostname and IP form before adding IP to avoid checking if
     #   some of them is already there. Then we add by IP
@@ -432,11 +435,9 @@ def _remove_node(root, node):
     remove node from DesiredNodes, InactiveNodes, ActiveNodes
     '''
     # Remove both hostname and IPv4 forms
-    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
-    # If reverse lookup failed, normalize hostname to ip so we always try
-    # removing both variants from lists.
-    if hostname is None:
-        hostname = ip4
+    host_identity = get_host_address_manager().get_identity(node)
+    ip4 = host_identity.primary_ip
+    hostname = host_identity.effective_hostname
     for lst in (
         root.find("./DesiredNodes"),
         root.find("./InactiveNodes"),
@@ -449,9 +450,9 @@ def _remove_node(root, node):
 # This moves a node from ActiveNodes to InactiveNodes
 def _deactivate_node(root, node):
     """Move node from ActiveNodes to InactiveNodes. Store as IPv4."""
-    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
-    if hostname is None:
-        hostname = ip4
+    host_identity = get_host_address_manager().get_identity(node)
+    ip4 = host_identity.primary_ip
+    hostname = host_identity.effective_hostname
 
     active_nodes = root.find("./ActiveNodes")
     __remove_helper(active_nodes, hostname)
@@ -1048,7 +1049,9 @@ def _add_Module_entries(root, node: str) -> None:
     # XXXPAT: No guarantee these are the values used in the rest of the system.
     # TODO: what should we do with complicated network configs where node has
     #       several ips and\or several hostnames
-    ip4, hostname = NetworkManager.resolve_ip_and_hostname(node)
+    host_identity = get_host_address_manager().get_identity(node)
+    ip4 = host_identity.primary_ip
+    hostname = host_identity.primary_name
     if hostname is None:
         logging.warning(f'Could not resolve hostname for {node}, using IP address as hostname')
         hostname = ip4
@@ -1101,7 +1104,8 @@ def _add_WES(root, pm_num, node):
     `node` may be a hostname or an IP; we normalize to IPv4 to avoid
     mismatches when comparing against ModuleIPAddr entries.
     """
-    ip4, _hostname = NetworkManager.resolve_ip_and_hostname(node)
+    host_identity = get_host_address_manager().get_identity(node)
+    ip4 = host_identity.primary_ip
     wes_node = etree.SubElement(root, f"pm{pm_num}_WriteEngineServer")
     etree.SubElement(wes_node, "IPAddr").text = ip4
     etree.SubElement(wes_node, "Port").text = "8630"
@@ -1219,7 +1223,7 @@ def _replace_localhost(root: etree.Element, node: str) -> bool:
         return False
 
     host_identity = get_host_address_manager().get_identity(node)
-    ipaddr, hostname = host_identity.primary_ip, host_identity.primary_name
+    ipaddr, hostname = host_identity.primary_ip, host_identity.effective_hostname
     logging.info(
         f'add_node(): replacing 127.0.0.1/localhost with {ipaddr}/{hostname} '
         f'as this node\'s name. Be sure {hostname} resolves to {ipaddr} on '

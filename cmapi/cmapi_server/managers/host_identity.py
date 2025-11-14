@@ -97,32 +97,15 @@ class ResolutionPolicy:
 
 @dataclass
 class HostIdentity:
-    """Normalized result of host resolution (after policy is enforced)"""
+    """Host's network identity, IP addrs and hostnames that are visible from other hosts"""
     input: str
-    ips: list[str]
-    names: list[str]
+    # The first, most important IP addr and host name (ordering is done by policy)
     primary_ip: str
     primary_name: Optional[str]
+    ips: list[str]  # All IP addrs
+    names: list[str]  # All host names (only those that are visible to other hosts)
     unique_key: str  # unique id of this host, will be used later for aliases
     observed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-    def __repr__(self) -> str:
-        parts: list[str] = [
-            f'input={self.input!r}',
-            f'primary_ip={self.primary_ip!r}',
-        ]
-        if self.primary_name is not None:
-            parts.append(f'primary_name={self.primary_name!r}')
-        if self.ips != [self.primary_ip]:
-            parts.append(f'ips={self.ips!r}')
-        if self.names != [self.primary_name]:
-            parts.append(f'names={self.names!r}')
-        parts.append(f'unique_key={self.unique_key[:4]}')
-        parts.append(f'observed_at={self.observed_at.replace(microsecond=0).isoformat()!r}')
-        return 'HostIdentity(' + ', '.join(parts) + ')'
-
-    def __str__(self) -> str:
-        return repr(self)
 
     @staticmethod
     def from_policy(input: str, policy: ResolutionPolicy, ips: Sequence[IPAddress], names: Sequence[str]) -> 'HostIdentity':
@@ -151,6 +134,30 @@ class HostIdentity:
             primary_name=primary_name,
             unique_key=unique_key,
         )
+
+    @property
+    def effective_hostname(self) -> str:
+        """Hostname or primary IP if hostname is not set"""
+        return self.primary_name or self.primary_ip
+
+    def __repr__(self) -> str:
+        parts: list[str] = [
+            f'input={self.input!r}',
+            f'primary_ip={self.primary_ip!r}',
+        ]
+        if self.primary_name is not None:
+            parts.append(f'primary_name={self.primary_name!r}')
+        # Don't show addrs and hostnames if there is only one addr or hostname
+        if self.ips != [self.primary_ip]:
+            parts.append(f'ips={self.ips!r}')
+        if self.names != [self.primary_name]:
+            parts.append(f'names={self.names!r}')
+        parts.append(f'unique_key={self.unique_key[:4]}')
+        parts.append(f'observed_at={self.observed_at.replace(microsecond=0).isoformat()!r}')
+        return 'HostIdentity(' + ', '.join(parts) + ')'
+
+    def __str__(self) -> str:
+        return repr(self)
 
 
 class HostAddressManager:

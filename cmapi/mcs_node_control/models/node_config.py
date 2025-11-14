@@ -19,6 +19,7 @@ from cmapi_server.constants import (
     DEFAULT_SM_CONF_PATH,
     MCS_MODULE_FILE_PATH,
 )
+from cmapi_server.managers.host_identity import get_host_address_manager
 
 # from cmapi_server.managers.process import MCSProcessManager
 from mcs_node_control.models.misc import get_dbroots_list, read_module_id
@@ -433,8 +434,16 @@ class NodeConfig:
             root = self.get_current_config_root()
 
         primary_address = self.get_dbrm_conn_info(root)['IPAddr']
-        is_primary = primary_address in self.get_network_addresses_and_names()
-        module_logger.debug('is_primary: %s, primary_address: %s', is_primary, primary_address)
+
+        local_identity = get_host_address_manager().get_local_identity()
+        candidates = set(local_identity.ips)
+        candidates.update(local_identity.names)
+
+        is_primary = primary_address in candidates
+        module_logger.debug(
+            'is_primary: %s, primary_address: %s, local_identity: %s',
+            is_primary, primary_address, local_identity,
+        )
         return is_primary
 
     def is_single_node(self,

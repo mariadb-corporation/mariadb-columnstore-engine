@@ -249,30 +249,3 @@ class NetworkManager:
             if not ip_address(ip).is_loopback:
                 return False
         return True
-
-    @classmethod
-    def resolve_ip_and_hostname(cls, input_str: str) -> tuple[str, Optional[str]]:
-        """Resolve input string to an (IP, hostname) pair.
-
-        :param input_str: Input which may be an IP address or a hostname
-        :type input_str: str
-        :return: A tuple containing (ip, hostname)
-        :rtype: tuple[str, str]
-        :raises CMAPIBasicError: if hostname resolution yields no IPs
-        """
-        ip: str = ''
-        hostname: Optional[str] = None
-
-        if cls.is_ip(input_str):
-            ip = input_str
-            hostname = cls.get_hostname(input_str)
-        else:
-            hostname = input_str
-            ip_list = cls.resolve_hostname_to_ips(
-                input_str,
-                exclude_loopback=not cls.is_only_loopback_hostname(input_str)
-            )
-            if not ip_list:
-                raise CMAPIBasicError(f'No IPs found for {hostname!r}')
-            ip = ip_list[0]
-        return ip, hostname
