@@ -1,7 +1,6 @@
 import hashlib
 import ipaddress
 import logging
-import socket
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -26,18 +25,16 @@ def get_host_address_manager() -> 'HostAddressManager':
 
 @dataclass(frozen=True)
 class ResolutionPolicy:
-    """Rules controlling how hosts are resolved, what is/isn't allowed (like IPv6)."""
+    """Class to represent our requirements for the addresses, how are they resolved,
+      what must be filtered out, how addresses are ordered, etc.
+
+    It's nice to separate these concerns from the resolving itself.
+    Also maybe in the future we'll make it configurable by users.
+    """
 
     allow_private_ips: bool = True
     allow_ipv6: bool = False
     require_hostname: bool = False
-
-    def validate_hostname(self, name: str) -> str:
-        """Validate and normalize a hostname to FQDN."""
-        normalized = name.strip().lower()
-        if not _is_fqdn(normalized):
-            raise ResolutionPolicyViolationError(f'The name {name} is not a fully qualified domain name.')
-        return normalized
 
     def filter_addresses(self, addrs: Iterable[str]) -> list[IPAddress]:
         """Filter out IP addresses that don't match the policy."""
@@ -47,9 +44,8 @@ class ResolutionPolicy:
             list(addrs), self.allow_private_ips, self.allow_ipv6
         )
         for addr in addrs:
-            try:
-                ip = ipaddress.ip_address(addr)
-            except ValueError:
+            ip = ip_or_none(addr)
+            if ip is None:
                 logger.debug('Skip %s: not a valid IP literal', addr)
                 continue
 
@@ -83,7 +79,7 @@ class ResolutionPolicy:
         return ips
 
     def order_addresses(self, ips: Sequence[IPAddress]) -> list[IPAddress]:
-        """Deterministic ordering: global first, then IPv4 before IPv6, then sort by numeric value."""
+        """Order IPs deterministically to choose the primary IP."""
         def key(ip: IPAddress) -> tuple[int, int, int, int, int, int, int, int]:
             is_global = 0 if ip.is_global else 1
             is_ipv4 = 0 if isinstance(ip, ipaddress.IPv4Address) else 1
@@ -101,7 +97,7 @@ class HostIdentity:
     input: str
     # The first, most important IP addr and host name (ordering is done by policy)
     primary_ip: str
-    primary_name: Optional[str]
+    primary_name: Optional[str]  # Name can be missing (but policy can make it required)
     ips: list[str]  # All IP addrs
     names: list[str]  # All host names (only those that are visible to other hosts)
     unique_key: str  # unique id of this host, will be used later for aliases
@@ -109,35 +105,35 @@ class HostIdentity:
 
     @staticmethod
     def from_policy(input: str, policy: ResolutionPolicy, ips: Sequence[IPAddress], names: Sequence[str]) -> 'HostIdentity':
-        """Construct a HostIdentity from filtered addresses and names using policy ordering and hashing rules."""
+        """Construct a HostIdentity from filtered addresses and names using policy ordering."""
         if not ips:
-            raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy (loopback / link-local / multicast).')
-        ordered = policy.order_addresses(ips)
-        addresses = [str(ip) for ip in ordered]
+            raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
 
+        ordered_ips = policy.order_addresses(ips)
         # Calculate host unique key from its addresses (we prefer globals as more stable ones)
-        globals_sorted = [str(ip) for ip in ordered if ip.is_global]
-        privates_sorted = [str(ip) for ip in ordered if ip.is_private]
-        basis = globals_sorted if globals_sorted else privates_sorted
+        globals_ordered = [ip for ip in ordered_ips if ip.is_global]
+        privates_ordered = [ip for ip in ordered_ips if ip.is_private]
+        to_hash = globals_ordered if globals_ordered else privates_ordered
         hasher = hashlib.sha256()
-        for address_text in basis:
-            hasher.update(address_text.encode('utf-8'))
+        for ip in to_hash:
+            hasher.update(str(ip).encode('utf-8'))
         unique_key = hasher.hexdigest()
 
-        primary_ip = addresses[0]
-        primary_name = names[0] if names else None
         return HostIdentity(
             input=input,
-            ips=addresses,
+            ips=[str(ip) for ip in ordered_ips],
             names=list(names),
-            primary_ip=primary_ip,
-            primary_name=primary_name,
+            primary_ip=str(ordered_ips[0]),
+            primary_name=names[0] if names else None,
             unique_key=unique_key,
         )
 
     @property
     def effective_hostname(self) -> str:
-        """Hostname or primary IP if hostname is not set"""
+        """Hostname or primary IP if hostname is not set
+
+        If policy requires host to have a hostname and it doesn't, we won't even get here
+        """
         return self.primary_name or self.primary_ip
 
     def __repr__(self) -> str:
@@ -161,115 +157,45 @@ class HostIdentity:
 
 
 class HostAddressManager:
-    """In-memory resolver that performs DNS-only lookups, enforces policy, and caches results."""
+    """Calculates HostIdentity from passed hostname or IP address."""
 
     def __init__(self, policy: Optional[ResolutionPolicy] = None) -> None:
         self._policy = policy if policy is not None else ResolutionPolicy()
         self._cache: dict[str, HostIdentity] = {}
 
-    @property
-    def policy(self) -> ResolutionPolicy:
-        return self._policy
-
     def get_identity(self, target: str) -> HostIdentity:
-        """Resolve and normalize a hostname or IP under the current policy."""
+        """Resolve and normalize a hostname or IP."""
         if target in self._cache:
             return self._cache[target]
 
         target = target.strip()
-        # If target is IP literal
-        try:
-            literal_ip = ipaddress.ip_address(target)
-        except ValueError:
-            literal_ip = None
 
-        if literal_ip is not None:
-            # Use the literal IP only; names via PTR if available
-            candidate_ips: set[str] = {str(literal_ip)}
-            names_set: set[str] = set(self._reverse_dns_names(literal_ip))
-            ips = self._policy.filter_addresses(candidate_ips)
-            if self._policy.require_hostname and not names_set:
-                logger.debug('Reject %s: no PTR hostname found and policy requires hostname', target)
-                raise ResolutionPolicyViolationError('Policy requires a hostname for the input IP address (no PTR record found).')
-            if not ips:
-                raise ResolutionPolicyViolationError('Input IP address was rejected by policy')
-            identity = HostIdentity.from_policy(target, self._policy, ips, sorted(names_set))
-            self._cache[target] = identity
-            return identity
+        ip = ip_or_none(target)
+        if ip is not None:
+            identity = self._get_identity_from_ip(ip, target)
+        else:
+            identity = self._get_identity_from_hostname(target)
 
-        # Target is hostname: if it's a valid FQDN, use DNS path; otherwise treat as local alias (e.g., localhost)
-        try:
-            fqdn = self._policy.validate_hostname(target)
-        except ResolutionPolicyViolationError:
-            fqdn = None
-        if fqdn is None:
-            # Non-FQDN (e.g., localhost). Seed with system resolver only.
-            candidate_ips: set[str] = set(
-                NetworkManager.resolve_hostname_to_ips(
-                    target,
-                    only_ipv4=not self._policy.allow_ipv6,
-                    exclude_loopback=False,
-                )
-            )
-            # Collect names by PTR of candidate IPs and include original token
-            names_set: set[str] = {target}
-            for ip_text in list(candidate_ips):
-                try:
-                    ip_obj = ipaddress.ip_address(ip_text)
-                except ValueError:
-                    continue
-                names_set.update(self._reverse_dns_names(ip_obj))
-            ips = self._policy.filter_addresses(candidate_ips)
-            if not ips:
-                raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
-            identity = HostIdentity.from_policy(target, self._policy, ips, sorted(names_set))
-            self._cache[target] = identity
-            return identity
-
-        # FQDN path: forward DNS, then PTR of accepted IPs; no further expansion
-        addrs, _ = self._resolve_dns(fqdn)
-        if not addrs:
-            raise ResolutionError(f'Could not resolve {fqdn} to any IP addresses.')
-        ips = self._policy.filter_addresses([str(ip) for ip in addrs])
-        names_set: set[str] = {fqdn}
-        ptr_match = False
-        for ip in ips:
-            ptrs = self._reverse_dns_names(ip)
-            if fqdn in ptrs:
-                ptr_match = True
-            names_set.update(ptrs)
-        if not ptr_match:
-            raise ResolutionError(f'{fqdn} failed the DNS round-trip check — forward and reverse records do not match.')
-        if not ips:
-            raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
-        identity = HostIdentity.from_policy(fqdn, self._policy, ips, sorted(names_set))
         self._cache[target] = identity
         return identity
 
     def get_local_identity(self) -> HostIdentity:
-        """Return normalized identity of the current host."""
-        name = socket.getfqdn().strip().lower()
-        candidates: list[str] = []
-        if _is_fqdn(name):
-            candidates.append(name)
+        """Calculate HostIdentity for the current host."""
         try:
             local_ips = NetworkManager.get_current_node_ips(
                 ignore_loopback=False,
                 only_ipv4=not self._policy.allow_ipv6,
             )
-        except CMAPIBasicError:
-            logger.exception('Failed to get local IP addresses for identity resolution')
-            local_ips = []
-        candidates.extend(local_ips)
-        seen: set[str] = set()
-        for candidate in candidates:
-            if candidate in seen:
-                continue
-            seen.add(candidate)
+        except:
+            logger.exception('Failed to get local IP addresses')
+            raise
+
+        # Use the first IP that resolves into a normal identity that is not rejected by policy
+        for ip_text in set(local_ips):
             try:
-                return self.get_identity(candidate)
+                return self.get_identity(ip_text)
             except CMAPIBasicError:
-                logger.exception('Local identity candidate failed resolution: %s', candidate)
+                logger.exception('Local identity candidate %s failed resolution', ip_text)
                 continue
         raise ResolutionPolicyViolationError('Could not determine any acceptable local IP addresses under current policy.')
 
@@ -285,67 +211,149 @@ class HostAddressManager:
             return identity, False
 
         for ip_text in identity.ips:
-            try:
-                ip_obj = ipaddress.ip_address(ip_text)
-            except ValueError:
+            ip = ip_or_none(ip_text)
+            if ip is None:
+                logger.error('Invalid IP address: %s', ip_text)
                 continue
+
             try:
-                reverse_names = self._reverse_dns_names(ip_obj)
+                reverse_names = self._get_names_of_ip(ip)
             except Exception:
+                logger.exception('Failed to get reverse names for %s', ip)
                 continue
+
             if normalized in reverse_names:
-                logger.debug('Roundtrip check passed for %s: %s', hostname, ip_obj)
+                logger.debug('Roundtrip check passed for %s: %s', hostname, ip)
                 return identity, True
 
         logger.warning('Roundtrip check failed for %s', hostname)
         return identity, False
 
-    def _resolve_dns(self, hostname: str) -> tuple[list[IPAddress], list[str]]:
-        """Resolve the given hostname using DNS and return (addresses, names)."""
+    @property
+    def policy(self) -> ResolutionPolicy:
+        return self._policy
+
+    def _get_identity_from_ip(self, ip: IPAddress, original_input: str) -> HostIdentity:
+        if not self._policy.filter_addresses([str(ip)]):
+            raise ResolutionPolicyViolationError('Input IP address was rejected by policy')
+
+        names: list[str] = self._get_names_of_ip(ip)
+        if self._policy.require_hostname and not names:
+            logger.warning('Reject %s: no names found for this IP and policy requires hostname', original_input)
+            raise ResolutionPolicyViolationError('Policy requires a hostname for the input IP address (no PTR record found).')
+
+        return HostIdentity.from_policy(original_input, self._policy, [ip], sorted(names))
+
+    def _get_identity_from_hostname(self, hostname: str) -> HostIdentity:
+        normalized = hostname.strip().lower()
+        if not _is_fqdn(normalized):
+            return self._get_identity_from_non_fqdn(hostname)
+        return self._get_identity_from_fqdn(normalized)
+
+    def _get_identity_from_fqdn(self, fqdn: str) -> HostIdentity:
+        # Get IPs from hostname (via DNS), filter them, then get names from each IP
+        addrs = self._resolve_dns(fqdn)
+        if not addrs:
+            raise ResolutionError(f'Could not resolve {fqdn} to any IP addresses.')
+        filtered_ips = self._policy.filter_addresses([str(ip) for ip in addrs])
+
+        # Resolve each IP back to names and check if there is any that resolved back to passed fqdn
+        names: set[str] = {fqdn}
+        roundtrip_found = False
+        for ip in filtered_ips:
+            names_of_ip = self._get_names_of_ip(ip)
+            if fqdn in names_of_ip:
+                roundtrip_found = True
+            names.update(names_of_ip)
+
+        if not roundtrip_found:
+            logger.warning(
+                'FQDN %s failed DNS forward/reverse round-trip; IPs: %s',
+                fqdn,
+                [str(ip) for ip in filtered_ips],
+            )
+            raise ResolutionError(f'{fqdn} failed the DNS round-trip check — forward and reverse records do not match.')
+
+        if not filtered_ips:
+            raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
+
+        return HostIdentity.from_policy(fqdn, self._policy, filtered_ips, sorted(names))
+
+    def _get_identity_from_non_fqdn(self, hostname: str) -> HostIdentity:
+        # Like FQDN version, but we know that nothing will resolve back to passed hostname
+        candidate_ips: set[str] = set(
+            NetworkManager.resolve_hostname_to_ips(
+                hostname,
+                only_ipv4=not self._policy.allow_ipv6,
+                exclude_loopback=False,
+            )
+        )
+
+        ips = self._policy.filter_addresses(candidate_ips)
+        if not ips:
+            raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
+
+        # Collect names of IPs
+        names: set[str] = set()
+        for ip_text in list(candidate_ips):
+            ip = ip_or_none(ip_text)
+            if ip is None:
+                logger.error('Invalid IP address: %s', ip_text)
+                continue
+            names.update(self._get_names_of_ip(ip))
+
+        if self._policy.require_hostname and not names:
+            logger.error(
+                'Non-FQDN name %s does not resolve to any valid hostname; candidate IPs: %s',
+                hostname,
+                sorted(candidate_ips),
+            )
+            raise ResolutionPolicyViolationError('Policy requires a hostname for the input host, but DNS did not return any FQDN names.')
+
+        return HostIdentity.from_policy(hostname, self._policy, ips, sorted(names))
+
+    def _resolve_dns(self, hostname: str) -> list[IPAddress]:
+        """Resolve the given hostname using DNS and return addresses."""
         ipv4_texts: list[str] = []
         ipv6_texts: list[str] = []
         try:
             ipv4_texts = self._dns_resolve_ipv4(hostname)
         except dns.resolver.NoAnswer:
-            logger.debug('IPv4 lookup returned no records for %s', hostname)
+            logger.warning('IPv4 lookup returned no records for %s', hostname)
             ipv4_texts = []
         except Exception:
             logger.exception('IPv4 lookup unexpected failure for %s', hostname)
             raise
+
         if self._policy.allow_ipv6:
             try:
                 ipv6_texts = self._dns_resolve_ipv6(hostname)
             except dns.resolver.NoAnswer:
-                logger.debug('IPv6 lookup returned no records for %s', hostname)
+                logger.warning('IPv6 lookup returned no records for %s', hostname)
                 ipv6_texts = []
             except Exception:
                 logger.exception('IPv6 lookup unexpected failure for %s', hostname)
                 raise
 
         addrs: list[IPAddress] = []
-        for t in ipv4_texts:
-            try:
-                addrs.append(ipaddress.ip_address(t))
-            except ValueError:
+        for ip_text in ipv4_texts + ipv6_texts:
+            ip = ip_or_none(ip_text)
+            if ip is None:
+                logger.error('DNS returned invalid IP address %s for host name %s, skipping', ip_text, hostname)
                 continue
-        for t in ipv6_texts:
-            try:
-                addrs.append(ipaddress.ip_address(t))
-            except ValueError:
-                continue
+            addrs.append(ip)
 
-        names = [hostname]
-        return addrs, names
+        return addrs
 
-    def _reverse_dns_names(self, ip: IPAddress) -> list[str]:
+    def _get_names_of_ip(self, ip: IPAddress) -> list[str]:
         """Fetch PTR names for an IP via DNS."""
         try:
             return self._dns_reverse(str(ip))
         except dns.resolver.NoAnswer:
-            logger.debug('PTR lookup returned no records for %s', ip)
+            logger.warning('ip-to-name lookup returned no records for %s', ip)
             return []
         except Exception:
-            logger.exception('PTR lookup unexpected failure for %s', ip)
+            logger.exception('ip-to-name lookup unexpected failure for %s', ip)
             raise
 
     # DNS abstraction methods for easier mocking
@@ -385,13 +393,21 @@ class HostAddressManager:
     def _contains_private(self, addrs: list[str]) -> bool:
         """Return True if any resolvable address string is a private IP."""
         for addr in addrs:
-            try:
-                if ipaddress.ip_address(addr).is_private:
-                    return True
-            except ValueError:
+            ip = ip_or_none(addr)
+            if ip is None:
                 continue
+            if ip.is_private:
+                return True
         return False
 
+def ip_or_none(val: str) -> Optional[IPAddress]:
+    try:
+        return ipaddress.ip_address(val)
+    except ValueError:
+        return None
+
+def is_ip_address(val: str) -> bool:
+    return ip_or_none(val) is not None
 
 def _is_fqdn(name: str) -> bool:
     """Return True if the string is a valid FQDN (lower-cased, no trailing dot).

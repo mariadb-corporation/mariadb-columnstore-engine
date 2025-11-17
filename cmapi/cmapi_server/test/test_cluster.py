@@ -3,6 +3,7 @@ import os
 import socket
 import subprocess
 from shutil import copyfile
+from unittest.mock import patch
 
 import requests
 
@@ -24,6 +25,12 @@ class BaseClusterTestCase(BaseServerTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         copyfile(MCS_CONFIG_FILEPATH, COPY_MCS_CONFIG_FILEPATH)
+        # Disable real DNS lookups for rev lookup checks, this isn't focus of these tests
+        cls._rev_check_patcher = patch(
+            'cmapi_server.managers.host_identity.HostAddressManager.check_hostname_rev_lookup',
+            new=lambda manager, hostname: (manager.get_identity(hostname), True),
+        )
+        cls._rev_check_patcher.start()
         return super().setUpClass()
 
     @classmethod
@@ -32,6 +39,7 @@ class BaseClusterTestCase(BaseServerTestCase):
         os.remove(os.path.abspath(COPY_MCS_CONFIG_FILEPATH))
         MCSProcessManager.stop_node(is_primary=True, use_sudo=False)
         MCSProcessManager.start_node(is_primary=True, use_sudo=False)
+        cls._rev_check_patcher.stop()
         return super().tearDownClass()
 
     def setUp(self) -> None:

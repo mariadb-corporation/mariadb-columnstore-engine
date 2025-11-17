@@ -4,12 +4,12 @@ import logging
 import pwd
 import re
 import socket
+from collections.abc import Iterator
 from contextlib import contextmanager
 from os import chown, mkdir, replace
 from pathlib import Path
 from shutil import copyfile
 from typing import Optional
-from collections.abc import Iterator
 from xml.dom import minidom  # to pick up pretty printing functionality
 
 from lxml import etree
@@ -17,6 +17,7 @@ from lxml import etree
 from cmapi_server.constants import (
     DEFAULT_MCS_CONF_PATH,
     DEFAULT_SM_CONF_PATH,
+    LOCALHOSTS,
     MCS_MODULE_FILE_PATH,
 )
 from cmapi_server.managers.host_identity import get_host_address_manager
@@ -438,6 +439,10 @@ class NodeConfig:
         local_identity = get_host_address_manager().get_local_identity()
         candidates = set(local_identity.ips)
         candidates.update(local_identity.names)
+
+        # HostIdentity ignores loopback/non-DNS-visible names, so add them explicitly
+        if self.is_single_node(root):
+            candidates.update(LOCALHOSTS)
 
         is_primary = primary_address in candidates
         module_logger.debug(
