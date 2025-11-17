@@ -2467,7 +2467,7 @@ SBPP BatchPrimitiveProcessor::duplicate()
       bpp->smallNullPointers = smallNullPointers;
       bpp->joinedRG = joinedRG;
     }
-    bpp->mSmallSideRGPtr = &bpp->smallSideRGs[0];
+    bpp->mSmallSideRGPtr = bpp->smallSideRGs.empty() ? nullptr : &bpp->smallSideRGs[0];
 
 #ifdef __FreeBSD__
     pthread_mutex_unlock(&bpp->objLock);
