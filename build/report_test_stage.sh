@@ -101,6 +101,11 @@ fi
 execInnerDocker "$CONTAINER_NAME" "/logs.sh ${STAGE}"
 execInnerDocker "$CONTAINER_NAME" "/core_dump_check.sh core /core/ ${STAGE}"
 
+# Check for sanitizer reports
+if ! execInnerDocker "$CONTAINER_NAME" "/check_sanitizer_reports.sh core ${STAGE}"; then
+    SANITIZER_FAILED=1
+fi
+
 docker cp "${CONTAINER_NAME}:/core/" "/drone/src/${RESULT}/"
 docker cp "${CONTAINER_NAME}:/unit_logs/" "/drone/src/${RESULT}/"
 
@@ -108,4 +113,9 @@ execInnerDocker "$CONTAINER_NAME" "/core_dump_drop.sh core"
 echo "Saved artifacts:"
 ls -R "/drone/src/${RESULT}/"
 echo "Done reporting ${STAGE}"
+
+# Exit with error if sanitizer issues found
+if [[ "${SANITIZER_FAILED:-0}" -eq 1 ]]; then
+    exit 1
+fi
 
