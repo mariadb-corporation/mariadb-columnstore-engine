@@ -18,79 +18,6 @@ IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 logger = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=1)  # singleton
-def get_host_address_manager() -> 'HostAddressManager':
-    return HostAddressManager()
-
-
-@dataclass(frozen=True)
-class ResolutionPolicy:
-    """Class to represent our requirements for the addresses, how are they resolved,
-      what must be filtered out, how addresses are ordered, etc.
-
-    It's nice to separate these concerns from the resolving itself.
-    Also maybe in the future we'll make it configurable by users.
-    """
-
-    allow_private_ips: bool = True
-    allow_ipv6: bool = False
-    require_hostname: bool = False
-
-    def filter_addresses(self, addrs: Iterable[str]) -> list[IPAddress]:
-        """Filter out IP addresses that don't match the policy."""
-        ips: list[IPAddress] = []
-        logger.debug(
-            'Filtering addresses: %s (allow_private_ips=%s, allow_ipv6=%s)',
-            list(addrs), self.allow_private_ips, self.allow_ipv6
-        )
-        for addr in addrs:
-            ip = ip_or_none(addr)
-            if ip is None:
-                logger.debug('Skip %s: not a valid IP literal', addr)
-                continue
-
-            # Fixed rejections first
-            if ip.is_loopback:
-                logger.debug('Skip %s: loopback address', addr)
-                continue
-            if ip.is_link_local:
-                logger.debug('Skip %s: link-local address', addr)
-                continue
-            if ip.is_multicast:
-                logger.debug('Skip %s: multicast address', addr)
-                continue
-            if isinstance(ip, ipaddress.IPv4Address) and int(ip) == int(ipaddress.IPv4Address('255.255.255.255')):
-                logger.debug('Skip %s: IPv4 broadcast address', addr)
-                continue
-
-            # Policy conditionals
-            if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
-                logger.debug('Skip %s: IPv6 not allowed by policy', addr)
-                continue
-            if not ip.is_global and not ip.is_private:
-                logger.debug('Skip %s: neither global nor private address', addr)
-                continue
-            if ip.is_private and not self.allow_private_ips:
-                logger.debug('Skip %s: private address but private use disabled', addr)
-                continue
-
-            ips.append(ip)
-            logger.debug('Accept %s', addr)
-        return ips
-
-    def order_addresses(self, ips: Sequence[IPAddress]) -> list[IPAddress]:
-        """Order IPs deterministically to choose the primary IP."""
-        def key(ip: IPAddress) -> tuple[int, int, int, int, int, int, int, int]:
-            is_global = 0 if ip.is_global else 1
-            is_ipv4 = 0 if isinstance(ip, ipaddress.IPv4Address) else 1
-            return (
-                is_global,
-                is_ipv4,
-                *list(ip.packed)
-            )
-        return sorted(ips, key=key)
-
-
 @dataclass
 class HostIdentity:
     """Host's network identity, IP addrs and hostnames that are visible from other hosts"""
@@ -104,7 +31,7 @@ class HostIdentity:
     observed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @staticmethod
-    def from_policy(input: str, policy: ResolutionPolicy, ips: Sequence[IPAddress], names: Sequence[str]) -> 'HostIdentity':
+    def from_policy(input: str, policy: 'ResolutionPolicy', ips: Sequence[IPAddress], names: Sequence[str]) -> 'HostIdentity':
         """Construct a HostIdentity from filtered addresses and names using policy ordering."""
         if not ips:
             raise ResolutionPolicyViolationError('All resolved addresses were rejected by policy.')
@@ -156,6 +83,74 @@ class HostIdentity:
         return repr(self)
 
 
+@dataclass(frozen=True)
+class ResolutionPolicy:
+    """Class to represent our requirements for the addresses, how are they resolved,
+      what must be filtered out, how addresses are ordered, etc.
+
+    It's nice to separate these concerns from the resolving itself.
+    Also maybe in the future we'll make it configurable by users.
+    """
+
+    allow_private_ips: bool = True
+    allow_ipv6: bool = False
+    require_hostname: bool = False
+
+    def filter_addresses(self, addrs: Iterable[str]) -> list[IPAddress]:
+        """Filter out IP addresses that don't match the policy."""
+        ips: list[IPAddress] = []
+        logger.debug(
+            'Filtering addresses: %s (allow_private_ips=%s, allow_ipv6=%s)',
+            list(addrs), self.allow_private_ips, self.allow_ipv6
+        )
+        for addr in addrs:
+            ip = _ip_or_none(addr)
+            if ip is None:
+                logger.error('Skip %s: not a valid IP literal', addr)
+                continue
+
+            # Fixed rejections first
+            if ip.is_loopback:
+                logger.debug('Skip %s: loopback address', addr)
+                continue
+            if ip.is_link_local:
+                logger.debug('Skip %s: link-local address', addr)
+                continue
+            if ip.is_multicast:
+                logger.debug('Skip %s: multicast address', addr)
+                continue
+            if isinstance(ip, ipaddress.IPv4Address) and int(ip) == int(ipaddress.IPv4Address('255.255.255.255')):
+                logger.debug('Skip %s: IPv4 broadcast address', addr)
+                continue
+
+            # Policy conditionals
+            if not self.allow_ipv6 and isinstance(ip, ipaddress.IPv6Address):
+                logger.debug('Skip %s: IPv6 not allowed by policy', addr)
+                continue
+            if not ip.is_global and not ip.is_private:
+                logger.debug('Skip %s: neither global nor private address', addr)
+                continue
+            if ip.is_private and not self.allow_private_ips:
+                logger.debug('Skip %s: private address but private use disabled', addr)
+                continue
+
+            ips.append(ip)
+            logger.debug('Accept %s', addr)
+        return ips
+
+    def order_addresses(self, ips: Sequence[IPAddress]) -> list[IPAddress]:
+        """Order IPs deterministically to choose the primary IP."""
+        def key(ip: IPAddress) -> tuple[int, int, int, int, int, int, int, int]:
+            is_global = 0 if ip.is_global else 1
+            is_ipv4 = 0 if isinstance(ip, ipaddress.IPv4Address) else 1
+            return (
+                is_global,
+                is_ipv4,
+                *list(ip.packed)
+            )
+        return sorted(ips, key=key)
+
+
 class HostAddressManager:
     """Calculates HostIdentity from passed hostname or IP address."""
 
@@ -170,7 +165,7 @@ class HostAddressManager:
 
         target = target.strip()
 
-        ip = ip_or_none(target)
+        ip = _ip_or_none(target)
         if ip is not None:
             identity = self._get_identity_from_ip(ip, target)
         else:
@@ -195,7 +190,7 @@ class HostAddressManager:
             try:
                 return self.get_identity(ip_text)
             except CMAPIBasicError:
-                logger.exception('Local identity candidate %s failed resolution', ip_text)
+                logger.debug('Local identity candidate %s failed resolution', ip_text)
                 continue
         raise ResolutionPolicyViolationError('Could not determine any acceptable local IP addresses under current policy.')
 
@@ -211,7 +206,7 @@ class HostAddressManager:
             return identity, False
 
         for ip_text in identity.ips:
-            ip = ip_or_none(ip_text)
+            ip = _ip_or_none(ip_text)
             if ip is None:
                 logger.error('Invalid IP address: %s', ip_text)
                 continue
@@ -229,10 +224,6 @@ class HostAddressManager:
         logger.warning('Roundtrip check failed for %s', hostname)
         return identity, False
 
-    @property
-    def policy(self) -> ResolutionPolicy:
-        return self._policy
-
     def _get_identity_from_ip(self, ip: IPAddress, original_input: str) -> HostIdentity:
         if not self._policy.filter_addresses([str(ip)]):
             raise ResolutionPolicyViolationError('Input IP address was rejected by policy')
@@ -246,9 +237,10 @@ class HostAddressManager:
 
     def _get_identity_from_hostname(self, hostname: str) -> HostIdentity:
         normalized = hostname.strip().lower()
-        if not _is_fqdn(normalized):
+        if _is_fqdn(normalized):
+            return self._get_identity_from_fqdn(normalized)
+        else:
             return self._get_identity_from_non_fqdn(hostname)
-        return self._get_identity_from_fqdn(normalized)
 
     def _get_identity_from_fqdn(self, fqdn: str) -> HostIdentity:
         # Get IPs from hostname (via DNS), filter them, then get names from each IP
@@ -296,7 +288,7 @@ class HostAddressManager:
         # Collect names of IPs
         names: set[str] = set()
         for ip_text in list(candidate_ips):
-            ip = ip_or_none(ip_text)
+            ip = _ip_or_none(ip_text)
             if ip is None:
                 logger.error('Invalid IP address: %s', ip_text)
                 continue
@@ -337,7 +329,7 @@ class HostAddressManager:
 
         addrs: list[IPAddress] = []
         for ip_text in ipv4_texts + ipv6_texts:
-            ip = ip_or_none(ip_text)
+            ip = _ip_or_none(ip_text)
             if ip is None:
                 logger.error('DNS returned invalid IP address %s for host name %s, skipping', ip_text, hostname)
                 continue
@@ -383,9 +375,9 @@ class HostAddressManager:
         names: list[str] = []
         for ptr_rdata in answer:
             try:
-                fqdn_name = str(ptr_rdata.target).rstrip('.').lower()
-                if _is_fqdn(fqdn_name):
-                    names.append(fqdn_name)
+                name = str(ptr_rdata.target).rstrip('.').lower()
+                if name:
+                    names.append(name)
             except Exception:
                 continue
         return names
@@ -393,21 +385,27 @@ class HostAddressManager:
     def _contains_private(self, addrs: list[str]) -> bool:
         """Return True if any resolvable address string is a private IP."""
         for addr in addrs:
-            ip = ip_or_none(addr)
+            ip = _ip_or_none(addr)
             if ip is None:
                 continue
             if ip.is_private:
                 return True
         return False
 
-def ip_or_none(val: str) -> Optional[IPAddress]:
+
+@lru_cache(maxsize=1)  # singleton
+def get_host_address_manager() -> 'HostAddressManager':
+    return HostAddressManager()
+
+
+def _ip_or_none(val: str) -> Optional[IPAddress]:
     try:
         return ipaddress.ip_address(val)
     except ValueError:
         return None
 
-def is_ip_address(val: str) -> bool:
-    return ip_or_none(val) is not None
+def _is_ip_address(val: str) -> bool:
+    return _ip_or_none(val) is not None
 
 def _is_fqdn(name: str) -> bool:
     """Return True if the string is a valid FQDN (lower-cased, no trailing dot).
