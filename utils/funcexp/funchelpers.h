@@ -385,7 +385,8 @@ inline int power(int16_t a)
 }
 
 template <typename T>
-inline void decimalPlaceDec(int64_t& d, T& p, int8_t& s)
+inline __attribute__((no_sanitize("signed-integer-overflow"))) void decimalPlaceDec(int64_t& d, T& p,
+                                                                                    int8_t& s)
 {
   // find new scale if D < s
   if (d < s)
@@ -541,7 +542,9 @@ inline int getNumbers(const std::string& expr, int64_t* array, execplan::OpType 
   return index;
 }
 
-inline int getNumbers(const std::string& expr, int* array, execplan::OpType funcType)
+inline __attribute__((no_sanitize("signed-integer-overflow"))) int getNumbers(const std::string& expr,
+                                                                              int* array,
+                                                                              execplan::OpType funcType)
 {
   int index = 0;
 
