@@ -1,26 +1,17 @@
 DROP DATABASE IF EXISTS tpchqa;
 CREATE DATABASE tpchqa;
 USE tpchqa;
-SELECT calsettrace(1);
-calsettrace(1)
-0
-drop table if exists region;
 create table region (
 r_regionkey int PRIMARY KEY,
 r_name char (25),
 r_comment varchar (152)
-);
-SHOW CREATE TABLE region;
-drop table if exists nation;
+) ENGINE=InnoDB;
 create table nation (
 n_nationkey int PRIMARY KEY,
 n_name char (25),
 n_regionkey int,
-n_comment varchar (152),
-FOREIGN KEY (n_regionkey) REFERENCES region(r_regionkey)
-);
-SHOW CREATE TABLE nation;
-drop table if exists supplier;
+n_comment varchar (152)
+) ENGINE=InnoDB;
 create table supplier (
 s_suppkey int PRIMARY KEY,
 s_name char (25),
@@ -28,11 +19,8 @@ s_address varchar (40),
 s_nationkey int,
 s_phone char (15),
 s_acctbal decimal(15,2),
-s_comment varchar (101),
-FOREIGN KEY (s_nationkey) REFERENCES nation(n_nationkey)
-);
-SHOW CREATE TABLE supplier;
-drop table if exists customer;
+s_comment varchar (101)
+) ENGINE=InnoDB;
 create table customer (
 c_custkey int PRIMARY KEY,
 c_name varchar (25),
@@ -41,11 +29,8 @@ c_nationkey int,
 c_phone char (15),
 c_acctbal decimal(15,2),
 c_mktsegment char (10),
-c_comment varchar (117),
-FOREIGN KEY (c_nationkey) REFERENCES nation(n_nationkey)
-);
-SHOW CREATE TABLE customer;
-drop table if exists part;
+c_comment varchar (117)
+) ENGINE=InnoDB;
 create table part (
 p_partkey int PRIMARY KEY,
 p_name varchar (55),
@@ -56,21 +41,15 @@ p_size int,
 p_container char (10),
 p_retailprice decimal(15,2),
 p_comment varchar (23)
-);
-SHOW CREATE TABLE part;
-drop table if exists partsupp;
+) ENGINE=InnoDB;
 create table partsupp (
 ps_partkey int,
 ps_suppkey int,
 ps_availqty int,
 ps_supplycost decimal(15,2),
 ps_comment varchar (199),
-PRIMARY KEY (ps_partkey, ps_suppkey),
-FOREIGN KEY (ps_partkey) REFERENCES part(p_partkey),
-FOREIGN KEY (ps_suppkey) REFERENCES supplier(s_suppkey)
-);
-SHOW CREATE TABLE partsupp;
-drop table if exists orders;
+PRIMARY KEY (ps_partkey, ps_suppkey)
+) ENGINE=InnoDB;
 create table orders (
 o_orderkey int PRIMARY KEY,
 o_custkey int,
@@ -80,11 +59,8 @@ o_orderdate date,
 o_orderpriority char (15),
 o_clerk char (15),
 o_shippriority int,
-o_comment varchar (79),
-FOREIGN KEY (o_custkey) REFERENCES customer(c_custkey)
-);
-SHOW CREATE TABLE orders;
-drop table if exists lineitem;
+o_comment varchar (79)
+) ENGINE=InnoDB;
 create table lineitem (
 l_orderkey int,
 l_partkey int,
@@ -102,53 +78,38 @@ l_receiptdate date,
 l_shipinstruct char (25),
 l_shipmode char (10),
 l_comment varchar (44),
-PRIMARY KEY (l_orderkey, l_linenumber),
-FOREIGN KEY (l_orderkey) REFERENCES orders(o_orderkey),
-FOREIGN KEY (l_partkey) REFERENCES part(p_partkey),
-FOREIGN KEY (l_suppkey) REFERENCES supplier(s_suppkey)
-);
-SHOW CREATE TABLE lineitem;
+PRIMARY KEY (l_orderkey, l_linenumber)
+) ENGINE=InnoDB;
 ALTER TABLE partsupp ADD INDEX I1 (PS_PARTKEY, PS_SUPPKEY);
-ALTER TABLE lineitem ADD COLUMN `recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0;
-UPDATE lineitem SET recdate_gt_commitdate = 1 WHERE l_receiptdate > l_commitdate;
-ALTER TABLE lineitem ADD INDEX(`l_orderkey`, `l_suppkey`,recdate_gt_commitdate);
+ALTER TABLE lineitem ADD INDEX(`l_orderkey`, `l_suppkey`);
 ALTER TABLE orders   ADD INDEX(`o_orderkey`, `o_orderstatus`);
 ALTER TABLE supplier ADD INDEX(s_nationkey, s_suppkey,s_name);
-ALTER TABLE supplier ADD FOREIGN KEY (S_NATIONKEY) REFERENCES nation(N_NATIONKEY);
-ALTER TABLE orders   ADD FOREIGN KEY (O_CUSTKEY) REFERENCES customer(C_CUSTKEY);
-ALTER TABLE lineitem ADD FOREIGN KEY (L_ORDERKEY) REFERENCES orders(O_ORDERKEY);
-ALTER TABLE lineitem ADD FOREIGN KEY (L_PARTKEY) REFERENCES part(P_PARTKEY);
-ALTER TABLE lineitem ADD FOREIGN KEY (L_SUPPKEY) REFERENCES supplier(S_SUPPKEY);
-ALTER table nation   ADD FOREIGN KEY (N_REGIONKEY) REFERENCES region(R_REGIONKEY);
-ALTER TABLE partsupp ADD FOREIGN KEY (PS_PARTKEY) REFERENCES part(P_PARTKEY);
-ALTER TABLE partsupp ADD FOREIGN KEY (PS_SUPPKEY) REFERENCES supplier(S_SUPPKEY);
-ALTER TABLE customer ADD FOREIGN KEY (C_NATIONKEY) REFERENCES nation(N_NATIONKEY);
-SET histogram_size=40;
+SET histogram_size=10;
 ANALYZE TABLE lineitem PERSISTENT FOR COLUMNS(l_orderkey) INDEXES();
 Table	Op	Msg_type	Msg_text
 tpchqa.lineitem	analyze	status	Engine-independent statistics collected
-tpchqa.lineitem	analyze	status	Table is already up to date
+tpchqa.lineitem	analyze	status	OK
 SET histogram_size=3;
 ANALYZE TABLE partsupp PERSISTENT FOR COLUMNS(ps_partkey) INDEXES();
 Table	Op	Msg_type	Msg_text
 tpchqa.partsupp	analyze	status	Engine-independent statistics collected
-tpchqa.partsupp	analyze	status	Table is already up to date
+tpchqa.partsupp	analyze	status	OK
 SET histogram_size=2;
 ANALYZE TABLE part PERSISTENT FOR COLUMNS(p_partkey) INDEXES();
 Table	Op	Msg_type	Msg_text
 tpchqa.part	analyze	status	Engine-independent statistics collected
 tpchqa.part	analyze	status	OK
-SET histogram_size=6;
+SET histogram_size=5;
 ANALYZE TABLE orders PERSISTENT FOR COLUMNS(o_orderkey) INDEXES();
 Table	Op	Msg_type	Msg_text
 tpchqa.orders	analyze	status	Engine-independent statistics collected
-tpchqa.orders	analyze	status	Table is already up to date
+tpchqa.orders	analyze	status	OK
 SELECT count(*) from orders;
 count(*)
 150000
 set columnstore_unstable_optimizer=on;
 set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
-SET @@columnstore_query_accel_parallel_factor=15;
+SET @@columnstore_query_accel_parallel_factor=5;
 SELECT  "QUERY 1";
 QUERY 1
 QUERY 1
@@ -172,10 +133,11 @@ A	F	3774200.00	5320753880.69	5054096266.6828	5256751331.449234	25.537587	36002.1
 N	F	95257.00	133737795.84	127132372.6512	132286291.229445	25.300664	35521.326916	0.049394	3765
 N	O	7459297.00	10512270008.90	9986238338.3847	10385578376.585467	25.545538	36000.924688	0.050096	292000
 R	F	3785523.00	5337950526.47	5071818532.9420	5274405503.049367	25.525944	35994.029214	0.049989	148301
-SET @rbo_rules := mcs_get_plan('rules');
-SELECT @rbo_rules LIKE '%parallel_ces%' AS qa_q1_applied;
+SELECT mcs_get_plan('rules') LIKE '%parallel_ces%' AS qa_q1_applied;
 qa_q1_applied
-NULL
+1
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;
 SELECT  "QUERY 2";
 QUERY 2
 QUERY 2
@@ -252,6 +214,8 @@ s_acctbal	s_name	n_name	p_partkey	p_mfgr	s_address	s_phone	s_comment
 -820.89	Supplier#000000409	GERMANY	2156	Manufacturer#5	LyXUYFz7aXrvy65kKAbTatGzGS,NDBcdtD	17-719-517-9836	y final, slow theodolites. furiously regular req
 -845.44	Supplier#000000704	ROMANIA	9926	Manufacturer#5	hQvlBqbqqnA5Dgo1BffRBX78tkkRu	29-300-896-5991	ctions. carefully sly requ
 -942.73	Supplier#000000563	GERMANY	5797	Manufacturer#1	Rc7U1cRUhYs03JD	17-108-537-2691	slyly furiously final decoys; silent, special realms poach f
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 3";
 QUERY 3
 QUERY 3
@@ -280,10 +244,9 @@ l_orderkey	revenue	o_orderdate	o_shippriority
 108514	314967.0754	1995-02-20	0
 462502	312604.5420	1995-03-08	0
 178727	309728.9306	1995-02-25	0
-SET @rbo_rules := mcs_get_plan('rules');
-SELECT @rbo_rules LIKE '%parallel_ces%' AS qa_q3_applied;
+SELECT mcs_get_plan('rules') LIKE '%parallel_ces%' AS qa_q3_applied;
 qa_q3_applied
-NULL
+1
 SELECT  "QUERY 4";
 QUERY 4
 QUERY 4
@@ -649,6 +612,8 @@ c_custkey	c_name	revenue	c_acctbal	n_name	c_address	c_phone	c_comment
 SELECT  "QUERY 11";
 QUERY 11
 QUERY 11
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;
 SELECT
 ps_partkey,
 SUM(ps_supplycost * ps_availqty) AS value
@@ -3279,6 +3244,8 @@ c_count	custdist
 35	5
 1	2
 36	1
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 14" ;
 QUERY 14
 QUERY 14
@@ -3317,6 +3284,8 @@ FROM revenue0
 ORDER BY s_suppkey;
 s_suppkey	s_name	s_address	s_phone	total_revenue
 677	Supplier#000000677	8mhrffG7D2WJBSQbOGstQ	23-290-639-3315	1614410.2928
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;
 SELECT  "QUERY 16";
 QUERY 16
 QUERY 16
@@ -6100,6 +6069,8 @@ Brand#22	PROMO BURNISHED COPPER	14	3
 Brand#43	STANDARD BRUSHED BRASS	23	3
 Brand#44	MEDIUM ANODIZED NICKEL	9	3
 Brand#53	MEDIUM BURNISHED BRASS	49	3
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 17";
 QUERY 17
 QUERY 17
@@ -6116,6 +6087,8 @@ WHERE l_partkey = p_partkey
 );
 avg_yearly
 23512.752857
+set columnstore_unstable_optimizer=off;
+set optimizer_switch=default;
 SELECT  "QUERY 18";
 QUERY 18
 QUERY 18
@@ -6143,6 +6116,8 @@ Customer#000006655	6655	29158	1995-10-21	452805.02	305.00
 Customer#000014110	14110	565574	1995-09-24	425099.85	301.00
 Customer#000001775	1775	6882	1997-04-09	408368.10	303.00
 Customer#000011459	11459	551136	1993-05-19	386812.74	308.00
+set columnstore_unstable_optimizer=on;
+set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 19";
 QUERY 19
 QUERY 19
@@ -6271,53 +6246,53 @@ ORDER BY
 numwait DESC,
 s_name;
 s_name	numwait
-Supplier#000000445	16
-Supplier#000000825	16
-Supplier#000000709	15
-Supplier#000000762	15
-Supplier#000000357	14
-Supplier#000000399	14
-Supplier#000000496	14
-Supplier#000000977	13
-Supplier#000000144	12
-Supplier#000000188	12
-Supplier#000000415	12
-Supplier#000000472	12
-Supplier#000000633	12
-Supplier#000000708	12
-Supplier#000000889	12
-Supplier#000000380	11
-Supplier#000000602	11
-Supplier#000000659	11
-Supplier#000000821	11
-Supplier#000000929	11
-Supplier#000000262	10
-Supplier#000000460	10
-Supplier#000000486	10
-Supplier#000000669	10
-Supplier#000000718	10
-Supplier#000000778	10
-Supplier#000000167	9
-Supplier#000000578	9
-Supplier#000000673	9
-Supplier#000000687	9
-Supplier#000000074	8
-Supplier#000000565	8
-Supplier#000000648	8
-Supplier#000000918	8
-Supplier#000000427	7
-Supplier#000000503	7
-Supplier#000000610	7
-Supplier#000000670	7
-Supplier#000000811	7
-Supplier#000000114	6
-Supplier#000000379	6
-Supplier#000000436	6
-Supplier#000000500	6
-Supplier#000000660	6
-Supplier#000000788	6
-Supplier#000000846	6
-Supplier#000000920	4
+Supplier#000000445	80
+Supplier#000000825	80
+Supplier#000000709	75
+Supplier#000000762	75
+Supplier#000000357	70
+Supplier#000000399	70
+Supplier#000000496	70
+Supplier#000000977	65
+Supplier#000000144	60
+Supplier#000000188	60
+Supplier#000000415	60
+Supplier#000000472	60
+Supplier#000000633	60
+Supplier#000000708	60
+Supplier#000000889	60
+Supplier#000000380	55
+Supplier#000000602	55
+Supplier#000000659	55
+Supplier#000000821	55
+Supplier#000000929	55
+Supplier#000000262	50
+Supplier#000000460	50
+Supplier#000000486	50
+Supplier#000000669	50
+Supplier#000000718	50
+Supplier#000000778	50
+Supplier#000000167	45
+Supplier#000000578	45
+Supplier#000000673	45
+Supplier#000000687	45
+Supplier#000000074	40
+Supplier#000000565	40
+Supplier#000000648	40
+Supplier#000000918	40
+Supplier#000000427	35
+Supplier#000000503	35
+Supplier#000000610	35
+Supplier#000000670	35
+Supplier#000000811	35
+Supplier#000000114	30
+Supplier#000000379	30
+Supplier#000000436	30
+Supplier#000000500	30
+Supplier#000000660	30
+Supplier#000000788	30
+Supplier#000000846	30
+Supplier#000000920	20
 SELECT  "QUERY 22";
 QUERY 22
 QUERY 22
@@ -6366,12 +6341,8 @@ cntrycode	numcust	totacctbal
 29	85	632693.46
 30	87	646748.02
 31	87	647372.50
-SET @rbo_rules := mcs_get_plan('rules');
-SELECT @rbo_rules LIKE '%parallel_ces%' AS qa_q22_applied;
+SELECT mcs_get_plan('rules') LIKE '%parallel_ces%' AS qa_q22_applied;
 qa_q22_applied
-NULL
-SELECT calsettrace(0);
-calsettrace(0)
 1
 DROP DATABASE tpchqa;
 set columnstore_unstable_optimizer=off;
