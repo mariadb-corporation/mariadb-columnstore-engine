@@ -217,9 +217,13 @@ class HostAddressManager:
                 logger.exception('Failed to get reverse names for %s', ip)
                 continue
 
-            if normalized in reverse_names:
-                logger.debug('Roundtrip check passed for %s: %s', hostname, ip)
-                return identity, True
+            for rev_name in reverse_names:
+                # Count reverse names like "mcs1.<domain>" as a match for "mcs"
+                # It is true because of search_domain/ndots (in /etc/resolv.conf)
+                # Resolvers respect these options and will add them to the hostname
+                if rev_name == normalized or rev_name.startswith(normalized + '.'):
+                    logger.debug('Roundtrip check passed for %s: %s', hostname, ip)
+                    return identity, True
 
         logger.warning('Roundtrip check failed for %s', hostname)
         return identity, False
