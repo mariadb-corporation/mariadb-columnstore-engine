@@ -1,41 +1,32 @@
 DROP DATABASE IF EXISTS group_by_ambiguous_test;
 CREATE DATABASE group_by_ambiguous_test;
 USE group_by_ambiguous_test;
-CREATE TABLE `test2` (
+CREATE TABLE `t1` (
 `id` INT UNSIGNED NOT NULL,
 `GBP` DOUBLE UNSIGNED NOT NULL,
 `cat_id` INT UNSIGNED NOT NULL,
 `cat_id_level_0` INT UNSIGNED NOT NULL
 ) ENGINE=Columnstore;
-INSERT INTO test2 VALUES (1, 100.5, 10, 20);
-INSERT INTO test2 VALUES (2, 200.5, 10, 30);
-INSERT INTO test2 VALUES (3, 300.5, 20, 20);
-#
-# Test case: GROUP BY with ambiguous column reference
-# This should not throw a ColumnStore error, but resolve to the table column (SQL standard)
-#
+INSERT INTO t1 VALUES (1, 100.5, 10, 20);
+INSERT INTO t1 VALUES (2, 200.5, 10, 30);
+INSERT INTO t1 VALUES (3, 300.5, 20, 20);
 SELECT cat_id_level_0 AS entity_id, SUM(GBP) AS spend, cat_id_level_0 AS cat_id
-FROM test2
-GROUP BY cat_id;
+FROM t1
+GROUP BY cat_id
+ORDER BY entity_id;
 entity_id	spend	cat_id
 20	300.5	20
 30	301	30
 Warnings:
 Warning	1052	Column 'cat_id' in GROUP BY is ambiguous
-DROP TABLE test2;
-#
-# Test case: GROUP BY with alias that matches a column but points to different column
-#
-CREATE TABLE t1 (col1 int, col2 varchar(5), col_t1 int) ENGINE=Columnstore;
-INSERT INTO t1 VALUES(10,'hello',10);
-INSERT INTO t1 VALUES(20,'hello',20);
-INSERT INTO t1 VALUES(30,'hello',30);
-INSERT INTO t1 VALUES(10,'bye',10);
-INSERT INTO t1 VALUES(10,'sam',10);
-INSERT INTO t1 VALUES(10,'bob',10);
-# GROUP BY col2 is ambiguous: matches both table column and SELECT alias
-# SQL standard: prefers table column col2 (varchar) over alias
-SELECT SUM(col1) AS col2 FROM t1 GROUP BY col2 ORDER BY col2;
+CREATE TABLE t2 (col1 int, col2 varchar(5), col_t1 int) ENGINE=Columnstore;
+INSERT INTO t2 VALUES(10,'hello',10);
+INSERT INTO t2 VALUES(20,'hello',20);
+INSERT INTO t2 VALUES(30,'hello',30);
+INSERT INTO t2 VALUES(10,'bye',10);
+INSERT INTO t2 VALUES(10,'sam',10);
+INSERT INTO t2 VALUES(10,'bob',10);
+SELECT SUM(col1) AS col2 FROM t2 GROUP BY col2 ORDER BY col2;
 col2
 10
 10
@@ -43,8 +34,57 @@ col2
 60
 Warnings:
 Warning	1052	Column 'col2' in GROUP BY is ambiguous
-#
-# Cleanup
-#
+CREATE TABLE t3 (a int, b int, c int) ENGINE=Columnstore;
+INSERT INTO t3 VALUES(1,10,100),(1,20,200),(2,10,100),(2,20,200);
+SELECT c AS a, c AS b, SUM(a) AS sum_val FROM t3 GROUP BY a, b ORDER BY a, b, sum_val;
+a	b	sum_val
+100	100	1
+100	100	2
+200	200	1
+200	200	2
+Warnings:
+Warning	1052	Column 'a' in GROUP BY is ambiguous
+Warning	1052	Column 'b' in GROUP BY is ambiguous
+CREATE TABLE t4 (id int, val int, name varchar(50)) ENGINE=Columnstore;
+CREATE TABLE t4b (id int, amount int) ENGINE=Columnstore;
+INSERT INTO t4 VALUES(1, 100, 'A'), (2, 200, 'B');
+INSERT INTO t4b VALUES(1, 50), (2, 75);
+CREATE VIEW v4 AS SELECT id, val FROM t4;
+SELECT v4.id, SUM(t4b.amount) AS total FROM v4 JOIN t4b ON v4.id = t4b.id GROUP BY id ORDER BY id;
+id	total
+1	50
+2	75
+DROP VIEW v4;
+CREATE TABLE t5 (id int, amount decimal(10,2), name varchar(50)) ENGINE=Columnstore;
+INSERT INTO t5 VALUES(1, 100.50, 'A'),(1, 200.75, 'B'),(2, 150.25, 'A');
+SELECT id AS name, SUM(amount) AS total FROM t5 GROUP BY name ORDER BY name;
+name	total
+1	200.75
+2	250.75
+Warnings:
+Warning	1052	Column 'name' in GROUP BY is ambiguous
+CREATE TABLE t6a (id int, val int) ENGINE=Columnstore;
+CREATE TABLE t6b (id int, name varchar(10)) ENGINE=Columnstore;
+INSERT INTO t6a VALUES(1,100),(2,200),(3,300);
+INSERT INTO t6b VALUES(1,'A'),(2,'B'),(3,'C');
+SELECT t6a.val AS id, COUNT(*) AS cnt FROM t6a JOIN t6b ON t6a.id = t6b.id GROUP BY id ORDER BY id;
+id	cnt
+100	1
+200	1
+300	1
+CREATE TABLE t7 (x int, y int, z int) ENGINE=Columnstore;
+INSERT INTO t7 VALUES(1,10,100),(2,20,200),(1,30,100),(2,40,200);
+SELECT z AS x, SUM(y) AS sum_y FROM t7 GROUP BY x ORDER BY x;
+x	sum_y
+100	40
+200	60
+Warnings:
+Warning	1052	Column 'x' in GROUP BY is ambiguous
 DROP TABLE t1;
+DROP TABLE t2;
+DROP TABLE t3;
+DROP TABLE t4, t4b;
+DROP TABLE t5;
+DROP TABLE t6a, t6b;
+DROP TABLE t7;
 DROP DATABASE group_by_ambiguous_test;
