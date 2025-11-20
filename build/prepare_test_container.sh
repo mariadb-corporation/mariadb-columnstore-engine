@@ -64,7 +64,10 @@ start_container() {
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
         docker_run_args+=(--env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup:ro)
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
-        docker_run_args+=(--shm-size=500m --memory 15g)
+        # Mount volume to write memory logs outside of container
+        REGRESSION_RESULTS_DIR="${SCRIPT_LOCATION}/regression-results"
+        mkdir -p "$REGRESSION_RESULTS_DIR"
+        docker_run_args+=(--shm-size=500m --memory 15g --volume "${REGRESSION_RESULTS_DIR}:/regression-results")
     else
         error "Unknown container type: $CONTAINER_NAME"
         exit 1
