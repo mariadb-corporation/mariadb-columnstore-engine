@@ -84,9 +84,12 @@ elif [[ "${CONTAINER_NAME}" == *regression* ]]; then
     echo
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "/drone/src/${RESULT}/" || echo "missing regression logs"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs.tgz"
-
+    
+    # Copy memory-monitor logs into alltest for archive
+    execInnerDocker "$CONTAINER_NAME" 'cp /regression-results/memory-monitor-* /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/ 2>/dev/null' || echo "no memory-monitor logs"
+    
     execInnerDocker "$CONTAINER_NAME" 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/'
-    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && tar czf testErrorLogs2.tgz *.log /var/log/mariadb/columnstore' || echo "failed to grab regression results"
+    execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && tar czf testErrorLogs2.tgz *.log memory-monitor-* /var/log/mariadb/columnstore 2>/dev/null' || echo "failed to grab regression results"
     docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs2.tgz"
     docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "/drone/src/${RESULT}/" || echo "missing regressionQueries.tgz"
 

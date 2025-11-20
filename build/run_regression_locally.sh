@@ -89,10 +89,8 @@ for test in "${TESTS[@]}"; do
         --regression-timeout "$REGRESSION_TIMEOUT" || true
 done
 
-# Copy test results from container to host
-RESULTS_DIR="./regression-results"
-rm -rf "$RESULTS_DIR"
-mkdir -p "$RESULTS_DIR"
+RESULTS_DIR="${SCRIPT_LOCATION}/regression-results"
+
 docker cp "$CONTAINER_NAME":/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/. "$RESULTS_DIR/" 2>/dev/null || true
 
 echo ""
