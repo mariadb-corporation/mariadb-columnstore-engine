@@ -226,7 +226,8 @@ class ArithmeticOperator : public Operator
 
 #include "parsetree.h"
 
-inline void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
+inline __attribute__((no_sanitize("signed-integer-overflow")))
+void ArithmeticOperator::evaluate(rowgroup::Row& row, bool& isNull, ParseTree* lop, ParseTree* rop)
 {
   // fOpType should have already been set on the connector during parsing
   switch (fOperationType.colDataType)
