@@ -254,13 +254,14 @@ class MCSProcessManager:
         :rtype: bool
         """
         logging.info(f'Waiting for DMLProc to stop in {timeout} seconds')
-        # Use a deadline-based loop with throttled logging to reduce noise.
         deadline = time.monotonic() + max(1, int(timeout))
-        LOG_INTERVAL = 30  # seconds
-        next_log_in = 0  # log immediately on first iteration
+        # Log at most every 5 seconds while polling every ~1s for responsiveness
+        LOG_INTERVAL_SEC = 5.0
+        next_log_at = time.monotonic()  # log immediately on first iteration
 
         while True:
-            remaining = int(deadline - time.monotonic())
+            now = time.monotonic()
+            remaining = deadline - now
             if remaining <= 0:
                 break
 
@@ -268,24 +269,18 @@ class MCSProcessManager:
                 logging.info('DMLProc gracefully stopped by DBRM command.')
                 return True
 
-            # Throttle waiting logs to roughly once every LOG_INTERVAL seconds
-            if next_log_in <= 0:
-                sleep_for = min(10, remaining)
+            if now >= next_log_at:
                 logging.info(
-                    (
-                        f'Waiting for DMLProc to stop. Seconds left ~{remaining}. '
-                        f'Sleeping {sleep_for} seconds before next check.'
-                    )
+                    f'Waiting for DMLProc to stop. Seconds left ~{int(remaining)}.'
                 )
-                next_log_in = LOG_INTERVAL
+                next_log_at = now + LOG_INTERVAL_SEC
 
-            sleep_for = min(10, remaining)
-            sleep(sleep_for)
-            next_log_in -= sleep_for
+            # Sleep in small increments to minimize over-wait after process exit
+            sleep(min(1.0, max(0.1, remaining)))
 
         logging.error(
-            'DMLProc didn\'t stop gracefully by DBRM command within '
-            f'{timeout} seconds. Will be stopped directly.'
+            "DMLProc didn't stop gracefully by DBRM command within "
+            f"{int(timeout)} seconds. Will be stopped directly."
         )
         return False
 
