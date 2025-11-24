@@ -42,8 +42,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Strip _ASan/_UBSan suffix for Docker image (keep it for RESULT_PATH)
+CLEAN_PLATFORM=$(echo "$PLATFORM" | sed -E 's/_(ASan|UBSan)//i')
 # Apply image naming logic from jsonnet: "detravi/" + std.strReplace(platform, "/", "-")
-DOCKER_IMAGE="detravi/${PLATFORM}"
+DOCKER_IMAGE="detravi/${CLEAN_PLATFORM}"
 
 # Checks
 [[ "$EUID" -ne 0 ]] && echo "Run with sudo" && exit 1

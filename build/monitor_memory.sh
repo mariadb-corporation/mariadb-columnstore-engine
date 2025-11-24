@@ -24,6 +24,11 @@ while true; do
         echo "========================================"
         printf "\n--- System Memory ---\n"
         free -h
+
+        if [[ -f "/tmp/current_query.txt" ]]; then
+            CURRENT_QUERY=$(cat /tmp/current_query.txt)
+            printf "\n--- Current Query ---\n%s\n" "$CURRENT_QUERY"
+        fi
         
         printf "\n--- Top 10 Processes by memory ---\n"
         PS_OUTPUT=$(ps_by_memory)
