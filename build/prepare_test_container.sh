@@ -117,6 +117,8 @@ prepare_container() {
 
     # Prepare core dump directory inside container
     execInnerDocker "$CONTAINER_NAME" 'mkdir -p core && chmod 777 core'
+    # Prepare ASAN logs directory
+    execInnerDocker "$CONTAINER_NAME" 'mkdir -p /tmp/asan && chmod 777 /tmp/asan'
     docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
