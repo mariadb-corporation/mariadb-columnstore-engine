@@ -1,3 +1,19 @@
+"""
+This module implements hostname <-> IP addr resolution logic (it is not as simple as it may look).
+
+Most of CMAPI/Columnstore code assumes that each node has 1 IP address and 1 hostname.
+But in reality it can have N IP addresses and M hostnames, and we need some way to choose which IP/hostname will be primary.
+Also some of these names will not be visible from the other hosts (like local aliases from systemd).
+And some sources are more reliable than the others (DNS > /etc/hosts), so we must order them by reliablity and choose the most reliable.
+
+So:
+1. We must choose 1 IP address and 0/1 hostnames as primary (of many)
+2. We need to filter out unreliable names
+3. We must order IPs/hostnames by source reliability
+4. There can be very many resolving sources, so we cannot resolve everything ourselves, and must rely on OS resolving
+  (see /etc/nsswitch.conf, there are local /etc/hosts, DNS, mDNS, systemd-resolved, LDAP, myhostname, etc)
+5. But most important sources (DNS and /etc/hosts, recommended by our manual...) must be checked and ordered by our policy
+"""
 import hashlib
 import ipaddress
 import logging
@@ -12,6 +28,7 @@ import dns.reversename
 
 from cmapi_server.exceptions import CMAPIBasicError, ResolutionError, ResolutionPolicyViolationError
 from cmapi_server.managers.network import NetworkManager
+from cmapi_server.managers.resolving_sources import get_resolving_source
 
 IPAddress = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
 
@@ -310,44 +327,14 @@ class HostAddressManager:
 
     def _resolve_dns(self, hostname: str) -> list[IPAddress]:
         """Resolve the given hostname using DNS and return addresses."""
-        ipv4_texts: list[str] = []
-        ipv6_texts: list[str] = []
-        try:
-            ipv4_texts = self._dns_resolve_ipv4(hostname)
-        except dns.resolver.NoAnswer:
-            logger.warning('IPv4 lookup returned no records for %s', hostname)
-            ipv4_texts = []
-        except Exception:
-            logger.exception('IPv4 lookup unexpected failure for %s', hostname)
-            raise
-
-        if self._policy.allow_ipv6:
-            try:
-                ipv6_texts = self._dns_resolve_ipv6(hostname)
-            except dns.resolver.NoAnswer:
-                logger.warning('IPv6 lookup returned no records for %s', hostname)
-                ipv6_texts = []
-            except Exception:
-                logger.exception('IPv6 lookup unexpected failure for %s', hostname)
-                raise
-
-        addrs: list[IPAddress] = []
-        for ip_text in ipv4_texts + ipv6_texts:
-            ip = _ip_or_none(ip_text)
-            if ip is None:
-                logger.error('DNS returned invalid IP address %s for host name %s, skipping', ip_text, hostname)
-                continue
-            addrs.append(ip)
-
-        return addrs
+        resolver = get_resolving_source('dns')
+        return resolver.resolve(hostname)
 
     def _get_names_of_ip(self, ip: IPAddress) -> list[str]:
         """Fetch PTR names for an IP via DNS."""
         try:
-            return self._dns_reverse(str(ip))
-        except dns.resolver.NoAnswer:
-            logger.warning('ip-to-name lookup returned no records for %s', ip)
-            return []
+            resolver = get_resolving_source('dns')
+            return resolver.reverse(ip)
         except Exception:
             logger.exception('ip-to-name lookup unexpected failure for %s', ip)
             raise
