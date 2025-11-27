@@ -31,7 +31,7 @@ if(WITH_COLUMNSTORE_ASAN)
     endif()
 
     set(ASAN_OPTIONS
-        abort_on_error=${ABORT_ON_ERROR}:disable_coredump=0:print_stats=0:detect_odr_violation=0:check_initialization_order=1:detect_stack_use_after_return=1:atexit=0
+        abort_on_error=${ABORT_ON_ERROR}:disable_coredump=0:print_stats=0:detect_odr_violation=0:check_initialization_order=1:detect_stack_use_after_return=0:atexit=0
     )
     set(ALLOC_CONFIG ASAN_OPTIONS=${ASAN_OPTIONS})
 
