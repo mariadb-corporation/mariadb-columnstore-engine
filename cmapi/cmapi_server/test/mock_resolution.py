@@ -88,12 +88,10 @@ class MockResolutionBuilder:
                 # Patch NetworkManager local IP discovery (it uses psutil or system libs,
                 #   proper mocking would be too complex)
                 patch('cmapi_server.managers.network.NetworkManager.get_current_node_ips', return_value=[CUR_HOST_IP, DEFAULT_LOCALHOST_IP]),
-                # Patch HostAddressManager DNS abstraction methods
-                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_resolve_ipv4',
-                      side_effect=self._fake_dns_resolve_ipv4),
-                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_resolve_ipv6',
-                      side_effect=self._fake_dns_resolve_ipv6),
-                patch('cmapi_server.managers.host_identity.HostAddressManager._dns_reverse',
+                # Patch DNS resolving source used by HostAddressManager
+                patch('cmapi_server.managers.resolving_sources.DNSResolvingSource.resolve',
+                      side_effect=self._fake_dns_resolve),
+                patch('cmapi_server.managers.resolving_sources.DNSResolvingSource.reverse',
                       side_effect=self._fake_dns_reverse),
             ]
             with ExitStack() as stack:
@@ -127,17 +125,19 @@ class MockResolutionBuilder:
         primary, aliases = self._reverse[addr]
         return (primary, aliases, [addr])
 
-    # HostIdentityManager DNS abstraction mocks
-    def _fake_dns_resolve_ipv4(self, hostname: str) -> List[str]:
+    def _fake_dns_resolve(self, hostname: str) -> List[str]:
+        """Fake DNS A/AAAA resolution used by DNSResolvingSource.resolve.
+
+        We only care about returning IP strings that match our forward mapping.
+        IPv6 is kept disabled by default in tests for determinism.
+        """
         # Return mapped IPv4 for provided hostname, or empty list if unknown
         ip = self._forward.get(hostname)
         return [ip] if ip else []
 
-    def _fake_dns_resolve_ipv6(self, hostname: str) -> List[str]:
-        # Keep IPv6 disabled by default in tests for determinism
-        return []
-
-    def _fake_dns_reverse(self, ip_text: str) -> List[str]:
+    def _fake_dns_reverse(self, ip_obj) -> List[str]:
+        """Fake DNS PTR resolution used by DNSResolvingSource.reverse."""
+        ip_text = str(ip_obj)
         # Return PTR names (primary + aliases) from reverse map, lowercase
         rec = self._reverse.get(ip_text)
         if not rec:
