@@ -129,11 +129,6 @@ class NodeManipTester(BaseNodeManipTestCase):
             nc = NodeConfig()
             root = nc.get_current_config_root(self.tmp_files[1])
 
-            # Check that get_read_replicas infers the read replica correctly
-            read_replicas = nc.get_read_replicas(root)
-            self.assertEqual(len(read_replicas), 1)
-            self.assertEqual(read_replicas[0], self.REMOTE_IP)
-
             # Check if PMS was added
             pms_node_ipaddr = root.find('./PMS2/IPAddr')
             self.assertEqual(pms_node_ipaddr.text, self.REMOTE_IP)
@@ -141,6 +136,11 @@ class NodeManipTester(BaseNodeManipTestCase):
             # Check that WriteEngineServer was not added
             wes_node = root.find('./pm2_WriteEngineServer')
             self.assertIsNone(wes_node)
+
+            # Check that get_read_replicas_pm_nums infers the read replica correctly
+            read_replicas_pm_nums = nc.get_read_replicas_pm_nums(root)
+            self.assertEqual(len(read_replicas_pm_nums), 1)
+            self.assertEqual(read_replicas_pm_nums[0], 2)
 
             mock_rebalance_dbroots.assert_not_called()
             mock_move_primary_node.assert_not_called()
@@ -160,8 +160,8 @@ class NodeManipTester(BaseNodeManipTestCase):
 
             nc = NodeConfig()
             root = nc.get_current_config_root(self.tmp_files[2])
-            read_replicas = nc.get_read_replicas(root)
-            self.assertEqual(len(read_replicas), 0)
+            read_replicas_pm_nums = nc.get_read_replicas_pm_nums(root)
+            self.assertEqual(len(read_replicas_pm_nums), 0)
 
             for section_path in ['InactiveNodes', 'DesiredNodes', 'ActiveNodes']:
                 section = root.find(section_path)

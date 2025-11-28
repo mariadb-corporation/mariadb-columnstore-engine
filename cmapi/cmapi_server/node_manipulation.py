@@ -10,7 +10,7 @@ import shutil
 import socket
 import subprocess
 import time
-from typing import Optional
+from typing import Dict, Optional
 
 import requests
 from lxml import etree
@@ -125,7 +125,7 @@ def add_node(
                     _rebalance_dbroots(c_root)
                     _move_primary_node(c_root)
 
-            if NodeConfig().get_read_replicas(c_root):
+            if NodeConfig().get_read_replicas_pm_nums(c_root):
                 update_dbroots_of_read_replicas(c_root)
     except Exception:
         logging.error(
@@ -182,9 +182,11 @@ def remove_node(
         ip4, _ = NetworkManager.resolve_ip_and_hostname(node)
 
         if len(active_nodes) > 1:
-            pm_num = _remove_node_from_PMS(c_root, ip4)
+            pm_num = get_pm_num_by_addr(c_root, ip4)
+            read_replicas_pms = node_config.get_read_replicas_pm_nums(c_root)
+            is_read_replica = pm_num in read_replicas_pms
 
-            is_read_replica = ip4 in node_config.get_read_replicas(c_root)
+            _remove_node_from_PMS(c_root, ip4)
             if not is_read_replica:
                 _remove_WES(c_root, pm_num)
 
@@ -202,7 +204,7 @@ def remove_node(
                 _rebalance_dbroots(c_root)
                 _move_primary_node(c_root)
 
-            if NodeConfig().get_read_replicas(c_root):
+            if node_config.get_read_replicas_pm_nums(c_root):
                 update_dbroots_of_read_replicas(c_root)
         else:
             # TODO:
@@ -1265,7 +1267,7 @@ class NodeNotFoundException(Exception):
     pass
 
 
-def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
+def get_pm_module_num_to_addr_map(root: etree.Element) -> Dict[int, str]:
     """Get a mapping of PM module numbers to their IP addresses"""
     module_num_to_addr = {}
     smc_node = root.find("./SystemModuleConfig")
@@ -1276,28 +1278,25 @@ def get_pm_module_num_to_addr_map(root: etree.Element) -> dict[int, str]:
     return module_num_to_addr
 
 
+def get_pm_num_by_addr(root: etree.Element, addr: str) -> int:
+    """Get the PM module number by IP address"""
+    pm_num_to_addr = get_pm_module_num_to_addr_map(root)
+    for pm_num, pm_addr in pm_num_to_addr.items():
+        if pm_addr == addr:
+            return pm_num
+    logging.warning('PM with IP %s not found in config', addr)
+    return None
+
+
 def update_dbroots_of_read_replicas(root: etree.Element) -> None:
     """Read replicas do not have their own dbroots, but they must have all the
     dbroots of the other nodes. Sets the list of dbroots of each read replica to
     the list of all dbroots in the cluster.
     """
     nc = NodeConfig()
-    pm_num_to_addr = get_pm_module_num_to_addr_map(root)
-    for read_replica in nc.get_read_replicas(root):
-        # Get PM num by IP address
-        this_ip_pm_num = None
-        for pm_num, pm_addr in pm_num_to_addr.items():
-            if pm_addr == read_replica:
-                this_ip_pm_num = pm_num
-                break
-
-        if this_ip_pm_num is not None:
-            # Add dbroots of other nodes to this read replica
-            add_dbroots_of_other_nodes(root, this_ip_pm_num)
-        else:  # This should not happen
-            err_msg = f"Could not find PM number for read replica {read_replica}"
-            logging.error(err_msg)
-            raise NodeNotFoundException(err_msg)
+    for read_replica_pm_num in nc.get_read_replicas_pm_nums(root):
+        # Add dbroots of other nodes to this read replica
+        add_dbroots_of_other_nodes(root, read_replica_pm_num)
 
 
 def add_dbroots_of_other_nodes(root: etree.Element, module_num: int) -> None:
