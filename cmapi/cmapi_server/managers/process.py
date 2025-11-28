@@ -4,6 +4,7 @@ import logging
 import os.path
 import socket
 import time
+from copy import deepcopy
 from time import sleep
 
 import psutil
@@ -72,7 +73,7 @@ class MCSProcessManager:
         """
         unsorted_progs: dict
         if is_primary:
-            unsorted_progs = cls.mcs_progs
+            unsorted_progs = deepcopy(cls.mcs_progs)
         else:
             unsorted_progs = {
                 prog_name: prog_info
@@ -133,7 +134,7 @@ class MCSProcessManager:
                 'Please try to update your CMAPI version or contact support.'
             )
         logging.info(
-            f'Detected {len(cls.mcs_progs)} MCS services.'
+            f'Detected {len(cls.mcs_progs)} MCS services. '
             f'MCS version is {cls.mcs_version_info}'
         )
         # TODO: For next releases. Do we really need custom dispatchers?
