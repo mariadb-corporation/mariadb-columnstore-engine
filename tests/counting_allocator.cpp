@@ -107,6 +107,11 @@ TEST_F(CountingAllocatorTest, AllocatorEquality)
   std::atomic<int64_t> anotherCounter(0);
   CountingAllocator<TestClass> allocator3(&anotherCounter);
   EXPECT_FALSE(allocator1 == allocator3);
+
+  CountingAllocator<TestClass> nonStrictAlloc1(&allocatedMemory, allocators::AllocMode::NO_CHECK);
+  CountingAllocator<TestClass> nonStrictAlloc2(&allocatedMemory, allocators::AllocMode::NO_CHECK);
+  EXPECT_FALSE(allocator1 == nonStrictAlloc1);
+  EXPECT_TRUE(nonStrictAlloc1 == nonStrictAlloc2);
 }
 
 // Test 4: Using allocator with std::allocate_shared
@@ -213,10 +218,41 @@ TEST_F(CountingAllocatorTest, AllocateZeroObjects)
   EXPECT_EQ(allocatedMemory.load(), MemoryAllowance);
 }
 
+// Test 7: copy assignment
 TEST_F(CountingAllocatorTest, CopyAssignable)
 {
+  std::atomic<int64_t> allocatedMemory2{MemoryAllowance};
+
   CountingAllocator<TestClass> allocator1(&allocatedMemory);
-  CountingAllocator<TestClass> allocator2(&allocatedMemory);
+  CountingAllocator<TestClass> allocator2(&allocatedMemory2);
+  EXPECT_NE(allocator1, allocator2);
   allocator1 = allocator2;
   EXPECT_EQ(allocator1, allocator2);
+
+  CountingAllocator<TestClass> nonStrictAllocator1(&allocatedMemory, allocators::AllocMode::NO_CHECK);
+  CountingAllocator<TestClass> nonStrictAllocator2(&allocatedMemory2, allocators::AllocMode::NO_CHECK);
+  EXPECT_NE(nonStrictAllocator1, nonStrictAllocator2);
+  nonStrictAllocator1 = nonStrictAllocator2;
+  EXPECT_EQ(nonStrictAllocator1, nonStrictAllocator2);
+}
+
+// Test 8: STRICT & NO_CHECK behaviors on memory extinctions
+TEST_F(CountingAllocatorTest, AllocateOutOfMemory)
+{
+  std::atomic<int64_t> memLimit{0};
+  CountingAllocator<TestClass> strict(&memLimit, allocators::AllocMode::STRICT, 0, 1024);
+  CountingAllocator<TestClass> nonStrict(&memLimit, allocators::AllocMode::NO_CHECK, 0, 1024);
+  TestClass* ptr = nullptr;
+  ASSERT_THROW({
+    ptr = strict.allocate(1);
+  }, logging::OutOfMemoryExcept);
+  EXPECT_EQ(ptr, nullptr);
+  ASSERT_EQ(memLimit, 0);
+
+  ptr = nullptr;
+  ASSERT_NO_THROW({
+    ptr = nonStrict.allocate(1);
+  });
+  EXPECT_NE(ptr, nullptr);
+  EXPECT_EQ(memLimit, -sizeof(*ptr));
 }

@@ -45,8 +45,10 @@ const constexpr int64_t CheckPointStepSize = 100 * 1024;
 
 enum class AllocMode
 {
-  STRICT,  /// 
-  NO_CHECK
+  STRICT,  /// Checks the limit avery checkPointStepSize and throws OutOfMemoryExcept if
+           /// MemoryLimitLowerBound is hit
+  NO_CHECK /// Always allocates requested memory. The memoryLimit can become negative,
+           /// and the responsibility for handling this lies with the calling code
 };
 
 // Custom Allocator that tracks allocated memory using an atomic counter
@@ -180,7 +182,7 @@ class CountingAllocator
   template <typename U>
   bool operator==(const CountingAllocator<U>& other) const noexcept
   {
-    return memoryLimit_ == other.memoryLimit_;
+    return memoryLimit_ == other.memoryLimit_ && mode_ == other.mode_;
   }
 
   template <typename U>
