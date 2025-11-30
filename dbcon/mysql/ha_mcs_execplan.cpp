@@ -6314,24 +6314,8 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     csep->filters(filters);
   }
 
-  if (!gwi.rcWorkStack.empty())
-  {
-    while (!gwi.rcWorkStack.empty())
-    {
-      ReturnedColumn* t = gwi.rcWorkStack.top();
-      delete t;
-      gwi.rcWorkStack.pop();
-    }
-  }
-  if (!gwi.ptWorkStack.empty())
-  {
-    while (!gwi.ptWorkStack.empty())
-    {
-      ParseTree* t = gwi.ptWorkStack.top();
-      delete t;
-      gwi.ptWorkStack.pop();
-    }
-  }
+  // Clean up any remaining items on work stacks
+  clearDeleteStacks(gwi);
 
   return 0;
 }

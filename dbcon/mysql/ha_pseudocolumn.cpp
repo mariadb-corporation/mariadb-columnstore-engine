@@ -444,6 +444,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
   }
   else if (!gwi.rcWorkStack.empty())
   {
+    delete gwi.rcWorkStack.top();
     gwi.rcWorkStack.pop();
   }
 
