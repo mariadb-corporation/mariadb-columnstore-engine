@@ -340,7 +340,10 @@ ReturnedColumn* buildWindowFunctionColumn(Item* item, gp_walk_info& gwi, bool& n
     funcParms.push_back(srcp);
 
     if (gwi.clauseType == WHERE && !gwi.rcWorkStack.empty())
+    {
+      delete gwi.rcWorkStack.top();
       gwi.rcWorkStack.pop();
+    }
   }
 
   // Setup UDAnF functions
