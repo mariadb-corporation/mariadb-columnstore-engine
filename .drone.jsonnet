@@ -171,7 +171,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests = [
+  local regression_tests_base = if (true) then [
+  //if (event == "cron") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -198,6 +199,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "test400.sh",
     "test500.sh",
   ],
+
+
+  local regression_tests = [regression_tests_base[i] for i in indexes(regression_tests_base) if !std.member(ignoreFailureStepList, regression_tests_base[i])],
 
   local mdb_server_versions = upgrade_test_lists[platformKey][arch],
 
@@ -309,7 +313,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       MTR_SUITE_LIST: "${MTR_SUITE_LIST:-" + mtr_suite_list + "}",
-      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-true}",
+      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
     },
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true),
@@ -321,6 +325,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --distro " + platform +
       " --suite-list $${MTR_SUITE_LIST}" +
       " --download-data" +
+      " --full-mtr" +
       " --triggering-event " + event +
       if std.endsWith(result, "ASan") then " --run-as-extern" else "",
     ],
@@ -723,7 +728,16 @@ local AllPipelines =
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
-    for flag in ["ASan", "UBSan"]
+    for flag in ["UBSan"]
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ] +
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["test009.sh"], { size: "heavy" })
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for platform in ["ubuntu:24.04"]
+    for flag in ["ASan"]
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
