@@ -222,15 +222,21 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         success = False
         while attempts > 0:
+            start = time.monotonic()
             try:
                 with DBRM():
                     # check connection
                     success = True
             except (OSError, ConnectionRefusedError, RuntimeError):
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
                 logging.info(
                     'Cannot establish connection to controllernode.'
-                    f'Controller node still not started. Waiting...{attempts}'
+                    f'Controller node still not started. {attempts} attempts left.'
                 )
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
             else:
                 break
             attempts -= 1
