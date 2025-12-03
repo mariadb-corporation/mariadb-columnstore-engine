@@ -106,7 +106,7 @@ local echo_running_on = [
   make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime"),
 ];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[]) = {
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[], node_selector={}) = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -663,7 +663,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     event: [event],
     branch: [branch],
   },
-};
+} + (if node_selector != {} then { node: node_selector } else {});
 
 
 local AllPipelines =
@@ -721,7 +721,7 @@ local AllPipelines =
     for server in servers[current_branch]
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", [], { size: "heavy" })
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
