@@ -312,7 +312,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       MTR_SUITE_LIST: "${MTR_SUITE_LIST:-" + mtr_suite_list + "}",
-      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
+      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-true}",
     },
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true),
@@ -323,6 +323,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
       " --suite-list $${MTR_SUITE_LIST}" +
+      " --download-data" +
       " --triggering-event " + event +
       if std.endsWith(result, "ASan") then " --run-as-extern" else "",
     ],
