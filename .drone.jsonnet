@@ -356,6 +356,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       REGRESSION_TIMEOUT: {
         from_secret: "regression_timeout",
       },
+      GITHUB_TOKEN: {
+        from_secret: "github_token",
+      },
       REGRESSION_BRANCH_REF: "${DRONE_SOURCE_BRANCH}",
       REGRESSION_REF_AUX: branch_ref,
     },
@@ -364,7 +367,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
       // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
-      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://$${GITHUB_TOKEN}@github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
       "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
       'echo "$$REGRESSION_REF"',
 
@@ -374,7 +377,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --test-name " + name +
       " --distro " + platform +
       " --regression-branch $$REGRESSION_REF" +
-      " --regression-timeout $${REGRESSION_TIMEOUT}",
+      " --regression-timeout $${REGRESSION_TIMEOUT}" +
+      ' --github-token $${GITHUB_TOKEN}',
     ],
 
   },

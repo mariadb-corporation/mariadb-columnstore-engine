@@ -10,9 +10,10 @@ optparse.define short=b long=regression-branch  desc="Branch from regression tes
 optparse.define short=d long=distro             desc="Linux distro for which regression is executed"                variable=DISTRO
 optparse.define short=t long=regression-timeout desc="Timeout for the regression test run"                          variable=REGRESSION_TIMEOUT default=2h
 optparse.define short=n long=test-name          desc="Name of regression test to execute"                           variable=TEST_NAME
+optparse.define short=g long=github-token       desc="GitHub token"                                                 variable=GITHUB_TOKEN
 source "$(optparse.build)"
 
-for flag in CONTAINER_NAME REGRESSION_BRANCH DISTRO TEST_NAME; do
+for flag in CONTAINER_NAME REGRESSION_BRANCH DISTRO TEST_NAME GITHUB_TOKEN; do
   if [[ -z "${!flag}" ]]; then
     error "Missing required flag: -${flag:0:1} / --${flag,,}"
     exit 1
@@ -42,10 +43,7 @@ prepare_regression() {
   fi
 
   # Clone regression test repo (requires GitHub token)
-  REPO_URL="https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"
-  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-    REPO_URL="https://${GITHUB_TOKEN}@github.com/mariadb-corporation/mariadb-columnstore-regression-test"
-  fi
+  REPO_URL="https://${GITHUB_TOKEN}@github.com/mariadb-corporation/mariadb-columnstore-regression-test"
 
   rm -rf mariadb-columnstore-regression-test
   git clone --recurse-submodules --branch "${REGRESSION_BRANCH}" --depth 1 "${REPO_URL}"
