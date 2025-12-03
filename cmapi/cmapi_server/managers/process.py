@@ -172,7 +172,8 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         while attempts > 0 and len(workernodes) > 0:
             logging.debug(f'Waiting for "{list(workernodes)}"....{attempts}')
-            # creating a separated list with workernode names
+            start = time.monotonic()
+            # creating a separate list with workernode names
             # for safe deleting items from source dict
             for name in list(workernodes):
                 try:
@@ -187,7 +188,7 @@ class MCSProcessManager:
                         )
                     )
                 except (ConnectionRefusedError, socket.timeout):
-                    logging.debug(
+                    logging.info(
                         f'"{name}" {workernodes[name]["IPAddr"]}:'
                         f'{workernodes[name]["Port"]} not started yet.'
                     )
@@ -196,6 +197,15 @@ class MCSProcessManager:
                     del workernodes[name]
                 finally:
                     sock.close()
+
+            if workernodes:
+                # We get here only if some workernodes were not accessible during this attempt
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
+
             attempts -= 1
 
         if workernodes:
