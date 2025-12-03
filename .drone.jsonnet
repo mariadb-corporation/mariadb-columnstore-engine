@@ -171,7 +171,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests = if (event == "cron") then [
+  local regression_tests = [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -197,9 +197,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "test299.sh",
     "test400.sh",
     "test500.sh",
-  ] else [
-    "test000.sh",
-    "test001.sh",
   ],
 
   local mdb_server_versions = upgrade_test_lists[platformKey][arch],
