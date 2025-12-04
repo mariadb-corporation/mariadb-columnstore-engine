@@ -1055,10 +1055,10 @@ int WriteEngineWrapper::deleteRow(const TxnID& txnid, const vector<CSCTypesList>
       cscColType = cscColTypeList[i];
       Convertor::convertColType(&curColStruct);
 
-      const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->getEmptyRowValue(
-          curColStruct.colDataType, curColStruct.colWidth);
+      int correctWidth = m_colOp[op(curColStruct.fCompressionType)]->getCorrectRowWidth(curColStruct.colDataType, curColStruct.colWidth);
+      const uint8_t* emptyVal = m_colOp[op(curColStruct.fCompressionType)]->getEmptyRowValue(curColStruct.colDataType, correctWidth);
 
-      emptyValueToAny(&curTuple.data, emptyVal, curColStruct.colWidth);
+      emptyValueToAny(&curTuple.data, emptyVal, correctWidth);
 
       curTupleList.push_back(curTuple);
       colValueList.push_back(curTupleList);
