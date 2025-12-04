@@ -193,6 +193,7 @@ class MCSProcessManager:
                         f'{workernodes[name]["Port"]} not started yet.'
                     )
                 else:
+                    logging.debug(f'Workernode {workernodes[name]["IPAddr"]}:{workernodes[name]["Port"]} started.')
                     # delete started workernode from workernodes dict
                     del workernodes[name]
                 finally:
@@ -248,6 +249,7 @@ class MCSProcessManager:
                     logging.debug('Sleeping %.1f seconds', remaining)
                     time.sleep(remaining)
             else:
+                logging.debug('Controllernode is reachable')
                 break
             attempts -= 1
 
