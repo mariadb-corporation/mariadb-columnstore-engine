@@ -98,7 +98,6 @@ def _record_incoming_json_preview(req) -> dict[str, Any]:
 
     parsed_json = getattr(req, 'json', None)
     if parsed_json is None:
-        logger.debug('request.json is not available')
         return attrs
     normalized = json.dumps(parsed_json, ensure_ascii=False, sort_keys=True)
     if len(normalized) > _PREVIEW_MAX_CHARS:
