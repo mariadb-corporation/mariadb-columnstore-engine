@@ -750,7 +750,15 @@ int doFromSubquery(CalpontExecutionPlan* ep, const string& alias, const string& 
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
   if (csep->isRecursiveQuery())
   {
-    dynamic_cast<SubAdapterStep*>(subAd.get())->isRecursiveStep(true);
+    SubAdapterStep* subAdTemp = dynamic_cast<SubAdapterStep*>(subAd.get());
+    if (subAdTemp != nullptr)
+    {
+      subAdTemp->isRecursiveStep(true);
+    }
+    else
+    {
+      throw runtime_error("Failed to get SubAdapterStep");
+    }
   }
   jobInfo.selectAndFromSubs.push_back(subAd);
 
