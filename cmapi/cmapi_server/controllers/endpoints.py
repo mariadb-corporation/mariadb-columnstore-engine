@@ -17,6 +17,7 @@ from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
 from cmapi_server.constants import (
+    ALL_MCS_PROGS,
     CMAPI_PACKAGE_NAME,
     CMAPI_PORT,
     DEFAULT_MCS_CONF_PATH,
@@ -45,17 +46,18 @@ from cmapi_server.helpers import (
     get_current_key, get_dbroots, in_maintenance_state,
     save_cmapi_conf_file, system_ready,
 )
+from cmapi_server.invariant_checks import run_invariant_checks
 from cmapi_server.logging_management import change_loggers_level
 from cmapi_server.managers.application import (
     AppManager, AppStatefulConfig, StatefulConfigModel
 )
-from cmapi_server.managers.upgrade.packages import PackagesManager
-from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.managers.upgrade.packages import PackagesManager
+from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
-from cmapi_server.invariant_checks import run_invariant_checks
+from cmapi_server.process_dispatchers.container import ContainerDispatcher
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -268,6 +270,7 @@ class StatusController:
             'dbroots': sorted(get_dbroots(node_fqdn)),
             'module_id': int(node_status.get_module_id()),
             'services': MCSProcessManager.get_running_mcs_procs(),
+            'mariadbd_running': ContainerDispatcher.is_service_running('mariadbd'),
         }
 
         module_logger.debug(f'{func_name} returns {str(status_response)}')
@@ -1635,8 +1638,10 @@ class NodeProcessController():
         """Handler for /node/is_process_running (GET) endpoint."""
         func_name = 'get_process_running'
         log_begin(module_logger, func_name)
-
-        process_running = MCSProcessManager.is_service_running(process_name)
+        if process_name in ALL_MCS_PROGS:
+            process_running = MCSProcessManager.is_service_running(process_name)
+        else:
+            process_running = ContainerDispatcher.is_service_running(process_name)
 
         response = {
             'timestamp': str(datetime.now()),

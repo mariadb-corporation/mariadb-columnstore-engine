@@ -415,6 +415,15 @@ class NodeControllerClient(BaseClient):
         """
         return self._request('PUT', 'stop-mariadb', extra)
 
+    def is_process_running(
+            self, process_name: str, extra: Dict[str, Any] = dict()
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Check if a process is running on a node.
+
+        :return: The response from the API.
+        """
+        return self._request('GET', 'is-process-running', {'process_name': process_name, **extra})
+
     def repo_pkg_versions(
             self, extra: Dict[str, Any] = dict()
     ) -> Union[Dict[str, Any], Dict[str, str]]:

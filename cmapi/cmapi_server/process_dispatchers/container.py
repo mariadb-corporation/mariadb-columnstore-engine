@@ -100,7 +100,7 @@ class ContainerDispatcher(BaseDispatcher):
 
     @classmethod
     def is_service_running(cls, service: str, use_sudo: bool = True) -> bool:
-        """Check if mcs process is running.
+        """Check if MCS process (not only MCS, but also any other process) is running.
 
         :param service: service name
         :type service: str
