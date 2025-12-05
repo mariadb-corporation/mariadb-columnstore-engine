@@ -10,6 +10,8 @@ from typing import List, Optional
 import requests
 import typer
 from typing_extensions import Annotated
+from rich.console import Console
+from rich.table import Table
 
 from cmapi_server.constants import (
     CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH, REQUEST_TIMEOUT
@@ -37,10 +39,101 @@ client = ClusterControllerClient()
 
 @app.command(rich_help_panel='cluster and single node commands')
 @handle_output
-def status():
+def status(
+    human_readable: Annotated[
+        bool,
+        typer.Option(
+            '-h', '--human-readable',
+            help='Output cluster status in human-readable text instead of JSON.'
+        )
+    ] = False,
+):
     """Get status information."""
     client.request_timeout = REQUEST_TIMEOUT
-    return client.get_status()
+    result = client.get_status()
+
+    if not human_readable:
+        return result
+
+    def _fmt_uptime(seconds: Optional[int]) -> str:
+        if seconds is None:
+            return 'N/A'
+        try:
+            seconds = int(seconds)
+        except (TypeError, ValueError):
+            return str(seconds)
+        mins, sec = divmod(seconds, 60)
+        hrs, mins = divmod(mins, 60)
+        days, hrs = divmod(hrs, 24)
+        parts = []
+        if days:
+            parts.append(f'{days}d')
+        if hrs:
+            parts.append(f'{hrs}h')
+        if mins:
+            parts.append(f'{mins}m')
+        parts.append(f'{sec}s')
+        return ' '.join(parts)
+
+    timestamp = result.get('timestamp')
+    # total nodes are all keys except control ones
+    control_keys = {'timestamp', 'num_nodes'}
+    node_names = sorted([k for k in result.keys() if k not in control_keys])
+    total_nodes = len(node_names)
+    reachable = result.get('num_nodes', total_nodes)
+
+    console = Console(record=True)
+    if timestamp:
+        console.print(f'Cluster status at {timestamp}')
+    console.print(f'Nodes: {reachable}/{total_nodes} reachable')
+
+    table = Table(
+        'Node', 'State', 'MariaDB status', 'DBRM mode', 'Cluster Mode', 'Module ID', 'Uptime',
+        'DBRoots', 'Services(PID)', title=None, show_lines=True
+    )
+
+    for node in node_names:
+        info = result.get(node, {})
+        state = info.get('state', 'unknown')
+        dbrm = info.get('dbrm_mode', 'unknown')
+        cluster_mode_val = info.get('cluster_mode', 'unknown')
+        module_id = info.get('module_id', 'N/A')
+        uptime = _fmt_uptime(info.get('uptime'))
+        dbroots = info.get('dbroots') or []
+        services = info.get('services') or []
+        mariadbd_running = info.get('mariadbd_running', 'Unknown')
+        error = info.get('error')
+
+        dbroots_str = ','.join(map(str, dbroots)) if dbroots else '-'
+        if services:
+            svc_str = ', '.join(
+                f"{svc.get('name','?')}({svc.get('pid','?')})" for svc in services
+            )
+        else:
+            svc_str = '-'
+
+        # Append error note to state if present (keeps table compact)
+        state_display = f'{state}' if not error else f'{state} (note: {error})'
+
+        if mariadbd_running != 'Unknown':
+            mariadb_status = 'Online' if mariadbd_running else 'Offline'
+        else:
+            mariadb_status = 'Unknown'
+
+        table.add_row(
+            node,
+            state_display,
+            mariadb_status,
+            str(dbrm),
+            str(cluster_mode_val),
+            str(module_id),
+            str(uptime),
+            dbroots_str,
+            svc_str,
+        )
+
+    console.print(table)
+    return console.export_text().rstrip()
 
 
 @app.command(rich_help_panel='cluster and single node commands')

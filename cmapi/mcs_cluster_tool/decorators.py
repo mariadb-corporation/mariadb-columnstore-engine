@@ -16,7 +16,11 @@ def handle_output(func):
         return_code = 1
         try:
             result = func(*args, **kwargs)
-            typer.echo(json.dumps(result, indent=2))
+            # Print strings as-is for human-readable output; JSON otherwise
+            if isinstance(result, str):
+                logging.debug(f'Command returned: {result}')
+            else:
+                typer.echo(json.dumps(result, indent=2))
             logger.debug(f'Command returned: {result}')
             return_code = 0
         except CMAPIBasicError as err:
