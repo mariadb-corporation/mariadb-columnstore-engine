@@ -1954,6 +1954,7 @@ class NodeController:
     def check_shared_file(self, file_path, check_sum):
         func_name = 'check_shared_file'
         log_begin(module_logger, func_name)
+        logger = logging.getLogger('shared_storage_monitor')
         ACCEPTED_PATHS = (
             '/var/lib/columnstore/data1/',
             '/var/lib/columnstore/storagemanager/metadata/data1/'
@@ -1963,27 +1964,27 @@ class NodeController:
 
         success = True
         file_path_obj = Path(file_path)
-        logging.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
+        logger.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
         if not file_path_obj.exists():
             success = False
-            logging.debug(f'Shared file {file_path} does not exist.')
+            logger.debug(f'Shared file {file_path} does not exist.')
         else:
             with file_path_obj.open(mode='rb') as file_to_check:
                 data = file_to_check.read()
                 calculated_md5 = hashlib.md5(data).hexdigest()
             if calculated_md5 != check_sum:
-                logging.debug(
+                logger.debug(
                     f'Shared file at {file_path} md5 {calculated_md5} does not match given md5 {check_sum}.'
                 )
                 success = False
         if success:
-            logging.debug(f'Shared file {file_path} md5 matches {check_sum}.')
+            logger.debug(f'Shared file {file_path} md5 matches {check_sum}.')
 
         response = {
             'timestamp': str(datetime.now()),
             'success': success
         }
-        logging.debug(f'{func_name} returns {str(response)}')
+        logger.debug(f'{func_name} returns {str(response)}')
         return response
 
     @cherrypy.tools.timeit()

@@ -134,9 +134,15 @@ def is_primary_fallback(current_hostname):
     logging.debug(
         'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
     )
-    hostnames = set()
+    ip_addrs = []
     for _, nic_name in socket.if_nameindex():
         ip_addr = get_ip_address_by_nic(nic_name)
+        if ip_addr:
+            ip_addrs.append(ip_addr)
+    logging.debug('Found ip addresses {}.'.format(ip_addrs))
+
+    hostnames = set()
+    for ip_addr in ip_addrs:
         if ip_addr:
             hostnames_3tuple = socket.gethostbyaddr(ip_addr)
             hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
