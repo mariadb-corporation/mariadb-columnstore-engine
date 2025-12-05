@@ -126,7 +126,6 @@ install(
 )
 install(FILES mcs_cluster_tool/mcs.1 DESTINATION ${MAN_DIR})
 
-
 option(RPM "Build an RPM" OFF)
 if(RPM)
     set(CPACK_GENERATOR "RPM")
@@ -164,7 +163,27 @@ if(RPM)
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/postinst)
     set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prerm)
     set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${ETC_DIR} ${SHARE_DIR})
-    set(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAPI_CONF_FILEPATH}")
+
+
+    # Define %ignore as a comment so RPM doesn't claim ownership of shared directories
+    set(CPACK_RPM_SPEC_MORE_DEFINE
+        "${CPACK_RPM_SPEC_MORE_DEFINE}
+%define ignore \#
+"
+    )
+
+    set(ignored
+        "%ignore /usr/share/man"
+        "%ignore /usr/share/man/man1"
+        "%ignore /usr/lib/systemd"
+        "%ignore /usr/lib/systemd/system"
+    )
+
+    # Combine your config file and your ignores into the same USER_FILELIST
+    set(CPACK_RPM_USER_FILELIST
+        "%config(noreplace) ${CMAPI_CONF_FILEPATH}"
+        ${ignored}
+    )
 
     set(CPACK_RPM_PACKAGE_OBSOLETES "mariadb-columnstore-cmapi")
     set(CPACK_RPM_PACKAGE_REQUIRES "curl")
