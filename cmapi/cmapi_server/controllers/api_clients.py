@@ -25,8 +25,7 @@ class BaseClient:
              manager).
     """
     def __init__(
-            self, base_url: str = CURRENT_NODE_CMAPI_URL,
-            request_timeout: Optional[float] = None
+        self, base_url: str = CURRENT_NODE_CMAPI_URL, request_timeout: Optional[float] = None
     ):
         """Initialize the BaseClient with the base URL.
 
@@ -38,8 +37,7 @@ class BaseClient:
         self.cmd_class = None
 
     def _request(
-        self, method: str, endpoint: str,
-        data: Optional[Dict[str, Any]] = None,
+        self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None,
         throw_real_exp: bool = False
     ) -> Union[Dict[str, Any], List[Any]]:
         """Make a request to the API.
@@ -124,8 +122,7 @@ class ClusterControllerClient(BaseClient):
     adding and removing nodes, and getting the cluster status.
     """
     def __init__(
-            self, base_url: str = CURRENT_NODE_CMAPI_URL,
-            request_timeout: Optional[float] = None
+        self, base_url: str = CURRENT_NODE_CMAPI_URL, request_timeout: Optional[float] = None
     ):
         """Initialize the BaseClient with the base URL.
 
@@ -139,7 +136,7 @@ class ClusterControllerClient(BaseClient):
         self.cmd_class = 'cluster'
 
     def start_cluster(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Start the cluster.
 
@@ -148,7 +145,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'start', extra)
 
     def shutdown_cluster(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Shutdown the cluster.
 
@@ -157,17 +154,17 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'shutdown', extra)
 
     def set_mode(
-            self, mode: str, extra: Dict[str, Any] = dict()
+        self, mode: str, extra: Optional[Dict[str, Any]] = None
         ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Set the cluster mode.
 
         :param mode: The mode to set.
         :return: The response from the API.
         """
-        return self._request('PUT', 'mode-set', {'mode': mode, **extra})
+        return self._request('PUT', 'mode-set', {'mode': mode, **(extra or {})})
 
     def add_node(
-            self, node_info: Dict[str, Any], extra: Dict[str, Any] = dict()
+        self, node_info: Dict[str, Any], extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Add a node to the cluster.
 
@@ -175,17 +172,17 @@ class ClusterControllerClient(BaseClient):
         :return: The response from the API.
         """
         #TODO: fix interface as in remove_node used or think about universal
-        return self._request('PUT', 'node', {**node_info, **extra})
+        return self._request('PUT', 'node', {**node_info, **(extra or {})})
 
     def remove_node(
-            self, node: str, extra: Dict[str, Any] = dict()
+        self, node: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Remove a node from the cluster.
 
         :param node: node IP, name or FQDN.
         :return: The response from the API.
         """
-        return self._request('DELETE', 'node', {'node': node, **extra})
+        return self._request('DELETE', 'node', {'node': node, **(extra or {})})
 
     def get_status(self) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get the status of the cluster.
@@ -195,7 +192,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('GET', 'status')
 
     def get_health(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """
         Get the health of the cluster.
@@ -204,9 +201,7 @@ class ClusterControllerClient(BaseClient):
         """
         return self._request('GET', 'health', extra)
 
-    def set_api_key(
-            self, api_key: str
-    ) -> Union[Dict[str, Any], Dict[str, str]]:
+    def set_api_key(self, api_key: str) -> Union[Dict[str, Any], Dict[str, str]]:
         """Set the API key for the cluster.
 
         :param api_key: The API key to set.
@@ -219,9 +214,7 @@ class ClusterControllerClient(BaseClient):
         }
         return self._request('PUT', 'apikey-set', payload)
 
-    def set_log_level(
-            self, log_level: str
-    ) -> Union[Dict[str, Any], Dict[str, str]]:
+    def set_log_level(self, log_level: str) -> Union[Dict[str, Any], Dict[str, str]]:
         """Set the log level for the cluster.
 
         :param log_level: The log level to set.
@@ -229,9 +222,7 @@ class ClusterControllerClient(BaseClient):
         """
         return self._request('PUT', 'log-level', {'log_level': log_level})
 
-    def load_s3data(
-            self, s3data_info: Dict[str, Any]
-    ) -> Union[Dict[str, Any], Dict[str, str]]:
+    def load_s3data(self, s3data_info: Dict[str, Any]) -> Union[Dict[str, Any], Dict[str, str]]:
         """Load S3 data into the cluster.
 
         :param s3data_info: Information about the S3 data to load.
@@ -240,7 +231,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'load_s3data', s3data_info)
 
     def get_versions(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get packages versions.
         :return: The response from the API.
@@ -248,7 +239,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('GET', 'versions', extra)
 
     def start_mariadb(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Start MariaDB server service on each node in cluster.
 
@@ -257,7 +248,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'start-mariadb', extra)
 
     def stop_mariadb(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Stop MariaDB server service on each node in cluster.
 
@@ -266,8 +257,7 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'stop-mariadb', extra)
 
     def install_repo(
-            self, token: str, mariadb_version: str,
-            extra: Dict[str, Any] = dict()
+        self, token: str, mariadb_version: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Install ES repository on each node in cluster.
 
@@ -277,10 +267,10 @@ class ClusterControllerClient(BaseClient):
             'token': token,
             'mariadb_version': mariadb_version
         }
-        return self._request('PUT', 'install-repo', {**data, **extra})
+        return self._request('PUT', 'install-repo', {**data, **(extra or {})})
 
     def preupgrade_backup(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Backup DBRM and configs on each node in cluster.
 
@@ -289,8 +279,8 @@ class ClusterControllerClient(BaseClient):
         return self._request('PUT', 'preupgrade-backup', extra)
 
     def upgrade_mdb_mcs(
-            self, mariadb_version: str, columnstore_version: str,
-            extra: Dict[str, Any] = dict()
+        self, mariadb_version: str, columnstore_version: str,
+        extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Upgrade MariaDB and Columnstore on each node in cluster.
 
@@ -300,22 +290,21 @@ class ClusterControllerClient(BaseClient):
             'mariadb_version': mariadb_version,
             'columnstore_version': columnstore_version
         }
-        return self._request('PUT', 'upgrade-mdb-mcs', {**data, **extra})
+        return self._request('PUT', 'upgrade-mdb-mcs', {**data, **(extra or {})})
 
     def upgrade_cmapi(
-            self, version: str,
-            extra: Dict[str, Any] = dict()
+        self, version: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Starts cmapi_updater.service on each node and waits for new cmapi.
 
         :return: The response from the API.
         """
         return self._request(
-            'PUT', 'upgrade-cmapi', {'version': version, **extra}
+            'PUT', 'upgrade-cmapi', {'version': version, **(extra or {})}
         )
 
     def check_shared_storage(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Check if shared storage working.
 
@@ -331,8 +320,7 @@ class NodeControllerClient(BaseClient):
     API.
     """
     def __init__(
-            self, base_url: str = CURRENT_NODE_CMAPI_URL,
-            request_timeout: Optional[float] = None
+        self, base_url: str = CURRENT_NODE_CMAPI_URL, request_timeout: Optional[float] = None
     ):
         """Initialize the NodeControllerClient with the base URL.
 
@@ -346,7 +334,7 @@ class NodeControllerClient(BaseClient):
         self.cmd_class = 'node'
 
     def get_versions(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get packages versions installed on a node.
 
@@ -355,7 +343,7 @@ class NodeControllerClient(BaseClient):
         return self._request('GET', 'versions', extra)
 
     def get_latest_mdb_version(
-        self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get latest tested MDB version from repo.
 
@@ -364,9 +352,7 @@ class NodeControllerClient(BaseClient):
         return self._request('GET', 'latest-mdb-version', extra)
 
     def validate_mdb_version(
-            self, token: str, mariadb_version: str,
-            extra: Dict[str, Any] = dict(),
-            **kwargs
+        self, token: str, mariadb_version: str, extra: Optional[Dict[str, Any]] = None, **kwargs
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Verify MariaDB ES version.
 
@@ -381,11 +367,10 @@ class NodeControllerClient(BaseClient):
             'token': token,
             'mariadb_version': mariadb_version
         }
-        return self._request('GET', 'validate-mdb-version', {**data, **extra}, **kwargs)
+        return self._request('GET', 'validate-mdb-version', {**data, **(extra or {})}, **kwargs)
 
     def validate_es_token(
-            self, token: str,
-            extra: Dict[str, Any] = dict()
+        self, token: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Verify MariaDB ES token is correct.
 
@@ -394,11 +379,11 @@ class NodeControllerClient(BaseClient):
         :return: The response from the API.
         """
         return self._request(
-            'GET', 'validate-es-token', {'token': token, **extra}
+            'GET', 'validate-es-token', {'token': token, **(extra or {})}
         )
 
     def start_mariadb(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Start MariaDB-server service on a node.
 
@@ -407,7 +392,7 @@ class NodeControllerClient(BaseClient):
         return self._request('PUT', 'start-mariadb', extra)
 
     def stop_mariadb(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Stop MariaDB-server service on a node.
 
@@ -416,16 +401,18 @@ class NodeControllerClient(BaseClient):
         return self._request('PUT', 'stop-mariadb', extra)
 
     def is_process_running(
-            self, process_name: str, extra: Dict[str, Any] = dict()
+        self, process_name: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Check if a process is running on a node.
 
         :return: The response from the API.
         """
-        return self._request('GET', 'is-process-running', {'process_name': process_name, **extra})
+        return self._request(
+            'GET', 'is-process-running', {'process_name': process_name, **(extra or {})}
+        )
 
     def repo_pkg_versions(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get available packages versions from the repo on a node.
 
@@ -434,8 +421,7 @@ class NodeControllerClient(BaseClient):
         return self._request('GET', 'repo-pkg-versions', extra)
 
     def install_repo(
-            self, token: str, mariadb_version: str,
-            extra: Dict[str, Any] = dict()
+        self, token: str, mariadb_version: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Install the repository on a node.
 
@@ -449,11 +435,11 @@ class NodeControllerClient(BaseClient):
             'token': token,
             'mariadb_version': mariadb_version
         }
-        return self._request('PUT', 'install-repo', {**data, **extra})
+        return self._request('PUT', 'install-repo', {**data, **(extra or {})})
 
 
     def preupgrade_backup(
-            self, extra: Dict[str, Any] = dict()
+        self, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Backup DBRM and configs on a node.
 
@@ -462,8 +448,8 @@ class NodeControllerClient(BaseClient):
         return self._request('PUT', 'preupgrade-backup', extra)
 
     def upgrade_mdb_mcs(
-            self, mariadb_version: str, columnstore_version: str,
-            extra: Dict[str, Any] = dict()
+        self, mariadb_version: str, columnstore_version: str,
+        extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Upgrade MariaDB and Columnstore on a node.
 
@@ -473,18 +459,17 @@ class NodeControllerClient(BaseClient):
             'mariadb_version': mariadb_version,
             'columnstore_version': columnstore_version
         }
-        return self._request('PUT', 'upgrade-mdb-mcs', {**data, **extra})
+        return self._request('PUT', 'upgrade-mdb-mcs', {**data, **(extra or {})})
 
     def kick_cmapi_upgrade(
-            self, version: str,
-            extra: Dict[str, Any] = dict()
+        self, version: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Starting cmapi_updater.service on a node.
 
         :return: The response from the API.
         """
         return self._request(
-            'PUT', 'kick-cmapi-upgrade', {'version': version, **extra}
+            'PUT', 'kick-cmapi-upgrade', {'version': version, **(extra or {})}
         )
 
     def check_shared_file(
@@ -513,8 +498,7 @@ class AppControllerClient(BaseClient):
     API.
     """
     def __init__(
-            self, base_url: str = CURRENT_NODE_CMAPI_URL,
-            request_timeout: Optional[float] = None
+        self, base_url: str = CURRENT_NODE_CMAPI_URL, request_timeout: Optional[float] = None
     ):
         """Initialize the NodeControllerClient with the base URL.
 

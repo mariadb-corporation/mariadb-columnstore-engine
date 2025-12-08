@@ -59,20 +59,25 @@ def status(
         if seconds is None:
             return 'N/A'
         try:
-            seconds = int(seconds)
+            total = int(seconds)
         except (TypeError, ValueError):
             return str(seconds)
-        mins, sec = divmod(seconds, 60)
-        hrs, mins = divmod(mins, 60)
-        days, hrs = divmod(hrs, 24)
+
+        td = timedelta(seconds=total)
+        days = td.days
+        # remainder seconds within the day
+        rem = td.seconds
+        hours, rem = divmod(rem, 3600)
+        minutes, secs = divmod(rem, 60)
+
         parts = []
         if days:
             parts.append(f'{days}d')
-        if hrs:
-            parts.append(f'{hrs}h')
-        if mins:
-            parts.append(f'{mins}m')
-        parts.append(f'{sec}s')
+        if hours:
+            parts.append(f'{hours}h')
+        if minutes:
+            parts.append(f'{minutes}m')
+        parts.append(f'{secs}s')
         return ' '.join(parts)
 
     timestamp = result.get('timestamp')
