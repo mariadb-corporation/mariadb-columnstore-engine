@@ -180,7 +180,19 @@ WEClients::WEClients(int PrgmID) : fPrgmID(PrgmID), closingConnection{0}, pmCoun
 
 WEClients::~WEClients()
 {
-  Close();
+  try
+  {
+    Close();
+  }
+  catch (const std::exception& ex)
+  {
+    writeToLog(__FILE__, __LINE__, std::string("Exception in WEClients::~WEClients: ") + ex.what(),
+               LOG_TYPE_ERROR);
+  }
+  catch (...)
+  {
+    writeToLog(__FILE__, __LINE__, "Unknown exception in WEClients::~WEClients", LOG_TYPE_ERROR);
+  }
 }
 
 void WEClients::Setup()
@@ -317,9 +329,25 @@ int WEClients::Close()
 {
   makeBusy(false);
   closingConnection.store(1, std::memory_order_relaxed);
-  ByteStream bs;
-  bs << (ByteStream::byte)WE_SVR_CLOSE_CONNECTION;
-  write_to_all(bs);
+
+  try
+  {
+    if (pmCount > 0)
+    {
+      ByteStream bs;
+      bs << (ByteStream::byte)WE_SVR_CLOSE_CONNECTION;
+      write_to_all(bs);
+    }
+  }
+  catch (const std::exception& ex)
+  {
+    writeToLog(__FILE__, __LINE__, std::string("Exception during WEClients::Close: ") + ex.what(),
+               LOG_TYPE_ERROR);
+  }
+  catch (...)
+  {
+    writeToLog(__FILE__, __LINE__, "Unknown exception during WEClients::Close", LOG_TYPE_ERROR);
+  }
 
   // cout << "connection is closed. this = " << this << " and closingConnection = " << closingConnection <<
   // endl;

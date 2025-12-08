@@ -129,7 +129,7 @@ void ByteStream::deallocate(BSBufType* ptr)
     size_t count = (fMaxLen) ? fMaxLen + ISSOverhead : 0;
     return allocator->deallocate(ptr, count);
   }
-  return delete[] fBuf;
+  return delete[] ptr;
 }
 
 void ByteStream::growBuf(BSSizeType toSize)
