@@ -1424,10 +1424,14 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, s
       continue;  // both connected, will be a cycle if added.
 
     if (nodeSet.find(tid1) == nodeSet.end() && nodeSet.find(tid2) == nodeSet.end())
+    {
       continue;  // both isolated, wait until one is connected.
+    }
 
     if (tables.find(tid1) == tables.end() || tables.find(tid2) == tables.end())
+    {
       continue;  // sub-query case
+    }
 
     // one & only one is already connected
     pair<uint32_t, uint32_t> p(tid1, tid2);

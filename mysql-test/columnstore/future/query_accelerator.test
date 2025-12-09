@@ -42,7 +42,6 @@ SELECT  "QUERY 1";
 # check Query Accelerator for q1 (simple aggregation)
 SELECT mcs_get_plan('rules') LIKE '%parallel_ces%' AS qa_q1_applied;
 
---source ../include/disable_rbo_parallel_ces.inc
 SELECT  "QUERY 2";
     SELECT
         s_acctbal,
@@ -72,7 +71,6 @@ SELECT  "QUERY 2";
       )
     ORDER BY s_acctbal DESC, n_name, s_name, p_partkey
     LIMIT 100;
---source ../include/enable_rbo_parallel_ces.inc
 
 SELECT  "QUERY 3";
     SELECT
@@ -230,7 +228,6 @@ SELECT  "QUERY 10";
     LIMIT 20;
 
 SELECT  "QUERY 11";
---source ../include/disable_rbo_parallel_ces.inc
     SELECT
         ps_partkey,
         SUM(ps_supplycost * ps_availqty) AS value
@@ -310,7 +307,6 @@ SELECT  "QUERY 15";
       )
     ORDER BY s_suppkey;
 
---source ../include/disable_rbo_parallel_ces.inc
 SELECT  "QUERY 16";
     SELECT
         p_brand,
@@ -329,7 +325,6 @@ SELECT  "QUERY 16";
       )
     GROUP BY p_brand, p_type, p_size
     ORDER BY supplier_cnt DESC, p_brand, p_type, p_size;
---source ../include/enable_rbo_parallel_ces.inc
 
 SELECT  "QUERY 17";
     SELECT
@@ -344,7 +339,6 @@ SELECT  "QUERY 17";
         WHERE l_partkey = p_partkey
       );
 
---source ../include/disable_rbo_parallel_ces.inc
 SELECT  "QUERY 18";
     SELECT
         c_name,
@@ -364,7 +358,6 @@ SELECT  "QUERY 18";
     GROUP BY c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice
     ORDER BY o_totalprice DESC, o_orderdate, o_orderkey
     LIMIT 100;
---source ../include/enable_rbo_parallel_ces.inc
 
 SELECT  "QUERY 19";
     SELECT

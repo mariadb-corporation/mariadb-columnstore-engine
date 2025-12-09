@@ -7621,6 +7621,11 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     // Store optimized plan and applied rules
     store_query_plan(csep, PlanType::Optimized);
     store_applied_rules(ctx.serializeAppliedRules());
+    if (csep->traceOn())
+    {
+      cerr << "csepWasOptimized=" << csepWasOptimized << " appliedRules=" << ctx.serializeAppliedRules()
+           << endl;
+    }
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;
