@@ -120,7 +120,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
 
 
   // Update v-table's alias.
-  fVtable.name("$sub");
+  fVtable.name("$sub"+fVtable.name()+"/"+fVtable.alias());
 
   if (fVtable.alias().empty())
   {
@@ -301,6 +301,7 @@ void SubQueryTransformer::checkCorrelateInfo(TupleHashJoinStep* thjs, const JobI
 
 void SubQueryTransformer::updateCorrelateInfo()
 {
+	idblog("updateCorrelateInfo");
   // put vtable into the table list to resolve correlated filters
   // Temp fix for @bug3932 until outer join has no dependency on table order.
   // Insert at [1], not to mess with OUTER join and hint(INFINIDB_ORDERED -- bug2317).

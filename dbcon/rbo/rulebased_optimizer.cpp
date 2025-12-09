@@ -35,9 +35,20 @@ namespace optimizer
 std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
                                       const RBOptimizerContext& ctx)
 {
+#if 01
   static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
   return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
          std::to_string(ctx.getUniqueId());
+#else
+  if (table.alias.empty())
+  {
+    return table.table;
+  }
+  else
+  {
+    return table.alias;  
+  }
+#endif
 }
 
 // Apply a list of rules to a CSEP
@@ -86,14 +97,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
-                                    optimizer::applyRewriteDistinct};
-    rules.push_back(rewriteDistinct);
+//    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+//                                    optimizer::applyRewriteDistinct};
+//    rules.push_back(rewriteDistinct);
   }
 
-  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
-                                    optimizer::applyPredicatePushdown};
-  rules.push_back(predicatePushdown);
+//  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+//                                    optimizer::applyPredicatePushdown};
+//  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }
@@ -104,10 +115,12 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   bool changedThisRound = false;
   bool hasBeenApplied = false;
 
+  idblog("Rule::apply START rule=" << name);
   do
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
+    idblog("Rule::apply round complete: changedThisRound=" << changedThisRound << " hasBeenApplied=" << hasBeenApplied);
     if (ctx.logRulesEnabled() && changedThisRound)
     {
       std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
@@ -119,6 +132,7 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
     }
   } while (changedThisRound && !applyOnlyOnce);
 
+  idblog("Rule::apply END rule=" << name << " hasBeenApplied=" << hasBeenApplied);
   return hasBeenApplied;
 }
 
@@ -132,8 +146,13 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
   while (!planStack.empty())
   {
+    idblog("Rule::walk loop iteration, planStack.size=" << planStack.size());
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
+    
+    idblog("Rule::walk processing CSEP subType=" << current->subType() 
+           << " unionVec.size=" << current->unionVec().size()
+           << " subSelectList.size=" << current->subSelectList().size());
 
     // Walk nested UNION UNITS
     for (auto& unionUnit : current->unionVec())
@@ -141,6 +160,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       auto* unionUnitPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
       if (unionUnitPtr)
       {
+        idblog("  pushing unionUnit subType=" << unionUnitPtr->subType());
         planStack.push(unionUnitPtr);
       }
     }
@@ -151,6 +171,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       auto* subselectPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subselect.get());
       if (subselectPtr)
       {
+        idblog("  pushing subselect subType=" << subselectPtr->subType());
         planStack.push(subselectPtr);
       }
     }
@@ -159,11 +180,31 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
     if (mayApply(*current, ctx))
     {
-      rewrite |= applyRule(*current, ctx);
-      ctx.incrementUniqueId();
+      idblog("  mayApply=true, calling applyRule");
+      try
+      {
+        rewrite |= applyRule(*current, ctx);
+        ctx.incrementUniqueId();
+        idblog("  applyRule completed, planStack.size=" << planStack.size());
+      }
+      catch (const std::exception& e)
+      {
+        idblog("  STD EXCEPTION in applyRule: " << e.what());
+        throw;
+      }
+      catch (...)
+      {
+        idblog("  UNKNOWN EXCEPTION in applyRule");
+        throw;
+      }
+    }
+    else
+    {
+      idblog("  mayApply=false, skipping applyRule");
     }
   }
 
+  idblog("Rule::walk END, rewrite=" << rewrite << " planStack.empty=" << planStack.empty());
   return rewrite;
 }
 

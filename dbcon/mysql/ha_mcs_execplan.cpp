@@ -7435,6 +7435,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->derivedTableList(gwi.derivedTbList);
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
+  idblog("getSelectPlan: subselectList.size()=" << gwi.subselectList.size());
   return 0;
 }
 
@@ -7617,10 +7618,16 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     // TODO RBO can crash or fail leaving CSEP in an invalid state, so there must be a valid CSEP copy
     // TBD There is a tradeoff b/w copy per rule and copy per optimizer run.
     bool csepWasOptimized = optimizer::optimizeCSEP(*csep, ctx, get_unstable_optimizer(&ctx.getThd()));
+    idblog("csepWasOptimized=" << csepWasOptimized << " appliedRules=" << ctx.serializeAppliedRules());
+    idblog("optimized CSEP: " << csep->toString());
 
     // Store optimized plan and applied rules
     store_query_plan(csep, PlanType::Optimized);
     store_applied_rules(ctx.serializeAppliedRules());
+    if (csep->traceOn())
+    {
+      cerr << "csepWasOptimized=" << csepWasOptimized << " appliedRules=" << ctx.serializeAppliedRules() << endl;
+    }
     if (csep->traceOn() && csepWasOptimized)
     {
       cerr << "---------------- cs_get_select_plan optimized EXECUTION PLAN ----------------" << endl;
