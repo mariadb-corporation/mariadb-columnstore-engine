@@ -110,7 +110,7 @@ uint32_t uniqTupleKey(JobInfo& jobInfo, CalpontSystemCatalog::OID& o, CalpontSys
     }
     else if (tn.compare(0, 4, "$sub") == 0)
     {
-      name = "sub-query";
+      name = "sub-query("+tn+")";
     }
     else
     {

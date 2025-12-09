@@ -213,6 +213,8 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
   // Filter out tables that were re-written.
   bool someFT = someAreForeignTables(csep);
   bool someFTSI = someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
+  idblog("csep some FT " << (someFT ? "yes" : "no") << ", some FTSI " << (someFTSI ? "yes" : "no"));
+  idblog("csep: " << csep.toString());
   return someFT && someFTSI;
 }
 
@@ -632,7 +634,10 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     auto having = csep.having();
     if (having)
     {
+	    idblog("processing HAVING");
+	    idblog("HAVING: " << having->toString());
       updateSCsUsingWalkers(tableAliasToSCPositionsMap, having);
+	    idblog("updated HAVING: " << having->toString());
     }
 
     // 6.5 pass: update correlated columns inside EXISTS subqueries
@@ -685,6 +690,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     if (having)
     {
       updateExistsCorrelated(having);
+	    idblog("updated exists correlated HAVING: " << having->toString());
     }
 
     // 7th pass over tables to create derived CSEP with the collected SCs
@@ -711,6 +717,14 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // Replace table list with new table list populated with union units
     csep.tableList(newTableList);
     csep.returnedCols(newReturnedColumns);
+    if (csep.having())
+    {
+	    idblog("final HAVING: " << csep.having()->toString());
+    }
+    else
+    {
+	    idblog("no having");
+    }
   }
   return ruleMustBeApplied;
 }

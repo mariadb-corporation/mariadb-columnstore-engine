@@ -417,6 +417,7 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
 
         if (thjs)
         {
+		idblog("thjs");
           if (thjs->alias1().empty() || thjs->alias1().compare(0, 5, "$sub_"))
             tn = thjs->alias2();
           else

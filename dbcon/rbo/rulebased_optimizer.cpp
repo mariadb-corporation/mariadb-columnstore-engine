@@ -86,14 +86,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
-                                    optimizer::applyRewriteDistinct};
-    rules.push_back(rewriteDistinct);
+//    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+//                                    optimizer::applyRewriteDistinct};
+//    rules.push_back(rewriteDistinct);
   }
 
-  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
-                                    optimizer::applyPredicatePushdown};
-  rules.push_back(predicatePushdown);
+//  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+//                                    optimizer::applyPredicatePushdown};
+//  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }

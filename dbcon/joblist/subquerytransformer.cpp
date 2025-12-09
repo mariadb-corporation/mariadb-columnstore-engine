@@ -120,7 +120,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
 
 
   // Update v-table's alias.
-  fVtable.name("$sub");
+  fVtable.name("$sub"+fVtable.name()+"/"+fVtable.alias());
 
   if (fVtable.alias().empty())
   {
