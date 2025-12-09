@@ -14,8 +14,8 @@ optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR defa
 source $(optparse.build)
 
 # Define test suite lists
-MTR_BASIC_SUITE_LIST="basic,bugfixes"
-MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly"
+MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
+MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
 
 if [[ "${EVENT}" == "cron" ]]; then
     FULL_MTR=true

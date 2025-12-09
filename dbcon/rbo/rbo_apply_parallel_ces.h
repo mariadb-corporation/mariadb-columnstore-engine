@@ -29,47 +29,10 @@
 
 namespace optimizer
 {
-struct TableAliasLessThan
-{
-  bool operator()(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
-                  const execplan::CalpontSystemCatalog::TableAliasName& rhs) const
-  {
-    if (lhs.schema < rhs.schema)
-    {
-      return true;
-    }
-    else if (lhs.schema == rhs.schema)
-    {
-      if (lhs.table < rhs.table)
-      {
-        return true;
-      }
-      else if (lhs.table == rhs.table)
-      {
-        if (lhs.alias < rhs.alias)
-        {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-};
-
-struct SimpleColumnLessThan
-{
-  bool operator()(const execplan::SimpleColumn* lhs, const execplan::SimpleColumn* rhs) const
-  {
-    return lhs->columnName() < rhs->columnName();
-  }
-};
+// TableAliasLessThan, SimpleColumnLessThan, SCToPosCounterMap, and TableAliasToNewAliasAndSCPositionsMap
+// are now defined in rulebased_optimizer.h
 
 using NewTableAliasAndColumnPosCounter = std::pair<std::string, size_t>;
-using SCToPosCounterMap = std::map<execplan::SimpleColumn*, size_t, SimpleColumnLessThan>;
-using TableAliasToNewAliasAndSCPositionsMap =
-    std::map<execplan::CalpontSystemCatalog::TableAliasName,
-             std::tuple<std::string, SCToPosCounterMap, size_t>, TableAliasLessThan>;
 
 // Helper functions in details namespace
 namespace details

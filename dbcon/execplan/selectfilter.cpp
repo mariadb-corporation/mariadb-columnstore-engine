@@ -241,7 +241,4 @@ void SelectFilter::setSimpleColumnListExtended()
   }
 }
 
-const std::vector<SimpleColumn*>& SelectFilter::simpleColumnListExtended()
-{ return fSimpleColumnListExtended; }
-
 }  // namespace execplan

@@ -49,11 +49,16 @@ using namespace joblist;
 #include "simplecolumn.h"
 #include "simplefilter.h"
 #include "selectfilter.h"
+#include "existsfilter.h"
+#include "simplescalarfilter.h"
+#include "outerjoinonfilter.h"
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
 #include "logicoperator.h"
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
+#include "constantcolumn.h"
+#include "logicoperator.h"
 
 namespace execplan
 {
@@ -95,14 +100,45 @@ void getSimpleCols(execplan::ParseTree* n, void* obj)
 
 void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
 {
-  vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
   TreeNode* tn = n->data();
+  vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
   ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
   AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
+  Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
-  Filter* f = dynamic_cast<Filter*>(tn);
+
+  // Skip subquery filters - they contain sub-CSEPs that should be processed separately by RBO
+  // Walking into them would incorrectly collect subquery columns for outer query processing
+  SelectFilter* sf = dynamic_cast<SelectFilter*>(tn);
+  ExistsFilter* ef = dynamic_cast<ExistsFilter*>(tn);
+  SimpleScalarFilter* ssf = dynamic_cast<SimpleScalarFilter*>(tn);
+  if (sf || ef || ssf)
+  {
+    const vector<boost::shared_ptr<ReturnedColumn>>* cols = nullptr;
+    // For subquery filters, only collect the outer query columns (cols())
+    // Do NOT descend into sub->filters() - that will be handled when RBO processes the subquery
+    if (sf)
+    {
+      cols = &sf->cols();
+    }
+    // SimpleScalarFilter also has cols() - the outer query column being compared with subquery result
+    if (ssf)
+    {
+      cols = &ssf->cols();
+    }
+    // ExistsFilter has no outer columns to collect (it's just EXISTS (subquery))
+    if (cols)
+    {
+      for (const auto& col : *cols)
+      {
+        col->setSimpleColumnListExtended();
+        list->insert(list->end(), col->simpleColumnListExtended().begin(),
+                     col->simpleColumnListExtended().end());
+      }
+    }
+    return;
+  }
 
   if (sc)
   {
@@ -128,16 +164,13 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }
-  else if (lo) // XXX: should it be default case?
+  if (n->left())
   {
-    if (n->left())
-    {
-      n->left()->walk(getSimpleColsExtended, obj);
-    }
-    if (n->right())
-    {
-      n->right()->walk(getSimpleColsExtended, obj);
-    }
+    n->left()->walk(getSimpleColsExtended, obj);
+  }
+  if (n->right())
+  {
+    n->right()->walk(getSimpleColsExtended, obj);
   }
 }
 
@@ -358,10 +391,9 @@ const string SimpleColumn::toString(bool compact) const
   output << "Column: " << data();
   datatypes::Charset cs(fResultType.charsetNumber);
   output << endl
-         << "Info: " << schemaName() << "." << tableName()
-         << "(" << tableAlias() << ")"
-          << "."  << columnName()
-         << " (Type: " << colDataTypeToString(fResultType.colDataType) << ", OID: " << oid() << ")";
+         << "Info: " << schemaName() << "." << tableName() << "(" << tableAlias() << ")"
+         << "." << columnName() << " (Type: " << colDataTypeToString(fResultType.colDataType)
+         << ", OID: " << oid() << ")";
 
   return output.str();
 }
