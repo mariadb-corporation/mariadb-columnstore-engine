@@ -204,8 +204,8 @@ class ConstantFilter : public Filter
   const std::vector<SimpleColumn*>& simpleColumnList();
   const std::vector<SimpleColumn*>& simpleColumnListExtended();
   // walk through the constant filter operands to re-populate fSimpleColumnList
-  void setSimpleColumnList();
-  void setSimpleColumnListExtended();
+  void setSimpleColumnList() override;
+  void setSimpleColumnListExtended() override;
 
   // get all aggregate columns involved in this column
   const std::vector<AggregateColumn*>& aggColumnList() const

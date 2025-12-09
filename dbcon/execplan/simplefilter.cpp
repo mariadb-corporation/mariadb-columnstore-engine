@@ -805,16 +805,6 @@ void SimpleFilter::replaceRealCol(CalpontSelectExecutionPlan::ReturnedColumnList
   }
 }
 
-const std::vector<SimpleColumn*>& SimpleFilter::simpleColumnList()
-{
-  return fSimpleColumnList;
-}
-
-const std::vector<SimpleColumn*>& SimpleFilter::simpleColumnListExtended()
-{
-  return fSimpleColumnListExtended;
-}
-
 void SimpleFilter::setSimpleColumnList()
 {
   SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);

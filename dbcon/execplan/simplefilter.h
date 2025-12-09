@@ -244,12 +244,9 @@ class SimpleFilter : public Filter
   inline double getDoubleVal(rowgroup::Row& row, bool& isNull) override;
   inline long double getLongDoubleVal(rowgroup::Row& row, bool& isNull) override;
 
-  // get all simple columns involved in this column
-  const std::vector<SimpleColumn*>& simpleColumnList();
-  const std::vector<SimpleColumn*>& simpleColumnListExtended();
   // walk through the simple filter operands to re-populate fSimpleColumnList
-  void setSimpleColumnList();
-  void setSimpleColumnListExtended();
+  virtual void setSimpleColumnList() override;
+  virtual void setSimpleColumnListExtended() override;
   // walk through the simple filter operands to check existence of aggregate
   bool hasAggregate();
 
@@ -266,8 +263,6 @@ class SimpleFilter : public Filter
   }
 
  private:
-  std::vector<SimpleColumn*> fSimpleColumnList;
-  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;
 };

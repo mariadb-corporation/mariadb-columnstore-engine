@@ -170,7 +170,7 @@ class SelectFilter : public Filter
    */
   bool operator!=(const SelectFilter& t) const;
 
-  void setSimpleColumnListExtended();
+  void setSimpleColumnListExtended() override;
   const std::vector<SimpleColumn*>& simpleColumnListExtended();
 
  private:

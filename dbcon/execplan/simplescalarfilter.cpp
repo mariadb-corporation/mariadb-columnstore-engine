@@ -28,6 +28,7 @@ using namespace std;
 #include "simplescalarfilter.h"
 #include "bytestream.h"
 #include "objectreader.h"
+#include "simplecolumn.h"
 
 namespace execplan
 {
@@ -200,5 +201,29 @@ bool SimpleScalarFilter::operator!=(const TreeNode* t) const
 {
   return (!(*this == t));
 }
+void SimpleScalarFilter::setSimpleColumnList()
+{
+  for (auto& c : fCols)
+  {
+    SimpleColumn* sc = dynamic_cast<SimpleColumn*>(c.get());
+    if (sc)
+    {
+      fSimpleColumnList.push_back(sc);
+    }
+  }
+}
+
+void SimpleScalarFilter::setSimpleColumnListExtended()
+{
+  for (auto& c : fCols)
+  {
+    SimpleColumn* sc = dynamic_cast<SimpleColumn*>(c.get());
+    if (sc)
+    {
+      fSimpleColumnListExtended.push_back(sc);
+    }
+  }
+}
+
 
 }  // namespace execplan

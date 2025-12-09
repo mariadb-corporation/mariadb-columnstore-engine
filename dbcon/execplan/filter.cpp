@@ -118,4 +118,15 @@ ostream& operator<<(ostream& output, const Filter& rhs)
   return output;
 }
 
+const std::vector<SimpleColumn*>& Filter::simpleColumnList()
+{
+  return fSimpleColumnList;
+}
+
+const std::vector<SimpleColumn*>& Filter::simpleColumnListExtended()
+{
+  return fSimpleColumnListExtended;
+}
+
+
 }  // namespace execplan
