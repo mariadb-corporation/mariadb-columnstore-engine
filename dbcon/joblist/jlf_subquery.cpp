@@ -431,7 +431,7 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
       Message::Args args;
 
       if (tn.empty() || tn.compare(0, 5, "$sub_"))
-        tn = "sub-query";
+        tn = "sub-query("+tn+")";
 
       args.add(tn);
       throw IDBExcept(ERR_MISS_JOIN_IN_SUB, args);

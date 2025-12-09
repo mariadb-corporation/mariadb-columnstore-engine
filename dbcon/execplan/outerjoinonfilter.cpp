@@ -28,6 +28,7 @@ using namespace std;
 using namespace messageqcpp;
 #include "objectreader.h"
 #include "outerjoinonfilter.h"
+#include "simplecolumn.h"
 
 namespace execplan
 {
@@ -136,6 +137,16 @@ bool OuterJoinOnFilter::operator!=(const OuterJoinOnFilter& t) const
 bool OuterJoinOnFilter::operator!=(const TreeNode* t) const
 {
   return (!(*this == t));
+}
+
+void OuterJoinOnFilter::setSimpleColumnList()
+{
+  fPt->walk(execplan::getSimpleCols, &fSimpleColumnList);
+}
+
+void OuterJoinOnFilter::setSimpleColumnListExtended()
+{
+  fPt->walk(execplan::getSimpleColsExtended, &fSimpleColumnListExtended);
 }
 
 }  // namespace execplan

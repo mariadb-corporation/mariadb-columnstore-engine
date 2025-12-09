@@ -150,9 +150,20 @@ class Filter : public TreeNode
     fCardinality = cardinality;
   }
 
+  // get all simple columns involved in this column
+  const std::vector<SimpleColumn*>& simpleColumnList();
+  const std::vector<SimpleColumn*>& simpleColumnListExtended();
+  // walk through the simple filter operands to re-populate fSimpleColumnList
+  virtual void setSimpleColumnList() { } 
+  virtual void setSimpleColumnListExtended() { }
+
+
  protected:
   uint64_t fCardinality;
   std::string fData;
+
+  std::vector<SimpleColumn*> fSimpleColumnList;
+  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
 };
 
 std::ostream& operator<<(std::ostream& os, const Filter& rhs);

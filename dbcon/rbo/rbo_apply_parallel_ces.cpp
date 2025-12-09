@@ -35,6 +35,8 @@
 #include "returnedcolumn.h"
 #include "simplefilter.h"
 #include "existsfilter.h"
+#include "outerjoinonfilter.h"
+#include "simplescalarfilter.h"
 
 namespace optimizer
 {
@@ -209,7 +211,9 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
 {
   // TODO filter out CSEPs with orderBy, groupBy, having || or clean up OB,GB,HAVING cloning CSEP
   // Filter out tables that were re-written.
-  return someAreForeignTables(csep) && someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
+  bool someFT = someAreForeignTables(csep);
+  bool someFTSI = someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
+  return someFT && someFTSI;
 }
 
 uint64_t decodeU64(const std::string& bytes)
@@ -532,6 +536,7 @@ void updateSCsUsingIteration(optimizer::TableAliasToNewAliasAndSCPositionsMap& t
 void updateSCsUsingWalkers(optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap,
                            execplan::ParseTree* pt)
 {
+
   std::vector<execplan::SimpleColumn*> simpleColumns;
   pt->walk(execplan::getSimpleColsExtended, &simpleColumns);
   for (auto* sc : simpleColumns)
@@ -640,11 +645,12 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       auto walker = [](const execplan::ParseTree* n, void* obj)
       {
         auto* ef = dynamic_cast<execplan::ExistsFilter*>(n->data());
-        if (!ef)
+        auto* ssf = dynamic_cast<execplan::SimpleScalarFilter*>(n->data());
+        if (!ef && !ssf)
           return;
         auto* mapPtr = static_cast<optimizer::TableAliasToNewAliasAndSCPositionsMap*>(obj);
         auto& map = *mapPtr;
-        auto sub = ef->sub();
+        auto sub = ef ? ef->sub() : ssf->sub();
         if (sub)
         {
           if (auto subFilters = sub->filters())
@@ -673,9 +679,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     };
 
     if (filters)
+    {
       updateExistsCorrelated(filters);
+    }
     if (having)
+    {
       updateExistsCorrelated(having);
+    }
 
     // 7th pass over tables to create derived CSEP with the collected SCs
     for (auto& table : tables)

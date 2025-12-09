@@ -115,11 +115,16 @@ class OuterJoinOnFilter : public Filter
   bool operator!=(const OuterJoinOnFilter& t) const;
   std::string toCppCode(IncludeSet& includes) const override;
 
+  // walk through the simple filter operands to re-populate fSimpleColumnList
+  virtual void setSimpleColumnList() override;
+  virtual void setSimpleColumnListExtended() override;
+
  private:
   // default okay?
   // OuterJoinOnFilter& operator=(const OuterJoinOnFilter& rhs);
   SPTP fPt;
   std::string fData;
+
 };
 
 std::ostream& operator<<(std::ostream& output, const OuterJoinOnFilter& rhs);

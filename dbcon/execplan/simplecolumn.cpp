@@ -51,6 +51,7 @@ using namespace joblist;
 #include "selectfilter.h"
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
+#include "logicoperator.h"
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
 
@@ -98,11 +99,10 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   TreeNode* tn = n->data();
   ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
   AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
-  ConstantFilter* cf = dynamic_cast<ConstantFilter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  SelectFilter* selectFilter = dynamic_cast<SelectFilter*>(tn);
-  SimpleFilter* sf = dynamic_cast<SimpleFilter*>(tn);
+  LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
+  Filter* f = dynamic_cast<Filter*>(tn);
 
   if (sc)
   {
@@ -123,21 +123,21 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
     agc->setSimpleColumnListExtended();
     list->insert(list->end(), agc->simpleColumnListExtended().begin(), agc->simpleColumnListExtended().end());
   }
-  else if (sf)
+  else if (f)
   {
-    sf->setSimpleColumnListExtended();
-    list->insert(list->end(), sf->simpleColumnListExtended().begin(), sf->simpleColumnListExtended().end());
+    f->setSimpleColumnListExtended();
+    list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }
-  else if (selectFilter)
+  else if (lo) // XXX: should it be default case?
   {
-    selectFilter->setSimpleColumnListExtended();
-    list->insert(list->end(), selectFilter->simpleColumnListExtended().begin(),
-                 selectFilter->simpleColumnListExtended().end());
-  }
-  else if (cf)
-  {
-    cf->setSimpleColumnListExtended();
-    list->insert(list->end(), cf->simpleColumnListExtended().begin(), cf->simpleColumnListExtended().end());
+    if (n->left())
+    {
+      n->left()->walk(getSimpleColsExtended, obj);
+    }
+    if (n->right())
+    {
+      n->right()->walk(getSimpleColsExtended, obj);
+    }
   }
 }
 
@@ -358,7 +358,9 @@ const string SimpleColumn::toString(bool compact) const
   output << "Column: " << data();
   datatypes::Charset cs(fResultType.charsetNumber);
   output << endl
-         << "Info: " << schemaName() << "." << tableName() << "." << columnName()
+         << "Info: " << schemaName() << "." << tableName()
+         << "(" << tableAlias() << ")"
+          << "."  << columnName()
          << " (Type: " << colDataTypeToString(fResultType.colDataType) << ", OID: " << oid() << ")";
 
   return output.str();
