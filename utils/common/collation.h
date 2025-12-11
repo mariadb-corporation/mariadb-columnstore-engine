@@ -116,7 +116,12 @@ class MariaDBHasher
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
   {
+#ifdef MY_HASH_ADD_MARIADB
+    my_hasher_st hasher= my_hasher_mysql5x();
+    cs->hash_sort(&hasher, (const uchar*)str, length);
+#else
     cs->hash_sort((const uchar*)str, length, &mPart1, &mPart2);
+#endif
     return *this;
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const utils::ConstString& str)
