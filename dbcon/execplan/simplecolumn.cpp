@@ -56,6 +56,7 @@ using namespace joblist;
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
 #include "constantcolumn.h"
+#include "logicoperator.h"
 
 namespace execplan
 {
@@ -105,6 +106,7 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
+  LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
 
   if (sc)
   {
@@ -130,6 +132,17 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
 	  idblog("any filter in getSimpleColsExtended()");
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
+  }
+  else if (lo) // XXX: should it be default case?
+  {
+    if (n->left())
+    {
+      n->left()->walk(getSimpleColsExtended, obj);
+    }
+    if (n->right())
+    {
+      n->right()->walk(getSimpleColsExtended, obj);
+    }
   }
   else
   {
