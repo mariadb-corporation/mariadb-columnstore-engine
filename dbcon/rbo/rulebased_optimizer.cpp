@@ -35,9 +35,20 @@ namespace optimizer
 std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
                                       const RBOptimizerContext& ctx)
 {
+#if 01
   static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
   return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
          std::to_string(ctx.getUniqueId());
+#else
+  if (table.alias.empty())
+  {
+    return table.table;
+  }
+  else
+  {
+    return table.alias;  
+  }
+#endif
 }
 
 // Apply a list of rules to a CSEP

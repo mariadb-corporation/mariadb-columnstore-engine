@@ -503,9 +503,11 @@ void tryToUpdateScToUseRewrittenDerived(
     execplan::SimpleColumn* sc, optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap)
 {
   auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
+  idblog("  sc: " << sc->toString());
 
   if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
   {
+	  idblog("  in table map!");
     auto& [newTableAlias, SCToPosCounterMap, currentColPositionCursorValue] =
         tableAliasToSCPositionsIt->second;
 
@@ -627,7 +629,9 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     auto filters = csep.filters();
     if (filters)
     {
+	    idblog("filters " << filters->toString());
       updateSCsUsingWalkers(tableAliasToSCPositionsMap, filters);
+      idblog("filters updated: " << filters->toString());
     }
 
     // 6th pass over filters to use derived table SCs in filters
@@ -660,10 +664,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         {
           if (auto subFilters = sub->filters())
           {
+		  idblog("rewriting filter " << subFilters->toString());
             std::vector<execplan::SimpleColumn*> subSCs;
             subFilters->walk(execplan::getSimpleColsExtended, &subSCs);
+	    idblog("  " << subSCs.size() << " simple columns collected");
             for (auto* sc : subSCs)
             {
+		    idblog("  rewriting simple column " << sc->toString());
               if (sc)
                 tryToUpdateScToUseRewrittenDerived(sc, map);
             }
@@ -685,7 +692,9 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
 
     if (filters)
     {
+	    idblog("before updated exists correlated FILTERS: " << filters->toString());
       updateExistsCorrelated(filters);
+	    idblog("updated exists correlated FILTERS: " << filters->toString());
     }
     if (having)
     {

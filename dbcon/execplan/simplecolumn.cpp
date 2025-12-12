@@ -49,11 +49,13 @@ using namespace joblist;
 #include "simplecolumn.h"
 #include "simplefilter.h"
 #include "selectfilter.h"
+#include "outerjoinonfilter.h"
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
 #include "logicoperator.h"
 #include "../../utils/windowfunction/windowfunction.h"
 #include "utils/common/branchpred.h"
+#include "constantcolumn.h"
 
 namespace execplan
 {
@@ -95,14 +97,14 @@ void getSimpleCols(execplan::ParseTree* n, void* obj)
 
 void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
 {
-  vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
+	idblog("getting simple columns from " << n->toString());
   TreeNode* tn = n->data();
+  vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
   ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
   AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
+  Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
-  Filter* f = dynamic_cast<Filter*>(tn);
 
   if (sc)
   {
@@ -125,19 +127,23 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   }
   else if (f)
   {
+	  idblog("any filter in getSimpleColsExtended()");
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }
-  else if (lo) // XXX: should it be default case?
+  else
   {
-    if (n->left())
-    {
-      n->left()->walk(getSimpleColsExtended, obj);
-    }
-    if (n->right())
-    {
-      n->right()->walk(getSimpleColsExtended, obj);
-    }
+	  idblog("collecting simple columns from " << tn->toString());
+	  idblog("  type " << typeid(*tn).name());
+	  //n->walk(getSimpleColsExtended, obj);
+  }
+  if (n->left())
+  {
+    n->left()->walk(getSimpleColsExtended, obj);
+  }
+  if (n->right())
+  {
+    n->right()->walk(getSimpleColsExtended, obj);
   }
 }
 
