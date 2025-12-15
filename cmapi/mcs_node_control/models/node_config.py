@@ -602,33 +602,28 @@ has dbroot {subel.text}')
 
         return dbroots
 
-    def get_read_replicas(self, root=None) -> list[str]:
-        """Collects IP addresses of read replicas.
+    def get_read_replicas_pm_nums(self, root=None) -> list[int]:
+        """Collects PM numbers of read replicas.
 
         A read replica is any PM that does not have a corresponding WriteEngineServer.
         """
         root = root or self.get_current_config_root()
 
-        # Collect all PM IP addresses
-        smc_node = root.find("./SystemModuleConfig")
-        mod_count = int(smc_node.find("./ModuleCount3").text)
-        pm_addrs = set()
-        for i in range(1, mod_count + 1):
-            ip_node = smc_node.find(f"./ModuleIPAddr{i}-1-3")
-            if ip_node is not None and ip_node.text:
-                pm_addrs.add(ip_node.text)
+        smc_node = root.find('./SystemModuleConfig')
+        mod_count = int(smc_node.find('./ModuleCount3').text)
 
-        # Collect all WriteEngineServer IP addresses
-        wes_addrs = set()
+        read_replica_pm_nums: list[int] = []
         for i in range(1, mod_count + 1):
-            wes = root.find(f"./pm{i}_WriteEngineServer")
-            if wes is not None:
-                ip = wes.findtext("./IPAddr")
-                if ip:
-                    wes_addrs.add(ip)
+            mod_ip_node = smc_node.find(f'./ModuleIPAddr{i}-1-3')
+            if mod_ip_node is None or mod_ip_node.text is None:
+                module_logger.warning('Module %d IP addr is not filled', i)
+                continue
 
-        # Find PMs without a WriteEngineServer
-        return list(sorted(pm_addrs - wes_addrs))
+            wes = root.find(f'./pm{i}_WriteEngineServer')
+            if wes is None or wes.findtext('./IPAddr') is None:
+                read_replica_pm_nums.append(i)
+
+        return read_replica_pm_nums
 
     def am_i_read_replica(self, root=None) -> bool:
         """Checks if this node is configured as a read replica.
@@ -638,8 +633,5 @@ has dbroot {subel.text}')
         root = root or self.get_current_config_root()
 
         pm_num = self.get_current_pm_num(root)
-        pm_ip = self.get_module_net_address(root, module_id=pm_num)
-
-        # Check if our PM's IP is in the list of read replicas
-        read_replicas = set(self.get_read_replicas(root))
-        return pm_ip in read_replicas
+        read_replicas_pms = self.get_read_replicas_pm_nums(root)
+        return pm_num in read_replicas_pms

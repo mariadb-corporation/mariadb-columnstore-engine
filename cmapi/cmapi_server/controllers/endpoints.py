@@ -17,10 +17,19 @@ from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
 from cmapi_server.constants import (
-    CMAPI_PACKAGE_NAME, CMAPI_PORT, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX, MCS_BRM_CURRENT_PATH, MCS_EM_PATH,
-    MDB_CS_PACKAGE_NAME, MDB_SERVER_PACKAGE_NAME, REQUEST_TIMEOUT,
-    S3_BRM_CURRENT_PATH, SECRET_KEY,
+    ALL_MCS_PROGS,
+    CMAPI_PACKAGE_NAME,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    REQUEST_TIMEOUT,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
 )
 from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server import helpers
@@ -37,17 +46,18 @@ from cmapi_server.helpers import (
     get_current_key, get_dbroots, in_maintenance_state,
     save_cmapi_conf_file, system_ready,
 )
+from cmapi_server.invariant_checks import run_invariant_checks
 from cmapi_server.logging_management import change_loggers_level
 from cmapi_server.managers.application import (
     AppManager, AppStatefulConfig, StatefulConfigModel
 )
-from cmapi_server.managers.upgrade.packages import PackagesManager
-from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
 from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
 from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.managers.upgrade.packages import PackagesManager
+from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
-from cmapi_server.invariant_checks import run_invariant_checks
+from cmapi_server.process_dispatchers.container import ContainerDispatcher
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -260,6 +270,7 @@ class StatusController:
             'dbroots': sorted(get_dbroots(node_fqdn)),
             'module_id': int(node_status.get_module_id()),
             'services': MCSProcessManager.get_running_mcs_procs(),
+            'mariadbd_running': ContainerDispatcher.is_service_running('mariadbd'),
         }
 
         module_logger.debug(f'{func_name} returns {str(status_response)}')
@@ -728,7 +739,7 @@ class ShutdownController:
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
         request_body = cherrypy.request.json
-        timeout = request_body.get('timeout', 0)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         node_config = NodeConfig()
         try:
             MCSProcessManager.stop_node(
@@ -897,7 +908,7 @@ class ClusterController:
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', None)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
         in_transaction = request_body.get('in_transaction', False)
@@ -907,7 +918,7 @@ class ClusterController:
                 with TransactionManager():
                     response = ClusterHandler.shutdown(config, timeout)
             else:
-                response = ClusterHandler.shutdown(config)
+                response = ClusterHandler.shutdown(config, timeout)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -1597,7 +1608,7 @@ class NodeProcessController():
 
         request = cherrypy.request
         request_body = request.json
-        timeout = request_body.get('timeout', 10)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         force = request_body.get('force', False)
 
         if force:
@@ -1627,8 +1638,10 @@ class NodeProcessController():
         """Handler for /node/is_process_running (GET) endpoint."""
         func_name = 'get_process_running'
         log_begin(module_logger, func_name)
-
-        process_running = MCSProcessManager.is_service_running(process_name)
+        if process_name in ALL_MCS_PROGS:
+            process_running = MCSProcessManager.is_service_running(process_name)
+        else:
+            process_running = ContainerDispatcher.is_service_running(process_name)
 
         response = {
             'timestamp': str(datetime.now()),
@@ -1946,6 +1959,7 @@ class NodeController:
     def check_shared_file(self, file_path, check_sum):
         func_name = 'check_shared_file'
         log_begin(module_logger, func_name)
+        logger = logging.getLogger('shared_storage_monitor')
         ACCEPTED_PATHS = (
             '/var/lib/columnstore/data1/',
             '/var/lib/columnstore/storagemanager/metadata/data1/'
@@ -1955,27 +1969,27 @@ class NodeController:
 
         success = True
         file_path_obj = Path(file_path)
-        logging.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
+        logger.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
         if not file_path_obj.exists():
             success = False
-            logging.debug(f'Shared file {file_path} does not exist.')
+            logger.debug(f'Shared file {file_path} does not exist.')
         else:
             with file_path_obj.open(mode='rb') as file_to_check:
                 data = file_to_check.read()
                 calculated_md5 = hashlib.md5(data).hexdigest()
             if calculated_md5 != check_sum:
-                logging.debug(
+                logger.debug(
                     f'Shared file at {file_path} md5 {calculated_md5} does not match given md5 {check_sum}.'
                 )
                 success = False
         if success:
-            logging.debug(f'Shared file {file_path} md5 matches {check_sum}.')
+            logger.debug(f'Shared file {file_path} md5 matches {check_sum}.')
 
         response = {
             'timestamp': str(datetime.now()),
             'success': success
         }
-        logging.debug(f'{func_name} returns {str(response)}')
+        logger.debug(f'{func_name} returns {str(response)}')
         return response
 
     @cherrypy.tools.timeit()

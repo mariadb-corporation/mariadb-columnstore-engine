@@ -16,7 +16,11 @@ from mcs_node_control.models.node_config import NodeConfig
 from tracing.traced_session import get_traced_session
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CMAPI_PORT, DEFAULT_MCS_CONF_PATH, REQUEST_TIMEOUT,
+    CMAPI_CONF_PATH,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    REQUEST_TIMEOUT,
 )
 from cmapi_server.exceptions import CMAPIBasicError, exc_to_cmapi_error
 from cmapi_server.controllers.api_clients import NodeControllerClient
@@ -44,7 +48,7 @@ class ClusterAction(Enum):
 
 
 def toggle_cluster_state(
-        action: ClusterAction, config: str) -> dict:
+        action: ClusterAction, config: str, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT) -> dict:
     """Toggle the state of the cluster (start or stop).
 
     :param action: The cluster action to perform.
@@ -64,7 +68,7 @@ def toggle_cluster_state(
 
     switch_node_maintenance(maintainance_flag)
     update_revision_and_manager()
-    broadcast_new_config(config, distribute_secrets=True)
+    broadcast_new_config(config, distribute_secrets=True, timeout=timeout)
 
 
 class ClusterHandler:
@@ -161,7 +165,7 @@ class ClusterHandler:
 
     @staticmethod
     def shutdown(
-        config: str = DEFAULT_MCS_CONF_PATH, timeout: Optional[int] = None
+        config: str = DEFAULT_MCS_CONF_PATH, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT,
     ) -> dict:
         """Method to stop the MCS Cluster.
 
@@ -169,7 +173,7 @@ class ClusterHandler:
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
         :param timeout: timeout in seconds to gracefully stop DMLProc,
-                        defaults to None
+                        defaults to DMLPROC_SHUTDOWN_TIMEOUT
         :type timeout: Optional[int], optional
         :raises CMAPIBasicError: if no nodes in the cluster
         :return: start timestamp
@@ -180,7 +184,7 @@ class ClusterHandler:
             'Cluster shutdown command called. Shutting down the cluster.'
         )
         operation_start_time = str(datetime.now())
-        toggle_cluster_state(ClusterAction.STOP, config)
+        toggle_cluster_state(ClusterAction.STOP, config, timeout=timeout)
         logger.debug('Successfully finished shutting down the cluster.')
         return {'timestamp': operation_start_time}
 
@@ -466,6 +470,7 @@ class ClusterHandler:
         :return: status result
         """
         tmp_file_path: str
+        logger = logging.getLogger('shared_storage_monitor')
         active_nodes = get_active_nodes()
         if skip_nodes:
             # Remove any nodes the caller asked us to skip (e.g., unstable HB)
@@ -491,11 +496,11 @@ class ClusterHandler:
             temp_file.flush()
             os.fsync(temp_file.fileno())
             tmp_file_path = temp_file.name
-            logging.debug(f'Temporary file to check shared storage created at: {tmp_file_path}')
+            logger.debug(f'Temporary file to check shared storage created at: {tmp_file_path}')
             tmp_file_md5 = hashlib.md5(file_data).hexdigest()
-            logging.debug(f'Temporary file md5: {tmp_file_md5}')
+            logger.debug(f'Temporary file md5: {tmp_file_md5}')
             for node in active_nodes:
-                logging.debug(f'Checking shared file on {node!r}.')
+                logger.debug(f'Checking shared file on {node!r}.')
                 client = NodeControllerClient(
                     request_timeout=REQUEST_TIMEOUT,
                     base_url=f'https://{node}:{CMAPI_PORT}'
@@ -506,7 +511,7 @@ class ClusterHandler:
                         node_response = client.check_shared_file(
                             file_path=tmp_file_path, check_sum=tmp_file_md5
                         )
-                        logging.debug(f'Finished checking file on {node!r}')
+                        logger.debug(f'Finished checking file on {node!r}')
                         all_responses[node] = node_response
                         break
                     except CMAPIBasicError as err:  # per-node failure must not abort the whole check
@@ -516,7 +521,7 @@ class ClusterHandler:
                         continue
                 else:
                     # Retries exhausted
-                    logging.warning(
+                    logger.warning(
                         f'Error checking shared file on {node!r}: {last_err_msg}',
                         exc_info=True
                     )
@@ -548,7 +553,7 @@ class ClusterHandler:
             'nodes_errors': {**nodes_errors}
         }
 
-        logging.debug(
+        logger.debug(
             'Successfully finished checking shared storage on all nodes.'
         )
         return response

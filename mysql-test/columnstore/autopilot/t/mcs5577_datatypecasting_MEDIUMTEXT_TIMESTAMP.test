@@ -5,6 +5,9 @@
 # -------------------------------------------------------------- #
 #
 --source ../include/have_columnstore.inc
+--disable_query_log
+SET time_zone='GMT';
+--enable_query_log
 #
 USE autopilot;
 #

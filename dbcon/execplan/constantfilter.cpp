@@ -347,6 +347,11 @@ void ConstantFilter::setSimpleColumnListExtended()
                                      fFilterList[i]->simpleColumnListExtended().begin(),
                                      fFilterList[i]->simpleColumnListExtended().end());
   }
+  fCol->setSimpleColumnListExtended();
+  fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                   fCol->simpleColumnListExtended().begin(),
+                                   fCol->simpleColumnListExtended().end());
+
 }
 
 }  // namespace execplan

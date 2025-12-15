@@ -43,6 +43,17 @@ LOCALHOST = '127.0.0.1'
 API_VERSION = '0.4.0'
 API_PORT = '8640'
 
+LOCALHOST_IPS = {
+    '127.0.0.1',
+    '::1',
+}
+LOCALHOST_HOSTNAMES = {
+    'localhost', 'localhost.localdomain',
+    'localhost4', 'localhost4.localdomain4',
+    'localhost6', 'localhost6.localdomain6',
+}
+LOCALHOSTS = LOCALHOST_IPS.union(LOCALHOST_HOSTNAMES)
+
 
 def get_api_key():
     """Get API key from cmapi config file.
@@ -123,6 +134,60 @@ def get_ip_address_by_nic(ifname):
     return ip_addr
 
 
+def get_my_hostnames_aux():
+    """Calculate hostnames for current node based on interface IPs."""
+    hostnames = set()
+    ip_addrs = []
+    for _, nic_name in socket.if_nameindex():
+        ip_addr = get_ip_address_by_nic(nic_name)
+        if ip_addr and ip_addr not in LOCALHOST_IPS:
+            ip_addrs.append(ip_addr)
+    logging.debug('Found ip addresses %s.', ip_addrs)
+
+    for ip_addr in ip_addrs:
+        try:
+            hostnames_3tuple = socket.gethostbyaddr(ip_addr)
+            hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
+        except Exception:
+            logging.debug(
+                'Exception while getting hostnames for IP "%s"',
+                ip_addr,
+                exc_info=True,
+            )
+
+    logging.debug('Found hostnames %s.', hostnames)
+    return hostnames
+
+
+def get_my_hostnames(max_retries=5, delay_secs=2):
+    """Detect hostnames for current node with retries
+
+    There are possible cases where NIC is not ready yet even after network-online target is reached.
+    So here we added retries to work around it.
+    """
+    attempt = 0
+    hostnames = set()
+    while attempt < max_retries:
+        hostnames = get_my_hostnames_aux()
+
+        if not hostnames or hostnames.issubset(LOCALHOSTS):
+            attempt += 1
+            if attempt < max_retries:
+                logging.debug(
+                    'Hostname detection attempt %d returned only localhost ' \
+                    'hostnames %s, retrying in %d seconds.',
+                    attempt,
+                    hostnames,
+                    delay_secs,
+                )
+                time.sleep(delay_secs)
+                continue
+
+        return hostnames
+
+    return hostnames
+
+
 def is_primary_fallback(current_hostname):
     """Detect is node primary or not without cmapi.
 
@@ -134,14 +199,14 @@ def is_primary_fallback(current_hostname):
     logging.debug(
         'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
     )
-    hostnames = set()
-    for _, nic_name in socket.if_nameindex():
-        ip_addr = get_ip_address_by_nic(nic_name)
-        if ip_addr:
-            hostnames_3tuple = socket.gethostbyaddr(ip_addr)
-            hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
-    logging.debug('Found hostnames {}.'.format(hostnames))
-    return current_hostname in hostnames
+    if current_hostname in LOCALHOSTS:
+        logging.debug('is_primary_fallback result: True (localhost match)')
+        return True
+
+    hostnames = get_my_hostnames()
+    is_primary = current_hostname in hostnames
+    logging.debug('is_primary_fallback result: %s', is_primary)
+    return is_primary
 
 
 def is_node_primary(conf_root):

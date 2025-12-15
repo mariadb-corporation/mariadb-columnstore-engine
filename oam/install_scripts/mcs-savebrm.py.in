@@ -24,7 +24,7 @@ MCS_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
 SM_CONFIG_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
 MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SAVEBRM = os.path.join(MCS_BIN_DIR, 'save_brm')
-CLEAR_ALL_SHMEM_LOCKS = os.path.join(MCS_BIN_DIR, 'mcs-shmem-locks') 
+CLEAR_ALL_SHMEM_LOCKS = os.path.join(MCS_BIN_DIR, 'mcs-shmem-locks')
 CLEAR_ALL_SHMEM_LOCKS_ARGS = '-a'
 EM_FILE_SUFFIX = '_em'
 EM_FILE_SIZE_THRESHOLD = 1000
@@ -32,14 +32,16 @@ FIVE_SECS = 5
 NUMBER_OF_FILES_TO_KEEP = 40
 DEFAULT_EM_LOCAL_PATH_PREFIX = ''
 LOCALHOST = '127.0.0.1'
-# according to https://www.ibm.com/docs/en/storage-sentinel/1.1.2?topic=installation-map-your-local-host-loopback-address
-LOCALHOSTS = (
+LOCALHOST_IPS = {
     '127.0.0.1',
+    '::1',
+}
+LOCALHOST_HOSTNAMES = {
     'localhost', 'localhost.localdomain',
     'localhost4', 'localhost4.localdomain4',
-    '::1',
     'localhost6', 'localhost6.localdomain6',
-)
+}
+LOCALHOSTS = LOCALHOST_IPS.union(LOCALHOST_HOSTNAMES)
 API_VERSION = '0.4.0'
 API_PORT = '8640'
 BRM_BACKUP_PATH = '/tmp/columnstore_tmp_files/rdwrscratch/'
@@ -123,6 +125,60 @@ def get_ip_address_by_nic(ifname):
     return ip_addr
 
 
+def get_my_hostnames_aux():
+    """Calculate hostnames for current node based on interface IPs."""
+    hostnames = set()
+    ip_addrs = []
+    for _, nic_name in socket.if_nameindex():
+        ip_addr = get_ip_address_by_nic(nic_name)
+        if ip_addr and ip_addr not in LOCALHOST_IPS:
+            ip_addrs.append(ip_addr)
+    logging.debug('Found ip addresses %s.', ip_addrs)
+
+    for ip_addr in ip_addrs:
+        try:
+            hostnames_3tuple = socket.gethostbyaddr(ip_addr)
+            hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
+        except Exception:
+            logging.debug(
+                'Exception while getting hostnames for IP "%s"',
+                ip_addr,
+                exc_info=True,
+            )
+
+    logging.debug('Found hostnames %s.', hostnames)
+    return hostnames
+
+
+def get_my_hostnames(max_retries=5, delay_secs=2):
+    """Detect hostnames for current node with retries
+
+    There are possible cases where NIC is not ready yet even after network-online target is reached.
+    So here we added retries to work around it.
+    """
+    attempt = 0
+    hostnames = set()
+    while attempt < max_retries:
+        hostnames = get_my_hostnames_aux()
+
+        if not hostnames or hostnames.issubset(LOCALHOSTS):
+            attempt += 1
+            if attempt < max_retries:
+                logging.debug(
+                    'Hostname detection attempt %d returned only localhost ' \
+                    'hostnames %s, retrying in %d seconds.',
+                    attempt,
+                    hostnames,
+                    delay_secs,
+                )
+                time.sleep(delay_secs)
+                continue
+
+        return hostnames
+
+    return hostnames
+
+
 def is_primary_fallback(current_hostname):
     """Detect is node primary or not without cmapi.
 
@@ -134,16 +190,14 @@ def is_primary_fallback(current_hostname):
     logging.info(
         'Current DBRM_Controller/IPAddr is {}'.format(current_hostname)
     )
-    hostnames = set()
-    for _, nic_name in socket.if_nameindex():
-        ip_addr = get_ip_address_by_nic(nic_name)
-        try:
-            hostnames_3tuple = socket.gethostbyaddr(ip_addr)
-            hostnames.update([hostnames_3tuple[0], *hostnames_3tuple[1]])
-        except:
-            pass
-    logging.info('Found hostnames {}.'.format(hostnames))
-    return current_hostname in LOCALHOSTS or current_hostname in hostnames
+    if current_hostname in LOCALHOSTS:
+        logging.info('is_primary_fallback result: True (localhost match)')
+        return True
+
+    hostnames = get_my_hostnames()
+    is_primary = current_hostname in hostnames
+    logging.info('is_primary_fallback result: %s', is_primary)
+    return is_primary
 
 
 def is_node_primary(conf_root):
@@ -208,10 +262,10 @@ def get_file_size(file_path):
     except OSError as e:
         logging.error('OSError in get_file_size(): {}.'.format(e))
         return None
-    
+
 
 def em_is_empty(file_path_prefix):
-    """Returns True if EM file size is less than EM_FILE_SIZE_THRESHOLD 
+    """Returns True if EM file size is less than EM_FILE_SIZE_THRESHOLD
         or its argument is None.
 
     :rtype: Bool
@@ -286,7 +340,7 @@ def get_epoch_prefix():
     :rtype: String
     """
     epoch_time = int(time.time())
-    
+
     return 'backup_{}'.format(epoch_time)
 
 
@@ -307,7 +361,7 @@ def get_save_brm_dir_path(a_mcs_config_root):
             save_brm_dir_path = system_temp_file_dir + hdfs_rdwr_scratch
         except AttributeError:
             logging.error('Exception while getting SystemTempFileDir and hdfsRdwrScratch from Columnstore.xml', exc_info=True)
-    
+
     return save_brm_dir_path
 
 
@@ -340,7 +394,7 @@ def call_executable_with_params(executable: str, args: str) -> bool:
 
 
 def clear_shmem_locks() -> bool:
-    """Clears shmem locks before save_brm call 
+    """Clears shmem locks before save_brm call
 
     :rtype: Optional[str]
     """
@@ -349,7 +403,7 @@ def clear_shmem_locks() -> bool:
 
 
 def call_save_brm(path) -> bool:
-    """Calls save_brm with a path. 
+    """Calls save_brm with a path.
 
     :param path: path to save_brm
     :rtype: Optional[str]
@@ -360,7 +414,7 @@ def call_save_brm(path) -> bool:
 if __name__ == '__main__':
     # Configure logging to show INFO level messages
     logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
-    
+
     mcs_config_root = get_config_root_from_file(MCS_CONFIG_PATH)
     if clear_shmem_locks() is None:
         logging.error('Exiting with error cleaning locks.')
@@ -371,7 +425,7 @@ if __name__ == '__main__':
         if not call_save_brm(em_local_path_prefix) or em_is_empty(em_local_path_prefix):
             logging.error('Exiting with error trying to safe BRM locally on primary node.')
             sys.exit(1)
-        
+
         clean_up_backup_brm_files(get_save_brm_dir_path(mcs_config_root))
 
         call_save_brm(DEFAULT_EM_LOCAL_PATH_PREFIX)

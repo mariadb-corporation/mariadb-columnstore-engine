@@ -3,11 +3,19 @@ from __future__ import annotations
 import logging
 import os.path
 import socket
+import time
+from copy import deepcopy
 from time import sleep
 
 import psutil
 
-from cmapi_server.constants import ALL_MCS_PROGS, MCS_INSTALL_BIN, MCSProgs, ProgInfo
+from cmapi_server.constants import (
+    ALL_MCS_PROGS,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    MCS_INSTALL_BIN,
+    MCSProgs,
+    ProgInfo,
+)
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from cmapi_server.process_dispatchers.container import ContainerDispatcher
@@ -65,7 +73,7 @@ class MCSProcessManager:
         """
         unsorted_progs: dict
         if is_primary:
-            unsorted_progs = cls.mcs_progs
+            unsorted_progs = deepcopy(cls.mcs_progs)
         else:
             unsorted_progs = {
                 prog_name: prog_info
@@ -126,7 +134,7 @@ class MCSProcessManager:
                 'Please try to update your CMAPI version or contact support.'
             )
         logging.info(
-            f'Detected {len(cls.mcs_progs)} MCS services.'
+            f'Detected {len(cls.mcs_progs)} MCS services. '
             f'MCS version is {cls.mcs_version_info}'
         )
         # TODO: For next releases. Do we really need custom dispatchers?
@@ -164,7 +172,8 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         while attempts > 0 and len(workernodes) > 0:
             logging.debug(f'Waiting for "{list(workernodes)}"....{attempts}')
-            # creating a separated list with workernode names
+            start = time.monotonic()
+            # creating a separate list with workernode names
             # for safe deleting items from source dict
             for name in list(workernodes):
                 try:
@@ -179,15 +188,25 @@ class MCSProcessManager:
                         )
                     )
                 except (ConnectionRefusedError, socket.timeout):
-                    logging.debug(
+                    logging.info(
                         f'"{name}" {workernodes[name]["IPAddr"]}:'
                         f'{workernodes[name]["Port"]} not started yet.'
                     )
                 else:
+                    logging.debug(f'Workernode {workernodes[name]["IPAddr"]}:{workernodes[name]["Port"]} started.')
                     # delete started workernode from workernodes dict
                     del workernodes[name]
                 finally:
                     sock.close()
+
+            if workernodes:
+                # We get here only if some workernodes were not accessible during this attempt
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
+
             attempts -= 1
 
         if workernodes:
@@ -214,16 +233,23 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         success = False
         while attempts > 0:
+            start = time.monotonic()
             try:
                 with DBRM():
                     # check connection
                     success = True
             except (OSError, ConnectionRefusedError, RuntimeError):
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
                 logging.info(
                     'Cannot establish connection to controllernode.'
-                    f'Controller node still not started. Waiting...{attempts}'
+                    f'Controller node still not started. {attempts} attempts left.'
                 )
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
             else:
+                logging.debug('Controllernode is reachable')
                 break
             attempts -= 1
 
@@ -238,32 +264,44 @@ class MCSProcessManager:
         return True
 
     @classmethod
-    def _wait_for_DMLProc_stop(cls, timeout: int = 10) -> bool:
+    def _wait_for_DMLProc_stop(cls, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT) -> bool:
         """Waiting DMLProc process to stop.
 
-        :param timeout: timeout to wait, defaults to 10
+        :param timeout: timeout to wait in seconds, defaults to DMLPROC_SHUTDOWN_TIMEOUT
         :type timeout: int, optional
         :return: True on success
         :rtype: bool
         """
         logging.info(f'Waiting for DMLProc to stop in {timeout} seconds')
-        dmlproc_stopped = False
-        while timeout > 0:
-            logging.info(
-                f'Waiting for DMLProc to stop. Seconds left {timeout}.'
-            )
+        deadline = time.monotonic() + max(1, int(timeout))
+        # Log at most every 5 seconds while polling every ~1s for responsiveness
+        LOG_INTERVAL_SEC = 5.0
+        next_log_at = time.monotonic()  # log immediately on first iteration
+
+        while True:
+            now = time.monotonic()
+            remaining = deadline - now
+            if remaining <= 0:
+                break
+
             if not Process.check_process_alive('DMLProc'):
                 logging.info('DMLProc gracefully stopped by DBRM command.')
-                dmlproc_stopped = True
-                break
-            sleep(1)
-            timeout -= 1
-        else:
-            logging.error(
-                f'DMLProc did not stopped gracefully by DBRM command within '
-                f'{timeout} seconds. Will be stopped directly.'
-            )
-        return dmlproc_stopped
+                return True
+
+            if now >= next_log_at:
+                logging.info(
+                    f'Waiting for DMLProc to stop. Seconds left ~{int(remaining)}.'
+                )
+                next_log_at = now + LOG_INTERVAL_SEC
+
+            # Sleep in small increments to minimize over-wait after process exit
+            sleep(min(1.0, max(0.1, remaining)))
+
+        logging.error(
+            "DMLProc didn't stop gracefully by DBRM command within "
+            f"{int(timeout)} seconds. Will be stopped directly."
+        )
+        return False
 
     @classmethod
     def noop(cls, *args, **kwargs):
@@ -324,7 +362,7 @@ class MCSProcessManager:
 
     @classmethod
     def stop(
-        cls, name: str, is_primary: bool, use_sudo: bool, timeout: int = 10
+        cls, name: str, is_primary: bool, use_sudo: bool, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT
     ) -> bool:
         """Stop mcs process.
 
@@ -455,7 +493,7 @@ class MCSProcessManager:
         cls,
         is_primary: bool,
         use_sudo: bool = True,
-        timeout: int = 10,
+        timeout: int = DMLPROC_SHUTDOWN_TIMEOUT,
     ):
         """Stop mcs node processes.
 
@@ -472,7 +510,7 @@ class MCSProcessManager:
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
         for prog_name in cls._get_sorted_progs(is_primary=True, reverse=True):
-            if not cls.stop(prog_name, is_primary, use_sudo):
+            if not cls.stop(prog_name, is_primary, use_sudo, timeout=timeout):
                 logging.error(f'Process "{prog_name}" not stopped properly.')
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
 

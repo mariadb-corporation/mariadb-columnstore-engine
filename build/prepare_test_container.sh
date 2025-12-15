@@ -64,7 +64,10 @@ start_container() {
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
         docker_run_args+=(--env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup:ro)
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
-        docker_run_args+=(--shm-size=500m --memory 15g)
+        # Mount volume to write memory logs outside of container
+        REGRESSION_RESULTS_DIR="${SCRIPT_LOCATION}/regression-results"
+        mkdir -p "$REGRESSION_RESULTS_DIR"
+        docker_run_args+=(--shm-size=500m --memory 15g --volume "${REGRESSION_RESULTS_DIR}:/regression-results")
     else
         error "Unknown container type: $CONTAINER_NAME"
         exit 1
@@ -114,6 +117,8 @@ prepare_container() {
 
     # Prepare core dump directory inside container
     execInnerDocker "$CONTAINER_NAME" 'mkdir -p core && chmod 777 core'
+    # Prepare ASAN logs directory
+    execInnerDocker "$CONTAINER_NAME" 'mkdir -p /tmp/asan && chmod 777 /tmp/asan'
     docker cp "$COLUMNSTORE_SOURCE_PATH"/core_dumps/. "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/build/utils.sh "$CONTAINER_NAME":/
     docker cp "$COLUMNSTORE_SOURCE_PATH"/setup-repo.sh "$CONTAINER_NAME":/
@@ -147,18 +152,24 @@ prepare_container() {
 
     #Install columnstore in container
     message "Installing columnstore..."
-    SERVER_VERSION=$(grep -E 'MYSQL_VERSION_(MAJOR|MINOR)' $MDB_SOURCE_PATH/VERSION | cut -d'=' -f2 | paste -sd. -)
-    message "Server version of build is $SERVER_VERSION"
+    
+    # Try to detect server version from VERSION file (CI) or PACKAGES_URL (local)
+    if [[ -f "$MDB_SOURCE_PATH/VERSION" ]]; then
+        SERVER_VERSION=$(grep -E 'MYSQL_VERSION_(MAJOR|MINOR)' $MDB_SOURCE_PATH/VERSION | cut -d'=' -f2 | paste -sd. -)
+    else
+        # Extract from PACKAGES_URL: e.g., /10.6-enterprise/ -> 10.6
+        SERVER_VERSION=$(echo "$PACKAGES_URL" | sed -n 's|.*/\([0-9]\+\.[0-9]\+\)-enterprise\(/.*\)\?|\1|p')
+    fi
+    message "Server version of build is: ${SERVER_VERSION:-unknown}"
 
     if [[ "$RESULT" == *rocky* ]]; then
         execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
     else
-
         execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-test-dbgsym'
-        if [[ $SERVER_VERSION == '10.6' ]]; then
-            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt install -y mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym'
-        else
-            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt install -y mariadb-client-dbgsym mariadb-client-core-dbgsym mariadb-server-dbgsym mariadb-server-core-dbgsym'
+        
+        # Try to install server debug symbols (may not be available)
+        if [[ -n "$SERVER_VERSION" && $SERVER_VERSION == '10.6' ]]; then
+            execInnerDocker "$CONTAINER_NAME" 'apt install -y mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym' || warn "Debug symbols not available (not critical)"
         fi
     fi
 
