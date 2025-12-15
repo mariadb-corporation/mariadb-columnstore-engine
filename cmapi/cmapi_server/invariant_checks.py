@@ -3,7 +3,7 @@ import os
 from typing import Optional, Tuple
 
 from mr_kot import Runner, Status, any_of, check, check_all, fact, parametrize
-from mr_kot_fs_validators import Exists, GroupIs, HasMode, IsDir, OwnerIs
+from mr_kot_fs_validators import Exists, GroupIs, IsDir, IsExecutable, IsReadable, IsWritable, OwnerIs
 
 from cmapi_server import helpers
 from cmapi_server.constants import MCS_DATA_PATH
@@ -78,7 +78,9 @@ def required_dirs_perms(dir: str) -> Tuple[Status, str]:
         dir,
         Exists(),
         IsDir(),
-        HasMode('1755'),
+        IsReadable(),
+        IsWritable(),
+        IsExecutable(),
     )
     return (status, ev)
 

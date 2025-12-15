@@ -218,7 +218,8 @@ class ArithmeticOperator : public Operator
 
  private:
   template <typename result_t>
-  inline result_t execute(result_t op1, result_t op2, bool& isNull);
+  inline __attribute__((no_sanitize("signed-integer-overflow"))) result_t execute(result_t op1, result_t op2,
+                                                                                  bool& isNull);
   inline void execute(IDB_Decimal& result, IDB_Decimal op1, IDB_Decimal op2, bool& isNull);
   long fTimeZone;
   bool fDecimalOverflowCheck;
