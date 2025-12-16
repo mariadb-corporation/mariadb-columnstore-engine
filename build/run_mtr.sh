@@ -7,21 +7,27 @@ source "$SCRIPT_LOCATION"/utils.sh
 
 optparse.define short=c long=container-name desc="Name of the Docker container where mtr tests will run" variable=CONTAINER_NAME
 optparse.define short=d long=distro desc="Linux distro for which mtr is runned" variable=DISTRO
-optparse.define short=s long=suite-list desc="Comma-separated list of test suites to run" variable=MTR_SUITE_LIST
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
 optparse.define short=E long=run-as-extern desc="Run MTR with --extern flag" variable=EXTERN default=false value=true
-optparse.define short=D long=setup-data desc="Download test data and run columnstore/setup for full MTR" variable=SETUP_DATA default=false value=true
 optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default=false
 
 source $(optparse.build)
+
+# Define test suite lists
+MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
+MTR_FULL_SUITE_LIST="basic,bugfixes,future,devregression,autopilot,extended,multinode,oracle,1pmonly"
 
 if [[ "${EVENT}" == "cron" ]]; then
     FULL_MTR=true
 fi
 
 if [[ $FULL_MTR = true ]]; then
+    MTR_SUITE_LIST="$MTR_FULL_SUITE_LIST"
     SETUP_DATA=true
     EXTERN=true
+else
+    MTR_SUITE_LIST="$MTR_BASIC_SUITE_LIST"
+    SETUP_DATA=false
 fi
 
 echo "Arguments received: $@"
@@ -31,7 +37,7 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-for flag in CONTAINER_NAME DISTRO EVENT MTR_SUITE_LIST; do
+for flag in CONTAINER_NAME DISTRO EVENT; do
     if [[ -z "${!flag}" ]]; then
         error "Missing required flag: -${flag:0:1} / --${flag,,}"
         exit 1

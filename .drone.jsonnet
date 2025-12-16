@@ -67,10 +67,6 @@ local customBuildFlags(buildKey) =
 
 local any_branch = "**";
 
-
-local mtr_suite_list = "basic,bugfixes,future";
-local mtr_full_set = "basic,bugfixes,future,devregression,autopilot,extended,multinode,oracle,1pmonly";
-
 local upgrade_test_lists = {
   rockylinux8: {
     arm64: ["10.6.4-1", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
@@ -311,18 +307,15 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:git",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      MTR_SUITE_LIST: "${MTR_SUITE_LIST:-" + mtr_suite_list + "}",
       MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
     },
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true),
-      'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" = true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
       "apk add bash &&" +
       get_build_command("run_mtr.sh") +
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
-      " --suite-list $${MTR_SUITE_LIST}" +
       " --triggering-event " + event +
       " --full-mtr $${MTR_FULL_SUITE}" +
       if std.endsWith(result, "ASan") then " --run-as-extern" else "",
