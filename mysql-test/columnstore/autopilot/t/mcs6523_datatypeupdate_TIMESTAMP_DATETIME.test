@@ -8,7 +8,7 @@
 #
 use autopilot;
 --disable_query_log
-SET time_zone='GMT';
+SET time_zone='+00:00';
 --enable_query_log
 
 START TRANSACTION;
