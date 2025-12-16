@@ -316,7 +316,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true),
-      'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" == true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
+      'MTR_SUITE_LIST=$([ "$MTR_FULL_SUITE" = true ] && echo "' + mtr_full_set + '" || echo "$MTR_SUITE_LIST")',
 
       "apk add bash &&" +
       get_build_command("run_mtr.sh") +
@@ -324,6 +324,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --distro " + platform +
       " --suite-list $${MTR_SUITE_LIST}" +
       " --triggering-event " + event +
+      " --full-mtr $${MTR_FULL_SUITE}" +
       if std.endsWith(result, "ASan") then " --run-as-extern" else "",
     ],
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
