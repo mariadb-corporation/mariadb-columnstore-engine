@@ -5332,6 +5332,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
           return ER_INTERNAL_ERROR;
         }
         dynamic_cast<CalpontSelectExecutionPlan*>(anchor_plan.get())->isRecursiveWithTable(true);
+        dynamic_cast<CalpontSelectExecutionPlan*>(anchor_plan.get())
+            ->maxRecursiveDepth(gwi.thd->variables.max_recursive_iterations);
 
         gwi.derivedTbList.push_back(anchor_plan);
         gwi.tbList.push_back(tn);

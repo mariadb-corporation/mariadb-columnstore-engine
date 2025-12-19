@@ -843,7 +843,7 @@ void CalpontSelectExecutionPlan::unserialize(messageqcpp::ByteStream& b)
   fIsRecursiveQuery = tmp8;
   b >> tmp8;
   fContainsRecursiveQuery = tmp8;
-  b >> fMaxRecursiveDepth;
+  b >> (uint32_t&)fMaxRecursiveDepth;
 }
 
 bool CalpontSelectExecutionPlan::operator==(const CalpontSelectExecutionPlan& t) const
@@ -1224,7 +1224,7 @@ SCSEP CalpontSelectExecutionPlan::clone()
   }
 
   newPlan->fDerivedTableList.clear();
-  for (const auto& drvTable: fDerivedTableList)
+  for (const auto& drvTable : fDerivedTableList)
   {
     auto* drvCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(drvTable.get());
     idbassert_s(drvCSEP != nullptr, "derivedTable is not a CalpontSelectExecutionPlan");
