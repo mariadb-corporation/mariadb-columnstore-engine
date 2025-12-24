@@ -81,9 +81,9 @@ Example: /mnt/backups/
 .IP \(bu 2
 \fB\fC\-bd, \-\-backup\-destination TEXT\fR: Are the backups going to be stored on the same machine this script is running on or another server \- if Remote you need to setup scp=Options: \[dq]Local\[dq] or \[dq]Remote\[dq]
 .IP \(bu 2
-\fB\fC\-scp TEXT\fR: Used only if \-\-backup\-destination=\[dq]Remote\[dq]\&.
+\fB\fC\-scp, \-\-secure\-copy\-protocol TEXT\fR: Used only if \-\-backup\-destination=\[dq]Remote\[dq]\&.
 The user/credentials that will be used to scp the backup files
-Example: \[dq]\[la]centos@10.14.51.62\[ra]\[dq]
+Example: \[dq]\[la]centos@192.168.0.1\[ra]\[dq]
 .IP \(bu 2
 \fB\fC\-bb, \-\-backup\-bucket TEXT\fR: Only used if \-\-storage=S3
 Name of the bucket to store the columnstore backups.
@@ -162,7 +162,17 @@ $ mcs dbrm_backup [OPTIONS]
 .IP \(bu 2
 \fB\fC\-ssm, \-\-skip\-storage\-manager\fR: Skip backing up storagemanager directory.
 .IP \(bu 2
+\fB\fC\-sbrm, \-\-skip\-save\-brm\fR: Skip saving BRM prior to running a DBRM backup \- ideal for dirty backups.
+.IP \(bu 2
+\fB\fC\-slock, \-\-skip\-locks\fR: Skip issuing flush read locks to dbrms.
+.IP \(bu 2
+\fB\fC\-spoll, \-\-skip\-polls\fR: Skip polling to confirm locks are released.
+.IP \(bu 2
 \fB\fC\-q, \-\-quiet\fR: Silence verbose copy command outputs.
+.IP \(bu 2
+\fB\fC\-pi, \-\-poll\-interval INTEGER\fR: Number of seconds to wait between polls to confirm.
+.IP \(bu 2
+\fB\fC\-pmw, \-\-poll\-max\-wait INTEGER\fR: Max number of minutes for polling checks for writes to wait before exiting as a failed dbrm backup attempt.
 .IP \(bu 2
 \fB\fC\-li, \-\-list\fR: List backups.
 .IP \(bu 2
@@ -456,6 +466,8 @@ $ mcs status [OPTIONS]
 \fBOptions\fP:
 .RS
 .IP \(bu 2
+\fB\fC\-h, \-\-human\-readable\fR: Output cluster status in human\-readable text instead of JSON.
+.IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
 .SH \fB\fCmcs stop\fR
@@ -714,6 +726,8 @@ $ mcs cluster status [OPTIONS]
 \fBOptions\fP:
 .RS
 .IP \(bu 2
+\fB\fC\-h, \-\-human\-readable\fR: Output cluster status in human\-readable text instead of JSON.
+.IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
 .SS \fB\fCmcs cluster stop\fR
@@ -946,6 +960,8 @@ $ mcs cmapi [OPTIONS] COMMAND [ARGS]...
 .RS
 .IP \(bu 2
 \fB\fCis\-ready\fR: Check CMAPI is ready to handle requests.
+.IP \(bu 2
+\fB\fCconfig\fR: Manage CMAPI configuration.
 .RE
 .SS \fB\fCmcs cmapi is\-ready\fR
 .PP
@@ -963,6 +979,48 @@ $ mcs cmapi is\-ready [OPTIONS]
 .RS
 .IP \(bu 2
 \fB\fC\-\-node TEXT\fR: Which node to check the CMAPI is ready to handle requests.  [default: 127.0.0.1]
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.SS \fB\fCmcs cmapi config\fR
+.PP
+Manage CMAPI configuration.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cmapi config [OPTIONS] COMMAND [ARGS]...
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-help\fR: Show this message and exit.
+.RE
+.PP
+\fBCommands\fP:
+.RS
+.IP \(bu 2
+\fB\fCset\fR: Set CMAPI configuration on all nodes.
+.RE
+.SS \fB\fCmcs cmapi config set\fR
+.PP
+Set CMAPI configuration on all nodes.
+.PP
+\fBUsage\fP:
+.PP
+.RS
+.nf
+$ mcs cmapi config set [OPTIONS]
+.fi
+.RE
+.PP
+\fBOptions\fP:
+.RS
+.IP \(bu 2
+\fB\fC\-\-sampling\-interval\-seconds INTEGER RANGE\fR: Failover sampling interval in seconds.  [x>=1]
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE
