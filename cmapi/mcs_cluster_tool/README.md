@@ -52,9 +52,9 @@ Consider write permissions of the scp user and the user running this script.
 Mariadb-backup will use this location as a tmp dir for S3 and remote backups temporarily.
 Example: /mnt/backups/
 * `-bd, --backup-destination TEXT`: Are the backups going to be stored on the same machine this script is running on or another server - if Remote you need to setup scp=Options: &quot;Local&quot; or &quot;Remote&quot;
-* `-scp TEXT`: Used only if --backup-destination=&quot;Remote&quot;.
+* `-scp, --secure-copy-protocol TEXT`: Used only if --backup-destination=&quot;Remote&quot;.
 The user/credentials that will be used to scp the backup files
-Example: &quot;centos@10.14.51.62&quot;
+Example: &quot;centos@192.168.0.1&quot;
 * `-bb, --backup-bucket TEXT`: Only used if --storage=S3
 Name of the bucket to store the columnstore backups.
 Example: &quot;s3://my-cs-backups&quot;
@@ -102,7 +102,12 @@ $ mcs dbrm_backup [OPTIONS]
 * `-m, --mode TEXT`: &quot;loop&quot; or &quot;once&quot; ; Determines if this script runs in a forever loop sleeping -i minutes or just once.  [default: once]
 * `-nb, --name-backup TEXT`: Define the prefix of the backup - default: dbrm_backup+date +%Y%m%d_%H%M%S  [default: dbrm_backup]
 * `-ssm, --skip-storage-manager`: Skip backing up storagemanager directory.
+* `-sbrm, --skip-save-brm`: Skip saving BRM prior to running a DBRM backup - ideal for dirty backups.
+* `-slock, --skip-locks`: Skip issuing flush read locks to dbrms.
+* `-spoll, --skip-polls`: Skip polling to confirm locks are released.
 * `-q, --quiet`: Silence verbose copy command outputs.
+* `-pi, --poll-interval INTEGER`: Number of seconds to wait between polls to confirm.
+* `-pmw, --poll-max-wait INTEGER`: Max number of minutes for polling checks for writes to wait before exiting as a failed dbrm backup attempt.
 * `-li, --list`: List backups.
 * `--help`: Show this message and exit.
 
@@ -311,6 +316,7 @@ $ mcs status [OPTIONS]
 
 **Options**:
 
+* `-h, --human-readable`: Output cluster status in human-readable text instead of JSON.
 * `--help`: Show this message and exit.
 
 ## `mcs stop`
@@ -511,6 +517,7 @@ $ mcs cluster status [OPTIONS]
 
 **Options**:
 
+* `-h, --human-readable`: Output cluster status in human-readable text instead of JSON.
 * `--help`: Show this message and exit.
 
 ### `mcs cluster stop`
@@ -693,6 +700,7 @@ $ mcs cmapi [OPTIONS] COMMAND [ARGS]...
 **Commands**:
 
 * `is-ready`: Check CMAPI is ready to handle requests.
+* `config`: Manage CMAPI configuration.
 
 ### `mcs cmapi is-ready`
 
@@ -707,6 +715,39 @@ $ mcs cmapi is-ready [OPTIONS]
 **Options**:
 
 * `--node TEXT`: Which node to check the CMAPI is ready to handle requests.  [default: 127.0.0.1]
+* `--help`: Show this message and exit.
+
+### `mcs cmapi config`
+
+Manage CMAPI configuration.
+
+**Usage**:
+
+```console
+$ mcs cmapi config [OPTIONS] COMMAND [ARGS]...
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `set`: Set CMAPI configuration on all nodes.
+
+#### `mcs cmapi config set`
+
+Set CMAPI configuration on all nodes.
+
+**Usage**:
+
+```console
+$ mcs cmapi config set [OPTIONS]
+```
+
+**Options**:
+
+* `--sampling-interval-seconds INTEGER RANGE`: Failover sampling interval in seconds.  [x&gt;=1]
 * `--help`: Show this message and exit.
 
 ## `mcs sentry`
