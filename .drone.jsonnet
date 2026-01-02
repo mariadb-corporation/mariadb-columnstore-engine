@@ -723,7 +723,7 @@ local AllPipelines =
     for server in servers[current_branch]
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh'])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh', 'test011.sh'])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
