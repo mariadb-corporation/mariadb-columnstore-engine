@@ -11,3 +11,4 @@ pron : pron is not threadsfe and doesn't work with PrimProc TDB: leonid.fedorov@
 ctype_extent_koi8u : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
 ctype_extent_latin1 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
 ctype_extent_utf8mb3 : unstable MCOL-6165 2025-09-26 timofey.turenko@mariadb.com
+MCOL-5142-left-join-null-driving: unstable MCOL-5142 2026-01-02 roman.nozdrin@mariadb.com
