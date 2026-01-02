@@ -2254,10 +2254,10 @@ void setError(THD* thd, uint32_t errcode, string errmsg)
   ci->expressionId = 0;
 }
 
-void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& gwi)
+void setError(THD* thd, uint32_t errcode, string errmsg, gp_walk_info& /*gwi*/)
 {
-  // Clean up any allocated objects in the work stacks to prevent memory leaks
-  clearDeleteStacks(gwi);
+  // Note: Work stacks are cleaned up by StackCleanupGuard in the calling function.
+  // The gwi parameter is kept for API compatibility.
   setError(thd, errcode, errmsg);
 }
 
@@ -2269,13 +2269,12 @@ int setErrorAndReturn(gp_walk_info& gwi)
   // processing.
   if (gwi.thd->derived_tables_processing)
   {
-    // Clean up work stacks even for derived table processing to prevent leaks
-    clearDeleteStacks(gwi);
+    // Work stacks are cleaned up by StackCleanupGuard in the caller (processWhere)
     gwi.cs_vtable_is_update_with_derive = true;
     return -1;
   }
 
-  setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText, gwi);
+  setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
   return ER_INTERNAL_ERROR;
 }
 
@@ -6314,9 +6313,6 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     csep->filters(filters);
   }
 
-  // Clean up any remaining items on work stacks
-  clearDeleteStacks(gwi);
-
   return 0;
 }
 
@@ -7201,6 +7197,9 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool isUnion,
                   bool isSelectHandlerTop, bool isSelectLexUnit, const std::vector<COND*>& condStack)
 {
+  // RAII: automatically clean up work stacks on any return path
+  StackCleanupGuard stackGuard(gwi);
+
 #ifdef DEBUG_WALK_COND
   cerr << "getSelectPlan()" << endl;
 #endif

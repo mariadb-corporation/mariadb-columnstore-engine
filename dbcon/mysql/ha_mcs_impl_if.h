@@ -674,6 +674,24 @@ void setError(THD* thd, uint32_t errcode, const std::string errmsg, gp_walk_info
 void setError(THD* thd, uint32_t errcode, const std::string errmsg);
 void gp_walk(const Item* item, void* arg);
 void clearDeleteStacks(gp_walk_info& gwi);
+
+// RAII guard to unconditionally clean up work stacks when going out of scope.
+class StackCleanupGuard
+{
+ public:
+  explicit StackCleanupGuard(gp_walk_info& gwi) : fgwi(gwi)
+  {
+  }
+  ~StackCleanupGuard()
+  {
+    clearDeleteStacks(fgwi);
+  }
+  StackCleanupGuard(const StackCleanupGuard&) = delete;
+  StackCleanupGuard& operator=(const StackCleanupGuard&) = delete;
+
+ private:
+  gp_walk_info& fgwi;
+};
 void parse_item(Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16& parseInfo,
                 gp_walk_info* gwip = nullptr);
 const std::string bestTableName(const Item_field* ifp);
