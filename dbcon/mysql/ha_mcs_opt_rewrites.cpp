@@ -108,7 +108,11 @@ void first_cond_optimization_flag_toggle(SELECT_LEX* select_lex, void (*func)(SE
         {
           if (sl->get_table_list())
           {
-            first_cond_optimization_flag_toggle(sl, func);
+            // rCTE will recursively call toggle for the same SL
+            if (select_lex != sl)
+            {
+              first_cond_optimization_flag_toggle(sl, func);
+            }
           }
         }
       }
