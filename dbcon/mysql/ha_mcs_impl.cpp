@@ -3808,8 +3808,11 @@ COND* ha_mcs_impl_cond_push(COND* cond, TABLE* table, std::vector<COND*>& condSt
     gwi->condPush = true;
     gwi->thd = thd;
     gwi->sessionid = tid2sid(thd->thread_id);
-    cond->traverse_cond(gp_walk, gwi, Item::POSTFIX);
-    clearDeleteStacks(*gwi);
+    {
+      // RAII: clean up work stacks after traverse_cond
+      StackCleanupGuard stackGuard(*gwi);
+      cond->traverse_cond(gp_walk, gwi, Item::POSTFIX);
+    }
     ci->tableMap[table] = ti;
 
     if (gwi->fatalParseError)
