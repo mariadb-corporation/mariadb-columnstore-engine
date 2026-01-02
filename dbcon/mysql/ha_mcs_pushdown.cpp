@@ -879,7 +879,7 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       // Unset select_lex::first_cond_optimization
       if (select_lex->first_cond_optimization)
       {
-        // first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
+        first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
       }
     }
   }

@@ -5298,9 +5298,6 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         // SELECT_LEX* end = NULL;
         dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())
             ->maxRecursiveDepth(gwi.thd->variables.max_recursive_iterations);
-        // CalpontSelectExecutionPlan::SelectList unionVec;
-        // bool unionSel = true;
-        // uint8_t distUnionNum = 0;
         SCSEP anchor_plan = NULL;
 
         gwi.isRecursiveWithTable = true;
@@ -5503,8 +5500,6 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
   if (!isUnion && (!isSelectHandlerTop || isSelectLexUnit) && select_lex.master_unit()->is_unit_op())
   {
-    // MCOL-2178 isUnion member only assigned, never used
-    // MIGR::infinidb_vtable.isUnion = true;
     CalpontSelectExecutionPlan::SelectList unionVec;
     SELECT_LEX* select_cursor = select_lex.master_unit()->first_select();
     unionSel = true;
@@ -5532,8 +5527,6 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       // distinct union num
       if (sl == select_lex.master_unit()->union_distinct)
         distUnionNum = unionVec.size();
-      // if (sl->get_table_list()->is_recursive_with_table())
-      //   break;
     }
 
     csep->unionVec(unionVec);
