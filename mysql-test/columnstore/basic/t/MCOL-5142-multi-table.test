@@ -38,6 +38,7 @@ INSERT INTO suppliers (supplier_id, supplier_name, component_id) VALUES
 (1001, 'Supplier B', 201),
 (1002, 'Supplier C', 202);
 
+#sorted_result
 WITH RECURSIVE product_tree AS (
     SELECT
         p.product_id AS root_id,
@@ -67,8 +68,7 @@ SELECT
     s.supplier_name AS supplier,
     pt.level
 FROM product_tree pt
-JOIN suppliers s ON pt.component_id = s.component_id
-ORDER BY pt.root_id, pt.level, pt.component_id;
+JOIN suppliers s ON pt.component_id = s.component_id;
 
 DROP DATABASE MULTI_TABLE_TEST;
 

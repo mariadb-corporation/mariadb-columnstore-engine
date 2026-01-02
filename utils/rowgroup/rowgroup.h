@@ -378,8 +378,6 @@ class RGData
   // Need sig to support backward compat.  RGData can deserialize both forms.
   static const uint32_t RGDATA_SIG = 0xffffffff;  // won't happen for 'old' Rowgroup data
 
-  uint32_t skipSteps = 0;  // TEST:: for dealing with recursive CTE
-
   friend class RowGroup;
   friend class RowGroupStorage;
 };

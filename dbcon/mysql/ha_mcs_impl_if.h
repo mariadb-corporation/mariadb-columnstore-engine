@@ -704,8 +704,6 @@ void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& 
 void castCharArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castDecimalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castTypeArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
-// void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16&
-// parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
 execplan::ParseTree* buildRowPredicate(gp_walk_info* gwip, execplan::RowColumn* lhs, execplan::RowColumn* rhs,
                                        std::string predicateOp);
@@ -723,9 +721,6 @@ execplan::CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item);
 execplan::SPTP getIntervalType(gp_walk_info* gwip, int interval_type);
 uint32_t isPseudoColumn(std::string funcName);
 void setDerivedTable(execplan::ParseTree* n);
-// execplan::ParseTree* setDerivedFilter(gp_walk_info* gwip, execplan::ParseTree*& n,
-//                                       std::map<std::string, execplan::ParseTree*>& obj,
-//                                       execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
 void derivedTableOptimization(gp_walk_info* gwip, execplan::SCSEP& csep);
 bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedColumn* rhs, gp_walk_info* gwip,
                             boost::shared_ptr<execplan::Operator>& sop, const Item_func::Functype& funcType,
