@@ -97,8 +97,8 @@ execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan:
       }
     }
 
-    // should never be null; if null then give up optimization.
-    if (!csep)
+    // should never be null; if null or rCTE then give up the optimization.
+    if (!csep || csep->isRecursiveWithTable())
       return n;
 
     // 2. push the filter to the derived table filter stack, or 'and' with
@@ -183,6 +183,7 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList derivedColList = plan->returnedCols();
     auto mapIt = derivedTbFilterMap.find(plan->derivedTbAlias());
 
+    // TODO implement rCTE anchor-only specific predicate pushdown.
     if (mapIt != derivedTbFilterMap.end())
     {
       // replace all derived column of this filter with real column from

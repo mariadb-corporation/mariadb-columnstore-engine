@@ -1,0 +1,38 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5142_MULTI_ROOT;
+--enable_warnings
+
+CREATE DATABASE MCOL5142_MULTI_ROOT;
+USE MCOL5142_MULTI_ROOT;
+
+CREATE TABLE emp (
+  id INT NOT NULL,
+  name VARCHAR(50),
+  manager_id INT NULL
+) ENGINE=ColumnStore;
+
+INSERT INTO emp VALUES
+(1,'CEO-A',NULL),
+(2,'A-1',1),
+(3,'A-2',1),
+(10,'CEO-B',NULL),
+(11,'B-1',10),
+(12,'B-2',10),
+(13,'B-1-1',11);
+
+#sorted_result
+WITH RECURSIVE org AS (
+  SELECT id, name, manager_id, id AS root_id, 0 AS lvl
+  FROM emp
+  WHERE manager_id IS NULL
+
+  UNION ALL
+
+  SELECT e.id, e.name, e.manager_id, o.root_id, o.lvl + 1
+  FROM emp e
+  JOIN org o ON e.manager_id = o.id
+)
+SELECT root_id, id, name, manager_id, lvl
+FROM org;
+
+DROP DATABASE MCOL5142_MULTI_ROOT;
