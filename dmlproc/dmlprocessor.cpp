@@ -132,175 +132,191 @@ struct CancellationThread
 
       if (bRollback)
       {
-        RollbackTransactionProcessor rollbackProcessor(fDbrm);
-        SessionManager sessionManager;
-        uint64_t uniqueId = fDbrm->getUnique64();
-        std::string errorMsg;
-        int activeTransCount = 0;
-        int idleTransCount = 0;
-        bDoingRollback = true;
-        ostringstream oss;
-        oss << "DMLProc has been told to rollback all DML transactions.";
-        DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
-        // Tell any active processors to stop working and return an error
-        // The front end will respond with a ROLLBACK command.
-        // Mark all active processors to rollback
-        boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
-
-        for (phIter = DMLProcessor::packageHandlerMap.begin();
-             phIter != DMLProcessor::packageHandlerMap.end(); ++phIter)
+        try
         {
+          RollbackTransactionProcessor rollbackProcessor(fDbrm);
+          SessionManager sessionManager;
+          uint64_t uniqueId = fDbrm->getUnique64();
+          std::string errorMsg;
+          int activeTransCount = 0;
+          int idleTransCount = 0;
+          bDoingRollback = true;
           ostringstream oss;
-          oss << "DMLProc will rollback active session " << phIter->second->getSessionID() << " Transaction "
-              << phIter->second->getTxnid();
+          oss << "DMLProc has been told to rollback all DML transactions.";
           DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+          // Tell any active processors to stop working and return an error
+          // The front end will respond with a ROLLBACK command.
+          // Mark all active processors to rollback
+          boost::mutex::scoped_lock lk2(DMLProcessor::packageHandlerMapLock);
 
-          ++activeTransCount;
-          phIter->second->rollbackPending();
-        }
-
-        if (activeTransCount > 0)
-        {
-          ostringstream oss1;
-          oss1 << "DMLProc is rolling back back " << activeTransCount << " active transactions.";
-          DMLProcessor::log(oss1.str(), logging::LOG_TYPE_INFO);
-        }
-
-        // WIP Need to set cluster to read-only via CMAPI before shutting the cluster down.
-        if (fDbrm->isReadWrite())
-        {
-          continue;
-        }
-
-        // Check for any open DML transactions that don't currently have
-        // a processor
-        tableLocks = fDbrm->getAllTableLocks();
-
-        if (tableLocks.size() > 0)
-        {
-          for (uint32_t i = 0; i < tableLocks.size(); ++i)
+          for (phIter = DMLProcessor::packageHandlerMap.begin();
+               phIter != DMLProcessor::packageHandlerMap.end(); ++phIter)
           {
-            sessionID = tableLocks[i].ownerSessionID;
-            phIter = DMLProcessor::packageHandlerMap.find(sessionID);
+            ostringstream oss;
+            oss << "DMLProc will rollback active session " << phIter->second->getSessionID()
+                << " Transaction " << phIter->second->getTxnid();
+            DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
 
-            if (phIter == DMLProcessor::packageHandlerMap.end())
+            ++activeTransCount;
+            phIter->second->rollbackPending();
+          }
+
+          if (activeTransCount > 0)
+          {
+            ostringstream oss1;
+            oss1 << "DMLProc is rolling back back " << activeTransCount << " active transactions.";
+            DMLProcessor::log(oss1.str(), logging::LOG_TYPE_INFO);
+          }
+
+          // WIP Need to set cluster to read-only via CMAPI before shutting the cluster down.
+          if (fDbrm->isReadWrite())
+          {
+            continue;
+          }
+
+          // Check for any open DML transactions that don't currently have
+          // a processor
+          tableLocks = fDbrm->getAllTableLocks();
+
+          if (tableLocks.size() > 0)
+          {
+            for (uint32_t i = 0; i < tableLocks.size(); ++i)
             {
-              // We have found an active transaction without a packagehandler.
-              // This means that a transaction is open with autocommit turned
-              // off, but there's no current activity on the transaction. We
-              // need to roll it back if it's a DML transaction.
-              // If ownerName == "DMLProc" then it's a DML transaction.
-              if (tableLocks[i].ownerName == "DMLProc")
+              sessionID = tableLocks[i].ownerSessionID;
+              phIter = DMLProcessor::packageHandlerMap.find(sessionID);
+
+              if (phIter == DMLProcessor::packageHandlerMap.end())
               {
-                // OK, we know this is an idle DML transaction, so roll it back.
-                ++idleTransCount;
-                txnId.id = tableLocks[i].ownerTxnID;
-                txnId.valid = true;
-                rc = rollbackProcessor.rollBackTransaction(uniqueId, txnId, sessionID, errorMsg);
-
-                if (rc == 0)
+                // We have found an active transaction without a packagehandler.
+                // This means that a transaction is open with autocommit turned
+                // off, but there's no current activity on the transaction. We
+                // need to roll it back if it's a DML transaction.
+                // If ownerName == "DMLProc" then it's a DML transaction.
+                if (tableLocks[i].ownerName == "DMLProc")
                 {
-                  fDbrm->invalidateUncommittedExtentLBIDs(txnId.id, false);
-
-                  //@Bug 4524. In case it is batchinsert, call bulkrollback.
-                  rc = rollbackProcessor.rollBackBatchAutoOnTransaction(uniqueId, txnId, sessionID,
-                                                                        tableLocks[i].tableOID, errorMsg);
+                  // OK, we know this is an idle DML transaction, so roll it back.
+                  ++idleTransCount;
+                  txnId.id = tableLocks[i].ownerTxnID;
+                  txnId.valid = true;
+                  rc = rollbackProcessor.rollBackTransaction(uniqueId, txnId, sessionID, errorMsg);
 
                   if (rc == 0)
                   {
-                    logging::logCommand(0, tableLocks[i].ownerTxnID, "ROLLBACK;");
+                    fDbrm->invalidateUncommittedExtentLBIDs(txnId.id, false);
 
-                    bool lockReleased = true;
+                    //@Bug 4524. In case it is batchinsert, call bulkrollback.
+                    rc = rollbackProcessor.rollBackBatchAutoOnTransaction(uniqueId, txnId, sessionID,
+                                                                          tableLocks[i].tableOID, errorMsg);
 
-                    try
+                    if (rc == 0)
                     {
-                      lockReleased = fDbrm->releaseTableLock(tableLocks[i].id);
-                      TablelockData::removeTablelockData(sessionID);
-                    }
-                    catch (std::exception&)
-                    {
-                      throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
-                    }
+                      logging::logCommand(0, tableLocks[i].ownerTxnID, "ROLLBACK;");
 
-                    if (lockReleased)
-                    {
-                      sessionManager.rolledback(txnId);
-                      ostringstream oss;
-                      oss << "DMLProc rolled back idle transaction " << tableLocks[i].ownerTxnID
-                          << " and table lock id " << tableLocks[i].id << " is released.";
-                      DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+                      bool lockReleased = true;
+
+                      try
+                      {
+                        lockReleased = fDbrm->releaseTableLock(tableLocks[i].id);
+                        TablelockData::removeTablelockData(sessionID);
+                      }
+                      catch (std::exception&)
+                      {
+                        throw std::runtime_error(IDBErrorInfo::instance()->errorMsg(ERR_HARD_FAILURE));
+                      }
+
+                      if (lockReleased)
+                      {
+                        sessionManager.rolledback(txnId);
+                        ostringstream oss;
+                        oss << "DMLProc rolled back idle transaction " << tableLocks[i].ownerTxnID
+                            << " and table lock id " << tableLocks[i].id << " is released.";
+                        DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+                      }
+                      else
+                      {
+                        ostringstream oss;
+                        oss << "DMLProc rolled back idle transaction " << tableLocks[i].ownerTxnID
+                            << " and tble lock id " << tableLocks[i].id << " is not released.";
+                        DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+                      }
                     }
                     else
                     {
                       ostringstream oss;
-                      oss << "DMLProc rolled back idle transaction " << tableLocks[i].ownerTxnID
-                          << " and tble lock id " << tableLocks[i].id << " is not released.";
-                      DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+                      oss << " problem with bulk rollback of idle transaction " << tableLocks[i].ownerTxnID
+                          << "and DBRM is setting to readonly and table lock is not released: " << errorMsg;
+                      DMLProcessor::log(oss.str(), logging::LOG_TYPE_CRITICAL);
+                      rc = fDbrm->setReadOnly(true);
                     }
                   }
                   else
                   {
                     ostringstream oss;
-                    oss << " problem with bulk rollback of idle transaction " << tableLocks[i].ownerTxnID
+                    oss << " problem with rollback of idle transaction " << tableLocks[i].ownerTxnID
                         << "and DBRM is setting to readonly and table lock is not released: " << errorMsg;
                     DMLProcessor::log(oss.str(), logging::LOG_TYPE_CRITICAL);
                     rc = fDbrm->setReadOnly(true);
                   }
                 }
-                else
-                {
-                  ostringstream oss;
-                  oss << " problem with rollback of idle transaction " << tableLocks[i].ownerTxnID
-                      << "and DBRM is setting to readonly and table lock is not released: " << errorMsg;
-                  DMLProcessor::log(oss.str(), logging::LOG_TYPE_CRITICAL);
-                  rc = fDbrm->setReadOnly(true);
-                }
               }
             }
           }
-        }
 
-        // If there are any abandonded transactions without locks
-        // release them.
-        int len;
-        std::shared_ptr<BRM::SIDTIDEntry[]> activeTxns = sessionManager.SIDTIDMap(len);
+          // If there are any abandonded transactions without locks
+          // release them.
+          int len;
+          std::shared_ptr<BRM::SIDTIDEntry[]> activeTxns = sessionManager.SIDTIDMap(len);
 
-        for (int i = 0; i < len; i++)
-        {
-          // If there isn't a table lock for this transaction, roll it back. Otherwise, assume
-          // it has an active processor or is not DML initiated and leave it alone. It's someone
-          // else's concern.
-          bool bFoundit = false;
-
-          for (uint32_t j = 0; j < tableLocks.size(); ++j)
+          for (int i = 0; i < len; i++)
           {
-            if (tableLocks[j].ownerTxnID == activeTxns[i].txnid.id)
+            // If there isn't a table lock for this transaction, roll it back. Otherwise, assume
+            // it has an active processor or is not DML initiated and leave it alone. It's someone
+            // else's concern.
+            bool bFoundit = false;
+
+            for (uint32_t j = 0; j < tableLocks.size(); ++j)
             {
-              bFoundit = true;
-              break;
+              if (tableLocks[j].ownerTxnID == activeTxns[i].txnid.id)
+              {
+                bFoundit = true;
+                break;
+              }
+            }
+
+            if (!bFoundit && activeTxns[i].txnid.valid)
+            {
+              rollbackProcessor.rollBackTransaction(uniqueId, activeTxns[i].txnid, activeTxns[i].sessionid,
+                                                    errorMsg);
+              sessionManager.rolledback(activeTxns[i].txnid);
+              ++idleTransCount;
+              ostringstream oss;
+              oss << "DMLProc rolled back idle transaction with no tablelock" << tableLocks[i].ownerTxnID;
+              DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
             }
           }
 
-          if (!bFoundit && activeTxns[i].txnid.valid)
+          if (idleTransCount > 0)
           {
-            rollbackProcessor.rollBackTransaction(uniqueId, activeTxns[i].txnid, activeTxns[i].sessionid,
-                                                  errorMsg);
-            sessionManager.rolledback(activeTxns[i].txnid);
-            ++idleTransCount;
-            ostringstream oss;
-            oss << "DMLProc rolled back idle transaction with no tablelock" << tableLocks[i].ownerTxnID;
-            DMLProcessor::log(oss.str(), logging::LOG_TYPE_INFO);
+            ostringstream oss2;
+            oss2 << "DMLProc has rolled back " << idleTransCount << " idle transactions.";
+            DMLProcessor::log(oss2.str(), logging::LOG_TYPE_INFO);
           }
+          // Here is the end of the rollback if so DMLProc rollbacks what it can.
+          break;
         }
-
-        if (idleTransCount > 0)
+        catch (std::exception& ex)
         {
-          ostringstream oss2;
-          oss2 << "DMLProc has rolled back " << idleTransCount << " idle transactions.";
-          DMLProcessor::log(oss2.str(), logging::LOG_TYPE_INFO);
+          ostringstream oss;
+          oss << "DMLProc failed to rollback transactions: " << ex.what();
+          DMLProcessor::log(oss.str(), logging::LOG_TYPE_CRITICAL);
+          break;
         }
-        // Here is the end of the rollback if so DMLProc rollbacks what it can.
-        break;
+        catch (...)
+        {
+          DMLProcessor::log("DMLProc failed to rollback transactions: unknown exception",
+                            logging::LOG_TYPE_CRITICAL);
+          break;
+        }
       }
     }
     // Setting the flag to tell DMLServer to exit.
@@ -1406,8 +1422,7 @@ void DMLProcessor::operator()()
 
       int rr = fDbrm->getSystemState(stateFlags);
 
-      if (rr >
-          0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
+      if (rr > 0)  // > 0 implies succesful retrieval. It doesn't imply anything about the contents
       {
         messageqcpp::ByteStream results;
         std::string responseMsg;
@@ -1846,8 +1861,7 @@ void DMLProcessor::operator()()
 }
 
 void RollbackTransactionProcessor::processBulkRollback(BRM::TableLockInfo lockInfo, BRM::DBRM* dbrm,
-                                                       uint64_t uniqueId,
-                                                       OamCache* oamcache,
+                                                       uint64_t uniqueId, OamCache* oamcache,
                                                        bool& lockReleased)
 {
   // Take over ownership of stale lock.
