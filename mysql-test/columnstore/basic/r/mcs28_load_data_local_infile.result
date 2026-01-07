@@ -11,7 +11,7 @@ Warning	1265	Data truncated for column 'a' at row 2
 Warning	1265	Data truncated for column 'b' at row 2
 Warning	1265	Data truncated for column 'd' at row 2
 LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata1.dat' INTO TABLE t1 FIELDS TERMINATED BY ',' IGNORE 2 LINES;;
-SELECT * FROM t1;
+SELECT * FROM t1 ORDER BY a,b,c,d;
 a	b	c	d
 0000-00-00	NULL	0000-00-00	0000-00-00
 0000-00-00	0000-00-00	0000-00-00	0000-00-00

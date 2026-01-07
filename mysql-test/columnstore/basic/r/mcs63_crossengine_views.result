@@ -185,12 +185,12 @@ DROP VIEW v1;
 CREATE VIEW v1 AS SELECT * FROM t1;
 CREATE VIEW v2 AS SELECT * FROM t2;
 INSERT INTO tt SELECT v1.id*100+v1.id, CONCAT(v1.fname,'+',v2.fname) FROM v1,v2 WHERE v1.id=v2.id;
-SELECT * FROM tt;
+SELECT * FROM tt ORDER BY fname;
 id	fname
-101	One-Uno
-202	Two-Due
 101	One+Uno
+101	One-Uno
 202	Two+Due
+202	Two-Due
 DROP VIEW v1,v2;
 DROP TABLE tt,t2,t1;
 DROP USER 'cejuser'@'localhost';
