@@ -15,6 +15,10 @@ if (!$MASTER_MYPORT)
 DROP DATABASE IF EXISTS mcs63_db;
 --enable_warnings
 
+--disable_query_log
+SET collation_server = 'utf8mb4_general_ci';
+--enable_query_log
+
 CREATE DATABASE mcs63_db;
 USE mcs63_db;
 
