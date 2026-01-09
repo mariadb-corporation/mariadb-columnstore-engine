@@ -255,4 +255,5 @@ TEST_F(CountingAllocatorTest, AllocateOutOfMemory)
   });
   EXPECT_NE(ptr, nullptr);
   EXPECT_EQ(memLimit, -sizeof(*ptr));
+  nonStrict.deallocate(ptr, 1);
 }
