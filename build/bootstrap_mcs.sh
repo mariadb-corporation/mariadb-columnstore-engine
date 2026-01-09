@@ -630,6 +630,12 @@ run_unit_tests() {
         return
     fi
 
+    make_dir /etc/columnstore
+    if [[ ! -f /etc/columnstore/Columnstore.xml ]]; then
+        cp "$MDB_SOURCE_PATH"/storage/columnstore/columnstore/oam/etc/Columnstore.xml /etc/columnstore/Columnstore.xml
+    fi
+
+
     message "Running unittests"
     cd $MARIA_BUILD_PATH
     ${CTEST_BIN_NAME} . -R columnstore: -j $(nproc) --output-on-failure
