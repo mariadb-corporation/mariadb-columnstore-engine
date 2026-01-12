@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <boost/shared_ptr.hpp>
+#include "countingallocator.h"
 #include "poolallocator.h"
 #include "resourcemanager.h"
 
@@ -65,6 +66,7 @@ class STLPoolAllocator
   STLPoolAllocator(joblist::ResourceManager* rm,
                    const int64_t checkPointStepSize = allocators::CheckPointStepSize,
                    const int64_t memoryLimitLowerBound = allocators::MemoryLimitLowerBound);
+  STLPoolAllocator(allocators::CountingAllocator<PoolAllocatorBufType> alloc);
   STLPoolAllocator(const STLPoolAllocator&) throw();
   STLPoolAllocator(uint32_t capacity) throw();
   template <class U>
@@ -105,13 +107,19 @@ STLPoolAllocator<T>::STLPoolAllocator(joblist::ResourceManager* rm,
 {
   if (rm)
   {
-    auto alloc = rm->getAllocator<PoolAllocatorBufType>(checkPointStepSize, memoryLimitLowerBound);
+    auto alloc = rm->getAllocator<PoolAllocatorBufType>(allocators::AllocMode::STRICT, checkPointStepSize, memoryLimitLowerBound);
     pa.reset(new PoolAllocator(alloc, DEFAULT_SIZE));
   }
   else
   {
     pa.reset(new PoolAllocator(DEFAULT_SIZE));
   }
+}
+
+template <class T>
+STLPoolAllocator<T>::STLPoolAllocator(allocators::CountingAllocator<PoolAllocatorBufType> alloc)
+{
+  pa.reset(new PoolAllocator(alloc, DEFAULT_SIZE));
 }
 
 template <class T>

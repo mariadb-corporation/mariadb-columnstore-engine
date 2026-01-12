@@ -326,6 +326,7 @@ class ResourceManager
   /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
   bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
   bool getMemory(int64_t amount, bool patience = true);
+  bool getMemoryForce(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit);
   inline void returnMemory(int64_t amount)
   {
     atomicops::atomicAddRef(totalUmMemLimit, amount);
@@ -338,6 +339,12 @@ class ResourceManager
   inline int64_t availableMemory() const
   {
     return atomicops::atomicLoadRef(totalUmMemLimit);
+  }
+  inline int64_t availableMemory(boost::shared_ptr<int64_t>& sessionLimit)
+  {
+    int64_t availSess = sessionLimit ? *sessionLimit : std::numeric_limits<int64_t>::max();
+    int64_t availTotal = atomicops::atomicLoadRef(totalUmMemLimit);
+    return std::min(availTotal, availSess);
   }
 
   inline void setMemory(int64_t amount) 
@@ -464,10 +471,11 @@ class ResourceManager
 
   template <typename T>
   allocators::CountingAllocator<T> getAllocator(
+      allocators::AllocMode mode = allocators::AllocMode::STRICT,
       const int64_t checkPointStepSize = allocators::CheckPointStepSize,
       const int64_t memoryLimitLowerBound = allocators::MemoryLimitLowerBound)
   {
-    return allocators::CountingAllocator<T>(&totalUmMemLimit, checkPointStepSize, memoryLimitLowerBound);
+    return allocators::CountingAllocator<T>(&totalUmMemLimit, mode, checkPointStepSize, memoryLimitLowerBound);
   }
 
  private:

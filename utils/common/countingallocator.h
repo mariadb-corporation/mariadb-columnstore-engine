@@ -43,6 +43,14 @@ const constexpr int64_t MemoryLimitLowerBound = 500 * 1024 * 1024;
 // Higher values demonstrate slower response to memory limit violations.
 const constexpr int64_t CheckPointStepSize = 100 * 1024;
 
+enum class AllocMode
+{
+  STRICT,  /// Checks the limit avery checkPointStepSize and throws OutOfMemoryExcept if
+           /// MemoryLimitLowerBound is hit
+  NO_CHECK /// Always allocates requested memory. The memoryLimit can become negative,
+           /// and the responsibility for handling this lies with the calling code
+};
+
 // Custom Allocator that tracks allocated memory using an atomic counter
 template <typename T>
 class CountingAllocator
@@ -80,7 +88,7 @@ class CountingAllocator
 
       auto currentGlobalMemoryLimit =
           atomicops::atomicSubRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
-      if (currentGlobalMemoryLimit < memoryLimitLowerBound_)
+      if (mode_ == AllocMode::STRICT && currentGlobalMemoryLimit < memoryLimitLowerBound_)
       {
         atomicops::atomicAddRef(*memoryLimit_, lastMemoryLimitCheckpointDiff);
         throw logging::OutOfMemoryExcept(logging::ERR_OUT_OF_MEMORY);
@@ -93,9 +101,13 @@ class CountingAllocator
 
   // Constructor accepting a reference to an atomic counter
   explicit CountingAllocator(std::atomic<int64_t>* memoryLimit,
+                             AllocMode mode = AllocMode::STRICT,
                              const int64_t checkPointStepSize = CheckPointStepSize,
                              const int64_t lowerBound = MemoryLimitLowerBound) noexcept
-   : memoryLimit_(memoryLimit), memoryLimitLowerBound_(lowerBound), checkPointStepSize_(checkPointStepSize)
+   : memoryLimit_(memoryLimit)
+   , memoryLimitLowerBound_(lowerBound)
+   , checkPointStepSize_(checkPointStepSize)
+   , mode_(mode)
   {
   }
 
@@ -105,6 +117,7 @@ class CountingAllocator
    : memoryLimit_(other.memoryLimit_)
    , memoryLimitLowerBound_(other.memoryLimitLowerBound_)
    , checkPointStepSize_(other.checkPointStepSize_)
+   , mode_(other.mode_)
   {
 
   }
@@ -169,7 +182,7 @@ class CountingAllocator
   template <typename U>
   bool operator==(const CountingAllocator<U>& other) const noexcept
   {
-    return memoryLimit_ == other.memoryLimit_;
+    return memoryLimit_ == other.memoryLimit_ && mode_ == other.mode_;
   }
 
   template <typename U>
@@ -199,6 +212,7 @@ class CountingAllocator
   int64_t checkPointStepSize_ = CheckPointStepSize;
   int64_t lastMemoryLimitCheckpoint_ = 0;
   int64_t currentLocalMemoryUsage_ = 0;
+  AllocMode mode_ = AllocMode::STRICT;
 
   // Grant access to other instances of CountingAllocator with different types
   template <typename U>

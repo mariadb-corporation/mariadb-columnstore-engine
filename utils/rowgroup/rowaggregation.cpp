@@ -5144,7 +5144,7 @@ void GroupConcat::deserialize(messageqcpp::ByteStream& bs)
     bs >> f;
     uint8_t s;
     bs >> s;
-    fOrderCond.emplace_back(f, static_cast<bool>(s));
+    fOrderCols.emplace_back(f, static_cast<bool>(s));
   }
   bs >> fSeparator;
   bs >> size;

@@ -344,7 +344,7 @@ void BatchPrimitiveProcessor::initBPP(ByteStream& bs)
       typelessJoin.reset(new bool[joinerCount]);
       tlSmallSideKeyLengths.reset(new uint32_t[joinerCount]);
 
-      auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>();
+      auto alloc = exemgr::globServiceExeMgr->getRm().getAllocator<utils::PoolAllocatorBufType>(allocators::AllocMode::NO_CHECK);
       for (uint j = 0; j < joinerCount; ++j)
       {
         storedKeyAllocators.emplace_back(PoolAllocator(alloc, PoolAllocator::DEFAULT_WINDOW_SIZE, false,
@@ -659,7 +659,7 @@ void BatchPrimitiveProcessor::addToJoiner(ByteStream& bs)
     // properly-named functions for clarity.
     if (typelessJoin[joinerNum])
     {
-      utils::VLArray<vector<pair<TypelessData, uint32_t> > > tmpBuckets(processorThreads);
+      utils::VLArray<vector<pair<TypelessData, uint32_t>>> tmpBuckets(processorThreads);
       uint8_t nullFlag;
       PoolAllocator& storedKeyAllocator = storedKeyAllocators[joinerNum];
       // this first loop hashes incoming values into vectors that parallel the hash tables.
@@ -2315,7 +2315,7 @@ int BatchPrimitiveProcessor::operator()()
 
 void BatchPrimitiveProcessor::allocLargeBuffers()
 {
-  auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>();
+  auto allocator = exemgr::globServiceExeMgr->getRm().getAllocator<rowgroup::RGDataBufType>(allocators::AllocMode::NO_CHECK);
 
   if (ot == ROW_GROUP && !outRowGroupData)
   {

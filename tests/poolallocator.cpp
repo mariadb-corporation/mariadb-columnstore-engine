@@ -215,7 +215,7 @@ class PoolallocatorTest : public ::testing::Test
   // Constructor
   PoolallocatorTest()
    : allocatedMemory(MemoryAllowance)
-   , allocator(&allocatedMemory, MemoryAllowance / 1000, MemoryAllowance / 100)
+   , allocator(&allocatedMemory, allocators::AllocMode::STRICT, MemoryAllowance / 1000, MemoryAllowance / 100)
   {
   }
 

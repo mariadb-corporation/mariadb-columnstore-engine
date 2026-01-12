@@ -379,7 +379,7 @@ class RGDataTest : public ::testing::Test
   // bool useStringTable = true;
 TEST_F(RGDataTest, AllocData)
 {
-  allocators::CountingAllocator<rowgroup::RGDataBufType> alloc(&allocatedMemory, MemoryAllowance / 100, MemoryAllowance / 10000);
+  allocators::CountingAllocator<rowgroup::RGDataBufType> alloc(&allocatedMemory, allocators::AllocMode::STRICT, MemoryAllowance / 100, MemoryAllowance / 10000);
   rgD = rowgroup::RGData(rg, alloc);
   rg.setData(&rgD);
   rg.initRow(&r);

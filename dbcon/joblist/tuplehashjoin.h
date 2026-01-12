@@ -378,9 +378,8 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
   }
   bool getMemory(uint64_t memSize)
   {
-    bool gotMem = resourceManager->getMemory(memSize);
-    if (gotMem)
-      fMemSizeForOutputRG += memSize;
+    bool gotMem = resourceManager->getMemoryForce(memSize, sessionMemLimit);
+    fMemSizeForOutputRG += memSize;
     return gotMem;
   }
 
@@ -501,7 +500,7 @@ class TupleHashJoinStep : public JobStep, public TupleDeliveryStep
 
   /* Iteration 18 mods */
   uint32_t largeSideIndex;
-  bool joinIsTooBig;
+  std::atomic<bool> joinIsTooBig;
 
   /* Functions & Expressions support */
   boost::shared_ptr<funcexp::FuncExpWrapper> fe2;
