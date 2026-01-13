@@ -836,7 +836,6 @@ void SimpleFilter::setSimpleColumnList()
 
 void SimpleFilter::setSimpleColumnListExtended()
 {
-	idblog("setting simple columns in simple filter: " << toString());
   SimpleColumn* lsc = dynamic_cast<SimpleColumn*>(fLhs);
   SimpleColumn* rsc = dynamic_cast<SimpleColumn*>(fRhs);
   fSimpleColumnListExtended.clear();

@@ -49,6 +49,8 @@ using namespace joblist;
 #include "simplecolumn.h"
 #include "simplefilter.h"
 #include "selectfilter.h"
+#include "existsfilter.h"
+#include "simplescalarfilter.h"
 #include "outerjoinonfilter.h"
 #include "aggregatecolumn.h"
 #include "constantfilter.h"
@@ -98,20 +100,37 @@ void getSimpleCols(execplan::ParseTree* n, void* obj)
 
 void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
 {
-	idblog("getting simple columns from ParseTree " << n->toString());
   TreeNode* tn = n->data();
-	idblog("getting simple columns from TreeNode " << tn->toString());
   vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
   ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
   AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
   Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  //LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
+  
+  // Skip subquery filters - they contain sub-CSEPs that should be processed separately by RBO
+  // Walking into them would incorrectly collect subquery columns for outer query processing
+  SelectFilter* sf = dynamic_cast<SelectFilter*>(tn);
+  ExistsFilter* ef = dynamic_cast<ExistsFilter*>(tn);
+  SimpleScalarFilter* ssf = dynamic_cast<SimpleScalarFilter*>(tn);
+  if (sf || ef || ssf)
+  {
+    // For subquery filters, only collect the outer query columns (cols() for SelectFilter)
+    // Do NOT descend into sub->filters() - that will be handled when RBO processes the subquery
+    if (sf)
+    {
+      for (const auto& col : sf->cols())
+      {
+        col->setSimpleColumnListExtended();
+        list->insert(list->end(), col->simpleColumnListExtended().begin(), col->simpleColumnListExtended().end());
+      }
+    }
+    // For ExistsFilter and SimpleScalarFilter, there are no outer columns to collect
+    return;
+  }
 
   if (sc)
   {
-	  idblog("simple column bottom case");
     list->push_back(sc);
   }
   else if (fc)
@@ -131,7 +150,6 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   }
   else if (f)
   {
-	  idblog("any filter in getSimpleColsExtended()");
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }

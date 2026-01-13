@@ -301,7 +301,7 @@ void SubQueryTransformer::checkCorrelateInfo(TupleHashJoinStep* thjs, const JobI
 
 void SubQueryTransformer::updateCorrelateInfo()
 {
-	idbloh("updateCorrelateInfo");
+	idblog("updateCorrelateInfo");
   // put vtable into the table list to resolve correlated filters
   // Temp fix for @bug3932 until outer join has no dependency on table order.
   // Insert at [1], not to mess with OUTER join and hint(INFINIDB_ORDERED -- bug2317).

@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #define PREFER_MY_CONFIG_H
@@ -28,9 +30,57 @@
 
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/calpontsystemcatalog.h"
+#include "execplan/simplecolumn.h"
 
 namespace optimizer
 {
+
+// Forward declarations for table alias mapping types
+// Compares by schema, table, AND alias - for exact table matching
+struct TableAliasLessThan
+{
+  bool operator()(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
+                  const execplan::CalpontSystemCatalog::TableAliasName& rhs) const
+  {
+    if (lhs.schema < rhs.schema)
+      return true;
+    if (lhs.schema == rhs.schema)
+    {
+      if (lhs.table < rhs.table)
+        return true;
+      if (lhs.table == rhs.table)
+        return lhs.alias < rhs.alias;
+    }
+    return false;
+  }
+};
+
+// Compares by schema and table ONLY (ignores alias) - for finding same base table across queries
+struct TableSchemaTableLessThan
+{
+  bool operator()(const execplan::CalpontSystemCatalog::TableAliasName& lhs,
+                  const execplan::CalpontSystemCatalog::TableAliasName& rhs) const
+  {
+    if (lhs.schema < rhs.schema)
+      return true;
+    if (lhs.schema == rhs.schema)
+      return lhs.table < rhs.table;
+    return false;
+  }
+};
+
+struct SimpleColumnLessThan
+{
+  bool operator()(const execplan::SimpleColumn* lhs, const execplan::SimpleColumn* rhs) const
+  {
+    return lhs->columnName() < rhs->columnName();
+  }
+};
+
+using SCToPosCounterMap = std::map<execplan::SimpleColumn*, size_t, SimpleColumnLessThan>;
+using TableAliasToNewAliasAndSCPositionsMap =
+    std::map<execplan::CalpontSystemCatalog::TableAliasName,
+             std::tuple<std::string, SCToPosCounterMap, size_t>, TableAliasLessThan>;
 
 class RBOptimizerContext
 {
@@ -96,6 +146,17 @@ class RBOptimizerContext
     return out;
   }
 
+  // Accumulated table alias mapping for parallel CES rule
+  // This allows subqueries to see outer query's rewritten table aliases
+  TableAliasToNewAliasAndSCPositionsMap& getAccumulatedTableAliasMap()
+  {
+    return accumulatedTableAliasMap_;
+  }
+  const TableAliasToNewAliasAndSCPositionsMap& getAccumulatedTableAliasMap() const
+  {
+    return accumulatedTableAliasMap_;
+  }
+
  private:
   // gwi lifetime should be longer than optimizer context.
   // In plugin runtime this is always true.
@@ -106,6 +167,8 @@ class RBOptimizerContext
   uint cesOptimizationParallelFactor_;
   // Names of rules that were actually applied in order
   std::vector<std::string> appliedRules_;
+  // Accumulated table alias mapping for parallel CES - allows subqueries to see outer query's mappings
+  TableAliasToNewAliasAndSCPositionsMap accumulatedTableAliasMap_;
 };
 
 struct Rule

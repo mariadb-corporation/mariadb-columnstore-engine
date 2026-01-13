@@ -36,6 +36,7 @@
 #include "simplefilter.h"
 #include "existsfilter.h"
 #include "outerjoinonfilter.h"
+#include "selectfilter.h"
 #include "simplescalarfilter.h"
 
 namespace optimizer
@@ -213,8 +214,6 @@ bool parallelCESFilter(execplan::CalpontSelectExecutionPlan& csep, optimizer::RB
   // Filter out tables that were re-written.
   bool someFT = someAreForeignTables(csep);
   bool someFTSI = someForeignTablesHasStatisticsAndMbIndex(csep, ctx);
-  idblog("csep some FT " << (someFT ? "yes" : "no") << ", some FTSI " << (someFTSI ? "yes" : "no"));
-  idblog("csep: " << csep.toString());
   return someFT && someFTSI;
 }
 
@@ -504,12 +503,14 @@ execplan::SimpleColumn* cloneSCForDerivedProjection(execplan::SimpleColumn* sc)
 void tryToUpdateScToUseRewrittenDerived(
     execplan::SimpleColumn* sc, optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap)
 {
-  auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*sc->singleTable());
-  idblog("  sc: " << sc->toString());
+  auto singleTable = sc->singleTable();
+  if (!singleTable)
+    return;
+  
+  auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*singleTable);
 
   if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
   {
-	  idblog("  in table map!");
     auto& [newTableAlias, SCToPosCounterMap, currentColPositionCursorValue] =
         tableAliasToSCPositionsIt->second;
 
@@ -523,7 +524,6 @@ void tryToUpdateScToUseRewrittenDerived(
       ++currentColPositionCursorValue;
     }
     updateScToUseRewrittenDerived(sc, newTableAlias, colPosition, std::nullopt);
-    idblog("  updated sc: " << sc->toString());
   }
 }
 
@@ -575,22 +575,39 @@ SCsAndTheirProjectionPositions findPositionsForExtraSCs(
 bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
   auto tables = csep.tableList();
+  
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   // TODO support CSEPs with derived tables
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
   bool ruleMustBeApplied = false;
-  optimizer::TableAliasToNewAliasAndSCPositionsMap tableAliasToSCPositionsMap;
+  
+  // Get reference to accumulated map from outer queries - used for updating correlated columns
+  // that reference tables from outer query
+  optimizer::TableAliasToNewAliasAndSCPositionsMap& accumulatedMap = ctx.getAccumulatedTableAliasMap();
+  
+  // Local map for THIS CSEP's tables - subquery creates its OWN derived tables
+  // We insert local tables here AND into accumulatedMap
+  // Column updates will modify entries in accumulatedMap (which includes local tables)
+  // Then we copy back local table entries for derived table creation
 
   // 1st pass over tables to create derived tables placeholders to collect
-  // SCs to be updated
+  // SCs to be updated - each CSEP creates its OWN derived tables
+  std::vector<execplan::CalpontSystemCatalog::TableAliasName> localTables;
+  // Local map for THIS CSEP's tables only - separate from accumulated map
+  optimizer::TableAliasToNewAliasAndSCPositionsMap localTableMap;
+  
   for (auto& table : tables)
   {
     cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
     auto anyColumnStatistics = ctx.getGwi().findStatisticsForATable(schemaAndTableName);
     if (!table.isColumnstore() && anyColumnStatistics)
     {
+      // Create NEW derived table for THIS CSEP's table
+      // Each CSEP (including subqueries) creates its OWN derived tables
       std::string tableAlias = getRewrittenSubTableAlias(table, ctx);
-      tableAliasToSCPositionsMap.insert({table, {tableAlias, {}, 0}});
+      // Add to LOCAL map - this CSEP's own derived tables
+      localTableMap.insert({table, {tableAlias, {}, 0}});
+      localTables.push_back(table);
       execplan::CalpontSystemCatalog::TableAliasName tn = execplan::make_aliasview("", "", tableAlias, "");
       newTableList.push_back(tn);
       ruleMustBeApplied = true;
@@ -600,6 +617,18 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       newTableList.push_back(table);
     }
   }
+  
+  // Merge local map into accumulated map for column updates
+  // Local tables take priority over outer query tables (for this CSEP's columns)
+  for (auto& [k, v] : localTableMap)
+  {
+    accumulatedMap.insert_or_assign(k, v);
+  }
+  
+  // Use accumulatedMap for all column updates - this includes:
+  // - Local tables (this CSEP's derived tables) 
+  // - Outer query tables (for correlated columns in subqueries)
+  optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap = accumulatedMap;
 
   // 2nd pass over RCs to update RCs with derived table SCs in projection
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
@@ -632,19 +661,14 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     auto filters = csep.filters();
     if (filters)
     {
-	    idblog("filters " << filters->toString());
       updateSCsUsingWalkers(tableAliasToSCPositionsMap, filters);
-      idblog("filters updated: " << filters->toString());
     }
 
     // 6th pass over filters to use derived table SCs in filters
     auto having = csep.having();
     if (having)
     {
-	    idblog("processing HAVING");
-	    idblog("HAVING: " << having->toString());
       updateSCsUsingWalkers(tableAliasToSCPositionsMap, having);
-	    idblog("updated HAVING: " << having->toString());
     }
 
     // 6.5 pass: update correlated columns inside EXISTS subqueries
@@ -653,36 +677,32 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     {
       if (!root)
         return;
-      // Walker to process ExistsFilter nodes
+      // Walker to process ExistsFilter, SimpleScalarFilter, and SelectFilter nodes
       auto walker = [](const execplan::ParseTree* n, void* obj)
       {
         auto* ef = dynamic_cast<execplan::ExistsFilter*>(n->data());
         auto* ssf = dynamic_cast<execplan::SimpleScalarFilter*>(n->data());
-        if (!ef && !ssf)
+        auto* sf = dynamic_cast<execplan::SelectFilter*>(n->data());
+        if (!ef && !ssf && !sf)
           return;
+        
         auto* mapPtr = static_cast<optimizer::TableAliasToNewAliasAndSCPositionsMap*>(obj);
         auto& map = *mapPtr;
-        auto sub = ef ? ef->sub() : ssf->sub();
-        if (sub)
+        
+        // NOTE: We do NOT process sub->filters() or sub->having() here.
+        // The subquery will be processed by RBO separately and will create its OWN derived tables.
+        // Processing subquery filters here would incorrectly rewrite subquery columns to outer query's
+        // derived tables instead of the subquery's own derived tables.
+        // 
+        // We only update SelectFilter.cols() - the outer query columns being compared with subquery result.
+        
+        // For SelectFilter, update the outer query columns being compared
+        if (sf)
         {
-          if (auto subFilters = sub->filters())
+          for (const auto& col : sf->cols())
           {
-		  idblog("rewriting filter " << subFilters->toString());
-            std::vector<execplan::SimpleColumn*> subSCs;
-            subFilters->walk(execplan::getSimpleColsExtended, &subSCs);
-	    idblog("  " << subSCs.size() << " simple columns collected");
-            for (auto* sc : subSCs)
-            {
-		    idblog("  rewriting simple column " << sc->toString());
-              if (sc)
-                tryToUpdateScToUseRewrittenDerived(sc, map);
-            }
-          }
-          if (auto subHaving = sub->having())
-          {
-            std::vector<execplan::SimpleColumn*> subSCs;
-            subHaving->walk(execplan::getSimpleColsExtended, &subSCs);
-            for (auto* sc : subSCs)
+            col->setSimpleColumnListExtended();
+            for (auto* sc : col->simpleColumnListExtended())
             {
               if (sc)
                 tryToUpdateScToUseRewrittenDerived(sc, map);
@@ -694,34 +714,21 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     };
 
     if (filters)
-    {
-	    idblog("before updated exists correlated FILTERS: " << filters->toString());
       updateExistsCorrelated(filters);
-	    idblog("updated exists correlated FILTERS: " << filters->toString());
-    }
     if (having)
-    {
       updateExistsCorrelated(having);
-	    idblog("updated exists correlated HAVING: " << having->toString());
-    }
 
-    // 7th pass over tables to create derived CSEP with the collected SCs
-    for (auto& table : tables)
+    // 7th pass over LOCAL tables to create derived CSEP with the collected SCs
+    // Create derived tables only for LOCAL tables (this CSEP's own tables)
+    for (auto& table : localTables)
     {
-      cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
-      if (!table.isColumnstore())
+      // Get the mapping from accumulatedMap (where column updates happened)
+      auto tableIt = tableAliasToSCPositionsMap.find(table);
+      if (tableIt != tableAliasToSCPositionsMap.end())
       {
-        auto produceDerivedTableIt = tableAliasToSCPositionsMap.find(table);
-        if (produceDerivedTableIt != tableAliasToSCPositionsMap.end())
-        {
-          auto& [newTableAlias, SCToPosCounterMap, unused] = produceDerivedTableIt->second;
-          auto derivedSCEP = createDerivedTableFromTable(csep, table, newTableAlias, ctx, SCToPosCounterMap);
-          newDerivedTableList.push_back(std::move(derivedSCEP));
-        }
-      }
-      else
-      {
-        newTableList.push_back(table);
+        auto& [newTableAlias, SCToPosCounterMap, unused] = tableIt->second;
+        auto derivedSCEP = createDerivedTableFromTable(csep, table, newTableAlias, ctx, SCToPosCounterMap);
+        newDerivedTableList.push_back(std::move(derivedSCEP));
       }
     }
 
@@ -729,14 +736,6 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // Replace table list with new table list populated with union units
     csep.tableList(newTableList);
     csep.returnedCols(newReturnedColumns);
-    if (csep.having())
-    {
-	    idblog("final HAVING: " << csep.having()->toString());
-    }
-    else
-    {
-	    idblog("no having");
-    }
   }
   return ruleMustBeApplied;
 }
