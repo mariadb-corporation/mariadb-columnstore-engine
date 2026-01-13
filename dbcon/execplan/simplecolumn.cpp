@@ -107,7 +107,7 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  
+
   // Skip subquery filters - they contain sub-CSEPs that should be processed separately by RBO
   // Walking into them would incorrectly collect subquery columns for outer query processing
   SelectFilter* sf = dynamic_cast<SelectFilter*>(tn);
@@ -122,7 +122,8 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
       for (const auto& col : sf->cols())
       {
         col->setSimpleColumnListExtended();
-        list->insert(list->end(), col->simpleColumnListExtended().begin(), col->simpleColumnListExtended().end());
+        list->insert(list->end(), col->simpleColumnListExtended().begin(),
+                     col->simpleColumnListExtended().end());
       }
     }
     // SimpleScalarFilter also has cols() - the outer query column being compared with subquery result
@@ -131,7 +132,8 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
       for (const auto& col : ssf->cols())
       {
         col->setSimpleColumnListExtended();
-        list->insert(list->end(), col->simpleColumnListExtended().begin(), col->simpleColumnListExtended().end());
+        list->insert(list->end(), col->simpleColumnListExtended().begin(),
+                     col->simpleColumnListExtended().end());
       }
     }
     // ExistsFilter has no outer columns to collect (it's just EXISTS (subquery))
@@ -162,31 +164,31 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }
-//  else //if (lo) // XXX: should it be default case?
-//  {
-//    if (n->left())
-//    {
-//      n->left()->walk(getSimpleColsExtended, obj);
-//    }
-//    if (n->right())
-//    {
-//      n->right()->walk(getSimpleColsExtended, obj);
-//    }
-//  }
-//  else
-//  {
-//	  idblog("collecting simple columns from " << tn->toString());
-//	  idblog("  type " << typeid(*tn).name());
-//	  //n->walk(getSimpleColsExtended, obj);
-//  }
-    if (n->left())
-    {
-      n->left()->walk(getSimpleColsExtended, obj);
-    }
-    if (n->right())
-    {
-      n->right()->walk(getSimpleColsExtended, obj);
-    }
+  //  else //if (lo) // XXX: should it be default case?
+  //  {
+  //    if (n->left())
+  //    {
+  //      n->left()->walk(getSimpleColsExtended, obj);
+  //    }
+  //    if (n->right())
+  //    {
+  //      n->right()->walk(getSimpleColsExtended, obj);
+  //    }
+  //  }
+  //  else
+  //  {
+  //	  idblog("collecting simple columns from " << tn->toString());
+  //	  idblog("  type " << typeid(*tn).name());
+  //	  //n->walk(getSimpleColsExtended, obj);
+  //  }
+  if (n->left())
+  {
+    n->left()->walk(getSimpleColsExtended, obj);
+  }
+  if (n->right())
+  {
+    n->right()->walk(getSimpleColsExtended, obj);
+  }
 }
 
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList& derivedColList)
@@ -406,10 +408,9 @@ const string SimpleColumn::toString(bool compact) const
   output << "Column: " << data();
   datatypes::Charset cs(fResultType.charsetNumber);
   output << endl
-         << "Info: " << schemaName() << "." << tableName()
-         << "(" << tableAlias() << ")"
-          << "."  << columnName()
-         << " (Type: " << colDataTypeToString(fResultType.colDataType) << ", OID: " << oid() << ")";
+         << "Info: " << schemaName() << "." << tableName() << "(" << tableAlias() << ")"
+         << "." << columnName() << " (Type: " << colDataTypeToString(fResultType.colDataType)
+         << ", OID: " << oid() << ")";
 
   return output.str();
 }

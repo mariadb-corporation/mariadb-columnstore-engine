@@ -7626,7 +7626,8 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     store_applied_rules(ctx.serializeAppliedRules());
     if (csep->traceOn())
     {
-      cerr << "csepWasOptimized=" << csepWasOptimized << " appliedRules=" << ctx.serializeAppliedRules() << endl;
+      cerr << "csepWasOptimized=" << csepWasOptimized << " appliedRules=" << ctx.serializeAppliedRules()
+           << endl;
     }
     if (csep->traceOn() && csepWasOptimized)
     {

@@ -468,7 +468,7 @@ void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string
   sc->tableName(newTableAlias);
   sc->tableAlias(newTableAlias);
   sc->derivedTable(newTableAlias);
-  sc->data("``.`" + newTableAlias + "`.`" + sc->columnName() + "`" );
+  sc->data("``.`" + newTableAlias + "`.`" + sc->columnName() + "`");
 
   sc->colPosition(colPosition);
   sc->isColumnStore(true);
@@ -507,7 +507,7 @@ void tryToUpdateScToUseRewrittenDerived(
   auto singleTable = sc->singleTable();
   if (!singleTable)
     return;
-  
+
   auto tableAliasToSCPositionsIt = tableAliasToSCPositionsMap.find(*singleTable);
 
   if (tableAliasToSCPositionsIt != tableAliasToSCPositionsMap.end())
@@ -544,7 +544,6 @@ void updateSCsUsingIteration(optimizer::TableAliasToNewAliasAndSCPositionsMap& t
 void updateSCsUsingWalkers(optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap,
                            execplan::ParseTree* pt)
 {
-
   std::vector<execplan::SimpleColumn*> simpleColumns;
   pt->walk(execplan::getSimpleColsExtended, &simpleColumns);
   for (auto* sc : simpleColumns)
@@ -576,16 +575,16 @@ SCsAndTheirProjectionPositions findPositionsForExtraSCs(
 bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimizerContext& ctx)
 {
   auto tables = csep.tableList();
-  
+
   execplan::CalpontSelectExecutionPlan::TableList newTableList;
   // TODO support CSEPs with derived tables
   execplan::CalpontSelectExecutionPlan::SelectList newDerivedTableList;
   bool ruleMustBeApplied = false;
-  
+
   // Get reference to accumulated map from outer queries - used for updating correlated columns
   // that reference tables from outer query
   optimizer::TableAliasToNewAliasAndSCPositionsMap& accumulatedMap = ctx.getAccumulatedTableAliasMap();
-  
+
   // Local map for THIS CSEP's tables - subquery creates its OWN derived tables
   // We insert local tables here AND into accumulatedMap
   // Column updates will modify entries in accumulatedMap (which includes local tables)
@@ -596,7 +595,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   std::vector<execplan::CalpontSystemCatalog::TableAliasName> localTables;
   // Local map for THIS CSEP's tables only - separate from accumulated map
   optimizer::TableAliasToNewAliasAndSCPositionsMap localTableMap;
-  
+
   for (auto& table : tables)
   {
     cal_impl_if::SchemaAndTableName schemaAndTableName = {table.schema, table.table};
@@ -618,7 +617,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
       newTableList.push_back(table);
     }
   }
-  
+
   // Create a WORKING map for this CSEP's column updates
   // Start with local tables, then add outer query tables (local takes priority)
   // This ensures:
@@ -626,13 +625,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
   // 2. Correlated columns from outer query use outer query's derived tables
   // 3. We don't modify accumulatedMap (which would affect outer query)
   optimizer::TableAliasToNewAliasAndSCPositionsMap workingMap = localTableMap;
-  
+
   // Add outer query mappings for correlated columns (only if not already in local map)
   for (auto& [k, v] : accumulatedMap)
   {
     workingMap.insert({k, v});  // insert() won't overwrite existing local entries
   }
-  
+
   // Use workingMap for all column updates in this CSEP
   optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap = workingMap;
 
@@ -691,13 +690,13 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         auto* sf = dynamic_cast<execplan::SelectFilter*>(n->data());
         if (!ef && !ssf && !sf)
           return;
-        
+
         auto* mapPtr = static_cast<optimizer::TableAliasToNewAliasAndSCPositionsMap*>(obj);
         auto& map = *mapPtr;
-        
+
         // Get the subquery
         auto sub = ef ? ef->sub() : (ssf ? ssf->sub() : sf->sub());
-        
+
         // Build a set of subquery's own table aliases to distinguish outer query columns
         std::set<std::string> subqueryTableAliases;
         if (sub)
@@ -707,7 +706,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             subqueryTableAliases.insert(t.alias);
           }
         }
-        
+
         // Helper to check if a column belongs to outer query (not subquery's own tables)
         auto isOuterQueryColumn = [&subqueryTableAliases](execplan::SimpleColumn* sc) -> bool
         {
@@ -718,7 +717,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
           // Column is from outer query if it's NOT in subquery's table list
           return subqueryTableAliases.count(alias) == 0;
         };
-        
+
         // For ExistsFilter (used for NOT IN), correlated outer query columns are in sub->filters()
         // We need to rewrite ONLY outer query columns, not subquery's own columns
         if (ef && sub)
@@ -736,7 +735,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             }
           }
         }
-        
+
         // For SelectFilter, update the outer query columns being compared
         if (sf)
         {
@@ -779,7 +778,7 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // Replace table list with new table list populated with union units
     csep.tableList(newTableList);
     csep.returnedCols(newReturnedColumns);
-    
+
     // Update accumulatedMap with this CSEP's local tables for subqueries to use
     // This must happen AFTER column updates so subqueries see the correct mappings
     for (auto& table : localTables)
