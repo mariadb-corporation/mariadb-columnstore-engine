@@ -1391,7 +1391,6 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
 bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, set<uint32_t>& nodeSet,
                      set<pair<uint32_t, uint32_t>>& pathSet, TableInfoMap& tableInfoMap, JobInfo& jobInfo)
 {
-	idblog("in addFunctionJoin");
   // @bug3683, adding function joins for not joined tables, one pair at a time.
   // design review comment:
   //     all convertable expressions between a pair of tables should be done all, or none.
@@ -1412,11 +1411,9 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, s
     ExpressionStep* es = dynamic_cast<ExpressionStep*>((*i));
     idbassert(es);
 
-    idblog("expression step " << es->toString());
     if (es->functionJoin())
       continue;  // already converted to a join
 
-    idblog("not in join");
     boost::shared_ptr<FunctionJoinInfo> fji = es->functionJoinInfo();
     uint32_t key1 = fji->fJoinKey[0];
     uint32_t key2 = fji->fJoinKey[1];
@@ -1428,13 +1425,11 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, s
 
     if (nodeSet.find(tid1) == nodeSet.end() && nodeSet.find(tid2) == nodeSet.end())
     {
-	    idblog("both isolated");
       continue;  // both isolated, wait until one is connected.
     }
 
     if (tables.find(tid1) == tables.end() || tables.find(tid2) == tables.end())
     {
-	    idblog("subqiery case");
       continue;  // sub-query case
     }
 
@@ -1481,12 +1476,10 @@ bool addFunctionJoin(vector<uint32_t>& joinedTables, JobStepVector& joinSteps, s
     }
     else if (functionJoinPairs.find(p) == functionJoinPairs.end())
     {
-	    idblog("different path");
       continue;  // different path
     }
     else
     {
-	    idblog("path added");
       // path already added, do compound join
       m1->second.fTypeless = m2->second.fTypeless = true;
     }
@@ -2313,7 +2306,6 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector& joinSteps, Job
     while (joinedTables.size() < tableInfoMap.size() &&
            addFunctionJoin(joinedTables, joinSteps, nodeSet, pathSet, tableInfoMap, jobInfo))
     {
-	    idblog("adding function join");
       fjAdded = true;
 
       for (size_t i = joinedTables.size() - 1; i < joinedTables.size(); i++)
@@ -2418,7 +2410,6 @@ void spanningTreeCheck(TableInfoMap& tableInfoMap, JobStepVector& joinSteps, Job
     // 1c. check again if all tables are joined after pulling in function joins.
     if (joinedTables.size() < tableInfoMap.size())
     {
-	    idblog("joinedTables.size() < tableInfoMap.size()");
       vector<uint32_t> notJoinedTables;
 
       for (TableInfoMap::iterator i = tableInfoMap.begin(); i != tableInfoMap.end(); i++)

@@ -605,7 +605,6 @@ void ExpressionStep::functionJoinCheck(SimpleFilter* sf, JobInfo& jobInfo)
       (parseFuncJoinColumn(sf->rhs(), jobInfo) == false) ||
       (fFunctionJoinInfo->fTableKey[0] == fFunctionJoinInfo->fTableKey[1]))
   {
-	  idblog("not convertible");
     // not convertible
     fFunctionJoinInfo.reset();
     return;
@@ -621,7 +620,6 @@ void ExpressionStep::functionJoinCheck(SimpleFilter* sf, JobInfo& jobInfo)
 
     // not convertible
     fFunctionJoinInfo.reset();
-    idblog("not convertible - incompatible");
     return;
   }
 

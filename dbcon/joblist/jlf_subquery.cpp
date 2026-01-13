@@ -406,7 +406,6 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
     // @bug 2839. error out in-relelvant correlated column case
     if (!transformer.correlatedSteps().empty())
     {
-	    idblog("!transformer.correlatedSteps().empty()");
       JobStepVector::const_iterator it = transformer.correlatedSteps().begin();
       string tn;
 
@@ -418,7 +417,6 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
 
         if (thjs)
         {
-		idblog("thjs");
           if (thjs->alias1().empty() || thjs->alias1().compare(0, 5, "$sub_"))
             tn = thjs->alias2();
           else
@@ -469,7 +467,6 @@ const SRCP doSelectSubquery(CalpontExecutionPlan* ep, SRCP& sc, JobInfo& jobInfo
   string subView = dynamic_cast<SimpleColumn*>(sc.get())->viewName();
   SubQueryTransformer transformer(&jobInfo, errorInfo, subView);
   transformer.setVarbinaryOK();
-  idblog("making subquery step from csep " << csep->toString());
   SJSTEP subQueryStep = transformer.makeSubQueryStep(csep);
 
   if (transformer.correlatedSteps().size() > 0)

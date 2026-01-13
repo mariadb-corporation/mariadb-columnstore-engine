@@ -43,7 +43,6 @@ using namespace joblist;
 #include "arithmeticcolumn.h"
 #include "functioncolumn.h"
 #include "objectreader.h"
-#include "simplecolumn.h"
 
 namespace execplan
 {
@@ -152,7 +151,6 @@ void AggregateColumn::setSimpleColumnListExtended_()
     if (!parm)
       continue;
 
-    idblog("parm " << parm->toString());
     auto aggParmsAsSCVec = getSCsFromRCForExtended(parm);
 
     for (auto* sc : aggParmsAsSCVec)

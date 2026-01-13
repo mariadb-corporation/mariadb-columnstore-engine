@@ -146,9 +146,7 @@ void OuterJoinOnFilter::setSimpleColumnList()
 
 void OuterJoinOnFilter::setSimpleColumnListExtended()
 {
-	idblog("OuterJoinOnFilter sets extended simple columns");
   fPt->walk(execplan::getSimpleColsExtended, &fSimpleColumnListExtended);
-  idblog(fSimpleColumnListExtended.size() << " columns set");
 }
 
 }  // namespace execplan

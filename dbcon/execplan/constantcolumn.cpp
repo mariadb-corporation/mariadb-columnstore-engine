@@ -220,7 +220,7 @@ const string ConstantColumn::toString() const
   oss << " resultType=" << colDataTypeToString(fResultType.colDataType);
 
   if (fAlias.length() > 0)
-    oss << "/Alias: [" << fAlias << "]";
+    oss << "/Alias: " << fAlias;
 
   return oss.str();
 }

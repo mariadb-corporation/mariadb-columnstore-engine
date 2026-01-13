@@ -19,7 +19,7 @@
 //  $Id: subquerytransformer.cpp 6406 2010-03-26 19:18:37Z xlou $
 
 #include <iostream>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 using namespace std;
 
@@ -79,7 +79,7 @@ SubQueryTransformer::~SubQueryTransformer()
 SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPlan* csep,
                                               bool subInFromClause)
 {
-    // Setup job info, job list and error status relation.
+  // Setup job info, job list and error status relation.
   fSubJobInfo = new JobInfo(fOutJobInfo->rm);
   fSubJobInfo->sessionId = fOutJobInfo->sessionId;
   fSubJobInfo->txnId = fOutJobInfo->txnId;
@@ -118,9 +118,8 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   fSubJobInfo->isDML = fOutJobInfo->isDML;
   fSubJobInfo->orderByThreads = csep->orderByThreads();
 
-
   // Update v-table's alias.
-  fVtable.name("$sub"+fVtable.name()+"/"+fVtable.alias());
+  fVtable.name("$sub" + fVtable.name() + "/" + fVtable.alias());
 
   if (fVtable.alias().empty())
   {
@@ -266,7 +265,8 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
       precision.push_back(ti.precision);
     }
 
-    fOutJobInfo->vtableColTypes[UniqId(fVtable.columnOid(i), fVtable.alias(), "", "", execplan::Partitions())] =
+    fOutJobInfo
+        ->vtableColTypes[UniqId(fVtable.columnOid(i), fVtable.alias(), "", "", execplan::Partitions())] =
         fVtable.columnType(i);
   }
 
@@ -301,13 +301,12 @@ void SubQueryTransformer::checkCorrelateInfo(TupleHashJoinStep* thjs, const JobI
 
 void SubQueryTransformer::updateCorrelateInfo()
 {
-	idblog("updateCorrelateInfo");
   // put vtable into the table list to resolve correlated filters
   // Temp fix for @bug3932 until outer join has no dependency on table order.
   // Insert at [1], not to mess with OUTER join and hint(INFINIDB_ORDERED -- bug2317).
-  fOutJobInfo->tableList.insert(
-      fOutJobInfo->tableList.begin() + 1,
-      makeTableKey(*fOutJobInfo, fVtable.tableOid(), fVtable.name(), fVtable.alias(), "", fVtable.view(), fVtable.partitions()));
+  fOutJobInfo->tableList.insert(fOutJobInfo->tableList.begin() + 1,
+                                makeTableKey(*fOutJobInfo, fVtable.tableOid(), fVtable.name(),
+                                             fVtable.alias(), "", fVtable.view(), fVtable.partitions()));
 
   // tables in outer level
   set<uint32_t> outTables;
@@ -423,7 +422,7 @@ void SubQueryTransformer::updateCorrelateInfo()
             sc->viewName(fVtable.view());
             sc->oid(fVtable.columnOid(k->second));
             sc->columnName(fVtable.columns()[k->second]->columnName());
-	    sc->partitions(fVtable.partitions());
+            sc->partitions(fVtable.partitions());
             const CalpontSystemCatalog::ColType& ct = fVtable.columnType(k->second);
             TupleInfo ti = setTupleInfo(ct, sc->oid(), *fOutJobInfo, fVtable.tableOid(), sc, fVtable.alias());
 
@@ -433,7 +432,7 @@ void SubQueryTransformer::updateCorrelateInfo()
             schemas[j] = sc->schemaName();
             columnKeys[j] = ti.key;
             tableKeys[j] = getTableKey(*fOutJobInfo, ti.key);
-	    partitions[j] = sc->partitions();
+            partitions[j] = sc->partitions();
           }
           else
           {
@@ -524,7 +523,8 @@ void SubQueryTransformer::updateCorrelateInfo()
 
       if (outTables.find(tid) == outTables.end())
       {
-        if (subMap.find(UniqId(j->oid(), j->alias(), j->schema(), j->view(), j->partitions(), 0)) != subMap.end())
+        if (subMap.find(UniqId(j->oid(), j->alias(), j->schema(), j->view(), j->partitions(), 0)) !=
+            subMap.end())
           // throw CorrelateFailExcept();
           throw IDBExcept(logging::ERR_NON_SUPPORT_SUB_QUERY_TYPE);
       }

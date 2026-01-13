@@ -219,17 +219,15 @@ bool SelectFilter::operator!=(const TreeNode* t) const
 
 void SelectFilter::setSimpleColumnListExtended()
 {
-	idblog("set simple column list extended in SelectFilter " << toString());
   fSimpleColumnListExtended.clear();
   for (auto col : fCols)
   {
-	  idblog("    processing " << col->toString());
     col->setSimpleColumnListExtended();
     fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
                                      col->simpleColumnListExtended().begin(),
                                      col->simpleColumnListExtended().end());
   }
-  if (true || fCorrelated)
+  if (fCorrelated)
   {
     auto* subFilters = fSub->filters();
     if (subFilters)
