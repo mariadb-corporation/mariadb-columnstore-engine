@@ -46,7 +46,7 @@ std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::Tabl
   }
   else
   {
-    return table.alias;  
+    return table.alias;
   }
 #endif
 }
@@ -97,14 +97,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-//    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
-//                                    optimizer::applyRewriteDistinct};
-//    rules.push_back(rewriteDistinct);
+    //    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+    //                                    optimizer::applyRewriteDistinct};
+    //    rules.push_back(rewriteDistinct);
   }
 
-//  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
-//                                    optimizer::applyPredicatePushdown};
-//  rules.push_back(predicatePushdown);
+  //  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+  //                                    optimizer::applyPredicatePushdown};
+  //  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }
@@ -120,7 +120,8 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
-    idblog("Rule::apply round complete: changedThisRound=" << changedThisRound << " hasBeenApplied=" << hasBeenApplied);
+    idblog("Rule::apply round complete: changedThisRound=" << changedThisRound
+                                                           << " hasBeenApplied=" << hasBeenApplied);
     if (ctx.logRulesEnabled() && changedThisRound)
     {
       std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
@@ -149,9 +150,9 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
     idblog("Rule::walk loop iteration, planStack.size=" << planStack.size());
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
-    
-    idblog("Rule::walk processing CSEP subType=" << current->subType() 
-           << " unionVec.size=" << current->unionVec().size()
+
+    idblog("Rule::walk processing CSEP subType="
+           << current->subType() << " unionVec.size=" << current->unionVec().size()
            << " subSelectList.size=" << current->subSelectList().size());
 
     // Walk nested UNION UNITS
