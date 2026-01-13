@@ -618,17 +618,22 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     }
   }
   
-  // Merge local map into accumulated map for column updates
-  // Local tables take priority over outer query tables (for this CSEP's columns)
-  for (auto& [k, v] : localTableMap)
+  // Create a WORKING map for this CSEP's column updates
+  // Start with local tables, then add outer query tables (local takes priority)
+  // This ensures:
+  // 1. Local tables use THIS CSEP's derived tables
+  // 2. Correlated columns from outer query use outer query's derived tables
+  // 3. We don't modify accumulatedMap (which would affect outer query)
+  optimizer::TableAliasToNewAliasAndSCPositionsMap workingMap = localTableMap;
+  
+  // Add outer query mappings for correlated columns (only if not already in local map)
+  for (auto& [k, v] : accumulatedMap)
   {
-    accumulatedMap.insert_or_assign(k, v);
+    workingMap.insert({k, v});  // insert() won't overwrite existing local entries
   }
   
-  // Use accumulatedMap for all column updates - this includes:
-  // - Local tables (this CSEP's derived tables) 
-  // - Outer query tables (for correlated columns in subqueries)
-  optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap = accumulatedMap;
+  // Use workingMap for all column updates in this CSEP
+  optimizer::TableAliasToNewAliasAndSCPositionsMap& tableAliasToSCPositionsMap = workingMap;
 
   // 2nd pass over RCs to update RCs with derived table SCs in projection
   execplan::CalpontSelectExecutionPlan::ReturnedColumnList newReturnedColumns;
@@ -736,6 +741,17 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
     // Replace table list with new table list populated with union units
     csep.tableList(newTableList);
     csep.returnedCols(newReturnedColumns);
+    
+    // Update accumulatedMap with this CSEP's local tables for subqueries to use
+    // This must happen AFTER column updates so subqueries see the correct mappings
+    for (auto& table : localTables)
+    {
+      auto tableIt = workingMap.find(table);
+      if (tableIt != workingMap.end())
+      {
+        accumulatedMap.insert_or_assign(table, tableIt->second);
+      }
+    }
   }
   return ruleMustBeApplied;
 }
