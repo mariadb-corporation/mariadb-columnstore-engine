@@ -98,18 +98,20 @@ void getSimpleCols(execplan::ParseTree* n, void* obj)
 
 void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
 {
-	idblog("getting simple columns from " << n->toString());
+	idblog("getting simple columns from ParseTree " << n->toString());
   TreeNode* tn = n->data();
+	idblog("getting simple columns from TreeNode " << tn->toString());
   vector<SimpleColumn*>* list = reinterpret_cast<vector<SimpleColumn*>*>(obj);
   ArithmeticColumn* ac = dynamic_cast<ArithmeticColumn*>(tn);
   AggregateColumn* agc = dynamic_cast<AggregateColumn*>(tn);
   Filter* f = dynamic_cast<Filter*>(tn);
   FunctionColumn* fc = dynamic_cast<FunctionColumn*>(tn);
   SimpleColumn* sc = dynamic_cast<SimpleColumn*>(tn);
-  LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
+  //LogicOperator* lo = dynamic_cast<LogicOperator*>(tn);
 
   if (sc)
   {
+	  idblog("simple column bottom case");
     list->push_back(sc);
   }
   else if (fc)
@@ -133,8 +135,23 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
     f->setSimpleColumnListExtended();
     list->insert(list->end(), f->simpleColumnListExtended().begin(), f->simpleColumnListExtended().end());
   }
-  else if (lo) // XXX: should it be default case?
-  {
+//  else //if (lo) // XXX: should it be default case?
+//  {
+//    if (n->left())
+//    {
+//      n->left()->walk(getSimpleColsExtended, obj);
+//    }
+//    if (n->right())
+//    {
+//      n->right()->walk(getSimpleColsExtended, obj);
+//    }
+//  }
+//  else
+//  {
+//	  idblog("collecting simple columns from " << tn->toString());
+//	  idblog("  type " << typeid(*tn).name());
+//	  //n->walk(getSimpleColsExtended, obj);
+//  }
     if (n->left())
     {
       n->left()->walk(getSimpleColsExtended, obj);
@@ -143,21 +160,6 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
     {
       n->right()->walk(getSimpleColsExtended, obj);
     }
-  }
-  else
-  {
-	  idblog("collecting simple columns from " << tn->toString());
-	  idblog("  type " << typeid(*tn).name());
-	  //n->walk(getSimpleColsExtended, obj);
-  }
-  if (n->left())
-  {
-    n->left()->walk(getSimpleColsExtended, obj);
-  }
-  if (n->right())
-  {
-    n->right()->walk(getSimpleColsExtended, obj);
-  }
 }
 
 ParseTree* replaceRefCol(ParseTree*& n, CalpontSelectExecutionPlan::ReturnedColumnList& derivedColList)

@@ -462,11 +462,13 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
 void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string& newTableAlias,
                                    const uint32_t colPosition, std::optional<std::string> scAlias)
 {
+  sc->oid(0);
   sc->schemaName("");
   // For derived tables, leave tableName empty; use tableAlias/derivedTable to reference it
-  sc->tableName("");
+  sc->tableName(newTableAlias);
   sc->tableAlias(newTableAlias);
   sc->derivedTable(newTableAlias);
+  sc->data("``.`" + newTableAlias + "`.`" + sc->columnName() + "`" );
 
   sc->colPosition(colPosition);
   sc->isColumnStore(true);
@@ -521,6 +523,7 @@ void tryToUpdateScToUseRewrittenDerived(
       ++currentColPositionCursorValue;
     }
     updateScToUseRewrittenDerived(sc, newTableAlias, colPosition, std::nullopt);
+    idblog("  updated sc: " << sc->toString());
   }
 }
 

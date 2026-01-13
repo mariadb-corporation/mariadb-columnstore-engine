@@ -219,15 +219,17 @@ bool SelectFilter::operator!=(const TreeNode* t) const
 
 void SelectFilter::setSimpleColumnListExtended()
 {
+	idblog("set simple column list extended in SelectFilter " << toString());
   fSimpleColumnListExtended.clear();
   for (auto col : fCols)
   {
+	  idblog("    processing " << col->toString());
     col->setSimpleColumnListExtended();
     fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
                                      col->simpleColumnListExtended().begin(),
                                      col->simpleColumnListExtended().end());
   }
-  if (fCorrelated)
+  if (true || fCorrelated)
   {
     auto* subFilters = fSub->filters();
     if (subFilters)
@@ -240,8 +242,5 @@ void SelectFilter::setSimpleColumnListExtended()
     }
   }
 }
-
-const std::vector<SimpleColumn*>& SelectFilter::simpleColumnListExtended()
-{ return fSimpleColumnListExtended; }
 
 }  // namespace execplan
