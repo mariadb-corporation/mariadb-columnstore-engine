@@ -115,10 +115,12 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
   bool changedThisRound = false;
   bool hasBeenApplied = false;
 
+  idblog("Rule::apply START rule=" << name);
   do
   {
     changedThisRound = walk(root, ctx);
     hasBeenApplied |= changedThisRound;
+    idblog("Rule::apply round complete: changedThisRound=" << changedThisRound << " hasBeenApplied=" << hasBeenApplied);
     if (ctx.logRulesEnabled() && changedThisRound)
     {
       std::cout << "MCS RBO: " << name << " has been applied this round." << std::endl;
@@ -130,6 +132,7 @@ bool Rule::apply(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptimi
     }
   } while (changedThisRound && !applyOnlyOnce);
 
+  idblog("Rule::apply END rule=" << name << " hasBeenApplied=" << hasBeenApplied);
   return hasBeenApplied;
 }
 
@@ -143,8 +146,13 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
   while (!planStack.empty())
   {
+    idblog("Rule::walk loop iteration, planStack.size=" << planStack.size());
     execplan::CalpontSelectExecutionPlan* current = planStack.top();
     planStack.pop();
+    
+    idblog("Rule::walk processing CSEP subType=" << current->subType() 
+           << " unionVec.size=" << current->unionVec().size()
+           << " subSelectList.size=" << current->subSelectList().size());
 
     // Walk nested UNION UNITS
     for (auto& unionUnit : current->unionVec())
@@ -152,6 +160,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       auto* unionUnitPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
       if (unionUnitPtr)
       {
+        idblog("  pushing unionUnit subType=" << unionUnitPtr->subType());
         planStack.push(unionUnitPtr);
       }
     }
@@ -162,6 +171,7 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
       auto* subselectPtr = dynamic_cast<execplan::CalpontSelectExecutionPlan*>(subselect.get());
       if (subselectPtr)
       {
+        idblog("  pushing subselect subType=" << subselectPtr->subType());
         planStack.push(subselectPtr);
       }
     }
@@ -170,11 +180,31 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
     if (mayApply(*current, ctx))
     {
-      rewrite |= applyRule(*current, ctx);
-      ctx.incrementUniqueId();
+      idblog("  mayApply=true, calling applyRule");
+      try
+      {
+        rewrite |= applyRule(*current, ctx);
+        ctx.incrementUniqueId();
+        idblog("  applyRule completed, planStack.size=" << planStack.size());
+      }
+      catch (const std::exception& e)
+      {
+        idblog("  STD EXCEPTION in applyRule: " << e.what());
+        throw;
+      }
+      catch (...)
+      {
+        idblog("  UNKNOWN EXCEPTION in applyRule");
+        throw;
+      }
+    }
+    else
+    {
+      idblog("  mayApply=false, skipping applyRule");
     }
   }
 
+  idblog("Rule::walk END, rewrite=" << rewrite << " planStack.empty=" << planStack.empty());
   return rewrite;
 }
 
