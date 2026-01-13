@@ -21,6 +21,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <set>
 #include <vector>
 
 #include "rulebased_optimizer.h"
@@ -694,12 +695,47 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
         auto* mapPtr = static_cast<optimizer::TableAliasToNewAliasAndSCPositionsMap*>(obj);
         auto& map = *mapPtr;
         
-        // NOTE: We do NOT process sub->filters() or sub->having() here.
-        // The subquery will be processed by RBO separately and will create its OWN derived tables.
-        // Processing subquery filters here would incorrectly rewrite subquery columns to outer query's
-        // derived tables instead of the subquery's own derived tables.
-        // 
-        // We only update SelectFilter.cols() - the outer query columns being compared with subquery result.
+        // Get the subquery
+        auto sub = ef ? ef->sub() : (ssf ? ssf->sub() : sf->sub());
+        
+        // Build a set of subquery's own table aliases to distinguish outer query columns
+        std::set<std::string> subqueryTableAliases;
+        if (sub)
+        {
+          for (auto& t : sub->tableList())
+          {
+            subqueryTableAliases.insert(t.alias);
+          }
+        }
+        
+        // Helper to check if a column belongs to outer query (not subquery's own tables)
+        auto isOuterQueryColumn = [&subqueryTableAliases](execplan::SimpleColumn* sc) -> bool
+        {
+          const std::string& alias = sc->tableAlias();
+          // Skip already rewritten columns
+          if (alias.find("$added_sub_") != std::string::npos)
+            return false;
+          // Column is from outer query if it's NOT in subquery's table list
+          return subqueryTableAliases.count(alias) == 0;
+        };
+        
+        // For ExistsFilter (used for NOT IN), correlated outer query columns are in sub->filters()
+        // We need to rewrite ONLY outer query columns, not subquery's own columns
+        if (ef && sub)
+        {
+          if (auto subFilters = sub->filters())
+          {
+            std::vector<execplan::SimpleColumn*> subSCs;
+            subFilters->walk(execplan::getSimpleColsExtended, &subSCs);
+            for (auto* sc : subSCs)
+            {
+              if (sc && isOuterQueryColumn(sc))
+              {
+                tryToUpdateScToUseRewrittenDerived(sc, map);
+              }
+            }
+          }
+        }
         
         // For SelectFilter, update the outer query columns being compared
         if (sf)
@@ -710,7 +746,9 @@ bool applyParallelCES(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBO
             for (auto* sc : col->simpleColumnListExtended())
             {
               if (sc)
+              {
                 tryToUpdateScToUseRewrittenDerived(sc, map);
+              }
             }
           }
         }
