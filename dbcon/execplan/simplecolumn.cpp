@@ -115,7 +115,7 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
   SimpleScalarFilter* ssf = dynamic_cast<SimpleScalarFilter*>(tn);
   if (sf || ef || ssf)
   {
-    // For subquery filters, only collect the outer query columns (cols() for SelectFilter)
+    // For subquery filters, only collect the outer query columns (cols())
     // Do NOT descend into sub->filters() - that will be handled when RBO processes the subquery
     if (sf)
     {
@@ -125,7 +125,16 @@ void getSimpleColsExtended(execplan::ParseTree* n, void* obj)
         list->insert(list->end(), col->simpleColumnListExtended().begin(), col->simpleColumnListExtended().end());
       }
     }
-    // For ExistsFilter and SimpleScalarFilter, there are no outer columns to collect
+    // SimpleScalarFilter also has cols() - the outer query column being compared with subquery result
+    if (ssf)
+    {
+      for (const auto& col : ssf->cols())
+      {
+        col->setSimpleColumnListExtended();
+        list->insert(list->end(), col->simpleColumnListExtended().begin(), col->simpleColumnListExtended().end());
+      }
+    }
+    // ExistsFilter has no outer columns to collect (it's just EXISTS (subquery))
     return;
   }
 
