@@ -144,7 +144,7 @@ prepare_container() {
         execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils expect findutils iproute2 g++ gawk gdb hostname lz4 patch procps rsyslog sudo tar wget'
     fi
 
-    execInnerDockerWithRetry "$CONTAINER_NAME" 'wget -qO- https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.85.0'
+    execInnerDockerWithRetry "$CONTAINER_NAME" 'wget -qO- https://sh.rustup.rs | sh -s -- -y --default-toolchain stable'
     execInnerDockerWithRetry "$CONTAINER_NAME" 'source /root/.cargo/env && cargo install tpchgen-cli && ln -sf /root/.cargo/bin/tpchgen-cli /usr/local/bin/tpchgen-cli'
 
     # Configure core dump naming pattern
