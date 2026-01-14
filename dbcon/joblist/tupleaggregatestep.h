@@ -167,6 +167,10 @@ class TupleAggregateStep : public JobStep, public TupleDeliveryStep
   template <class GroupByMap>
   static bool tryToFindEqualFunctionColumnByTupleKey(JobInfo& jobInfo, GroupByMap& groupByMap,
                                                      const uint32_t tupleKey, uint32_t& foundTypleKey);
+  // Check if a FunctionColumn depends only on columns that are in the GROUP BY clause.
+  template <class GroupByMap>
+  static bool tryToFindFunctionDependsOnGroupByColumns(JobInfo& jobInfo, GroupByMap& groupByMap,
+                                                       const uint64_t projIdx);
   // This functions are workaround for the function above. For some reason different parts of the code with
   // same semantics use different containers.
   static uint32_t getTupleKeyFromTuple(

@@ -27,6 +27,7 @@
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
+#include <set>
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -941,7 +942,9 @@ SJSTEP TupleAggregateStep::prepAggregate(SJSTEP& step, JobInfo& jobInfo)
   // fix the delivered rowgroup data
   dynamic_cast<TupleAggregateStep*>(spjs.get())->configDeliveredRowGroup(jobInfo);
 
-  if (jobInfo.expressionVec.size() > 0)
+  // Call prepExpressionOnAggregate if there are expressions with aggregates,
+  // or if there are function columns that depend on GROUP BY columns
+  if (jobInfo.expressionVec.size() > 0 || jobInfo.groupByColVec.size() > 0)
     dynamic_cast<TupleAggregateStep*>(spjs.get())->prepExpressionOnAggregate(aggUM, jobInfo);
 
   return spjs;
@@ -1187,6 +1190,19 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
           widthAgg.push_back(width[colProj]);
           // Update key.
           key = foundTupleKey;
+          ++outIdx;
+          continue;
+        }
+        // Check if this is a FunctionColumn that depends only on GROUP BY columns
+        else if (tryToFindFunctionDependsOnGroupByColumns(jobInfo, groupbyMap, i))
+        {
+          oidsAgg.push_back(oidsProj[colProj]);
+          keysAgg.push_back(key);
+          scaleAgg.push_back(scaleProj[colProj]);
+          precisionAgg.push_back(precisionProj[colProj]);
+          typeAgg.push_back(typeProj[colProj]);
+          csNumAgg.push_back(csNumProj[colProj]);
+          widthAgg.push_back(width[colProj]);
           ++outIdx;
           continue;
         }
@@ -1507,7 +1523,8 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
 
   RowGroup aggRG(oidsAgg.size(), posAgg, oidsAgg, keysAgg, typeAgg, csNumAgg, scaleAgg, precisionAgg,
                  jobInfo.stringTableThreshold);
-  SP_ROWAGG_UM_t rowAgg(new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, jobInfo.hasRollup));
+  SP_ROWAGG_UM_t rowAgg(
+      new RowAggregationUM(groupBy, functionVec, jobInfo.rm, jobInfo.umMemLimit, jobInfo.hasRollup));
   rowAgg->timeZone(jobInfo.timeZone);
   rowgroups.push_back(aggRG);
   aggregators.push_back(rowAgg);
@@ -2438,6 +2455,34 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
                 }
               }
 
+              // Check if this is a FunctionColumn that depends only on GROUP BY columns
+              if (returnColMissing)
+              {
+                map<uint32_t, int> tempGroupByMap;
+                for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+                  tempGroupByMap.insert(make_pair(jobInfo.groupByColVec[j], j));
+
+                if (tryToFindFunctionDependsOnGroupByColumns(jobInfo, tempGroupByMap, i))
+                {
+                  for (uint64_t k = 0; k < keysProj.size(); k++)
+                  {
+                    if (retKey == keysProj[k])
+                    {
+                      oidsAggDist.push_back(oidsProj[k]);
+                      keysAggDist.push_back(retKey);
+                      scaleAggDist.push_back(scaleProj[k] >> 8);
+                      precisionAggDist.push_back(precisionProj[k]);
+                      typeAggDist.push_back(typeProj[k]);
+                      csNumAggDist.push_back(csNumProj[k]);
+                      widthAggDist.push_back(widthProj[k]);
+
+                      returnColMissing = false;
+                      break;
+                    }
+                  }
+                }
+              }
+
               if (returnColMissing)
               {
                 Message::Args args;
@@ -3123,6 +3168,51 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
       colAggPm++;
     }
 
+    // Add function columns that depend only on GROUP BY columns to PM aggregation
+    // This allows functions like length(a) to be passed from PM to UM when 'a' is in GROUP BY
+    {
+      map<uint32_t, int> tempGroupByMap;
+      for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+        tempGroupByMap.insert(make_pair(jobInfo.groupByColVec[j], j));
+
+      for (uint64_t i = 0; i < returnedColVec.size(); i++)
+      {
+        if (returnedColVec[i].second != 0)
+          continue;  // skip aggregate columns
+
+        uint32_t key = returnedColVec[i].first;
+
+        // Skip if already in keysAggPm
+        if (find(keysAggPm.begin(), keysAggPm.end(), key) != keysAggPm.end())
+          continue;
+
+        // Check if this is a function that depends only on GROUP BY columns
+        if (tryToFindFunctionDependsOnGroupByColumns(jobInfo, tempGroupByMap, i))
+        {
+          if (projColPosMap.find(key) == projColPosMap.end())
+            continue;  // skip if not in projection
+
+          uint64_t colProj = projColPosMap[key];
+
+          SP_ROWAGG_GRPBY_t groupby(new RowAggGroupByCol(colProj, colAggPm));
+          groupByPm.push_back(groupby);
+
+          oidsAggPm.push_back(oidsProj[colProj]);
+          keysAggPm.push_back(key);
+          scaleAggPm.push_back(scaleProj[colProj]);
+          precisionAggPm.push_back(precisionProj[colProj]);
+          typeAggPm.push_back(typeProj[colProj]);
+          csNumAggPm.push_back(csNumProj[colProj]);
+          widthAggPm.push_back(width[colProj]);
+
+          aggFuncMap.insert(make_pair(boost::make_tuple(keysAggPm[colAggPm], 0, pUDAFFunc,
+                                                        udafc ? udafc->getContext().getParamKeys() : NULL),
+                                      colAggPm));
+          colAggPm++;
+        }
+      }
+    }
+
     // vectors for aggregate functions
     for (uint64_t i = 0; i < aggColVec.size(); i++)
     {
@@ -3615,6 +3705,36 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
             returnColMissing = false;
           }
 
+          // Check if this is a FunctionColumn that depends only on GROUP BY columns
+          if (returnColMissing)
+          {
+            map<uint32_t, int> tempGroupByMap;
+            for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+              tempGroupByMap.insert(make_pair(jobInfo.groupByColVec[j], j));
+
+            if (tryToFindFunctionDependsOnGroupByColumns(jobInfo, tempGroupByMap, i))
+            {
+              // Find the column in PM aggregation result (it was added earlier in this function)
+              for (uint64_t k = 0; k < keysAggPm.size(); k++)
+              {
+                if (retKey == keysAggPm[k])
+                {
+                  colPm = k;
+                  oidsAggUm.push_back(oidsAggPm[colPm]);
+                  keysAggUm.push_back(retKey);
+                  scaleAggUm.push_back(scaleAggPm[colPm]);
+                  precisionAggUm.push_back(precisionAggPm[colPm]);
+                  typeAggUm.push_back(typeAggPm[colPm]);
+                  csNumAggUm.push_back(csNumAggPm[colPm]);
+                  widthAggUm.push_back(widthAggPm[colPm]);
+
+                  returnColMissing = false;
+                  break;
+                }
+              }
+            }
+          }
+
           if (returnColMissing)
           {
             Message::Args args;
@@ -3860,14 +3980,22 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
             jobInfo.groupByColVec.end() &&
         jobInfo.windowSet.find(rtcKey) != jobInfo.windowSet.end())
     {
-      Message::Args args;
-      args.add(keyName(i, rtcKey, jobInfo));
-      string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
-      cerr << "prep2PhasesDistinctAggregate: " << emsg
-           << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[rtcKey].fId
-           << ", alias=" << jobInfo.keyInfo->tupleKeyVec[rtcKey].fTable
-           << ", view=" << jobInfo.keyInfo->tupleKeyVec[rtcKey].fView << endl;
-      throw IDBExcept(emsg, ERR_NOT_GROUPBY_EXPRESSION);
+      // Check if this is a FunctionColumn that depends only on GROUP BY columns
+      map<uint32_t, int> tempGroupByMap;
+      for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+        tempGroupByMap.insert(make_pair(jobInfo.groupByColVec[j], j));
+
+      if (!tryToFindFunctionDependsOnGroupByColumns(jobInfo, tempGroupByMap, i))
+      {
+        Message::Args args;
+        args.add(keyName(i, rtcKey, jobInfo));
+        string emsg = IDBErrorInfo::instance()->errorMsg(ERR_NOT_GROUPBY_EXPRESSION, args);
+        cerr << "prep2PhasesDistinctAggregate: " << emsg
+             << " oid=" << (int)jobInfo.keyInfo->tupleKeyVec[rtcKey].fId
+             << ", alias=" << jobInfo.keyInfo->tupleKeyVec[rtcKey].fTable
+             << ", view=" << jobInfo.keyInfo->tupleKeyVec[rtcKey].fView << endl;
+        throw IDBExcept(emsg, ERR_NOT_GROUPBY_EXPRESSION);
+      }
     }
 
     // skip if not an aggregation column
@@ -4712,6 +4840,28 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
               returnColMissing = false;
             }
 
+            // Check if this is a FunctionColumn that depends only on GROUP BY columns
+            if (returnColMissing)
+            {
+              map<uint32_t, int> tempGroupByMap;
+              for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+                tempGroupByMap.insert(make_pair(jobInfo.groupByColVec[j], j));
+
+              if (tryToFindFunctionDependsOnGroupByColumns(jobInfo, tempGroupByMap, i))
+              {
+                TupleInfo ti = getTupleInfo(retKey, jobInfo);
+                oidsAggDist.push_back(ti.oid);
+                keysAggDist.push_back(retKey);
+                scaleAggDist.push_back(ti.scale);
+                precisionAggDist.push_back(ti.precision);
+                typeAggDist.push_back(ti.dtype);
+                csNumAggDist.push_back(ti.csNum);
+                widthAggDist.push_back(ti.width);
+
+                returnColMissing = false;
+              }
+            }
+
             if (returnColMissing)
             {
               Message::Args args;
@@ -5236,6 +5386,11 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
       keyToIndexMap.insert(make_pair(fRowGroupOut.getKeys()[i], i));
   }
 
+  // Build a set of GROUP BY column keys for checking function dependencies
+  set<uint32_t> groupByKeySet;
+  for (uint64_t j = 0; j < jobInfo.groupByColVec.size(); j++)
+    groupByKeySet.insert(jobInfo.groupByColVec[j]);
+
   RetColsVector expressionVec;
   ArithmeticColumn* ac = NULL;
   FunctionColumn* fc = NULL;
@@ -5264,6 +5419,9 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
       eid = fc->expressionId();
       expressionVec.push_back(*it);
     }
+    // Note: FunctionColumns that depend only on GROUP BY columns (no aggregate columns)
+    // are now added to groupByColVec in doAggProject, so they are treated like GROUP BY expressions
+    // and evaluated during projection phase. They don't need to be evaluated here.
 
     // update the output index
     if (eid != (uint64_t)-1)
@@ -5607,18 +5765,18 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
               // The key is the groupby columns, which are the leading columns.
               // TBD This approach could potential
               // put all values in on bucket.
-	      // The fAggregator->hasRollup() is true when we perform one-phase
-	      // aggregation and also are doing subtotals' computations.
-	      // Subtotals produce new keys whose hash values may not be in
-	      // the processing bucket. Consider case for key tuples (1,2) and (1,3).
-	      // Their subtotals's keys will be (1, NULL) and (1, NULL)
-	      // but they will be left in their processing buckets and never
-	      // gets aggregated properly.
-	      // Due to this, we put all rows into the same bucket 0 when perfoming
-	      // single-phase aggregation with subtotals.
-	      // For all other cases (single-phase without subtotals and two-phase
-	      // aggregation with and without subtotals) fAggregator->hasRollup() is false.
-	      // In these cases we have full parallel processing as expected.
+              // The fAggregator->hasRollup() is true when we perform one-phase
+              // aggregation and also are doing subtotals' computations.
+              // Subtotals produce new keys whose hash values may not be in
+              // the processing bucket. Consider case for key tuples (1,2) and (1,3).
+              // Their subtotals's keys will be (1, NULL) and (1, NULL)
+              // but they will be left in their processing buckets and never
+              // gets aggregated properly.
+              // Due to this, we put all rows into the same bucket 0 when perfoming
+              // single-phase aggregation with subtotals.
+              // For all other cases (single-phase without subtotals and two-phase
+              // aggregation with and without subtotals) fAggregator->hasRollup() is false.
+              // In these cases we have full parallel processing as expected.
               uint64_t hash = fAggregator->hasRollup() ? 0 : rowgroup::hashRow(rowIn, hashLens[0] - 1);
               int bucketID = hash % fNumOfBuckets;
               rowBucketVecs[bucketID][0].emplace_back(rowIn.getPointer(), hash);
@@ -6137,5 +6295,77 @@ bool TupleAggregateStep::tryToFindEqualFunctionColumnByTupleKey(JobInfo& jobInfo
     }
   }
   return false;
+}
+
+template <class GroupByMap>
+bool TupleAggregateStep::tryToFindFunctionDependsOnGroupByColumns(JobInfo& jobInfo, GroupByMap& groupByMap,
+                                                                  const uint64_t projIdx)
+{
+  // Get the FunctionColumn or ArithmeticColumn from projectionCols
+  if (projIdx >= jobInfo.projectionCols.size())
+    return false;
+
+  const vector<SimpleColumn*>* simpleColListPtr = nullptr;
+
+  const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(jobInfo.projectionCols[projIdx].get());
+  if (fc)
+  {
+    // Ensure simpleColumnList is populated
+    const_cast<FunctionColumn*>(fc)->setSimpleColumnList();
+    simpleColListPtr = &fc->simpleColumnList();
+  }
+  else
+  {
+    const ArithmeticColumn* ac = dynamic_cast<const ArithmeticColumn*>(jobInfo.projectionCols[projIdx].get());
+    if (ac)
+    {
+      // Ensure simpleColumnList is populated
+      const_cast<ArithmeticColumn*>(ac)->setSimpleColumnList();
+      simpleColListPtr = &ac->simpleColumnList();
+    }
+  }
+
+  if (!simpleColListPtr || simpleColListPtr->empty())
+    return false;
+
+  const vector<SimpleColumn*>& simpleColList = *simpleColListPtr;
+
+  // Check if all columns in simpleColumnList are in the GROUP BY clause
+  for (const auto* sc : simpleColList)
+  {
+    if (!sc)
+      return false;
+
+    // Check if this column's tuple key is in the groupByMap
+    bool foundInGroupBy = false;
+
+    // Get tuple key for this simple column
+    uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+
+    // For dictionary columns, check if there's a mapping
+    CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
+    if (dictOid > 0)
+    {
+      auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
+      if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
+        scKey = dictIt->second;
+    }
+
+    // Check if this key is in the groupByMap
+    for (const auto& groupByMapPair : groupByMap)
+    {
+      const auto groupByKey = getTupleKeyFromTuple(groupByMapPair.first);
+      if (groupByKey == scKey)
+      {
+        foundInGroupBy = true;
+        break;
+      }
+    }
+
+    if (!foundInGroupBy)
+      return false;
+  }
+
+  return true;
 }
 }  // namespace joblist
