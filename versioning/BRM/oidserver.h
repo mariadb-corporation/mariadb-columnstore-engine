@@ -123,13 +123,6 @@ class OIDServer
   int fFd;  /// file descriptor referencing the bitmap file
   std::vector<uint16_t> vbOidDBRootMap;
 
-  /** @brief Grab the file lock
-   *
-   * Grab the file lock.
-   * @note Throws ios::failure after MaxRetries hard errors
-   */
-  // void lockFile() const;
-
   /** @brief Reliably reads data from the bitmap file
    *
    * Reliably reads data from the bitmap file.
