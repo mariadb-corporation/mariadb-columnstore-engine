@@ -21,7 +21,7 @@ local extra_servers_platforms = {
 };
 
 //local archs = ["amd64", "arm64"];
-local archs = ["amd64"];
+local archs = ["arm64"];
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
 
@@ -660,15 +660,15 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
 
 local AllPipelines =
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["rockylinux:8"]
-    for flag in ["gcc-toolset"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["rockylinux:8"]
+  //   for flag in ["gcc-toolset"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
   [
     Pipeline(b, p, e, a, s)
     for b in std.objectFields(platforms)
@@ -683,54 +683,54 @@ local AllPipelines =
     for server in servers[current_branch]
     for a in archs
   ] +
-  // clang
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for buildenv in std.objectFields(customEnvCommandsMap)
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  // last argument is to ignore mtr and regression failures
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for server in extra_servers[current_branch]
-    for platform in extra_servers_platforms[current_branch]
-    for triggeringEvent in events
-  ] +
+  // // clang
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for buildenv in std.objectFields(customEnvCommandsMap)
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
   // // last argument is to ignore mtr and regression failures
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["libcpp"]
-    for envcommand in ["clang-20"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["UBSan"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh', 'test011.sh'])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["ASan"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for server in extra_servers[current_branch]
+  //   for platform in extra_servers_platforms[current_branch]
+  //   for triggeringEvent in events
+  // ] +
+  // // // last argument is to ignore mtr and regression failures
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["libcpp"]
+  //   for envcommand in ["clang-20"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["UBSan"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh', 'test011.sh'])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["ASan"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
 
   [];
 
