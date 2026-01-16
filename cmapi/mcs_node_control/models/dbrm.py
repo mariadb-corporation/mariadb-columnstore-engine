@@ -45,6 +45,11 @@ class DBRM:
             )
         dbrm_host = master_conn_info['IPAddr'] or DEFAULT_HOST
         dbrm_port = int(master_conn_info['Port']) or DEFAULT_PORT
+        module_logger.info(
+            f'DBRM.connect: connecting to {dbrm_host}:{dbrm_port} '
+            f'(from config: IPAddr={master_conn_info.get("IPAddr")}, '
+            f'Port={master_conn_info.get("Port")})'
+        )
         self.dbrm_socket.connect(dbrm_host, dbrm_port)
 
     def close(self):

@@ -226,24 +226,30 @@ class MCSProcessManager:
         :return: True on success
         :rtype: bool
         """
-        logging.debug(
-            'Waiting for controllernode to come up before starting '
-            'ddlproc/dmlproc on non-primary nodes.'
+        logging.info(
+            f'_wait_for_controllernode: starting with max_retry={cls.CONTROLLER_MAX_RETRY}, '
+            f'sock_timeout={SOCK_TIMEOUT}s'
         )
+        overall_start = time.monotonic()
         attempts = cls.CONTROLLER_MAX_RETRY
         success = False
         while attempts > 0:
             start = time.monotonic()
             try:
-                with DBRM():
-                    # check connection
+                with DBRM() as dbrm:
+                    elapsed = time.monotonic() - start
+                    logging.info(
+                        f'_wait_for_controllernode: connected to '
+                        f'{dbrm.dbrm_socket._host}:{dbrm.dbrm_socket._port} '
+                        f'in {elapsed:.2f}s'
+                    )
                     success = True
-            except (OSError, ConnectionRefusedError, RuntimeError):
+            except (OSError, ConnectionRefusedError, RuntimeError) as e:
                 elapsed = time.monotonic() - start
                 remaining = SOCK_TIMEOUT - elapsed
                 logging.info(
-                    'Cannot establish connection to controllernode.'
-                    f'Controller node still not started. {attempts} attempts left.'
+                    f'_wait_for_controllernode: attempt {cls.CONTROLLER_MAX_RETRY - attempts + 1}/{cls.CONTROLLER_MAX_RETRY} '
+                    f'failed: {type(e).__name__}: {e}. Elapsed: {elapsed:.2f}s.'
                 )
                 if remaining > 0:
                     logging.debug('Sleeping %.1f seconds', remaining)
@@ -253,14 +259,15 @@ class MCSProcessManager:
                 break
             attempts -= 1
 
+        overall_elapsed = time.monotonic() - overall_start
         if not success:
             logging.error(
-                'Controllernode is not reachable after '
-                f'{cls.CONTROLLER_MAX_RETRY} attempts to connect with '
-                f'{SOCK_TIMEOUT} seconds timeout.'
+                f'_wait_for_controllernode: FAILED after {overall_elapsed:.2f}s '
+                f'({cls.CONTROLLER_MAX_RETRY} attempts with {SOCK_TIMEOUT}s timeout). '
                 'Starting mcs-dmlproc/mcs-ddlproc anyway.'
             )
             return False
+        logging.info(f'_wait_for_controllernode: SUCCESS in {overall_elapsed:.2f}s')
         return True
 
     @classmethod

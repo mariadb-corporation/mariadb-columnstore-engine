@@ -84,17 +84,27 @@ class DBRMSocketHandler():
 
         :raises RuntimeError: [description]
         """
+        logging.info(
+            f'_detect_protocol: starting protocol detection '
+            f'(current long_strings={DBRMSocketHandler.long_strings})'
+        )
         success = False
         # check at first old protocol because 5.x.x version got an issue if
         # we try to send new format packages.
         for long_strings in (False, True):
             DBRMSocketHandler.long_strings = long_strings
+            logging.info(f'_detect_protocol: trying long_strings={long_strings}')
             self.send('readonly')
             try:
                 _ = self.receive()
                 success = True
+                logging.info(f'_detect_protocol: success with long_strings={long_strings}')
                 break
-            except (socket.timeout, TimeoutError):
+            except (socket.timeout, TimeoutError) as e:
+                logging.warning(
+                    f'_detect_protocol: timeout with long_strings={long_strings}: '
+                    f'{type(e).__name__}: {e}'
+                )
                 # wrong packet sended could cause errors on the mcs engine side
                 self._recreate_socket()
                 continue
@@ -205,7 +215,19 @@ class DBRMSocketHandler():
         self._host = host
         self._port = port
         self._socket.settimeout(SOCK_TIMEOUT)
-        self._socket.connect((host, port))
+        logging.info(
+            f'DBRMSocketHandler.connect: attempting connection to {host}:{port} '
+            f'with timeout={SOCK_TIMEOUT}s'
+        )
+        try:
+            self._socket.connect((host, port))
+            logging.info(f'DBRMSocketHandler.connect: connected successfully to {host}:{port}')
+        except Exception as e:
+            logging.error(
+                f'DBRMSocketHandler.connect: failed to connect to {host}:{port}: '
+                f'{type(e).__name__}: {e}'
+            )
+            raise
 
     def close(self):
         """Closing the socket.
@@ -226,6 +248,10 @@ class DBRMSocketHandler():
         :type command_value: int, optional
         """
         if DBRMSocketHandler.long_strings is None:
+            logging.info(
+                f'DBRMSocketHandler.send: long_strings is None, '
+                f'calling _detect_protocol()'
+            )
             self._detect_protocol()
         msg_bytes = self._make_msg(command_name, command_value)
         self._send(msg_bytes)
