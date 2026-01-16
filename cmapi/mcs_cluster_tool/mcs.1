@@ -419,7 +419,7 @@ $ mcs review [OPTIONS]
 [Beta]
 Install the specified MDB ES version.
 If the version is \[aq]latest\[aq], it will upgrade to the latest tested version
-available.
+available for your OS.
 .PP
 \fBUsage\fP:
 .PP
@@ -437,6 +437,10 @@ $ mcs install_es [OPTIONS]
 \fB\fC\-v, \-\-version TEXT\fR: ES version to upgdate.
 .IP \(bu 2
 \fB\fC\-\-ignore\-mismatch\fR: Proceed even if nodes report different installed package versions (use majority as baseline).
+.IP \(bu 2
+\fB\fC\-\-skip\-cmapi\fR: Skip CMAPI upgrade/install entirely. Use when CMAPI does not need to be updated (e.g. custom/latest CMAPI version already installed).
+.IP \(bu 2
+\fB\fC\-\-allow\-cmapi\-downgrade\fR: Allow CMAPI to be downgraded when performing a downgrade. By default, CMAPI will NOT be downgraded to prevent meeting an already fixed issues and loss the new features.
 .IP \(bu 2
 \fB\fC\-\-help\fR: Show this message and exit.
 .RE

@@ -6,11 +6,13 @@ import socket
 import time
 from copy import deepcopy
 from time import sleep
+from typing import Optional
 
 import psutil
 
 from cmapi_server.constants import (
     ALL_MCS_PROGS,
+    CMAPI_SYSTEMD_SERVICE_NAME,
     DMLPROC_SHUTDOWN_TIMEOUT,
     MCS_INSTALL_BIN,
     MCSProgs,
@@ -522,44 +524,73 @@ class MCSProcessManager:
         cls.start_node(is_primary, use_sudo, is_read_replica)
 
 
-class MDBProcessManager:
-    """TODO: not working with a non systemd installations need to implement."""
+class BaseNonMCSProcessManager:
+    """
+    Basic process manager for non MCS processes, e.g. mariadb.
+
+    TODO: not working with a non systemd installations, need to implement?
+    """
     process_dispatcher = SystemdDispatcher
+    process_name: Optional[str] = None
+
+    @classmethod
+    def _process_name_check(cls):
+        """Check if process name is set for Class."""
+        if not cls.process_name:
+            raise CMAPIBasicError('Process name is not set.')
 
     @classmethod
     def is_service_running(cls, use_sudo: bool = True) -> bool:
-        """Check if MariaDB process is running.
+        """Check if non MCS process is running.
 
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
-        :return: True if MariaDB process is running, otherwise False
+        :return: True if non MCS process is running, otherwise False
         :rtype: bool
         """
-        return cls.process_dispatcher.is_service_running(
-            'mariadb', use_sudo=use_sudo
-        )
+        cls._process_name_check()
+        return cls.process_dispatcher.is_service_running(cls.process_name, use_sudo=use_sudo)
 
     @classmethod
     def start(cls, use_sudo: bool) -> bool:
-        """Start MariaDB process.
+        """Start non MCS process.
 
         :type use_sudo: bool
-        :return: True if process started successfully
+        :return: True if non MCS process started successfully
         :rtype: bool
         """
         if not cls.is_service_running():
-            return cls.process_dispatcher.start('mariadb', use_sudo)
+            return cls.process_dispatcher.start(cls.process_name, use_sudo)
         return True
 
     @classmethod
     def stop(cls, use_sudo: bool = True) -> bool:
-        """Stop MariaDB process.
+        """Stop non MCS process.
 
         :type use_sudo: bool
-        :return: True if process stopped
-          successfully
+        :return: True if non MCS process stopped successfully
         :rtype: bool
         """
         if cls.is_service_running():
-            return cls.process_dispatcher.stop('mariadb', use_sudo)
+            return cls.process_dispatcher.stop(cls.process_name, use_sudo)
         return True
+
+    @classmethod
+    def restart(cls, use_sudo: bool = True) -> bool:
+        """Restart non MCS process.
+
+        :type use_sudo: bool
+        :return: True if non MCS process restarted successfully
+        :rtype: bool
+        """
+        cls._process_name_check()
+        return cls.process_dispatcher.restart(cls.process_name, use_sudo)
+
+
+class MDBProcessManager(BaseNonMCSProcessManager):
+    """Process manager for MariaDB process."""
+    process_name = 'mariadb'
+
+class CmapiProcessManager(BaseNonMCSProcessManager):
+    """Process manager for CMAPI process."""
+    process_name = CMAPI_SYSTEMD_SERVICE_NAME

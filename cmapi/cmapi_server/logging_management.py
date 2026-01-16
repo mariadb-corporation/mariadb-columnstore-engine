@@ -35,6 +35,86 @@ class TraceParamsFilter(logging.Filter):
             record.trace_params = ""
         return True
 
+class SharedStorageAccessFilter(logging.Filter):
+    """Redirect shared-storage check logs to a separate log file.
+
+    When attached to output handlers (``file``, ``console``,
+    ``cmapi_server``) this filter intercepts log records whose message
+    matches shared-storage-related endpoint paths or handler function
+    names and forwards them to the file handler used by the
+    ``shared_storage_monitor`` logger.
+
+    Matched records are suppressed from the handler they would normally
+    reach so they do not clutter ``cmapi_server.log``.  A per-record
+    ``_ss_redirected`` flag ensures the redirect happens only once even
+    when the filter is installed on multiple handlers.  The dedicated
+    handler is resolved lazily on the first matching record and cached
+    for the lifetime of the filter instance.
+
+    :param name: Standard :class:`logging.Filter` *name* argument.
+    :type name: str
+    """
+
+    _PATTERNS = (
+        'check-shared-storage',
+        'check-shared-file',
+        'check_shared_storage',
+        'check_shared_file',
+    )
+
+    def __init__(self, name=''):
+        """Initialise the filter.
+
+        :param name: Logger-name prefix used by the base class filter.
+        :type name: str
+        """
+        super().__init__(name)
+        self._handler = None
+
+    def filter(self, record):
+        """Decide whether *record* should reach the handler.
+
+        If the record's message contains a shared-storage-related
+        pattern it is emitted to the shared-storage log file (once per
+        record, guarded by ``_ss_redirected``) and suppressed from this
+        handler (returns ``False``).
+
+        :param record: The log record to evaluate.
+        :type record: logging.LogRecord
+        :returns: ``True`` to keep the record in the normal flow;
+            ``False`` to suppress it.
+        :rtype: bool
+        """
+        msg = record.getMessage()
+        if not any(p in msg for p in self._PATTERNS):
+            return True
+        if not getattr(record, '_ss_redirected', False):
+            handler = self._resolve_handler()
+            if handler is None:
+                return True
+            record._ss_redirected = True
+            handler.handle(record)
+        return False
+
+    def _resolve_handler(self):
+        """Lazily resolve the shared-storage file handler.
+
+        The handler is obtained from the ``shared_storage_monitor`` logger
+        on first call and cached for subsequent invocations.
+
+        :returns: The file handler, or ``None`` if it cannot be found.
+        :rtype: logging.Handler or None
+        """
+        if self._handler is not None:
+            return self._handler
+        ss_logger = logging.getLogger('shared_storage_monitor')
+        for h in ss_logger.handlers:
+            if hasattr(h, 'baseFilename'):
+                self._handler = h
+                return h
+        return None
+
+
 def custom_cherrypy_error(
         self, msg='', context='', severity=logging.INFO, traceback=False
     ):

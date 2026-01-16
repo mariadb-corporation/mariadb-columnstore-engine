@@ -28,4 +28,3 @@ if [ $rpmmode = erase ]; then
 fi
 
 exit 0
-
