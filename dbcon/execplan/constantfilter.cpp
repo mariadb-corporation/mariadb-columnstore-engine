@@ -331,11 +331,6 @@ void ConstantFilter::setSimpleColumnList()
   }
 }
 
-const std::vector<SimpleColumn*>& ConstantFilter::simpleColumnListExtended()
-{
-  return fSimpleColumnListExtended;
-}
-
 void ConstantFilter::setSimpleColumnListExtended()
 {
   fSimpleColumnListExtended.clear();
@@ -347,11 +342,13 @@ void ConstantFilter::setSimpleColumnListExtended()
                                      fFilterList[i]->simpleColumnListExtended().begin(),
                                      fFilterList[i]->simpleColumnListExtended().end());
   }
-  fCol->setSimpleColumnListExtended();
-  fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
-                                   fCol->simpleColumnListExtended().begin(),
-                                   fCol->simpleColumnListExtended().end());
-
+  if (fCol)
+  {
+    fCol->setSimpleColumnListExtended();
+    fSimpleColumnListExtended.insert(fSimpleColumnListExtended.end(),
+                                     fCol->simpleColumnListExtended().begin(),
+                                     fCol->simpleColumnListExtended().end());
+  }
 }
 
 }  // namespace execplan
