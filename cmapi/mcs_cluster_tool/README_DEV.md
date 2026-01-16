@@ -14,10 +14,12 @@
 - dependencies for gem build (RHEL example)
     ```bash
     sudo dnf install make gcc redhat-rpm-config -y
+    # sudo apt install -y make gcc
     ```
 - install `md2man` (for now it's the only one tool that make convertation without any issues)
     ```bash
     sudo yum install -y ruby ruby-devel
+    # sudo apt install -y ruby ruby-dev
     gem install md2man
     ```
 - convert to perfect `.roff` file (`man` page)

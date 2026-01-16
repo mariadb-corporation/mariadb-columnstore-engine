@@ -364,6 +364,26 @@ dispatcher.connect(
 )
 
 
+# /_version/node/start-upgrade-agent (PUT)
+dispatcher.connect(
+    name = 'node_start_upgrade_agent',
+    route = f'/cmapi/{_version}/node/start-upgrade-agent',
+    action = 'start_upgrade_agent',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/cluster/start-upgrade-agent (PUT)
+dispatcher.connect(
+    name = 'cluster_start_upgrade_agent',
+    route = f'/cmapi/{_version}/cluster/start-upgrade-agent',
+    action = 'start_upgrade_agent',
+    controller = ClusterController(),
+    conditions = {'method': ['PUT']}
+)
+
+
 # /_version/node/install-repo (PUT)
 dispatcher.connect(
     name = 'node_install_repo',

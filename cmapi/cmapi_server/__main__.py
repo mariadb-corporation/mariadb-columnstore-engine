@@ -26,7 +26,7 @@ from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_404, jsonify_error
 from cmapi_server.failover_agent import FailoverAgent
-from cmapi_server.invariant_checks import run_invariant_checks
+from cmapi_server.invariant_checks import init_invariant_checks_enforce, run_invariant_checks
 from cmapi_server.managers.application import AppManager
 from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.managers.process import MCSProcessManager
@@ -155,9 +155,12 @@ if __name__ == '__main__':
     CertificateManager.create_self_signed_certificate_if_not_exist()
     CertificateManager.renew_certificate()
 
-    # Run checks, if some of them fail -- log and exit
-    diag = run_invariant_checks()
-    if diag:
+    # Read invariant_checks_enforce once from config and cache it
+    init_invariant_checks_enforce()
+
+    # Run checks, if some of them fail -- log and exit (unless warning mode)
+    diag, warn_only = run_invariant_checks()
+    if diag and not warn_only:
         logging.error('Invariant checks failed, exiting')
         sys.exit(1)
 

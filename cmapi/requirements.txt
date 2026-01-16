@@ -14,6 +14,8 @@ aiosignal==1.4.0
     # via aiohttp
 annotated-types==0.7.0
     # via pydantic
+anyio==4.12.1
+    # via starlette
 argcomplete==3.6.2
     # via gsutil
 attrs==25.3.0
@@ -43,7 +45,9 @@ cheroot==10.0.1
 cherrypy==18.10.0
     # via -r requirements.in
 click==8.1.8
-    # via typer
+    # via
+    #   typer
+    #   uvicorn
 colorama==0.4.6
     # via awscli
 crcmod==1.7
@@ -56,6 +60,8 @@ distro==1.9.0
     # via -r requirements.in
 docutils==0.16
     # via awscli
+fastapi==0.115.6
+    # via -r requirements.in
 fasteners==0.20
     # via
     #   google-apitools
@@ -85,6 +91,8 @@ google-reauth==0.1.1
     #   gsutil
 gsutil==5.35
     # via -r requirements.in
+h11==0.16.0
+    # via uvicorn
 httplib2==0.20.4
     # via
     #   gcs-oauth2-boto-plugin
@@ -94,6 +102,7 @@ httplib2==0.20.4
     #   oauth2client
 idna==3.10
     # via
+    #   anyio
     #   requests
     #   yarl
 jaraco-collections==5.2.1
@@ -159,7 +168,9 @@ pyasn1-modules==0.4.2
 pycparser==2.22
     # via cffi
 pydantic==2.11.7
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   fastapi
 pydantic-core==2.33.2
     # via pydantic
 pygments==2.19.2
@@ -217,12 +228,15 @@ six==1.17.0
     #   python-dateutil
     #   pyu2f
     #   routes
+starlette==0.41.3
+    # via fastapi
 tempora==5.8.1
     # via portend
 typer==0.15.2
     # via -r requirements.in
 typing-extensions==4.14.1
     # via
+    #   fastapi
     #   pydantic
     #   pydantic-core
     #   typer
@@ -234,6 +248,8 @@ urllib3==1.26.20
     #   botocore
     #   requests
     #   sentry-sdk
+uvicorn==0.34.0
+    # via -r requirements.in
 yarl==1.20.1
     # via aiohttp
 zc-lockfile==3.0.post1

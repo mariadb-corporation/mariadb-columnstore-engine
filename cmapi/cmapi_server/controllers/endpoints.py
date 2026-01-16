@@ -1,5 +1,7 @@
 import logging
 import hashlib
+import os
+import shlex
 import socket
 import subprocess
 import threading
@@ -21,6 +23,8 @@ from cmapi_server.constants import (
     ALL_MCS_PROGS,
     CMAPI_PACKAGE_NAME,
     CMAPI_PORT,
+    CMAPI_PYTHON_BIN,
+    CMAPI_PYTHON_DEPS_PATH,
     DEFAULT_MCS_CONF_PATH,
     DMLPROC_SHUTDOWN_TIMEOUT,
     EM_PATH_SUFFIX,
@@ -31,6 +35,10 @@ from cmapi_server.constants import (
     REQUEST_TIMEOUT,
     S3_BRM_CURRENT_PATH,
     SECRET_KEY,
+    UPGRADE_DIR,
+    UPGRADE_AGENT_MODULE,
+    PkgType,
+    get_pkg_type,
 )
 from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server import helpers
@@ -58,7 +66,10 @@ from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.managers.upgrade.packages import PackagesManager
 from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
 from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.process_dispatchers.base import BaseDispatcher
 from cmapi_server.process_dispatchers.container import ContainerDispatcher
+from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
+
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -488,11 +499,11 @@ class ConfigController:
                     sm_config_string=sm_config
                 )
 
-                diag = run_invariant_checks()
-                if diag:
+                diag, warn_only = run_invariant_checks()
+                if diag and not warn_only:
                     raise_422_error(
                         module_logger, func_name,
-                        f'Invariant checks failed. Details:\n{diag.strip()}',
+                        f'Invariant checks failed. Details:\n{diag.strip() if diag else ""}',
                         exc_info=False
                     )
 
@@ -1050,6 +1061,55 @@ class ClusterController:
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def start_upgrade_agent(self):
+        """Handler for /cluster/start-upgrade-agent (PUT) endpoint.
+
+        Starts the upgrade agent process on each node in the cluster.
+        The agent provides a universal command execution API for
+        post-upgrade/downgrade fixes.
+        """
+        func_name = 'cluster_start_upgrade_agent'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        autoshutdown_timeout = request_body.get('autoshutdown_timeout', 0)
+
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(f'Starting upgrade agent on "{node}".')
+            client = NodeControllerClient(
+                request_timeout=REQUEST_TIMEOUT,
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            try:
+                node_response = client.start_upgrade_agent(
+                    {'autoshutdown_timeout': autoshutdown_timeout}
+                )
+                logging.debug(f'Upgrade agent started on {node}')
+                all_responses[node] = node_response
+            except Exception as err:
+                logging.error(f'Failed to start upgrade agent on {node}: {err}')
+                all_responses[node] = {
+                    'status': 'failed',
+                    'error': str(err)
+                }
+
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Finished starting upgrade agent on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def put_mode_set(self):
         func_name = 'put_mode_set'
         log_begin(module_logger, func_name)
@@ -1300,10 +1360,13 @@ class ClusterController:
             client = NodeControllerClient(
                 base_url=f'https://{node}:{CMAPI_PORT}'
             )
-            node_response = client.install_repo(
-                token=token,
-                mariadb_version=mariadb_version
-            )
+            try:
+                node_response = client.install_repo(
+                    token=token,
+                    mariadb_version=mariadb_version
+                )
+            except CMAPIBasicError as err:
+                raise_422_error(module_logger, func_name, err.message)
             logging.debug(f'ES repo installed on {node}')
             all_responses[node] = node_response
         response = {
@@ -1726,12 +1789,14 @@ class NodeController:
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
-    def latest_mdb_version(self):
+    def latest_mdb_version(self, mdb_ver_prefix=''):
         """Handler for /node/latest-mdb-version (GET) endpoint."""
         func_name = 'get_latest_mdb_version'
         log_begin(module_logger, func_name)
         try:
-            version = MariaDBESRepoManager.get_latest_tested_mdb_version()
+            version = MariaDBESRepoManager.get_latest_tested_mdb_version(
+                mdb_ver_prefix=mdb_ver_prefix
+            )
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
         response = {
@@ -1794,7 +1859,7 @@ class NodeController:
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def start_mariadb(self):
-        """Handler for /node/start_mariadb (PUT) endpoint."""
+        """Handler for /node/start-mariadb (PUT) endpoint."""
         func_name = 'node_start_mariadb'
         log_begin(module_logger, func_name)
         req = cherrypy.request
@@ -1843,6 +1908,110 @@ class NodeController:
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def start_upgrade_agent(self):
+        """Handler for /node/start-upgrade-agent (PUT) endpoint.
+
+        Starts the upgrade agent process on this node. The agent provides
+        a universal command execution API for post-upgrade/downgrade fixes.
+        It runs on port 8619 and uses the CMAPI API key for authentication.
+        """
+
+        func_name = 'node_start_upgrade_agent'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        autoshutdown_timeout = request_body.get('autoshutdown_timeout', 0)
+
+        cfg_parser = get_config_parser()
+        api_key = get_current_key(cfg_parser)
+
+        if not api_key:
+            raise_422_error(
+                module_logger, func_name,
+                'API key not configured. Cannot start upgrade agent.'
+            )
+
+        my_env = os.environ.copy()
+        my_env['PYTHONPATH'] = CMAPI_PYTHON_DEPS_PATH
+
+        # NOTE: When CMAPI is started by systemd, child processes inherit its
+        # cgroup. During CMAPI upgrade/restart systemd may kill everything in
+        # the service cgroup, including the upgrade agent.
+        #
+        # To make the agent survive, start it via `systemd-run` as a transient
+        # scope unit (new cgroup).
+        upgrade_agent_run_cmd = [
+            CMAPI_PYTHON_BIN,
+            '-m',
+            UPGRADE_AGENT_MODULE,
+            '--api-key', api_key,
+            '--autoshutdown-timeout', str(autoshutdown_timeout),
+            '--log-file', os.path.join(UPGRADE_DIR, 'upgrade_agent.log'),
+        ]
+
+        if not MCSProcessManager.dispatcher_name == 'systemd':
+            raise_422_error(
+                module_logger,
+                func_name,
+                'Non-systemd installations not supported for upgrade agent.',
+                exc_info=False,
+            )
+
+        # Use a stable unit name so it can be managed predictably.
+        # systemd will refuse to start if an active unit with the same
+        # name already exists.
+        unit_name = 'cmapi-upgrade-agent'
+
+        # If the unit is already active, treat this call as idempotent.
+        already_running = SystemdDispatcher.is_service_running(
+            f'{unit_name}.scope', use_sudo=False
+        )
+        ok: bool = False
+        output: str = ''
+        if already_running:
+            module_logger.info(
+                'Upgrade agent unit already active (%s.scope); skipping start',
+                unit_name,
+            )
+            ok = True
+        else:
+            # Use a transient *scope* unit: it becomes independent from
+            # CMAPI's service cgroup but keeps "run this process" semantics.
+            # --collect ensures systemd cleans up the unit after exit.
+            start_cmd = ' '.join(
+                [
+                    'systemd-run',
+                    '--scope',
+                    f'--unit={shlex.quote(unit_name)}',
+                    '--collect',
+                    '--property=KillMode=process',
+                    '--quiet',
+                    *[shlex.quote(a) for a in upgrade_agent_run_cmd],
+                ]
+            )
+            module_logger.info(
+                'Starting upgrade agent via systemd-run: %s', unit_name
+            )
+            ok, output = BaseDispatcher.exec_command(
+                start_cmd, env=my_env, daemonize=True
+            )
+        if not ok:
+            raise_422_error(
+                module_logger, func_name,
+                f'Failed to start upgrade agent. Output: {output}'
+            )
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'status': 'already_running' if already_running else 'started',
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def install_repo(self):
         """Handler for /node/install-repo (PUT) endpoint."""
         func_name = 'node_install_repo'
@@ -1883,18 +2052,20 @@ class NodeController:
         mdb_pkg_name: str
         mcs_pkg_name: str
         cmapi_pkg_name: str
-        if os_name in ['ubuntu', 'debian']:
-            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.deb
-            mcs_pkg_name = MDB_CS_PACKAGE_NAME.deb
-            cmapi_pkg_name = CMAPI_PACKAGE_NAME.deb
-        elif os_name in ['centos', 'rhel', 'rocky']:
-            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.rhel
-            mcs_pkg_name = MDB_CS_PACKAGE_NAME.rhel
-            cmapi_pkg_name = CMAPI_PACKAGE_NAME.rhel
-        else:
+        try:
+            pkg_type = get_pkg_type(os_name)
+        except ValueError:
             raise_422_error(
                 module_logger, func_name, f'Unsupported OS type: {os_name}'
             )
+        if pkg_type == PkgType.DEB:
+            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.deb
+            mcs_pkg_name = MDB_CS_PACKAGE_NAME.deb
+            cmapi_pkg_name = CMAPI_PACKAGE_NAME.deb
+        elif pkg_type == PkgType.RPM:
+            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.rhel
+            mcs_pkg_name = MDB_CS_PACKAGE_NAME.rhel
+            cmapi_pkg_name = CMAPI_PACKAGE_NAME.rhel
 
         try:
             repo_versions = {

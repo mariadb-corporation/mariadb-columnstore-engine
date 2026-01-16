@@ -279,7 +279,7 @@ $ mcs review [OPTIONS]
 [Beta]
 Install the specified MDB ES version.
 If the version is &#x27;latest&#x27;, it will upgrade to the latest tested version
-available.
+available for your OS.
 
 **Usage**:
 
@@ -292,6 +292,8 @@ $ mcs install_es [OPTIONS]
 * `--token TEXT`: ES API Token to use for the upgrade.  [required]
 * `-v, --version TEXT`: ES version to upgdate.
 * `--ignore-mismatch`: Proceed even if nodes report different installed package versions (use majority as baseline).
+* `--skip-cmapi`: Skip CMAPI upgrade/install entirely. Use when CMAPI does not need to be updated (e.g. custom/latest CMAPI version already installed).
+* `--allow-cmapi-downgrade`: Allow CMAPI to be downgraded when performing a downgrade. By default, CMAPI will NOT be downgraded to prevent meeting an already fixed issues and loss the new features.
 * `--help`: Show this message and exit.
 
 ## `mcs help-all`

@@ -6,7 +6,12 @@ from datetime import datetime
 
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
-from cmapi_server.constants import MCS_BACKUP_MANAGER_SH
+from cmapi_server.constants import (
+    MCS_BACKUP_MANAGER_SH,
+    UPGRADE_BACKUP_DIR,
+    PkgType,
+    get_pkg_type,
+)
 
 
 class BackupRestoreManager:
@@ -79,8 +84,8 @@ class PreUpgradeBackupRestoreManager(BackupRestoreManager):
         :type distro_name: str
         """
         timestamp = datetime.now().strftime('%m-%d-%Y-%H%M')
-        pre_upgrade_config_directory = (
-            f'/tmp/preupgrade-configurations-{timestamp}'
+        pre_upgrade_config_directory = os.path.join(
+            UPGRADE_BACKUP_DIR, f'preupgrade-configurations-{timestamp}'
         )
         os.makedirs(pre_upgrade_config_directory, exist_ok=True)
         cls._copy_files(
@@ -93,17 +98,20 @@ class PreUpgradeBackupRestoreManager(BackupRestoreManager):
             '/etc/columnstore/cmapi_server.conf', pre_upgrade_config_directory
         )
 
-        if distro_name in ['centos', 'rhel', 'rocky', 'almalinux']:
+        try:
+            pkg_type = get_pkg_type(distro_name)
+        except ValueError:
+            logging.error(f'Unknown distro: {distro_name}')
+            return
+        if pkg_type == PkgType.RPM:
             cls._copy_files(
                 '/etc/my.cnf.d/server.cnf', pre_upgrade_config_directory
             )
-        elif distro_name in ['ubuntu', 'debian']:
+        elif pkg_type == PkgType.DEB:
             cls._copy_files(
                 '/etc/mysql/mariadb.conf.d/*server.cnf',
                 pre_upgrade_config_directory
             )
-        else:
-            logging.error(f'Unknown distro: {distro_name}')
 
     @staticmethod
     def restore_dbrm():

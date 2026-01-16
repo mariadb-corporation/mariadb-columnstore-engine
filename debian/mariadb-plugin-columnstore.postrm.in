@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+if [ "$1" = "purge" ]; then
+    rm -rf /var/lib/columnstore
+    rm -rf /etc/columnstore
+    rm -f @MARIADB_MYCNFDIR@/columnstore.cnf.rpmsave
+    rm -f @MARIADB_MYCNFDIR@/columnstore.cnf.bak
+fi
+
+# After plugin removal the ha_columnstore.so is gone but dpkg may keep the
+# conffile columnstore.cnf (e.g. if the user modified it).  Bare
+# columnstore_* variables in it will cause MariaDB to abort with
+# "unknown variable".  Rename the file so MariaDB won't read it; the user's
+# config is preserved and can be restored on reinstall.
+CS_CNF="@MARIADB_MYCNFDIR@/columnstore.cnf"
+if [ -f "$CS_CNF" ]; then
+    mv -f "$CS_CNF" "${CS_CNF}.bak"
+    echo "NOTE: ${CS_CNF} has been renamed to ${CS_CNF}.bak to prevent" \
+         "MariaDB startup errors after ColumnStore plugin removal." >&2
+    echo "If you are upgrading manually, review ${CS_CNF}.bak for any custom" \
+         "settings and merge them into the new config shipped with the package." >&2
+fi
+
+# Automatically restart MariaDB after ColumnStore plugin has been removed
+case "$1" in
+  purge|remove|disappear)
+    if [ -d /run/systemd/system ]; then
+      # If systemd
+      deb-systemd-invoke restart mariadb.service >/dev/null
+    elif [ -x "/etc/init.d/mariadb" ]; then
+      # Fall-back to SysV init
+      invoke-rc.d mariadb restart || exit $?
+    fi
+  ;;
+esac
+
+#DEBHELPER#
