@@ -830,6 +830,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   RetColsVector& retCols = jobInfo.projectionCols;
   SRCP srcp;
 
+  // Save the original size of retCols. Elements added later (e.g., from GROUP_CONCAT arguments)
+  // should not be added to groupByColVec, as they are aggregate function arguments, not projections.
+  const uint64_t originalRetColsSize = retCols.size();
+
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
     GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(retCols[i].get());
@@ -1280,8 +1284,9 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             hasWndCols = true;
 
           // Ensure simpleColumnList is populated and check GROUP BY dependency
+          // Only check for original projection columns, not for columns added from aggregate arguments
           const_cast<ArithmeticColumn*>(ac)->setSimpleColumnList();
-          if (!hasAggCols && !hasWndCols)
+          if (!hasAggCols && !hasWndCols && i < originalRetColsSize)
             checkAndAddExpressionDependingOnGroupBy(ac->simpleColumnList(), ac, jobInfo);
         }
         else if (dynamic_cast<const RollupMarkColumn*>(srcp.get()) != NULL)
@@ -1302,7 +1307,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             hasFuncColsWithOneArgument = true;
 
           // Check GROUP BY dependency and add to groupByColVec if all columns are in GROUP BY
-          if (!hasAggCols && !hasWndCols)
+          // Only check for original projection columns, not for columns added from aggregate arguments
+          if (!hasAggCols && !hasWndCols && i < originalRetColsSize)
             checkAndAddExpressionDependingOnGroupBy(fc->simpleColumnList(), fc, jobInfo);
         }
         else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
