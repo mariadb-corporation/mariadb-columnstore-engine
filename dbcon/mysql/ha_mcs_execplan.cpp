@@ -2756,6 +2756,12 @@ ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* b
     return rc;
   }
 
+  // Don't wrap correlated columns - they need to remain as SimpleColumn for proper join handling
+  if (rc->joinInfo() & execplan::JOIN_CORRELATED)
+  {
+    return rc;
+  }
+
   if (itemDisablesWrapping(baseItem, gwi))
   {
     return rc;
