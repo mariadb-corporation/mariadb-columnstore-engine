@@ -1369,22 +1369,24 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
   else if (ifp->functype() == Item_func::IN_FUNC)
   {
     idbassert(gwip->rcWorkStack.size() >= 2);
-    ReturnedColumn* rhs = gwip->rcWorkStack.top();
+    std::unique_ptr<ReturnedColumn> rhs(gwip->rcWorkStack.top());
     gwip->rcWorkStack.pop();
-    ReturnedColumn* lhs = gwip->rcWorkStack.top();
+    std::unique_ptr<ReturnedColumn> lhs(gwip->rcWorkStack.top());
     gwip->rcWorkStack.pop();
 
     // @bug3038
-    RowColumn* rrhs = dynamic_cast<RowColumn*>(rhs);
-    RowColumn* rlhs = dynamic_cast<RowColumn*>(lhs);
+    RowColumn* rrhs = dynamic_cast<RowColumn*>(rhs.get());
+    RowColumn* rlhs = dynamic_cast<RowColumn*>(lhs.get());
 
     if (rrhs && rlhs)
     {
+      rhs.release();  // buildRowColumnFilter takes ownership
+      lhs.release();
       return buildRowColumnFilter(gwip, rrhs, rlhs, ifp);
     }
 
-    ConstantColumn* crhs = dynamic_cast<ConstantColumn*>(rhs);
-    ConstantColumn* clhs = dynamic_cast<ConstantColumn*>(lhs);
+    ConstantColumn* crhs = dynamic_cast<ConstantColumn*>(rhs.get());
+    ConstantColumn* clhs = dynamic_cast<ConstantColumn*>(lhs.get());
 
     if (!crhs || !clhs)
     {
@@ -1411,11 +1413,10 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
     sop.reset(new PredicateOperator(eqop));
     SRCP scsp = gwip->scsp;
     idbassert(scsp.get() != nullptr);
-    // sop->setOpType(gwip->scsp->resultType(), rhs->resultType());
     sop->setOpType(scsp->resultType(), rhs->resultType());
     ConstantFilter* cf = 0;
 
-    cf = new ConstantFilter(sop, scsp->clone(), lhs);
+    cf = new ConstantFilter(sop, scsp->clone(), lhs.release());
     sop.reset(new LogicOperator(cmbop));
     cf->op(sop);
     sop.reset(new PredicateOperator(eqop));
@@ -1424,15 +1425,18 @@ bool buildPredicateItem(Item_func* ifp, gp_walk_info* gwip)
 
     while (!gwip->rcWorkStack.empty())
     {
-      lhs = gwip->rcWorkStack.top();
+      std::unique_ptr<ReturnedColumn> val(gwip->rcWorkStack.top());
 
-      if (dynamic_cast<ConstantColumn*>(lhs) == 0)
+      if (dynamic_cast<ConstantColumn*>(val.get()) == 0)
+      {
+        val.release();  // put back - not ours to delete
         break;
+      }
 
       gwip->rcWorkStack.pop();
       sop.reset(new PredicateOperator(eqop));
-      sop->setOpType(scsp->resultType(), lhs->resultType());
-      cf->pushFilter(new SimpleFilter(sop, scsp->clone(), lhs->clone(), gwip->timeZone));
+      sop->setOpType(scsp->resultType(), val->resultType());
+      cf->pushFilter(new SimpleFilter(sop, scsp->clone(), val->clone(), gwip->timeZone));
     }
 
     if (!gwip->rcWorkStack.empty())
