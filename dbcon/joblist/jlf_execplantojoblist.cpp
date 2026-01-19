@@ -1913,6 +1913,91 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     if (jsv.empty())
       throw runtime_error("Unhandled SimpleFilter");
   }
+  // Handle bitmask pattern: (col & mask) = mask
+  // This allows bitwise AND filters to be pushed down as primitive filters
+  else if (lhsType == FUNCTIONCOLUMN && opeq == *sop)
+  {
+    const FunctionColumn* fc = static_cast<const FunctionColumn*>(lhs);
+    const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(rhs);
+    bool handled = false;
+
+    // Check if this is a bitwise AND function with a SimpleColumn and ConstantColumn
+    if (cc && fc->functionName() == "&" && fc->functionParms().size() == 2)
+    {
+      const auto& parms = fc->functionParms();
+      const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(parms[0]->data());
+      const ConstantColumn* maskCC = dynamic_cast<const ConstantColumn*>(parms[1]->data());
+
+      if (sc && maskCC && !sc->schemaName().empty() && sc->isColumnStore())
+      {
+        std::string maskStr = maskCC->constval().safeString("");
+        std::string rhsStr = cc->constval().safeString("");
+
+        if (maskStr == rhsStr)
+        {
+          CalpontSystemCatalog::OID tbl_oid = tableOid(sc, jobInfo.csc);
+          CalpontSystemCatalog::ColType ct = sc->colType();
+
+          if (!sc->schemaName().empty() && sc->isColumnStore())
+          {
+            ct = jobInfo.csc->colType(sc->oid());
+            ct.charsetNumber = sc->colType().charsetNumber;
+          }
+
+          // Only for integer types
+          if (ct.colDataType == CalpontSystemCatalog::BIGINT ||
+              ct.colDataType == CalpontSystemCatalog::UBIGINT ||
+              ct.colDataType == CalpontSystemCatalog::INT ||
+              ct.colDataType == CalpontSystemCatalog::UINT ||
+              ct.colDataType == CalpontSystemCatalog::SMALLINT ||
+              ct.colDataType == CalpontSystemCatalog::USMALLINT ||
+              ct.colDataType == CalpontSystemCatalog::TINYINT ||
+              ct.colDataType == CalpontSystemCatalog::UTINYINT)
+          {
+            string alias(extractTableAlias(sc));
+            string view(sc->viewName());
+
+            pColStep* pcs = new pColStep(sc->oid(), tbl_oid, ct, jobInfo);
+            pcs->alias(alias);
+            pcs->view(view);
+            pcs->name(sc->columnName());
+            pcs->schema(sc->schemaName());
+            pcs->cardinality(sf->cardinality());
+
+            int64_t maskValue = 0;
+            try
+            {
+              // Use stoull for unsigned values, then cast to int64_t
+              // This handles values > INT64_MAX correctly
+              maskValue = static_cast<int64_t>(std::stoull(maskStr));
+            }
+            catch (...)
+            {
+              delete pcs;
+              jsv = doExpressionFilter(sf, jobInfo);
+              return jsv;
+            }
+
+            pcs->addFilter(COMPARE_BITMASK, maskValue, 0);
+
+            SJSTEP sjstep;
+            sjstep.reset(pcs);
+            jsv.push_back(sjstep);
+
+            pcs->addFilter(sf);
+
+            TupleInfo ti(setTupleInfo(ct, sc->oid(), jobInfo, tbl_oid, sc, alias));
+            pcs->tupleId(ti.key);
+
+            handled = true;
+          }
+        }
+      }
+    }
+
+    if (!handled)
+      jsv = doExpressionFilter(sf, jobInfo);
+  }
   else if (lhsType == ARITHMETICCOLUMN || rhsType == ARITHMETICCOLUMN || lhsType == FUNCTIONCOLUMN ||
            rhsType == FUNCTIONCOLUMN)
   {
@@ -3344,11 +3429,48 @@ namespace joblist
     {
       /*doAND(jsv, jobInfo)*/;
 
-      if (n->left())
-        walkTree(n->left(), jobInfo);
+      // Reorder AND filters: process cheaper filters first
+      // This helps when combining expensive filters (LIKE '%...%') with cheap filters (bitmask)
+      // Heuristic: LIKE on TEXT/BLOB is expensive, numeric filters are cheap
+      auto estimateCost = [](const ParseTree* pt) -> int {
+        if (!pt || !pt->data())
+          return 0;
+        TreeNode* data = pt->data();
+        const SimpleFilter* sf = dynamic_cast<const SimpleFilter*>(data);
+        if (sf)
+        {
+          const SOP& op = sf->op();
+          // LIKE is expensive
+          if (op && (op->op() == OP_LIKE || op->op() == OP_NOTLIKE))
+            return 1000;
+          // Check if LHS is a bitmask function (col & mask) = mask
+          const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(sf->lhs());
+          if (fc && fc->functionName() == "&")
+            return 10;  // Bitmask is cheap
+        }
+        const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(data);
+        if (fc && fc->functionName() == "&")
+          return 10;  // Bitmask is cheap
+        return 100;  // Default cost
+      };
 
-      if (n->right())
-        walkTree(n->right(), jobInfo);
+      int leftCost = estimateCost(n->left());
+      int rightCost = estimateCost(n->right());
+
+      if (leftCost <= rightCost)
+      {
+        if (n->left())
+          walkTree(n->left(), jobInfo);
+        if (n->right())
+          walkTree(n->right(), jobInfo);
+      }
+      else
+      {
+        if (n->right())
+          walkTree(n->right(), jobInfo);
+        if (n->left())
+          walkTree(n->left(), jobInfo);
+      }
     }
     else if (*op == opOR || *op == opor)
     {
