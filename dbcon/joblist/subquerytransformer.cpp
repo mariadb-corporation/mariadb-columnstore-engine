@@ -119,7 +119,7 @@ SJSTEP& SubQueryTransformer::makeSubQueryStep(execplan::CalpontSelectExecutionPl
   fSubJobInfo->orderByThreads = csep->orderByThreads();
 
   // Update v-table's alias.
-  fVtable.name("$sub" + fVtable.name() + "/" + fVtable.alias());
+  fVtable.name("$sub");
 
   if (fVtable.alias().empty())
   {
