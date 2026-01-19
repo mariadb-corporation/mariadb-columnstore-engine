@@ -35,20 +35,9 @@ namespace optimizer
 std::string getRewrittenSubTableAlias(const execplan::CalpontSystemCatalog::TableAliasName& table,
                                       const RBOptimizerContext& ctx)
 {
-#if 01
   static const std::string rewrittenSubTableAliasPrefix{"$added_sub_"};
   return rewrittenSubTableAliasPrefix + table.schema + "_" + table.table + "_" +
          std::to_string(ctx.getUniqueId());
-#else
-  if (table.alias.empty())
-  {
-    return table.table;
-  }
-  else
-  {
-    return table.alias;
-  }
-#endif
 }
 
 // Apply a list of rules to a CSEP
@@ -97,14 +86,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
-    //    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
-    //                                    optimizer::applyRewriteDistinct};
-    //    rules.push_back(rewriteDistinct);
+    optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
+                                    optimizer::applyRewriteDistinct};
+    rules.push_back(rewriteDistinct);
   }
 
-  //  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
-  //                                    optimizer::applyPredicatePushdown};
-  //  rules.push_back(predicatePushdown);
+  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+                                    optimizer::applyPredicatePushdown};
+  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }
@@ -170,19 +159,8 @@ bool Rule::walk(execplan::CalpontSelectExecutionPlan& csep, optimizer::RBOptimiz
 
     if (mayApply(*current, ctx))
     {
-      try
-      {
-        rewrite |= applyRule(*current, ctx);
-        ctx.incrementUniqueId();
-      }
-      catch (const std::exception& e)
-      {
-        throw;
-      }
-      catch (...)
-      {
-        throw;
-      }
+      rewrite |= applyRule(*current, ctx);
+      ctx.incrementUniqueId();
     }
   }
 

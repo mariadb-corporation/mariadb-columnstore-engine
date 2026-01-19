@@ -464,7 +464,7 @@ void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string
 {
   sc->oid(0);
   sc->schemaName("");
-  // For derived tables, leave tableName empty; use tableAlias/derivedTable to reference it
+  // For derived tables, set tableName/tableAlias/derivedTable to the new alias
   sc->tableName(newTableAlias);
   sc->tableAlias(newTableAlias);
   sc->derivedTable(newTableAlias);
