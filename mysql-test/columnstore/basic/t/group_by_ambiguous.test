@@ -301,6 +301,92 @@ FROM t25 GROUP BY category ORDER BY category;
 
 DROP TABLE t25;
 
+# Test: PAD SPACE collation with length() function
+# 'foo' and 'foo ' should be grouped together due to PAD SPACE collation
+# length() should return the length of the first value in the group
+#
+CREATE TABLE t26 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t26 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# With PAD SPACE collation, 'foo' and 'foo ' are equal, so we get 3 groups
+# length(x) should return 3 for the 'foo'/'foo ' group (first value)
+SELECT length(x) FROM t26 GROUP BY x ORDER BY length(x);
+
+# Verify grouping is correct
+SELECT x, count(*) FROM t26 GROUP BY x ORDER BY x;
+
+# Combined: x, length(x), count(*)
+SELECT x, length(x), count(*) FROM t26 GROUP BY x ORDER BY x;
+
+DROP TABLE t26;
+
+#
+# Test: IF(x IS NULL, ...) with GROUP BY x
+#
+CREATE TABLE t27 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t27 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# IF function depending on GROUP BY column
+SELECT IF(x IS NULL, 'blank', 'not blank') FROM t27 GROUP BY x ORDER BY 1;
+
+# IFNULL function
+SELECT IFNULL(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+
+# COALESCE function
+SELECT COALESCE(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+
+DROP TABLE t27;
+
+#
+# Test: rand() with GROUP BY - should return one random value per group
+#
+CREATE TABLE t28 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t28 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# rand() should return 3 rows (one per group)
+--disable_result_log
+SELECT rand() FROM t28 GROUP BY x;
+--enable_result_log
+
+# Verify we get exactly 3 groups
+SELECT COUNT(*) FROM (SELECT rand() FROM t28 GROUP BY x) AS subq;
+
+DROP TABLE t28;
+
+#
+# Test: upper(x) with GROUP BY x
+#
+CREATE TABLE t29 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t29 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# upper() on GROUP BY column
+SELECT upper(x) FROM t29 GROUP BY x ORDER BY upper(x);
+
+# lower() on GROUP BY column
+SELECT lower(x) FROM t29 GROUP BY x ORDER BY lower(x);
+
+# Combined upper and lower
+SELECT upper(x), lower(x) FROM t29 GROUP BY x ORDER BY x;
+
+DROP TABLE t29;
+
+#
+# Test: concat(a, b) with GROUP BY a, b
+#
+CREATE TABLE t30 (a varchar(10), b varchar(10), c int) ENGINE=Columnstore;
+INSERT INTO t30 VALUES ('x', 'y', 1), ('x', 'z', 2), ('x', 'y', 3), ('a', 'b', 4);
+
+# concat of two GROUP BY columns
+SELECT concat(a, b) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+# concat with separator
+SELECT concat(a, '-', b) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+# concat with count
+SELECT concat(a, b), count(*) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+DROP TABLE t30;
+
 DROP TABLE t1;
 DROP TABLE t2;
 DROP TABLE t3;

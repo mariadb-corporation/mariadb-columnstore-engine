@@ -1515,6 +1515,35 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
     ++lastCol;
   }
 
+  // Add GROUP BY columns needed for expression evaluation (e.g., length(x) when x is in GROUP BY)
+  // These columns are added as auxiliary columns so they are available for prepExpressionOnAggregate
+  for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
+  {
+    uint32_t gbKey = jobInfo.groupByColVec[i];
+    // Check if this GROUP BY column is already in keysAgg
+    if (find(keysAgg.begin(), keysAgg.end(), gbKey) == keysAgg.end())
+    {
+      // Check if this column is in projection
+      if (projColPosMap.find(gbKey) != projColPosMap.end())
+      {
+        int64_t colProj = projColPosMap[gbKey];
+        oidsAgg.push_back(oidsProj[colProj]);
+        keysAgg.push_back(gbKey);
+        scaleAgg.push_back(scaleProj[colProj]);
+        precisionAgg.push_back(precisionProj[colProj]);
+        typeAgg.push_back(typeProj[colProj]);
+        csNumAgg.push_back(csNumProj[colProj]);
+        widthAgg.push_back(width[colProj]);
+
+        // Update the groupBy output index if not set
+        if (groupBy[i]->fOutputColumnIndex == (uint32_t)-1)
+          groupBy[i]->fOutputColumnIndex = lastCol;
+
+        ++lastCol;
+      }
+    }
+  }
+
   // calculate the offset and create the rowaggregation, rowgroup
   posAgg.push_back(2);
 
@@ -3920,6 +3949,41 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
     }
   }
 
+  // Add GROUP BY columns needed for expression evaluation (e.g., length(x) when x is in GROUP BY)
+  // These columns are added as auxiliary columns so they are available for prepExpressionOnAggregate
+  {
+    uint64_t auxCol = oidsAggUm.size();
+    for (uint64_t i = 0; i < jobInfo.groupByColVec.size(); i++)
+    {
+      uint32_t gbKey = jobInfo.groupByColVec[i];
+      // Check if this GROUP BY column is already in keysAggUm
+      if (find(keysAggUm.begin(), keysAggUm.end(), gbKey) == keysAggUm.end())
+      {
+        // Find this column in PM aggregation result
+        for (uint64_t k = 0; k < keysAggPm.size(); k++)
+        {
+          if (gbKey == keysAggPm[k])
+          {
+            oidsAggUm.push_back(oidsAggPm[k]);
+            keysAggUm.push_back(gbKey);
+            scaleAggUm.push_back(scaleAggPm[k]);
+            precisionAggUm.push_back(precisionAggPm[k]);
+            typeAggUm.push_back(typeAggPm[k]);
+            csNumAggUm.push_back(csNumAggPm[k]);
+            widthAggUm.push_back(widthAggPm[k]);
+
+            // Update the groupByUm output index if not set
+            if (groupByUm[i]->fOutputColumnIndex == (uint32_t)-1)
+              groupByUm[i]->fOutputColumnIndex = auxCol;
+
+            ++auxCol;
+            break;
+          }
+        }
+      }
+    }
+  }
+
   // calculate the offset and create the rowaggregations, rowgroups
   posAggUm.push_back(2);  // rid
 
@@ -5401,27 +5465,90 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
   {
     uint64_t eid = -1;
 
-    if (((ac = dynamic_cast<ArithmeticColumn*>(it->get())) != NULL) && (ac->aggColumnList().size() > 0) &&
+    if (((ac = dynamic_cast<ArithmeticColumn*>(it->get())) != NULL) &&
         (ac->windowfunctionColumnList().size() == 0))
     {
-      const vector<SimpleColumn*>& scols = ac->simpleColumnList();
-      simpleColumns.insert(simpleColumns.end(), scols.begin(), scols.end());
+      bool hasAggCols = ac->aggColumnList().size() > 0;
+      bool dependsOnGroupBy = false;
 
-      eid = ac->expressionId();
-      expressionVec.push_back(*it);
+      // Check if all simple columns are in GROUP BY (for functions without aggregate columns)
+      if (!hasAggCols)
+      {
+        const vector<SimpleColumn*>& scols = ac->simpleColumnList();
+        if (!scols.empty())
+        {
+          dependsOnGroupBy = true;
+          for (const auto* sc : scols)
+          {
+            if (!sc) { dependsOnGroupBy = false; break; }
+            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+            CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
+            if (dictOid > 0)
+            {
+              auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
+              if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
+                scKey = dictIt->second;
+            }
+            if (groupByKeySet.find(scKey) == groupByKeySet.end())
+            {
+              dependsOnGroupBy = false;
+              break;
+            }
+          }
+        }
+      }
+
+      if (hasAggCols || dependsOnGroupBy)
+      {
+        const vector<SimpleColumn*>& scols = ac->simpleColumnList();
+        simpleColumns.insert(simpleColumns.end(), scols.begin(), scols.end());
+
+        eid = ac->expressionId();
+        expressionVec.push_back(*it);
+      }
     }
-    else if (((fc = dynamic_cast<FunctionColumn*>(it->get())) != NULL) && (fc->aggColumnList().size() > 0) &&
+    else if (((fc = dynamic_cast<FunctionColumn*>(it->get())) != NULL) &&
              (fc->windowfunctionColumnList().size() == 0))
     {
-      const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
-      simpleColumns.insert(simpleColumns.end(), sCols.begin(), sCols.end());
+      bool hasAggCols = fc->aggColumnList().size() > 0;
+      bool dependsOnGroupBy = false;
 
-      eid = fc->expressionId();
-      expressionVec.push_back(*it);
+      // Check if all simple columns are in GROUP BY (for functions without aggregate columns)
+      if (!hasAggCols)
+      {
+        const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
+        if (!sCols.empty())
+        {
+          dependsOnGroupBy = true;
+          for (const auto* sc : sCols)
+          {
+            if (!sc) { dependsOnGroupBy = false; break; }
+            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+            CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
+            if (dictOid > 0)
+            {
+              auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
+              if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
+                scKey = dictIt->second;
+            }
+            if (groupByKeySet.find(scKey) == groupByKeySet.end())
+            {
+              dependsOnGroupBy = false;
+              break;
+            }
+          }
+        }
+      }
+
+      if (hasAggCols || dependsOnGroupBy)
+      {
+        const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
+        simpleColumns.insert(simpleColumns.end(), sCols.begin(), sCols.end());
+
+        eid = fc->expressionId();
+        expressionVec.push_back(*it);
+      }
     }
-    // Note: FunctionColumns that depend only on GROUP BY columns (no aggregate columns)
-    // are now added to groupByColVec in doAggProject, so they are treated like GROUP BY expressions
-    // and evaluated during projection phase. They don't need to be evaluated here.
 
     // update the output index
     if (eid != (uint64_t)-1)

@@ -671,48 +671,6 @@ void updateAggregateColType(AggregateColumn* ac, const SRCP& srcp, int op, JobIn
     (i->second)->resultType(ct);
 }
 
-// Helper function to check if all columns in simpleColumnList are in GROUP BY
-// and optionally add the expression to groupByColVec
-bool checkAndAddExpressionDependingOnGroupBy(const vector<SimpleColumn*>& scList,
-                                              const ReturnedColumn* rc,
-                                              JobInfo& jobInfo)
-{
-  if (scList.empty())
-    return false;
-
-  for (const auto* sc : scList)
-  {
-    if (!sc)
-      return false;
-
-    uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
-    CalpontSystemCatalog::OID dictOid = isDictCol(sc->colType());
-    if (dictOid > 0)
-    {
-      auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
-      if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
-        scKey = dictIt->second;
-    }
-    if (find(jobInfo.groupByColVec.begin(), jobInfo.groupByColVec.end(), scKey) ==
-        jobInfo.groupByColVec.end())
-    {
-      return false;
-    }
-  }
-
-  // All columns are in GROUP BY - add expression to groupByColVec
-  uint64_t eid = rc->expressionId();
-  CalpontSystemCatalog::ColType ct = rc->resultType();
-  TupleInfo ti(setExpTupleInfo(ct, eid, rc->alias(), jobInfo));
-  uint32_t exprKey = ti.key;
-  if (find(jobInfo.groupByColVec.begin(), jobInfo.groupByColVec.end(), exprKey) ==
-      jobInfo.groupByColVec.end())
-  {
-    jobInfo.groupByColVec.push_back(exprKey);
-  }
-  return true;
-}
-
 const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo& jobInfo)
 {
   vector<uint32_t> projectKeys;  // projected column keys   -- unique
@@ -829,10 +787,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   // process the returned columns
   RetColsVector& retCols = jobInfo.projectionCols;
   SRCP srcp;
-
-  // Save the original size of retCols. Elements added later (e.g., from GROUP_CONCAT arguments)
-  // should not be added to groupByColVec, as they are aggregate function arguments, not projections.
-  const uint64_t originalRetColsSize = retCols.size();
 
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
@@ -1283,11 +1237,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           if (ac->windowfunctionColumnList().size() > 0)
             hasWndCols = true;
 
-          // Ensure simpleColumnList is populated and check GROUP BY dependency
-          // Only check for original projection columns, not for columns added from aggregate arguments
+          // Ensure simpleColumnList is populated for later use in tupleaggregatestep.cpp
           const_cast<ArithmeticColumn*>(ac)->setSimpleColumnList();
-          if (!hasAggCols && !hasWndCols && i < originalRetColsSize)
-            checkAndAddExpressionDependingOnGroupBy(ac->simpleColumnList(), ac, jobInfo);
         }
         else if (dynamic_cast<const RollupMarkColumn*>(srcp.get()) != NULL)
         {
@@ -1305,11 +1256,6 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           // MCOL-5476 Currently support function with only one argument for group by list.
           if (fc->simpleColumnList().size() == 1)
             hasFuncColsWithOneArgument = true;
-
-          // Check GROUP BY dependency and add to groupByColVec if all columns are in GROUP BY
-          // Only check for original projection columns, not for columns added from aggregate arguments
-          if (!hasAggCols && !hasWndCols && i < originalRetColsSize)
-            checkAndAddExpressionDependingOnGroupBy(fc->simpleColumnList(), fc, jobInfo);
         }
         else if (dynamic_cast<const AggregateColumn*>(srcp.get()) != NULL)
         {
@@ -1337,6 +1283,44 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         if (hasAggCols && !hasWndCols)
         {
           jobInfo.expressionVec.push_back(tupleKey);
+        }
+        // Also add to expressionVec if expression depends only on GROUP BY columns
+        // This allows functions like length(x) or length(a) + length(b) to be evaluated after aggregation
+        else if (!hasWndCols && (fc != NULL || ac != NULL))
+        {
+          const vector<SimpleColumn*>* scListPtr = nullptr;
+          if (fc != NULL)
+            scListPtr = &fc->simpleColumnList();
+          else if (ac != NULL)
+            scListPtr = &ac->simpleColumnList();
+
+          if (scListPtr != nullptr)
+          {
+            const vector<SimpleColumn*>& scList = *scListPtr;
+            bool dependsOnGroupBy = !scList.empty();
+            for (const auto* sc : scList)
+            {
+              if (!sc) { dependsOnGroupBy = false; break; }
+              uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+              CalpontSystemCatalog::OID dictOid = isDictCol(sc->colType());
+              if (dictOid > 0)
+              {
+                auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
+                if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
+                  scKey = dictIt->second;
+              }
+              if (find(jobInfo.groupByColVec.begin(), jobInfo.groupByColVec.end(), scKey) ==
+                  jobInfo.groupByColVec.end())
+              {
+                dependsOnGroupBy = false;
+                break;
+              }
+            }
+            if (dependsOnGroupBy)
+            {
+              jobInfo.expressionVec.push_back(tupleKey);
+            }
+          }
         }
 
         if (hasFuncColsWithOneArgument)

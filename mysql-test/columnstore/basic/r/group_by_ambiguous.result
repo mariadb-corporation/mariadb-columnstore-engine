@@ -266,6 +266,85 @@ upper(category)	SUM(price)	AVG(price)	COUNT(*)	SUM(qty)
 A	30.75	15.375000	2	8
 B	15.00	15.000000	1	7
 DROP TABLE t25;
+CREATE TABLE t26 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t26 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+SELECT length(x) FROM t26 GROUP BY x ORDER BY length(x);
+length(x)
+NULL
+3
+3
+SELECT x, count(*) FROM t26 GROUP BY x ORDER BY x;
+x	count(*)
+NULL	2
+bar	1
+foo	2
+SELECT x, length(x), count(*) FROM t26 GROUP BY x ORDER BY x;
+x	length(x)	count(*)
+NULL	NULL	2
+bar	3	1
+foo	3	2
+DROP TABLE t26;
+CREATE TABLE t27 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t27 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+SELECT IF(x IS NULL, 'blank', 'not blank') FROM t27 GROUP BY x ORDER BY 1;
+IF(x IS NULL, 'blank', 'not blank')
+blank
+not blank
+not blank
+SELECT IFNULL(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+IFNULL(x, 'NULL_VALUE')
+bar
+foo
+NULL_VALUE
+SELECT COALESCE(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+COALESCE(x, 'NULL_VALUE')
+bar
+foo
+NULL_VALUE
+DROP TABLE t27;
+CREATE TABLE t28 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t28 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+SELECT rand() FROM t28 GROUP BY x;
+SELECT COUNT(*) FROM (SELECT rand() FROM t28 GROUP BY x) AS subq;
+COUNT(*)
+3
+DROP TABLE t28;
+CREATE TABLE t29 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t29 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+SELECT upper(x) FROM t29 GROUP BY x ORDER BY upper(x);
+upper(x)
+NULL
+BAR
+FOO
+SELECT lower(x) FROM t29 GROUP BY x ORDER BY lower(x);
+lower(x)
+NULL
+bar
+foo
+SELECT upper(x), lower(x) FROM t29 GROUP BY x ORDER BY x;
+upper(x)	lower(x)
+NULL	NULL
+BAR	bar
+FOO	foo
+DROP TABLE t29;
+CREATE TABLE t30 (a varchar(10), b varchar(10), c int) ENGINE=Columnstore;
+INSERT INTO t30 VALUES ('x', 'y', 1), ('x', 'z', 2), ('x', 'y', 3), ('a', 'b', 4);
+SELECT concat(a, b) FROM t30 GROUP BY a, b ORDER BY a, b;
+concat(a, b)
+ab
+xy
+xz
+SELECT concat(a, '-', b) FROM t30 GROUP BY a, b ORDER BY a, b;
+concat(a, '-', b)
+a-b
+x-y
+x-z
+SELECT concat(a, b), count(*) FROM t30 GROUP BY a, b ORDER BY a, b;
+concat(a, b)	count(*)
+ab	1
+xy	2
+xz	1
+DROP TABLE t30;
 DROP TABLE t1;
 DROP TABLE t2;
 DROP TABLE t3;
