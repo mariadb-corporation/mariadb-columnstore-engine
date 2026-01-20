@@ -2160,86 +2160,106 @@ int BulkLoadBuffer::fillFromFile(const BulkLoadBuffer& overFlowBufIn, FILE* hand
   copyOverflow(overFlowBufIn);
   size_t readSize = 0;
 
-  // Copy the overflow data from the last buffer, that did not get written
-  if (fOverflowSize != 0)
+  bool success = false;
+  do
   {
-    memcpy(fData, fOverflowBuf, fOverflowSize);
-
-    if (fOverflowBuf != nullptr)
+    success = false;
+    // Copy the overflow data from the last buffer, that did not get written
+    if (fOverflowSize != 0)
     {
-      delete[] fOverflowBuf;
-      fOverflowBuf = nullptr;
-    }
-  }
+      memcpy(fData, fOverflowBuf, fOverflowSize);
 
-  readSize = fread(fData + fOverflowSize, 1, fBufferSize - fOverflowSize, handle);
-
-  if (ferror(handle))
-  {
-    return ERR_FILE_READ_IMPORT;
-  }
-
-  bool bEndOfData = false;
-
-  if (feof(handle))
-    bEndOfData = true;
-
-  if (bEndOfData &&                           // @bug 3516: Add '\n' if missing from last record
-      (fImportDataMode == IMPORT_DATA_TEXT))  // Only applies to ascii mode
-  {
-    if ((fOverflowSize > 0) | (readSize > 0))
-    {
-      if (fData[fOverflowSize + readSize - 1] != '\n')
+      if (fOverflowBuf != nullptr)
       {
-        // Should be safe to add byte to fData w/o risk of overflowing,
-        // since we hit EOF.  That should mean fread() did not read all
-        // the bytes we requested, meaning we have room to add a byte.
-        fData[fOverflowSize + readSize] = '\n';
-        readSize++;
+        delete[] fOverflowBuf;
+        fOverflowBuf = nullptr;
       }
     }
-  }
 
-  // Lazy allocation of fToken memory as needed
-  if (fTokens == 0)
-  {
-    resizeTokenArray();
-  }
+    readSize = fread(fData + fOverflowSize, 1, fBufferSize - fOverflowSize, handle);
 
-  if ((readSize > 0) || (fOverflowSize > 0))
-  {
-    if (fOverflowBuf != NULL)
+    if (ferror(handle))
     {
-      delete[] fOverflowBuf;
-      fOverflowBuf = NULL;
+      return ERR_FILE_READ_IMPORT;
     }
 
-    fReadSize = readSize + fOverflowSize;
-    fStartRow = correctTotalRows;
-    fStartRowForLogging = totalReadRows;
+    bool bEndOfData = false;
 
-    if (fImportDataMode == IMPORT_DATA_TEXT)
+    if (feof(handle))
+      bEndOfData = true;
+
+    if (bEndOfData &&                           // @bug 3516: Add '\n' if missing from last record
+        (fImportDataMode == IMPORT_DATA_TEXT))  // Only applies to ascii mode
     {
-      tokenize(columnsInfo, allowedErrCntThisCall, skipRows);
+      if ((fOverflowSize > 0) || (readSize > 0))
+      {
+        if (fData[fOverflowSize + readSize - 1] != '\n')
+        {
+          // Should be safe to add byte to fData w/o risk of overflowing,
+          // since we hit EOF.  That should mean fread() did not read all
+          // the bytes we requested, meaning we have room to add a byte.
+          fData[fOverflowSize + readSize] = '\n';
+          readSize++;
+        }
+      }
+    }
+
+    // Lazy allocation of fToken memory as needed
+    if (fTokens == 0)
+    {
+      resizeTokenArray();
+    }
+
+    if ((readSize > 0) || (fOverflowSize > 0))
+    {
+      if (fOverflowBuf != NULL)
+      {
+        delete[] fOverflowBuf;
+        fOverflowBuf = NULL;
+      }
+
+      fReadSize = readSize + fOverflowSize;
+      fStartRow = correctTotalRows;
+      fStartRowForLogging = totalReadRows;
+
+      if (fImportDataMode == IMPORT_DATA_TEXT)
+      {
+        tokenize(columnsInfo, allowedErrCntThisCall, skipRows);
+      }
+      else
+      {
+        int rc = tokenizeBinary(columnsInfo, allowedErrCntThisCall, bEndOfData);
+
+        if (rc != NO_ERROR)
+  	return rc;
+      }
+
+      // Old logic: If we read a full buffer without hitting any new lines, then
+      //            terminate import because row size is greater than read buffer size.
+      if ((fTotalReadRowsForLog == 0) && (fReadSize == fBufferSize))
+      {
+        // new logic: increase fBufferSize and reallocate fData; rerun parsing as the data in the overflow.
+        size_t doubled = size_t(fBufferSize) * 2;
+        fLog->logMsg( "doubling buffer size", MSGLVL_INFO1 );
+	if (doubled >= 1UL <<31)
+	{
+	  return ERR_BULK_ROW_FILL_BUFFER; // row exceeds 2GiB.
+	}
+        fBufferSize = doubled;
+	delete[] fData;
+	fData = new char[fBufferSize];
+	continue;
+      }
+
+      totalReadRows += fTotalReadRowsForLog;
+      correctTotalRows += fTotalReadRows;
+      success = true;
     }
     else
     {
-      int rc = tokenizeBinary(columnsInfo, allowedErrCntThisCall, bEndOfData);
-
-      if (rc != NO_ERROR)
-        return rc;
+      success = true;
     }
-
-    // If we read a full buffer without hitting any new lines, then
-    // terminate import because row size is greater than read buffer size.
-    if ((fTotalReadRowsForLog == 0) && (fReadSize == fBufferSize))
-    {
-      return ERR_BULK_ROW_FILL_BUFFER;
-    }
-
-    totalReadRows += fTotalReadRowsForLog;
-    correctTotalRows += fTotalReadRows;
-  }
+  } while (!success);
 
   return NO_ERROR;
 }

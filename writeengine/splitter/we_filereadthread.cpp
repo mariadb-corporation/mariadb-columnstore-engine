@@ -93,8 +93,6 @@ WEFileReadThread::WEFileReadThread(WESDHandler& aSdh)
     fBuffSize = fSdh.getReadBufSize();
   }
 
-  fBuff = new char[fBuffSize];
-
   const WECmdArgs& args = fSdh.fRef.fCmdArgs;
   initS3Connection(args);
 }
@@ -118,7 +116,6 @@ WEFileReadThread::~WEFileReadThread()
   }
 
   fpThread = 0;
-  delete[] fBuff;
   // cout << "WEFileReadThread destructor called" << endl;
 
   if (doS3Import)
@@ -363,11 +360,27 @@ void WEFileReadThread::feedData()
   }
 }
 
+// helper to copy line from input file to the stringstream.
+// not very performant, yet.
+static void copyLine(std::vector<char>& out, std::istream& is)
+{
+  out.clear();
+  while (is.good() && !is.eof())
+  {
+    char c = is.get();
+    out.push_back(c);
+    if (c == '\n')
+    {
+      break;
+    }
+  }
+}
 //------------------------------------------------------------------------------
 // Read input data as ASCII text
 //------------------------------------------------------------------------------
 unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 {
+  fBuff.reserve(fBuffSize * 2);	
   boost::mutex::scoped_lock aLock(fFileMutex);
 
   // For now we are going to send KEEPALIVES
@@ -378,7 +391,6 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
     // char aBuff[1024*1024];			// TODO May have to change it later
     // char*pStart = aBuff;
     unsigned int aIdx = 0;
-    int aLen = 0;
     *Sbs << static_cast<ByteStream::byte>(WE_CLT_SRV_DATA);
 
     while (!fInFile.eof() && aIdx < getBatchQty())
@@ -386,14 +398,13 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
       if (fSkipRows > 0)
       {
         fSkipRows--;
-        fInFile.getline(fBuff, fBuffSize - 1);
+	copyLine(fBuff, fInFile);
         if (fSdh.getDebugLvl() > 3)
         {
-          aLen = fInFile.gcount();
-          if (aLen > 0 && aLen < fBuffSize - 2)
+          if (fBuff.size() > 0)
           {
-            fBuff[aLen - 1] = 0;
-            cout << "Skip header row (" << fSkipRows<< " to go): " << fBuff << endl;
+	    std::string s(fBuff.data(), fBuff.size());
+            cout << "Skip header row (" << fSkipRows<< " to go): " << s << endl;
           }
         }
         continue;
@@ -401,36 +412,32 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 
       if (fEnclEsc)
       {
+	cout << "getting next row" << endl;
         // pStart = aBuff;
-        aLen = getNextRow(fInFile, fBuff, fBuffSize - 1);
+        getNextRow(fInFile, fBuff);
       }
       else
       {
-        fInFile.getline(fBuff, fBuffSize - 1);
-        aLen = fInFile.gcount();
+	      cout << "copying line" << endl;
+        copyLine(fBuff, fInFile);
       }
 
-      ////aLen chars incl \n, Therefore aLen-1; '<<' oper won't go past it
-      // cout << "Data Length " << aLen <<endl;
-      if ((aLen < (fBuffSize - 2)) && (aLen > 0))
+      if (fBuff.size())
       {
-        fBuff[aLen - 1] = '\n';
-        fBuff[aLen] = 0;
+        if (fBuff[fBuff.size() - 1] != '\n')
+          fBuff.push_back('\n');
 
         if (fSdh.getDebugLvl() > 3)
-          cout << "Data Read " << fBuff << endl;
+	{
+	  std::string s(fBuff.data(), fBuff.size());
+          cout << "Data Read " << s << endl;
+	}
 
-        (*Sbs).append(reinterpret_cast<ByteStream::byte*>(fBuff), aLen);
+        (*Sbs).append(reinterpret_cast<ByteStream::byte*>(fBuff.data()), fBuff.size());
         aIdx++;
 
         if (fSdh.getDebugLvl() > 2)
           cout << "File data line = " << aIdx << endl;
-      }
-      else if (aLen >= fBuffSize - 2)  // Didn't hit delim; BIG ROW
-      {
-        cout << "Bad Row data " << endl;
-        cout << fBuff << endl;
-        throw runtime_error("Data Row too BIG to handle!!");
       }
 
       // for debug
@@ -458,12 +465,13 @@ unsigned int WEFileReadThread::readBinaryDataFile(messageqcpp::SBS& Sbs, unsigne
 
     while ((!fInFile.eof()) && (aIdx < getBatchQty()))
     {
-      fInFile.read(fBuff, recLen);
+      fBuff.resize(recLen);
+      fInFile.read(fBuff.data(), recLen);
       aLen = fInFile.gcount();
 
       if (aLen > 0)
       {
-        (*Sbs).append(reinterpret_cast<ByteStream::byte*>(fBuff), aLen);
+        (*Sbs).append(reinterpret_cast<ByteStream::byte*>(fBuff.data()), aLen);
         aIdx++;
 
         if (fSdh.getDebugLvl() > 2)
@@ -585,14 +593,14 @@ void WEFileReadThread::openInFile()
 
 //------------------------------------------------------------------------------
 
-int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
+int WEFileReadThread::getNextRow(istream& ifs, std::vector<char>& buf)
 {
+  buf.resize(0); // keep allocated capacity.
   // const char ENCL ='\"';		//TODO for time being
   // const char ESC = '\0';		//TODO for time being
   const char ENCL = fEncl;
   const char ESC = fEsc;
   bool aTrailEsc = false;
-  char* pEnd = pBuf;
   int aCh = ifs.get();
 
   while (ifs.good())
@@ -600,7 +608,7 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
     if (aCh == ENCL)
     {
       // we got the first enclosedBy char.
-      *pEnd++ = aCh;
+      buf.push_back(aCh);
       aCh = ifs.get();
 
       // cout << "aCh 1 = " << aCh << endl;
@@ -608,38 +616,38 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
       {
         if (aCh == ESC)  // check spl cond ESC inside ENCL of '\n' here
         {
-          *pEnd++ = aCh;
+          buf.push_back(aCh);
           aCh = ifs.get();
-          *pEnd++ = aCh;
+          buf.push_back(aCh);
           aCh = ifs.get();  // get the next char for while loop
                             // cout << "aCh 2 = " << aCh << endl;
         }                   // case ESC
         else
         {
-          *pEnd++ = aCh;
+          buf.push_back(aCh);
           aCh = ifs.get();
           // cout << "aCh 3 = " << aCh << endl;
         }
       }
 
-      *pEnd++ = aCh;     // ENCL char got
+      buf.push_back(aCh);     // ENCL char got
       aTrailEsc = true;  //@BUG 4641
     }                    // case ENCL
     else if (aCh == ESC)
     {
-      *pEnd++ = aCh;
+      buf.push_back(aCh);
       aCh = ifs.get();
-      *pEnd++ = aCh;
+      buf.push_back(aCh);
       // cout << "aCh 4 = " << aCh << endl;
     }  // case ESC
     else
     {
-      *pEnd++ = aCh;
+      buf.push_back(aCh);
       // cout << "aCh 5 = " << aCh << endl;
     }
 
     // cout << "pBuf1 " << pBuf << endl;
-    if ((aCh == '\n') || ((pEnd - pBuf) == MaxLen))
+    if (aCh == '\n')
       break;  // we got a full row
 
     aCh = ifs.get();
@@ -655,14 +663,14 @@ int WEFileReadThread::getNextRow(istream& ifs, char* pBuf, int MaxLen)
       }
       else
       {
-        *pEnd++ = aCh;
+        buf.push_back(aCh);
         aCh = ifs.get();
       }
     }
 
   }  // end of while loop
 
-  return pEnd - pBuf;
+  return buf.size();
 }
 
 void WEFileReadThread::initS3Connection(const WECmdArgs& args)
