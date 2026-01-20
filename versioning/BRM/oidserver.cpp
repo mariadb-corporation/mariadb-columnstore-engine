@@ -724,77 +724,72 @@ int OIDServer::allocOIDs(int num)
 
 
 // FIXME: Not implemented
-void OIDServer::returnOIDs(int /*start*/, int /*end*/) const
+void OIDServer::returnOIDs(int start, int end) const
 {
-  //@Bug 1412. Do not reuse oids for now.
-  /*	struct FEntry freelist[FreeListEntries];
-      int i, emptyEntry = -1, entryBefore = -1, entryAfter = -1;
-      bool changed = true;
+  struct FEntry freelist[FreeListEntries];
+  int i, emptyEntry = -1, entryBefore = -1, entryAfter = -1;
+  bool changed = true;
 
-      lockFile();
+  boost::mutex::scoped_lock lk(fMutex);
 
-      try {
-              readData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
-      }
-      catch (...) {
-              flock(fFd, LOCK_UN);
-              throw;
-      }
+  try
+  {
+    readData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
+  }
+  catch (...)
+  {
+    flock(fFd, LOCK_UN);
+    throw;
+  }
 
-      for (i = 0; i < FreeListEntries; i++) {
+  for (i = 0; i < FreeListEntries; i++)
+  {
 
-              //this entry is empty
-          if (freelist[i].begin == -1) {
-                      if (emptyEntry == -1)
-                              emptyEntry = i;
-              }
-              else
-              //this entry is before the block to return
-              if (freelist[i].end == start - 1)
-                      entryBefore = i;
-              //the entry is after
-              else if (freelist[i].begin == end + 1)
-                      entryAfter = i;
-      }
+    //this entry is empty
+    if (freelist[i].begin == -1)
+    {
+      if (emptyEntry == -1)
+        emptyEntry = i;
+    }
+    else
+      //this entry is before the block to return
+      if (freelist[i].end == start - 1)
+        entryBefore = i;
+      //the entry is after
+      else if (freelist[i].begin == end + 1)
+        entryAfter = i;
+  }
 
-              if (entryBefore != -1 && entryAfter != -1) {
-                      freelist[entryBefore].end = freelist[entryAfter].end;
-                      freelist[entryAfter].begin = -1;
-              }
-              else if (entryBefore != -1)
-                      freelist[entryBefore].end = end;
-              else if (entryAfter != -1)
-                      freelist[entryAfter].begin = start;
-              else if (emptyEntry != -1) {
-                      freelist[emptyEntry].begin = start;
-                      freelist[emptyEntry].end = end;
-              }
-              else
-                      changed = false;
+  if (entryBefore != -1 && entryAfter != -1)
+  {
+    freelist[entryBefore].end = freelist[entryAfter].end;
+    freelist[entryAfter].begin = -1;
+  }
+  else if (entryBefore != -1)
+    freelist[entryBefore].end = end;
+  else if (entryAfter != -1)
+    freelist[entryAfter].begin = start;
+  else if (emptyEntry != -1)
+  {
+    freelist[emptyEntry].begin = start;
+    freelist[emptyEntry].end = end;
+  }
+  else
+    changed = false;
 
+  try
+  {
+    if (changed)
+      writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
+    flipOIDBlock(start, end - start + 1, 1);
+  }
+  catch (...)
+  {
+    flock(fFd, LOCK_UN);
+    throw;
+  }
 
-  //	    "Old Reliable"
-      for (i = 0; i < FreeListEntries; i++)
-              if (freelist[i].begin == -1) {
-                      freelist[i].begin = start;
-                      freelist[i].end = end;
-                      break;
-              }
-
-
-      try {
-              if (i != FreeListEntries)
-              if (changed)
-                      writeData(reinterpret_cast<uint8_t*>(freelist), 0, HeaderSize);
-              flipOIDBlock(start, end - start + 1, 1);
-      }
-      catch (...) {
-              flock(fFd, LOCK_UN);
-              throw;
-      }
-
-      flock(fFd, LOCK_UN);
-  */
+  flock(fFd, LOCK_UN);
 }
 
 int OIDServer::size() const
