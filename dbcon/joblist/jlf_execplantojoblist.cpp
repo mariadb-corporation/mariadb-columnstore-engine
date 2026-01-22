@@ -29,6 +29,7 @@
 #include <map>
 #include <climits>
 #include <cmath>
+#include "mcs_datatype.h"
 using namespace std;
 
 #include <boost/shared_ptr.hpp>
@@ -1913,20 +1914,34 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
     if (jsv.empty())
       throw runtime_error("Unhandled SimpleFilter");
   }
-  // Handle bitmask pattern: (col & mask) = mask
+  // Handle bitmask pattern: (col & mask) = mask or mask = (col & mask)
   // This allows bitwise AND filters to be pushed down as primitive filters
-  else if (lhsType == FUNCTIONCOLUMN && opeq == *sop)
+  else if ((lhsType == FUNCTIONCOLUMN || rhsType == FUNCTIONCOLUMN) && opeq == *sop)
   {
-    const FunctionColumn* fc = static_cast<const FunctionColumn*>(lhs);
-    const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(rhs);
+    // Normalize: fc is the FunctionColumn, cc is the ConstantColumn on the other side
+    const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(lhsType == FUNCTIONCOLUMN ? lhs : rhs);
+    const ConstantColumn* cc = dynamic_cast<const ConstantColumn*>(lhsType == FUNCTIONCOLUMN ? rhs : lhs);
     bool handled = false;
 
     // Check if this is a bitwise AND function with a SimpleColumn and ConstantColumn
-    if (cc && fc->functionName() == "&" && fc->functionParms().size() == 2)
+    // Supports: (col & mask) = mask, (mask & col) = mask, mask = (col & mask), mask = (mask & col)
+    if (cc && fc && fc->functionName() == "&" && fc->functionParms().size() == 2)
     {
       const auto& parms = fc->functionParms();
-      const SimpleColumn* sc = dynamic_cast<const SimpleColumn*>(parms[0]->data());
-      const ConstantColumn* maskCC = dynamic_cast<const ConstantColumn*>(parms[1]->data());
+
+      // Extract SimpleColumn and ConstantColumn from either argument order
+      auto extractBitmaskArgs = [](const funcexp::FunctionParm& p)
+          -> std::pair<const SimpleColumn*, const ConstantColumn*> {
+        if (auto sc = dynamic_cast<const SimpleColumn*>(p[0]->data()))
+          if (auto cc = dynamic_cast<const ConstantColumn*>(p[1]->data()))
+            return {sc, cc};
+        if (auto sc = dynamic_cast<const SimpleColumn*>(p[1]->data()))
+          if (auto cc = dynamic_cast<const ConstantColumn*>(p[0]->data()))
+            return {sc, cc};
+        return {nullptr, nullptr};
+      };
+
+      auto [sc, maskCC] = extractBitmaskArgs(parms);
 
       if (sc && maskCC && !sc->schemaName().empty() && sc->isColumnStore())
       {
@@ -1945,14 +1960,7 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
           }
 
           // Only for integer types
-          if (ct.colDataType == CalpontSystemCatalog::BIGINT ||
-              ct.colDataType == CalpontSystemCatalog::UBIGINT ||
-              ct.colDataType == CalpontSystemCatalog::INT ||
-              ct.colDataType == CalpontSystemCatalog::UINT ||
-              ct.colDataType == CalpontSystemCatalog::SMALLINT ||
-              ct.colDataType == CalpontSystemCatalog::USMALLINT ||
-              ct.colDataType == CalpontSystemCatalog::TINYINT ||
-              ct.colDataType == CalpontSystemCatalog::UTINYINT)
+          if (datatypes::isInteger(ct.colDataType))
           {
             string alias(extractTableAlias(sc));
             string view(sc->viewName());
@@ -3431,8 +3439,21 @@ namespace joblist
 
       // Reorder AND filters: process cheaper filters first
       // This helps when combining expensive filters (LIKE '%...%') with cheap filters (bitmask)
-      // Heuristic: LIKE on TEXT/BLOB is expensive, numeric filters are cheap
-      auto estimateCost = [](const ParseTree* pt) -> int {
+      // Heuristic: LIKE on TEXT/BLOB is expensive, bitmask primitive filters are cheap
+
+      // Check if FunctionColumn is a bitmask pattern: (col & const) or (const & col)
+      auto isBitmaskPattern = [](const FunctionColumn* fc) -> bool {
+        if (!fc || fc->functionName() != "&" || fc->functionParms().size() != 2)
+          return false;
+        const auto& p = fc->functionParms();
+        bool hasSimpleCol = dynamic_cast<const SimpleColumn*>(p[0]->data()) ||
+                            dynamic_cast<const SimpleColumn*>(p[1]->data());
+        bool hasConst = dynamic_cast<const ConstantColumn*>(p[0]->data()) ||
+                        dynamic_cast<const ConstantColumn*>(p[1]->data());
+        return hasSimpleCol && hasConst;
+      };
+
+      auto estimateCost = [&isBitmaskPattern](const ParseTree* pt) -> int {
         if (!pt || !pt->data())
           return 0;
         TreeNode* data = pt->data();
@@ -3443,14 +3464,12 @@ namespace joblist
           // LIKE is expensive
           if (op && (op->op() == OP_LIKE || op->op() == OP_NOTLIKE))
             return 1000;
-          // Check if LHS is a bitmask function (col & mask) = mask
-          const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(sf->lhs());
-          if (fc && fc->functionName() == "&")
-            return 10;  // Bitmask is cheap
+          // Check for bitmask pattern: (col & mask) = mask (pushdown to primitive filter)
+          const FunctionColumn* fcLhs = dynamic_cast<const FunctionColumn*>(sf->lhs());
+          const FunctionColumn* fcRhs = dynamic_cast<const FunctionColumn*>(sf->rhs());
+          if (isBitmaskPattern(fcLhs) || isBitmaskPattern(fcRhs))
+            return 10;  // Bitmask primitive filter is cheap
         }
-        const FunctionColumn* fc = dynamic_cast<const FunctionColumn*>(data);
-        if (fc && fc->functionName() == "&")
-          return 10;  // Bitmask is cheap
         return 100;  // Default cost
       };
 
