@@ -2748,49 +2748,6 @@ bool itemDisablesWrapping(Item* item, gp_walk_info& gwi)
   }
   return false;
 }
-ReturnedColumn* wrapIntoAggregate(ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem)
-{
-  if (!gwi.implicitExplicitGroupBy || gwi.disableWrapping || !gwi.select_lex)
-  {
-    return rc;
-  }
-
-  if (dynamic_cast<AggregateColumn*>(rc) != nullptr || dynamic_cast<ConstantColumn*>(rc) != nullptr)
-  {
-    return rc;
-  }
-
-  if (itemDisablesWrapping(baseItem, gwi))
-  {
-    return rc;
-  }
-
-  cal_connection_info* ci = static_cast<cal_connection_info*>(get_fe_conn_info_ptr());
-
-  AggregateColumn* ac = new AggregateColumn(gwi.sessionid);
-  ac->timeZone(gwi.timeZone);
-  ac->alias(rc->alias());
-  ac->aggOp(AggregateColumn::SELECT_SOME);
-  ac->asc(rc->asc());
-  ac->charsetNumber(rc->charsetNumber());
-  ac->orderPos(rc->orderPos());
-  uint32_t i;
-  for (i = 0; i < gwi.processed.size() && !gwi.processed[i].first->eq(baseItem, false); i++)
-  {
-  }
-  if (i < gwi.processed.size())
-  {
-    ac->expressionId(gwi.processed[i].second);
-  }
-  else
-  {
-    ac->expressionId(ci->expressionId++);
-  }
-
-  ac->aggParms().push_back(SRCP(rc));
-  ac->resultType(rc->resultType());
-  return ac;
-}
 
 ReturnedColumn* buildReturnedColumnNull(gp_walk_info& gwi)
 {
@@ -2825,7 +2782,7 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
     {
       Item_field* ifp = (Item_field*)item;
 
-      return wrapIntoAggregate(buildSimpleColumn(ifp, gwi, queryType), gwi, ifp);
+      return buildSimpleColumn(ifp, gwi, queryType);
     }
     case Item::NULL_ITEM: return buildReturnedColumnNull(gwi);
     case Item::CONST_ITEM:
@@ -6633,7 +6590,7 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
           }
 
           // We need to look into GROUP BY columns to decide if we need to wrap a column.
-          ReturnedColumn* rc = wrapIntoAggregate(sc, gwi, baseItem);
+          ReturnedColumn* rc = sc;
 
           SRCP sprc(rc);
           pushReturnedCol(gwi, baseItem, sprc);
@@ -7066,8 +7023,6 @@ int processOrderByCol(const ORDER* ordercol, gp_walk_info& gwi, IDBQueryType que
     else
     {
       rc = buildReturnedColumn(ord_item, gwi, gwi.fatalParseError, false, queryType);
-
-      rc = wrapIntoAggregate(rc, gwi, ord_item);
     }
     // @bug5501 try item_ptr if item can not be fixed. For some
     // weird dml statement state, item can not be fixed but the
@@ -7366,7 +7321,7 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
     funcFieldVec[i]->print(&str, QT_ORDINARY);
     sc->alias(string(str.c_ptr()));
     sc->tableAlias(sc->tableAlias());
-    SRCP srcp(wrapIntoAggregate(sc, gwi, funcFieldVec[i]));
+    SRCP srcp(sc);
     uint32_t j = 0;
 
     for (; j < gwi.returnedCols.size(); j++)

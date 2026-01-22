@@ -55,5 +55,4 @@ execplan::ConstantColumn* newConstantColumnNotNullUsingValNativeNoTz(Item* item,
 bool isSupportedAggregateWithOneConstArg(const Item_sum* item, Item** orig_args);
 execplan::ConstantColumn* buildConstantColumnNotNullUsingValNative(Item* item, gp_walk_info& gwi);
 execplan::ConstantColumn* buildConstantColumnMaybeNullUsingValStr(Item* item, gp_walk_info& gwi);
-execplan::ReturnedColumn* wrapIntoAggregate(execplan::ReturnedColumn* rc, gp_walk_info& gwi, Item* baseItem);
 }

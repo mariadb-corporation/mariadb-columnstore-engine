@@ -79,6 +79,11 @@ class WindowFunctionColumn : public ReturnedColumn
     return fFunctionParms;
   }
 
+  inline std::vector<SRCP>& functionParms()
+  {
+    return fFunctionParms;
+  }
+
   /** set function parameters*/
   inline void functionParms(const std::vector<SRCP>& functionParms)
   {
@@ -91,6 +96,11 @@ class WindowFunctionColumn : public ReturnedColumn
     return fPartitions;
   }
 
+  inline std::vector<SRCP>& partitions()
+  {
+    return fPartitions;
+  }
+
   /** set partition columns */
   inline void partitions(const std::vector<SRCP>& partitions)
   {
@@ -99,6 +109,11 @@ class WindowFunctionColumn : public ReturnedColumn
 
   /** get order by clause */
   inline const WF_OrderBy& orderBy() const
+  {
+    return fOrderBy;
+  }
+
+  inline WF_OrderBy& orderBy()
   {
     return fOrderBy;
   }
