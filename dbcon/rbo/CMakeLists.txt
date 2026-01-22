@@ -2,7 +2,8 @@ set(rbo_SRCS
     rulebased_optimizer.cpp
     rbo_apply_parallel_ces.cpp
     rbo_apply_rewrite_distinct.cpp
-    rbo_predicate_pushdown.cpp)
+    rbo_predicate_pushdown.cpp
+    rbo_groupby_wrap_columns.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 

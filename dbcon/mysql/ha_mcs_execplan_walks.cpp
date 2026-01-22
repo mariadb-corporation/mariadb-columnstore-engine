@@ -124,7 +124,7 @@ void gp_walk(const Item* item, void* arg)
         if (!scp)
           break;
 
-        execplan::ReturnedColumn* rc = wrapIntoAggregate(scp->clone(), *gwip, ifp);
+        execplan::ReturnedColumn* rc = scp->clone();
 
         std::string aliasTableName(scp->tableAlias());
         scp->tableAlias(aliasTableName);

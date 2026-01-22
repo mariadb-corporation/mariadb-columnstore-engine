@@ -1,4 +1,4 @@
-/* Copyright (C) 2025 MariaDB Corporation
+/* Copyright (C) 2026 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@
 
 namespace optimizer
 {
-  bool rewriteDistinctFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
-  bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
+  bool groupByWrapColumnsFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
+  bool applyGroupByWrapColumns(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx);
 }
+

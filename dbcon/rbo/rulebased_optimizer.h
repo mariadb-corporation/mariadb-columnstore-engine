@@ -112,6 +112,15 @@ class RBOptimizerContext
   {
     ++uniqueId_;
   }
+  uint32_t getMaxExpressionId() const
+  {
+    return maxExpressionId_;
+  }
+  void setMaxExpressionId(uint32_t exprId)
+  {
+    if (exprId > maxExpressionId_)
+      maxExpressionId_ = exprId;
+  }
   bool logRulesEnabled() const
   {
     return logRules_;
@@ -163,6 +172,7 @@ class RBOptimizerContext
   cal_impl_if::gp_walk_info& gwi_;
   THD& thd_;
   uint64_t uniqueId_{0};
+  uint32_t maxExpressionId_{0};
   bool logRules_{false};
   uint cesOptimizationParallelFactor_;
   // Names of rules that were actually applied in order
