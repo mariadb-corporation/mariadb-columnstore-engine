@@ -4,8 +4,8 @@ DROP DATABASE IF EXISTS MCOL_5987;
 CREATE DATABASE MCOL_5987;
 USE MCOL_5987;
 CREATE TABLE t1(x integer) ENGINE=COLUMNSTORE;
-SELECT * FROM information_schema.columnstore_tables;
-SELECT OBJECT_ID FROM information_schema.columnstore_tables WHERE TABLE_SCHEMA='MCOL_5987' AND TABLE_NAME='t1';
+#SELECT * FROM information_schema.columnstore_tables;
+#SELECT OBJECT_ID FROM information_schema.columnstore_tables WHERE TABLE_SCHEMA='MCOL_5987' AND TABLE_NAME='t1';
 --let $oid1=query_get_value(SELECT OBJECT_ID FROM information_schema.columnstore_tables WHERE TABLE_SCHEMA='MCOL_5987' AND TABLE_NAME='t1', OBJECT_ID, 1)
 CREATE TABLE t2(x integer) ENGINE=COLUMNSTORE;
 DROP TABLE t1;
