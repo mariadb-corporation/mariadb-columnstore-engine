@@ -788,6 +788,10 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   RetColsVector& retCols = jobInfo.projectionCols;
   SRCP srcp;
 
+  // Save the original size of retCols. Elements added later (e.g., from GROUP_CONCAT arguments)
+  // should not be added to expressionVec, as they are aggregate function arguments, not projections.
+  const uint64_t originalRetColsSize = retCols.size();
+
   for (uint64_t i = 0; i < retCols.size(); i++)
   {
     GroupConcatColumn* gcc = dynamic_cast<GroupConcatColumn*>(retCols[i].get());
@@ -1286,7 +1290,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
         }
         // Also add to expressionVec if expression depends only on GROUP BY columns
         // This allows functions like length(x) or length(a) + length(b) to be evaluated after aggregation
-        else if (!hasWndCols && (fc != NULL || ac != NULL))
+        // Only check for original projection columns, not for columns added from aggregate arguments (e.g., GROUP_CONCAT)
+        else if (!hasWndCols && (fc != NULL || ac != NULL) && i < originalRetColsSize)
         {
           const vector<SimpleColumn*>* scListPtr = nullptr;
           if (fc != NULL)
@@ -1301,7 +1306,8 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
             for (const auto* sc : scList)
             {
               if (!sc) { dependsOnGroupBy = false; break; }
-              uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+              // Use add=false to avoid modifying jobInfo state (important for cursor re-execution)
+              uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc), false);
               CalpontSystemCatalog::OID dictOid = isDictCol(sc->colType());
               if (dictOid > 0)
               {

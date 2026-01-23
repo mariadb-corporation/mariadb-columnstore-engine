@@ -5481,7 +5481,8 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
           for (const auto* sc : scols)
           {
             if (!sc) { dependsOnGroupBy = false; break; }
-            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+            // Use add=false to avoid modifying jobInfo state (important for cursor re-execution)
+            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc), false);
             CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
             if (dictOid > 0)
             {
@@ -5523,7 +5524,8 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
           for (const auto* sc : sCols)
           {
             if (!sc) { dependsOnGroupBy = false; break; }
-            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc));
+            // Use add=false to avoid modifying jobInfo state (important for cursor re-execution)
+            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc), false);
             CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
             if (dictOid > 0)
             {
