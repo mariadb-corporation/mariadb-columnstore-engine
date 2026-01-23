@@ -364,10 +364,14 @@ void WEFileReadThread::feedData()
 // not very performant, yet.
 static void copyLine(std::vector<char>& out, std::istream& is)
 {
-  out.clear();
+  out.resize(0);
   while (is.good() && !is.eof())
   {
-    char c = is.get();
+    int c = is.get();
+    if (c < 0)
+    {
+	    break; // unfortunately, eof() is insufficient.
+    }
     out.push_back(c);
     if (c == '\n')
     {
@@ -380,7 +384,7 @@ static void copyLine(std::vector<char>& out, std::istream& is)
 //------------------------------------------------------------------------------
 unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 {
-  fBuff.reserve(fBuffSize * 2);	
+  fBuff.reserve(fBuffSize * 2);
   boost::mutex::scoped_lock aLock(fFileMutex);
 
   // For now we are going to send KEEPALIVES
@@ -412,13 +416,11 @@ unsigned int WEFileReadThread::readDataFile(messageqcpp::SBS& Sbs)
 
       if (fEnclEsc)
       {
-	cout << "getting next row" << endl;
         // pStart = aBuff;
         getNextRow(fInFile, fBuff);
       }
       else
       {
-	      cout << "copying line" << endl;
         copyLine(fBuff, fInFile);
       }
 
