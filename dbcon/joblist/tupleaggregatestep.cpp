@@ -5515,28 +5515,42 @@ void TupleAggregateStep::prepExpressionOnAggregate(SP_ROWAGG_UM_t& aggUM, JobInf
       bool dependsOnGroupBy = false;
 
       // Check if all simple columns are in GROUP BY (for functions without aggregate columns)
+      // Exclude conditional functions (IF, CASE, IFNULL, etc.) as they need row-level evaluation
       if (!hasAggCols)
       {
-        const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
-        if (!sCols.empty())
+        // List of conditional/non-deterministic functions that should NOT be evaluated after aggregation
+        static const std::set<std::string> conditionalFunctions = {
+          "if", "case", "ifnull", "nullif", "coalesce", "isnull", "nvl", "nvl2",
+          "greatest", "least", "elt", "field", "find_in_set", "make_set",
+          "rand", "uuid", "now", "curdate", "curtime", "sysdate", "unix_timestamp"
+        };
+
+        std::string funcName = fc->functionName();
+        std::transform(funcName.begin(), funcName.end(), funcName.begin(), ::tolower);
+
+        if (conditionalFunctions.find(funcName) == conditionalFunctions.end())
         {
-          dependsOnGroupBy = true;
-          for (const auto* sc : sCols)
+          const vector<SimpleColumn*>& sCols = fc->simpleColumnList();
+          if (!sCols.empty())
           {
-            if (!sc) { dependsOnGroupBy = false; break; }
-            // Use add=false to avoid modifying jobInfo state (important for cursor re-execution)
-            uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc), false);
-            CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
-            if (dictOid > 0)
+            dependsOnGroupBy = true;
+            for (const auto* sc : sCols)
             {
-              auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
-              if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
-                scKey = dictIt->second;
-            }
-            if (groupByKeySet.find(scKey) == groupByKeySet.end())
-            {
-              dependsOnGroupBy = false;
-              break;
+              if (!sc) { dependsOnGroupBy = false; break; }
+              // Use add=false to avoid modifying jobInfo state (important for cursor re-execution)
+              uint32_t scKey = getTupleKey(jobInfo, const_cast<SimpleColumn*>(sc), false);
+              CalpontSystemCatalog::OID dictOid = joblist::isDictCol(sc->colType());
+              if (dictOid > 0)
+              {
+                auto dictIt = jobInfo.keyInfo->dictKeyMap.find(scKey);
+                if (dictIt != jobInfo.keyInfo->dictKeyMap.end())
+                  scKey = dictIt->second;
+              }
+              if (groupByKeySet.find(scKey) == groupByKeySet.end())
+              {
+                dependsOnGroupBy = false;
+                break;
+              }
             }
           }
         }

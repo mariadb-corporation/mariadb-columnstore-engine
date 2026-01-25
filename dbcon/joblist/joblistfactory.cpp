@@ -1289,19 +1289,24 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
           jobInfo.expressionVec.push_back(tupleKey);
         }
         // Also add to expressionVec if expression depends only on GROUP BY columns
-        // This allows functions like length(x) or length(a) + length(b) to be evaluated after aggregation
+        // This allows functions like length(x) or upper(x) to be evaluated after aggregation
+        // Exclude conditional functions (IF, CASE, IFNULL, etc.) as they need row-level evaluation
         // Only check for original projection columns, not for columns added from aggregate arguments (e.g., GROUP_CONCAT)
-        else if (!hasWndCols && (fc != NULL || ac != NULL) && i < originalRetColsSize)
+        else if (!hasWndCols && fc != NULL && i < originalRetColsSize)
         {
-          const vector<SimpleColumn*>* scListPtr = nullptr;
-          if (fc != NULL)
-            scListPtr = &fc->simpleColumnList();
-          else if (ac != NULL)
-            scListPtr = &ac->simpleColumnList();
+          // List of conditional/non-deterministic functions that should NOT be evaluated after aggregation
+          static const std::set<std::string> conditionalFunctions = {
+            "if", "case", "ifnull", "nullif", "coalesce", "isnull", "nvl", "nvl2",
+            "greatest", "least", "elt", "field", "find_in_set", "make_set",
+            "rand", "uuid", "now", "curdate", "curtime", "sysdate", "unix_timestamp"
+          };
 
-          if (scListPtr != nullptr)
+          std::string funcName = fc->functionName();
+          std::transform(funcName.begin(), funcName.end(), funcName.begin(), ::tolower);
+
+          if (conditionalFunctions.find(funcName) == conditionalFunctions.end())
           {
-            const vector<SimpleColumn*>& scList = *scListPtr;
+            const vector<SimpleColumn*>& scList = fc->simpleColumnList();
             bool dependsOnGroupBy = !scList.empty();
             for (const auto* sc : scList)
             {

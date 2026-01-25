@@ -387,6 +387,94 @@ SELECT concat(a, b), count(*) FROM t30 GROUP BY a, b ORDER BY a, b;
 
 DROP TABLE t30;
 
+#
+# Test: Conditional functions with GROUP BY (IF, CASE, IFNULL, NULLIF, COALESCE)
+# These functions should be evaluated at row-level, not after aggregation
+# Bug reference: bug3025 - IF() returning wrong results with GROUP BY
+#
+CREATE TABLE t31 (value int) ENGINE=Columnstore;
+INSERT INTO t31 VALUES (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
+
+# IF function with comparison - should correctly evaluate for each row
+SELECT value, IF(value<=1000,'<=1000', '>1000')
+FROM t31
+GROUP BY value, IF(value<=1000,'<=1000', '>1000')
+ORDER BY ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+# IF function in projection only
+SELECT IF(value<=1000,'<=1000', '>1000')
+FROM t31
+GROUP BY IF(value<=1000,'<=1000', '>1000'), value
+ORDER BY ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+# IF function grouped by itself
+SELECT IF(value<=1000,'<=1000', '>1000') FROM t31
+GROUP BY IF(value<=1000,'<=1000', '>1000')
+ORDER BY IF(value<=1000,'<=1000', '>1000');
+
+# Nested IF functions (from bug3025)
+SELECT * FROM (
+  SELECT count(*) cnt,
+         if((if(not isnull(value),'notNull','null') like 'null'), null, if(value<1000,'<1000','>=1000')) a
+  FROM t31
+  GROUP BY a, value
+  ORDER BY not isnull(a), value asc
+) b
+ORDER BY cnt, a;
+
+DROP TABLE t31;
+
+#
+# Test: CASE expression with GROUP BY
+#
+CREATE TABLE t32 (status int) ENGINE=Columnstore;
+INSERT INTO t32 VALUES (1), (2), (3), (1), (2), (null), (3), (1);
+
+# CASE expression should evaluate correctly
+SELECT CASE status WHEN 1 THEN 'active' WHEN 2 THEN 'pending' WHEN 3 THEN 'closed' ELSE 'unknown' END as status_text
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+# CASE with count
+SELECT CASE status WHEN 1 THEN 'active' WHEN 2 THEN 'pending' WHEN 3 THEN 'closed' ELSE 'unknown' END as status_text, count(*)
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+# Searched CASE
+SELECT CASE WHEN status < 2 THEN 'low' WHEN status < 3 THEN 'medium' ELSE 'high' END as priority
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+DROP TABLE t32;
+
+#
+# Test: NULLIF function with GROUP BY
+#
+CREATE TABLE t33 (x int) ENGINE=Columnstore;
+INSERT INTO t33 VALUES (1), (2), (1), (3), (2), (1);
+
+# NULLIF should return NULL when values are equal
+SELECT NULLIF(x, 1) FROM t33 GROUP BY x ORDER BY x;
+
+# NULLIF with different comparison
+SELECT x, NULLIF(x, 2) FROM t33 GROUP BY x ORDER BY x;
+
+DROP TABLE t33;
+
+#
+# Test: ELT function with GROUP BY
+#
+CREATE TABLE t34 (idx int) ENGINE=Columnstore;
+INSERT INTO t34 VALUES (1), (2), (3), (1), (2), (null);
+
+# ELT returns the Nth element from the list
+SELECT ELT(idx, 'one', 'two', 'three') FROM t34 GROUP BY idx ORDER BY idx;
+
+DROP TABLE t34;
+
 DROP TABLE t1;
 DROP TABLE t2;
 DROP TABLE t3;
