@@ -89,14 +89,16 @@ void stop(int /*sig*/)
   if (!die)
   {
     die = true;
-    comm->stop();
+    if (comm)
+      comm->stop();
     monitorThreads.interrupt_all();
   }
 }
 
 void reset(int /*sig*/)
 {
-  comm->reset();
+  if (comm)
+    comm->reset();
 }
 
 void ServiceWorkerNode::setupChildSignalHandlers()
