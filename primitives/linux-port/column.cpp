@@ -169,6 +169,13 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP)
 
     case COMPARE_NULLEQ: return val1 == val2;
 
+    case COMPARE_BITMASK:
+      // Bitmask comparison only valid for integral types
+      if constexpr (std::is_integral_v<T>)
+        return (val1 & val2) == val2;
+      else
+        return false;
+
     default: logIt(34, COP, "colCompare_"); return false;  // throw an exception here?
   }
 }
@@ -206,6 +213,13 @@ inline bool colCompare_(const T& val1, const T& val2, uint8_t COP, uint8_t rf)
     case COMPARE_GT: return val1 > val2 || (val1 == val2 && (rf & 0x80));
 
     case COMPARE_NULLEQ: return val1 == val2 && rf == 0;
+
+    case COMPARE_BITMASK:
+      // Bitmask comparison only valid for integral types
+      if constexpr (std::is_integral_v<T>)
+        return (val1 & val2) == val2;
+      else
+        return false;
 
     default: logIt(34, COP, "colCompare_"); return false;  // throw an exception here?
   }
@@ -1560,6 +1574,11 @@ void vectorizedFiltering_(NewColRequestHeader* in, ColResultHeader* out, const T
         case (COMPARE_LT): filterMask = simdProcessor.cmpLt(l, filterArgsVectors[j]); break;
         case (COMPARE_NE): filterMask = simdProcessor.cmpNe(l, filterArgsVectors[j]); break;
         case (COMPARE_NIL): filterMask = falseMask; break;
+        case (COMPARE_BITMASK):
+          // Bitmask: (value & mask) == mask
+          // Using SIMD: AND then compare equal
+          filterMask = simdProcessor.cmpEq(simdProcessor.bwAnd(l, filterArgsVectors[j]), filterArgsVectors[j]);
+          break;
 
         default:
           idbassert(false);
