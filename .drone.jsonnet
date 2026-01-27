@@ -67,33 +67,20 @@ local customBuildFlags(buildKey) =
 
 local any_branch = "**";
 
-local upgrade_test_lists = {
-  rockylinux8: {
-    arm64: ["10.6.4-1", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-  },
-  rockylinux9: {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-  },
+local default_upgrade_versions = ["10.6.15-10", "10.6.24-20"];
+local default_arch_versions = {
+  arm64: default_upgrade_versions,
+  amd64: default_upgrade_versions,
+};
 
-  debian12: {
-    arm64: [],
-    amd64: [],
-  },
-  "ubuntu20.04": {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-  },
-  "ubuntu22.04": {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-  },
-  "ubuntu24.04":
-    {
-      arm64: [],
-      amd64: [],
-    },
+local upgrade_test_lists = {
+  rockylinux8: default_arch_versions,
+  rockylinux9: default_arch_versions,
+  rockylinux10: default_arch_versions,
+  debian12: default_arch_versions,
+  debian13: default_arch_versions,
+  "ubuntu22.04": default_arch_versions,
+  "ubuntu24.04": default_arch_versions,
 };
 
 local make_clickable_link(link) = "echo -e '\\e]8;;" + link + "\\e\\\\" + link + "\\e]8;;\\e\\\\'";
@@ -210,13 +197,15 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
   local getContainerName(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
 
-  local prepareTestContainer(containerName, result, do_setup) =
+  local prepareTestContainer(containerName, result, do_setup, do_install, do_install_builddeps) =
     'sh -c "apk add bash && ' + get_build_command("prepare_test_container.sh") +
     " --container-name " + containerName +
     " --docker-image " + img +
     " --result-path " + result +
     " --packages-url " + packages_url +
     " --do-setup " + std.toString(do_setup) +
+    " --do-install " + std.toString(do_install) +
+    " --do-install-builddeps " + std.toString(do_install_builddeps) +
     (if result == "ubuntu24.04_clang-20_libcpp" then " --install-libcpp " else "") +
     '"',
 
@@ -243,7 +232,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:28.2.2",
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
-      prepareTestContainer(getContainerName("smoke"), result, true),
+      prepareTestContainer(getContainerName("smoke"), result, true, true, true),
       get_build_command("run_smoke.sh") +
       " --container-name " + getContainerName("smoke"),
     ],
@@ -262,16 +251,16 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   },
   upgrade(version):: {
     name: "upgrade-test from " + version,
-    depends_on: ["regressionlog"],
+    depends_on: ["publish pkg", "publish cmapi build"],
     image: "docker:28.2.2",
-    volumes: [pipeline._volumes.docker],
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
       UPGRADE_TOKEN: {
         from_secret: "es_token",
-      },
+      }
     },
     commands: [
-      prepareTestContainer(getContainerName("upgrade") + version, result, false),
+      prepareTestContainer(getContainerName("upgrade") + version, result, false, false, false),
 
       execInnerDocker(
         'bash -c "./upgrade_setup_' + pkg_format + ".sh "
@@ -279,7 +268,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
         + result + " "
         + arch + " "
         + repo_pkg_url_no_res
-        + ' $${UPGRADE_TOKEN}"',
+        + ' $${UPGRADE_TOKEN} ' + server + '"',
         getContainerName("upgrade") + version
       ),
     ],
@@ -313,7 +302,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
     },
     commands: [
-      prepareTestContainer(getContainerName("mtr"), result, true),
+      prepareTestContainer(getContainerName("mtr"), result, true, true, true),
 
       "apk add bash &&" +
       get_build_command("run_mtr.sh") +
@@ -357,7 +346,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       REGRESSION_REF_AUX: branch_ref,
     },
     commands: [
-      prepareTestContainer(getContainerName("regression"), result, true),
+      prepareTestContainer(getContainerName("regression"), result, true, true, true),
 
       // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
       // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
@@ -438,7 +427,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       PYTHONPATH: "/usr/share/columnstore/cmapi/deps",
     },
     commands: [
-      prepareTestContainer(getContainerName("cmapi"), result, true),
+      prepareTestContainer(getContainerName("cmapi"), result, true, true, true),
       "apk add bash && " +
       get_build_command("run_cmapi_test.sh") +
       " --container-name " + getContainerName("cmapi") +
@@ -463,7 +452,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:git",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
-      prepareTestContainer(getContainerName("cmapi-docs"), result, true),
+      prepareTestContainer(getContainerName("cmapi-docs"), result, true, true, true),
       "apk add bash && " +
       get_build_command("check_mcs_cli_docs.sh") +
       " --container-name " + getContainerName("cmapi-docs"),
@@ -660,8 +649,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +
-         // [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         // (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
+         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
          (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],

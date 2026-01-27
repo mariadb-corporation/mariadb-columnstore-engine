@@ -9,6 +9,7 @@ RESULT="$2"
 ARCH="$3"
 LINK="$4"
 UPGRADE_TOKEN="$5"
+SERVER="$6"
 
 DEBIAN_FRONTEND=noninteractive
 UCF_FORCE_CONFNEW=1
@@ -18,9 +19,9 @@ sed -i "s/exit 101/exit 0/g" /usr/sbin/policy-rc.d
 bash -c "apt update --yes && apt install -y procps wget curl"
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup
 chmod +x mariadb_es_repo_setup
-bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools"
+bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools" || { message "The version $VERSION is not supported, skipping upgrade test"; exit 0; }
 apt update --yes
-apt install --yes -oDebug::RunScripts=1 mariadb-server mariadb-client mariadb-plugin-columnstore
+apt install --yes -oDebug::RunScripts=1 mariadb-server mariadb-client mariadb-plugin-columnstore || { message "The version $VERSION can not be installed, skipping upgrade test"; exit 0; }
 systemctl start mariadb
 systemctl start mariadb-columnstore
 
@@ -33,6 +34,8 @@ touch /etc/apt/auth.conf
 cat << EOF > /etc/apt/auth.conf
 machine ${LINK}${RESULT}/
 EOF
+
+is_majors_equal $VERSION $SERVER || apt remove --yes "mariadb-*"
 
 bash -c "./setup-repo.sh"
 
@@ -49,7 +52,8 @@ bash -c "./setup-repo.sh"
 
 # the -o options are used to make choise of keep your currently-installed version without interactive prompt
 
-apt-get --yes --with-new-pkgs -oDebug::RunScripts=1 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+apt-get --yes --with-new-pkgs -oDebug::RunScripts=1 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade mariadb-server mariadb-client mariadb-plugin-columnstore
+is_majors_equal $VERSION $SERVER || { apt install --yes -oDebug::RunScripts=1 -o Dpkg::Options::="--force-confold" -o Dpkg::Options::="--force-confdef" mariadb-server mariadb-client mariadb-plugin-columnstore; systemctl start mariadb; systemctl start mariadb-columnstore; }
 
 UPGRADED_VERSION=$(mariadb -e "select @@version;")
 
