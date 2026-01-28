@@ -70,7 +70,7 @@ class WEFileReadThread
   unsigned int readBinaryDataFile(messageqcpp::SBS& Sbs, unsigned int recLen);
   void openInFile();
 
-  int getNextRow(std::istream& ifs, char* pBuf, int MaxLen);
+  int getNextRow(std::istream& ifs, std::vector<char>& buf);
 
   boost::thread* getFpThread() const
   {
@@ -155,7 +155,7 @@ class WEFileReadThread
   char fEsc;        // Esc char
   char fDelim;      // Column Delimit char
   size_t fSkipRows; // Header rows to skip
-  char* fBuff;      // main data buffer
+  std::vector<char> fBuff;      // main data buffer
   int fBuffSize;
 
   /* To support mode 1 imports from objects on S3 */

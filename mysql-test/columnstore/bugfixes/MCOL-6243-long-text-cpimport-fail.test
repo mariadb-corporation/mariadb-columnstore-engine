@@ -1,0 +1,26 @@
+# Checks that long text values longer than 1MB (old cpimport buffer size)
+# get loaded by cpimport.
+
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL_6243;
+--enable_warnings
+CREATE DATABASE MCOL_6243;
+USE MCOL_6243;
+
+CREATE TABLE t1 (
+      short_id varchar(36)
+    , long_content longtext
+)  ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+let $DATADIR=`SELECT @@datadir`;
+--exec rm -f $DATADIR/mcol_6243_input.csv
+--exec printf "short id;" > $DATADIR/mcol_6243_input.csv
+# this line produces 100,000 repetitions of the "long content" string, totaling 1,200,000 bytes.
+--system bash -c "printf 'long content%.0s' {1..100000}" >> $DATADIR/mcol_6243_input.csv
+--replace_result $DATADIR DATADIR
+--eval LOAD DATA LOCAL INFILE '$DATADIR/mcol_6243_input.csv' INTO TABLE t1 CHARACTER SET UTF8MB4 FIELDS TERMINATED BY ';' OPTIONALLY ENCLOSED BY '"' ESCAPED BY '\\\\' (short_id, long_content);
+--exec rm -f $DATADIR/mcol_6243_input.csv
+
+SELECT short_id, length(long_content) FROM t1;
+
+DROP DATABASE MCOL_6243;
