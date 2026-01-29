@@ -41,12 +41,21 @@ fi
 
 select_pkg_format ${RESULT}
 
+# Detect MTR path - try mariadb path first (11.4+), fallback to mysql path
 if [[ "$PKG_FORMAT" == "rpm" ]]; then
     SYSTEMD_PATH="/usr/lib/systemd/systemd"
-    MTR_PATH="/usr/share/mysql-test"
+    if execInnerDocker "${CONTAINER_NAME}" "test -d /usr/share/mariadb-test" 2>/dev/null; then
+        MTR_PATH="/usr/share/mariadb-test"
+    else
+        MTR_PATH="/usr/share/mysql-test"
+    fi
 else
     SYSTEMD_PATH="systemd"
-    MTR_PATH="/usr/share/mysql/mysql-test"
+    if execInnerDocker "${CONTAINER_NAME}" "test -d /usr/share/mariadb/mariadb-test" 2>/dev/null; then
+        MTR_PATH="/usr/share/mariadb/mariadb-test"
+    else
+        MTR_PATH="/usr/share/mysql/mysql-test"
+    fi
 fi
 
 echo "Reporting test stage: ${STAGE} executed in ${CONTAINER_NAME} container"
