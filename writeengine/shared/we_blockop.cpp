@@ -87,10 +87,6 @@ const uint8_t* BlockOp::getEmptyRowValue(const CalpontSystemCatalog::ColDataType
                                          const int width) const
 {
   auto attrs = datatypes::SystemCatalog::TypeAttributesStd(width, 0, -1);
-  // Bulk operation runtime should have m_typeHandler nullptr calling this
-  // Non-bulk operations runtime branch
-  if (m_typeHandler)
-    return m_typeHandler->getEmptyValueForType(attrs);
 
   // Bulk operation branch
   auto* typeHandler = datatypes::TypeHandler::find(colDataType, attrs);
