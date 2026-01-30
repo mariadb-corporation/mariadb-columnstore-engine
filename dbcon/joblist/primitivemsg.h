@@ -55,6 +55,10 @@ const int8_t COMPARE_NGE = (COMPARE_GE | COMPARE_NOT);  // 0x0e
 const int8_t COMPARE_LIKE = 0x10;
 const int8_t COMPARE_NLIKE = (COMPARE_LIKE | COMPARE_NOT);  // 0x18
 
+// Bitmask comparison: (value & mask) = mask
+// Used for Bloom filter style queries where we check if all bits in mask are set
+const int8_t COMPARE_BITMASK = 0x20;
+
 namespace primitives
 {
 using RIDType = uint16_t;

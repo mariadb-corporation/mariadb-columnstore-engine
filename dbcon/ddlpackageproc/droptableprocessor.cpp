@@ -641,6 +641,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
     auxRoPair.objnum = tableAUXColOid;
     tableColRidList.push_back(auxRoPair);
   }
+  oidList.push_back(roPair.objnum);
 
   // Save the oids to a file
   try
@@ -778,6 +779,7 @@ DropTableProcessor::DDLResult DropTableProcessor::processPackageInternal(ddlpack
   deleteLogFile(DROPTABLE_LOG, roPair.objnum, uniqueId);
   // release the transaction
   // fSessionManager.committed(txnID);
+  tableColRidList.push_back(roPair);
   returnOIDs(tableColRidList, dictOIDList);
   return result;
 }

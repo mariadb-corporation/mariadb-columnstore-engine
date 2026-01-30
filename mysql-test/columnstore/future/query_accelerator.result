@@ -136,8 +136,6 @@ R	F	3785523.00	5337950526.47	5071818532.9420	5274405503.049367	25.525944	35994.0
 SELECT mcs_get_plan('rules') LIKE '%parallel_ces%' AS qa_q1_applied;
 qa_q1_applied
 1
-set columnstore_unstable_optimizer=off;
-set optimizer_switch=default;
 SELECT  "QUERY 2";
 QUERY 2
 QUERY 2
@@ -214,8 +212,6 @@ s_acctbal	s_name	n_name	p_partkey	p_mfgr	s_address	s_phone	s_comment
 -820.89	Supplier#000000409	GERMANY	2156	Manufacturer#5	LyXUYFz7aXrvy65kKAbTatGzGS,NDBcdtD	17-719-517-9836	y final, slow theodolites. furiously regular req
 -845.44	Supplier#000000704	ROMANIA	9926	Manufacturer#5	hQvlBqbqqnA5Dgo1BffRBX78tkkRu	29-300-896-5991	ctions. carefully sly requ
 -942.73	Supplier#000000563	GERMANY	5797	Manufacturer#1	Rc7U1cRUhYs03JD	17-108-537-2691	slyly furiously final decoys; silent, special realms poach f
-set columnstore_unstable_optimizer=on;
-set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 3";
 QUERY 3
 QUERY 3
@@ -612,8 +608,6 @@ c_custkey	c_name	revenue	c_acctbal	n_name	c_address	c_phone	c_comment
 SELECT  "QUERY 11";
 QUERY 11
 QUERY 11
-set columnstore_unstable_optimizer=off;
-set optimizer_switch=default;
 SELECT
 ps_partkey,
 SUM(ps_supplycost * ps_availqty) AS value
@@ -3284,8 +3278,6 @@ FROM revenue0
 ORDER BY s_suppkey;
 s_suppkey	s_name	s_address	s_phone	total_revenue
 677	Supplier#000000677	8mhrffG7D2WJBSQbOGstQ	23-290-639-3315	1614410.2928
-set columnstore_unstable_optimizer=off;
-set optimizer_switch=default;
 SELECT  "QUERY 16";
 QUERY 16
 QUERY 16
@@ -6069,8 +6061,6 @@ Brand#22	PROMO BURNISHED COPPER	14	3
 Brand#43	STANDARD BRUSHED BRASS	23	3
 Brand#44	MEDIUM ANODIZED NICKEL	9	3
 Brand#53	MEDIUM BURNISHED BRASS	49	3
-set columnstore_unstable_optimizer=on;
-set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 17";
 QUERY 17
 QUERY 17
@@ -6087,8 +6077,6 @@ WHERE l_partkey = p_partkey
 );
 avg_yearly
 23512.752857
-set columnstore_unstable_optimizer=off;
-set optimizer_switch=default;
 SELECT  "QUERY 18";
 QUERY 18
 QUERY 18
@@ -6116,8 +6104,6 @@ Customer#000006655	6655	29158	1995-10-21	452805.02	305.00
 Customer#000014110	14110	565574	1995-09-24	425099.85	301.00
 Customer#000001775	1775	6882	1997-04-09	408368.10	303.00
 Customer#000011459	11459	551136	1993-05-19	386812.74	308.00
-set columnstore_unstable_optimizer=on;
-set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
 SELECT  "QUERY 19";
 QUERY 19
 QUERY 19

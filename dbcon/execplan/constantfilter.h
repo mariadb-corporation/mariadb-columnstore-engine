@@ -202,7 +202,7 @@ class ConstantFilter : public Filter
 
   // get all simple columns involved in this column
   const std::vector<SimpleColumn*>& simpleColumnList();
-  const std::vector<SimpleColumn*>& simpleColumnListExtended();
+  // simpleColumnListExtended() is inherited from Filter base class
   // walk through the constant filter operands to re-populate fSimpleColumnList
   void setSimpleColumnList() override;
   void setSimpleColumnListExtended() override;
@@ -215,7 +215,7 @@ class ConstantFilter : public Filter
 
  private:
   std::vector<SimpleColumn*> fSimpleColumnList;
-  std::vector<SimpleColumn*> fSimpleColumnListExtended{};
+  // Note: fSimpleColumnListExtended is inherited from Filter base class
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;
 };
