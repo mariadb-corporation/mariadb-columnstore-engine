@@ -2021,7 +2021,15 @@ void TupleRecursiveUnion::readInput(uint32_t which)
 
     if (!more)
     {
-      fRecursiveSteps[0]->abort();
+      if (fRecursiveSteps.empty())  // preserve existing error code
+      {
+        errorMessage(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_RCTE_UNION_ABORT));
+        status(logging::ERR_RCTE_UNION_ABORT);
+      }
+      else
+      {
+        fRecursiveSteps[0]->abort();
+      }
     }
 
     while (more && !cancelled())

@@ -5380,31 +5380,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable("", table_ptr->table_name.str, alias);
         gwi.tableMap[tan] = make_pair(0, table_ptr);
-        // MCOL-2178 isUnion member only assigned, never used
-        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
         start = table_ptr->derived->first_select();
-
-        // if (with_element->with_anchor)
-        //   end = with_element->first_recursive;
-
-        if (!anchor_plan)
-        {
-          setError(gwi.thd, ER_INTERNAL_ERROR, "No Anchor Query", gwi);
-          CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
-          return ER_INTERNAL_ERROR;
-        }
-
-        // if (table_ptr->view)
-        // {
-        //   gwi.parseErrorText = "Recursive CTE view";
-        // }
-        // else
-        // {
-        //   gwi.parseErrorText = "Recursive CTE";
-        // }
-
-        // setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        // return ER_CHECK_NOT_IMPLEMENTED;
       }
 
       // @todo process from subquery

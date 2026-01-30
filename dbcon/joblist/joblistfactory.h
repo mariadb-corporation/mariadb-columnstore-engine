@@ -38,6 +38,8 @@ class CalpontExecutionPlan;
 
 namespace joblist
 {
+
+const int MaxRecursionDepth = 100;
 class ResourceManager;
 /** @brief create a JobList object from a CalpontExecutionPlan object
  *

@@ -112,6 +112,7 @@
 
 2063	ERR_TNS_DISTINCT_IS_TOO_BIG	DISTINCT memory limit is exceeded whilst running TNS step.
 2064	ERR_OUT_OF_MEMORY	Out of memory.
+2065	ERR_RCTE_UNION_ABORT	Recursive CTE union does not have anchor step to abort Union Step.
 
 # Sub-query errors
 3001	ERR_NON_SUPPORT_SUB_QUERY_TYPE	This subquery type is not supported yet.

@@ -2115,8 +2115,8 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
                                            return false;
                                          });
 
-    CalpontSelectExecutionPlan* baseRecur;
-    CalpontSelectExecutionPlan* currRecur;
+    CalpontSelectExecutionPlan* baseRecur = nullptr;
+    CalpontSelectExecutionPlan* currRecur = nullptr;
 
     SJSTEP sub;
 
@@ -2158,14 +2158,17 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       currRecur->isRecursiveQuery(true);
     }
     baseRecur = new CalpontSelectExecutionPlan(*currRecur);
-    uint32_t depth = (currRecur->maxRecursiveDepth() <= 100) ? csep->maxRecursiveDepth() : 100;
-    // uint32_t depth = 100;
+    uint32_t depth =
+        (currRecur->maxRecursiveDepth() <= MaxRecursionDepth && currRecur->maxRecursiveDepth() > 0)
+            ? csep->maxRecursiveDepth()
+            : MaxRecursionDepth;
     for (uint32 i = 0; i < depth; ++i)
     {
       CalpontSelectExecutionPlan* workingRecur = new CalpontSelectExecutionPlan(*baseRecur);
       CalpontSelectExecutionPlan::SelectList& currDerivedTbList = workingRecur->derivedTableList();
       CalpontSelectExecutionPlan::SelectList& currUnionVec = workingRecur->unionVec();
 
+      assert(currRecur != nullptr);
       currRecur->isRecursiveWithTable(true);
       workingRecur->isRecursiveQuery(true);
 
