@@ -1,0 +1,99 @@
+#
+# MCOL-5983 Bit-wise operations slower than expected
+# Test verifies that (col & mask) = mask pattern works correctly
+# BUG: User variables don't work with COMPARE_BITMASK primitive filter
+#
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5983;
+--enable_warnings
+
+CREATE DATABASE mcol_5983;
+USE mcol_5983;
+
+# Basic test table
+CREATE TABLE t1 (
+  id INT,
+  sig BIGINT UNSIGNED,
+  data VARCHAR(100)
+) ENGINE=columnstore;
+
+INSERT INTO t1 VALUES 
+  (1, 0x3F, 'all bits 0-5 set'),
+  (2, 0x15, 'bits 0,2,4 set'),
+  (3, 0x2A, 'bits 1,3,5 set'),
+  (4, 0x0F, 'bits 0-3 set'),
+  (5, 0x00, 'no bits set');
+
+# Test 1: Basic bitmask with literal - should work
+# Mask 0x15 = bits 0,2,4. Should match id=1,2 only
+SELECT id, HEX(sig), data FROM t1 WHERE (sig & 0x15) = 0x15 ORDER BY id;
+
+# Test 2: Bitmask combined with LIKE (the original performance problem)
+SELECT id, HEX(sig), data FROM t1 
+WHERE (sig & 0x0F) = 0x0F AND data LIKE '%bits%' 
+ORDER BY id;
+
+# Test 3: Exact scenario from MCOL-5983 ticket with bloom64() function
+
+--delimiter //
+CREATE FUNCTION bloom64(s TEXT) RETURNS BIGINT UNSIGNED
+DETERMINISTIC SQL SECURITY INVOKER
+BEGIN
+  DECLARE i   INT DEFAULT 1;
+  DECLARE n   INT DEFAULT CHAR_LENGTH(s);
+  DECLARE sig BIGINT UNSIGNED DEFAULT 0;
+  DECLARE crc INT UNSIGNED;
+
+  WHILE i <= n - 2 DO
+    SET crc = CRC32(SUBSTRING(s, i, 3));
+    SET sig = sig
+              | (CAST(1 AS UNSIGNED) << ( crc         & 63))
+              | (CAST(1 AS UNSIGNED) << ((crc >> 13) & 63))
+              | (CAST(1 AS UNSIGNED) << ((crc >> 26) & 63));
+    SET i = i + 1;
+  END WHILE;
+
+  RETURN sig;
+END//
+--delimiter ;
+
+CREATE TABLE molecole (
+  smiles TEXT NOT NULL,
+  sig BIGINT UNSIGNED NOT NULL
+) ENGINE=columnstore;
+
+INSERT INTO molecole (smiles, sig) VALUES
+  ('CCO', bloom64('CCO')),
+  ('c1ccccc1', bloom64('c1ccccc1')),
+  ('CC(=O)OC1=CC=CC=C1C(=O)O', bloom64('CC(=O)OC1=CC=CC=C1C(=O)O')),
+  ('CCC(=O)O[C@]1(C[C@H]2[C@H]3[C@@H]1[C@]4(C(=O)C(O)=C(C4=O)O)O[C@@H]3C[C@H]2O)C', 
+   bloom64('CCC(=O)O[C@]1(C[C@H]2[C@H]3[C@@H]1[C@]4(C(=O)C(O)=C(C4=O)O)O[C@@H]3C[C@H]2O)C'));
+
+INSERT INTO molecole SELECT * FROM molecole;
+INSERT INTO molecole SELECT * FROM molecole;
+
+# Bloom filter query pattern from ticket:
+# SET @mask := bloom64('substring'); WHERE smiles LIKE '%substring%' AND (sig & @mask) = @mask
+
+SET @mask := bloom64('C(=O)');
+
+# With literal - works correctly
+SELECT COUNT(*) AS with_literal FROM molecole 
+WHERE smiles LIKE '%C(=O)%' AND (sig & bloom64('C(=O)')) = bloom64('C(=O)');
+
+# With variable - BUG (returns wrong count)
+SELECT COUNT(*) AS with_variable FROM molecole 
+WHERE smiles LIKE '%C(=O)%' AND (sig & @mask) = @mask;
+
+DROP FUNCTION bloom64;
+
+# Test 4: User variable - BUG! Returns all rows instead of filtered
+# Expected: same as Test 1 (id=1,2)
+# Actual: returns ALL rows (mask becomes 0)
+SET @mask = 0x15;
+SELECT id, HEX(sig), data FROM t1 WHERE (sig & @mask) = @mask ORDER BY id;
+
+DROP DATABASE mcol_5983;
