@@ -1,0 +1,69 @@
+DROP DATABASE IF EXISTS mcol_5983;
+CREATE DATABASE mcol_5983;
+USE mcol_5983;
+CREATE TABLE t1 (
+id INT,
+sig BIGINT UNSIGNED,
+data VARCHAR(100)
+) ENGINE=columnstore;
+INSERT INTO t1 VALUES 
+(1, 0x3F, 'all bits 0-5 set'),
+(2, 0x15, 'bits 0,2,4 set'),
+(3, 0x2A, 'bits 1,3,5 set'),
+(4, 0x0F, 'bits 0-3 set'),
+(5, 0x00, 'no bits set');
+SELECT id, HEX(sig), data FROM t1 WHERE (sig & 0x15) = 0x15 ORDER BY id;
+id	HEX(sig)	data
+1	3F	all bits 0-5 set
+2	15	bits 0,2,4 set
+SELECT id, HEX(sig), data FROM t1 
+WHERE (sig & 0x0F) = 0x0F AND data LIKE '%bits%' 
+ORDER BY id;
+id	HEX(sig)	data
+1	3F	all bits 0-5 set
+4	F	bits 0-3 set
+CREATE FUNCTION bloom64(s TEXT) RETURNS BIGINT UNSIGNED
+DETERMINISTIC SQL SECURITY INVOKER
+BEGIN
+DECLARE i   INT DEFAULT 1;
+DECLARE n   INT DEFAULT CHAR_LENGTH(s);
+DECLARE sig BIGINT UNSIGNED DEFAULT 0;
+DECLARE crc INT UNSIGNED;
+WHILE i <= n - 2 DO
+SET crc = CRC32(SUBSTRING(s, i, 3));
+SET sig = sig
+| (CAST(1 AS UNSIGNED) << ( crc         & 63))
+| (CAST(1 AS UNSIGNED) << ((crc >> 13) & 63))
+| (CAST(1 AS UNSIGNED) << ((crc >> 26) & 63));
+SET i = i + 1;
+END WHILE;
+RETURN sig;
+END//
+CREATE TABLE molecole (
+smiles TEXT NOT NULL,
+sig BIGINT UNSIGNED NOT NULL
+) ENGINE=columnstore;
+INSERT INTO molecole (smiles, sig) VALUES
+('CCO', bloom64('CCO')),
+('c1ccccc1', bloom64('c1ccccc1')),
+('CC(=O)OC1=CC=CC=C1C(=O)O', bloom64('CC(=O)OC1=CC=CC=C1C(=O)O')),
+('CCC(=O)O[C@]1(C[C@H]2[C@H]3[C@@H]1[C@]4(C(=O)C(O)=C(C4=O)O)O[C@@H]3C[C@H]2O)C', 
+bloom64('CCC(=O)O[C@]1(C[C@H]2[C@H]3[C@@H]1[C@]4(C(=O)C(O)=C(C4=O)O)O[C@@H]3C[C@H]2O)C'));
+INSERT INTO molecole SELECT * FROM molecole;
+INSERT INTO molecole SELECT * FROM molecole;
+SET @mask := bloom64('C(=O)');
+SELECT COUNT(*) AS with_literal FROM molecole 
+WHERE smiles LIKE '%C(=O)%' AND (sig & bloom64('C(=O)')) = bloom64('C(=O)');
+with_literal
+8
+SELECT COUNT(*) AS with_variable FROM molecole 
+WHERE smiles LIKE '%C(=O)%' AND (sig & @mask) = @mask;
+with_variable
+8
+DROP FUNCTION bloom64;
+SET @mask = 0x15;
+SELECT id, HEX(sig), data FROM t1 WHERE (sig & @mask) = @mask ORDER BY id;
+id	HEX(sig)	data
+1	3F	all bits 0-5 set
+2	15	bits 0,2,4 set
+DROP DATABASE mcol_5983;
