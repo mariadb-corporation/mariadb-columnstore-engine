@@ -457,6 +457,18 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       status: ["success", "failure"],
     },
   },
+  mcs_cli_docs_check:: {
+    name: "mcs cli docs check",
+    depends_on: ["publish cmapi build"],
+    image: "docker:git",
+    volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
+    commands: [
+      prepareTestContainer(getContainerName("cmapi-docs"), result, true),
+      "apk add bash && " +
+      get_build_command("check_mcs_cli_docs.sh") +
+      " --container-name " + getContainerName("cmapi-docs"),
+    ],
+  },
   multi_node_mtr:: {
     name: "mtr",
     depends_on: ["dockerhub"],
@@ -643,6 +655,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapitest] +
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
+         (if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise") then [pipeline.mcs_cli_docs_check] else []) +
          (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
