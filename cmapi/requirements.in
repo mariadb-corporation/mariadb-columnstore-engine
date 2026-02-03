@@ -7,7 +7,7 @@ CherryPy==18.10.0
 cryptography==43.0.3
 distro==1.9.0
 furl==2.1.4
-gsutil==5.33
+gsutil==5.35
 lxml==5.3.2
 psutil==7.0.0
 pyotp==2.9.0
