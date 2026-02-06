@@ -1,0 +1,34 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL_6293;
+--enable_warnings
+
+CREATE DATABASE MCOL_6293;
+USE MCOL_6293;
+
+CREATE TABLE t(x int, y text) ENGINE=Columnstore;
+INSERT INTO t VALUES (1,'1'), (2,'2');
+
+let $func_exists=`SELECT COUNT(*) FROM mysql.func WHERE name='calshowpartitions'`;
+--disable_query_log
+if (!$func_exists)
+{
+  CREATE FUNCTION calshowpartitions RETURNS STRING SONAME "ha_columnstore.so";
+}
+--enable_query_log
+
+--let $xpart=`SELECT REGEXP_SUBSTR(CALSHOWPARTITIONS('MCOL_6293', 't', 'x'), '[0-9]+[.][0-9]+[.][0-9]+')`
+--let $ypart=`SELECT REGEXP_SUBSTR(CALSHOWPARTITIONS('MCOL_6293', 't', 'y'), '[0-9]+[.][0-9]+[.][0-9]+')`
+--replace_result $xpart xpart
+--eval SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNSTORE_PARTITIONS WHERE TABLE_SCHEMA='MCOL_6293' AND TABLE_NAME='t' AND COLUMN_NAME='x' AND PARTITION_ID='$xpart'
+--replace_result $ypart ypart
+--eval SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNSTORE_PARTITIONS WHERE TABLE_SCHEMA='MCOL_6293' AND TABLE_NAME='t' AND COLUMN_NAME='y' AND PARTITION_ID='$ypart'
+
+--disable_query_log
+if (!$func_exists)
+{
+  DROP FUNCTION calshowpartitions;
+}
+--enable_query_log
+
+DROP DATABASE MCOL_6293;
+

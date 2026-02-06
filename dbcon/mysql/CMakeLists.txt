@@ -41,6 +41,7 @@ set(libcalmysql_SRCS
     is_columnstore_columns.cpp
     is_columnstore_files.cpp
     is_columnstore_extents.cpp
+    is_columnstore_partitions.cpp
     columnstore_dataload.cpp
 )
 
