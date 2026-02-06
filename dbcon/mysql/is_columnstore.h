@@ -20,21 +20,26 @@
 int is_columnstore_extents_plugin_init(void* p);
 int is_columnstore_files_plugin_init(void* p);
 int is_columnstore_tables_plugin_init(void* p);
+int is_columnstore_partitions_plugin_init(void* p);
 int is_columnstore_columns_plugin_init(void* p);
 
 class InformationSchemaCond
 {
   StringBuffer<MAX_FIELD_WIDTH> mBufferTableName;
   StringBuffer<MAX_FIELD_WIDTH> mBufferTableSchema;
+  StringBuffer<MAX_FIELD_WIDTH> mBufferColumnName;
   String* mTableName;
   String* mTableSchema;
+  String* mColumnName;
 
  public:
   InformationSchemaCond()
    : mBufferTableName(system_charset_info)
    , mBufferTableSchema(system_charset_info)
+   , mBufferColumnName(system_charset_info)
    , mTableName(nullptr)
    , mTableSchema(nullptr)
+   , mColumnName(nullptr)
   {
   }
   const String* tableName() const
@@ -57,6 +62,10 @@ class InformationSchemaCond
   {
     return eqName(mTableName, table) && eqName(mTableSchema, schema);
   }
+  bool matchColumn(const std::string& column) const
+  {
+    return eqName(mColumnName, column);
+  }
 
   void getCondItem(Item_field* item_field, Item* item_const)
   {
@@ -67,6 +76,10 @@ class InformationSchemaCond
     else if (strcasecmp(item_field->field_name.str, "table_schema") == 0)
     {
       mTableSchema = item_const->val_str(&mBufferTableSchema);
+    }
+    else if (strcasecmp(item_field->field_name.str, "column_name") == 0)
+    {
+      mColumnName = item_const->val_str(&mBufferColumnName);
     }
   }
 
