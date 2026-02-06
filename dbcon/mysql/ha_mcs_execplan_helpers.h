@@ -46,7 +46,7 @@ class ValStrStdString : public std::string
     return mIsNull;
   }
 };
-  
+
 bool nonConstFunc(Item_func* ifp);
 // Note: This function might be unused currently but is kept for future compatibility.
 execplan::ConstantColumn* buildConstantColumnMaybeNullFromValStr(const Item* item, const ValStrStdString& valStr,

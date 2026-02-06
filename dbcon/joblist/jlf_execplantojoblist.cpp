@@ -1950,7 +1950,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
 
         if (maskStr == rhsStr)
         {
-          CalpontSystemCatalog::OID tbl_oid = tableOid(sc, jobInfo.csc);
           CalpontSystemCatalog::ColType ct = sc->colType();
 
           if (!sc->schemaName().empty() && sc->isColumnStore())
@@ -1962,6 +1961,18 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
           // Only for integer types
           if (datatypes::isInteger(ct.colDataType))
           {
+            int64_t maskValue = 0;
+            try
+            {
+              maskValue = static_cast<int64_t>(std::stoull(maskStr));
+            }
+            catch (...)
+            {
+              jsv = doExpressionFilter(sf, jobInfo);
+              return jsv;
+            }
+
+            CalpontSystemCatalog::OID tbl_oid = tableOid(sc, jobInfo.csc);
             string alias(extractTableAlias(sc));
             string view(sc->viewName());
 
@@ -1971,20 +1982,6 @@ const JobStepVector doSimpleFilter(SimpleFilter* sf, JobInfo& jobInfo)
             pcs->name(sc->columnName());
             pcs->schema(sc->schemaName());
             pcs->cardinality(sf->cardinality());
-
-            int64_t maskValue = 0;
-            try
-            {
-              // Use stoull for unsigned values, then cast to int64_t
-              // This handles values > INT64_MAX correctly
-              maskValue = static_cast<int64_t>(std::stoull(maskStr));
-            }
-            catch (...)
-            {
-              delete pcs;
-              jsv = doExpressionFilter(sf, jobInfo);
-              return jsv;
-            }
 
             pcs->addFilter(COMPARE_BITMASK, maskValue, 0);
 

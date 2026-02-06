@@ -252,7 +252,7 @@ void gp_walk(const Item* item, void* arg)
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
       std::string funcName = ifp->func_name();
-      
+
       if (!gwip->condPush)
       {
         if (!ifp->fixed())
@@ -357,9 +357,8 @@ void gp_walk(const Item* item, void* arg)
                 logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DATATYPE_NOT_SUPPORT, funcName);
           return;
         }
-        ValStrStdString valStr(ifp);
 
-        execplan::ConstantColumn* cc = buildConstantColumnMaybeNullFromValStr(ifp, valStr, *gwip);
+        execplan::ConstantColumn* cc = buildConstantColumnMaybeNullUsingValStr(ifp, *gwip);
 
         for (uint32_t i = 0; i < ifp->argument_count() && !gwip->rcWorkStack.empty(); i++)
         {
@@ -369,19 +368,10 @@ void gp_walk(const Item* item, void* arg)
 
         // bug 3137. If filter constant like 1=0, put it to ptWorkStack
         // MariaDB bug 750. Breaks if compare is an argument to a function.
-        //				if ((int32_t)gwip->rcWorkStack.size() <=
-        //(gwip->rcBookMarkStack.empty()
-        //?
-        // 0
-        //: gwip->rcBookMarkStack.top())
-        //				&& isPredicateFunction(ifp, gwip))
         if (isPredicateFunction(ifp, gwip))
           gwip->ptWorkStack.push(new execplan::ParseTree(cc));
         else
           gwip->rcWorkStack.push(cc);
-
-        if (!valStr.isNull())
-          IDEBUG(cerr << "Const F&E " << item->full_name() << " evaluate: " << valStr << endl);
 
         break;
       }

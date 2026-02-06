@@ -2835,12 +2835,13 @@ ReturnedColumn* buildReturnedColumnBody(Item* item, gp_walk_info& gwi, bool& non
     }
     case Item::FUNC_ITEM:
     {
+      Item_func* ifp = (Item_func*)item;
+
       if (item->const_item())
       {
         rc = buildConstantColumnMaybeNullUsingValStr(item, gwi);
         break;
       }
-      Item_func* ifp = (Item_func*)item;
       string func_name = ifp->func_name();
 
       // try to evaluate const F&E. only for select clause

@@ -87,9 +87,42 @@ execplan::ConstantColumn* buildConstantColumnMaybeNullFromValStr(const Item* ite
 // Create a ConstantColumn by calling val_str().
 // Supports both NULL and NOT NULL values.
 // Sets the time zone according to gwi.
+// Special handling for user variables that store numeric values as binary.
 
 execplan::ConstantColumn* buildConstantColumnMaybeNullUsingValStr(Item* item, gp_walk_info& gwi)
 {
+  // User variables with numeric values (e.g., SET @v = 0x15) are stored as binary strings.
+  // val_str() returns raw binary data, which breaks atoll() in ConstantColumn constructor.
+  // For binary charset, interpret the string as a little-endian integer.
+  if (item->type() == Item::FUNC_ITEM)
+  {
+    Item_func* ifp = static_cast<Item_func*>(item);
+    if (ifp->functype() == Item_func::GUSERVAR_FUNC)
+    {
+      Item_func_get_user_var* udf = static_cast<Item_func_get_user_var*>(ifp);
+      String buf;
+      String* str = udf->val_str(&buf);
+
+      if (udf->null_value)
+        return new execplan::ConstantColumnNull();
+
+      // Check if this is a binary string (numeric value stored as binary)
+      if (str && str->length() > 0 && str->length() <= 8 &&
+          str->charset() == &my_charset_bin)
+      {
+        // Interpret binary string as little-endian integer
+        uint64_t val = 0;
+        const unsigned char* p = (const unsigned char*)str->ptr();
+        for (size_t i = 0; i < str->length(); i++)
+          val |= ((uint64_t)p[i]) << (i * 8);
+
+        execplan::ConstantColumn* cc = new execplan::ConstantColumn((int64_t)val);
+        cc->timeZone(gwi.timeZone);
+        return cc;
+      }
+    }
+  }
+
   return buildConstantColumnMaybeNullFromValStr(item, ValStrStdString(item), gwi);
 }
 
