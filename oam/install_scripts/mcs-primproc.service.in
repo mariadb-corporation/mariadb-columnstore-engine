@@ -19,4 +19,5 @@ ExecStartPre=/usr/bin/env bash -c "ldconfig -p | grep -m1 libjemalloc > /dev/nul
 ExecStart=/usr/bin/env bash -c "@PRIMPROC_ALLOC_CONFIG@ @LD_PRELOAD_STRING@ exec @ENGINE_BINDIR@/PrimProc"
 
 Restart=on-failure
+@PRIMPROC_TIMEOUT_START_SEC@
 TimeoutStopSec=2
