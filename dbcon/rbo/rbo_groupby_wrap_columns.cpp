@@ -156,6 +156,10 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
     bool ourTable = false;
     for (const auto& tbl : lctx.tableList)
     {
+      if (!tbl.isColumnstore())
+      {
+        continue;
+      }
       if (tbl.schema == sc->schemaName() &&
           (tbl.table == sc->tableName() || (tbl.table.empty() && tbl.alias == sc->tableName())) &&
           tbl.alias == sc->tableAlias())
@@ -515,7 +519,9 @@ void wrapIntoAggregate(execplan::SRCP& rc, ColumnWrapperContext& lctx, RBOptimiz
 
 bool groupByWrapColumnsFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
 {
-  if (csep.tableList().empty())
+  bool hasCSTables = std::any_of(csep.tableList().begin(), csep.tableList().end(),
+                                 [](const auto& table) { return table.isColumnstore(); });
+  if (!hasCSTables)
   {
     return false;
   }
