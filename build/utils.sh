@@ -659,3 +659,16 @@ is_rocky_version_ge() {
 
   return 1
 }
+
+is_majors_equal() {
+  local old="$1"
+  local new="$2"
+
+  old_major=`echo "$old" | sed -E 's/^([0-9]+\.[0-9]+).*/\1/'`
+  new_major=`echo "$new" | sed -E 's/^([0-9]+\.[0-9]+).*/\1/'`
+  if [[ "$old_major" != "$new_major" ]]; then
+    return 1
+  else
+    return 0
+  fi
+}

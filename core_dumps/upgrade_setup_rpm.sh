@@ -9,15 +9,16 @@ RESULT="$2"
 ARCH="$3"
 LINK="$4"
 UPGRADE_TOKEN="$5"
+SERVER="$6"
+
 
 yum clean all
 yum install -y wget which procps-ng diffutils rsyslog
 wget https://dlm.mariadb.com/enterprise-release-helpers/mariadb_es_repo_setup -O mariadb_es_repo_setup
 chmod +x mariadb_es_repo_setup
-bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools --skip-check-installed"
+bash -c "./mariadb_es_repo_setup --token=${UPGRADE_TOKEN} --apply --mariadb-server-version=${VERSION} --skip-maxscale --skip-tools --skip-check-installed" || { message "The version $VERSION is not supported, skipping upgrade test"; exit 0; }
 yum repo-pkgs mariadb-es-main list
-yum -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
-
+yum -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo || { message "The version $VERSION can not be installed, skipping upgrade test"; exit 0; }
 systemctl start mariadb
 systemctl start mariadb-columnstore
 
@@ -26,10 +27,12 @@ INITIAL_VERSION=$(mariadb -e "select @@version;")
 bash -c "./upgrade_data.sh"
 bash -c "./upgrade_verify.sh"
 
+is_majors_equal $VERSION $SERVER || yum -y remove "MariaDB-*"
+
 bash -c "./setup-repo.sh"
 
 yum repo-pkgs repo list
-yum -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo
+yum -y update MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo || { yum -y install MariaDB-server MariaDB-client MariaDB-columnstore-engine MariaDB-columnstore-engine-debuginfo;systemctl start mariadb; systemctl start mariadb-columnstore; }
 
 UPGRADED_VERSION=$(mariadb -e "select @@version;")
 
