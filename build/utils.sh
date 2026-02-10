@@ -672,3 +672,14 @@ is_majors_equal() {
     return 0
   fi
 }
+
+set_cnf_path() {
+  # Set config path prefix based on distro
+  # TODO: fix check: instead of 'rocky' the RPM/DEB check should be used
+  # TODO: check paths in all new versions (it can be also /etc/mariadb/mariadb.conf.d, /etc/mariadb.conf.d
+  if [[ "$DISTRO" == *rocky* ]]; then
+    echo "/etc/my.cnf.d/"
+  else
+    echo "/etc/mysql/mariadb.conf.d/50-"
+  fi
+}
