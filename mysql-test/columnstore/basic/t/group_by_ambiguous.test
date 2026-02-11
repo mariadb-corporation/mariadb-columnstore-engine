@@ -79,6 +79,401 @@ INSERT INTO t7 VALUES(1,10,100),(2,20,200),(1,30,100),(2,40,200);
 # Column reference in both GROUP BY and ORDER BY
 SELECT z AS x, SUM(y) AS sum_y FROM t7 GROUP BY x ORDER BY x;
 
+#
+# Test case: Function on column that is in GROUP BY
+# SELECT length(a) FROM t1 GROUP BY a should work because length(a) depends only on 'a'
+#
+
+# Original bug case: VARCHAR column with length() function
+CREATE TABLE t8 (x varchar(10)) ENGINE=Columnstore;
+INSERT INTO t8 VALUES ('ffff'), ('hello'), ('ffff');
+
+# This was the original failing query
+SELECT length(x) FROM t8 GROUP BY x ORDER BY length(x);
+
+# With column itself
+SELECT x, length(x) FROM t8 GROUP BY x ORDER BY x;
+
+DROP TABLE t8;
+
+# TEXT column tests
+CREATE TABLE t9 (a TEXT) ENGINE=Columnstore;
+INSERT INTO t9 VALUES ('ffff'), ('hello'), ('ffff');
+
+# length() on TEXT
+SELECT length(a) FROM t9 GROUP BY a ORDER BY length(a);
+
+# Multiple functions on the same column
+SELECT length(a), upper(a) FROM t9 GROUP BY a ORDER BY a;
+
+# Function with the column itself
+SELECT a, length(a) FROM t9 GROUP BY a ORDER BY a;
+
+DROP TABLE t9;
+
+# Nested functions test
+CREATE TABLE t10 (a varchar(20)) ENGINE=Columnstore;
+INSERT INTO t10 VALUES ('Hello'), ('World'), ('Hello');
+
+# Nested function: concat(upper(), lower())
+SELECT concat(upper(a), '-', lower(a)) FROM t10 GROUP BY a ORDER BY a;
+
+# Multiple nested functions
+SELECT length(upper(a)), substr(a, 1, 3) FROM t10 GROUP BY a ORDER BY a;
+
+DROP TABLE t10;
+
+# Functions with multiple GROUP BY columns
+CREATE TABLE t11 (a varchar(10), b varchar(10), c int) ENGINE=Columnstore;
+INSERT INTO t11 VALUES ('x', 'y', 1), ('x', 'z', 2), ('x', 'y', 3);
+
+# Function using multiple columns that are all in GROUP BY
+SELECT concat(a, b), length(a) + length(b) FROM t11 GROUP BY a, b ORDER BY a, b;
+
+# Function on one column, aggregate on another
+SELECT length(a), SUM(c) FROM t11 GROUP BY a ORDER BY a;
+
+DROP TABLE t11;
+
+# Numeric functions test
+CREATE TABLE t12 (a int, b decimal(10,2)) ENGINE=Columnstore;
+INSERT INTO t12 VALUES (10, 3.14), (-5, 2.71), (10, 1.41);
+
+# Numeric functions on GROUP BY columns
+SELECT abs(a), round(b) FROM t12 GROUP BY a, b ORDER BY a, b;
+
+# Function with aggregate
+SELECT abs(a), SUM(b) FROM t12 GROUP BY a ORDER BY a;
+
+DROP TABLE t12;
+
+# Test: function on column NOT in GROUP BY
+# MariaDB allows this by default (ONLY_FULL_GROUP_BY is not enabled)
+# The result is non-deterministic but should not error
+CREATE TABLE t13 (a varchar(10), b varchar(10)) ENGINE=Columnstore;
+INSERT INTO t13 VALUES ('x', 'y'), ('x', 'z');
+
+# This returns an arbitrary value from the group (MariaDB extension)
+--disable_result_log
+SELECT length(b) FROM t13 GROUP BY a;
+--enable_result_log
+
+DROP TABLE t13;
+
+# CHAR column test (different from VARCHAR)
+CREATE TABLE t14 (a char(10)) ENGINE=Columnstore;
+INSERT INTO t14 VALUES ('abc'), ('def'), ('abc');
+
+SELECT length(a), trim(a) FROM t14 GROUP BY a ORDER BY a;
+
+DROP TABLE t14;
+
+#
+# Additional tests for ArithmeticColumn and FunctionColumn with GROUP BY
+#
+
+# Test: Arithmetic expression with columns from GROUP BY
+CREATE TABLE t15 (a int, b int, c int) ENGINE=Columnstore;
+INSERT INTO t15 VALUES (1, 2, 100), (1, 3, 200), (2, 4, 300);
+
+# Positive: a+b where both a and b are in GROUP BY
+SELECT a + b, a * b FROM t15 GROUP BY a, b ORDER BY a, b;
+
+# Positive: arithmetic with one GROUP BY column and constant
+SELECT a + 10, a * 2 FROM t15 GROUP BY a ORDER BY a;
+
+# Positive: complex arithmetic expression
+SELECT (a + b) * 2, a - b FROM t15 GROUP BY a, b ORDER BY a, b;
+
+# Positive: arithmetic with aggregate
+SELECT a + 1, SUM(c) FROM t15 GROUP BY a ORDER BY a;
+
+DROP TABLE t15;
+
+# Test: Function with arithmetic inside
+CREATE TABLE t16 (a int, b int) ENGINE=Columnstore;
+INSERT INTO t16 VALUES (10, 20), (10, 30), (20, 40);
+
+# Positive: abs() on arithmetic expression of GROUP BY columns
+SELECT abs(a - b) FROM t16 GROUP BY a, b ORDER BY a, b;
+
+# Positive: multiple functions on arithmetic
+SELECT abs(a - b), a + b FROM t16 GROUP BY a, b ORDER BY a, b;
+
+DROP TABLE t16;
+
+# Test: String functions with concatenation
+CREATE TABLE t17 (first_name varchar(20), last_name varchar(20), age int) ENGINE=Columnstore;
+INSERT INTO t17 VALUES ('John', 'Doe', 30), ('Jane', 'Doe', 25), ('John', 'Smith', 35);
+
+# Positive: concat of GROUP BY columns
+SELECT concat(first_name, ' ', last_name) AS full_name FROM t17 GROUP BY first_name, last_name ORDER BY full_name;
+
+# Positive: length of concatenated GROUP BY columns
+SELECT length(concat(first_name, last_name)) FROM t17 GROUP BY first_name, last_name ORDER BY first_name, last_name;
+
+# Positive: function on GROUP BY column with aggregate
+SELECT upper(first_name), SUM(age) FROM t17 GROUP BY first_name ORDER BY first_name;
+
+DROP TABLE t17;
+
+# Test: Date/time functions
+CREATE TABLE t18 (dt date, val int) ENGINE=Columnstore;
+INSERT INTO t18 VALUES ('2024-01-15', 100), ('2024-01-20', 200), ('2024-02-15', 300);
+
+# Positive: year/month functions on GROUP BY column
+SELECT year(dt), month(dt), SUM(val) FROM t18 GROUP BY dt ORDER BY dt;
+
+# Positive: date arithmetic
+SELECT dt, datediff(dt, '2024-01-01') AS days_since FROM t18 GROUP BY dt ORDER BY dt;
+
+DROP TABLE t18;
+
+# Test: CASE expression with GROUP BY columns
+CREATE TABLE t19 (status int, amount decimal(10,2)) ENGINE=Columnstore;
+INSERT INTO t19 VALUES (1, 100.50), (1, 200.25), (2, 150.75), (2, 50.00);
+
+# Positive: CASE on GROUP BY column
+SELECT CASE status WHEN 1 THEN 'Active' ELSE 'Inactive' END AS status_name, SUM(amount)
+FROM t19 GROUP BY status ORDER BY status;
+
+DROP TABLE t19;
+
+# Test: Subexpressions and complex nesting
+CREATE TABLE t20 (a int, b int, c int) ENGINE=Columnstore;
+INSERT INTO t20 VALUES (1, 2, 10), (1, 3, 20), (2, 2, 30);
+
+# Positive: deeply nested expression
+SELECT ((a + b) * 2) + 1, abs(a - b) + length(cast(a as char)) FROM t20 GROUP BY a, b ORDER BY a, b;
+
+DROP TABLE t20;
+
+# Test: Mixed positive - function on one GROUP BY col, arithmetic on another
+CREATE TABLE t21 (name varchar(20), value int, category int) ENGINE=Columnstore;
+INSERT INTO t21 VALUES ('A', 10, 1), ('B', 20, 1), ('A', 30, 2);
+
+# Positive: different operations on different GROUP BY columns
+SELECT upper(name), value * 2, SUM(category) FROM t21 GROUP BY name, value ORDER BY name, value;
+
+DROP TABLE t21;
+
+# Test: Non-deterministic but allowed (MariaDB extension - ONLY_FULL_GROUP_BY off)
+CREATE TABLE t22 (grp int, val1 int, val2 varchar(10)) ENGINE=Columnstore;
+INSERT INTO t22 VALUES (1, 10, 'a'), (1, 20, 'b'), (2, 30, 'c');
+
+# This is allowed by MariaDB (returns arbitrary value from group)
+--disable_result_log
+SELECT grp, val1 + 5, upper(val2) FROM t22 GROUP BY grp;
+--enable_result_log
+
+DROP TABLE t22;
+
+# Test: Expression in GROUP BY itself
+CREATE TABLE t23 (a int, b int) ENGINE=Columnstore;
+INSERT INTO t23 VALUES (1, 10), (2, 20), (1, 30);
+
+# Positive: GROUP BY expression, SELECT same expression
+SELECT a + b, COUNT(*) FROM t23 GROUP BY a + b ORDER BY a + b;
+
+# Positive: GROUP BY function, SELECT same function
+SELECT abs(a), SUM(b) FROM t23 GROUP BY abs(a) ORDER BY abs(a);
+
+DROP TABLE t23;
+
+# Test: NULL handling in functions
+CREATE TABLE t24 (a varchar(10), b int) ENGINE=Columnstore;
+INSERT INTO t24 VALUES ('x', 1), (NULL, 2), ('x', 3);
+
+# Positive: function handles NULL in GROUP BY column
+--disable_result_log
+SELECT length(a), coalesce(a, 'NULL'), SUM(b) FROM t24 GROUP BY a;
+--enable_result_log
+
+DROP TABLE t24;
+
+# Test: Multiple aggregates with functions on GROUP BY
+CREATE TABLE t25 (category varchar(10), price decimal(10,2), qty int) ENGINE=Columnstore;
+INSERT INTO t25 VALUES ('A', 10.50, 5), ('A', 20.25, 3), ('B', 15.00, 7);
+
+# Positive: multiple aggregates with function on GROUP BY
+SELECT upper(category), SUM(price), AVG(price), COUNT(*), SUM(qty)
+FROM t25 GROUP BY category ORDER BY category;
+
+DROP TABLE t25;
+
+# Test: PAD SPACE collation with length() function
+# 'foo' and 'foo ' should be grouped together due to PAD SPACE collation
+# length() should return the length of the first value in the group
+#
+CREATE TABLE t26 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t26 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# With PAD SPACE collation, 'foo' and 'foo ' are equal, so we get 3 groups
+# length(x) should return 3 for the 'foo'/'foo ' group (first value)
+SELECT length(x) FROM t26 GROUP BY x ORDER BY length(x);
+
+# Verify grouping is correct
+SELECT x, count(*) FROM t26 GROUP BY x ORDER BY x;
+
+# Combined: x, length(x), count(*)
+SELECT x, length(x), count(*) FROM t26 GROUP BY x ORDER BY x;
+
+DROP TABLE t26;
+
+#
+# Test: IF(x IS NULL, ...) with GROUP BY x
+#
+CREATE TABLE t27 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t27 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# IF function depending on GROUP BY column
+SELECT IF(x IS NULL, 'blank', 'not blank') FROM t27 GROUP BY x ORDER BY 1;
+
+# IFNULL function
+SELECT IFNULL(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+
+# COALESCE function
+SELECT COALESCE(x, 'NULL_VALUE') FROM t27 GROUP BY x ORDER BY 1;
+
+DROP TABLE t27;
+
+#
+# Test: rand() with GROUP BY - should return one random value per group
+#
+CREATE TABLE t28 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t28 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# rand() should return 3 rows (one per group)
+--disable_result_log
+SELECT rand() FROM t28 GROUP BY x;
+--enable_result_log
+
+# Verify we get exactly 3 groups
+SELECT COUNT(*) FROM (SELECT rand() FROM t28 GROUP BY x) AS subq;
+
+DROP TABLE t28;
+
+#
+# Test: upper(x) with GROUP BY x
+#
+CREATE TABLE t29 (x varchar(255)) ENGINE=Columnstore;
+INSERT INTO t29 VALUES (NULL), ('foo'), ('bar'), (NULL), ('foo ');
+
+# upper() on GROUP BY column
+SELECT upper(x) FROM t29 GROUP BY x ORDER BY upper(x);
+
+# lower() on GROUP BY column
+SELECT lower(x) FROM t29 GROUP BY x ORDER BY lower(x);
+
+# Combined upper and lower
+SELECT upper(x), lower(x) FROM t29 GROUP BY x ORDER BY x;
+
+DROP TABLE t29;
+
+#
+# Test: concat(a, b) with GROUP BY a, b
+#
+CREATE TABLE t30 (a varchar(10), b varchar(10), c int) ENGINE=Columnstore;
+INSERT INTO t30 VALUES ('x', 'y', 1), ('x', 'z', 2), ('x', 'y', 3), ('a', 'b', 4);
+
+# concat of two GROUP BY columns
+SELECT concat(a, b) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+# concat with separator
+SELECT concat(a, '-', b) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+# concat with count
+SELECT concat(a, b), count(*) FROM t30 GROUP BY a, b ORDER BY a, b;
+
+DROP TABLE t30;
+
+#
+# Test: Conditional functions with GROUP BY (IF, CASE, IFNULL, NULLIF, COALESCE)
+# These functions should be evaluated at row-level, not after aggregation
+# Bug reference: bug3025 - IF() returning wrong results with GROUP BY
+#
+CREATE TABLE t31 (value int) ENGINE=Columnstore;
+INSERT INTO t31 VALUES (1), (1001), (24), (2123), (null), (123), (888), (8421), (231), (-100), (null);
+
+# IF function with comparison - should correctly evaluate for each row
+SELECT value, IF(value<=1000,'<=1000', '>1000')
+FROM t31
+GROUP BY value, IF(value<=1000,'<=1000', '>1000')
+ORDER BY ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+# IF function in projection only
+SELECT IF(value<=1000,'<=1000', '>1000')
+FROM t31
+GROUP BY IF(value<=1000,'<=1000', '>1000'), value
+ORDER BY ISNULL(IF(value<=1000,'<=1000', '>1000')), value;
+
+# IF function grouped by itself
+SELECT IF(value<=1000,'<=1000', '>1000') FROM t31
+GROUP BY IF(value<=1000,'<=1000', '>1000')
+ORDER BY IF(value<=1000,'<=1000', '>1000');
+
+# Nested IF functions (from bug3025)
+SELECT * FROM (
+  SELECT count(*) cnt,
+         if((if(not isnull(value),'notNull','null') like 'null'), null, if(value<1000,'<1000','>=1000')) a
+  FROM t31
+  GROUP BY a, value
+  ORDER BY not isnull(a), value asc
+) b
+ORDER BY cnt, a;
+
+DROP TABLE t31;
+
+#
+# Test: CASE expression with GROUP BY
+#
+CREATE TABLE t32 (status int) ENGINE=Columnstore;
+INSERT INTO t32 VALUES (1), (2), (3), (1), (2), (null), (3), (1);
+
+# CASE expression should evaluate correctly
+SELECT CASE status WHEN 1 THEN 'active' WHEN 2 THEN 'pending' WHEN 3 THEN 'closed' ELSE 'unknown' END as status_text
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+# CASE with count
+SELECT CASE status WHEN 1 THEN 'active' WHEN 2 THEN 'pending' WHEN 3 THEN 'closed' ELSE 'unknown' END as status_text, count(*)
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+# Searched CASE
+SELECT CASE WHEN status < 2 THEN 'low' WHEN status < 3 THEN 'medium' ELSE 'high' END as priority
+FROM t32
+GROUP BY status
+ORDER BY status;
+
+DROP TABLE t32;
+
+#
+# Test: NULLIF function with GROUP BY
+#
+CREATE TABLE t33 (x int) ENGINE=Columnstore;
+INSERT INTO t33 VALUES (1), (2), (1), (3), (2), (1);
+
+# NULLIF should return NULL when values are equal
+SELECT NULLIF(x, 1) FROM t33 GROUP BY x ORDER BY x;
+
+# NULLIF with different comparison
+SELECT x, NULLIF(x, 2) FROM t33 GROUP BY x ORDER BY x;
+
+DROP TABLE t33;
+
+#
+# Test: ELT function with GROUP BY
+#
+CREATE TABLE t34 (idx int) ENGINE=Columnstore;
+INSERT INTO t34 VALUES (1), (2), (3), (1), (2), (null);
+
+# ELT returns the Nth element from the list
+SELECT ELT(idx, 'one', 'two', 'three') FROM t34 GROUP BY idx ORDER BY idx;
+
+DROP TABLE t34;
 
 DROP TABLE t1;
 DROP TABLE t2;
