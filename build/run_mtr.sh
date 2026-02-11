@@ -17,6 +17,10 @@ source $(optparse.build)
 MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
 MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
 
+set_cnf_path
+
+echo "lower_case_table_names=2" > ${CONFIG_PATH_PREFIX}lower_case.cnf
+
 if [[ "${EVENT}" == "cron" ]]; then
     FULL_MTR=true
 fi
@@ -56,7 +60,7 @@ message "Running mtr tests..."
 # disable systemd 'ProtectSystem' (we need to write to /usr/share/)
 execInnerDocker "${CONTAINER_NAME}" "sed -i /ProtectSystem/d \$(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//) || true"
 execInnerDocker "${CONTAINER_NAME}" "systemctl daemon-reload"
-execInnerDocker "${CONTAINER_NAME}" "systemctl start mariadb"
+execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb"
 
 # Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
 execInnerDocker "${CONTAINER_NAME}" "/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local"

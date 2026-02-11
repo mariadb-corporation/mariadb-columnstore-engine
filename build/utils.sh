@@ -672,3 +672,12 @@ is_majors_equal() {
     return 0
   fi
 }
+
+set_cnf_path() {
+  # Set config path prefix based on distro
+  if [[ "$DISTRO" == *rocky* ]]; then
+    CONFIG_PATH_PREFIX="/etc/my.cnf.d/"
+  else
+    CONFIG_PATH_PREFIX="/etc/mysql/mariadb.conf.d/50-"
+  fi
+}
