@@ -35,11 +35,7 @@ prepare_regression() {
   message "Running one-time preparation for regression tests"
 
   # Set config path prefix based on distro
-  if [[ "$DISTRO" == *rocky* ]]; then
-    CONFIG_PATH_PREFIX="/etc/my.cnf.d/"
-  else
-    CONFIG_PATH_PREFIX="/etc/mysql/mariadb.conf.d/50-"
-  fi
+  set_cnf_path
 
   # Clone regression test repo (requires GitHub token)
   REPO_URL="https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"

@@ -19,10 +19,8 @@ MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,o
 
 set_cnf_path
 
-ls /etc/
-ls /etc/mysql/
-echo "[mysqld]" > ${CONFIG_PATH_PREFIX}lower_case.cnf
-echo "lower_case_table_names=2" >> ${CONFIG_PATH_PREFIX}lower_case.cnf
+execInnerDocker "${CONTAINER_NAME}" "echo '[mysqld]' > ${CONFIG_PATH_PREFIX}lower_case.cnf"
+execInnerDocker "${CONTAINER_NAME}" "echo 'lower_case_table_names=2' >> ${CONFIG_PATH_PREFIX}lower_case.cnf"
 
 if [[ "${EVENT}" == "cron" ]]; then
     FULL_MTR=true
