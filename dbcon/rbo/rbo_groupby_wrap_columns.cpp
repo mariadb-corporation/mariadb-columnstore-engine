@@ -44,10 +44,12 @@ struct ColumnWrapperContext
       const std::vector<execplan::SRCP>* gbcols,
       const execplan::CalpontSelectExecutionPlan::TableList& tablelist)
     : gbCols(gbcols)
+    , origGbCols(gbCols)
     , tableList(tablelist)
   {}
 
   const std::vector<execplan::SRCP>* gbCols;
+  const std::vector<execplan::SRCP>* origGbCols;
   const execplan::CalpontSelectExecutionPlan::TableList& tableList;
   std::vector<std::pair<execplan::AggregateColumn*, uint32_t>> aggExprs;
   uint32_t nextId{0};
@@ -408,6 +410,12 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
         constexpr size_t ORD_FLAG{0x40000000};
         if (!(step & (PART_FLAG | ORD_FLAG)))
         {
+          if (step == 0)
+          {
+            stack.gbCols.push_back(lctx.gbCols);
+            lctx.gbCols = lctx.origGbCols;
+          }
+
           // window function param
           if (step > 0)
           {
@@ -424,24 +432,21 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           {
             // there are some params left, push the next one
             stack.frames.push_back(Stack::Frame{wf->functionParms()[step++].get(), 0});
+            continue;
           }
           else if (!wf->partitions().empty())
           {
             // wrap partitions
             step = PART_FLAG | 1;
             stack.frames.push_back(Stack::Frame{wf->partitions()[0].get(), 0});
+            continue;
           }
           else if (!wf->orderBy().fOrders.empty())
           {
             // wrap order by columns
             step = ORD_FLAG | 1;
             stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[0].get(), 0});
-          }
-          else
-          {
-            // all done
-            stack.frames.pop_back();
-            stack.results.push_back(false);
+            continue;
           }
         }
         else if (step & PART_FLAG)
@@ -465,17 +470,14 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
             step++;
             partStep++;
             stack.frames.push_back(Stack::Frame{wf->partitions()[partStep].get(), 0});
+            continue;
           }
           else if (!wf->orderBy().fOrders.empty())
           {
             // wrap order by columns
             step = ORD_FLAG | 1;
             stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[0].get(), 0});
-          }
-          else
-          {
-            stack.frames.pop_back();
-            stack.results.push_back(false);
+            continue;
           }
         }
         else if (step & ORD_FLAG)
@@ -498,13 +500,14 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
             step++;
             ordStep++;
             stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[ordStep].get(), 0});
-          }
-          else
-          {
-            stack.frames.pop_back();
-            stack.results.push_back(false);
+            continue;
           }
         }
+        // all done
+        lctx.gbCols = stack.gbCols.back();
+        stack.gbCols.pop_back();
+        stack.frames.pop_back();
+        stack.results.push_back(false);
         continue;
       }
     }
