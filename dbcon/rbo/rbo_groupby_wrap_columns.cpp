@@ -321,8 +321,19 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
       }
       if (auto* ac = dynamic_cast<execplan::ArithmeticColumn*>(tn))
       {
-        stack.frames.pop_back();
-        stack.frames.push_back(Stack::Frame{ac->expression(), 0});
+        if (step == 0)
+        {
+          step++;
+          stack.gbCols.push_back(lctx.gbCols);
+          lctx.gbCols = &lctx.emptySRCPVec;
+          stack.frames.push_back(Stack::Frame{ac->expression(), 0});
+        }
+        else
+        {
+          lctx.gbCols = stack.gbCols.back();
+          stack.gbCols.pop_back();
+          stack.frames.pop_back();
+        }
         continue;
       }
       if (auto* fc = dynamic_cast<execplan::FunctionColumn*>(tn))
@@ -344,8 +355,8 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           if (step == 0)
           {
             stack.gbCols.push_back(lctx.gbCols);
+            lctx.gbCols = &lctx.emptySRCPVec;
           }
-          lctx.gbCols = &lctx.emptySRCPVec;
           // there are some params left, push the next one
           stack.frames.push_back(Stack::Frame{fc->functionParms()[step++].get(), 0});
         }

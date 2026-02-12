@@ -82,14 +82,6 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
                   bool useUnstableOptimizer)
 {
   std::vector<optimizer::Rule> rules;
-#if 0
-  optimizer::Rule rewriteGroupBy{"rewrite_groupby", optimizer::rewriteGroupBy,
-                                  optimizer::applyRewriteGroupBy};
-  rules.push_back(rewriteGroupBy);
-#endif
-  optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
-                                  optimizer::applyGroupByWrapColumns};
-  rules.push_back(rewriteGroupBy);
 
   if (useUnstableOptimizer)
   {
@@ -100,6 +92,9 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
                                     optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
   }
+  optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
+                                  optimizer::applyGroupByWrapColumns};
+  rules.push_back(rewriteGroupBy);
   optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
                                     optimizer::applyPredicatePushdown};
   rules.push_back(predicatePushdown);
