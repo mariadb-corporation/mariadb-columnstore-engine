@@ -65,6 +65,13 @@ if [[ ! -d ${INSTALLED_MTR_PATH}/suite/columnstore ]]; then
     ln -s ${COLUMNSTORE_MTR_SOURCE} ${INSTALLED_MTR_PATH}/suite
 fi
 
+# MTR may resolve suite paths via mysql-test instead of mariadb-test
+MTR_MYSQL_TEST_SUITE="/usr/share/${SERVERNAME}/mysql-test/suite"
+if [[ -d "/usr/share/${SERVERNAME}/mysql-test" && ! -d "${MTR_MYSQL_TEST_SUITE}/columnstore" ]]; then
+    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_SUITE}/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
+    ln -s ${COLUMNSTORE_MTR_SOURCE} ${MTR_MYSQL_TEST_SUITE}
+fi
+
 if [[ ! -d '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
     message ' ・ Downloading and extracting test data for full MTR to /data'
     bash -c "wget -qO- https://cspkg.s3.amazonaws.com/mtr-test-data.tar.lz4 | lz4 -dc - | tar xf - -C /"
