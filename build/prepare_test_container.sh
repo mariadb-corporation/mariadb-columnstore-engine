@@ -34,15 +34,29 @@ fi
 
 select_pkg_format ${RESULT}
 
+# Detect server version from VERSION file (CI) or PACKAGES_URL (local)
+if [[ -f "$MDB_SOURCE_PATH/VERSION" ]]; then
+    SERVER_VERSION=$(grep -E 'MYSQL_VERSION_(MAJOR|MINOR)' $MDB_SOURCE_PATH/VERSION | cut -d'=' -f2 | paste -sd. -)
+else
+    # Extract from PACKAGES_URL: e.g., /10.6-enterprise/ -> 10.6
+    SERVER_VERSION=$(echo "$PACKAGES_URL" | sed -n 's|.*/\([0-9]\+\.[0-9]\+\)-enterprise\(/.*\)\?|\1|p')
+fi
+message "Server version of build is: ${SERVER_VERSION:-unknown}"
+
+SERVERNAME="mysql"
+if [[ "${SERVER_VERSION%%.*}" -ge 11 ]]; then
+    SERVERNAME="mariadb"
+fi
+
 start_container() {
     message Starting $DOCKER_IMAGE
     if [[ $PKG_FORMAT == "rpm" ]]; then
         SYSTEMD_PATH="/usr/lib/systemd/systemd"
-        MTR_PATH="/usr/share/mysql-test"
+        MTR_PATH="/usr/share/${SERVERNAME}-test"
     else
         # Debian/Ubuntu based
         SYSTEMD_PATH="/lib/systemd/systemd"
-        MTR_PATH="/usr/share/mysql/mysql-test"
+        MTR_PATH="/usr/share/${SERVERNAME}/${SERVERNAME}-test"
     fi
 
     docker_run_args=(
@@ -163,15 +177,6 @@ prepare_container() {
     if [[ "$DO_INSTALL" == "true" ]]; then
         #Install columnstore in container
         message "Installing columnstore..."
-    
-        # Try to detect server version from VERSION file (CI) or PACKAGES_URL (local)
-        if [[ -f "$MDB_SOURCE_PATH/VERSION" ]]; then
-            SERVER_VERSION=$(grep -E 'MYSQL_VERSION_(MAJOR|MINOR)' $MDB_SOURCE_PATH/VERSION | cut -d'=' -f2 | paste -sd. -)
-        else
-            # Extract from PACKAGES_URL: e.g., /10.6-enterprise/ -> 10.6
-            SERVER_VERSION=$(echo "$PACKAGES_URL" | sed -n 's|.*/\([0-9]\+\.[0-9]\+\)-enterprise\(/.*\)\?|\1|p')
-        fi
-        message "Server version of build is: ${SERVER_VERSION:-unknown}"
         if [[ "$RESULT" == *rocky* ]]; then
             execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
         else

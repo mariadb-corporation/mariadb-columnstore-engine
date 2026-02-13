@@ -60,16 +60,16 @@ add_mtr_warn_functions() {
 
 cd ${INSTALLED_MTR_PATH}
 
-if [[ ! -d ${INSTALLED_MTR_PATH}/suite/columnstore ]]; then
+if [[ ! -d "${INSTALLED_MTR_PATH}/suite/columnstore" ]]; then
     message " ・ Adding symlink for columnstore tests to ${INSTALLED_MTR_PATH}/suite/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
-    ln -s ${COLUMNSTORE_MTR_SOURCE} ${INSTALLED_MTR_PATH}/suite
+    ln -s "${COLUMNSTORE_MTR_SOURCE}" "${INSTALLED_MTR_PATH}/suite"
 fi
 
 # MTR may resolve suite paths via mysql-test instead of mariadb-test
-MTR_MYSQL_TEST_SUITE="/usr/share/${SERVERNAME}/mysql-test/suite"
-if [[ -d "/usr/share/${SERVERNAME}/mysql-test" && ! -d "${MTR_MYSQL_TEST_SUITE}/columnstore" ]]; then
-    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_SUITE}/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
-    ln -s ${COLUMNSTORE_MTR_SOURCE} ${MTR_MYSQL_TEST_SUITE}
+MTR_MYSQL_TEST_BASE="/usr/share/${SERVERNAME}/mysql-test"
+if [[ -d "${MTR_MYSQL_TEST_BASE}" && ! -d "${MTR_MYSQL_TEST_BASE}/suite/columnstore" ]]; then
+    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_BASE}/suite/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
+    ln -s "${COLUMNSTORE_MTR_SOURCE}" "${MTR_MYSQL_TEST_BASE}/suite"
 fi
 
 if [[ ! -d '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
