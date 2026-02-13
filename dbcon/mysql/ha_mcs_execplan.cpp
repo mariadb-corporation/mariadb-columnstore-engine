@@ -5677,6 +5677,60 @@ int processHaving(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
   return 0;
 }
 
+execplan::ReturnedColumn* findMatchingAlias(
+        const Item_field* ifp,
+        execplan::CalpontSelectExecutionPlan::ReturnedColumnList& cols)
+{
+  if (!ifp->name.length)
+  {
+    return nullptr;
+  }
+
+  execplan::ReturnedColumn* rc = nullptr;
+  for (uint32_t j = 0; j < cols.size(); j++)
+  {
+    if (strcasecmp(ifp->name.str, cols[j].get()->alias().c_str()) == 0)
+    {
+      ReturnedColumn* matched_col = cols[j].get();
+
+      // If it's an aggregate column, try to unwrap it to get the underlying column
+      AggregateColumn* agg_check = dynamic_cast<AggregateColumn*>(matched_col);
+      if (agg_check)
+      {
+        // Check if the aggregate has parameters and use the first parameter if it's not an aggregate
+        // itself
+        if (!agg_check->aggParms().empty())
+        {
+          ReturnedColumn* inner_col = agg_check->aggParms()[0].get();
+          AggregateColumn* inner_agg = dynamic_cast<AggregateColumn*>(inner_col);
+
+          if (!inner_agg)
+          {
+            // Use the inner non-aggregate column
+            matched_col = inner_col;
+          }
+          else
+          {
+            // It's a nested aggregate, skip it
+            continue;
+          }
+        }
+        else
+        {
+          // Aggregate with no parameters (like COUNT(*)), skip it
+          continue;
+        }
+      }
+
+      rc = matched_col->clone();
+      rc->orderPos(j);
+      break;
+    }
+  }
+
+  return rc;
+}
+
 /*@brief  Process GROUP BY part of the query or sub-query      */
 /***********************************************************
  * DESCRIPTION:
@@ -5828,92 +5882,17 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
       {
         // rc is not a SimpleColumn (e.g., could be an aggregate or other type)
         // Try to match by alias name
-        for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
+        if (auto* nrc = findMatchingAlias(ifp, gwi.returnedCols); nrc != nullptr)
         {
-          if (ifp->name.length && strcasecmp(ifp->name.str, gwi.returnedCols[j].get()->alias().c_str()) == 0)
-          {
-            ReturnedColumn* matched_col = gwi.returnedCols[j].get();
-
-            // If it's an aggregate column, try to unwrap it to get the underlying column
-            AggregateColumn* agg_check = dynamic_cast<AggregateColumn*>(matched_col);
-            if (agg_check)
-            {
-              // Check if the aggregate has parameters and use the first parameter if it's not an aggregate
-              // itself
-              if (!agg_check->aggParms().empty())
-              {
-                ReturnedColumn* inner_col = agg_check->aggParms()[0].get();
-                AggregateColumn* inner_agg = dynamic_cast<AggregateColumn*>(inner_col);
-
-                if (!inner_agg)
-                {
-                  // Use the inner non-aggregate column
-                  matched_col = inner_col;
-                }
-                else
-                {
-                  // It's a nested aggregate, skip it
-                  continue;
-                }
-              }
-              else
-              {
-                // Aggregate with no parameters (like COUNT(*)), skip it
-                continue;
-              }
-            }
-
-            delete rc;
-            rc = matched_col->clone();
-            rc->orderPos(j);
-            break;
-          }
+          delete rc;
+          rc = nrc;
         }
       }
       else
       {
         // buildSimpleColumn() returned NULL - this might be due to ambiguity
         // or column not found. Try to find a matching alias in the SELECT list.
-        for (uint32_t j = 0; j < gwi.returnedCols.size(); j++)
-        {
-          if (ifp->name.length && strcasecmp(ifp->name.str, gwi.returnedCols[j].get()->alias().c_str()) == 0)
-          {
-            ReturnedColumn* matched_col = gwi.returnedCols[j].get();
-
-            // If it's an aggregate column, try to unwrap it to get the underlying column
-            AggregateColumn* agg_check = dynamic_cast<AggregateColumn*>(matched_col);
-            if (agg_check)
-            {
-              // Check if the aggregate has parameters and use the first parameter if it's not an aggregate
-              // itself
-              if (!agg_check->aggParms().empty())
-              {
-                ReturnedColumn* inner_col = agg_check->aggParms()[0].get();
-                AggregateColumn* inner_agg = dynamic_cast<AggregateColumn*>(inner_col);
-
-                if (!inner_agg)
-                {
-                  // Use the inner non-aggregate column
-                  matched_col = inner_col;
-                }
-                else
-                {
-                  // It's a nested aggregate, skip it
-                  continue;
-                }
-              }
-              else
-              {
-                // Aggregate with no parameters (like COUNT(*)), skip it
-                continue;
-              }
-            }
-
-            rc = matched_col->clone();
-            rc->orderPos(j);
-            break;
-          }
-        }
+        rc = findMatchingAlias(ifp, gwi.returnedCols);
       }
 
       if (!rc)

@@ -185,12 +185,13 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
     return false;
   }
 
+  // In this case sorting direction is not significant, so set it to the default value
+  // for columns comparison (actual for ORDER BY columns)
   bool asc = rc->asc();
   rc->asc(true);
   bool ret = true;
   for (const auto& gbCol : *lctx.gbCols)
   {
-    // FIXME
     if (*rc == *gbCol)
     {
       ret = false;
