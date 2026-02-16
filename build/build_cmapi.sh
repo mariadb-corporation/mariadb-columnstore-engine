@@ -8,7 +8,6 @@ set -eo pipefail
 
 SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
-MDB_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../../../..)
 
 source "$SCRIPT_LOCATION"/utils.sh
 
@@ -100,7 +99,7 @@ build_cmapi() {
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
   ./cleanup.sh
   CMAPI_GIT_REVISION_ARG="$(get_cmapi_git_revision)"
-  cmake -D"${PKG_FORMAT^^}"=1 -DSERVER_DIR="$MDB_SOURCE_PATH" -DCMAPI_GIT_REVISION="$CMAPI_GIT_REVISION_ARG" . && make package
+  cmake -D"${PKG_FORMAT^^}"=1 -DCMAPI_GIT_REVISION="$CMAPI_GIT_REVISION_ARG" . && make package
 }
 install_deps
 build_cmapi

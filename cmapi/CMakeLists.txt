@@ -9,11 +9,7 @@ set(CPACK_PACKAGE_NAME "MariaDB-columnstore-cmapi")
 # use columnstore package versioning
 set(CMAPI "YES")
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-message(STATUS "GET SERVER_DIR from input argument ${SERVER_DIR}")
-set(SERVER_SOURCE_DIR "${SERVER_DIR}")
 include(cmapi_misc)
-# Get mysql version
-get_mysql_version()
 # get CMAPI version from Columnstore version
 set(ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
