@@ -17,6 +17,13 @@ source $(optparse.build)
 MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
 MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
 
+for flag in CONTAINER_NAME DISTRO EVENT; do
+    if [[ -z "${!flag}" ]]; then
+        error "Missing required flag: -${flag:0:1} / --${flag,,}"
+        exit 1
+    fi
+done
+
 if [[ "${EVENT}" == "cron" ]]; then
     FULL_MTR=true
 fi
@@ -37,17 +44,14 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-for flag in CONTAINER_NAME DISTRO EVENT; do
-    if [[ -z "${!flag}" ]]; then
-        error "Missing required flag: -${flag:0:1} / --${flag,,}"
-        exit 1
-    fi
-done
-
 if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     error "Container '${CONTAINER_NAME}' is not running."
     exit 1
 fi
+
+CONFIG_PATH_PREFIX=$(set_cnf_path)
+echo "Put lower_case_table_names=2 into ${CONFIG_PATH_PREFIX}lower_case.cnf"
+execInnerDocker "${CONTAINER_NAME}" "printf '[mysqld]\nlower_case_table_names=2\n' > ${CONFIG_PATH_PREFIX}lower_case.cnf"
 
 select_pkg_format ${DISTRO}
 
@@ -56,7 +60,7 @@ message "Running mtr tests..."
 # disable systemd 'ProtectSystem' (we need to write to /usr/share/)
 execInnerDocker "${CONTAINER_NAME}" "sed -i /ProtectSystem/d \$(systemctl show --property FragmentPath mariadb | sed s/FragmentPath=//) || true"
 execInnerDocker "${CONTAINER_NAME}" "systemctl daemon-reload"
-execInnerDocker "${CONTAINER_NAME}" "systemctl start mariadb"
+execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb"
 
 # Set RAM consumption limits to avoid RAM contention b/w mtr and regression steps.
 execInnerDocker "${CONTAINER_NAME}" "/usr/bin/mcsSetConfig SystemConfig CGroup just_no_group_use_local"

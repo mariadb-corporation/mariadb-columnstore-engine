@@ -1,1 +1,2 @@
 --plugin-load-add=$HA_COLUMNSTORE_SO
+--lower_case_table_names=2
