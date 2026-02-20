@@ -99,7 +99,25 @@ IF(RPM)
     SET(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/postinst)
     SET(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prerm)
     SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${ETC_DIR} ${SHARE_DIR})
-    SET(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAPI_CONF_FILEPATH}")
+
+    # Define %ignore as a comment so RPM doesn't claim ownership of shared directories
+    set(CPACK_RPM_SPEC_MORE_DEFINE
+        "${CPACK_RPM_SPEC_MORE_DEFINE}
+        %define ignore \#"
+    )
+
+    set(ignored
+        "%ignore /usr/share/man"
+        "%ignore /usr/share/man/man1"
+        "%ignore /usr/lib/systemd"
+        "%ignore /usr/lib/systemd/system"
+    )
+
+    # Combine your config file and your ignores into the same USER_FILELIST
+    set(CPACK_RPM_USER_FILELIST
+        "%config(noreplace) ${CMAPI_CONF_FILEPATH}"
+        ${ignored}
+    )
 
     SET(CPACK_RPM_PACKAGE_OBSOLETES "mariadb-columnstore-cmapi")
     
@@ -111,7 +129,7 @@ IF(RPM)
     if(LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma|redhatenterprise")
         set(OS_NAME_SHORT "el")
         if(OS_VERSION_MAJOR GREATER_EQUAL 9)
-            set(CPACK_RPM_PACKAGE_REQUIRES "libxcrypt-compat")
+            set(CPACK_RPM_PACKAGE_REQUIRES "${CPACK_RPM_PACKAGE_REQUIRES}, libxcrypt-compat")
         endif()
     else()
         set(OS_NAME_SHORT "unknown")
