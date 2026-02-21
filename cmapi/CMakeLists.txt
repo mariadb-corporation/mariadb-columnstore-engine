@@ -8,6 +8,7 @@ SET(CPACK_PACKAGE_NAME "MariaDB-columnstore-cmapi")
 SET(CMAPI "YES")
 SET(ENGINE_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/../cmake)
+include(cmake/cmapi_misc.cmake)
 INCLUDE(columnstore_version)
 SET(PACKAGE_VERSION "${CMAPI_VERSION_MAJOR}.${CMAPI_VERSION_MINOR}.${CMAPI_VERSION_PATCH}")
 
@@ -98,10 +99,52 @@ IF(RPM)
     SET(CPACK_RPM_POST_INSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/postinst)
     SET(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prerm)
     SET(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION ${ETC_DIR} ${SHARE_DIR})
-    SET(CPACK_RPM_USER_FILELIST "%config(noreplace) ${CMAPI_CONF_FILEPATH}")
+
+    # Define %ignore as a comment so RPM doesn't claim ownership of shared directories
+    set(CPACK_RPM_SPEC_MORE_DEFINE
+        "${CPACK_RPM_SPEC_MORE_DEFINE}
+        %define ignore \#"
+    )
+
+    set(ignored
+        "%ignore /usr/share/man"
+        "%ignore /usr/share/man/man1"
+        "%ignore /usr/lib/systemd"
+        "%ignore /usr/lib/systemd/system"
+    )
+
+    # Combine your config file and your ignores into the same USER_FILELIST
+    set(CPACK_RPM_USER_FILELIST
+        "%config(noreplace) ${CMAPI_CONF_FILEPATH}"
+        ${ignored}
+    )
 
     SET(CPACK_RPM_PACKAGE_OBSOLETES "mariadb-columnstore-cmapi")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl")
+    
+    set(CPACK_RPM_PACKAGE_REQUIRES "curl")
+    get_linux_lsb_release_information()
+
+    string(REGEX MATCH "^[0-9]+" OS_VERSION_MAJOR "${LSB_RELEASE_VERSION_SHORT}")
+    message(STATUS ${OS_VERSION_MAJOR})
+    if(LSB_RELEASE_ID_SHORT MATCHES "centos|rocky|rhel|alma|redhatenterprise")
+        set(OS_NAME_SHORT "el")
+        if(OS_VERSION_MAJOR GREATER_EQUAL 9)
+            set(CPACK_RPM_PACKAGE_REQUIRES "${CPACK_RPM_PACKAGE_REQUIRES}, libxcrypt-compat")
+        endif()
+    else()
+        set(OS_NAME_SHORT "unknown")
+    endif()
+    set(OS_VERSION "${OS_NAME_SHORT}${OS_VERSION_MAJOR}")
+    message(STATUS "OS_VERSION ${OS_VERSION}")
+
+    set(CPACK_RPM_PACKAGE_FILE_NAME
+        "${CPACK_PACKAGE_NAME}-${PACKAGE_VERSION}-${CMAPI_VERSION_RELEASE}.${OS_VERSION}.${CMAKE_HOST_SYSTEM_PROCESSOR}"
+    )
+    message(STATUS "CPACK_RPM_PACKAGE_FILE_NAME ${CPACK_RPM_PACKAGE_FILE_NAME}")
+    set(CPACK_PACKAGE_FILE_NAME ${CPACK_RPM_PACKAGE_FILE_NAME})
+    # version and release the same as in Columnstore engine package
+    set(CPACK_RPM_PACKAGE_VERSION "${PACKAGE_VERSION}")
+    set(CPACK_RPM_PACKAGE_RELEASE "${CMAPI_VERSION_RELEASE}.${OS_VERSION}")
 ENDIF()
 
 OPTION(DEB "Build a DEB" OFF)
@@ -123,8 +166,26 @@ IF(DEB)
   SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/prerm;${CMAKE_CURRENT_SOURCE_DIR}/postinst;${CMAKE_CURRENT_SOURCE_DIR}/conffiles")
 
   SET(CPACK_DEBIAN_PACKAGE_REPLACES "mariadb-columnstore-cmapi")
-  SET(CPACK_RPM_PACKAGE_REQUIRES "curl")
+  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "curl")
+  set(PATCHLEVEL "+maria")
+  get_linux_lsb_release_information()
+  string(REGEX MATCH "^..." LSBID ${LSB_RELEASE_ID_SHORT})
+  message(STATUS "LSBID ${LSBID}")
+  string(REPLACE "." "" LSBVERSION ${LSB_RELEASE_VERSION_SHORT})
+  message(STATUS "LSBVERSION ${LSBVERSION}")
+  execute_process(
+      COMMAND dpkg-architecture -q DEB_BUILD_ARCH
+      OUTPUT_VARIABLE ARCHITECTURE
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  message(STATUS "ARCHITECTURE detected ${ARCHITECTURE}")
+  set(CPACK_DEBIAN_PACKAGE_FILE_NAME
+    "${CPACK_PACKAGE_NAME}_${PACKAGE_VERSION}${PATCHLEVEL}~${LSBID}${LSBVERSION}_${ARCHITECTURE}"
+  )
+  message(STATUS "CPACK_DEBIAN_PACKAGE_FILE_NAME ${CPACK_DEBIAN_PACKAGE_FILE_NAME}")
+  set(CPACK_PACKAGE_FILE_NAME ${CPACK_DEBIAN_PACKAGE_FILE_NAME})
+  # making possible to store several cmapi packages in one repo (same version as in Columnstore engine package)
+  set(CPACK_DEBIAN_PACKAGE_VERSION "${PACKAGE_VERSION}~${LSBID}${LSBVERSION}")
 ENDIF()
 
-SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${PACKAGE_VERSION}.${CMAKE_HOST_SYSTEM_PROCESSOR}")
 INCLUDE (CPack)
