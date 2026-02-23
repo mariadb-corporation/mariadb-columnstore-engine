@@ -682,7 +682,13 @@ local AllPipelines =
   [
     Pipeline(any_branch, p, "custom", a, server)
     for p in platforms[current_branch]
-    for server in servers[current_branch] + extra_servers[current_branch]
+    for server in servers[current_branch]
+    for a in archs
+  ] +
+  [
+    Pipeline(any_branch, p, "custom", a, server, "", "", ["regression"])
+    for p in extra_servers_platforms[current_branch]
+    for server in extra_servers[current_branch]
     for a in archs
   ] +
   // clang
