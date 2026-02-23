@@ -154,7 +154,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests_base = if (event == "cron") then [
+  local regression_tests_base = if (event != "cron") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
