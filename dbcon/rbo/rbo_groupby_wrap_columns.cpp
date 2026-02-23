@@ -185,20 +185,24 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
     return false;
   }
 
-  // In this case sorting direction is not significant, so set it to the default value
+  // In this case sorting direction & joinInfo is not significant, so set it to the default value
   // for columns comparison (actual for ORDER BY columns)
+  // Old values are not restored after exceptions, as the entire query will be aborted in this case
   bool asc = rc->asc();
+  auto joinInfo = rc->joinInfo();
   rc->asc(true);
+  rc->joinInfo(0);
   bool ret = true;
   for (const auto& gbCol : *lctx.gbCols)
   {
-    if (*rc == *gbCol)
+    if (*rc == *gbCol && rc->derivedRefCol() == gbCol->derivedRefCol())
     {
       ret = false;
       break;
     }
   }
   rc->asc(asc);
+  rc->joinInfo(joinInfo);
   return ret;
 }
 
