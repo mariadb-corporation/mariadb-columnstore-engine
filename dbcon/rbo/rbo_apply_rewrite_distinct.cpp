@@ -47,7 +47,16 @@ execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& 
 
   // fill TreeNode data
   rcCloned->derivedTable(tableAlias);
-  rcCloned->derivedRefCol(rc.get());
+  if (auto* rcRef = rc->derivedRefCol())
+  {
+    rcCloned->derivedRefCol(rcRef);
+    rcRef->incRefCount();
+  }
+  else
+  {
+    rcCloned->derivedRefCol(rc.get());
+    rc->incRefCount();
+  }
   rcCloned->resultType(rc->resultType());
   rcCloned->operationType(rc->operationType());
   rcCloned->colPosition(colPos);
@@ -68,7 +77,6 @@ execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& 
   {
     rcCloned->timeZone(rcwc->timeZone());
   }
-  rc->incRefCount();
 
   auto colName = getSimpleColumnAlias(*rc, colPos);
   rcCloned->columnName(colName);
