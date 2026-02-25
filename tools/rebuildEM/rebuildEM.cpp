@@ -32,6 +32,24 @@
 
 using namespace idbdatafile;
 
+#define idblog(x)                                                                       \
+  do                                                                                       \
+  {                                                                                        \
+    {                                                                                      \
+      std::ostringstream os;                                                               \
+                                                                                           \
+      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
+      std::cerr << os.str() << std::endl;                                                  \
+      logging::MessageLog logger((logging::LoggingID()));                                  \
+      logging::Message message;                                                            \
+      logging::Message::Args args;                                                         \
+                                                                                           \
+      args.add(os.str());                                                                  \
+      message.format(args);                                                                \
+      logger.logErrorMessage(message);                                                     \
+    }                                                                                      \
+  } while (0)
+
 namespace RebuildExtentMap
 {
 std::unordered_map<uint32_t, FileId> systemCatalogMap = {
@@ -313,6 +331,10 @@ int32_t EMReBuilder::rebuildExtentMap()
     {
       try
       {
+	      idblog("creating extent OID " << fileId.oid);
+	      std::vector<BRM::EMEntry> entries;
+              getEM().getExtents(fileId.oid, entries, true, false);
+	      idblog("  " << entries.size() << " extent map entries found");
         if (fileId.isDict)
         {
           // Create a dictionary extent for the given oid, partition,

@@ -240,7 +240,9 @@ class ChunkManagerWrapperDict : public ChunkManagerWrapper
                           uint32_t segment, execplan::CalpontSystemCatalog::ColDataType colDataType,
                           uint32_t colWidth, uint32_t compressionType);
 
-  ~ChunkManagerWrapperDict() = default;
+  ~ChunkManagerWrapperDict()
+  {
+  }
   ChunkManagerWrapperDict(const ChunkManagerWrapperDict& other) = delete;
   ChunkManagerWrapperDict& operator=(const ChunkManagerWrapperDict& other) = delete;
   ChunkManagerWrapperDict(ChunkManagerWrapperDict&& other) = delete;
