@@ -1,0 +1,75 @@
+#
+# Test 1: Verify routines exist in queryacc schema
+#
+ROUTINE_SCHEMA	ROUTINE_NAME	ROUTINE_TYPE
+queryacc	disable_queryacc	PROCEDURE
+queryacc	enable_queryacc	FUNCTION
+queryacc	with_queryacc	PROCEDURE
+#
+# Test 2: enable_queryacc() changes session variables correctly
+#
+unstable_optimizer_after_enable
+1
+parallel_factor_after_enable
+5
+optimizer_switch_changed
+1
+#
+# Test 3: disable_queryacc() restores optimizer_switch
+#
+unstable_optimizer_after_disable
+0
+optimizer_switch_still_off
+0
+#
+# Test 4: enable/disable round-trip preserves original optimizer_switch
+#
+before_enable
+1
+during_enable
+1
+after_disable
+1
+#
+# Test 5: parallel_factor after enable/disable round-trip
+#
+pf_before_enable
+50
+pf_during_enable
+5
+pf_after_disable
+5
+#
+# Test 6: unstable_optimizer after enable/disable when already ON
+#
+unstable_before_enable
+1
+unstable_after_disable_was_on
+0
+#
+# Test 7: with_queryacc() from queryacc database
+#
+id	val
+1	10
+2	20
+3	30
+unstable_after_with_queryacc_ok
+0
+#
+# Test 8: with_queryacc() error handling — bad query
+#
+ERROR 42S02: Table 'mcol6298_test.nonexistent_table' doesn't exist
+unstable_after_error_handling
+0
+#
+# Test 9: with_queryacc() from a non-queryacc database
+#
+id	val
+1	10
+2	20
+3	30
+unstable_after_with_queryacc_other_db
+0
+#
+# Cleanup
+#
