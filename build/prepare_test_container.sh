@@ -189,6 +189,11 @@ prepare_container() {
         fi
     fi
 
+    if [[ "$DO_INSTALL" == "true" ]]; then
+        message "Running install_mcs_mysql.sh to create UDFs and queryacc routines..."
+        execInnerDocker "$CONTAINER_NAME" "systemctl start mariadb && install_mcs_mysql.sh" || warn "install_mcs_mysql.sh failed (non-critical)"
+    fi
+
     sleep 5
     message "PrepareTestStage completed in $CONTAINER_NAME"
 }
