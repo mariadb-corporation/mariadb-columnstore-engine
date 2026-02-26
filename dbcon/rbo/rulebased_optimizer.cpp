@@ -91,13 +91,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
     optimizer::Rule rewriteDistinct{"rewrite_distinct", optimizer::rewriteDistinctFilter,
                                     optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
+    optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
+                                    optimizer::applyPredicatePushdown};
+    rules.push_back(predicatePushdown);
+
   }
   optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
                                   optimizer::applyGroupByWrapColumns};
   rules.push_back(rewriteGroupBy);
-  optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
-                                    optimizer::applyPredicatePushdown};
-  rules.push_back(predicatePushdown);
 
   return optimizeCSEPWithRules(root, rules, ctx);
 }
