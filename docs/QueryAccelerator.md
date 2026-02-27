@@ -9,12 +9,24 @@ Under the hood Columnstore:
 
 # How to enable Query Accelerator
 
-- One has to set `columnstore_innodb_queries_use_mcs = on` in MariaDB configuration file and restart MariaDB server(my.cnf).
-- Set a number of parameters in a client session:
+- Set `columnstore_innodb_queries_use_mcs = on` in MariaDB configuration file and restart MariaDB server (my.cnf).
+- Use the convenience routines in the `queryacc` schema (automatically created during ColumnStore installation):
 ```SQL
-set columnstore_unstable_optimizer=on;
-set optimizer_switch="index_merge=off,index_merge_union=off,index_merge_sort_union=off,index_merge_intersection=off,index_merge_sort_intersection=off,index_condition_pushdown=off,derived_merge=off,derived_with_keys=off,firstmatch=off,loosescan=off,materialization=on,in_to_exists=off,semijoin=off,partial_match_rowid_merge=off,partial_match_table_scan=off,subquery_cache=off,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=off,semijoin_with_cache=off,join_cache_incremental=off,join_cache_hashed=off,join_cache_bka=off,optimize_join_buffer_size=off,table_elimination=off,extended_keys=off,exists_to_in=off,orderby_uses_equalities=off,condition_pushdown_for_derived=on,split_materialized=off,condition_pushdown_for_subquery=off,rowid_filter=off,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=off,cset_narrowing=off,sargable_casefold=off";
+-- Enable Query Accelerator and save previous settings
+SET @old_settings = queryacc.enable_queryacc();
+
+-- Run your queries
+SELECT ...;
+
+-- Disable and restore previous settings
+CALL queryacc.disable_queryacc(@old_settings);
 ```
+- To run a single query with Query Accelerator without manually managing enable/disable:
+```SQL
+CALL queryacc.with_queryacc('SELECT ...');
+```
+
+> **Warning:** Do not leave Query Accelerator enabled for an entire session. Always call `disable_queryacc()` after your queries, or use `with_queryacc()` which handles this automatically.
 
 # Enable ColumnStore processing for InnoDB tables
 There must be Engine Independent statistics for InnoDB table index column to be used for Query Accelerator.
@@ -29,6 +41,8 @@ analyze table <table_name> persistent for columns (<column_name>) indexes();
 - `columnstore_query_accel_parallel_factor`: controls the number of parallel ranges to be used for Query Accelerator
 
 Watch out `max_connections`. If you set `columnstore_query_accel_parallel_factor` to a high value, you may need to increase `max_connections` to avoid connection pool exhaustion.
+
+> **Note:** `enable_queryacc()` sets `columnstore_query_accel_parallel_factor` to 5 by default. To use a different value, set it manually after calling `enable_queryacc()`.
 
 # How to verify Query Accelerator is being used
 There are two ways to verify Query Accelerator is being used:
