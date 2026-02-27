@@ -56,7 +56,7 @@ class SystemdDispatcher(BaseDispatcher):
         """Check if systemd service is running.
 
         :param service: service name
-        :type service: str, optional
+        :type service: str
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
         :return: True if service is running, otherwise False
@@ -65,7 +65,7 @@ class SystemdDispatcher(BaseDispatcher):
         ..Note:
             Not working with multiple services at a time.
         """
-        logging.debug(f'Checking "{service}" is running.')
+        logging.debug(f'Checking if "{service}" is running.')
         # TODO: remove conditions below when we'll drop CentOS 7 support
         cmd = 'show -p ActiveState --value'
         if cls.systemctl_version < 230:  # not supported --value in old version

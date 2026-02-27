@@ -1,24 +1,31 @@
 from __future__ import annotations
+
 import logging
 import os.path
 import socket
+import time
+from copy import deepcopy
 from time import sleep
 
 import psutil
 
-from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import MCS_INSTALL_BIN, ALL_MCS_PROGS
-from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
-from cmapi_server.process_dispatchers.container import (
-    ContainerDispatcher
+from cmapi_server.constants import (
+    ALL_MCS_PROGS,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    MCS_INSTALL_BIN,
+    MCSProgs,
+    ProgInfo,
 )
+from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.process_dispatchers.base import BaseDispatcher
+from cmapi_server.process_dispatchers.container import ContainerDispatcher
+from cmapi_server.process_dispatchers.systemd import SystemdDispatcher
 from mcs_node_control.models.dbrm import DBRM
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT
 from mcs_node_control.models.misc import get_workernodes
 from mcs_node_control.models.process import Process
 
-
-PROCESS_DISPATCHERS = {
+PROCESS_DISPATCHERS: dict[str, type[BaseDispatcher]] = {
     'systemd': SystemdDispatcher,
     # could be used in docker containers and OSes w/o systemd
     'container': ContainerDispatcher,
@@ -32,10 +39,10 @@ class MCSProcessManager:
     e.g. re/-start or stop systemd services, run executable.
     """
     CONTROLLER_MAX_RETRY = 30
-    mcs_progs = {}
+    mcs_progs: dict[str, ProgInfo] = {}
     mcs_version_info = None
     dispatcher_name = None
-    process_dispatcher = None
+    process_dispatcher: BaseDispatcher = None
 
     @classmethod
     def _get_prog_name(cls, name: str) -> str:
@@ -47,12 +54,13 @@ class MCSProcessManager:
         :rtype: str
         """
         if cls.dispatcher_name == 'systemd':
-            return ALL_MCS_PROGS[name].service_name
+            prog = MCSProgs(name)
+            return ALL_MCS_PROGS[prog].service_name
         return name
 
     @classmethod
     def _get_sorted_progs(
-        cls, is_primary: bool, reverse: bool = False
+        cls, is_primary: bool, reverse: bool = False, is_read_replica: bool = False
     ) -> dict:
         """Get sorted services dict.
 
@@ -65,13 +73,20 @@ class MCSProcessManager:
         """
         unsorted_progs: dict
         if is_primary:
-            unsorted_progs = cls.mcs_progs
+            unsorted_progs = deepcopy(cls.mcs_progs)
         else:
             unsorted_progs = {
                 prog_name: prog_info
                 for prog_name, prog_info in cls.mcs_progs.items()
                 if prog_name not in PRIMARY_PROGS
             }
+
+        if is_read_replica:
+            logging.debug('Node is a read replica, skipping WriteEngine')
+            unsorted_progs.pop(
+                MCSProgs.WRITE_ENGINE_SERVER, None
+            )
+
         if reverse:
             # stop sequence builds using stop_priority property
             return dict(
@@ -89,7 +104,8 @@ class MCSProcessManager:
         if cls.mcs_progs:
             logging.warning('Mcs ProcessHandler already detected processes.')
 
-        for prog_name, prog_info in ALL_MCS_PROGS.items():
+        for prog, prog_info in ALL_MCS_PROGS.items():
+            prog_name = prog.value
             if os.path.exists(os.path.join(MCS_INSTALL_BIN, prog_name)):
                 cls.mcs_progs[prog_name] = prog_info
 
@@ -118,7 +134,7 @@ class MCSProcessManager:
                 'Please try to update your CMAPI version or contact support.'
             )
         logging.info(
-            f'Detected {len(cls.mcs_progs)} MCS services.'
+            f'Detected {len(cls.mcs_progs)} MCS services. '
             f'MCS version is {cls.mcs_version_info}'
         )
         # TODO: For next releases. Do we really need custom dispatchers?
@@ -156,7 +172,8 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         while attempts > 0 and len(workernodes) > 0:
             logging.debug(f'Waiting for "{list(workernodes)}"....{attempts}')
-            # creating a separated list with workernode names
+            start = time.monotonic()
+            # creating a separate list with workernode names
             # for safe deleting items from source dict
             for name in list(workernodes):
                 try:
@@ -171,15 +188,25 @@ class MCSProcessManager:
                         )
                     )
                 except (ConnectionRefusedError, socket.timeout):
-                    logging.debug(
+                    logging.info(
                         f'"{name}" {workernodes[name]["IPAddr"]}:'
                         f'{workernodes[name]["Port"]} not started yet.'
                     )
                 else:
+                    logging.debug(f'Workernode {workernodes[name]["IPAddr"]}:{workernodes[name]["Port"]} started.')
                     # delete started workernode from workernodes dict
                     del workernodes[name]
                 finally:
                     sock.close()
+
+            if workernodes:
+                # We get here only if some workernodes were not accessible during this attempt
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
+
             attempts -= 1
 
         if workernodes:
@@ -206,16 +233,23 @@ class MCSProcessManager:
         attempts = cls.CONTROLLER_MAX_RETRY
         success = False
         while attempts > 0:
+            start = time.monotonic()
             try:
                 with DBRM():
                     # check connection
                     success = True
-            except (ConnectionRefusedError, RuntimeError, socket.error):
+            except (OSError, ConnectionRefusedError, RuntimeError):
+                elapsed = time.monotonic() - start
+                remaining = SOCK_TIMEOUT - elapsed
                 logging.info(
                     'Cannot establish connection to controllernode.'
-                    f'Controller node still not started. Waiting...{attempts}'
+                    f'Controller node still not started. {attempts} attempts left.'
                 )
+                if remaining > 0:
+                    logging.debug('Sleeping %.1f seconds', remaining)
+                    time.sleep(remaining)
             else:
+                logging.debug('Controllernode is reachable')
                 break
             attempts -= 1
 
@@ -230,37 +264,84 @@ class MCSProcessManager:
         return True
 
     @classmethod
-    def _wait_for_DMLProc_stop(cls, timeout: int = 10) -> bool:
+    def _wait_for_DMLProc_stop(cls, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT) -> bool:
         """Waiting DMLProc process to stop.
 
-        :param timeout: timeout to wait, defaults to 10
+        :param timeout: timeout to wait in seconds, defaults to DMLPROC_SHUTDOWN_TIMEOUT
         :type timeout: int, optional
         :return: True on success
         :rtype: bool
         """
         logging.info(f'Waiting for DMLProc to stop in {timeout} seconds')
-        dmlproc_stopped = False
-        while timeout > 0:
-            logging.info(
-                f'Waiting for DMLProc to stop. Seconds left {timeout}.'
-            )
+        deadline = time.monotonic() + max(1, int(timeout))
+        # Log at most every 5 seconds while polling every ~1s for responsiveness
+        LOG_INTERVAL_SEC = 5.0
+        next_log_at = time.monotonic()  # log immediately on first iteration
+
+        while True:
+            now = time.monotonic()
+            remaining = deadline - now
+            if remaining <= 0:
+                break
+
             if not Process.check_process_alive('DMLProc'):
                 logging.info('DMLProc gracefully stopped by DBRM command.')
-                dmlproc_stopped = True
-                break
-            sleep(1)
-            timeout -= 1
-        else:
-            logging.error(
-                f'DMLProc did not stopped gracefully by DBRM command within '
-                f'{timeout} seconds. Will be stopped directly.'
-            )
-        return dmlproc_stopped
+                return True
+
+            if now >= next_log_at:
+                logging.info(
+                    f'Waiting for DMLProc to stop. Seconds left ~{int(remaining)}.'
+                )
+                next_log_at = now + LOG_INTERVAL_SEC
+
+            # Sleep in small increments to minimize over-wait after process exit
+            sleep(min(1.0, max(0.1, remaining)))
+
+        logging.error(
+            "DMLProc didn't stop gracefully by DBRM command within "
+            f"{int(timeout)} seconds. Will be stopped directly."
+        )
+        return False
 
     @classmethod
     def noop(cls, *args, **kwargs):
         """No operation. TODO: looks like useless."""
         cls.process_dispatcher.noop()
+
+    @classmethod
+    def gracefully_stop_dmlproc(cls) -> None:
+        """Gracefully stop DMLProc using DBRM commands."""
+        logging.info(
+            'Trying to gracefully stop DMLProc using DBRM commands.'
+        )
+        try:
+            with DBRM() as dbrm:
+                dbrm.set_system_state(
+                    ['SS_ROLLBACK', 'SS_SHUTDOWN_PENDING']
+                )
+        except (ConnectionRefusedError, RuntimeError):
+            logging.error(
+                'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING via DBRM, '
+                'graceful auto stop of DMLProc failed. '
+                'Try a regular stop method.'
+            )
+            raise
+
+    @classmethod
+    def is_service_running(cls, name: str, use_sudo: bool = True) -> bool:
+        """Check if MCS process is running.
+
+        :param name: mcs process name
+        :type name: str
+        :param use_sudo: use sudo or not, defaults to True
+        :type use_sudo: bool, optional
+        :return: True if mcs process is running, otherwise False
+        :rtype: bool
+        """
+        return cls.process_dispatcher.is_service_running(
+            cls._get_prog_name(name), use_sudo
+        )
+
 
     @classmethod
     def start(cls, name: str, is_primary: bool, use_sudo: bool) -> bool:
@@ -281,7 +362,7 @@ class MCSProcessManager:
 
     @classmethod
     def stop(
-        cls, name: str, is_primary: bool, use_sudo: bool, timeout: int = 10
+        cls, name: str, is_primary: bool, use_sudo: bool, timeout: int = DMLPROC_SHUTDOWN_TIMEOUT
     ) -> bool:
         """Stop mcs process.
 
@@ -299,20 +380,9 @@ class MCSProcessManager:
         # TODO: do we need here force stop DMLProc as a method argument?
 
         if is_primary and name == 'DMLProc':
-            logging.info(
-                'Trying to gracefully stop DMLProc using DBRM commands.'
-            )
             try:
-                with DBRM() as dbrm:
-                    dbrm.set_system_state(
-                        ['SS_ROLLBACK', 'SS_SHUTDOWN_PENDING']
-                    )
+                cls.gracefully_stop_dmlproc()
             except (ConnectionRefusedError, RuntimeError):
-                logging.error(
-                    'Cannot set SS_ROLLBACK and SS_SHUTDOWN_PENDING '
-                    'using DBRM while trying to gracefully auto stop DMLProc.'
-                    'Continue with a regular stop method.'
-                )
                 # stop DMLProc using regular signals or systemd
                 return cls.process_dispatcher.stop(
                     cls._get_prog_name(name), is_primary, use_sudo
@@ -380,19 +450,29 @@ class MCSProcessManager:
         return set(node_progs) == set(p['name'] for p in running_procs)
 
     @classmethod
-    def start_node(cls, is_primary: bool, use_sudo: bool = True):
+    def start_node(
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        is_read_replica: bool = False,
+    ) -> None:
         """Start mcs node processes.
 
         :param is_primary: is node primary or not, defaults to True
         :type is_primary: bool
         :param use_sudo: use sudo or not, defaults to True
         :type use_sudo: bool, optional
+        :param is_read_replica: if true, doesn't start WriteEngine
+        :type is_read_replica: bool, optional
         :raises CMAPIBasicError: immediately if one mcs process not started
         """
-        for prog_name in cls._get_sorted_progs(is_primary):
+        for prog_name in cls._get_sorted_progs(
+            is_primary=is_primary,
+            is_read_replica=is_read_replica,
+        ):
             if (
                     cls.dispatcher_name == 'systemd'
-                    and prog_name == 'StorageManager'
+                    and prog_name == MCSProgs.STORAGE_MANAGER
             ):
                 # TODO: MCOL-5458
                 logging.info(
@@ -400,9 +480,9 @@ class MCSProcessManager:
                 )
                 continue
             # TODO: additional error handling
-            if prog_name == 'controllernode':
+            if prog_name == MCSProgs.CONTROLLER_NODE:
                 cls._wait_for_workernodes()
-            if prog_name in ('DMLProc', 'DDLProc'):
+            if prog_name in (MCSProgs.DML_PROC, MCSProgs.DDL_PROC):
                 cls._wait_for_controllernode()
             if not cls.start(prog_name, is_primary, use_sudo):
                 logging.error(f'Process "{prog_name}" not started properly.')
@@ -410,7 +490,10 @@ class MCSProcessManager:
 
     @classmethod
     def stop_node(
-        cls, is_primary: bool, use_sudo: bool = True, timeout: int = 10
+        cls,
+        is_primary: bool,
+        use_sudo: bool = True,
+        timeout: int = DMLPROC_SHUTDOWN_TIMEOUT,
     ):
         """Stop mcs node processes.
 
@@ -426,14 +509,57 @@ class MCSProcessManager:
         # so use full available list of processes. Otherwise, it could cause
         # undefined behaviour when primary gone and then recovers (failover
         # triggered 2 times).
-        for prog_name in cls._get_sorted_progs(True, reverse=True):
-            if not cls.stop(prog_name, is_primary, use_sudo):
+        for prog_name in cls._get_sorted_progs(is_primary=True, reverse=True):
+            if not cls.stop(prog_name, is_primary, use_sudo, timeout=timeout):
                 logging.error(f'Process "{prog_name}" not stopped properly.')
                 raise CMAPIBasicError(f'Error while stopping "{prog_name}"')
 
     @classmethod
-    def restart_node(cls, is_primary: bool, use_sudo: bool):
+    def restart_node(cls, is_primary: bool, use_sudo: bool, is_read_replica: bool = False):
         """TODO: For next releases."""
         if cls.get_running_mcs_procs():
             cls.stop_node(is_primary, use_sudo)
-        cls.start_node(is_primary, use_sudo)
+        cls.start_node(is_primary, use_sudo, is_read_replica)
+
+
+class MDBProcessManager:
+    """TODO: not working with a non systemd installations need to implement."""
+    process_dispatcher = SystemdDispatcher
+
+    @classmethod
+    def is_service_running(cls, use_sudo: bool = True) -> bool:
+        """Check if MariaDB process is running.
+
+        :param use_sudo: use sudo or not, defaults to True
+        :type use_sudo: bool, optional
+        :return: True if MariaDB process is running, otherwise False
+        :rtype: bool
+        """
+        return cls.process_dispatcher.is_service_running(
+            'mariadb', use_sudo=use_sudo
+        )
+
+    @classmethod
+    def start(cls, use_sudo: bool) -> bool:
+        """Start MariaDB process.
+
+        :type use_sudo: bool
+        :return: True if process started successfully
+        :rtype: bool
+        """
+        if not cls.is_service_running():
+            return cls.process_dispatcher.start('mariadb', use_sudo)
+        return True
+
+    @classmethod
+    def stop(cls, use_sudo: bool = True) -> bool:
+        """Stop MariaDB process.
+
+        :type use_sudo: bool
+        :return: True if process stopped
+          successfully
+        :rtype: bool
+        """
+        if cls.is_service_running():
+            return cls.process_dispatcher.stop('mariadb', use_sudo)
+        return True

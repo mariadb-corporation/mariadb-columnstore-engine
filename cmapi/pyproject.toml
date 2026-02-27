@@ -1,0 +1,33 @@
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+# Enable common rule sets
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes: undefined names, unused imports, etc.
+    "I",  # isort: import sorting
+    "B",  # flake8-bugbear: common bugs and anti-patterns
+    "UP", # pyupgrade: use modern Python syntax
+    "N",  # pep8-naming: naming conventions
+    "Q",  # flake8-quotes: enforce quote style
+]
+
+ignore = []
+
+# Exclude cache and temporary directories
+exclude = [
+    "__pycache__",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.isort]
+known-first-party = ["cmapi_server", "failover", "mcs_node_control", "tracing"]
+force-single-line = false
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "single"
+docstring-quotes = "double"

@@ -220,13 +220,21 @@ class ConfigPutTestCase(BaseServerTestCase):
     def test_no_active_operation(self):
         """Test no active operation. skip_setUp"""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
-
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
         )
@@ -242,54 +250,93 @@ class ConfigPutTestCase(BaseServerTestCase):
             BeginTestCase.URL, verify=False, headers=self.HEADERS, json=body
         )
         self.assertEqual(r.status_code, 200)
+        # no manager in body
         body = {
-            'revision': 42,
+            'revision': '42',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
         )
         self.assertEqual(r.status_code, 422)
-        self.assertEqual(
-            r.json(), {'error': 'Mandatory attribute is missing.'}
+        self.assertTrue(
+            'Mandatory attribute is missing:' in r.json().get('error', ''),
+            'Error string should contain "Mandatory attribute is missing:"'
         )
+        # no timeout in body
         body = {
+            'revision': '42',
             'manager': '1.1.1.1',
-            'revision': 42,
             'config': "<Columnstore>...</Columnstore>",
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
         )
         self.assertEqual(r.status_code, 422)
-        self.assertEqual(
-            r.json(), {'error': 'Mandatory attribute is missing.'}
+        self.assertTrue(
+            'Mandatory attribute is missing:' in r.json().get('error', ''),
+            'Error string should contain "Mandatory attribute is missing:"'
         )
+        # no config in body
         body = {
+            'revision': '42',
             'manager': '1.1.1.1',
-            'revision': 42,
             'timeout': 42,
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
         )
         self.assertEqual(r.status_code, 422)
-        self.assertEqual(
-            r.json(), {'error': 'Mandatory attribute is missing.'}
-        )
+        self.assertEqual(r.json(), {'error': 'Mandatory operation attribute is missing.'})
 
     def test_no_auth(self):
         """Test no auth."""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'config': "<Columnstore>...</Columnstore>",
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
         r = requests.put(
             self.URL, verify=False, headers=self.NO_AUTH_HEADERS, json=body
@@ -307,29 +354,28 @@ class ConfigPutTestCase(BaseServerTestCase):
     def test_wrong_cluster_mode(self):
         """Test wrong cluster mode."""
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
             'cluster_mode': 'somemode',
-            'mcs_config_filename': self.mcs_config_filename
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
         )
         self.assertEqual(r.status_code, 422)
         self.assertTrue(
-            "Error occured setting cluster" in r.content.decode('ASCII')
+            "Input should be 'readonly' or 'readwrite'" in r.json().get('error', ''),
+            "Error string should contain 'Input should be 'readonly' or 'readwrite''"
         )
 
     def test_set_mode(self):
         """Test set mode."""
         mode = 'readwrite'
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 42,
-            'cluster_mode': mode,
-            'mcs_config_filename': self.mcs_config_filename
+            'cluster_mode': mode
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body
@@ -356,13 +402,22 @@ class ConfigPutTestCase(BaseServerTestCase):
             verify=False, headers=self.HEADERS, json=body
         )
         config_file = Path(self.mcs_config_filename)
-        config = config_file.read_text()
+        config = config_file.read_text(encoding='utf-8')
         body = {
-            'revision': 42,
+            'revision': '42',
             'manager': '1.1.1.1',
             'timeout': 15,
             'config': config,
-            'mcs_config_filename': self.mcs_config_filename
+            'mcs_config_filename': self.mcs_config_filename,
+            'stateful_config_dict': {
+                'flags': {
+                    'shared_storage_on': True
+                },
+                'version': {
+                    'seq': 1,
+                    'term': 1
+                }
+            }
         }
         r = requests.put(
             self.URL, verify=False, headers=self.HEADERS, json=body

@@ -6,49 +6,49 @@ CherryPy-based webservice daemon with background threads
 
 import logging
 import os
+import sys
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import cherrypy
 from cherrypy.process import plugins
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import NameOID
 
 # TODO: fix dispatcher choose logic because code executing in endpoints.py
 #       while import process, this cause module logger misconfiguration
 from cmapi_server.logging_management import config_cmapi_server_logging
-config_cmapi_server_logging()
+from tracing.sentry import maybe_init_sentry
+from tracing.traceparent_backend import TraceparentBackend
+from tracing.tracer import get_tracer
 
+config_cmapi_server_logging()
 from cmapi_server import helpers
-from cmapi_server.constants import DEFAULT_MCS_CONF_PATH, CMAPI_CONF_PATH
-from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.constants import CMAPI_CONF_PATH, DEFAULT_MCS_CONF_PATH
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_404, jsonify_error
 from cmapi_server.failover_agent import FailoverAgent
-from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.invariant_checks import run_invariant_checks
 from cmapi_server.managers.application import AppManager
+from cmapi_server.managers.certificate import CertificateManager
+from cmapi_server.managers.process import MCSProcessManager
 from failover.node_monitor import NodeMonitor
+from failover.config import Config
 from mcs_node_control.models.dbrm_socket import SOCK_TIMEOUT, DBRMSocketHandler
 from mcs_node_control.models.node_config import NodeConfig
+from tracing.trace_tool import register_tracing_tools
 
 
-cert_filename = './cmapi_server/self-signed.crt'
-
-
-def worker():
+def worker(app):
     """Background Timer that runs clean_txn_by_timeout() every 5 seconds
     TODO: this needs to be fixed/optimized. I don't like creating the thread
     repeatedly.
     """
     while True:
-        t = threading.Timer(5.0, clean_txn_by_timeout)
+        t = threading.Timer(5.0, clean_txn_by_timeout, args=(app,))
         t.start()
         t.join()
 
 
-def clean_txn_by_timeout():
+def clean_txn_by_timeout(app):
     txn_section = app.config.get('txn', None)
     timeout_timestamp = txn_section.get('timeout') if txn_section is not None else None
     current_timestamp = int(datetime.now().timestamp())
@@ -82,7 +82,9 @@ class TxnBackgroundThread(plugins.SimplePlugin):
     def start(self):
         """Plugin entrypoint"""
 
-        self.t = threading.Thread(target=worker, name='TxnBackgroundThread')
+        self.t = threading.Thread(
+            target=worker, name='TxnBackgroundThread', args=(self.app,)
+        )
         self.t.daemon = True
         self.t.start()
 
@@ -96,7 +98,8 @@ class FailoverBackgroundThread(plugins.SimplePlugin):
 
     def __init__(self, bus, turned_on):
         super().__init__(bus)
-        self.node_monitor = NodeMonitor(agent=FailoverAgent())
+        sampling_interval = Config().getFailoverTimeoutSeconds()
+        self.node_monitor = NodeMonitor(agent=FailoverAgent(), samplingInterval=sampling_interval)
         self.running = False
         self.turned_on = turned_on
         if self.turned_on:
@@ -139,72 +142,37 @@ class FailoverBackgroundThread(plugins.SimplePlugin):
         self._stop()
 
 
-def create_self_signed_certificate():
-    key_filename = './cmapi_server/self-signed.key'
-
-    key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    with open(key_filename, "wb") as f:
-        f.write(key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()),
-        )
-
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, 'US'),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, 'California'),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, 'Redwood City'),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'MariaDB'),
-        x509.NameAttribute(NameOID.COMMON_NAME, 'mariadb.com'),
-    ])
-
-    basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
-
-    cert = x509.CertificateBuilder(
-    ).subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.utcnow()
-    ).not_valid_after(
-        datetime.utcnow() + timedelta(days=365)
-    ).add_extension(
-        basic_contraints,
-        False
-    ).add_extension(
-        x509.SubjectAlternativeName([x509.DNSName('localhost')]),
-        critical=False
-    ).sign(key, hashes.SHA256(), default_backend())
-
-    with open(cert_filename, 'wb') as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
-
-
 if __name__ == '__main__':
     logging.info(f'CMAPI Version: {AppManager.get_version()}')
 
     # TODO: read cmapi config filepath as an argument
     helpers.cmapi_config_check()
 
-    if not os.path.exists(cert_filename):
-        create_self_signed_certificate()
+    register_tracing_tools()
+    get_tracer().register_backend(TraceparentBackend())  # Register default tracing backend
+    maybe_init_sentry()  # Init Sentry if DSN is present
+
+    CertificateManager.create_self_signed_certificate_if_not_exist()
+    CertificateManager.renew_certificate()
+
+    # Run checks, if some of them fail -- log and exit
+    diag = run_invariant_checks()
+    if diag:
+        logging.error('Invariant checks failed, exiting')
+        sys.exit(1)
 
     app = cherrypy.tree.mount(root=None, config=CMAPI_CONF_PATH)
+    root_config = {
+        "request.dispatch": dispatcher,
+        "error_page.default": jsonify_error,
+        "error_page.404": jsonify_404,
+        # Enable tracing tools
+        'tools.trace.on': True,
+        'tools.trace_end.on': True,
+    }
+
     app.config.update({
-        '/': {
-            'request.dispatch': dispatcher,
-            'error_page.default': jsonify_error,
-        },
+        '/': root_config,
         'config': {
             'path': CMAPI_CONF_PATH,
         },
@@ -224,6 +192,10 @@ if __name__ == '__main__':
     # subscribe FailoverBackgroundThread plugin code to bus channels
     # code below not starting "real" failover background thread
     FailoverBackgroundThread(cherrypy.engine, turn_on_failover).subscribe()
+    cherrypy.engine.certificate_monitor = plugins.BackgroundTask(
+        3600, CertificateManager.renew_certificate
+    )
+    cherrypy.engine.certificate_monitor.start()
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
 
@@ -272,10 +244,10 @@ if __name__ == '__main__':
                 'Something went wrong while trying to detect dbrm protocol.\n'
                 'Seems "controllernode" process isn\'t started.\n'
                 'This is just a notification, not a problem.\n'
-                'Next detection will started at first node\\cluster '
+                'Next detection will start at first node\\cluster '
                 'status check.\n'
-                f'This can cause extra {SOCK_TIMEOUT} seconds delay while\n'
-                'first attempt to get status.',
+                f'This can cause extra {SOCK_TIMEOUT} seconds delay during\n'
+                'this first attempt to get the status.',
                 exc_info=True
             )
     else:
