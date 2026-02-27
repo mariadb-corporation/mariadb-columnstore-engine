@@ -2239,12 +2239,6 @@ int ProcessDDLStatement(string& ddlStatement, string& schema, const string& /*ta
                               "The syntax replace table is not supported by Columnstore. Please check the "
                               "Columnstore syntax guide for supported syntax or data types.");
     }
-    else if (ddlStatement.find("DROP COLUMN IF EXISTS") != string::npos)
-    {
-      thd->raise_error_printf(ER_CHECK_NOT_IMPLEMENTED,
-                              "The syntax drop column if exists is not supported by Columnstore. Please "
-                              "check the Columnstore syntax guide for supported syntax or data types.");
-    }
     else
     {
       //@Bug 1888,1885. update error message
