@@ -15,37 +15,24 @@ set(ignored
     "%ignore /usr/sbin"
     "%ignore /usr/lib64/mysql"
     "%ignore /usr/lib64/mysql/plugin"
-    "%ignore /etc/my.cnf.d"
+    # REMOVED: "%ignore /etc/my.cnf.d" <--- This was causing the conflict
     "%ignore /var/lib"
     "%ignore /var"
 )
 
-set(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored})
+# Apply it to the specific component
+set(CPACK_RPM_columnstore-engine_USER_FILELIST "${ignored}")
 
 macro(columnstore_append_for_cpack var_name)
-    # Get current value from parent scope or use empty string
-    if(DEFINED ${var_name})
-        set(current_val "${${var_name}}")
-    else()
-        set(current_val "")
-    endif()
-
-    # Process each argument to append
+    # Process each argument passed to the macro
     foreach(arg IN LISTS ARGN)
-        if(current_val)
-            # If not empty, add comma before new item
-            set(current_val "${current_val}, ${arg}")
+        if(${var_name})
+            # Use a semicolon (;) for CPack lists, NOT a comma
+            set(${var_name} "${${var_name}};${arg}" PARENT_SCOPE)
         else()
-            # If empty, just add the item
-            set(current_val "${arg}")
+            set(${var_name} "${arg}" PARENT_SCOPE)
         endif()
     endforeach()
-
-    # Set back in parent scope
-    set(${var_name}
-        "${current_val}"
-        PARENT_SCOPE
-    )
 endmacro()
 
 macro(columnstore_add_rpm_deps)
