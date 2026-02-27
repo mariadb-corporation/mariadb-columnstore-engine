@@ -79,7 +79,7 @@ class BaseDispatcher:
             del proc
             result = (True, output)
         else:
-            logging.debug('Waiting command to finish.')
+            logging.debug('Waiting for command to finish.')
             stdout_str, _ = proc.communicate()
             returncode = proc.wait()
             if stdout_str is not None:

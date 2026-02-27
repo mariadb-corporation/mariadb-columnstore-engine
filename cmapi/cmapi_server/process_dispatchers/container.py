@@ -11,10 +11,10 @@ from time import sleep
 import psutil
 
 from cmapi_server.constants import (
-    IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS
+    IFLAG, LIBJEMALLOC_DEFAULT_PATH, MCS_INSTALL_BIN, ALL_MCS_PROGS, MCSProgs
 )
-from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.locks import release_shmem_locks
+from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
 
@@ -100,7 +100,7 @@ class ContainerDispatcher(BaseDispatcher):
 
     @classmethod
     def is_service_running(cls, service: str, use_sudo: bool = True) -> bool:
-        """Check if mcs process is running.
+        """Check if MCS process (not only MCS, but also any other process) is running.
 
         :param service: service name
         :type service: str
@@ -108,6 +108,9 @@ class ContainerDispatcher(BaseDispatcher):
         :type use_sudo: bool, optional
         :return: True if service is running, otherwise False
         :rtype: bool
+
+        ..Note:
+            Not working with multiple services at a time.
         """
         try:
             cls._get_proc_object(service)
@@ -124,7 +127,8 @@ class ContainerDispatcher(BaseDispatcher):
         :return: command with arguments if needed
         :rtype: str
         """
-        service_info = ALL_MCS_PROGS[service]
+        prog = MCSProgs(service)
+        service_info = ALL_MCS_PROGS[prog]
         command = os.path.join(MCS_INSTALL_BIN, service)
 
         if service_info.subcommand:
@@ -186,7 +190,8 @@ class ContainerDispatcher(BaseDispatcher):
             env=env_vars
         )
         # TODO: any other way to detect service finished its initialisation?
-        sleep(ALL_MCS_PROGS[service].delay)
+        prog = MCSProgs(service)
+        sleep(ALL_MCS_PROGS[prog].delay)
         logger.debug(f'Started "{service}".')
 
         if is_primary and service == 'DDLProc':

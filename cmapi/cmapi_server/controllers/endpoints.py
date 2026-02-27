@@ -1,37 +1,64 @@
 import logging
-
+import hashlib
 import socket
 import subprocess
+import threading
 import time
-
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import cherrypy
 import pyotp
 import requests
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
-from cmapi_server.exceptions import CMAPIBasicError
-from cmapi_server.constants import (
-    DEFAULT_SM_CONF_PATH, EM_PATH_SUFFIX, DEFAULT_MCS_CONF_PATH, MCS_EM_PATH,
-    MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH, CMAPI_CONF_PATH, SECRET_KEY,
-)
-from cmapi_server.controllers.error import APIError
-from cmapi_server.handlers.cej import CEJError
-from cmapi_server.handlers.cluster import ClusterHandler
-from cmapi_server.helpers import (
-    cmapi_config_check, get_config_parser, get_current_key, get_dbroots,
-    system_ready, save_cmapi_conf_file, dequote, in_maintenance_state,
-)
-from cmapi_server.logging_management import change_loggers_level
-from cmapi_server.managers.process import MCSProcessManager
-from cmapi_server.managers.application import AppManager
-from cmapi_server.node_manipulation import is_master, switch_node_maintenance
 from mcs_node_control.models.dbrm import set_cluster_mode
 from mcs_node_control.models.node_config import NodeConfig
 from mcs_node_control.models.node_status import NodeStatus
-
+from cmapi_server.constants import (
+    ALL_MCS_PROGS,
+    CMAPI_PACKAGE_NAME,
+    CMAPI_PORT,
+    DEFAULT_MCS_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    EM_PATH_SUFFIX,
+    MCS_BRM_CURRENT_PATH,
+    MCS_EM_PATH,
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    REQUEST_TIMEOUT,
+    S3_BRM_CURRENT_PATH,
+    SECRET_KEY,
+)
+from cmapi_server.controllers.api_clients import NodeControllerClient
+from cmapi_server import helpers
+from cmapi_server.controllers.error import APIError
+from cmapi_server.exceptions import CMAPIBasicError, cmapi_error_to_422
+from cmapi_server.exceptions import validate_or_422, exc_to_422
+from cmapi_server.controllers.request_models import (
+    ConfigPutRequestRootModel, StatefulConfigPutRequestModel,
+)
+from cmapi_server.handlers.cej import CEJError, CEJPasswordHandler
+from cmapi_server.handlers.cluster import ClusterHandler
+from cmapi_server.helpers import (
+    cmapi_config_check, dequote, get_active_nodes, get_config_parser,
+    get_current_key, get_dbroots, in_maintenance_state,
+    save_cmapi_conf_file, system_ready,
+)
+from cmapi_server.invariant_checks import run_invariant_checks
+from cmapi_server.logging_management import change_loggers_level
+from cmapi_server.managers.application import (
+    AppManager, AppStatefulConfig, StatefulConfigModel
+)
+from cmapi_server.managers.backup_restore import PreUpgradeBackupRestoreManager
+from cmapi_server.managers.process import MCSProcessManager, MDBProcessManager
+from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.managers.upgrade.packages import PackagesManager
+from cmapi_server.managers.upgrade.repo import MariaDBESRepoManager
+from cmapi_server.node_manipulation import is_master, switch_node_maintenance
+from cmapi_server.process_dispatchers.container import ContainerDispatcher
 
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
@@ -59,8 +86,28 @@ def raise_422_error(
     :type exc_info: bool
     :raises APIError: everytime with custom error message
     """
+    # TODO: change:
+    #       - func name to inspect.stack(0)[1][3]
+    #       - make something to logger, seems passing here is useless
     logger.error(f'{func_name} {err_msg}', exc_info=exc_info)
     raise APIError(422, err_msg)
+
+
+# TODO: Move somwhere else, eg. to helpers
+def get_use_sudo(app_config: dict) -> bool:
+    """Get value about using superuser or not from app config.
+
+    :param app_config: CherryPy application config
+    :type app_config: dict
+    :return: use_sudo config value
+    :rtype: bool
+    """
+    privileges_section = app_config.get('Privileges', None)
+    if privileges_section is not None:
+        use_sudo = privileges_section.get('use_sudo', False)
+    else:
+        use_sudo = False
+    return use_sudo
 
 
 @cherrypy.tools.register('before_handler', priority=80)
@@ -128,7 +175,27 @@ def active_operation():
     if txn_section is not None:
         txn_manager_address = app.config['txn'].get('manager_address', None)
     if txn_manager_address is not None and len(txn_manager_address) > 0:
-        raise APIError(422, "There is an active operation.")
+        raise_422_error(
+            module_logger, 'active_operation', 'There is an active operation.'
+        )
+
+
+@cherrypy.tools.register('before_handler', priority=82)
+def has_active_nodes():
+    """Check if there are any active nodes in the cluster.
+
+    TODO: Remove in next releases due to never used.
+          Now TransactionManager has this check inside.
+          Before removing, have to check all API endpoints without transaction
+          mechanics to potential use of this handler.
+    """
+    active_nodes = get_active_nodes()
+
+    if len(active_nodes) == 0:
+        raise_422_error(
+            module_logger, 'has_active_nodes',
+            'No active nodes in the cluster.'
+        )
 
 
 class TimingTool(cherrypy.Tool):
@@ -204,6 +271,7 @@ class StatusController:
             'dbroots': sorted(get_dbroots(node_fqdn)),
             'module_id': int(node_status.get_module_id()),
             'services': MCSProcessManager.get_running_mcs_procs(),
+            'mariadbd_running': ContainerDispatcher.is_service_running('mariadbd'),
         }
 
         module_logger.debug(f'{func_name} returns {str(status_response)}')
@@ -296,36 +364,68 @@ class ConfigController:
                 'PUT /config called outside of an operation.'
             )
 
+        try:
+            wrapper = ConfigPutRequestRootModel.model_validate(cherrypy.request.json)
+            # the actual StatefulConfigPutRequestModel or FullConfigPutRequestModel or
+            # PutConfigSetModeRequestModel
+            req_model = wrapper.root
+        except ValidationError as exp:
+            raise_422_error(
+                module_logger, func_name, f'Mandatory attribute is missing: {exp.errors()}'
+            )
+
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
-        request_body = cherrypy.request.json
-        request_revision = request_body.get('revision', None)
-        request_manager = request_body.get('manager', None)
-        request_timeout = request_body.get('timeout', None)
 
         #TODO: remove is_test
         # is_test = True means this should not save
         # the config file or apply the changes
-        is_test = request_body.get('test', False)
+        is_test = req_model.test
+        if req_model.type == 'set_mode':
+            # TODO: move it to separate endpoint
+            request_timeout = req_model.timeout
+            request_cluster_mode = req_model.cluster_mode
+            current_mode = set_cluster_mode(request_cluster_mode)
+            if current_mode == request_cluster_mode:
+                # Normal exit
+                request_response = {'timestamp': str(datetime.now())}
+                module_logger.debug(
+                    f'{func_name} returns {str(request_response)}'
+                )
+                return request_response
+            else:
+                raise_422_error(
+                    module_logger, func_name,
+                    (
+                        f'Error occured setting cluster to "{request_cluster_mode}" '
+                        f'mode, got "{current_mode}"'
+                    )
+                )
 
-        mandatory = [request_revision, request_manager, request_timeout]
-        if None in mandatory:
-            raise_422_error(
-                module_logger, func_name, 'Mandatory attribute is missing.')
-
-        request_mode = request_body.get('cluster_mode', None)
-        request_config = request_body.get('config', None)
-        mcs_config_filename = request_body.get(
-            'mcs_config_filename', DEFAULT_MCS_CONF_PATH
-        )
-        sm_config_filename = request_body.get(
-            'sm_config_filename', DEFAULT_SM_CONF_PATH
-        )
-
-        if request_mode is None and request_config is None:
-            raise_422_error(
-                module_logger, func_name, 'Mandatory attribute is missing.'
+        # if stateful config is provided, we just need to fast apply only stateful config
+        success = AppStatefulConfig.apply_update(req_model.stateful_config_dict)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term {req_model.stateful_config_dict.version.term} '
+                f'and seq {req_model.stateful_config_dict.version.seq}.'
             )
+
+        if isinstance(req_model, StatefulConfigPutRequestModel):
+            return {'timestamp': str(datetime.now()), 'success': success}
+
+        request_mode = req_model.cluster_mode
+        xml_config = req_model.config
+        sm_config = req_model.sm_config
+        mcs_config_filename = req_model.mcs_config_filename
+        sm_config_filename = req_model.sm_config_filename
+        secrets = req_model.secrets
+        request_timeout = req_model.timeout
+        operation_params = (request_mode, xml_config, secrets)
+        # if no operation to apply, return 422
+        if not any(operation_params):
+            raise_422_error(module_logger, func_name, 'Mandatory operation attribute is missing.')
 
         request_headers = cherrypy.request.headers
         request_manager_address = request_headers.get('Remote-Addr', None)
@@ -347,123 +447,147 @@ class ConfigController:
             request_manager_address = socket.gethostbyname(
                 socket.gethostname()
             )
+
+        # Enforce that only the transaction owner can apply config
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, func_name,
+                'PUT /config is allowed only for the operation owner.'
+            )
         request_response = {'timestamp': str(datetime.now())}
 
+        if secrets:
+            #TODO: validate incoming secrets?
+            CEJPasswordHandler().save_secrets(secrets)
+
         node_config = NodeConfig()
-        xml_config = request_body.get('config', None)
-        sm_config = request_body.get('sm_config', None)
         if is_test:
             return request_response
-        if request_mode is not None:
-            current_mode = set_cluster_mode(
-                request_mode, config_filename=mcs_config_filename
-            )
-            if current_mode == request_mode:
-                # Normal exit
-                module_logger.debug(
-                    f'{func_name} returns {str(request_response)}'
-                )
-                return request_response
-            else:
+        if xml_config is not None:
+            # Acquire a per-node, per-transaction config lock to serialize
+            # heavy config application on this node.
+            locks = app.config['txn'].setdefault('locks', {})
+            config_lock = locks.get('config_lock')
+            if config_lock is None:
+                config_lock = threading.Lock()
+                locks['config_lock'] = config_lock
+
+            module_logger.debug('Acquiring config lock for put_config.')
+            acquired = config_lock.acquire(blocking=False)
+            if not acquired:
+                module_logger.info('Config apply rejected: another config apply is in progress.')
                 raise_422_error(
-                    module_logger, func_name,
-                    (
-                        f'Error occured setting cluster to "{request_mode}" '
-                        f'mode, got "{current_mode}"'
-                    )
+                    module_logger, func_name, 'Config apply already in progress on this node.'
                 )
-        elif xml_config is not None:
-            node_config.apply_config(
-                config_filename=mcs_config_filename,
-                xml_string=xml_config,
-                sm_config_filename=sm_config_filename,
-                sm_config_string=sm_config
-            )
-            # TODO: change stop/start to restart option.
+            app.config['txn']['config_in_progress'] = True
             try:
-                MCSProcessManager.stop_node(
-                    is_primary=node_config.is_primary_node(),
-                    use_sudo=use_sudo,
-                    timeout=request_timeout
-                )
-            except CMAPIBasicError as err:
-                raise_422_error(
-                    module_logger, func_name,
-                    f'Error while stopping node. Details: {err.message}.',
-                    exc_info=False
+                node_config.apply_config(
+                    config_filename=mcs_config_filename,
+                    xml_string=xml_config,
+                    sm_config_filename=sm_config_filename,
+                    sm_config_string=sm_config
                 )
 
-            # if not in the list of active nodes,
-            # then do not start the services
-            new_root = node_config.get_current_config_root(
-                mcs_config_filename
-            )
-            if in_maintenance_state():
-                module_logger.info(
-                    'Maintaninance state is active in new config. '
-                    'MCS processes should not be started.'
-                )
-                cherrypy.engine.publish('failover', False)
-                # skip all other operations below
-                return request_response
-            else:
-                cherrypy.engine.publish('failover', True)
-            if node_config.in_active_nodes(new_root):
+                diag = run_invariant_checks()
+                if diag:
+                    raise_422_error(
+                        module_logger, func_name,
+                        f'Invariant checks failed. Details:\n{diag.strip()}',
+                        exc_info=False
+                    )
+
+                # TODO: change stop/start to restart option.
                 try:
-                    MCSProcessManager.start_node(
+                    MCSProcessManager.stop_node(
                         is_primary=node_config.is_primary_node(),
                         use_sudo=use_sudo,
+                        timeout=request_timeout,
                     )
                 except CMAPIBasicError as err:
                     raise_422_error(
                         module_logger, func_name,
-                        (
-                            'Error while starting node. '
-                            f'Details: {err.message}.'
-                        ),
+                        f'Error while stopping node. Details: {err.message}.',
                         exc_info=False
                     )
-            else:
-                module_logger.info(
-                    'This node is not in the current ActiveNodes section. '
-                    'Not starting Columnstore processes.'
-                )
 
-            attempts = 0
-            # TODO: FIX IT. If got (False, False) result, for eg in case
-            #       when there are no special CEJ user set, this check loop
-            #       is useless and do nothing.
-            try:
-                ready, retry = system_ready(mcs_config_filename)
-            except CEJError as cej_error:
-                raise_422_error(
-                    module_logger, func_name, cej_error.message
+                # if not in the list of active nodes,
+                # then do not start the services
+                new_root = node_config.get_current_config_root(
+                    mcs_config_filename
                 )
-
-            while not ready:
-                if retry:
-                    attempts +=1
-                    if attempts >= 10:
-                        module_logger.debug(
-                            'Timed out waiting for node to be ready.'
-                        )
-                        break
-                    time.sleep(1)
+                if in_maintenance_state():
+                    module_logger.info(
+                        'Maintenance state is active in new config. '
+                        'MCS processes should not be started.'
+                    )
+                    cherrypy.engine.publish('failover', False)
+                    # skip all other operations below
+                    return request_response
                 else:
-                    break
+                    cherrypy.engine.publish('failover', True)
+                if node_config.in_active_nodes(new_root):
+                    try:
+                        MCSProcessManager.start_node(
+                            is_primary=node_config.is_primary_node(),
+                            use_sudo=use_sudo,
+                            is_read_replica=node_config.am_i_read_replica(),
+                        )
+                    except CMAPIBasicError as err:
+                        raise_422_error(
+                            module_logger, func_name,
+                            (
+                                'Error while starting node. '
+                                f'Details: {err.message}'
+                            ),
+                            exc_info=False
+                        )
+                else:
+                    module_logger.info(
+                        'This node is not in the current ActiveNodes section. '
+                        'Not starting Columnstore processes.'
+                    )
+
+                attempts = 0
+                # TODO: FIX IT. If got (False, False) result, for eg in case
+                #       when special CEJ user is not set, this check loop
+                #       is useless and does nothing.
                 try:
                     ready, retry = system_ready(mcs_config_filename)
                 except CEJError as cej_error:
                     raise_422_error(
                         module_logger, func_name, cej_error.message
                     )
-            else:
-                module_logger.debug(f'Node is ready to accept queries.')
 
-            app.config['txn']['config_changed'] = True
+                while not ready:
+                    if retry:
+                        attempts +=1
+                        if attempts >= 10:
+                            module_logger.debug(
+                                'Timed out waiting for this node to become ready.'
+                            )
+                            break
+                        time.sleep(1)
+                    else:
+                        break
+                    try:
+                        ready, retry = system_ready(mcs_config_filename)
+                    except CEJError as cej_error:
+                        raise_422_error(
+                            module_logger, func_name, cej_error.message
+                        )
+                else:
+                    module_logger.debug(f'Node is ready to accept queries.')
 
-            # We might want to raise error
-            return request_response
+                app.config['txn']['config_changed'] = True
+
+                # We might want to raise error
+                return request_response
+            finally:
+                app.config['txn']['config_in_progress'] = False
+                try:
+                    config_lock.release()
+                except RuntimeError:
+                    pass
 
         # Unexpected exit
         raise_422_error(module_logger, func_name, 'Unknown error.')
@@ -505,6 +629,9 @@ IP address.")
                 'timeout': int(datetime.now().timestamp()) + txn_timeout,
                 'manager_address': txn_manager_address,
                 'config_changed': False,
+                # serialization helpers
+                'locks': {},
+                'config_in_progress': False,
             },
         })
 
@@ -512,6 +639,7 @@ IP address.")
 
         module_logger.debug(f'{func_name} returns {str(begin_response)}')
         return begin_response
+
 
 class CommitController:
     @cherrypy.tools.timeit()
@@ -544,6 +672,12 @@ class CommitController:
         request_manager_address = dequote(request_manager_address).lower()
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
             request_manager_address = socket.gethostbyname(socket.gethostname())
+        # enforce only operation owner can commit
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, func_name,
+                'PUT /commit is allowed only for the operation owner.'
+            )
         # txn is active
         app.config['txn']['id'] = 0
         app.config['txn']['timeout'] = 0
@@ -583,6 +717,13 @@ class RollbackController:
         if request_manager_address in ['127.0.0.1', 'localhost', '::1']:
             request_manager_address = socket.gethostbyname(socket.gethostname())
 
+        # enforce only operation owner can rollback
+        if request_manager_address != txn_manager_address:
+            raise_422_error(
+                module_logger, 'put_rollback',
+                'PUT /rollback is allowed only for the operation owner.'
+            )
+
         #TODO: add restart processes flag?
         # txn is active
         txn_config_changed = app.config['txn'].get('config_changed', None)
@@ -601,15 +742,6 @@ class RollbackController:
         return rollback_response
 
 
-def get_use_sudo(app_config):
-    privileges_section = app_config.get('Privileges', None)
-    if privileges_section is not None:
-        use_sudo = privileges_section.get('use_sudo', False)
-    else:
-        use_sudo = False
-    return use_sudo
-
-
 class StartController:
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_out()
@@ -624,7 +756,8 @@ class StartController:
         try:
             MCSProcessManager.start_node(
                 is_primary=node_config.is_primary_node(),
-                use_sudo=use_sudo
+                use_sudo=use_sudo,
+                is_read_replica=node_config.am_i_read_replica(),
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -653,13 +786,13 @@ class ShutdownController:
         req = cherrypy.request
         use_sudo = get_use_sudo(req.app.config)
         request_body = cherrypy.request.json
-        timeout = request_body.get('timeout', 0)
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
         node_config = NodeConfig()
         try:
             MCSProcessManager.stop_node(
                 is_primary=node_config.is_primary_node(),
                 use_sudo=use_sudo,
-                timeout=timeout
+                timeout=timeout,
             )
         except CMAPIBasicError as err:
             raise_422_error(
@@ -706,7 +839,12 @@ class ExtentMapController:
                     retry_count += 1
                     continue
                 elem_current_suffix = ret.stdout.decode("utf-8").rstrip()
-                elem_current_filename = f'{EM_PATH_SUFFIX}/{elem_current_suffix}_{element}'
+
+                suffix_for_file = elem_current_suffix
+                # The journal is always in the current directory, strip trailing A/B from suffix
+                if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                    suffix_for_file = suffix_for_file[:-1]
+                elem_current_filename = f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}'
 
                 # TODO: Remove conditional once container dispatcher
                 #       uses non-root by default
@@ -732,8 +870,13 @@ class ExtentMapController:
             )
             elem_current_name = Path(MCS_BRM_CURRENT_PATH)
             elem_current_filename = elem_current_name.read_text().rstrip()
+
+            suffix_for_file = elem_current_filename
+            # The journal is always in the current directory, strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
             elem_current_file = Path(
-                f'{MCS_EM_PATH}/{elem_current_filename}_{element}'
+                f'{MCS_EM_PATH}/{suffix_for_file}_{element}'
             )
             result = elem_current_file.read_bytes()
 
@@ -788,9 +931,14 @@ class ClusterController:
         request = cherrypy.request
         request_body = request.json
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.start(config)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.start(config)
+            else:
+                response = ClusterHandler.start(config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -807,13 +955,94 @@ class ClusterController:
 
         request = cherrypy.request
         request_body = request.json
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
+        force = request_body.get('force', False)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.shutdown(config)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.shutdown(config, timeout)
+            else:
+                response = ClusterHandler.shutdown(config, timeout)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def start_mariadb(self):
+        """Handler for /cluster/start-mariadb (PUT) endpoint."""
+        func_name = 'put_start_mariadb'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        # TODO: Is transaction really needed here.
+        timeout = request_body.get('timeout', None)
+        in_transaction = request_body.get('in_transaction', False)
+
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(f'Starting MariaDB server on "{node}".')
+            client = NodeControllerClient(
+                request_timeout=REQUEST_TIMEOUT,
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.start_mariadb()
+            logging.debug(f'MariaDB server started on {node}')
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Successfully finished starting MariaDB server on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def stop_mariadb(self):
+        """Handler for /cluster/stop-mariadb (PUT) endpoint."""
+        func_name = 'put_stop_mariadb'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        # TODO: Is transaction really needed here.
+        timeout = request_body.get('timeout', None)
+        in_transaction = request_body.get('in_transaction', False)
+
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(f'Stopping MariaDB server on "{node}".')
+            client = NodeControllerClient(
+                request_timeout=REQUEST_TIMEOUT,
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.stop_mariadb()
+            logging.debug(f'MariaDB server stopped on {node}')
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Successfully finished stopping MariaDB server on all nodes.'
+        )
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
@@ -829,9 +1058,14 @@ class ClusterController:
         request_body = request.json
         mode = request_body.get('mode', 'readonly')
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
 
         try:
-            response = ClusterHandler.set_mode(mode, config=config)
+            if not in_transaction:
+                with TransactionManager():
+                    response = ClusterHandler.set_mode(mode, config=config)
+            else:
+                response = ClusterHandler.set_mode(mode, config=config)
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
@@ -850,14 +1084,18 @@ class ClusterController:
         request_body = request.json
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
+        in_transaction = request_body.get('in_transaction', False)
+        read_replica = bool(request_body.get('read_replica', False))
 
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
 
-        try:
-            response = ClusterHandler.add_node(node, config)
-        except CMAPIBasicError as err:
-            raise_422_error(module_logger, func_name, err.message)
+        with cmapi_error_to_422(module_logger, func_name):
+            if not in_transaction:
+                with TransactionManager(extra_nodes=[node]):
+                    response = ClusterHandler.add_node(node, config, read_replica)
+            else:
+                response = ClusterHandler.add_node(node, config, read_replica)
 
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
@@ -873,16 +1111,18 @@ class ClusterController:
         request_body = request.json
         node = request_body.get('node', None)
         config = request_body.get('config', DEFAULT_MCS_CONF_PATH)
-        response = {'timestamp': str(datetime.now())}
+        in_transaction = request_body.get('in_transaction', False)
 
         #TODO: add arguments verification decorator
         if node is None:
             raise_422_error(module_logger, func_name, 'missing node argument')
 
-        try:
-            response = ClusterHandler.remove_node(node, config)
-        except CMAPIBasicError as err:
-            raise_422_error(module_logger, func_name, err.message)
+        with cmapi_error_to_422(module_logger, func_name):
+            if not in_transaction:
+                with TransactionManager(remove_nodes=[node]):
+                    response = ClusterHandler.remove_node(node, config)
+            else:
+                response = ClusterHandler.remove_node(node, config)
 
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
@@ -974,6 +1214,246 @@ class ClusterController:
         return response
 
     @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    def get_versions(self):
+        """Handler for /cluster/versions (GET) endpoint."""
+        func_name = 'cluster_get_versions'
+        log_begin(module_logger, func_name)
+        # Get versions of packages from all active nodes.
+        # If no active nodes found, get versions from localhost.
+        active_nodes = get_active_nodes()
+        active_nodes_count = len(active_nodes)
+        all_versions: dict = dict()
+
+        if not active_nodes:
+            logging.debug(
+                'No active nodes found, getting versions from localhost.'
+            )
+            active_nodes.append('localhost')
+        for node in active_nodes:
+            logging.debug(f'Getting packages versions from "{node}".')
+            client = NodeControllerClient(
+                request_timeout=REQUEST_TIMEOUT,
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_versions = client.get_versions()
+            logging.debug(
+                f'Node: {node} has installed versions: {node_versions}'
+            )
+            all_versions[node] = node_versions
+
+        versions_set: set = set()
+        for versions in all_versions.values():
+            for version in versions.values():
+                versions_set.add(version)
+
+        if set(versions_set) != set(all_versions[active_nodes[0]].values()):
+            # Nodes have different versions of packages.
+            raise_422_error(
+                logger=module_logger, func_name='get_versions',
+                err_msg=(
+                    'Nodes have different versions of packages. '
+                    f'Active nodes count: {active_nodes_count}. '
+                    f'Active nodes: {active_nodes}. '
+                    f'Packages versions: {all_versions}'
+                )
+            )
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_versions[active_nodes[0]],
+        }
+        logging.debug(
+            'Successfully finished getting package versions from all nodes.'
+        )
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def install_repo(self):
+        """Handler for /cluster/install-repo (PUT) endpoint.
+
+        Installs ES repository on all active nodes.
+        """
+        func_name = 'cluster_install_repo'
+        log_begin(module_logger, func_name)
+        active_nodes = get_active_nodes()
+        request = cherrypy.request
+        request_body = request.json
+        token = request_body.get('token', None)
+        mariadb_version = request_body.get('mariadb_version', None)
+
+        if not token or not mariadb_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required arguments: token, mariadb_version.'
+            )
+        if not active_nodes:
+            logging.debug(
+                'No active nodes found, installing repo on localhost.'
+            )
+            active_nodes.append('localhost')
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(f'Installing repo on "{node}".')
+            client = NodeControllerClient(
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.install_repo(
+                token=token,
+                mariadb_version=mariadb_version
+            )
+            logging.debug(f'ES repo installed on {node}')
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Successfully finished installing repo on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def preupgrade_backup(self):
+        """Handler for /cluster/preupgrade-backup (PUT) endpoint."""
+        func_name = 'cluster_preupgrade_backup'
+        log_begin(module_logger, func_name)
+
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(
+                f'Backuping DBRM and configs before upgrade on "{node}".'
+            )
+            client = NodeControllerClient(
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.preupgrade_backup()
+            logging.debug(f'PreUpgrade backup completed on {node}')
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Successfully finished PreUpgrade backup on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def upgrade_mdb_mcs(self):
+        """Handler for /cluster/upgrade-mdb-mcs (PUT) endpoint."""
+        func_name = 'cluster_upgrade_mdb_mcs'
+        log_begin(module_logger, func_name)
+        request = cherrypy.request
+        request_body = request.json
+        mdb_version = request_body.get('mariadb_version', None)
+        mcs_version = request_body.get('columnstore_version', None)
+        if not mdb_version or not mcs_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required arguments: mdb_version, mcs_version.'
+            )
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(
+                f'Upgrading MDB and MCS on "{node}".'
+            )
+            client = NodeControllerClient(
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.upgrade_mdb_mcs(
+                mariadb_version=mdb_version, columnstore_version=mcs_version
+            )
+            logging.debug(f'Upgrade MDB and MCS completed on {node}')
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Successfully finished upgrading MDB and MCS on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def upgrade_cmapi(self):
+        """Handler for /cluster/upgrade-cmapi (PUT) endpoint."""
+        func_name = 'cluster_upgrade_cmapi'
+        log_begin(module_logger, func_name)
+        request = cherrypy.request
+        request_body = request.json
+        target_version = request_body.get('version', None)
+        if not target_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required argument target_version.'
+            )
+        active_nodes = get_active_nodes()
+        all_responses: dict = dict()
+        for node in active_nodes:
+            logging.debug(
+                f'Kicking CMAPI to upgrade on "{node}".'
+            )
+            client = NodeControllerClient(
+                base_url=f'https://{node}:{CMAPI_PORT}'
+            )
+            node_response = client.kick_cmapi_upgrade(version=target_version)
+            all_responses[node] = node_response
+        response = {
+            'timestamp': str(datetime.now()),
+            **all_responses
+        }
+        logging.debug(
+            'Started CMAPI upgrade on all nodes.'
+        )
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def get_health(self):
+        func_name = 'get_health'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        timeout = request_body.get('timeout', None)
+        in_transaction = request_body.get('in_transaction', False)
+
+        try:
+            if not in_transaction:
+                with TransactionManager():
+                    # TODO: just a placeholder for now
+                    # response = ClusterHandler.health()
+                    response = {'status': 'ok'}
+            else:
+                # response = ClusterHandler.health()
+                response = {'status': 'ok'}
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     def set_api_key(self):
@@ -990,7 +1470,7 @@ class ClusterController:
 
         if not totp_key or not new_api_key:
             # not show which arguments in error message because endpoint for
-            # internal usage only
+            # cli tool or internal usage only
             raise_422_error(
                 module_logger, func_name, 'Missing required arguments.'
             )
@@ -1001,10 +1481,8 @@ class ClusterController:
                 module_logger, func_name, 'Wrong verification key.'
             )
 
-        try:
+        with cmapi_error_to_422(module_logger, func_name):
             response = ClusterHandler.set_api_key(new_api_key, totp_key)
-        except CMAPIBasicError as err:
-            raise_422_error(module_logger, func_name, err.message)
 
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
@@ -1035,6 +1513,30 @@ class ClusterController:
         except CMAPIBasicError as err:
             raise_422_error(module_logger, func_name, err.message)
 
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_storage(self):
+        """Handler for /cluster/check-shared-storage/ (PUT) endpoint."""
+        func_name = 'check_shared_storage'
+        log_begin(module_logger, func_name)
+        # Optional skip list provided by caller (e.g., failover monitor)
+        request = cherrypy.request
+        request_body = request.json or {}
+        skip_nodes = request_body.get('skip_nodes', [])
+        try:
+            response = ClusterHandler.check_shared_storage(skip_nodes)
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        except Exception:
+            raise_422_error(
+                module_logger, func_name,
+                'Undefined error happened while checking shared storage.'
+            )
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
@@ -1137,3 +1639,484 @@ class AppController():
             return {'started': True}
         else:
             raise APIError(503, 'CMAPI not ready to handle requests.')
+
+
+class NodeProcessController():
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def put_stop_dmlproc(self):
+        """Handler for /node/stop_dmlproc (PUT) endpoint."""
+        # TODO: make it works only from cli tool like set_api_key made
+        func_name = 'put_stop_dmlproc'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        timeout = request_body.get('timeout', DMLPROC_SHUTDOWN_TIMEOUT)
+        force = request_body.get('force', False)
+
+        if force:
+            module_logger.debug(
+                f'Calling DMLproc to force stop after timeout={timeout}.'
+            )
+            MCSProcessManager.stop(
+                name='DMLProc', is_primary=True, use_sudo=True, timeout=timeout
+            )
+        else:
+            module_logger.debug('Callling stop DMLproc gracefully.')
+            try:
+                MCSProcessManager.gracefully_stop_dmlproc()
+            except (ConnectionRefusedError, RuntimeError):
+                raise_422_error(
+                    logger=module_logger, func_name=func_name,
+                    err_msg='Couldn\'t stop DMlproc gracefully'
+                )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def get_process_running(self, process_name):
+        """Handler for /node/is_process_running (GET) endpoint."""
+        func_name = 'get_process_running'
+        log_begin(module_logger, func_name)
+        if process_name in ALL_MCS_PROGS:
+            process_running = MCSProcessManager.is_service_running(process_name)
+        else:
+            process_running = ContainerDispatcher.is_service_running(process_name)
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'process_name': process_name,
+            'running': process_running
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+
+class NodeController:
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    def get_versions(self):
+        """Handler for /node/versions (GET) endpoint."""
+        func_name = 'get_node_versions'
+        log_begin(module_logger, func_name)
+        columnstore_ver = AppManager.get_columnstore_version()
+        cmapi_short_ver = AppManager.version
+        # cmapi version currently is just a part of columnstore version excluding MDB version part
+        # so canonicalize it
+        cmapi_ver = columnstore_ver if cmapi_short_ver in columnstore_ver else cmapi_short_ver
+        node_versions = {
+            'cmapi_version': cmapi_ver,
+            'columnstore_version': columnstore_ver,
+            'server_version': AppManager.get_mdb_version(),
+        }
+        response = {
+            'timestamp': str(datetime.now()),
+            **node_versions
+        }
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def latest_mdb_version(self):
+        """Handler for /node/latest-mdb-version (GET) endpoint."""
+        func_name = 'get_latest_mdb_version'
+        log_begin(module_logger, func_name)
+        try:
+            version = MariaDBESRepoManager.get_latest_tested_mdb_version()
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        response = {
+            'timestamp': str(datetime.now()),
+            'latest_mdb_version': version
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def validate_mdb_version(self, token, mariadb_version):
+        """Handler for /node/validate-mdb-version (GET) endpoint."""
+        func_name = 'get_validate_mdb_version'
+        log_begin(module_logger, func_name)
+        if not token or not mariadb_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required arguments: token, mariadb_version.'
+            )
+        os_name, os_version = AppManager.get_distro_info()
+        arch = AppManager.get_architecture()
+        repo_manager = MariaDBESRepoManager(
+            token=token, arch=arch, os_type=os_name, os_version=os_version,
+            mariadb_version=mariadb_version
+        )
+
+        try:
+            repo_manager.check_mdb_version_exists()
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def validate_es_token(self, token):
+        """Handler for /node/validate-es-token (GET) endpoint."""
+        func_name = 'get_validate_es_token'
+        log_begin(module_logger, func_name)
+
+        if not token:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required argument token.'
+            )
+        try:
+            MariaDBESRepoManager.verify_token(token)
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def start_mariadb(self):
+        """Handler for /node/start_mariadb (PUT) endpoint."""
+        func_name = 'node_start_mariadb'
+        log_begin(module_logger, func_name)
+        req = cherrypy.request
+        use_sudo = get_use_sudo(req.app.config)
+        try:
+            MDBProcessManager.start(use_sudo=use_sudo)
+        except CMAPIBasicError as err:
+            raise_422_error(
+                module_logger, func_name,
+                (
+                    'Error while starting mariadb process. '
+                    f'Details: {err.message}'
+                ),
+                exc_info=False
+            )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def stop_mariadb(self):
+        """Handler for /node/stop_mariadb (PUT) endpoint."""
+        func_name = 'node_stop_mariadb'
+        log_begin(module_logger, func_name)
+        req = cherrypy.request
+        use_sudo = get_use_sudo(req.app.config)
+        try:
+            MDBProcessManager.stop(use_sudo=use_sudo)
+        except CMAPIBasicError as err:
+            raise_422_error(
+                module_logger, func_name,
+                (
+                    'Error while stopping mariadb process. '
+                    f'Details: {err.message}'
+                ),
+                exc_info=False
+            )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def install_repo(self):
+        """Handler for /node/install-repo (PUT) endpoint."""
+        func_name = 'node_install_repo'
+        log_begin(module_logger, func_name)
+
+        request = cherrypy.request
+        request_body = request.json
+        token = request_body.get('token', None)
+        mariadb_version = request_body.get('mariadb_version', None)
+
+        if not token or not mariadb_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required arguments: token, mariadb_version.'
+            )
+        os_name, os_version = AppManager.get_distro_info()
+        arch = AppManager.get_architecture()
+        repo_manager = MariaDBESRepoManager(
+            token=token, arch=arch, os_type=os_name, os_version=os_version,
+            mariadb_version=mariadb_version
+        )
+        try:
+            repo_manager.setup_repo()
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def repo_pkg_versions(self):
+        """Handler for /node/repo-pkg-versions (GET) endpoint."""
+        func_name = 'get_repo_pkg_versions'
+        log_begin(module_logger, func_name)
+        os_name, _ = AppManager.get_distro_info()
+        mdb_pkg_name: str
+        mcs_pkg_name: str
+        cmapi_pkg_name: str
+        if os_name in ['ubuntu', 'debian']:
+            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.deb
+            mcs_pkg_name = MDB_CS_PACKAGE_NAME.deb
+            cmapi_pkg_name = CMAPI_PACKAGE_NAME.deb
+        elif os_name in ['centos', 'rhel', 'rocky']:
+            mdb_pkg_name = MDB_SERVER_PACKAGE_NAME.rhel
+            mcs_pkg_name = MDB_CS_PACKAGE_NAME.rhel
+            cmapi_pkg_name = CMAPI_PACKAGE_NAME.rhel
+        else:
+            raise_422_error(
+                module_logger, func_name, f'Unsupported OS type: {os_name}'
+            )
+
+        try:
+            repo_versions = {
+                'cmapi_version': MariaDBESRepoManager.get_ver_of(
+                    cmapi_pkg_name, os_name
+                ),
+                'columnstore_version': MariaDBESRepoManager.get_ver_of(
+                    mcs_pkg_name, os_name
+                ),
+                'server_version': MariaDBESRepoManager.get_ver_of(
+                    mdb_pkg_name, os_name
+                ),
+            }
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+        response = {
+            'timestamp': str(datetime.now()),
+            **repo_versions
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def preupgrade_backup(self):
+        """Handler for /node/preupgrade-backup (PUT) endpoint."""
+        func_name = 'node_preupgrade_backup'
+        log_begin(module_logger, func_name)
+        os_name, _ = AppManager.get_distro_info()
+        try:
+            PreUpgradeBackupRestoreManager.backup_dbrm()
+            PreUpgradeBackupRestoreManager.backup_configs(distro_name=os_name)
+        except CMAPIBasicError as err:
+            raise_422_error(
+                module_logger, func_name,
+                f'Error while PreUpgrade backup. Details: {err.message}',
+                exc_info=False
+            )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def upgrade_mdb_mcs(self):
+        """Handler for /node/upgrade-mdb-mcs (PUT) endpoint."""
+        func_name = 'node_upgrade_mdb_mcs'
+        log_begin(module_logger, func_name)
+        request = cherrypy.request
+        request_body = request.json
+        mdb_version = request_body.get('mariadb_version', None)
+        mcs_version = request_body.get('columnstore_version', None)
+        if not mdb_version or not mcs_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required arguments: mdb_version, mcs_version.'
+            )
+        os_name, _ = AppManager.get_distro_info()
+        try:
+            packages_manager = PackagesManager(
+                os_name=os_name, mdb_version=mdb_version,
+                mcs_version=mcs_version
+            )
+            packages_manager.upgrade_mdb_and_mcs()
+        except CMAPIBasicError as err:
+            raise_422_error(
+                module_logger, func_name,
+                (
+                    'Error while Upgrading MDB and MCS packages. '
+                    f'Details: {err.message}'
+                ),
+                exc_info=False
+            )
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def kick_cmapi_upgrade(self):
+        """Handler for /node/kick-cmapi-upgrade (PUT) endpoint."""
+        func_name = 'node_kick_cmapi_upgrade'
+        log_begin(module_logger, func_name)
+        request = cherrypy.request
+        request_body = request.json
+        target_version = request_body.get('version', None)
+        if target_version is None:
+            raise_422_error(
+                module_logger, func_name, 'Missing required version argument.'
+            )
+        try:
+            PackagesManager.kick_cmapi_upgrade(cmapi_version=target_version)
+        except CMAPIBasicError as err:
+            raise_422_error(module_logger, func_name, err.message)
+
+        response = {'timestamp': str(datetime.now())}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_shared_file(self, file_path, check_sum):
+        func_name = 'check_shared_file'
+        log_begin(module_logger, func_name)
+        logger = logging.getLogger('shared_storage_monitor')
+        ACCEPTED_PATHS = (
+            '/var/lib/columnstore/data1/',
+            '/var/lib/columnstore/storagemanager/metadata/data1/'
+        )
+        if not file_path.startswith(ACCEPTED_PATHS):
+            raise_422_error(module_logger, func_name, 'Not acceptable file_path.')
+
+        success = True
+        file_path_obj = Path(file_path)
+        logger.debug(f'Checking shared file at {file_path} with md5 {check_sum}.')
+        if not file_path_obj.exists():
+            success = False
+            logger.debug(f'Shared file {file_path} does not exist.')
+        else:
+            with file_path_obj.open(mode='rb') as file_to_check:
+                data = file_to_check.read()
+                calculated_md5 = hashlib.md5(data).hexdigest()
+            if calculated_md5 != check_sum:
+                logger.debug(
+                    f'Shared file at {file_path} md5 {calculated_md5} does not match given md5 {check_sum}.'
+                )
+                success = False
+        if success:
+            logger.debug(f'Shared file {file_path} md5 matches {check_sum}.')
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'success': success
+        }
+        logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def put_stateful_config(self):
+        """Handler for /node/stateful-config (PUT) endpoint.
+
+        #TODO: for next releases.
+        """
+
+        func_name = 'put_stateful_config'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        request_stateful_config = validate_or_422(
+            StatefulConfigModel,
+            request_body.get('stateful_config_dict'),
+            module_logger,
+            func_name,
+            prefix='Invalid request body',
+        )
+
+        success = AppStatefulConfig.apply_update(request_stateful_config)
+        if not success:
+            logging.info('Stateful config update was stale.')
+        else:
+            logging.info(
+                f'Stateful config updated with term  {request_stateful_config.version.term} '
+                f'and seq {request_stateful_config.version.seq}.'
+            )
+
+        return {'timestamp': str(datetime.now()), 'success': success}
+
+
+class CmapiConfigPatchModel(BaseModel):
+    failover_sampling_interval_seconds: Optional[int] = Field(default=None, ge=1)
+
+    @model_validator(mode='after')
+    def ensure_any_present(self):
+        if self.failover_sampling_interval_seconds is None:
+            raise ValueError('At least one field must be provided')
+        return self
+
+
+class CmapiConfigController:
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def patch_cmapi_config(self):
+        """Update our own CMAPI config section in Columnstore.xml"""
+        func_name = 'patch_cmapi_config'
+        log_begin(module_logger, func_name)
+
+        req_model = validate_or_422(
+            CmapiConfigPatchModel,
+            cherrypy.request.json,
+            module_logger,
+            func_name,
+            prefix='Invalid payload',
+        )
+
+        # Update Columnstore.xml under <CMAPIConfig>
+        nc = NodeConfig()
+        with nc.modify_config(DEFAULT_MCS_CONF_PATH) as root:
+            cmapi_node = helpers.get_or_create_child_xml_node(root, 'CMAPIConfig')
+
+            # Failover sampling interval
+            if req_model.failover_sampling_interval_seconds is not None:
+                node = helpers.get_or_create_child_xml_node(cmapi_node, 'FailoverSamplingIntervalSeconds')
+                node.text = str(req_model.failover_sampling_interval_seconds)
+
+        with exc_to_422(module_logger, func_name, prefix='Failed to bump config revision'):
+            helpers.update_revision_and_manager(input_config_filename=DEFAULT_MCS_CONF_PATH)
+
+        # Broadcast updated config
+        with cmapi_error_to_422(module_logger, func_name):
+            with TransactionManager() as txn:
+                helpers.broadcast_new_config(nodes=txn.success_txn_nodes)
+
+        return {'timestamp': str(datetime.now())}

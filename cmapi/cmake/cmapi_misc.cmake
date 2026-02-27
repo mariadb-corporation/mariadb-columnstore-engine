@@ -32,14 +32,14 @@ function(get_linux_lsb_release_information)
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" LSB_RELEASE_ID_SHORT "${LSB_RELEASE_ID_SHORT}")
             string(TOLOWER "${LSB_RELEASE_ID_SHORT}" LSB_RELEASE_ID_SHORT)
 
-            string(REGEX MATCH "VERSION_ID=([^\n]*)" _match "${OS_RELEASE_CONTENT}")
-            set(LSB_RELEASE_VERSION_SHORT "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "(^|\n)VERSION_ID=([^\n]*)" _match "${OS_RELEASE_CONTENT}")
+            set(LSB_RELEASE_VERSION_SHORT "${CMAKE_MATCH_2}")
             # Remove quotes if present
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" LSB_RELEASE_VERSION_SHORT "${LSB_RELEASE_VERSION_SHORT}")
 
-            string(REGEX MATCH "VERSION_CODENAME=([^\n]*)" _match "${OS_RELEASE_CONTENT}")
-            if(CMAKE_MATCH_1)
-                set(LSB_RELEASE_CODENAME_SHORT "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "(^|\n)VERSION_CODENAME=([^\n]*)" _match "${OS_RELEASE_CONTENT}")
+            if(_match)
+                set(LSB_RELEASE_CODENAME_SHORT "${CMAKE_MATCH_2}")
                 # Remove quotes if present
                 string(REGEX REPLACE "^\"(.*)\"$" "\\1" LSB_RELEASE_CODENAME_SHORT "${LSB_RELEASE_CODENAME_SHORT}")
             else()

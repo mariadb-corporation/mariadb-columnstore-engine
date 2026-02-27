@@ -4,23 +4,25 @@ import logging
 import pwd
 import re
 import socket
-from os import mkdir, replace, chown
+from contextlib import contextmanager
+from os import chown, mkdir, replace
 from pathlib import Path
 from shutil import copyfile
-from xml.dom import minidom   # to pick up pretty printing functionality
+from typing import Optional
+from collections.abc import Iterator
+from xml.dom import minidom  # to pick up pretty printing functionality
 
 from lxml import etree
 
 from cmapi_server.constants import (
-    DEFAULT_MCS_CONF_PATH, DEFAULT_SM_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH,
     MCS_MODULE_FILE_PATH,
 )
-# from cmapi_server.managers.process import MCSProcessManager
-from mcs_node_control.models.misc import (
-    read_module_id, get_dbroots_list
-)
-from mcs_node_control.models.network_ifaces import get_network_interfaces
 
+# from cmapi_server.managers.process import MCSProcessManager
+from mcs_node_control.models.misc import get_dbroots_list, read_module_id
+from mcs_node_control.models.network_ifaces import get_network_interfaces
 
 module_logger = logging.getLogger()
 
@@ -36,8 +38,8 @@ class NodeConfig:
     """
     def get_current_config_root(
         self, config_filename: str = DEFAULT_MCS_CONF_PATH, upgrade=True
-    ):
-        """Retrievs current configuration.
+    ) -> etree.Element:
+        """Retrieves current configuration.
 
         Read the config and returns Element.
         TODO: pretty the same function in misc.py - review
@@ -49,7 +51,7 @@ class NodeConfig:
         self.upgrade_config(tree=tree, upgrade=upgrade)
         return tree.getroot()
 
-    def get_root_from_string(self, config_string: str):
+    def get_root_from_string(self, config_string: str) -> etree.Element:
         root = etree.fromstring(config_string)
         self.upgrade_config(root=root)
         return root
@@ -115,7 +117,6 @@ class NodeConfig:
         maintenance = etree.SubElement(root, 'Maintenance')
         maintenance.text = str(False).lower()
 
-
     def upgrade_config(self, tree=None, root=None, upgrade=True):
         """
         Add the parts that might be missing after an upgrade from an earlier
@@ -137,6 +138,26 @@ class NodeConfig:
         with open(tmp_filename, "w") as f:
             f.write(self.to_string(tree))
         replace(tmp_filename, filename)    # atomic replacement
+
+    @contextmanager
+    def modify_config(
+        self,
+        input_config_filename: str = DEFAULT_MCS_CONF_PATH,
+        output_config_filename: Optional[str] = None,
+        ):
+        """Context manager to modify the config file
+        If exception is raised, the config file is not modified and exception is re-raised
+        If output_config_filename is not provided, the input config file is modified
+        """
+        try:
+            c_root = self.get_current_config_root(input_config_filename)
+            yield c_root
+        except Exception as e:
+            logging.error(f"modify_config(): Caught exception: '{str(e)}', config file not modified")
+            raise
+        else:
+            output_config_filename = output_config_filename or input_config_filename
+            self.write_config(c_root, output_config_filename)
 
     def to_string(self, tree):
         # TODO: try to use lxml to do this to avoid the add'l dependency
@@ -263,15 +284,12 @@ class NodeConfig:
             )
             raise
 
-    def in_active_nodes(self, root):
+    def in_active_nodes(self, root) -> bool:
         my_names = set(self.get_network_addresses_and_names())
-        active_nodes = [
-            node.text for node in root.findall("./ActiveNodes/Node")
-        ]
-        for node in active_nodes:
-            if node in my_names:
-                return True
-        return False
+        active_nodes = {node.text for node in root.findall("./ActiveNodes/Node")}
+        am_i_active = bool(my_names.intersection(active_nodes))
+        module_logger.debug("Active nodes: %s, my names: %s, am i active: %s", active_nodes, my_names, am_i_active)
+        return am_i_active
 
     def get_current_pm_num(self, root):
         # Find this node in the Module* tags, return the module number
@@ -290,7 +308,6 @@ class NodeConfig:
                 return pm_num
         raise Exception("Did not find my IP addresses or names in the SystemModuleConfig section")
 
-
     def rollback_config(self, config_filename: str = DEFAULT_MCS_CONF_PATH):
         """Rollback the configuration.
 
@@ -306,7 +323,6 @@ class NodeConfig:
         config_file_copy = Path(backup_path)
         if config_file_copy.exists():
             replace(backup_path, config_file)   # atomic replacement
-
 
     def get_current_config(self, config_filename: str = DEFAULT_MCS_CONF_PATH):
         """Retrievs current configuration.
@@ -325,7 +341,6 @@ class NodeConfig:
             tree.getroot(), pretty_print=True, encoding='unicode'
         )
 
-
     def get_current_sm_config(
         self, config_filename: str = DEFAULT_SM_CONF_PATH
     ) -> str:
@@ -342,7 +357,6 @@ class NodeConfig:
         except FileNotFoundError:
             module_logger.error(f"{func_name} SM config {config_filename} not found.")
             return ''
-
 
     def s3_enabled(self, config_filename: str = DEFAULT_SM_CONF_PATH) -> bool:
         """Checks if SM is enabled
@@ -374,19 +388,17 @@ class NodeConfig:
 
         return False
 
-    def get_network_addresses(self):
+    def get_network_addresses(self) -> Iterator[str]:
         """Retrievs the list of the network addresses
 
         Generator that yields network interface addresses.
-
-        :rtype: str
         """
         for ni in get_network_interfaces():
             for fam in [socket.AF_INET, socket.AF_INET6]:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
 
     def get_network_addresses_and_names(self):
         """Retrievs the list of the network addresses, hostnames, and aliases
@@ -400,7 +412,7 @@ class NodeConfig:
                 addrs = ni.addresses.get(fam)
                 if addrs is not None:
                     for addr in addrs:
-                        yield(addr)
+                        yield addr
                         try:
                             (host, aliases, _) = socket.gethostbyaddr(addr)
                         except:
@@ -571,4 +583,39 @@ has dbroot {subel.text}')
         for i in range(1, mod_count+1):
             for j in range(1, int(smc_node.find(f"./ModuleDBRootCount{i}-3").text) + 1):
                 dbroots.append(smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text)
+
         return dbroots
+
+    def get_read_replicas_pm_nums(self, root=None) -> list[int]:
+        """Collects PM numbers of read replicas.
+
+        A read replica is any PM that does not have a corresponding WriteEngineServer.
+        """
+        root = root or self.get_current_config_root()
+
+        smc_node = root.find('./SystemModuleConfig')
+        mod_count = int(smc_node.find('./ModuleCount3').text)
+
+        read_replica_pm_nums: list[int] = []
+        for i in range(1, mod_count + 1):
+            mod_ip_node = smc_node.find(f'./ModuleIPAddr{i}-1-3')
+            if mod_ip_node is None or mod_ip_node.text is None:
+                module_logger.warning('Module %d IP addr is not filled', i)
+                continue
+
+            wes = root.find(f'./pm{i}_WriteEngineServer')
+            if wes is None or wes.findtext('./IPAddr') is None:
+                read_replica_pm_nums.append(i)
+
+        return read_replica_pm_nums
+
+    def am_i_read_replica(self, root=None) -> bool:
+        """Checks if this node is configured as a read replica.
+
+        "am i" in the name highlights that we check the current node.
+        """
+        root = root or self.get_current_config_root()
+
+        pm_num = self.get_current_pm_num(root)
+        read_replicas_pms = self.get_read_replicas_pm_nums(root)
+        return pm_num in read_replicas_pms

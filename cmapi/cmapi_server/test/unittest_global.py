@@ -2,36 +2,35 @@ import logging
 import os
 import unittest
 from contextlib import contextmanager
-from datetime import datetime, timedelta
 from shutil import copyfile
 from tempfile import TemporaryDirectory
 
 import cherrypy
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-from cryptography.hazmat.primitives import hashes
-
 from cmapi_server import helpers
 from cmapi_server.constants import CMAPI_CONF_PATH
 from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.logging_management import config_cmapi_server_logging
+from cmapi_server.managers.application import (
+    AppStatefulConfig, StatefulConfigModel, StatefulFlagsModel
+)
 from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.certificate import CertificateManager
 
 
 TEST_API_KEY = 'somekey123'
-cert_filename = './cmapi_server/self-signed.crt'
 MCS_CONFIG_FILEPATH = '/etc/columnstore/Columnstore.xml'
-COPY_MCS_CONFIG_FILEPATH = './cmapi_server/test/original_Columnstore.xml'
-TEST_MCS_CONFIG_FILEPATH = './cmapi_server/test/CS-config-test.xml'
+# Use absolute paths relative to this test package so tests work regardless of CWD
+_TEST_DIR = os.path.dirname(__file__)
+COPY_MCS_CONFIG_FILEPATH = os.path.join(_TEST_DIR, 'original_Columnstore.xml')
+TEST_MCS_CONFIG_FILEPATH = os.path.join(_TEST_DIR, 'CS-config-test.xml')
 # TODO:
 #       - rename after fix in all places
 #       - fix path to abs
-mcs_config_filename = './cmapi_server/test/CS-config-test.xml'
-tmp_mcs_config_filename = './cmapi_server/test/tmp.xml'
-cmapi_config_filename = './cmapi_server/cmapi_server.conf'
-tmp_cmapi_config_filename = './cmapi_server/test/tmp.conf'
+mcs_config_filename = os.path.join(_TEST_DIR, 'CS-config-test.xml')
+tmp_mcs_config_filename = os.path.join(_TEST_DIR, 'tmp.xml')
+cmapi_config_filename = os.path.join(os.path.dirname(_TEST_DIR), 'cmapi_server.conf')
+tmp_cmapi_config_filename = os.path.join(_TEST_DIR, 'tmp.conf')
+single_node_xml = os.path.join(_TEST_DIR, '..', 'SingleNode.xml')
 # constants for process dispatchers
 DDL_SERVICE = 'mcs-ddlproc'
 CONTROLLERNODE_SERVICE = 'mcs-controllernode.service'
@@ -42,57 +41,6 @@ SYSTEMCTL = 'systemctl'
 logging.basicConfig(level=logging.DEBUG)
 
 
-def create_self_signed_certificate():
-    key_filename = './cmapi_server/self-signed.key'
-
-    key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    with open(key_filename, "wb") as f:
-        f.write(key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()),
-        )
-
-    subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
-        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
-        x509.NameAttribute(NameOID.LOCALITY_NAME, u"Redwood City"),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"MariaDB"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"mariadb.com"),
-    ])
-
-    basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
-
-    cert = x509.CertificateBuilder(
-    ).subject_name(
-        subject
-    ).issuer_name(
-        issuer
-    ).public_key(
-        key.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.utcnow()
-    ).not_valid_after(
-        datetime.utcnow() + timedelta(days=365)
-    ).add_extension(
-        basic_contraints,
-        False
-    ).add_extension(
-        x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),
-        critical=False
-    ).sign(key, hashes.SHA256(), default_backend())
-
-    with open(cert_filename, "wb") as f:
-        f.write(cert.public_bytes(serialization.Encoding.PEM))
-
-
 def run_detect_processes():
     cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
     d_name, d_path = helpers.get_dispatcher_name_and_path(cfg_parser)
@@ -101,8 +49,7 @@ def run_detect_processes():
 
 @contextmanager
 def run_server():
-    if not os.path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
 
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
@@ -132,6 +79,7 @@ class BaseServerTestCase(unittest.TestCase):
             )
             copyfile(cmapi_config_filename, self.cmapi_config_filename)
             copyfile(TEST_MCS_CONFIG_FILEPATH, self.mcs_config_filename)
+            config_cmapi_server_logging()
             self.app = cherrypy.tree.mount(
                 root=None, config=self.cmapi_config_filename
             )
@@ -152,7 +100,7 @@ class BaseServerTestCase(unittest.TestCase):
 
 
 class BaseNodeManipTestCase(unittest.TestCase):
-    NEW_NODE_NAME = 'mysql.com'  # something that has a DNS entry everywhere
+    NEW_NODE_NAME = 'node.hostname'
 
     def setUp(self):
         self.tmp_files = []
@@ -164,6 +112,21 @@ class BaseNodeManipTestCase(unittest.TestCase):
                 os.remove(tmp_file)
         if os.path.exists(tmp_mcs_config_filename):
             os.remove(tmp_mcs_config_filename)
+
+    def _set_shared_storage(self, target_value: bool) -> bool:
+        """Set shared_storage_on flag to target_value, return original value.
+
+        If the current value already equals target_value, no update is applied.
+        """
+        current_cfg = AppStatefulConfig.get_config_copy()
+        original_value = current_cfg.flags.shared_storage_on
+        if original_value != target_value:
+            new_cfg = StatefulConfigModel(
+                version=current_cfg.version.next_seq(),
+                flags=StatefulFlagsModel(shared_storage_on=target_value),
+            )
+            AppStatefulConfig.apply_update(new_cfg)
+        return original_value
 
 
 class BaseProcessDispatcherCase(unittest.TestCase):

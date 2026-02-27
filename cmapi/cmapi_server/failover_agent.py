@@ -53,7 +53,7 @@ class FailoverAgent(AgentBase):
                 logger.info(f'FA.deactivateNodes(): deactivating node {node}')
                 node_manipulation.remove_node(
                     node, input_config_filename, output_config_filename,
-                    deactivate_only=True, test_mode=test_mode
+                    deactivate_only=False, test_mode=test_mode
                 )
                 removed_node_count += 1
             except Exception as err:

@@ -4,45 +4,73 @@ TODO: remove NodeConfig usage and move to arguments (eg. nc or root)
 """
 
 import asyncio
-import concurrent
 import configparser
 import datetime
 import logging
 import os
 import socket
 import time
-from functools import partial
+from collections import namedtuple
 from random import random
 from shutil import copyfile
-from typing import Tuple, Optional
+from typing import Any, Tuple, Optional
+from urllib.parse import urlencode, urlunparse
 
+import aiohttp
 import lxml.objectify
+from lxml import etree
 import requests
+from tracing.traced_session import get_traced_session
+from tracing.traced_aiohttp import create_traced_async_session
 
 from cmapi_server.exceptions import CMAPIBasicError
 # Bug in pylint https://github.com/PyCQA/pylint/issues/4584
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CMAPI_DEFAULT_CONF_PATH, DEFAULT_MCS_CONF_PATH,
-    DEFAULT_SM_CONF_PATH, LOCALHOSTS
+    CMAPI_CONF_PATH,
+    CMAPI_DEFAULT_CONF_PATH,
+    DEFAULT_MCS_CONF_PATH,
+    DEFAULT_SM_CONF_PATH,
+    DMLPROC_SHUTDOWN_TIMEOUT,
+    LOCALHOSTS,
+    LONG_REQUEST_TIMEOUT,
+    TRANSACTION_TIMEOUT,
+    _version
 )
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.managers.process import MCSProcessManager
+from cmapi_server.managers.application import AppStatefulConfig
 from mcs_node_control.models.node_config import NodeConfig
 
 
-def get_id():
+def get_id() -> int:
+    """Generate pseudo random id for transaction.
+
+    :return: id for internal transaction
+    :rtype: int
+
+    ..TODO: need to change transaction id format and generation method?
+    """
     return int(random() * 1000000)
 
 
+def get_or_create_child_xml_node(parent, name: str):
+    """Get a direct child by tag name or create it if missing."""
+    node = parent.find(f'./{name}')
+    if node is None:
+        node = etree.SubElement(parent, name)
+    return node
+
+
 def start_transaction(
-    config_filename=CMAPI_CONF_PATH,
-    cs_config_filename=DEFAULT_MCS_CONF_PATH,
-    extra_nodes=None,
-    remove_nodes=None,
-    optional_nodes=None,
-    id=get_id()
+    config_filename: str = CMAPI_CONF_PATH,
+    cs_config_filename: str = DEFAULT_MCS_CONF_PATH,
+    extra_nodes: Optional[list] = None,
+    remove_nodes: Optional[list] = None,
+    optional_nodes: Optional[list] = None,
+    txn_id: Optional[int] = None,
+    timeout: float = TRANSACTION_TIMEOUT
 ):
     """Start internal CMAPI transaction.
 
@@ -53,19 +81,26 @@ def start_transaction(
 
     :param config_filename: cmapi config filepath,
                             defaults to CMAPI_CONF_PATH
-    :type config_filename: str
+    :type config_filename: str, optional
     :param cs_config_filename: columnstore xml config filepath,
                                defaults to DEFAULT_MCS_CONF_PATH
     :type cs_config_filename: str, optional
     :param extra_nodes: extra nodes, defaults to None
-    :type extra_nodes: list, optional
+    :type extra_nodes: Optional[list], optional
     :param remove_nodes: remove nodes, defaults to None
-    :type remove_nodes: list, optional
+    :type remove_nodes: Optional[list], optional
     :param optional_nodes: optional nodes, defaults to None
-    :type optional_nodes: list, optional
-    :return: (success, txnid, nodes)
-    :rtype: tuple
+    :type optional_nodes: Optional[list], optional
+    :param txn_id: id for transaction to start, defaults to None
+    :type txn_id: Optional[int], optional
+    :param timeout: time in seconds for cmapi transaction lock before it ends
+                    automatically, defaults to TRANSACTION_TIMEOUT
+    :type timeout: float, optional
+    :return: (success, txn_id, nodes)
+    :rtype: tuple[bool, int, list[str]]
     """
+    if txn_id is None:
+        txn_id = get_id()
     # TODO: Somehow change that logic for eg using several input types
     #       (str\list\set) and detect which one we got.
     extra_nodes = extra_nodes or []
@@ -78,10 +113,11 @@ def start_transaction(
     version = get_version()
 
     headers = {'x-api-key': api_key}
-    body = {'id' : id}
-    final_time = datetime.datetime.now() + datetime.timedelta(seconds=300)
+    body = {'id' : txn_id}
+    final_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
 
     success = False
+    successes = []
     while datetime.datetime.now() < final_time and not success:
         successes = []
 
@@ -119,6 +155,10 @@ def start_transaction(
         # this copy will be updated if an optional node can't be reached
         real_active_nodes = set(active_nodes)
         logging.trace(f'Active nodes on start transaction {active_nodes}')
+
+        if not len(active_nodes):
+            logging.warning('No active nodes found, transaction start will not have any effect')
+
         for node in active_nodes:
             url = f'https://{node}:8640/cmapi/{version}/node/begin'
             node_success = False
@@ -135,9 +175,9 @@ def start_transaction(
                     body['timeout'] = (
                         final_time - datetime.datetime.now()
                     ).seconds
-                    r = requests.put(
-                        url, verify=False, headers=headers, json=body,
-                        timeout=10
+                    r = get_traced_session().request(
+                        'PUT', url, verify=False, headers=headers,
+                        json=body, timeout=10
                     )
 
                     # a 4xx error from our endpoint;
@@ -148,7 +188,7 @@ def start_transaction(
                     # conditions where that is the desired behavior here.
                     if int(r.status_code / 100) == 4:
                         logging.debug(
-                             'Got a 4xx error while beginning transaction '
+                             'Got a {r.status_code} error while beginning transaction '
                             f'with response text {r.text}'
                         )
                         break  # TODO: useless, got break in finally statement
@@ -180,7 +220,7 @@ def start_transaction(
                 time.sleep(1)
 
             if not node_success and node not in optional_nodes:
-                rollback_txn_attempt(api_key, version, id, successes)
+                rollback_txn_attempt(api_key, version, txn_id, successes)
                 # wait up to 5 secs and try the whole thing again
                 time.sleep(random() * 5)
                 break
@@ -192,7 +232,7 @@ def start_transaction(
         # are up (> 50%).
         success = (len(successes) == len(real_active_nodes))
 
-    return (success, id, successes)
+    return (success, txn_id, successes)
 
 def rollback_txn_attempt(key, version, txnid, nodes):
     headers = {'x-api-key': key}
@@ -201,8 +241,9 @@ def rollback_txn_attempt(key, version, txnid, nodes):
         url = f"https://{node}:8640/cmapi/{version}/node/rollback"
         for retry in range(5):
             try:
-                r = requests.put(
-                    url, verify=False, headers=headers, json=body, timeout=5
+                r = get_traced_session().request(
+                    'PUT', url, verify=False, headers=headers,
+                    json=body, timeout=5
                 )
                 r.raise_for_status()
             except requests.Timeout:
@@ -256,7 +297,10 @@ def commit_transaction(
         url = f"https://{node}:8640/cmapi/{version}/node/commit"
         for retry in range(5):
             try:
-                r = requests.put(url, verify = False, headers = headers, json = body, timeout = 5)
+                r = get_traced_session().request(
+                    'PUT', url, verify=False, headers=headers,
+                    json=body, timeout=5
+                )
                 r.raise_for_status()
             except requests.Timeout as e:
                 logging.warning(f"commit_transaction(): timeout on node {node}")
@@ -273,110 +317,167 @@ def broadcast_new_config(
     sm_config_filename: str = DEFAULT_SM_CONF_PATH,
     test_mode: bool = False,
     nodes: Optional[list] = None,
-) -> bool:
+    timeout: Optional[int] = None,
+    distribute_secrets: bool = False,
+    stateful_config_dict: Optional[dict[str, Any]] = None
+) -> None:
     """Send new config to nodes. Now in async way.
 
     :param cs_config_filename: Columnstore.xml path,
                                defaults to DEFAULT_MCS_CONF_PATH
-    :type cs_config_filename: str, optional
     :param cmapi_config_filename: cmapi config path,
                                   defaults to CMAPI_CONF_PATH
-    :type cmapi_config_filename: str, optional
     :param sm_config_filename: storage manager config path,
                                defaults to DEFAULT_SM_CONF_PATH
-    :type sm_config_filename: str, optional
     :param test_mode: for test purposes, defaults to False TODO: remove
-    :type test_mode: bool, optional
     :param nodes: nodes list for config put, defaults to None
-    :type nodes: Optional[list], optional
-    :return: success state
-    :rtype: _type_
+    :param timeout: timeout passing to gracefully stop DMLProc process,
+    :param distribute_secrets: flag to distribute secrets to nodes
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
+    :raises CMAPIBasicError: If Broadcasting config to nodes failed with errors
     """
 
+    # TODO: move this from multiple places to one, eg to helpers
     cfg_parser = get_config_parser(cmapi_config_filename)
     key = get_current_key(cfg_parser)
     version = get_version()
     if nodes is None:
         nodes = get_active_nodes(cs_config_filename)
 
-    nc = NodeConfig()
-    root = nc.get_current_config_root(config_filename=cs_config_filename)
-    with open(cs_config_filename) as f:
-        config_text = f.read()
-
-    with open(sm_config_filename) as f:
-        sm_config_text = f.read()
-
     headers = {'x-api-key': key}
-    body = {
-        'manager': root.find('./ClusterManager').text,
-        'revision': root.find('./ConfigRevision').text,
-        'timeout': 300,
-        'config': config_text,
-        'cs_config_filename': cs_config_filename,
-        'sm_config_filename': sm_config_filename,
-        'sm_config': sm_config_text
-    }
+    if stateful_config_dict:
+        body = {
+            'timeout': DMLPROC_SHUTDOWN_TIMEOUT if timeout is None else timeout,
+            'stateful_config_dict': stateful_config_dict,
+            'only_stateful_config': True,
+        }
+    else:
+        nc = NodeConfig()
+        root = nc.get_current_config_root(config_filename=cs_config_filename)
+        with open(cs_config_filename, mode='r', encoding='utf-8') as f:
+            config_text = f.read()
+
+        with open(sm_config_filename, mode='r', encoding='utf-8') as f:
+            sm_config_text = f.read()
+
+        body = {
+            'manager': root.find('./ClusterManager').text,
+            'revision': root.find('./ConfigRevision').text,
+            'timeout': DMLPROC_SHUTDOWN_TIMEOUT if timeout is None else timeout,
+            'config': config_text,
+            'mcs_config_filename': cs_config_filename,
+            'sm_config_filename': sm_config_filename,
+            'sm_config': sm_config_text,
+            'stateful_config_dict': AppStatefulConfig.to_dict(),
+        }
+
+    if distribute_secrets:
+        # TODO: do not restart cluster when put xml config only with
+        #       distribute secrets
+        if not CEJPasswordHandler.secretsfile_exists():
+            logging.debug('No .secrets file found so not distrinuting it.')
+        else:
+            secrets = CEJPasswordHandler.get_secrets_json()
+            body['secrets'] = secrets
+
     # TODO: remove test mode here and replace it by mock in tests
     if test_mode:
         body['test'] = True
 
-    failed_nodes = []
-    success_nodes = []
+    async def update_config(node: str, headers: dict, body: dict) -> None:
+        """Update remote node config asyncronously.
 
-    async def update_config(node, success_nodes, failed_nodes, headers, body):
+        :param node: node ip address or hostname
+        :param headers: headers for request
+        :param body: request body
+        :raises CMAPIBasicError: If request failed by status code
+        :raises CMAPIBasicError: If request failed by some undefined error
+        :raises CMAPIBasicError: If request failed by timeout
+        :raises CMAPIBasicError: If undefined error happened
+        """
         url = f'https://{node}:8640/cmapi/{version}/node/config'
-        request_put = partial(
-            requests.put, url, verify=False, headers=headers, json=body,
-            timeout=120
-        )
-        success = False
-        executor = concurrent.futures.ThreadPoolExecutor()
-        loop = asyncio.get_event_loop()
+        resp_json: dict = dict()
 
-        # TODO: remove this retry, it cause retries and long waiting time
-        #       for eg if some of mcs processes couldn't properly start/stop.
-        #       Fix error handling, could be raising error instead of returning
-        #       bool value
-        for retry in range(5):
+        async with create_traced_async_session() as session:
             try:
-                r = await loop.run_in_executor(executor, request_put)
-                r.raise_for_status()
-            except requests.Timeout as e:
-                logging.warning(
-                    f'Timeout while pushing new config to "{node}"'
+                async with session.put(
+                    url, headers=headers, json=body, ssl=False, timeout=LONG_REQUEST_TIMEOUT
+                ) as response:
+                    resp_json =  await response.json(encoding='utf-8')
+                    response.raise_for_status()
+                logging.info(f'Node {node} config put successful.')
+            except aiohttp.ClientResponseError as err:
+                # TODO: may be better to check if resp status is 422 cause
+                #       it's like a signal that cmapi server raised it in
+                #       most cases
+                error_msg = resp_json.get('error', resp_json)
+                message = (
+                    f'Node {node} config put failed with status: '
+                    f'{err.status} and err message: {error_msg}'
                 )
-            except Exception as e:
-                logging.warning(
-                    f'Got an unexpected error pushing new config to "{node}"',
-                    exc_info=True
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except aiohttp.ClientError as err:
+
+                message = (
+                        f'Node {node} config put failed with ClientError: '
+                        f'{str(err)}'
+                    )
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except asyncio.TimeoutError:
+                message = f'Node {node} config put failed by Timeout: '
+                logging.error(message)
+                raise CMAPIBasicError(message)
+            except Exception as err:
+                message = (
+                    f'Node {node} config put failed by undefined exception: '
+                    f'{str(err)}'
                 )
-            else:
-                success_nodes.append(node)
-                success = True
-                break
-        if not success:
-            failed_nodes.append(node)
+                logging.error(message)
+                raise CMAPIBasicError(message)
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     tasks = [
-        update_config(node, success_nodes, failed_nodes, headers, body)
+        update_config(node, headers, body)
         for node in nodes
     ]
-    loop.run_until_complete(asyncio.wait(tasks))
+    error_messages = []
+    results = loop.run_until_complete(
+        asyncio.gather(*tasks, return_exceptions=True)
+    )
+    for result in results:
+        if isinstance(result, Exception):
+            error_messages.append(result.message)
     loop.close()
+    if error_messages:
+        errors_str = ', '.join(error_messages)
+        final_message = (
+            f'Broadcasting config to nodes failed with errors: {errors_str}'
+        )
+        raise CMAPIBasicError(final_message)
 
-    if len(success_nodes) > 0:
-        logging.info(
-            f'Successfully pushed new config file to {success_nodes}'
+
+def broadcast_stateful_config(stateful_config_dict: dict[str, Any]) -> None:
+    """Broadcast new stateful config to nodes.
+
+    :param stateful_config_dict: stateful config update dict to distribute to nodes
+    """
+
+    try:
+        broadcast_new_config(stateful_config_dict=stateful_config_dict)
+    except CMAPIBasicError as err:
+        message = (
+            f'Failed to broadcast new stateful config dict: {stateful_config_dict}, '
+            f'got error: {err.message}'
         )
-    if len(failed_nodes) > 0:
-        logging.error(
-            f'Failed to push the new config to {failed_nodes}'
+        logging.error(message)
+        return
+    else:
+        logging.debug(
+            f'Successfully broadcasted new stateful config dict: {stateful_config_dict}'
         )
-        return False
-    return True
 
 
 # Might be more appropriate to put these in node_manipulation?
@@ -435,7 +536,7 @@ def get_config_parser(
     except PermissionError as e:
         # TODO: looks like it's useless here, because of creating config
         #       from default on cmapi server startup
-        #       Anyway looks like it have to raise error and then
+        #       Anyway looks like it has to raise error and then
         #       return 500 error
         logging.error(
             'CMAPI cannot create configuration file. '
@@ -464,7 +565,7 @@ def save_cmapi_conf_file(cfg_parser, config_filepath: str = CMAPI_CONF_PATH):
         )
 
 
-def get_active_nodes(config:str = DEFAULT_MCS_CONF_PATH) -> list:
+def get_active_nodes(config: str = DEFAULT_MCS_CONF_PATH) -> list:
     """Get active nodes from Columnstore.xml.
 
     Actually this is only names of nodes by which node have been added.
@@ -512,7 +613,6 @@ def get_current_key(config_parser):
 
 
 def get_version():
-    from cmapi_server.controllers.dispatcher import _version
     return _version
 
 
@@ -523,16 +623,36 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
     dbroots = []
     smc_node = root.find('./SystemModuleConfig')
     mod_count = int(smc_node.find('./ModuleCount3').text)
+
     for i in range(1, mod_count+1):
         ip_addr = smc_node.find(f'./ModuleIPAddr{i}-1-3').text
         hostname = smc_node.find(f'./ModuleHostName{i}-1-3').text
-        node_fqdn = socket.gethostbyaddr(hostname)[0]
+        try:
+            node_fqdn = socket.gethostbyaddr(hostname)[0]
+        except (socket.herror, socket.gaierror, OSError) as e:
+            # Fallback if reverse lookup fails
+            logging.warning(
+                'get_dbroots(): reverse lookup failed for %r: %s. Using original hostname.',
+                hostname, e
+            )
+            node_fqdn = hostname
 
         if node in LOCALHOSTS and hostname != 'localhost':
-            node = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                node = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning(
+                    'get_dbroots(): reverse lookup failed for local hostname: %s. Using socket.gethostname().',
+                    e
+                )
+                node = socket.gethostname()
         elif node not in LOCALHOSTS and hostname == 'localhost':
             # hostname will only be loclahost if we are in one node cluster
-            hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            try:
+                hostname = socket.gethostbyaddr(socket.gethostname())[0]
+            except (socket.herror, socket.gaierror, OSError) as e:
+                logging.warning('get_dbroots(): reverse lookup failed for "localhost": %s.', e)
+                hostname = socket.gethostname()
 
 
         if node == ip_addr or node == hostname or node == node_fqdn:
@@ -542,6 +662,7 @@ def get_dbroots(node, config=DEFAULT_MCS_CONF_PATH):
                 dbroots.append(
                     smc_node.find(f"./ModuleDBRootID{i}-{j}-3").text
                 )
+
     return dbroots
 
 
@@ -601,7 +722,7 @@ def get_current_config_file(
         headers = {'x-api-key' : key}
         url = f'https://{node}:8640/cmapi/{get_version()}/node/config'
         try:
-            r = requests.get(url, verify=False, headers=headers, timeout=5)
+            r = get_traced_session().request('GET', url, verify=False, headers=headers, timeout=5)
             r.raise_for_status()
             config = r.json()['config']
         except Exception as e:
@@ -712,14 +833,17 @@ def if_primary_restart(
     success = False
     while not success and datetime.datetime.now() < endtime:
         try:
-            response = requests.put(url, verify = False, headers = headers, json = body, timeout = 60)
+            response = get_traced_session().request(
+                'PUT', url, verify=False, headers=headers,
+                json=body, timeout=60
+            )
             response.raise_for_status()
             success = True
         except Exception as e:
             logging.warning(f"if_primary_restart(): failed to start the cluster, got {str(e)}")
             time.sleep(10)
     if not success:
-        logging.error(f"if_primary_restart(): failed to start the cluster.  Manual intervention is required.")
+        logging.error("if_primary_restart(): failed to start the cluster.  Manual intervention is required.")
 
 
 def get_cej_info(config_root):
@@ -733,6 +857,7 @@ def get_cej_info(config_root):
     :return: cej_host, cej_port, cej_username, cej_password
     :rtype: tuple
     """
+    #TODO: move this to cej.py?
     cej_node = config_root.find('./CrossEngineSupport')
     cej_host = cej_node.find('Host').text or '127.0.0.1'
     cej_port = cej_node.find('Port').text or '3306'
@@ -748,8 +873,26 @@ def get_cej_info(config_root):
             'Columnstore.xml has an empty CrossEngineSupport.Password tag'
         )
 
-    if CEJPasswordHandler.secretsfile_exists():
-        cej_password = CEJPasswordHandler.decrypt_password(cej_password)
+    if (
+        not CEJPasswordHandler.secretsfile_exists() and
+        CEJPasswordHandler.is_password_encrypted(cej_password)
+    ):
+        logging.error(
+            'CrossengineSupport password seems to be encrypted '
+            'but no .secrets file exist. May be it\'s eventually removed.'
+        )
+
+
+    if CEJPasswordHandler.secretsfile_exists() and cej_password:
+        if CEJPasswordHandler.is_password_encrypted(cej_password):
+            cej_password = CEJPasswordHandler.decrypt_password(cej_password)
+        else:
+            logging.error(
+                'CrossengineSupport password seems to be unencrypted but '
+                '.secrets file exist. May be .secrets file generated by '
+                'mistake or password left encrypted after using cskeys '
+                'utility.'
+            )
 
     return cej_host, cej_port, cej_username, cej_password
 
@@ -800,7 +943,7 @@ def cmapi_config_check(cmapi_conf_path: str = CMAPI_CONF_PATH):
     """
     if not os.path.exists(cmapi_conf_path):
         logging.info(
-            f'There are no config file at "{cmapi_conf_path}". '
+            f'There is no config file at "{cmapi_conf_path}". '
             f'So copy default config from {CMAPI_DEFAULT_CONF_PATH} there.'
         )
         copyfile(CMAPI_DEFAULT_CONF_PATH, cmapi_conf_path)
@@ -845,3 +988,44 @@ def get_dispatcher_name_and_path(
         config_parser.get('Dispatcher', 'path', fallback='')
     )
     return dispatcher_name, dispatcher_path
+
+
+def build_url(
+        base_url: str, query_params: dict, scheme: str = 'https',
+        path: str = '', params: str = '', fragment: str = '',
+        port: Optional[int] = None
+) -> str:
+    """Build url with query params.
+
+    :param base_url: base url address
+    :type base_url: str
+    :param query_params: query params
+    :type query_params: dict
+    :param scheme: url scheme, defaults to 'https'
+    :type scheme: str, optional
+    :param path: url path, defaults to ''
+    :type path: str, optional
+    :param params: params, defaults to ''
+    :type params: str, optional
+    :param fragment: fragment, defaults to ''
+    :type fragment: str, optional
+    :param port: port for base url, defaults to None
+    :type port: Optional[int], optional
+    :return: url with query params
+    :rtype: str
+    """
+    # namedtuple to match the internal signature of urlunparse
+    Components = namedtuple(
+        typename='Components',
+        field_names=['scheme', 'netloc', 'path', 'params', 'query', 'fragment']
+    )
+    return urlunparse(
+        Components(
+            scheme=scheme,
+            netloc=f'{base_url}:{port}' if port else base_url,
+            path=path,
+            params=params,
+            query=urlencode(query_params),
+            fragment=fragment
+        )
+    )

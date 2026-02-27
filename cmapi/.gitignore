@@ -87,3 +87,18 @@ result
 centos8
 ubuntu20.04
 buildinfo.txt
+
+# Self-signed certificates
+self-signed.crt
+self-signed.key
+
+# Comes in handy if you build packages locally
+pp
+mcs
+mcs_aws
+mcs_gsutil
+_CPack_Packages/
+venv/
+
+*.log
+*.puml

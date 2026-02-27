@@ -11,30 +11,29 @@ import requests
 requests.packages.urllib3.disable_warnings()
 
 from cmapi_server.constants import (
-    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH
+    EM_PATH_SUFFIX, MCS_EM_PATH, MCS_BRM_CURRENT_PATH, S3_BRM_CURRENT_PATH, _version
 )
-from cmapi_server.controllers.dispatcher import (
-    dispatcher, jsonify_error,_version
-)
+from cmapi_server.controllers.dispatcher import dispatcher, jsonify_error
+from cmapi_server.managers.certificate import CertificateManager
 from cmapi_server.test.unittest_global import (
-    create_self_signed_certificate, cert_filename, cmapi_config_filename,
-    tmp_cmapi_config_filename
+    cmapi_config_filename, tmp_cmapi_config_filename
 )
 from mcs_node_control.models.node_config import NodeConfig
 
 
 @contextmanager
 def run_server():
-    if not path.exists(cert_filename):
-        create_self_signed_certificate()
+    CertificateManager.create_self_signed_certificate_if_not_exist()
     cherrypy.engine.start()
     cherrypy.engine.wait(cherrypy.engine.states.STARTED)
-    yield
-    cherrypy.engine.exit()
-    cherrypy.engine.block()
+    try:
+        yield
+    finally:
+        cherrypy.engine.exit()
+        cherrypy.engine.block()
 
 
-def get_current_key():
+def get_current_key() -> str:
     app_config = configparser.ConfigParser()
     try:
         with open(cmapi_config_filename, 'r') as _config_file:
@@ -67,7 +66,13 @@ class TestEMEndpoints(unittest.TestCase):
                 ["smcat", S3_BRM_CURRENT_PATH], stdout=subprocess.PIPE
             )
             element_current_suffix = ret.stdout.decode("utf-8").rstrip()
-            element_current_filename = f'{EM_PATH_SUFFIX}/{element_current_suffix}_{element}'
+
+            suffix_for_file = element_current_suffix
+            # Journal is always singular, so strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
+
+            element_current_filename = f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}'
             ret = subprocess.run(
                 ["smcat", element_current_filename], stdout=subprocess.PIPE
             )
@@ -75,8 +80,14 @@ class TestEMEndpoints(unittest.TestCase):
         else:
             element_current_name = Path(MCS_BRM_CURRENT_PATH)
             element_current_filename = element_current_name.read_text().rstrip()
+
+            suffix_for_file = element_current_filename
+            # Journal is always singular, so strip trailing A/B from suffix
+            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+                suffix_for_file = suffix_for_file[:-1]
+
             element_current_file = Path(
-                f'{MCS_EM_PATH}/{element_current_filename}_{element}'
+                f'{MCS_EM_PATH}/{suffix_for_file}_{element}'
             )
             result = element_current_file.read_bytes()
         return result

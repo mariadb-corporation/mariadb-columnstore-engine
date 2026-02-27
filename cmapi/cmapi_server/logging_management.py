@@ -7,6 +7,7 @@ import cherrypy
 from cherrypy import _cperror
 
 from cmapi_server.constants import CMAPI_LOG_CONF_PATH
+from tracing.tracer import get_tracer
 
 
 class AddIpFilter(logging.Filter):
@@ -15,6 +16,24 @@ class AddIpFilter(logging.Filter):
         record.ip = cherrypy.request.remote.name or cherrypy.request.remote.ip
         return True
 
+
+class TraceParamsFilter(logging.Filter):
+    """Filter that adds trace_params to log records, except for the 'tracer' logger."""
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Don't print trace params for tracer logger family; it already prints trace data
+        if record.name == 'tracer' or record.name.startswith('tracer.'):
+            record.trace_params = ""
+            return True
+
+        trace_id, span_id, parent_span_id = get_tracer().current_trace_ids()
+        if trace_id and span_id:
+            trace_params = f"rid={trace_id} sid={span_id}"
+            if parent_span_id:
+                trace_params += f" psid={parent_span_id}"
+            record.trace_params = trace_params
+        else:
+            record.trace_params = ""
+        return True
 
 def custom_cherrypy_error(
         self, msg='', context='', severity=logging.INFO, traceback=False
@@ -95,10 +114,19 @@ def add_logging_level(level_name, level_num, method_name=None):
     setattr(logging, method_name, partial(logging.log, level_num))
 
 
+def enable_console_logging(logger: logging.Logger) -> None:
+    """Enable logging to console for passed logger by adding a StreamHandler to it"""
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_handler.setFormatter(logger.handlers[0].formatter)
+    logger.addHandler(console_handler)
+
+
 def config_cmapi_server_logging():
     # add custom level TRACE only for develop purposes
     # could be activated using API endpoints or cli tool without relaunching
-    add_logging_level('TRACE', 5)
+    if not hasattr(logging, 'TRACE'):
+        add_logging_level('TRACE', 5)
     cherrypy._cplogging.LogManager.error = custom_cherrypy_error
     # reconfigure cherrypy.access log message format
     # Default access_log_format '{h} {l} {u} {t} "{r}" {s} {b} "{f}" "{a}"'
@@ -113,7 +141,9 @@ def config_cmapi_server_logging():
     cherrypy._cplogging.LogManager.access_log_format = (
         '{h} ACCESS "{r}" code {s}, bytes {b}, user-agent "{a}"'
     )
+    # trace_params are populated via TraceParamsFilter configured in logging config
     dict_config(CMAPI_LOG_CONF_PATH)
+    disable_unwanted_loggers()
 
 
 def change_loggers_level(level: str):
@@ -129,3 +159,25 @@ def change_loggers_level(level: str):
     loggers.append(logging.getLogger())  # add RootLogger
     for logger in loggers:
         logger.setLevel(level)
+
+def disable_unwanted_loggers():
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+
+class JsonFormatter(logging.Formatter):
+    # Standard LogRecord fields
+    skip_fields = set(logging.LogRecord('',0,'',0,'',(),None).__dict__.keys())
+
+    def format(self, record):
+        data = {
+            "ts": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "msg": record.getMessage(),
+        }
+        # Extract extras from the record (all attributes except standard LogRecord fields)
+        for k, v in record.__dict__.items():
+            if k not in self.skip_fields:
+                data[k] = v
+        # Allow non-serializable extras (e.g., bytes, datetime) to be stringified
+        return json.dumps(data, ensure_ascii=False, sort_keys=True, default=str)

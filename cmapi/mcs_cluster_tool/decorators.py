@@ -16,20 +16,29 @@ def handle_output(func):
         return_code = 1
         try:
             result = func(*args, **kwargs)
-            typer.echo(json.dumps(result, indent=2))
+            # Print strings as-is for human-readable output; JSON otherwise
+            if isinstance(result, str):
+                logging.debug(f'Command returned: {result}')
+            else:
+                typer.echo(json.dumps(result, indent=2))
             logger.debug(f'Command returned: {result}')
             return_code = 0
         except CMAPIBasicError as err:
             typer.echo(err.message, err=True)
-            logger.error('Error while command execution', exc_info=True)
+            logger.error('Error during command execution', exc_info=True)
         except typer.BadParameter as err:
             logger.error('Bad command line parameter.')
             raise err
+        except typer.Exit as err:  # if some command used typer.Exit
+            #TODO: think about universal protocol to return json data and
+            #      plain text results.
+            return_code = err.exit_code
         except Exception:
             logger.error(
-                'Undefined error while command execution',
+                'Undefined error during command execution',
                 exc_info=True
             )
             typer.echo('Unknown error, check the log file.', err=True)
+
         raise typer.Exit(return_code)
     return wrapper
