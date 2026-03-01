@@ -7,6 +7,7 @@ ALTER TABLE t1 ADD COLUMN c11 INT NOT NULL;
 ERROR HY000: Internal error: Table is not empty. New column has to have a default value if NOT NULL required.
 ALTER TABLE t1 ADD COLUMN c11 INT(1);
 ALTER TABLE t1 ADD COLUMN c21 CHAR(2);
+ALTER TABLE t1 ADD COLUMN c31 CHAR(2);
 ALTER TABLE t1 ADD COLUMN c11 INT(2);
 ERROR 42S21: Duplicate column name 'c11'
 ALTER TABLE t1 ADD COLUMN c12 CHAR(1) AFTER c11;
@@ -20,11 +21,10 @@ ERROR HY000: Internal error: CAL0001: Alter table Failed:  Changing the datatype
 ALTER TABLE t1 CHANGE COLUMN c2 c2new CHAR(1);
 ALTER TABLE t1 CHANGE COLUMN c2new c2 CHAR(1);
 ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
-ERROR 42000: The storage engine for the table doesn't support The syntax drop column if exists is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
-ALTER TABLE t1 DROP COLUMN c11;
 ALTER TABLE t1 DROP COLUMN IF EXISTS c11;
 Warnings:
 Note	1091	Can't DROP COLUMN `c11`; check that it exists
+ALTER TABLE t1 DROP COLUMN c31;
 SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (

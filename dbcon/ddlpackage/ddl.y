@@ -1309,7 +1309,7 @@ opt_signed:
 
     drop_column_def:
         DROP column_name drop_behavior {$$ = new AtaDropColumn($2, $3);}
-        | DROP COLUMN column_name drop_behavior {$$ = new AtaDropColumn($3, $4);}
+        | DROP COLUMN opt_if_exists column_name drop_behavior {$$ = new AtaDropColumn($4, $5);}
         | DROP COLUMN '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
         | DROP '(' column_name_list ')' {$$ = new AtaDropColumns($3);}
         | DROP COLUMNS '(' column_name_list ')' {$$ = new AtaDropColumns($4);}
