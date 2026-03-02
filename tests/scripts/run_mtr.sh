@@ -62,14 +62,16 @@ cd ${INSTALLED_MTR_PATH}
 
 if [[ ! -d "${INSTALLED_MTR_PATH}/suite/columnstore" ]]; then
     message " ・ Adding symlink for columnstore tests to ${INSTALLED_MTR_PATH}/suite/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
-    ln -s "${COLUMNSTORE_MTR_SOURCE}" "${INSTALLED_MTR_PATH}/suite"
+    ln -sfn "${COLUMNSTORE_MTR_SOURCE}" "${INSTALLED_MTR_PATH}/suite"
 fi
 
-# MTR may resolve suite paths via mysql-test instead of mariadb-test
-MTR_MYSQL_TEST_BASE="/usr/share/${SERVERNAME}/mysql-test"
-if [[ -d "${MTR_MYSQL_TEST_BASE}" && ! -d "${MTR_MYSQL_TEST_BASE}/suite/columnstore" ]]; then
-    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_BASE}/suite/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
-    ln -s "${COLUMNSTORE_MTR_SOURCE}" "${MTR_MYSQL_TEST_BASE}/suite"
+# MTR's mtr_cases.pm searches for suites in mysql-test/suite/ relative to
+# the parent of the test directory, even when running from mariadb-test/.
+MTR_MYSQL_TEST_SUITE="$(dirname "${INSTALLED_MTR_PATH%/}")/mysql-test/suite"
+if [[ ! -d "${MTR_MYSQL_TEST_SUITE}/columnstore" ]]; then
+    mkdir -p "${MTR_MYSQL_TEST_SUITE}"
+    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_SUITE}/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
+    ln -sfn "${COLUMNSTORE_MTR_SOURCE}" "${MTR_MYSQL_TEST_SUITE}"
 fi
 
 if [[ ! -d '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
