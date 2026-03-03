@@ -369,17 +369,29 @@ class NodeConfig:
         func_name = 's3_enabled'
         sm_config = configparser.ConfigParser()
         if len(sm_config.read(config_filename)) > 0:
-            storage = sm_config.get('ObjectStorage', 'service')
+            try:
+                storage = sm_config.get('ObjectStorage', 'service')
+            except (configparser.NoSectionError, configparser.NoOptionError):
+                storage = 'LocalStorage'
             if storage is None:
                 storage = 'LocalStorage'
 
             if storage.lower() == 's3':
                 config_root = self.get_current_config_root()
-                if not config_root.find('./Installation/DBRootStorageType').text.lower() == "storagemanager":
+                db_root_storage_type = config_root.find('./Installation/DBRootStorageType')
+                if db_root_storage_type is None or db_root_storage_type.text is None:
+                    module_logger.error(f"{func_name} Installation/DBRootStorageType element not found in config")
+                elif not db_root_storage_type.text.lower() == "storagemanager":
                     module_logger.error(f"{func_name} DBRootStorageType.lower() != storagemanager")
-                if not config_root.find('./StorageManager/Enabled').text.lower() == "y":
+                sm_enabled = config_root.find('./StorageManager/Enabled')
+                if sm_enabled is None or sm_enabled.text is None:
+                    module_logger.error(f"{func_name} StorageManager/Enabled element not found in config")
+                elif not sm_enabled.text.lower() == "y":
                     module_logger.error(f"{func_name} StorageManager/Enabled.lower() != y")
-                if not config_root.find('./SystemConfig/DataFilePlugin').text == "libcloudio.so":
+                data_file_plugin = config_root.find('./SystemConfig/DataFilePlugin')
+                if data_file_plugin is None or data_file_plugin.text is None:
+                    module_logger.error(f"{func_name} SystemConfig/DataFilePlugin element not found in config")
+                elif not data_file_plugin.text == "libcloudio.so":
                     module_logger.error(f"{func_name} SystemConfig/DataFilePlugin != libcloudio.so")
 
                 return True
