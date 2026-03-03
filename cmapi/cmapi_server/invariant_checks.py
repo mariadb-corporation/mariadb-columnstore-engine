@@ -98,7 +98,11 @@ def run_invariant_checks() -> Optional[str]:
 @fact
 def storage_type() -> str:
     """Provides storage type: shared_fs or s3."""
-    return 's3' if NodeConfig().s3_enabled() else 'shared_fs'
+    try:
+        return 's3' if NodeConfig().s3_enabled() else 'shared_fs'
+    except Exception:
+        logger.exception('Failed to detect storage type, defaulting to shared_fs')
+        return 'shared_fs'
 
 @fact
 def is_shared_fs(storage_type: str) -> bool:
