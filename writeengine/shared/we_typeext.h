@@ -56,6 +56,7 @@ struct Token
     fbo = 0xFFFFFFFFFLL;
     bc = 0x3FFFF;
   }
+  bool isNotPhysical() const { return fbo == 0xfffffffffLL; }
 };
 
 constexpr uid_t UID_NONE = (uid_t)-1;
