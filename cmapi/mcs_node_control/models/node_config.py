@@ -170,6 +170,41 @@ class NodeConfig:
         ])
         return xmlstr
 
+    def _require_text(
+        self, root: etree.Element, xpath: str, *, func_name: str,
+        element_desc: Optional[str] = None,
+        missing_log_msg: Optional[str] = None,
+    ) -> Optional[str]:
+        """Fetch required text content from an XML config node.
+
+        The helper centralizes the common pattern of:
+
+        * locating an element via ``xpath``,
+        * ensuring it exists and has non-``None`` ``.text``,
+        * logging a consistent error when it doesn't.
+
+        :param root: Root XML element to search in.
+        :param xpath: XPath expression passed to ``root.find()``.
+        :param func_name: Caller function name to include in log messages.
+        :param element_desc: Optional human-friendly element description for log
+            messages. If omitted, it is derived from ``xpath``.
+        :param missing_log_msg: Optional full error message to emit when the
+            element or its text is missing. If not provided, a default message
+            is derived from ``func_name`` and ``element_desc``.
+
+        :returns: The element's text if found and non-``None``; otherwise
+            ``None``.
+        """
+        node = root.find(xpath) if root is not None else None
+        if node is None or node.text is None:
+            if missing_log_msg is not None:
+                module_logger.error(missing_log_msg)
+            else:
+                desc = element_desc or xpath.lstrip('./')
+                module_logger.error(f'{func_name} {desc} element not found in config')
+            return None
+        return node.text
+
     def get_dbrm_conn_info(self, root=None):
         """Retrievs current DBRM master IP and port
 
@@ -378,23 +413,50 @@ class NodeConfig:
 
             if storage.lower() == 's3':
                 config_root = self.get_current_config_root()
-                db_root_storage_type = config_root.find('./Installation/DBRootStorageType')
-                if db_root_storage_type is None or db_root_storage_type.text is None:
-                    module_logger.error(f"{func_name} Installation/DBRootStorageType element not found in config")
-                elif not db_root_storage_type.text.lower() == "storagemanager":
-                    module_logger.error(f"{func_name} DBRootStorageType.lower() != storagemanager")
-                sm_enabled = config_root.find('./StorageManager/Enabled')
-                if sm_enabled is None or sm_enabled.text is None:
-                    module_logger.error(f"{func_name} StorageManager/Enabled element not found in config")
-                elif not sm_enabled.text.lower() == "y":
-                    module_logger.error(f"{func_name} StorageManager/Enabled.lower() != y")
-                data_file_plugin = config_root.find('./SystemConfig/DataFilePlugin')
-                if data_file_plugin is None or data_file_plugin.text is None:
-                    module_logger.error(f"{func_name} SystemConfig/DataFilePlugin element not found in config")
-                elif not data_file_plugin.text == "libcloudio.so":
-                    module_logger.error(f"{func_name} SystemConfig/DataFilePlugin != libcloudio.so")
+                s3_is_correctly_configured = True
 
-                return True
+                db_root_storage_type = self._require_text(
+                    config_root, './Installation/DBRootStorageType', func_name=func_name,
+                    element_desc='Installation/DBRootStorageType',
+                    missing_log_msg=(
+                        f'{func_name} Installation/DBRootStorageType element not found in config'
+                    ),
+                )
+                if db_root_storage_type is None:
+                    s3_is_correctly_configured = False
+                elif db_root_storage_type.lower() != 'storagemanager':
+                    module_logger.error(f'{func_name} DBRootStorageType.lower() != storagemanager')
+                    s3_is_correctly_configured = False
+
+                sm_enabled = self._require_text(
+                    config_root, './StorageManager/Enabled', func_name=func_name,
+                    element_desc='StorageManager/Enabled',
+                    missing_log_msg=(
+                        f'{func_name} StorageManager/Enabled element not found in config'
+                    ),
+                )
+                if sm_enabled is None:
+                    s3_is_correctly_configured = False
+                elif sm_enabled.lower() != 'y':
+                    module_logger.error(f'{func_name} StorageManager/Enabled.lower() != y')
+                    s3_is_correctly_configured = False
+
+                data_file_plugin = self._require_text(
+                    config_root, './SystemConfig/DataFilePlugin', func_name=func_name,
+                    element_desc='SystemConfig/DataFilePlugin',
+                    missing_log_msg=(
+                        f'{func_name} SystemConfig/DataFilePlugin element not found in config'
+                    ),
+                )
+                if data_file_plugin is None:
+                    s3_is_correctly_configured = False
+                elif data_file_plugin != 'libcloudio.so':
+                    module_logger.error(
+                        f'{func_name} SystemConfig/DataFilePlugin != libcloudio.so'
+                    )
+                    s3_is_correctly_configured = False
+
+                return s3_is_correctly_configured
         else:
             module_logger.error(f"{func_name} SM config {config_filename} not found.")
 
