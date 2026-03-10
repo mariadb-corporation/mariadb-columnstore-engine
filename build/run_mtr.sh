@@ -36,7 +36,7 @@ else
     MTR_SUITE_LIST="$MTR_BASIC_SUITE_LIST"
     SETUP_DATA=false
 fi
-
+SETUP_DATA=true
 echo "Arguments received: $@"
 
 if [[ "$EUID" -ne 0 ]]; then
