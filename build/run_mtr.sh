@@ -37,6 +37,7 @@ else
     SETUP_DATA=false
 fi
 SETUP_DATA=true
+EXTERN=true
 echo "Arguments received: $@"
 
 if [[ "$EUID" -ne 0 ]]; then
