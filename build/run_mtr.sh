@@ -14,7 +14,7 @@ optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR defa
 source $(optparse.build)
 
 # Define test suite lists
-MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
+MTR_BASIC_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
 MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
 
 for flag in CONTAINER_NAME DISTRO EVENT; do
