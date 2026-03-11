@@ -50,8 +50,10 @@ SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_int, t1.t1_int, 
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_int DESC, t1.t1_int DESC, t2.t2_char DESC;
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_char ASC, t2.t2_int, t1.t1_int;
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY t2.t2_char DESC, t2.t2_int DESC, t1.t1_int DESC;
+--disable_result_log
 --error ER_BAD_FIELD_ERROR
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY -1;
+--enable_result_log
 --error ER_BAD_FIELD_ERROR
 SELECT * FROM t1, t2 WHERE t1.t1_int = t2.t2_int ORDER BY 0;
 --error ER_BAD_FIELD_ERROR
