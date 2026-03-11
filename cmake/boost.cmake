@@ -1,5 +1,5 @@
 # Single source of truth for Boost components we need
-set(BOOST_COMPONENTS chrono filesystem program_options regex system thread)
+set(BOOST_COMPONENTS chrono filesystem program_options regex thread)
 
 find_package(Boost 1.88.0 COMPONENTS ${BOOST_COMPONENTS})
 

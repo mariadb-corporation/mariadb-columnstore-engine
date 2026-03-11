@@ -71,7 +71,6 @@ target_compile_definitions(storagemanager PUBLIC BOOST_NO_CXX11_SCOPED_ENUMS)
 columnstore_link(
     storagemanager
     boost_chrono
-    boost_system
     boost_thread
     boost_filesystem
     boost_regex
