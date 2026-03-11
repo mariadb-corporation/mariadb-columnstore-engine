@@ -10,6 +10,7 @@
 --source ../include/detect_maxscale.inc
 #
 --disable_warnings
+SET time_zone='+00:00';
 DROP DATABASE IF EXISTS tpch1m;
 DROP DATABASE IF EXISTS tpch1;
 DROP DATABASE IF EXISTS ssb1;
