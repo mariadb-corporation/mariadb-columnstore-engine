@@ -1,7 +1,7 @@
-# Build SELinux policy and package it for RPM on RHEL-like systems >= 10 only
+# Build SELinux policy and package it for RPM on RHEL-like systems >= 9 only
 # Builds from: storage/columnstore/columnstore/build/security/columnstore.te
 # Produces: columnstore.pp packaged under ${ENGINE_SUPPORTDIR}/policy/selinux
-# Adds BuildRequires: selinux-policy-devel (RPM, RHEL-like >= 10)
+# Adds BuildRequires: selinux-policy-devel (RPM, RHEL-like >= 9)
 
 # Detect if we are building an RPM package
 if(NOT RPM)
@@ -11,14 +11,14 @@ endif()
 columnstore_detect_os(_os_id _os_version_major)
 columnstore_is_rhel_like("${_os_id}" _is_rhel_like)
 
-# We only build on RHEL-like >= 10
+# We only build on RHEL-like >= 10, however 9 was reported to have same troubles
 if(NOT _is_rhel_like
    OR (NOT _os_version_major)
-   OR (_os_version_major LESS 10)
+   OR (_os_version_major LESS 9)
 )
     message(
         STATUS
-            "SELinux policy build skipped: OS '${_os_id}' version '${_os_version_major}' not matching RHEL-like >= 10 or undetected."
+            "SELinux policy build skipped: OS '${_os_id}' version '${_os_version_major}' not matching RHEL-like >= 9 or undetected."
     )
     return()
 endif()
@@ -39,7 +39,7 @@ file(MAKE_DIRECTORY "${SELINUX_BUILD_DIR}")
 if(NOT EXISTS "/usr/share/selinux/devel/Makefile")
     message(
         FATAL_ERROR
-            "SELinux policy build requires '/usr/share/selinux/devel/Makefile'. Please install 'selinux-policy-devel' (RHEL/Rocky >= 10) and re-run CMake."
+            "SELinux policy build requires '/usr/share/selinux/devel/Makefile'. Please install 'selinux-policy-devel' (RHEL/Rocky >= 9) and re-run CMake."
     )
 endif()
 
