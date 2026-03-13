@@ -16,7 +16,8 @@ USE mcs88_db;
 
 # Copy the data file to a location where there is no need to have permission.
 --exec \cp $MTR_SUITE_DIR/../std_data/100Krows.dat $DATADIR/mcs88_100Krows.dat
-
+# Change owner to mysql to avoid error when test is running as root and 'cp' sets owner as root
+--exec chown mysql:mysql $DATADIR/mcs88_100Krows.dat
 CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 --replace_result $DATADIR DATADIR
 --eval LOAD DATA INFILE '$DATADIR/mcs88_100Krows.dat' INTO TABLE t1 FIELDS TERMINATED BY '|';
