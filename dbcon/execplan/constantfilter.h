@@ -211,6 +211,7 @@ class ConstantFilter : public Filter
   }
 
  private:
+  void correctSQLText(); // corrects SQL text in fData after predicate pushdown.
   std::vector<SimpleColumn*> fSimpleColumnList;
   std::vector<AggregateColumn*> fAggColumnList;
   std::vector<WindowFunctionColumn*> fWindowFunctionColumnList;

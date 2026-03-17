@@ -113,6 +113,8 @@ const string ConstantFilter::toString() const
   if (!fFunctionName.empty())
     output << "  Func: " << fFunctionName << endl;
 
+  output << "  fData: [" << data() << "]" << endl;
+
   if (fCol)
     output << "   " << *fCol << endl;
 
@@ -288,6 +290,84 @@ void ConstantFilter::replaceRealCol(std::vector<SRCP>& derivedColList)
 
   for (unsigned i = 0; i < fFilterList.size(); i++)
     fFilterList[i]->replaceRealCol(derivedColList);
+  // MCOL-6297: we need to fix SQL representation (fData) for cross-engine joins.
+  correctSQLText();
+}
+void ConstantFilter::correctSQLText()
+{
+  // this code recognizes simple_column (NOT) IN operator, translated into ConstantFilter, and changes
+  // fData field (SQL operator) to reflect new column names.
+  SimpleColumn* sc = dynamic_cast<SimpleColumn*>(fCol.get());
+  if (!sc)
+  {
+    // not a simple column.
+    return ;
+  }
+  bool first = true;
+  bool needQuotes = datatypes::isCharType(sc->colType().colDataType);
+  OpType relOp = OP_XOR;
+  std::ostringstream values;
+  for (unsigned i = 0; i < fFilterList.size(); i++)
+  {
+    SSFP simpleFilter = fFilterList[i];
+    auto thisRelOp = simpleFilter->op()->op();
+    if (first)
+    {
+      relOp = thisRelOp;
+      if (relOp != OP_EQ && relOp != OP_NE)
+      {
+        // not an (NOT) IN operator.
+	return ;
+      }
+    }
+    else if (relOp != thisRelOp)
+    {
+      // not a proper structure of the (NOT) IN operator.
+      return ;
+    }
+    // debian 12 has problems with code like "delimiter = ",";", thus this.
+    if (i == 0)
+    {
+      values << "(";
+    }
+    else
+    {
+      values << ",";
+    }
+    std::string value = simpleFilter->rhs()->data();
+    bool enquote = false;
+    if (needQuotes)
+    {
+      enquote = value.length() == 0 || value[0] != '\'' || value[value.length() - 1] != '\'';
+    }
+    if (enquote)
+    {
+      values << "'" << value << "'";
+    }
+    else
+    {
+      values << value;
+    }
+    first = false;
+  }
+  values << ")";
+  bool inverse = false;
+  if (op()->op() == OP_OR && relOp == OP_EQ)
+  {
+    // IN case, do nothing.
+  }
+  else if (op()->op() == OP_AND && relOp == OP_NE)
+  {
+    // NOT IN, remember that.
+    inverse = true;
+  }
+  else
+  {
+    // not a valid case for either IN or NOT IN operator, translated into ConstantFilter.
+    return ;
+  }
+  data ("`" + sc->schemaName() + "`.`" + sc->tableAlias() + "`.`" + sc->columnName() + "` " +
+          (inverse ? "NOT " : "") + "IN " + values.str());
 }
 
 const std::vector<SimpleColumn*>& ConstantFilter::simpleColumnList()
