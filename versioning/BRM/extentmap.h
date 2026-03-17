@@ -321,16 +321,16 @@ class ExtentMapRBTreeImpl
 class FreeListImpl
 {
  public:
-  ~FreeListImpl(){};
+  ~FreeListImpl() {};
 
   static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
-  
+
   static void refreshShmWithLock()
   {
     boost::mutex::scoped_lock lk(fInstanceMutex);
     return refreshShm();
   }
-  
+
   static void refreshShm()
   {
     if (fInstance)
@@ -388,18 +388,24 @@ class FreeListImpl
 class ExtentMapIndexImpl
 {
  public:
-  ~ExtentMapIndexImpl(){};
+  ~ExtentMapIndexImpl() {};
 
   static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
   static void refreshShm()
   {
     if (fInstance_)
     {
-      // effectively umpas a mapped managed shmem segment changing the segment VA address
+      // effectively unmaps a mapped managed shmem segment changing the segment VA address
       // when mapped next time.
       delete fInstance_;
       fInstance_ = nullptr;
     }
+  }
+
+  static void refreshShmWithLock()
+  {
+    std::lock_guard lk(fInstanceMutex_);
+    return refreshShm();
   }
 
   // The multipliers and constants here are pure theoretical

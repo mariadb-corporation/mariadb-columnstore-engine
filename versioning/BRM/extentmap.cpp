@@ -314,7 +314,7 @@ ExtentMapIndexImpl* ExtentMapIndexImpl::makeExtentMapIndexImpl(unsigned key, off
 
   if (fInstance_)
   {
-    if (size != fInstance_->getShmemSize())
+    if (size != fInstance_->getShmemImplSize())
     {
       fInstance_->fBRMManagedShmMemImpl_.remap();
     }
@@ -378,7 +378,7 @@ InsertUpdateShmemKeyPair ExtentMapIndexImpl::insert(const EMEntry& emEntry, cons
   while (dbRoot >= extentMapIndexPtr->size())
   {
     const size_t memNeeded = (extentMapIndexPtr->capacity() + extraUnits_) * dbRootContainerUnitSize_;
-    shmemHasGrown = growIfNeeded(memNeeded);
+    shmemHasGrown |= growIfNeeded(memNeeded);
     // Need to refresh all refs and iterators b/c the local address range changed.
     extentMapIndexPtr = get();
     assert(extentMapIndexPtr);
@@ -1592,7 +1592,6 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
   idbassert(emNumElements > 0);
   cout << "Expected EM entries:" << emNumElements << endl;
   cout << "Expected free list entries:" << flNumElements << endl;
-
 
   if (nbytes != (2 * sizeof(uint32_t)))
   {
