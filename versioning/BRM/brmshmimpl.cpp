@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <string>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <algorithm>
 using namespace std;
@@ -44,9 +44,9 @@ const constexpr uint32_t ShmCreateMaxRetries = 10;
 const constexpr unsigned int NapTimer = 500000;
 
 BRMShmImplParent::BRMShmImplParent(unsigned key, off_t size, bool readOnly)
- : fKey(key), fSize(size), fReadOnly(readOnly){};
+ : fKey(key), fSize(size), fReadOnly(readOnly) {};
 
-BRMShmImplParent::~BRMShmImplParent(){};
+BRMShmImplParent::~BRMShmImplParent() {};
 
 BRMShmImpl::BRMShmImpl(unsigned key, off_t size, bool readOnly) : BRMShmImplParent(key, size, readOnly)
 {
@@ -330,7 +330,13 @@ int BRMManagedShmImpl::grow(off_t newSize)
     {
       // Call destructor to unmap the segment.
       delete fShmSegment;
-      // Grow the segment.
+      // WARNING: boost documentation states that managed_shared_memory::grow() requires
+      // that no other process has the segment mapped. Other processes (readers) may still
+      // have active mappings at this point. The grow() call modifies segment_manager
+      // metadata (size) in shared memory, which becomes visible to those processes via
+      // MAP_SHARED, even though their mappings remain at the old (smaller) size.
+      // The MST write lock and the remap logic in makeExtentMapIndexImpl/grabEMIndex
+      // mitigate this by ensuring readers remap before accessing the grown region.
       bi::managed_shared_memory::grow(keyName.c_str(), incSize);
       // Open only with the assumption ::grow() can be called on read-write shmem.
       fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
@@ -394,6 +400,7 @@ void BRMManagedShmImpl::remap(const bool readOnly)
     fShmSegment = new bi::managed_shared_memory(bi::open_read_only, keyName.c_str());
   else
     fShmSegment = new bi::managed_shared_memory(bi::open_only, keyName.c_str());
+  fSize = fShmSegment->get_size();
 }
 
 BRMManagedShmImplRBTree::BRMManagedShmImplRBTree(unsigned key, off_t size, bool readOnly)
