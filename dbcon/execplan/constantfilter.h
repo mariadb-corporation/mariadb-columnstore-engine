@@ -214,6 +214,7 @@ class ConstantFilter : public Filter
   }
 
  private:
+  void correctSQLText(); // corrects SQL test in fData after predicate pushdown.
   std::vector<SimpleColumn*> fSimpleColumnList;
   // Note: fSimpleColumnListExtended is inherited from Filter base class
   std::vector<AggregateColumn*> fAggColumnList;
