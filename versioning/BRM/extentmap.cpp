@@ -2128,7 +2128,7 @@ void ExtentMap::grabEMIndex(OPS op)
       fMST.getTable_upgrade(MasterSegmentTable::EMIndex);
       emIndexLocked = true;
 
-      fPExtMapIndexImpl_->refreshShm();
+      ExtentMapIndexImpl::refreshShmWithLock();
 
       fPExtMapIndexImpl_ =
           ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
@@ -2138,7 +2138,7 @@ void ExtentMap::grabEMIndex(OPS op)
     }
     else
     {
-      fPExtMapIndexImpl_->refreshShm();
+      ExtentMapIndexImpl::refreshShmWithLock();
 
       fPExtMapIndexImpl_ =
           ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
