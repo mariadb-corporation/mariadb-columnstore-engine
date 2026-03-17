@@ -105,6 +105,7 @@ class DBRM
   {
     MasterSegmentTableImpl::refreshShmWithLock();
     ExtentMapRBTreeImpl::refreshShmWithLock();
+    ExtentMapIndexImpl::refreshShmWithLock();
     FreeListImpl::refreshShmWithLock();
   }
 
@@ -753,7 +754,7 @@ class DBRM
   /* SessionManager interface */
   EXPORT const QueryContext verID();
   EXPORT const QueryContext sysCatVerID();
-  EXPORT uint8_t newCpimportJob(uint32_t &jobId);
+  EXPORT uint8_t newCpimportJob(uint32_t& jobId);
   EXPORT void finishCpimportJob(uint32_t jobId);
   EXPORT const TxnID newTxnID(const SessionManagerServer::SID session, bool block, bool isDDL = false);
   EXPORT void committed(BRM::TxnID& txnid);
