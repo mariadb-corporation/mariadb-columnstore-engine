@@ -2197,7 +2197,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       }
       if (i == depth - 1)
       {
-        sub = doUnionSub(workingRecur, jobInfo);
+        sub = doUnionSub(replacement.get(), jobInfo);
         querySteps.push_back(sub);
       }
       // querySteps.push_back(sub);

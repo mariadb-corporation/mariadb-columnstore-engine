@@ -25,7 +25,6 @@ id	next_id
 3	1
 1	2
 2	3
-3	1
 WITH RECURSIVE cte AS (
 SELECT id, next_id FROM t_cycle WHERE id = 1
 UNION ALL
@@ -44,5 +43,4 @@ id	next_id
 3	1
 1	2
 2	3
-3	1
 DROP DATABASE MCOL5142_cyclic;
