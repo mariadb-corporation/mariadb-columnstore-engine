@@ -2063,7 +2063,6 @@ void ExtentMap::grabEMIndex(OPS op)
   }
   else if (fPExtMapIndexImpl_->getShmemImplSize() != (unsigned)fEMIndexShminfo->allocdSize)
   {
-    fPExtMapIndexImpl_->refreshShm();
     fPExtMapIndexImpl_ =
         ExtentMapIndexImpl::makeExtentMapIndexImpl(getInitialEMIndexShmkey(), fEMIndexShminfo->allocdSize);
   }
