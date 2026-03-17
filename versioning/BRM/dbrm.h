@@ -105,6 +105,7 @@ class DBRM
   {
     MasterSegmentTableImpl::refreshShmWithLock();
     ExtentMapRBTreeImpl::refreshShmWithLock();
+    ExtentMapIndexImpl::refreshShmWithLock();
     FreeListImpl::refreshShmWithLock();
   }
 

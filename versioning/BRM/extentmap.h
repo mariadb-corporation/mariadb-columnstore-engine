@@ -397,9 +397,17 @@ class ExtentMapIndexImpl
   {
     if (fInstance_)
     {
+      // effectively unmaps a mapped managed shmem segment changing the segment VA address
+      // when mapped next time.
       delete fInstance_;
       fInstance_ = nullptr;
     }
+  }
+
+  static void refreshShmWithLock()
+  {
+    std::lock_guard lk(fInstanceMutex_);
+    return refreshShm();
   }
 
   // The multipliers and constants here are pure theoretical
