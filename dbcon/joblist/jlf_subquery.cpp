@@ -431,7 +431,7 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
       Message::Args args;
 
       if (tn.empty() || tn.compare(0, 5, "$sub_"))
-        tn = "sub-query("+tn+")";
+        tn = "sub-query(" + tn + ")";
 
       args.add(tn);
       throw IDBExcept(ERR_MISS_JOIN_IN_SUB, args);
@@ -884,7 +884,11 @@ SJSTEP doUnionSub(CalpontExecutionPlan* ep, JobInfo& jobInfo)
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
   if (csep->isRecursiveQuery())
   {
-    dynamic_cast<SubAdapterStep*>(subAd.get())->isRecursiveStep(true);
+    auto* sas = dynamic_cast<SubAdapterStep*>(subAd.get());
+    if (sas)
+    {
+      sas->isRecursiveStep(true);
+    }
   }
   return subAd;
 }

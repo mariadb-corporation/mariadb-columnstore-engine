@@ -1037,7 +1037,7 @@ class CalpontSelectExecutionPlan : public CalpontExecutionPlan
   bool fIsRecursiveQuery = false;
   bool fContainsRecursiveQuery = false;
 
-  uint32_t fMaxRecursiveDepth;
+  uint32_t fMaxRecursiveDepth = 0;
 };
 
 /**

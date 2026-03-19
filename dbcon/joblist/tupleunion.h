@@ -372,7 +372,5 @@ class TupleRecursiveUnion : public JobStep, public TupleDeliveryStep
   boost::shared_ptr<int64_t> sessionMemLimit;
   long fTimeZone;
   uint32_t fLastCol;
-
-  bool isStablised = false;
 };
 }  // namespace joblist
