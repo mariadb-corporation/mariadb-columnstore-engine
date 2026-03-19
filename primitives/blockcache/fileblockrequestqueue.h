@@ -25,10 +25,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <deque>
-#include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
+#include <atomic>
 #include <iostream>
+#include "blockingconcurrentqueue.h"
 #include "filerequest.h"
 
 /**
@@ -40,10 +39,8 @@
  **/
 namespace dbbc
 {
-typedef std::deque<fileRequest*> fileBlockRequestQueue_t;
-
 /**
- * @brief class to hold requests for disk blocks in a queue. sorted by the size of a request
+ * @brief class to hold requests for disk blocks in a lock-free concurrent queue.
  **/
 
 class fileBlockRequestQueue
@@ -75,11 +72,11 @@ class fileBlockRequestQueue
   bool empty() const;
 
   /**
-   * @brief number of requests in the queue
+   * @brief approximate number of requests in the queue
    **/
   uint32_t size() const
   {
-    return queueSize;
+    return static_cast<uint32_t>(fbQueue.size_approx());
   }
 
   /**
@@ -87,20 +84,10 @@ class fileBlockRequestQueue
    **/
   void stop();
 
- protected:
-  boost::mutex mutex;
-  boost::condition notEmpty;
-  fileBlockRequestQueue_t fbQueue;
-  uint32_t queueSize;
-  uint32_t readersWaiting;
-
  private:
+  moodycamel::BlockingConcurrentQueue<fileRequest*> fbQueue;
+
   fileBlockRequestQueue(const fileBlockRequestQueue&) = delete;
   const fileBlockRequestQueue& operator=(const fileBlockRequestQueue&) = delete;
-
-  /**
-   * @brief pointer to the next request to be popped from the queue
-   **/
-  fileRequest* top() const;
 };
 }  // namespace dbbc

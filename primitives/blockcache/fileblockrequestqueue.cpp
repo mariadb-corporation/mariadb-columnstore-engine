@@ -23,72 +23,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <boost/thread.hpp>
-#include <boost/thread/condition.hpp>
-
 #include "fileblockrequestqueue.h"
-
-using namespace std;
 
 namespace dbbc
 {
-fileBlockRequestQueue::fileBlockRequestQueue() : queueSize(0), readersWaiting(0)
+fileBlockRequestQueue::fileBlockRequestQueue()
 {
-  // pthread_mutex_init(&mutex, NULL);
-  // pthread_cond_init(&notEmpty, NULL);
 }
 
 fileBlockRequestQueue::~fileBlockRequestQueue()
 {
-  // pthread_cond_destroy(&notEmpty);
-  // pthread_mutex_destroy(&mutex);
 }
 
 bool fileBlockRequestQueue::empty() const
 {
-  return (queueSize == 0);
-}
-
-fileRequest* fileBlockRequestQueue::top() const
-{
-  return fbQueue.front();
+  return (fbQueue.size_approx() == 0);
 }
 
 int fileBlockRequestQueue::push(fileRequest& blk)
 {
-  mutex.lock();  // pthread_mutex_lock(&mutex);
-  fbQueue.push_back(&blk);
-
-  // @bug 1007.  Changed "== 1" to ">= 1" below.  The wake up call was only being fired when the queue size
-  // was 1 which caused only one i/o thread to be working at a time.
-  if (++queueSize >= 1 && readersWaiting > 0)
-    notEmpty.notify_one();  // pthread_cond_signal(&notEmpty);
-
-  mutex.unlock();  // pthread_mutex_unlock(&mutex);
-
+  fbQueue.enqueue(&blk);
   return 0;
 }
 
 void fileBlockRequestQueue::stop()
 {
-  notEmpty.notify_all();  // pthread_cond_broadcast(&notEmpty);
 }
 
 fileRequest* fileBlockRequestQueue::pop(void)
 {
-  mutex.lock();  // pthread_mutex_lock(&mutex);
-
-  while (queueSize == 0)
-  {
-    readersWaiting++;
-    notEmpty.wait(mutex);  // pthread_cond_wait(&notEmpty, &mutex);
-    readersWaiting--;
-  }
-
-  fileRequest* blk = fbQueue.front();
-  fbQueue.pop_front();
-  --queueSize;
-  mutex.unlock();  // pthread_mutex_unlock(&mutex);
+  fileRequest* blk = nullptr;
+  fbQueue.wait_dequeue(blk);
   return blk;
 }
 
