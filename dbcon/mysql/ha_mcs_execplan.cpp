@@ -5358,18 +5358,6 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
           CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
           return ER_INTERNAL_ERROR;
         }
-
-        // if (table_ptr->view)
-        // {
-        //   gwi.parseErrorText = "Recursive CTE view";
-        // }
-        // else
-        // {
-        //   gwi.parseErrorText = "Recursive CTE";
-        // }
-
-        // setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        // return ER_CHECK_NOT_IMPLEMENTED;
       }
 
       // @todo process from subquery
