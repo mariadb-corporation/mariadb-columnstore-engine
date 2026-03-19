@@ -146,7 +146,8 @@ boost::mutex djMutex;                             // lock for djLock, lol.
 std::map<uint64_t, boost::shared_mutex*> djLock;  // djLock synchronizes destroy and joiner msgs, see bug 2619
 
 std::atomic<int32_t> asyncCounter;
-const int asyncMax = 20;  // current number of asynchronous loads
+const int asyncMax = 32;  // current number of asynchronous loads
+static ThreadPool asyncLoadPool(asyncMax, asyncMax);
 
 struct preFetchCond
 {
@@ -942,24 +943,26 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
   if (bc.exists(lbid, ver))
     return;
 
-  /* a quick and easy stand-in for a threadpool for loaders */
   if (asyncCounter.load(std::memory_order_relaxed) >= asyncMax)
     return;
 
   asyncCounter.fetch_add(1, std::memory_order_relaxed);
 
-  boost::mutex::scoped_lock sl(*m);
+  {
+    boost::mutex::scoped_lock sl(*m);
+    (*busyLoaders)++;
+  }
 
   try
   {
-    boost::thread thd(AsynchLoader(lbid, c, txn, compType, cCount, rCount, LBIDTrace, sessionID, m,
-                                   busyLoaders, sendThread, vssCache));
-    (*busyLoaders)++;
+    asyncLoadPool.invoke(AsynchLoader(lbid, c, txn, compType, cCount, rCount, LBIDTrace, sessionID, m,
+                                      busyLoaders, sendThread, vssCache));
   }
-  catch (boost::thread_resource_error& e)
+  catch (...)
   {
-    cerr << "AsynchLoader: caught a thread resource error, need to lower asyncMax\n";
-    idbassert(asyncCounter.load() > 0);
+    cerr << "AsynchLoader: invoke failed, pool exhausted\n";
+    boost::mutex::scoped_lock sl(*m);
+    --(*busyLoaders);
     asyncCounter.fetch_sub(1, std::memory_order_relaxed);
   }
 }

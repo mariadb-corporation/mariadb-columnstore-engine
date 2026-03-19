@@ -253,8 +253,21 @@ struct fdCountCompare
 
 typedef multiset<FdCountEntry_t, fdCountCompare> FdCacheCountType_t;
 
-FdCacheType_t fdcache;
-boost::mutex fdMapMutex;
+constexpr uint32_t FD_CACHE_SHARDS = 16;
+
+struct alignas(64) FdCacheShard
+{
+  FdCacheType_t cache;
+  boost::mutex mutex;
+};
+
+FdCacheShard fdShards[FD_CACHE_SHARDS];
+
+inline FdCacheShard& getFdShard(BRM::OID_t oid)
+{
+  return fdShards[static_cast<uint32_t>(oid) % FD_CACHE_SHARDS];
+}
+
 rwlock::RWLock_local localLock;
 
 char* alignTo(const char* in, int av)
@@ -539,18 +552,49 @@ void* thr_popper(ioManager* arg)
     // cout << "Looking for " << fdKey << endl
     //   << "O: " << oid << " D: " << dbroot << " P: " << partNum << " S: " << segNum << endl;
 
-    fdMapMutex.lock();
-    fdit = fdcache.find(fdKey);
+    // Select shard by OID - threads working with different OIDs won't contend
+    FdCacheShard& fdShard = getFdShard(oid);
 
-    if (fdit == fdcache.end())
+    // Fast path: check cache under shard lock
+    fdShard.mutex.lock();
+    fdit = fdShard.cache.find(fdKey);
+
+    if (fdit != fdShard.cache.end())
     {
+      // Cache hit
+      if (fdit->second.get())
+      {
+        fdit->second->c++;
+        fdit->second->inUse++;
+        fp = fdit->second->fp;
+        fdShard.mutex.unlock();
+      }
+      else
+      {
+        Message::Args args;
+        fdit = fdShard.cache.end();
+        fdShard.mutex.unlock();
+        args.add(oid);
+        ostringstream errMsg;
+        errMsg << "Null FD cache entry. (dbroot, partNum, segNum, compType) = (" << dbroot << ", " << partNum
+               << ", " << segNum << ", " << compType << ")";
+        args.add(errMsg.str());
+        primitiveprocessor::mlp->logMessage(logging::M0053, args, true);
+        iom->handleBlockReadError(fr, errMsg.str(), &copyLocked);
+        continue;
+      }
+    }
+    else
+    {
+      // Cache miss - unlock before expensive I/O operations
+      fdShard.mutex.unlock();
+
       try
       {
         iom->buildOidFileName(oid, dbroot, partNum, segNum, fileNamePtr);
       }
       catch (exception& exc)
       {
-        fdMapMutex.unlock();
         Message::Args args;
         args.add(oid);
         args.add(exc.what());
@@ -572,83 +616,7 @@ void* thr_popper(ioManager* arg)
 
 #endif
 
-      if (oid > 3000)
-      {
-        // TODO: should syscat columns be considered when reducing open file count
-        //  They are always needed why should they be closed?
-        if (fdcache.size() >= iom->MaxOpenFiles())
-        {
-          FdCacheCountType_t fdCountSort;
-
-          for (FdCacheType_t::iterator it = fdcache.begin(); it != fdcache.end(); it++)
-          {
-            struct FdCountEntry fdc(it->second->oid, it->second->dbroot, it->second->partNum,
-                                    it->second->segNum, it->second->c, it);
-
-            fdCountSort.insert(fdc);
-          }
-
-          if (iom->FDCacheTrace())
-          {
-            iom->FDTraceFile() << "Before flushing sz: " << fdcache.size()
-                               << " delCount: " << iom->DecreaseOpenFilesCount() << endl;
-
-            for (FdCacheType_t::iterator it = fdcache.begin(); it != fdcache.end(); it++)
-              iom->FDTraceFile() << *(*it).second << endl;
-
-            iom->FDTraceFile() << "==================" << endl << endl;
-          }
-
-          // TODO: should we consider a minimum number of open files
-          //      currently, there is nothing to prevent all open files
-          //      from being closed by the IOManager.
-
-          uint32_t delCount = 0;
-
-          for (FdCacheCountType_t::reverse_iterator rit = fdCountSort.rbegin();
-               rit != fdCountSort.rend() && fdcache.size() > 0 && delCount < iom->DecreaseOpenFilesCount();
-               rit++)
-          {
-            FdEntry oldfdKey(rit->oid, rit->dbroot, rit->partNum, rit->segNum, 0, NULL);
-            FdCacheType_t::iterator it = fdcache.find(oldfdKey);
-
-            if (it != fdcache.end())
-            {
-              if (iom->FDCacheTrace())
-              {
-                if (!rit->fdit->second->inUse)
-                  iom->FDTraceFile() << "Removing dc: " << delCount << " sz: " << fdcache.size()
-                                     << *(*it).second << " u: " << rit->fdit->second->inUse << endl;
-                else
-                  iom->FDTraceFile() << "Skip Remove in use dc: " << delCount << " sz: " << fdcache.size()
-                                     << *(*it).second << " u: " << rit->fdit->second->inUse << endl;
-              }
-
-              if (rit->fdit->second->inUse <= 0)
-              {
-                fdcache.erase(it);
-                delCount++;
-              }
-            }
-          }  // for (FdCacheCountType_t...
-
-          if (iom->FDCacheTrace())
-          {
-            iom->FDTraceFile() << "After flushing sz: " << fdcache.size() << endl;
-
-            for (FdCacheType_t::iterator it = fdcache.begin(); it != fdcache.end(); it++)
-            {
-              iom->FDTraceFile() << *(*it).second << endl;
-            }
-
-            iom->FDTraceFile() << "==================" << endl << endl;
-          }
-
-          fdCountSort.clear();
-
-        }  // if (fdcache.size()...
-      }  // if (oid > 3000)
-
+      // Open file outside the lock to avoid blocking all I/O threads
       int opts = primitiveprocessor::directIOFlag ? IDBDataFile::USE_ODIRECT : 0;
       fp = NULL;
       uint32_t openRetries = 0;
@@ -666,8 +634,6 @@ void* thr_popper(ioManager* arg)
       if (fp == NULL)
       {
         Message::Args args;
-        fdit = fdcache.end();
-        fdMapMutex.unlock();
         args.add(oid);
         args.add(string(fileNamePtr) + ":" + strerror(saveErrno));
         primitiveprocessor::mlp->logMessage(logging::M0053, args, true);
@@ -685,38 +651,131 @@ void* thr_popper(ioManager* arg)
         continue;
       }
 
-      fe.reset(new FdEntry(oid, dbroot, partNum, segNum, compType, fp));
-      fe->inUse++;
-      fdcache[fdKey] = fe;
-      fdit = fdcache.find(fdKey);
-      fe.reset();
-    }
+      // Re-lock and double-check: another thread may have cached this file
+      fdShard.mutex.lock();
+      fdit = fdShard.cache.find(fdKey);
 
-    else
-    {
-      if (fdit->second.get())
+      if (fdit != fdShard.cache.end())
       {
-        fdit->second->c++;
-        fdit->second->inUse++;
-        fp = fdit->second->fp;
+        // Another thread already cached this file while we were opening ours
+        delete fp;
+
+        if (fdit->second.get())
+        {
+          fdit->second->c++;
+          fdit->second->inUse++;
+          fp = fdit->second->fp;
+        }
+        else
+        {
+          Message::Args args;
+          fdit = fdShard.cache.end();
+          fdShard.mutex.unlock();
+          args.add(oid);
+          ostringstream errMsg;
+          errMsg << "Null FD cache entry on re-check. (dbroot, partNum, segNum, compType) = (" << dbroot
+                 << ", " << partNum << ", " << segNum << ", " << compType << ")";
+          args.add(errMsg.str());
+          primitiveprocessor::mlp->logMessage(logging::M0053, args, true);
+          iom->handleBlockReadError(fr, errMsg.str(), &copyLocked);
+          continue;
+        }
       }
       else
       {
-        Message::Args args;
-        fdit = fdcache.end();
-        fdMapMutex.unlock();
-        args.add(oid);
-        ostringstream errMsg;
-        errMsg << "Null FD cache entry. (dbroot, partNum, segNum, compType) = (" << dbroot << ", " << partNum
-               << ", " << segNum << ", " << compType << ")";
-        args.add(errMsg.str());
-        primitiveprocessor::mlp->logMessage(logging::M0053, args, true);
-        iom->handleBlockReadError(fr, errMsg.str(), &copyLocked);
-        continue;
-      }
-    }
+        // Still not cached - evict if needed, then insert
+        const uint32_t maxOpenPerShard =
+            iom->MaxOpenFiles() / FD_CACHE_SHARDS > 0 ? iom->MaxOpenFiles() / FD_CACHE_SHARDS : 1;
+        const uint32_t decreasePerShard = iom->DecreaseOpenFilesCount() / FD_CACHE_SHARDS > 0
+                                              ? iom->DecreaseOpenFilesCount() / FD_CACHE_SHARDS
+                                              : 1;
 
-    fdMapMutex.unlock();
+        if (oid > 3000)
+        {
+          // TODO: should syscat columns be considered when reducing open file count
+          //  They are always needed why should they be closed?
+          if (fdShard.cache.size() >= maxOpenPerShard)
+          {
+            FdCacheCountType_t fdCountSort;
+
+            for (FdCacheType_t::iterator it = fdShard.cache.begin(); it != fdShard.cache.end(); it++)
+            {
+              struct FdCountEntry fdc(it->second->oid, it->second->dbroot, it->second->partNum,
+                                      it->second->segNum, it->second->c, it);
+
+              fdCountSort.insert(fdc);
+            }
+
+            if (iom->FDCacheTrace())
+            {
+              iom->FDTraceFile() << "Before flushing sz: " << fdShard.cache.size()
+                                 << " delCount: " << decreasePerShard << endl;
+
+              for (FdCacheType_t::iterator it = fdShard.cache.begin(); it != fdShard.cache.end(); it++)
+                iom->FDTraceFile() << *(*it).second << endl;
+
+              iom->FDTraceFile() << "==================" << endl << endl;
+            }
+
+            // TODO: should we consider a minimum number of open files
+            //      currently, there is nothing to prevent all open files
+            //      from being closed by the IOManager.
+
+            uint32_t delCount = 0;
+
+            for (FdCacheCountType_t::reverse_iterator rit = fdCountSort.rbegin();
+                 rit != fdCountSort.rend() && fdShard.cache.size() > 0 && delCount < decreasePerShard; rit++)
+            {
+              FdEntry oldfdKey(rit->oid, rit->dbroot, rit->partNum, rit->segNum, 0, NULL);
+              FdCacheType_t::iterator it = fdShard.cache.find(oldfdKey);
+
+              if (it != fdShard.cache.end())
+              {
+                if (iom->FDCacheTrace())
+                {
+                  if (!rit->fdit->second->inUse)
+                    iom->FDTraceFile() << "Removing dc: " << delCount << " sz: " << fdShard.cache.size()
+                                       << *(*it).second << " u: " << rit->fdit->second->inUse << endl;
+                  else
+                    iom->FDTraceFile()
+                        << "Skip Remove in use dc: " << delCount << " sz: " << fdShard.cache.size()
+                        << *(*it).second << " u: " << rit->fdit->second->inUse << endl;
+                }
+
+                if (rit->fdit->second->inUse <= 0)
+                {
+                  fdShard.cache.erase(it);
+                  delCount++;
+                }
+              }
+            }  // for (FdCacheCountType_t...
+
+            if (iom->FDCacheTrace())
+            {
+              iom->FDTraceFile() << "After flushing sz: " << fdShard.cache.size() << endl;
+
+              for (FdCacheType_t::iterator it = fdShard.cache.begin(); it != fdShard.cache.end(); it++)
+              {
+                iom->FDTraceFile() << *(*it).second << endl;
+              }
+
+              iom->FDTraceFile() << "==================" << endl << endl;
+            }
+
+            fdCountSort.clear();
+
+          }  // if (fdShard.cache.size()...
+        }  // if (oid > 3000)
+
+        fe.reset(new FdEntry(oid, dbroot, partNum, segNum, compType, fp));
+        fe->inUse++;
+        fdShard.cache[fdKey] = fe;
+        fdit = fdShard.cache.find(fdKey);
+        fe.reset();
+      }
+
+      fdShard.mutex.unlock();
+    }
 
 #ifdef SHARED_NOTHING_DEMO_2
 
@@ -797,7 +856,7 @@ void* thr_popper(ioManager* arg)
           // hdrs may have been modified since we cached them in fdit->second...
           time_t cur_mtime = numeric_limits<time_t>::max();
           int updatePtrsRc = 0;
-          fdMapMutex.lock();
+          fdShard.mutex.lock();
           time_t fp_mtime = fp->mtime();
 
           if (fp_mtime != (time_t)-1)
@@ -806,7 +865,7 @@ void* thr_popper(ioManager* arg)
           if (decompRetryCount > 0 || retryReadHeadersCount > 0 || cur_mtime > fdit->second->cmpMTime)
             updatePtrsRc = updateptrs(&alignedbuff[0], fdit);
 
-          fdMapMutex.unlock();
+          fdShard.mutex.unlock();
 
           int idx = cmpOffFact.quot;
 
@@ -1130,13 +1189,13 @@ void* thr_popper(ioManager* arg)
 
     }  // for (j...
 
-    fdMapMutex.lock();
+    fdShard.mutex.lock();
 
     if (fdit->second.get())
       fdit->second->inUse--;
 
-    fdit = fdcache.end();
-    fdMapMutex.unlock();
+    fdit = fdShard.cache.end();
+    fdShard.mutex.unlock();
 
     if (errorOccurred)
       continue;
@@ -1210,23 +1269,25 @@ void releaseReadLock()
 void dropFDCache()
 {
   localLock.write_lock();
-  fdcache.clear();
+
+  for (uint32_t i = 0; i < FD_CACHE_SHARDS; i++)
+    fdShards[i].cache.clear();
+
   localLock.write_unlock();
 }
 void purgeFDCache(std::vector<BRM::FileInfo>& files)
 {
   localLock.write_lock();
 
-  FdCacheType_t::iterator fdit;
-
   for (uint32_t i = 0; i < files.size(); i++)
   {
+    FdCacheShard& shard = getFdShard(files[i].oid);
     FdEntry fdKey(files[i].oid, files[i].dbRoot, files[i].partitionNum, files[i].segmentNum,
                   files[i].compType, NULL);
-    fdit = fdcache.find(fdKey);
+    FdCacheType_t::iterator fdit = shard.cache.find(fdKey);
 
-    if (fdit != fdcache.end())
-      fdcache.erase(fdit);
+    if (fdit != shard.cache.end())
+      shard.cache.erase(fdit);
   }
 
   localLock.write_unlock();
