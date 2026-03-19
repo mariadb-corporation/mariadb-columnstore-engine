@@ -1044,6 +1044,8 @@ void* thr_popper(ioManager* arg)
         }
 
         uint8_t* ptr = (uint8_t*)&alignedbuff[0];
+        uint32_t chunkTotalBlocks = 0;
+        uint32_t chunkBlockOffset = 0;
 
         if (blocksThisRead > 0 && fdit->second->isCompressed())
         {
@@ -1111,6 +1113,9 @@ void* thr_popper(ioManager* arg)
           // FIXME: why doesn't this work??? (See later for why)
           // ptr = &uCmpBuf[cmpOffFact.rem];
           memcpy(ptr, &uCmpBuf[cmpOffFact.rem], blocksThisRead * BLOCK_SIZE);
+
+          chunkBlockOffset = cmpOffFact.rem / BLOCK_SIZE;
+          chunkTotalBlocks = blen / BLOCK_SIZE;
 
           // log the retries, if any
           if (retryReadHeadersCount > 0 || decompRetryCount > 0)
@@ -1182,6 +1187,43 @@ void* thr_popper(ioManager* arg)
         {
           blocksLoaded += fbm->bulkInsert(cacheInsertOps);
           cacheInsertOps.clear();
+        }
+
+        // Readahead: cache remaining blocks from the decompressed chunk
+        if (useCache && chunkTotalBlocks > 0)
+        {
+          uint32_t readaheadStart = chunkBlockOffset + blocksThisRead;
+
+          if (chunkTotalBlocks > readaheadStart)
+          {
+            uint32_t readaheadCount = chunkTotalBlocks - readaheadStart;
+            BRM::LBID_t raBaseLbid = (BRM::LBID_t)(lbid + blocksThisRead) + (j * iom->blocksPerRead);
+
+            vector<BRM::LBID_t> raLbids;
+            vector<BRM::VER_t> raVersions;
+            vector<bool> raIsLocked;
+            raLbids.reserve(readaheadCount);
+
+            for (uint32_t k = 0; k < readaheadCount; k++)
+              raLbids.push_back(raBaseLbid + k);
+
+            iom->dbrm()->bulkGetCurrentVersion(raLbids, &raVersions, &raIsLocked);
+
+            for (uint32_t k = 0; k < readaheadCount; k++)
+            {
+              if (!raIsLocked[k])
+              {
+                cacheInsertOps.push_back(
+                    CacheInsert_t(raLbids[k], raVersions[k], &uCmpBuf[(readaheadStart + k) * BLOCK_SIZE]));
+              }
+            }
+
+            if (!cacheInsertOps.empty())
+            {
+              blocksLoaded += fbm->bulkInsert(cacheInsertOps);
+              cacheInsertOps.clear();
+            }
+          }
         }
       }
 
