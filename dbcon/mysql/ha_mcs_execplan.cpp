@@ -5293,6 +5293,15 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
       }
       if (table_ptr->is_recursive_with_table())
       {
+        if (table_ptr->derived->union_distinct)
+        {
+          gwi.fatalParseError = true;
+          gwi.parseErrorText =
+              "Recursive CTE with UNION DISTINCT is not supported by ColumnStore. Use UNION ALL.";
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
+
         dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())->containsRecursiveQuery(true);
         SELECT_LEX* start = table_ptr->derived->first_select();
         // SELECT_LEX* end = NULL;
@@ -5375,8 +5384,7 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         }
         fromSub->alias(alias);
 
-        CalpontSystemCatalog::TableAliasName tn =
-            make_aliasview("", table_ptr->table_name.str, alias, viewName);
+        CalpontSystemCatalog::TableAliasName tn = make_aliasview("", "", alias, viewName);
         // @bug 3852. check return execplan
         SCSEP plan = fromSub->transform();
 
@@ -5394,10 +5402,8 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
 
         gwi.derivedTbList.push_back(plan);
         gwi.tbList.push_back(tn);
-        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", table_ptr->table_name.str, alias);
+        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
         gwi.tableMap[tan] = make_pair(0, table_ptr);
-        // MCOL-2178 isUnion member only assigned, never used
-        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
       }
       else if (table_ptr->view)
       {
@@ -5434,9 +5440,12 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         CalpontSystemCatalog::TableAliasName tn =
             make_aliasview(table_ptr->db.str, table_name, table_ptr->alias.str, viewName, columnStore,
                            lower_case_table_names);
+        execplan::Partitions parts = getPartitions(table_ptr);
+        tn.partitions = parts;
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable(
             table_ptr->db.str, table_name, table_ptr->alias.str, columnStore, lower_case_table_names);
+        tan.partitions = parts;
         gwi.tableMap[tan] = make_pair(0, table_ptr);
 #ifdef DEBUG_WALK_COND
         cerr << tn << endl;
@@ -5756,9 +5765,8 @@ int processHaving(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
   return 0;
 }
 
-execplan::ReturnedColumn* findMatchingAlias(
-        const Item_field* ifp,
-        execplan::CalpontSelectExecutionPlan::ReturnedColumnList& cols)
+execplan::ReturnedColumn* findMatchingAlias(const Item_field* ifp,
+                                            execplan::CalpontSelectExecutionPlan::ReturnedColumnList& cols)
 {
   if (!ifp->name.length)
   {

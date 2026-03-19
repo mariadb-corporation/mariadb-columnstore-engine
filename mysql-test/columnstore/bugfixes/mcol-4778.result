@@ -14,5 +14,5 @@ SELECT origin as dst FROM bus_routes WHERE origin='New York'
 SELECT bus_routes.dst FROM bus_routes JOIN bus_dst ON bus_dst.dst = bus_routes.origin
 )
 SELECT * FROM bus_dst;
-ERROR 42000: The storage engine for the table doesn't support Recursive CTE
+ERROR 42000: The storage engine for the table doesn't support Recursive CTE with UNION DISTINCT is not supported by ColumnStore. Use UNION ALL.
 DROP DATABASE mcol_4778;
