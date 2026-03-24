@@ -1557,7 +1557,7 @@ void TupleBPS::join()
 
 void TupleBPS::sendError(uint16_t status)
 {
-  SBS msgBpp;
+  SBS msgBpp = boost::make_shared<ByteStream>();
   fBPP->setCount(1);
   fBPP->setStatus(status);
   fBPP->runErrorBPP(*msgBpp);
