@@ -35,49 +35,49 @@ using namespace idbdatafile;
 namespace RebuildExtentMap
 {
 std::unordered_map<uint32_t, FileId> systemCatalogMap = {
-    {2073, FileId(2073, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 201728, 0, true)},
-    {2070, FileId(2070, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 163840, 0, true)},
-    {2067, FileId(2067, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 114688, 0, true)},
-    {2064, FileId(2064, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 98304, 0, true)},
-    {2076, FileId(2076, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 218112, 0, true)},
-    {2061, FileId(2061, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 81920, 0, true)},
-    {1004, FileId(1004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 36864, 0, false)},
-    {1022, FileId(1022, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 90112, 0, false)},
-    {1001, FileId(1001, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false)},
-    {1023, FileId(1023, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 106496, 0, false)},
-    {1021, FileId(1021, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 73728, 0, false)},
-    {1010, FileId(1010, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 61440, 0, false)},
-    {1006, FileId(1006, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 45056, 0, false)},
-    {1002, FileId(1002, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 16384, 0, false)},
-    {1009, FileId(1009, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 57344, 0, false)},
-    {1005, FileId(1005, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 40960, 0, false)},
-    {1011, FileId(1011, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 65536, 0, false)},
-    {1012, FileId(1012, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 69632, 0, false)},
-    {1008, FileId(1008, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 53248, 0, false)},
-    {1007, FileId(1007, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 49152, 0, false)},
-    {1003, FileId(1003, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 32768, 0, false)},
-    {1032, FileId(1032, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 155648, 0, false)},
-    {1038, FileId(1038, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 189440, 0, false)},
-    {1033, FileId(1033, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 172032, 0, false)},
-    {1027, FileId(1027, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 135168, 0, false)},
-    {1024, FileId(1024, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 122880, 0, false)},
-    {1042, FileId(1042, 0, 0, 0, 8, execplan::CalpontSystemCatalog::UBIGINT, 230400, 0, false)},
-    {1040, FileId(1040, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 209920, 0, false)},
-    {1025, FileId(1025, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 126976, 0, false)},
-    {1035, FileId(1035, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 180224, 0, false)},
-    {1028, FileId(1028, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 139264, 0, false)},
-    {1036, FileId(1036, 0, 0, 0, 1, execplan::CalpontSystemCatalog::CHAR, 184320, 0, false)},
-    {1031, FileId(1031, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 151552, 0, false)},
-    {1037, FileId(1037, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 185344, 0, false)},
-    {1039, FileId(1039, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 193536, 0, false)},
-    {1030, FileId(1030, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 147456, 0, false)},
-    {1034, FileId(1034, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 176128, 0, false)},
-    {1026, FileId(1026, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 131072, 0, false)},
-    {1041, FileId(1041, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 226304, 0, false)},
-    {1043, FileId(1043, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 238592, 0, false)},
-    {1029, FileId(1029, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 143360, 0, false)},
-    {2001, FileId(2001, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 8192, 0, true)},
-    {2004, FileId(2004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 24576, 0, true)},
+    {2073, FileId(2073, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 201728, 0, true, 0)},
+    {2070, FileId(2070, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 163840, 0, true, 0)},
+    {2067, FileId(2067, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 114688, 0, true, 0)},
+    {2064, FileId(2064, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 98304, 0, true, 0)},
+    {2076, FileId(2076, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 218112, 0, true, 0)},
+    {2061, FileId(2061, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 81920, 0, true, 0)},
+    {1004, FileId(1004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 36864, 0, false, 0)},
+    {1022, FileId(1022, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 90112, 0, false, 0)},
+    {1001, FileId(1001, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 0, 0, false, 0)},
+    {1023, FileId(1023, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 106496, 0, false, 0)},
+    {1021, FileId(1021, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 73728, 0, false, 0)},
+    {1010, FileId(1010, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 61440, 0, false, 0)},
+    {1006, FileId(1006, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 45056, 0, false, 0)},
+    {1002, FileId(1002, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 16384, 0, false, 0)},
+    {1009, FileId(1009, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 57344, 0, false, 0)},
+    {1005, FileId(1005, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 40960, 0, false, 0)},
+    {1011, FileId(1011, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 65536, 0, false, 0)},
+    {1012, FileId(1012, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 69632, 0, false, 0)},
+    {1008, FileId(1008, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 53248, 0, false, 0)},
+    {1007, FileId(1007, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 49152, 0, false, 0)},
+    {1003, FileId(1003, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 32768, 0, false, 0)},
+    {1032, FileId(1032, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 155648, 0, false, 0)},
+    {1038, FileId(1038, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 189440, 0, false, 0)},
+    {1033, FileId(1033, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 172032, 0, false, 0)},
+    {1027, FileId(1027, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 135168, 0, false, 0)},
+    {1024, FileId(1024, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 122880, 0, false, 0)},
+    {1042, FileId(1042, 0, 0, 0, 8, execplan::CalpontSystemCatalog::UBIGINT, 230400, 0, false, 0)},
+    {1040, FileId(1040, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 209920, 0, false, 0)},
+    {1025, FileId(1025, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 126976, 0, false, 0)},
+    {1035, FileId(1035, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 180224, 0, false, 0)},
+    {1028, FileId(1028, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 139264, 0, false, 0)},
+    {1036, FileId(1036, 0, 0, 0, 1, execplan::CalpontSystemCatalog::CHAR, 184320, 0, false, 0)},
+    {1031, FileId(1031, 0, 0, 0, 4, execplan::CalpontSystemCatalog::DATE, 151552, 0, false, 0)},
+    {1037, FileId(1037, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 185344, 0, false, 0)},
+    {1039, FileId(1039, 0, 0, 0, 8, execplan::CalpontSystemCatalog::VARCHAR, 193536, 0, false, 0)},
+    {1030, FileId(1030, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 147456, 0, false, 0)},
+    {1034, FileId(1034, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 176128, 0, false, 0)},
+    {1026, FileId(1026, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 131072, 0, false, 0)},
+    {1041, FileId(1041, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 226304, 0, false, 0)},
+    {1043, FileId(1043, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 238592, 0, false, 0)},
+    {1029, FileId(1029, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 143360, 0, false, 0)},
+    {2001, FileId(2001, 0, 0, 0, 0, execplan::CalpontSystemCatalog::VARCHAR, 8192, 0, true, 0)},
+    {2004, FileId(2004, 0, 0, 0, 4, execplan::CalpontSystemCatalog::INT, 24576, 0, true, 0)},
 };
 
 void EMReBuilder::collectFileNames(const std::string& partialPath, std::string currentPath,
@@ -107,13 +107,93 @@ int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
 
   std::vector<std::string> fileNames;
   collectFileNames(dbRootPath, "", fileNames);
+
+  std::sort(fileNames.begin(), fileNames.end()); // this makes token files go before corresponding dict files.
+
   for (const auto& fileName : fileNames)
   {
     (void)collectExtent(fileName);
   }
 
+  // generate FileId's for invisible LBIDs - these are not recorded in headers.
+  addInvisibleLBIDs();
+
+  // setup HWMs for all OIDs.
+  setupHWMs();
+
   return 0;
 }
+
+void EMReBuilder::addInvisibleLBIDs()
+{
+  for (auto dictOID : dictOIDs)
+  {
+    uint64_t hwm;
+    if (oidHWMs.count(dictOID) == 0)
+    {
+      if (doVerbose())
+      {
+        std::cout << "dictionary OID " << dictOID << " does not have HWM set." << std::endl;
+      }
+      continue;
+    }
+    hwm = oidHWMs[dictOID];
+
+    // not very efficient. but it gets job done.
+    FileId dictFileId(0, 0, 0, 0, 0, execplan::CalpontSystemCatalog::BIT, 0, 0, false, 0);
+    for(const FileId& fid : extentMap)
+    {
+       if (fid.oid == dictOID)
+       {
+         dictFileId = fid;
+         break;
+       }
+    }
+    if (doVerbose())
+    {
+      std::cout << "Template FileID: " << dictFileId << std::endl;
+    }
+
+    for(uint64_t blockOffset : oidBlockOffsetsFromTokens[dictOID])
+    {
+      if (oidKnownBlockOffsets[dictOID].count(blockOffset) > 0 || blockOffset > hwm)
+      {
+        if (doVerbose())
+        {
+          std::cout << "  Skipping block offset " << blockOffset << ", it is in known LBIDs or higher than HWN ("
+                    << hwm << ")" << std::endl;
+        }
+        continue;
+      }
+      FileId toAdd(dictFileId); // fill all the information.
+      toAdd.blockOffset = blockOffset; // inventing a new LBID as we do not know old one.
+      lastUsedLBID += 8192;
+      toAdd.lbid = lastUsedLBID;
+      extentMap.push_back(toAdd);
+      if (doVerbose())
+      {
+        std::cout << "  Collected " << toAdd << std::endl;
+      }
+    }
+  }
+}
+
+// setup HWMs for all OIDs.
+void EMReBuilder::setupHWMs()
+{
+  for(uint32_t i = 0; i < extentMap.size();i++)
+  {
+    if (oidHWMs.count(extentMap[i].oid))
+    {
+      uint64_t hwm = oidHWMs[extentMap[i].oid];
+      if (extentMap[i].blockOffset <= hwm && extentMap[i].blockOffset + 8192 > hwm)
+      {
+        extentMap[i].hwm = hwm;
+      }
+    }
+  }
+}
+
 
 int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
 {
@@ -124,6 +204,14 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
 
   // Initialize oid, partition and segment from the given `fullFileName`.
   auto rc = WriteEngine::Convertor::fileName2Oid(fullFileName, oid, partition, segment);
+  if (doVerbose())
+  {
+    std::cout << "converted '" << fullFileName << "' to OID " << oid << ", partition " << partition << ", segment " << segment << "\n";
+    if (rc != 0)
+    {
+      std::cout << "failure code " << int(rc) << "\n";
+    }
+  }
   if (rc != 0)
     return rc;
 
@@ -184,6 +272,11 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     auto lbidCount = compress::CompressInterface::getLBIDCount(fileHeader);
     auto compressionType = compress::CompressInterface::getCompressionType(fileHeader);
 
+    if (doVerbose())
+    {
+      std::cout << "col data type index " << int(colDataType) << ", col width " << colWidth << std::endl;
+    }
+
     if (colDataType == execplan::CalpontSystemCatalog::UNDEFINED)
     {
       if (doVerbose())
@@ -193,8 +286,16 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     }
 
     auto isDict = isDictFile(colDataType, colWidth);
+    bool isProbablyTokenColumn = colWidth == 8 && datatypes::isCharType(colDataType);
     if (isDict)
+    {
+      if (doVerbose())
+      {
+        std::cout << "Setting column width to 8. Old column width " << colWidth << std::endl;
+      }
       colWidth = 8;
+      dictOIDs.insert(oid);
+    }
 
     if (doVerbose())
     {
@@ -204,49 +305,41 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
 
     uint64_t hwm = 0;
     rc = searchHWMInSegmentFile(fullFileName, oid, getDBRoot(), partition, segment, colDataType, colWidth,
-                                blockCount, isDict, compressionType, hwm);
+                                blockCount, isDict, isProbablyTokenColumn, compressionType, hwm);
 
     if (rc != 0)
       return rc;
 
-    if (doVerbose())
-      std::cout << "HWM is: " << hwm << std::endl;
+    oidHWMs[oid] = hwm;
 
     const uint32_t extentMaxBlockCount = getEM().getExtentRows() * colWidth / BLOCK_SIZE;
-    // We found multiple extents per one segment file.
-    if (hwm >= extentMaxBlockCount)
+
+    if (doVerbose())
     {
-      for (uint32_t lbidIndex = 0; lbidIndex < lbidCount - 1; ++lbidIndex)
-      {
-        auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
-        FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, /*hwm*/ 0, isDict);
-        extentMap.push_back(fileId);
-      }
-
-      // Last one has an actual HWM.
-      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidCount - 1);
-      FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, hwm, isDict);
-      extentMap.push_back(fileId);
-
-      if (doVerbose())
-      {
-        std::cout << "Found multiple extents per segment file " << std::endl;
-        std::cout << "FileId is collected " << fileId << std::endl;
-      }
+      std::cout << "HWM is: " << hwm << std::endl;
+      std::cout << "extentMaxBlockCount: " << extentMaxBlockCount << std::endl;
+      std::cout << "lbidCount: " << lbidCount << std::endl;
     }
-    else
-    {
-      // One extent per segment file.
-      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, 0);
-      FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, hwm, isDict);
-      extentMap.push_back(fileId);
 
+    // We process LBIDs in the header the same way regardless of their count in the header.
+    uint64_t blockOffset = 0;
+    oidHWMs[oid] = hwm; // remember HWM to assign later.
+    for (uint32_t lbidIndex = 0; lbidIndex < lbidCount; ++lbidIndex, blockOffset += 8192)
+    {
+      auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
+      lastUsedLBID = std::max(lbid, lastUsedLBID);
+      FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, /*hwm*/ 0, isDict, blockOffset);
+      extentMap.push_back(fileId);
+      oidKnownBlockOffsets[oid].insert(blockOffset);
       if (doVerbose())
         std::cout << "FileId is collected " << fileId << std::endl;
     }
+
   }
   else
   {
+    // SZ: XXX: this handles syscat LBIDs differently and may introduce errors. It needs to be tested with
+    //          syscat with lots of tables (up to whatever limit we have).
     const auto fileSize = dbFile->size();
     if (fileSize == -1)
     {
@@ -273,7 +366,7 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     uint64_t hwm = 0;
     rc = searchHWMInSegmentFile(fullFileName, oid, getDBRoot(), systemFileId.partition, systemFileId.segment,
                                 systemFileId.colDataType, systemFileId.colWidth, blockCount,
-                                systemFileId.isDict, 0 /*=compressionType*/, hwm);
+                                systemFileId.isDict, false, 0 /*=compressionType*/, hwm);
     if (rc != 0)
       return rc;
 
@@ -371,6 +464,7 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
                                             uint32_t partition, uint32_t segment,
                                             execplan::CalpontSystemCatalog::ColDataType colDataType,
                                             uint32_t colWidth, uint64_t blockCount, bool isDict,
+                                            bool probablyTokenColumn,
                                             uint32_t compressionType, uint64_t& hwm)
 {
   std::unique_ptr<ChunkManagerWrapper> chunkManagerWrapper;
@@ -393,12 +487,17 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
     return -1;
   }
 
+  if (doVerbose())
+  {
+    std::cout << "block count " << blockCount << std::endl;
+  }
   hwm = 0;
   // Starting from the end.
   // Note: This solves problem related to `bulk` insertion.
   // Currently it could start to insert values from any block into empty
   // column.
-  for (int32_t currentBlock = blockCount - 1; currentBlock >= 0; --currentBlock)
+  int32_t currentBlock;
+  for (currentBlock = blockCount - 1; currentBlock >= 0; --currentBlock)
   {
     // Read the block associated to HWM.
     // The uncompressed chunk size is 512 * 1024 * 8, so for `abbreviated`
@@ -407,12 +506,54 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
     chunkManagerWrapper->readBlock(currentBlock);
     if (!chunkManagerWrapper->isEmptyBlock())
     {
+      if (doVerbose())
+      {
+        std::cout << "non empty block " << currentBlock << std::endl;
+      }
       hwm = currentBlock;
       break;
     }
   }
 
+  // If the column we scan can be a token column, read blocks as if they are tokens and extract LBIDs.
+  if (probablyTokenColumn)
+  {
+    std::set<uint64_t> seenBlockOffsets;
+    scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+    for(currentBlock--; currentBlock >= 0; currentBlock --)
+    {
+      chunkManagerWrapper->readBlock(currentBlock);
+      if (chunkManagerWrapper->isEmptyBlock())
+      {
+        continue;
+      }
+      scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+    }
+  }
+
   return 0;
+}
+
+void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen)
+{
+  for(uint32_t i=0;i<numTokens;i++)
+  {
+    if (tokens[i].isNotPhysical())
+    {
+      continue;
+    }
+    uint64_t fbo = tokens[i].fbo;
+    uint64_t lbidBlockOffset = fbo - (fbo % 8192);
+    if (seen.count(lbidBlockOffset) == 0)
+    {
+      if (doVerbose())
+      {
+        std::cout << "Adding block offset " << lbidBlockOffset << " for dict OID " << oidForDict << std::endl;
+      }
+      oidBlockOffsetsFromTokens[oidForDict].insert(lbidBlockOffset);
+      seen.insert(lbidBlockOffset);
+    }
+  }
 }
 
 void EMReBuilder::showExtentMap()
@@ -564,7 +705,7 @@ std::ostream& operator<<(std::ostream& os, const FileId& fileID)
 {
   os << "[OID: " << fileID.oid << ", partition: " << fileID.partition << ", segment: " << fileID.segment
      << ", col width: " << fileID.colWidth << ", lbid:" << fileID.lbid << ", hwm: " << fileID.hwm
-     << ", isDict: " << fileID.isDict << "]";
+     << ", isDict: " << fileID.isDict << ", blockOffset: " << fileID.blockOffset << "]";
   return os;
 }
 }  // namespace RebuildExtentMap

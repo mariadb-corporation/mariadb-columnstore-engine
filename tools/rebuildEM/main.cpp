@@ -30,6 +30,8 @@ using namespace RebuildExtentMap;
 
 static void usage(const std::string& pname)
 {
+  // note the 'y' option is not in the usage text. This is intentional, to keep
+  // manual confirmation and simultaneously allow for slightly easier testing.
   std::cout << "usage: " << pname << " [-vdhs]" << std::endl;
   std::cout << "rebuilds the extent map from the contents of the database file "
                "system."
@@ -61,8 +63,9 @@ int main(int argc, char** argv)
   bool showExtentMap = false;
   bool verbose = false;
   bool display = false;
+  bool confirm = true;
 
-  while ((option = getopt(argc, argv, "vdhs")) != EOF)
+  while ((option = getopt(argc, argv, "yvdhs")) != EOF)
   {
     switch (option)
     {
@@ -71,6 +74,8 @@ int main(int argc, char** argv)
       case 'd': display = true; break;
 
       case 's': showExtentMap = true; break;
+
+      case 'y': confirm = false; break;
 
       case 'h':
       case '?':
@@ -90,10 +95,13 @@ int main(int argc, char** argv)
   }
 
   // MCOL-4685
-  std::cout << "The launch of mcsRebuildEM tool must be sanctioned by MariaDB support. " << std::endl;
-  std::cout << "Do you want to continue Y/N? ";
-  if (!isYes())
-    return 0;
+  if (confirm)
+  {
+    std::cout << "The launch of mcsRebuildEM tool must be sanctioned by MariaDB support. " << std::endl;
+    std::cout << "Do you want to continue Y/N? ";
+    if (!isYes())
+      return 0;
+  }
 
   auto* config = config::Config::makeConfig();
   const auto BRMSavesEM = config->getConfig("SystemConfig", "DBRMRoot") + "_em";
