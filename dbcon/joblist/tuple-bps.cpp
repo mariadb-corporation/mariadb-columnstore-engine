@@ -2414,6 +2414,13 @@ void TupleBPS::receiveMultiPrimitiveMessages()
   vector<boost::shared_ptr<messageqcpp::ByteStream>> bsv;
   boost::unique_lock<boost::mutex> tplLock(tplMutex, boost::defer_lock);
 
+  // Stall detection: if finishedSending is true but we keep getting zero messages
+  // from read_some(), a lost PrimProc response could cause an infinite polling loop.
+  // Track elapsed wall time in that state and abort after a timeout.
+  static const uint32_t kReceiveStallTimeoutSec = 300;
+  struct timespec stallStart;
+  stallStart.tv_sec = 0;
+
   try
   {
     tplLock.lock();
@@ -2477,11 +2484,50 @@ void TupleBPS::receiveMultiPrimitiveMessages()
 
       if (size == 0)
       {
+        // Stall detection: if the sender has finished and we are still missing
+        // responses, track how long we have been stuck.  Abort after timeout
+        // to avoid an infinite hang (see MCOL-5765).
+        if (finishedSending.load(std::memory_order_acquire))
+        {
+          struct timespec now;
+          clock_gettime(CLOCK_MONOTONIC, &now);
+
+          if (stallStart.tv_sec == 0)
+          {
+            stallStart = now;
+          }
+          else
+          {
+            uint64_t elapsedSec = now.tv_sec - stallStart.tv_sec;
+
+            if (elapsedSec >= kReceiveStallTimeoutSec)
+            {
+              cerr << "TupleBPS::receiveMultiPrimitiveMessages(): receive stall detected"
+                   << " (st:" << fStepId << " uniqueID:" << uniqueID
+                   << " msgsSent:" << msgsSent << " msgsRecvd:" << msgsRecvd
+                   << " elapsed:" << elapsedSec << "s).  Aborting query." << endl;
+              errorMessage("PrimProc response stall detected: sent " + std::to_string(msgsSent) +
+                           " but only received " + std::to_string(msgsRecvd) +
+                           " after " + std::to_string(elapsedSec) + "s");
+              status(ERR_TUPLE_BPS);
+
+              if (sendWaiting)
+                condvarWakeupProducer.notify_one();
+
+              abort();
+              break;
+            }
+          }
+        }
+
         tplLock.unlock();
         usleep(2000 * fNumThreads);
         tplLock.lock();
         continue;
       }
+
+      // Received data successfully — reset stall timer.
+      stallStart.tv_sec = 0;
 
       tplLock.unlock();
 
