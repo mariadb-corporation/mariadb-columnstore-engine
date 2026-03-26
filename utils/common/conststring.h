@@ -89,7 +89,7 @@ class ConstString
   }
   ConstString& rtrimZero()
   {
-    for (; mLength && mStr[mLength - 1] == '\0'; mLength--)
+    for (; mLength && mStr[mLength - 1] == '\0'; --mLength)
     {
     }
     return *this;
@@ -116,6 +116,10 @@ class ConstString
   {
     return mStr == nullptr;
   }
+};
+
+class ShortConstString
+{
 };
 
 }  // namespace utils

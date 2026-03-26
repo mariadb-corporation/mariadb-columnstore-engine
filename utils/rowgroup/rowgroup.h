@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -39,6 +40,7 @@
 #include <boost/thread/mutex.hpp>
 #include <cmath>
 #include <cfloat>
+#include "conststring.h"
 #include <execinfo.h>
 
 #include "countingallocator.h"
@@ -70,7 +72,49 @@ namespace rowgroup
 {
 constexpr int16_t rgCommonSize = 8192;
 using RGDataSizeType = uint64_t;
+using OffsetType = uint32_t;
+using OffsetsType = std::vector<OffsetType>;
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept CanUseIntegralTypes =
+    requires {
+      requires((std::is_integral<FromType>::value || std::is_floating_point<FromType>::value) &&
+               !(std::is_same<FromType, utils::ShortConstString>::value ||
+                 std::is_same<ToType, utils::ConstString>::value));
+    };
 
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsTSInt128 = requires {
+                       requires((std::is_same<FromType, datatypes::TSInt128>::value &&
+                                 std::is_same<ToType, datatypes::TSInt128>::value) &&
+                                !(std::is_same<FromType, utils::ShortConstString>::value ||
+                                  std::is_same<ToType, utils::ConstString>::value));
+                     };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsShortStringInIntegralTypes =
+    requires {
+      requires std::is_integral<FromType>::value && std::is_same<ToType, utils::ConstString>::value;
+    };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsVariadicType =
+    requires {
+      requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
+               ColType == datatypes::SystemCatalog::TEXT) &&
+                  std::is_same<ToType, utils::ConstString>::value &&
+                  std::is_same<FromType, utils::ConstString>::value;
+    };
+
+template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+concept IsShortString =
+    requires {
+      requires(ColType == datatypes::SystemCatalog::CHAR || ColType == datatypes::SystemCatalog::VARCHAR ||
+               ColType == datatypes::SystemCatalog::TEXT) &&
+                  std::is_same<ToType, utils::ConstString>::value &&
+                  std::is_same<FromType, utils::ShortConstString>::value;
+    };
+template <typename T>
+concept UsesCollationCmp = requires { requires(std::is_same<T, utils::ConstString>::value); };
 /*
     The RowGroup family of classes encapsulate the data moved through the
     system.
@@ -152,6 +196,7 @@ class StringStore
   // returns the offset.
   // it may receive nullptr as data and it is proper way to store NULL values.
   uint64_t storeString(const uint8_t* data, uint32_t length);
+  // please note getPointer can return nullptr.
   // please note getPointer can return nullptr.
   inline const uint8_t* getPointer(uint64_t offset) const;
   inline uint32_t getStringLength(uint64_t offset) const;
@@ -380,7 +425,7 @@ class RGData
   friend class RowGroup;
   friend class RowGroupStorage;
 };
-
+using RGDataVector = std::vector<RGData>;
 class Row
 {
  public:
@@ -427,7 +472,7 @@ class Row
   inline uint32_t getSize() const;          // this is only accurate if there is no string table
   // if a string table is being used, getRealSize() takes into account variable-length strings
   inline uint32_t getRealSize() const;
-  inline uint32_t getOffset(uint32_t colIndex) const;
+  inline OffsetType getOffset(uint32_t colIndex) const;
   inline uint32_t getScale(uint32_t colIndex) const;
   inline uint32_t getPrecision(uint32_t colIndex) const;
   inline execplan::CalpontSystemCatalog::ColDataType getColType(uint32_t colIndex) const;
@@ -523,9 +568,9 @@ class Row
   for the other types as well as the getters.
   */
   template <int len>
-  void setUintField_offset(uint64_t val, uint32_t offset);
+  void setUintField_offset(uint64_t val, OffsetType offset);
   template <typename T>
-  void setIntField_offset(const T val, const uint32_t offset);
+  void setIntField_offset(const T val, const OffsetType offset);
   inline void nextRow(uint32_t size);
   inline void prevRow(uint32_t size, uint64_t number);
 
@@ -1593,6 +1638,77 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
+  const uint8_t* getColumnValueBuf(const uint32_t columnID, const uint32_t rowID) const
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
+    // check the out of bounds invariant somehow
+    return &data[valueOffset];
+  }
+
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires CanUseIntegralTypes<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
+    // check the out of bounds invariant somehow
+    const ToType* valuePtr = reinterpret_cast<ToType*>(&data[valueOffset]);  // the cast is questionable here
+    return *valuePtr;
+  }
+
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsTSInt128<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
+    // check the out of bounds invariant somehow
+    const int128_t* valuePtr = reinterpret_cast<int128_t*>(&data[valueOffset]);
+    return datatypes::TSInt128(valuePtr);
+  }
+
+  // Need one more template spec for short ConstStrings
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsVariadicType<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data && strings);
+    static utils::ConstString nullValue{nullptr, 0};
+    size_t offset2stringStoreOffset =
+        RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsetArray()[columnID];
+    // bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    // if (isNull)
+    //   return nullValue;
+    // check the out of bounds invariant somehow
+    return strings->getConstString(*(reinterpret_cast<uint64_t*>(&data[offset2stringStoreOffset])));
+  }
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsShortString<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    static utils::ConstString nullValue{nullptr, 0};
+    size_t offset2stringStoreOffset =
+        RowGroup::getHeaderSize() + rowID * getRowSize() + getOffsets()[columnID];
+    // bool isNull = strings->isNullValue(offset2stringStoreOffset);
+    // if (isNull)
+    //   return nullValue;
+    // check the out of bounds invariant somehow
+    const char* src = reinterpret_cast<const char*>(&data[offset2stringStoreOffset]);
+    return ToType(src, strnlen(src, getColumnWidth(columnID)));
+  }
+  template <datatypes::SystemCatalog::ColDataType ColType, typename FromType, typename ToType>
+    requires IsShortStringInIntegralTypes<ColType, FromType, ToType>
+  ToType getColumnValue(const uint32_t columnID, const uint32_t rowID)
+  {
+    assert(data);
+    size_t valueOffset = RowGroup::getHeaderSize() + getOffsets()[columnID] + rowID * getRowSize();
+    // check the out of bounds invariant somehow
+    const char* valuePtr = reinterpret_cast<const char*>(&data[valueOffset]);
+    return ToType(valuePtr, sizeof(FromType));
+  }
+
   uint32_t getStatus() const;
   void setStatus(uint16_t);
 
@@ -1620,7 +1736,8 @@ class RowGroup : public messageqcpp::Serializeable
 
   uint32_t getColumnWidth(uint32_t col) const;
   uint32_t getColumnCount() const;
-  inline const std::vector<uint32_t>& getOffsets() const;
+  inline const OffsetsType& getOffsets() const;
+  inline const uint32_t* getOffsetArray() const;
   inline const std::vector<uint32_t>& getOIDs() const;
   inline const std::vector<uint32_t>& getKeys() const;
   inline const std::vector<uint32_t>& getColWidths() const;
@@ -1708,6 +1825,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline void setStringStore(boost::shared_ptr<StringStore>);
 
   const CHARSET_INFO* getCharset(uint32_t col);
+  // This method is for testing.
+  void setCharset(uint32_t col, const CHARSET_INFO* cs);
 
   const auto& getGroupConcats() const
   {
@@ -1958,6 +2077,11 @@ inline const std::vector<uint32_t>& RowGroup::getOffsets() const
   return oldOffsets;
 }
 
+inline const uint32_t* RowGroup::getOffsetArray() const
+{
+  return offsets;
+}
+
 inline const std::vector<uint32_t>& RowGroup::getOIDs() const
 {
   return oids;
@@ -2099,6 +2223,60 @@ inline void Row::getLocation(uint32_t* partNum, uint16_t* segNum, uint8_t* exten
 
   if (rowNum)
     *rowNum = getRelRid();
+}
+
+inline void copyRowM(const Row& in, Row* out, uint32_t colCount)
+{
+  if (&in == out)
+    return;
+
+  // out->setRid(in.getRelRid());
+
+  if (!in.usesStringTable() && !out->usesStringTable())
+  {
+    memcpy(out->getData(), in.getData(), std::min(in.getSize(), out->getSize()));
+
+    for (uint32_t i = 0; i < colCount; i++)
+    {
+      out->setNullMark(i, in.getNullMark(i));
+    }
+    return;
+  }
+
+  for (uint32_t i = 0; i < colCount; i++)
+  {
+    if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::VARBINARY ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::BLOB ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::TEXT ||
+                 in.getColTypes()[i] == execplan::CalpontSystemCatalog::CLOB))
+    {
+      out->setVarBinaryField(in.getVarBinaryField(i), in.getVarBinaryLength(i), i);
+    }
+    else if (UNLIKELY(in.isLongString(i)))
+    {
+      out->setStringField(in.getConstString(i), i);
+    }
+    else if (UNLIKELY(in.isShortString(i)))
+    {
+      out->setUintField(in.getUintField(i), i);
+    }
+    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::DOUBLE))
+    {
+      out->setDoubleField(in.getDoubleField(i), i);
+    }
+    else if (UNLIKELY(in.getColTypes()[i] == execplan::CalpontSystemCatalog::LONGDOUBLE))
+    {
+      out->setLongDoubleField(in.getLongDoubleField(i), i);
+    }
+    else if (UNLIKELY(datatypes::isWideDecimalType(in.getColType(i), in.getColumnWidth(i))))
+    {
+      in.copyBinaryField(*out, i, i);
+    }
+    else
+    {
+      out->setIntField(in.getIntField(i), i);
+    }
+  }
 }
 
 // This routine can be slow for your purposes. Please inspect copyRowInline below,

@@ -27,15 +27,17 @@ if(WITH_UNITTESTS)
                    -DCMAKE_SHARED_LINKER_FLAGS=${linkflags} -DCMAKE_MODULE_LINKER_FLAGS=${linkflags}
     )
 
-    # this is a workaround for gtest's bug still not closed https://github.com/google/googletest/issues/3659
+    # this is a workaround for gtest's bug still not closed
+    # https://github.com/google/googletest/issues/3659
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        my_check_and_set_compiler_flag("-U__cpp_char8_t")
+        MY_CHECK_AND_SET_COMPILER_FLAG("-U__cpp_char8_t")
     endif()
 
     include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+
     # lib64 for RPM-based distros
     link_directories(${EXTERNAL_INSTALL_LOCATION}/lib ${EXTERNAL_INSTALL_LOCATION}/lib64)
-    set(GTEST_LIBRARIES gtest gtest_main pthread)
+    set(GTEST_LIBRARIES gtest gtest_main gmock gmock_main pthread)
     include(GoogleTest)
 
     # GoogleTest tests
@@ -82,6 +84,16 @@ if(WITH_UNITTESTS)
     columnstore_link(simd_processors ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
     gtest_add_tests(TARGET simd_processors TEST_PREFIX columnstore:)
 
+    add_executable(heaporderby heaporderby-tests.cpp)
+    add_dependencies(heaporderby googletest)
+    target_link_libraries(heaporderby ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET heaporderby TEST_PREFIX columnstore:)
+
+    add_executable(modified_pdqsort modified_pdqsort.cpp)
+    add_dependencies(modified_pdqsort googletest)
+    target_link_libraries(modified_pdqsort ${ENGINE_LDFLAGS} ${MARIADB_CLIENT_LIBS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
+    gtest_add_tests(TARGET modified_pdqsort TEST_PREFIX columnstore:)
+
     add_executable(fair_threadpool_test fair_threadpool.cpp)
     add_dependencies(fair_threadpool_test googletest)
     columnstore_link(fair_threadpool_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES} processor dbbc)
@@ -122,6 +134,10 @@ if(WITH_UNITTESTS)
         add_executable(bytestream bytestream.cpp)
         columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
         add_test(NAME columnstore:bytestream COMMAND bytestream)
+
+        add_executable(pqorderby_test pqorderby-test.cpp)
+        columnstore_link(pqorderby_test ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:pqorderby_test COMMAND pqorderby_test)
 
         # standalone EM routines test
         add_executable(brm_em_standalone brm-em-standalone.cpp)

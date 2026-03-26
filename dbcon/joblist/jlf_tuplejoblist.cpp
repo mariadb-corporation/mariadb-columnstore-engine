@@ -693,6 +693,8 @@ void addProjectStepsToBps(TableInfoMap::iterator& mit, BatchPrimitive* bps, JobI
       //				cout << "1 setting project BPP for " << tbps->toString() << " with "
       //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
       //<< endl;
+      //<< 					it->get()->toString() << " and " << (it+1)->get()->toString()
+      //<< endl;
       bps->setProjectBPP(it->get(), (it + 1)->get());
 
       // this is a two-step project step, remove the token step from id vector
@@ -4406,12 +4408,6 @@ namespace joblist
 void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
                   IDBQueryType queryType)
 {
-  // TODO MCOL-894 we don't need to run sorting|distinct
-  // every time
-  //    if ((jobInfo.limitCount != (uint64_t) - 1) ||
-  //            (jobInfo.constantCol == CONST_COL_EXIST) ||
-  //            (jobInfo.hasDistinct))
-  //    {
   if (!jobInfo.annexStep)
   {
     jobInfo.annexStep.reset(new TupleAnnexStep(jobInfo));
@@ -4422,10 +4418,7 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
 
   if (!jobInfo.orderByColVec.empty())
   {
-    tas->addOrderBy(new LimitedOrderBy());
-    if (jobInfo.orderByThreads > 1)
-      tas->setParallelOp();
-    tas->setMaxThreads(jobInfo.orderByThreads);
+    tas->addOrderBy(jobInfo);
   }
 
   if (queryType != IDBQueryType::UNION)
@@ -4436,7 +4429,6 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
     if (jobInfo.hasDistinct)
       tas->setDistinct();
   }
-  //    }
 
   auto* tds = dynamic_cast<TupleDeliveryStep*>(deliverySteps[CNX_VTABLE_ID].get());
   RowGroup rg = tds->getDeliveredRowGroup();
@@ -4467,6 +4459,18 @@ void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, J
   spdlOut->rowGroupDL(dlOut);
   JobStepAssociation jsaOut;
   jsaOut.outAdd(spdlOut);
+  // WIP add spec check for flat order by here
+  if (jobInfo.orderByColVec.size() > 0 && !tas->firstPhaseflatOrderBys_.empty())
+  {
+    for (size_t i = 1; i <= jobInfo.orderByThreads; ++i)
+    {
+      AnyDataListSPtr spdlOut(new AnyDataList());
+      RowGroupDL* dlOut = new RowGroupDL(1, jobInfo.fifoSize);
+      dlOut->OID(CNX_VTABLE_ID);
+      spdlOut->rowGroupDL(dlOut);
+      jsaOut.outAdd(spdlOut);
+    }
+  }
   jobInfo.annexStep->outputAssociation(jsaOut);
 
   querySteps.push_back(jobInfo.annexStep);

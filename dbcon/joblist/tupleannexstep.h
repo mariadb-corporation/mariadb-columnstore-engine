@@ -20,11 +20,15 @@
 
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <boost/thread/thread.hpp>
 
+#include "funcexp.h"
+#include "jlf_common.h"
 #include "jobstep.h"
 #include "limitedorderby.h"
+#include "pdqorderby.h"
 
 namespace joblist
 {
@@ -34,6 +38,7 @@ class LimitedOrderBy;
 
 namespace joblist
 {
+
 /** @brief class TupleAnnexStep
  *
  */
@@ -73,6 +78,32 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   {
     fOrderBy = lob;
   }
+  void addOrderBy(const JobInfo& jobInfo)
+  {
+    // WIP Check the right condition
+    if (fLimitStart + fLimitCount <= ReasonableLimit)
+    {
+      fOrderBy = new LimitedOrderBy();
+    }
+    else if (jobInfo.orderByThreads == 1)
+    {
+      flatOrderBy_.reset(new sorting::PDQOrderBy());
+    }
+    else
+    {
+      for (size_t i = 0; i < jobInfo.orderByThreads; ++i)
+      {
+        firstPhaseflatOrderBys_.emplace_back(new sorting::PDQOrderBy());
+        secondPhaseflatOrderBys_.emplace_back(new sorting::PDQOrderBy());
+      }
+    }
+
+    if (jobInfo.orderByThreads > 1)
+    {
+      setParallelOp();
+    }
+    setMaxThreads(jobInfo.orderByThreads);
+  }
   void addConstant(TupleConstantStep* tcs)
   {
     fConstant = tcs;
@@ -107,6 +138,8 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void execute(uint32_t);
   void executeNoOrderBy();
   void executeWithOrderBy();
+  void executePDQOrderBy();
+  void executePDQOrderBy(const uint32_t id);
   void executeParallelOrderBy(uint64_t id);
   void executeNoOrderByWithDistinct();
   void checkAndAllocateMemory4RGData(const rowgroup::RowGroup& rowGroup);
@@ -114,6 +147,16 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   void printCalTrace();
   void finalizeParallelOrderBy();
   void finalizeParallelOrderByDistinct();
+  const sorting::ValueRangesMatrix calculatePivots4phase2(
+      const sorting::SortingThreads& sortingGroup) const;
+  // WIP replace Mattrix with vector
+  void finalizePDQOrderBy(const uint32_t id, const sorting::ValueRangesMatrix ranges,
+                          const sorting::SortingThreads& firstPhaseThreads);
+  void finalizeHeapOrderBy(const uint32_t id, const sorting::ValueRangesVector ranges,
+                           const sorting::SortingThreads& firstPhaseThreads);
+  void joinOutputDLs();
+
+  static constexpr const uint64_t ReasonableLimit = 10000ULL;
 
   // input/output rowgroup and row
   rowgroup::RowGroup fRowGroupIn;
@@ -163,6 +206,13 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
   bool fParallelOp;
 
   LimitedOrderBy* fOrderBy;
+  std::unique_ptr<sorting::PDQOrderBy> flatOrderBy_;
+
+ public:
+  sorting::SortingThreads firstPhaseflatOrderBys_;
+  sorting::SortingThreads secondPhaseflatOrderBys_;
+
+ private:
   TupleConstantStep* fConstant;
 
   funcexp::FuncExp* fFeInstance;
@@ -170,9 +220,30 @@ class TupleAnnexStep : public JobStep, public TupleDeliveryStep
 
   std::vector<LimitedOrderBy*> fOrderByList;
   std::vector<uint64_t> fRunnersList;
-  uint16_t fFinishedThreads;
+  size_t fFinishedThreads;
   boost::mutex fParallelFinalizeMutex;
+  std::mutex parallelOrderByMutex_;
+  size_t secondPhaseFlatThreadId{0};
   joblist::ResourceManager* fRm;
+};
+
+template <class T>
+class reservablePQ : private std::priority_queue<T>
+{
+ public:
+  typedef typename std::priority_queue<T>::size_type size_type;
+  reservablePQ(size_type capacity = 0)
+  {
+    reserve(capacity);
+  };
+  void reserve(size_type capacity)
+  {
+    this->c.reserve(capacity);
+  }
+  size_type capacity() const
+  {
+    return this->c.capacity();
+  }
 };
 
 }  // namespace joblist
