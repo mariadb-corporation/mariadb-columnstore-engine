@@ -2065,7 +2065,7 @@ void replaceDerivedTableList(CalpontSelectExecutionPlan::SelectList& list, const
 {
   for (auto& scep : list)
   {
-    auto plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
+    auto* plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
     if (!plan)
       continue;
 
@@ -2171,7 +2171,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
     nonRecursiveEnd = std::partition(unionVec.begin(), unionVec.end(),
                                      [](SCEP scep)
                                      {
-                                       auto plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
+                                       auto* plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
                                        return plan ? !plan->containsRecursiveQuery() : false;
                                      });
   }
@@ -2221,7 +2221,6 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
     // baseRecur is the template plan for every unrolled iteration.
     CalpontSelectExecutionPlan* baseRecur = new CalpontSelectExecutionPlan(*currRecur);
     uint32_t depth = (currRecur->maxRecursiveDepth() <= 100) ? csep->maxRecursiveDepth() : 100;
-    // uint32_t depth = 100;
     for (uint32 i = 0; i < depth; ++i)
     {
       // Create a fresh copy of the recursive plan for this iteration.

@@ -5341,7 +5341,7 @@ SJSTEP recursiveUnionQueries(JobStepVector& queries, uint64_t distinctUnionNum, 
     SJSTEP spjs = recurQueries[i];
     TupleDeliveryStep* tds = dynamic_cast<TupleDeliveryStep*>(spjs.get());
 
-    if (tds == NULL)
+    if (tds == nullptr)
     {
       throw runtime_error("Not a deliverable step.");
     }
