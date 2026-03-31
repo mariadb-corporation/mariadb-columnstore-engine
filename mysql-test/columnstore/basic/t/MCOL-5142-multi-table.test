@@ -38,7 +38,7 @@ INSERT INTO suppliers (supplier_id, supplier_name, component_id) VALUES
 (1001, 'Supplier B', 201),
 (1002, 'Supplier C', 202);
 
-#sorted_result
+--sorted_result
 WITH RECURSIVE product_tree AS (
     SELECT
         p.product_id AS root_id,

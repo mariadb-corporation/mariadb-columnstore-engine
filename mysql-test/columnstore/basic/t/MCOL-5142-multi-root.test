@@ -20,7 +20,7 @@ INSERT INTO emp VALUES
 (12,'B-2',10),
 (13,'B-1-1',11);
 
-#sorted_result
+--sorted_result
 WITH RECURSIVE org AS (
   SELECT id, name, manager_id, id AS root_id, 0 AS lvl
   FROM emp
