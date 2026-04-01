@@ -35,6 +35,74 @@ class TraceParamsFilter(logging.Filter):
             record.trace_params = ""
         return True
 
+class SharedStorageAccessFilter(logging.Filter):
+    """Redirect shared-storage check access logs to a separate log file.
+
+    When attached to the ``cherrypy.access`` logger this filter intercepts
+    log records whose message matches shared-storage-related endpoint paths
+    (``check-shared-storage``, ``check-shared-file``) and forwards them to
+    the file handler used by the ``shared_storage_monitor`` logger.
+
+    Matched records are suppressed from the normal access-log handler chain
+    so they do not clutter ``cmapi_server.log``.  The dedicated handler is
+    resolved lazily on the first matching record and cached for the
+    lifetime of the filter instance.
+
+    :param name: Standard :class:`logging.Filter` *name* argument.
+    :type name: str
+    """
+
+    _ENDPOINTS = ('check-shared-storage', 'check-shared-file')
+
+    def __init__(self, name=''):
+        """Initialise the filter.
+
+        :param name: Logger-name prefix used by the base class filter.
+        :type name: str
+        """
+        super().__init__(name)
+        self._handler = None
+
+    def filter(self, record):
+        """Decide whether *record* should reach the default handlers.
+
+        If the formatted message contains a shared-storage endpoint path
+        the record is emitted directly to the shared-storage log file and
+        suppressed from the regular handler chain (returns ``False``).
+
+        :param record: The log record to evaluate.
+        :type record: logging.LogRecord
+        :returns: ``True`` to keep the record in the normal flow;
+            ``False`` to suppress it.
+        :rtype: bool
+        """
+        msg = record.getMessage()
+        if not any(ep in msg for ep in self._ENDPOINTS):
+            return True
+        handler = self._resolve_handler()
+        if handler is not None:
+            handler.handle(record)
+        return False
+
+    def _resolve_handler(self):
+        """Lazily resolve the shared-storage file handler.
+
+        The handler is obtained from the ``shared_storage_monitor`` logger
+        on first call and cached for subsequent invocations.
+
+        :returns: The file handler, or ``None`` if it cannot be found.
+        :rtype: logging.Handler or None
+        """
+        if self._handler is not None:
+            return self._handler
+        ss_logger = logging.getLogger('shared_storage_monitor')
+        for h in ss_logger.handlers:
+            if hasattr(h, 'baseFilename'):
+                self._handler = h
+                return h
+        return None
+
+
 def custom_cherrypy_error(
         self, msg='', context='', severity=logging.INFO, traceback=False
     ):
