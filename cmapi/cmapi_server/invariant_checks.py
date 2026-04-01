@@ -12,16 +12,30 @@ from mcs_node_control.models.node_config import NodeConfig
 logger = logging.getLogger(__name__)
 
 
+# Supported modes for the 'invariant_checks' config option:
+#   enforce  – run checks and fail on problems (default)
+#   warning  – run checks but only log warnings, never fail
+#   disabled – skip checks entirely
+# Boolean values (true/false) are also accepted:
+#   true  -> enforce
+#   false -> disabled
+_BOOL_TO_MODE = {'true': 'enforce', '1': 'enforce', 'yes': 'enforce',
+                 'false': 'disabled', '0': 'disabled', 'no': 'disabled'}
+VALID_MODES = ('enforce', 'warning', 'disabled')
+
+_cache = {'mode': 'enforce'}
+
+
 def resolve_symlinks_in_path(base_path: str, subdirs: List[str]) -> List[str]:
     """Build required directories list, resolving symlinks at each level.
 
-    If base_path or any intermediate directory is a symlink, resolve it
-    before appending subsequent path components. This ensures we check
+    If *base_path* or any intermediate directory is a symlink, resolve it
+    before appending subsequent path components.  This ensures we check
     the actual target directories rather than potentially broken paths.
 
-    :param base_path: The root path (e.g., MCS_DATA_PATH).
-    :param subdirs: List of subdirectory components to append sequentially.
-    :return: List of resolved directory paths to check.
+    :param base_path: The root path (e.g., ``MCS_DATA_PATH``).
+    :param subdirs: Subdirectory components to append sequentially.
+    :returns: Resolved directory paths to check.
     """
     result: List[str] = []
     current: str = base_path
@@ -45,28 +59,68 @@ def resolve_symlinks_in_path(base_path: str, subdirs: List[str]) -> List[str]:
     return result
 
 
-def is_invariant_checks_enabled() -> bool:
-    """Check if invariant checks are enabled in CMAPI config.
+def init_invariant_checks_mode() -> None:
+    """Read the invariant-checks mode from CMAPI config and cache it.
 
-    :return: True if invariant checks are enabled (default), False otherwise.
+    Must be called once at application startup.  Subsequent calls to
+    :func:`get_invariant_checks_mode` return the cached value without
+    re-reading the config file.
+
+    Reads ``[application] invariant_checks`` from the CMAPI config file.
+    Accepted values: ``enforce`` (default), ``warning``, ``disabled``.
+    Boolean literals (``true``/``false``) are accepted for backward
+    compatibility and mapped to ``enforce``/``disabled``.
     """
     cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
-    return cfg_parser.getboolean('application', 'invariant_checks', fallback=True)
+    raw = cfg_parser.get(
+        'application', 'invariant_checks', fallback='enforce',
+    ).strip().lower()
+    mode = _BOOL_TO_MODE.get(raw, raw)
+    if mode not in VALID_MODES:
+        logger.warning(
+            'Unknown invariant_checks value %r in config, '
+            'falling back to "enforce".',
+            raw,
+        )
+        mode = 'enforce'
+    _cache['mode'] = mode
+    logger.info('Invariant checks mode: %s', mode)
 
 
-def run_invariant_checks() -> Optional[str]:
-    """Run invariant checks, log results, and return a formatted string with problems, if any.
+def get_invariant_checks_mode() -> str:
+    """Return the cached invariant-checks mode.
 
-    If invariant checks are disabled in CMAPI config file (invariant_checks = false),
-    this function returns None without running any checks.
-
-    :return: Formatted string with problems if checks fail, None otherwise.
+    :returns: One of ``'enforce'``, ``'warning'``, or ``'disabled'``.
+    :rtype: str
     """
-    if not is_invariant_checks_enabled():
-        logger.info('Invariant checks are turned OFF in CMAPI config file.')
-        return None
+    return _cache['mode']
 
-    logger.info('Starting invariant checks')
+
+def run_invariant_checks() -> Tuple[Optional[str], bool]:
+    """Run invariant checks and return diagnostics together with the mode.
+
+    Behaviour depends on the cached ``invariant_checks`` mode
+    (see :func:`init_invariant_checks_mode`):
+
+    * ``enforce`` (default) – run checks; return diagnostics on failure.
+    * ``warning`` – run checks; return diagnostics on failure but signal
+      that callers should only log a warning, not abort.
+    * ``disabled`` – skip checks entirely.
+
+    :returns: ``(diag, warn_only)`` where *diag* is a formatted string
+        with problems (or ``None`` when checks pass / are disabled) and
+        *warn_only* is ``True`` when the caller should log a warning
+        instead of raising / exiting.
+    :rtype: tuple[str | None, bool]
+    """
+    mode = get_invariant_checks_mode()
+
+    if mode == 'disabled':
+        logger.info('Invariant checks are disabled in CMAPI config file.')
+        return None, False
+
+    warn_only = mode == 'warning'
+    logger.info('Starting invariant checks (mode=%s)', mode)
     runner = Runner()
     result = runner.run()
     problems = result.problems()
@@ -87,11 +141,16 @@ def run_invariant_checks() -> Optional[str]:
         {k.value: v for k, v in result.counts.items() if v != 0}
     )
     if result.overall in (Status.FAIL, Status.ERROR):
-        logger.error('Invariant checks failed')
-        return diag
+        if warn_only:
+            logger.warning(
+                'Invariant checks failed (warning mode, not aborting)',
+            )
+        else:
+            logger.error('Invariant checks failed')
+        return diag, warn_only
     else:
         logger.info('Invariant checks passed')
-        return None
+        return None, warn_only
 
 
 ### Facts

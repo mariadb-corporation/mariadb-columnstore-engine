@@ -488,8 +488,8 @@ class ConfigController:
                     sm_config_string=sm_config
                 )
 
-                diag = run_invariant_checks()
-                if diag:
+                diag, warn_only = run_invariant_checks()
+                if diag and not warn_only:
                     raise_422_error(
                         module_logger, func_name,
                         f'Invariant checks failed. Details:\n{diag.strip()}',
