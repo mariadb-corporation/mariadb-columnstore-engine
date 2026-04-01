@@ -18,7 +18,7 @@ INSERT INTO chain VALUES
 (5,6),
 (6,NULL);
 
-#sorted_result
+--sorted_result
 WITH RECURSIVE cte AS (
   SELECT id, next_id, 0 AS lvl
   FROM chain

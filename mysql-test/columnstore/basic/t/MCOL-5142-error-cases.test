@@ -1,0 +1,92 @@
+--disable_warnings
+DROP DATABASE IF EXISTS MCOL5142_ERROR_CASES;
+--enable_warnings
+
+CREATE DATABASE MCOL5142_ERROR_CASES;
+USE MCOL5142_ERROR_CASES;
+
+CREATE TABLE t (id INT NOT NULL, pid INT) ENGINE=ColumnStore;
+INSERT INTO t VALUES (1, NULL), (2, 1), (3, 2), (4, 3);
+
+#
+# 1. UNION DISTINCT is not supported in recursive CTE
+#
+--error ER_CHECK_NOT_IMPLEMENTED
+WITH RECURSIVE cte AS (
+    SELECT id, pid FROM t WHERE id = 1
+
+    UNION DISTINCT
+
+    SELECT t.id, t.pid FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+
+#
+# 2. GROUP BY in recursive member is not supported
+#
+--error ER_NOT_STANDARD_COMPLIANT_RECURSIVE
+WITH RECURSIVE cte AS (
+    SELECT id, pid FROM t WHERE id = 1
+
+    UNION ALL
+
+    SELECT MAX(t.id), t.pid FROM t JOIN cte c ON t.pid = c.id GROUP BY t.pid
+)
+SELECT * FROM cte;
+
+#
+# 3. ORDER BY in recursive member is not supported
+#
+--error ER_TABLENAME_NOT_ALLOWED_HERE
+WITH RECURSIVE cte AS (
+    SELECT id, pid FROM t WHERE id = 1
+
+    UNION ALL
+
+    SELECT t.id, t.pid FROM t JOIN cte c ON t.pid = c.id ORDER BY t.id
+)
+SELECT * FROM cte;
+
+#
+# 4. Window functions in recursive member are not supported
+#
+--error ER_NOT_STANDARD_COMPLIANT_RECURSIVE
+WITH RECURSIVE cte AS (
+    SELECT id, pid, 1 AS rn FROM t WHERE id = 1
+
+    UNION ALL
+
+    SELECT t.id, t.pid, ROW_NUMBER() OVER () FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+
+#
+# 5. Depth overflow: max_recursive_iterations limits the recursion depth.
+#    With iterations=2 and a chain of 4 nodes, only partial results are returned.
+#
+SET @old_max_recursive_iterations = @@max_recursive_iterations;
+SET @@max_recursive_iterations = 2;
+WITH RECURSIVE cte AS (
+    SELECT id, pid, 0 AS lvl FROM t WHERE id = 1
+
+    UNION ALL
+
+    SELECT t.id, t.pid, c.lvl + 1 FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+
+#
+# 6. max_recursive_iterations = 0: only anchor is returned
+#
+SET @@max_recursive_iterations = 0;
+WITH RECURSIVE cte AS (
+    SELECT id, pid, 0 AS lvl FROM t WHERE id = 1
+
+    UNION ALL
+
+    SELECT t.id, t.pid, c.lvl + 1 FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+SET @@max_recursive_iterations = @old_max_recursive_iterations;
+
+DROP DATABASE MCOL5142_ERROR_CASES;

@@ -9,10 +9,12 @@ USE MCOL5142_cyclic;
 
 CREATE TABLE t_cycle (id INT, next_id INT) ENGINE=ColumnStore;
 INSERT INTO t_cycle VALUES (1, 2), (2, 3), (3, 1);
+SET @old_max_recursive_iterations = @@max_recursive_iterations;
 SET @@max_recursive_iterations = 10;
 
 SELECT @@max_recursive_iterations;
 
+--sorted_result
 WITH RECURSIVE cte AS (
   SELECT id, next_id FROM t_cycle WHERE id = 1
   UNION ALL
@@ -21,6 +23,7 @@ WITH RECURSIVE cte AS (
 SELECT * FROM cte LIMIT 100;
 
 
+--sorted_result
 WITH RECURSIVE cte AS (
   SELECT id, next_id FROM t_cycle WHERE id = 1
   UNION ALL
@@ -28,5 +31,7 @@ WITH RECURSIVE cte AS (
 )
 SELECT * FROM cte LIMIT 100;
 
+
+SET @@max_recursive_iterations = @old_max_recursive_iterations;
 
 DROP DATABASE MCOL5142_cyclic;
