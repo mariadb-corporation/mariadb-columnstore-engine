@@ -80,8 +80,9 @@ class SharedStorageAccessFilter(logging.Filter):
         if not any(ep in msg for ep in self._ENDPOINTS):
             return True
         handler = self._resolve_handler()
-        if handler is not None:
-            handler.handle(record)
+        if handler is None:
+            return True
+        handler.handle(record)
         return False
 
     def _resolve_handler(self):

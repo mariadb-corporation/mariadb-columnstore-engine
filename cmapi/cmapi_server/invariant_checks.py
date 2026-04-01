@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 # Boolean values (true/false) are also accepted:
 #   true  -> enforce
 #   false -> disabled
-_BOOL_TO_MODE = {'true': 'enforce', '1': 'enforce', 'yes': 'enforce',
-                 'false': 'disabled', '0': 'disabled', 'no': 'disabled'}
+_BOOL_TO_MODE = {'true': 'enforce', '1': 'enforce', 'yes': 'enforce', 'on': 'enforce',
+                 'false': 'disabled', '0': 'disabled', 'no': 'disabled', 'off': 'disabled'}
 VALID_MODES = ('enforce', 'warning', 'disabled')
 
 _cache = {'mode': 'enforce'}
@@ -141,12 +141,11 @@ def run_invariant_checks() -> Tuple[Optional[str], bool]:
         {k.value: v for k, v in result.counts.items() if v != 0}
     )
     if result.overall in (Status.FAIL, Status.ERROR):
+        msg = f'Invariant checks failed. Details:\n{diag.strip() if diag else ""}'
         if warn_only:
-            logger.warning(
-                'Invariant checks failed (warning mode, not aborting)',
-            )
+            logger.warning('%s (warning mode, not aborting)', msg)
         else:
-            logger.error('Invariant checks failed')
+            logger.error(msg)
         return diag, warn_only
     else:
         logger.info('Invariant checks passed')
