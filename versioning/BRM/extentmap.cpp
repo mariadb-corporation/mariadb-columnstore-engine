@@ -229,7 +229,7 @@ void EMEntry::setHWMAndInvalidate(HWM_t newHWM)
 {
   HWM = newHWM;
 
-  partition.isValid = CP_INVALID;
+  partition.cprange.isValid = CP_INVALID;
 }
 
 
