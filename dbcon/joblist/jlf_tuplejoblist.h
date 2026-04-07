@@ -87,7 +87,7 @@ struct TableInfo
   rowgroup::RowGroup fRowGroup;      // output rowgroup meta data
   std::set<uint32_t> fJoinedTables;  // tables directly/indirectly joined to this table
 
-  TableInfo() : fTableOid(-1), fVisited(false)
+  TableInfo() : fTableOid(-1), fSubId(0), fVisited(false)
   {
   }
 };
