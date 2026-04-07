@@ -75,6 +75,7 @@ void QueryStats::reset()
   fHost.clear();
   fUser.clear();
   fPriority.clear();
+  fPriorityLevel = 0;
 }
 
 void QueryStats::serialize(ByteStream& b)
