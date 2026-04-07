@@ -402,11 +402,13 @@ ReadKeyResult secrets_readkeys(const string& filepath)
     {
       std::cout << "Error reading JSON from secrets file: " << filepath << std::endl;
       std::cout << je.what() << std::endl;
+      return rval;
     }
     catch (...)
     {
       printf("Error reading JSON from secrets file '%s' failed. Error %d, %s.\n", filepathc, errno,
              strerror(errno));
+      return rval;
     }
     // json_t* obj = json_load_file(filepathc, 0, &err);
     string enc_cipher = jsontree[field_cipher];
