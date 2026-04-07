@@ -1195,7 +1195,7 @@ MinMaxPartitionInfo TypeHandler::getExtentPartitionInfo(const SystemCatalog::Typ
                                                         BRM::DBRM& em, const BRM::EMEntry& entry,
                                                         int* state) const
 {
-  int32_t seqNum;
+  int32_t seqNum = 0;
   MinMaxPartitionInfo partInfo(entry);
   *state = em.getExtentMaxMin(entry.range.start, partInfo.max, partInfo.min, seqNum);
   return partInfo;
@@ -1205,7 +1205,7 @@ MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo64(
     const SystemCatalog::TypeAttributesStd& /*attr*/, BRM::DBRM& em, const BRM::EMEntry& entry,
     int* state) const
 {
-  int32_t seqNum;
+  int32_t seqNum = 0;
   MinMaxPartitionInfo partInfo(entry);
   *state = em.getExtentMaxMin(entry.range.start, partInfo.max, partInfo.min, seqNum);
   return partInfo;
@@ -1215,7 +1215,7 @@ MinMaxPartitionInfo TypeHandlerXDecimal::getExtentPartitionInfo128(
     const SystemCatalog::TypeAttributesStd& /*attr*/, BRM::DBRM& em, const BRM::EMEntry& entry,
     int* state) const
 {
-  int32_t seqNum;
+  int32_t seqNum = 0;
   MinMaxPartitionInfo partInfo(entry);
   *state = em.getExtentMaxMin(entry.range.start, partInfo.int128Max, partInfo.int128Min, seqNum);
   return partInfo;
@@ -1225,7 +1225,7 @@ MinMaxPartitionInfo TypeHandlerChar::getExtentPartitionInfo(const SystemCatalog:
                                                             BRM::DBRM& em, const BRM::EMEntry& entry,
                                                             int* state) const
 {
-  int32_t seqNum;
+  int32_t seqNum = 0;
   MinMaxPartitionInfo partInfo(entry);
   *state = em.getExtentMaxMin(entry.range.start, partInfo.max, partInfo.min, seqNum);
   // char column order swap
@@ -1241,7 +1241,7 @@ MinMaxPartitionInfo TypeHandlerVarchar::getExtentPartitionInfo(const SystemCatal
                                                                BRM::DBRM& em, const BRM::EMEntry& entry,
                                                                int* state) const
 {
-  int32_t seqNum;
+  int32_t seqNum = 0;
   MinMaxPartitionInfo partInfo(entry);
   *state = em.getExtentMaxMin(entry.range.start, partInfo.max, partInfo.min, seqNum);
   // char column order swap
