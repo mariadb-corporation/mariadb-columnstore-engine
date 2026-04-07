@@ -30,13 +30,15 @@ using namespace std;
 namespace dmlpackage
 {
 VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int sessionID)
- : fDMLStatement(dmlstatement), fSessionID(sessionID), fLogging(true), fLogending(true)
+ : fDMLStatement(dmlstatement), fDMLStatementType(0), fRows(0), fColumns(0), fSessionID(sessionID), fLogging(true), fLogending(true)
 {
 }
 
 VendorDMLStatement::VendorDMLStatement(std::string dmlstatement, int stmttype, int sessionID)
  : fDMLStatement(dmlstatement)
  , fDMLStatementType(stmttype)
+ , fRows(0)
+ , fColumns(0)
  , fSessionID(sessionID)
  , fLogging(true)
  , fLogending(true)
