@@ -661,11 +661,11 @@ void ColumnCommand::projectResult(messageqcpp::SBS& bs)
   {
     ostringstream os;
     BRM::DBRM brm;
-    BRM::OID_t oid;
-    uint16_t l_dbroot;
-    uint32_t partNum;
-    uint16_t segNum;
-    uint32_t fbo;
+    BRM::OID_t oid = 0;
+    uint16_t l_dbroot = 0;
+    uint32_t partNum = 0;
+    uint16_t segNum = 0;
+    uint32_t fbo = 0;
     brm.lookupLocal(lbid, 0, false, oid, l_dbroot, partNum, segNum, fbo);
 
     os << __FILE__ << " error on projection for oid " << oid << " lbid " << lbid;
@@ -770,11 +770,11 @@ void ColumnCommand::_projectResultRG(RowGroup& rg, uint32_t pos)
   {
     ostringstream os;
     BRM::DBRM brm;
-    BRM::OID_t oid;
-    uint16_t dbroot;
-    uint32_t partNum;
-    uint16_t segNum;
-    uint32_t fbo;
+    BRM::OID_t oid = 0;
+    uint16_t dbroot = 0;
+    uint32_t partNum = 0;
+    uint16_t segNum = 0;
+    uint32_t fbo = 0;
     brm.lookupLocal(lbid, 0, false, oid, dbroot, partNum, segNum, fbo);
 
     os << __FILE__ << " error on projectResultRG for oid " << oid << " lbid " << lbid;
