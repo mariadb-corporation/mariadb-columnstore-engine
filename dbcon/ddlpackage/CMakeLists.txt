@@ -43,3 +43,10 @@ columnstore_library(
 )
 
 columnstore_link(ddlpackage loggingcpp)
+
+add_custom_target(GenDDLPackageSource
+    DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/ddl-gram.h
+    ${CMAKE_CURRENT_BINARY_DIR}/ddl-scan.cpp
+)
