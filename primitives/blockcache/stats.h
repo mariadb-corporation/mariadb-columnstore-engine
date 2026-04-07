@@ -44,11 +44,11 @@ class Stats
 
   inline BRM::OID_t lbid2oid(uint64_t lbid)
   {
-    BRM::OID_t oid;
-    uint16_t dbroot;
-    uint32_t partNum;
-    uint16_t segNum;
-    uint32_t fbo;
+    BRM::OID_t oid = 0;
+    uint16_t dbroot = 0;
+    uint32_t partNum = 0;
+    uint16_t segNum = 0;
+    uint32_t fbo = 0;
     brm.lookupLocal(lbid, 0, false, oid, dbroot, partNum, segNum, fbo);
     return oid;
   }
