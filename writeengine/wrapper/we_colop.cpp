@@ -1515,7 +1515,7 @@ int ColumnOp::writeRow(Column& curCol, uint64_t totalRow, const RID* rowIdArray,
                        void* oldValArray, bool bDelete)
 {
   uint64_t i = 0, curRowId;
-  int dataFbo, dataBio, curDataFbo = -1;
+  int dataFbo = 0, dataBio = 0, curDataFbo = -1;
   unsigned char dataBuf[BYTE_PER_BLOCK];
   bool bExit = false, bDataDirty = false;
   const void* pVal = 0;
@@ -1685,7 +1685,7 @@ int ColumnOp::writeRows(Column& curCol, uint64_t totalRow, const RIDList& ridLis
                         void* oldValArray, bool bDelete)
 {
   uint64_t i = 0, curRowId;
-  int dataFbo, dataBio, curDataFbo = -1;
+  int dataFbo = 0, dataBio = 0, curDataFbo = -1;
   unsigned char dataBuf[BYTE_PER_BLOCK];
   bool bExit = false, bDataDirty = false;
   const void* pVal = 0;
@@ -1815,7 +1815,7 @@ int ColumnOp::writeRowsReadOnly(Column& curCol, uint64_t totalRow, const RIDList
                                 void* oldValArray)
 {
   uint64_t i = 0, curRowId;
-  int dataFbo, dataBio, curDataFbo = -1;
+  int dataFbo = 0, dataBio = 0, curDataFbo = -1;
   unsigned char dataBuf[BYTE_PER_BLOCK];
   int rc = NO_ERROR;
 
@@ -1865,7 +1865,7 @@ int ColumnOp::writeRowsValues(Column& curCol, uint64_t totalRow, const RIDList& 
                               void* oldValArray)
 {
   uint64_t i = 0, curRowId;
-  int dataFbo, dataBio, curDataFbo = -1;
+  int dataFbo = 0, dataBio = 0, curDataFbo = -1;
   unsigned char dataBuf[BYTE_PER_BLOCK];
   bool bExit = false, bDataDirty = false;
   void* pVal = 0;
