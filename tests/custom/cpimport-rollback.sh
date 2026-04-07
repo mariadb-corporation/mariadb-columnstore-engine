@@ -29,5 +29,11 @@ kill -11 $CP_PID
 wait $CP_PID
 
 echo "6. Testing MAX(dt) - Will incorrectly return 0000-00-00:"
-mariadb -e "SELECT MAX(dt) FROM ${DB_NAME}.${TB_NAME};"
+RESULT=`mariadb -N -e "SELECT MAX(dt) FROM ${DB_NAME}.${TB_NAME};"`
 
+echo "MAX(dt): $RESULT"
+
+if [ "$RESULT" != "2026-03-01" ];
+then
+	exit 1
+fi
