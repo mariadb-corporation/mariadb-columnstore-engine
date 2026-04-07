@@ -15,7 +15,7 @@ if command -v getenforce >/dev/null 2>&1 && command -v semodule >/dev/null 2>&1;
   case "$MODE" in
     Enforcing|Permissive)
       if [ -r "$POLICY_PATH" ]; then
-        semodule -i "$POLICY_PATH" || true
+        semodule -X 600 -i "$POLICY_PATH" 2>/dev/null || semodule -i "$POLICY_PATH" || true
       fi
       ;;
     *)
