@@ -326,10 +326,10 @@ void pDictionaryScan::sendPrimitiveMessages()
   HWM_t hwm;
   uint32_t fbo;
   DBRM dbrm;
-  uint16_t dbroot;
-  uint32_t partNum;
-  uint16_t segNum;
-  BRM::OID_t oid;
+  uint16_t dbroot = 0;
+  uint32_t partNum = 0;
+  uint16_t segNum = 0;
+  BRM::OID_t oid = 0;
   boost::shared_ptr<map<int, int> > dbRootConnectionMap;
   boost::shared_ptr<map<int, int> > dbRootPMMap;
   oam::OamCache* oamCache = oam::OamCache::makeOamCache();
