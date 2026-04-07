@@ -384,7 +384,7 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
   uint16_t tmp32;
   uint16_t dbRoot;
   uint32_t partitionNum;
-  uint16_t segmentNum;
+  uint16_t segmentNum = 0;
   std::vector<CreateStripeColumnExtentsArgIn> cols;
   std::vector<CreateStripeColumnExtentsArgOut> extents;
   ByteStream reply;
