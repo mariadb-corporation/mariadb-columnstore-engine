@@ -1536,7 +1536,7 @@ int BRMWrapper::writeVB(IDBDataFile* pSourceFile, const VER_t transID, const OID
   if (idbdatafile::IDBPolicy::useHdfs())
     return 0;
 
-  int rc;
+  int rc = NO_ERROR;
   size_t i;
   size_t processedBlocks;
   size_t rangeListCount;
