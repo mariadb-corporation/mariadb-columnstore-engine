@@ -42,3 +42,10 @@ columnstore_library(
 )
 
 columnstore_link(dmlpackage loggingcpp)
+
+add_custom_target(GenDMLPackageSource
+    DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/dml-gram.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/dml-gram.h
+    ${CMAKE_CURRENT_BINARY_DIR}/dml-scan.cpp
+)

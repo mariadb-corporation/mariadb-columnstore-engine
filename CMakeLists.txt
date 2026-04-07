@@ -87,6 +87,10 @@ foreach(component ${COMPONENTS})
     add_subdirectory(${component})
 endforeach()
 
+add_custom_target(GenColumnstoreSource
+    DEPENDS GenDDLPackageSource GenDMLPackageSource GenLoggingSource
+)
+
 add_dependencies(rbo GenError)
 add_dependencies(udf_mysql GenError)
 add_dependencies(funcexp GenError)
