@@ -184,7 +184,7 @@ int ColumnInfoCompressed::resetFileOffsetsNewExtent(const char* hdr)
     RETURN_ON_ERROR(fColBufferMgr->setDbFile(curCol.dataFile.pFile, curCol.dataFile.hwm, hdr));
 
     // Reinitialize ColBuf for the next extent
-    long long startFileOffset;
+    long long startFileOffset = 0;
     RETURN_ON_ERROR(fColBufferMgr->resetToBeCompressedColBuf(startFileOffset));
 
     // Set the file offset to point to the chunk we are adding or updating
