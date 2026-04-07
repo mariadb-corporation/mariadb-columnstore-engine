@@ -153,6 +153,7 @@ struct CPMaxMin
     int64_t min_;
   };
   bool isBinaryColumn;  // XXX: these two fields should be replaced with type handler pointer.
+  CPMaxMin() : max(0), min(0), seqNum(0), max_(0), min_(0), isBinaryColumn(false) {}
 };
 typedef std::tr1::unordered_map<LBID_t, CPMaxMin> CPMaxMinMap_t;
 
@@ -200,6 +201,7 @@ struct CPMaxMinMerge
     int128_t bigMin;
     int64_t min_;
   };
+  CPMaxMinMerge() : max(0), min(0), seqNum(0), type(execplan::CalpontSystemCatalog::UNDEFINED), colWidth(0), newExtent(false), max_(0), min_(0) {}
 };
 typedef std::tr1::unordered_map<LBID_t, CPMaxMinMerge> CPMaxMinMergeMap_t;
 
