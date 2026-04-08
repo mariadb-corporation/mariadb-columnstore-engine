@@ -1,0 +1,48 @@
+# MCOL-6300: Server crash when INSERT SELECT from JSON_TABLE with
+# subquery referencing a ColumnStore table.
+# isMCSTable() crashed dereferencing NULL db_plugin for JSON_TABLE
+# virtual table.
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6300;
+--enable_warnings
+
+CREATE DATABASE mcol_6300;
+USE mcol_6300;
+
+CREATE TABLE test_cs (id INT, name VARCHAR(100)) ENGINE=Columnstore;
+INSERT INTO test_cs VALUES (1, 'existing');
+
+# Simple INSERT from JSON_TABLE — triggers isMCSTable() on the
+# JSON_TABLE virtual table which has db_plugin=NULL.
+INSERT INTO test_cs
+SELECT * FROM JSON_TABLE(
+    '[{"id": 2, "name": "new"}]',
+    '$[*]' COLUMNS (
+        id INT PATH '$.id',
+        name VARCHAR(100) PATH '$.name'
+    )
+) AS jt;
+
+# Verify both rows are present.
+SELECT * FROM test_cs ORDER BY id;
+
+# Also test a plain SELECT from JSON_TABLE with a ColumnStore table
+# in the same query (NOT EXISTS subquery). This is a cross-engine
+# scenario; if CrossEngineSupport is not configured it will error,
+# but it must NOT crash.
+--error 0,ER_INTERNAL_ERROR
+SELECT jt.* FROM JSON_TABLE(
+    '[{"id": 3, "name": "another"}]',
+    '$[*]' COLUMNS (
+        id INT PATH '$.id',
+        name VARCHAR(100) PATH '$.name'
+    )
+) AS jt
+WHERE NOT EXISTS (
+    SELECT 1 FROM test_cs t WHERE t.id = jt.id
+);
+
+DROP DATABASE mcol_6300;
