@@ -329,17 +329,17 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
   },
-  custom_tests:: {
+  customtests:: {
     name: "custom tests",
     depends_on: ["smoke"],
     image: "docker:git",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     commands: [
-      prepareTestContainer(getContainerName("custom_tests"), result, true, true, true),
+      prepareTestContainer(getContainerName("customtests"), result, true, true, true),
 
       "apk add bash &&" + get_build_command("../tests/custom/cpimport-rollback.sh")
     ],
-    [if (std.member(ignoreFailureStepList, "custom_tests")) then "failure"]: "ignore",
+    [if (std.member(ignoreFailureStepList, "customtests")) then "failure"]: "ignore",
   },
   regression(name, depends_on,):: {
     name: name,
@@ -660,7 +660,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
          [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
-         [pipeline.custom_tests] +
+         [pipeline.customtests] +
          [pipeline.publish("regressionlog")] +
          [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
          (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
