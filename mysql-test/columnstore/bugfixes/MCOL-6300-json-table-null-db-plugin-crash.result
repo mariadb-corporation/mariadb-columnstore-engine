@@ -15,6 +15,7 @@ SELECT * FROM test_cs ORDER BY id;
 id	name
 1	existing
 2	new
+INSERT INTO test_cs
 SELECT jt.* FROM JSON_TABLE(
 '[{"id": 3, "name": "another"}]',
 '$[*]' COLUMNS (
@@ -25,4 +26,9 @@ name VARCHAR(100) PATH '$.name'
 WHERE NOT EXISTS (
 SELECT 1 FROM test_cs t WHERE t.id = jt.id
 );
+SELECT * FROM test_cs ORDER BY id;
+id	name
+1	existing
+2	new
+3	another
 DROP DATABASE mcol_6300;
