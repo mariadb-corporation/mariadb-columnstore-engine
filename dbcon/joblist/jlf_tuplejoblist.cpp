@@ -1151,7 +1151,7 @@ bool combineJobStepsByTable(TableInfoMap::iterator& mit, JobInfo& jobInfo)
     // rowgroup has the joinkeys and selected columns
     // this is the expected output of this table
     if (bps == NULL)
-      throw runtime_error("BPS not created 2");
+      throw runtime_error("BatchPrimitiveProcessor (BPS) was not properly initialized for the table.");
 
     rgOut = bps->getOutputRowGroup();
 
