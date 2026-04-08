@@ -1,0 +1,28 @@
+DROP DATABASE IF EXISTS mcol_6300;
+CREATE DATABASE mcol_6300;
+USE mcol_6300;
+CREATE TABLE test_cs (id INT, name VARCHAR(100)) ENGINE=Columnstore;
+INSERT INTO test_cs VALUES (1, 'existing');
+INSERT INTO test_cs
+SELECT * FROM JSON_TABLE(
+'[{"id": 2, "name": "new"}]',
+'$[*]' COLUMNS (
+id INT PATH '$.id',
+name VARCHAR(100) PATH '$.name'
+    )
+) AS jt;
+SELECT * FROM test_cs ORDER BY id;
+id	name
+1	existing
+2	new
+SELECT jt.* FROM JSON_TABLE(
+'[{"id": 3, "name": "another"}]',
+'$[*]' COLUMNS (
+id INT PATH '$.id',
+name VARCHAR(100) PATH '$.name'
+    )
+) AS jt
+WHERE NOT EXISTS (
+SELECT 1 FROM test_cs t WHERE t.id = jt.id
+);
+DROP DATABASE mcol_6300;
