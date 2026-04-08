@@ -22,7 +22,7 @@ optparse.define short=s long=suite desc="whole suite to run" variable=SUITE_NAME
 optparse.define short=t long=test_full_name desc="Testname with suite as like bugfixes.mcol-4899" variable=TEST_FULL_NAME default=""
 optparse.define short=f long=full desc="Run full MTR" variable=RUN_FULL default=false value=true
 optparse.define short=r long=record desc="Record the result" variable=RECORD default=false value=true
-optparse.define short=e long=no-extern desc="Run with --extern" variable=EXTERN default=false value=true
+optparse.define short=e long=extern desc="Run with --extern" variable=EXTERN default=false value=true
 optparse.define short=c long=color desc="run with unbufer to colorize output" variable=UNBUFFER default=false value=true
 
 
@@ -65,13 +65,13 @@ if [[ ! -d "${INSTALLED_MTR_PATH}/suite/columnstore" ]]; then
     ln -sfn "${COLUMNSTORE_MTR_SOURCE}" "${INSTALLED_MTR_PATH}/suite"
 fi
 
-# MTR's mtr_cases.pm searches for suites in mysql-test/suite/ relative to
-# the parent of the test directory, even when running from mariadb-test/.
+# MTR's mtr_cases.pm also searches in mysql-test/suite/ relative to the parent
+# of the test directory. Remove any stale symlink there to avoid duplicate suite
+# detection which causes mtr_cases.pm to abort.
 MTR_MYSQL_TEST_SUITE="$(dirname "${INSTALLED_MTR_PATH%/}")/mysql-test/suite"
-if [[ ! -d "${MTR_MYSQL_TEST_SUITE}/columnstore" ]]; then
-    mkdir -p "${MTR_MYSQL_TEST_SUITE}"
-    message " ・ Adding symlink for columnstore tests to ${MTR_MYSQL_TEST_SUITE}/columnstore from ${COLUMNSTORE_MTR_SOURCE}"
-    ln -sfn "${COLUMNSTORE_MTR_SOURCE}" "${MTR_MYSQL_TEST_SUITE}"
+if [[ -L "${MTR_MYSQL_TEST_SUITE}/columnstore" ]]; then
+    rm -f "${MTR_MYSQL_TEST_SUITE}/columnstore"
+    message " ・ Removed stale symlink ${MTR_MYSQL_TEST_SUITE}/columnstore to avoid duplicate suite"
 fi
 
 if [[ ! -d '/data/qa/source/dbt3/' || ! -d '/data/qa/source/ssb/' ]]; then
