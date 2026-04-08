@@ -337,7 +337,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("customtests"), result, true, true, true),
 
-      "apk add bash && "
+      "apk add bash && " +
       get_build_command("run_mtr.sh") +
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
