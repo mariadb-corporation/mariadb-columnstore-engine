@@ -361,7 +361,11 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   }
 
   auto& columnStatistics = *columnStatisticsOpt.value();
-  auto& keyColumn = columnStatistics.getColumn();
+
+  execplan::SimpleColumn keyColumn(columnStatistics.getColumn()); // copying because we have to modify it.
+
+  keyColumn.tableAlias(table.alias); // assigns correct alias
+  keyColumn.data("");                // force recomputation of data() - SQL representation (for foreign query)
 
   size_t configuredMaxParallelFactor = ctx.getCesOptimizationParallelFactor();
 
@@ -409,7 +413,9 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
                                             const std::string& tableAlias, optimizer::RBOptimizerContext& ctx,
                                             SCToPosCounterMap& sCsAndTheirPositions)
 {
-  auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
+  auto newAliasedTable(table);
+  newAliasedTable.alias = tableAlias;
+  auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(newAliasedTable, false);
   // update returned columns using SC -> position map.
   std::vector<execplan::SimpleColumn*> projectionSCs(sCsAndTheirPositions.size(), nullptr);
   for (auto [sc, colPosition] : sCsAndTheirPositions)
