@@ -23,9 +23,9 @@ if(NOT _is_rhel_like
     return()
 endif()
 
-# Add RPM BuildRequires for the engine component only on matching systems Use the common appender macro to handle comma
-# separation
-columnstore_append_for_cpack(CPACK_RPM_columnstore-engine_PACKAGE_BUILDREQUIRES "selinux-policy-devel")
+# Use the common appender macro to handle comma separation.
+# As a SRPM directive, it is global rather than for the component
+columnstore_append_for_cpack(CPACK_RPM_BUILDREQUIRES "selinux-policy-devel")
 
 # Paths
 set(SELINUX_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/../build/security")
