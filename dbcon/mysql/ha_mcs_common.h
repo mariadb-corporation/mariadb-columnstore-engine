@@ -36,11 +36,7 @@ inline bool isMCSTable(TABLE* table_ptr)
   if (!name)
     return false;
 
-  std::string engineName = name;
-
-  if (engineName == "Columnstore" || engineName == "Columnstore_cache")
-    return true;
-  return false;
+  return (strcmp(name, "Columnstore") == 0 || strcmp(name, "Columnstore_cache") == 0);
 }
 
 inline bool isMultiUpdateStatement(const enum_sql_command& command)
