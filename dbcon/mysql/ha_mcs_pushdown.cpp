@@ -662,6 +662,14 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       {
         return nullptr;
       }
+
+      // MCOL-6300: Table functions (e.g. JSON_TABLE) are virtual tables
+      // that ColumnStore cannot handle.  Reject early so the server
+      // processes them natively.
+      if (table_ptr->table_function)
+      {
+        return nullptr;
+      }
     }
   }
 

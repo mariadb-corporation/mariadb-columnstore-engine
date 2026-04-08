@@ -5402,6 +5402,17 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         gwi.viewList.push_back(view);
         view->transform();
       }
+      else if (table_ptr->table_function)
+      {
+        // MCOL-6300: Table functions (e.g. JSON_TABLE) are virtual tables
+        // that do not exist in any database.  ColumnStore cannot handle
+        // them — neither as a native table nor via CrossEngineStep.
+        // Signal unsupported so the caller can fall back to the server.
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = "Table functions (e.g. JSON_TABLE) are not supported by ColumnStore.";
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
+      }
       else
       {
         // check foreign engine tables
