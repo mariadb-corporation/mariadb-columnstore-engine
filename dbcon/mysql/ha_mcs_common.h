@@ -24,7 +24,7 @@ namespace ha_mcs_common
 
 inline bool isMCSTable(TABLE* table_ptr)
 {
-  if (!table_ptr->s || !table_ptr->s->db_plugin)
+  if (!table_ptr || !table_ptr->s || !table_ptr->s->db_plugin)
     return false;
 
 #if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
