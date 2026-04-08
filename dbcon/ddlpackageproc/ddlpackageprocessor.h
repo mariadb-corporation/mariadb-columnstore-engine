@@ -140,6 +140,7 @@ class DDLPackageProcessor
     execplan::CalpontSystemCatalog::OID oid;
     execplan::CalpontSystemCatalog::ColType colType;
     execplan::CalpontSystemCatalog::TableColName tableColName;
+    DDLColumn() : oid(0) {}
   };
 
   /** @brief a list of DDLColumns

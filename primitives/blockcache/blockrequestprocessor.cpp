@@ -97,11 +97,11 @@ int BlockRequestProcessor::check(const BRM::InlineLBIDRange& range, const BRM::Q
   {
     if (fTrace)
     {
-      uint16_t dbroot;
-      uint32_t partNum;
-      uint16_t segNum;
-      uint32_t fbo;
-      BRM::OID_t oid;
+      uint16_t dbroot = 0;
+      uint32_t partNum = 0;
+      uint16_t segNum = 0;
+      uint32_t fbo = 0;
+      BRM::OID_t oid = 0;
       fdbrm.lookupLocal(maxLbid, ver.currentScn, false, oid, dbroot, partNum, segNum, fbo);
       fLogFile << oid << " " << maxLbid << " " << fbo << " " << rangeLen << " " << 0 << " " << 0 << " " << 0
                << " " << right << fixed << ((double)(start_tm.tv_sec + (1.e-9 * start_tm.tv_nsec))) << endl;
@@ -133,11 +133,11 @@ int BlockRequestProcessor::check(const BRM::InlineLBIDRange& range, const BRM::Q
 
   if (fTrace)
   {
-    uint16_t dbroot;
-    uint32_t partNum;
-    uint16_t segNum;
-    uint32_t fbo;
-    BRM::OID_t oid;
+    uint16_t dbroot = 0;
+    uint32_t partNum = 0;
+    uint16_t segNum = 0;
+    uint32_t fbo = 0;
+    BRM::OID_t oid = 0;
     fdbrm.lookupLocal(maxLbid, ver.currentScn, false, oid, dbroot, partNum, segNum, fbo);
     fLogFile << oid << " " << maxLbid << " " << fbo << " " << rangeLen << " " << adjSz << " "
              << rqstBlk.BlocksRead() << " " << rqstBlk.BlocksLoaded() << " " << right << fixed

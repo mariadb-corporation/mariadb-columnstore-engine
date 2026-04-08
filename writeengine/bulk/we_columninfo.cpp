@@ -599,7 +599,7 @@ int ColumnInfo::extendColumnNewExtent(bool saveLBIDForCP, uint16_t dbRootNew, ui
   std::string segFileNew;
 
   uint16_t segmentNew = 0;
-  BRM::LBID_t startLbid;
+  BRM::LBID_t startLbid = 0;
 
   char hdr[compress::CompressInterface::HDR_BUF_LEN * 2];
 

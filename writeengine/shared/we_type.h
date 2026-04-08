@@ -374,7 +374,7 @@ struct DctnryTuple /** @brief Dictionary Tuple struct*/
   int sigSize;             /** @brief dictionary signature size */
   Token token;             /** @brief dictionary token */
   bool isNull;
-  DctnryTuple()
+  DctnryTuple() : sigValue(nullptr), sigSize(0), isNull(false)
   {
   }
   ~DctnryTuple()
