@@ -337,7 +337,13 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("customtests"), result, true, true, true),
 
-      "apk add bash &&" + get_build_command("../tests/custom/cpimport-rollback.sh")
+      "apk add bash && "
+      get_build_command("run_mtr.sh") +
+      " --container-name " + getContainerName("mtr") +
+      " --distro " + platform +
+      " --no-mtr" +
+      if std.endsWith(result, "ASan") then " --run-as-extern" else ""  +
+      " && " + get_build_command("../tests/custom/cpimport-rollback.sh")
     ],
     [if (std.member(ignoreFailureStepList, "customtests")) then "failure"]: "ignore",
   },

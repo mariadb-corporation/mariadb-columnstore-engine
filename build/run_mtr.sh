@@ -10,6 +10,7 @@ optparse.define short=d long=distro desc="Linux distro for which mtr is runned" 
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
 optparse.define short=E long=run-as-extern desc="Run MTR with --extern flag" variable=EXTERN default=false value=true
 optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default=false
+optparse.define short=N long=no-mtr desc="Skip MTR run, only initialize container" variable=NO_MTR default=false
 
 source $(optparse.build)
 
@@ -100,4 +101,8 @@ MTR_RUN_COMMAND="cd ${MTR_PATH} && ./mtr ${EXTERN_FLAG} --force --print-core=det
                                   --verbose-restart --skip-test=rocksdb_hotbackup* \
                                   --suite=columnstore/${MTR_SUITE_LIST//,/,columnstore/}"
 
-execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}"
+if [[ $NO_MTR = true ]]; then
+  echo "Skipping MTR altogether."
+else
+  execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}"
+fi
