@@ -10,7 +10,7 @@ optparse.define short=d long=distro desc="Linux distro for which mtr is runned" 
 optparse.define short=e long=triggering-event desc="Event that triggers testrun" variable=EVENT
 optparse.define short=E long=run-as-extern desc="Run MTR with --extern flag" variable=EXTERN default=false value=true
 optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR default=false
-optparse.define short=N long=no-mtr desc="Skip MTR run, only initialize container" variable=NO_MTR default=false
+optparse.define short=N long=no-mtr desc="Skip MTR run, only initialize container" variable=NO_MTR default=false value=true
 
 source $(optparse.build)
 
