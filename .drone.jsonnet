@@ -341,6 +341,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       get_build_command("run_mtr.sh") +
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
+      " --triggering-event " + event +
       " --no-mtr" +
       if std.endsWith(result, "ASan") then " --run-as-extern" else ""  +
       " && " + get_build_command("../tests/custom/cpimport-rollback.sh")
