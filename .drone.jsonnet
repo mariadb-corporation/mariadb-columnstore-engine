@@ -339,7 +339,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       "apk add bash && " +
       get_build_command("run_mtr.sh") +
-      " --container-name " + getContainerName("mtr") +
+      " --container-name " + getContainerName("customtests") +
       " --distro " + platform +
       " --triggering-event " + event +
       " --no-mtr" +
