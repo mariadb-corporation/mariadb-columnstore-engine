@@ -1,5 +1,9 @@
 #!/bin/bash
 
+echo "PATH: $PATH"
+
+export PATH=$PATH:/usr/bin:/usr/sbin
+
 DB_NAME="test_cp_rb"
 TB_NAME="date_crash"
 
