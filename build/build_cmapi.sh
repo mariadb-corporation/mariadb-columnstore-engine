@@ -78,7 +78,7 @@ install_deps() {
   if [ "$(arch)" == "x86_64" ]; then
     PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
     PYTHON_FILE="cpython-3.13.11+20260127-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
-    PYTHON_SHA="b5d915b716609b9f60e17ab8654cdf0bd810f52f710b743d0fd75bb85db1cbac"
+    PYTHON_SHA="b5d915b716609b9f60e17ab8654cdf0bd810f52f710b743d0fd75bb853b1cbac"
   elif [[ "$(arch)" == "arm64" || "$(arch)" == "aarch64" ]]; then
     PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-aarch64-unknown-linux-gnu-pgo+lto-full.tar.zst"
     PYTHON_FILE="cpython-3.13.11+20260127-aarch64-unknown-linux-gnu-pgo+lto-full.tar.zst"
