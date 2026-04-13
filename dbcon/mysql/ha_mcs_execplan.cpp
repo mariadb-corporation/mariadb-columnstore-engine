@@ -6141,22 +6141,28 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   // Flag to indicate if this is a prepared statement
   bool isPS = gwi.thd->stmt_arena && gwi.thd->stmt_arena->is_stmt_execute();
 
-  if (join != 0 && !isPS)
+  // MCOL-6311: For UPDATE/DELETE at the outer query level (not inside a subquery),
+  // use the isUpdateDelete path (condStack / select_lex.where) instead of join->conds.
+  // After MDEV-25008, the server creates a JOIN for UPDATE/DELETE's select_lex during
+  // prepare phase, making join non-NULL. However, join->conds may have been transformed
+  // by the server's optimizer in ways that Columnstore cannot handle for DML.
+  // Subqueries within UPDATE/DELETE should still use join->conds normally.
+  if (!gwi.subQuery && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+  {
+    isUpdateDelete = true;
+  }
+  else if (join != 0 && !isPS)
     icp = join->conds;
   else if (isPS && select_lex.prep_where)
     icp = select_lex.prep_where;
 
   // if icp is null, try to find the where clause other where
-  if (!join && gwi.thd->lex->derived_tables)
+  if (!icp && !isUpdateDelete && !join && gwi.thd->lex->derived_tables)
   {
     if (select_lex.prep_where)
       icp = select_lex.prep_where;
     else if (select_lex.where)
       icp = select_lex.where;
-  }
-  else if (!join && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
-  {
-    isUpdateDelete = true;
   }
 
   if (icp)

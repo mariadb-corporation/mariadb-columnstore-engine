@@ -259,7 +259,13 @@ int ha_mcs::open(const char* name, int mode, uint32_t test_if_locked)
   //   CREATE TABLE t1 (a int, b int) engine=columnstore;
   //   PREPARE stmt1 FROM "SELECT * FROM t1";
   //   EXECUTE stmt1;
-  if (isPS)
+  // MCOL-4868 For UPDATE/DELETE, mutate_optimizer_flags must be called early
+  // (during open, before prepare_inner/JOIN::prepare) so that
+  // check_and_do_in_subquery_rewrites sees the correct optimizer flags
+  // (e.g., semijoin=OFF). Without this, IN subqueries are registered as
+  // semijoin candidates instead of being transformed via select_transformer,
+  // leaving Item_in_subselect unwrapped and causing ExeMgr Error 999.
+  if (isPS || ha_mcs_common::isUpdateOrDeleteStatement(current_thd->lex->sql_command))
     mutate_optimizer_flags(current_thd);
 
   int rc;
@@ -281,8 +287,17 @@ int ha_mcs::discover_check_version()
   bool isPS = current_thd->stmt_arena &&
               (current_thd->stmt_arena->is_stmt_prepare() || current_thd->stmt_arena->is_stmt_execute());
 
-  if (isPS)
+  if (isPS || ha_mcs_common::isUpdateOrDeleteStatement(current_thd->lex->sql_command))
+  {
+    // MCOL-4868 For UPDATE/DELETE with subqueries (and for prepared statements),
+    // we need to mutate optimizer flags to disable semijoin and enable
+    // materialization. This ensures:
+    // 1. Item_in_subselect is properly wrapped with Item_in_optimizer via
+    //    check_and_do_in_subquery_rewrites() -> select_transformer().
+    // 2. The subquery uses MATERIALIZATION strategy which works correctly
+    //    with Columnstore's cross-engine join execution.
     mutate_optimizer_flags(current_thd);
+  }
 
   return 0;
 }

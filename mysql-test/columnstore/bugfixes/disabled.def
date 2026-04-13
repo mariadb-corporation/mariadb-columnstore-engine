@@ -1,2 +1,1 @@
 MCOL-6198-segfault-crossengine-join : oom probably due to filltablecol function
-mcol-4868 : MCOL-6311 2025-09-26 roman.nozdrin@mariadb.com 
