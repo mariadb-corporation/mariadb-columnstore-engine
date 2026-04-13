@@ -137,6 +137,8 @@ int main(int argc, char** argv)
     emReBuilder.collectExtents(dbRootPath.c_str());
   }
 
+  emReBuilder.solveExtents();
+
   emReBuilder.rebuildExtentMap();
   emReBuilder.clear();
 
