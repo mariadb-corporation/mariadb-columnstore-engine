@@ -116,7 +116,7 @@ rewritten_derived_table_count
 1.0000
 SELECT (CHAR_LENGTH(@opt_plan) - CHAR_LENGTH(REPLACE(@opt_plan, @original_table_name, ''))) / CHAR_LENGTH(@original_table_name) AS original_table_count;
 original_table_count
-3.0000
+2.0000
 SELECT calsettrace(0);
 calsettrace(0)
 1
