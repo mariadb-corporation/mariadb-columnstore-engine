@@ -616,6 +616,18 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
     return nullptr;
   }
 
+  // MCOL-4868 Disable select_handler for DELETE statements.
+  // Multi-table DELETEs (including self-join DELETEs like
+  // "DELETE FROM t WHERE a IN (SELECT a FROM t)") go through
+  // Sql_cmd_dml::execute_inner which calls find_single_select_handler.
+  // The select_handler's prepare() crashes because the DELETE's
+  // SELECT_LEX doesn't have proper field setup for temp table creation.
+  // DELETE should use the doUpdateDelete path via ha_mcs::rnd_init.
+  if (ha_mcs_common::isDeleteStatement(thd->lex->sql_command))
+  {
+    return nullptr;
+  }
+
   // Flag to indicate if this is a prepared statement
   bool isPS = thd->stmt_arena && thd->stmt_arena->is_stmt_execute();
 

@@ -1530,7 +1530,6 @@ uint32_t doUpdateDelete(THD* thd, gp_walk_info& gwi, const std::vector<COND*>& c
     }
   }
 
-  // cout<< "Plan is " << endl << *updateCP << endl;
   // updateCP->traceFlags(1);
   pDMLPackage->HasFilter(true);
   pDMLPackage->uuid(updateCP->uuid());
