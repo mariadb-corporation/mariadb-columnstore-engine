@@ -326,6 +326,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       get_build_command("run_mtr.sh") +
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
+      " --run-as-extern" +
       " --triggering-event " + event +
       " --full-mtr $${MTR_FULL_SUITE}" +
       (if std.endsWith(result, "ASan") then " --run-as-extern" else "") +
