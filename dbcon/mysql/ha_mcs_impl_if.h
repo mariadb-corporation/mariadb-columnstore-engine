@@ -464,6 +464,10 @@ struct gp_walk_info
   // the chain using sorta kinda RAII.
   SubQuery** subQueriesChain;
 
+  // Stored function columns in the SELECT list: (Item_func_sp*, output_field_idx).
+  // These are evaluated on the connector side after ExeMgr returns rows.
+  std::vector<std::pair<Item*, uint32_t>> storedFuncCols;
+
   gp_walk_info(long timeZone_, SubQuery** subQueriesChain_)
    : tableStatistics({})
    , sessionid(0)

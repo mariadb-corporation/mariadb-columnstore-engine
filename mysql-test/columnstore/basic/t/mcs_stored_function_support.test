@@ -1,0 +1,288 @@
+#
+# Comprehensive tests for stored function support in Columnstore (ON mode).
+# Tests SP evaluation on the connector side after ExeMgr returns rows.
+#
+# Stored functions are evaluated per-row on the connector (MariaDB server)
+# side AFTER ExeMgr returns rows. This means SPs work in SELECT projection
+# when their argument columns are also present in the SELECT list.
+#
+# Known limitations in ON mode (not tested here):
+# - SP in WHERE clause: requires filter pushdown support
+# - SP in ORDER BY: requires ORDER BY expression support
+# - SP in GROUP BY / HAVING: requires grouping expression support
+# - DISTINCT with SP: ExeMgr cannot deduplicate on SP placeholder values
+# - Arithmetic on SP result in projection (e.g. sf(a) + 1): hits expression tree
+# - Aggregate on SP result (e.g. MIN(sf(a))): requires expression support
+# - SP-only projection without source column: source field not populated
+#
+-- source ../include/have_columnstore.inc
+SET GLOBAL log_bin_trust_function_creators = 1;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcs_sf_db;
+--enable_warnings
+
+CREATE DATABASE mcs_sf_db;
+USE mcs_sf_db;
+
+--echo #
+--echo # Setup: tables and stored functions
+--echo #
+
+CREATE TABLE t1(a INT, b VARCHAR(50)) Engine=Columnstore;
+INSERT INTO t1 VALUES(1,'alpha'),(2,'beta'),(3,'gamma'),(4,'delta'),(5,'epsilon'),(NULL,NULL);
+
+CREATE TABLE t2(x INT, y INT) Engine=Columnstore;
+INSERT INTO t2 VALUES(1,10),(2,20),(3,30),(4,40);
+
+CREATE TABLE t3(id INT, dt DATE, amount DECIMAL(10,2)) Engine=Columnstore;
+INSERT INTO t3 VALUES(1,'2024-01-15',100.50),(2,'2024-06-20',250.75),(3,'2024-12-31',999.99);
+
+DELIMITER |;
+
+CREATE FUNCTION sf_square(n INT) RETURNS BIGINT
+  DETERMINISTIC
+  RETURN n * n|
+
+CREATE FUNCTION sf_double(n INT) RETURNS INT
+  DETERMINISTIC
+  RETURN n * 2|
+
+CREATE FUNCTION sf_upper(s VARCHAR(50)) RETURNS VARCHAR(50)
+  DETERMINISTIC
+  RETURN UPPER(s)|
+
+CREATE FUNCTION sf_add(x INT, y INT) RETURNS INT
+  DETERMINISTIC
+  RETURN x + y|
+
+CREATE FUNCTION sf_concat_dash(a VARCHAR(50), b VARCHAR(50)) RETURNS VARCHAR(110)
+  DETERMINISTIC
+  RETURN CONCAT(a, '-', b)|
+
+CREATE FUNCTION sf_is_even(n INT) RETURNS BOOLEAN
+  DETERMINISTIC
+  RETURN n % 2 = 0|
+
+CREATE FUNCTION sf_pct(n DECIMAL(10,2), total DECIMAL(10,2)) RETURNS DECIMAL(10,2)
+  DETERMINISTIC
+  RETURN n * 100.0 / total|
+
+CREATE FUNCTION sf_add_days(d DATE, n INT) RETURNS DATE
+  DETERMINISTIC
+  RETURN DATE_ADD(d, INTERVAL n DAY)|
+
+CREATE FUNCTION sf_strlen(s VARCHAR(100)) RETURNS INT
+  DETERMINISTIC
+  RETURN LENGTH(s)|
+
+CREATE FUNCTION sf_coalesce_int(a INT, b INT) RETURNS INT
+  DETERMINISTIC
+  RETURN COALESCE(a, b)|
+
+DELIMITER ;|
+
+--echo #
+--echo # 1. Basic projection: SP with single column argument
+--echo #
+--sorted_result
+SELECT a, sf_square(a) FROM t1;
+
+--echo #
+--echo # 2. Basic projection: SP with VARCHAR result
+--echo #
+--sorted_result
+SELECT a, b, sf_upper(b) FROM t1;
+
+--echo #
+--echo # 3. Multiple SPs in one SELECT
+--echo #
+--sorted_result
+SELECT a, b, sf_square(a), sf_upper(b) FROM t1;
+
+--echo #
+--echo # 4. Multi-argument SP: column + CAST expression
+--echo #
+--sorted_result
+SELECT a, b, sf_concat_dash(b, CAST(a AS CHAR)) FROM t1;
+
+--echo #
+--echo # 5. SP with expression argument: a + 1
+--echo #
+--sorted_result
+SELECT a, sf_square(a + 1) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 6. SP with complex expression argument: a * 2 + 1
+--echo #
+--sorted_result
+SELECT a, sf_square(a * 2 + 1) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 7. Nested SPs: sf_square(sf_double(a))
+--echo #
+--sorted_result
+SELECT a, sf_square(sf_double(a)) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 8. SP with constant argument (evaluated per row)
+--echo #
+--sorted_result
+SELECT a, sf_square(10) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 9. NULL handling: NULLs propagate through SPs
+--echo #
+SELECT a, b, sf_square(a), sf_upper(b) FROM t1 WHERE a IS NULL OR b IS NULL;
+
+--echo #
+--echo # 10. SP that handles NULLs internally via COALESCE
+--echo #
+--sorted_result
+SELECT a, sf_coalesce_int(a, -1) FROM t1;
+
+--echo #
+--echo # 11. INNER JOIN: SP on columns from both tables
+--echo #
+--sorted_result
+SELECT t1.a, t2.y, sf_add(t1.a, t2.y)
+  FROM t1 JOIN t2 ON t1.a = t2.x;
+
+--echo #
+--echo # 12. INNER JOIN: separate SP on each table
+--echo #
+--sorted_result
+SELECT t1.a, sf_square(t1.a), t2.x, sf_double(t2.x)
+  FROM t1 JOIN t2 ON t1.a = t2.x;
+
+--echo #
+--echo # 13. LEFT JOIN with SP (NULLs from unmatched rows)
+--echo #
+--sorted_result
+SELECT t1.a, t2.x, sf_add(t1.a, COALESCE(t2.x, 0))
+  FROM t1 LEFT JOIN t2 ON t1.a = t2.x
+  WHERE t1.a IS NOT NULL;
+
+--echo #
+--echo # 14. Self-join with SP
+--echo #
+--sorted_result
+SELECT a1.a, a2.a, sf_add(a1.a, a2.a)
+  FROM t1 a1 JOIN t1 a2 ON a1.a = a2.a
+  WHERE a1.a IS NOT NULL;
+
+--echo #
+--echo # 15. DISTINCT with SP is unsupported (error expected)
+--echo #
+--error ER_CHECK_NOT_IMPLEMENTED
+SELECT DISTINCT a, sf_square(a) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 16. LIMIT with SP
+--echo #
+SELECT a, sf_square(a) FROM t1 WHERE a IS NOT NULL ORDER BY a LIMIT 3;
+
+--echo #
+--echo # 17. DECIMAL return type
+--echo #
+--sorted_result
+SELECT id, amount, sf_pct(amount, 1000.00) FROM t3;
+
+--echo #
+--echo # 18. DATE return type
+--echo #
+--sorted_result
+SELECT id, dt, sf_add_days(dt, 30) FROM t3;
+
+--echo #
+--echo # 19. INT from VARCHAR argument (sf_strlen)
+--echo #
+--sorted_result
+SELECT a, b, sf_strlen(b) FROM t1 WHERE b IS NOT NULL;
+
+--echo #
+--echo # 20. Boolean return type in projection
+--echo #
+--sorted_result
+SELECT a, sf_is_even(a) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 21. INSERT INTO ... SELECT with SP
+--echo #
+CREATE TABLE t_result(val INT, sq BIGINT) Engine=Columnstore;
+INSERT INTO t_result SELECT a, sf_square(a) FROM t1 WHERE a IS NOT NULL;
+--sorted_result
+SELECT * FROM t_result;
+DROP TABLE t_result;
+
+--echo #
+--echo # 22. CREATE TABLE AS SELECT with SP
+--echo #
+CREATE TABLE t_ctas Engine=Columnstore AS
+  SELECT a, sf_square(a) AS sq FROM t1 WHERE a IS NOT NULL;
+--sorted_result
+SELECT * FROM t_ctas;
+DROP TABLE t_ctas;
+
+--echo #
+--echo # 23. Multiple SPs stress: 5 SPs in one query
+--echo #
+--sorted_result
+SELECT a, b,
+       sf_square(a),
+       sf_double(a),
+       sf_upper(b),
+       sf_strlen(b),
+       sf_concat_dash(b, sf_upper(b))
+  FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 24. SP with mixed column and literal arguments
+--echo #
+--sorted_result
+SELECT a, sf_add(a, 100) FROM t1 WHERE a IS NOT NULL;
+
+--echo #
+--echo # 25. SP on a single-column table
+--echo #
+CREATE TABLE t_single(v INT) Engine=Columnstore;
+INSERT INTO t_single VALUES(7),(14),(21);
+--sorted_result
+SELECT v, sf_square(v) FROM t_single;
+DROP TABLE t_single;
+
+--echo #
+--echo # 26. Two-table join: multiple SPs including cross-table multi-arg
+--echo #
+--sorted_result
+SELECT t1.a, t2.x, t2.y,
+       sf_square(t1.a),
+       sf_double(t2.y),
+       sf_add(t1.a, t2.y)
+  FROM t1 JOIN t2 ON t1.a = t2.x;
+
+--echo #
+--echo # 27. SP with WHERE filter on non-SP column
+--echo #
+--sorted_result
+SELECT a, sf_square(a) FROM t1 WHERE a > 2 AND a < 5;
+
+--echo #
+--echo # 28. Error: wrong number of arguments
+--echo #
+--error ER_SP_WRONG_NO_OF_ARGS
+SELECT sf_square();
+
+--error ER_SP_WRONG_NO_OF_ARGS
+SELECT sf_square(1, 2);
+
+--echo #
+--echo # 29. Error: non-existent function
+--echo #
+--error ER_SP_DOES_NOT_EXIST
+SELECT nonexistent_func(a) FROM t1;
+
+--echo #
+--echo # Cleanup
+--echo #
+DROP DATABASE mcs_sf_db;

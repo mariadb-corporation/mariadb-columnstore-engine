@@ -6717,13 +6717,23 @@ int processSelect(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, vector
       {
         Item_func* ifp = static_cast<Item_func*>(item);
 
-        // @bug4383. error out non-support stored function
+        // Stored functions are evaluated on the connector side after ExeMgr
+        // returns rows. Push a ConstantColumn placeholder so ExeMgr reserves a
+        // slot in the output row, and record the Item_func_sp* for post-processing.
         if (ifp->functype() == Item_func::FUNC_SP)
         {
-          gwi.fatalParseError = true;
-          gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_SP_FUNCTION_NOT_SUPPORT);
-          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-          return ER_CHECK_NOT_IMPLEMENTED;
+          uint32_t outputIdx = gwi.returnedCols.size();
+          ConstantColumn* cc = new ConstantColumn((int64_t)0, ConstantColumn::NUM);
+          cc->timeZone(gwi.timeZone);
+          cc->resultType(colType_MysqlToIDB(ifp));
+          if (ifp->name.length)
+            cc->alias(ifp->name.str);
+          else if (!itemAlias.empty())
+            cc->alias(itemAlias);
+          SRCP srcp(cc);
+          gwi.returnedCols.push_back(srcp);
+          gwi.storedFuncCols.push_back(std::make_pair(static_cast<Item*>(ifp), outputIdx));
+          break;
         }
 
         if (string(ifp->func_name()) == "xor")
@@ -7716,6 +7726,24 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
     return ER_INTERNAL_ERROR;
   else if (status < 0)
     return status;
+
+  // Transfer stored function info to the handler for connector-side evaluation.
+  for (auto& sf : gwi.storedFuncCols)
+  {
+    StoredFuncColumnInfo info;
+    info.sp_item = static_cast<Item_func_sp*>(sf.first);
+    info.output_field_idx = sf.second;
+    handler->stored_func_cols.push_back(info);
+  }
+
+  // DISTINCT with stored function columns is unsupported: ExeMgr cannot
+  // correctly deduplicate because SP columns are ConstantColumn(0) placeholders.
+  if (!handler->stored_func_cols.empty() && csep->distinct())
+  {
+    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED,
+             "DISTINCT with stored functions is not supported by Columnstore in ON mode.", gwi);
+    return ER_CHECK_NOT_IMPLEMENTED;
+  }
 
   if (csep->traceOn())
   {
