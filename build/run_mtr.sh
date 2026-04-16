@@ -37,7 +37,7 @@ if [[ $FULL_MTR = true ]]; then
     EXTERN=true
 else
     MTR_SUITE_LIST="$MTR_BASIC_SUITE_LIST"
-    SETUP_DATA=false
+    SETUP_DATA=true
 fi
 
 echo "Arguments received: $@"
