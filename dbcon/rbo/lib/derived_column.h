@@ -87,18 +87,23 @@ execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& 
 // ---------------------------------------------------------------------------
 // Entry point 2 :: makeDerivedColumnRef (decorrelate flavour).
 //
-// Builds a minimal SimpleColumn whose `columnName` matches `refCol->alias()`
-// (which the caller is expected to have set before invoking this routine to
-// the desired projection alias, e.g. "group_N" or "dec_agg").
+// Builds a SimpleColumn whose `columnName` matches `refCol->alias()` (which
+// the caller is expected to have set before invoking this routine to the
+// desired projection alias, e.g. "group_N" or "dec_agg").
 //
 // Additional fields set (beyond the core):
+//   tableName(derivedAlias); data("``.`<alias>`.`<col>`");
 //   resultType(refCol->resultType()); timeZone(timeZone);
-//   sequence(colPos); derivedRefCol(refCol); refCol->incRefCount().
+//   sequence(colPos); derivedRefCol(...); refCol->incRefCount()
 //
-// Caveat: this entry point deliberately does NOT set charsetNumber,
-// operationType, data, colSource, alias.  Callers that need them should use
-// cloneAsSimpleColumn instead.  See NOTES_PRIMITIVES.md for the historical
-// audit.
+// derivedRefCol uses the same one-level-indirection-follow semantics as
+// cloneAsSimpleColumn: if `refCol->derivedRefCol()` is already set, the new
+// SC points at the innermost origin instead of chaining through `refCol`.
+//
+// Caveat: this entry point still does NOT set charsetNumber, operationType,
+// colSource, alias.  Callers that need them should use cloneAsSimpleColumn
+// instead; in practice decorrelate feeds the returned SimpleColumn straight
+// into a SimpleFilter lhs/rhs where those fields are not consulted.
 // ---------------------------------------------------------------------------
 execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
                                              const std::string& derivedAlias,

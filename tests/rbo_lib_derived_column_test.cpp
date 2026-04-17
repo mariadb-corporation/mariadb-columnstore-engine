@@ -157,10 +157,27 @@ TEST(DerivedColumnTest, MakeDerivedColumnRefUsesAliasAsColumnName)
   EXPECT_EQ(out->derivedRefCol(), refCol.get());
   EXPECT_EQ(out->timeZone(), 42);
 
-  // Fields NOT set by this entry point remain at default-constructed values
-  // (matches historical behaviour of decorrelate's makeDerivedColumnRef).
-  EXPECT_EQ(out->schemaName(), "");
-  EXPECT_EQ(out->tableName(), "");
+  // Unified with cloneAsSimpleColumn / rebindSCToDerivedInPlace: tableName
+  // and data mirror the derived-table alias so downstream consumers see a
+  // self-consistent tag regardless of which entry point built the SC.
+  EXPECT_EQ(out->tableName(), "dec_sub");
+  EXPECT_EQ(out->schemaName(), "");  // default-ctor
+  EXPECT_EQ(out->data(), "``.`dec_sub`.`aliased_group_0`");
+}
+
+TEST(DerivedColumnTest, MakeDerivedColumnRefFollowsDerivedRefColNesting)
+{
+  // B2 regression: if refCol is itself a derived reference the new SC must
+  // point at the innermost origin, not chain through refCol.
+  auto innermost = newBasicSC("innermost");
+  auto middle = newBasicSC("middle");
+  middle->derivedRefCol(innermost.get());
+  middle->alias("alias_mid");
+
+  std::unique_ptr<execplan::SimpleColumn> out(
+      makeDerivedColumnRef(middle.get(), "dt", 0, /*timeZone=*/0));
+  ASSERT_NE(out.get(), nullptr);
+  EXPECT_EQ(out->derivedRefCol(), innermost.get());
 }
 
 // ---------------------------------------------------------------------------

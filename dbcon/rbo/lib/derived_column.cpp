@@ -102,20 +102,45 @@ execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
                                              int64_t colPos,
                                              long timeZone)
 {
-  // Default-constructed SimpleColumn already has oid=0, empty schemaName and
-  // empty tableName, matching the historical impl which never touched those.
+  // Default-constructed SimpleColumn already has oid=0 and empty schemaName,
+  // matching the historical impl which never touched those.
   auto* sc = new execplan::SimpleColumn();
 
   // Universal core: tableAlias/derivedTable/colPosition.
   bindSCToDerivedProjectionCore(sc, derivedAlias, colPos);
 
-  // Decorrelate-specific fields.
+  // Fields unified with cloneAsSimpleColumn / rebindSCToDerivedInPlace
+  // (closes the latent B1/B2 observations logged in the original
+  // derived_column commit):
+  //   * tableName mirrors derivedAlias so downstream plan consumers that
+  //     inspect sc->tableName() see a self-consistent derived-table tag
+  //     (historically only set by cloneAsSimpleColumn and
+  //     rebindSCToDerivedInPlace; decorrelate left tableName empty).
+  //   * data stores the canonical backticked reference so the virtual
+  //     SimpleColumn::data() override returns the same string as for the
+  //     other two entry points.
+  sc->tableName(derivedAlias);
+  sc->data("``.`" + derivedAlias + "`.`" + refCol->alias() + "`");
+
   sc->columnName(refCol->alias());
   sc->resultType(refCol->resultType());
   sc->timeZone(timeZone);
   sc->sequence(static_cast<int>(colPos));
-  sc->derivedRefCol(refCol);
-  refCol->incRefCount();
+
+  // derivedRefCol nesting: if refCol is itself already a derived reference,
+  // point the new SC at the innermost origin (same semantics as
+  // cloneAsSimpleColumn).  Prevents an accidental two-level indirection
+  // chain when decorrelate is applied on top of an already-rewritten sub.
+  if (auto* rcRef = refCol->derivedRefCol())
+  {
+    sc->derivedRefCol(rcRef);
+    rcRef->incRefCount();
+  }
+  else
+  {
+    sc->derivedRefCol(refCol);
+    refCol->incRefCount();
+  }
   return sc;
 }
 
