@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "execplan/aggregatecolumn.h"
+#include "execplan/calpontsystemcatalog.h"
 #include "execplan/logicoperator.h"
 #include "execplan/operator.h"
 #include "execplan/outerjoinonfilter.h"
@@ -341,6 +342,193 @@ bool decorrelateOuterJoinSubFilter(execplan::CalpontSelectExecutionPlan& csep,
   return treeHasUnsupportedOuterJoinSub(csep.filters());
 }
 
+namespace
+{
+
+// Builds a right-deep AND tree over the given leaves.  Caller retains
+// ownership of the returned root.  Assumes `leaves.size() >= 1`.
+execplan::ParseTree* buildAndTree(const std::vector<execplan::ParseTree*>& leaves)
+{
+  execplan::ParseTree* result = leaves.back();
+  for (ssize_t i = static_cast<ssize_t>(leaves.size()) - 2; i >= 0; --i)
+  {
+    auto* andOp = new execplan::LogicOperator("and");
+    auto* andNode = new execplan::ParseTree(andOp);
+    andNode->left(leaves[i]);
+    andNode->right(result);
+    result = andNode;
+  }
+  return result;
+}
+
+// Constructs a fresh SimpleColumn that references column `refCol` (projected
+// at position `colPos` of the derived CSEP whose alias is `derivedAlias`).
+execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
+                                             const std::string& derivedAlias,
+                                             size_t colPos,
+                                             long timeZone)
+{
+  auto* sc = new execplan::SimpleColumn();
+  sc->columnName(refCol->alias());
+  sc->tableAlias(derivedAlias);
+  sc->derivedTable(derivedAlias);
+  sc->derivedRefCol(refCol);
+  sc->colPosition(static_cast<int>(colPos));
+  sc->resultType(refCol->resultType());
+  sc->timeZone(timeZone);
+  sc->sequence(static_cast<int>(colPos));
+  refCol->incRefCount();
+  return sc;
+}
+
+// Performs the actual rewrite for one matched pattern.  Returns true on
+// success; the CSEP is either fully rewritten or left untouched.
+bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
+                           SubqueryPattern& pat,
+                           optimizer::RBOptimizerContext& ctx)
+{
+  const long timeZone = ctx.getGwi().timeZone;
+
+  // ----- 1. Pick unique aliases for every derived column so the outer CSEP
+  //       can reference them by name.
+  const std::string uniqSuffix = "__dec" + std::to_string(ctx.getUniqueId());
+  const std::string derivedAlias = "$dec_sub" + uniqSuffix;
+  const std::string aggAlias = "dec_agg" + uniqSuffix;
+
+  std::vector<std::string> groupAliases(pat.sub->returnedCols().size());
+  size_t nonAggIdx = 0;
+  for (size_t i = 0; i < pat.sub->returnedCols().size(); ++i)
+  {
+    if (i == pat.aggColPos)
+    {
+      pat.sub->returnedCols()[i]->alias(aggAlias);
+      groupAliases[i] = aggAlias;
+    }
+    else
+    {
+      std::string a = "dec_k" + std::to_string(nonAggIdx++) + uniqSuffix;
+      pat.sub->returnedCols()[i]->alias(a);
+      groupAliases[i] = a;
+    }
+  }
+
+  // ----- 2. Capture everything we need from the correlation equi-predicates
+  //       BEFORE dismantling the sub's filter tree — those leaves are owned
+  //       by sub->filters() and will be freed together with it below.
+  struct CorrInfo
+  {
+    std::string subColumnName;                          // T_sub.k_i
+    std::unique_ptr<execplan::SimpleColumn> outerSide;  // deep copy of outer SC
+  };
+  std::vector<CorrInfo> corrInfos;
+  corrInfos.reserve(pat.corrEquis.size());
+  for (const auto& ce : pat.corrEquis)
+  {
+    corrInfos.push_back({ce.subSide->columnName(),
+                         std::unique_ptr<execplan::SimpleColumn>(new execplan::SimpleColumn(*ce.outerSide))});
+  }
+  // Main predicate LHS lives inside the SelectFilter's own cols() vector,
+  // which stays alive until we delete the SelectFilter at step 6.  No need
+  // to clone it here beyond constructing the new SimpleColumn then.
+
+  // Strip the correlation equi-predicates from the sub's WHERE tree.
+  // Each surviving local predicate is deep-copied so we can safely destroy
+  // the whole old filter tree (which owns the correlation leaves).
+  std::vector<execplan::ParseTree*> newLocals;
+  newLocals.reserve(pat.localPreds.size());
+  for (auto* lp : pat.localPreds)
+    newLocals.push_back(new execplan::ParseTree(*lp));
+
+  execplan::ParseTree* newFilters = newLocals.empty() ? nullptr : buildAndTree(newLocals);
+  delete pat.sub->filters();
+  pat.sub->filters(newFilters);
+
+  // ----- 3. Convert the subquery CSEP into a FROM-subquery.
+  pat.sub->location(execplan::CalpontSelectExecutionPlan::FROM);
+  pat.sub->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
+  pat.sub->derivedTbAlias(derivedAlias);
+
+  // The SelectFilter's sub() is a shared_ptr we can reuse as the derived
+  // CSEP entry (avoids re-cloning or leaking ownership).  We take the shared
+  // pointer out of the SelectFilter so that when we later delete the
+  // SelectFilter its destructor does not also destroy the CSEP.
+  execplan::SCSEP derivedScep = pat.selectFilter->sub();
+  execplan::SCSEP empty;
+  pat.selectFilter->sub(empty);  // release the SCSEP from the SelectFilter
+
+  // ----- 4. Attach the derived CSEP to the outer plan.
+  csep.derivedTableList().push_back(derivedScep);
+  {
+    auto tl = csep.tableList();
+    tl.push_back(execplan::CalpontSystemCatalog::TableAliasName("", "", derivedAlias, ""));
+    csep.tableList(tl);
+  }
+
+  // ----- 5. Construct the replacement parse tree for the SelectFilter leaf.
+  //       It is the AND of:
+  //         * one equi-predicate per group key (derived.key_i = outer.x_i)
+  //         * the main predicate   (outer_lhs  sf->op  derived.agg)
+  std::vector<execplan::ParseTree*> replacementLeaves;
+  replacementLeaves.reserve(pat.corrEquis.size() + 1);
+
+  for (auto& ci : corrInfos)
+  {
+    // Find the position in returnedCols whose columnName matches ci.subColumnName.
+    size_t pos = 0;
+    for (; pos < pat.sub->returnedCols().size(); ++pos)
+    {
+      if (pos == pat.aggColPos)
+        continue;
+      auto* sc = dynamic_cast<execplan::SimpleColumn*>(pat.sub->returnedCols()[pos].get());
+      if (sc && sc->columnName() == ci.subColumnName)
+        break;
+    }
+    if (pos == pat.sub->returnedCols().size())
+    {
+      // Should not happen — matcher validated this invariant.
+      return false;
+    }
+
+    auto* refCol = pat.sub->returnedCols()[pos].get();
+    auto* lhs = makeDerivedColumnRef(refCol, derivedAlias, pos, timeZone);
+    auto* rhs = ci.outerSide.release();  // transfer ownership to SimpleFilter
+    auto* eqOp = new execplan::Operator("=");
+    auto* sf = new execplan::SimpleFilter(execplan::SOP(eqOp), lhs, rhs, timeZone);
+    replacementLeaves.push_back(new execplan::ParseTree(sf));
+  }
+
+  // Main predicate: outer_lhs <op> derived.agg
+  {
+    auto* outerLhs = dynamic_cast<execplan::SimpleColumn*>(pat.selectFilter->cols()[0].get());
+    if (!outerLhs)
+      return false;
+    auto* lhs = new execplan::SimpleColumn(*outerLhs);
+    auto* rhs = makeDerivedColumnRef(pat.sub->returnedCols()[pat.aggColPos].get(),
+                                     derivedAlias, pat.aggColPos, timeZone);
+    auto* op = pat.selectFilter->op() ? pat.selectFilter->op()->clone() : new execplan::Operator("=");
+    auto* sf = new execplan::SimpleFilter(execplan::SOP(op), lhs, rhs, timeZone);
+    replacementLeaves.push_back(new execplan::ParseTree(sf));
+  }
+
+  execplan::ParseTree* replacementRoot = buildAndTree(replacementLeaves);
+
+  // ----- 6. Swap replacementRoot's contents into pat.leafNode in place so the
+  //       enclosing OJF parse tree keeps its shape.
+  execplan::TreeNode* oldData = pat.leafNode->data();
+  pat.leafNode->data(replacementRoot->data());
+  pat.leafNode->left(replacementRoot->left());
+  pat.leafNode->right(replacementRoot->right());
+  replacementRoot->data(nullptr);
+  replacementRoot->left(static_cast<execplan::ParseTree*>(nullptr));
+  replacementRoot->right(static_cast<execplan::ParseTree*>(nullptr));
+  delete replacementRoot;
+  delete oldData;  // releases the old SelectFilter (which no longer owns the sub CSEP)
+
+  return true;
+}
+
+}  // namespace
+
 bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
                                   optimizer::RBOptimizerContext& ctx)
 {
@@ -349,14 +537,12 @@ bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
   if (leaves.empty())
     return false;
 
-  bool anyMatched = false;
+  bool anyRewrote = false;
   for (auto* leaf : leaves)
   {
     SubqueryPattern pat;
     if (!matchSubqueryPattern(leaf, pat))
       continue;
-
-    anyMatched = true;
 
     if (csep.traceOn() || ctx.logRulesEnabled())
     {
@@ -367,23 +553,11 @@ bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
                 << " local_preds=" << pat.localPreds.size() << std::endl;
     }
 
-    // TODO(MCOL-4250): implement the actual rewrite.  At this point `pat`
-    // carries everything required to rebuild the plan:
-    //   * pat.leafNode   — ParseTree leaf inside the OJF currently holding
-    //                       the SelectFilter.
-    //   * pat.sub        — the correlated subquery CSEP, which MariaDB has
-    //                       already shaped as "GROUP BY correlation-keys".
-    //   * pat.subAlias   — alias of its single table.
-    //   * pat.aggCol     — the scalar aggregate, projected at pat.aggColPos.
-    //   * pat.corrEquis  — one T_sub.k_i = outer.x_i predicate per group key.
-    //   * pat.localPreds — non-correlated predicates on T_sub.
-    //
-    // Until the rewrite lands, leave the plan untouched so the post-RBO
-    // validator keeps raising IDB-1015.
+    if (rewriteMatchedPattern(csep, pat, ctx))
+      anyRewrote = true;
   }
 
-  (void)anyMatched;
-  return false;
+  return anyRewrote;
 }
 
 bool outerJoinOnContainsScalarSubselect(const execplan::CalpontSelectExecutionPlan& csep)
