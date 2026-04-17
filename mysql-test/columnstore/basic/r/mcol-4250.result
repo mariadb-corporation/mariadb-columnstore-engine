@@ -184,6 +184,51 @@ FROM cas_caseflow e
 WHERE e.CASEID = cf.CASEID);
 ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
 #
+# 4e. Unsupported: AVG aggregate.  Its result type (DECIMAL/DOUBLE) does
+#     not match the outer LHS type on the hash-join compatibility check
+#     (MCS-1002), so the matcher skips AVG outright to keep the executor
+#     from hitting an unreachable plan.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.SOURCE_DB = (SELECT AVG(e.SOURCE_DB)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 4f. Supported: two correlated scalar subqueries in the SAME OUTER JOIN
+#     ON clause.  Each gets its own derived table; the unique-id counter
+#     is bumped between rewrites so the aliases do not collide.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.SOURCE_DB = (SELECT MAX(e.SOURCE_DB)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID)
+AND cf.STATUSCODE = (SELECT MAX(e.STATUSCODE)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+CASEID
+1
+1
+1
+1
+1
+1
+1
+1
+2
+2
+2
+2
+3
+#
 # 5. Unsupported: non-correlated scalar subquery inside an OUTER JOIN ON.
 #    The subquery is a constant so there is nothing to decorrelate, but
 #    the executor cannot compile SimpleScalarFilter inside OuterJoinOnFilter

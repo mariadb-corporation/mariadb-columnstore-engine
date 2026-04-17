@@ -133,7 +133,12 @@ bool collectConjuncts(execplan::ParseTree* root, std::vector<execplan::ParseTree
 bool isSupportedAggOp(uint8_t op)
 {
   using A = execplan::AggregateColumn;
-  return op == A::COUNT_ASTERISK || op == A::COUNT || op == A::SUM || op == A::AVG ||
+  // AVG is deliberately excluded: its result type is DOUBLE/DECIMAL while the
+  // outer LHS is typically INT, which makes the executor reject the rewritten
+  // equi-join with MCS-1002 ("incompatible column type").  COUNT/SUM keep the
+  // int family (BIGINT), MIN/MAX preserve the input type, so both are safe
+  // for the hash-join's type-compatibility check.
+  return op == A::COUNT_ASTERISK || op == A::COUNT || op == A::SUM ||
          op == A::MIN || op == A::MAX;
 }
 
@@ -587,7 +592,12 @@ bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
     }
 
     if (rewriteMatchedPattern(csep, pat, ctx))
+    {
       anyRewrote = true;
+      // Several scalar subqueries inside the same OJF would otherwise share
+      // the same uniqSuffix and clash on derived-table aliases / column names.
+      ctx.incrementUniqueId();
+    }
   }
 
   return anyRewrote;
