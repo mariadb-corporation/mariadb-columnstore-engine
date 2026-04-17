@@ -91,7 +91,8 @@ extern "C"
                                         std::string_view region, std::string_view cmapi_host,
                                         ulong cmapi_port, std::string_view cmapi_version,
                                         std::string_view cmapi_key, std::string_view terminated_by,
-                                        std::string_view enclosed_by, std::string_view escaped_by)
+                                        std::string_view enclosed_by, std::string_view escaped_by,
+                                        long long mode)
 
   {
     CURLcode res;
@@ -109,7 +110,7 @@ extern "C"
     j["terminated_by"] = terminated_by;
     j["enclosed_by"] = enclosed_by;
     j["escaped_by"] = escaped_by;
-
+    j["mode"] = mode;
 
     std::string param = j.dump();
 
@@ -168,7 +169,15 @@ extern "C"
     const char* terminated_by = args->args[4];
     const char* enclosed_by = args->args[5];
     const char* escaped_by = args->args[6];
+    long long mode = (args->arg_count > 7 && args->args[7]) ? *((long long*)args->args[7]) : 1;
 
+    if (mode != 1 && mode != 2 && mode != 3)
+    {
+      std::string msg("Invalid mode: must be 1, 2, or 3");
+      memcpy(result, msg.c_str(), msg.length());
+      *length = msg.length();
+      return result;
+    }
 
     ulong cmapi_port = get_cmapi_port(_current_thd());
     const char* cmapi_host = get_cmapi_host(_current_thd());
@@ -184,14 +193,14 @@ extern "C"
     return columnstore_dataload_impl(initData->curl, initData->result, length, bucket, table, filename,
                                      database, secret, key, region, cmapi_host, cmapi_port, cmapi_version,
                                      ::strlen(cmapi_key) == 0 ? parseCMAPIkey().c_str() : cmapi_key,
-                                     terminated_by, enclosed_by, escaped_by);
+                                     terminated_by, enclosed_by, escaped_by, mode);
   }
 
   my_bool columnstore_dataload_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
-    if (args->arg_count != 7)
+    if (args->arg_count < 7 || args->arg_count > 8)
     {
-      strcpy(message, "columnstore_dataload needs 7 arguments: (bucket, file_name, db_name, table, terminated_by, enclosed_by, escaped_by)");
+      strcpy(message, "columnstore_dataload needs 7 or 8 arguments: (bucket, file_name, db_name, table, terminated_by, enclosed_by, escaped_by [, mode])");
       return 1;
     }
 

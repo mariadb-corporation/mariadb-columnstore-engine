@@ -9,10 +9,16 @@ from subprocess import PIPE, Popen, run, CalledProcessError
 import cherrypy
 import furl
 from cmapi_server.constants import (
-    CMAPI_PYTHON_BIN, CMAPI_PYTHON_BINARY_DEPS_PATH, CMAPI_PYTHON_DEPS_PATH
+    CMAPI_PYTHON_BIN,
+    CMAPI_PYTHON_BINARY_DEPS_PATH,
+    CMAPI_PYTHON_DEPS_PATH,
+    CMAPI_PORT,
+    LONG_REQUEST_TIMEOUT,
 )
 
+from cmapi_server.controllers.api_clients import NodeControllerClient
 from cmapi_server.controllers.endpoints import raise_422_error
+from cmapi_server.helpers import get_active_nodes
 
 
 module_logger = logging.getLogger('cmapi_server')
@@ -207,12 +213,13 @@ class S3DataLoadController:
 
             return gs_process
 
-        module_logger.debug(f'LOAD S3 Data')
+        module_logger.debug('LOAD S3 Data')
         request = cherrypy.request
         request_body = request.json
 
         bucket = getKey('bucket', request_body)
 
+        storage: str = ''
         if bucket.startswith(r's3://'):
             storage = 'aws'
         elif bucket.startswith(r'gs://'):
@@ -228,7 +235,8 @@ class S3DataLoadController:
         filename = getKey('filename', request_body)
         key = getKey('key', request_body)
         secret = getKey('secret', request_body)
-        region = getKey('region', request_body, required=storage=='aws')
+        is_aws_storage = bool(storage=='aws')
+        region = getKey('region', request_body, required=is_aws_storage)
         database = getKey('database', request_body)
         terminated_by = getKey('terminated_by', request_body, skip_check=True)
         enclosed_by = getKey(
@@ -237,19 +245,7 @@ class S3DataLoadController:
         escaped_by = getKey(
             'escaped_by', request_body, skip_check=True, required=False
         )
-
-        if storage == 'aws':
-            download_proc = prepare_aws(bucket, filename, secret, key, region)
-        elif storage == 'gs':
-            temporary_config = os.path.join(
-                tempfile.gettempdir(), '.boto.' + str(uuid.uuid4())
-            )
-
-            download_proc = prepare_google_storage(
-                bucket, filename, secret, key, temporary_config
-            )
-        else:
-            response_error('Unknown storage detected. Internal error')
+        mode = request_body.get('mode', 1)
 
         cpimport_command_line = [
             'cpimport', database, table, '-s', terminated_by
@@ -258,65 +254,164 @@ class S3DataLoadController:
             cpimport_command_line += ['-C', escaped_by]
         if enclosed_by:
             cpimport_command_line += ['-E', enclosed_by]
+        try:
+            mode_val = int(mode)
+        except (ValueError, TypeError):
+            response_error(f'Invalid mode value: {mode}')
+        if mode_val not in (1, 2, 3):
+            response_error(
+                f'Invalid mode: {mode_val}. Must be 1, 2, or 3'
+            )
+
+        cpimport_command_line += ['-m', str(mode_val)]
+
+        temporary_config = None
+        download_proc = None
+        temporary_load_file = None
+        active_nodes = []
+
+        if mode_val == 2:
+            # Mode 2 requires a local file path (-f/-l) on every PM.
+            # Tell each node in the cluster to download the file from S3
+            # into the same local path.
+            load_filename = 'cs_s3load_' + str(uuid.uuid4()) + '.dat'
+            temporary_load_file = os.path.join(
+                tempfile.gettempdir(), load_filename
+            )
+
+            active_nodes = get_active_nodes()
+            if not active_nodes:
+                response_error(
+                    'Mode 2 requires an active cluster with nodes'
+                )
+
+            module_logger.info(
+                f'Mode 2: distributing S3 file to {len(active_nodes)} '
+                f'nodes at {temporary_load_file}'
+            )
+
+            for node in active_nodes:
+                module_logger.debug(
+                    f'Mode 2: requesting download on node {node}'
+                )
+                # we need to download possibly big files from s3, so longer timeout needed.
+                client = NodeControllerClient(
+                    request_timeout=LONG_REQUEST_TIMEOUT,
+                    base_url=f'https://{node}:{CMAPI_PORT}'
+                )
+                try:
+                    client.download_s3_file(
+                        bucket=bucket,
+                        filename=filename,
+                        key=key,
+                        secret=secret,
+                        region=region,
+                        storage=storage,
+                        target_path=temporary_load_file
+                    )
+                except Exception as e:
+                    response_error(
+                        f'Failed to download file on node {node}: {e}'
+                    )
+
+            cpimport_command_line += [
+                '-f', os.path.dirname(temporary_load_file),
+                '-l', os.path.basename(temporary_load_file)
+            ]
+        else:
+            # Modes 1/3: stream S3 data via download process stdout.
+            if storage == 'aws':
+                download_proc = prepare_aws(
+                    bucket, filename, secret, key, region
+                )
+            elif storage == 'gs':
+                temporary_config = os.path.join(
+                    tempfile.gettempdir(), '.boto.' + str(uuid.uuid4())
+                )
+                download_proc = prepare_google_storage(
+                    bucket, filename, secret, key, temporary_config
+                )
+            else:
+                response_error('Unknown storage detected. Internal error')
 
         module_logger.debug(
             f'cpimport command line: {" ".join(cpimport_command_line)}'
         )
 
-        cpimport_proc = Popen(
-            cpimport_command_line, shell=False, stdin=download_proc.stdout,
-            stdout=PIPE, stderr=PIPE, encoding='utf-8'
-        )
+        if mode_val == 2:
+            # Mode 2: file already on disk, no stdin piping needed.
+            cpimport_proc = Popen(
+                cpimport_command_line, shell=False, stdin=PIPE,
+                stdout=PIPE, stderr=PIPE, encoding='utf-8'
+            )
+            cpimport_proc.stdin.close()
 
-        selector = selectors.DefaultSelector()
-        for stream in [
-            download_proc.stderr, cpimport_proc.stderr, cpimport_proc.stdout
-        ]:
-            os.set_blocking(stream.fileno(), False)
+            cpimport_output, cpimport_error = cpimport_proc.communicate()
+            downloader_error = ''
+        else:
+            # Mode 1/3: pipe S3 download stdout directly to cpimport stdin.
+            cpimport_proc = Popen(
+                cpimport_command_line, shell=False, stdin=download_proc.stdout,
+                stdout=PIPE, stderr=PIPE, encoding='utf-8'
+            )
 
-        selector.register(
-            download_proc.stderr, selectors.EVENT_READ, data='downloader_error'
-        )
-        selector.register(
-            cpimport_proc.stderr, selectors.EVENT_READ, data='cpimport_error'
-        )
-        selector.register(
-            cpimport_proc.stdout, selectors.EVENT_READ, data='cpimport_output'
-        )
+            selector = selectors.DefaultSelector()
+            for stream in [download_proc.stderr, cpimport_proc.stderr, cpimport_proc.stdout]:
+                os.set_blocking(stream.fileno(), False)
 
-        downloader_error = ''
-        cpimport_error = ''
-        cpimport_output = ''
+            selector.register(download_proc.stderr, selectors.EVENT_READ, data='downloader_error')
+            selector.register(cpimport_proc.stderr, selectors.EVENT_READ, data='cpimport_error')
+            selector.register(cpimport_proc.stdout, selectors.EVENT_READ, data='cpimport_output')
 
-        while True:
-            events = selector.select()
-            for key, mask in events:
-                name = key.data
-                line = key.fileobj.readline().rstrip()
-                if name == 'downloader_error' and line:
-                    downloader_error += line + '\n'
-                if name == 'cpimport_error' and line:
-                    cpimport_error += line + '\n'
-                if name == 'cpimport_output' and line:
-                    cpimport_output += line + '\n'
+            downloader_error = ''
+            cpimport_error = ''
+            cpimport_output = ''
 
-            if downloader_error:
-                response_error(downloader_error)
+            while True:
+                events = selector.select()
+                for key, mask in events:
+                    name = key.data
+                    line = key.fileobj.readline().rstrip()
+                    if name == 'downloader_error' and line:
+                        downloader_error += line + '\n'
+                    if name == 'cpimport_error' and line:
+                        cpimport_error += line + '\n'
+                    if name == 'cpimport_output' and line:
+                        cpimport_output += line + '\n'
 
-            if cpimport_error:
-                response_error(cpimport_error)
+                if downloader_error:
+                    response_error(downloader_error)
 
-            cpimport_status = cpimport_proc.poll()
-            download_status = download_proc.poll()
+                if cpimport_error:
+                    response_error(cpimport_error)
 
-            if cpimport_status is not None \
-              and download_status is not None:
-                break
+                cpimport_status = cpimport_proc.poll()
+                download_status = download_proc.poll()
 
+                if cpimport_status is not None \
+                  and download_status is not None:
+                    break
 
         # clean after Prepare Google
-        if storage == 'gs' and os.path.exists(temporary_config):
+        if temporary_config and os.path.exists(temporary_config):
             os.remove(temporary_config)
+
+        # clean temp data file on all nodes for mode 2
+        if temporary_load_file:
+            if mode_val == 2:
+                for node in active_nodes:
+                    try:
+                        client = NodeControllerClient(
+                            request_timeout=REQUEST_TIMEOUT,
+                            base_url=f'https://{node}:{CMAPI_PORT}'
+                        )
+                        client.delete_load_file(temporary_load_file)
+                    except Exception as e:
+                        module_logger.warning(
+                            f'Failed to cleanup file on node {node}: {e}'
+                        )
+            elif os.path.exists(temporary_load_file):
+                os.remove(temporary_load_file)
 
         if downloader_error:
             response_error(downloader_error)
