@@ -5,6 +5,24 @@ DROP DATABASE IF EXISTS mcol_6328;
 CREATE DATABASE mcol_6328;
 USE mcol_6328;
 
+# Original example from the ticket (crashes the server)
+CREATE TABLE t0 (a INT, b INT) ENGINE=Columnstore;
+INSERT INTO t0 SELECT seq, seq % 150 FROM seq_1_to_1500;
+
+SELECT AVG(b),
+       STD(b) OVER (PARTITION BY abs(b)
+                     ORDER BY b, a
+                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+FROM t0 ORDER BY 1, 2;
+
+# Test trasition in processing of columns inside a window function (PARTITION -> ORDER BY), with multiple partition and order by columns
+SELECT AVG(b),
+       STD(b) OVER (PARTITION BY b, a
+                     ORDER BY b, a
+                     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+FROM t0 ORDER BY 1, 2;
+
+# Test varying number of partition and order by cols separately
 CREATE TABLE t1 (a INT, b INT, c INT) ENGINE=Columnstore;
 INSERT INTO t1 VALUES (1, 10, 2), (2, 20, 3), (3, 10, 5), (4, 20, 7), (5, 30, 11);
 
