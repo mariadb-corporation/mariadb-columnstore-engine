@@ -179,11 +179,25 @@ bool matchSubqueryPattern(execplan::ParseTree* leaf, SubqueryPattern& out)
   if (subAlias.empty())
     return false;
 
-  // Outer LHS(es) of the SelectFilter must all be plain SimpleColumns.  For a
-  // single-row scalar subquery there is always exactly one.
+  // A single-row scalar subquery has exactly one outer LHS expression.  We
+  // require it to be a plain SimpleColumn for two reasons:
+  //  * constants / arithmetic expressions leave the rewritten main predicate
+  //    with no direct column-to-derived link (see MCS-1000 "tables are not
+  //    joined");
+  //  * the executor's join-inference needs the outer LHS to share a table
+  //    with at least one correlation equi-predicate so it can pull the
+  //    derived table into the same OJF group as the rest of the join.
   if (sf->cols().size() != 1)
     return false;
-  if (!dynamic_cast<execplan::SimpleColumn*>(sf->cols()[0].get()))
+  auto* outerLhsSc = dynamic_cast<execplan::SimpleColumn*>(sf->cols()[0].get());
+  if (!outerLhsSc)
+    return false;
+
+  // The outer comparison operator must be '=' as well.  For inequalities
+  // (<, >, <=, >=, <>) the executor does not pick up the derived table as a
+  // join partner and raises MCS-1000.  Dropping this guard produces
+  // semantically-correct plans that simply fail to execute.
+  if (!sf->op() || sf->op()->data() != "=")
     return false;
 
   // Exactly one AggregateColumn in the projection, the rest must be
@@ -270,6 +284,23 @@ bool matchSubqueryPattern(execplan::ParseTree* leaf, SubqueryPattern& out)
 
   if (corrEquis.size() != groupSideCols.size())
     return false;
+
+  // The outer LHS must share a table with at least one correlation equi so
+  // that, after rewrite, the executor's join inference can pull the derived
+  // table into the same OJF group as the other participating tables.
+  {
+    bool shares = false;
+    for (const auto& ce : corrEquis)
+    {
+      if (ce.outerSide->tableAlias() == outerLhsSc->tableAlias())
+      {
+        shares = true;
+        break;
+      }
+    }
+    if (!shares)
+      return false;
+  }
 
   // Sanity: each corrEqui.subSide.columnName must match one of groupSideCols.
   for (auto& ce : corrEquis)
@@ -497,12 +528,14 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
     replacementLeaves.push_back(new execplan::ParseTree(sf));
   }
 
-  // Main predicate: outer_lhs <op> derived.agg
+  // Main predicate: outer_lhs <op> derived.agg.  `outer_lhs` is any
+  // ReturnedColumn; we clone it via its virtual clone() so constants and
+  // arithmetic expressions work the same as bare columns.
   {
-    auto* outerLhs = dynamic_cast<execplan::SimpleColumn*>(pat.selectFilter->cols()[0].get());
-    if (!outerLhs)
+    auto* outerLhsSrc = pat.selectFilter->cols()[0].get();
+    if (!outerLhsSrc)
       return false;
-    auto* lhs = new execplan::SimpleColumn(*outerLhs);
+    auto* lhs = outerLhsSrc->clone();
     auto* rhs = makeDerivedColumnRef(pat.sub->returnedCols()[pat.aggColPos].get(),
                                      derivedAlias, pat.aggColPos, timeZone);
     auto* op = pat.selectFilter->op() ? pat.selectFilter->op()->clone() : new execplan::Operator("=");
