@@ -12,7 +12,8 @@ set(rbo_SRCS
     lib/filter_builders.cpp
     lib/derived_column.cpp
     lib/derived_table.cpp
-    lib/agg_wrap.cpp)
+    lib/agg_wrap.cpp
+    lib/column_classify.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 
