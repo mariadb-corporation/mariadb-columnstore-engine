@@ -32,6 +32,7 @@
 #include "logicoperator.h"
 #include "operator.h"
 #include "predicateoperator.h"
+#include "lib/derived_column.h"
 #include "lib/filter_builders.h"
 #include "lib/parse_tree_ops.h"
 #include "rbo_apply_parallel_ces.h"
@@ -420,21 +421,8 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
 void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string& newTableAlias,
                                    const uint32_t colPosition, std::optional<std::string> scAlias)
 {
-  sc->oid(0);
-  sc->schemaName("");
-  // For derived tables, set tableName/tableAlias/derivedTable to the new alias
-  sc->tableName(newTableAlias);
-  sc->tableAlias(newTableAlias);
-  sc->derivedTable(newTableAlias);
-  sc->data("``.`" + newTableAlias + "`.`" + sc->columnName() + "`");
-
-  sc->colPosition(colPosition);
-  sc->isColumnStore(true);
-
-  if (scAlias)
-  {
-    sc->alias(scAlias.value());
-  }
+  optimizer::lib::rebindSCToDerivedInPlace(sc, newTableAlias, static_cast<int64_t>(colPosition),
+                                           std::move(scAlias));
 }
 
 std::pair<uint32_t, bool> findOrInsertColumnPosition(execplan::SimpleColumn* sc,
