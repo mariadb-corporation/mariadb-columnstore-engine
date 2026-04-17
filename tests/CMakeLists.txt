@@ -47,7 +47,7 @@ if(WITH_UNITTESTS)
 
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
-    columnstore_link(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(rewritetest rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)

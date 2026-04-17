@@ -10,7 +10,7 @@
 
 #include <algorithm>
 #include <memory>
-#include "rewrites.h"
+#include "common_leaf_conjunctions.h"
 #include "bytestream.h"
 #include "objectreader.h"
 #include "unitqueries_tree_before.h"

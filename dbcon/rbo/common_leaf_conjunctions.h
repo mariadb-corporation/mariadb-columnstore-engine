@@ -33,8 +33,11 @@ struct NodeSemanticComparator
   bool operator()(execplan::ParseTree* left, execplan::ParseTree* right) const;
 };
 
-// Walk the tree and find out common conjuctions
-template<bool stableSort = false>
+// Lift leaf Filter nodes that appear in every branch of every OR up to the
+// root as a top-level AND chain:
+//   (A AND B) OR (A AND C)  ->  A AND (B OR C)
+// Returns a (possibly new) root of the rewritten tree.
+template <bool stableSort = false>
 execplan::ParseTree* extractCommonLeafConjunctionsToRoot(execplan::ParseTree* tree);
-bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit);
+
 }  // namespace execplan

@@ -77,7 +77,7 @@ using namespace cal_impl_if;
 #include "logicoperator.h"
 #include "outerjoinonfilter.h"
 #include "predicateoperator.h"
-#include "rewrites.h"
+#include "check_filters_limit.h"
 #include "rowcolumn.h"
 #include "rbo_decorrelate_outer_join_sub.h"
 #include "rulebased_optimizer.h"
@@ -6387,12 +6387,9 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     outerJoinStack.push(ptp);
   }
 
-  config::Config* cf = config::Config::makeConfig();
-  string rewriteEnabled = cf->getConfig("Rewrites", "CommonLeafConjunctionsToTop");
-  if (filters && rewriteEnabled != "OFF")
-  {
-    filters = extractCommonLeafConjunctionsToRoot(filters);
-  }
+  // NOTE: lifting common leaf conjunctions to the top of the WHERE tree
+  // is now performed by the RBO rule "common_leaf_conjunctions_to_top"
+  // (see dbcon/rbo/rbo_common_leaf_conjunctions_to_top.{h,cpp}).
 
   uint64_t limit = get_max_allowed_in_values(gwi.thd);
 

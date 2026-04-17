@@ -1,7 +1,10 @@
 set(rbo_SRCS
     rulebased_optimizer.cpp
+    common_leaf_conjunctions.cpp
+    check_filters_limit.cpp
     rbo_apply_parallel_ces.cpp
     rbo_apply_rewrite_distinct.cpp
+    rbo_common_leaf_conjunctions_to_top.cpp
     rbo_predicate_pushdown.cpp
     rbo_decorrelate_outer_join_sub.cpp
     rbo_groupby_wrap_columns.cpp)
