@@ -532,6 +532,43 @@ class NodeControllerClient(BaseClient):
         }
         return self._request('GET', 'check-shared-file', data)
 
+    def download_s3_file(
+        self, bucket: str, filename: str, key: str, secret: str,
+        region: str, storage: str, target_path: str
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Download an S3/GCS file to a local path on a node.
+
+        :param bucket: S3/GCS bucket URL
+        :param filename: filename in bucket
+        :param key: access key
+        :param secret: access secret
+        :param region: region (for AWS)
+        :param storage: storage type ('aws' or 'gs')
+        :param target_path: local path to save the file
+        :return: The response from the API.
+        """
+        data = {
+            'bucket': bucket,
+            'filename': filename,
+            'key': key,
+            'secret': secret,
+            'region': region,
+            'storage': storage,
+            'target_path': target_path,
+        }
+        return self._request('PUT', 'download-s3-file', data)
+
+    def delete_load_file(
+        self, target_path: str
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Delete a previously downloaded load file on a node.
+
+        :param target_path: path of the file to delete
+        :return: The response from the API.
+        """
+        return self._request(
+            'PUT', 'delete-load-file', {'target_path': target_path}
+        )
 
 class AppControllerClient(BaseClient):
     """Client for the AppController API.

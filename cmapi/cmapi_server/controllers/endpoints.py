@@ -1,14 +1,18 @@
-import logging
+import furl
 import hashlib
+import logging
 import os
 import shlex
 import socket
 import subprocess
+import tempfile
 import threading
 import time
+import uuid
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
+from subprocess import CalledProcessError, PIPE, Popen, run
 from typing import Optional
 
 import cherrypy
@@ -25,6 +29,7 @@ from cmapi_server.constants import (
     CMAPI_PORT,
     CMAPI_PYTHON_BIN,
     CMAPI_PYTHON_DEPS_PATH,
+    CMAPI_PYTHON_BINARY_DEPS_PATH,
     DEFAULT_MCS_CONF_PATH,
     DMLPROC_SHUTDOWN_TIMEOUT,
     EM_PATH_SUFFIX,
@@ -2209,6 +2214,154 @@ class NodeController:
         }
         logger.debug(f'{func_name} returns {str(response)}')
         return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def download_s3_file(self):
+        """Handler for /node/download-s3-file (PUT) endpoint.
+
+        Downloads a file from S3/GCS to a specified local path on this node.
+        Used by load_s3data mode 2 to distribute data files to all PMs.
+        """
+        func_name = 'download_s3_file'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        bucket = request_body.get('bucket')
+        filename = request_body.get('filename')
+        key = request_body.get('key')
+        secret = request_body.get('secret')
+        region = request_body.get('region', '')
+        storage = request_body.get('storage')
+        target_path = request_body.get('target_path')
+
+        if not all([bucket, filename, key, secret, storage, target_path]):
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required parameters: bucket, filename, key, secret, '
+                'storage, target_path'
+            )
+
+        ACCEPTED_DIRS = ('/tmp/',)
+        if not target_path.startswith(ACCEPTED_DIRS):
+            raise_422_error(
+                module_logger, func_name,
+                f'Target_path must start with one of {ACCEPTED_DIRS}'
+            )
+
+        target_dir = os.path.dirname(target_path)
+        os.makedirs(target_dir, exist_ok=True)
+
+        try:
+            if storage == 'aws':
+                my_env = os.environ.copy()
+                my_env['AWS_ACCESS_KEY_ID'] = key
+                my_env['AWS_SECRET_ACCESS_KEY'] = secret
+                my_env['PYTHONPATH'] = CMAPI_PYTHON_DEPS_PATH
+
+                aws_cli_binary = os.path.join(
+                    CMAPI_PYTHON_BINARY_DEPS_PATH, 'aws'
+                )
+                s3_url = furl.furl(bucket).add(path=filename).url
+                aws_command_line = [
+                    CMAPI_PYTHON_BIN, aws_cli_binary,
+                    's3', 'cp', '--source-region', region, s3_url, target_path
+                ]
+                module_logger.debug(
+                    f'download_s3_file AWS cmd: {" ".join(aws_command_line)}'
+                )
+                result = run(
+                    aws_command_line, env=my_env, capture_output=True,
+                    encoding='utf-8', check=True
+                )
+            elif storage == 'gs':
+                my_env = os.environ.copy()
+                my_env['PYTHONPATH'] = CMAPI_PYTHON_DEPS_PATH
+                gs_cli_binary = os.path.join(
+                    CMAPI_PYTHON_BINARY_DEPS_PATH, 'gsutil'
+                )
+                temporary_config = os.path.join(
+                    tempfile.gettempdir(),
+                    '.boto.' + str(uuid.uuid4())
+                )
+                my_env['BOTO_CONFIG'] = temporary_config
+                project_id = 'project_id'
+                config_cmd = (
+                    f'/usr/bin/bash -c '
+                    f'\'echo -e "{key}\n{secret}\n{project_id}"\' | '
+                    f'{CMAPI_PYTHON_BIN} {gs_cli_binary} '
+                    f'config -a -o {temporary_config}'
+                )
+                run(config_cmd, capture_output=True, shell=True,
+                    encoding='utf-8', check=True, env=my_env)
+
+                gs_url = furl.furl(bucket).add(path=filename).url
+                gs_command_line = [
+                    CMAPI_PYTHON_BIN, gs_cli_binary, 'cp', gs_url, target_path
+                ]
+                module_logger.debug(
+                    f'download_s3_file GS cmd: {" ".join(gs_command_line)}'
+                )
+                result = run(
+                    gs_command_line, env=my_env, capture_output=True,
+                    encoding='utf-8', check=True
+                )
+                if os.path.exists(temporary_config):
+                    os.remove(temporary_config)
+            else:
+                raise_422_error(
+                    module_logger, func_name,
+                    f'Unknown storage type: {storage}'
+                )
+        except CalledProcessError as exc:
+            raise_422_error(
+                module_logger, func_name,
+                f'S3 download failed: {exc.stderr or exc.stdout}'
+            )
+
+        response = {
+            'timestamp': str(datetime.now()),
+            'success': True,
+            'target_path': target_path
+        }
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.json_in()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def delete_load_file(self):
+        """Handler for /node/delete-load-file (PUT) endpoint.
+
+        Deletes a previously downloaded load file from this node.
+        Used for cleanup after mode 2 cpimport finishes.
+        """
+        func_name = 'delete_load_file'
+        log_begin(module_logger, func_name)
+
+        request_body = cherrypy.request.json
+        target_path = request_body.get('target_path')
+
+        if not target_path:
+            raise_422_error(
+                module_logger, func_name, 'Missing target_path parameter'
+            )
+
+        ACCEPTED_DIRS = ('/tmp/', '/var/lib/columnstore/', '/var/tmp/')
+        if not target_path.startswith(ACCEPTED_DIRS):
+            raise_422_error(
+                module_logger, func_name,
+                f'target_path must start with one of {ACCEPTED_DIRS}'
+            )
+
+        if os.path.exists(target_path):
+            os.remove(target_path)
+            module_logger.debug(f'Deleted load file: {target_path}')
+
+        return {'timestamp': str(datetime.now()), 'success': True}
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()

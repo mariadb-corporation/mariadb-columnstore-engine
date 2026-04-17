@@ -14,6 +14,9 @@ DEFAULT_MCS_CONF_PATH = os.path.join(MCS_ETC_PATH, 'Columnstore.xml')
 # default Storage Manager config path
 DEFAULT_SM_CONF_PATH = os.path.join(MCS_ETC_PATH, 'storagemanager.cnf')
 
+# MCSLOGDIR (in mcs engine code) and related paths
+MCS_LOG_PATH = '/var/log/mariadb/columnstore'
+
 # MCSDATADIR (in mcs engine code) and related paths
 MCS_DATA_PATH = '/var/lib/columnstore'
 MCS_MODULE_FILE_PATH = os.path.join(MCS_DATA_PATH, 'local/module')
@@ -109,7 +112,6 @@ ALL_MCS_PROGS: dict[MCSProgs, ProgInfo] = {
 MCS_INSTALL_BIN = '/usr/bin'
 IFLAG = os.path.join(MCS_ETC_PATH, 'container-initialized')
 LIBJEMALLOC_DEFAULT_PATH = os.path.join(MCS_DATA_PATH, 'libjemalloc.so.2')
-MCS_LOG_PATH = '/var/log/mariadb/columnstore'
 
 # BRM shmem lock inspection/reset tool
 SHMEM_LOCKS_PATH = os.path.join(MCS_INSTALL_BIN, 'mcs-shmem-locks')

@@ -484,6 +484,26 @@ dispatcher.connect(
 )
 
 
+# /_version/node/download-s3-file/ (PUT)
+dispatcher.connect(
+    name = 'node_download_s3_file',
+    route = f'/cmapi/{_version}/node/download-s3-file',
+    action = 'download_s3_file',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
+# /_version/node/delete-load-file/ (PUT)
+dispatcher.connect(
+    name = 'node_delete_load_file',
+    route = f'/cmapi/{_version}/node/delete-load-file',
+    action = 'delete_load_file',
+    controller = NodeController(),
+    conditions = {'method': ['PUT']}
+)
+
+
 # /_version/cluster/check-shared-storage/ (PUT)
 dispatcher.connect(
     name = 'cluster_check_shared_storage',

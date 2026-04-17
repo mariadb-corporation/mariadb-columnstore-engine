@@ -120,6 +120,9 @@ create or replace procedure columnstore_upgrade() SQL SECURITY INVOKER
     END LOOP;
 END //
 
+-- DEPRECATED: load_from_s3 is discontinued. Use load_from_s3_ex with explicit
+-- mode parameter instead. This procedure is kept for backward compatibility
+-- and always uses mode 1.
 CREATE OR REPLACE PROCEDURE load_from_s3 (in bucket varchar(256) CHARACTER SET utf8,
                                           in filename varchar(256) CHARACTER SET utf8,
                                           in dbname varchar(256) CHARACTER SET utf8,
@@ -133,7 +136,29 @@ NOT DETERMINISTIC
 MODIFIES SQL DATA
 SQL SECURITY INVOKER
 BEGIN
+    SIGNAL SQLSTATE '01000' SET MESSAGE_TEXT = 'load_from_s3 is deprecated and uses mode 1 only. Use load_from_s3_ex with explicit mode parameter.';
     select columnstore_dataload(bucket, filename, dbname, table_name, terminated_by, enclosed_by, escaped_by);
+END //
+
+
+CREATE OR REPLACE PROCEDURE load_from_s3_ex (in bucket varchar(256) CHARACTER SET utf8,
+                                             in filename varchar(256) CHARACTER SET utf8,
+                                             in dbname varchar(256) CHARACTER SET utf8,
+                                             in table_name varchar(256) CHARACTER SET utf8,
+                                             in terminated_by varchar(256) CHARACTER SET utf8,
+                                             in enclosed_by varchar(1) CHARACTER SET utf8,
+                                             in escaped_by varchar(1) CHARACTER SET utf8,
+                                             in mode int
+                                             )
+LANGUAGE SQL
+NOT DETERMINISTIC
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+    IF mode IS NULL OR mode NOT IN (1, 2, 3) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid mode: must be 1, 2, or 3';
+    END IF;
+    select columnstore_dataload(bucket, filename, dbname, table_name, terminated_by, enclosed_by, escaped_by, mode);
 END //
 
 
