@@ -13,7 +13,8 @@ set(rbo_SRCS
     lib/derived_column.cpp
     lib/derived_table.cpp
     lib/agg_wrap.cpp
-    lib/column_classify.cpp)
+    lib/column_classify.cpp
+    lib/csep_walk.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 
