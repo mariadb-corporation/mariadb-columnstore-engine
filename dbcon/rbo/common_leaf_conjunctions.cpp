@@ -17,6 +17,7 @@
 #include "operator.h"
 #include "simplefilter.h"
 #include "logicoperator.h"
+#include "lib/parse_tree_ops.h"
 #include <boost/core/demangle.hpp>
 #include <set>
 #include <string>
@@ -209,45 +210,18 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   }
 }
 
-// this utility function creates new and node
-execplan::ParseTree* newAndNode()
-{
-  execplan::Operator* op = new execplan::LogicOperator("and");
-  return new execplan::ParseTree(op);
-}
-
+// Build AND(c0, AND(c1, ..., AND(c_{n-1}, tree))).  If `tree` is nullptr the
+// residual chain just ends at c_{n-1}.  Empty `common` returns `tree`.
+//
+// This replaces the previous hand-rolled `appendToRoot` that suffered from
+// undefined behaviour on the single-conjunct + no-residual case
+// (`std::next(end)` on a std::set iterator).
 template <typename Common>
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& common)
 {
-  if (common.empty())
-    return tree;
-
-  // TODO: refactor to debug
-  execplan::ParseTree* result = newAndNode();
-  auto current = result;
-  for (auto treenode = common.begin(); treenode != common.end();)
-  {
-    execplan::ParseTree* andCondition = *treenode;
-
-    ++treenode;
-    current->right(andCondition);
-
-    if ((treenode != common.end() && std::next(treenode) != common.end()) ||
-        (std::next(treenode) == common.end() && tree != nullptr))
-    {
-      execplan::ParseTree* andOp = newAndNode();
-      current->left(andOp);
-      current = andOp;
-    }
-    else if (std::next(treenode) == common.end() && tree == nullptr)
-    {
-      current->left(andCondition);
-    }
-  }
-  if (tree)
-    current->left(tree);
-
-  return result;
+  std::vector<execplan::ParseTree*> leaves(common.begin(), common.end());
+  execplan::ParseTree* conj = optimizer::lib::andAll(leaves);
+  return optimizer::lib::andWith(conj, tree);
 }
 
 struct StackFrame
@@ -264,21 +238,9 @@ struct StackFrame
 
 using DFSStack = std::vector<StackFrame>;
 
-void deleteOneNode(execplan::ParseTree** node)
+inline void deleteOneNode(execplan::ParseTree** node)
 {
-  if (!node || !*node)
-    return;
-
-  (*node)->nullLeft();
-  (*node)->nullRight();
-
-#if debug_rewrites
-  std::cerr << "   Deleting: " << (*node)->data() << " " << boost::core::demangle(typeid(**node).name())
-            << " " << "ptr: " << *node << std::endl;
-#endif
-
-  delete *node;
-  *node = nullptr;
+  optimizer::lib::deleteOneNode(node);
 }
 
 // this utility function adds one stack frame to a stack for dfs traversal

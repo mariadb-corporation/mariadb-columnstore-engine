@@ -31,6 +31,7 @@
 #include "execplan/simplecolumn.h"
 #include "execplan/simplefilter.h"
 #include "execplan/simplescalarfilter.h"
+#include "lib/parse_tree_ops.h"
 
 namespace optimizer
 {
@@ -112,22 +113,6 @@ void collectSelectFiltersInOJF(execplan::ParseTree* root,
 
   collectSelectFiltersInOJF(root->left(), outLeaves);
   collectSelectFiltersInOJF(root->right(), outLeaves);
-}
-
-// Walks a ParseTree that should be a conjunction of SimpleFilter leaves.
-// Returns false if the shape is not a plain AND-of-leaves of SimpleFilters.
-bool collectConjuncts(execplan::ParseTree* root, std::vector<execplan::ParseTree*>& leaves)
-{
-  if (!root)
-    return true;
-  if (auto* lop = dynamic_cast<execplan::LogicOperator*>(root->data()))
-  {
-    if (lop->data() != "and")
-      return false;
-    return collectConjuncts(root->left(), leaves) && collectConjuncts(root->right(), leaves);
-  }
-  leaves.push_back(root);
-  return true;
 }
 
 bool isSupportedAggOp(uint8_t op)
@@ -254,7 +239,7 @@ bool matchSubqueryPattern(execplan::ParseTree* leaf, SubqueryPattern& out)
   // or local.  The number of correlation equi-predicates must match the group
   // key count so every derived column gets a unique join partner.
   std::vector<execplan::ParseTree*> conjuncts;
-  if (!collectConjuncts(sub->filters(), conjuncts))
+  if (!optimizer::lib::collectConjuncts(sub->filters(), conjuncts))
     return false;
 
   std::vector<CorrEqui> corrEquis;
@@ -381,22 +366,6 @@ bool decorrelateOuterJoinSubFilter(execplan::CalpontSelectExecutionPlan& csep,
 namespace
 {
 
-// Builds a right-deep AND tree over the given leaves.  Caller retains
-// ownership of the returned root.  Assumes `leaves.size() >= 1`.
-execplan::ParseTree* buildAndTree(const std::vector<execplan::ParseTree*>& leaves)
-{
-  execplan::ParseTree* result = leaves.back();
-  for (ssize_t i = static_cast<ssize_t>(leaves.size()) - 2; i >= 0; --i)
-  {
-    auto* andOp = new execplan::LogicOperator("and");
-    auto* andNode = new execplan::ParseTree(andOp);
-    andNode->left(leaves[i]);
-    andNode->right(result);
-    result = andNode;
-  }
-  return result;
-}
-
 // Constructs a fresh SimpleColumn that references column `refCol` (projected
 // at position `colPos` of the derived CSEP whose alias is `derivedAlias`).
 execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
@@ -475,7 +444,7 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
   for (auto* lp : pat.localPreds)
     newLocals.push_back(new execplan::ParseTree(*lp));
 
-  execplan::ParseTree* newFilters = newLocals.empty() ? nullptr : buildAndTree(newLocals);
+  execplan::ParseTree* newFilters = optimizer::lib::andAll(newLocals);
   delete pat.sub->filters();
   pat.sub->filters(newFilters);
 
@@ -548,19 +517,12 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
     replacementLeaves.push_back(new execplan::ParseTree(sf));
   }
 
-  execplan::ParseTree* replacementRoot = buildAndTree(replacementLeaves);
+  execplan::ParseTree* replacementRoot = optimizer::lib::andAll(replacementLeaves);
 
   // ----- 6. Swap replacementRoot's contents into pat.leafNode in place so the
-  //       enclosing OJF parse tree keeps its shape.
-  execplan::TreeNode* oldData = pat.leafNode->data();
-  pat.leafNode->data(replacementRoot->data());
-  pat.leafNode->left(replacementRoot->left());
-  pat.leafNode->right(replacementRoot->right());
-  replacementRoot->data(nullptr);
-  replacementRoot->left(static_cast<execplan::ParseTree*>(nullptr));
-  replacementRoot->right(static_cast<execplan::ParseTree*>(nullptr));
-  delete replacementRoot;
-  delete oldData;  // releases the old SelectFilter (which no longer owns the sub CSEP)
+  //       enclosing OJF parse tree keeps its shape.  replaceInPlace takes
+  //       care of freeing the old SelectFilter and the replacementRoot shell.
+  optimizer::lib::replaceInPlace(pat.leafNode, replacementRoot);
 
   return true;
 }

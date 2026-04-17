@@ -23,6 +23,7 @@
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
+#include "lib/parse_tree_ops.h"
 #include "logicoperator.h"
 #include "operator.h"
 
@@ -111,10 +112,7 @@ execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan:
     }
     else
     {
-      execplan::ParseTree* pt = new execplan::ParseTree(new execplan::LogicOperator("and"));
-      pt->left(mapIter->second);
-      pt->right(n);
-      mapIter->second = pt;
+      mapIter->second = optimizer::lib::andWith(mapIter->second, n);
     }
 
     int64_t val = 1;
@@ -193,18 +191,7 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
       replaceRefCol(mainFilter, derivedColList);
       execplan::ParseTree* derivedFilter = plan->filters();
 
-      if (derivedFilter)
-      {
-        execplan::LogicOperator* op = new execplan::LogicOperator("and");
-        execplan::ParseTree* filter = new execplan::ParseTree(op);
-        filter->left(derivedFilter);
-        filter->right(mainFilter);
-        plan->filters(filter);
-      }
-      else
-      {
-        plan->filters(mainFilter);
-      }
+      plan->filters(optimizer::lib::andWith(derivedFilter, mainFilter));
 
       // union filter handling
       for (uint j = 0; j < plan->unionVec().size(); j++)
@@ -217,18 +204,7 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
         replaceRefCol(mainFilterForUnion, unionColList);
         execplan::ParseTree* unionFilter = unionPlan->filters();
 
-        if (unionFilter)
-        {
-          execplan::LogicOperator* op = new execplan::LogicOperator("and");
-          execplan::ParseTree* filter = new execplan::ParseTree(op);
-          filter->left(unionFilter);
-          filter->right(mainFilterForUnion);
-          unionPlan->filters(filter);
-        }
-        else
-        {
-          unionPlan->filters(mainFilterForUnion);
-        }
+        unionPlan->filters(optimizer::lib::andWith(unionFilter, mainFilterForUnion));
       }
       hasBeenApplied = true;
     }
