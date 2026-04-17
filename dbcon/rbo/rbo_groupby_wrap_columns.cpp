@@ -473,8 +473,7 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           {
             // there are some partitions left, push the next one
             step++;
-            partStep++;
-            stack.frames.push_back(Stack::Frame{wf->partitions()[partStep].get(), 0});
+            stack.frames.push_back(Stack::Frame{wf->partitions()[partStep++].get(), 0});
             continue;
           }
           else if (!wf->orderBy().fOrders.empty())
@@ -503,8 +502,7 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           if (ordStep < wf->orderBy().fOrders.size())
           {
             step++;
-            ordStep++;
-            stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[ordStep].get(), 0});
+            stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[ordStep++].get(), 0});
             continue;
           }
         }

@@ -1,0 +1,35 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6328;
+--enable_warnings
+CREATE DATABASE mcol_6328;
+USE mcol_6328;
+
+CREATE TABLE t1 (a INT, b INT, c INT) ENGINE=Columnstore;
+INSERT INTO t1 VALUES (1, 10, 2), (2, 20, 3), (3, 10, 5), (4, 20, 7), (5, 30, 11);
+
+# 1 partition cols
+SELECT SUM(b), DENSE_RANK() OVER (PARTITION BY abs(a) ORDER BY b)
+FROM t1 ORDER BY 1, 2;
+
+# 2 partition cols
+SELECT SUM(b), DENSE_RANK() OVER (PARTITION BY abs(a), b ORDER BY b)
+FROM t1 ORDER BY 1, 2;
+
+# 3 partition cols
+SELECT SUM(b), DENSE_RANK() OVER (PARTITION BY abs(a), b, c ORDER BY b)
+FROM t1 ORDER BY 1, 2;
+
+# 1 order by cols (0 partition cols)
+SELECT SUM(b), DENSE_RANK() OVER (ORDER BY a)
+FROM t1 ORDER BY 1, 2;
+
+# 2 order by cols
+SELECT SUM(b), DENSE_RANK() OVER (ORDER BY a, b)
+FROM t1 ORDER BY 1, 2;
+
+# 3 order by cols
+SELECT SUM(b), DENSE_RANK() OVER (ORDER BY a, b, c)
+FROM t1 ORDER BY 1, 2;
+
+DROP DATABASE mcol_6328;
