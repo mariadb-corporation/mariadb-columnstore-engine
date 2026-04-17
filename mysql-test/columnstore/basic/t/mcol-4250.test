@@ -1,10 +1,13 @@
 --source ../include/have_columnstore.inc
 
 --echo # MCOL-4250
---echo # Correlated subquery inside an OUTER JOIN ON clause is currently
---echo # not supported by Columnstore. With columnstore_select_handler=ON we
---echo # expect IDB-1015 (ER_INTERNAL_ERROR / 1815). With AUTO the server
---echo # falls back to MariaDB engine and the query must succeed.
+--echo # Correlated scalar aggregate subqueries inside an OUTER JOIN ON clause
+--echo # are now decorrelated by the RBO rule `decorrelate_outer_join_sub`:
+--echo # the inner SELECT is promoted to a derived table (GROUP BY on the
+--echo # correlation keys) and the enclosing SelectFilter is replaced with
+--echo # equi-join predicates referencing that derived table.  For every
+--echo # supported shape Columnstore must now execute the query directly and
+--echo # produce the same result set as the MariaDB (AUTO) fallback path.
 
 SET default_storage_engine=columnstore;
 
@@ -57,7 +60,7 @@ INSERT INTO cas_caseflow VALUES
 --echo #    pattern from MCOL-4250).
 --echo #
 SET columnstore_select_handler=ON;
---error 1815
+--sorted_result
 SELECT cc.CASEID
 FROM cas_case cc
 LEFT JOIN cas_caseflow cf
@@ -109,14 +112,7 @@ LEFT JOIN cas_caseflow cf
 WHERE cc.REQUESTTYPECODE IN ('CBGBranchesRequest','BCAPApplication');
 
 SET columnstore_select_handler=ON;
---error 1815
 SELECT * FROM vw_triggerevent_assoc_bcap_cases ORDER BY CASEID;
-
-# NOTE: The AUTO-fallback path currently crashes the server on this
-# particular VIEW shape (unrelated pre-existing bug, not MCOL-4250). Once
-# the decorrelation rewrite for MCOL-4250 lands the VIEW can be executed
-# directly by Columnstore and this test will be extended to assert the
-# expected result set.
 
 DROP VIEW vw_triggerevent_assoc_bcap_cases;
 DROP TABLE cas_triggerevent;

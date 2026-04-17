@@ -1,8 +1,11 @@
 # MCOL-4250
-# Correlated subquery inside an OUTER JOIN ON clause is currently
-# not supported by Columnstore. With columnstore_select_handler=ON we
-# expect IDB-1015 (ER_INTERNAL_ERROR / 1815). With AUTO the server
-# falls back to MariaDB engine and the query must succeed.
+# Correlated scalar aggregate subqueries inside an OUTER JOIN ON clause
+# are now decorrelated by the RBO rule `decorrelate_outer_join_sub`:
+# the inner SELECT is promoted to a derived table (GROUP BY on the
+# correlation keys) and the enclosing SelectFilter is replaced with
+# equi-join predicates referencing that derived table.  For every
+# supported shape Columnstore must now execute the query directly and
+# produce the same result set as the MariaDB (AUTO) fallback path.
 SET default_storage_engine=columnstore;
 DROP DATABASE IF EXISTS mcol4250;
 CREATE DATABASE mcol4250;
@@ -55,7 +58,10 @@ FROM cas_caseflow e
 WHERE e.CASEID    = cf.CASEID
 AND e.SOURCE_DB = cf.SOURCE_DB
 AND e.STATUSCODE = cf.STATUSCODE);
-ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+CASEID
+1
+2
+3
 SET columnstore_select_handler=AUTO;
 SELECT cc.CASEID
 FROM cas_case cc
@@ -97,7 +103,9 @@ AND e.STATUSCODE = cf.STATUSCODE)
 WHERE cc.REQUESTTYPECODE IN ('CBGBranchesRequest','BCAPApplication');
 SET columnstore_select_handler=ON;
 SELECT * FROM vw_triggerevent_assoc_bcap_cases ORDER BY CASEID;
-ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+CASEID
+1
+2
 DROP VIEW vw_triggerevent_assoc_bcap_cases;
 DROP TABLE cas_triggerevent;
 DROP TABLE cas_case;
