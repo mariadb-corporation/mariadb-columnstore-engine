@@ -18,7 +18,6 @@
 #include "rbo_decorrelate_outer_join_sub.h"
 
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 #include "execplan/aggregatecolumn.h"
