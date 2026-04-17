@@ -126,6 +126,12 @@ if(WITH_UNITTESTS)
     columnstore_link(rbo_lib_derived_table_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rbo_lib_derived_table_test TEST_PREFIX columnstore:)
 
+    add_executable(rbo_lib_agg_wrap_test rbo_lib_agg_wrap_test.cpp)
+    target_compile_options(rbo_lib_agg_wrap_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_agg_wrap_test googletest)
+    columnstore_link(rbo_lib_agg_wrap_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_agg_wrap_test TEST_PREFIX columnstore:)
+
     add_executable(stlpoolallocator stlpoolallocator.cpp)
     target_compile_options(stlpoolallocator PRIVATE -Wno-sign-compare)
     add_dependencies(stlpoolallocator googletest)
