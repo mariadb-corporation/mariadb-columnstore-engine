@@ -115,6 +115,109 @@ SET columnstore_select_handler=ON;
 SELECT * FROM vw_triggerevent_assoc_bcap_cases ORDER BY CASEID;
 
 DROP VIEW vw_triggerevent_assoc_bcap_cases;
+
+--echo #
+--echo # 3. Supported: MIN aggregate with a local predicate on the sub.
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID, cf.INDATE
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.INDATE = (SELECT MIN(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID = cf.CASEID
+                    AND e.STATUSCODE = 'CompletedScreening');
+
+--echo #
+--echo # 4. Supported: SUM aggregate with a bare-column outer LHS on cf.  The
+--echo #    outer LHS (cf.SOURCE_DB) shares a table with the correlation equi
+--echo #    (e.CASEID = cf.CASEID) and the outer operator is '=', both of which
+--echo #    are required for the executor's join-inference.
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID, cf.SOURCE_DB
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB = (SELECT SUM(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4b. Unsupported: inequality operator on the outer comparison.  The
+--echo #     join-inference does not pick up the derived table when the main
+--echo #     predicate is <, >, <=, >=, or <> (MCS-1000), so the matcher is
+--echo #     conservative and leaves such plans to the post-RBO validator.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB < (SELECT SUM(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4c. Unsupported: outer LHS references a table (cc) that does not
+--echo #     appear in any correlation equi-predicate.  Without a shared table
+--echo #     the executor cannot wire the derived table into the OJF group.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.GCIN = (SELECT SUM(e.SOURCE_DB)
+                FROM cas_caseflow e
+                WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4d. Unsupported: outer LHS is a constant, not a plain column.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND 1 = (SELECT COUNT(*)
+          FROM cas_caseflow e
+          WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 5. Unsupported: non-correlated scalar subquery inside an OUTER JOIN ON.
+--echo #    The subquery is a constant so there is nothing to decorrelate, but
+--echo #    the executor cannot compile SimpleScalarFilter inside OuterJoinOnFilter
+--echo #    either, so IDB-1015 is still the expected contract.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.INDATE = (SELECT MAX(INDATE) FROM cas_caseflow);
+
+--echo #
+--echo # 6. Unsupported: correlated subquery with a DISTINCT aggregate — the
+--echo #    matcher rejects DISTINCT and the post-RBO validator raises IDB-1015.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND 1 < (SELECT COUNT(DISTINCT e.INDATE)
+          FROM cas_caseflow e
+          WHERE e.CASEID = cf.CASEID);
+
 DROP TABLE cas_triggerevent;
 DROP TABLE cas_case;
 DROP TABLE cas_bcapkyc;

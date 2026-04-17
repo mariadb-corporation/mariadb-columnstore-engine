@@ -107,6 +107,108 @@ CASEID
 1
 2
 DROP VIEW vw_triggerevent_assoc_bcap_cases;
+#
+# 3. Supported: MIN aggregate with a local predicate on the sub.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID, cf.INDATE
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.INDATE = (SELECT MIN(e.INDATE)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID
+AND e.STATUSCODE = 'CompletedScreening');
+CASEID	INDATE
+1	2024-01-01
+2	2024-03-01
+3	NULL
+#
+# 4. Supported: SUM aggregate with a bare-column outer LHS on cf.  The
+#    outer LHS (cf.SOURCE_DB) shares a table with the correlation equi
+#    (e.CASEID = cf.CASEID) and the outer operator is '=', both of which
+#    are required for the executor's join-inference.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID, cf.SOURCE_DB
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.SOURCE_DB = (SELECT SUM(e.SOURCE_DB)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+CASEID	SOURCE_DB
+1	1
+1	1
+2	1
+3	NULL
+#
+# 4b. Unsupported: inequality operator on the outer comparison.  The
+#     join-inference does not pick up the derived table when the main
+#     predicate is <, >, <=, >=, or <> (MCS-1000), so the matcher is
+#     conservative and leaves such plans to the post-RBO validator.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.SOURCE_DB < (SELECT SUM(e.SOURCE_DB)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 4c. Unsupported: outer LHS references a table (cc) that does not
+#     appear in any correlation equi-predicate.  Without a shared table
+#     the executor cannot wire the derived table into the OJF group.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cc.GCIN = (SELECT SUM(e.SOURCE_DB)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 4d. Unsupported: outer LHS is a constant, not a plain column.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND 1 = (SELECT COUNT(*)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 5. Unsupported: non-correlated scalar subquery inside an OUTER JOIN ON.
+#    The subquery is a constant so there is nothing to decorrelate, but
+#    the executor cannot compile SimpleScalarFilter inside OuterJoinOnFilter
+#    either, so IDB-1015 is still the expected contract.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cf.INDATE = (SELECT MAX(INDATE) FROM cas_caseflow);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 6. Unsupported: correlated subquery with a DISTINCT aggregate — the
+#    matcher rejects DISTINCT and the post-RBO validator raises IDB-1015.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND 1 < (SELECT COUNT(DISTINCT e.INDATE)
+FROM cas_caseflow e
+WHERE e.CASEID = cf.CASEID);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
 DROP TABLE cas_triggerevent;
 DROP TABLE cas_case;
 DROP TABLE cas_bcapkyc;
