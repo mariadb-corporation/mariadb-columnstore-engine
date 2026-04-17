@@ -11,7 +11,8 @@ set(rbo_SRCS
     lib/parse_tree_ops.cpp
     lib/filter_builders.cpp
     lib/derived_column.cpp
-    lib/derived_table.cpp)
+    lib/derived_table.cpp
+    lib/agg_wrap.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 

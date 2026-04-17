@@ -29,6 +29,7 @@
 #include "simplefilter.h"
 #include "existsfilter.h"
 #include "functioncolumn.h"
+#include "lib/agg_wrap.h"
 #include "logicoperator.h"
 
 namespace optimizer
@@ -51,8 +52,7 @@ struct ColumnWrapperContext
   const std::vector<execplan::SRCP>* gbCols;
   const std::vector<execplan::SRCP>* origGbCols;
   const execplan::CalpontSelectExecutionPlan::TableList& tableList;
-  std::vector<std::pair<execplan::AggregateColumn*, uint32_t>> aggExprs;
-  uint32_t nextId{0};
+  optimizer::lib::AggExprDedup dedup;
   bool applied{false};
   static std::vector<execplan::SRCP> emptySRCPVec;
 };
@@ -209,33 +209,10 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
 template <typename T>
 execplan::AggregateColumn* wrapColumn(const T& rc, ColumnWrapperContext& lctx, RBOptimizerContext& ctx)
 {
-  auto ac = std::make_unique<execplan::AggregateColumn>(rc->sessionID());
-  ac->timeZone(ctx.getGwi().timeZone);
-  ac->alias(rc->alias());
-  ac->aggOp(execplan::AggregateColumn::SELECT_SOME);
-  ac->asc(rc->asc());
-  ac->charsetNumber(rc->charsetNumber());
-  ac->orderPos(rc->orderPos());
-  ac->aggParms().emplace_back(rc);
-  ac->resultType(rc->resultType());
-
-  size_t i;
-  for (i = 0; i < lctx.aggExprs.size(); i++)
-  {
-    if (*ac == *lctx.aggExprs[i].first)
-      break;
-  }
-  if (i < lctx.aggExprs.size())
-  {
-    ac->expressionId(lctx.aggExprs[i].second);
-  }
-  else
-  {
-    ac->expressionId(lctx.nextId);
-    lctx.aggExprs.emplace_back(ac.get(), lctx.nextId++);
-  }
+  auto* ac = optimizer::lib::wrapIntoSelectSomeAgg(rc, ctx.getGwi().timeZone);
+  lctx.dedup.assignId(ac);
   lctx.applied = true;
-  return ac.release();
+  return ac;
 }
 
 struct Stack
@@ -559,11 +536,11 @@ bool applyGroupByWrapColumns(execplan::CalpontSelectExecutionPlan& csep, RBOptim
   ColumnWrapperContext lctx{&csep.groupByCols(), csep.tableList()};
   // Find the next expression ID. Since this is the only place where the SELECT_SOME can appear,
   // there is no need to check if such an expression has occurred before.
-  lctx.nextId = ctx.getMaxExpressionId() + 1;
+  lctx.dedup.nextId = ctx.getMaxExpressionId() + 1;
   for (const auto& p : ctx.getGwi().processed) {
-    if (p.second != -1u && p.second >= lctx.nextId)
+    if (p.second != -1u && p.second >= lctx.dedup.nextId)
     {
-      lctx.nextId = p.second + 1;
+      lctx.dedup.nextId = p.second + 1;
     }
   }
 
