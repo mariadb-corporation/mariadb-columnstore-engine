@@ -32,6 +32,7 @@
 #include "logicoperator.h"
 #include "operator.h"
 #include "predicateoperator.h"
+#include "lib/parse_tree_ops.h"
 #include "rbo_apply_parallel_ces.h"
 #include "returnedcolumn.h"
 #include "simplefilter.h"
@@ -170,15 +171,7 @@ execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::Simple
     ptp = finalAnd;
   }
 
-  auto* currentFilters = csep->filters();
-  if (currentFilters)
-  {
-    execplan::ParseTree* andWithExistingFilters =
-        new execplan::ParseTree(new execplan::LogicOperator("and"), currentFilters, ptp);
-    return andWithExistingFilters;
-  }
-
-  return ptp;
+  return optimizer::lib::andWith(csep->filters(), ptp);
 }
 
 // Looking for a projected column that comes first in an available index and has EI statistics
