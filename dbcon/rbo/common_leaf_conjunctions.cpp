@@ -8,10 +8,9 @@
  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "rewrites.h"
+#include "common_leaf_conjunctions.h"
 #include <cstdint>
 #include <typeinfo>
-#include "constantfilter.h"
 #include "objectreader.h"
 #include "installdir.h"
 #include "parsetree.h"
@@ -483,22 +482,6 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
     return details::simpleFiltersCmp(filterLeft, filterRight);
 
   return left->data()->data() < right->data()->data();
-}
-
-bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit)
-{
-  uint64_t maxLimit = 0;
-  auto walker = [](const execplan::ParseTree* node, void* maxLimit)
-  {
-    auto maybe_cf = dynamic_cast<ConstantFilter*>(node->data());
-    if (maybe_cf != nullptr &&
-        (maybe_cf->op()->op() == OpType::OP_OR || maybe_cf->op()->op() == OpType::OP_IN))
-    {
-      *((uint64_t*)maxLimit) = std::max(maybe_cf->filterList().size(), *((uint64_t*)maxLimit));
-    }
-  };
-  tree->walk(walker, &maxLimit);
-  return maxLimit <= limit;
 }
 
 }  // namespace execplan

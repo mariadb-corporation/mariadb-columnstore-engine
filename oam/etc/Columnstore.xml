@@ -246,10 +246,8 @@
 	<DataRedundancyConfig>
 		<DBRoot1PMs/>
 	</DataRedundancyConfig>
-	<Rewrites>
-		<CommonLeafConjunctionsToTop>Y</CommonLeafConjunctionsToTop>
-	</Rewrites>
 	<OptimizerRules>
+		<common_leaf_conjunctions_to_top>true</common_leaf_conjunctions_to_top>
 		<predicate_pushdown>true</predicate_pushdown>
 		<parallel_ces>true</parallel_ces>
 	</OptimizerRules>

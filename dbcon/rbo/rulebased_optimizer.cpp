@@ -23,6 +23,7 @@
 #include "predicateoperator.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_apply_rewrite_distinct.h"
+#include "rbo_common_leaf_conjunctions_to_top.h"
 #include "rbo_decorrelate_outer_join_sub.h"
 #include "rbo_groupby_wrap_columns.h"
 #include "rbo_predicate_pushdown.h"
@@ -83,6 +84,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
                   bool useUnstableOptimizer)
 {
   std::vector<optimizer::Rule> rules;
+
+  // Normalize the WHERE tree up-front so subsequent structural rules
+  // (predicate pushdown, decorrelation, ...) see the lifted common
+  // conjunctions at the CSEP root.
+  optimizer::Rule commonLeafConjunctionsToTop{"common_leaf_conjunctions_to_top",
+                                               optimizer::commonLeafConjunctionsToTopFilter,
+                                               optimizer::applyCommonLeafConjunctionsToTop};
+  rules.push_back(commonLeafConjunctionsToTop);
 
   if (useUnstableOptimizer)
   {
