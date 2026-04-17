@@ -30,6 +30,7 @@
 #include "existsfilter.h"
 #include "functioncolumn.h"
 #include "lib/agg_wrap.h"
+#include "lib/column_classify.h"
 #include "logicoperator.h"
 
 namespace optimizer
@@ -59,73 +60,14 @@ struct ColumnWrapperContext
 
 std::vector<execplan::SRCP> ColumnWrapperContext::emptySRCPVec;
 
+// Thin wrapper: forwards to optimizer::lib::containsAggregate and propagates
+// every observed expression id into ctx.maxExpressionId.
 bool isAggregateColumn(const std::variant<execplan::ParseTree*, execplan::TreeNode*>& col,
                        RBOptimizerContext& ctx)
 {
-  bool ret = false;
-  std::vector<std::variant<execplan::ParseTree*, execplan::TreeNode*>> stack;
-  stack.emplace_back(col);
-  while (!stack.empty())
-  {
-    auto node = stack.back();
-    stack.pop_back();
-    if (auto* ptp = std::get_if<execplan::ParseTree*>(&node))
-    {
-      auto* pt = *ptp;
-      if (pt->left() != nullptr)
-        stack.emplace_back(pt->left());
-      if (pt->right() != nullptr)
-        stack.emplace_back(pt->right());
-      stack.emplace_back(pt->data());
-    }
-    else
-    {
-      auto* tn = std::get<execplan::TreeNode*>(node);
-      if (auto* rc = dynamic_cast<execplan::ReturnedColumn*>(tn))
-      {
-        if (rc->expressionId() != -1u)
-          ctx.setMaxExpressionId(rc->expressionId());
-      }
-
-      if (auto* agc = dynamic_cast<execplan::AggregateColumn*>(tn))
-      {
-        ret = true;
-        for (auto& arg : agc->aggParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-      }
-      else if (auto* ac = dynamic_cast<execplan::ArithmeticColumn*>(tn))
-      {
-        stack.emplace_back(ac->expression());
-      }
-      else if (auto* fc = dynamic_cast<execplan::FunctionColumn*>(tn))
-      {
-        for (auto& arg : fc->functionParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-      }
-      else if (auto* sf = dynamic_cast<execplan::SimpleFilter*>(tn))
-      {
-        if (sf->lhs() != nullptr)
-          stack.emplace_back(sf->lhs());
-        if (sf->rhs() != nullptr)
-          stack.emplace_back(sf->rhs());
-      }
-      else if (auto* wf = dynamic_cast<execplan::WindowFunctionColumn*>(tn))
-      {
-        for (auto& arg : wf->functionParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-        for (auto& part : wf->partitions())
-        {
-          stack.emplace_back(part.get());
-        }
-      }
-    }
-  }
+  uint32_t localMax = ctx.getMaxExpressionId();
+  const bool ret = optimizer::lib::containsAggregate(col, &localMax);
+  ctx.setMaxExpressionId(localMax);
   return ret;
 }
 
@@ -155,25 +97,8 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
 
   if (auto* sc = dynamic_cast<const execplan::SimpleColumn*>(tn))
   {
-    bool ourTable = false;
-    for (const auto& tbl : lctx.tableList)
-    {
-      if (!tbl.isColumnstore())
-      {
-        continue;
-      }
-      if (tbl.schema == sc->schemaName() &&
-          (tbl.table == sc->tableName() || (tbl.table.empty() && tbl.alias == sc->tableName())) &&
-          tbl.alias == sc->tableAlias())
-      {
-        ourTable = true;
-        break;
-      }
-    }
-    if (!ourTable)
-    {
+    if (!optimizer::lib::columnBelongsToCSTableList(sc, lctx.tableList))
       return false;
-    }
   }
 
   if (dynamic_cast<execplan::SimpleFilter*>(tn))
