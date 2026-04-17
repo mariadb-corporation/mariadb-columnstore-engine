@@ -23,6 +23,7 @@
 #include "predicateoperator.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_apply_rewrite_distinct.h"
+#include "rbo_decorrelate_outer_join_sub.h"
 #include "rbo_groupby_wrap_columns.h"
 #include "rbo_predicate_pushdown.h"
 #include "utils/pron/pron.h"
@@ -95,6 +96,13 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
   optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
                                   optimizer::applyGroupByWrapColumns};
   rules.push_back(rewriteGroupBy);
+  // MCOL-4250: rewrite scalar subqueries inside OUTER JOIN ON into equi-joins
+  // with a GROUP-BY derived table.  Must run before predicate_pushdown so the
+  // latter can push through the freshly-introduced derived tables.
+  optimizer::Rule decorrelateOuterJoinSub{"decorrelate_outer_join_sub",
+                                          optimizer::decorrelateOuterJoinSubFilter,
+                                          optimizer::applyDecorrelateOuterJoinSub};
+  rules.push_back(decorrelateOuterJoinSub);
   optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
                                     optimizer::applyPredicatePushdown};
   rules.push_back(predicatePushdown);
