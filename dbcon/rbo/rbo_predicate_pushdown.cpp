@@ -185,9 +185,9 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
     if (mapIt != derivedTbFilterMap.end())
     {
       // replace all derived column of this filter with real column from
-      // derived table projection list.
-      execplan::ParseTree* mainFilter = new execplan::ParseTree();
-      mainFilter->copyTree(*(mapIt->second));
+      // derived table projection list.  ParseTree's copy ctor already
+      // delegates to copyTree(), so the one-arg form does a deep clone.
+      execplan::ParseTree* mainFilter = new execplan::ParseTree(*(mapIt->second));
       replaceRefCol(mainFilter, derivedColList);
       execplan::ParseTree* derivedFilter = plan->filters();
 
@@ -199,8 +199,8 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
         execplan::CalpontSelectExecutionPlan* unionPlan =
             reinterpret_cast<execplan::CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
         execplan::CalpontSelectExecutionPlan::ReturnedColumnList unionColList = unionPlan->returnedCols();
-        execplan::ParseTree* mainFilterForUnion = new execplan::ParseTree();
-        mainFilterForUnion->copyTree(*(mapIt->second));
+        execplan::ParseTree* mainFilterForUnion =
+            new execplan::ParseTree(*(mapIt->second));
         replaceRefCol(mainFilterForUnion, unionColList);
         execplan::ParseTree* unionFilter = unionPlan->filters();
 
