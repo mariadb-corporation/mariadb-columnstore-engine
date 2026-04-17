@@ -31,6 +31,7 @@
 #include "execplan/simplecolumn.h"
 #include "execplan/simplefilter.h"
 #include "execplan/simplescalarfilter.h"
+#include "lib/csep_walk.h"
 #include "lib/derived_column.h"
 #include "lib/derived_table.h"
 #include "lib/filter_builders.h"
@@ -86,36 +87,18 @@ struct SubqueryPattern
 };
 
 // Pre-order collector of (outerJoinOnFilter -> inside-parse-tree-leaf-holding-SelectFilter) pairs.
+// Thin wrapper over optimizer::lib::collectLeavesInOuterJoinOn with a
+// decorrelate-specific predicate (SelectFilter or SimpleScalarFilter).
 void collectSelectFiltersInOJF(execplan::ParseTree* root,
                                std::vector<execplan::ParseTree*>& outLeaves)
 {
-  if (!root)
-    return;
-
-  if (auto* ojf = dynamic_cast<execplan::OuterJoinOnFilter*>(root->data()))
-  {
-    // Descend into the ON-clause parse tree and collect SelectFilter leaves.
-    std::vector<execplan::ParseTree*> stack{ojf->pt().get()};
-    while (!stack.empty())
-    {
-      execplan::ParseTree* n = stack.back();
-      stack.pop_back();
-      if (!n)
-        continue;
-      if (dynamic_cast<execplan::SelectFilter*>(n->data()) ||
-          dynamic_cast<execplan::SimpleScalarFilter*>(n->data()))
+  optimizer::lib::collectLeavesInOuterJoinOn(
+      root, outLeaves,
+      [](execplan::TreeNode* tn) -> bool
       {
-        outLeaves.push_back(n);
-        continue;
-      }
-      stack.push_back(n->left());
-      stack.push_back(n->right());
-    }
-    return;
-  }
-
-  collectSelectFiltersInOJF(root->left(), outLeaves);
-  collectSelectFiltersInOJF(root->right(), outLeaves);
+        return dynamic_cast<execplan::SelectFilter*>(tn) != nullptr ||
+               dynamic_cast<execplan::SimpleScalarFilter*>(tn) != nullptr;
+      });
 }
 
 bool isSupportedAggOp(uint8_t op)
@@ -559,28 +542,9 @@ bool outerJoinOnContainsScalarSubselect(const execplan::CalpontSelectExecutionPl
   if (treeHasUnsupportedOuterJoinSub(csep.filters()))
     return true;
 
-  for (const auto& sub : csep.subSelectList())
-  {
-    auto* subCsep = dynamic_cast<const execplan::CalpontSelectExecutionPlan*>(sub.get());
-    if (subCsep && outerJoinOnContainsScalarSubselect(*subCsep))
-      return true;
-  }
-
-  for (const auto& derived : csep.derivedTableList())
-  {
-    auto* derivedCsep = dynamic_cast<const execplan::CalpontSelectExecutionPlan*>(derived.get());
-    if (derivedCsep && outerJoinOnContainsScalarSubselect(*derivedCsep))
-      return true;
-  }
-
-  for (const auto& unionUnit : csep.unionVec())
-  {
-    auto* unionCsep = dynamic_cast<const execplan::CalpontSelectExecutionPlan*>(unionUnit.get());
-    if (unionCsep && outerJoinOnContainsScalarSubselect(*unionCsep))
-      return true;
-  }
-
-  return false;
+  return optimizer::lib::walkNestedCSEPs(
+      csep, [](const execplan::CalpontSelectExecutionPlan& sub) -> bool
+      { return treeHasUnsupportedOuterJoinSub(sub.filters()); });
 }
 
 }  // namespace optimizer
