@@ -23,6 +23,7 @@
 #include "existsfilter.h"
 #include "functioncolumn.h"
 #include "lib/derived_column.h"
+#include "lib/derived_table.h"
 #include "logicoperator.h"
 
 namespace optimizer
@@ -37,28 +38,11 @@ bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
 {
   auto origCSEP = csep.clone();
   auto tableAlias = getRewrittenSubTableAlias(csep.tableList()[0], ctx);
-  origCSEP->location(execplan::CalpontSelectExecutionPlan::FROM);
-  origCSEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-  origCSEP->derivedTbAlias(tableAlias);
 
-  csep.subSelectList({});
-  csep.subSelects({});
-  csep.selectSubList({});
-  csep.unionVec({});
-
-  execplan::CalpontSelectExecutionPlan::TableList tblList;
-  tblList.push_back(execplan::make_aliasview("", "", tableAlias, ""));
-  csep.tableList(tblList);
-  execplan::CalpontSelectExecutionPlan::SelectList derivedTblList;
-  derivedTblList.emplace_back(origCSEP);
-  csep.derivedTableList(derivedTblList);
-
-  csep.distinct(false);
-  csep.filters(nullptr);
-  csep.having(nullptr);
-
-  csep.returnedCols({});
-  csep.groupByCols({});
+  // Fully wrap csep around origCSEP: promotes origCSEP to FROM-subquery,
+  // clears csep's sub*/union/filters/having/distinct and resets
+  // returnedCols/groupByCols (repopulated below from origCSEP's projection).
+  lib::wrapCSEPAsDerived(csep, origCSEP, tableAlias);
   int64_t colPos = 0;
   for (const auto& rc : origCSEP->returnedCols())
   {

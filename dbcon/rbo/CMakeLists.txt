@@ -10,7 +10,8 @@ set(rbo_SRCS
     rbo_groupby_wrap_columns.cpp
     lib/parse_tree_ops.cpp
     lib/filter_builders.cpp
-    lib/derived_column.cpp)
+    lib/derived_column.cpp
+    lib/derived_table.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 
