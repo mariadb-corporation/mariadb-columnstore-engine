@@ -8,7 +8,8 @@ set(rbo_SRCS
     rbo_predicate_pushdown.cpp
     rbo_decorrelate_outer_join_sub.cpp
     rbo_groupby_wrap_columns.cpp
-    lib/parse_tree_ops.cpp)
+    lib/parse_tree_ops.cpp
+    lib/filter_builders.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 

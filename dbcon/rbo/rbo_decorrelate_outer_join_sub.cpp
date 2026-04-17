@@ -31,6 +31,7 @@
 #include "execplan/simplecolumn.h"
 #include "execplan/simplefilter.h"
 #include "execplan/simplescalarfilter.h"
+#include "lib/filter_builders.h"
 #include "lib/parse_tree_ops.h"
 
 namespace optimizer
@@ -497,9 +498,7 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
     auto* refCol = pat.sub->returnedCols()[pos].get();
     auto* lhs = makeDerivedColumnRef(refCol, derivedAlias, pos, timeZone);
     auto* rhs = ci.outerSide.release();  // transfer ownership to SimpleFilter
-    auto* eqOp = new execplan::Operator("=");
-    auto* sf = new execplan::SimpleFilter(execplan::SOP(eqOp), lhs, rhs, timeZone);
-    replacementLeaves.push_back(new execplan::ParseTree(sf));
+    replacementLeaves.push_back(optimizer::lib::makeCmpFilter(lhs, "=", rhs, timeZone));
   }
 
   // Main predicate: outer_lhs <op> derived.agg.  `outer_lhs` is any
@@ -512,9 +511,8 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
     auto* lhs = outerLhsSrc->clone();
     auto* rhs = makeDerivedColumnRef(pat.sub->returnedCols()[pat.aggColPos].get(),
                                      derivedAlias, pat.aggColPos, timeZone);
-    auto* op = pat.selectFilter->op() ? pat.selectFilter->op()->clone() : new execplan::Operator("=");
-    auto* sf = new execplan::SimpleFilter(execplan::SOP(op), lhs, rhs, timeZone);
-    replacementLeaves.push_back(new execplan::ParseTree(sf));
+    const std::string opSym = pat.selectFilter->op() ? pat.selectFilter->op()->data() : std::string("=");
+    replacementLeaves.push_back(optimizer::lib::makeCmpFilter(lhs, opSym, rhs, timeZone));
   }
 
   execplan::ParseTree* replacementRoot = optimizer::lib::andAll(replacementLeaves);
