@@ -79,6 +79,7 @@ using namespace cal_impl_if;
 #include "predicateoperator.h"
 #include "rewrites.h"
 #include "rowcolumn.h"
+#include "rbo_decorrelate_outer_join_sub.h"
 #include "rulebased_optimizer.h"
 #include "simplecolumn_decimal.h"
 #include "simplecolumn_int.h"
@@ -869,15 +870,23 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
         for (Item* expr : tableOnExprList)
         {
           expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
+        }
 
-          // Error out subquery in outer join on filter for now
-          if (gwi_outer.hasSubSelect)
-          {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
-            return -1;
-          }
+        // MCOL-4250: the executor cannot currently evaluate a scalar
+        // subquery filter inside an OUTER JOIN ON clause.  Instead of
+        // erroring out here we let the plan be built and rely on the RBO
+        // rule `decorrelate_outer_join_sub` to rewrite the subquery into an
+        // equi-join against a GROUP-BY derived table.  Any subselect CSEPs
+        // collected while walking the ON clause must be propagated back to
+        // the outer gwi so they end up in csep->subSelectList().  If the
+        // rule is unable to rewrite a particular case the post-RBO
+        // validator in cs_get_select_plan() still emits IDB-1015.
+        if (gwi_outer.hasSubSelect)
+        {
+          gwi.hasSubSelect = true;
+          gwi.subselectList.insert(gwi.subselectList.end(),
+                                   gwi_outer.subselectList.begin(),
+                                   gwi_outer.subselectList.end());
         }
 
         // build outerjoinon filter
@@ -7744,6 +7753,19 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
       cerr << *csep << endl;
       cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
     }
+  }
+
+  // MCOL-4250: if the RBO rule `decorrelate_outer_join_sub` could not rewrite
+  // a scalar subquery inside an OUTER JOIN ON clause, the executor still
+  // cannot handle it — emit the same IDB-1015 error that used to be raised
+  // eagerly in buildJoin() so visible behaviour is preserved for unsupported
+  // patterns.
+  if (optimizer::outerJoinOnContainsScalarSubselect(*csep))
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
+    setError(thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+    return ER_INTERNAL_ERROR;
   }
 
   return 0;
