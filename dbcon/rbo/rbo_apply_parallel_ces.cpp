@@ -33,6 +33,7 @@
 #include "operator.h"
 #include "predicateoperator.h"
 #include "lib/derived_column.h"
+#include "lib/derived_table.h"
 #include "lib/filter_builders.h"
 #include "lib/parse_tree_ops.h"
 #include "rbo_apply_parallel_ces.h"
@@ -407,9 +408,7 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
         *derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
 
     // TODO add original alias to support multiple same name tables
-    derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
-    derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-    derivedSCEP->derivedTbAlias(tableAlias);
+    optimizer::lib::promoteCSEPToDerived(derivedSCEP.get(), tableAlias);
 
     derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
                                    additionalUnionVec.end());

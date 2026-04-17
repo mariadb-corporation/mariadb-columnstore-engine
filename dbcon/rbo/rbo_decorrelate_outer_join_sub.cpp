@@ -32,6 +32,7 @@
 #include "execplan/simplefilter.h"
 #include "execplan/simplescalarfilter.h"
 #include "lib/derived_column.h"
+#include "lib/derived_table.h"
 #include "lib/filter_builders.h"
 #include "lib/parse_tree_ops.h"
 
@@ -442,9 +443,7 @@ bool rewriteMatchedPattern(execplan::CalpontSelectExecutionPlan& csep,
   pat.sub->filters(newFilters);
 
   // ----- 3. Convert the subquery CSEP into a FROM-subquery.
-  pat.sub->location(execplan::CalpontSelectExecutionPlan::FROM);
-  pat.sub->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-  pat.sub->derivedTbAlias(derivedAlias);
+  optimizer::lib::promoteCSEPToDerived(pat.sub, derivedAlias);
 
   // The SelectFilter's sub() is a shared_ptr we can reuse as the derived
   // CSEP entry (avoids re-cloning or leaking ownership).  We take the shared
