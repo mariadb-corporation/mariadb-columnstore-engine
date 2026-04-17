@@ -22,6 +22,7 @@
 #include "simplecolumn.h"
 #include "existsfilter.h"
 #include "functioncolumn.h"
+#include "lib/derived_column.h"
 #include "logicoperator.h"
 
 namespace optimizer
@@ -30,60 +31,6 @@ namespace optimizer
 bool rewriteDistinctFilter(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& /*ctx*/)
 {
   return csep.distinct() && csep.tableList().size() > 0;
-}
-
-execplan::SRCP cloneAsSimpleColumn(const execplan::SRCP& rc, const std::string& tableAlias, int64_t colPos)
-{
-  auto rcCloned = boost::make_shared<execplan::SimpleColumn>(*rc);
-  // fill SimpleColumn data
-  rcCloned->schemaName("");
-  rcCloned->tableName(tableAlias);
-  rcCloned->oid(0);
-  rcCloned->tableAlias(tableAlias);
-  rcCloned->data("");
-
-  // fill ReturnedColumn data
-  rcCloned->charsetNumber(rc->charsetNumber());
-
-  // fill TreeNode data
-  rcCloned->derivedTable(tableAlias);
-  if (auto* rcRef = rc->derivedRefCol())
-  {
-    rcCloned->derivedRefCol(rcRef);
-    rcRef->incRefCount();
-  }
-  else
-  {
-    rcCloned->derivedRefCol(rc.get());
-    rc->incRefCount();
-  }
-  rcCloned->resultType(rc->resultType());
-  rcCloned->operationType(rc->operationType());
-  rcCloned->colPosition(colPos);
-
-  if (const auto* rcsc = dynamic_cast<execplan::SimpleColumn*>(rc.get()); rcsc != nullptr)
-  {
-    rcCloned->timeZone(rcsc->timeZone());
-  }
-  else if (const auto* rcfc = dynamic_cast<execplan::FunctionColumn*>(rc.get()))
-  {
-    rcCloned->timeZone(rcfc->timeZone());
-  }
-  else if (const auto* rcac = dynamic_cast<execplan::AggregateColumn*>(rc.get()))
-  {
-    rcCloned->timeZone(rcac->timeZone());
-  }
-  else if (const auto* rcwc = dynamic_cast<execplan::WindowFunctionColumn*>(rc.get()))
-  {
-    rcCloned->timeZone(rcwc->timeZone());
-  }
-
-  auto colName = getSimpleColumnAlias(*rc, colPos);
-  rcCloned->columnName(colName);
-  rcCloned->alias("`" + tableAlias + "`." + colName);
-  rcCloned->colSource(0);
-
-  return rcCloned;
 }
 
 bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimizerContext& ctx)
@@ -115,10 +62,10 @@ bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
   int64_t colPos = 0;
   for (const auto& rc : origCSEP->returnedCols())
   {
-    auto rcCloned = cloneAsSimpleColumn(rc, tableAlias, colPos);
+    auto rcCloned = lib::cloneAsSimpleColumn(rc, tableAlias, colPos);
     csep.returnedCols().emplace_back(rcCloned);
 
-    auto grpByCloned = cloneAsSimpleColumn(rc, tableAlias, colPos);
+    auto grpByCloned = lib::cloneAsSimpleColumn(rc, tableAlias, colPos);
     grpByCloned->orderPos(colPos);
     csep.groupByCols().emplace_back(grpByCloned);
 
@@ -147,7 +94,7 @@ bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
         {
           outerRC = csep.orderByCols()[retColPos - colPos];
         }
-        auto obcCloned = cloneAsSimpleColumn(outerRC, tableAlias, retColPos);
+        auto obcCloned = lib::cloneAsSimpleColumn(outerRC, tableAlias, retColPos);
         obcCloned->asc(obc->asc());
         obcCloned->nullsFirst(obc->nullsFirst());
         csep.orderByCols().emplace_back(obcCloned);
@@ -165,7 +112,7 @@ bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
     auto rc = boost::shared_ptr<execplan::ReturnedColumn>(obc->clone());
     origCSEP->returnedCols().emplace_back(rc);
 
-    auto rcCloned = cloneAsSimpleColumn(rc, tableAlias, colPos + orderByColPos);
+    auto rcCloned = lib::cloneAsSimpleColumn(rc, tableAlias, colPos + orderByColPos);
     //This "order by" column does not belong to "group by" columns, so it should be an aggregated column
     auto* aggCol = new execplan::AggregateColumn();
     auto obcCloned = boost::shared_ptr<execplan::ReturnedColumn>(aggCol);

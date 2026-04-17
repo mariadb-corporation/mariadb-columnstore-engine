@@ -9,7 +9,8 @@ set(rbo_SRCS
     rbo_decorrelate_outer_join_sub.cpp
     rbo_groupby_wrap_columns.cpp
     lib/parse_tree_ops.cpp
-    lib/filter_builders.cpp)
+    lib/filter_builders.cpp
+    lib/derived_column.cpp)
 
 columnstore_library(rbo ${rbo_SRCS})
 

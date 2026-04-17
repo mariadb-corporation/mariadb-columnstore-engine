@@ -31,6 +31,7 @@
 #include "execplan/simplecolumn.h"
 #include "execplan/simplefilter.h"
 #include "execplan/simplescalarfilter.h"
+#include "lib/derived_column.h"
 #include "lib/filter_builders.h"
 #include "lib/parse_tree_ops.h"
 
@@ -367,24 +368,15 @@ bool decorrelateOuterJoinSubFilter(execplan::CalpontSelectExecutionPlan& csep,
 namespace
 {
 
-// Constructs a fresh SimpleColumn that references column `refCol` (projected
-// at position `colPos` of the derived CSEP whose alias is `derivedAlias`).
-execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
-                                             const std::string& derivedAlias,
-                                             size_t colPos,
-                                             long timeZone)
+// Thin shim around optimizer::lib::makeDerivedColumnRef, preserved for
+// call-site readability.
+inline execplan::SimpleColumn* makeDerivedColumnRef(execplan::ReturnedColumn* refCol,
+                                                    const std::string& derivedAlias,
+                                                    size_t colPos,
+                                                    long timeZone)
 {
-  auto* sc = new execplan::SimpleColumn();
-  sc->columnName(refCol->alias());
-  sc->tableAlias(derivedAlias);
-  sc->derivedTable(derivedAlias);
-  sc->derivedRefCol(refCol);
-  sc->colPosition(static_cast<int>(colPos));
-  sc->resultType(refCol->resultType());
-  sc->timeZone(timeZone);
-  sc->sequence(static_cast<int>(colPos));
-  refCol->incRefCount();
-  return sc;
+  return optimizer::lib::makeDerivedColumnRef(refCol, derivedAlias, static_cast<int64_t>(colPos),
+                                              timeZone);
 }
 
 // Performs the actual rewrite for one matched pattern.  Returns true on
