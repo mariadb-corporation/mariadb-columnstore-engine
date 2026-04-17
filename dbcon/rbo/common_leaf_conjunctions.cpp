@@ -210,18 +210,38 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   }
 }
 
-// Build AND(c0, AND(c1, ..., AND(c_{n-1}, tree))).  If `tree` is nullptr the
-// residual chain just ends at c_{n-1}.  Empty `common` returns `tree`.
+// Build AND(AND(AND(tree, c_{n-1}), c_{n-2}), ..., c_0).
 //
-// This replaces the previous hand-rolled `appendToRoot` that suffered from
-// undefined behaviour on the single-conjunct + no-residual case
-// (`std::next(end)` on a std::set iterator).
+// The output is LEFT-deep with `tree` at the deepest left position and the
+// conjuncts nesting outward on the right, iterated in reverse order.  This
+// preserves the tree shape expected by the pre-existing fixture tests in
+// rewritetest.cpp (unitqueries_tree_after.h).
+//
+// This replaces the previous hand-rolled `appendToRoot` which had undefined
+// behaviour on the single-conjunct + null-tree case (std::next(end) on a
+// std::set iterator) and dropped conjuncts on 3+ element inputs.
 template <typename Common>
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& common)
 {
+  if (common.empty())
+    return tree;
+
   std::vector<execplan::ParseTree*> leaves(common.begin(), common.end());
-  execplan::ParseTree* conj = optimizer::lib::andAll(leaves);
-  return optimizer::lib::andWith(conj, tree);
+  execplan::ParseTree* acc = tree;
+  for (auto it = leaves.rbegin(); it != leaves.rend(); ++it)
+  {
+    if (acc == nullptr)
+    {
+      // Seed: no residual tree and this is the deepest conjunct.
+      acc = *it;
+      continue;
+    }
+    execplan::ParseTree* node = optimizer::lib::newAndNode();
+    node->left(acc);
+    node->right(*it);
+    acc = node;
+  }
+  return acc;
 }
 
 struct StackFrame
