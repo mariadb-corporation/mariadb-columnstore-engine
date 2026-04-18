@@ -85,16 +85,14 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
 {
   std::vector<optimizer::Rule> rules;
 
-  // Normalize the WHERE tree up-front so subsequent structural rules
-  // (predicate pushdown, decorrelation, ...) see the lifted common
-  // conjunctions at the CSEP root.
-  optimizer::Rule commonLeafConjunctionsToTop{"common_leaf_conjunctions_to_top",
-                                               optimizer::commonLeafConjunctionsToTopFilter,
-                                               optimizer::applyCommonLeafConjunctionsToTop};
-  rules.push_back(commonLeafConjunctionsToTop);
-
   if (useUnstableOptimizer)
   {
+    // parallel_ces must run before common_leaf_conjunctions_to_top so it gets
+    // to consume RBOptimizerContext::uniqueId_ starting from 0.  The MTR
+    // baselines in mysql-test/columnstore/future/rbo_parallel_ces* hard-code
+    // the resulting derived-table alias suffix `_0`; any earlier rule that
+    // matches the same CSEP bumps uniqueId_ via Rule::walk and shifts the
+    // suffix to `_1`.
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
@@ -102,6 +100,15 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
                                     optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
   }
+
+  // Normalize the WHERE tree so subsequent structural rules
+  // (predicate pushdown, decorrelation, ...) see the lifted common
+  // conjunctions at the CSEP root.
+  optimizer::Rule commonLeafConjunctionsToTop{"common_leaf_conjunctions_to_top",
+                                               optimizer::commonLeafConjunctionsToTopFilter,
+                                               optimizer::applyCommonLeafConjunctionsToTop};
+  rules.push_back(commonLeafConjunctionsToTop);
+
   optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
                                   optimizer::applyGroupByWrapColumns};
   rules.push_back(rewriteGroupBy);
