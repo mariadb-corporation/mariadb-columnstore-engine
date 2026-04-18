@@ -146,10 +146,6 @@ Recursive walkers over CSEP sub-plan trees and over
 
 A handful of call sites deliberately did **not** migrate to the lib:
 
-- `rbo_apply_rewrite_distinct.cpp`'s ORDER-BY-not-in-projection wrap
-  builds an `AggregateColumn` with a narrower field-set than
-  `wrapIntoSelectSomeAgg`.  Using the full factory there would change
-  plan semantics.
 - `rulebased_optimizer.cpp::Rule::walk` mixes CSEP traversal with
   rule-application and context mutation; wrapping it around
   `walkNestedCSEPs` would require either an out-parameter through the

@@ -22,6 +22,7 @@
 #include "simplecolumn.h"
 #include "existsfilter.h"
 #include "functioncolumn.h"
+#include "lib/agg_wrap.h"
 #include "lib/derived_column.h"
 #include "lib/derived_table.h"
 #include "logicoperator.h"
@@ -97,14 +98,15 @@ bool applyRewriteDistinct(execplan::CalpontSelectExecutionPlan& csep, RBOptimize
     origCSEP->returnedCols().emplace_back(rc);
 
     auto rcCloned = lib::cloneAsSimpleColumn(rc, tableAlias, colPos + orderByColPos);
-    //This "order by" column does not belong to "group by" columns, so it should be an aggregated column
-    auto* aggCol = new execplan::AggregateColumn();
-    auto obcCloned = boost::shared_ptr<execplan::ReturnedColumn>(aggCol);
-
-    aggCol->asc(obc->asc());
+    // This "order by" column does not belong to "group by" columns, so it
+    // should be an aggregated column.  lib::wrapIntoSelectSomeAgg sets the
+    // full column-level attribute set (alias/asc/charsetNumber/orderPos/
+    // resultType/sessionID/timeZone/aggOp/aggParms) from `rcCloned`;
+    // nullsFirst is an ORDER-BY-specific concept that the factory does not
+    // touch, so we copy it from the source ORDER BY column here.
+    auto* aggCol = lib::wrapIntoSelectSomeAgg(rcCloned, ctx.getGwi().timeZone);
     aggCol->nullsFirst(obc->nullsFirst());
-    aggCol->aggOp(execplan::AggregateColumn::SELECT_SOME);
-    aggCol->aggParms().emplace_back(rcCloned);
+    auto obcCloned = boost::shared_ptr<execplan::ReturnedColumn>(aggCol);
 
     csep.orderByCols().emplace_back(obcCloned);
 

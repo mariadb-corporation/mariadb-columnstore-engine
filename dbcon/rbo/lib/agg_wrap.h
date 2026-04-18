@@ -19,14 +19,17 @@
 // AggregateColumn(SELECT_SOME) node and for deduplicating identical such
 // wrappers by expression id.
 //
-// Historical use site: rbo_groupby_wrap_columns.cpp — covers queries that
-// mix GROUP BY with non-aggregate projection columns so every non-GB
-// projection element becomes an "ANY_VALUE"-style SELECT_SOME aggregate.
+// Use sites:
+//   * rbo_groupby_wrap_columns.cpp — covers queries that mix GROUP BY with
+//     non-aggregate projection columns so every non-GB projection element
+//     becomes an "ANY_VALUE"-style SELECT_SOME aggregate.  Full factory use:
+//     both wrapIntoSelectSomeAgg and AggExprDedup.
+//   * rbo_apply_rewrite_distinct.cpp — ORDER-BY-not-in-projection wrap.
+//     Uses wrapIntoSelectSomeAgg and post-sets `nullsFirst` (an ORDER-BY-
+//     specific field the factory does not populate).
 //
-// NOT used by rbo_apply_rewrite_distinct.cpp's ORDER-BY-not-in-projection
-// wrapping.  That callsite sets a narrower field subset (asc/nullsFirst/
-// aggOp/aggParms only) and is intentionally left inline until a dedicated
-// audit pass confirms the missing fields are safe to add.
+// `nullsFirst` is deliberately NOT set by the factory because it has no
+// meaning outside an ORDER BY clause; ORDER-BY callers set it themselves.
 
 #pragma once
 
