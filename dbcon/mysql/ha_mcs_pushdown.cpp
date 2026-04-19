@@ -902,7 +902,11 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
         {
           if (select_lex->save_leaf_tables(thd))
           {
+#if MYSQL_VERSION_ID >= 110800
+            // LEX::needs_reprepare was added in 11.8-enterprise; older
+            // server branches (e.g. 11.4-enterprise) don't have it.
             thd->lex->needs_reprepare = true;
+#endif
             delete handler;
             return nullptr;
           }
