@@ -1,0 +1,26 @@
+--source ../include/have_columnstore.inc  
+--disable_warnings  
+DROP DATABASE IF EXISTS mcol_6337;
+--enable_warnings  
+  
+CREATE DATABASE mcol_6337;
+USE mcol_6337;
+
+--disable_warnings
+DROP TABLE IF EXISTS t_text;
+DROP TABLE IF EXISTS t_blob;
+--enable_warnings
+CREATE TABLE t_text (id INT, txt TEXT) ENGINE=Columnstore;
+INSERT INTO t_text VALUES (1,'aaa'),(2,'bbb'),(3,'aaa'),(4,'ccc'),(5,'bbb');
+CREATE TABLE t_blob (id INT, blb BLOB) ENGINE=Columnstore;
+INSERT INTO t_blob VALUES (1,'aaa'),(2,'bbb'),(3,'aaa'),(4,'ccc'),(5,'bbb');
+SELECT id, txt, RANK() OVER (PARTITION BY txt ORDER BY id) FROM t_text;
+SELECT id, txt, ROW_NUMBER() OVER (PARTITION BY txt ORDER BY id) FROM t_text; 
+SELECT id, txt, DENSE_RANK() OVER (PARTITION BY txt ORDER BY id) FROM t_text;
+SELECT id, txt, COUNT(*) OVER (PARTITION BY txt ORDER BY id) FROM t_text;
+SELECT id, blb, RANK() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+SELECT id, blb, ROW_NUMBER() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+
+--disable_warnings
+DROP DATABASE mcol_6337;
+--enable_warnings
