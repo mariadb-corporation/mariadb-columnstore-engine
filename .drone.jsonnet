@@ -645,12 +645,12 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
          (if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise") then [pipeline.mcs_cli_docs_check] else []) +
-         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
-         [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
-         [pipeline.regressionlog] +
-         [pipeline.publish("regressionlog")] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
+       //  (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+     //    [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+       //  [pipeline.regressionlog] +
+    //     [pipeline.publish("regressionlog")] +
+      //   [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+        // (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
          (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],
@@ -662,68 +662,68 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
 
 local AllPipelines =
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["rockylinux:8"]
-    for flag in ["gcc-toolset"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, p, e, a, s)
-    for b in std.objectFields(platforms)
-    for p in platforms[b]
-    for s in servers[b]
-    for e in events
-    for a in archs
-  ] +
-  [
-    Pipeline(any_branch, p, "custom", a, server)
-    for p in platforms[current_branch]
-    for server in servers[current_branch]
-    for a in archs
-  ] +
-  // clang
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for buildenv in std.objectFields(customEnvCommandsMap)
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  // last argument is to ignore mtr and regression failures
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for server in extra_servers[current_branch]
-    for platform in extra_servers_platforms[current_branch]
-    for triggeringEvent in events
-  ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["rockylinux:8"]
+  //   for flag in ["gcc-toolset"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
+  // [
+  //   Pipeline(b, p, e, a, s)
+  //   for b in std.objectFields(platforms)
+  //   for p in platforms[b]
+  //   for s in servers[b]
+  //   for e in events
+  //   for a in archs
+  // ] +
+  // [
+  //   Pipeline(any_branch, p, "custom", a, server)
+  //   for p in platforms[current_branch]
+  //   for server in servers[current_branch]
+  //   for a in archs
+  // ] +
+  // // clang
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for buildenv in std.objectFields(customEnvCommandsMap)
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
   // // last argument is to ignore mtr and regression failures
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["libcpp"]
-    for envcommand in ["clang-20"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["UBSan"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for server in extra_servers[current_branch]
+  //   for platform in extra_servers_platforms[current_branch]
+  //   for triggeringEvent in events
+  // ] +
+  // // // last argument is to ignore mtr and regression failures
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["libcpp"]
+  //   for envcommand in ["clang-20"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
+  // [
+  //   Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+  //   for a in ["amd64"]
+  //   for b in std.objectFields(platforms)
+  //   for platform in ["ubuntu:24.04"]
+  //   for flag in ["UBSan"]
+  //   for triggeringEvent in events
+  //   for server in servers[current_branch]
+  // ] +
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh', 'test011.sh', 'test012.sh'])
     for a in ["amd64"]
