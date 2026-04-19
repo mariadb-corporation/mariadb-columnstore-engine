@@ -747,18 +747,23 @@ void TupleAnnexStep::finalizeParallelOrderByDistinct()
       // add rows into the final PQ.
       fOrderByList[id]->getRule().revertRules();
       ordering::SortingPQ& currentPQ = fOrderByList[id]->getQueue();
-      finalPQ.reserve(finalPQ.size() + currentPQ.size());
+      auto& currentRows = currentPQ.container();
+      finalPQ.reserve(finalPQ.size() + currentRows.size());
       pair<TNSDistinctMap_t::iterator, bool> inserted;
-      while (currentPQ.size())
+      // NB: drain via the underlying container rather than top()/pop().
+      // revertRules() above just flipped the comparator, so the heap
+      // invariant no longer holds and libstdc++ in debug mode aborts
+      // on pop_heap.  The iteration order here is irrelevant -- each
+      // row is re-inserted into finalPQ under the new ordering.
+      for (auto& obRow : currentRows)
       {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(currentPQ.top());
-        inserted = distinctMap->insert(topOBRow.fData);
+        inserted = distinctMap->insert(obRow.fData);
         if (inserted.second)
         {
-          finalPQ.push(topOBRow);
+          finalPQ.push(obRow);
         }
-        currentPQ.pop();
       }
+      currentRows.clear();
     }
   }
   catch (const std::bad_alloc&)
@@ -951,13 +956,15 @@ void TupleAnnexStep::finalizeParallelOrderBy()
       // add rows into the final PQ.
       fOrderByList[id]->getRule().revertRules();
       ordering::SortingPQ& currentPQ = fOrderByList[id]->getQueue();
-      finalPQ.reserve(currentPQ.size());
-      while (currentPQ.size())
+      auto& currentRows = currentPQ.container();
+      finalPQ.reserve(finalPQ.size() + currentRows.size());
+      // See finalizeParallelOrderByDistinct() for why we bypass
+      // top()/pop() after revertRules().
+      for (auto& obRow : currentRows)
       {
-        ordering::OrderByRow& topOBRow = const_cast<ordering::OrderByRow&>(currentPQ.top());
-        finalPQ.push(topOBRow);
-        currentPQ.pop();
+        finalPQ.push(obRow);
       }
+      currentRows.clear();
     }
   }
   catch (const std::bad_alloc&)
