@@ -3955,13 +3955,18 @@ int ha_mcs::impl_external_lock(THD* thd, TABLE* table, int lock_type)
     {
       restoreBinlogForDML(thd);
       std::set<TABLE*>::iterator iter = ci->physTablesList.find(table);
-      if (iter != ci->physTablesList.end())
+      const bool wasInPhysTablesList = (iter != ci->physTablesList.end());
+      if (wasInPhysTablesList)
       {
-        ci->physTablesList.erase(table);
+        ci->physTablesList.erase(iter);
       }
 
-      // CS ends up processing query with handlers
-      if (iter != ci->physTablesList.end() && ci->physTablesList.empty())
+      // CS ends up processing query with handlers.
+      // NB: do NOT re-dereference `iter` here -- erase() above invalidated
+      // it, and libstdc++'s debug iterators abort on comparison of a
+      // singular iterator.  In release this was silently UB that happened
+      // to evaluate the way we wanted on most rb_tree layouts.
+      if (wasInPhysTablesList && ci->physTablesList.empty())
       {
         if (!ci->cal_conn_hndl)
           return 0;
