@@ -17,6 +17,11 @@ if(WITH_UNITTESTS)
         set(cxxflags "'${cxxflags} -stdlib=libc++'")
         set(linkflags "'${linkflags} -stdlib=libc++'")
     endif()
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(cxxflags "${cxxflags} -D_GLIBCXX_DEBUG -D_GLIBCXX_ASSERTIONS")
+    endif()
+
     ExternalProject_Add(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest

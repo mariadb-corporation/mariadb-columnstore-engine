@@ -14,7 +14,7 @@ if(WITH_THRIFT STREQUAL "system" OR WITH_THRIFT STREQUAL "auto")
     elseif(WITH_THRIFT STREQUAL "system")
         FIND_PACKAGE(PkgConfig REQUIRED)
         pkg_check_modules(THRIFT REQUIRED thrift)
-        
+
         if(THRIFT_FOUND)
             add_custom_target(external_thrift)
             set(THRIFT_INCLUDE_DIR "${THRIFT_INCLUDE_DIR}")
@@ -34,6 +34,10 @@ set(THRIFT_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 set(THRIFT_LIBRARY ${THRIFT_LIBRARY_DIRS}/${CMAKE_STATIC_LIBRARY_PREFIX}thrift${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 set(cxxflags -fPIC)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(cxxflags "${cxxflags} -D_GLIBCXX_DEBUG -D_GLIBCXX_ASSERTIONS")
+endif()
 
 set(linkflags "")
 if(WITH_MSAN)
