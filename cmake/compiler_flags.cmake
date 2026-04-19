@@ -32,10 +32,12 @@ endif()
 unset(CMAKE_CXX_STANDARD)
 # } end C++ standard
 
-# Hacks to keep alive with MariaDB server {
-string(REPLACE -D_GLIBCXX_DEBUG "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-string(REPLACE -D_GLIBCXX_ASSERTIONS "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-# } end hacks
+# Keep _GLIBCXX_DEBUG / _GLIBCXX_ASSERTIONS in sync with the MariaDB server
+# build.  These flags change the ABI of libstdc++ containers (std::vector,
+# std::string, std::set, ...), so stripping them here would make Columnstore
+# silently mis-read server-owned containers such as Histogram_json_hb::buckets
+# in debug builds.  The bundled Boost is rebuilt with matching flags (see
+# cmake/boost.cmake).
 
 if(WITH_COLUMNSTORE_ASAN)
     set(WERROR_FLAG)

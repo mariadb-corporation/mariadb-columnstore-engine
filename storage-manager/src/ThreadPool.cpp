@@ -80,7 +80,6 @@ void ThreadPool::addJob(const boost::shared_ptr<Job>& j)
 
 void ThreadPool::prune()
 {
-  set<ID_Thread>::iterator it;
   boost::unique_lock<boost::mutex> s(mutex);
 
   while (1)
@@ -93,7 +92,7 @@ void ThreadPool::prune()
 
     for (auto& id : pruneable)
     {
-      it = s_threads.find(id);
+      auto it = s_threads.find(id);
       assert(it != s_threads.end());
       it->thrd->join();
       threads.remove_thread(it->thrd);

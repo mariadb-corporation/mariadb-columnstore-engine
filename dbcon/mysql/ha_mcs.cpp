@@ -1890,6 +1890,13 @@ static int columnstore_init_func(void* p)
     }
     innodb_hton->create_select = create_columnstore_select_handler;
     innodb_hton->create_unit = create_columnstore_unit_handler;
+
+    // ha_resolve_by_name() returns a ref-counted plugin_ref; we only need
+    // the hton pointer from it, so release the reference right away.  Not
+    // releasing it shows up as a 32-byte leak under safemalloc in debug
+    // builds (see sql/sql_plugin.cc:intern_plugin_lock allocation).
+    plugin_unlock(0, plugin_innodb);
+    plugin_innodb = nullptr;
   }
 
 #ifdef HAVE_PSI_INTERFACE
