@@ -484,6 +484,7 @@ int ServicePrimProc::Child()
     BRPBlocks = BRPBlocksPct / 8192;
   else
     BRPBlocks = ((BRPBlocksPct / 100.0) * (double)cg.getTotalMemory()) / 8192;
+  std::cout << "[init] after line 486: BRPBlocks=" << BRPBlocks << std::endl;
 #if 0
     temp = toInt(cf->getConfig(dbbc, "NumThreads"));
 
@@ -550,7 +551,9 @@ int ServicePrimProc::Child()
     aggPct = temp;
 
   //...Start the thread to monitor our memory usage
+  std::cout << "[init] before MonitorProcMem ctor/spawn (line ~553)" << std::endl;
   new boost::thread(utils::MonitorProcMem(maxPct, aggPct, 28));
+  std::cout << "[init] after MonitorProcMem spawn" << std::endl;
 
   // config file priority is 40..1 (highest..lowest)
   string sPriority = cf->getConfig(primitiveServers, "Priority");
@@ -572,7 +575,9 @@ int ServicePrimProc::Child()
   setpriority(PRIO_PROCESS, 0, priority);
   //..Instantiate UmSocketSelector singleton.  Disable rotating destination
   //..selection if no UM IP addresses are in the Calpo67108864LLnt.xml file.
+  std::cout << "[init] before UmSocketSelector::instance() (line ~575)" << std::endl;
   UmSocketSelector* pUmSocketSelector = UmSocketSelector::instance();
+  std::cout << "[init] after UmSocketSelector::instance()" << std::endl;
 
   if (rotatingDestination)
   {
@@ -590,7 +595,9 @@ int ServicePrimProc::Child()
   {
     // count the actual #cores
 
+    std::cout << "[init] before cg.getNumCores() (line ~593)" << std::endl;
     numCores = cg.getNumCores();
+    std::cout << "[init] after cg.getNumCores(): " << numCores << std::endl;
 
     if (numCores == 0)
       numCores = 8;
@@ -648,11 +655,14 @@ int ServicePrimProc::Child()
   if ((strVal == "n") || (strVal == "N"))
     directIOFlag = 0;
 
+  std::cout << "[init] before IDBPolicy::configIDBPolicy() (line ~651)" << std::endl;
   IDBPolicy::configIDBPolicy();
+  std::cout << "[init] after IDBPolicy::configIDBPolicy()" << std::endl;
 
   // no versionbuffer if using HDFS for performance reason
   if (IDBPolicy::useHdfs())
     noVB = 1;
+  std::cout << "[init] before Starting PrimitiveServer cout (line ~657)" << std::endl;
 
   cout << "Starting PrimitiveServer: st = " << serverThreads << ", sq = " << serverQueueSize
        << ", pw = " << processorWeight << ", pq = " << processorQueueSize << ", nb = " << BRPBlocks
@@ -660,9 +670,11 @@ int ServicePrimProc::Child()
        << ", db = " << deleteBlocks << ", mb = " << maxBlocksPerRead << ", rd = " << rotatingDestination
        << ", tr = " << PTTrace << ", ss = " << PMSmallSide << ", bp = " << BPPCount << endl;
 
+  std::cout << "[init] before PrimitiveServer ctor (line ~663)" << std::endl;
   PrimitiveServer server(serverThreads, serverQueueSize, processorWeight, processorQueueSize,
                          rotatingDestination, BRPBlocks, BRPThreads, cacheCount, maxBlocksPerRead,
                          blocksReadAhead, deleteBlocks, PTTrace, prefetchThreshold, PMSmallSide);
+  std::cout << "[init] after PrimitiveServer ctor" << std::endl;
 
 #ifdef QSIZE_DEBUG
   thread* qszMonThd;
@@ -696,6 +708,7 @@ int ServicePrimProc::Child()
 
   primServerThreadPool = server.getProcessorThreadPool();
 
+  std::cout << "[init] before server.start() (line ~699)" << std::endl;
   server.start(this, startupRaceLock);
 
   cerr << "server.start() exited!" << endl;
