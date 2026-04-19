@@ -158,17 +158,34 @@ void LimitedOrderBy::processRow(const rowgroup::Row& row)
 
   else if (fOrderByCond.size() > 0 && fRule.less(row.getPointer(), orderByQueue.top().fData))
   {
+    // Evict the current greatest row and replace its backing buffer with
+    // `row`.  Order of operations matters:
+    //   1) snapshot the top entry (pointer + rule) before we touch it;
+    //   2) remove it from the distinct map while the buffer still holds
+    //      the OLD key, otherwise hash/equality would use stale data;
+    //   3) pop() while the heap is still valid w.r.t. the current buffer
+    //      contents.  Overwriting the buffer first and then pop()ing
+    //      breaks libstdc++'s heap invariant and aborts under
+    //      _GLIBCXX_DEBUG in std::pop_heap;
+    //   4) copy the new data into the freed buffer;
+    //   5) reinsert into the distinct map and the heap.
     OrderByRow swapRow = orderByQueue.top();
+
+    if (fDistinct)
+    {
+      fDistinctMap->erase(swapRow.fData);
+    }
+
+    orderByQueue.pop();
+
     row1.setData(swapRow.fData);
     copyRow(row, &row1);
 
     if (fDistinct)
     {
-      fDistinctMap->erase(orderByQueue.top().fData);
       fDistinctMap->insert(row1.getPointer());
     }
 
-    orderByQueue.pop();
     orderByQueue.push(swapRow);
   }
 }
