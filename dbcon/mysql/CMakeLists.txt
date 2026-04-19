@@ -45,7 +45,19 @@ set(libcalmysql_SRCS
     columnstore_dataload.cpp
 )
 
-set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
+# -fno-implicit-templates suppresses automatic instantiation of function
+# templates in ha_mcs.cpp -- historically useful to keep this TU small,
+# but in Debug builds it leaves libstdc++'s debug-mode helpers (e.g.
+# __gnu_debug::_Safe_sequence<std::__debug::vector<Item*>>::_M_invalidate_if,
+# which `vector::pop_back` expands to under _GLIBCXX_DEBUG) as
+# undefined references with nowhere to resolve them: the server does
+# not instantiate std::__debug::vector<Item*> at all, so the plugin
+# fails to load with `undefined symbol` at dlopen time.
+# Only suppress implicit instantiation when not building with debug
+# containers.
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set_source_files_properties(ha_mcs.cpp PROPERTIES COMPILE_FLAGS "-fno-implicit-templates")
+endif()
 
 if(COMMAND mysql_add_plugin)
     if(NOT (RPM OR DEB))
