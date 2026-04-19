@@ -41,8 +41,12 @@ bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
 
 // Helper exported for the post-RBO validator in ha_mcs_execplan.cpp.
 // Returns true if the given CSEP (any depth) still contains an
-// OuterJoinOnFilter with a scalar-subquery filter inside, which the executor
-// cannot handle and for which we must keep emitting IDB-1015.
-bool outerJoinOnContainsScalarSubselect(const execplan::CalpontSelectExecutionPlan& csep);
+// OuterJoinOnFilter with a subquery filter inside (scalar SelectFilter /
+// SimpleScalarFilter, or an ExistsFilter from IN / NOT IN / EXISTS / NOT
+// EXISTS).  The executor cannot evaluate any of those shapes, and the
+// decorrelate rule only rewrites the SelectFilter subset, so this validator
+// preserves the pre-MCOL-4250 IDB-1015 contract for everything it leaves
+// behind.
+bool outerJoinOnContainsSubselect(const execplan::CalpontSelectExecutionPlan& csep);
 
 }  // namespace optimizer
