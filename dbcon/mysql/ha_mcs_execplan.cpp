@@ -7753,11 +7753,12 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
   }
 
   // MCOL-4250: if the RBO rule `decorrelate_outer_join_sub` could not rewrite
-  // a scalar subquery inside an OUTER JOIN ON clause, the executor still
-  // cannot handle it — emit the same IDB-1015 error that used to be raised
-  // eagerly in buildJoin() so visible behaviour is preserved for unsupported
-  // patterns.
-  if (optimizer::outerJoinOnContainsScalarSubselect(*csep))
+  // a subquery inside an OUTER JOIN ON clause (either because the pattern is
+  // outside the rule's supported subset, or because the rule was disabled via
+  // config), the executor still cannot handle it — emit the same IDB-1015
+  // error that used to be raised eagerly in buildJoin() so visible behaviour
+  // is preserved for every unsupported shape (scalar, IN, EXISTS, ...).
+  if (optimizer::outerJoinOnContainsSubselect(*csep))
   {
     gwi.fatalParseError = true;
     gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);

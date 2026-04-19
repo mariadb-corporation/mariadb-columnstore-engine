@@ -252,6 +252,31 @@ LEFT JOIN cas_caseflow cf
           FROM cas_caseflow e
           WHERE e.CASEID = cf.CASEID);
 
+--echo #
+--echo # 7. Rule disabled: with OptimizerRules.decorrelate_outer_join_sub=N in
+--echo #    Columnstore.xml the rule never runs, so the same scalar subquery
+--echo #    pattern that was rewritten in case 1 must now fall back to the
+--echo #    pre-MCOL-4250 IDB-1015 contract.  The post-RBO validator in
+--echo #    cs_get_select_plan() is the single place responsible for the
+--echo #    error, no matter whether the rule was unable to match or simply
+--echo #    never ran.
+--echo #
+--exec $MCS_MCSSETCONFIG OptimizerRules decorrelate_outer_join_sub 'N'
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.SOURCE_DB = cf.SOURCE_DB
+ AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID    = cf.CASEID
+                    AND e.SOURCE_DB = cf.SOURCE_DB
+                    AND e.STATUSCODE = cf.STATUSCODE);
+--exec $MCS_MCSSETCONFIG OptimizerRules decorrelate_outer_join_sub 'Y'
+
 DROP TABLE cas_triggerevent;
 DROP TABLE cas_case;
 DROP TABLE cas_bcapkyc;

@@ -22,6 +22,7 @@
 
 #include "execplan/aggregatecolumn.h"
 #include "execplan/calpontsystemcatalog.h"
+#include "execplan/existsfilter.h"
 #include "execplan/logicoperator.h"
 #include "execplan/operator.h"
 #include "execplan/outerjoinonfilter.h"
@@ -308,19 +309,31 @@ bool matchSubqueryPattern(execplan::ParseTree* leaf, SubqueryPattern& out)
 // Top-level walkers over the outer CSEP's `filters()`.
 // ---------------------------------------------------------------------------
 
-bool treeHasScalarSubFilter(const execplan::ParseTree* root)
+// True for any TreeNode that represents a subquery filter the executor
+// cannot evaluate inside an OuterJoinOnFilter.  We intentionally match the
+// full set of subquery filter kinds buildJoin() used to reject eagerly:
+//   * SelectFilter        — correlated scalar subqueries
+//   * SimpleScalarFilter  — non-correlated scalar subqueries
+//   * ExistsFilter        — IN / NOT IN / EXISTS / NOT EXISTS subqueries
+// The decorrelate rule only rewrites SelectFilter patterns; every other
+// shape must still trigger IDB-1015 in the post-RBO validator so users see
+// the same actionable error message as before MCOL-4250.
+bool isSubqueryFilterNode(const execplan::TreeNode* data)
+{
+  return dynamic_cast<const execplan::SelectFilter*>(data) != nullptr ||
+         dynamic_cast<const execplan::SimpleScalarFilter*>(data) != nullptr ||
+         dynamic_cast<const execplan::ExistsFilter*>(data) != nullptr;
+}
+
+bool treeHasSubqueryFilter(const execplan::ParseTree* root)
 {
   if (!root)
     return false;
 
-  const execplan::TreeNode* data = root->data();
-  if (dynamic_cast<const execplan::SelectFilter*>(data) != nullptr ||
-      dynamic_cast<const execplan::SimpleScalarFilter*>(data) != nullptr)
-  {
+  if (isSubqueryFilterNode(root->data()))
     return true;
-  }
 
-  return treeHasScalarSubFilter(root->left()) || treeHasScalarSubFilter(root->right());
+  return treeHasSubqueryFilter(root->left()) || treeHasSubqueryFilter(root->right());
 }
 
 bool treeHasUnsupportedOuterJoinSub(const execplan::ParseTree* root)
@@ -330,7 +343,7 @@ bool treeHasUnsupportedOuterJoinSub(const execplan::ParseTree* root)
 
   if (auto* ojf = dynamic_cast<const execplan::OuterJoinOnFilter*>(root->data()))
   {
-    if (treeHasScalarSubFilter(ojf->pt().get()))
+    if (treeHasSubqueryFilter(ojf->pt().get()))
       return true;
   }
 
@@ -536,7 +549,7 @@ bool applyDecorrelateOuterJoinSub(execplan::CalpontSelectExecutionPlan& csep,
   return anyRewrote;
 }
 
-bool outerJoinOnContainsScalarSubselect(const execplan::CalpontSelectExecutionPlan& csep)
+bool outerJoinOnContainsSubselect(const execplan::CalpontSelectExecutionPlan& csep)
 {
   if (treeHasUnsupportedOuterJoinSub(csep.filters()))
     return true;

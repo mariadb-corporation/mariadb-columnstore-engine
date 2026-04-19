@@ -254,6 +254,28 @@ AND 1 < (SELECT COUNT(DISTINCT e.INDATE)
 FROM cas_caseflow e
 WHERE e.CASEID = cf.CASEID);
 ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
+#
+# 7. Rule disabled: with OptimizerRules.decorrelate_outer_join_sub=N in
+#    Columnstore.xml the rule never runs, so the same scalar subquery
+#    pattern that was rewritten in case 1 must now fall back to the
+#    pre-MCOL-4250 IDB-1015 contract.  The post-RBO validator in
+#    cs_get_select_plan() is the single place responsible for the
+#    error, no matter whether the rule was unable to match or simply
+#    never ran.
+#
+SET columnstore_select_handler=ON;
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+ON cc.CASEID = cf.CASEID
+AND cc.SOURCE_DB = cf.SOURCE_DB
+AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+FROM cas_caseflow e
+WHERE e.CASEID    = cf.CASEID
+AND e.SOURCE_DB = cf.SOURCE_DB
+AND e.STATUSCODE = cf.STATUSCODE);
+ERROR HY000: Internal error: MCS-1015: Subquery on OUTER JOIN ON clause is currently not supported.
 DROP TABLE cas_triggerevent;
 DROP TABLE cas_case;
 DROP TABLE cas_bcapkyc;
