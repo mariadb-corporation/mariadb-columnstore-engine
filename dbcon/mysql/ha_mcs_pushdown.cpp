@@ -887,6 +887,27 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       // Unset select_lex::first_cond_optimization
       if (select_lex->first_cond_optimization)
       {
+        // The server keeps first_cond_optimization and leaf_tables_saved
+        // in sync: JOIN::optimize_inner() flips first_cond_optimization
+        // to false *and* calls save_leaf_tables() on the same pass (see
+        // sql/sql_select.cc around the "sel->first_cond_optimization= 0"
+        // assignment).  When we bypass that path and reset the flag
+        // ourselves we must mirror save_leaf_tables() too, otherwise
+        // the second execution of the same statement (typical for a
+        // stored procedure CALL) hits
+        //   DBUG_ASSERT(select_lex->leaf_tables_saved)
+        // in setup_tables().  On non-debug builds the same desync leads
+        // to leaf_tables_exec being empty / stale.
+        if (!select_lex->leaf_tables_saved)
+        {
+          if (select_lex->save_leaf_tables(thd))
+          {
+            thd->lex->needs_reprepare = true;
+            delete handler;
+            return nullptr;
+          }
+          select_lex->leaf_tables_saved = true;
+        }
         first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
       }
     }
