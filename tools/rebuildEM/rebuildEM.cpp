@@ -16,7 +16,9 @@
    MA 02110-1301, USA. */
 
 #include <iostream>
+#include <set>
 #include <stdint.h>
+#include <tuple>
 
 #include "rebuildEM.h"
 #include "calpontsystemcatalog.h"
@@ -438,15 +440,18 @@ int32_t EMReBuilder::rebuildExtentMap()
         std::cout << "For " << fileId << std::endl;
       }
 
-      // This is important part, it sets a status for specific extent
-      // as 'available' that means we can use it.
+      // Mark the just-created extent as AVAILABLE.  ExtentMap::setLocalHWM
+      // also stores `newHWM` on the extent that currently has the highest
+      // blockOffset for (oid, partition, segment), so we intentionally pass
+      // 0 here: the correct HWM is applied in the second pass below, after
+      // every extent of that segment is in the extent map.
       if (doVerbose())
       {
-        std::cout << "Setting a HWM for " << fileId << std::endl;
+        std::cout << "Marking AVAILABLE for " << fileId << std::endl;
       }
       try
       {
-        getEM().setLocalHWM(fileId.oid, fileId.partition, fileId.segment, fileId.hwm, false, true);
+        getEM().setLocalHWM(fileId.oid, fileId.partition, fileId.segment, 0, false, true);
       }
       catch (std::exception& e)
       {
@@ -456,6 +461,62 @@ int32_t EMReBuilder::rebuildExtentMap()
       }
       getEM().confirmChanges();
     }
+  }
+
+  if (doDisplay())
+    return 0;
+
+  // Second pass: apply the real HWM exactly once per (oid, partition,
+  // segment).  ExtentMap::setLocalHWM always writes newHWM into the extent
+  // with the highest blockOffset of that segment file *and* resets the
+  // previous HWM-bearing extent to 0 (versioning/BRM/extentmap.cpp:4866-
+  // 4876).  Calling it per-extent inside the creation loop therefore
+  // nukes the correct HWM as soon as any trailing entry with hwm=0 is
+  // processed, which happens routinely for "invisible" LBIDs appended by
+  // addInvisibleLBIDs() (they carry artificial LBIDs higher than any real
+  // one, so they always come last after the LBID sort).  Reproducer:
+  // bugfixes.MCOL-6321-test-em-rebuild, which hits MCS-2031 "Blocks are
+  // missing" because getLocalHWM() comes back as 0 and PrimProc computes
+  // `range.size = HWM - lowfbo + 1` as a huge negative number.
+  //
+  // Running the HWM update as a dedicated second pass guarantees that:
+  //   * every extent in the segment has been created, so setLocalHWM sees
+  //     a `lastEm` whose [blockOffset, blockOffset+range.size*1024) window
+  //     can accommodate the recorded HWM (avoiding the "new HWM past the
+  //     end of the file" check at extentmap.cpp:4856);
+  //   * setLocalHWM is called at most once per segment file, so no stale
+  //     zero ever races against the real HWM.
+  std::set<std::tuple<uint32_t, uint32_t, uint32_t>> hwmApplied;
+  for (const auto& fileId : extentMap)
+  {
+    auto key = std::make_tuple(fileId.oid, fileId.partition, fileId.segment);
+    if (!hwmApplied.insert(key).second)
+      continue;
+
+    // Per-OID HWM is populated by searchHWMInSegmentFile() in
+    // collectExtent() for regular OIDs; system extents carry the real HWM
+    // directly on fileId.hwm (see scanSystemCatalogFile()).
+    uint64_t hwm = fileId.hwm;
+    auto it = oidHWMs.find(fileId.oid);
+    if (it != oidHWMs.end())
+      hwm = it->second;
+
+    if (doVerbose())
+    {
+      std::cout << "Setting a HWM=" << hwm << " for OID " << fileId.oid << " partition "
+                << fileId.partition << " segment " << fileId.segment << std::endl;
+    }
+    try
+    {
+      getEM().setLocalHWM(fileId.oid, fileId.partition, fileId.segment, hwm, false, true);
+    }
+    catch (std::exception& e)
+    {
+      getEM().undoChanges();
+      std::cerr << "Cannot set local HWM: " << e.what() << std::endl;
+      return -1;
+    }
+    getEM().confirmChanges();
   }
   return 0;
 }
