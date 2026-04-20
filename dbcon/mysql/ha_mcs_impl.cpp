@@ -2982,6 +2982,37 @@ int ha_mcs_impl_delete_row()
   return (rc);
 }
 
+// Make every column of `table` readable via Field::val_str() for the duration
+// of a cpimport bulk insert by pointing table->read_set at the shared
+// TABLE_SHARE::all_set (whose invariant is "all bits are set").  The caller's
+// original read_set pointer is stashed in ci->bulkInsertSavedReadSet and
+// restored by restore_bulk_insert_read_set().
+//
+// Before MCOL-xxxxx the plugin mutated bits directly via
+// bitmap_set_all/bitmap_clear_all on table->read_set.  During ALTER TABLE's
+// copy_data_between_tables the server points read_set *and* write_set at
+// &s->all_set (via TABLE::use_all_columns()), so bitmap_clear_all wiped the
+// shared bitmap and the subsequent handler::ha_reset() tripped
+//   DBUG_ASSERT(bitmap_is_set_all(&table->s->all_set)).
+static void save_and_swap_bulk_insert_read_set(TABLE* table, cal_connection_info* ci)
+{
+  // Idempotent: tolerate repeated calls within the same bulk insert.
+  if (!ci->bulkInsertSavedReadSet)
+  {
+    ci->bulkInsertSavedReadSet = table->read_set;
+    table->read_set = &table->s->all_set;
+  }
+}
+
+static void restore_bulk_insert_read_set(TABLE* table, cal_connection_info* ci)
+{
+  if (ci->bulkInsertSavedReadSet)
+  {
+    table->read_set = ci->bulkInsertSavedReadSet;
+    ci->bulkInsertSavedReadSet = nullptr;
+  }
+}
+
 void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_insert)
 {
   THD* thd = current_thd;
@@ -3292,9 +3323,13 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
         ci->fdt[0] = -1;
         // now we can send all the data thru FIFO[1], writer of PARENT
       }
-      // Set read_set used for bulk insertion of Fields inheriting
-      // from Field_blob|Field_varstring. Used in ColWriteBatchString()
-      bitmap_set_all(table->read_set);
+      // Swap read_set so that every column is readable via Field::val_str()
+      // during cpimport bulk insertion (used by ColWriteBatchString for
+      // Field_blob/Field_varstring).  We point read_set at the shared
+      // TABLE_SHARE::all_set instead of mutating bits in place, so we never
+      // clobber a server-owned bitmap that may be aliased via
+      // TABLE::use_all_columns() (e.g. during ALTER TABLE copy).
+      save_and_swap_bulk_insert_read_set(table, ci);
     }
     else
     {
@@ -3360,7 +3395,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
       setError(current_thd, ER_READ_ONLY_MODE, "Cannot execute the statement. DBRM is read only!");
       ci->rc = rc;
       ci->singleInsert = true;
-      bitmap_clear_all(table->read_set);
+      restore_bulk_insert_read_set(table, ci);
       return;
     }
 
@@ -3370,7 +3405,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     if (stateFlags & SessionManagerServer::SS_SUSPENDED)
     {
       setError(current_thd, ER_INTERNAL_ERROR, "Writing to the database is disabled.");
-      bitmap_clear_all(table->read_set);
+      restore_bulk_insert_read_set(table, ci);
       return;
     }
 
@@ -3385,12 +3420,12 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
     }
     catch (IDBExcept& ie)
     {
-      bitmap_clear_all(table->read_set);
+      restore_bulk_insert_read_set(table, ci);
       setError(thd, ER_INTERNAL_ERROR, ie.what());
     }
     catch (std::exception& ex)
     {
-      bitmap_clear_all(table->read_set);
+      restore_bulk_insert_read_set(table, ci);
       setError(thd, ER_INTERNAL_ERROR,
                logging::IDBErrorInfo::instance()->errorMsg(ERR_SYSTEM_CATALOG) + ex.what());
     }
@@ -3402,10 +3437,17 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
 int ha_mcs_impl_end_bulk_insert(bool abort, TABLE* table)
 {
-  // Clear read_set used for bulk insertion of Fields inheriting
-  // from Field_blob|Field_varstring
-  bitmap_clear_all(table->read_set);
   THD* thd = current_thd;
+
+  // Restore the read_set pointer that start_bulk_insert swapped to
+  // &s->all_set for ColWriteBatchString.  No-op if start_bulk_insert did not
+  // swap (e.g. non-cpimport path, slave thread early-return, or a throw
+  // before the swap).
+  if (void* fe = get_fe_conn_info_ptr())
+  {
+    restore_bulk_insert_read_set(
+        table, reinterpret_cast<cal_connection_info*>(fe));
+  }
 
   if (thd->slave_thread && !get_replication_slave(thd))
     return 0;
