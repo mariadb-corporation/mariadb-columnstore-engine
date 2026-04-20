@@ -2638,7 +2638,11 @@ int ha_mcs_impl_create_(const char* /*name*/, TABLE* table_arg, HA_CREATE_INFO* 
 
   if (rc != 0)
   {
-    push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+    // Some ProcessDDLStatement() failure paths report the error only via
+    // thd->raise_error_printf() and leave emsg empty; push_warning() asserts
+    // on strlen(msg) in debug builds (sql/sql_error.cc:764).
+    if (!emsg.empty())
+      push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
     // Bug 1705 reset the flag if error occurs
     ci.alterTableState = cal_connection_info::NOT_ALTER;
     ci.isAlter = false;
@@ -2715,7 +2719,8 @@ int ha_mcs_impl_delete_table_(const char* /*db*/, const char* name, cal_connecti
 
   if (rc != 0 && rc != ER_NO_SUCH_TABLE_IN_ENGINE)
   {
-    push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
+    if (!emsg.empty())
+      push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
   }
 
   return rc;
@@ -2776,7 +2781,7 @@ int ha_mcs_impl_rename_table_(const char* from, const char* to, cal_connection_i
 
   int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg);
 
-  if (rc != 0)
+  if (rc != 0 && !emsg.empty())
     push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 
   return rc;
@@ -2816,7 +2821,7 @@ extern "C"
 
     int rc = ProcessDDLStatement(stmt, db, "", tid2sid(thd->thread_id), emsg, compressiontype);
 
-    if (rc != 0)
+    if (rc != 0 && !emsg.empty())
       push_warning(thd, Sql_condition::WARN_LEVEL_WARN, 9999, emsg.c_str());
 
     return rc;
