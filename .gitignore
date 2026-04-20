@@ -167,6 +167,7 @@ bin
 external
 gitversionEngine
 mcsconfig.h
+debian/mariadb-plugin-columnstore.postrm
 storage-manager/storagemanager.cnf
 storage-manager/testS3Connection
 storage-manager/unit_tests

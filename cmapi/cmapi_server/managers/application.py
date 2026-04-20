@@ -8,8 +8,15 @@ import distro
 from pydantic import BaseModel, ConfigDict, Field
 
 from cmapi_server.constants import (
-    MDB_CS_PACKAGE_NAME, MDB_SERVER_PACKAGE_NAME, PKG_GET_VER_CMD,
-    SUPPORTED_DISTROS, SUPPORTED_ARCHITECTURES, VERSION_PATH, MultiDistroNamer
+    MDB_CS_PACKAGE_NAME,
+    MDB_SERVER_PACKAGE_NAME,
+    PKG_GET_VER_CMD,
+    SUPPORTED_DISTROS,
+    SUPPORTED_ARCHITECTURES,
+    VERSION_PATH,
+    MultiDistroNamer,
+    PkgType,
+    get_pkg_type,
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.process_dispatchers.base import BaseDispatcher
@@ -159,10 +166,14 @@ class AppManager:
         distro_name, _ = cls.get_distro_info()
         cmd: str = ''
         package_name: str = ''
-        if distro_name in ['ubuntu', 'debian']:
+        try:
+            pkg_type = get_pkg_type(distro_name)
+        except ValueError as exc:
+            raise CMAPIBasicError(str(exc)) from exc
+        if pkg_type == PkgType.DEB:
             package_name = pkg_namer.deb
             cmd = PKG_GET_VER_CMD.deb.format(package_name=package_name)
-        elif distro_name in ['centos', 'rhel', 'rocky', 'almalinux']:
+        elif pkg_type == PkgType.RPM:
             package_name = pkg_namer.rhel
             cmd = PKG_GET_VER_CMD.rhel.format(package_name=package_name)
         success, result_raw = BaseDispatcher.exec_command(cmd)
@@ -174,7 +185,7 @@ class AppManager:
             logging.error(message)
             raise CMAPIBasicError(message)
         version_clean = result_raw
-        if distro_name in ['ubuntu', 'debian']:
+        if pkg_type == PkgType.DEB:
             # remove prefix before : (epoch)
             result_raw = result_raw.split(':', 1)[1]
             # remove suffix after first '+'

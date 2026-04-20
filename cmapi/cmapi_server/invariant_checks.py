@@ -12,16 +12,21 @@ from mcs_node_control.models.node_config import NodeConfig
 logger = logging.getLogger(__name__)
 
 
+# If true, invariant check failures cause CMAPI to abort (exit / HTTP 422).
+# If false (default), failures are logged as warnings and execution continues.
+_cache = {'enforce': False}
+
+
 def resolve_symlinks_in_path(base_path: str, subdirs: List[str]) -> List[str]:
     """Build required directories list, resolving symlinks at each level.
 
-    If base_path or any intermediate directory is a symlink, resolve it
-    before appending subsequent path components. This ensures we check
+    If *base_path* or any intermediate directory is a symlink, resolve it
+    before appending subsequent path components.  This ensures we check
     the actual target directories rather than potentially broken paths.
 
-    :param base_path: The root path (e.g., MCS_DATA_PATH).
-    :param subdirs: List of subdirectory components to append sequentially.
-    :return: List of resolved directory paths to check.
+    :param base_path: The root path (e.g., ``MCS_DATA_PATH``).
+    :param subdirs: Subdirectory components to append sequentially.
+    :returns: Resolved directory paths to check.
     """
     result: List[str] = []
     current: str = base_path
@@ -45,28 +50,49 @@ def resolve_symlinks_in_path(base_path: str, subdirs: List[str]) -> List[str]:
     return result
 
 
-def is_invariant_checks_enabled() -> bool:
-    """Check if invariant checks are enabled in CMAPI config.
+def init_invariant_checks_enforce() -> None:
+    """Read ``invariant_checks_enforce`` from CMAPI config and cache it.
 
-    :return: True if invariant checks are enabled (default), False otherwise.
+    Must be called once at application startup.  Subsequent calls to
+    :func:`is_invariant_checks_enforce` return the cached value without
+    re-reading the config file.
+
+    Reads ``[application] invariant_checks_enforce`` from the CMAPI
+    config file.  Default is ``false`` (log warnings only).
     """
     cfg_parser = helpers.get_config_parser(CMAPI_CONF_PATH)
-    return cfg_parser.getboolean('application', 'invariant_checks', fallback=True)
+    _cache['enforce'] = cfg_parser.getboolean(
+        'application', 'invariant_checks_enforce', fallback=False,
+    )
+    logger.info('Invariant checks enforce: %s', _cache['enforce'])
 
 
-def run_invariant_checks() -> Optional[str]:
-    """Run invariant checks, log results, and return a formatted string with problems, if any.
+def is_invariant_checks_enforce() -> bool:
+    """Return the cached ``invariant_checks_enforce`` flag.
 
-    If invariant checks are disabled in CMAPI config file (invariant_checks = false),
-    this function returns None without running any checks.
-
-    :return: Formatted string with problems if checks fail, None otherwise.
+    :returns: ``True`` if failures should abort, ``False`` if they
+        should only be logged as warnings.
     """
-    if not is_invariant_checks_enabled():
-        logger.info('Invariant checks are turned OFF in CMAPI config file.')
-        return None
+    return _cache['enforce']
 
-    logger.info('Starting invariant checks')
+
+def run_invariant_checks() -> Tuple[Optional[str], bool]:
+    """Run invariant checks and return diagnostics.
+
+    Checks always run.  The second element of the returned tuple
+    indicates whether the caller should treat failures as non-fatal
+    warnings (see :func:`is_invariant_checks_enforce`).
+
+    :returns: ``(diag, warn_only)`` where *diag* is a formatted string
+        with problems (or ``None`` when all checks pass) and
+        *warn_only* is ``True`` when the caller should log a warning
+        instead of raising / exiting.
+    """
+    enforce = is_invariant_checks_enforce()
+    warn_only = not enforce
+    logger.info(
+        'Starting invariant checks (enforce=%s)', enforce,
+    )
     runner = Runner()
     result = runner.run()
     problems = result.problems()
@@ -87,18 +113,26 @@ def run_invariant_checks() -> Optional[str]:
         {k.value: v for k, v in result.counts.items() if v != 0}
     )
     if result.overall in (Status.FAIL, Status.ERROR):
-        logger.error('Invariant checks failed')
-        return diag
+        msg = f'Invariant checks failed. Details:\n{diag.strip() if diag else ""}'
+        if warn_only:
+            logger.warning('%s (warning mode, not aborting)', msg)
+        else:
+            logger.error(msg)
+        return diag, warn_only
     else:
         logger.info('Invariant checks passed')
-        return None
+        return None, warn_only
 
 
 ### Facts
 @fact
 def storage_type() -> str:
     """Provides storage type: shared_fs or s3."""
-    return 's3' if NodeConfig().s3_enabled() else 'shared_fs'
+    try:
+        return 's3' if NodeConfig().s3_enabled() else 'shared_fs'
+    except Exception:
+        logger.exception('Failed to detect storage type, defaulting to shared_fs')
+        return 'shared_fs'
 
 @fact
 def is_shared_fs(storage_type: str) -> bool:

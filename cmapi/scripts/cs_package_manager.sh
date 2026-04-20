@@ -8,6 +8,7 @@ ci_user=""
 ci_pwd=""
 cs_pkg_manager_version="3.12"
 USE_DEV_PACKAGES=false
+dev_product="10.6-enterprise"
 if [ ! -f /var/lib/columnstore/local/module ]; then  pm="pm1"; else pm=$(cat /var/lib/columnstore/local/module);  fi;
 pm_number=$(echo "$pm" | tr -dc '0-9')
 action=$1
@@ -697,12 +698,15 @@ Flags:
     -cu | --cross-engine-user   Cross-engine user       Default: cross_engine
     -cp | --cross-engine-pwd    Cross-engine password   Default: Mariadb123%
     --with-dev                  Include development client packages (MariaDB-devel on RPM, libmariadb-dev on DEB)
+    -p  | --product             Product for dev builds Default: 10.6-enterprise  (e.g. 11.4-enterprise, 11.8-enterprise)
     -h  | --help                Help Text
 
 Example:
     bash $0 install dev develop cron/8629
     bash $0 install dev develop-23.02 pull_request/7256
     bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+    bash $0 install dev develop pull_request/3526 --product 11.4-enterprise
+    bash $0 install dev develop pull_request/3526 --product 11.8-enterprise
 
 Note: When deploying a cluster, --nodes required and run the same command on all nodes at the same time.
             "
@@ -894,6 +898,11 @@ parse_install_cluster_additional_args() {
                 ;;
             -dev | --dev-drone-key)
                 dev_drone_key="$2"
+                shift # past argument
+                shift # past value
+                ;;
+            -p | --product)
+                dev_product="$2"
                 shift # past argument
                 shift # past value
                 ;;
@@ -2060,7 +2069,7 @@ dev_install() {
     dronePath="s3://$dev_drone_key"
     branch="$3"
     build="$4"
-    product="10.6-enterprise"
+    product="$dev_product"
     if [ -z $dev_drone_key ]; then printf "Missing dev_drone_key: \n"; exit; fi;
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
@@ -2069,6 +2078,7 @@ dev_install() {
     # Construct URLs
     s3_path="$dronePath/$branch/$build/$product/$arch"
     drone_http=$(echo "$s3_path" | sed "s|s3://$dev_drone_key/|https://${dev_drone_key}.s3.amazonaws.com/|")
+    echo "Product: $product"
     echo "Locations:"
     echo "Bucket: $s3_path"
     echo "Drone: $drone_http"
@@ -2236,7 +2246,7 @@ do_ci_yum_install() {
         dronePath="s3://$dev_drone_key"
         branch="stable-23.10"
         build="latest"
-        product="10.6-enterprise"
+        product="$dev_product"
         s3_path="$dronePath/$branch/$build/$product/$arch/rockylinux${version_id}"
         check_aws_cli_installed
         echo "Attempting to download cmapi from drone: $s3_path"
@@ -2320,7 +2330,7 @@ do_ci_apt_install() {
         dronePath="s3://$dev_drone_key"
         branch="stable-23.10"
         build="latest"
-        product="10.6-enterprise"
+        product="$dev_product"
         s3_path="$dronePath/$branch/$build/$product/$arch/$distro"
         check_aws_cli_installed
         echo "Attempting to download cmapi from drone: $s3_path"
@@ -2790,6 +2800,8 @@ EOF
 dev_upgrade() {
 
     # Variables
+    error_on_unknown_option=false
+    parse_install_cluster_additional_args "$@"
     if [ -z $dev_drone_key ]; then printf "[!] Missing dev_drone_key \nvi $0\n"; exit; fi;
     check_aws_cli_installed
     print_upgrade_variables
@@ -2798,7 +2810,7 @@ dev_upgrade() {
     dronePath="s3://$dev_drone_key"
     branch="$3"
     build="$4"
-    product="10.6-enterprise"
+    product="$dev_product"
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
 
@@ -3942,6 +3954,11 @@ parse_download_additional_args() {
                 shift # past argument
                 shift # past value
                 ;;
+            -p | --product)
+                dev_product="$2"
+                shift # past argument
+                shift # past value
+                ;;
             maxscale | -m | --maxscale)
                 download_maxscale=true
                 shift # past argument
@@ -4273,7 +4290,7 @@ download_dev() {
     dronePath="s3://$dev_drone_key"
     branch="$3"
     build="$4"
-    product="10.6-enterprise"
+    product="$dev_product"
     if [ -z "$branch" ]; then printf "Missing branch: $branch\n"; exit 2; fi;
     if [ -z "$build" ]; then printf "Missing build: $branch\n"; exit 2; fi;
 
