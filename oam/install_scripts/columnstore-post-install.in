@@ -4,6 +4,8 @@
 #
 # Post-install steps for columnstore install
 
+set +x
+
 running_systemd() {
    if  [ "$(ps --no-headers -o comm 1)" = "systemd" ]; then
        echo 0
@@ -382,7 +384,7 @@ if [ $(running_systemd) -eq 0 ]; then
             chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
         else
             echo "Confirmed top @ENGINE_DATADIR@ folders owned by @DEFAULT_USER@"
-        fi  
+        fi
     else
         chown -R @DEFAULT_USER@:@DEFAULT_GROUP@ @ENGINE_DATADIR@
     fi
