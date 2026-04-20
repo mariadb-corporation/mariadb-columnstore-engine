@@ -9,10 +9,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
-
-CERT_FILENAME = './cmapi_server/self-signed.crt'
-KEY_FILENAME = './cmapi_server/self-signed.key'
-CERT_DAYS = 365
+from cmapi_server.constants import CMAPI_CERT_PATH, CMAPI_KEY_PATH, CERT_DAYS
 
 
 class CertificateManager():
@@ -27,7 +24,7 @@ class CertificateManager():
             backend=default_backend()
         )
 
-        with open(KEY_FILENAME, "wb") as f:
+        with open(CMAPI_KEY_PATH, "wb") as f:
             f.write(key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -67,14 +64,14 @@ class CertificateManager():
             critical=False
         ).sign(key, hashes.SHA256(), default_backend())
 
-        with open(CERT_FILENAME, 'wb') as f:
+        with open(CMAPI_CERT_PATH, 'wb') as f:
             f.write(cert.public_bytes(serialization.Encoding.PEM))
-        logging.info('Created self signed sertificate for CMAPI API access.')
-    
+        logging.info('Created self signed certificate for CMAPI API access.')
+
     @staticmethod
     def create_self_signed_certificate_if_not_exist() -> None:
         """Create self-signed certificate if not exist."""
-        if not os.path.exists(CERT_FILENAME):
+        if not os.path.exists(CMAPI_CERT_PATH):
             CertificateManager.create_self_signed_certificate()
 
     @staticmethod
@@ -87,7 +84,7 @@ class CertificateManager():
         :rtype: int
         """
         CertificateManager.create_self_signed_certificate_if_not_exist()
-        with open(CERT_FILENAME, 'rb') as cert_file:
+        with open(CMAPI_CERT_PATH, 'rb') as cert_file:
             cert_data = cert_file.read()
         cert = x509.load_pem_x509_certificate(cert_data)
         days_before_expire = (cert.not_valid_after - datetime.now()).days
@@ -96,8 +93,8 @@ class CertificateManager():
     @staticmethod
     def renew_certificate() -> None:
         """Creates new self signed certificate.
-        
-        Creates self-signed cetificate if certificate doesn't exist or
+
+        Creates self-signed certificate if certificate doesn't exist or
         expires in a 1 day or less.
         """
         if CertificateManager.days_before_expire() <= 0:

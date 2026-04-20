@@ -534,9 +534,10 @@ def _add_dbroot(root, host) -> int:
 def is_master():
     node_config = NodeConfig()
     root = node_config.get_current_config_root()
-    host, port, username, password = helpers.get_cej_info(root)
-
-    if username is None:
+    try:
+        host, port, username, password = helpers.get_cej_info(root)
+    except helpers.CEJError as exc:
+        logging.error('is_master(): %s', exc)
         return False
 
     cmd = (

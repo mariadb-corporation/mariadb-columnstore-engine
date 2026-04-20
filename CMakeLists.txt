@@ -56,6 +56,10 @@ endif()
 # releasenum is used by external scripts for various tasks. Leave it alone.
 columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/build/releasenum ${ENGINE_SUPPORTDIR})
 columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_SUPPORTDIR})
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/debian/mariadb-plugin-columnstore.postrm.in"
+    "${CMAKE_SOURCE_DIR}/debian/mariadb-plugin-columnstore.postrm" @ONLY
+)
 
 set(COMPONENTS
     utils

@@ -58,9 +58,9 @@ install_deps() {
   fi
 
   if [ "$(arch)" == "x86_64" ]; then
-    PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
+    PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
   elif [ "$(arch)" == "arm64" ]; then
-    PYTHON_URL="https://github.com/indygreg/python-build-standalone/releases/download/20220802/cpython-3.9.13+20220802-aarch64-unknown-linux-gnu-noopt-full.tar.zst"
+    PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-aarch64-unknown-linux-gnu-pgo+lto-full.tar.zst"
   else
     echo "Unsupported architecture: $(arch)"
     exit 1

@@ -6,7 +6,11 @@ import requests
 
 
 from cmapi_server.constants import (
-    CMAPI_CONF_PATH, CURRENT_NODE_CMAPI_URL, SECRET_KEY, _version
+    CMAPI_CONF_PATH,
+    CURRENT_NODE_CMAPI_URL,
+    SECRET_KEY,
+    UPGRADE_AGENT_PORT,
+    _version
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import get_config_parser, get_current_key
@@ -35,6 +39,17 @@ class BaseClient:
         self.base_url = base_url
         self.request_timeout = request_timeout
         self.cmd_class = None
+        self.url_template = f'{self.base_url}/cmapi/{_version}/{{cmd_class}}/{{endpoint}}'
+
+    def _build_url(self, endpoint: str) -> str:
+        """Build the URL for the given endpoint.
+
+        Subclasses can override this method to customize URL construction.
+
+        :param endpoint: The API endpoint to call.
+        :return: The full URL for the request.
+        """
+        return self.url_template.format(cmd_class=self.cmd_class, endpoint=endpoint)
 
     def _request(
         self, method: str, endpoint: str, data: Optional[Dict[str, Any]] = None,
@@ -47,8 +62,7 @@ class BaseClient:
         :param data: The data to send with the request.
         :return: The response from the API.
         """
-
-        url = f'{self.base_url}/cmapi/{_version}/{self.cmd_class}/{endpoint}'
+        url = self._build_url(endpoint)
         cmapi_cfg_parser = get_config_parser(CMAPI_CONF_PATH)
         key = get_current_key(cmapi_cfg_parser)
         headers = {'x-api-key': key}
@@ -256,6 +270,18 @@ class ClusterControllerClient(BaseClient):
         """
         return self._request('PUT', 'stop-mariadb', extra)
 
+    def start_upgrade_agent(
+        self, extra: Optional[Dict[str, Any]] = None
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Start upgrade agent on each node in cluster.
+
+        The upgrade agent provides a universal command execution API for
+        post-upgrade/downgrade fixes. It runs on port 8619.
+
+        :return: The response from the API.
+        """
+        return self._request('PUT', 'start-upgrade-agent', extra)
+
     def install_repo(
         self, token: str, mariadb_version: str, extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
@@ -343,13 +369,18 @@ class NodeControllerClient(BaseClient):
         return self._request('GET', 'versions', extra)
 
     def get_latest_mdb_version(
-        self, extra: Optional[Dict[str, Any]] = None
+        self, mdb_ver_prefix: str = '', extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get latest tested MDB version from repo.
 
+        :param mdb_ver_prefix: optional major (or major.minor) version prefix
+            to filter by (e.g. ``"10"``, ``"10.6"``, ``"11"``).
         :return: The response from the API.
         """
-        return self._request('GET', 'latest-mdb-version', extra)
+        data = {**(extra or {})}
+        if mdb_ver_prefix:
+            data['mdb_ver_prefix'] = mdb_ver_prefix
+        return self._request('GET', 'latest-mdb-version', data or None)
 
     def validate_mdb_version(
         self, token: str, mariadb_version: str, extra: Optional[Dict[str, Any]] = None, **kwargs
@@ -399,6 +430,18 @@ class NodeControllerClient(BaseClient):
         :return: The response from the API.
         """
         return self._request('PUT', 'stop-mariadb', extra)
+
+    def start_upgrade_agent(
+        self, extra: Optional[Dict[str, Any]] = None
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Start upgrade agent on a node.
+
+        The upgrade agent provides a universal command execution API for
+        post-upgrade/downgrade fixes. It runs on port 8619.
+
+        :return: The response from the API.
+        """
+        return self._request('PUT', 'start-upgrade-agent', extra)
 
     def is_process_running(
         self, process_name: str, extra: Optional[Dict[str, Any]] = None
@@ -490,26 +533,20 @@ class NodeControllerClient(BaseClient):
         return self._request('GET', 'check-shared-file', data)
 
 
-
 class AppControllerClient(BaseClient):
     """Client for the AppController API.
 
     This class provides methods for interacting with a cmapi special management
     API.
     """
-    def __init__(
-        self, base_url: str = CURRENT_NODE_CMAPI_URL, request_timeout: Optional[float] = None
-    ):
-        """Initialize the NodeControllerClient with the base URL.
 
-        :param base_url: The base URL for the API endpoints,
-                         defaults to CURRENT_NODE_CMAPI_URL
-        :type base_url: str, optional
-        :param request_timeout: request timeout, defaults to None
-        :type request_timeout: Optional[float], optional
+    def _build_url(self, endpoint: str) -> str:
+        """Build URL for AppController endpoints.
+
+        :param endpoint: The API endpoint to call.
+        :return: The full URL for the request.
         """
-        super().__init__(base_url, request_timeout)
-        self.cmd_url = f'{self.base_url}/cmapi/'
+        return f'{self.base_url}/cmapi/{endpoint}'
 
     def get_ready(self) -> Union[Dict[str, Any], Dict[str, str]]:
         """Get CMAPI ready or not.
@@ -517,3 +554,129 @@ class AppControllerClient(BaseClient):
         :return: The response from the API.
         """
         return self._request('GET', 'ready', None, throw_real_exp=True)
+
+
+class UpgradeAgentClient:
+    """Client for communicating with the upgrade agent on a node."""
+
+    def __init__(
+        self,
+        host: str,
+        api_key: str,
+        port: int = UPGRADE_AGENT_PORT,
+        timeout: float = 30.0
+    ):
+        """Initialize the upgrade agent client.
+
+        :param host: Hostname or IP address of the node.
+        :param api_key: API key for authentication.
+        :param port: Port the upgrade agent is listening on.
+        :param timeout: Request timeout in seconds.
+        """
+        self.host = host
+        self.api_key = api_key
+        self.port = port
+        self.timeout = timeout
+        self.base_url = f'https://{host}:{port}'
+        self.logger = logging.getLogger('mcs_cli')
+
+    def _request(self, method: str, path: str, data: dict = None) -> dict:
+        """Make a request to the upgrade agent.
+
+        :param method: HTTP method (GET, POST).
+        :param path: URL path.
+        :param data: Request body data.
+        :return: Response JSON decoded into a dict.
+        :rtype: dict
+        :raises requests.RequestException: On request failure.
+        """
+        url = f'{self.base_url}{path}'
+        headers = {'x-api-key': self.api_key}
+
+        response = requests.request(
+            method=method,
+            url=url,
+            headers=headers,
+            json=data,
+            timeout=self.timeout,
+            verify=False  # Using self-signed certs
+        )
+        if not response.ok:
+            # Log the response body so the caller can see the actual error
+            # returned by the upgrade agent (e.g. traceback on 500).
+            try:
+                body = response.json()
+            except Exception:
+                body = response.text
+            self.logger.error(
+                'Upgrade agent %s %s returned %d: %s',
+                method, url, response.status_code, body,
+            )
+        response.raise_for_status()
+        try:
+            return response.json()
+        except Exception as exc:
+            self.logger.error(
+                'Upgrade agent %s %s returned unparseable response: %s',
+                method, url, response.text,
+            )
+            raise requests.RequestException(
+                f'Unparseable JSON response from {method} {url}: {exc}. '
+                f'Raw response: {response.text}'
+            ) from exc
+
+
+    def health_check(self) -> dict:
+        """Check if the upgrade agent is running and healthy.
+
+        :return: Health status dict with ``status``, ``timestamp``, ``hostname``.
+        :rtype: dict
+        """
+        return self._request('GET', '/health')
+
+    def shutdown(self) -> dict:
+        """Request the upgrade agent to stop.
+
+        :return: Shutdown confirmation dict.
+        :rtype: dict
+        """
+        return self._request('POST', '/shutdown')
+
+    def fix_mariadb_cli_config(self) -> dict:
+        """Fix MariaDB CLI config by removing unsupported options.
+
+        Checks if the mariadb CLI works and patches columnstore.cnf if needed
+        by removing options that are not supported in the current version.
+
+        :return: Dict with ``needed_fix``, ``success``, ``removed_options``, ``error_message``.
+        :rtype: dict
+        """
+        return self._request('POST', '/fix-mariadb-cli-config')
+
+    def fix_columnstore_cnf(self) -> dict:
+        """Fix columnstore.cnf: loose- prefix + merge old user values from .bak.
+
+        :return: Dict with ``success``, ``cnf_path``, ``pkg_backup_path``,
+            ``loose_prefixed``, ``merged_from_backup``, ``error_message``.
+        :rtype: dict
+        """
+        return self._request('POST', '/fix-columnstore-cnf')
+
+    def restart_cmapi(self) -> dict:
+        """Restart the mariadb-columnstore-cmapi systemd service.
+
+        :return: Dict with ``success`` and ``error_message``.
+        """
+        return self._request('POST', '/restart-cmapi')
+
+    def is_running(self) -> bool:
+        """Check if the upgrade agent is running.
+
+        :return: ``True`` if running, otherwise ``False``.
+        :rtype: bool
+        """
+        try:
+            self.health_check()
+            return True
+        except requests.RequestException:
+            return False

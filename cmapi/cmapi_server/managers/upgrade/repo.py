@@ -1,13 +1,23 @@
+import glob
 import logging
 import os
 import re
+import shlex
+import shutil
 import subprocess
 
 import requests
 
 from cmapi_server.constants import (
-    ES_REPO, ES_REPO_PRIORITY_PREFS, ES_TOKEN_VERIFY_URL, ES_VERIFY_URL, MDB_GPG_KEY_URL,
-    MDB_LATEST_RELEASES_URL, MDB_LATEST_TESTED_MAJOR, REQUEST_TIMEOUT,
+    ES_REPO, ES_REPO_PRIORITY_PREFS,
+    ES_TOKEN_VERIFY_URL,
+    ES_VERIFY_URL,
+    MDB_GPG_KEY_URL,
+    MDB_LATEST_RELEASES_URL,
+    REQUEST_TIMEOUT,
+    UPGRADE_STALE_REPOS_DIR,
+    PkgType,
+    get_pkg_type,
 )
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.managers.upgrade.utils import ComparableVersion
@@ -23,6 +33,10 @@ class MariaDBESRepoManager:
         self.arch = arch
         self.os_type = os_type
         self.os_version = os_version
+        try:
+            self.pkg_type = get_pkg_type(os_type)
+        except ValueError as exc:
+            raise CMAPIBasicError(str(exc)) from exc
         if mariadb_version == 'latest':
             self.mariadb_version = self.get_latest_tested_mdb_version()
         else:
@@ -66,22 +80,20 @@ class MariaDBESRepoManager:
         :raises CMAPIBasicError: some other request/response errors
         """
         verify_url: str = ''
-        if self.os_type in ['ubuntu', 'debian']:
+        if self.pkg_type == PkgType.DEB:
             # get only two first numbers from version to build repo link
             verify_url = ES_VERIFY_URL.deb.format(
                 token=self.token,
                 mdb_version=self.mariadb_version,
                 os_version=self.os_version
             )
-        elif self.os_type in ['centos', 'rhel', 'rocky']:
+        elif self.pkg_type == PkgType.RPM:
             verify_url = ES_VERIFY_URL.rhel.format(
                 token=self.token,
                 mdb_version=self.mariadb_version,
                 os_major_version=self.os_version.split('.', maxsplit=1)[0],
                 arch=self.arch
             )
-        else:
-            raise CMAPIBasicError(f'Unsupported OS type: {self.os_type}')
         try:
             # Download the keyring file
             response = requests.get(verify_url, timeout=REQUEST_TIMEOUT)
@@ -148,33 +160,42 @@ class MariaDBESRepoManager:
             )
 
     @classmethod
-    def get_latest_tested_mdb_version(cls) -> str:
+    def get_latest_tested_mdb_version(cls, mdb_ver_prefix: str = '') -> str:
         """Get latest tested MDB version from repo.
 
-        :raises CMAPIBasicError: no latest version matched with latest tested
+        When *mdb_ver_prefix* is given (e.g. ``"10"``, ``"10.6"``,
+        ``"11.4"``), only versions whose dot/dash-separated numeric parts
+        start with the same components are considered.  When omitted the
+        overall latest version is returned.
+
+        :param mdb_ver_prefix: optional major (or major.minor) version
+            prefix to filter by (e.g. ``"10"``, ``"10.6"``, ``"11"``).
+        :raises CMAPIBasicError: no versions found
         :raises CMAPIBasicError: if request error
-        :return: latest MDB version matched with latest tested major
+        :return: latest available MDB version (optionally within prefix)
         """
         try:
-            # Download the keyring file
             response = requests.get(
                 MDB_LATEST_RELEASES_URL, timeout=REQUEST_TIMEOUT
             )
             response.raise_for_status()
-            latest_version_nums = [
-                ver
+            all_versions = [
+                ver.strip()
                 for ver in response.text.split(' ')
-                if MDB_LATEST_TESTED_MAJOR in ver
+                if ver.strip()
             ]
-            if not latest_version_nums:
+            if not all_versions:
                 raise CMAPIBasicError(
-                    'Failed to get latest MDB version number matched latest '
-                    f'tested major {MDB_LATEST_TESTED_MAJOR}'
+                    'Failed to get any MDB version numbers from '
+                    f'{MDB_LATEST_RELEASES_URL}'
+                )
+
+            latest_version_num = cls.select_latest_version(
+                all_versions, mdb_ver_prefix
             )
-            latest_version_num = sorted(latest_version_nums, reverse=True)[0]
+
             logging.debug(
-                'Succesfully got latest MDB version number: '
-                f'{latest_version_num}'
+                f'Successfully got latest MDB version number: {latest_version_num}'
             )
         except requests.RequestException as exc:
             raise CMAPIBasicError(
@@ -182,6 +203,41 @@ class MariaDBESRepoManager:
                 f'{MDB_LATEST_RELEASES_URL}'
             )
         return latest_version_num
+
+    @staticmethod
+    def select_latest_version(
+        all_versions: list[str], mdb_ver_prefix: str = '',
+    ) -> str:
+        """Select the latest version from a list, optionally filtered by prefix.
+
+        When *mdb_ver_prefix* is given (e.g. ``"10"``, ``"10.6"``,
+        ``"11.4"``), only versions whose numeric components start with
+        the same prefix are considered.
+
+        :param all_versions: non-empty list of version strings
+        :param mdb_ver_prefix: optional major (or major.minor) prefix
+        :raises CMAPIBasicError: invalid prefix format
+        :raises CMAPIBasicError: no versions match the prefix
+        :return: the latest version string (within prefix if given)
+        """
+        if mdb_ver_prefix:
+            prefix_parts = re.split(r'[.\-_]', mdb_ver_prefix)
+            try:
+                prefix_nums = [int(p.lstrip('0') or '0') for p in prefix_parts]
+            except ValueError:
+                raise CMAPIBasicError(f'Invalid version prefix: "{mdb_ver_prefix}"')
+
+            matched_versions = [
+                ver for ver in all_versions
+                if ComparableVersion(ver).version_nums[:len(prefix_nums)] == prefix_nums
+            ]
+            if not matched_versions:
+                raise CMAPIBasicError(
+                    f'No MDB version matched prefix "{mdb_ver_prefix}"'
+                )
+            return max(matched_versions, key=ComparableVersion)
+        else:
+            return max(all_versions, key=ComparableVersion)
 
     @classmethod
     def get_ver_of(cls, package_name: str, os_type: str,) -> str:
@@ -199,12 +255,14 @@ class MariaDBESRepoManager:
         """
         latest_version: str = ''
         cmd: str = ''
-        if os_type in ['ubuntu', 'debian']:
+        try:
+            pkg_type = get_pkg_type(os_type)
+        except ValueError as exc:
+            raise CMAPIBasicError(str(exc)) from exc
+        if pkg_type == PkgType.DEB:
             cmd = f'apt show {package_name}'
-        elif os_type in ['centos', 'rhel', 'rocky']:
+        elif pkg_type == PkgType.RPM:
             cmd = f'yum info --showduplicates --available {package_name}'
-        else:
-            raise CMAPIBasicError(f'Unsupported OS type: {os_type}')
 
         success, result = BaseDispatcher.exec_command(cmd)
         if not success:
@@ -232,33 +290,214 @@ class MariaDBESRepoManager:
         :raises CMAPIBasicError: could not find package matching the version
         """
         pkg_ver: str = ''
-        mdb_pkg_mgr_version = self.get_ver_of('mariadb-server', self.os_type)
-        if self.os_type in ['ubuntu', 'debian']:
+        if self.pkg_type == PkgType.DEB:
             # for deb packages it's just a part of version
             # eg: 10.6.22.18 and 1:10.6.22.18+maria~ubu2204
             pkg_ver = self.mariadb_version.replace('-', '.')
-        elif self.os_type in ['centos', 'rhel', 'rocky']:
-            # in rhel distros it's full version
-            pkg_ver = self.mariadb_version.replace('-', '_')
-        else:
-            raise CMAPIBasicError(f'Unsupported OS type: {self.os_type}')
-        if pkg_ver not in mdb_pkg_mgr_version:
-            raise CMAPIBasicError(
-                'Could not find mariadb-server package matched with version '
-                f'{pkg_ver}'
+            mdb_pkg_mgr_version = self.get_ver_of(
+                'mariadb-server', self.os_type
             )
+            if pkg_ver not in mdb_pkg_mgr_version:
+                raise CMAPIBasicError(
+                    'Could not find mariadb-server package matched with '
+                    f'version {pkg_ver}'
+                )
+        elif self.pkg_type == PkgType.RPM:
+            # yum may list multiple versions from different repos;
+            # check all of them, not just the latest.
+            pkg_ver = self.mariadb_version.replace('-', '_')
+            cmd = 'yum info --showduplicates --available mariadb-server'
+            success, result = BaseDispatcher.exec_command(cmd)
+            if not success:
+                raise CMAPIBasicError(
+                    'Failed to get mariadb-server package information using '
+                    f'command {cmd} with result: {result}'
+                )
+            versions = re.findall(r'\bVersion\s*:\s+(\S+)', result)
+            if not any(pkg_ver in v for v in versions):
+                raise CMAPIBasicError(
+                    'Could not find mariadb-server package matched with '
+                    f'version {pkg_ver}'
+                )
+
+    @staticmethod
+    def _cleanup_stale_deb_repos(
+        target_repo_file: str,
+        es_url_marker: str = 'dlm.mariadb.com',
+    ):
+        """Move stale deb repo files providing MariaDB packages to backup.
+
+        Queries ``apt-cache madison`` to discover which repositories
+        provide MariaDB packages.  Source files in
+        ``/etc/apt/sources.list.d`` (other than *target_repo_file*)
+        whose hostnames appear in the results (excluding the ES
+        repository identified by *es_url_marker*) are moved into
+        :data:`UPGRADE_STALE_REPOS_DIR`.
+        """
+        repo_dir = '/etc/apt/sources.list.d'
+        target = os.path.abspath(target_repo_file)
+
+        # Collect hostnames of non-ES repos that provide MariaDB pkgs
+        stale_hostnames: set = set()
+        success, result = BaseDispatcher.exec_command(
+            'apt-cache madison mariadb-server 2>/dev/null'
+        )
+        if not success:
+            logging.warning(
+                'Failed to query apt-cache madison for mariadb-server; '
+                'skipping stale-repo cleanup'
+            )
+            return
+        for line in result.splitlines():
+            parts = [p.strip() for p in line.split('|')]
+            if len(parts) < 3:
+                continue
+            source = parts[2].strip()
+            url = source.split()[0] if source else ''
+            if not url.startswith('http'):
+                continue
+            if es_url_marker in url:
+                continue
+            # Extract hostname from URL
+            host = url.split('://')[1].split('/')[0].split(':')[0]
+            if host:
+                stale_hostnames.add(host)
+
+        if not stale_hostnames:
+            return
+
+        # Find and move .list files containing stale repo hostnames
+        for repo_path in glob.glob(os.path.join(repo_dir, '*.list')):
+            if os.path.abspath(repo_path) == target:
+                continue
+            try:
+                with open(repo_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            except OSError:
+                continue
+            if any(host in content for host in stale_hostnames):
+                # Skip system repo files managed by dpkg packages
+                owned, owner = BaseDispatcher.exec_command(
+                    f'dpkg -S {shlex.quote(repo_path)}'
+                )
+                if owned and 'no path found' not in owner.lower():
+                    logging.info(
+                        'Skipping system repo file (owned by %s): %s',
+                        owner.strip(), repo_path
+                    )
+                    continue
+                os.makedirs(UPGRADE_STALE_REPOS_DIR, exist_ok=True)
+                backup_path = os.path.join(
+                    UPGRADE_STALE_REPOS_DIR, os.path.basename(repo_path)
+                )
+                logging.info(
+                    'Moving stale MariaDB repo file: %s -> %s',
+                    repo_path, backup_path
+                )
+                try:
+                    shutil.move(repo_path, backup_path)
+                except OSError as exc:
+                    logging.warning(
+                        'Failed to move %s: %s', repo_path, exc
+                    )
+
+    @staticmethod
+    def _cleanup_stale_rhel_repos(
+        target_repo_file: str,
+        es_repo_id: str = 'mariadb-es-main',
+    ):
+        """Move RHEL repo files providing conflicting MariaDB packages.
+
+        Queries ``yum list available`` to discover which repositories
+        provide MariaDB packages.  Any ``.repo`` file (other than
+        *target_repo_file*) whose section matches a discovered repo id
+        (excluding *es_repo_id*) is moved into
+        :data:`UPGRADE_STALE_REPOS_DIR`.
+        """
+        repo_dir = '/etc/yum.repos.d'
+        target = os.path.abspath(target_repo_file)
+
+        # Build map: repo section name -> .repo file path
+        section_to_file: dict = {}
+        for repo_path in glob.glob(os.path.join(repo_dir, '*.repo')):
+            if os.path.abspath(repo_path) == target:
+                continue
+            try:
+                with open(repo_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            except OSError:
+                continue
+            for section in re.findall(
+                r'^\[([^\]]+)\]', content, re.MULTILINE
+            ):
+                section_to_file[section] = repo_path
+
+        # Ask yum which repos provide MariaDB packages
+        success, result = BaseDispatcher.exec_command(
+            "yum list available 'MariaDB-*' 2>/dev/null"
+        )
+        if not success:
+            logging.warning(
+                'Failed to query available MariaDB packages; '
+                'skipping stale-repo cleanup'
+            )
+            return
+
+        # Parse output – lines after "Available Packages" look like:
+        #   MariaDB-server.x86_64   10.6.26_22-1.el9   drone
+        stale_files: set = set()
+        in_packages = False
+        for line in result.splitlines():
+            if 'Available Packages' in line:
+                in_packages = True
+                continue
+            if not in_packages:
+                continue
+            parts = line.split()
+            if len(parts) >= 3 and '.' in parts[0]:
+                repo_id = parts[-1]
+                if repo_id != es_repo_id and repo_id in section_to_file:
+                    stale_files.add(section_to_file[repo_id])
+
+        for repo_path in stale_files:
+            # Skip system repo files managed by RPM packages (e.g.
+            # appstream in rocky.repo) — only remove custom/CI repos.
+            owned, owner = BaseDispatcher.exec_command(
+                f'rpm -qf {shlex.quote(repo_path)}'
+            )
+            if owned and 'not owned' not in owner.lower():
+                logging.info(
+                    'Skipping system repo file (owned by %s): %s',
+                    owner.strip(), repo_path
+                )
+                continue
+            os.makedirs(UPGRADE_STALE_REPOS_DIR, exist_ok=True)
+            backup_path = os.path.join(
+                UPGRADE_STALE_REPOS_DIR, os.path.basename(repo_path)
+            )
+            logging.info(
+                'Moving stale MariaDB repo file: %s -> %s',
+                repo_path, backup_path
+            )
+            try:
+                shutil.move(repo_path, backup_path)
+            except OSError as exc:
+                logging.warning(
+                    'Failed to move %s: %s', repo_path, exc
+                )
 
     def setup_repo(self):
         """Set up the MariaDB Enterprise repository based on OS type."""
         self.check_mdb_version_exists()
-        if self.os_type in ['ubuntu', 'debian']:
+        if self.pkg_type == PkgType.DEB:
+            repo_file = '/etc/apt/sources.list.d/mariadb.list'
+            self._cleanup_stale_deb_repos(repo_file)
             # get only two first numbers from version to build repo link
             repo_data = ES_REPO.deb.format(
                 token=self.token,
                 mdb_version=self.mariadb_version,
                 os_version=self.os_version
             )
-            repo_file = '/etc/apt/sources.list.d/mariadb.list'
             with open(repo_file, 'w', encoding='utf-8') as f:
                 f.write(repo_data)
             # Set permissions to 640
@@ -270,7 +509,10 @@ class MariaDBESRepoManager:
 
             self._import_mariadb_keyring()
             subprocess.run(['apt-get', 'update'], check=True)
-        elif self.os_type in ['centos', 'rhel', 'rocky']:
+        elif self.pkg_type == PkgType.RPM:
+            repo_file = '/etc/yum.repos.d/mariadb.repo'
+            # Remove stale repos before installing the new one
+            self._cleanup_stale_rhel_repos(repo_file)
             repo_data = ES_REPO.rhel.format(
                 token=self.token,
                 mdb_version=self.mariadb_version,
@@ -278,10 +520,8 @@ class MariaDBESRepoManager:
                 arch=self.arch,
                 gpg_key_url=MDB_GPG_KEY_URL
             )
-            repo_file = '/etc/yum.repos.d/mariadb.repo'
             with open(repo_file, 'w', encoding='utf-8') as f:
                 f.write(repo_data)
             subprocess.run(['rpm', '--import', MDB_GPG_KEY_URL], check=True)
-        else:
-            raise CMAPIBasicError(f'Unsupported OS type: {self.os_type}')
+            subprocess.run(['yum', 'clean', 'all'], check=True)
         self.check_repo()
