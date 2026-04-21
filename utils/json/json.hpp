@@ -2445,7 +2445,8 @@ JSON_HEDLEY_DIAGNOSTIC_POP
         #endif
 
         // no filesystem support before GCC 8: https://en.cppreference.com/w/cpp/compiler_support
-        #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 8
+	// RHEL8 has a gcc 8.5 which, apparently, does not support std::filesystem::path.
+        #if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ < 8 || (__GNUC__ == 8 && __GNUC_MINOR__ < 6))
             #undef JSON_HAS_FILESYSTEM
             #undef JSON_HAS_EXPERIMENTAL_FILESYSTEM
         #endif
