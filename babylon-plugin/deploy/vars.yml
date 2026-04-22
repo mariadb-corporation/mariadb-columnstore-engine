@@ -6,7 +6,7 @@ cs_burza_repo_dir: "/opt/burza"
 
 # columnstore-ansible-aws lives in its own repo; clone at deploy time.
 cs_ansible_aws_repo: "https://github.com/mariadb-corporation/columnstore-ansible-aws.git"
-cs_ansible_aws_ref: "main"
+cs_ansible_aws_ref: "master"
 
 cs_aws_region: "us-west-2"
 cs_aws_vpc: "vpc-00be58d5ed0814587"
