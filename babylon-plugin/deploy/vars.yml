@@ -1,0 +1,21 @@
+# Columnstore deploy config (non-secret bits).
+
+cs_repo_dir: "/opt/columnstore-ansible-aws"
+cs_workspaces_dir: "/opt/babylon/cs-workspaces"
+cs_burza_repo_dir: "/opt/burza"
+
+# columnstore-ansible-aws lives in its own repo; clone at deploy time.
+cs_ansible_aws_repo: "https://github.com/mariadb-corporation/columnstore-ansible-aws.git"
+cs_ansible_aws_ref: "main"
+
+cs_aws_region: "us-west-2"
+cs_aws_vpc: "vpc-00be58d5ed0814587"
+cs_aws_subnet: "subnet-0ee83cc38052aafa1"
+cs_key_pair_name: "tiamat-provisioning"
+cs_ssh_key_file: "/opt/clusterctl/tiamat-provisioning.pem"
+cs_enterprise_token: "75af701d-ae3a-40e8-9dce-e4149af3e528"
+
+cs_admin_user: "admin"
+cs_maxscale_user: "mx_admin"
+cs_repli_user: "replication"
+cs_cej_user: "cej"

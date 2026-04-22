@@ -1,0 +1,96 @@
+---
+# Columnstore plugin bootstrap — mirror of tiamat plugin bootstrap.
+# babylon core's deploy/ansible/playbook.yml runs this via
+# include_tasks after cloning + pip-installing the plugin.
+#
+# Expects from the caller:
+#   - babylon_user / babylon_group
+#   - _plugin_local_deploy_dir — controller path (include_vars, template)
+#   - _plugin_remote_dir — target path (rsync/remote_src)
+
+- name: Load CS plugin vars
+  include_vars:
+    file: "{{ _plugin_local_deploy_dir }}/vars.yml"
+
+- name: Load CS plugin vault
+  include_vars:
+    file: "{{ _plugin_local_deploy_dir }}/vault.yml"
+
+- name: Ensure CS workspaces dir exists
+  file:
+    path: "{{ cs_workspaces_dir }}"
+    state: directory
+    owner: "{{ babylon_user }}"
+    group: "{{ babylon_group }}"
+    mode: "0755"
+
+- name: Ensure columnstore-ansible-aws dir exists
+  file:
+    path: "{{ cs_repo_dir }}"
+    state: directory
+    owner: "{{ babylon_user }}"
+    group: "{{ babylon_group }}"
+    mode: "0755"
+
+- name: Wipe stale rsync tree on first columnstore-ansible-aws git-deploy
+  shell: |
+    if [ ! -d {{ cs_repo_dir }}/.git ]; then
+      find {{ cs_repo_dir }} -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+    fi
+  changed_when: false
+
+- name: Clone/update columnstore-ansible-aws
+  shell: |
+    cd /tmp; sudo -u {{ babylon_user }} -H bash -lc '
+      set -eu
+      cd {{ cs_repo_dir }}
+      if [ -d .git ]; then
+        git fetch --quiet origin
+      else
+        git init --quiet
+        git remote add origin {{ cs_ansible_aws_repo }} 2>/dev/null || \
+          git remote set-url origin {{ cs_ansible_aws_repo }}
+        git fetch --quiet origin
+      fi
+      git checkout -fB deployed origin/{{ cs_ansible_aws_ref | default("main") }}
+      git reset --hard origin/{{ cs_ansible_aws_ref | default("main") }}
+    '
+  changed_when: false
+
+- name: Render CS provider config
+  template:
+    src: "{{ _plugin_local_deploy_dir }}/provider-config.yaml.j2"
+    dest: /opt/babylon/provider-config/columnstore.yaml
+    owner: "{{ babylon_user }}"
+    group: "{{ babylon_group }}"
+    mode: "0600"
+
+# columnstore-ansible-aws playbooks require these galaxy collections.
+- name: Install Ansible Galaxy collections for ColumnStore
+  command: >
+    /opt/babylon/.venv/bin/ansible-galaxy collection install
+    ansible.posix community.general community.mysql community.crypto
+    -p /opt/babylon/.ansible/collections
+    --force
+  changed_when: false
+
+- name: Fix ansible collections ownership
+  file:
+    path: /opt/babylon/.ansible
+    owner: "{{ babylon_user }}"
+    group: "{{ babylon_group }}"
+    recurse: true
+
+# RepositoryProvider (ColumnStoreRepositoryProvider) reads /var/src/columnstore-engine
+# via gh CLI for PR lookup. Clone on first deploy, fetch on re-deploys.
+- name: Clone/update columnstore-engine for RepositoryProvider
+  shell: |
+    cd /tmp; sudo -u {{ babylon_user }} -H bash -lc '
+      if [ -d /var/src/columnstore-engine/.git ]; then
+        cd /var/src/columnstore-engine && git fetch --quiet origin
+      else
+        git clone --quiet https://github.com/mariadb-corporation/mariadb-columnstore-engine.git /var/src/columnstore-engine
+      fi
+    '
+  when: github_token | length > 0
+  changed_when: false

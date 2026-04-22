@@ -1,0 +1,25 @@
+# ColumnStore provider configuration — rendered by babylon-plugin/deploy/bootstrap.yml
+repo_dir: "{{ cs_repo_dir }}"
+workspaces_dir: "{{ cs_workspaces_dir }}"
+burza_repo_dir: "{{ cs_burza_repo_dir }}"
+
+# Terraform defaults passed to every columnstore workspace.
+# These map 1:1 to columnstore-ansible-aws variables.tf names.
+terraform_defaults:
+  aws_region: "{{ cs_aws_region }}"
+  aws_vpc: "{{ cs_aws_vpc }}"
+  aws_subnet: "{{ cs_aws_subnet }}"
+  create_key_pair: false
+  key_pair_name: "{{ cs_key_pair_name }}"
+  ssh_key_file: "{{ cs_ssh_key_file }}"
+  mariadb_enterprise_token: "{{ cs_enterprise_token }}"
+  admin_user: "{{ cs_admin_user }}"
+  admin_pass: "{{ vault_cs_admin_pass }}"
+  maxscale_user: "{{ cs_maxscale_user }}"
+  maxscale_pass: "{{ vault_cs_maxscale_pass }}"
+  repli_user: "{{ cs_repli_user }}"
+  repli_pass: "{{ vault_cs_repli_pass }}"
+  cej_user: "{{ cs_cej_user }}"
+  cej_pass: "{{ vault_cs_cej_pass }}"
+  cmapi_key: "{{ vault_cs_cmapi_key }}"
+  pcs_pass: "{{ vault_cs_pcs_pass }}"
