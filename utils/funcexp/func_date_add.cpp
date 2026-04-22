@@ -822,8 +822,15 @@ int64_t Func_date_add::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& i
   else
     funcType = static_cast<OpType>(parm[3]->data()->getIntVal(row, isNull));
 
-  uint64_t value =
-      helpers::dateAdd(val, parm[1]->data()->getStrVal(row, isNull).safeString(""), unit, dateType, funcType);
+  const auto expr = parm[1]->data()->getStrVal(row, isNull).safeString("");
+
+  if (isNull)
+  {
+    isNull = true;
+    return 0;
+  }
+
+  uint64_t value = helpers::dateAdd(val, expr, unit, dateType, funcType);
 
   if (value == 0)
     isNull = true;
