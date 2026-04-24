@@ -600,3 +600,15 @@ change_ubuntu_mirror_in_docker() {
 
   execInnerDocker "$container_name" "$docker_funcs; change_ubuntu_mirror ${region}"
 }
+
+
+set_cnf_path() {
+  # Set config path prefix based on distro
+  # TODO: fix check: instead of 'rocky' the RPM/DEB check should be used
+  # TODO: check paths in all new versions (it can be also /etc/mariadb/mariadb.conf.d, /etc/mariadb.conf.d
+  if [[ "$DISTRO" == *rocky* ]]; then
+    echo "/etc/my.cnf.d/"
+  else
+    echo "/etc/mysql/mariadb.conf.d/50-"
+  fi
+}
