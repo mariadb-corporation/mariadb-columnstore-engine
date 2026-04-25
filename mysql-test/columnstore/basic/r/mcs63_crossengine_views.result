@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS mcs63_db;
 CREATE DATABASE mcs63_db;
 USE mcs63_db;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL,''),(1,'aaa'),(2,'bbb'),(3,'ccc'),(4,'ddd'),(5,'eee'),(6,'fff'),(7,'gggg');
@@ -193,5 +190,4 @@ id	fname
 202	Two-Due
 DROP VIEW v1,v2;
 DROP TABLE tt,t2,t1;
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs63_db;

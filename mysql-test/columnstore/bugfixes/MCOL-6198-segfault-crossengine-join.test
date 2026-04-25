@@ -9,25 +9,7 @@ CREATE DATABASE mcol_6198;
 --disable_query_log
 --disable_result_log
 USE mcol_6198;
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
-if (!$MASTER_MYPORT)
-{
-  # Running with --extern
-  let $MASTER_MYPORT=`SELECT @@port`;
-}
-
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-#
-# Create corresponding in the server
-#
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
+--source ../include/cross_engine.inc
 CREATE TABLE IF NOT EXISTS `p` (
   `a1` int(11) DEFAULT NULL,
   `a2` varchar(8) DEFAULT NULL,
@@ -1226,7 +1208,7 @@ WHERE
 GROUP BY c36,p6,g01,g02;
 
 --disable_query_log
-DROP USER 'cejuser'@'localhost';
+--source ../include/drop_cross_engine.inc
 --enable_query_log
 --enable_result_log
 --enable_warnings

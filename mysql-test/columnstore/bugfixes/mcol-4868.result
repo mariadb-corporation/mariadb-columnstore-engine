@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS `mcol_4868`;
 CREATE DATABASE `mcol_4868`;
 USE `mcol_4868`;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE test_cs (a INT, b VARCHAR(100)) ENGINE=COLUMNSTORE;
 INSERT INTO test_cs VALUES (1,'Test1'), (2,'Test2'), (3,'Test3'), (4,'Test4');
 INSERT INTO test_cs VALUES (null,'TestNULL'), (6,NULL), (7,'Test7');
@@ -142,5 +139,4 @@ a	b
 2	cs02
 SELECT * FROM innotab1;
 a	b
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE `mcol_4868`;

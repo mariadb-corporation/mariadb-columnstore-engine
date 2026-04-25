@@ -17,24 +17,7 @@ DROP DATABASE IF EXISTS mcs90_db;
 
 CREATE DATABASE mcs90_db;
 USE mcs90_db;
-
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
-#
-# Create corresponding in the server
-#
---disable_warnings
-CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, NULL),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, 'ddd'),(7, 'eee');
 
@@ -67,7 +50,5 @@ SELECT t1.b, MAX(t1.a) FROM t1 JOIN t3 ON t1.a = t3.a GROUP BY t1.b ORDER BY 1;
 SELECT t1.b, MIN(t1.a) FROM t1 JOIN t3 ON t1.a = t3.a GROUP BY t1.b ORDER BY 1;
 
 # Clean UP
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP DATABASE mcs90_db;
