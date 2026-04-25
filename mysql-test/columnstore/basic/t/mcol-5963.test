@@ -9,6 +9,13 @@ CREATE DATABASE mcol5963;
 
 USE mcol5963;
 
+# Configure CrossEngine so InnoDB-baseline queries routed through
+# Columnstore's select_handler (columnstore_innodb_queries_use_mcs=ON
+# in suite.opt) can reach MariaDB on the MTR port. Without it
+# CrossEngineStep tries the default 3306 and fails with
+# "Server has gone away".
+--source ../include/cross_engine.inc
+
 create table FOO(foo datetime) engine = columnstore;
 insert into FOO(foo) values ('2025-08-27 15:26:25');
  
@@ -107,4 +114,5 @@ select if(0 = 1, true, foo) from FOO;
 select if(0 = 1, NULL, foo) from FOO;
 
 drop table FOO;
+--source ../include/drop_cross_engine.inc
 DROP DATABASE mcol5963;

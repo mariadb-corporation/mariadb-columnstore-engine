@@ -6,22 +6,7 @@ DROP DATABASE IF EXISTS MCOL5886;
 CREATE DATABASE MCOL5886;
 USE MCOL5886;
 
-if (!$MASTER_MYPORT)
-{
-  # Running with --extern
-  let $MASTER_MYPORT=`SELECT @@port`;
-}
-
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 CREATE TABLE   t1( a DECIMAL(12, 2), b int ) ENGINE=innodb PARTITION BY KEY(b,a) PARTITIONS 4;
 INSERT INTO t1 SELECT seq, seq/10 FROM seq_1_to_100;
 
@@ -30,8 +15,5 @@ CREATE TABLE IF NOT EXISTS t2  ( a DECIMAL(12, 2), b int ) ENGINE=COLUMNSTORE;
 SELECT COUNT(*) FROM (SELECT * FROM t1 PARTITION (p0)) tt;
 
 SELECT COUNT(*) FROM (SELECT * FROM t2 UNION ALL SELECT * FROM t1 PARTITION (p0)) tt;
-REVOKE ALL PRIVILEGES ON *.* FROM 'cejuser'@'localhost';
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP DATABASE MCOL5886;

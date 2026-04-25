@@ -52,18 +52,6 @@ if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     exit 1
 fi
 
-CONFIG_PATH_PREFIX=$(set_cnf_path)
-echo "Put lower_case_table_names=2 into ${CONFIG_PATH_PREFIX}lower_case.cnf"
-execInnerDocker "${CONTAINER_NAME}" "printf '[mysqld]\nlower_case_table_names=2\n' > ${CONFIG_PATH_PREFIX}lower_case.cnf"
-
-# Enable innodb_queries_use_mcs=ON for the future suite (Query Accelerator / RBO tests).
-# This READONLY startup variable routes InnoDB queries to Columnstore's select handler.
-# We write it before the first restart so it takes effect for ALL suites.  Non-QA suites
-# are unaffected because they use ENGINE=ColumnStore tables directly.  The loose- prefix
-# ensures MariaDB 10.6 (where the variable does not exist) starts without error.
-echo "Put innodb_queries_use_mcs=ON into ${CONFIG_PATH_PREFIX}queryacc.cnf"
-execInnerDocker "${CONTAINER_NAME}" "printf '[mysqld]\nloose-columnstore_innodb_queries_use_mcs=ON\n' > ${CONFIG_PATH_PREFIX}queryacc.cnf"
-
 select_pkg_format ${DISTRO}
 
 message "Running mtr tests..."
@@ -114,16 +102,9 @@ MTR_RUN_COMMAND="cd ${MTR_PATH} && ./mtr ${EXTERN_FLAG} --force --print-core=det
 MTR_EXIT=0
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}" || MTR_EXIT=$?
 
-# Run 'future' suite separately.  innodb_queries_use_mcs=ON was already written
-# into queryacc.cnf before the first restart above, so no extra restart is needed.
-# Verify the variable is still ON (sanity check).
-if ! execInnerDocker "${CONTAINER_NAME}" "mariadb -N -s -e \"SELECT @@global.columnstore_innodb_queries_use_mcs\"" 2>/dev/null | tr -d '\r' | grep -qw "ON"; then
-  warn "innodb_queries_use_mcs does NOT appear to be ON — future suite tests will likely fail"
-  # Show diagnostics: what cnf file contains and what server sees
-  execInnerDocker "${CONTAINER_NAME}" "cat ${CONFIG_PATH_PREFIX}queryacc.cnf 2>/dev/null || echo 'queryacc.cnf NOT FOUND'" || true
-  execInnerDocker "${CONTAINER_NAME}" "mariadb -N -s -e \"SHOW VARIABLES LIKE 'columnstore_innodb%'\"" 2>/dev/null || true
-fi
-
+# Run 'future' suite separately — it opts into innodb_queries_use_mcs=on via
+# its own suite.opt (mariadbd restarted). Under --extern mode .opt files are
+# ignored; tests skip via include/have_innodb_queries_use_mcs.inc.
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" || MTR_EXIT=$?
 
 exit ${MTR_EXIT}

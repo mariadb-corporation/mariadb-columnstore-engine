@@ -13,21 +13,8 @@ DROP DATABASE IF EXISTS mcs4011_db;
 #
 CREATE DATABASE mcs4011_db;
 USE mcs4011_db;
-# -------------------------------------------------------------- #
-# Enable cross engine join and query stats
-# Configure user and password in Columnstore.xml file
-# -------------------------------------------------------------- #
---exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
---exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
+--source ../include/cross_engine.inc
 --exec /usr/bin/mcsSetConfig QueryStats Enabled 'Y'
-# -------------------------------------------------------------- #
-# Create corresponding in the server
-# -------------------------------------------------------------- #
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 # -------------------------------------------------------------- #
 # Clear infinidb_quertstats.querystats table
 # -------------------------------------------------------------- #
@@ -60,5 +47,5 @@ select user, priority, queryType, query from infinidb_querystats.querystats;
 # -------------------------------------------------------------- #
 #
 --exec /usr/bin/mcsSetConfig QueryStats Enabled 'N'
-DROP USER 'cejuser'@'localhost';
+--source ../include/drop_cross_engine.inc
 DROP DATABASE mcs4011_db;

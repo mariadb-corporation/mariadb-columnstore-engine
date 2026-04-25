@@ -17,23 +17,7 @@ DROP DATABASE IF EXISTS `mcol_4874`;
 --enable_warnings
 CREATE DATABASE `mcol_4874`;
 USE `mcol_4874`;
-
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-#
-# Create corresponding in the server
-#
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 CREATE TABLE cs1 (a1 INT, b1 BIGINT, c1 INT)ENGINE=COLUMNSTORE;
 
 CREATE TABLE i1 (a2 INT, b2 DECIMAL(37,0), c2 INT);
@@ -53,7 +37,5 @@ JOIN
 USING (col1);
 
 # Cleanup
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP DATABASE `mcol_4874`;

@@ -5,29 +5,7 @@
 --source ../include/have_columnstore.inc
 --source ../include/disable_11.8.inc
 
-if (!$MASTER_MYPORT)
-{
-  # Running with --extern
-  let $MASTER_MYPORT=`SELECT @@port`;
-}
-
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
-#
-# Create corresponding in the server
-#
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 --disable_warnings
 DROP DATABASE IF EXISTS mdev25080;
 --enable_warnings
@@ -202,8 +180,6 @@ DELETE FROM t1; DELETE FROM t2;
 SELECT a FROM (SELECT a FROM t1 UNION SELECT a FROM t2) AS sub ORDER BY a;
 EXPLAIN SELECT a FROM (SELECT a FROM t1 UNION SELECT a FROM t2) AS sub ORDER BY a;
 
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP TABLE t1, t2, t3, t4;
 DROP DATABASE mdev25080;

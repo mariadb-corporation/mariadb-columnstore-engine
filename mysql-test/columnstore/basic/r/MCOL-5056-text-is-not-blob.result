@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS MCOL5056;
 CREATE DATABASE MCOL5056;
 USE MCOL5056;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE foo5 (a TEXT);
 CREATE TABLE bar5 (b TEXT) ENGINE=COLUMNSTORE;
 SELECT * FROM foo5, bar5 WHERE foo5.a=bar5.b;
@@ -18,5 +15,4 @@ SELECT * FROM t3i, t3c WHERE t3i.ai=t3c.cc;
 ai	bi	ci	ac	bc	cc
 SELECT * FROM t3i, t3c WHERE t3i.ci=t3c.cc;
 ai	bi	ci	ac	bc	cc
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE MCOL5056;
