@@ -28,6 +28,7 @@
 #include <set>
 #include <map>
 #include <climits>
+#include <cctype>
 #include <cmath>
 #include "mcs_datatype.h"
 using namespace std;
@@ -410,6 +411,33 @@ void convertValueNum(const string& str, const CalpontSystemCatalog::ColType& ct,
     }
 
     rf = (data[0] == '-') ? ROUND_NEG : ROUND_POS;
+  }
+
+  // Fractional literals converted to integral filter values do not always raise pushWarning,
+  // but comparisons still need round-style semantics (e.g. col > -762.2).
+  if (rf == 0 &&
+      (ct.colDataType == CalpontSystemCatalog::TINYINT || ct.colDataType == CalpontSystemCatalog::SMALLINT ||
+       ct.colDataType == CalpontSystemCatalog::MEDINT || ct.colDataType == CalpontSystemCatalog::INT ||
+       ct.colDataType == CalpontSystemCatalog::BIGINT || ct.colDataType == CalpontSystemCatalog::UTINYINT ||
+       ct.colDataType == CalpontSystemCatalog::USMALLINT || ct.colDataType == CalpontSystemCatalog::UMEDINT ||
+       ct.colDataType == CalpontSystemCatalog::UINT || ct.colDataType == CalpontSystemCatalog::UBIGINT))
+  {
+    string data(str);
+    size_t fpos = data.find_first_of(" \t()");
+    while (string::npos != fpos)
+    {
+      data.erase(fpos, 1);
+      fpos = data.find_first_of(" \t()");
+    }
+
+    const size_t dotPos = data.find('.');
+    if (dotPos != string::npos)
+    {
+      const size_t fracStart = dotPos + 1;
+      const size_t firstNonZero = data.find_first_not_of('0', fracStart);
+      if (firstNonZero != string::npos && std::isdigit(static_cast<unsigned char>(data[firstNonZero])))
+        rf = (!data.empty() && data[0] == '-') ? ROUND_NEG : ROUND_POS;
+    }
   }
 }
 

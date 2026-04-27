@@ -3531,8 +3531,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 }
 
                 ostringstream os;
-                //@Bug 3350 fix the precision.
-                os << setprecision(7) << dl;
+                // Preserve enough precision for round-trip conversion.
+                os << setprecision(std::numeric_limits<float>::max_digits10) << dl;
                 value.assign(os.str());
                 break;
               }
@@ -3551,8 +3551,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                 }
 
                 ostringstream os;
-                //@Bug 3350 fix the precision.
-                os << setprecision(16) << dl;
+                // Preserve enough precision for round-trip conversion.
+                os << setprecision(std::numeric_limits<double>::max_digits10) << dl;
                 value.assign(os.str());
                 break;
               }
@@ -3565,8 +3565,8 @@ uint8_t WE_DMLCommandProc::processUpdate(messageqcpp::ByteStream& bs, std::strin
                   continue;
 
                 ostringstream os;
-                //@Bug 3350 fix the precision.
-                os << setprecision(19) << dll;
+                // Preserve enough precision for round-trip conversion.
+                os << setprecision(std::numeric_limits<long double>::max_digits10) << dll;
                 value.assign(os.str());
                 break;
               }
