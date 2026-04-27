@@ -632,7 +632,9 @@ void CompareRule::compileRules(const std::vector<IdbSortSpec>& spec, const rowgr
 
       case CalpontSystemCatalog::CHAR:
       case CalpontSystemCatalog::VARCHAR:
+      case CalpontSystemCatalog::VARBINARY:
       case CalpontSystemCatalog::TEXT:
+      case CalpontSystemCatalog::BLOB:
       {
         Compare* c = new StringCompare(spec_el);
         fCompares.push_back(c);
