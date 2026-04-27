@@ -20,6 +20,8 @@ SELECT id, txt, DENSE_RANK() OVER (PARTITION BY txt ORDER BY id) FROM t_text;
 SELECT id, txt, COUNT(*) OVER (PARTITION BY txt ORDER BY id) FROM t_text;
 SELECT id, blb, RANK() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
 SELECT id, blb, ROW_NUMBER() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+SELECT id, blb, DENSE_RANK() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+SELECT id, blb, COUNT(*) OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
 
 --disable_warnings
 DROP DATABASE mcol_6337;

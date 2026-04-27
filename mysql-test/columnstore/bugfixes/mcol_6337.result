@@ -38,15 +38,29 @@ id	txt	COUNT(*) OVER (PARTITION BY txt ORDER BY id)
 SELECT id, blb, RANK() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
 id	blb	RANK() OVER (PARTITION BY blb ORDER BY id)
 1	aaa	1
+3	aaa	2
 2	bbb	1
-3	aaa	1
+5	bbb	2
 4	ccc	1
-5	bbb	1
 SELECT id, blb, ROW_NUMBER() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
 id	blb	ROW_NUMBER() OVER (PARTITION BY blb ORDER BY id)
 1	aaa	1
+3	aaa	2
 2	bbb	1
-3	aaa	1
+5	bbb	2
 4	ccc	1
-5	bbb	1
+SELECT id, blb, DENSE_RANK() OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+id	blb	DENSE_RANK() OVER (PARTITION BY blb ORDER BY id)
+1	aaa	1
+3	aaa	2
+2	bbb	1
+5	bbb	2
+4	ccc	1
+SELECT id, blb, COUNT(*) OVER (PARTITION BY blb ORDER BY id) FROM t_blob;
+id	blb	COUNT(*) OVER (PARTITION BY blb ORDER BY id)
+1	aaa	1
+3	aaa	2
+2	bbb	1
+5	bbb	2
+4	ccc	1
 DROP DATABASE mcol_6337;
