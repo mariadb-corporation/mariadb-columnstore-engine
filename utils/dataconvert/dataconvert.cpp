@@ -251,6 +251,21 @@ void number_int_value(const string& data, cscDataType typeCode,
     if ((!noRoundup) && frac1 >= 5)
       roundup = 1;
 
+    // Flag precision loss for the SELECT filter path (noRoundup == true,
+    // round-up suppressed) so that convertValueNum() can set rf to
+    // ROUND_POS / ROUND_NEG and equality comparisons (>=, <=, =) are
+    // evaluated correctly against the truncated integer representation.
+    // Without this, e.g.
+    //   cdecimal18_2 >= 99999999999.972
+    // is sent to the primitive as col >= 9999999999997 with rf=0 and
+    // erroneously matches rows whose stored value is exactly 99999999999.97.
+    //
+    // Gate on noRoundup to avoid tripping the INSERT/UPDATE path, where
+    // frac1>=5 is resolved by actual round-up (e.g. 1.5 -> 2) and
+    // pushwarning=true would be translated into "Data truncated" errors.
+    if (noRoundup && valStr.find_first_not_of('0', dp + 1) != string::npos)
+      pushwarning = true;
+
     intStr.erase(dp);
     frnStr = valStr.substr(dp + 1);
 
