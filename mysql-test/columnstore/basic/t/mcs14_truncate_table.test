@@ -25,7 +25,9 @@ TRUNCATE non_existing_table;
 
 # check multi-table TRUNCATE
 DROP TABLE t1;
+--disable_warnings
 DROP TABLE IF EXISTS t2;
+--enable_warnings
 CREATE TABLE t1 (id INT) ENGINE=INNODB;
 CREATE TABLE t2 (id INT) ENGINE=Columnstore;
 --error 1064
@@ -61,7 +63,9 @@ HANDLER t1 OPEN;
 TRUNCATE t1;
 
 DROP TABLE t1;
+--disable_warnings
 DROP TABLE IF EXISTS t1;
+--enable_warnings
 CREATE TABLE t1 (id INT) ENGINE=Columnstore;
 INSERT INTO t1 (id) VALUES (1), (2), (3), (4), (5);
 CREATE TABLE t2 LIKE t1;
