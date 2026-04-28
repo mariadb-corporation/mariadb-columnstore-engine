@@ -19,8 +19,8 @@ a	a
 select * from t3, t4 where t3.a = t4.a order by t3.a,t4.a;
 a	a
 one	one
-two	two
 three	three
+two	two
 set session columnstore_max_pm_join_result_count=1048576;
 select * from t1, t2 where t1.a = t2.a order by t1.a,t2.a;
 a	a
@@ -31,6 +31,6 @@ a	a
 select * from t3, t4 where t3.a = t4.a order by t3.a,t4.a;
 a	a
 one	one
-two	two
 three	three
+two	two
 DROP DATABASE mcol_5522;
