@@ -1567,7 +1567,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
   if (isNull(&fRowGroupIn, rowIn, colIn) == true)
     return;
 
-  int64_t valIn = 0;
+  uint64_t valIn = 0;
   uint64_t uvalIn = 0;
 
   switch (colDataType)
@@ -1577,23 +1577,51 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     case execplan::CalpontSystemCatalog::MEDINT:
     case execplan::CalpontSystemCatalog::INT:
     case execplan::CalpontSystemCatalog::BIGINT:
+    {
+      int64_t valInSigned = rowIn.getIntField(colIn);
+      valIn = static_cast<uint64_t>(valInSigned);
+      break;
+    }
+
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      valIn = rowIn.getIntField(colIn);
+      int64_t valInSigned = 0;
+      uint32_t scale = fRowGroupIn.getScale()[colIn];
+      long double dbl = 0.0;
 
-      if ((fRowGroupIn.getScale())[colIn] != 0)
+      if (LIKELY(rowIn.getColumnWidth(colIn) == datatypes::MAXDECIMALWIDTH))
       {
-        valIn = rowIn.getIntField(colIn);
-        valIn /= IDB_pow[fRowGroupIn.getScale()[colIn] - 1];
-
-        if (valIn > 0)
-          valIn += 5;
-        else if (valIn < 0)
-          valIn -= 5;
-
-        valIn /= 10;
+        // Wide decimal values are kept as int128; convert using a signed path
+        // consistent with the floating-point BIT_* coercion below.
+        int128_t wideValIn = rowIn.getTSInt128Field(colIn).getValue();
+        dbl = static_cast<long double>(wideValIn);
       }
+      else if (rowIn.getColumnWidth(colIn) <= datatypes::MAXLEGACYWIDTH)
+      {
+        dbl = static_cast<long double>(rowIn.getIntField(colIn));
+      }
+      else
+      {
+        idbassert(0);
+        throw std::logic_error("RowAggregation::doBitOp(): DECIMAL bad length.");
+      }
+
+      if (scale != 0)
+        dbl /= datatypes::scaleDivisor<long double>(scale);
+
+      dbl += (dbl >= 0) ? 0.5 : -0.5;
+
+      const long double maxInt64 = static_cast<long double>(std::numeric_limits<int64_t>::max());
+      const long double minInt64 = static_cast<long double>(std::numeric_limits<int64_t>::min());
+      if (dbl > maxInt64)
+        valInSigned = std::numeric_limits<int64_t>::max();
+      else if (dbl < minInt64)
+        valInSigned = std::numeric_limits<int64_t>::min();
+      else
+        valInSigned = static_cast<int64_t>(dbl);
+
+      valIn = static_cast<uint64_t>(valInSigned);
 
       break;
     }
@@ -1623,7 +1651,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     case execplan::CalpontSystemCatalog::TEXT:
     {
       auto str = rowIn.getStringField(colIn);
-      valIn = strtoll(str.safeString("").c_str(), nullptr, 10);
+      valIn = static_cast<uint64_t>(strtoll(str.safeString("").c_str(), nullptr, 10));
       break;
     }
 
@@ -1648,16 +1676,16 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
 
       if (dbl > maxint)
       {
-        valIn = maxint;
+        valIn = static_cast<uint64_t>(maxint);
       }
       else if (dbl < minint)
       {
-        valIn = minint;
+        valIn = static_cast<uint64_t>(minint);
       }
       else
       {
         dbl += (dbl >= 0) ? 0.5 : -0.5;
-        valIn = (int64_t)dbl;
+        valIn = static_cast<uint64_t>((int64_t)dbl);
       }
 
       break;
@@ -1667,16 +1695,16 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     {
       uint64_t dt = rowIn.getUintField(colIn);
       dt = dt & 0xFFFFFFC0;  // no need to set spare bits to 3E, will shift out
-      valIn = ((dt >> 16) * 10000) + (((dt >> 12) & 0xF) * 100) + ((dt >> 6) & 077);
+      valIn = static_cast<uint64_t>(((dt >> 16) * 10000) + (((dt >> 12) & 0xF) * 100) + ((dt >> 6) & 077));
       break;
     }
 
     case execplan::CalpontSystemCatalog::DATETIME:
     {
       uint64_t dtm = rowIn.getUintField(colIn);
-      valIn = ((dtm >> 48) * 10000000000LL) + (((dtm >> 44) & 0xF) * 100000000) +
-              (((dtm >> 38) & 077) * 1000000) + (((dtm >> 32) & 077) * 10000) + (((dtm >> 26) & 077) * 100) +
-              ((dtm >> 20) & 077);
+      valIn = static_cast<uint64_t>(((dtm >> 48) * 10000000000LL) + (((dtm >> 44) & 0xF) * 100000000) +
+                                    (((dtm >> 38) & 077) * 1000000) + (((dtm >> 32) & 077) * 10000) +
+                                    (((dtm >> 26) & 077) * 100) + ((dtm >> 20) & 077));
       break;
     }
 
@@ -1686,7 +1714,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
       string str = DataConvert::timestampToString1(timestamp, fTimeZone);
       // strip off micro seconds
       str = str.substr(0, 14);
-      valIn = strtoll(str.c_str(), nullptr, 10);
+      valIn = static_cast<uint64_t>(strtoll(str.c_str(), nullptr, 10));
       break;
     }
 
@@ -1702,7 +1730,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
       }
 
       hour |= ((dtm >> 40) & 0xfff);
-      valIn = (hour * 10000) + (((dtm >> 32) & 0xff) * 100) + ((dtm >> 24) & 0xff);
+      valIn = static_cast<uint64_t>((hour * 10000) + (((dtm >> 32) & 0xff) * 100) + ((dtm >> 24) & 0xff));
       break;
     }
 
@@ -1712,14 +1740,14 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
     }
   }
 
-  int64_t valOut = fRow.getIntField(colOut);
+  uint64_t valOut = fRow.getUintField(colOut);
 
   if (funcType == ROWAGG_BIT_AND)
-    fRow.setIntField(valIn & valOut, colOut);
+    fRow.setUintField(valIn & valOut, colOut);
   else if (funcType == ROWAGG_BIT_OR)
-    fRow.setIntField(valIn | valOut, colOut);
+    fRow.setUintField(valIn | valOut, colOut);
   else
-    fRow.setIntField(valIn ^ valOut, colOut);
+    fRow.setUintField(valIn ^ valOut, colOut);
 }
 
 //------------------------------------------------------------------------------
