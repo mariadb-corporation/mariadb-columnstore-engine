@@ -489,6 +489,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6.15-10", custo
                SERVER_REF: "${SERVER_REF:-" + server + "}",
                SERVER_REMOTE: "${SERVER_REMOTE:-" + server_remote + "}",
                SERVER_SHA: "${SERVER_SHA:-" + server + "}",
+               SOURCE_DIR: "/mdb/" + builddir,
              },
              commands: echo_running_on +
              [
@@ -501,6 +502,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6.15-10", custo
                "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
                "git config cmake.update-submodules no",
                "rm -rf storage/columnstore/columnstore",
+               "echo $$SOURCE_DIR/storage/columnstore/CMakeLists.txt",
+               "sed -i 's|INSTALL_MYSQL_TEST(\"$${CMAKE_CURRENT_SOURCE_DIR}/mysql-test/\" \"plugin/columnstore\")|INSTALL_MYSQL_TEST(\"$${CMAKE_CURRENT_SOURCE_DIR}/columnstore/mysql-test/\" \"plugin/columnstore\")|' $$SOURCE_DIR/storage/columnstore/CMakeLists.txt",
                "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore/columnstore",
              ],
            },
