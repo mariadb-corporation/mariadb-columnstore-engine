@@ -17,8 +17,6 @@ TRUNCATE non_existing_table;
 ERROR 42S02: Table 'mcs14_db1.non_existing_table' doesn't exist
 DROP TABLE t1;
 DROP TABLE IF EXISTS t2;
-Warnings:
-Note	1051	Unknown table 'mcs14_db1.t2'
 CREATE TABLE t1 (id INT) ENGINE=INNODB;
 CREATE TABLE t2 (id INT) ENGINE=Columnstore;
 TRUNCATE t1, t2;

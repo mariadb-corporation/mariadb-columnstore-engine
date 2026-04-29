@@ -19,7 +19,9 @@ INSERT INTO t1 VALUES (1, 2, "test");
 SELECT COUNT(*) FROM t1;
 TRUNCATE mcs14_db1.t1;
 
+--disable_warnings
 DROP TABLE IF EXISTS non_existing_table;
+--enable_warnings
 --error 1146
 TRUNCATE non_existing_table;
 
