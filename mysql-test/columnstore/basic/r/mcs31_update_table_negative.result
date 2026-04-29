@@ -10,7 +10,7 @@ CREATE table t2 LIKE t1;
 UPDATE t1 SET nonexistingColumn = 1;
 ERROR 42S22: Unknown column 'nonexistingColumn' in 'field list'
 UPDATE t2 SET a = (SELECT nonexistingColumn FROM t1);
-ERROR 42S22: Unknown column 'nonexistingColumn' in 'SELECT'
+ERROR 42S22: Unknown column 'nonexistingColumn' in 'field list'
 UPDATE t1 SET a = NULL;
 ERROR HY000: Internal error: CAL0002: Update Failed:  MCS-4015: Column 'a' cannot be null.
 UPDATE t1 SET a = NULL, b =1;
