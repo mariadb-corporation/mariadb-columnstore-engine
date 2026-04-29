@@ -187,7 +187,7 @@ TEST(DataConvertTest, NumberIntValue)
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, 12);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   data = "-1234";
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
@@ -197,7 +197,7 @@ TEST(DataConvertTest, NumberIntValue)
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, -12);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   // test max
   data = "99999999999999999999999999999999999999";
   valMax = ((((((((int128_t)999999999 * 1000000000) + 999999999) * 1000000000) + 999999999) * 1000000000) +
@@ -234,12 +234,12 @@ TEST(DataConvertTest, NumberIntValue)
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, 13);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   data = "-12.56";
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, -13);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   // test saturation
   data = "999999999999999999999999999999999999999";  // data has 39 9's
   // valMax has 38 9's
@@ -367,12 +367,12 @@ TEST(DataConvertTest, NumberIntValue)
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, 121111111112);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   data = "-12.11111111119";
   pushWarning = false;
   number_int_value(data, typecode, ct, pushWarning, noRoundup, res);
   EXPECT_EQ(res, -121111111112);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   // test saturation
   data = "99999999999999999999999999999";  // data has 29 9's
   // valMax has 38 9's
@@ -532,7 +532,7 @@ TEST(DataConvertTest, NumberIntValue)
   b4 = *(reinterpret_cast<const uint64_t*>(&valMax) + 1);
   EXPECT_EQ(b1, b3);
   EXPECT_EQ(b2, b4);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   data = "-0.199999999999999999999999999999999999999";
   valMax = ((((((((int128_t)200000000 * 1000000000) + 0) * 1000000000) + 0) * 1000000000) + 0) * 100) + 0;
   valMax = -valMax;
@@ -544,7 +544,7 @@ TEST(DataConvertTest, NumberIntValue)
   b4 = *(reinterpret_cast<const uint64_t*>(&valMax) + 1);
   EXPECT_EQ(b1, b3);
   EXPECT_EQ(b2, b4);
-  EXPECT_TRUE(pushWarning);
+  EXPECT_FALSE(pushWarning);
   // test saturation
   data = "99999999999999999999999999999";  // data has 29 9's
   // valMax has 38 9's

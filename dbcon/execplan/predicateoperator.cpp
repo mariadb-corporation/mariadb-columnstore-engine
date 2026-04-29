@@ -211,6 +211,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
       case execplan::CalpontSystemCatalog::INT:
       case execplan::CalpontSystemCatalog::MEDINT:
       case execplan::CalpontSystemCatalog::TINYINT:
+      case execplan::CalpontSystemCatalog::SMALLINT:
       case execplan::CalpontSystemCatalog::BIGINT:
       case execplan::CalpontSystemCatalog::UINT:
       case execplan::CalpontSystemCatalog::UMEDINT:
@@ -244,6 +245,7 @@ void PredicateOperator::setOpType(Type& l, Type& r)
       case execplan::CalpontSystemCatalog::INT:
       case execplan::CalpontSystemCatalog::MEDINT:
       case execplan::CalpontSystemCatalog::TINYINT:
+      case execplan::CalpontSystemCatalog::SMALLINT:
       case execplan::CalpontSystemCatalog::BIGINT:
       case execplan::CalpontSystemCatalog::UINT:
       case execplan::CalpontSystemCatalog::UMEDINT:
