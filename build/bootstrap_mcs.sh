@@ -107,6 +107,44 @@ install_sccache() {
     install sccache*/sccache /usr/local/bin/ && message "sccache installed"
 }
 
+install_optional_arrow_and_parquet_deps() {
+    if [[ $INSTALL_DEPS = false ]]; then
+        return
+    fi
+
+    if [[ $PKG_FORMAT == "deb" ]]; then
+        local candidate_pkgs=("libarrow-dev" "libparquet-dev")
+        local found_pkgs=()
+        local pkg
+        for pkg in "${candidate_pkgs[@]}"; do
+            if apt-cache show "$pkg" >/dev/null 2>&1; then
+                found_pkgs+=("$pkg")
+            else
+                warn "Optional package '$pkg' is not available on ${OS}; bundled Arrow fallback remains available."
+            fi
+        done
+        if [[ ${#found_pkgs[@]} -gt 0 ]]; then
+            message "Installing optional Apache Arrow/Parquet system packages: ${found_pkgs[*]}"
+            retry_eval 3 "apt-get -y install ${found_pkgs[*]}"
+        fi
+    elif [[ $PKG_FORMAT == "rpm" ]]; then
+        local candidate_pkgs=("arrow-devel" "parquet-devel")
+        local found_pkgs=()
+        local pkg
+        for pkg in "${candidate_pkgs[@]}"; do
+            if dnf list --available "$pkg" >/dev/null 2>&1; then
+                found_pkgs+=("$pkg")
+            else
+                warn "Optional package '$pkg' is not available on ${OS}; bundled Arrow fallback remains available."
+            fi
+        done
+        if [[ ${#found_pkgs[@]} -gt 0 ]]; then
+            message "Installing optional Apache Arrow/Parquet system packages: ${found_pkgs[*]}"
+            retry_eval 3 "dnf install -y ${found_pkgs[*]}"
+        fi
+    fi
+}
+
 install_deps() {
     if [[ $INSTALL_DEPS = false ]]; then
         return
@@ -161,6 +199,7 @@ install_deps() {
 }
 
 install_deps
+install_optional_arrow_and_parquet_deps
 install_sccache
 
 cd $COLUMSNTORE_SOURCE_PATH
