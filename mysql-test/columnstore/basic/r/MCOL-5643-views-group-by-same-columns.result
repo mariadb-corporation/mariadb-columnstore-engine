@@ -1,6 +1,6 @@
-drop database if exists MCOL_5643;
-create database MCOL_5643;
-use MCOL_5643;
+drop database if exists mcol_5643;
+create database mcol_5643;
+use mcol_5643;
 create table t1
 (
 id int,
@@ -23,4 +23,4 @@ on view_on_t1.id = view_on_t2.fk_t1
 group by view_on_t1.someStr, view_on_t2.someStr;
 max(view_on_t1.id)	someStr	someStr
 1	bla	xyz
-drop database MCOL_5643;
+drop database mcol_5643;

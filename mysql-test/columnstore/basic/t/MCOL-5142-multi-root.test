@@ -1,9 +1,9 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142_MULTI_ROOT;
+DROP DATABASE IF EXISTS mcol5142_multi_root;
 --enable_warnings
 
-CREATE DATABASE MCOL5142_MULTI_ROOT;
-USE MCOL5142_MULTI_ROOT;
+CREATE DATABASE mcol5142_multi_root;
+USE mcol5142_multi_root;
 
 CREATE TABLE emp (
   id INT NOT NULL,
@@ -35,4 +35,4 @@ WITH RECURSIVE org AS (
 SELECT root_id, id, name, manager_id, lvl
 FROM org;
 
-DROP DATABASE MCOL5142_MULTI_ROOT;
+DROP DATABASE mcol5142_multi_root;

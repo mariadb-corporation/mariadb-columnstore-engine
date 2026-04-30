@@ -1,10 +1,10 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5568;
+DROP DATABASE IF EXISTS mcol5568;
 --enable_warnings
 
-CREATE DATABASE MCOL5568;
+CREATE DATABASE mcol5568;
 
-USE MCOL5568;
+USE mcol5568;
 
 CREATE TABLE test_mult (
 
@@ -105,5 +105,5 @@ SELECT indemnity_paid, n_clms, n_clms + (indemnity_paid + 9) FROM test_mult4;
 --error 1815
 SELECT indemnity_paid, n_clms, n_clms - 2 FROM test_mult4;
 
-DROP DATABASE MCOL5568;
+DROP DATABASE mcol5568;
 

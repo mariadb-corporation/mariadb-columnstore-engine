@@ -1,7 +1,7 @@
 DROP DATABASE IF EXISTS mcol5992;
 CREATE DATABASE mcol5992;
 USE mcol5992;
-CREATE TABLE `CS_LEG` (
+CREATE TABLE `cs_leg` (
 ID BIGINT(20) DEFAULT NULL,
 bigint_col BIGINT(20) DEFAULT NULL,
 tinyint_col TINYINT DEFAULT NULL,
@@ -18,47 +18,47 @@ varchar_col VARCHAR(255) DEFAULT NULL,
 char_col CHAR(10) DEFAULT NULL,
 text_col TEXT DEFAULT NULL
 ) ENGINE=Columnstore;
-INSERT INTO CS_LEG(ID) VALUES(1);
-SELECT NULLIF(bigint_col, 9999999999) FROM CS_LEG;
+INSERT INTO cs_leg(ID) VALUES(1);
+SELECT NULLIF(bigint_col, 9999999999) FROM cs_leg;
 NULLIF(bigint_col, 9999999999)
 NULL
-SELECT NULLIF(tinyint_col, 1) FROM CS_LEG;
+SELECT NULLIF(tinyint_col, 1) FROM cs_leg;
 NULLIF(tinyint_col, 1)
 NULL
-SELECT NULLIF(smallint_col, 100) FROM CS_LEG;
+SELECT NULLIF(smallint_col, 100) FROM cs_leg;
 NULLIF(smallint_col, 100)
 NULL
-SELECT NULLIF(mediumint_col, 1000) FROM CS_LEG;
+SELECT NULLIF(mediumint_col, 1000) FROM cs_leg;
 NULLIF(mediumint_col, 1000)
 NULL
-SELECT NULLIF(int_col, 99999) FROM CS_LEG;
+SELECT NULLIF(int_col, 99999) FROM cs_leg;
 NULLIF(int_col, 99999)
 NULL
-SELECT NULLIF(float_col, 1.1) FROM CS_LEG;
+SELECT NULLIF(float_col, 1.1) FROM cs_leg;
 NULLIF(float_col, 1.1)
 NULL
-SELECT NULLIF(double_col, 2.2) FROM CS_LEG;
+SELECT NULLIF(double_col, 2.2) FROM cs_leg;
 NULLIF(double_col, 2.2)
 NULL
-SELECT NULLIF(decimal_col, 123.45) FROM CS_LEG;
+SELECT NULLIF(decimal_col, 123.45) FROM cs_leg;
 NULLIF(decimal_col, 123.45)
 NULL
-SELECT NULLIF(date_col, '2025-01-01') FROM CS_LEG;
+SELECT NULLIF(date_col, '2025-01-01') FROM cs_leg;
 NULLIF(date_col, '2025-01-01')
 NULL
-SELECT NULLIF(datetime_col, '2025-01-01 12:00:00') FROM CS_LEG;
+SELECT NULLIF(datetime_col, '2025-01-01 12:00:00') FROM cs_leg;
 NULLIF(datetime_col, '2025-01-01 12:00:00')
 NULL
-SELECT NULLIF(time_col, '12:00:00') FROM CS_LEG;
+SELECT NULLIF(time_col, '12:00:00') FROM cs_leg;
 NULLIF(time_col, '12:00:00')
 NULL
-SELECT NULLIF(varchar_col, 'Test') FROM CS_LEG;
+SELECT NULLIF(varchar_col, 'Test') FROM cs_leg;
 NULLIF(varchar_col, 'Test')
 NULL
-SELECT NULLIF(char_col, 'Test') FROM CS_LEG;
+SELECT NULLIF(char_col, 'Test') FROM cs_leg;
 NULLIF(char_col, 'Test')
 NULL
-SELECT NULLIF(text_col, 'Test') FROM CS_LEG;
+SELECT NULLIF(text_col, 'Test') FROM cs_leg;
 NULLIF(text_col, 'Test')
 NULL
 DROP DATABASE mcol5992;

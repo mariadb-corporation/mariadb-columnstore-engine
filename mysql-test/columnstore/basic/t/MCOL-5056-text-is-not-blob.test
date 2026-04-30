@@ -2,12 +2,12 @@
 -- source ../include/have_columnstore.inc
 
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5056;
+DROP DATABASE IF EXISTS mcol5056;
 --enable_warnings
 
-CREATE DATABASE MCOL5056;
+CREATE DATABASE mcol5056;
 
-USE MCOL5056;
+USE mcol5056;
 
 --source ../include/cross_engine.inc
 CREATE TABLE foo5 (a TEXT);
@@ -23,5 +23,5 @@ SELECT * FROM t3i, t3c WHERE t3i.ai=t3c.cc;
 SELECT * FROM t3i, t3c WHERE t3i.ci=t3c.cc;
 
 --source ../include/drop_cross_engine.inc
-DROP DATABASE MCOL5056;
+DROP DATABASE mcol5056;
 

@@ -1,14 +1,14 @@
-DROP DATABASE IF EXISTS MCOL_5987;
-CREATE DATABASE MCOL_5987;
-USE MCOL_5987;
+DROP DATABASE IF EXISTS mcol_5987;
+CREATE DATABASE mcol_5987;
+USE mcol_5987;
 CREATE TABLE t1(x integer) ENGINE=COLUMNSTORE;
 CREATE TABLE t2(x integer) ENGINE=COLUMNSTORE;
 CREATE TABLE t3(x integer) ENGINE=COLUMNSTORE;
-INSERT INTO t2(x) SELECT object_id FROM information_schema.columnstore_tables WHERE table_name='t1' AND table_schema='MCOL_5987';
+INSERT INTO t2(x) SELECT object_id FROM information_schema.columnstore_tables WHERE table_name='t1' AND table_schema='mcol_5987';
 DROP TABLE t1;
 CREATE TABLE t1(x integer) ENGINE=COLUMNSTORE;
-INSERT INTO t3(x) SELECT object_id FROM information_schema.columnstore_tables WHERE table_name='t1' AND table_schema='MCOL_5987';
+INSERT INTO t3(x) SELECT object_id FROM information_schema.columnstore_tables WHERE table_name='t1' AND table_schema='mcol_5987';
 SELECT COUNT(*) FROM t2, t3 WHERE t2.x = t3.x;
 COUNT(*)
 1
-DROP DATABASE MCOL_5987;
+DROP DATABASE mcol_5987;

@@ -1,9 +1,9 @@
 --disable_warnings
-drop database if exists MCOL_5643;
+drop database if exists mcol_5643;
 --enable_warnings
-create database MCOL_5643;
+create database mcol_5643;
 
-use MCOL_5643;
+use mcol_5643;
 
 create table t1
 (
@@ -32,5 +32,5 @@ on view_on_t1.id = view_on_t2.fk_t1
 group by view_on_t1.someStr, view_on_t2.someStr;
 # ==> All non-aggregate columns in the SELECT and ORDER BY clause must be included in the GROUP BY clause. 0.063 sec
 
-drop database MCOL_5643;
+drop database mcol_5643;
 

@@ -1,9 +1,9 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142_OUTER_OPS;
+DROP DATABASE IF EXISTS mcol5142_outer_ops;
 --enable_warnings
 
-CREATE DATABASE MCOL5142_OUTER_OPS;
-USE MCOL5142_OUTER_OPS;
+CREATE DATABASE mcol5142_outer_ops;
+USE mcol5142_outer_ops;
 
 CREATE TABLE emp (
     id INT NOT NULL,
@@ -106,4 +106,4 @@ SELECT * FROM hier;
 --sorted_result
 SELECT * FROM hier_copy;
 
-DROP DATABASE MCOL5142_OUTER_OPS;
+DROP DATABASE mcol5142_outer_ops;

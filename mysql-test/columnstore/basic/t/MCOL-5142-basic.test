@@ -1,11 +1,11 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142;
+DROP DATABASE IF EXISTS mcol5142;
 --enable_warnings
 
-CREATE DATABASE MCOL5142;
+CREATE DATABASE mcol5142;
 
 
-USE MCOL5142;
+USE mcol5142;
 CREATE TABLE employees (
     id INT NOT NULL,
     name VARCHAR(100),
@@ -44,4 +44,4 @@ WITH RECURSIVE employee_hierarchy AS (
 )
 SELECT * FROM employee_hierarchy;
 
-DROP DATABASE MCOL5142;
+DROP DATABASE mcol5142;

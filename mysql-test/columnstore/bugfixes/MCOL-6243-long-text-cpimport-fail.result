@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MCOL_6243;
-CREATE DATABASE MCOL_6243;
-USE MCOL_6243;
+DROP DATABASE IF EXISTS mcol_6243;
+CREATE DATABASE mcol_6243;
+USE mcol_6243;
 CREATE TABLE t1 (
 short_id varchar(36)
 , long_content longtext
@@ -9,4 +9,4 @@ LOAD DATA LOCAL INFILE 'DATADIR/mcol_6243_input.csv' INTO TABLE t1 CHARACTER SET
 SELECT short_id, length(long_content) FROM t1;
 short_id	length(long_content)
 short id	1200000
-DROP DATABASE MCOL_6243;
+DROP DATABASE mcol_6243;
