@@ -1685,7 +1685,7 @@ void RowAggregation::doBitOp(const Row& rowIn, int64_t colIn, int64_t colOut, in
       else
       {
         dbl += (dbl >= 0) ? 0.5 : -0.5;
-        valIn = static_cast<uint64_t>((int64_t)dbl);
+        valIn = static_cast<uint64_t>(static_cast<int64_t>(dbl));
       }
 
       break;
