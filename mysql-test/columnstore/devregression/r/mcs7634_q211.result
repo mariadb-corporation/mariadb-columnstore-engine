@@ -1,5 +1,6 @@
 USE tpch1;
 drop database if exists test023_cs3;
+create database test023_cs3;
 use test023_cs3;
 drop table if exists `cs3`;
 create table `test023_cs3`.`cs3`(i int, t text) engine=columnstore;
