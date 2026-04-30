@@ -10,6 +10,6 @@
 USE autopilot;
 --disable_query_log
 SET time_zone='+00:00';
--enable_query_log
+--enable_query_log
 
 select * from datatypetestm1;
