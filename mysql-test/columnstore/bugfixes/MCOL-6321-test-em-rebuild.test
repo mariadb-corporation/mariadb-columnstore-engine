@@ -17,10 +17,10 @@
 
 
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL_6321;
+DROP DATABASE IF EXISTS mcol_6321;
 --enable_warnings
-CREATE DATABASE MCOL_6321;
-USE MCOL_6321;
+CREATE DATABASE mcol_6321;
+USE mcol_6321;
 
 # Create and populate the table.
 CREATE TABLE t(x longtext) ENGINE=Columnstore;
@@ -167,4 +167,4 @@ SELECT SUBSTR(x,1,10) FROM t;
 
 # Finish the test.
 
-DROP DATABASE MCOL_6321;
+DROP DATABASE mcol_6321;

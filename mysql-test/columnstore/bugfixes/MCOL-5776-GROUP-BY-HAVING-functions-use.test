@@ -3,10 +3,10 @@
 --source ../include/functions.inc
 
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5776;
+DROP DATABASE IF EXISTS mcol5776;
 --enable_warnings
-CREATE DATABASE MCOL5776;
-USE MCOL5776;
+CREATE DATABASE mcol5776;
+USE mcol5776;
 
 CREATE TABLE t(x INTEGER, y INTEGER) ENGINE=Columnstore;
 INSERT INTO t(x,y) VALUES (1,2), (2,3), (3,3);
@@ -102,5 +102,5 @@ INSERT INTO t(k) VALUES (1), (2), (2), (3), (3), (4), (4),(4),(4),(4),(995), (NU
 --sorted_result
 SELECT k + k a FROM t GROUP BY a HAVING a >= 8;
 
-DROP DATABASE MCOL5776;
+DROP DATABASE mcol5776;
 --source ../include/drop_functions.inc

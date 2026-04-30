@@ -1,10 +1,10 @@
 -- source ../include/have_columnstore.inc
 --source include/have_innodb.inc
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5886;
+DROP DATABASE IF EXISTS mcol5886;
 --enable_warnings
-CREATE DATABASE MCOL5886;
-USE MCOL5886;
+CREATE DATABASE mcol5886;
+USE mcol5886;
 
 --source ../include/cross_engine.inc
 CREATE TABLE   t1( a DECIMAL(12, 2), b int ) ENGINE=innodb PARTITION BY KEY(b,a) PARTITIONS 4;
@@ -16,4 +16,4 @@ SELECT COUNT(*) FROM (SELECT * FROM t1 PARTITION (p0)) tt;
 
 SELECT COUNT(*) FROM (SELECT * FROM t2 UNION ALL SELECT * FROM t1 PARTITION (p0)) tt;
 --source ../include/drop_cross_engine.inc
-DROP DATABASE MCOL5886;
+DROP DATABASE mcol5886;

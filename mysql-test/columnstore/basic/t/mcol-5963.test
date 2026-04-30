@@ -16,62 +16,62 @@ USE mcol5963;
 # "Server has gone away".
 --source ../include/cross_engine.inc
 
-create table FOO(foo datetime) engine = columnstore;
-insert into FOO(foo) values ('2025-08-27 15:26:25');
+create table foo(foo datetime) engine = columnstore;
+insert into foo(foo) values ('2025-08-27 15:26:25');
  
-select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
-select if(0 = 1, null, foo) from FOO;
-select if(0 = 1, true, foo) from FOO;
-select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, '2025-08-27 15:26:25', foo) from foo;
+select if(0 = 1, null, foo) from foo;
+select if(0 = 1, true, foo) from foo;
+select if(0 = 1, 5, foo) from foo;
 select if(0 = 1, null, "text");
 
-drop table FOO;
+drop table foo;
 
 # InnoDB comparison for DATETIME
-create table FOO(foo datetime) engine = innodb;
-insert into FOO(foo) values ('2025-08-27 15:26:25');
+create table foo(foo datetime) engine = innodb;
+insert into foo(foo) values ('2025-08-27 15:26:25');
 
-select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
-select if(0 = 1, null, foo) from FOO;
-select if(0 = 1, true, foo) from FOO;
-select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, '2025-08-27 15:26:25', foo) from foo;
+select if(0 = 1, null, foo) from foo;
+select if(0 = 1, true, foo) from foo;
+select if(0 = 1, 5, foo) from foo;
 select if(0 = 1, null, "text");
 
-drop table FOO;
+drop table foo;
 
 # Additional temporal types: DATE
-create table FOO_DATE(foo date) engine = columnstore;
-insert into FOO_DATE(foo) values ('2025-08-27');
+create table foo_date(foo date) engine = columnstore;
+insert into foo_date(foo) values ('2025-08-27');
 
-select if(0 = 1, true, foo) from FOO_DATE;
-select if(0 = 1, 5, foo) from FOO_DATE;
-select if(0 = 1, null, foo) from FOO_DATE;
+select if(0 = 1, true, foo) from foo_date;
+select if(0 = 1, 5, foo) from foo_date;
+select if(0 = 1, null, foo) from foo_date;
 
-drop table FOO_DATE;
+drop table foo_date;
 
 # InnoDB comparison for DATE
-create table FOO_DATE(foo date) engine = innodb;
-insert into FOO_DATE(foo) values ('2025-08-27');
+create table foo_date(foo date) engine = innodb;
+insert into foo_date(foo) values ('2025-08-27');
 
-select if(0 = 1, true, foo) from FOO_DATE;
-select if(0 = 1, 5, foo) from FOO_DATE;
-select if(0 = 1, null, foo) from FOO_DATE;
+select if(0 = 1, true, foo) from foo_date;
+select if(0 = 1, 5, foo) from foo_date;
+select if(0 = 1, null, foo) from foo_date;
 
-drop table FOO_DATE;
+drop table foo_date;
 
 # Additional temporal types: TIME
 
-create table FOO_TIME(foo time) engine = columnstore;
-insert into FOO_TIME(foo) values ('15:26:25');
+create table foo_time(foo time) engine = columnstore;
+insert into foo_time(foo) values ('15:26:25');
 
-select if(0 = 1, true, foo) from FOO_TIME;
-select if(0 = 1, 5, foo) from FOO_TIME;
-select if(0 = 1, null, foo) from FOO_TIME;
-drop table FOO_TIME;
+select if(0 = 1, true, foo) from foo_time;
+select if(0 = 1, 5, foo) from foo_time;
+select if(0 = 1, null, foo) from foo_time;
+drop table foo_time;
 
 # InnoDB comparison for TIME
-create table FOO_TIME(foo time) engine = innodb;
-insert into FOO_TIME(foo) values ('15:26:25');
+create table foo_time(foo time) engine = innodb;
+insert into foo_time(foo) values ('15:26:25');
 
 # TODO: known CES display drift, NOT data corruption. CrossEngineStep emits
 # TIME values from IF(0=1, int_const, time_col) as HH:MM:SS.0 (the IF() result
@@ -81,47 +81,47 @@ insert into FOO_TIME(foo) values ('15:26:25');
 # innodb_queries_use_mcs=ON) and multinode (direct InnoDB) modes. Worth a
 # follow-up ticket to make CES match InnoDB's trim behaviour.
 --replace_regex /(15:26:25)\.0/\1/
-select if(0 = 1, true, foo) from FOO_TIME;
+select if(0 = 1, true, foo) from foo_time;
 --replace_regex /(15:26:25)\.0/\1/
-select if(0 = 1, 5, foo) from FOO_TIME;
-select if(0 = 1, null, foo) from FOO_TIME;
+select if(0 = 1, 5, foo) from foo_time;
+select if(0 = 1, null, foo) from foo_time;
 
-drop table FOO_TIME;
+drop table foo_time;
 
 # Additional temporal types: TIMESTAMP
-create table FOO_TS(foo timestamp) engine = columnstore;
+create table foo_ts(foo timestamp) engine = columnstore;
 
-insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
-select if(0 = 1, true, foo) from FOO_TS;
-select if(0 = 1, 5, foo) from FOO_TS;
-select if(0 = 1, null, foo) from FOO_TS;
+insert into foo_ts(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, true, foo) from foo_ts;
+select if(0 = 1, 5, foo) from foo_ts;
+select if(0 = 1, null, foo) from foo_ts;
 
-drop table FOO_TS;
+drop table foo_ts;
 
 # InnoDB comparison for TIMESTAMP
-create table FOO_TS(foo timestamp) engine = innodb;
-insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
+create table foo_ts(foo timestamp) engine = innodb;
+insert into foo_ts(foo) values ('2025-08-27 15:26:25');
 
-select if(0 = 1, true, foo) from FOO_TS;
-select if(0 = 1, 5, foo) from FOO_TS;
-select if(0 = 1, null, foo) from FOO_TS;
+select if(0 = 1, true, foo) from foo_ts;
+select if(0 = 1, 5, foo) from foo_ts;
+select if(0 = 1, null, foo) from foo_ts;
 
-drop table FOO_TS;
+drop table foo_ts;
 
-create table FOO(foo varchar(30)) engine = columnstore;
-insert into FOO(foo) values ("text1");
+create table foo(foo varchar(30)) engine = columnstore;
+insert into foo(foo) values ("text1");
 
-select if(0 = 1, true, foo) from FOO;
-select if(0 = 1, NULL, foo) from FOO;
+select if(0 = 1, true, foo) from foo;
+select if(0 = 1, NULL, foo) from foo;
 
-drop table FOO;
+drop table foo;
 
-create table FOO(foo int) engine = columnstore;
-insert into FOO(foo) values (123);
+create table foo(foo int) engine = columnstore;
+insert into foo(foo) values (123);
 
-select if(0 = 1, true, foo) from FOO;
-select if(0 = 1, NULL, foo) from FOO;
+select if(0 = 1, true, foo) from foo;
+select if(0 = 1, NULL, foo) from foo;
 
-drop table FOO;
+drop table foo;
 --source ../include/drop_cross_engine.inc
 DROP DATABASE mcol5963;

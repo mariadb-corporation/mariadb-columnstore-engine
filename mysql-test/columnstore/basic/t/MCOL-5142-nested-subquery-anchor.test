@@ -1,10 +1,10 @@
 --disable_warnings
-DROP DATABASE IF EXISTS NESTED_SUBQUERY_TEST;
+DROP DATABASE IF EXISTS nested_subquery_test;
 --enable_warnings
 
-CREATE DATABASE NESTED_SUBQUERY_TEST;
+CREATE DATABASE nested_subquery_test;
 
-USE NESTED_SUBQUERY_TEST;
+USE nested_subquery_test;
 
 CREATE TABLE employees (
     id INT NOT NULL,
@@ -51,5 +51,5 @@ WITH RECURSIVE sales_hierarchy AS (
 )
 SELECT * FROM sales_hierarchy;
 
-DROP DATABASE NESTED_SUBQUERY_TEST;
+DROP DATABASE nested_subquery_test;
 

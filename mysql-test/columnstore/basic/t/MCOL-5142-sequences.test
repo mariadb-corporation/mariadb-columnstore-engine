@@ -1,9 +1,9 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142_SEQUENCES;
+DROP DATABASE IF EXISTS mcol5142_sequences;
 --enable_warnings
 
-CREATE DATABASE MCOL5142_SEQUENCES;
-USE MCOL5142_SEQUENCES;
+CREATE DATABASE mcol5142_sequences;
+USE mcol5142_sequences;
 
 #
 # 1. Number generator: generate sequence 1..10
@@ -71,4 +71,4 @@ WITH RECURSIVE dec_seq AS (
 )
 SELECT * FROM dec_seq;
 
-DROP DATABASE MCOL5142_SEQUENCES;
+DROP DATABASE mcol5142_sequences;

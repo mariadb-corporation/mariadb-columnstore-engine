@@ -1,18 +1,18 @@
 USE tpch1;
-drop table if exists MCOL_673_a;
-drop table if exists MCOL_673_b;
-CREATE TABLE MCOL_673_A (a int, b text) engine=columnstore;
-CREATE TABLE MCOL_673_b (a int, b text) engine=columnstore;
-INSERT INTO MCOL_673_a VALUES (1, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (2, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (3, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (4, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (5, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (6, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (7, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_a VALUES (8, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_673_b SELECT * FROM MCOL_673_a;
-SELECT a, length(b) FROM MCOL_673_a;
+drop table if exists mcol_673_a;
+drop table if exists mcol_673_b;
+CREATE TABLE mcol_673_a (a int, b text) engine=columnstore;
+CREATE TABLE mcol_673_b (a int, b text) engine=columnstore;
+INSERT INTO mcol_673_a VALUES (1, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (2, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (3, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (4, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (5, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (6, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (7, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_a VALUES (8, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_673_b SELECT * FROM mcol_673_a;
+SELECT a, length(b) FROM mcol_673_a;
 a	length(b)
 1	60000
 2	60000
@@ -22,7 +22,7 @@ a	length(b)
 6	60000
 7	60000
 8	60000
-SELECT a, length(b) FROM MCOL_673_b;
+SELECT a, length(b) FROM mcol_673_b;
 a	length(b)
 1	60000
 2	60000
@@ -32,5 +32,5 @@ a	length(b)
 6	60000
 7	60000
 8	60000
-drop table if exists MCOL_673_a;
-drop table if exists MCOL_673_b;
+drop table if exists mcol_673_a;
+drop table if exists mcol_673_b;

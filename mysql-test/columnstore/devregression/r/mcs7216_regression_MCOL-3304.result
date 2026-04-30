@@ -1,20 +1,20 @@
 USE tpch1;
-DROP TABLE IF EXISTS `MCOL3304`;
-CREATE TABLE `MCOL3304` (
+DROP TABLE IF EXISTS `mcol3304`;
+CREATE TABLE `mcol3304` (
 `c` decimal(5,2) DEFAULT NULL
 ) ENGINE=columnstore;
-INSERT INTO `MCOL3304`
+INSERT INTO `mcol3304`
 (`c`)
 VALUES (2.05), (5.44),(3.04);
-select c,sum(c) over(), sum(c) over w1, sum(c) over w2 from `MCOL3304`
+select c,sum(c) over(), sum(c) over w1, sum(c) over w2 from `mcol3304`
 WINDOW `w1` as (),`w2` as (rows between unbounded preceding and current row);
 c	sum(c) over()	sum(c) over w1	sum(c) over w2
 2.05	10.53	10.53	2.05
 5.44	10.53	10.53	7.49
 3.04	10.53	10.53	10.53
 select csum,sum(csum) over(), sum(csum) over w1, sum(csum) over w2 from
-(select sum(c) as csum from`MCOL3304`) t 
+(select sum(c) as csum from`mcol3304`) t 
 WINDOW `w1` as (),`w2` as (rows between unbounded preceding and current row);
 csum	sum(csum) over()	sum(csum) over w1	sum(csum) over w2
 10.53	10.53	10.53	10.53
-DROP TABLE IF EXISTS `MCOL3304`;
+DROP TABLE IF EXISTS `mcol3304`;

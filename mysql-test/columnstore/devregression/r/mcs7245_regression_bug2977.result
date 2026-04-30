@@ -38,7 +38,7 @@ s.ShippingDiscountAmount,
 s.ShippingDiscountOrderAmount,
 total.ShippingDiscountTotalAmount,      
 IF( s.OrderLine = MIN(t.OrderLine), 1, 0 )  
-FROM shipAmounts AS s  
+FROM shipamounts AS s  
 LEFT OUTER JOIN ship1 AS t ON s.OrderNum = t.OrderNum 
 LEFT OUTER JOIN  
 (SELECT OrderNum, SUM(ShippingAmount) AS ShippingTotalAmount,
