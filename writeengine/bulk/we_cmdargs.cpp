@@ -110,6 +110,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Import binary data; how to treat NULL values:\n"
         "\t1 - import NULL values\n"
         "\t2 - saturate NULL values\n")
+      ("input-format", po::value<string>(),
+        "Input format: text (default), binary, parquet")
       ("calling-module,P", po::value<string>(&fModuleIDandPID), "Calling module ID and PID.")
       ("truncation-as-error,S", po::bool_switch(&fbTruncationAsError),
         "Treat string truncations as errors.")
@@ -222,6 +224,18 @@ void WECmdArgs::usage() const
 void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 {
   std::string importPath;
+  auto optionPresent = [argc, argv](const std::string& longOpt, const std::string& shortOpt) {
+    for (int i = 1; i < argc; ++i)
+    {
+      const std::string arg(argv[i]);
+      if (arg == longOpt || (!longOpt.empty() && arg.rfind(longOpt + "=", 0) == 0) || arg == shortOpt ||
+          (!shortOpt.empty() && arg.rfind(shortOpt, 0) == 0 && arg.size() > shortOpt.size()))
+      {
+        return true;
+      }
+    }
+    return false;
+  };
 
   if (argc > 0)
     fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
@@ -267,6 +281,31 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else
     {
       startupError("Invalid Binary mode; value can be 1 or 2");
+    }
+    fInputFormat = InputFormat::Binary;
+  }
+  if (vm.count("input-format"))
+  {
+    auto value = vm["input-format"].as<std::string>();
+    if (value == "text")
+    {
+      fInputFormat = InputFormat::Text;
+      if (fImportDataMode != IMPORT_DATA_TEXT)
+      {
+        startupError("Cannot combine --input-format=text with --binary-mode/-I");
+      }
+    }
+    else if (value == "binary")
+    {
+      fInputFormat = InputFormat::Binary;
+    }
+    else if (value == "parquet")
+    {
+      fInputFormat = InputFormat::Parquet;
+    }
+    else
+    {
+      startupError("Invalid --input-format value; valid options are text, binary, parquet");
     }
   }
   if (vm.count("tz"))
@@ -340,6 +379,49 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   {
     fLocFile = vm["load-file"].as<std::string>();
   }
+
+  if (fInputFormat == InputFormat::Parquet)
+  {
+    if (fLocFile.empty())
+    {
+      startupError("Parquet mode requires positional load-file argument");
+    }
+    if (fLocFile.find_first_of(",|") != std::string::npos)
+    {
+      startupError("Parquet mode currently supports a single input file");
+    }
+    if (optionPresent("--separator", "-s") || optionPresent("--enclosed-by", "-E") ||
+        optionPresent("--escape-char", "-C") || optionPresent("--headers", "-O") ||
+        optionPresent("--binary-mode", "-I"))
+    {
+      startupError("Parquet mode is incompatible with text/binary parsing options");
+    }
+    if (!fS3Key.empty() || !fS3Secret.empty() || !fS3Bucket.empty() || !fS3Host.empty() || !fS3Region.empty())
+    {
+      startupError("Parquet mode currently supports only local files (S3 options are unsupported)");
+    }
+  }
+}
+
+std::string WECmdArgs::getParquetFilePath() const
+{
+  if (fLocFile.empty())
+  {
+    return {};
+  }
+
+  boost::filesystem::path loadFilePath(fLocFile);
+  if (loadFilePath.is_absolute())
+  {
+    return loadFilePath.string();
+  }
+
+  if (!fPmFilePath.empty())
+  {
+    return (boost::filesystem::path(fPmFilePath) / loadFilePath).string();
+  }
+
+  return (boost::filesystem::current_path() / loadFilePath).string();
 }
 
 void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string& sXMLJobDir,
@@ -549,7 +631,8 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
 
 void WECmdArgs::startupError(const std::string& errMsg, bool showHint) const
 {
-  BRMWrapper::getInstance()->finishCpimportJob(fCpimportJobId);
+  if (fCpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(fCpimportJobId);
   // Log to console
   if (!BulkLoad::disableConsoleOutput())
     cerr << errMsg << endl;

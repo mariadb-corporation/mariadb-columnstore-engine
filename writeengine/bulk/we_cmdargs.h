@@ -37,6 +37,13 @@ namespace WriteEngine
 class WECmdArgs
 {
 public:
+  enum class InputFormat
+  {
+    Text,
+    Binary,
+    Parquet
+  };
+
   WECmdArgs(int argc, char** argv);
   ~WECmdArgs();
 
@@ -51,6 +58,11 @@ public:
   void fillParams(BulkLoad& curJob, std::string& sJobIdStr,
                   std::string& sXMLJobDir, std::string& sModuleIDandPID, bool& bLogInfo2ToConsole,
                   std::string& xmlGenSchema, std::string& xmlGenTable, bool& bValidateColumnList);
+  bool isParquetMode() const
+  {
+    return fInputFormat == InputFormat::Parquet;
+  }
+  std::string getParquetFilePath() const;
 
   void setCpimportJobId(uint32_t cpimportJobId)
   {
@@ -102,6 +114,7 @@ private:
   int fNoOfWriteThrds{3};     // No. of write threads
   bool fNullStrMode{false};   // set null string mode - treat null as null
   ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
+  InputFormat fInputFormat{InputFormat::Text};       // Input format type
   std::string fPrgmName;      // argv[0]
   std::string fSchema;        // Schema name - positional parmater
   std::string fTable;         // Table name - table name parameter

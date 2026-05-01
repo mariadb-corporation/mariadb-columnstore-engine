@@ -50,6 +50,9 @@
 #include "mcsconfig.h"
 #include "mariadb_my_sys.h"
 #include "we_cmdargs.h"
+#ifdef WITH_PARQUET
+#include "we_parquet_reader.h"
+#endif
 
 using namespace std;
 using namespace WriteEngine;
@@ -87,6 +90,50 @@ const char* taskLabels[] = {"",
                             "establishing job file",
                             "loading job file",
                             "processing data"};
+
+int processParquetReadOnly()
+{
+#ifndef WITH_PARQUET
+  cmdArgs->startupError(
+      "Parquet input format was requested, but this cpimport build does not include Parquet support.", false);
+  return ERR_INVALID_PARAM;
+#else
+  const std::string inputFile = cmdArgs->getParquetFilePath();
+  if (inputFile.empty())
+  {
+    cmdArgs->startupError("Parquet input format requires a single load-file argument.", true);
+    return ERR_INVALID_PARAM;
+  }
+
+  if (!BulkLoad::disableConsoleOutput())
+  {
+    cout << "Input format: parquet" << endl;
+    cout << "Reading parquet file: " << inputFile << endl;
+  }
+
+  ParquetReadStats stats;
+  std::string errMsg;
+  int rc = ParquetReader::readFile(inputFile, stats, errMsg);
+  if (rc != NO_ERROR)
+  {
+    if (!BulkLoad::disableConsoleOutput())
+      cerr << "Parquet read failed: " << errMsg << endl;
+    return rc;
+  }
+
+  if (!BulkLoad::disableConsoleOutput())
+  {
+    cout << "Parquet read summary:" << endl;
+    cout << "  rows       : " << stats.totalRows << endl;
+    cout << "  columns    : " << stats.columnCount << endl;
+    cout << "  row groups : " << stats.rowGroupCount << endl;
+    cout << "  batches    : " << stats.batchCount << endl;
+    cout << "  elapsed(s) : " << stats.elapsedSeconds << endl;
+  }
+
+  return NO_ERROR;
+#endif
+}
 }  // namespace
 
 //------------------------------------------------------------------------------
@@ -94,7 +141,8 @@ const char* taskLabels[] = {"",
 //------------------------------------------------------------------------------
 void handleSigTerm(int /*i*/)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+  if (cpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGTERM to terminate the process..." << std::endl;
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
@@ -104,7 +152,8 @@ void handleSigTerm(int /*i*/)
 //------------------------------------------------------------------------------
 void handleControlC(int /*i*/)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+  if (cpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   if (!BulkLoad::disableConsoleOutput())
     std::cout << "Received Control-C to terminate the process..." << std::endl;
 
@@ -116,7 +165,8 @@ void handleControlC(int /*i*/)
 //------------------------------------------------------------------------------
 void handleSigSegv(int /*i*/)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+  if (cpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGSEGV to terminate the process..." << std::endl;
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
@@ -126,7 +176,8 @@ void handleSigSegv(int /*i*/)
 //------------------------------------------------------------------------------
 void handleSigAbrt(int /*i*/)
 {
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+  if (cpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   std::cout << "Received SIGABRT to terminate the process..." << std::endl;
   BulkStatus::setJobStatus(EXIT_FAILURE);
 }
@@ -441,232 +492,241 @@ int main(int argc, char** argv)
     if (bDebug)
       logInitiateMsg("Command line arguments parsed");
 
-    //--------------------------------------------------------------------------
-    // Init singleton classes (other than syslogging that we already setup)
-    //--------------------------------------------------------------------------
-    task = TASK_INIT_CONFIG_CACHE;
-
-    // Initialize cache used to store configuration parms from Columnstore.xml
-    Config::initConfigCache();
-
-    // Setup signal handlers "again" because HDFS plugin seems to be
-    // changing our settings to ignore ctrl-C and sigterm
-    setupSignalHandlers();
-
-    // initialize singleton BRM Wrapper.  Also init ExtentRows (in dbrm) from
-    // main thread, since ExtentMap::getExtentRows is not thread safe.
-    BRMWrapper::getInstance()->getInstance()->getExtentRows();
-
-    //--------------------------------------------------------------------------
-    // Validate running on valid node
-    //--------------------------------------------------------------------------
-    verifyNode();
-
-    //--------------------------------------------------------------------------
-    // Set scheduling priority for this cpimport.bin process
-    //--------------------------------------------------------------------------
-    setpriority(PRIO_PROCESS, 0, Config::getBulkProcessPriority());
-
-    if (bDebug)
-      logInitiateMsg("Config cache initialized");
-
-    //--------------------------------------------------------------------------
-    // Make sure DMLProc startup has completed before running a cpimport.bin job
-    //--------------------------------------------------------------------------
-    task = TASK_BRM_STATE_READY;
-
-    if (!BRMWrapper::getInstance()->isSystemReady())
+    if (cmdArgs->isParquetMode())
     {
-      cmdArgs->startupError(std::string("System is not ready.  Verify that ColumnStore is up and ready "
-                                        "before running cpimport."),
-                            false);
+      task = TASK_PROCESS_DATA;
+      rc = processParquetReadOnly();
     }
-
-    if (bDebug)
-      logInitiateMsg("BRM state verified: state is Ready");
-
-    //--------------------------------------------------------------------------
-    // Verify that the state of BRM is read/write
-    //--------------------------------------------------------------------------
-    task = TASK_BRM_STATE_READ_WRITE;
-    int brmReadWriteStatus = BRMWrapper::getInstance()->isReadWrite();
-
-    if (brmReadWriteStatus != NO_ERROR)
+    else
     {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << ec.errorString(brmReadWriteStatus) << "  cpimport.bin is terminating.";
-      cmdArgs->startupError(oss.str(), false);
-    }
+      //--------------------------------------------------------------------------
+      // Init singleton classes (other than syslogging that we already setup)
+      //--------------------------------------------------------------------------
+      task = TASK_INIT_CONFIG_CACHE;
 
-    if (bDebug)
-      logInitiateMsg("BRM state is Read/Write");
+      // Initialize cache used to store configuration parms from Columnstore.xml
+      Config::initConfigCache();
 
-    //--------------------------------------------------------------------------
-    // Make sure we're not about to shutdown
-    //--------------------------------------------------------------------------
-    task = TASK_SHUTDOWN_PENDING;
-    int brmShutdownPending = BRMWrapper::getInstance()->isShutdownPending(bRollback, bForce);
+      // Setup signal handlers "again" because HDFS plugin seems to be
+      // changing our settings to ignore ctrl-C and sigterm
+      setupSignalHandlers();
 
-    if (brmShutdownPending != NO_ERROR)
-    {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << ec.errorString(brmShutdownPending) << "  cpimport.bin is terminating.";
-      cmdArgs->startupError(oss.str(), false);
-    }
+      // initialize singleton BRM Wrapper.  Also init ExtentRows (in dbrm) from
+      // main thread, since ExtentMap::getExtentRows is not thread safe.
+      BRMWrapper::getInstance()->getInstance()->getExtentRows();
 
-    if (bDebug)
-      logInitiateMsg("Verified no shutdown operation is pending");
+      //--------------------------------------------------------------------------
+      // Validate running on valid node
+      //--------------------------------------------------------------------------
+      verifyNode();
 
-    //--------------------------------------------------------------------------
-    // Make sure we're not write suspended
-    //--------------------------------------------------------------------------
-    task = TASK_SUSPEND_PENDING;
-    int brmSuspendPending = BRMWrapper::getInstance()->isSuspendPending();
+      //--------------------------------------------------------------------------
+      // Set scheduling priority for this cpimport.bin process
+      //--------------------------------------------------------------------------
+      setpriority(PRIO_PROCESS, 0, Config::getBulkProcessPriority());
 
-    if (brmSuspendPending != NO_ERROR)
-    {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << ec.errorString(brmSuspendPending) << "  cpimport.bin is terminating.";
-      cmdArgs->startupError(oss.str(), false);
-    }
+      if (bDebug)
+        logInitiateMsg("Config cache initialized");
 
-    if (bDebug)
-      logInitiateMsg("Verified no suspend operation is pending");
+      //--------------------------------------------------------------------------
+      // Make sure DMLProc startup has completed before running a cpimport.bin job
+      //--------------------------------------------------------------------------
+      task = TASK_BRM_STATE_READY;
 
-    //--------------------------------------------------------------------------
-    // Set some flags
-    //--------------------------------------------------------------------------
-    task = TASK_ESTABLISH_JOBFILE;
-    BRMWrapper::setUseVb(false);
-    Cache::setUseCache(false);
-
-    //--------------------------------------------------------------------------
-    // Construct temporary Job XML file if user provided schema, job, and
-    // optional load filename.
-    //--------------------------------------------------------------------------
-    boost::filesystem::path sFileName;
-    bool bUseTempJobFile = false;
-
-    if (!BulkLoad::disableConsoleOutput())
-      cout << std::endl;  // print blank line before we start
-
-    // Start tracking time to create/load jobfile;
-    // The elapsed time for this step is logged at the end of loadJobInfo()
-    curJob.startTimer();
-
-    if (!xmlGenSchema.empty())  // create temporary job file name
-    {
-      // If JobID is not provided, then default to the table OID
-      std::string tableOIDStr{""};
-      if (sJobIdStr.empty())
+      if (!BRMWrapper::getInstance()->isSystemReady())
       {
-        getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
-
-        if (!(BulkLoad::disableConsoleOutput()))
-          cout << "Using table OID " << tableOIDStr << " as the default JOB ID" << std::endl;
-
-        sJobIdStr = tableOIDStr;
+        cmdArgs->startupError(std::string("System is not ready.  Verify that ColumnStore is up and ready "
+                                          "before running cpimport."),
+                              false);
       }
 
-      // No need to validate column list in job XML file for user errors,
-      // if cpimport.bin just generated the job XML file on-the-fly.
-      bValidateColumnList = false;
+      if (bDebug)
+        logInitiateMsg("BRM state verified: state is Ready");
 
-      bUseTempJobFile = true;
-      constructTempXmlFile(curJob.getTempJobDir(), sJobIdStr, xmlGenSchema, xmlGenTable,
-                           curJob.getAlternateImportDir(), curJob.getS3Bucket(), tableOIDStr, sFileName);
-    }
-    else  // create user's persistent job file name
-    {
-      // Construct the job description file name
-      std::string xmlErrMsg;
-      std::string tableOIdStr("");
-      rc = XMLJob::genJobXMLFileName(sXMLJobDir, curJob.getJobDir(), sJobIdStr, bUseTempJobFile,
-                                     std::string(), std::string(), sFileName, xmlErrMsg, tableOIdStr);
+      //--------------------------------------------------------------------------
+      // Verify that the state of BRM is read/write
+      //--------------------------------------------------------------------------
+      task = TASK_BRM_STATE_READ_WRITE;
+      int brmReadWriteStatus = BRMWrapper::getInstance()->isReadWrite();
 
-      if (rc != NO_ERROR)
+      if (brmReadWriteStatus != NO_ERROR)
       {
+        WErrorCodes ec;
         std::ostringstream oss;
-        oss << "cpimport.bin error creating Job XML file name: " << xmlErrMsg;
+        oss << ec.errorString(brmReadWriteStatus) << "  cpimport.bin is terminating.";
         cmdArgs->startupError(oss.str(), false);
       }
 
-      printInputSource(curJob.getAlternateImportDir(), sFileName.string(), curJob.getS3Bucket());
-    }
+      if (bDebug)
+        logInitiateMsg("BRM state is Read/Write");
 
-    if (bDebug)
-      logInitiateMsg("Job xml file is established");
+      //--------------------------------------------------------------------------
+      // Make sure we're not about to shutdown
+      //--------------------------------------------------------------------------
+      task = TASK_SHUTDOWN_PENDING;
+      int brmShutdownPending = BRMWrapper::getInstance()->isShutdownPending(bRollback, bForce);
 
-    //-------------------------------------------------------------------------
-    // Bug 5415 Add HDFS MemBuffer vs. FileBuffer decision logic.
-    // MemoryCheckPercent. This controls at what percent of total memory be
-    // consumed by all processes before we switch from HdfsRdwrMemBuffer to
-    // HdfsRdwrFileBuffer. This is only used in Hdfs installations.
-    //-------------------------------------------------------------------------
-    config::Config* cf = config::Config::makeConfig();
-    int checkPct = 95;
-    string strCheckPct = cf->getConfig("SystemConfig", "MemoryCheckPercent");
+      if (brmShutdownPending != NO_ERROR)
+      {
+        WErrorCodes ec;
+        std::ostringstream oss;
+        oss << ec.errorString(brmShutdownPending) << "  cpimport.bin is terminating.";
+        cmdArgs->startupError(oss.str(), false);
+      }
 
-    if (strCheckPct.length() != 0)
-      checkPct = cf->uFromText(strCheckPct);
+      if (bDebug)
+        logInitiateMsg("Verified no shutdown operation is pending");
 
-    //--------------------------------------------------------------------------
-    // If we're HDFS, start the monitor thread.
-    // Otherwise, we don't need it, so don't waste the resources.
-    //--------------------------------------------------------------------------
-    if (idbdatafile::IDBPolicy::useHdfs())
-    {
-      new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK));
-    }
+      //--------------------------------------------------------------------------
+      // Make sure we're not write suspended
+      //--------------------------------------------------------------------------
+      task = TASK_SUSPEND_PENDING;
+      int brmSuspendPending = BRMWrapper::getInstance()->isSuspendPending();
 
-    rc = BRMWrapper::getInstance()->newCpimportJob(cpimportJobId);
-    // TODO kemm: pass cpimportJobId to WECmdArgs
-    if (rc != NO_ERROR)
-    {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << "Error in creating new cpimport job on Controller node; " << ec.errorString(rc)
-          << "; cpimport is terminating.";
-      cmdArgs->startupError(oss.str(), false);
-    }
+      if (brmSuspendPending != NO_ERROR)
+      {
+        WErrorCodes ec;
+        std::ostringstream oss;
+        oss << ec.errorString(brmSuspendPending) << "  cpimport.bin is terminating.";
+        cmdArgs->startupError(oss.str(), false);
+      }
 
-    //--------------------------------------------------------------------------
-    // This is the real business
-    //--------------------------------------------------------------------------
-    task = TASK_LOAD_JOBFILE;
-    rc = curJob.loadJobInfo(sFileName.string(), bUseTempJobFile, argc, argv, bLogInfo2ToConsole,
-                            bValidateColumnList);
+      if (bDebug)
+        logInitiateMsg("Verified no suspend operation is pending");
 
-    if (rc != NO_ERROR)
-    {
-      WErrorCodes ec;
-      std::ostringstream oss;
-      oss << "Error in loading job information; " << ec.errorString(rc) << "; cpimport.bin is terminating.";
-      cmdArgs->startupError(oss.str(), false);
-    }
+      //--------------------------------------------------------------------------
+      // Set some flags
+      //--------------------------------------------------------------------------
+      task = TASK_ESTABLISH_JOBFILE;
+      BRMWrapper::setUseVb(false);
+      Cache::setUseCache(false);
 
-    if (bDebug)
-      logInitiateMsg("Job xml file is loaded");
+      //--------------------------------------------------------------------------
+      // Construct temporary Job XML file if user provided schema, job, and
+      // optional load filename.
+      //--------------------------------------------------------------------------
+      boost::filesystem::path sFileName;
+      bool bUseTempJobFile = false;
 
-    task = TASK_PROCESS_DATA;
-
-    // Log start of job to INFO log
-    logging::Message::Args startMsgArgs;
-    startMsgArgs.add(sJobIdStr);
-    startMsgArgs.add(curJob.getSchema());
-    SimpleSysLog::instance()->logMsg(startMsgArgs, logging::LOG_TYPE_INFO, logging::M0081);
-
-    curJob.printJob();
-
-    rc = curJob.processJob();
-
-    if (rc != NO_ERROR)
-    {
       if (!BulkLoad::disableConsoleOutput())
-        cerr << endl << "Error in loading job data" << endl;
+        cout << std::endl;  // print blank line before we start
+
+      // Start tracking time to create/load jobfile;
+      // The elapsed time for this step is logged at the end of loadJobInfo()
+      curJob.startTimer();
+
+      if (!xmlGenSchema.empty())  // create temporary job file name
+      {
+        // If JobID is not provided, then default to the table OID
+        std::string tableOIDStr{""};
+        if (sJobIdStr.empty())
+        {
+          getTableOID(xmlGenSchema, xmlGenTable, tableOIDStr);
+
+          if (!(BulkLoad::disableConsoleOutput()))
+            cout << "Using table OID " << tableOIDStr << " as the default JOB ID" << std::endl;
+
+          sJobIdStr = tableOIDStr;
+        }
+
+        // No need to validate column list in job XML file for user errors,
+        // if cpimport.bin just generated the job XML file on-the-fly.
+        bValidateColumnList = false;
+
+        bUseTempJobFile = true;
+        constructTempXmlFile(curJob.getTempJobDir(), sJobIdStr, xmlGenSchema, xmlGenTable,
+                             curJob.getAlternateImportDir(), curJob.getS3Bucket(), tableOIDStr, sFileName);
+      }
+      else  // create user's persistent job file name
+      {
+        // Construct the job description file name
+        std::string xmlErrMsg;
+        std::string tableOIdStr("");
+        rc = XMLJob::genJobXMLFileName(sXMLJobDir, curJob.getJobDir(), sJobIdStr, bUseTempJobFile,
+                                       std::string(), std::string(), sFileName, xmlErrMsg, tableOIdStr);
+
+        if (rc != NO_ERROR)
+        {
+          std::ostringstream oss;
+          oss << "cpimport.bin error creating Job XML file name: " << xmlErrMsg;
+          cmdArgs->startupError(oss.str(), false);
+        }
+
+        printInputSource(curJob.getAlternateImportDir(), sFileName.string(), curJob.getS3Bucket());
+      }
+
+      if (bDebug)
+        logInitiateMsg("Job xml file is established");
+
+      //-------------------------------------------------------------------------
+      // Bug 5415 Add HDFS MemBuffer vs. FileBuffer decision logic.
+      // MemoryCheckPercent. This controls at what percent of total memory be
+      // consumed by all processes before we switch from HdfsRdwrMemBuffer to
+      // HdfsRdwrFileBuffer. This is only used in Hdfs installations.
+      //-------------------------------------------------------------------------
+      config::Config* cf = config::Config::makeConfig();
+      int checkPct = 95;
+      string strCheckPct = cf->getConfig("SystemConfig", "MemoryCheckPercent");
+
+      if (strCheckPct.length() != 0)
+        checkPct = cf->uFromText(strCheckPct);
+
+      //--------------------------------------------------------------------------
+      // If we're HDFS, start the monitor thread.
+      // Otherwise, we don't need it, so don't waste the resources.
+      //--------------------------------------------------------------------------
+      if (idbdatafile::IDBPolicy::useHdfs())
+      {
+        new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK));
+      }
+
+      rc = BRMWrapper::getInstance()->newCpimportJob(cpimportJobId);
+      cmdArgs->setCpimportJobId(cpimportJobId);
+      // TODO kemm: pass cpimportJobId to WECmdArgs
+      if (rc != NO_ERROR)
+      {
+        WErrorCodes ec;
+        std::ostringstream oss;
+        oss << "Error in creating new cpimport job on Controller node; " << ec.errorString(rc)
+            << "; cpimport is terminating.";
+        cmdArgs->startupError(oss.str(), false);
+      }
+
+      //--------------------------------------------------------------------------
+      // This is the real business
+      //--------------------------------------------------------------------------
+      task = TASK_LOAD_JOBFILE;
+      rc = curJob.loadJobInfo(sFileName.string(), bUseTempJobFile, argc, argv, bLogInfo2ToConsole,
+                              bValidateColumnList);
+
+      if (rc != NO_ERROR)
+      {
+        WErrorCodes ec;
+        std::ostringstream oss;
+        oss << "Error in loading job information; " << ec.errorString(rc) << "; cpimport.bin is terminating.";
+        cmdArgs->startupError(oss.str(), false);
+      }
+
+      if (bDebug)
+        logInitiateMsg("Job xml file is loaded");
+
+      task = TASK_PROCESS_DATA;
+
+      // Log start of job to INFO log
+      logging::Message::Args startMsgArgs;
+      startMsgArgs.add(sJobIdStr);
+      startMsgArgs.add(curJob.getSchema());
+      SimpleSysLog::instance()->logMsg(startMsgArgs, logging::LOG_TYPE_INFO, logging::M0081);
+
+      curJob.printJob();
+
+      rc = curJob.processJob();
+
+      if (rc != NO_ERROR)
+      {
+        if (!BulkLoad::disableConsoleOutput())
+          cerr << endl << "Error in loading job data" << endl;
+      }
     }
   }
   catch (std::exception& ex)
@@ -683,7 +743,8 @@ int main(int argc, char** argv)
     rc = ERR_UNKNOWN;
   }
 
-  BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+  if (cpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
   // Free up resources allocated by MY_INIT() above.
   my_end(0);
 
