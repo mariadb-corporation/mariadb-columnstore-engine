@@ -4,7 +4,7 @@ local events = ["pull_request", "cron"];
 local current_branch = "develop-23.02";
 
 local servers = {
-  [current_branch]: ["10.6-enterprise"],
+  [current_branch]: ["10.6.15-10"],
 };
 
 local platforms = {
@@ -92,7 +92,7 @@ local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link
 local echo_running_on = ["echo running on ${DRONE_STAGE_MACHINE}",
       make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime")];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="") = {
+local Pipeline(branch, platform, event, arch="amd64", server="10.6.15-10", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -111,7 +111,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local container_tags = if (event == "cron") then [brancht + std.strReplace(event, "_", "-") + "${DRONE_BUILD_NUMBER}", brancht] else [brancht + std.strReplace(event, "_", "-") + "${DRONE_BUILD_NUMBER}"],
   local container_version = branchp + event + "/${DRONE_BUILD_NUMBER}/" + server + "/" + arch,
 
-  local server_remote = if (std.endsWith(server, "enterprise")) then "https://github.com/mariadb-corporation/MariaDBEnterprise" else "https://github.com/MariaDB/server",
+  local server_remote = "https://github.com/mariadb-corporation/MariaDBEnterprise",
 
   local pipeline = self,
 
@@ -489,6 +489,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                SERVER_REF: "${SERVER_REF:-" + server + "}",
                SERVER_REMOTE: "${SERVER_REMOTE:-" + server_remote + "}",
                SERVER_SHA: "${SERVER_SHA:-" + server + "}",
+               SOURCE_DIR: "/mdb/" + builddir,
              },
              commands: echo_running_on +
              [
@@ -501,6 +502,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
                "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
                "git config cmake.update-submodules no",
                "rm -rf storage/columnstore/columnstore",
+               "echo $$SOURCE_DIR/storage/columnstore/CMakeLists.txt",
+               "sed -i 's|INSTALL_MYSQL_TEST(\"$${CMAKE_CURRENT_SOURCE_DIR}/mysql-test/\" \"plugin/columnstore\")|INSTALL_MYSQL_TEST(\"$${CMAKE_CURRENT_SOURCE_DIR}/columnstore/mysql-test/\" \"plugin/columnstore\")|' $$SOURCE_DIR/storage/columnstore/CMakeLists.txt",
                "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore/columnstore",
              ],
            },
@@ -644,8 +647,8 @@ local FinalPipeline(branch, event) = {
       "failure",
     ],
   } + (if event == "cron" then { cron: ["nightly-" + std.strReplace(branch, ".", "-")] } else {}),
-  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6-enterprise", "", ""]), platforms[current_branch]),
-  // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6-enterprise", "", ""]), platforms_arm.develop),
+  depends_on: std.map(function(p) std.join(" ", [branch, p, event, "amd64", "10.6.15-10", "", ""]), platforms[current_branch]),
+  // +std.map(function(p) std.join(" ", [branch, p, event, "arm64", "10.6.15-10", "", ""]), platforms_arm.develop),
 };
 
 [
@@ -669,12 +672,12 @@ local FinalPipeline(branch, event) = {
 ] +
 
 [
-  Pipeline(any_branch, p, "custom", "amd64", "10.6-enterprise")
+  Pipeline(any_branch, p, "custom", "amd64", "10.6.15-10")
   for p in platforms[current_branch]
 ]
 //+
 // [
-//   Pipeline(any_branch, p, "custom", "arm64", "10.6-enterprise")
+//   Pipeline(any_branch, p, "custom", "arm64", "10.6.15-10")
 //   for p in platforms_arm[current_branch];
 // ]
 // +

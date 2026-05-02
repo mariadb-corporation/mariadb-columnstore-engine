@@ -26,10 +26,10 @@ SHOW WARNINGS;
 
 --disable_warnings
 DROP TABLE IF EXISTS test_collate;
---enable_warnings
 
 # Test COLLATE in table definition and column definition
 DROP TABLE IF EXISTS t1;
+--enable_warnings
 CREATE TABLE t1 (col1 CHAR(10)) CHARSET latin1 COLLATE latin1_bin ENGINE=columnstore;
 INSERT INTO t1 VALUES ('a'), ('1'), ('-1');
 SELECT col1 FROM t1;

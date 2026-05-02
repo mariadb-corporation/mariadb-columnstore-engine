@@ -8,12 +8,14 @@
 -- source ../include/have_columnstore.inc
 
 USE tpch1;
-
+--disable_warnings
 drop database if exists test023_cs3;
+--enable_warnings
 create database test023_cs3;
 use test023_cs3;
-
+--disable_warnings
 drop table if exists `cs3`;
+--enable_warnings
 create table `test023_cs3`.`cs3`(i int, t text) engine=columnstore;
 insert into `test023_cs3`.`cs3` values (1,'Lorem ipsum dolor sit amet, consectetur adipiscing elit,'),(7,'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'),(8,'Ut enim ad minim veniam,'),(9,'quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'),(10,'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore e');
 select * from `test023_cs3`.`cs3`;

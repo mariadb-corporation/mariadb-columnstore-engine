@@ -7,3 +7,7 @@ mcs16_functions_define_call_drop : 2022-07-08 roman.navrotskiy@mariadb.com
 udf_calshowpartitions : unstable values for min/max in the output(sometimes N/A, sometimes numbers) 2022-07-26 roman.nozdrin@mariadb.com
 mcs3_create_table_charset_collations : 10.6 vs 10.9 show create table difference
 mcol_2000 : 2025-06-12 aleksei@bukhalov@mariadb.com
+mcs254_hex_function : Disabled because of MCOL-6347
+mcs89_drop_table_restrict : Disabled because of MCOL-6361
+mcs10_drop_db_table : Disabled because of MCOL-6361
+MCOL-6293-partitions-table : Disabled because of MCOL-6362

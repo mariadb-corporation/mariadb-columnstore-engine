@@ -18,6 +18,7 @@ CREATE TABLE t1(col1 INT, col2 INT, col3 CHAR(8)) ENGINE=Columnstore;
 --exec yes | cp $MTR_SUITE_DIR/../std_data/100Krows.dat /tmp
 
 --disable_result_log #cpimport logs thread/timestamps
+--exec chmod a+r /tmp/100Krows.dat
 --exec $MCS_CPIMPORT -m2 mcs48_db t1 -f '/tmp' -l '100Krows.dat';
 --enable_result_log
 
