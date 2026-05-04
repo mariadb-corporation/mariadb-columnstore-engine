@@ -687,6 +687,15 @@ local AllPipelines =
     for server in servers[current_branch]
     for a in archs
   ] +
+  // also expose 11.4/11.8 on custom builds so regression results are
+  // visible across all server versions, not just 10.6. No failure:ignore
+  // here - we want real status from a custom verification run.
+  [
+    Pipeline(any_branch, p, "custom", a, server)
+    for p in extra_servers_platforms[current_branch]
+    for server in extra_servers[current_branch]
+    for a in archs
+  ] +
   // clang
   [
     Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
