@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace WriteEngine
 {
@@ -32,10 +33,26 @@ struct ParquetReadStats
   double elapsedSeconds{0.0};
 };
 
+struct ParquetColumnMapping
+{
+  std::string name;
+  std::string arrowType;
+  std::string conversion;
+};
+
+struct ParquetConversionResult
+{
+  ParquetReadStats stats;
+  std::vector<ParquetColumnMapping> mappings;
+  std::string materializedFilePath;
+};
+
 class ParquetReader
 {
  public:
   static int readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg);
+  static int convertToDelimitedFile(const std::string& parquetFilePath, const std::string& outputFilePath,
+                                    ParquetConversionResult& result, std::string& errMsg);
 };
 
 }  // namespace WriteEngine

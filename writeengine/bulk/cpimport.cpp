@@ -34,7 +34,9 @@
 #include <cstdlib>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <vector>
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include "idberrorinfo.h"
 #include "we_simplesyslog.h"
 #include "we_bulkload.h"
@@ -91,7 +93,7 @@ const char* taskLabels[] = {"",
                             "loading job file",
                             "processing data"};
 
-int processParquetReadOnly()
+int prepareParquetInputForBulk(BulkLoad& curJob, ParquetConversionResult& result, std::string& errMsg)
 {
 #ifndef WITH_PARQUET
   cmdArgs->startupError(
@@ -105,15 +107,27 @@ int processParquetReadOnly()
     return ERR_INVALID_PARAM;
   }
 
+  std::string stagingTemplate = "/tmp/cpimport_parquet_stage_XXXXXX";
+  std::vector<char> mutableTemplate(stagingTemplate.begin(), stagingTemplate.end());
+  mutableTemplate.push_back('\0');
+  int stageFd = mkstemp(mutableTemplate.data());
+  if (stageFd < 0)
+  {
+    errMsg = "Unable to create temporary parquet staging file";
+    return ERR_FILE_CREATE;
+  }
+  close(stageFd);
+
+  const std::string stagingPath(mutableTemplate.data());
+
   if (!BulkLoad::disableConsoleOutput())
   {
     cout << "Input format: parquet" << endl;
     cout << "Reading parquet file: " << inputFile << endl;
+    cout << "Materializing parquet batches into: " << stagingPath << endl;
   }
 
-  ParquetReadStats stats;
-  std::string errMsg;
-  int rc = ParquetReader::readFile(inputFile, stats, errMsg);
+  int rc = ParquetReader::convertToDelimitedFile(inputFile, stagingPath, result, errMsg);
   if (rc != NO_ERROR)
   {
     if (!BulkLoad::disableConsoleOutput())
@@ -121,14 +135,19 @@ int processParquetReadOnly()
     return rc;
   }
 
+  curJob.overrideCmdLineImportFile(stagingPath);
+  curJob.setColDelimiter('\t');
+  curJob.setEscapeChar('\\');
+  curJob.setEnclosedByChar('"');
+  curJob.setSkipRows(0);
+
   if (!BulkLoad::disableConsoleOutput())
   {
-    cout << "Parquet read summary:" << endl;
-    cout << "  rows       : " << stats.totalRows << endl;
-    cout << "  columns    : " << stats.columnCount << endl;
-    cout << "  row groups : " << stats.rowGroupCount << endl;
-    cout << "  batches    : " << stats.batchCount << endl;
-    cout << "  elapsed(s) : " << stats.elapsedSeconds << endl;
+    cout << "Parquet schema mapping (" << result.mappings.size() << " columns):" << endl;
+    for (const auto& mapping : result.mappings)
+    {
+      cout << "  " << mapping.name << " : " << mapping.arrowType << " -> " << mapping.conversion << endl;
+    }
   }
 
   return NO_ERROR;
@@ -460,6 +479,10 @@ int main(int argc, char** argv)
   bool bValidateColumnList = true;
   bool bRollback = false;
   bool bForce = false;
+  const bool parquetMode = cmdArgs->isParquetMode();
+  ParquetConversionResult parquetConversion;
+  std::string parquetPrepErrMsg;
+  std::string parquetStagingFilePath;
   int rc = NO_ERROR;
   std::string exceptionMsg;
   TASK task;  // track tasks being performed
@@ -492,28 +515,32 @@ int main(int argc, char** argv)
     if (bDebug)
       logInitiateMsg("Command line arguments parsed");
 
-    if (cmdArgs->isParquetMode())
+    if (parquetMode)
     {
       task = TASK_PROCESS_DATA;
-      rc = processParquetReadOnly();
+      rc = prepareParquetInputForBulk(curJob, parquetConversion, parquetPrepErrMsg);
+      if (rc != NO_ERROR)
+      {
+        cmdArgs->startupError(parquetPrepErrMsg, false);
+      }
+      parquetStagingFilePath = parquetConversion.materializedFilePath;
     }
-    else
-    {
-      //--------------------------------------------------------------------------
-      // Init singleton classes (other than syslogging that we already setup)
-      //--------------------------------------------------------------------------
-      task = TASK_INIT_CONFIG_CACHE;
 
-      // Initialize cache used to store configuration parms from Columnstore.xml
-      Config::initConfigCache();
+    //--------------------------------------------------------------------------
+    // Init singleton classes (other than syslogging that we already setup)
+    //--------------------------------------------------------------------------
+    task = TASK_INIT_CONFIG_CACHE;
 
-      // Setup signal handlers "again" because HDFS plugin seems to be
-      // changing our settings to ignore ctrl-C and sigterm
-      setupSignalHandlers();
+    // Initialize cache used to store configuration parms from Columnstore.xml
+    Config::initConfigCache();
 
-      // initialize singleton BRM Wrapper.  Also init ExtentRows (in dbrm) from
-      // main thread, since ExtentMap::getExtentRows is not thread safe.
-      BRMWrapper::getInstance()->getInstance()->getExtentRows();
+    // Setup signal handlers "again" because HDFS plugin seems to be
+    // changing our settings to ignore ctrl-C and sigterm
+    setupSignalHandlers();
+
+    // initialize singleton BRM Wrapper.  Also init ExtentRows (in dbrm) from
+    // main thread, since ExtentMap::getExtentRows is not thread safe.
+    BRMWrapper::getInstance()->getInstance()->getExtentRows();
 
       //--------------------------------------------------------------------------
       // Validate running on valid node
@@ -727,7 +754,16 @@ int main(int argc, char** argv)
         if (!BulkLoad::disableConsoleOutput())
           cerr << endl << "Error in loading job data" << endl;
       }
-    }
+
+      if (parquetMode && rc == NO_ERROR && !BulkLoad::disableConsoleOutput())
+      {
+        cout << "Parquet import conversion summary:" << endl;
+        cout << "  rows       : " << parquetConversion.stats.totalRows << endl;
+        cout << "  columns    : " << parquetConversion.stats.columnCount << endl;
+        cout << "  row groups : " << parquetConversion.stats.rowGroupCount << endl;
+        cout << "  batches    : " << parquetConversion.stats.batchCount << endl;
+        cout << "  elapsed(s) : " << parquetConversion.stats.elapsedSeconds << endl;
+      }
   }
   catch (std::exception& ex)
   {
@@ -745,6 +781,13 @@ int main(int argc, char** argv)
 
   if (cpimportJobId != 0)
     BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
+
+  if (!parquetStagingFilePath.empty())
+  {
+    boost::system::error_code cleanupEc;
+    boost::filesystem::remove(parquetStagingFilePath, cleanupEc);
+  }
+
   // Free up resources allocated by MY_INIT() above.
   my_end(0);
 

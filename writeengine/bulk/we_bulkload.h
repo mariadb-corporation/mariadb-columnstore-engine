@@ -102,6 +102,7 @@ class BulkLoad : public FileOp
 
   // Accessors and mutators
   void addToCmdLineImportFileList(const std::string& importFile);
+  void overrideCmdLineImportFile(const std::string& importFile);
   const std::string& getAlternateImportDir() const;
   const std::string& getErrorDir() const;
   long getTimeZone() const;
@@ -306,6 +307,12 @@ class BulkLoad : public FileOp
 //------------------------------------------------------------------------------
 inline void BulkLoad::addToCmdLineImportFileList(const std::string& importFile)
 {
+  fCmdLineImportFiles.push_back(importFile);
+}
+
+inline void BulkLoad::overrideCmdLineImportFile(const std::string& importFile)
+{
+  fCmdLineImportFiles.clear();
   fCmdLineImportFiles.push_back(importFile);
 }
 
