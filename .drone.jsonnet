@@ -681,19 +681,13 @@ local AllPipelines =
     for e in events
     for a in archs
   ] +
+  // Custom verification runs: keep it light - 2 platforms (rpm + deb)
+  // per server version, all 3 servers (10.6, 11.4, 11.8) = 6 pipelines.
+  // No failure:ignore - we want real regression status.
   [
     Pipeline(any_branch, p, "custom", a, server)
-    for p in platforms[current_branch]
-    for server in servers[current_branch]
-    for a in archs
-  ] +
-  // also expose 11.4/11.8 on custom builds so regression results are
-  // visible across all server versions, not just 10.6. No failure:ignore
-  // here - we want real status from a custom verification run.
-  [
-    Pipeline(any_branch, p, "custom", a, server)
-    for p in extra_servers_platforms[current_branch]
-    for server in extra_servers[current_branch]
+    for p in ["rockylinux:9", "ubuntu:24.04"]
+    for server in servers[current_branch] + extra_servers[current_branch]
     for a in archs
   ] +
   // clang
