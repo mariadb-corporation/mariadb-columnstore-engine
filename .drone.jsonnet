@@ -154,7 +154,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests_base = if (event == "cron") then [
+  local regression_tests_base = if (event == "cron" || event == "custom") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -645,8 +645,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.cmapilog] +
          [pipeline.publish("cmapilog")] +
          (if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise") then [pipeline.mcs_cli_docs_check] else []) +
-         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
-         [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+         (if (event == "custom") then []
+          else if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")]
+          else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
+         [pipeline.regression(regression_tests[i], if (i == 0) then (if (event == "custom") then ["publish pkg", "publish cmapi build"] else ["mtr", "publish pkg", "publish cmapi build"]) else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
          [pipeline.regressionlog] +
          [pipeline.publish("regressionlog")] +
          [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
