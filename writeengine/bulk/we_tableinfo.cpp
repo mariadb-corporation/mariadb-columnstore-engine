@@ -2393,5 +2393,47 @@ bool TableInfo::readFromSTDIN()
   return fReadFromStdin;
 }
 
+void TableInfo::prepareDirectImportCompletion(RID totalRows)
+{
+  boost::mutex::scoped_lock lock(fSyncUpdatesTI);
+  fTotalReadRows = totalRows;
+  fStatusTI = WriteEngine::READ_COMPLETE;
+  if (!fBuffers.empty())
+  {
+    fLastBufferId = 0;
+    fBuffers[0].setStatusBLB(WriteEngine::READ_COMPLETE);
+  }
+  else
+  {
+    fLastBufferId = -1;
+  }
+
+  gettimeofday(&fStartTime, nullptr);
+  fProcessingBegun = true;
+}
+
+int TableInfo::finalizeDirectImport(std::string& errMsg)
+{
+  if (fBuffers.empty())
+  {
+    errMsg = "Direct import finalize failed: no processing buffers initialized";
+    return ERR_INVALID_PARAM;
+  }
+
+  for (unsigned colId = 0; colId < fColumns.size(); ++colId)
+  {
+    const int rc = setParseComplete(static_cast<int>(colId), 0, 0.0);
+    if (rc != NO_ERROR)
+    {
+      std::ostringstream oss;
+      oss << "Direct import finalize failed for column '" << fColumns[colId].column.colName << "'";
+      errMsg = oss.str();
+      return rc;
+    }
+  }
+
+  return NO_ERROR;
+}
+
 }  // namespace WriteEngine
 // end of namespace

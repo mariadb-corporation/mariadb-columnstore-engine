@@ -470,6 +470,20 @@ class TableInfo : public WeUIDGID
 
   bool readFromSTDIN();
 
+  // Internal helper for direct parquet import path.
+  boost::ptr_vector<ColumnInfo>& directImportColumns()
+  {
+    return fColumns;
+  }
+
+  const std::string& directImportTableName() const
+  {
+    return fTableName;
+  }
+
+  void prepareDirectImportCompletion(RID totalRows);
+  int finalizeDirectImport(std::string& errMsg);
+
  public:
   friend class BulkLoad;
   friend class ColumnInfo;

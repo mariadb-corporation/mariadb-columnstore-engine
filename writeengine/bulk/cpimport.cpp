@@ -36,7 +36,6 @@
 #include <sys/resource.h>
 #include <vector>
 #include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include "idberrorinfo.h"
 #include "we_simplesyslog.h"
 #include "we_bulkload.h"
@@ -93,7 +92,7 @@ const char* taskLabels[] = {"",
                             "loading job file",
                             "processing data"};
 
-int prepareParquetInputForBulk(BulkLoad& curJob, ParquetConversionResult& result, std::string& errMsg)
+int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& result, std::string& errMsg)
 {
 #ifndef WITH_PARQUET
   cmdArgs->startupError(
@@ -107,49 +106,13 @@ int prepareParquetInputForBulk(BulkLoad& curJob, ParquetConversionResult& result
     return ERR_INVALID_PARAM;
   }
 
-  std::string stagingTemplate = "/tmp/cpimport_parquet_stage_XXXXXX";
-  std::vector<char> mutableTemplate(stagingTemplate.begin(), stagingTemplate.end());
-  mutableTemplate.push_back('\0');
-  int stageFd = mkstemp(mutableTemplate.data());
-  if (stageFd < 0)
-  {
-    errMsg = "Unable to create temporary parquet staging file";
-    return ERR_FILE_CREATE;
-  }
-  close(stageFd);
-
-  const std::string stagingPath(mutableTemplate.data());
-
   if (!BulkLoad::disableConsoleOutput())
   {
     cout << "Input format: parquet" << endl;
     cout << "Reading parquet file: " << inputFile << endl;
-    cout << "Materializing parquet batches into: " << stagingPath << endl;
   }
 
-  int rc = ParquetReader::convertToDelimitedFile(inputFile, stagingPath, result, errMsg);
-  if (rc != NO_ERROR)
-  {
-    if (!BulkLoad::disableConsoleOutput())
-      cerr << "Parquet read failed: " << errMsg << endl;
-    return rc;
-  }
-
-  curJob.overrideCmdLineImportFile(stagingPath);
-  curJob.setColDelimiter('\t');
-  curJob.setEscapeChar('\\');
-  curJob.setEnclosedByChar('"');
-  curJob.setSkipRows(0);
-
-  if (!BulkLoad::disableConsoleOutput())
-  {
-    cout << "Parquet schema mapping (" << result.mappings.size() << " columns):" << endl;
-    for (const auto& mapping : result.mappings)
-    {
-      cout << "  " << mapping.name << " : " << mapping.arrowType << " -> " << mapping.conversion << endl;
-    }
-  }
-
+  curJob.enableParquetDirectImport(inputFile, &result, &errMsg);
   return NO_ERROR;
 #endif
 }
@@ -482,7 +445,6 @@ int main(int argc, char** argv)
   const bool parquetMode = cmdArgs->isParquetMode();
   ParquetConversionResult parquetConversion;
   std::string parquetPrepErrMsg;
-  std::string parquetStagingFilePath;
   int rc = NO_ERROR;
   std::string exceptionMsg;
   TASK task;  // track tasks being performed
@@ -518,12 +480,11 @@ int main(int argc, char** argv)
     if (parquetMode)
     {
       task = TASK_PROCESS_DATA;
-      rc = prepareParquetInputForBulk(curJob, parquetConversion, parquetPrepErrMsg);
+      rc = configureParquetDirectImport(curJob, parquetConversion, parquetPrepErrMsg);
       if (rc != NO_ERROR)
       {
         cmdArgs->startupError(parquetPrepErrMsg, false);
       }
-      parquetStagingFilePath = parquetConversion.materializedFilePath;
     }
 
     //--------------------------------------------------------------------------
@@ -752,7 +713,11 @@ int main(int argc, char** argv)
       if (rc != NO_ERROR)
       {
         if (!BulkLoad::disableConsoleOutput())
+        {
           cerr << endl << "Error in loading job data" << endl;
+          if (parquetMode && !parquetPrepErrMsg.empty())
+            cerr << parquetPrepErrMsg << endl;
+        }
       }
 
       if (parquetMode && rc == NO_ERROR && !BulkLoad::disableConsoleOutput())
@@ -781,12 +746,6 @@ int main(int argc, char** argv)
 
   if (cpimportJobId != 0)
     BRMWrapper::getInstance()->finishCpimportJob(cpimportJobId);
-
-  if (!parquetStagingFilePath.empty())
-  {
-    boost::system::error_code cleanupEc;
-    boost::filesystem::remove(parquetStagingFilePath, cleanupEc);
-  }
 
   // Free up resources allocated by MY_INIT() above.
   my_end(0);

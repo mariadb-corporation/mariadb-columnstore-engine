@@ -53,6 +53,7 @@
 /** Namespace WriteEngine */
 namespace WriteEngine
 {
+struct ParquetConversionResult;
 /** Class BulkLoad */
 class BulkLoad : public FileOp
 {
@@ -171,6 +172,8 @@ class BulkLoad : public FileOp
   // Add error message into appropriate BRM updater
   static bool addErrorMsg2BrmUpdater(const std::string& tablename, const std::ostringstream& oss);
   void setDefaultJobUUID();
+  void enableParquetDirectImport(const std::string& parquetFilePath, ParquetConversionResult* result,
+                                 std::string* errMsg);
 
  private:
   //--------------------------------------------------------------------------
@@ -238,6 +241,10 @@ class BulkLoad : public FileOp
   std::string fS3Bucket;                              // S3 Bucket
   std::string fS3Region;                              // S3 Region
   std::string fUsername{"mysql"};                     // data files owner name mysql by default
+  bool fParquetDirectMode{false};
+  std::string fParquetDirectInputFile;
+  ParquetConversionResult* fParquetDirectResult{nullptr};
+  std::string* fParquetDirectErrMsg{nullptr};
 
   //--------------------------------------------------------------------------
   // Private Functions
@@ -529,6 +536,15 @@ inline void BulkLoad::setS3Region(const std::string& region)
 inline void BulkLoad::setUsername(const std::string& username)
 {
   fUsername = username;
+}
+
+inline void BulkLoad::enableParquetDirectImport(const std::string& parquetFilePath,
+                                                ParquetConversionResult* result, std::string* errMsg)
+{
+  fParquetDirectMode = true;
+  fParquetDirectInputFile = parquetFilePath;
+  fParquetDirectResult = result;
+  fParquetDirectErrMsg = errMsg;
 }
 
 inline void BulkLoad::startTimer()

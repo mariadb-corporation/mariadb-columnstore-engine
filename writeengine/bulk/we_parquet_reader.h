@@ -23,6 +23,7 @@
 
 namespace WriteEngine
 {
+class TableInfo;
 
 struct ParquetReadStats
 {
@@ -53,6 +54,8 @@ class ParquetReader
   static int readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg);
   static int convertToDelimitedFile(const std::string& parquetFilePath, const std::string& outputFilePath,
                                     ParquetConversionResult& result, std::string& errMsg);
+  static int importIntoTableDirect(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                   ParquetConversionResult& result, std::string& errMsg);
 };
 
 }  // namespace WriteEngine
