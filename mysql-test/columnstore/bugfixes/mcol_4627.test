@@ -32,6 +32,22 @@ SELECT * FROM t1;
 --disable_warnings
 DROP TABLE IF EXISTS t1;
 --enable_warnings
+CREATE TABLE t1 (i INT, d DECIMAL(10,1)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, -1.5);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT, d DECIMAL(10,1)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (7, NULL);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
 CREATE TABLE t1 (i INT UNSIGNED, d DECIMAL(10,1)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 0.5);
 UPDATE t1 SET i=d;
