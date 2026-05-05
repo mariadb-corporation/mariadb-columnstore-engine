@@ -609,7 +609,7 @@ void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Tok
     {
       if (doVerbose())
       {
-        std::cout << "Adding block offset " << lbidBlockOffset << " for dict OID " << oidForDict << std::endl;
+        std::cout << "Adding block offset " << lbidBlockOffset << " (fbo " << fbo << ") for dict OID " << oidForDict << std::endl;
       }
       oidBlockOffsetsFromTokens[oidForDict].insert(lbidBlockOffset);
       seen.insert(lbidBlockOffset);
