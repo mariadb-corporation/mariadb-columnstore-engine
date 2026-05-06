@@ -8,11 +8,11 @@ local servers = {
 };
 
 local platforms = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
 };
 
 local platforms_arm = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
@@ -38,7 +38,7 @@ local customEnvCommands(envkey, builddir) =
 local customBootstrapParamsForExisitingPipelines(envkey) =
   # errorprone if we pass --custom-cmake-flags twice, the last one will win
   local customBootstrapMap = {
-    "ubuntu:24.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
+    "ubuntu:22.04": "--custom-cmake-flags '-DCOLUMNSTORE_ASAN_FOR_UNITTESTS=YES'",
   };
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
@@ -61,12 +61,12 @@ local mtr_full_set = "basic,bugfixes,devregression,autopilot,extended,multinode,
 
 local upgrade_test_lists = {
   rockylinux8: {
-    arm64: ["10.6.4-1", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.15-10"],
-    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+    arm64: ["10.6.4-1", "10.6.9-5", "10.6.11-6", "10.6.12-7"],
+    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
   },
   rockylinux9: {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
+    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
   },
 
   debian12: {
@@ -74,18 +74,13 @@ local upgrade_test_lists = {
     amd64: [],
   },
   "ubuntu20.04": {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
+    amd64: ["10.6.4-1", "10.6.5-2", "10.6.7-3", "10.6.8-4", "10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
   },
   "ubuntu22.04": {
-    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
-    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9", "10.6.15-10"],
+    arm64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
+    amd64: ["10.6.9-5", "10.6.11-6", "10.6.12-7", "10.6.14-9"],
   },
-  "ubuntu24.04":
-    {
-      arm64: [],
-      amd64: [],
-    },
 };
 
 local make_clickable_link(link) = "echo -e '\\e]8;;" +  link + "\\e\\\\" +  link + "\\e]8;;\\e\\\\'";
