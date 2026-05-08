@@ -496,6 +496,10 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
   uint32_t totalProcessed = 0;
   BLBufferStats bufferStats(columnInfo.column.dataType);
   bool updateCPInfoPending = false;
+  const uint32_t maxChunkRows = std::min<uint32_t>(static_cast<uint32_t>(batchRows), DIRECT_IMPORT_MAX_CHUNK_ROWS);
+  std::vector<unsigned char> outputBuffer(static_cast<size_t>(maxChunkRows) * columnInfo.column.width);
+  char fieldBuffer[MAX_FIELD_SIZE + 1];
+  std::string scalarText;
 
   while (totalProcessed < static_cast<uint32_t>(batchRows))
   {
@@ -523,10 +527,6 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
         return autoRc;
       converter.setAutoIncNextValue(nextAutoIncValue);
     }
-
-    std::vector<unsigned char> outputBuffer(static_cast<size_t>(nRowsParsed) * columnInfo.column.width);
-    char fieldBuffer[MAX_FIELD_SIZE + 1];
-    std::string scalarText;
 
     for (uint32_t row = 0; row < nRowsParsed; ++row)
     {
