@@ -32,6 +32,7 @@ from cmapi_server.helpers import (
     get_dbroots,
     get_version,
     update_revision_and_manager,
+    validate_cej_credentials,
 )
 from cmapi_server.node_manipulation import (
     add_dbroot,
@@ -152,12 +153,16 @@ class ClusterHandler:
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
-        :raises CMAPIBasicError: if no nodes in the cluster
+        :raises CMAPIBasicError: if no nodes in the cluster or if
+                                 cross-engine credentials are invalid
         :return: start timestamp
         :rtype: dict
         """
         logger: logging.Logger = logging.getLogger('cmapi_server')
         logger.info('Cluster start command called. Starting the cluster.')
+
+        validate_cej_credentials(config)
+
         operation_start_time = str(datetime.now())
         toggle_cluster_state(ClusterAction.START, config)
         logger.info('Successfully finished cluster start.')
