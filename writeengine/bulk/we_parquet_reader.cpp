@@ -18,6 +18,7 @@
 #include "we_parquet_reader.h"
 
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <memory>
@@ -555,6 +556,310 @@ int getValueAsString(const std::shared_ptr<arrow::Array>& array, int64_t rowInde
   return NO_ERROR;
 }
 
+bool isDirectNumericFastPathEligible(const JobColumn& column)
+{
+  using DT = execplan::CalpontSystemCatalog::ColDataType;
+  if (column.dataType == DT::DATE || column.dataType == DT::DATETIME || column.dataType == DT::TIMESTAMP ||
+      column.dataType == DT::TIME || column.dataType == DT::DECIMAL || column.dataType == DT::UDECIMAL)
+  {
+    return false;
+  }
+
+  switch (column.weType)
+  {
+    case WriteEngine::WR_BYTE:
+    case WriteEngine::WR_SHORT:
+    case WriteEngine::WR_INT:
+    case WriteEngine::WR_LONGLONG:
+    case WriteEngine::WR_UBYTE:
+    case WriteEngine::WR_USHORT:
+    case WriteEngine::WR_UINT:
+    case WriteEngine::WR_ULONGLONG:
+    case WriteEngine::WR_FLOAT:
+    case WriteEngine::WR_DOUBLE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool tryExtractSignedValue(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, int64_t& out)
+{
+  using arrow::Type;
+  switch (array->type_id())
+  {
+    case Type::BOOL:
+      out = std::static_pointer_cast<arrow::BooleanArray>(array)->Value(rowIndex) ? 1 : 0;
+      return true;
+    case Type::INT8:
+      out = std::static_pointer_cast<arrow::Int8Array>(array)->Value(rowIndex);
+      return true;
+    case Type::INT16:
+      out = std::static_pointer_cast<arrow::Int16Array>(array)->Value(rowIndex);
+      return true;
+    case Type::INT32:
+      out = std::static_pointer_cast<arrow::Int32Array>(array)->Value(rowIndex);
+      return true;
+    case Type::INT64:
+      out = std::static_pointer_cast<arrow::Int64Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT8:
+      out = std::static_pointer_cast<arrow::UInt8Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT16:
+      out = std::static_pointer_cast<arrow::UInt16Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT32:
+      out = std::static_pointer_cast<arrow::UInt32Array>(array)->Value(rowIndex);
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool tryExtractUnsignedValue(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, uint64_t& out)
+{
+  using arrow::Type;
+  switch (array->type_id())
+  {
+    case Type::BOOL:
+      out = std::static_pointer_cast<arrow::BooleanArray>(array)->Value(rowIndex) ? 1 : 0;
+      return true;
+    case Type::UINT8:
+      out = std::static_pointer_cast<arrow::UInt8Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT16:
+      out = std::static_pointer_cast<arrow::UInt16Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT32:
+      out = std::static_pointer_cast<arrow::UInt32Array>(array)->Value(rowIndex);
+      return true;
+    case Type::UINT64:
+      out = std::static_pointer_cast<arrow::UInt64Array>(array)->Value(rowIndex);
+      return true;
+    case Type::INT8:
+    {
+      const int8_t v = std::static_pointer_cast<arrow::Int8Array>(array)->Value(rowIndex);
+      out = (v < 0) ? 0 : static_cast<uint64_t>(v);
+      return true;
+    }
+    case Type::INT16:
+    {
+      const int16_t v = std::static_pointer_cast<arrow::Int16Array>(array)->Value(rowIndex);
+      out = (v < 0) ? 0 : static_cast<uint64_t>(v);
+      return true;
+    }
+    case Type::INT32:
+    {
+      const int32_t v = std::static_pointer_cast<arrow::Int32Array>(array)->Value(rowIndex);
+      out = (v < 0) ? 0 : static_cast<uint64_t>(v);
+      return true;
+    }
+    case Type::INT64:
+    {
+      const int64_t v = std::static_pointer_cast<arrow::Int64Array>(array)->Value(rowIndex);
+      out = (v < 0) ? 0 : static_cast<uint64_t>(v);
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+bool tryExtractFloatingValue(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, double& out)
+{
+  using arrow::Type;
+  switch (array->type_id())
+  {
+    case Type::FLOAT:
+      out = std::static_pointer_cast<arrow::FloatArray>(array)->Value(rowIndex);
+      return true;
+    case Type::DOUBLE:
+      out = std::static_pointer_cast<arrow::DoubleArray>(array)->Value(rowIndex);
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool tryConvertFieldDirectBinary(const std::shared_ptr<arrow::Array>& sourceArray, int64_t rowIndex, const JobColumn& column,
+                                 BLBufferStats& bufferStats, unsigned char* output)
+{
+  if (!sourceArray || sourceArray->IsNull(rowIndex))
+    return false;
+
+  switch (column.weType)
+  {
+    case WriteEngine::WR_BYTE:
+    case WriteEngine::WR_SHORT:
+    case WriteEngine::WR_INT:
+    case WriteEngine::WR_LONGLONG:
+    {
+      int64_t value = 0;
+      if (!tryExtractSignedValue(sourceArray, rowIndex, value))
+        return false;
+
+      const int64_t minSat = static_cast<int64_t>(column.fMinIntSat);
+      const int64_t maxSat = static_cast<int64_t>(column.fMaxIntSat);
+      if (value < minSat)
+      {
+        value = minSat;
+        bufferStats.satCount++;
+      }
+      else if (value > maxSat)
+      {
+        value = maxSat;
+        bufferStats.satCount++;
+      }
+
+      if (value < bufferStats.minBufferVal)
+        bufferStats.minBufferVal = value;
+      if (value > bufferStats.maxBufferVal)
+        bufferStats.maxBufferVal = value;
+
+      switch (column.weType)
+      {
+        case WriteEngine::WR_BYTE:
+        {
+          const int8_t v = static_cast<int8_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_SHORT:
+        {
+          const int16_t v = static_cast<int16_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_INT:
+        {
+          const int32_t v = static_cast<int32_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_LONGLONG:
+        {
+          memcpy(output, &value, sizeof(value));
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+    case WriteEngine::WR_UBYTE:
+    case WriteEngine::WR_USHORT:
+    case WriteEngine::WR_UINT:
+    case WriteEngine::WR_ULONGLONG:
+    {
+      uint64_t value = 0;
+      if (!tryExtractUnsignedValue(sourceArray, rowIndex, value))
+        return false;
+
+      const uint64_t minSat = static_cast<uint64_t>(column.fMinIntSat < 0 ? 0 : column.fMinIntSat);
+      const uint64_t maxSat = static_cast<uint64_t>(column.fMaxIntSat);
+      if (value < minSat)
+      {
+        value = minSat;
+        bufferStats.satCount++;
+      }
+      else if (value > maxSat)
+      {
+        value = maxSat;
+        bufferStats.satCount++;
+      }
+
+      if (value < static_cast<uint64_t>(bufferStats.minBufferVal))
+        bufferStats.minBufferVal = static_cast<int64_t>(value);
+      if (value > static_cast<uint64_t>(bufferStats.maxBufferVal))
+        bufferStats.maxBufferVal = static_cast<int64_t>(value);
+
+      switch (column.weType)
+      {
+        case WriteEngine::WR_UBYTE:
+        {
+          const uint8_t v = static_cast<uint8_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_USHORT:
+        {
+          const uint16_t v = static_cast<uint16_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_UINT:
+        {
+          const uint32_t v = static_cast<uint32_t>(value);
+          memcpy(output, &v, sizeof(v));
+          return true;
+        }
+        case WriteEngine::WR_ULONGLONG:
+        {
+          memcpy(output, &value, sizeof(value));
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+    case WriteEngine::WR_FLOAT:
+    {
+      double value = 0.0;
+      if (!tryExtractFloatingValue(sourceArray, rowIndex, value))
+        return false;
+
+      float outValue = static_cast<float>(value);
+      const float minSat = static_cast<float>(column.fMinDblSat);
+      const float maxSat = static_cast<float>(column.fMaxDblSat);
+      if (std::isnan(outValue))
+      {
+        outValue = std::signbit(outValue) ? minSat : maxSat;
+        bufferStats.satCount++;
+      }
+      else if (outValue > maxSat)
+      {
+        outValue = maxSat;
+        bufferStats.satCount++;
+      }
+      else if (outValue < minSat)
+      {
+        outValue = minSat;
+        bufferStats.satCount++;
+      }
+
+      memcpy(output, &outValue, sizeof(outValue));
+      return true;
+    }
+    case WriteEngine::WR_DOUBLE:
+    {
+      double outValue = 0.0;
+      if (!tryExtractFloatingValue(sourceArray, rowIndex, outValue))
+        return false;
+
+      if (std::isnan(outValue))
+      {
+        outValue = std::signbit(outValue) ? column.fMinDblSat : column.fMaxDblSat;
+        bufferStats.satCount++;
+      }
+      else if (outValue > column.fMaxDblSat)
+      {
+        outValue = column.fMaxDblSat;
+        bufferStats.satCount++;
+      }
+      else if (outValue < column.fMinDblSat)
+      {
+        outValue = column.fMinDblSat;
+        bufferStats.satCount++;
+      }
+
+      memcpy(output, &outValue, sizeof(outValue));
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
 void resetBufferStats(const JobColumn& column, BLBufferStats& stats)
 {
   if (isUnsigned(column.dataType))
@@ -601,6 +906,7 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
   std::vector<unsigned char> outputBuffer(static_cast<size_t>(maxChunkRows) * columnInfo.column.width);
   char fieldBuffer[MAX_FIELD_SIZE + 1];
   std::string scalarText;
+  const bool enableDirectBinaryFastPath = isDirectNumericFastPathEligible(columnInfo.column);
 
   while (totalProcessed < static_cast<uint32_t>(batchRows))
   {
@@ -636,28 +942,41 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
       int fieldLength = 0;
       if (!nullFlag)
       {
-        const int valueRc = getValueAsString(sourceArray, batchRow, nullFlag, scalarText, errMsg);
-        if (valueRc != NO_ERROR)
-          return valueRc;
-        if (!nullFlag)
+        const bool usedFastPath =
+            enableDirectBinaryFastPath &&
+            tryConvertFieldDirectBinary(sourceArray, batchRow, columnInfo.column, bufferStats,
+                                        outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width);
+        if (!usedFastPath)
         {
-          if (scalarText.size() > MAX_FIELD_SIZE)
+          const int valueRc = getValueAsString(sourceArray, batchRow, nullFlag, scalarText, errMsg);
+          if (valueRc != NO_ERROR)
+            return valueRc;
+          if (!nullFlag)
           {
-            std::ostringstream oss;
-            oss << "Parquet value exceeds max field size for column '" << columnInfo.column.colName << "'";
-            errMsg = oss.str();
-            return ERR_BULK_ROW_FILL_BUFFER;
+            if (scalarText.size() > MAX_FIELD_SIZE)
+            {
+              std::ostringstream oss;
+              oss << "Parquet value exceeds max field size for column '" << columnInfo.column.colName << "'";
+              errMsg = oss.str();
+              return ERR_BULK_ROW_FILL_BUFFER;
+            }
+            fieldLength = static_cast<int>(scalarText.size());
+            if (fieldLength > 0)
+              memcpy(fieldBuffer, scalarText.data(), fieldLength);
+            fieldBuffer[fieldLength] = '\0';
           }
-          fieldLength = static_cast<int>(scalarText.size());
-          if (fieldLength > 0)
-            memcpy(fieldBuffer, scalarText.data(), fieldLength);
-          fieldBuffer[fieldLength] = '\0';
+
+          converter.convertField(fieldBuffer, fieldLength, nullFlag,
+                                 outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width,
+                                 columnInfo.column, bufferStats);
         }
       }
-
-      converter.convertField(fieldBuffer, fieldLength, nullFlag,
-                             outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width,
-                             columnInfo.column, bufferStats);
+      else
+      {
+        converter.convertField(fieldBuffer, fieldLength, nullFlag,
+                               outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width,
+                               columnInfo.column, bufferStats);
+      }
       updateCPInfoPending = true;
 
       const RID currentInputRow = sectionStartRow + row;
