@@ -50,6 +50,9 @@
 #include "mcsconfig.h"
 #include "mariadb_my_sys.h"
 #include "we_cmdargs.h"
+#ifdef WITH_PARQUET
+#include "we_parquet_reader.h"
+#endif
 
 using namespace std;
 using namespace WriteEngine;
@@ -95,6 +98,11 @@ int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& resu
   return ERR_INVALID_PARAM;
 #else
   errMsg.clear();
+  ParquetImportRuntimeConfig importCfg;
+  importCfg.readThreads = cmdArgs->getParquetReadThreads();
+  importCfg.queueBytes = cmdArgs->getParquetQueueBytes();
+  ParquetReader::setImportRuntimeConfig(importCfg);
+
   const std::string inputFile = cmdArgs->getParquetFilePath();
   if (inputFile.empty())
   {

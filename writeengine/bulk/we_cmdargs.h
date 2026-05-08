@@ -63,6 +63,14 @@ public:
     return fInputFormat == InputFormat::Parquet;
   }
   std::string getParquetFilePath() const;
+  int getParquetReadThreads() const
+  {
+    return fParquetReadThreads;
+  }
+  int64_t getParquetQueueBytes() const
+  {
+    return fParquetQueueBytes;
+  }
 
   void setCpimportJobId(uint32_t cpimportJobId)
   {
@@ -112,6 +120,8 @@ private:
   char fEscChar{0};           // esc char
   int fSkipRows{0};           // skip header
   int fNoOfWriteThrds{3};     // No. of write threads
+  int fParquetReadThreads{1}; // Number of parquet reader workers
+  int64_t fParquetQueueBytes{134217728}; // Max bytes in parquet batch queue
   bool fNullStrMode{false};   // set null string mode - treat null as null
   ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
   InputFormat fInputFormat{InputFormat::Text};       // Input format type

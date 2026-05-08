@@ -48,9 +48,16 @@ struct ParquetConversionResult
   std::string materializedFilePath;
 };
 
+struct ParquetImportRuntimeConfig
+{
+  int readThreads{1};
+  int64_t queueBytes{134217728};
+};
+
 class ParquetReader
 {
  public:
+  static void setImportRuntimeConfig(const ParquetImportRuntimeConfig& cfg);
   static int readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg);
   static int convertToDelimitedFile(const std::string& parquetFilePath, const std::string& outputFilePath,
                                     ParquetConversionResult& result, std::string& errMsg);

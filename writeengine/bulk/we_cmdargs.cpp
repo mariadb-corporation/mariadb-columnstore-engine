@@ -96,6 +96,14 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("io-buffer-size,B", fSetBufSize, 1, INT_MAX,
         "I/O library read buffer size (in bytes)")
       DECLARE_INT_ARG("writers,w", fNoOfWriteThrds, 1, INT_MAX, "Number of parsers.")
+      DECLARE_INT_ARG("parquet-read-threads", fParquetReadThreads, 1, INT_MAX,
+        "Number of parallel parquet reader workers (parquet input only).")
+      ("parquet-queue-bytes", po::value<int64_t>(&fParquetQueueBytes)->notifier(
+          [this](auto&& value) {
+            if (value <= 0)
+              startupError("Argument parquet-queue-bytes is out of range [1, INT64_MAX]");
+          }),
+        "Maximum bytes buffered between parquet readers and writer.")
       ("enclosed-by,E", po::value<char>(&fEnclosedChar),
         "Enclosed by character if field values are enclosed.")
       ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),
@@ -399,6 +407,14 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (!fS3Key.empty() || !fS3Secret.empty() || !fS3Bucket.empty() || !fS3Host.empty() || !fS3Region.empty())
     {
       startupError("Parquet mode currently supports only local files (S3 options are unsupported)");
+    }
+    if (fParquetReadThreads < 1)
+    {
+      startupError("Parquet read thread count must be >= 1");
+    }
+    if (fParquetQueueBytes <= 0)
+    {
+      startupError("Parquet queue byte limit must be >= 1");
     }
   }
 }
