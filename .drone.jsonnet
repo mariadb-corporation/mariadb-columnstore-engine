@@ -13,11 +13,11 @@ local extra_servers = {
 
 
 local platforms = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04", "ubuntu:26.04"],
 };
 
 local extra_servers_platforms = {
-  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04"],
+  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04", "ubuntu:26.04"],
 };
 
 //local archs = ["amd64", "arm64"];
@@ -81,6 +81,7 @@ local upgrade_test_lists = {
   debian13: default_arch_versions,
   "ubuntu22.04": default_arch_versions,
   "ubuntu24.04": default_arch_versions,
+  "ubuntu26.04": default_arch_versions,
 };
 
 // Normalise signal-killed exits (≥128) to 1 so Drone records status=`failure`
