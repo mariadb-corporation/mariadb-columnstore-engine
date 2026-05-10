@@ -50,9 +50,7 @@
 #include "mcsconfig.h"
 #include "mariadb_my_sys.h"
 #include "we_cmdargs.h"
-#ifdef WITH_PARQUET
 #include "we_parquet_reader.h"
-#endif
 
 using namespace std;
 using namespace WriteEngine;
@@ -93,10 +91,6 @@ const char* taskLabels[] = {"",
 
 int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& result, std::string& errMsg)
 {
-#ifndef WITH_PARQUET
-  errMsg = "Parquet input format was requested, but this cpimport build does not include Parquet support.";
-  return ERR_INVALID_PARAM;
-#else
   errMsg.clear();
   ParquetImportRuntimeConfig importCfg;
   importCfg.readThreads = cmdArgs->getParquetReadThreads();
@@ -118,7 +112,6 @@ int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& resu
 
   curJob.enableParquetDirectImport(inputFile, &result, &errMsg);
   return NO_ERROR;
-#endif
 }
 }  // namespace
 

@@ -55,9 +55,7 @@
 #include "calpontsystemcatalog.h"
 #include "we_ddlcommandclient.h"
 #include "mcsconfig.h"
-#ifdef WITH_PARQUET
 #include "we_parquet_reader.h"
-#endif
 
 using namespace std;
 using namespace boost;
@@ -1144,11 +1142,6 @@ int BulkLoad::processJob()
 
   if (fParquetDirectMode)
   {
-#ifndef WITH_PARQUET
-    rc = ERR_INVALID_PARAM;
-    if (fParquetDirectErrMsg)
-      *fParquetDirectErrMsg = "Parquet direct import requested but binary is built without parquet support";
-#else
     if (tables.size() != 1)
     {
       rc = ERR_INVALID_PARAM;
@@ -1169,7 +1162,6 @@ int BulkLoad::processJob()
       std::string* errPtr = fParquetDirectErrMsg ? fParquetDirectErrMsg : &throwawayErr;
       rc = ParquetReader::importIntoTableDirect(fParquetDirectInputFile, *tables[0], *resultPtr, *errPtr);
     }
-#endif
   }
   else
   {
