@@ -493,7 +493,11 @@ class BoundedBatchQueue
   {
     std::unique_lock<std::mutex> lock(mu_);
     const int64_t bytes = std::max<int64_t>(1, env.estimatedBytes);
-    cvNotFull_.wait(lock, [&] { return closed_ || stopFlag.load() || (bytesInQueue_ + bytes <= maxBytes_); });
+    // If a single batch estimate exceeds maxBytes_, still allow enqueue when the queue is
+    // empty so producers cannot block forever (--parquet-queue-bytes softer than batch size).
+    cvNotFull_.wait(lock, [&] {
+      return closed_ || stopFlag.load() || queue_.empty() || (bytesInQueue_ + bytes <= maxBytes_);
+    });
     if (closed_ || stopFlag.load())
       return false;
     bytesInQueue_ += bytes;
@@ -1014,7 +1018,10 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
     }
 
     if (bufferStats.satCount)
+    {
       columnInfo.incSaturatedCnt(bufferStats.satCount);
+      bufferStats.satCount = 0;
+    }
 
     section->write(outputBuffer.data(), static_cast<int>(nRowsParsed));
     const int releaseRc = columnInfo.fColBufferMgr->releaseSection(section);
