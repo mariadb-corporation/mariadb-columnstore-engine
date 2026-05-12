@@ -723,6 +723,28 @@ int main(int argc, char** argv)
       cout << "  row groups : " << parquetConversion.stats.rowGroupCount << endl;
       cout << "  batches    : " << parquetConversion.stats.batchCount << endl;
       cout << "  elapsed(s) : " << parquetConversion.stats.elapsedSeconds << endl;
+      const char* instrEnv = std::getenv("COLUMNSTORE_PARQUET_IMPORT_INSTR");
+      if (instrEnv && instrEnv[0] != '\0' && instrEnv[0] != '0' &&
+          !parquetConversion.columnInstrumentation.empty())
+      {
+        cout << "Parquet import instrumentation (COLUMNSTORE_PARQUET_IMPORT_INSTR):" << endl;
+        for (size_t i = 0; i < parquetConversion.columnInstrumentation.size(); ++i)
+        {
+          const std::string& cname =
+              (i < parquetConversion.columnNames.size()) ? parquetConversion.columnNames[i] : std::string("?");
+          const auto& s = parquetConversion.columnInstrumentation[i];
+          cout << "  column[" << i << "] " << cname << ":" << endl;
+          cout << "    dictRows=" << s.dictRows << " dictNulls=" << s.dictNulls
+               << " dictDctnryCalls=" << s.dictDctnryCalls << " dictCanonHits=" << s.dictCanonHits << endl;
+          cout << "    dictChunkDistinctSum=" << s.dictChunkDistinctSum << " dictChunks=" << s.dictChunks;
+          if (s.dictChunks > 0)
+            cout << " avgDistinct/chunk=" << (static_cast<double>(s.dictChunkDistinctSum) /
+                                                  static_cast<double>(s.dictChunks));
+          cout << endl;
+          cout << "    temporalArrowFast=" << s.temporalArrowFast
+               << " temporalScalarFallback=" << s.temporalScalarFallback << endl;
+        }
+      }
     }
   }
   catch (std::exception& ex)

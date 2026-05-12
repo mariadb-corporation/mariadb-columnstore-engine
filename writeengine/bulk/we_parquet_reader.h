@@ -41,11 +41,29 @@ struct ParquetColumnMapping
   std::string conversion;
 };
 
+/** Per-column counters merged after direct parquet import (see COLUMNSTORE_PARQUET_IMPORT_INSTR). */
+struct ParquetColumnInstrSnapshot
+{
+  uint64_t dictRows{0};
+  uint64_t dictNulls{0};
+  /** Sum of distinct string values per dictionary chunk (divide by dictChunks for average). */
+  uint64_t dictChunkDistinctSum{0};
+  uint64_t dictChunks{0};
+  uint64_t dictDctnryCalls{0};
+  /** Rows remapped to an earlier identical string in the same chunk (token lookup savings). */
+  uint64_t dictCanonHits{0};
+  uint64_t temporalArrowFast{0};
+  uint64_t temporalScalarFallback{0};
+};
+
 struct ParquetConversionResult
 {
   ParquetReadStats stats;
   std::vector<ParquetColumnMapping> mappings;
   std::string materializedFilePath;
+  /** Column names aligned with columnInstrumentation indices (direct-import column order). */
+  std::vector<std::string> columnNames;
+  std::vector<ParquetColumnInstrSnapshot> columnInstrumentation;
 };
 
 struct ParquetImportRuntimeConfig

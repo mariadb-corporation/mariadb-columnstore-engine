@@ -400,6 +400,11 @@ class BulkLoadBuffer
     fTimeZone = timeZone;
   }
 
+  long getTimeZone() const
+  {
+    return fTimeZone;
+  }
+
   // Direct parquet path helper: reuse existing value conversion logic.
   void convertField(char* field, int fieldLength, bool nullFlag, unsigned char* output, const JobColumn& column,
                     BLBufferStats& bufStats)

@@ -19,8 +19,10 @@
 
 #include <chrono>
 #include <cmath>
+#include <ctime>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -33,6 +35,7 @@
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
+#include <string_view>
 
 #include <arrow/array.h>
 #include <arrow/io/file.h>
@@ -45,6 +48,9 @@
 
 #include "we_define.h"
 #include "we_tableinfo.h"
+#include "dataconvert.h"
+
+#include <arrow/type.h>
 
 namespace WriteEngine
 {
@@ -204,6 +210,9 @@ std::string escapeStringValue(const std::string& value)
   return out;
 }
 
+int getValueAsString(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, bool& isNull, std::string& value,
+                     std::string& errMsg);
+
 int writeBatchAsDelimited(const std::shared_ptr<arrow::RecordBatch>& batch, std::ofstream& out, std::string& errMsg)
 {
   if (!batch)
@@ -225,34 +234,29 @@ int writeBatchAsDelimited(const std::shared_ptr<arrow::RecordBatch>& batch, std:
         return ERR_FILE_READ;
       }
 
-      if (array->IsNull(row))
+      std::string cell;
+      bool cellNull = false;
+      const int cellRc = getValueAsString(array, row, cellNull, cell, errMsg);
+      if (cellRc != NO_ERROR)
+      {
+        return cellRc;
+      }
+      if (cellNull)
       {
         out << "\\N";
       }
       else
       {
-        auto scalarResult = array->GetScalar(row);
-        if (!scalarResult.ok())
+        const auto tid = array->type_id();
+        if (tid == arrow::Type::STRING || tid == arrow::Type::LARGE_STRING ||
+            tid == arrow::Type::BINARY || tid == arrow::Type::LARGE_BINARY ||
+            tid == arrow::Type::FIXED_SIZE_BINARY || tid == arrow::Type::DICTIONARY)
         {
-          return setArrowError("Unable to materialize parquet scalar", scalarResult, errMsg);
-        }
-
-        std::shared_ptr<arrow::Scalar> scalar = scalarResult.ValueOrDie();
-        if (!scalar)
-        {
-          errMsg = "Arrow scalar conversion returned null scalar";
-          return ERR_FILE_READ;
-        }
-
-        if (array->type_id() == arrow::Type::STRING || array->type_id() == arrow::Type::LARGE_STRING ||
-            array->type_id() == arrow::Type::BINARY || array->type_id() == arrow::Type::LARGE_BINARY ||
-            array->type_id() == arrow::Type::FIXED_SIZE_BINARY)
-        {
-          out << "\"" << escapeStringValue(scalar->ToString()) << "\"";
+          out << "\"" << escapeStringValue(cell) << "\"";
         }
         else
         {
-          out << scalar->ToString();
+          out << cell;
         }
       }
 
@@ -530,6 +534,165 @@ class BoundedBatchQueue
   bool closed_{false};
 };
 
+int readDictionaryIndexSlot(const std::shared_ptr<arrow::Array>& indices, int64_t row, int64_t& outSlot,
+                            std::string& errMsg);
+
+/**
+ * Typed extraction for STRING/LARGE_STRING/BINARY/LARGE_BINARY/FIXED_SIZE_BINARY and
+ * DICTIONARY with string/binary values — avoids Arrow GetScalar + Scalar::ToString on hot paths.
+ * Returns true if \p value / \p isNull were set without scalar materialization.
+ */
+bool tryMaterializeArrowCellAsBulkLoadText(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, bool& isNull,
+                                           std::string& value, std::string& errMsg)
+{
+  isNull = false;
+  using arrow::Type;
+  switch (array->type_id())
+  {
+    case Type::STRING:
+    {
+      const auto* sa = static_cast<const arrow::StringArray*>(array.get());
+      if (sa->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      {
+        const auto v = sa->GetView(rowIndex);
+        value.assign(v.data(), v.size());
+      }
+      return true;
+    }
+    case Type::LARGE_STRING:
+    {
+      const auto* sa = static_cast<const arrow::LargeStringArray*>(array.get());
+      if (sa->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      {
+        const auto v = sa->GetView(rowIndex);
+        value.assign(v.data(), v.size());
+      }
+      return true;
+    }
+    case Type::BINARY:
+    {
+      const auto* ba = static_cast<const arrow::BinaryArray*>(array.get());
+      if (ba->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      {
+        const auto v = ba->GetView(rowIndex);
+        value.assign(v.data(), v.size());
+      }
+      return true;
+    }
+    case Type::LARGE_BINARY:
+    {
+      const auto* ba = static_cast<const arrow::LargeBinaryArray*>(array.get());
+      if (ba->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      {
+        const auto v = ba->GetView(rowIndex);
+        value.assign(v.data(), v.size());
+      }
+      return true;
+    }
+    case Type::FIXED_SIZE_BINARY:
+    {
+      const auto* fsb = static_cast<const arrow::FixedSizeBinaryArray*>(array.get());
+      if (fsb->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      {
+        const auto v = fsb->GetView(rowIndex);
+        value.assign(v.data(), v.size());
+      }
+      return true;
+    }
+    case Type::DICTIONARY:
+    {
+      const auto* dictArr = static_cast<const arrow::DictionaryArray*>(array.get());
+      if (dictArr->IsNull(rowIndex))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      const std::shared_ptr<arrow::Array> indices = dictArr->indices();
+      const std::shared_ptr<arrow::Array> dictionary = dictArr->dictionary();
+      if (!indices || !dictionary)
+      {
+        errMsg = "Arrow dictionary column has null indices or dictionary array";
+        return false;
+      }
+      int64_t dictSlot = 0;
+      if (readDictionaryIndexSlot(indices, rowIndex, dictSlot, errMsg) != NO_ERROR)
+        return false;
+      if (dictSlot < 0 || dictSlot >= dictionary->length())
+      {
+        errMsg = "Arrow dictionary index out of range";
+        return false;
+      }
+      if (dictionary->IsNull(dictSlot))
+      {
+        isNull = true;
+        value.clear();
+        return true;
+      }
+      switch (dictionary->type_id())
+      {
+        case Type::STRING:
+        {
+          const auto* dv = static_cast<const arrow::StringArray*>(dictionary.get());
+          const auto v = dv->GetView(dictSlot);
+          value.assign(v.data(), v.size());
+          return true;
+        }
+        case Type::LARGE_STRING:
+        {
+          const auto* dv = static_cast<const arrow::LargeStringArray*>(dictionary.get());
+          const auto v = dv->GetView(dictSlot);
+          value.assign(v.data(), v.size());
+          return true;
+        }
+        case Type::BINARY:
+        {
+          const auto* dv = static_cast<const arrow::BinaryArray*>(dictionary.get());
+          const auto v = dv->GetView(dictSlot);
+          value.assign(v.data(), v.size());
+          return true;
+        }
+        case Type::LARGE_BINARY:
+        {
+          const auto* dv = static_cast<const arrow::LargeBinaryArray*>(dictionary.get());
+          const auto v = dv->GetView(dictSlot);
+          value.assign(v.data(), v.size());
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+    default:
+      return false;
+  }
+}
+
 int getValueAsString(const std::shared_ptr<arrow::Array>& array, int64_t rowIndex, bool& isNull, std::string& value,
                      std::string& errMsg)
 {
@@ -543,6 +706,15 @@ int getValueAsString(const std::shared_ptr<arrow::Array>& array, int64_t rowInde
     isNull = true;
     value.clear();
     return NO_ERROR;
+  }
+
+  if (tryMaterializeArrowCellAsBulkLoadText(array, rowIndex, isNull, value, errMsg))
+  {
+    return NO_ERROR;
+  }
+  if (!errMsg.empty())
+  {
+    return ERR_FILE_READ;
   }
 
   auto scalarResult = array->GetScalar(rowIndex);
@@ -895,8 +1067,317 @@ void resetBufferStats(const JobColumn& column, BLBufferStats& stats)
   }
 }
 
+struct ParquetColumnInstrLive
+{
+  std::atomic<uint64_t> dictRows{0};
+  std::atomic<uint64_t> dictNulls{0};
+  std::atomic<uint64_t> dictChunkDistinctSum{0};
+  std::atomic<uint64_t> dictChunks{0};
+  std::atomic<uint64_t> dictDctnryCalls{0};
+  std::atomic<uint64_t> dictCanonHits{0};
+  std::atomic<uint64_t> temporalArrowFast{0};
+  std::atomic<uint64_t> temporalScalarFallback{0};
+};
+
+/** Howard Hinnant civil-from-days; z = days since 1970-01-01 (Unix). */
+static void civilFromUnixEpochDays(int32_t z, int& y, int& m, int& d)
+{
+  const int zz = static_cast<int>(z) + 719468;
+  const int era = (zz >= 0 ? zz : zz - 146096) / 146097;
+  const unsigned doe = static_cast<unsigned>(zz - era * 146097);
+  const unsigned yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+  y = static_cast<int>(yoe) + era * 400;
+  const unsigned doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+  const unsigned mp = (5 * doy + 2) / 153;
+  d = static_cast<int>(doy - (153 * mp + 2) / 5 + 1);
+  m = static_cast<int>(mp) + (mp < 10u ? 3 : -9);
+  if (m <= 2)
+    ++y;
+}
+
+static int64_t arrowTimestampToNanos(int64_t v, arrow::TimeUnit::type unit)
+{
+  switch (unit)
+  {
+    case arrow::TimeUnit::NANO:
+      return v;
+    case arrow::TimeUnit::MICRO:
+      return v * 1000LL;
+    case arrow::TimeUnit::MILLI:
+      return v * 1000000LL;
+    case arrow::TimeUnit::SECOND:
+      return v * 1000000000LL;
+    default:
+      return v;
+  }
+}
+
+static void divmodNanos(int64_t nanos, int64_t& sec, int64_t& usec)
+{
+  const int64_t div = 1000000000LL;
+  sec = nanos / div;
+  int64_t rem = nanos % div;
+  if (rem < 0)
+  {
+    rem += div;
+    sec -= 1;
+  }
+  usec = rem / 1000;
+}
+
+/**
+ * Follow one level of Arrow dictionary to a leaf array index (physical row).
+ * @return false on structural error (errMsg set); true with logicalNull if value is null.
+ */
+static bool resolveDictionaryLeafOneLevel(const std::shared_ptr<arrow::Array>& root, int64_t logicalRow,
+                                          const arrow::Array*& outLeaf, int64_t& outIndex, bool& logicalNull,
+                                          std::string& errMsg)
+{
+  logicalNull = false;
+  if (!root)
+  {
+    errMsg = "Arrow array pointer is null";
+    return false;
+  }
+  if (root->IsNull(logicalRow))
+  {
+    logicalNull = true;
+    outLeaf = nullptr;
+    outIndex = 0;
+    return true;
+  }
+  const arrow::Array* cur = root.get();
+  int64_t idx = logicalRow;
+  if (cur->type_id() == arrow::Type::DICTIONARY)
+  {
+    const auto* dictArr = static_cast<const arrow::DictionaryArray*>(cur);
+    const std::shared_ptr<arrow::Array> indices = dictArr->indices();
+    const std::shared_ptr<arrow::Array> dictionary = dictArr->dictionary();
+    if (!indices || !dictionary)
+    {
+      errMsg = "Arrow dictionary column has null indices or dictionary array";
+      return false;
+    }
+    int64_t dictSlot = 0;
+    if (readDictionaryIndexSlot(indices, idx, dictSlot, errMsg) != NO_ERROR)
+      return false;
+    if (dictSlot < 0 || dictSlot >= dictionary->length())
+    {
+      errMsg = "Arrow dictionary index out of range";
+      return false;
+    }
+    if (dictionary->IsNull(dictSlot))
+    {
+      logicalNull = true;
+      outLeaf = nullptr;
+      outIndex = 0;
+      return true;
+    }
+    cur = dictionary.get();
+    idx = dictSlot;
+  }
+  outLeaf = cur;
+  outIndex = idx;
+  return true;
+}
+
+/**
+ * Fast path: Arrow DATE32 / TIMESTAMP (incl. dictionary-wrapped) -> ColumnStore DATE / DATETIME / TIMESTAMP
+ * binary layout matching BulkLoadBuffer text-mode output (no Arrow Scalar::ToString).
+ * DATETIME uses UTC civil fields from the instant (Arrow/Parquet epoch semantics).
+ */
+static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>& sourceArray, int64_t batchRow,
+                                            const JobColumn& column, BLBufferStats& bufferStats, unsigned char* output)
+{
+  using DT = execplan::CalpontSystemCatalog::ColDataType;
+  if (!sourceArray)
+    return false;
+
+  const arrow::Array* leaf = nullptr;
+  int64_t ix = 0;
+  bool logicalNull = false;
+  std::string errTmp;
+  if (!resolveDictionaryLeafOneLevel(sourceArray, batchRow, leaf, ix, logicalNull, errTmp))
+    return false;
+  if (logicalNull || !leaf)
+    return false;
+  if (leaf->IsNull(ix))
+    return false;
+
+  switch (leaf->type_id())
+  {
+    case arrow::Type::DATE32:
+    {
+      if (column.dataType != DT::DATE || column.weType != WriteEngine::WR_INT)
+        return false;
+      const auto* da = static_cast<const arrow::Date32Array*>(leaf);
+      const int32_t days = da->Value(ix);
+      int y = 0;
+      int mo = 0;
+      int day = 0;
+      civilFromUnixEpochDays(days, y, mo, day);
+      if (!dataconvert::isDateValid(day, mo, y))
+      {
+        const int32_t zero = 0;
+        memcpy(output, &zero, sizeof(zero));
+        bufferStats.satCount++;
+        return true;
+      }
+      dataconvert::Date cal(static_cast<unsigned>(y), static_cast<unsigned>(mo), static_cast<unsigned>(day));
+      int32_t iDate = 0;
+      memcpy(&iDate, &cal, sizeof(iDate));
+      if (!dataconvert::DataConvert::isColumnDateValid(iDate))
+      {
+        const int32_t zero = 0;
+        memcpy(output, &zero, sizeof(zero));
+        bufferStats.satCount++;
+        return true;
+      }
+      memcpy(output, &iDate, sizeof(iDate));
+      if (iDate < bufferStats.minBufferVal)
+        bufferStats.minBufferVal = iDate;
+      if (iDate > bufferStats.maxBufferVal)
+        bufferStats.maxBufferVal = iDate;
+      return true;
+    }
+    case arrow::Type::TIMESTAMP:
+    {
+      if (column.dataType != DT::DATETIME && column.dataType != DT::TIMESTAMP)
+        return false;
+      if (column.weType != WriteEngine::WR_LONGLONG)
+        return false;
+      const auto* ta = static_cast<const arrow::TimestampArray*>(leaf);
+      const auto tsType = std::static_pointer_cast<arrow::TimestampType>(leaf->type());
+      if (!tsType)
+        return false;
+      const int64_t nanos = arrowTimestampToNanos(ta->Value(ix), tsType->unit());
+      int64_t sec = 0;
+      int64_t usec = 0;
+      divmodNanos(nanos, sec, usec);
+      if (usec < 0 || usec > 999999)
+        return false;
+
+      if (column.dataType == DT::TIMESTAMP)
+      {
+        if (sec < 0)
+          return false;
+        if (!dataconvert::isTimestampValid(static_cast<uint64_t>(sec), static_cast<uint64_t>(usec)))
+        {
+          int64_t zero = 0;
+          memcpy(output, &zero, sizeof(zero));
+          bufferStats.satCount++;
+          return true;
+        }
+        dataconvert::TimeStamp ts(static_cast<unsigned>(usec), static_cast<unsigned long long>(sec));
+        int64_t packed = 0;
+        memcpy(&packed, &ts, sizeof(packed));
+        if (!dataconvert::DataConvert::isColumnTimeStampValid(packed))
+        {
+          packed = 0;
+          memcpy(output, &packed, sizeof(packed));
+          bufferStats.satCount++;
+          return true;
+        }
+        memcpy(output, &packed, sizeof(packed));
+        if (packed < bufferStats.minBufferVal)
+          bufferStats.minBufferVal = packed;
+        if (packed > bufferStats.maxBufferVal)
+          bufferStats.maxBufferVal = packed;
+        return true;
+      }
+
+      // DATETIME: UTC civil from unix seconds (instant semantics).
+      if (sec < std::numeric_limits<time_t>::min() || sec > std::numeric_limits<time_t>::max())
+        return false;
+      time_t tt = static_cast<time_t>(sec);
+      struct tm tmBuf
+      {
+      };
+      if (!gmtime_r(&tt, &tmBuf))
+        return false;
+      const int y = tmBuf.tm_year + 1900;
+      const unsigned mo = static_cast<unsigned>(tmBuf.tm_mon + 1);
+      const unsigned day = static_cast<unsigned>(tmBuf.tm_mday);
+      if (!dataconvert::isDateValid(static_cast<int>(day), static_cast<int>(mo), y) ||
+          !dataconvert::isDateTimeValid(tmBuf.tm_hour, tmBuf.tm_min, tmBuf.tm_sec, static_cast<int>(usec)))
+      {
+        int64_t zero = 0;
+        memcpy(output, &zero, sizeof(zero));
+        bufferStats.satCount++;
+        return true;
+      }
+      dataconvert::DateTime dt(static_cast<unsigned>(y), mo, day, static_cast<unsigned>(tmBuf.tm_hour),
+                               static_cast<unsigned>(tmBuf.tm_min), static_cast<unsigned>(tmBuf.tm_sec),
+                               static_cast<unsigned>(usec));
+      int64_t packed = 0;
+      memcpy(&packed, &dt, sizeof(packed));
+      if (!dataconvert::DataConvert::isColumnDateTimeValid(packed))
+      {
+        packed = 0;
+        memcpy(output, &packed, sizeof(packed));
+        bufferStats.satCount++;
+        return true;
+      }
+      memcpy(output, &packed, sizeof(packed));
+      if (packed < bufferStats.minBufferVal)
+        bufferStats.minBufferVal = packed;
+      if (packed > bufferStats.maxBufferVal)
+        bufferStats.maxBufferVal = packed;
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+
+struct StringViewHash
+{
+  size_t operator()(std::string_view sv) const noexcept
+  {
+    uint64_t h = 14695981039346656037ULL;
+    for (unsigned char c : sv)
+      h = (h ^ static_cast<uint64_t>(c)) * 1099511628211ULL;
+    return static_cast<size_t>(h);
+  }
+};
+
+/** Remap duplicate string payloads in a chunk to the first ColPosPair (reduces Dctnry signature lookups). */
+static void dedupeDictionaryStringsInChunk(std::vector<char>& dataBuffer, std::vector<ColPosPair*>& rowPtrs,
+                                           uint32_t nRows, int colId, ParquetColumnInstrLive* instr,
+                                           size_t instrCols)
+{
+  if (nRows == 0 || dataBuffer.empty())
+    return;
+  std::unordered_map<std::string_view, ColPosPair, StringViewHash, std::equal_to<>> canon;
+  canon.reserve(static_cast<size_t>(nRows) * 2 + 1);
+  uint64_t hits = 0;
+  for (uint32_t r = 0; r < nRows; ++r)
+  {
+    ColPosPair& pos = rowPtrs[r][colId];
+    if (pos.offset == 0)
+      continue;
+    const size_t end = static_cast<size_t>(pos.start) + static_cast<size_t>(pos.offset);
+    if (end > dataBuffer.size())
+      continue;
+    const std::string_view key(dataBuffer.data() + pos.start, pos.offset);
+    const auto [it, inserted] = canon.emplace(key, pos);
+    if (!inserted)
+    {
+      pos = it->second;
+      ++hits;
+    }
+  }
+  if (instr && colId >= 0 && static_cast<size_t>(colId) < instrCols)
+  {
+    instr[colId].dictCanonHits.fetch_add(hits, std::memory_order_relaxed);
+    instr[colId].dictChunkDistinctSum.fetch_add(canon.size(), std::memory_order_relaxed);
+    instr[colId].dictChunks.fetch_add(1, std::memory_order_relaxed);
+  }
+}
+
 int processFixedColumnBatch(const DirectColumnBinding& binding, const std::shared_ptr<arrow::RecordBatch>& batch,
-                            RID batchStartRow, BulkLoadBuffer& converter, std::string& errMsg)
+                            RID batchStartRow, BulkLoadBuffer& converter, std::string& errMsg,
+                            ParquetColumnInstrLive* instr, size_t instrCols)
 {
   ColumnInfo& columnInfo = *binding.columnInfo;
   std::shared_ptr<arrow::Array> sourceArray;
@@ -912,6 +1393,11 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
   char fieldBuffer[MAX_FIELD_SIZE + 1];
   std::string scalarText;
   const bool enableDirectBinaryFastPath = isDirectNumericFastPathEligible(columnInfo.column);
+  using DT = execplan::CalpontSystemCatalog::ColDataType;
+  const bool colIsTemporal = columnInfo.column.dataType == DT::DATE ||
+                             columnInfo.column.dataType == DT::DATETIME ||
+                             columnInfo.column.dataType == DT::TIMESTAMP;
+  const int instrColId = columnInfo.id;
 
   while (totalProcessed < static_cast<uint32_t>(batchRows))
   {
@@ -947,12 +1433,26 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
       int fieldLength = 0;
       if (!nullFlag)
       {
-        const bool usedFastPath =
-            enableDirectBinaryFastPath &&
-            tryConvertFieldDirectBinary(sourceArray, batchRow, columnInfo.column, bufferStats,
-                                        outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width);
-        if (!usedFastPath)
+        bool filled = enableDirectBinaryFastPath &&
+                      tryConvertFieldDirectBinary(sourceArray, batchRow, columnInfo.column, bufferStats,
+                                                  outputBuffer.data() +
+                                                      static_cast<size_t>(row) * columnInfo.column.width);
+        if (!filled)
         {
+          const bool temporalOk = tryConvertArrowTemporalToBinary(
+              sourceArray, batchRow, columnInfo.column, bufferStats,
+              outputBuffer.data() + static_cast<size_t>(row) * columnInfo.column.width);
+          if (temporalOk)
+          {
+            filled = true;
+            if (colIsTemporal && instr && instrColId >= 0 && static_cast<size_t>(instrColId) < instrCols)
+              instr[instrColId].temporalArrowFast.fetch_add(1, std::memory_order_relaxed);
+          }
+        }
+        if (!filled)
+        {
+          if (colIsTemporal && instr && instrColId >= 0 && static_cast<size_t>(instrColId) < instrCols)
+            instr[instrColId].temporalScalarFallback.fetch_add(1, std::memory_order_relaxed);
           const int valueRc = getValueAsString(sourceArray, batchRow, nullFlag, scalarText, errMsg);
           if (valueRc != NO_ERROR)
             return valueRc;
@@ -1034,6 +1534,76 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
   return NO_ERROR;
 }
 
+int readDictionaryIndexSlot(const std::shared_ptr<arrow::Array>& indices, int64_t row, int64_t& outSlot,
+                            std::string& errMsg)
+{
+  using arrow::Type;
+  switch (indices->type_id())
+  {
+    case Type::INT8:
+      outSlot = std::static_pointer_cast<arrow::Int8Array>(indices)->Value(row);
+      return NO_ERROR;
+    case Type::UINT8:
+      outSlot = static_cast<int64_t>(std::static_pointer_cast<arrow::UInt8Array>(indices)->Value(row));
+      return NO_ERROR;
+    case Type::INT16:
+      outSlot = std::static_pointer_cast<arrow::Int16Array>(indices)->Value(row);
+      return NO_ERROR;
+    case Type::UINT16:
+      outSlot = static_cast<int64_t>(std::static_pointer_cast<arrow::UInt16Array>(indices)->Value(row));
+      return NO_ERROR;
+    case Type::INT32:
+      outSlot = std::static_pointer_cast<arrow::Int32Array>(indices)->Value(row);
+      return NO_ERROR;
+    case Type::UINT32:
+      outSlot = static_cast<int64_t>(std::static_pointer_cast<arrow::UInt32Array>(indices)->Value(row));
+      return NO_ERROR;
+    case Type::INT64:
+      outSlot = std::static_pointer_cast<arrow::Int64Array>(indices)->Value(row);
+      return NO_ERROR;
+    case Type::UINT64:
+      outSlot = static_cast<int64_t>(std::static_pointer_cast<arrow::UInt64Array>(indices)->Value(row));
+      return NO_ERROR;
+    default:
+      errMsg = "Unsupported Arrow dictionary index array type";
+      return ERR_INVALID_PARAM;
+  }
+}
+
+/** Append one dictionary-column cell; uses getValueAsString (typed fast path + scalar fallback). */
+int appendDictionaryCellFromArrow(const std::shared_ptr<arrow::Array>& array, int64_t row, bool& cellNull,
+                                  std::vector<char>& dataBuffer, ColPosPair& pos, std::string& fallbackStorage,
+                                  const std::string& columnNameForErr, std::string& errMsg)
+{
+  cellNull = false;
+  if (!array)
+  {
+    errMsg = "Arrow array pointer is null";
+    return ERR_INVALID_PARAM;
+  }
+
+  auto appendView = [&](std::string_view v) -> int {
+    if (v.size() > static_cast<size_t>(MAX_FIELD_SIZE))
+    {
+      std::ostringstream oss;
+      oss << "Parquet value exceeds max field size for dictionary column '" << columnNameForErr << "'";
+      errMsg = oss.str();
+      return ERR_BULK_ROW_FILL_BUFFER;
+    }
+    pos.start = static_cast<uint32_t>(dataBuffer.size());
+    pos.offset = static_cast<uint32_t>(v.size());
+    dataBuffer.insert(dataBuffer.end(), v.begin(), v.end());
+    return NO_ERROR;
+  };
+
+  const int valueRc = getValueAsString(array, row, cellNull, fallbackStorage, errMsg);
+  if (valueRc != NO_ERROR)
+    return valueRc;
+  if (cellNull)
+    return NO_ERROR;
+  return appendView(std::string_view(fallbackStorage.data(), fallbackStorage.size()));
+}
+
 int fillDictionaryInput(const DirectColumnBinding& binding, const std::shared_ptr<arrow::RecordBatch>& batch,
                         uint32_t startOffset, uint32_t nRows, size_t totalColumns, std::vector<char>& dataBuffer,
                         std::vector<ColPosPair>& positions, std::vector<ColPosPair*>& rowPtrs, std::string& errMsg)
@@ -1048,44 +1618,34 @@ int fillDictionaryInput(const DirectColumnBinding& binding, const std::shared_pt
   if (binding.recordBatchColumnIndex >= 0)
     sourceArray = batch->column(binding.recordBatchColumnIndex);
 
-  std::string scalarText;
+  std::string fallbackScalarText;
+  const std::string& colName = binding.columnInfo->column.colName;
   for (uint32_t row = 0; row < nRows; ++row)
   {
     auto& pos = rowPtrs[row][binding.columnInfo->id];
-    bool nullFlag = (binding.schemaIndex < 0);
-    if (!nullFlag)
+    bool cellNull = (binding.schemaIndex < 0);
+    if (!cellNull)
     {
-      const int valueRc = getValueAsString(sourceArray, static_cast<int64_t>(startOffset + row), nullFlag, scalarText, errMsg);
+      const int valueRc = appendDictionaryCellFromArrow(sourceArray, static_cast<int64_t>(startOffset + row), cellNull,
+                                                        dataBuffer, pos, fallbackScalarText, colName, errMsg);
       if (valueRc != NO_ERROR)
         return valueRc;
     }
 
-    if (nullFlag)
+    if (cellNull)
     {
       pos.start = 0;
       pos.offset = 0;
       continue;
     }
-
-    if (scalarText.size() > MAX_FIELD_SIZE)
-    {
-      std::ostringstream oss;
-      oss << "Parquet value exceeds max field size for dictionary column '" << binding.columnInfo->column.colName
-          << "'";
-      errMsg = oss.str();
-      return ERR_BULK_ROW_FILL_BUFFER;
-    }
-
-    pos.start = static_cast<uint32_t>(dataBuffer.size());
-    pos.offset = static_cast<uint32_t>(scalarText.size());
-    dataBuffer.insert(dataBuffer.end(), scalarText.begin(), scalarText.end());
   }
 
   return NO_ERROR;
 }
 
 int processDictionaryColumnBatch(const DirectColumnBinding& binding, const std::shared_ptr<arrow::RecordBatch>& batch,
-                                 RID batchStartRow, size_t totalColumns, std::string& errMsg)
+                                 RID batchStartRow, size_t totalColumns, std::string& errMsg,
+                                 ParquetColumnInstrLive* instr, size_t instrCols)
 {
   ColumnInfo& columnInfo = *binding.columnInfo;
   const uint32_t batchRows = static_cast<uint32_t>(batch->num_rows());
@@ -1166,6 +1726,23 @@ int processDictionaryColumnBatch(const DirectColumnBinding& binding, const std::
                              rowPtrs, errMsg);
     if (rc != NO_ERROR)
       return rc;
+
+    const int dictColId = binding.columnInfo->id;
+    if (instr && dictColId >= 0 && static_cast<size_t>(dictColId) < instrCols)
+    {
+      instr[dictColId].dictRows.fetch_add(nRowsParsed, std::memory_order_relaxed);
+      uint64_t nullsInChunk = 0;
+      for (uint32_t r = 0; r < nRowsParsed; ++r)
+      {
+        const ColPosPair& p = rowPtrs[r][dictColId];
+        if (p.start == 0 && p.offset == 0)
+          ++nullsInChunk;
+      }
+      instr[dictColId].dictNulls.fetch_add(nullsInChunk, std::memory_order_relaxed);
+    }
+    dedupeDictionaryStringsInChunk(dataBuffer, rowPtrs, nRowsParsed, dictColId, instr, instrCols);
+    if (instr && dictColId >= 0 && static_cast<size_t>(dictColId) < instrCols)
+      instr[dictColId].dictDctnryCalls.fetch_add(1, std::memory_order_relaxed);
 
     char dummy = '\0';
     char* dictionaryInput = dataBuffer.empty() ? &dummy : dataBuffer.data();
@@ -1613,6 +2190,9 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
 
   if (totalRowsFromMeta == 0)
   {
+    for (const auto& ci : tableInfo.directImportColumns())
+      result.columnNames.push_back(ci.column.colName);
+    result.columnInstrumentation.assign(result.columnNames.size(), ParquetColumnInstrSnapshot{});
     tableInfo.prepareDirectImportCompletion(0);
     rc = tableInfo.finalizeDirectImport(errMsg);
     if (rc != NO_ERROR)
@@ -1653,6 +2233,15 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   std::condition_variable drainCv;
   std::atomic<int> batchesInflight{0};
   const size_t totalColumns = tableInfo.directImportColumns().size();
+
+  result.columnNames.clear();
+  result.columnNames.reserve(totalColumns);
+  for (const auto& ci : tableInfo.directImportColumns())
+    result.columnNames.push_back(ci.column.colName);
+  std::unique_ptr<ParquetColumnInstrLive[]> instrLive;
+  if (totalColumns > 0)
+    instrLive.reset(new ParquetColumnInstrLive[totalColumns]);
+  ParquetColumnInstrLive* const parquetInstrPtr = instrLive.get();
 
   int workerCount = std::max(1, gImportRuntimeConfig.readThreads);
   workerCount = std::min(workerCount, std::max(1, rowGroupCount));
@@ -1706,10 +2295,12 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
         {
           const auto& binding = bindings[bi];
           if (binding.columnInfo->column.colType == COL_TYPE_DICT)
-            taskRc = processDictionaryColumnBatch(binding, task.batch, task.batchStartRow, totalColumns, localErr);
+            taskRc = processDictionaryColumnBatch(binding, task.batch, task.batchStartRow, totalColumns, localErr,
+                                                  parquetInstrPtr, totalColumns);
           else
             taskRc = processFixedColumnBatch(binding, task.batch, task.batchStartRow,
-                                             *columnConverters[static_cast<size_t>(w)], localErr);
+                                             *columnConverters[static_cast<size_t>(w)], localErr, parquetInstrPtr,
+                                             totalColumns);
           if (taskRc != NO_ERROR)
             break;
         }
@@ -1886,6 +2477,25 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   {
     if (cw.joinable())
       cw.join();
+  }
+
+  if (instrLive)
+  {
+    result.columnInstrumentation.resize(totalColumns);
+    for (size_t i = 0; i < totalColumns; ++i)
+    {
+      result.columnInstrumentation[i].dictRows = instrLive[i].dictRows.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictNulls = instrLive[i].dictNulls.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictChunkDistinctSum =
+          instrLive[i].dictChunkDistinctSum.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictChunks = instrLive[i].dictChunks.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictDctnryCalls = instrLive[i].dictDctnryCalls.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictCanonHits = instrLive[i].dictCanonHits.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].temporalArrowFast =
+          instrLive[i].temporalArrowFast.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].temporalScalarFallback =
+          instrLive[i].temporalScalarFallback.load(std::memory_order_relaxed);
+    }
   }
 
   if (!sharedErrMsg.empty() && rc == NO_ERROR)
