@@ -81,6 +81,16 @@ public:
   {
     return fParquetMaxInflightBatches;
   }
+  /** 1 = per-chunk dictionary string dedupe (parquet direct import); 0 = off (default). */
+  bool getParquetDictChunkDedupe() const
+  {
+    return fParquetDictChunkDedupe != 0;
+  }
+  /** 1 = Arrow parquet FileReader use_threads (parallel decode inside Arrow); 0 = off (default). */
+  bool getParquetArrowReaderUseThreads() const
+  {
+    return fParquetArrowReaderUseThreads != 0;
+  }
 
   void setCpimportJobId(uint32_t cpimportJobId)
   {
@@ -134,6 +144,10 @@ private:
   int64_t fParquetQueueBytes{134217728}; // Max bytes in parquet batch queue
   /** Max batches between coordinator and column writers (0 = auto). Parquet direct import only. */
   int fParquetMaxInflightBatches{0};
+  /** 1 = dedupe repeated strings per chunk before dictionary store (parquet direct import; default 0: hash cost often loses vs Dctnry). */
+  int fParquetDictChunkDedupe{0};
+  /** 1 = Arrow parquet reader use_threads (testing; default 0). */
+  int fParquetArrowReaderUseThreads{0};
   bool fNullStrMode{false};   // set null string mode - treat null as null
   ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
   InputFormat fInputFormat{InputFormat::Text};       // Input format type

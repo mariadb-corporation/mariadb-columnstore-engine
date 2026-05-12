@@ -106,6 +106,10 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Maximum bytes buffered between parquet readers and writer.")
       DECLARE_INT_ARG("parquet-max-inflight-batches", fParquetMaxInflightBatches, 0, INT_MAX,
         "Max batches in flight from coordinator to column writers (parquet direct import; 0 = auto).")
+      DECLARE_INT_ARG("parquet-dict-dedupe", fParquetDictChunkDedupe, 0, 1,
+        "Per-chunk dictionary string dedupe before token store (parquet direct import: 0=off default, 1=on for experiments).")
+      DECLARE_INT_ARG("parquet-arrow-use-threads", fParquetArrowReaderUseThreads, 0, 1,
+        "Arrow parquet FileReader use_threads (0=off default; 1=parallel decode inside Arrow, for A/B vs cpimport workers).")
       ("enclosed-by,E", po::value<char>(&fEnclosedChar),
         "Enclosed by character if field values are enclosed.")
       ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),

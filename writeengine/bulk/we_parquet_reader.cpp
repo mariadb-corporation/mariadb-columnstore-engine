@@ -63,7 +63,8 @@ constexpr int64_t PARQUET_STREAM_BATCH_ROWS = 1024;
 constexpr int DEFAULT_PARQUET_READ_THREADS = 1;
 constexpr int64_t DEFAULT_PARQUET_QUEUE_BYTES = 134217728;
 
-ParquetImportRuntimeConfig gImportRuntimeConfig{DEFAULT_PARQUET_READ_THREADS, DEFAULT_PARQUET_QUEUE_BYTES, 1, 0};
+ParquetImportRuntimeConfig gImportRuntimeConfig{DEFAULT_PARQUET_READ_THREADS, DEFAULT_PARQUET_QUEUE_BYTES, 1, 0,
+                                                false, false};
 
 int setArrowError(const std::string& prefix, const arrow::Status& st, std::string& errMsg)
 {
@@ -85,8 +86,8 @@ int openParquetFileReaderForBulk(const std::shared_ptr<arrow::io::ReadableFile>&
   std::shared_ptr<arrow::io::RandomAccessFile> input = inputHandle;
 
   parquet::ArrowReaderProperties arrowProps;
-  // External parquet reader + column-writer threads provide parallelism; leave Arrow decode threads off.
-  arrowProps.set_use_threads(false);
+  // When false, only cpimport's own reader/column-writer threads decode; when true, Arrow may parallelize too.
+  arrowProps.set_use_threads(gImportRuntimeConfig.arrowReaderUseThreads);
   arrowProps.set_batch_size(PARQUET_STREAM_BATCH_ROWS);
   // Default ArrowReaderProperties pre_buffer=true coalesces file reads into large
   // in-memory buffers (bad under small RLIMIT_AS even for mmap-backed files).
@@ -1740,7 +1741,8 @@ int processDictionaryColumnBatch(const DirectColumnBinding& binding, const std::
       }
       instr[dictColId].dictNulls.fetch_add(nullsInChunk, std::memory_order_relaxed);
     }
-    dedupeDictionaryStringsInChunk(dataBuffer, rowPtrs, nRowsParsed, dictColId, instr, instrCols);
+    if (gImportRuntimeConfig.dictChunkDedupe)
+      dedupeDictionaryStringsInChunk(dataBuffer, rowPtrs, nRowsParsed, dictColId, instr, instrCols);
     if (instr && dictColId >= 0 && static_cast<size_t>(dictColId) < instrCols)
       instr[dictColId].dictDctnryCalls.fetch_add(1, std::memory_order_relaxed);
 
@@ -1979,6 +1981,8 @@ void ParquetReader::setImportRuntimeConfig(const ParquetImportRuntimeConfig& cfg
   gImportRuntimeConfig.queueBytes = std::max<int64_t>(1, cfg.queueBytes);
   gImportRuntimeConfig.columnWriteThreads = std::max(1, cfg.columnWriteThreads);
   gImportRuntimeConfig.maxParquetInflightBatches = cfg.maxParquetInflightBatches;
+  gImportRuntimeConfig.dictChunkDedupe = cfg.dictChunkDedupe;
+  gImportRuntimeConfig.arrowReaderUseThreads = cfg.arrowReaderUseThreads;
 }
 
 int ParquetReader::readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg)
@@ -2135,6 +2139,7 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
 {
   result = {};
   errMsg.clear();
+  result.dictChunkDedupeEnabled = gImportRuntimeConfig.dictChunkDedupe;
 
   const auto start = std::chrono::steady_clock::now();
 

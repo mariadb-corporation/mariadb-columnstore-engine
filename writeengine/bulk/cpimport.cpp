@@ -97,6 +97,8 @@ int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& resu
   importCfg.queueBytes = cmdArgs->getParquetQueueBytes();
   importCfg.columnWriteThreads = cmdArgs->getNoOfParseThreads();
   importCfg.maxParquetInflightBatches = cmdArgs->getParquetMaxInflightBatches();
+  importCfg.dictChunkDedupe = cmdArgs->getParquetDictChunkDedupe();
+  importCfg.arrowReaderUseThreads = cmdArgs->getParquetArrowReaderUseThreads();
   ParquetReader::setImportRuntimeConfig(importCfg);
 
   const std::string inputFile = cmdArgs->getParquetFilePath();
@@ -728,6 +730,33 @@ int main(int argc, char** argv)
           !parquetConversion.columnInstrumentation.empty())
       {
         cout << "Parquet import instrumentation (COLUMNSTORE_PARQUET_IMPORT_INSTR):" << endl;
+        cout << "  dict-chunk dedupe: " << (parquetConversion.dictChunkDedupeEnabled ? "enabled" : "disabled")
+             << endl;
+        uint64_t sumDictRows = 0;
+        uint64_t sumDictCanonHits = 0;
+        uint64_t sumDictChunkDistinct = 0;
+        uint64_t sumDictChunks = 0;
+        uint64_t sumTemporalFast = 0;
+        uint64_t sumTemporalFallback = 0;
+        for (const auto& s : parquetConversion.columnInstrumentation)
+        {
+          sumDictRows += s.dictRows;
+          sumDictCanonHits += s.dictCanonHits;
+          sumDictChunkDistinct += s.dictChunkDistinctSum;
+          sumDictChunks += s.dictChunks;
+          sumTemporalFast += s.temporalArrowFast;
+          sumTemporalFallback += s.temporalScalarFallback;
+        }
+        cout << "  dictRows=" << sumDictRows << " dictCanonHits=" << sumDictCanonHits
+             << " dictChunkDistinctSum=" << sumDictChunkDistinct << " dictChunks=" << sumDictChunks;
+        if (sumDictChunks > 0)
+          cout << " avgDistinct/chunk="
+               << (static_cast<double>(sumDictChunkDistinct) / static_cast<double>(sumDictChunks));
+        else if (!parquetConversion.dictChunkDedupeEnabled)
+          cout << " avgDistinct/chunk=n/a (dedupe off)";
+        cout << endl;
+        cout << "  temporalArrowFast=" << sumTemporalFast << " temporalScalarFallback=" << sumTemporalFallback
+             << endl;
         for (size_t i = 0; i < parquetConversion.columnInstrumentation.size(); ++i)
         {
           const std::string& cname =

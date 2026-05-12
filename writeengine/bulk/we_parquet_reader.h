@@ -64,6 +64,8 @@ struct ParquetConversionResult
   /** Column names aligned with columnInstrumentation indices (direct-import column order). */
   std::vector<std::string> columnNames;
   std::vector<ParquetColumnInstrSnapshot> columnInstrumentation;
+  /** Per-chunk dictionary string dedupe was enabled for this run (`--parquet-dict-dedupe`). */
+  bool dictChunkDedupeEnabled{false};
 };
 
 struct ParquetImportRuntimeConfig
@@ -77,6 +79,13 @@ struct ParquetImportRuntimeConfig
    * max(2, columnWriteThreads * 2)). Limits writer-queue growth under slow consumers.
    */
   int maxParquetInflightBatches{0};
+  /** Remap duplicate strings within each chunk before updateDctnryStore (opt-in; default off on typical workloads). */
+  bool dictChunkDedupe{false};
+  /**
+   * Parquet-Arrow FileReader: ArrowReaderProperties::use_threads (decode row groups with Arrow's thread pool).
+   * Default false: cpimport already uses external reader workers + column writers.
+   */
+  bool arrowReaderUseThreads{false};
 };
 
 class ParquetReader
