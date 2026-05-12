@@ -95,6 +95,8 @@ int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& resu
   ParquetImportRuntimeConfig importCfg;
   importCfg.readThreads = cmdArgs->getParquetReadThreads();
   importCfg.queueBytes = cmdArgs->getParquetQueueBytes();
+  importCfg.columnWriteThreads = cmdArgs->getNoOfParseThreads();
+  importCfg.maxParquetInflightBatches = cmdArgs->getParquetMaxInflightBatches();
   ParquetReader::setImportRuntimeConfig(importCfg);
 
   const std::string inputFile = cmdArgs->getParquetFilePath();

@@ -104,6 +104,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
               startupError("Argument parquet-queue-bytes is out of range [1, INT64_MAX]");
           }),
         "Maximum bytes buffered between parquet readers and writer.")
+      DECLARE_INT_ARG("parquet-max-inflight-batches", fParquetMaxInflightBatches, 0, INT_MAX,
+        "Max batches in flight from coordinator to column writers (parquet direct import; 0 = auto).")
       ("enclosed-by,E", po::value<char>(&fEnclosedChar),
         "Enclosed by character if field values are enclosed.")
       ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),

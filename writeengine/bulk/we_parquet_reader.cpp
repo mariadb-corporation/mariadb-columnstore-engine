@@ -57,7 +57,7 @@ constexpr int64_t PARQUET_STREAM_BATCH_ROWS = 1024;
 constexpr int DEFAULT_PARQUET_READ_THREADS = 1;
 constexpr int64_t DEFAULT_PARQUET_QUEUE_BYTES = 134217728;
 
-ParquetImportRuntimeConfig gImportRuntimeConfig{DEFAULT_PARQUET_READ_THREADS, DEFAULT_PARQUET_QUEUE_BYTES};
+ParquetImportRuntimeConfig gImportRuntimeConfig{DEFAULT_PARQUET_READ_THREADS, DEFAULT_PARQUET_QUEUE_BYTES, 1, 0};
 
 int setArrowError(const std::string& prefix, const arrow::Status& st, std::string& errMsg)
 {
@@ -79,6 +79,7 @@ int openParquetFileReaderForBulk(const std::shared_ptr<arrow::io::ReadableFile>&
   std::shared_ptr<arrow::io::RandomAccessFile> input = inputHandle;
 
   parquet::ArrowReaderProperties arrowProps;
+  // External parquet reader + column-writer threads provide parallelism; leave Arrow decode threads off.
   arrowProps.set_use_threads(false);
   arrowProps.set_batch_size(PARQUET_STREAM_BATCH_ROWS);
   // Default ArrowReaderProperties pre_buffer=true coalesces file reads into large
@@ -1222,12 +1223,185 @@ int processDictionaryColumnBatch(const DirectColumnBinding& binding, const std::
   return NO_ERROR;
 }
 
+constexpr char kParquetWriterQueueFailMsg[] =
+    "Parquet direct import: column writer queue closed while dispatching batch";
+
+template <typename T>
+class ParquetWorkQueue
+{
+ public:
+  void close()
+  {
+    std::lock_guard<std::mutex> lock(mu_);
+    closed_ = true;
+    cv_.notify_all();
+  }
+
+  /** @return false if the queue is closed (caller must not drop work silently). */
+  bool push(T&& item)
+  {
+    std::lock_guard<std::mutex> lock(mu_);
+    if (closed_)
+      return false;
+    q_.push_back(std::move(item));
+    cv_.notify_one();
+    return true;
+  }
+
+  bool pop(T& out, std::atomic<bool>& stop)
+  {
+    std::unique_lock<std::mutex> lock(mu_);
+    cv_.wait(lock, [&] { return closed_ || stop.load() || !q_.empty(); });
+    if (q_.empty())
+      return false;
+    out = std::move(q_.front());
+    q_.pop_front();
+    return true;
+  }
+
+ private:
+  std::mutex mu_;
+  std::condition_variable cv_;
+  std::deque<T> q_;
+  bool closed_{false};
+};
+
+struct ColumnTask
+{
+  std::shared_ptr<arrow::RecordBatch> batch;
+  RID batchStartRow{0};
+  std::vector<size_t> bindingIndices;
+  std::shared_ptr<struct BatchCompletion> completion;
+};
+
+struct BatchCompletion
+{
+  BatchCompletion(int rem, int64_t rows, ParquetConversionResult* res, std::condition_variable* cv,
+                  std::atomic<int>* bi, std::string* sharedErr, std::mutex* importStateMu)
+   : remaining(rem)
+   , batchRows(rows)
+   , result(res)
+   , drainCv(cv)
+   , batchesInflight(bi)
+   , sharedErrMsg(sharedErr)
+   , importStateMutex(importStateMu)
+  {
+  }
+
+  std::atomic<int> remaining;
+  const int64_t batchRows;
+  ParquetConversionResult* result;
+  std::condition_variable* drainCv;
+  std::atomic<int>* batchesInflight;
+  std::string* sharedErrMsg;
+  std::mutex* importStateMutex;
+
+  void notifyWorkerDone(int rc, const std::string& err, std::atomic<bool>& stop)
+  {
+    if (rc != NO_ERROR)
+    {
+      if (importStateMutex && sharedErrMsg)
+      {
+        std::lock_guard<std::mutex> lk(*importStateMutex);
+        if (sharedErrMsg->empty())
+          *sharedErrMsg = err;
+      }
+      stop.store(true);
+    }
+
+    const int left = remaining.fetch_sub(1) - 1;
+    if (left == 0)
+    {
+      if (importStateMutex && sharedErrMsg && result)
+      {
+        std::lock_guard<std::mutex> lk(*importStateMutex);
+        if (sharedErrMsg->empty())
+        {
+          result->stats.batchCount++;
+          result->stats.totalRows += batchRows;
+        }
+      }
+      if (batchesInflight)
+        batchesInflight->fetch_sub(1);
+      if (drainCv)
+        drainCv->notify_all();
+    }
+  }
+};
+
+void partitionParquetBindingsToWriters(const std::vector<DirectColumnBinding>& bindings, int writerCount,
+                                       std::vector<std::vector<size_t>>& perWriter)
+{
+  perWriter.assign(static_cast<size_t>(writerCount), {});
+  std::vector<size_t> dictIdx;
+  std::vector<size_t> fixedIdx;
+  dictIdx.reserve(bindings.size());
+  fixedIdx.reserve(bindings.size());
+  for (size_t i = 0; i < bindings.size(); ++i)
+  {
+    if (bindings[i].columnInfo->column.colType == COL_TYPE_DICT)
+      dictIdx.push_back(i);
+    else
+      fixedIdx.push_back(i);
+  }
+  if (writerCount > 0)
+  {
+    for (size_t k = 0; k < dictIdx.size(); ++k)
+      perWriter[k % static_cast<size_t>(writerCount)].push_back(dictIdx[k]);
+  }
+  for (size_t idx : fixedIdx)
+  {
+    size_t best = 0;
+    for (int w = 1; w < writerCount; ++w)
+    {
+      if (perWriter[static_cast<size_t>(w)].size() < perWriter[best].size())
+        best = static_cast<size_t>(w);
+    }
+    perWriter[best].push_back(idx);
+  }
+}
+
+int validatePartitionParquetBindings(const std::vector<DirectColumnBinding>& bindings, int writerCount,
+                                     const std::vector<std::vector<size_t>>& perWriter, std::string& errMsg)
+{
+  const size_t n = bindings.size();
+  std::vector<int> seen(n, 0);
+  for (int w = 0; w < writerCount; ++w)
+  {
+    for (size_t idx : perWriter[static_cast<size_t>(w)])
+    {
+      if (idx >= n)
+      {
+        errMsg = "Parquet direct import: internal binding index out of range";
+        return ERR_INVALID_PARAM;
+      }
+      if (seen[idx])
+      {
+        errMsg = "Parquet direct import: duplicate binding index in writer partition";
+        return ERR_INVALID_PARAM;
+      }
+      seen[idx] = 1;
+    }
+  }
+  for (size_t i = 0; i < n; ++i)
+  {
+    if (!seen[i])
+    {
+      errMsg = "Parquet direct import: binding index missing from writer partition";
+      return ERR_INVALID_PARAM;
+    }
+  }
+  return NO_ERROR;
+}
+
 }  // namespace
 
 void ParquetReader::setImportRuntimeConfig(const ParquetImportRuntimeConfig& cfg)
 {
   gImportRuntimeConfig.readThreads = std::max(1, cfg.readThreads);
   gImportRuntimeConfig.queueBytes = std::max<int64_t>(1, cfg.queueBytes);
+  gImportRuntimeConfig.columnWriteThreads = std::max(1, cfg.columnWriteThreads);
+  gImportRuntimeConfig.maxParquetInflightBatches = cfg.maxParquetInflightBatches;
 }
 
 int ParquetReader::readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg)
@@ -1415,19 +1589,6 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   if (rc != NO_ERROR)
     return rc;
 
-  JobFieldRefList emptyFieldRefList;
-  BulkLoadBuffer converter(static_cast<unsigned>(tableInfo.directImportColumns().size()), 4096, nullptr, 0,
-                           tableInfo.directImportTableName(), emptyFieldRefList);
-  converter.setImportDataMode(IMPORT_DATA_TEXT, 0);
-  converter.setTimeZone(tableInfo.getTimeZone());
-
-  for (const auto& binding : bindings)
-  {
-    rc = binding.columnInfo->createDelayedFileIfNeeded(tableInfo.directImportTableName());
-    if (rc != NO_ERROR)
-      return rc;
-  }
-
   result.stats.rowGroupCount = reader->num_row_groups();
   result.stats.columnCount = schema ? schema->num_fields() : 0;
   const int rowGroupCount = reader->num_row_groups();
@@ -1461,6 +1622,38 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     return NO_ERROR;
   }
 
+  JobFieldRefList emptyFieldRefList;
+  int columnWriterCount = std::max(1, gImportRuntimeConfig.columnWriteThreads);
+  columnWriterCount = std::min(columnWriterCount, static_cast<int>(bindings.size()));
+  std::vector<std::vector<size_t>> bindingsPerWriter;
+  partitionParquetBindingsToWriters(bindings, columnWriterCount, bindingsPerWriter);
+  rc = validatePartitionParquetBindings(bindings, columnWriterCount, bindingsPerWriter, errMsg);
+  if (rc != NO_ERROR)
+    return rc;
+
+  int maxBatchesInflight = gImportRuntimeConfig.maxParquetInflightBatches;
+  if (maxBatchesInflight <= 0)
+    maxBatchesInflight = std::max(2, columnWriterCount * 2);
+  else
+    maxBatchesInflight = std::max(1, maxBatchesInflight);
+
+  std::vector<std::unique_ptr<BulkLoadBuffer>> columnConverters;
+  columnConverters.reserve(static_cast<size_t>(columnWriterCount));
+  for (int w = 0; w < columnWriterCount; ++w)
+  {
+    auto conv = std::make_unique<BulkLoadBuffer>(static_cast<unsigned>(tableInfo.directImportColumns().size()), 4096,
+                                                   nullptr, 0, tableInfo.directImportTableName(), emptyFieldRefList);
+    conv->setImportDataMode(IMPORT_DATA_TEXT, 0);
+    conv->setTimeZone(tableInfo.getTimeZone());
+    columnConverters.push_back(std::move(conv));
+  }
+
+  std::vector<ParquetWorkQueue<ColumnTask>> columnWriterQueues(static_cast<size_t>(columnWriterCount));
+  std::mutex drainMutex;
+  std::condition_variable drainCv;
+  std::atomic<int> batchesInflight{0};
+  const size_t totalColumns = tableInfo.directImportColumns().size();
+
   int workerCount = std::max(1, gImportRuntimeConfig.readThreads);
   workerCount = std::min(workerCount, std::max(1, rowGroupCount));
   const int groupsPerWorker = std::max(1, (rowGroupCount + workerCount - 1) / workerCount);
@@ -1480,15 +1673,50 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   BoundedBatchQueue queue(gImportRuntimeConfig.queueBytes);
   std::atomic<bool> stopRequested(false);
   std::atomic<int> activeProducers(0);
-  std::mutex errorMutex;
-  std::string workerErrMsg;
-  auto setWorkerError = [&](const std::string& msg) {
+  std::mutex importStateMutex;
+  std::string sharedErrMsg;
+  auto setImportError = [&](const std::string& msg) {
     if (msg.empty())
       return;
-    std::lock_guard<std::mutex> lock(errorMutex);
-    if (workerErrMsg.empty())
-      workerErrMsg = msg;
+    std::lock_guard<std::mutex> lock(importStateMutex);
+    if (sharedErrMsg.empty())
+      sharedErrMsg = msg;
   };
+
+  for (const auto& binding : bindings)
+  {
+    rc = binding.columnInfo->createDelayedFileIfNeeded(tableInfo.directImportTableName());
+    if (rc != NO_ERROR)
+      return rc;
+  }
+
+  std::vector<std::thread> columnWriters;
+  columnWriters.reserve(static_cast<size_t>(columnWriterCount));
+  for (int w = 0; w < columnWriterCount; ++w)
+  {
+    columnWriters.emplace_back([&, w]() {
+      while (true)
+      {
+        ColumnTask task;
+        if (!columnWriterQueues[static_cast<size_t>(w)].pop(task, stopRequested))
+          break;
+        std::string localErr;
+        int taskRc = NO_ERROR;
+        for (size_t bi : task.bindingIndices)
+        {
+          const auto& binding = bindings[bi];
+          if (binding.columnInfo->column.colType == COL_TYPE_DICT)
+            taskRc = processDictionaryColumnBatch(binding, task.batch, task.batchStartRow, totalColumns, localErr);
+          else
+            taskRc = processFixedColumnBatch(binding, task.batch, task.batchStartRow,
+                                             *columnConverters[static_cast<size_t>(w)], localErr);
+          if (taskRc != NO_ERROR)
+            break;
+        }
+        task.completion->notifyWorkerDone(taskRc, localErr, stopRequested);
+      }
+    });
+  }
 
   std::vector<std::thread> workers;
   workers.reserve(static_cast<size_t>(workerCount));
@@ -1503,7 +1731,7 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
       auto inputWorkerResult = arrow::io::ReadableFile::Open(parquetFilePath);
       if (!inputWorkerResult.ok())
       {
-        setWorkerError("Unable to open parquet file for reader worker");
+        setImportError("Unable to open parquet file for reader worker");
         stopRequested.store(true);
         queue.close();
       }
@@ -1513,7 +1741,7 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
         std::unique_ptr<parquet::arrow::FileReader> workerReader;
         if (openParquetFileReaderForBulk(workerInput, workerReader, localErr) != NO_ERROR)
         {
-          setWorkerError(localErr);
+          setImportError(localErr);
           stopRequested.store(true);
           queue.close();
         }
@@ -1523,7 +1751,7 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
           if (createDirectImportRecordBatchReader(*workerReader, rowGroups, columnSelection, batchReader, localErr) !=
               NO_ERROR)
           {
-            setWorkerError(localErr);
+            setImportError(localErr);
             stopRequested.store(true);
             queue.close();
           }
@@ -1536,13 +1764,15 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
               const arrow::Status st = batchReader->ReadNext(&batch);
               if (!st.ok())
               {
-                setWorkerError("Unable to read parquet record batch: " + st.ToString());
+                setImportError("Unable to read parquet record batch: " + st.ToString());
                 stopRequested.store(true);
                 queue.close();
                 break;
               }
               if (!batch)
                 break;
+              if (batch->num_rows() <= 0)
+                continue;
               BatchEnvelope env;
               env.globalStartRow = workerRowCursor;
               env.numRows = batch->num_rows();
@@ -1561,11 +1791,51 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     });
   }
 
-  const size_t totalColumns = tableInfo.directImportColumns().size();
+  rc = NO_ERROR;
   RID expectedStartRow = 0;
-  int64_t processedRows = 0;
+  int64_t rowsDispatched = 0;
   std::map<RID, BatchEnvelope> reorder;
-  while (processedRows < totalRowsFromMeta && !stopRequested.load())
+
+  auto dispatchOrderedBatch = [&](BatchEnvelope& current, RID batchStart) {
+    int taskCount = 0;
+    for (int w = 0; w < columnWriterCount; ++w)
+    {
+      if (!bindingsPerWriter[static_cast<size_t>(w)].empty())
+        ++taskCount;
+    }
+    if (taskCount == 0 || current.numRows <= 0)
+      return;
+    auto completion = std::make_shared<BatchCompletion>(taskCount, current.numRows, &result, &drainCv, &batchesInflight,
+                                                          &sharedErrMsg, &importStateMutex);
+    int pushesSucceeded = 0;
+    for (int w = 0; w < columnWriterCount; ++w)
+    {
+      if (bindingsPerWriter[static_cast<size_t>(w)].empty())
+        continue;
+      ColumnTask task;
+      task.batch = current.batch;
+      task.batchStartRow = batchStart;
+      task.bindingIndices = bindingsPerWriter[static_cast<size_t>(w)];
+      task.completion = completion;
+      if (!columnWriterQueues[static_cast<size_t>(w)].push(std::move(task)))
+      {
+        stopRequested.store(true);
+        {
+          std::lock_guard<std::mutex> lk(importStateMutex);
+          if (sharedErrMsg.empty())
+            sharedErrMsg = kParquetWriterQueueFailMsg;
+        }
+        const int needSynthetic = taskCount - pushesSucceeded;
+        for (int k = 0; k < needSynthetic; ++k)
+          completion->notifyWorkerDone(ERR_FILE_READ, kParquetWriterQueueFailMsg, stopRequested);
+        return;
+      }
+      pushesSucceeded++;
+    }
+    batchesInflight.fetch_add(1);
+  };
+
+  while (rowsDispatched < totalRowsFromMeta && !stopRequested.load())
   {
     BatchEnvelope env;
     if (!queue.pop(env, stopRequested))
@@ -1581,27 +1851,20 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
       auto it = reorder.find(expectedStartRow);
       if (it == reorder.end())
         break;
+      {
+        std::unique_lock<std::mutex> lk(drainMutex);
+        drainCv.wait(lk, [&] {
+          return batchesInflight.load() < maxBatchesInflight || stopRequested.load();
+        });
+      }
+      if (stopRequested.load())
+        break;
       BatchEnvelope current = std::move(it->second);
       reorder.erase(it);
-      for (const auto& binding : bindings)
-      {
-        if (binding.columnInfo->column.colType == COL_TYPE_DICT)
-          rc = processDictionaryColumnBatch(binding, current.batch, expectedStartRow, totalColumns, errMsg);
-        else
-          rc = processFixedColumnBatch(binding, current.batch, expectedStartRow, converter, errMsg);
-        if (rc != NO_ERROR)
-        {
-          stopRequested.store(true);
-          queue.close();
-          break;
-        }
-      }
-      if (rc != NO_ERROR)
-        break;
+      const RID batchStart = expectedStartRow;
+      dispatchOrderedBatch(current, batchStart);
       expectedStartRow += static_cast<RID>(current.numRows);
-      processedRows += current.numRows;
-      result.stats.batchCount++;
-      result.stats.totalRows += current.numRows;
+      rowsDispatched += current.numRows;
     }
   }
 
@@ -1611,17 +1874,31 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     if (worker.joinable())
       worker.join();
   }
-  if (!workerErrMsg.empty() && rc == NO_ERROR)
+
   {
-    errMsg = workerErrMsg;
+    std::unique_lock<std::mutex> lk(drainMutex);
+    drainCv.wait(lk, [&] { return batchesInflight.load() == 0 || stopRequested.load(); });
+  }
+
+  for (auto& cwq : columnWriterQueues)
+    cwq.close();
+  for (auto& cw : columnWriters)
+  {
+    if (cw.joinable())
+      cw.join();
+  }
+
+  if (!sharedErrMsg.empty() && rc == NO_ERROR)
+  {
+    errMsg = sharedErrMsg;
     return ERR_FILE_READ;
   }
   if (rc != NO_ERROR)
     return rc;
-  if (processedRows != totalRowsFromMeta)
+  if (result.stats.totalRows != totalRowsFromMeta)
   {
     std::ostringstream oss;
-    oss << "Parquet import ended early: processed " << processedRows << " of " << totalRowsFromMeta << " rows";
+    oss << "Parquet import ended early: processed " << result.stats.totalRows << " of " << totalRowsFromMeta << " rows";
     errMsg = oss.str();
     return ERR_FILE_READ;
   }

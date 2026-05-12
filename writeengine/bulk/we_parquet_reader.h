@@ -52,6 +52,13 @@ struct ParquetImportRuntimeConfig
 {
   int readThreads{1};
   int64_t queueBytes{134217728};
+  /** Parallel column writers for direct import (`cpimport` maps `-w` / `--writers` here). */
+  int columnWriteThreads{1};
+  /**
+   * Max batches concurrently in the coordinator→writer pipeline (0 = auto:
+   * max(2, columnWriteThreads * 2)). Limits writer-queue growth under slow consumers.
+   */
+  int maxParquetInflightBatches{0};
 };
 
 class ParquetReader

@@ -71,6 +71,16 @@ public:
   {
     return fParquetQueueBytes;
   }
+  /** Parse / writer thread count from `-w` / `--writers` (used as parquet column writer count for direct import). */
+  int getNoOfParseThreads() const
+  {
+    return fNoOfWriteThrds;
+  }
+  /** 0 = auto cap on coordinator batch pipeline for parquet direct import. */
+  int getParquetMaxInflightBatches() const
+  {
+    return fParquetMaxInflightBatches;
+  }
 
   void setCpimportJobId(uint32_t cpimportJobId)
   {
@@ -122,6 +132,8 @@ private:
   int fNoOfWriteThrds{3};     // No. of write threads
   int fParquetReadThreads{1}; // Number of parquet reader workers
   int64_t fParquetQueueBytes{134217728}; // Max bytes in parquet batch queue
+  /** Max batches between coordinator and column writers (0 = auto). Parquet direct import only. */
+  int fParquetMaxInflightBatches{0};
   bool fNullStrMode{false};   // set null string mode - treat null as null
   ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
   InputFormat fInputFormat{InputFormat::Text};       // Input format type
