@@ -67,7 +67,9 @@ inline uint64_t htonll(uint64_t n);
 #endif
 
 #define LEAPS_THRU_END_OF(y) ((y) / 4 - (y) / 100 + (y) / 400)
+#ifndef isleap
 #define isleap(y) (((y) % 4) == 0 && (((y) % 100) != 0 || ((y) % 400) == 0))
+#endif
 
 // this method evalutes the uint64 that stores a char[] to expected value
 inline uint64_t uint64ToStr(uint64_t n)
