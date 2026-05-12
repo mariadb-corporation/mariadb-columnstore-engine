@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS NESTED_SUBQUERY_TEST;
-CREATE DATABASE NESTED_SUBQUERY_TEST;
-USE NESTED_SUBQUERY_TEST;
+DROP DATABASE IF EXISTS nested_subquery_test;
+CREATE DATABASE nested_subquery_test;
+USE nested_subquery_test;
 CREATE TABLE employees (
 id INT NOT NULL,
 name VARCHAR(100),
@@ -45,4 +45,4 @@ id	name	manager_id	level	department_id
 4	David	2	2	101
 5	Eve	3	2	102
 6	Frank	3	2	103
-DROP DATABASE NESTED_SUBQUERY_TEST;
+DROP DATABASE nested_subquery_test;

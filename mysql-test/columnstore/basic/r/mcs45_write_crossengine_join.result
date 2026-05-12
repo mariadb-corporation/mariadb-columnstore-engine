@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS mcs45_db;
 CREATE DATABASE mcs45_db;
 USE mcs45_db;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
 CREATE VIEW v1 AS SELECT * FROM t1;
@@ -104,5 +101,4 @@ a	b
 1	206
 2	209
 4	215
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs45_db;

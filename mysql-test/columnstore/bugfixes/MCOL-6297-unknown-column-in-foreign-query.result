@@ -1,29 +1,26 @@
-DROP DATABASE IF EXISTS MCOL6297;
-CREATE DATABASE IF NOT EXISTS MCOL6297;
-USE MCOL6297;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-CREATE TABLE ABC_fact_at_reghrp (
+DROP DATABASE IF EXISTS mcol6297;
+CREATE DATABASE IF NOT EXISTS mcol6297;
+USE mcol6297;
+CREATE TABLE abc_fact_at_reghrp (
 APO_ID INT NOT NULL,
 PZN_ID INT NOT NULL
 ) ENGINE=ColumnStore;
-CREATE TABLE ABC_tbr_adm_rpi_kunde (
+CREATE TABLE abc_tbr_adm_rpi_kunde (
 KUNDE_ID    INT NOT NULL,
 STRUKTUR_ID INT NOT NULL,
 APO_ID      INT NOT NULL,
 ADMAT_ID    INT NOT NULL
 ) ENGINE=InnoDB;
-CREATE TABLE ABC_fact_at_reghrd (
+CREATE TABLE abc_fact_at_reghrd (
 KUNDE_ID    INT NOT NULL,
 STRUKTUR_ID INT NOT NULL,
 APO_ID      INT NOT NULL,
 ADMAT_ID    INT NOT NULL,
 PZN_ID      INT NOT NULL
 ) ENGINE=ColumnStore;
-INSERT INTO ABC_tbr_adm_rpi_kunde (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID) VALUES (38, 1, 123, 401);
-INSERT INTO ABC_fact_at_reghrp (APO_ID, PZN_ID) VALUES (123, 3520496);
-INSERT INTO ABC_fact_at_reghrd (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID, PZN_ID) VALUES (38, 1, 99, 401, 3520496);
+INSERT INTO abc_tbr_adm_rpi_kunde (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID) VALUES (38, 1, 123, 401);
+INSERT INTO abc_fact_at_reghrp (APO_ID, PZN_ID) VALUES (123, 3520496);
+INSERT INTO abc_fact_at_reghrd (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID, PZN_ID) VALUES (38, 1, 99, 401, 3520496);
 SELECT
 CASE WHEN v.admat_id IN (401,402,403,404,405) THEN '$5' ELSE 'REST' END AS reggroup,
 v.PZN_ID AS `13999_PZN`,
@@ -34,8 +31,8 @@ mcads.ADMAT_ID AS admat_id,
 v.APO_ID       AS APO_ID,
 v.PZN_ID       AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrp AS v
-JOIN MCOL6297.ABC_tbr_adm_rpi_kunde AS mcads
+mcol6297.abc_fact_at_reghrp AS v
+JOIN mcol6297.abc_tbr_adm_rpi_kunde AS mcads
 ON mcads.KUNDE_ID    = 38
 AND mcads.STRUKTUR_ID = 1
 AND v.APO_ID          = mcads.APO_ID
@@ -45,7 +42,7 @@ v.ADMAT_ID AS admat_id,
 99         AS APO_ID,
 v.PZN_ID   AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrd AS v
+mcol6297.abc_fact_at_reghrd AS v
 WHERE
 v.KUNDE_ID    = 38
 AND v.STRUKTUR_ID = 1
@@ -67,8 +64,8 @@ mcads.ADMAT_ID AS admat_id,
 v.APO_ID       AS APO_ID,
 v.PZN_ID       AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrp AS v
-JOIN MCOL6297.ABC_tbr_adm_rpi_kunde AS mcads
+mcol6297.abc_fact_at_reghrp AS v
+JOIN mcol6297.abc_tbr_adm_rpi_kunde AS mcads
 ON mcads.KUNDE_ID    = 38
 AND mcads.STRUKTUR_ID = 1
 AND v.APO_ID          = mcads.APO_ID
@@ -78,7 +75,7 @@ v.ADMAT_ID AS admat_id,
 99         AS APO_ID,
 v.PZN_ID   AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrd AS v
+mcol6297.abc_fact_at_reghrd AS v
 WHERE
 v.KUNDE_ID    = 38
 AND v.STRUKTUR_ID = 1
@@ -89,29 +86,29 @@ AND v.PZN_ID IN (3520496,5129827,5129833)
 GROUP BY
 reggroup, `13999_PZN`;
 reggroup	13999_PZN	VALUE_2025_12_M_8132_1_1
-DROP DATABASE MCOL6297;
-CREATE DATABASE MCOL6297;
-USE MCOL6297;
-CREATE TABLE ABC_fact_at_reghrp (
+DROP DATABASE mcol6297;
+CREATE DATABASE mcol6297;
+USE mcol6297;
+CREATE TABLE abc_fact_at_reghrp (
 APO_ID INT NOT NULL,
 PZN_ID INT NOT NULL
 ) ENGINE=ColumnStore;
-CREATE TABLE ABC_tbr_adm_rpi_kunde (
+CREATE TABLE abc_tbr_adm_rpi_kunde (
 KUNDE_ID    INT NOT NULL,
 STRUKTUR_ID INT NOT NULL,
 APO_ID      INT NOT NULL,
 ADMAT_ID    TEXT NOT NULL
 ) ENGINE=InnoDB;
-CREATE TABLE ABC_fact_at_reghrd (
+CREATE TABLE abc_fact_at_reghrd (
 KUNDE_ID    INT NOT NULL,
 STRUKTUR_ID INT NOT NULL,
 APO_ID      INT NOT NULL,
 ADMAT_ID    TEXT NOT NULL,
 PZN_ID      INT NOT NULL
 ) ENGINE=ColumnStore;
-INSERT INTO ABC_tbr_adm_rpi_kunde (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID) VALUES (38, 1, 123, '401');
-INSERT INTO ABC_fact_at_reghrp (APO_ID, PZN_ID) VALUES (123, 3520496);
-INSERT INTO ABC_fact_at_reghrd (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID, PZN_ID) VALUES (38, 1, 99, '401', 3520496);
+INSERT INTO abc_tbr_adm_rpi_kunde (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID) VALUES (38, 1, 123, '401');
+INSERT INTO abc_fact_at_reghrp (APO_ID, PZN_ID) VALUES (123, 3520496);
+INSERT INTO abc_fact_at_reghrd (KUNDE_ID, STRUKTUR_ID, APO_ID, ADMAT_ID, PZN_ID) VALUES (38, 1, 99, '401', 3520496);
 SELECT
 CASE WHEN v.admat_id IN ('401','402','403','404','405') THEN '$5' ELSE 'REST' END AS reggroup,
 v.PZN_ID AS `13999_PZN`,
@@ -122,8 +119,8 @@ mcads.ADMAT_ID AS admat_id,
 v.APO_ID       AS APO_ID,
 v.PZN_ID       AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrp AS v
-JOIN MCOL6297.ABC_tbr_adm_rpi_kunde AS mcads
+mcol6297.abc_fact_at_reghrp AS v
+JOIN mcol6297.abc_tbr_adm_rpi_kunde AS mcads
 ON mcads.KUNDE_ID    = 38
 AND mcads.STRUKTUR_ID = 1
 AND v.APO_ID          = mcads.APO_ID
@@ -133,7 +130,7 @@ v.ADMAT_ID AS admat_id,
 99         AS APO_ID,
 v.PZN_ID   AS PZN_ID
 FROM
-MCOL6297.ABC_fact_at_reghrd AS v
+mcol6297.abc_fact_at_reghrd AS v
 WHERE
 v.KUNDE_ID    = 38
 AND v.STRUKTUR_ID = 1
@@ -145,4 +142,4 @@ GROUP BY
 reggroup, `13999_PZN`;
 reggroup	13999_PZN	VALUE_2025_12_M_8132_1_1
 $5	3520496	NULL
-DROP DATABASE MCOL6297;
+DROP DATABASE mcol6297;

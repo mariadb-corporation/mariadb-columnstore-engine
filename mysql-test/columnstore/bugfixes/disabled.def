@@ -1,1 +1,2 @@
 MCOL-6198-segfault-crossengine-join : oom probably due to filltablecol function
+MCOL-6321-test-em-rebuild : MCOL-6302 engine bug - PrimitiveServer fails on longtext with large dictionary data

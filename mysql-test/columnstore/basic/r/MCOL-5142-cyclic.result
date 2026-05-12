@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MCOL5142_cyclic;
-CREATE DATABASE MCOL5142_cyclic;
-USE MCOL5142_cyclic;
+DROP DATABASE IF EXISTS mcol5142_cyclic;
+CREATE DATABASE mcol5142_cyclic;
+USE mcol5142_cyclic;
 CREATE TABLE t_cycle (id INT, next_id INT) ENGINE=ColumnStore;
 INSERT INTO t_cycle VALUES (1, 2), (2, 3), (3, 1);
 SET @old_max_recursive_iterations = @@max_recursive_iterations;
@@ -45,4 +45,4 @@ id	next_id
 3	1
 3	1
 SET @@max_recursive_iterations = @old_max_recursive_iterations;
-DROP DATABASE MCOL5142_cyclic;
+DROP DATABASE mcol5142_cyclic;

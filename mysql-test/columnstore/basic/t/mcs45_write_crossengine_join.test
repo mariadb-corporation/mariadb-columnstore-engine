@@ -18,24 +18,7 @@ DROP DATABASE IF EXISTS mcs45_db;
 
 CREATE DATABASE mcs45_db;
 USE mcs45_db;
-
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
-#
-# Create corresponding in the server
-#
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 # Create tables with Innodb and Columnstore engines
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Innodb;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
@@ -79,7 +62,5 @@ UPDATE idb dest JOIN mcs src ON dest.a=src.a SET dest.b = dest.b + src.b + 100;
 SELECT * FROM idb;
 
 # Clean UP
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP DATABASE mcs45_db;

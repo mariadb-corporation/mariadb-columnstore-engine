@@ -1,9 +1,9 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142_TYPE_COERCION;
+DROP DATABASE IF EXISTS mcol5142_type_coercion;
 --enable_warnings
 
-CREATE DATABASE MCOL5142_TYPE_COERCION;
-USE MCOL5142_TYPE_COERCION;
+CREATE DATABASE mcol5142_type_coercion;
+USE mcol5142_type_coercion;
 
 CREATE TABLE edges (
   parent INT NOT NULL,
@@ -39,4 +39,4 @@ WITH RECURSIVE paths AS (
 SELECT parent, child, path, lvl
 FROM paths;
 
-DROP DATABASE MCOL5142_TYPE_COERCION;
+DROP DATABASE mcol5142_type_coercion;

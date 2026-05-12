@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MULTI_TABLE_TEST;
-CREATE DATABASE MULTI_TABLE_TEST;
-USE MULTI_TABLE_TEST;
+DROP DATABASE IF EXISTS multi_table_test;
+CREATE DATABASE multi_table_test;
+USE multi_table_test;
 CREATE TABLE products (
 product_id INT NOT NULL,
 product_name VARCHAR(100)
@@ -59,4 +59,4 @@ product	component	supplier	level
 Smartphone	Connector	Supplier C	2
 Smartphone	Glass Panel	Supplier A	2
 Smartphone	LCD	Supplier B	2
-DROP DATABASE MULTI_TABLE_TEST;
+DROP DATABASE multi_table_test;

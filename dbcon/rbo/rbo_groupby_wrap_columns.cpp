@@ -134,8 +134,19 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
 template <typename T>
 execplan::AggregateColumn* wrapColumn(const T& rc, ColumnWrapperContext& lctx, RBOptimizerContext& ctx)
 {
+  // Same pattern as above, need to ignore sorting direction for the AggregateColumn and its embedded ReturnedColumn
+  // when comparing for equality. ORDER BY direction (ASC/DESC) is not significant for expression identity.
+  // TODO: Maybe need to consider removing asc/joinInfo from operator== to eliminate this pattern
+  bool savedAsc = rc->asc();
+  rc->asc(true);
+
   auto* ac = optimizer::lib::wrapIntoSelectSomeAgg(rc, ctx.getGwi().timeZone);
   lctx.dedup.assignId(ac);
+
+  // restore sorting direction for both AggregatedColumn and its single ReturnedColumn agg parameter
+  rc->asc(savedAsc);
+  ac->asc(savedAsc);
+
   lctx.applied = true;
   return ac;
 }

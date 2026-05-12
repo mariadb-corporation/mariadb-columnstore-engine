@@ -1,130 +1,130 @@
 DROP DATABASE IF EXISTS mcol5963;
 CREATE DATABASE mcol5963;
 USE mcol5963;
-create table FOO(foo datetime) engine = columnstore;
-insert into FOO(foo) values ('2025-08-27 15:26:25');
-select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
+create table foo(foo datetime) engine = columnstore;
+insert into foo(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, '2025-08-27 15:26:25', foo) from foo;
 if(0 = 1, '2025-08-27 15:26:25', foo)
 2025-08-27 15:26:25
-select if(0 = 1, null, foo) from FOO;
+select if(0 = 1, null, foo) from foo;
 if(0 = 1, null, foo)
 2025-08-27 15:26:25
-select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, true, foo) from foo;
 if(0 = 1, true, foo)
 2025-08-27 15:26:25
-select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, 5, foo) from foo;
 if(0 = 1, 5, foo)
 2025-08-27 15:26:25
 select if(0 = 1, null, "text");
 if(0 = 1, null, "text")
 text
-drop table FOO;
-create table FOO(foo datetime) engine = innodb;
-insert into FOO(foo) values ('2025-08-27 15:26:25');
-select if(0 = 1, '2025-08-27 15:26:25', foo) from FOO;
+drop table foo;
+create table foo(foo datetime) engine = innodb;
+insert into foo(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, '2025-08-27 15:26:25', foo) from foo;
 if(0 = 1, '2025-08-27 15:26:25', foo)
 2025-08-27 15:26:25
-select if(0 = 1, null, foo) from FOO;
+select if(0 = 1, null, foo) from foo;
 if(0 = 1, null, foo)
 2025-08-27 15:26:25
-select if(0 = 1, true, foo) from FOO;
+select if(0 = 1, true, foo) from foo;
 if(0 = 1, true, foo)
 2025-08-27 15:26:25
-select if(0 = 1, 5, foo) from FOO;
+select if(0 = 1, 5, foo) from foo;
 if(0 = 1, 5, foo)
 2025-08-27 15:26:25
 select if(0 = 1, null, "text");
 if(0 = 1, null, "text")
 text
-drop table FOO;
-create table FOO_DATE(foo date) engine = columnstore;
-insert into FOO_DATE(foo) values ('2025-08-27');
-select if(0 = 1, true, foo) from FOO_DATE;
+drop table foo;
+create table foo_date(foo date) engine = columnstore;
+insert into foo_date(foo) values ('2025-08-27');
+select if(0 = 1, true, foo) from foo_date;
 if(0 = 1, true, foo)
 2025-08-27
-select if(0 = 1, 5, foo) from FOO_DATE;
+select if(0 = 1, 5, foo) from foo_date;
 if(0 = 1, 5, foo)
 2025-08-27
-select if(0 = 1, null, foo) from FOO_DATE;
+select if(0 = 1, null, foo) from foo_date;
 if(0 = 1, null, foo)
 2025-08-27
-drop table FOO_DATE;
-create table FOO_DATE(foo date) engine = innodb;
-insert into FOO_DATE(foo) values ('2025-08-27');
-select if(0 = 1, true, foo) from FOO_DATE;
+drop table foo_date;
+create table foo_date(foo date) engine = innodb;
+insert into foo_date(foo) values ('2025-08-27');
+select if(0 = 1, true, foo) from foo_date;
 if(0 = 1, true, foo)
 2025-08-27
-select if(0 = 1, 5, foo) from FOO_DATE;
+select if(0 = 1, 5, foo) from foo_date;
 if(0 = 1, 5, foo)
 2025-08-27
-select if(0 = 1, null, foo) from FOO_DATE;
+select if(0 = 1, null, foo) from foo_date;
 if(0 = 1, null, foo)
 2025-08-27
-drop table FOO_DATE;
-create table FOO_TIME(foo time) engine = columnstore;
-insert into FOO_TIME(foo) values ('15:26:25');
-select if(0 = 1, true, foo) from FOO_TIME;
+drop table foo_date;
+create table foo_time(foo time) engine = columnstore;
+insert into foo_time(foo) values ('15:26:25');
+select if(0 = 1, true, foo) from foo_time;
 if(0 = 1, true, foo)
 15:26:25
-select if(0 = 1, 5, foo) from FOO_TIME;
+select if(0 = 1, 5, foo) from foo_time;
 if(0 = 1, 5, foo)
 15:26:25
-select if(0 = 1, null, foo) from FOO_TIME;
+select if(0 = 1, null, foo) from foo_time;
 if(0 = 1, null, foo)
 15:26:25
-drop table FOO_TIME;
-create table FOO_TIME(foo time) engine = innodb;
-insert into FOO_TIME(foo) values ('15:26:25');
-select if(0 = 1, true, foo) from FOO_TIME;
+drop table foo_time;
+create table foo_time(foo time) engine = innodb;
+insert into foo_time(foo) values ('15:26:25');
+select if(0 = 1, true, foo) from foo_time;
 if(0 = 1, true, foo)
 15:26:25
-select if(0 = 1, 5, foo) from FOO_TIME;
+select if(0 = 1, 5, foo) from foo_time;
 if(0 = 1, 5, foo)
 15:26:25
-select if(0 = 1, null, foo) from FOO_TIME;
+select if(0 = 1, null, foo) from foo_time;
 if(0 = 1, null, foo)
 15:26:25
-drop table FOO_TIME;
-create table FOO_TS(foo timestamp) engine = columnstore;
-insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
-select if(0 = 1, true, foo) from FOO_TS;
+drop table foo_time;
+create table foo_ts(foo timestamp) engine = columnstore;
+insert into foo_ts(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, true, foo) from foo_ts;
 if(0 = 1, true, foo)
 2025-08-27 15:26:25
-select if(0 = 1, 5, foo) from FOO_TS;
+select if(0 = 1, 5, foo) from foo_ts;
 if(0 = 1, 5, foo)
 2025-08-27 15:26:25
-select if(0 = 1, null, foo) from FOO_TS;
+select if(0 = 1, null, foo) from foo_ts;
 if(0 = 1, null, foo)
 2025-08-27 15:26:25
-drop table FOO_TS;
-create table FOO_TS(foo timestamp) engine = innodb;
-insert into FOO_TS(foo) values ('2025-08-27 15:26:25');
-select if(0 = 1, true, foo) from FOO_TS;
+drop table foo_ts;
+create table foo_ts(foo timestamp) engine = innodb;
+insert into foo_ts(foo) values ('2025-08-27 15:26:25');
+select if(0 = 1, true, foo) from foo_ts;
 if(0 = 1, true, foo)
 2025-08-27 15:26:25
-select if(0 = 1, 5, foo) from FOO_TS;
+select if(0 = 1, 5, foo) from foo_ts;
 if(0 = 1, 5, foo)
 2025-08-27 15:26:25
-select if(0 = 1, null, foo) from FOO_TS;
+select if(0 = 1, null, foo) from foo_ts;
 if(0 = 1, null, foo)
 2025-08-27 15:26:25
-drop table FOO_TS;
-create table FOO(foo varchar(30)) engine = columnstore;
-insert into FOO(foo) values ("text1");
-select if(0 = 1, true, foo) from FOO;
+drop table foo_ts;
+create table foo(foo varchar(30)) engine = columnstore;
+insert into foo(foo) values ("text1");
+select if(0 = 1, true, foo) from foo;
 if(0 = 1, true, foo)
 text1
-select if(0 = 1, NULL, foo) from FOO;
+select if(0 = 1, NULL, foo) from foo;
 if(0 = 1, NULL, foo)
 text1
-drop table FOO;
-create table FOO(foo int) engine = columnstore;
-insert into FOO(foo) values (123);
-select if(0 = 1, true, foo) from FOO;
+drop table foo;
+create table foo(foo int) engine = columnstore;
+insert into foo(foo) values (123);
+select if(0 = 1, true, foo) from foo;
 if(0 = 1, true, foo)
 123
-select if(0 = 1, NULL, foo) from FOO;
+select if(0 = 1, NULL, foo) from foo;
 if(0 = 1, NULL, foo)
 123
-drop table FOO;
+drop table foo;
 DROP DATABASE mcol5963;

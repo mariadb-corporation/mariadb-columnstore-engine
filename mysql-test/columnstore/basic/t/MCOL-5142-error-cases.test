@@ -1,9 +1,9 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5142_ERROR_CASES;
+DROP DATABASE IF EXISTS mcol5142_error_cases;
 --enable_warnings
 
-CREATE DATABASE MCOL5142_ERROR_CASES;
-USE MCOL5142_ERROR_CASES;
+CREATE DATABASE mcol5142_error_cases;
+USE mcol5142_error_cases;
 
 CREATE TABLE t (id INT NOT NULL, pid INT) ENGINE=ColumnStore;
 INSERT INTO t VALUES (1, NULL), (2, 1), (3, 2), (4, 3);
@@ -89,4 +89,4 @@ WITH RECURSIVE cte AS (
 SELECT * FROM cte;
 SET @@max_recursive_iterations = @old_max_recursive_iterations;
 
-DROP DATABASE MCOL5142_ERROR_CASES;
+DROP DATABASE mcol5142_error_cases;

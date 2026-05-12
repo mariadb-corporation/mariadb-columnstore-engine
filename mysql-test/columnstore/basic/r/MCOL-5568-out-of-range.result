@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MCOL5568;
-CREATE DATABASE MCOL5568;
-USE MCOL5568;
+DROP DATABASE IF EXISTS mcol5568;
+CREATE DATABASE mcol5568;
+USE mcol5568;
 CREATE TABLE test_mult (
 indemnity_paid INT(11),
 n_clms TINYINT(3) UNSIGNED
@@ -58,4 +58,4 @@ indemnity_paid	n_clms	n_clms + (indemnity_paid + 9)
 -10	1	0
 SELECT indemnity_paid, n_clms, n_clms - 2 FROM test_mult4;
 ERROR HY000: Internal error: MCS-2053: The result is out of range for function "-" using value(s): 1.000000 2.000000
-DROP DATABASE MCOL5568;
+DROP DATABASE mcol5568;

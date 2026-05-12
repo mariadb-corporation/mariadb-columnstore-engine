@@ -10,9 +10,9 @@ l2.l_orderkey = L4.l_orderkey and l2.l_orderkey between 5 and 15);
 count(*)
 11
 SELECT count(*)
-FROM LINEITEM L1
+FROM lineitem L1
 WHERE l1.l_orderkey < 10
-AND L1.L_ORDERKEY not in ( SELECT l_orderkey FROM LINEITEM
+AND L1.L_ORDERKEY not in ( SELECT l_orderkey FROM lineitem
 where l_orderkey < 10
 group by 1 having count(*) > 0 );
 count(*)

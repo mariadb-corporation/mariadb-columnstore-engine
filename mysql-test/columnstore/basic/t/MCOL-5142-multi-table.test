@@ -1,10 +1,10 @@
 --disable_warnings
-DROP DATABASE IF EXISTS MULTI_TABLE_TEST;
+DROP DATABASE IF EXISTS multi_table_test;
 --enable_warnings
 
-CREATE DATABASE MULTI_TABLE_TEST;
+CREATE DATABASE multi_table_test;
 
-USE MULTI_TABLE_TEST;
+USE multi_table_test;
 
 CREATE TABLE products (
     product_id INT NOT NULL,
@@ -70,5 +70,5 @@ SELECT
 FROM product_tree pt
 JOIN suppliers s ON pt.component_id = s.component_id;
 
-DROP DATABASE MULTI_TABLE_TEST;
+DROP DATABASE multi_table_test;
 

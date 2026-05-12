@@ -3,9 +3,6 @@
 DROP DATABASE IF EXISTS mcol424;
 CREATE DATABASE mcol424;
 USE mcol424;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE `trans_test` (
 `id` int(11) DEFAULT NULL,
 `member_id` int(11) DEFAULT NULL,
@@ -29,5 +26,4 @@ id	member_id	name
 1	1	trans 1
 3	1	trans 3
 5	1	trans 5
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcol424;

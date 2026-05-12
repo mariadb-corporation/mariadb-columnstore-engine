@@ -10,9 +10,9 @@ USE `mcol 3785`;
 CREATE TABLE src (c0 INT, c1 INT);
 INSERT INTO src VALUES (1,1),(1,1),(1,1),(2,2),(2,2),(2,2),(3,3),(3,3),(3,3);
 CREATE TABLE `target table` ENGINE=ColumnStore AS SELECT c0, COUNT(c0) FROM `mcol 3785`.src GROUP BY c0;
-SELECT * FROM `target table`;
+SELECT * FROM `target table` ORDER BY c0;
 CREATE TABLE `mcol 3785 2`.`target table` ENGINE=ColumnStore AS SELECT c0, COUNT(c0) FROM `mcol 3785`.src GROUP BY c0;
-SELECT * FROM `mcol 3785 2`.`target table`;
+SELECT * FROM `mcol 3785 2`.`target table` ORDER BY c0;
 
 # cleanup
 DROP DATABASE `mcol 3785`;

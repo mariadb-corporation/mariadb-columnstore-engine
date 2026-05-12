@@ -1,0 +1,77 @@
+DROP DATABASE IF EXISTS mcol_6332;
+CREATE DATABASE mcol_6332;
+USE mcol_6332;
+CREATE TABLE orders (o_custkey INT, o_orderstatus CHAR(1)) ENGINE=Columnstore;
+INSERT INTO orders VALUES (10,'F'),(20,'O'),(10,'P'),(30,'F'),(20,'O'),(40,'P');
+SELECT COUNT(o_orderstatus), o_orderstatus
+FROM orders
+ORDER BY 1, 2 DESC;
+COUNT(o_orderstatus)	o_orderstatus
+6	P
+SELECT COUNT(o_orderstatus), o_orderstatus
+FROM orders
+ORDER BY 1, 2;
+COUNT(o_orderstatus)	o_orderstatus
+6	P
+SELECT COUNT(o_orderstatus), o_orderstatus
+FROM orders
+GROUP BY 2
+ORDER BY 1, 2 DESC;
+COUNT(o_orderstatus)	o_orderstatus
+2	P
+2	O
+2	F
+SELECT COUNT(o_orderstatus), o_orderstatus
+FROM orders
+GROUP BY 2
+ORDER BY 1, 2;
+COUNT(o_orderstatus)	o_orderstatus
+2	F
+2	O
+2	P
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus
+FROM orders
+ORDER BY cnt, o_orderstatus;
+cnt	o_orderstatus
+6	P
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus
+FROM orders
+ORDER BY cnt, o_orderstatus DESC;
+cnt	o_orderstatus
+6	P
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus
+FROM orders
+GROUP BY o_orderstatus
+ORDER BY cnt, o_orderstatus;
+cnt	o_orderstatus
+2	F
+2	O
+2	P
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus
+FROM orders
+GROUP BY o_orderstatus
+ORDER BY cnt, o_orderstatus DESC;
+cnt	o_orderstatus
+2	P
+2	O
+2	F
+CREATE TABLE orders2 (o_custkey INT, o_orderstatus CHAR(1), order_reason INT) ENGINE=Columnstore;
+INSERT INTO orders2 VALUES (10,'F', 1), (20,'O', 1), (20,'O', 2);
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus /* aggregated */, order_reason /* unaggregated */
+FROM orders2
+GROUP BY 2    /* group by o_orderstatus */
+ORDER BY 3;
+cnt	o_orderstatus	order_reason
+1	F	1
+2	O	2
+/* order by order_reason - not in group by */
+SELECT COUNT(o_orderstatus) cnt, o_orderstatus /* aggregated */, order_reason /* unaggregated */
+FROM orders2
+GROUP BY 2         /* group by o_orderstatus */
+ORDER BY 3 DESC;
+cnt	o_orderstatus	order_reason
+2	O	2
+1	F	1
+/* order by order_reason - not in group by */
+# Cleanup
+DROP DATABASE mcol_6332;

@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS mcs4010_db;
 CREATE DATABASE mcs4010_db;
 USE mcs4010_db;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 drop table if exists nation;
 create table nation (
 n_nationkey int,
@@ -109,5 +106,4 @@ r_regionkey	r_name	r_comment
 1	AMERICA	hs use ironic, even requests. s
 2	ASIA	ges. thinly even pinto beans ca
 5	Hawaii	The Hawaiian Kingdom
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs4010_db;

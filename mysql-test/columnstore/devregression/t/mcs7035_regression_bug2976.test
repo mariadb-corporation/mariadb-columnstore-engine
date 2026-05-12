@@ -72,7 +72,7 @@ SELECT s.OrderNum, s.OrderLine, s.ShippingAmount, s.ShippingOrderAmount,
 s.ShippingDiscountOrderAmount,
          total.ShippingDiscountTotalAmount,
          IF( s.OrderLine = t.MinOrderLine, 1, 0 )
-     FROM shipAmounts AS s
+     FROM shipamounts AS s
      LEFT OUTER JOIN (
          SELECT OrderNum, MIN(OrderLine) AS MinOrderLine
          FROM ship1
@@ -89,10 +89,10 @@ SELECT s.OrderNum, s.OrderLine, s.ShippingAmount, s.ShippingOrderAmount,
 	 s.ShippingDiscountOrderAmount,
          total.ShippingDiscountTotalAmount,
          IF( s.OrderLine = t.MinOrderLine, 1, 0 )
-     FROM shipAmounts AS s
+     FROM shipamounts AS s
      JOIN (
          SELECT sa.OrderNum, MIN(ship1.OrderLine) AS MinOrderLine
-         FROM shipAmounts sa left join ship1
+         FROM shipamounts sa left join ship1
          on (sa.OrderNum = ship1.OrderNum)
          GROUP BY OrderNum
      ) AS t ON s.OrderNum = t.OrderNum

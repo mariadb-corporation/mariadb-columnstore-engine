@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MCOL5142_MULTI_REC_REF;
-CREATE DATABASE MCOL5142_MULTI_REC_REF;
-USE MCOL5142_MULTI_REC_REF;
+DROP DATABASE IF EXISTS mcol5142_multi_rec_ref;
+CREATE DATABASE mcol5142_multi_rec_ref;
+USE mcol5142_multi_rec_ref;
 CREATE TABLE t (
 id INT NOT NULL
 ) ENGINE=Columnstore;
@@ -15,4 +15,4 @@ WHERE c1.id < 3
 )
 SELECT * FROM cte;
 ERROR HY000: Restrictions imposed on recursive definitions are violated for table 'cte'
-DROP DATABASE MCOL5142_MULTI_REC_REF;
+DROP DATABASE mcol5142_multi_rec_ref;

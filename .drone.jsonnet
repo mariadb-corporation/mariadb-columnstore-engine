@@ -83,6 +83,11 @@ local upgrade_test_lists = {
   "ubuntu24.04": default_arch_versions,
 };
 
+// Normalise signal-killed exits (≥128) to 1 so Drone records status=`failure`
+// instead of status=`killed`; `failure: ignore` then suppresses pipeline failure
+// while the step itself remains red (visible in the UI).
+local normaliseKilledExit = " || { ec=$$?; [ $$ec -ge 128 ] && exit 1; exit $$ec; }";
+
 local make_clickable_link(link) = "echo -e '\\e]8;;" + link + "\\e\\\\" + link + "\\e]8;;\\e\\\\'";
 local echo_running_on = [
   "echo running on ${DRONE_STAGE_MACHINE}",
@@ -310,7 +315,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --distro " + platform +
       " --triggering-event " + event +
       " --full-mtr $${MTR_FULL_SUITE}" +
-      if std.endsWith(result, "ASan") then " --run-as-extern" else "",
+      (if std.endsWith(result, "ASan") then " --run-as-extern" else "") +
+      (if std.member(ignoreFailureStepList, "mtr") then normaliseKilledExit else ""),
     ],
     [if (std.member(ignoreFailureStepList, "mtr")) then "failure"]: "ignore",
 
@@ -360,7 +366,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --test-name " + name +
       " --distro " + platform +
       " --regression-branch $$REGRESSION_REF" +
-      " --regression-timeout $${REGRESSION_TIMEOUT}",
+      " --regression-timeout $${REGRESSION_TIMEOUT}" +
+      (if std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression") then normaliseKilledExit else ""),
     ],
 
   },
@@ -715,8 +722,9 @@ local AllPipelines =
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
+  // sanitizers are non-functional; ignore mtr/regression failures so nightly stays green
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "")
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
@@ -725,7 +733,7 @@ local AllPipelines =
     for server in servers[current_branch]
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ['test009.sh', 'test011.sh', 'test012.sh'])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]

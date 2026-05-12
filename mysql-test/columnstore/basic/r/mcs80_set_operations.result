@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS mcs80_db;
 CREATE DATABASE mcs80_db;
 USE mcs80_db;
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE t1 (t1_int INT, t1_char CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t2 (t2_int INT, t2_char CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t3 (t3_int INT, t3_char CHAR(5))ENGINE=Innodb;
@@ -460,5 +457,4 @@ SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t3_int, 'Integer' AS Ta
 ERROR 42S22: Unknown column 't3_int' in 'order clause'
 SELECT t1_int, 'Integer' AS Table1 FROM t1 EXCEPT SELECT t2_int, 'Integer' AS Table2 FROM t2 order by t2_int;
 ERROR 42S22: Unknown column 't2_int' in 'order clause'
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs80_db;
