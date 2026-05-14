@@ -23,7 +23,10 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <clocale>
+#include <algorithm>
+#include <numeric>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -727,51 +730,147 @@ int main(int argc, char** argv)
       cout << "  elapsed(s) : " << parquetConversion.stats.elapsedSeconds << endl;
       const char* instrEnv = std::getenv("COLUMNSTORE_PARQUET_IMPORT_INSTR");
       if (instrEnv && instrEnv[0] != '\0' && instrEnv[0] != '0' &&
-          !parquetConversion.columnInstrumentation.empty())
+          (!parquetConversion.columnInstrumentation.empty() || parquetConversion.hasPipelineInstrumentation))
       {
-        cout << "Parquet import instrumentation (COLUMNSTORE_PARQUET_IMPORT_INSTR):" << endl;
-        cout << "  dict-chunk dedupe: " << (parquetConversion.dictChunkDedupeEnabled ? "enabled" : "disabled")
-             << endl;
-        uint64_t sumDictRows = 0;
-        uint64_t sumDictCanonHits = 0;
-        uint64_t sumDictChunkDistinct = 0;
-        uint64_t sumDictChunks = 0;
-        uint64_t sumTemporalFast = 0;
-        uint64_t sumTemporalFallback = 0;
-        for (const auto& s : parquetConversion.columnInstrumentation)
+        auto nsToSec = [](uint64_t ns) -> double { return static_cast<double>(ns) / 1e9; };
+        auto nsToMs = [](uint64_t ns) -> double { return static_cast<double>(ns) / 1e6; };
+
+        if (!parquetConversion.columnInstrumentation.empty())
         {
-          sumDictRows += s.dictRows;
-          sumDictCanonHits += s.dictCanonHits;
-          sumDictChunkDistinct += s.dictChunkDistinctSum;
-          sumDictChunks += s.dictChunks;
-          sumTemporalFast += s.temporalArrowFast;
-          sumTemporalFallback += s.temporalScalarFallback;
-        }
-        cout << "  dictRows=" << sumDictRows << " dictCanonHits=" << sumDictCanonHits
-             << " dictChunkDistinctSum=" << sumDictChunkDistinct << " dictChunks=" << sumDictChunks;
-        if (sumDictChunks > 0)
-          cout << " avgDistinct/chunk="
-               << (static_cast<double>(sumDictChunkDistinct) / static_cast<double>(sumDictChunks));
-        else if (!parquetConversion.dictChunkDedupeEnabled)
-          cout << " avgDistinct/chunk=n/a (dedupe off)";
-        cout << endl;
-        cout << "  temporalArrowFast=" << sumTemporalFast << " temporalScalarFallback=" << sumTemporalFallback
-             << endl;
-        for (size_t i = 0; i < parquetConversion.columnInstrumentation.size(); ++i)
-        {
-          const std::string& cname =
-              (i < parquetConversion.columnNames.size()) ? parquetConversion.columnNames[i] : std::string("?");
-          const auto& s = parquetConversion.columnInstrumentation[i];
-          cout << "  column[" << i << "] " << cname << ":" << endl;
-          cout << "    dictRows=" << s.dictRows << " dictNulls=" << s.dictNulls
-               << " dictDctnryCalls=" << s.dictDctnryCalls << " dictCanonHits=" << s.dictCanonHits << endl;
-          cout << "    dictChunkDistinctSum=" << s.dictChunkDistinctSum << " dictChunks=" << s.dictChunks;
-          if (s.dictChunks > 0)
-            cout << " avgDistinct/chunk=" << (static_cast<double>(s.dictChunkDistinctSum) /
-                                                  static_cast<double>(s.dictChunks));
+          cout << "Parquet import instrumentation (COLUMNSTORE_PARQUET_IMPORT_INSTR):" << endl;
+          cout << "  dict-chunk dedupe: " << (parquetConversion.dictChunkDedupeEnabled ? "enabled" : "disabled")
+               << endl;
+          uint64_t sumDictRows = 0;
+          uint64_t sumDictCanonHits = 0;
+          uint64_t sumDictChunkDistinct = 0;
+          uint64_t sumDictChunks = 0;
+          uint64_t sumTemporalFast = 0;
+          uint64_t sumTemporalFallback = 0;
+          for (const auto& s : parquetConversion.columnInstrumentation)
+          {
+            sumDictRows += s.dictRows;
+            sumDictCanonHits += s.dictCanonHits;
+            sumDictChunkDistinct += s.dictChunkDistinctSum;
+            sumDictChunks += s.dictChunks;
+            sumTemporalFast += s.temporalArrowFast;
+            sumTemporalFallback += s.temporalScalarFallback;
+          }
+          cout << "  dictRows=" << sumDictRows << " dictCanonHits=" << sumDictCanonHits
+               << " dictChunkDistinctSum=" << sumDictChunkDistinct << " dictChunks=" << sumDictChunks;
+          if (sumDictChunks > 0)
+            cout << " avgDistinct/chunk="
+                 << (static_cast<double>(sumDictChunkDistinct) / static_cast<double>(sumDictChunks));
+          else if (!parquetConversion.dictChunkDedupeEnabled)
+            cout << " avgDistinct/chunk=n/a (dedupe off)";
           cout << endl;
-          cout << "    temporalArrowFast=" << s.temporalArrowFast
-               << " temporalScalarFallback=" << s.temporalScalarFallback << endl;
+          cout << "  temporalArrowFast=" << sumTemporalFast << " temporalScalarFallback=" << sumTemporalFallback
+               << endl;
+        }
+
+        if (parquetConversion.hasPipelineInstrumentation)
+        {
+          const ParquetPipelineInstrSnapshot& p = parquetConversion.pipelineInstrumentation;
+          cout << std::fixed << std::setprecision(3);
+          cout << "Parquet pipeline instrumentation:" << endl;
+          cout << "  reader:" << endl;
+          cout << "    batches                  : " << p.readerBatches << endl;
+          cout << "    rows                     : " << p.readerRows << endl;
+          cout << "    decode time              : " << nsToSec(p.readerDecodeNs) << "s" << endl;
+          cout << "    push wait time           : " << nsToSec(p.readerPushWaitNs) << "s" << endl;
+          if (p.readerPushCount > 0)
+            cout << "    avg push wait            : " << nsToMs(p.readerPushWaitNs / p.readerPushCount) << "ms"
+                 << endl;
+          else
+            cout << "    avg push wait            : n/a" << endl;
+
+          cout << "  coordinator:" << endl;
+          cout << "    pop wait time            : " << nsToSec(p.coordinatorPopWaitNs) << "s" << endl;
+          if (p.coordinatorPopCount > 0)
+            cout << "    avg pop wait             : " << nsToMs(p.coordinatorPopWaitNs / p.coordinatorPopCount)
+                 << "ms" << endl;
+          else
+            cout << "    avg pop wait             : n/a" << endl;
+          cout << "    reorder hold time        : " << nsToSec(p.coordinatorReorderHoldNs) << "s" << endl;
+          cout << "    dispatched batches       : " << p.coordinatorDispatchedBatches << endl;
+          cout << "    dispatched tasks         : " << p.coordinatorDispatchedTasks << endl;
+          cout << "    inflight wait time       : " << nsToSec(p.coordinatorInflightWaitNs) << "s" << endl;
+          cout << "    inflight wait episodes   : " << p.coordinatorInflightWaitCount << endl;
+          cout << "    max inflight observed    : " << p.maxInflightBatchesObserved << endl;
+
+          cout << "  writers:" << endl;
+          cout << "    queue pop wait time      : " << nsToSec(p.writerQueuePopWaitNs) << "s" << endl;
+          if (p.writerQueuePopCount > 0)
+            cout << "    avg queue pop wait       : " << nsToMs(p.writerQueuePopWaitNs / p.writerQueuePopCount)
+                 << "ms" << endl;
+          else
+            cout << "    avg queue pop wait       : n/a" << endl;
+          cout << "    task process time        : " << nsToSec(p.writerTaskProcessNs) << "s" << endl;
+          cout << "    writer tasks             : " << p.writerTasks << endl;
+          cout << "    fixed column time        : " << nsToSec(p.fixedColumnNs) << "s"
+               << " calls=" << p.fixedColumnCalls << endl;
+          cout << "    dictionary column time   : " << nsToSec(p.dictionaryColumnNs) << "s"
+               << " calls=" << p.dictionaryColumnCalls << endl;
+          cout << "    max queue bytes observed : " << p.maxQueueBytesObserved << endl;
+
+          cout << "  interpretation hints:" << endl;
+          cout << "    high coordinator pop wait     => readers are not feeding fast enough" << endl;
+          cout << "    high reader push wait         => queue is full, downstream is slower" << endl;
+          cout << "    high writer queue pop wait    => writers are waiting for work" << endl;
+          cout << "    high writer task process time => writer side is bottleneck" << endl;
+          cout << "    high reorder hold time        => out-of-order reader batches are waiting" << endl;
+          cout << std::defaultfloat << std::setprecision(6);
+        }
+
+        if (!parquetConversion.columnInstrumentation.empty())
+        {
+          for (size_t i = 0; i < parquetConversion.columnInstrumentation.size(); ++i)
+          {
+            const std::string& cname =
+                (i < parquetConversion.columnNames.size()) ? parquetConversion.columnNames[i] : std::string("?");
+            const auto& s = parquetConversion.columnInstrumentation[i];
+            cout << "  column[" << i << "] " << cname << ":" << endl;
+            cout << "    dictRows=" << s.dictRows << " dictNulls=" << s.dictNulls
+                 << " dictDctnryCalls=" << s.dictDctnryCalls << " dictCanonHits=" << s.dictCanonHits << endl;
+            cout << "    dictChunkDistinctSum=" << s.dictChunkDistinctSum << " dictChunks=" << s.dictChunks;
+            if (s.dictChunks > 0)
+              cout << " avgDistinct/chunk=" << (static_cast<double>(s.dictChunkDistinctSum) /
+                                                    static_cast<double>(s.dictChunks));
+            cout << endl;
+            cout << "    temporalArrowFast=" << s.temporalArrowFast
+                 << " temporalScalarFallback=" << s.temporalScalarFallback << endl;
+            if (s.fixedColumnCalls + s.dictionaryColumnCalls > 0)
+            {
+              cout << "    writer fixedNs=" << nsToSec(s.fixedColumnNs) << "s"
+                   << " fixedCalls=" << s.fixedColumnCalls << " dictionaryNs=" << nsToSec(s.dictionaryColumnNs)
+                   << "s dictCalls=" << s.dictionaryColumnCalls << endl;
+            }
+          }
+
+          std::vector<size_t> colOrder(parquetConversion.columnInstrumentation.size());
+          std::iota(colOrder.begin(), colOrder.end(), 0);
+          std::sort(colOrder.begin(), colOrder.end(), [&](size_t a, size_t b) {
+            const auto& ca = parquetConversion.columnInstrumentation[a];
+            const auto& cb = parquetConversion.columnInstrumentation[b];
+            const uint64_t ta = ca.fixedColumnNs + ca.dictionaryColumnNs;
+            const uint64_t tb = cb.fixedColumnNs + cb.dictionaryColumnNs;
+            return ta > tb;
+          });
+          size_t printedSlow = 0;
+          for (size_t k = 0; k < colOrder.size() && printedSlow < 5; ++k)
+          {
+            const size_t idx = colOrder[k];
+            const auto& s = parquetConversion.columnInstrumentation[idx];
+            const uint64_t tsum = s.fixedColumnNs + s.dictionaryColumnNs;
+            if (tsum == 0)
+              continue;
+            if (printedSlow == 0)
+              cout << "  Slowest Parquet columns (writer-side):" << endl;
+            const std::string& cname =
+                (idx < parquetConversion.columnNames.size()) ? parquetConversion.columnNames[idx] : std::string("?");
+            cout << "    column[" << idx << "] " << cname << ": " << nsToSec(tsum) << "s"
+                 << " fixedCalls=" << s.fixedColumnCalls << " dictionaryCalls=" << s.dictionaryColumnCalls << endl;
+            ++printedSlow;
+          }
         }
       }
     }

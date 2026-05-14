@@ -21,6 +21,7 @@
 #include <cmath>
 #include <ctime>
 #include <cstring>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <memory>
@@ -451,6 +452,86 @@ int createDirectImportRecordBatchReader(parquet::arrow::FileReader& reader, cons
   return NO_ERROR;
 }
 
+using PipelineClock = std::chrono::steady_clock;
+
+static inline uint64_t pipelineNsSince(const PipelineClock::time_point& start)
+{
+  return static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(PipelineClock::now() - start).count());
+}
+
+static inline void pipelineAddNs(std::atomic<uint64_t>& dst, uint64_t ns)
+{
+  dst.fetch_add(ns, std::memory_order_relaxed);
+}
+
+static inline void pipelineUpdateMaxAtomic(std::atomic<uint64_t>& maxValue, uint64_t value)
+{
+  uint64_t current = maxValue.load(std::memory_order_relaxed);
+  while (current < value &&
+         !maxValue.compare_exchange_weak(current, value, std::memory_order_relaxed, std::memory_order_relaxed))
+  {
+  }
+}
+
+struct ParquetPipelineInstrumentation
+{
+  std::atomic<uint64_t> readerBatches{0};
+  std::atomic<uint64_t> readerRows{0};
+  std::atomic<uint64_t> readerDecodeNs{0};
+  std::atomic<uint64_t> readerPushWaitNs{0};
+  std::atomic<uint64_t> readerPushCount{0};
+
+  std::atomic<uint64_t> coordinatorPopWaitNs{0};
+  std::atomic<uint64_t> coordinatorPopCount{0};
+  std::atomic<uint64_t> coordinatorReorderHoldNs{0};
+  std::atomic<uint64_t> coordinatorDispatchedBatches{0};
+  std::atomic<uint64_t> coordinatorDispatchedTasks{0};
+  std::atomic<uint64_t> coordinatorInflightWaitNs{0};
+  std::atomic<uint64_t> coordinatorInflightWaitCount{0};
+
+  std::atomic<uint64_t> writerQueuePopWaitNs{0};
+  std::atomic<uint64_t> writerQueuePopCount{0};
+  std::atomic<uint64_t> writerTaskProcessNs{0};
+  std::atomic<uint64_t> writerTasks{0};
+
+  std::atomic<uint64_t> fixedColumnNs{0};
+  std::atomic<uint64_t> fixedColumnCalls{0};
+  std::atomic<uint64_t> dictionaryColumnNs{0};
+  std::atomic<uint64_t> dictionaryColumnCalls{0};
+
+  std::atomic<uint64_t> maxQueueBytesObserved{0};
+  std::atomic<uint64_t> maxInflightBatchesObserved{0};
+};
+
+static void copyPipelineInstrToResult(ParquetPipelineInstrumentation& src, ParquetConversionResult& result)
+{
+  result.hasPipelineInstrumentation = true;
+  ParquetPipelineInstrSnapshot& d = result.pipelineInstrumentation;
+  d.readerBatches = src.readerBatches.load(std::memory_order_relaxed);
+  d.readerRows = src.readerRows.load(std::memory_order_relaxed);
+  d.readerDecodeNs = src.readerDecodeNs.load(std::memory_order_relaxed);
+  d.readerPushWaitNs = src.readerPushWaitNs.load(std::memory_order_relaxed);
+  d.readerPushCount = src.readerPushCount.load(std::memory_order_relaxed);
+  d.coordinatorPopWaitNs = src.coordinatorPopWaitNs.load(std::memory_order_relaxed);
+  d.coordinatorPopCount = src.coordinatorPopCount.load(std::memory_order_relaxed);
+  d.coordinatorReorderHoldNs = src.coordinatorReorderHoldNs.load(std::memory_order_relaxed);
+  d.coordinatorDispatchedBatches = src.coordinatorDispatchedBatches.load(std::memory_order_relaxed);
+  d.coordinatorDispatchedTasks = src.coordinatorDispatchedTasks.load(std::memory_order_relaxed);
+  d.coordinatorInflightWaitNs = src.coordinatorInflightWaitNs.load(std::memory_order_relaxed);
+  d.coordinatorInflightWaitCount = src.coordinatorInflightWaitCount.load(std::memory_order_relaxed);
+  d.writerQueuePopWaitNs = src.writerQueuePopWaitNs.load(std::memory_order_relaxed);
+  d.writerQueuePopCount = src.writerQueuePopCount.load(std::memory_order_relaxed);
+  d.writerTaskProcessNs = src.writerTaskProcessNs.load(std::memory_order_relaxed);
+  d.writerTasks = src.writerTasks.load(std::memory_order_relaxed);
+  d.fixedColumnNs = src.fixedColumnNs.load(std::memory_order_relaxed);
+  d.fixedColumnCalls = src.fixedColumnCalls.load(std::memory_order_relaxed);
+  d.dictionaryColumnNs = src.dictionaryColumnNs.load(std::memory_order_relaxed);
+  d.dictionaryColumnCalls = src.dictionaryColumnCalls.load(std::memory_order_relaxed);
+  d.maxQueueBytesObserved = src.maxQueueBytesObserved.load(std::memory_order_relaxed);
+  d.maxInflightBatchesObserved = src.maxInflightBatchesObserved.load(std::memory_order_relaxed);
+}
+
 int64_t estimateBatchBytes(const std::shared_ptr<arrow::RecordBatch>& batch)
 {
   if (!batch)
@@ -480,12 +561,19 @@ struct BatchEnvelope
   int64_t numRows{0};
   int64_t estimatedBytes{0};
   std::shared_ptr<arrow::RecordBatch> batch;
+  /** When pipeline instrumentation is on: time batch was enqueued on the bounded queue (reorder delay). */
+  PipelineClock::time_point queuedAt{};
 };
 
 class BoundedBatchQueue
 {
  public:
   explicit BoundedBatchQueue(int64_t maxBytes) : maxBytes_(std::max<int64_t>(1, maxBytes)) {}
+
+  void attachPipelineInstr(ParquetPipelineInstrumentation* p)
+  {
+    pipeInstr_ = p;
+  }
 
   void close()
   {
@@ -508,6 +596,8 @@ class BoundedBatchQueue
       return false;
     bytesInQueue_ += bytes;
     queue_.push_back(std::move(env));
+    if (pipeInstr_)
+      pipelineUpdateMaxAtomic(pipeInstr_->maxQueueBytesObserved, static_cast<uint64_t>(bytesInQueue_));
     cvNotEmpty_.notify_one();
     return true;
   }
@@ -521,6 +611,8 @@ class BoundedBatchQueue
     out = std::move(queue_.front());
     queue_.pop_front();
     bytesInQueue_ -= std::max<int64_t>(1, out.estimatedBytes);
+    if (pipeInstr_)
+      pipelineUpdateMaxAtomic(pipeInstr_->maxQueueBytesObserved, static_cast<uint64_t>(bytesInQueue_));
     cvNotFull_.notify_one();
     return true;
   }
@@ -533,6 +625,7 @@ class BoundedBatchQueue
   int64_t maxBytes_{1};
   int64_t bytesInQueue_{0};
   bool closed_{false};
+  ParquetPipelineInstrumentation* pipeInstr_{nullptr};
 };
 
 int readDictionaryIndexSlot(const std::shared_ptr<arrow::Array>& indices, int64_t row, int64_t& outSlot,
@@ -1078,6 +1171,10 @@ struct ParquetColumnInstrLive
   std::atomic<uint64_t> dictCanonHits{0};
   std::atomic<uint64_t> temporalArrowFast{0};
   std::atomic<uint64_t> temporalScalarFallback{0};
+  std::atomic<uint64_t> colFixedNs{0};
+  std::atomic<uint64_t> colDictNs{0};
+  std::atomic<uint64_t> colFixedCalls{0};
+  std::atomic<uint64_t> colDictCalls{0};
 };
 
 /** Howard Hinnant civil-from-days; z = days since 1970-01-01 (Unix). */
@@ -2207,6 +2304,17 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     return NO_ERROR;
   }
 
+  const char* parquetInstrEnv = std::getenv("COLUMNSTORE_PARQUET_IMPORT_INSTR");
+  const bool enablePipelineInstr =
+      parquetInstrEnv && parquetInstrEnv[0] != '\0' && parquetInstrEnv[0] != '0';
+  std::unique_ptr<ParquetPipelineInstrumentation> pipelineInstrStorage;
+  ParquetPipelineInstrumentation* pipeInstr = nullptr;
+  if (enablePipelineInstr)
+  {
+    pipelineInstrStorage.reset(new ParquetPipelineInstrumentation());
+    pipeInstr = pipelineInstrStorage.get();
+  }
+
   JobFieldRefList emptyFieldRefList;
   int columnWriterCount = std::max(1, gImportRuntimeConfig.columnWriteThreads);
   columnWriterCount = std::min(columnWriterCount, static_cast<int>(bindings.size()));
@@ -2214,7 +2322,11 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   partitionParquetBindingsToWriters(bindings, columnWriterCount, bindingsPerWriter);
   rc = validatePartitionParquetBindings(bindings, columnWriterCount, bindingsPerWriter, errMsg);
   if (rc != NO_ERROR)
+  {
+    if (pipeInstr)
+      copyPipelineInstrToResult(*pipeInstr, result);
     return rc;
+  }
 
   int maxBatchesInflight = gImportRuntimeConfig.maxParquetInflightBatches;
   if (maxBatchesInflight <= 0)
@@ -2265,6 +2377,8 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   }
 
   BoundedBatchQueue queue(gImportRuntimeConfig.queueBytes);
+  if (pipeInstr)
+    queue.attachPipelineInstr(pipeInstr);
   std::atomic<bool> stopRequested(false);
   std::atomic<int> activeProducers(0);
   std::mutex importStateMutex;
@@ -2281,7 +2395,11 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   {
     rc = binding.columnInfo->createDelayedFileIfNeeded(tableInfo.directImportTableName());
     if (rc != NO_ERROR)
+    {
+      if (pipeInstr)
+        copyPipelineInstrToResult(*pipeInstr, result);
       return rc;
+    }
   }
 
   std::vector<std::thread> columnWriters;
@@ -2292,22 +2410,66 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
       while (true)
       {
         ColumnTask task;
-        if (!columnWriterQueues[static_cast<size_t>(w)].pop(task, stopRequested))
+        const auto popStart = PipelineClock::now();
+        const bool popped = columnWriterQueues[static_cast<size_t>(w)].pop(task, stopRequested);
+        if (pipeInstr)
+        {
+          pipelineAddNs(pipeInstr->writerQueuePopWaitNs, pipelineNsSince(popStart));
+          if (popped)
+            pipeInstr->writerQueuePopCount.fetch_add(1, std::memory_order_relaxed);
+        }
+        if (!popped)
           break;
+        const auto taskStart = PipelineClock::now();
         std::string localErr;
         int taskRc = NO_ERROR;
         for (size_t bi : task.bindingIndices)
         {
           const auto& binding = bindings[bi];
           if (binding.columnInfo->column.colType == COL_TYPE_DICT)
+          {
+            const auto colT0 = PipelineClock::now();
             taskRc = processDictionaryColumnBatch(binding, task.batch, task.batchStartRow, totalColumns, localErr,
                                                   parquetInstrPtr, totalColumns);
+            if (pipeInstr)
+            {
+              const uint64_t dt = pipelineNsSince(colT0);
+              pipelineAddNs(pipeInstr->dictionaryColumnNs, dt);
+              pipeInstr->dictionaryColumnCalls.fetch_add(1, std::memory_order_relaxed);
+              const int cid = binding.columnInfo->id;
+              if (cid >= 0 && static_cast<size_t>(cid) < totalColumns && parquetInstrPtr)
+              {
+                pipelineAddNs(parquetInstrPtr[cid].colDictNs, dt);
+                parquetInstrPtr[cid].colDictCalls.fetch_add(1, std::memory_order_relaxed);
+              }
+            }
+          }
           else
+          {
+            const auto colT0 = PipelineClock::now();
             taskRc = processFixedColumnBatch(binding, task.batch, task.batchStartRow,
                                              *columnConverters[static_cast<size_t>(w)], localErr, parquetInstrPtr,
                                              totalColumns);
+            if (pipeInstr)
+            {
+              const uint64_t dt = pipelineNsSince(colT0);
+              pipelineAddNs(pipeInstr->fixedColumnNs, dt);
+              pipeInstr->fixedColumnCalls.fetch_add(1, std::memory_order_relaxed);
+              const int cid = binding.columnInfo->id;
+              if (cid >= 0 && static_cast<size_t>(cid) < totalColumns && parquetInstrPtr)
+              {
+                pipelineAddNs(parquetInstrPtr[cid].colFixedNs, dt);
+                parquetInstrPtr[cid].colFixedCalls.fetch_add(1, std::memory_order_relaxed);
+              }
+            }
+          }
           if (taskRc != NO_ERROR)
             break;
+        }
+        if (pipeInstr)
+        {
+          pipelineAddNs(pipeInstr->writerTaskProcessNs, pipelineNsSince(taskStart));
+          pipeInstr->writerTasks.fetch_add(1, std::memory_order_relaxed);
         }
         task.completion->notifyWorkerDone(taskRc, localErr, stopRequested);
       }
@@ -2357,7 +2519,10 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
             while (!stopRequested.load())
             {
               std::shared_ptr<arrow::RecordBatch> batch;
+              const auto decodeStart = PipelineClock::now();
               const arrow::Status st = batchReader->ReadNext(&batch);
+              if (pipeInstr)
+                pipelineAddNs(pipeInstr->readerDecodeNs, pipelineNsSince(decodeStart));
               if (!st.ok())
               {
                 setImportError("Unable to read parquet record batch: " + st.ToString());
@@ -2369,13 +2534,29 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
                 break;
               if (batch->num_rows() <= 0)
                 continue;
+              if (pipeInstr)
+              {
+                pipeInstr->readerBatches.fetch_add(1, std::memory_order_relaxed);
+                pipeInstr->readerRows.fetch_add(static_cast<uint64_t>(batch->num_rows()),
+                                                 std::memory_order_relaxed);
+              }
               BatchEnvelope env;
               env.globalStartRow = workerRowCursor;
               env.numRows = batch->num_rows();
               env.estimatedBytes = estimateBatchBytes(batch);
               env.batch = std::move(batch);
+              if (pipeInstr)
+                env.queuedAt = PipelineClock::now();
               workerRowCursor += static_cast<RID>(env.numRows);
-              if (!queue.push(std::move(env), stopRequested))
+              const auto pushStart = PipelineClock::now();
+              const bool pushed = queue.push(std::move(env), stopRequested);
+              if (pipeInstr)
+              {
+                pipelineAddNs(pipeInstr->readerPushWaitNs, pipelineNsSince(pushStart));
+                if (pushed)
+                  pipeInstr->readerPushCount.fetch_add(1, std::memory_order_relaxed);
+              }
+              if (!pushed)
                 break;
             }
           }
@@ -2401,6 +2582,12 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     }
     if (taskCount == 0 || current.numRows <= 0)
       return;
+    if (pipeInstr)
+    {
+      pipeInstr->coordinatorDispatchedBatches.fetch_add(1, std::memory_order_relaxed);
+      pipeInstr->coordinatorDispatchedTasks.fetch_add(static_cast<uint64_t>(taskCount),
+                                                       std::memory_order_relaxed);
+    }
     auto completion = std::make_shared<BatchCompletion>(taskCount, current.numRows, &result, &drainCv, &batchesInflight,
                                                           &sharedErrMsg, &importStateMutex);
     int pushesSucceeded = 0;
@@ -2428,13 +2615,26 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
       }
       pushesSucceeded++;
     }
-    batchesInflight.fetch_add(1);
+    batchesInflight.fetch_add(1, std::memory_order_relaxed);
+    if (pipeInstr)
+    {
+      pipelineUpdateMaxAtomic(pipeInstr->maxInflightBatchesObserved,
+                              static_cast<uint64_t>(batchesInflight.load(std::memory_order_relaxed)));
+    }
   };
 
   while (rowsDispatched < totalRowsFromMeta && !stopRequested.load())
   {
     BatchEnvelope env;
-    if (!queue.pop(env, stopRequested))
+    const auto coordPopStart = PipelineClock::now();
+    const bool gotBatch = queue.pop(env, stopRequested);
+    if (pipeInstr)
+    {
+      pipelineAddNs(pipeInstr->coordinatorPopWaitNs, pipelineNsSince(coordPopStart));
+      if (gotBatch)
+        pipeInstr->coordinatorPopCount.fetch_add(1, std::memory_order_relaxed);
+    }
+    if (!gotBatch)
     {
       if (activeProducers.load() == 0)
         break;
@@ -2449,15 +2649,30 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
         break;
       {
         std::unique_lock<std::mutex> lk(drainMutex);
-        drainCv.wait(lk, [&] {
-          return batchesInflight.load() < maxBatchesInflight || stopRequested.load();
-        });
+        while (batchesInflight.load(std::memory_order_acquire) >= maxBatchesInflight && !stopRequested.load())
+        {
+          if (pipeInstr)
+            pipeInstr->coordinatorInflightWaitCount.fetch_add(1, std::memory_order_relaxed);
+          const auto inflightWait0 = PipelineClock::now();
+          drainCv.wait(lk, [&] {
+            return batchesInflight.load(std::memory_order_acquire) < maxBatchesInflight || stopRequested.load();
+          });
+          if (pipeInstr)
+            pipelineAddNs(pipeInstr->coordinatorInflightWaitNs, pipelineNsSince(inflightWait0));
+        }
+        if (pipeInstr)
+        {
+          pipelineUpdateMaxAtomic(pipeInstr->maxInflightBatchesObserved,
+                                  static_cast<uint64_t>(batchesInflight.load(std::memory_order_relaxed)));
+        }
       }
       if (stopRequested.load())
         break;
       BatchEnvelope current = std::move(it->second);
       reorder.erase(it);
       const RID batchStart = expectedStartRow;
+      if (pipeInstr)
+        pipelineAddNs(pipeInstr->coordinatorReorderHoldNs, pipelineNsSince(current.queuedAt));
       dispatchOrderedBatch(current, batchStart);
       expectedStartRow += static_cast<RID>(current.numRows);
       rowsDispatched += current.numRows;
@@ -2500,8 +2715,15 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
           instrLive[i].temporalArrowFast.load(std::memory_order_relaxed);
       result.columnInstrumentation[i].temporalScalarFallback =
           instrLive[i].temporalScalarFallback.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].fixedColumnNs = instrLive[i].colFixedNs.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictionaryColumnNs = instrLive[i].colDictNs.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].fixedColumnCalls = instrLive[i].colFixedCalls.load(std::memory_order_relaxed);
+      result.columnInstrumentation[i].dictionaryColumnCalls = instrLive[i].colDictCalls.load(std::memory_order_relaxed);
     }
   }
+
+  if (pipeInstr)
+    copyPipelineInstrToResult(*pipeInstr, result);
 
   if (!sharedErrMsg.empty() && rc == NO_ERROR)
   {

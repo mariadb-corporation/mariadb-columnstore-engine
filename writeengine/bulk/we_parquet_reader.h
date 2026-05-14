@@ -54,6 +54,43 @@ struct ParquetColumnInstrSnapshot
   uint64_t dictCanonHits{0};
   uint64_t temporalArrowFast{0};
   uint64_t temporalScalarFallback{0};
+  /** Writer-side time in processFixedColumnBatch (nanoseconds). */
+  uint64_t fixedColumnNs{0};
+  /** Writer-side time in processDictionaryColumnBatch (nanoseconds). */
+  uint64_t dictionaryColumnNs{0};
+  uint64_t fixedColumnCalls{0};
+  uint64_t dictionaryColumnCalls{0};
+};
+
+/** Snapshot of pipeline timing/counters (filled when COLUMNSTORE_PARQUET_IMPORT_INSTR is enabled). */
+struct ParquetPipelineInstrSnapshot
+{
+  uint64_t readerBatches{0};
+  uint64_t readerRows{0};
+  uint64_t readerDecodeNs{0};
+  uint64_t readerPushWaitNs{0};
+  uint64_t readerPushCount{0};
+
+  uint64_t coordinatorPopWaitNs{0};
+  uint64_t coordinatorPopCount{0};
+  uint64_t coordinatorReorderHoldNs{0};
+  uint64_t coordinatorDispatchedBatches{0};
+  uint64_t coordinatorDispatchedTasks{0};
+  uint64_t coordinatorInflightWaitNs{0};
+  uint64_t coordinatorInflightWaitCount{0};
+
+  uint64_t writerQueuePopWaitNs{0};
+  uint64_t writerQueuePopCount{0};
+  uint64_t writerTaskProcessNs{0};
+  uint64_t writerTasks{0};
+
+  uint64_t fixedColumnNs{0};
+  uint64_t fixedColumnCalls{0};
+  uint64_t dictionaryColumnNs{0};
+  uint64_t dictionaryColumnCalls{0};
+
+  uint64_t maxQueueBytesObserved{0};
+  uint64_t maxInflightBatchesObserved{0};
 };
 
 struct ParquetConversionResult
@@ -66,6 +103,9 @@ struct ParquetConversionResult
   std::vector<ParquetColumnInstrSnapshot> columnInstrumentation;
   /** Per-chunk dictionary string dedupe was enabled for this run (`--parquet-dict-dedupe`). */
   bool dictChunkDedupeEnabled{false};
+  /** Filled when COLUMNSTORE_PARQUET_IMPORT_INSTR is set (non-empty, first char not '0'). */
+  bool hasPipelineInstrumentation{false};
+  ParquetPipelineInstrSnapshot pipelineInstrumentation{};
 };
 
 struct ParquetImportRuntimeConfig
