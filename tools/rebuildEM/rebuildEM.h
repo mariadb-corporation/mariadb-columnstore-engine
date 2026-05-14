@@ -165,6 +165,140 @@ class EMReBuilder
   void showExtentMap();
 
  private:
+  struct sat_problem
+  {
+    int varIndex = 0;
+
+    // standard domain mapping between ranges and logical variables.
+    std::map<uint64_t, int> fromRangeToVar;
+    std::map<int, uint64_t> fromVarToRange;
+
+    // to do not repeat ourselves, record starts of one-of encodings.
+    std::set<uint64_t> oneOfStarts;
+
+    // the problem itself, standard DIMACS body encoding: clauses end with 0,
+    // positive integer is a variable, negative integer is a variable's negation.
+    std::vector<int> problem;
+
+    // invent new var or return existing for a range identified by start block offset.
+    int getRangeVar(uint64_t range)
+    {
+      if (fromRangeToVar.count(range) > 0)
+      {
+        return fromRangeToVar[range];
+      }
+      varIndex ++; // preincrement because vars should not be
+      int v = varIndex;
+      fromRangeToVar[range] = v;
+      fromVarToRange[v] = range;
+      return v;
+    }
+    // 1-from-N encoding.
+    void oneOf(const std::vector<int>& vars)
+    {
+      // encode requirement that at least one of vars is set.
+      for(uint32_t i = 0; i < vars.size();i++) {
+        problem.push_back(vars[i]);
+      }
+      problem.push_back(0); // close clause
+
+      // encode requirement that if any variable is set to true, other
+      // must be set to false.
+      // This is quadratic to the number of vars, but simple and results
+      // in faster solution process.
+      for(uint32_t i = 0; i < vars.size(); i++) {
+        int a = vars[i];
+        for(uint32_t j = i + 1; j < vars.size(); j++) {
+          int b = vars[j];
+	  problem.push_back(-a);
+	  problem.push_back(-b);
+	  problem.push_back(0);
+        }
+      }
+    }
+
+    // 1-from-N encoding for ranges' range.
+    // Do not do anything if we already added such subproblem.
+    void oneOf(uint64_t start, uint64_t step, int n)
+    {
+      if (oneOfStarts.count(start) > 0)
+      {
+        return ; // do not repeat ourselves.
+      }
+      std::vector<int> vars;
+      for(int i = 0;i < n; i++, start += step)
+      {
+        int var = getRangeVar(start);
+	vars.push_back(var);
+      }
+      oneOf(vars);
+    }
+
+    void mustBe(uint64_t range)
+    {
+      int v = getRangeVar(range);
+      problem.push_back(v); // assert presence.
+      problem.push_back(0);
+    }
+
+    void mustNotBe(uint64_t range)
+    {
+      int v = getRangeVar(range);
+      problem.push_back(-v); // assert absence.
+      problem.push_back(0);
+    }
+
+    // add the fact that some FBO is utilized - it may require one of ranges and
+    // also prevent use of some ranges.
+    void addWrittenFBO(uint64_t fbo, uint64_t length)
+    {
+      // why 512 - this is least possible extent size in blocks.
+      const uint64_t smallestAlignment = 512;
+      const uint64_t extentSize = 8192;
+      idbassert(fbo < std::numeric_limits<uint64_t>::max() - extentSize);
+
+      uint64_t highest_offset = fbo - (fbo % smallestAlignment);
+      uint64_t lowest_offset = 0;
+      if (highest_offset >= extentSize)
+      {
+        lowest_offset = highest_offset + smallestAlignment - extentSize;
+      }
+      int n = (highest_offset - lowest_offset) / smallestAlignment;
+      oneOf(highest_offset, smallestAlignment, n);
+      uint64_t lengthInBlocks = (length + extentSize - 1)/extentSize;
+      uint64_t dataEnd = fbo + lengthInBlocks;
+      if (dataEnd / smallestAlignment != fbo / smallestAlignment) // may span adjacent ranges.
+      {
+        // mark as invalid ranges whose bounds are inside written data.
+	for(uint64_t end = highest_offset + smallestAlignment; end < recordEnd; end += smallestAlignment)
+	{
+	  if (end >= extentSize)
+	  {
+	    uint64_t start = end - extentSize;
+	    mustNotBe(start);
+	  }
+	  if (end < std::numeric_limits<uint64_t>::max() - extentSize)
+	  {
+	    mustNotBe(end);
+	  }
+	}
+      }
+    }
+    void addKnownRange(uint64_t range)
+    {
+      mustBe(range);
+    }
+    void addHWM(uint64_t hwm)
+    {
+      idbassert(0);
+    }
+
+    bool solve(std::vector<uint64_t>& ranges)
+    {
+      idbassert(0);
+    }
+
+  };
   EMReBuilder(const EMReBuilder&) = delete;
   EMReBuilder(EMReBuilder&&) = delete;
   EMReBuilder& operator=(const EMReBuilder&) = delete;
@@ -183,6 +317,7 @@ class EMReBuilder
   std::map<uint32_t, uint64_t> oidHWMs; // HWM is assigned at the very end, to the LBID that properly contains it.
   uint64_t lastUsedLBID = 0;
   std::set<uint32_t> dictOIDs; // set of OIDs that are dicts.
+  std::map<uint32_t, sat_problem> problems;
   std::map<uint32_t, std::set<uint64_t>> oidBlockOffsetsFromTokens; // block offsets generated from tokens read.
   std::map<uint32_t, std::set<uint64_t>> oidKnownBlockOffsets; // the set of block offsets that need not new LBIDs.
 
