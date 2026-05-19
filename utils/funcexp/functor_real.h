@@ -26,6 +26,9 @@
 
 namespace funcexp
 {
+// Forward declaration; defined in funchelpers.h.
+inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& row, bool& isNull, bool isMod);
+
 /** @brief Func_Real class
  *    For function that returns a int/decimal/double result.
  *        Must implement getDoubleVal()
@@ -363,8 +366,21 @@ class Func_mod : public Func_Real
 
  private:
   template <typename ModType>
-  ModType doDecimal(const FunctionParm& parm, const int64_t div, rowgroup::Row& row, bool& isNull)
+  ModType doDecimal(FunctionParm& parm, const int64_t div, rowgroup::Row& row, bool& isNull)
   {
+    auto rhsDT = parm[1]->data()->resultType().colDataType;
+
+    if (rhsDT == execplan::CalpontSystemCatalog::DECIMAL ||
+        rhsDT == execplan::CalpontSystemCatalog::UDECIMAL)
+    {
+      execplan::IDB_Decimal result = modOrDivDecimal(parm, row, isNull, true);
+      if (isNull) return 0;
+      if (result.precision > datatypes::INT64MAXPRECISION)
+        return static_cast<ModType>(result.toDouble());
+      return static_cast<ModType>(static_cast<double>(result.value) /
+                                  datatypes::mcs_pow_10[result.scale]);
+    }
+
     execplan::IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
     if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
@@ -381,8 +397,13 @@ class Func_mod : public Func_Real
         return static_cast<ModType>(integralRemainder.toTFloat128() + intAndFract.second);
       }
     }
-    int64_t value = d.value / static_cast<int64_t>(pow(10.0, d.scale));
-    return value % div;
+    if (d.scale == 0)
+      return static_cast<ModType>(d.value % div);
+
+    int64_t scaleDivisor = static_cast<int64_t>(datatypes::mcs_pow_10[d.scale]);
+    int64_t integral = d.value / scaleDivisor;
+    double fractional = static_cast<double>(d.value % scaleDivisor) / scaleDivisor;
+    return static_cast<ModType>(static_cast<double>(integral % div) + fractional);
   }
 };
 
