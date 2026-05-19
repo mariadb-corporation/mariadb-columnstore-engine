@@ -1,0 +1,13 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_4667;
+--enable_warnings
+CREATE DATABASE mcol_4667;
+USE mcol_4667;
+
+CREATE TABLE t1 (a DECIMAL(18,17)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (-8.99999999999999999);
+SELECT AVG(a) FROM t1;
+
+# Cleanup
+DROP DATABASE mcol_4667;
