@@ -225,6 +225,14 @@ bool EMEntry::operator<(const EMEntry& e) const
   return false;
 }
 
+void EMEntry::setHWMAndInvalidate(HWM_t newHWM)
+{
+  HWM = newHWM;
+
+  partition.cprange.isValid = CP_INVALID;
+}
+
+
 /*static*/
 boost::mutex ExtentMap::mutex;
 boost::mutex ExtentMap::emIndexMutex;
@@ -3745,7 +3753,7 @@ void ExtentMap::rollbackColumnExtents_DBroot(int oid, bool bDeleteAll, uint16_t 
             if (emEntry.HWM != (fboLo - 1))
             {
               makeUndoRecordRBTree(UndoRecordType::DEFAULT, emEntry);
-              emEntry.HWM = fboLo - 1;  // case 3A
+              emEntry.setHWMAndInvalidate(fboLo - 1);  // case 3A
               emEntry.status = EXTENTAVAILABLE;
             }
           }
@@ -3763,7 +3771,7 @@ void ExtentMap::rollbackColumnExtents_DBroot(int oid, bool bDeleteAll, uint16_t 
           if (emEntry.HWM != fboHi)
           {
             makeUndoRecordRBTree(UndoRecordType::DEFAULT, emEntry);
-            emEntry.HWM = fboHi;  // case 4B
+            emEntry.setHWMAndInvalidate(fboHi);  // case 4B
             emEntry.status = EXTENTAVAILABLE;
           }
         }
@@ -3772,7 +3780,7 @@ void ExtentMap::rollbackColumnExtents_DBroot(int oid, bool bDeleteAll, uint16_t 
           if (emEntry.HWM != hwm)
           {
             makeUndoRecordRBTree(UndoRecordType::DEFAULT, emEntry);
-            emEntry.HWM = hwm;  // case 4C
+            emEntry.setHWMAndInvalidate(hwm);  // case 4C
             emEntry.status = EXTENTAVAILABLE;
           }
         }

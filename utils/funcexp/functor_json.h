@@ -105,7 +105,7 @@ class Func_json_multipath : public Func_json
       for (size_t i=0; i<paths.size(); i++)
       {
         JSONPath& path = paths[i];
-        initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i],  MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+        initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i][0],  MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
       }
       path_inited= true;
     }

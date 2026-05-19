@@ -198,6 +198,7 @@ struct EMEntry
   EXPORT EMEntry(const EMEntry&);
   EXPORT EMEntry& operator=(const EMEntry&);
   EXPORT bool operator<(const EMEntry&) const;
+  EXPORT void setHWMAndInvalidate(HWM_t newHWM); // used in cpimport failure rollback
 };
 
 // Bug 2989, moved from joblist
