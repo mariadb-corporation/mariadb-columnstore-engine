@@ -363,7 +363,7 @@ class Func_mod : public Func_Real
 
  private:
   template <typename ModType>
-  ModType doDecimal(const FunctionParm& parm, const int64_t div, rowgroup::Row& row, bool isNull)
+  ModType doDecimal(const FunctionParm& parm, const int64_t div, rowgroup::Row& row, bool& isNull)
   {
     execplan::IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
 
