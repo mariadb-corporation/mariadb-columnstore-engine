@@ -72,7 +72,14 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
     IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
     if (isNull) return 0;
     if (result.precision > datatypes::INT64MAXPRECISION)
+    {
+      if (result.s128Value > INT64_MAX || result.s128Value < INT64_MIN)
+      {
+        isNull = true;
+        return 0;
+      }
       return static_cast<int64_t>(result.s128Value);
+    }
     return result.value;
   }
 
@@ -117,7 +124,14 @@ uint64_t Func_div::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& isNu
     IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
     if (isNull) return 0;
     if (result.precision > datatypes::INT64MAXPRECISION)
+    {
+      if (result.s128Value > static_cast<int128_t>(UINT64_MAX))
+      {
+        isNull = true;
+        return 0;
+      }
       return static_cast<uint64_t>(result.s128Value);
+    }
     return static_cast<uint64_t>(result.value);
   }
 
