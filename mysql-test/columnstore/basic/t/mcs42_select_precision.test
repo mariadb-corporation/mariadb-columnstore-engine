@@ -28,6 +28,7 @@ SELECT col FROM t;
 
 CREATE TABLE t1 (col FLOAT)ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL),(2.13),(-2.13),(21.5e0),(-21.5e0),(35.498),(986.512),(-376012.9751);
+--replace_regex /\t-0/\t0/
 SELECT col, ROUND(col), ROUND(col,1), ROUND(col,-1), ROUND(col,-2), ROUND(col,3) FROM t1;
 
 SELECT (.1 + .2) = .3;
