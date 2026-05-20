@@ -33,7 +33,7 @@ create table t3813_2
 create table t3813_3
 (id3 int,
     from_date date,
-    to_date date
+    todate date
 )ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
 
 create table t3813_4
@@ -43,7 +43,7 @@ create table t3813_4
 
 insert into t3813_1(id) values(1);
 insert into t3813_2(id2, snapshot_date) values(1,'2020-05-09');
-insert into t3813_3(id3, from_date, to_date) values(1,'2020-05-09'-interval 1 day, '2020-05-09'+interval 2 day);
+insert into t3813_3(id3, from_date, todate) values(1,'2020-05-09'-interval 1 day, '2020-05-09'+interval 2 day);
 insert into t3813_4(id4, category) values(1, 'cat-1');
 #/*PREPARATION END*/
 
@@ -51,14 +51,14 @@ insert into t3813_4(id4, category) values(1, 'cat-1');
 select * from t3813_1 t3813_1
 LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4) 
 LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
-LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.todate);
 
 #/*Creating VIEW based on the SELECT above*/
 create or replace view view_test as
 select * from t3813_1 t3813_1
 LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4)
 LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
-LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.todate);
 
 #/*SELECT from the VIEW throws the error: Error Code: 1815. Internal error: On clause filter involving a table not directly involved in the outer join is currently not supported.*/
 select * from view_test;

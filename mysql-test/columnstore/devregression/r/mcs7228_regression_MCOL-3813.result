@@ -13,7 +13,7 @@ snapshot_date date
 create table t3813_3
 (id3 int,
 from_date date,
-to_date date
+todate date
 )ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
 create table t3813_4
 (id4 int,
@@ -21,21 +21,21 @@ category varchar(64)
 )ENGINE=COLUMNSTORE DEFAULT CHARSET=UTF8MB4;
 insert into t3813_1(id) values(1);
 insert into t3813_2(id2, snapshot_date) values(1,'2020-05-09');
-insert into t3813_3(id3, from_date, to_date) values(1,'2020-05-09'-interval 1 day, '2020-05-09'+interval 2 day);
+insert into t3813_3(id3, from_date, todate) values(1,'2020-05-09'-interval 1 day, '2020-05-09'+interval 2 day);
 insert into t3813_4(id4, category) values(1, 'cat-1');
 select * from t3813_1 t3813_1
 LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4) 
 LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
-LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
-id	id4	category	id2	snapshot_date	id3	from_date	to_date
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.todate);
+id	id4	category	id2	snapshot_date	id3	from_date	todate
 1	1	cat-1	1	2020-05-09	1	2020-05-08	2020-05-11
 create or replace view view_test as
 select * from t3813_1 t3813_1
 LEFT JOIN t3813_4 t3813_4 ON (t3813_1.id = t3813_4.id4)
 LEFT JOIN t3813_2 t3813_2 ON (t3813_1.id = t3813_2.id2) 
-LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.to_date);
+LEFT JOIN t3813_3 t3813_3 ON (t3813_2.id2 = t3813_3.id3 AND t3813_2.snapshot_date BETWEEN t3813_3.from_date AND t3813_3.todate);
 select * from view_test;
-id	id4	category	id2	snapshot_date	id3	from_date	to_date
+id	id4	category	id2	snapshot_date	id3	from_date	todate
 1	1	cat-1	1	2020-05-09	1	2020-05-08	2020-05-11
 drop table if exists t3813_1;
 drop table if exists t3813_2;
