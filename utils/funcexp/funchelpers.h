@@ -716,6 +716,13 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
                                    datatypes::INT128MAXPRECISION);
     }
 
+    // Short circuit when it's possible to return result straight away
+    // and avoid scaling and potential overflow.
+    // abs() cannot overflow since INT64_MIN and INT128_MIN are
+    // never reached in an internal store value for a narrow/wide decimal
+    if (d.scale >= div.scale && datatypes::abs(dVal) < datatypes::abs(divVal))
+      return isMod ? d : execplan::IDB_Decimal(); // return d or 0
+
     if (commonScale > d.scale)
     {
       int128_t scaleMultiplier;
@@ -753,6 +760,13 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
     isNull = true;
     return execplan::IDB_Decimal();
   }
+
+  // Short circuit when it's possible to return result straight away
+  // and avoid scaling and potential overflow.
+  // abs() cannot overflow since INT64_MIN and INT128_MIN are
+  // never reached in an internal store value for a narrow/wide decimal
+  if (d.scale >= div.scale && std::abs(dVal) < std::abs(divVal))
+    return isMod ? d : execplan::IDB_Decimal(); // return d or 0
 
   int64_t dMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - d.scale]);
   int64_t divMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - div.scale]);
