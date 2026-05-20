@@ -720,14 +720,22 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
     {
       int128_t scaleMultiplier;
       datatypes::getScaleDivisor(scaleMultiplier, commonScale - d.scale);
-      dVal *= scaleMultiplier;
+      if (__builtin_mul_overflow(dVal, scaleMultiplier, &dVal))
+      {
+        isNull = true;
+        return execplan::IDB_Decimal();
+      }
     }
 
     if (commonScale > div.scale)
     {
       int128_t scaleMultiplier;
       datatypes::getScaleDivisor(scaleMultiplier, commonScale - div.scale);
-      divVal *= scaleMultiplier;
+      if (__builtin_mul_overflow(divVal, scaleMultiplier, &divVal))
+      {
+        isNull = true;
+        return execplan::IDB_Decimal();
+      }
     }
 
     int128_t result = isMod ? (dVal % divVal) : (dVal / divVal);
