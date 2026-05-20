@@ -62,25 +62,49 @@ struct ParquetColumnInstrSnapshot
   uint64_t dictionaryColumnCalls{0};
 };
 
+/** Wall-clock stage budget for direct parquet import (COLUMNSTORE_PARQUET_IMPORT_INSTR). */
+struct ParquetWallClockInstrSnapshot
+{
+  uint64_t totalNs{0};
+  uint64_t setupNs{0};
+  uint64_t startWritersNs{0};
+  uint64_t startReadersNs{0};
+  uint64_t coordinatorLoopNs{0};
+  uint64_t readerJoinNs{0};
+  uint64_t writerDrainNs{0};
+  uint64_t writerJoinNs{0};
+  uint64_t finalizeNs{0};
+};
+
 /** Snapshot of pipeline timing/counters (filled when COLUMNSTORE_PARQUET_IMPORT_INSTR is enabled). */
 struct ParquetPipelineInstrSnapshot
 {
   uint64_t readerBatches{0};
   uint64_t readerRows{0};
+  /** Sum of decode time across all reader threads (may exceed wall-clock). */
   uint64_t readerDecodeNs{0};
+  /** Sum of time blocked on bounded-queue push across reader threads. */
   uint64_t readerPushWaitNs{0};
   uint64_t readerPushCount{0};
 
+  /** Coordinator thread time blocked waiting for queue.pop (wall time on coordinator). */
   uint64_t coordinatorPopWaitNs{0};
   uint64_t coordinatorPopCount{0};
-  uint64_t coordinatorReorderHoldNs{0};
+  /** Sum over batches: queuedAt until dispatch (cumulative; may exceed wall-clock). */
+  uint64_t batchPreDispatchResidenceNs{0};
+  /** Sum over batches held in reorder map until dispatch (cumulative). */
+  uint64_t trueReorderHoldNs{0};
+  uint64_t trueReorderHeldBatches{0};
   uint64_t coordinatorDispatchedBatches{0};
   uint64_t coordinatorDispatchedTasks{0};
+  /** Coordinator thread time blocked on inflight limit (wall time on coordinator). */
   uint64_t coordinatorInflightWaitNs{0};
   uint64_t coordinatorInflightWaitCount{0};
 
+  /** Sum of writer queue pop wait across writer threads. */
   uint64_t writerQueuePopWaitNs{0};
   uint64_t writerQueuePopCount{0};
+  /** Sum of per-task processing across writer threads. */
   uint64_t writerTaskProcessNs{0};
   uint64_t writerTasks{0};
 
@@ -106,6 +130,8 @@ struct ParquetConversionResult
   /** Filled when COLUMNSTORE_PARQUET_IMPORT_INSTR is set (non-empty, first char not '0'). */
   bool hasPipelineInstrumentation{false};
   ParquetPipelineInstrSnapshot pipelineInstrumentation{};
+  bool hasWallClockInstrumentation{false};
+  ParquetWallClockInstrSnapshot wallClockInstrumentation{};
 };
 
 struct ParquetImportRuntimeConfig
