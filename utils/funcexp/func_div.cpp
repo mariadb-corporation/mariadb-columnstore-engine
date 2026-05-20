@@ -38,6 +38,26 @@ using namespace execplan;
 
 namespace funcexp
 {
+static bool isDecimalType(CalpontSystemCatalog::ColDataType dt)
+{
+  return dt == CalpontSystemCatalog::DECIMAL || dt == CalpontSystemCatalog::UDECIMAL;
+}
+
+static bool isFloatType(CalpontSystemCatalog::ColDataType dt)
+{
+  return dt == CalpontSystemCatalog::FLOAT || dt == CalpontSystemCatalog::UFLOAT ||
+         dt == CalpontSystemCatalog::DOUBLE || dt == CalpontSystemCatalog::UDOUBLE;
+}
+
+static bool canUseDecimalPath(const FunctionParm& parm)
+{
+  auto lhsDT = parm[0]->data()->resultType().colDataType;
+  auto rhsDT = parm[1]->data()->resultType().colDataType;
+  if (isFloatType(lhsDT) || isFloatType(rhsDT))
+    return false;
+  return isDecimalType(lhsDT) || isDecimalType(rhsDT);
+}
+
 CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
@@ -47,13 +67,7 @@ CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
 int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
-  auto lhsDT = parm[0]->data()->resultType().colDataType;
-  auto rhsDT = parm[1]->data()->resultType().colDataType;
-
-  bool lhsIsDec = (lhsDT == CalpontSystemCatalog::DECIMAL || lhsDT == CalpontSystemCatalog::UDECIMAL);
-  bool rhsIsDec = (rhsDT == CalpontSystemCatalog::DECIMAL || rhsDT == CalpontSystemCatalog::UDECIMAL);
-
-  if (lhsIsDec || rhsIsDec)
+  if (canUseDecimalPath(parm))
   {
     IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
     if (isNull) return 0;
@@ -98,13 +112,7 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 uint64_t Func_div::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
-  auto lhsDT = parm[0]->data()->resultType().colDataType;
-  auto rhsDT = parm[1]->data()->resultType().colDataType;
-
-  bool lhsIsDec = (lhsDT == CalpontSystemCatalog::DECIMAL || lhsDT == CalpontSystemCatalog::UDECIMAL);
-  bool rhsIsDec = (rhsDT == CalpontSystemCatalog::DECIMAL || rhsDT == CalpontSystemCatalog::UDECIMAL);
-
-  if (lhsIsDec || rhsIsDec)
+  if (canUseDecimalPath(parm))
   {
     IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
     if (isNull) return 0;
