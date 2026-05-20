@@ -94,11 +94,10 @@ SELECT a, a MOD -0.333 as r from t7;
 SELECT a, a MOD 99999999999999.999 as r from t7;
 SELECT a, a MOD -99999999999999.999 as r from t7;
 
-# TODO: Expect out-of-range error when scaling When scaling up could overflow int128: DECIMAL(38,0) MOD DECIMAL(x,2)
-# CREATE TABLE t8 (a DECIMAL(38,0)) ENGINE=ColumnStore;
-# INSERT INTO t8 VALUES (99999999999999999999999999999999999999),(12345678901234567899999999999999999999);
-# --error 2053
-# SELECT a, a MOD 1.11 as r FROM t8;
+# TODO: Need to handle overflow, expect out-of-range error when scaling could overflow int128: DECIMAL(38,0) MOD DECIMAL(x,2)
+CREATE TABLE t8 (a DECIMAL(38,0)) ENGINE=ColumnStore;
+INSERT INTO t8 VALUES (99999999999999999999999999999999999999),(12345678901234567899999999999999999999);
+SELECT a, a MOD 1.11 as r FROM t8;
 
 # Divisor > dividend: result = dividend
 CREATE TABLE t9 (a DECIMAL(38,2)) ENGINE=ColumnStore;
@@ -171,30 +170,30 @@ SELECT a, a DIV 0 as r FROM t6;
 SELECT a, a DIV 999999999999999912.98 as r FROM t6;
 SELECT a, a DIV -999999999999999912.98 as r FROM t6;
 # TODO: dividing large wide decimal by a small value could overflow
-# SELECT a, a DIV 1.1 as r FROM t61;
-# SELECT a, a DIV -1.1 as r FROM t61;
-# SELECT a, a DIV 1.11 as r FROM t61;
-# SELECT a, a DIV 3.33 as r FROM t61;
-# SELECT a, a DIV -3.33 as r FROM t61;
+SELECT a, a DIV 1.1 as r FROM t6;
+SELECT a, a DIV -1.1 as r FROM t6;
+SELECT a, a DIV 1.11 as r FROM t6;
+SELECT a, a DIV 3.33 as r FROM t6;
+SELECT a, a DIV -3.33 as r FROM t6;
 
 # Common cases (dividend's scale < divisor's scale)
 # Reusing t7: DECIMAL(38,1)
 SELECT a, a DIV 9999999999999912.999 as r FROM t7;
 SELECT a, a DIV -9999999999999912.999 as r FROM t7;
 # TODO: dividing large wide decimal by a small value could overflow
-# SELECT a, a DIV 0.03 as r FROM t7;
-# SELECT a, a DIV -0.03 as r FROM t7;
-# SELECT a, a DIV 0.75 as r FROM t7;
-# SELECT a, a DIV 1.59 as r FROM t7;
-# SELECT a, a DIV 0.041 as r FROM t7;
-# SELECT a, a DIV 1.125 as r FROM t7;
-# SELECT a, a DIV 0.333 as r FROM t7;
-# SELECT a, a DIV -0.333 as r FROM t7;
+SELECT a, a DIV 0.03 as r FROM t7;
+SELECT a, a DIV -0.03 as r FROM t7;
+SELECT a, a DIV 0.75 as r FROM t7;
+SELECT a, a DIV 1.59 as r FROM t7;
+SELECT a, a DIV 0.041 as r FROM t7;
+SELECT a, a DIV 1.125 as r FROM t7;
+SELECT a, a DIV 0.333 as r FROM t7;
+SELECT a, a DIV -0.333 as r FROM t7;
 
 # TODO: Expect out-of-range error when scaling up could overflow int128: DECIMAL(38,0) DIV DECIMAL(x,2)
 # Reusing t8: DECIMAL(38,0)
-# SELECT a, a DIV 1.11 as r FROM t8;
-# SELECT a, a DIV 0.01 as r FROM t8;
+SELECT a, a DIV 1.11 as r FROM t8;
+SELECT a, a DIV 0.01 as r FROM t8;
 
 # Divisor > dividend: result = 0
 # Reusing t9: DECIMAL(38,2)
@@ -211,7 +210,8 @@ SELECT a, a DIV 0 as r FROM t91;
 SELECT a, a DIV 47300000000000000000001.1 as r FROM t91;
 SELECT a, a DIV 999999999999999999999999999999999999.98 as r FROM t91;
 # TODO: dividing large wide decimal by a small value could overflow
-# SELECT a, a DIV 1.1 as r FROM t91;
+SELECT a, a DIV 1.1 as r FROM t91;
+SELECT a, a DIV 0.01 as r FROM t91;
 
 # Cleanup
 DROP DATABASE mcol_4601;
