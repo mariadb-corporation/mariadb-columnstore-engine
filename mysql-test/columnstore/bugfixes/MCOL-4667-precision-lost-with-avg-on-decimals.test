@@ -5,9 +5,18 @@ DROP DATABASE IF EXISTS mcol_4667;
 CREATE DATABASE mcol_4667;
 USE mcol_4667;
 
+# Original query from the ticket
 CREATE TABLE t1 (a DECIMAL(18,17)) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (-8.99999999999999999);
 SELECT AVG(a) FROM t1;
+
+# Try various combinations of values for AVG()
+CREATE TABLE t2 (id int, a DECIMAL(18,17)) ENGINE=ColumnStore;
+INSERT INTO t2 VALUES (1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(-100, 1),(-200, 1);
+SELECT AVG(a) from t2 WHERE id < 3 AND id NOT IN (-200);
+SELECT AVG(a) from t2 WHERE id < 2;
+SELECT AVG(a) from t2 WHERE id < 10 AND id NOT IN (-200);
+SELECT AVG(a) from t2 WHERE id < 5 AND id NOT IN (-200);
 
 # Cleanup
 DROP DATABASE mcol_4667;

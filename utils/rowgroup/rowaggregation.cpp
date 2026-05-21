@@ -1411,8 +1411,8 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
       {
-        uint32_t scale = rowIn.getScale(colIn);
-        valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
+        wideValue = rowIn.getIntField(colIn);
+        isWideDataType = true;
       }
       else
       {
@@ -1959,8 +1959,8 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
       {
-        uint32_t scale = fRowGroupIn.getScale()[colIn];
-        valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
+        wideValue = rowIn.getIntField(colIn);
+        isWideDataType = true;
       }
       else
       {
@@ -4366,8 +4366,8 @@ void RowAggregationUMP2::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, 
       }
       else if (width <= datatypes::MAXLEGACYWIDTH)
       {
-        uint32_t scale = rowIn.getScale(colIn);
-        valIn = rowIn.getScaledSInt64FieldAsXFloat<long double>(colIn, scale);
+        wideValue = rowIn.getIntField(colIn);
+        isWideDataType = true;
       }
       else
       {
