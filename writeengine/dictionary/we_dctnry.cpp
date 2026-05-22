@@ -852,17 +852,25 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       }
       else
       {
-        const char* start = (const char*)curSig.signature;
-        const char* end = (const char*)(curSig.signature + curSig.size);
-        size_t numChars = cs->numchars(start, end);
         size_t maxCharLength = m_colWidth / cs->mbmaxlen;
 
-        if (numChars > maxCharLength)
+        // Fast path: every UTF-8 code unit is at least 1 byte (mbminlen==1),
+        // so charCount <= byteCount.  If the byte count already fits within
+        // the character limit there is nothing to truncate; skip the O(n)
+        // cs->numchars() walk entirely.
+        if (static_cast<size_t>(curSig.size) > maxCharLength)
         {
-          MY_STRCOPY_STATUS status;
-          cs->well_formed_char_length(start, end, maxCharLength, &status);
-          curSig.size = status.m_source_end_pos - start;
-          truncCount++;
+          const char* start = (const char*)curSig.signature;
+          const char* end = (const char*)(curSig.signature + curSig.size);
+          size_t numChars = cs->numchars(start, end);
+
+          if (numChars > maxCharLength)
+          {
+            MY_STRCOPY_STATUS status;
+            cs->well_formed_char_length(start, end, maxCharLength, &status);
+            curSig.size = status.m_source_end_pos - start;
+            truncCount++;
+          }
         }
       }
     }
