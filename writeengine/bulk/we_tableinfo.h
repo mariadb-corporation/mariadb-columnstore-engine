@@ -481,8 +481,68 @@ class TableInfo : public WeUIDGID
     return fTableName;
   }
 
+  // Used by the parquet parallel cohort driver when constructing sidecar
+  // ColumnInfo objects. They need the same Log* so cohort-local log lines
+  // route to the canonical cpimport log destination.
+  Log* directImportLogger() const
+  {
+    return fLog;
+  }
+
   void prepareDirectImportCompletion(RID totalRows);
   int finalizeDirectImport(std::string& errMsg);
+
+  /** @brief Merged finalize for the parallel parquet cohort path.
+   *
+   * Used by the parallel parquet cohort driver after every cohort thread
+   * returns NO_ERROR. The driver passes one sidecar `boost::ptr_vector` per
+   * cohort (built by `ParquetReader::buildSidecarColumnInfosForCohort`), each
+   * containing one independent `ColumnInfo` per logical table column.
+   *
+   * Steps (mirroring the canonical `setParseComplete` post-parse block at
+   * `we_tableinfo.cpp:702-928`, with the explicit merge audit in
+   * `parquet_cohorts.md`):
+   *
+   *   1. `prepareDirectImportCompletion(cumulativeRows)` (sets `fTotalReadRows`,
+   *      `fStatusTI = READ_COMPLETE`, `fProcessingBegun = true`).
+   *   2. For each sidecar in each cohort: collect dict-flush LBIDs, then call
+   *      `finishParsing` (flushes ColumnBufferManager, closes column file and
+   *      dictionary store, clears memory). Canonical `fColumns` are also walked
+   *      so their `finishParsing` runs (they wrote no data, so it's a no-op).
+   *   3. Non-HDFS: `cacheutils::flushPrimProcAllverBlocks` over the aggregated
+   *      dict LBIDs.
+   *   4. `synchronizeAutoInc` on canonical columns. NOTE: parallel cohorts do
+   *      not aggregate per-cohort auto-increment counters; tables with
+   *      `autoIncFlag` set should use sequential cohorts (documented in
+   *      `parquet_cohorts.md`).
+   *   5. For each cohort sidecar set: build `segFileInfo` from each sidecar's
+   *      `getSegFileInfo` and call `validateColumnHWMs("Ending(parallel-cN)")`.
+   *      Per-cohort, all columns share the same `(dbRoot, partition, segment)`
+   *      because each cohort allocates one stripe and writes to it; the cross-
+   *      width HWM check is therefore per-cohort, not global across cohorts.
+   *   6. `confirmDBFileChanges` (HDFS-only; no-op for local FS).
+   *   7. For each sidecar (canonical + every cohort): `getBRMUpdateInfo` into
+   *      the master `fBRMReporter`. This accumulates `BulkSetHWMArg`,
+   *      `FileInfo`, dictionary `FileInfo`, and CP min/max from every cohort
+   *      extent into one report.
+   *   8. `fBRMReporter.sendBRMInfo(...)` to commit HWMs / CPs to BRM.
+   *   9. `changeTableLockState` (PROCEED -> CLEANUP).
+   *  10. `deleteTempDBFileChanges` + `deleteMetaDataRollbackFile`.
+   *  11. `reportTotals(elapsedSec)` aggregating saturated counters across all
+   *      cohorts. Saturated counters are pulled from each sidecar via
+   *      `ColumnInfo::saturatedCnt()` and summed by canonical column index.
+   *  12. `releaseTableLock`.
+   *
+   * If any step returns non-NO_ERROR, `fStatusTI = WriteEngine::ERR` and the
+   * function returns the rc; the caller is expected to invoke the existing
+   * mode3 rollback path (which scans the FS on every dbroot the table touches
+   * and removes anything not in the rollback meta — sidecar fresh extents
+   * are caught by this scan).
+   */
+  int finalizeDirectImportSidecars(
+      RID cumulativeRows,
+      std::vector<boost::ptr_vector<ColumnInfo>*>& cohortSidecars,
+      double elapsedSec, std::string& errMsg);
 
  public:
   friend class BulkLoad;

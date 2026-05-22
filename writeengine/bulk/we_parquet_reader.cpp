@@ -23,6 +23,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -47,6 +49,8 @@
 #include <parquet/arrow/reader.h>
 #include <parquet/properties.h>
 
+#include "we_bulkload.h"
+#include "we_columninfocompressed.h"
 #include "we_define.h"
 #include "we_tableinfo.h"
 #include "dataconvert.h"
@@ -65,7 +69,8 @@ constexpr int DEFAULT_PARQUET_READ_THREADS = 1;
 constexpr int64_t DEFAULT_PARQUET_QUEUE_BYTES = 134217728;
 
 ParquetImportRuntimeConfig gImportRuntimeConfig{DEFAULT_PARQUET_READ_THREADS, DEFAULT_PARQUET_QUEUE_BYTES, 1, 0,
-                                                false, false};
+                                                false, false, /*cohorts=*/1,
+                                                ParquetCohortExecMode::Sequential};
 
 int setArrowError(const std::string& prefix, const arrow::Status& st, std::string& errMsg)
 {
@@ -329,11 +334,16 @@ struct DirectColumnBinding
   int recordBatchColumnIndex{-1};
 };
 
-int buildDirectBindings(const std::shared_ptr<arrow::Schema>& schema, TableInfo& tableInfo,
+// Note: the `columns` parameter is the cohort's `ColumnInfo` set (canonical
+// `TableInfo::fColumns` for the single/sequential paths; will be a cohort-local
+// sidecar set once parallel cohorts land). `tableInfo` is no longer consulted
+// here, but is kept implicit in the caller for symmetry with the rest of the
+// direct-import API.
+int buildDirectBindings(const std::shared_ptr<arrow::Schema>& schema,
+                        boost::ptr_vector<ColumnInfo>& columns,
                         std::vector<DirectColumnBinding>& bindings, std::string& errMsg)
 {
   bindings.clear();
-  auto& columns = tableInfo.directImportColumns();
   std::unordered_map<std::string, int> tableColumnIndex;
   tableColumnIndex.reserve(columns.size());
   for (unsigned i = 0; i < columns.size(); ++i)
@@ -2115,6 +2125,15 @@ void ParquetReader::setImportRuntimeConfig(const ParquetImportRuntimeConfig& cfg
   gImportRuntimeConfig.maxParquetInflightBatches = cfg.maxParquetInflightBatches;
   gImportRuntimeConfig.dictChunkDedupe = cfg.dictChunkDedupe;
   gImportRuntimeConfig.arrowReaderUseThreads = cfg.arrowReaderUseThreads;
+  // The cmdargs layer is the authoritative validator (range [1, 32]); we just
+  // floor at 1 here as a defensive guard so a forgotten initializer can never
+  // accidentally pass 0/-1 through to the cohort driver.
+  gImportRuntimeConfig.cohorts = std::max(1, cfg.cohorts);
+  // Cohort execution mode is opt-in for N>1. Default Sequential matches the
+  // pre-existing single-pipeline behavior; Parallel turns on the sidecar
+  // ColumnInfo per cohort + merged finalize path implemented in
+  // `importIntoTableDirectWithCohorts`.
+  gImportRuntimeConfig.cohortMode = cfg.cohortMode;
 }
 
 int ParquetReader::readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg)
@@ -2266,12 +2285,45 @@ int ParquetReader::convertToDelimitedFile(const std::string& parquetFilePath, co
   return NO_ERROR;
 }
 
-int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, TableInfo& tableInfo,
-                                         ParquetConversionResult& result, std::string& errMsg)
+// NOTE: This routine has been renamed from `importIntoTableDirect` to
+// `importIntoTableDirectRange` as part of the experimental cohort mode
+// (--parquet-cohorts=N). The body is functionally identical to the prior
+// `importIntoTableDirect` with three surgical changes:
+//   1. A `ParquetCohortContext` parameter restricts the function to a contiguous
+//      row-group window [cohortCtx.rowGroupBegin, cohortCtx.rowGroupEnd). When
+//      `cohortCtx.cohortCount <= 1` the window collapses to the whole file and
+//      behavior is byte-identical to the pre-cohort version.
+//   2. A `cohortColumns` parameter identifies the `ColumnInfo` set the cohort
+//      writes to. The previous turn implicitly used `tableInfo.directImportColumns()`
+//      everywhere; threading this through explicitly is what lets the parallel
+//      cohort driver (next turn) pass a cohort-local sidecar set without
+//      changing the body. For all current callers (single-file wrapper and
+//      sequential driver) the parameter is `tableInfo.directImportColumns()`,
+//      so behavior is byte-identical to the pre-refactor version.
+//   3. `prepareDirectImportCompletion` / `finalizeDirectImport` are NOT called
+//      here. The caller is responsible for finalizing exactly once after the
+//      last cohort, so a sequence of range calls can share a single finalize.
+// The two thin wrappers below (`importIntoTableDirect` and
+// `importIntoTableDirectWithCohorts`) drive finalize for their respective
+// callers; the range function itself stays focused on the import work.
+int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                              boost::ptr_vector<ColumnInfo>& cohortColumns,
+                                              const ParquetCohortContext& cohortCtx,
+                                              ParquetConversionResult& result, ParquetCohortStats* cohortStats,
+                                              std::atomic<bool>* externalStop, std::string& errMsg)
 {
   result = {};
   errMsg.clear();
   result.dictChunkDedupeEnabled = gImportRuntimeConfig.dictChunkDedupe;
+
+  // Cooperative cancel: peer cohort failed before this thread acquired any
+  // BRM extents. Bail out before opening the parquet file so we don't allocate
+  // sidecar storage that just has to be rolled back.
+  if (externalStop && externalStop->load(std::memory_order_acquire))
+  {
+    errMsg = "Parquet cohort import: peer cohort failed before this cohort started";
+    return ERR_UNKNOWN;
+  }
 
   const char* parquetInstrEnv = std::getenv("COLUMNSTORE_PARQUET_IMPORT_INSTR");
   const bool enablePipelineInstr =
@@ -2305,7 +2357,10 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     return rc;
 
   std::vector<DirectColumnBinding> bindings;
-  rc = buildDirectBindings(schema, tableInfo, bindings, errMsg);
+  // Bindings carry pointers into `cohortColumns`; for single/sequential paths
+  // this is `tableInfo.directImportColumns()`. The parallel driver (next turn)
+  // will pass a sidecar set without changing this call site.
+  rc = buildDirectBindings(schema, cohortColumns, bindings, errMsg);
   if (rc != NO_ERROR)
     return rc;
   DirectColumnSelection columnSelection;
@@ -2335,23 +2390,60 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     }
   }
 
-  if (totalRowsFromMeta == 0)
+  // Cohort-aware row-group window. For non-cohort mode (cohortCount <= 1)
+  // this collapses to [0, rowGroupCount) and `cohortExpectedRows` reduces to
+  // `totalRowsFromMeta`, preserving the pre-cohort behavior exactly.
+  const int cohortRgBegin =
+      (cohortCtx.cohortCount > 1) ? std::max(0, std::min(rowGroupCount, cohortCtx.rowGroupBegin)) : 0;
+  const int cohortRgEnd =
+      (cohortCtx.cohortCount > 1) ? std::max(cohortRgBegin, std::min(rowGroupCount, cohortCtx.rowGroupEnd))
+                                  : rowGroupCount;
+  const int cohortRgCount = cohortRgEnd - cohortRgBegin;
+  RID cohortRidBaseGlobal = 0;
+  int64_t cohortExpectedRows = 0;
+  if (cohortRgCount > 0 && rowGroupCount > 0)
   {
-    for (const auto& ci : tableInfo.directImportColumns())
+    cohortRidBaseGlobal = rowGroupStarts[static_cast<size_t>(cohortRgBegin)];
+    const RID rangeEnd = (cohortRgEnd < rowGroupCount)
+                             ? rowGroupStarts[static_cast<size_t>(cohortRgEnd)]
+                             : static_cast<RID>(totalRowsFromMeta);
+    if (rangeEnd >= cohortRidBaseGlobal)
+      cohortExpectedRows = static_cast<int64_t>(rangeEnd - cohortRidBaseGlobal);
+  }
+  // Parallel cohort sidecars start with `fMaxRowId == max-uint`, which
+  // `reserveSection` treats as "next RID must be 0". Sequential cohorts share
+  // the canonical buffer manager and must continue from the running
+  // `fMaxRowId`, so they stay on absolute RIDs. `cohortRidBase` is what gets
+  // emitted to the writer pipeline; `cohortRidBaseGlobal` stays for logging.
+  const RID cohortRidBase = cohortCtx.rebaseRowsToZero ? RID(0) : cohortRidBaseGlobal;
+  // Single subtraction applied at every dispatch point. When rebasing is off
+  // (sequential / single-cohort) this is zero.
+  const RID cohortRowOffset = cohortCtx.rebaseRowsToZero ? cohortRidBaseGlobal : RID(0);
+
+  if (cohortExpectedRows == 0)
+  {
+    for (const auto& ci : cohortColumns)
       result.columnNames.push_back(ci.column.colName);
     result.columnInstrumentation.assign(result.columnNames.size(), ParquetColumnInstrSnapshot{});
-    tableInfo.prepareDirectImportCompletion(0);
-    rc = tableInfo.finalizeDirectImport(errMsg);
     if (enablePipelineInstr)
     {
       wallClock.setupNs = pipelineNsSince(setupStart);
       wallClock.totalNs = pipelineNsSince(totalWallStart);
       copyWallClockInstrToResult(wallClock, result);
     }
-    if (rc != NO_ERROR)
-      return rc;
     const auto end = std::chrono::steady_clock::now();
     result.stats.elapsedSeconds = std::chrono::duration<double>(end - start).count();
+    if (cohortStats)
+    {
+      cohortStats->cohortId = cohortCtx.cohortId;
+      cohortStats->rowGroupBegin = cohortRgBegin;
+      cohortStats->rowGroupEnd = cohortRgEnd;
+      // Always log the GLOBAL ridBase so cross-cohort summaries make sense
+      // even when the cohort itself wrote with rebased (0-based) RIDs.
+      cohortStats->globalRowBase = static_cast<int64_t>(cohortRidBaseGlobal);
+      cohortStats->rowsImported = 0;
+      cohortStats->elapsedSeconds = result.stats.elapsedSeconds;
+    }
     return NO_ERROR;
   }
 
@@ -2392,8 +2484,8 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   columnConverters.reserve(static_cast<size_t>(columnWriterCount));
   for (int w = 0; w < columnWriterCount; ++w)
   {
-    auto conv = std::make_unique<BulkLoadBuffer>(static_cast<unsigned>(tableInfo.directImportColumns().size()), 4096,
-                                                   nullptr, 0, tableInfo.directImportTableName(), emptyFieldRefList);
+    auto conv = std::make_unique<BulkLoadBuffer>(static_cast<unsigned>(cohortColumns.size()), 4096, nullptr, 0,
+                                                  tableInfo.directImportTableName(), emptyFieldRefList);
     conv->setImportDataMode(IMPORT_DATA_TEXT, 0);
     conv->setTimeZone(tableInfo.getTimeZone());
     columnConverters.push_back(std::move(conv));
@@ -2403,11 +2495,11 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   std::mutex drainMutex;
   std::condition_variable drainCv;
   std::atomic<int> batchesInflight{0};
-  const size_t totalColumns = tableInfo.directImportColumns().size();
+  const size_t totalColumns = cohortColumns.size();
 
   result.columnNames.clear();
   result.columnNames.reserve(totalColumns);
-  for (const auto& ci : tableInfo.directImportColumns())
+  for (const auto& ci : cohortColumns)
     result.columnNames.push_back(ci.column.colName);
   std::unique_ptr<ParquetColumnInstrLive[]> instrLive;
   if (totalColumns > 0)
@@ -2415,19 +2507,23 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
   ParquetColumnInstrLive* const parquetInstrPtr = instrLive.get();
 
   int workerCount = std::max(1, gImportRuntimeConfig.readThreads);
-  workerCount = std::min(workerCount, std::max(1, rowGroupCount));
-  const int groupsPerWorker = std::max(1, (rowGroupCount + workerCount - 1) / workerCount);
+  // In cohort mode we may have fewer row groups than `readThreads`; cap workers
+  // so we never split an empty slice. Worker indices below are cohort-local
+  // (0..cohortRgCount) and translated to absolute row-group indices on push.
+  workerCount = std::min(workerCount, std::max(1, cohortRgCount));
+  const int groupsPerWorker = std::max(1, (cohortRgCount + workerCount - 1) / workerCount);
   std::vector<std::vector<int>> workerRowGroups(static_cast<size_t>(workerCount));
   for (int worker = 0; worker < workerCount; ++worker)
   {
     const int begin = worker * groupsPerWorker;
-    const int end = std::min(rowGroupCount, begin + groupsPerWorker);
+    const int end = std::min(cohortRgCount, begin + groupsPerWorker);
     if (begin >= end)
       break;
     auto& assignment = workerRowGroups[static_cast<size_t>(worker)];
     assignment.reserve(static_cast<size_t>(end - begin));
-    for (int rg = begin; rg < end; ++rg)
-      assignment.push_back(rg);
+    // Translate cohort-local indices to absolute parquet row-group indices.
+    for (int local = begin; local < end; ++local)
+      assignment.push_back(cohortRgBegin + local);
   }
 
   BoundedBatchQueue queue(gImportRuntimeConfig.queueBytes);
@@ -2584,7 +2680,12 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
           }
           else
           {
-            RID workerRowCursor = rowGroupStarts[static_cast<size_t>(rowGroups.front())];
+            // Subtract `cohortRowOffset` so each parallel cohort sidecar sees
+            // a 0-based RID stream matching its independent
+            // `ColumnBufferManager.fMaxRowId`. For sequential / single-cohort
+            // paths `cohortRowOffset` is 0 and this is a no-op.
+            RID workerRowCursor =
+                rowGroupStarts[static_cast<size_t>(rowGroups.front())] - cohortRowOffset;
             while (!stopRequested.load())
             {
               std::shared_ptr<arrow::RecordBatch> batch;
@@ -2640,7 +2741,13 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     wallClock.startReadersNs = pipelineNsSince(startReadersStart);
 
   rc = NO_ERROR;
-  RID expectedStartRow = 0;
+  // In cohort mode this is the global RID of the first row in this cohort's
+  // first row group. In non-cohort mode it is 0, matching the prior behavior.
+  // RID validation downstream (`reserveSection`/`fOutOfSequence`) requires this
+  // to align with `fMaxRowId + 1` on the corresponding ColumnInfo; for sequential
+  // cohort runs this holds because each cohort begins exactly where the prior
+  // cohort finished (rowGroupStarts is global).
+  RID expectedStartRow = cohortRidBase;
   int64_t rowsDispatched = 0;
   std::map<RID, BatchEnvelope> reorder;
 
@@ -2697,7 +2804,9 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     }
   };
 
-  while (rowsDispatched < totalRowsFromMeta && !stopRequested.load())
+  // In cohort mode, only this cohort's rows are dispatched; in non-cohort mode,
+  // cohortExpectedRows == totalRowsFromMeta, so the loop bound is unchanged.
+  while (rowsDispatched < cohortExpectedRows && !stopRequested.load())
   {
     BatchEnvelope env;
     const auto coordPopStart = PipelineClock::now();
@@ -2850,7 +2959,7 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
     }
     return rc;
   }
-  if (result.stats.totalRows != totalRowsFromMeta)
+  if (static_cast<int64_t>(result.stats.totalRows) != cohortExpectedRows)
   {
     if (enablePipelineInstr)
     {
@@ -2859,25 +2968,851 @@ int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, Tab
       copyWallClockInstrToResult(wallClock, result);
     }
     std::ostringstream oss;
-    oss << "Parquet import ended early: processed " << result.stats.totalRows << " of " << totalRowsFromMeta << " rows";
+    oss << "Parquet import ended early: processed " << result.stats.totalRows << " of " << cohortExpectedRows
+        << " rows";
+    if (cohortCtx.cohortCount > 1)
+      oss << " (cohort " << cohortCtx.cohortId << "/" << cohortCtx.cohortCount << ", row groups ["
+          << cohortRgBegin << "," << cohortRgEnd << "))";
     errMsg = oss.str();
     return ERR_FILE_READ;
   }
 
-  tableInfo.prepareDirectImportCompletion(static_cast<RID>(result.stats.totalRows));
-  rc = tableInfo.finalizeDirectImport(errMsg);
+  // NOTE: finalize is intentionally NOT called here. The thin wrapper
+  // `importIntoTableDirect` and the cohort driver `importIntoTableDirectWithCohorts`
+  // are responsible for invoking
+  //   tableInfo.prepareDirectImportCompletion(totalRows)
+  //   tableInfo.finalizeDirectImport(errMsg)
+  // exactly once per import. This allows G sequential range calls to share a
+  // single finalize over the cumulative row count.
   if (enablePipelineInstr)
   {
     wallClock.finalizeNs = pipelineNsSince(finalizeStart);
     wallClock.totalNs = pipelineNsSince(totalWallStart);
     copyWallClockInstrToResult(wallClock, result);
   }
-  if (rc != NO_ERROR)
-    return rc;
 
   const auto end = std::chrono::steady_clock::now();
   result.stats.elapsedSeconds = std::chrono::duration<double>(end - start).count();
+  if (cohortStats)
+  {
+    cohortStats->cohortId = cohortCtx.cohortId;
+    cohortStats->rowGroupBegin = cohortRgBegin;
+    cohortStats->rowGroupEnd = cohortRgEnd;
+    // Always log the GLOBAL ridBase so cross-cohort summaries make sense
+    // even when the cohort itself wrote with rebased (0-based) RIDs.
+    cohortStats->globalRowBase = static_cast<int64_t>(cohortRidBaseGlobal);
+    cohortStats->rowsImported = static_cast<int64_t>(result.stats.totalRows);
+    cohortStats->elapsedSeconds = result.stats.elapsedSeconds;
+    if (!result.columnInstrumentation.empty())
+    {
+      uint64_t fixedNs = 0;
+      uint64_t dictNs = 0;
+      for (const auto& c : result.columnInstrumentation)
+      {
+        fixedNs += c.fixedColumnNs;
+        dictNs += c.dictionaryColumnNs;
+      }
+      cohortStats->fixedColumnSeconds = static_cast<double>(fixedNs) / 1e9;
+      cohortStats->dictionaryColumnSeconds = static_cast<double>(dictNs) / 1e9;
+    }
+  }
   return NO_ERROR;
+}
+
+// -----------------------------------------------------------------------------
+// Build a cohort-local sidecar `ColumnInfo` set for the parallel cohort path.
+//
+// Each sidecar:
+//   * shares the master's `JobColumn` (schema/static metadata only) — copied by
+//     value through the ColumnInfo / ColumnInfoCompressed constructor, so
+//     mutating one cohort's `column` does NOT affect peers or the canonical;
+//   * points at the master `TableInfo` via `fpTableInfo` so it uses the shared,
+//     mutex-protected `ExtentStripeAlloc` (see we_extentstripealloc.cpp) and
+//     the shared, mutex-protected `RBMetaWriter`;
+//   * passes nullptr for `DBRootExtentTracker` because sidecars deliberately do
+//     not rotate over existing extents — they always allocate a fresh stripe
+//     via `createDelayedFileIfNeeded` on first write;
+//   * inherits UID/GID from the master via `WeUIDGID::setUIDGID(const WeUIDGID*)`
+//     so the new segment files belong to the same owner as canonical files;
+//   * calls `setupDelayedFileCreation(dbRoot, targetPartition, targetSegment,
+//     hwm=0, bEmptyPM=true)` AND flips on `setUseExactInitialExtent(true)` so
+//     the next `createDelayedFileIfNeeded` allocates the BRM extent at the
+//     EXACT requested `(partition, segment)` via
+//     `BRMWrapper::allocateColExtentExactFile`, bypassing the stripe
+//     allocator's segment-wrap behavior. `tempColOp.extendColumn` then
+//     creates the new on-disk file at that exact location and
+//     `setupInitialColumnExtent` builds the cohort's own
+//     `ColumnBufferManager`, `Dctnry`, `ColExtInf`. None of this mutates the
+//     canonical or peer cohorts.
+//
+// Returned `boost::ptr_vector` owns the sidecars; caller passes it to
+// `importIntoTableDirectRange` and then to
+// `TableInfo::finalizeDirectImportSidecars`.
+// -----------------------------------------------------------------------------
+int ParquetReader::buildSidecarColumnInfosForCohort(TableInfo& masterTableInfo, int cohortId,
+                                                    uint32_t targetPartition, uint16_t targetSegment,
+                                                    boost::ptr_vector<ColumnInfo>& sidecarColumns,
+                                                    std::string& errMsg)
+{
+  sidecarColumns.clear();
+  errMsg.clear();
+
+  auto& canonical = masterTableInfo.directImportColumns();
+  if (canonical.empty())
+  {
+    errMsg = "Parallel cohort sidecar build: master TableInfo has no columns";
+    return ERR_INVALID_PARAM;
+  }
+
+  Log* logger = masterTableInfo.directImportLogger();
+  for (unsigned i = 0; i < canonical.size(); ++i)
+  {
+    ColumnInfo& canon = canonical[i];
+
+    // Construct sidecar matching the canonical's compression flavor. Compressed
+    // columns use ColumnInfoCompressed (overrides setupInitialColumnFile,
+    // saveDctnryStoreHWMChunk, extendColumnOldExtent, etc.).
+    ColumnInfo* sidecar = nullptr;
+    if (canon.column.compressionType)
+    {
+      sidecar = new ColumnInfoCompressed(logger, static_cast<int>(i), canon.column,
+                                         /*pDBRootExtTrk=*/nullptr, &masterTableInfo);
+    }
+    else
+    {
+      sidecar = new ColumnInfo(logger, static_cast<int>(i), canon.column,
+                               /*pDBRootExtTrk=*/nullptr, &masterTableInfo);
+    }
+
+    // Inherit owner/group from canonical so newly created segment files match
+    // the rest of the table's files on disk. `WeUIDGID::setUIDGID(const
+    // WeUIDGID*)` is name-hidden in `ColumnInfo` because the derived class
+    // declares the `(uid_t, gid_t)` virtual override (and does not pull the
+    // base overload back in via `using`); call through the qualified base
+    // class name to dispatch to the copy-from-WeUIDGID overload.
+    sidecar->WeUIDGID::setUIDGID(&canon);
+
+    // Mirror the per-column width factor used in min-width block-skipping math.
+    // For sidecars we never skip blocks (each sidecar starts a fresh extent),
+    // so this is mostly cosmetic, but keeping it consistent makes the column's
+    // accounting identical to canonical.
+    sidecar->relativeColWidthFactor(canon.column.width / 1);
+
+    // Auto-increment is NOT replicated to sidecars. Multiple cohorts cannot
+    // independently consume autoinc next-value without a central counter.
+    // Tables with autoIncFlag must use sequential cohorts (documented in
+    // parquet_cohorts.md). The constructor still allocates fAutoIncMgr for
+    // autoinc columns, but no thread will ever pull from it because the
+    // parallel path won't call preProcessAutoInc on sidecars.
+
+    // Use the canonical's chosen starting dbRoot. For single-PM installs (the
+    // dev environment + every existing parquet test) every cohort allocates on
+    // dbroot 1; this matches the saveBulkRollbackMetaData snapshot taken at
+    // preProcess time and means rollback's FS walk covers sidecar extents.
+    const uint16_t dbRoot = canon.curCol.dataFile.fDbRoot ? canon.curCol.dataFile.fDbRoot : 1;
+
+    // `bEmptyPM = true` selects the INITIAL_DBFILE_STAT_CREATE_FILE_ON_EMPTY
+    // branch in createDelayedFileIfNeeded which is what we want: a fresh file
+    // is created on disk, dict store is created if applicable, then
+    // setupInitialColumnExtent builds the cohort-local ColumnBufferManager.
+    //
+    // Crucially we pre-set the target (partition, segment) here AND flip the
+    // sidecar into "exact-file BRM extent" mode, so when the serial
+    // pre-allocation loop below calls `createDelayedFileIfNeeded` the column
+    // lands on EXACTLY (targetPartition, targetSegment) instead of whatever
+    // the stripe allocator would pick. Each cohort therefore owns a distinct
+    // (partition, segment) tuple and never wraps onto a peer's file:
+    //
+    //   FILES_PER_COL_PART defaults to 4, so the stripe allocator would
+    //   otherwise roll cohort N>=3 back onto seg 0 with an advanced FBO
+    //   (`startNewStripeInSegFile` in extentmap.cpp), colliding with the
+    //   canonical/DDL extent at (p=0, s=0) and triggering the M0103
+    //   "starting FBO too large" path in `FileOp::extendFile`.
+    sidecar->setupDelayedFileCreation(dbRoot, targetPartition, targetSegment, /*hwm=*/0, /*bEmptyPM=*/true);
+    sidecar->setUseExactInitialExtent(true);
+
+    sidecarColumns.push_back(sidecar);
+  }
+
+  if (!BulkLoad::disableConsoleOutput())
+  {
+    std::cout << "  cohort[" << cohortId << "] sidecars built: " << sidecarColumns.size()
+              << " columns; targeting partition " << targetPartition << " segment " << targetSegment
+              << " for exact-file BRM allocation." << std::endl;
+  }
+  return NO_ERROR;
+}
+
+// -----------------------------------------------------------------------------
+// Public single-cohort entry. Behavior preserved exactly from the pre-cohort
+// version: build a whole-file cohort context, run the range, then drive
+// `prepareDirectImportCompletion` + `finalizeDirectImport` once.
+// -----------------------------------------------------------------------------
+int ParquetReader::importIntoTableDirect(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                         ParquetConversionResult& result, std::string& errMsg)
+{
+  ParquetCohortContext wholeFile;
+  wholeFile.cohortId = 0;
+  wholeFile.cohortCount = 1;
+  wholeFile.rowGroupBegin = 0;
+  // Setting rowGroupEnd large lets the range function clamp it to the file size.
+  wholeFile.rowGroupEnd = std::numeric_limits<int>::max();
+  wholeFile.globalRowBase = 0;
+  wholeFile.rowCountInCohort = 0;
+  wholeFile.driveFinalize = true;
+  wholeFile.label = "single";
+
+  // Single/whole-file path uses the canonical TableInfo column set, identical
+  // to the pre-refactor behavior.
+  int rc = importIntoTableDirectRange(parquetFilePath, tableInfo, tableInfo.directImportColumns(),
+                                      wholeFile, result, /*cohortStats=*/nullptr,
+                                      /*externalStop=*/nullptr, errMsg);
+  if (rc != NO_ERROR)
+    return rc;
+
+  tableInfo.prepareDirectImportCompletion(static_cast<RID>(result.stats.totalRows));
+  rc = tableInfo.finalizeDirectImport(errMsg);
+  return rc;
+}
+
+// -----------------------------------------------------------------------------
+// Cohort-aware entry. For cohorts == 1 this is identical to importIntoTableDirect.
+// For cohorts > 1 it dispatches on `gImportRuntimeConfig.cohortMode`:
+//
+//   - Sequential (default): split parquet row groups into N contiguous ranges
+//     and run them through the SAME TableInfo's canonical ColumnInfo set
+//     back-to-back. A single finalize at the end commits BRM/CP/HWM/autoinc.
+//     The cohort RID base (rowGroupStarts[cohortRgBegin]) carries the global
+//     offset, so reserveSection in the canonical ColumnBufferManager sees a
+//     strictly monotonic RID stream and `fOutOfSequence` is honored.
+//
+//   - Parallel (opt-in via `--parquet-cohort-mode=parallel`): run cohorts
+//     concurrently using one std::thread per cohort. Each cohort owns its
+//     own sidecar `ColumnInfo` set built by
+//     `buildSidecarColumnInfosForCohort` (independent `ColumnBufferManager`,
+//     `Dctnry`, `ColExtInf`, saturated counters, rollback state).
+//
+//     Sidecar extents are pinned with `BRMWrapper::allocateColExtentExactFile`
+//     onto a per-cohort `(partition, segment=0)` derived from the canonical
+//     column[0]'s preProcess partition. Cohort c lands on
+//     `partition = canonical.fPartition + 1 + c`, which sidesteps BRM's
+//     stripe-allocator wrap-around (extentmap.cpp `startNewStripeInSegFile`)
+//     that would otherwise roll cohort N>=FILES_PER_COL_PART back onto an
+//     earlier segment file (the M0103 "starting FBO too large" symptom).
+//
+//     Pre-allocation runs SERIALLY before any threads start so each cohort's
+//     full column set hits BRM atomically. After the threads join,
+//     `TableInfo::finalizeDirectImportSidecars` drives a single merged
+//     finalize (BRM HWMs / CP / dict flush / saturated counts / table lock).
+// -----------------------------------------------------------------------------
+int ParquetReader::importIntoTableDirectWithCohorts(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                                    ParquetConversionResult& result, std::string& errMsg)
+{
+  const int cohortCount = std::max(1, gImportRuntimeConfig.cohorts);
+
+  if (cohortCount <= 1)
+  {
+    return importIntoTableDirect(parquetFilePath, tableInfo, result, errMsg);
+  }
+
+  const bool parallelRequested = (gImportRuntimeConfig.cohortMode == ParquetCohortExecMode::Parallel);
+
+  result = {};
+  errMsg.clear();
+  result.dictChunkDedupeEnabled = gImportRuntimeConfig.dictChunkDedupe;
+
+  const auto driverStart = std::chrono::steady_clock::now();
+
+  // Probe parquet metadata once so we can lay out the row-group split before
+  // running cohorts. Each cohort call below re-opens the file (matches the
+  // existing per-reader-worker behavior on the single-cohort path).
+  auto inputResult = arrow::io::ReadableFile::Open(parquetFilePath);
+  if (!inputResult.ok())
+    return setArrowError("Unable to open parquet file (cohort driver)", inputResult, errMsg);
+  std::shared_ptr<arrow::io::ReadableFile> input = inputResult.ValueOrDie();
+
+  std::unique_ptr<parquet::arrow::FileReader> reader;
+  int openRc = openParquetFileReaderForBulk(input, reader, errMsg);
+  if (openRc != NO_ERROR)
+    return openRc;
+
+  const int rowGroupCount = reader->num_row_groups();
+  std::vector<RID> rowGroupStarts(static_cast<size_t>(std::max(0, rowGroupCount)), 0);
+  std::vector<int64_t> rowGroupRowCounts(static_cast<size_t>(std::max(0, rowGroupCount)), 0);
+  int64_t totalRowsFromMeta = 0;
+  if (auto* parquetReader = reader->parquet_reader())
+  {
+    auto metadata = parquetReader->metadata();
+    if (metadata)
+    {
+      totalRowsFromMeta = metadata->num_rows();
+      RID runningStart = 0;
+      for (int rg = 0; rg < rowGroupCount; ++rg)
+      {
+        rowGroupStarts[static_cast<size_t>(rg)] = runningStart;
+        const auto rgMeta = metadata->RowGroup(rg);
+        if (rgMeta)
+        {
+          const int64_t n = rgMeta->num_rows();
+          rowGroupRowCounts[static_cast<size_t>(rg)] = n;
+          runningStart += static_cast<RID>(n);
+        }
+      }
+    }
+  }
+
+  // Empty file → take the single-cohort fast path; finalize once over zero rows.
+  if (rowGroupCount == 0 || totalRowsFromMeta == 0)
+  {
+    return importIntoTableDirect(parquetFilePath, tableInfo, result, errMsg);
+  }
+
+  // Drop the local reader/input handles before launching cohorts so each cohort
+  // owns its own file open and there is no shared parquet reader.
+  reader.reset();
+  input.reset();
+
+  // Split row groups into contiguous cohort ranges. We split by row-group
+  // count, not by row count, to keep this turn simple — row groups in
+  // `stress_fast.parquet` are uniformly ~122k rows so the imbalance is small.
+  const int effectiveCohorts = std::min(cohortCount, std::max(1, rowGroupCount));
+  std::vector<int> cohortRgBegin(static_cast<size_t>(effectiveCohorts), 0);
+  std::vector<int> cohortRgEnd(static_cast<size_t>(effectiveCohorts), 0);
+  {
+    const int base = rowGroupCount / effectiveCohorts;
+    const int rem = rowGroupCount % effectiveCohorts;
+    int cursor = 0;
+    for (int c = 0; c < effectiveCohorts; ++c)
+    {
+      const int n = base + (c < rem ? 1 : 0);
+      cohortRgBegin[static_cast<size_t>(c)] = cursor;
+      cohortRgEnd[static_cast<size_t>(c)] = cursor + n;
+      cursor += n;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Parallel cohort driver.
+  //
+  // Each cohort:
+  //   1. Gets its own sidecar `ColumnInfo` / `Dctnry` / `ColumnBufferManager`
+  //      set built by `buildSidecarColumnInfosForCohort`. Sidecars defer file
+  //      creation; the first parquet write inside the cohort triggers a fresh
+  //      BRM stripe allocation through the shared mutex-protected
+  //      `ExtentStripeAlloc`, so cohort segments are disjoint.
+  //   2. Runs `importIntoTableDirectRange` on its row-group slice in its own
+  //      `std::thread`. The range function uses `cohortColumns` (the sidecar
+  //      ptr_vector) for all writes; canonical `fColumns` is untouched.
+  //   3. Reports its outcome (rc, errMsg, stats) into a per-cohort slot.
+  //
+  // First error wins: as soon as any cohort returns non-NO_ERROR we set the
+  // shared `stopRequested` atomic so any cohort still sitting at the entry
+  // gate bails immediately. Already-running cohorts complete their batch and
+  // return naturally; their sidecar state remains tracked by BRM so the
+  // standard mode3 rollback (which scans the FS) cleans up.
+  //
+  // On success: collect every cohort's sidecar set into a vector and hand it
+  // to `TableInfo::finalizeDirectImportSidecars` which runs the merged
+  // finalize (see header doc on that function for the full step list).
+  // ---------------------------------------------------------------------------
+  if (parallelRequested)
+  {
+    if (!BulkLoad::disableConsoleOutput())
+    {
+      std::cout << "Parquet cohort import: running " << effectiveCohorts << " parallel cohort(s) over "
+                << rowGroupCount << " row group(s), " << totalRowsFromMeta << " row(s) total." << std::endl;
+    }
+
+    struct CohortRun
+    {
+      ParquetCohortContext ctx;
+      ParquetConversionResult result;
+      ParquetCohortStats stats;
+      boost::ptr_vector<ColumnInfo> sidecars;
+      int rc{NO_ERROR};
+      std::string errMsg;
+      double startWallSec{0.0};
+      double endWallSec{0.0};
+    };
+
+    std::vector<std::unique_ptr<CohortRun>> runs;
+    runs.reserve(static_cast<size_t>(effectiveCohorts));
+
+    // Pick the cohort base partition from the canonical column[0] that the
+    // bulk-load preProcess pinned during HWM discovery (see we_bulkload.cpp
+    // selectFirstSegFile -> segFileInfo[0].fPartition). For an empty PM this
+    // is partition 0 (the partition DDL allocated the initial abbreviated
+    // extent in). For a non-empty PM it is the HWM partition. Either way we
+    // give cohort 0 the NEXT partition (base+1) and bump by one for each
+    // additional cohort, so the cohort partitions form a contiguous run that
+    // does not touch the canonical's partition. This sidesteps BRM's wrap-
+    // around (extentmap.cpp `startNewStripeInSegFile`, default
+    // FILES_PER_COL_PART=4) which would otherwise put cohort N>=3 back onto
+    // the canonical's seg 0 file.
+    uint32_t cohortBasePartition = 0;
+    {
+      auto& canonical = tableInfo.directImportColumns();
+      if (!canonical.empty())
+        cohortBasePartition = canonical[0].curCol.dataFile.fPartition;
+    }
+
+    // Step A: build per-cohort row-group context + sidecar ColumnInfo set.
+    // We deliberately do this serially (no threads yet) so any setup failure
+    // is detected before launching anything.
+    for (int c = 0; c < effectiveCohorts; ++c)
+    {
+      auto r = std::make_unique<CohortRun>();
+      r->ctx.cohortId = c;
+      r->ctx.cohortCount = effectiveCohorts;
+      r->ctx.rowGroupBegin = cohortRgBegin[static_cast<size_t>(c)];
+      r->ctx.rowGroupEnd = cohortRgEnd[static_cast<size_t>(c)];
+      r->ctx.globalRowBase = static_cast<int64_t>(rowGroupStarts[static_cast<size_t>(r->ctx.rowGroupBegin)]);
+      int64_t expectedRowsThisCohort = 0;
+      for (int rg = r->ctx.rowGroupBegin; rg < r->ctx.rowGroupEnd; ++rg)
+        expectedRowsThisCohort += rowGroupRowCounts[static_cast<size_t>(rg)];
+      r->ctx.rowCountInCohort = expectedRowsThisCohort;
+      r->ctx.driveFinalize = false;
+      // Critical: rebase parquet row indices to start at 0 so each sidecar's
+      // ColumnBufferManager.reserveSection sees a 0-based monotonic stream.
+      // `cohortStats->globalRowBase` still carries the absolute global RID
+      // so the summary banner is unambiguous.
+      r->ctx.rebaseRowsToZero = true;
+      r->ctx.label = "parallel";
+
+      const uint32_t cohortPartition = cohortBasePartition + 1 + static_cast<uint32_t>(c);
+      const uint16_t cohortSegment = 0;
+
+      int buildRc = buildSidecarColumnInfosForCohort(tableInfo, c, cohortPartition, cohortSegment,
+                                                    r->sidecars, r->errMsg);
+      if (buildRc != NO_ERROR)
+      {
+        if (r->errMsg.empty())
+        {
+          std::ostringstream oss;
+          oss << "Failed to build sidecars for cohort " << c << " (rc=" << buildRc << ")";
+          r->errMsg = oss.str();
+        }
+        errMsg = r->errMsg;
+        return buildRc;
+      }
+
+      runs.push_back(std::move(r));
+    }
+
+    // Step A.5: serialize each cohort's first-extent allocation BEFORE
+    // launching threads. Why this is required:
+    //
+    //   `ExtentStripeAlloc::allocateExtent` (we_extentstripealloc.cpp:100) is
+    //   mutex-protected, but its "lowest stripe wins" rule means that when N
+    //   cohort threads interleave their `createDelayedFileIfNeeded` calls
+    //   column-by-column, a single cohort can end up consuming entries from
+    //   MULTIPLE stripes (e.g. cohort 0 takes stripe-1's `id` then later
+    //   stripe-2's `float_col` because cohort 1 already drained stripe-1's
+    //   `float_col` entry). That violates the per-cohort invariant
+    //   "all columns share one `(partition, segment)`", which
+    //   `validateColumnHWMs` later flags as `ERR_BRM_HWMS_NOT_EQUAL` (the
+    //   "HWMs do not match" error). See the parquet_cohorts.md merge-table
+    //   for the cross-reference.
+    //
+    // Pre-allocating each cohort's full column stripe SERIALLY (one cohort at
+    // a time, all columns in order) ensures each cohort consumes exactly one
+    // stripe before the next cohort triggers the next allocation. After this
+    // loop every sidecar is in `INITIAL_DBFILE_STAT_FILE_EXISTS`, so the
+    // in-thread `createDelayedFileIfNeeded` short-circuits and the cohort
+    // writers never re-enter the allocator.
+    for (size_t c = 0; c < runs.size(); ++c)
+    {
+      CohortRun& r = *runs[c];
+      for (unsigned i = 0; i < r.sidecars.size(); ++i)
+      {
+        const int allocRc = r.sidecars[i].createDelayedFileIfNeeded(tableInfo.directImportTableName());
+        if (allocRc != NO_ERROR)
+        {
+          std::ostringstream oss;
+          oss << "Pre-allocate sidecar extent failed for cohort " << c << " column '"
+              << r.sidecars[i].column.colName << "' (rc=" << allocRc << ")";
+          errMsg = oss.str();
+          return allocRc;
+        }
+      }
+      if (!BulkLoad::disableConsoleOutput())
+      {
+        DBRootExtentInfo info0;
+        r.sidecars[0].getSegFileInfo(info0);
+        std::cout << "  cohort[" << c << "/" << effectiveCohorts << "] queued: row groups ["
+                  << r.ctx.rowGroupBegin << "," << r.ctx.rowGroupEnd << ") rows="
+                  << r.ctx.rowCountInCohort << " globalRidBase=" << r.ctx.globalRowBase
+                  << " (dbroot=" << info0.fDbRoot << " part=" << info0.fPartition
+                  << " seg=" << info0.fSegment << ")" << std::endl;
+      }
+    }
+
+    // Step B: launch one std::thread per cohort. Threads see `runs[c]` by
+    // reference; they do not touch any other cohort's state.
+    std::atomic<bool> stopRequested{false};
+    const auto wallStart0 = std::chrono::steady_clock::now();
+    std::vector<std::thread> threads;
+    threads.reserve(static_cast<size_t>(effectiveCohorts));
+
+    for (int c = 0; c < effectiveCohorts; ++c)
+    {
+      threads.emplace_back([&, c]() {
+        CohortRun& r = *runs[static_cast<size_t>(c)];
+        const auto tStart = std::chrono::steady_clock::now();
+        r.startWallSec = std::chrono::duration<double>(tStart - wallStart0).count();
+
+        r.rc = importIntoTableDirectRange(parquetFilePath, tableInfo, r.sidecars, r.ctx, r.result,
+                                          &r.stats, &stopRequested, r.errMsg);
+
+        const auto tEnd = std::chrono::steady_clock::now();
+        r.endWallSec = std::chrono::duration<double>(tEnd - wallStart0).count();
+        r.stats.startWallSec = r.startWallSec;
+        r.stats.endWallSec = r.endWallSec;
+
+        if (r.rc != NO_ERROR)
+          stopRequested.store(true, std::memory_order_release);
+      });
+    }
+
+    // Step C: join every thread (no early exit even on error — we must drain
+    // every thread before touching its results or unwinding sidecars).
+    for (auto& t : threads)
+      t.join();
+
+    // Step D: collect first error (deterministic: lowest cohort id wins).
+    int firstRc = NO_ERROR;
+    std::string firstErr;
+    for (size_t c = 0; c < runs.size(); ++c)
+    {
+      if (runs[c]->rc != NO_ERROR)
+      {
+        firstRc = runs[c]->rc;
+        firstErr = runs[c]->errMsg.empty() ? std::string("cohort failed") : runs[c]->errMsg;
+        if (!BulkLoad::disableConsoleOutput())
+        {
+          std::cout << "  cohort[" << c << "] FAILED: rc=" << firstRc << " msg=" << firstErr << std::endl;
+        }
+        break;
+      }
+    }
+
+    if (firstRc != NO_ERROR)
+    {
+      errMsg = firstErr;
+      if (!BulkLoad::disableConsoleOutput())
+      {
+        std::cout << "Parquet cohort import: parallel run aborted after first cohort failure; "
+                  << "BulkLoad rollback path will clean up sidecar extents." << std::endl;
+      }
+      return firstRc;
+    }
+
+    // Step E: aggregate row counts + per-column instrumentation for the
+    // human-readable banner; mirror what the sequential aggregation does.
+    int64_t cumulativeRows = 0;
+    ParquetConversionResult agg;
+    agg.dictChunkDedupeEnabled = gImportRuntimeConfig.dictChunkDedupe;
+    for (size_t c = 0; c < runs.size(); ++c)
+    {
+      const CohortRun& r = *runs[c];
+      cumulativeRows += r.stats.rowsImported;
+      if (c == 0)
+      {
+        agg.columnNames = r.result.columnNames;
+        agg.mappings = r.result.mappings;
+        agg.stats.columnCount = r.result.stats.columnCount;
+        agg.stats.rowGroupCount = r.result.stats.rowGroupCount;
+        agg.columnInstrumentation = r.result.columnInstrumentation;
+        agg.hasPipelineInstrumentation = r.result.hasPipelineInstrumentation;
+        agg.hasWallClockInstrumentation = r.result.hasWallClockInstrumentation;
+        if (r.result.hasPipelineInstrumentation)
+          agg.pipelineInstrumentation = r.result.pipelineInstrumentation;
+        if (r.result.hasWallClockInstrumentation)
+          agg.wallClockInstrumentation = r.result.wallClockInstrumentation;
+      }
+      else
+      {
+        if (agg.columnInstrumentation.size() == r.result.columnInstrumentation.size())
+        {
+          for (size_t i = 0; i < agg.columnInstrumentation.size(); ++i)
+          {
+            auto& a = agg.columnInstrumentation[i];
+            const auto& b = r.result.columnInstrumentation[i];
+            a.dictRows += b.dictRows;
+            a.dictNulls += b.dictNulls;
+            a.dictChunkDistinctSum += b.dictChunkDistinctSum;
+            a.dictChunks += b.dictChunks;
+            a.dictDctnryCalls += b.dictDctnryCalls;
+            a.dictCanonHits += b.dictCanonHits;
+            a.temporalArrowFast += b.temporalArrowFast;
+            a.temporalScalarFallback += b.temporalScalarFallback;
+            a.fixedColumnNs += b.fixedColumnNs;
+            a.dictionaryColumnNs += b.dictionaryColumnNs;
+            a.fixedColumnCalls += b.fixedColumnCalls;
+            a.dictionaryColumnCalls += b.dictionaryColumnCalls;
+          }
+        }
+      }
+    }
+    agg.stats.totalRows = cumulativeRows;
+
+    // Step F: merged finalize across canonical + all cohort sidecar sets.
+    std::vector<boost::ptr_vector<ColumnInfo>*> sidecarSets;
+    sidecarSets.reserve(runs.size());
+    for (auto& r : runs)
+      sidecarSets.push_back(&r->sidecars);
+
+    const auto wallEndPipelines = std::chrono::steady_clock::now();
+    const double parallelPipelineElapsed =
+        std::chrono::duration<double>(wallEndPipelines - wallStart0).count();
+
+    std::string finErr;
+    const int finRc = tableInfo.finalizeDirectImportSidecars(
+        static_cast<RID>(cumulativeRows), sidecarSets, parallelPipelineElapsed, finErr);
+    if (finRc != NO_ERROR)
+    {
+      errMsg = finErr;
+      return finRc;
+    }
+
+    // Step G: instrumentation summary. Parallel-mode banner explicitly labels
+    // the run mode, reports each cohort's wall window [start..end], the slowest
+    // single-cohort elapsed, and the sequential-sum-vs-parallel speedup.
+    const auto driverEnd = std::chrono::steady_clock::now();
+    agg.stats.elapsedSeconds = std::chrono::duration<double>(driverEnd - driverStart).count();
+    agg.stats.batchCount = static_cast<int64_t>(agg.pipelineInstrumentation.readerBatches);
+    result = std::move(agg);
+
+    if (!BulkLoad::disableConsoleOutput())
+    {
+      double sequentialSum = 0.0;
+      double maxCohort = 0.0;
+      for (const auto& r : runs)
+      {
+        sequentialSum += r->stats.elapsedSeconds;
+        maxCohort = std::max(maxCohort, r->stats.elapsedSeconds);
+      }
+      const double speedup =
+          (parallelPipelineElapsed > 0.0) ? (sequentialSum / parallelPipelineElapsed) : 0.0;
+
+      std::cout << "Parquet cohort import: ran " << effectiveCohorts
+                << " parallel cohort(s); cumulative rows=" << cumulativeRows
+                << " parallelElapsed=" << std::fixed << std::setprecision(3) << parallelPipelineElapsed
+                << "s sequentialSum=" << sequentialSum << "s maxCohort=" << maxCohort
+                << "s speedup=" << std::setprecision(2) << speedup << "x"
+                << " driverTotal=" << std::setprecision(3) << result.stats.elapsedSeconds << "s" << std::endl;
+      for (const auto& r : runs)
+      {
+        const auto& s = r->stats;
+        std::cout << "  cohort[" << s.cohortId << "] summary: rowGroups=[" << s.rowGroupBegin << ","
+                  << s.rowGroupEnd << ") rows=" << s.rowsImported << " ridBase=" << s.globalRowBase
+                  << " wall=[" << std::fixed << std::setprecision(3) << s.startWallSec << "s,"
+                  << s.endWallSec << "s] elapsed=" << s.elapsedSeconds
+                  << "s dict=" << s.dictionaryColumnSeconds << "s fixed=" << s.fixedColumnSeconds
+                  << "s" << std::endl;
+      }
+    }
+
+    return NO_ERROR;
+  }
+
+  if (!BulkLoad::disableConsoleOutput())
+  {
+    std::cout << "Parquet cohort import: running " << effectiveCohorts << " sequential cohort(s) over "
+              << rowGroupCount << " row group(s), " << totalRowsFromMeta << " row(s) total." << std::endl;
+  }
+
+  // Aggregate accounting across cohorts. We re-use the wide `result` for the
+  // human-readable summary by accumulating per-cohort fields; per-cohort
+  // detail lines are printed via `cohortStats` below.
+  std::vector<ParquetCohortStats> cohortRuns;
+  cohortRuns.reserve(static_cast<size_t>(effectiveCohorts));
+  int64_t cumulativeRows = 0;
+  ParquetConversionResult agg;
+  agg.dictChunkDedupeEnabled = gImportRuntimeConfig.dictChunkDedupe;
+
+  for (int c = 0; c < effectiveCohorts; ++c)
+  {
+    ParquetCohortContext ctx;
+    ctx.cohortId = c;
+    ctx.cohortCount = effectiveCohorts;
+    ctx.rowGroupBegin = cohortRgBegin[static_cast<size_t>(c)];
+    ctx.rowGroupEnd = cohortRgEnd[static_cast<size_t>(c)];
+    ctx.globalRowBase = static_cast<int64_t>(rowGroupStarts[static_cast<size_t>(ctx.rowGroupBegin)]);
+    int64_t expectedRowsThisCohort = 0;
+    for (int rg = ctx.rowGroupBegin; rg < ctx.rowGroupEnd; ++rg)
+      expectedRowsThisCohort += rowGroupRowCounts[static_cast<size_t>(rg)];
+    ctx.rowCountInCohort = expectedRowsThisCohort;
+    ctx.driveFinalize = false;  // driver finalizes once after the last cohort
+    ctx.label = "seq";
+
+    if (!BulkLoad::disableConsoleOutput())
+    {
+      std::cout << "  cohort[" << c << "/" << effectiveCohorts << "] starting: row groups ["
+                << ctx.rowGroupBegin << "," << ctx.rowGroupEnd << ") rows=" << expectedRowsThisCohort
+                << " globalRidBase=" << ctx.globalRowBase << std::endl;
+    }
+
+    ParquetConversionResult perCohortResult;
+    ParquetCohortStats stats;
+    // Sequential cohorts share the canonical `ColumnInfo` set; this is what
+    // makes the global RID base + `fOutOfSequence` invariant carry across
+    // cohorts. The parallel path (below) swaps in a sidecar set per cohort.
+    int rc = importIntoTableDirectRange(parquetFilePath, tableInfo, tableInfo.directImportColumns(), ctx,
+                                        perCohortResult, &stats, /*externalStop=*/nullptr, errMsg);
+    if (rc != NO_ERROR)
+    {
+      if (errMsg.empty())
+      {
+        std::ostringstream oss;
+        oss << "Parquet cohort " << c << " failed with rc=" << rc;
+        errMsg = oss.str();
+      }
+      // Best-effort: still try to finalize whatever was committed so the
+      // table lock / RBMeta are not left orphaned. Cohort segments allocated
+      // so far are recorded in the existing ColumnInfo state and BRMReporter,
+      // so the standard rollback path can clean them up.
+      // We deliberately do NOT call prepareDirectImportCompletion/finalize here
+      // because partial cohort failure means the per-column buffers may be in
+      // an inconsistent state. The bulk rollback path is invoked by BulkLoad
+      // (see rollbackLockedTables) and is the safer choice for an experimental
+      // feature.
+      return rc;
+    }
+
+    cohortRuns.push_back(stats);
+    cumulativeRows += stats.rowsImported;
+
+    if (!BulkLoad::disableConsoleOutput())
+    {
+      std::cout << "  cohort[" << c << "/" << effectiveCohorts << "] done    : rows=" << stats.rowsImported
+                << " elapsed=" << std::fixed << std::setprecision(3) << stats.elapsedSeconds
+                << "s dict=" << stats.dictionaryColumnSeconds << "s fixed=" << stats.fixedColumnSeconds
+                << "s" << std::endl;
+    }
+
+    // First cohort: capture column names and mapping skeleton. Successive
+    // cohorts overwrite the per-call result with their slice so we only
+    // copy the skeleton once.
+    if (c == 0)
+    {
+      agg.columnNames = perCohortResult.columnNames;
+      agg.mappings = perCohortResult.mappings;
+      agg.stats.columnCount = perCohortResult.stats.columnCount;
+      agg.stats.rowGroupCount = perCohortResult.stats.rowGroupCount;
+      agg.columnInstrumentation = perCohortResult.columnInstrumentation;
+      agg.hasPipelineInstrumentation = perCohortResult.hasPipelineInstrumentation;
+      agg.hasWallClockInstrumentation = perCohortResult.hasWallClockInstrumentation;
+      if (perCohortResult.hasPipelineInstrumentation)
+        agg.pipelineInstrumentation = perCohortResult.pipelineInstrumentation;
+      if (perCohortResult.hasWallClockInstrumentation)
+        agg.wallClockInstrumentation = perCohortResult.wallClockInstrumentation;
+    }
+    else
+    {
+      // Sum per-column counters across cohorts. Vectors are sized identically
+      // because the schema is the same.
+      if (agg.columnInstrumentation.size() == perCohortResult.columnInstrumentation.size())
+      {
+        for (size_t i = 0; i < agg.columnInstrumentation.size(); ++i)
+        {
+          auto& a = agg.columnInstrumentation[i];
+          const auto& b = perCohortResult.columnInstrumentation[i];
+          a.dictRows += b.dictRows;
+          a.dictNulls += b.dictNulls;
+          a.dictChunkDistinctSum += b.dictChunkDistinctSum;
+          a.dictChunks += b.dictChunks;
+          a.dictDctnryCalls += b.dictDctnryCalls;
+          a.dictCanonHits += b.dictCanonHits;
+          a.temporalArrowFast += b.temporalArrowFast;
+          a.temporalScalarFallback += b.temporalScalarFallback;
+          a.fixedColumnNs += b.fixedColumnNs;
+          a.dictionaryColumnNs += b.dictionaryColumnNs;
+          a.fixedColumnCalls += b.fixedColumnCalls;
+          a.dictionaryColumnCalls += b.dictionaryColumnCalls;
+        }
+      }
+      if (perCohortResult.hasPipelineInstrumentation)
+      {
+        agg.hasPipelineInstrumentation = true;
+        auto& a = agg.pipelineInstrumentation;
+        const auto& b = perCohortResult.pipelineInstrumentation;
+        a.readerBatches += b.readerBatches;
+        a.readerRows += b.readerRows;
+        a.readerDecodeNs += b.readerDecodeNs;
+        a.readerPushWaitNs += b.readerPushWaitNs;
+        a.readerPushCount += b.readerPushCount;
+        a.coordinatorPopWaitNs += b.coordinatorPopWaitNs;
+        a.coordinatorPopCount += b.coordinatorPopCount;
+        a.batchPreDispatchResidenceNs += b.batchPreDispatchResidenceNs;
+        a.trueReorderHoldNs += b.trueReorderHoldNs;
+        a.trueReorderHeldBatches += b.trueReorderHeldBatches;
+        a.coordinatorDispatchedBatches += b.coordinatorDispatchedBatches;
+        a.coordinatorDispatchedTasks += b.coordinatorDispatchedTasks;
+        a.coordinatorInflightWaitNs += b.coordinatorInflightWaitNs;
+        a.coordinatorInflightWaitCount += b.coordinatorInflightWaitCount;
+        a.writerQueuePopWaitNs += b.writerQueuePopWaitNs;
+        a.writerQueuePopCount += b.writerQueuePopCount;
+        a.writerTaskProcessNs += b.writerTaskProcessNs;
+        a.writerTasks += b.writerTasks;
+        a.fixedColumnNs += b.fixedColumnNs;
+        a.fixedColumnCalls += b.fixedColumnCalls;
+        a.dictionaryColumnNs += b.dictionaryColumnNs;
+        a.dictionaryColumnCalls += b.dictionaryColumnCalls;
+        a.maxQueueBytesObserved = std::max(a.maxQueueBytesObserved, b.maxQueueBytesObserved);
+        a.maxInflightBatchesObserved = std::max(a.maxInflightBatchesObserved, b.maxInflightBatchesObserved);
+      }
+      if (perCohortResult.hasWallClockInstrumentation)
+      {
+        agg.hasWallClockInstrumentation = true;
+        auto& a = agg.wallClockInstrumentation;
+        const auto& b = perCohortResult.wallClockInstrumentation;
+        a.totalNs += b.totalNs;
+        a.setupNs += b.setupNs;
+        a.startWritersNs += b.startWritersNs;
+        a.startReadersNs += b.startReadersNs;
+        a.coordinatorLoopNs += b.coordinatorLoopNs;
+        a.readerJoinNs += b.readerJoinNs;
+        a.writerDrainNs += b.writerDrainNs;
+        a.writerJoinNs += b.writerJoinNs;
+        a.finalizeNs += b.finalizeNs;
+      }
+    }
+  }
+
+  // Single finalize over the cumulative row count.
+  agg.stats.totalRows = cumulativeRows;
+  tableInfo.prepareDirectImportCompletion(static_cast<RID>(cumulativeRows));
+  int finalizeRc = tableInfo.finalizeDirectImport(errMsg);
+
+  const auto driverEnd = std::chrono::steady_clock::now();
+  agg.stats.elapsedSeconds = std::chrono::duration<double>(driverEnd - driverStart).count();
+  // batchCount in the aggregate is "number of dispatched batches" if pipeline
+  // instrumentation was collected, otherwise approximate via cohort batches.
+  agg.stats.batchCount = static_cast<int64_t>(agg.pipelineInstrumentation.readerBatches);
+
+  result = std::move(agg);
+
+  if (!BulkLoad::disableConsoleOutput())
+  {
+    // Execution-mode banner mirrors the opening log line so post-hoc log
+    // greps can pin down which path ran without scrolling back.
+    const char* modeLabel =
+        (gImportRuntimeConfig.cohortMode == ParquetCohortExecMode::Parallel) ? "parallel" : "sequential";
+    std::cout << "Parquet cohort import: ran " << effectiveCohorts << " " << modeLabel
+              << " cohort(s); cumulative rows=" << cumulativeRows << " elapsed=" << std::fixed
+              << std::setprecision(3) << result.stats.elapsedSeconds << "s" << std::endl;
+    for (const auto& s : cohortRuns)
+    {
+      std::cout << "  cohort[" << s.cohortId << "] summary: rowGroups=[" << s.rowGroupBegin << ","
+                << s.rowGroupEnd << ") rows=" << s.rowsImported << " ridBase=" << s.globalRowBase
+                << " elapsed=" << std::fixed << std::setprecision(3) << s.elapsedSeconds
+                << "s dict=" << s.dictionaryColumnSeconds << "s fixed=" << s.fixedColumnSeconds << "s"
+                << std::endl;
+    }
+  }
+
+  return finalizeRc;
 }
 
 }  // namespace WriteEngine

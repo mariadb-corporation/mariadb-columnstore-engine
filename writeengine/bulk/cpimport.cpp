@@ -102,6 +102,14 @@ int configureParquetDirectImport(BulkLoad& curJob, ParquetConversionResult& resu
   importCfg.maxParquetInflightBatches = cmdArgs->getParquetMaxInflightBatches();
   importCfg.dictChunkDedupe = cmdArgs->getParquetDictChunkDedupe();
   importCfg.arrowReaderUseThreads = cmdArgs->getParquetArrowReaderUseThreads();
+  importCfg.cohorts = cmdArgs->getParquetCohorts();
+  // Cohort exec mode is plumbed through; the actual dispatch (sequential vs
+  // parallel) lives in ParquetReader::importIntoTableDirectWithCohorts. The
+  // parser already restricted the string to {"sequential","parallel"}.
+  if (cmdArgs->getParquetCohortMode() == "parallel")
+    importCfg.cohortMode = ParquetCohortExecMode::Parallel;
+  else
+    importCfg.cohortMode = ParquetCohortExecMode::Sequential;
   ParquetReader::setImportRuntimeConfig(importCfg);
 
   const std::string inputFile = cmdArgs->getParquetFilePath();

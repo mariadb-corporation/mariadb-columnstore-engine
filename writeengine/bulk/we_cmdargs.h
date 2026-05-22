@@ -91,6 +91,39 @@ public:
   {
     return fParquetArrowReaderUseThreads != 0;
   }
+  /**
+   * Number of cohort partitions for parquet direct import (experimental).
+   * 1 (default) = unchanged behavior.
+   * N > 1       = split parquet row groups into N contiguous ranges and run them
+   *               back-to-back through the same TableInfo; a single finalize runs
+   *               after the last cohort. This is the sequential cohort mode that
+   *               establishes the row-range + RID + finalize plumbing; concurrent
+   *               cohorts and per-cohort segment routing are follow-up work.
+   * Allowed values: 1, 2, 4.
+   */
+  int getParquetCohorts() const
+  {
+    return fParquetCohorts;
+  }
+  /**
+   * Execution mode for `--parquet-cohorts=N` (N > 1). One of:
+   *  - "sequential" (default): cohorts run back-to-back through the shared
+   *    `TableInfo` / `ColumnInfo` set (the row-range + finalize plumbing
+   *    established in the previous turn).
+   *  - "parallel": cohorts run concurrently, each with its own sidecar
+   *    `ColumnInfo` / `Dctnry` / `ColumnBufferManager` state. Opt-in only;
+   *    while the sidecar `ColumnInfo` construction and the merged finalize
+   *    chain are still being implemented and validated, the runtime returns
+   *    an explicit error if this mode is selected with N > 1. Cohort
+   *    partitioning, mode plumbing, and the driver skeleton (threads,
+   *    stop atomic, first-error) are present so the wiring can be reviewed
+   *    in isolation from sidecar construction.
+   * For `--parquet-cohorts=1` the mode value is accepted but has no effect.
+   */
+  const std::string& getParquetCohortMode() const
+  {
+    return fParquetCohortMode;
+  }
 
   void setCpimportJobId(uint32_t cpimportJobId)
   {
@@ -148,6 +181,10 @@ private:
   int fParquetDictChunkDedupe{0};
   /** 1 = Arrow parquet reader use_threads (testing; default 0). */
   int fParquetArrowReaderUseThreads{0};
+  /** Number of cohort partitions for parquet direct import (1=default; range [1, 32]). */
+  int fParquetCohorts{1};
+  /** Cohort execution mode for `--parquet-cohorts=N` (N>1): "sequential" (default) or "parallel" (gated; not yet implemented). */
+  std::string fParquetCohortMode{"sequential"};
   bool fNullStrMode{false};   // set null string mode - treat null as null
   ImportDataMode fImportDataMode{IMPORT_DATA_TEXT};  // Importing text or binary data
   InputFormat fInputFormat{InputFormat::Text};       // Input format type

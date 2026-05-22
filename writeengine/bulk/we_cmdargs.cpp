@@ -110,6 +110,15 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Per-chunk dictionary string dedupe before token store (parquet direct import: 0=off default, 1=on for experiments).")
       DECLARE_INT_ARG("parquet-arrow-use-threads", fParquetArrowReaderUseThreads, 0, 1,
         "Arrow parquet FileReader use_threads (0=off default; 1=parallel decode inside Arrow, for A/B vs cpimport workers).")
+      DECLARE_INT_ARG("parquet-cohorts", fParquetCohorts, 1, 32,
+        "Experimental: split parquet row groups into N cohort partitions. Default 1 preserves the original single-pipeline "
+        "behavior verbatim. Range 1..32; useful values are typically 2..16 depending on core count, file size, and "
+        "available memory (per-cohort queue is `--parquet-queue-bytes`, so peak memory ~= N * queueBytes). Execution mode "
+        "is controlled by --parquet-cohort-mode (sequential by default, opt-in parallel).")
+      ("parquet-cohort-mode", po::value<std::string>(&fParquetCohortMode)->default_value("sequential"),
+        "Cohort execution mode for --parquet-cohorts=N (N>1): 'sequential' (default; cohorts run back-to-back through "
+        "the shared TableInfo/ColumnInfo set) or 'parallel' (cohorts run concurrently with sidecar ColumnInfo per cohort). "
+        "Parallel mode is gated off until per-cohort sidecar ColumnInfo and merged finalize land; opting in returns an explicit error.")
       ("enclosed-by,E", po::value<char>(&fEnclosedChar),
         "Enclosed by character if field values are enclosed.")
       ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),
@@ -421,6 +430,16 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     if (fParquetQueueBytes <= 0)
     {
       startupError("Parquet queue byte limit must be >= 1");
+    }
+    if (fParquetCohorts < 1 || fParquetCohorts > 32)
+    {
+      startupError("Parquet cohorts must be in range [1, 32]");
+    }
+    if (fParquetCohortMode != "sequential" && fParquetCohortMode != "parallel")
+    {
+      startupError(
+          "Argument --parquet-cohort-mode must be 'sequential' (default) or 'parallel' "
+          "(parallel is currently gated off pending sidecar ColumnInfo)");
     }
   }
 }

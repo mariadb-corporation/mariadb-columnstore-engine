@@ -322,6 +322,18 @@ class ColumnInfo : public WeUIDGID
   void setupDelayedFileCreation(uint16_t dbRoot, uint32_t partition, uint16_t segment, HWM hwm,
                                 bool bEmptyPM);
 
+  /** @brief Switch the next `createDelayedFileIfNeeded` call to allocate its
+   *  BRM extent at the exact (dbRoot, partition, segment) currently recorded
+   *  in `curCol.dataFile`, via `BRMWrapper::allocateColExtentExactFile`. Used
+   *  by the parallel parquet cohort driver to pin each cohort's sidecars onto
+   *  a private partition and sidestep BRM's stripe wrap-around.
+   *  @param v  true=use exact-file allocation; false=stripe (default).
+   */
+  void setUseExactInitialExtent(bool v)
+  {
+    fUseExactInitialExtent = v;
+  }
+
   /** @brief Belatedly create a starting DB file for a PM that has none.
    *  @param tableName Name of table for which this column belongs
    */
@@ -486,6 +498,21 @@ class ColumnInfo : public WeUIDGID
 
   InitialDBFileStat fDelayedFileCreation;  // Denotes when initial DB file is
   // to be created after preprocessing
+
+  // When true, `createDelayedFileIfNeeded` allocates the initial BRM extent
+  // at the EXACT (dbRoot, partition, segment) recorded in `curCol.dataFile`
+  // via `BRMWrapper::allocateColExtentExactFile`, instead of routing through
+  // the stripe allocator (`TableInfo::allocateBRMColumnExtent`).
+  //
+  // This is used by the parallel parquet cohort path so that each cohort
+  // pins its sidecar columns onto its own (partition, segment) and never
+  // collides with the wrap-around behavior of BRM's stripe allocator
+  // (extentmap.cpp `startNewStripeInSegFile`), which otherwise rolls cohort
+  // N back onto an earlier segment file once FILES_PER_COL_PART segments
+  // have been touched in the same partition.
+  //
+  // Default false preserves the original stripe-allocator path verbatim.
+  bool fUseExactInitialExtent;
 
   unsigned fRowsPerExtent;  // Number of rows per column extent
 };

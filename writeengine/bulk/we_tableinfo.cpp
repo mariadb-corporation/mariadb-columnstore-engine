@@ -2435,5 +2435,242 @@ int TableInfo::finalizeDirectImport(std::string& errMsg)
   return NO_ERROR;
 }
 
+// -----------------------------------------------------------------------------
+// Merged finalize for the parallel parquet cohort path.
+//
+// Audit reference: this function reproduces the post-parse block of
+// setParseComplete (we_tableinfo.cpp:702-928) but driven once over a vector of
+// sidecar ColumnInfo sets rather than once per canonical column via the state
+// machine. See header doc for the field-by-field merge table; the comments
+// below tag each step to the original location so future maintainers can
+// reconcile the two paths.
+// -----------------------------------------------------------------------------
+int TableInfo::finalizeDirectImportSidecars(
+    RID cumulativeRows,
+    std::vector<boost::ptr_vector<ColumnInfo>*>& cohortSidecars,
+    double elapsedSec, std::string& errMsg)
+{
+  errMsg.clear();
+
+  if (cohortSidecars.empty())
+  {
+    errMsg = "Parallel cohort finalize failed: no sidecar column sets";
+    return ERR_INVALID_PARAM;
+  }
+  for (size_t i = 0; i < cohortSidecars.size(); ++i)
+  {
+    if (cohortSidecars[i] == nullptr || cohortSidecars[i]->size() != fColumns.size())
+    {
+      std::ostringstream oss;
+      oss << "Parallel cohort finalize failed: cohort " << i << " sidecar count "
+          << (cohortSidecars[i] ? cohortSidecars[i]->size() : 0)
+          << " does not match canonical column count " << fColumns.size();
+      errMsg = oss.str();
+      return ERR_INVALID_PARAM;
+    }
+  }
+
+  // Step 1: prepare-completion state (we_tableinfo.cpp:2396 prepareDirectImportCompletion).
+  prepareDirectImportCompletion(cumulativeRows);
+
+  int rc = NO_ERROR;
+
+  // Step 2: finishParsing across canonical + every cohort. Order: canonical
+  // first (always a no-op in parallel mode but keeps any pre-allocated state
+  // tidy), then cohorts. Dict-flush LBIDs are accumulated as we go so the
+  // single non-HDFS flush below sees them all.
+  // Mirrors the per-column block at we_tableinfo.cpp:728-748.
+  fDictFlushBlks.clear();
+
+  auto walkSet = [&](boost::ptr_vector<ColumnInfo>& cols, const char* label, int cohortIdx) -> int
+  {
+    for (unsigned i = 0; i < cols.size(); ++i)
+    {
+      std::vector<BRM::LBID_t> dictBlks;
+      cols[i].getDictFlushBlks(dictBlks);
+      for (auto lb : dictBlks)
+        fDictFlushBlks.push_back(lb);
+
+      int frc = cols[i].finishParsing();
+      if (frc != NO_ERROR)
+      {
+        std::ostringstream oss;
+        oss << "Parallel cohort finalize: finishParsing failed for " << label;
+        if (cohortIdx >= 0)
+          oss << " cohort " << cohortIdx;
+        oss << " column '" << cols[i].column.colName << "'";
+        errMsg = oss.str();
+        fStatusTI = WriteEngine::ERR;
+        return frc;
+      }
+    }
+    return NO_ERROR;
+  };
+
+  rc = walkSet(fColumns, "canonical", -1);
+  if (rc != NO_ERROR)
+    return rc;
+  for (size_t c = 0; c < cohortSidecars.size(); ++c)
+  {
+    rc = walkSet(*cohortSidecars[c], "cohort", static_cast<int>(c));
+    if (rc != NO_ERROR)
+      return rc;
+  }
+
+  // Step 3: flush dictionary blocks from PrimProc (non-HDFS).
+  // Mirrors we_tableinfo.cpp:761-785.
+  if (!idbdatafile::IDBPolicy::useHdfs() && !fDictFlushBlks.empty())
+  {
+    if (fLog->isDebug(DEBUG_2))
+    {
+      std::ostringstream oss;
+      oss << "Dictionary cache flush (parallel cohorts): ";
+      for (size_t i = 0; i < fDictFlushBlks.size(); ++i)
+        oss << fDictFlushBlks[i] << ", ";
+      fLog->logMsg(oss.str(), MSGLVL_INFO1);
+    }
+    cacheutils::flushPrimProcAllverBlocks(fDictFlushBlks);
+    fDictFlushBlks.clear();
+  }
+
+  // Step 4: synchronize auto-increment. Walks canonical fColumns (we_tableinfo.cpp:788).
+  // Parallel cohorts do not aggregate per-cohort auto-increment counters because
+  // there is no central counter to fold the cohort-local autoIncLastValues
+  // into; tables with autoIncFlag should use sequential cohorts. We call
+  // synchronizeAutoInc anyway for consistency (it returns NO_ERROR with no
+  // updates when no autoinc column wrote rows).
+  rc = synchronizeAutoInc();
+  if (rc != NO_ERROR)
+  {
+    errMsg = "Parallel cohort finalize: synchronizeAutoInc failed";
+    fStatusTI = WriteEngine::ERR;
+    return rc;
+  }
+
+  // Step 5: per-cohort HWM validation (we_tableinfo.cpp:802-838 walks fColumns,
+  // here we walk each cohort's sidecars). Per cohort, the stripe allocation
+  // guarantees identical (dbRoot, partition, segment) across columns so the
+  // cross-width consistency check is meaningful. Cross-cohort consistency is
+  // *not* required (different cohorts can land on different partitions).
+  for (size_t c = 0; c < cohortSidecars.size(); ++c)
+  {
+    auto& cols = *cohortSidecars[c];
+    std::vector<DBRootExtentInfo> segFileInfo;
+    segFileInfo.reserve(cols.size());
+    for (unsigned i = 0; i < cols.size(); ++i)
+    {
+      DBRootExtentInfo info;
+      cols[i].getSegFileInfo(info);
+      segFileInfo.push_back(info);
+    }
+
+    std::ostringstream stageLabel;
+    stageLabel << "Ending(parallel-c" << c << ")";
+    rc = validateColumnHWMs(0, segFileInfo, stageLabel.str().c_str());
+    if (rc != NO_ERROR)
+    {
+      WErrorCodes ec;
+      std::ostringstream oss;
+      oss << "Parallel cohort finalize: HWM validation failed for cohort " << c << ": "
+          << ec.errorString(rc);
+      errMsg = oss.str();
+      fStatusTI = WriteEngine::ERR;
+
+      std::ostringstream oss2;
+      oss2 << "Ending HWMs for table " << fTableName << " (cohort " << c << "):";
+      for (unsigned i = 0; i < segFileInfo.size(); ++i)
+      {
+        oss2 << std::endl << "  " << cols[i].column.colName
+             << "; DBRoot/part/seg/hwm: " << segFileInfo[i].fDbRoot << "/" << segFileInfo[i].fPartition
+             << "/" << segFileInfo[i].fSegment << "/" << segFileInfo[i].fLocalHwm;
+      }
+      fLog->logMsg(oss2.str(), MSGLVL_INFO1);
+      return rc;
+    }
+  }
+
+  // Step 6: confirmDBFileChanges (HDFS only; we_tableinfo.cpp:841).
+  rc = confirmDBFileChanges();
+  if (rc != NO_ERROR)
+  {
+    errMsg = "Parallel cohort finalize: confirmDBFileChanges failed";
+    fStatusTI = WriteEngine::ERR;
+    return rc;
+  }
+
+  // Step 7: feed BRMReporter from canonical + every cohort sidecar
+  // (we_tableinfo.cpp:1045-1051 only walks fColumns; we extend to sidecars).
+  // Single-threaded at this point so direct fBRMReporter access is safe.
+  for (unsigned i = 0; i < fColumns.size(); ++i)
+    fColumns[i].getBRMUpdateInfo(fBRMReporter);
+  for (size_t c = 0; c < cohortSidecars.size(); ++c)
+  {
+    auto& cols = *cohortSidecars[c];
+    for (unsigned i = 0; i < cols.size(); ++i)
+      cols[i].getBRMUpdateInfo(fBRMReporter);
+  }
+
+  // Step 8: commit BRM updates (we_tableinfo.cpp:1066).
+  {
+    std::vector<std::string>* errFiles = nullptr;
+    std::vector<std::string>* badFiles = nullptr;
+    {
+      boost::mutex::scoped_lock lock(fErrorRptInfoMutex);
+      errFiles = &fErrFiles;
+      badFiles = &fBadFiles;
+    }
+    rc = fBRMReporter.sendBRMInfo(fBRMRptFileName, *errFiles, *badFiles);
+    if (rc != NO_ERROR)
+    {
+      errMsg = "Parallel cohort finalize: BRM update commit failed";
+      fStatusTI = WriteEngine::ERR;
+      return rc;
+    }
+  }
+
+  // Step 9: PROCEED -> CLEANUP (we_tableinfo.cpp:871).
+  rc = changeTableLockState();
+  if (rc != NO_ERROR)
+  {
+    errMsg = "Parallel cohort finalize: changeTableLockState failed";
+    fStatusTI = WriteEngine::ERR;
+    return rc;
+  }
+
+  // Step 10: cleanup temp files + rollback meta (we_tableinfo.cpp:887-888).
+  deleteTempDBFileChanges();
+  deleteMetaDataRollbackFile();
+
+  // Step 11: aggregate saturated counters across cohorts then run the standard
+  // reportTotals so distributed-mode reporting and BRMReport totals see the
+  // full picture. reportTotals walks fColumns for saturation counts; in
+  // parallel mode the canonical columns wrote nothing so satCount==0 on each.
+  // Sum the cohort counters into the canonical ColumnInfo of each column via
+  // the existing thread-safe incSaturatedCnt accessor.
+  for (unsigned i = 0; i < fColumns.size(); ++i)
+  {
+    int64_t sidecarSum = 0;
+    for (size_t c = 0; c < cohortSidecars.size(); ++c)
+      sidecarSum += static_cast<int64_t>((*cohortSidecars[c])[i].saturatedCnt());
+    if (sidecarSum > 0)
+      fColumns[i].incSaturatedCnt(sidecarSum);
+  }
+
+  fStatusTI = WriteEngine::PARSE_COMPLETE;
+  reportTotals(elapsedSec);
+  freeProcessingBuffers();
+
+  // Step 12: release table lock (we_tableinfo.cpp:890).
+  rc = releaseTableLock();
+  if (rc != NO_ERROR)
+  {
+    errMsg = "Parallel cohort finalize: releaseTableLock failed";
+    fStatusTI = WriteEngine::ERR;
+    return rc;
+  }
+
+  return NO_ERROR;
+}
+
 }  // namespace WriteEngine
 // end of namespace

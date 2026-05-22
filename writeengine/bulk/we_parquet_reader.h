@@ -17,12 +17,16 @@
 
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 #include <vector>
 
+#include <boost/ptr_container/ptr_vector.hpp>
+
 namespace WriteEngine
 {
+class ColumnInfo;
 class TableInfo;
 
 struct ParquetReadStats
@@ -134,6 +138,27 @@ struct ParquetConversionResult
   ParquetWallClockInstrSnapshot wallClockInstrumentation{};
 };
 
+/**
+ * Cohort execution model for parquet direct import. Selected via
+ * `--parquet-cohort-mode={sequential,parallel}`.
+ *
+ *  - Sequential: cohorts run back-to-back through the shared `TableInfo` /
+ *    `ColumnInfo` set. This is the row-range + finalize plumbing established
+ *    in the previous turn and the default for N > 1.
+ *  - Parallel: cohorts run concurrently, each with its own sidecar
+ *    `ColumnInfo` / `Dctnry` / `ColumnBufferManager` set built via
+ *    `setupDelayedFileCreation` + on-demand BRM stripe extent allocation.
+ *    The driver launches one `std::thread` per cohort, then runs a merged
+ *    finalize that walks every cohort's sidecars, feeds them into the master
+ *    TableInfo `BRMReporter`, and performs the table-level lock-state /
+ *    rollback-meta cleanup. See `TableInfo::finalizeDirectImportSidecars`.
+ */
+enum class ParquetCohortExecMode
+{
+  Sequential = 0,
+  Parallel = 1,
+};
+
 struct ParquetImportRuntimeConfig
 {
   int readThreads{1};
@@ -152,6 +177,88 @@ struct ParquetImportRuntimeConfig
    * Default false: cpimport already uses external reader workers + column writers.
    */
   bool arrowReaderUseThreads{false};
+  /**
+   * Experimental cohort partition count.
+   * 1 (default) preserves existing behavior exactly.
+   * N > 1 splits the parquet row groups into N contiguous ranges. The actual
+   * threading is governed by `cohortMode` (sequential = back-to-back through
+   * the shared TableInfo; parallel = one std::thread per cohort with
+   * independent sidecar ColumnInfo, gated off until that work lands).
+   * Allowed values: 1, 2, 4.
+   */
+  int cohorts{1};
+  /**
+   * Execution mode for N > 1 cohorts. Defaults to Sequential to preserve the
+   * existing behavior; Parallel is opt-in and currently gated off (see comment
+   * on `ParquetCohortExecMode`).
+   */
+  ParquetCohortExecMode cohortMode{ParquetCohortExecMode::Sequential};
+};
+
+/**
+ * Per-cohort context describing a contiguous row-group range to be imported
+ * through `importIntoTableDirectRange`. Carries enough information for the
+ * range routine to honor only the cohort's portion of the parquet file and
+ * for the cohort driver to log/aggregate per-cohort accounting.
+ */
+struct ParquetCohortContext
+{
+  /** Zero-based cohort id within this import. */
+  int cohortId{0};
+  /** Total cohorts in this import (G); 1 means "not a cohort split". */
+  int cohortCount{1};
+  /** First parquet row-group index (inclusive) processed by this cohort. */
+  int rowGroupBegin{0};
+  /** Last parquet row-group index (exclusive) processed by this cohort. */
+  int rowGroupEnd{0};
+  /** First global RID assigned to this cohort (== rowGroupStarts[rowGroupBegin]). */
+  int64_t globalRowBase{0};
+  /** Total rows expected for this cohort (sum of row group row counts in range). */
+  int64_t rowCountInCohort{0};
+  /**
+   * If true, this cohort is responsible for calling
+   * `prepareDirectImportCompletion`/`finalizeDirectImport` at the end of its
+   * run. The cohort driver sets this only on the final cohort (or on the sole
+   * cohort when `cohortCount == 1`).
+   */
+  bool driveFinalize{true};
+  /**
+   * If true, the range function rebases parquet row indices so the cohort's
+   * RID stream is **0-based** rather than absolute. Required for the parallel
+   * driver: each parallel cohort writes through its own sidecar
+   * `ColumnBufferManager`, whose `reserveSection` enforces a strict monotonic
+   * RID stream starting at 0 (`fMaxRowId == max-uint -> next must be 0`).
+   *
+   * For sequential cohorts this must remain `false` so each cohort's first
+   * batch lines up with the canonical buffer manager's accumulated `fMaxRowId`.
+   * `globalRowBase` is preserved for logging in either mode.
+   */
+  bool rebaseRowsToZero{false};
+  /** Optional human-readable label (used for cohort-aware logging). */
+  std::string label;
+};
+
+/**
+ * Per-cohort runtime telemetry, returned to the cohort driver/caller so it
+ * can print a summary line per cohort and aggregate totals.
+ *
+ * `startWallSec` / `endWallSec` are wall-clock timestamps captured by the
+ * parallel driver (steady-clock seconds, monotonic within one import) so the
+ * post-run banner can show staggered start/end ordering, the max cohort
+ * elapsed, and a sequential-vs-parallel speedup estimate.
+ */
+struct ParquetCohortStats
+{
+  int cohortId{0};
+  int rowGroupBegin{0};
+  int rowGroupEnd{0};
+  int64_t globalRowBase{0};
+  int64_t rowsImported{0};
+  double elapsedSeconds{0.0};
+  double dictionaryColumnSeconds{0.0};
+  double fixedColumnSeconds{0.0};
+  double startWallSec{0.0};
+  double endWallSec{0.0};
 };
 
 class ParquetReader
@@ -161,8 +268,80 @@ class ParquetReader
   static int readFile(const std::string& filePath, ParquetReadStats& stats, std::string& errMsg);
   static int convertToDelimitedFile(const std::string& parquetFilePath, const std::string& outputFilePath,
                                     ParquetConversionResult& result, std::string& errMsg);
+  /**
+   * Whole-file direct import. Preserved for the cohorts == 1 path; drives
+   * `prepareDirectImportCompletion` + `finalizeDirectImport` internally.
+   * Behavior unchanged from the pre-cohort version.
+   */
   static int importIntoTableDirect(const std::string& parquetFilePath, TableInfo& tableInfo,
                                    ParquetConversionResult& result, std::string& errMsg);
+  /**
+   * Cohort-aware direct import (experimental). When `gImportRuntimeConfig.cohorts == 1`
+   * this delegates to `importIntoTableDirect`. For N > 1 it splits the parquet
+   * file into N contiguous row-group ranges and imports them back-to-back through
+   * the same `TableInfo`, calling finalize exactly once after the last cohort.
+   *
+   * Returns the same `ParquetConversionResult` shape as `importIntoTableDirect`,
+   * with per-cohort timing appended to the human-readable summary written to
+   * stdout (instrumentation snapshots aggregate the totals).
+   */
+  static int importIntoTableDirectWithCohorts(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                              ParquetConversionResult& result, std::string& errMsg);
+  /**
+   * Import one cohort's row-group range against an EXPLICIT `ColumnInfo` set.
+   *
+   * The `cohortColumns` argument identifies the `ColumnInfo` instances the
+   * cohort should write to:
+   *  - For the sequential and `cohorts == 1` paths, the caller passes
+   *    `tableInfo.directImportColumns()` (canonical set from `BulkLoad::preProcess`).
+   *  - For the parallel driver, each cohort thread passes its own sidecar
+   *    `boost::ptr_vector<ColumnInfo>` built by `buildSidecarColumnInfosForCohort`.
+   *
+   * `externalStop` is an optional cooperative-cancel flag observed at coarse
+   * boundaries (per row group, before main pipeline setup). The parallel
+   * driver sets this when one cohort fails so peer cohorts unwind quickly
+   * without further BRM allocations. `nullptr` disables cooperative cancel
+   * (sequential / single-cohort callers pass nullptr).
+   *
+   * The function does NOT call `prepareDirectImportCompletion` /
+   * `finalizeDirectImport`; the caller is responsible for finalizing exactly
+   * once after every cohort returns (so a set of range calls share a single
+   * finalize: either `TableInfo::finalizeDirectImport` for the canonical-set
+   * paths or `TableInfo::finalizeDirectImportSidecars` for the parallel path).
+   * The `tableInfo` parameter is retained for `directImportTableName`,
+   * timezone, BRM / RBMeta back-pointers carried on each `ColumnInfo`, and
+   * the finalize chain itself.
+   */
+  static int importIntoTableDirectRange(const std::string& parquetFilePath, TableInfo& tableInfo,
+                                        boost::ptr_vector<ColumnInfo>& cohortColumns,
+                                        const ParquetCohortContext& cohortCtx,
+                                        ParquetConversionResult& result, ParquetCohortStats* cohortStats,
+                                        std::atomic<bool>* externalStop, std::string& errMsg);
+
+  /**
+   * Build a cohort-local set of `ColumnInfo` objects ("sidecars") that mirror
+   * the canonical set on `masterTableInfo`. Each sidecar:
+   *  - shares the canonical `JobColumn` (static schema/OIDs/widths only);
+   *  - holds its own `ColumnBufferManager`, `Dctnry` / dictionary store,
+   *    current segment cursors, ColExtInf CP map, saturated counters;
+   *  - points at the master `TableInfo` via `fpTableInfo` so it can use the
+   *    shared `ExtentStripeAlloc` (mutex-protected: see
+   *    `we_extentstripealloc.cpp`) and the shared `RBMetaWriter` (documented
+   *    thread-safe via `fRBChunkDctnryMutex`);
+   *  - is initialized in delayed-file-creation mode (`bEmptyPM = true`) so
+   *    the first row triggers `createDelayedFileIfNeeded` -> fresh BRM stripe
+   *    allocation -> file creation -> `setupInitialColumnExtent`. Sidecars
+   *    therefore never share segment files with the canonical columns nor
+   *    with peer cohorts.
+   *
+   * Caller owns the returned `boost::ptr_vector`; pass it to
+   * `importIntoTableDirectRange` and then to
+   * `TableInfo::finalizeDirectImportSidecars` for the merged finalize.
+   */
+  static int buildSidecarColumnInfosForCohort(TableInfo& masterTableInfo, int cohortId,
+                                              uint32_t targetPartition, uint16_t targetSegment,
+                                              boost::ptr_vector<ColumnInfo>& sidecarColumns,
+                                              std::string& errMsg);
 };
 
 }  // namespace WriteEngine

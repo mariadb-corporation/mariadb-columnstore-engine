@@ -1160,7 +1160,11 @@ int BulkLoad::processJob()
       std::string throwawayErr;
       ParquetConversionResult* resultPtr = fParquetDirectResult ? fParquetDirectResult : &throwawayResult;
       std::string* errPtr = fParquetDirectErrMsg ? fParquetDirectErrMsg : &throwawayErr;
-      rc = ParquetReader::importIntoTableDirect(fParquetDirectInputFile, *tables[0], *resultPtr, *errPtr);
+      // Dispatch via the cohort-aware entry. For `--parquet-cohorts=1` this
+      // calls the original `importIntoTableDirect`; for N>1 it runs N row-group
+      // ranges sequentially through the same TableInfo and finalizes once.
+      rc = ParquetReader::importIntoTableDirectWithCohorts(fParquetDirectInputFile, *tables[0], *resultPtr,
+                                                           *errPtr);
     }
   }
   else
