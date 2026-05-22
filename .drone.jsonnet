@@ -8,7 +8,11 @@ local servers = {
 };
 
 local extra_servers = {
-  [current_branch]: ["11.4-enterprise", "11.8-enterprise"],
+  [current_branch]: ["11.4-enterprise"],
+};
+
+local extra_servers_11_8 = {
+  [current_branch]: ["11.8-enterprise"],
 };
 
 
@@ -18,6 +22,10 @@ local platforms = {
 
 local extra_servers_platforms = {
   [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04"],
+};
+
+local extra_servers_platforms_11_8 = {
+  [current_branch]:  extra_servers_platforms[current_branch] + ["ubuntu:26.04"],
 };
 
 //local archs = ["amd64", "arm64"];
@@ -81,6 +89,7 @@ local upgrade_test_lists = {
   debian13: default_arch_versions,
   "ubuntu22.04": default_arch_versions,
   "ubuntu24.04": default_arch_versions,
+  "ubuntu26.04": default_arch_versions,
 };
 
 // Normalise signal-killed exits (≥128) to 1 so Drone records status=`failure`
@@ -719,6 +728,15 @@ local AllPipelines =
     for platform in extra_servers_platforms[current_branch]
     for triggeringEvent in events
   ] +
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for server in extra_servers_11_8[current_branch]
+    for platform in extra_servers_platforms_11_8[current_branch]
+    for triggeringEvent in events
+  ] +
+  // // last argument is to ignore mtr and regression failures
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
     for a in ["amd64"]

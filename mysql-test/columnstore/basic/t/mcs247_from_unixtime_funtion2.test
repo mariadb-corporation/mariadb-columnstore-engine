@@ -3,6 +3,10 @@
 #
 -- source ../include/have_columnstore.inc
 
+--disable_query_log
+SET time_zone = '+00:00';
+--enable_query_log
+	
 #
 # Get reference values from MariaDB
 #

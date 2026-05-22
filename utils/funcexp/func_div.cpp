@@ -47,6 +47,21 @@ CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
 int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
+  auto lhsDT = parm[0]->data()->resultType().colDataType;
+  auto rhsDT = parm[1]->data()->resultType().colDataType;
+
+  bool lhsIsDec = (lhsDT == CalpontSystemCatalog::DECIMAL || lhsDT == CalpontSystemCatalog::UDECIMAL);
+  bool rhsIsDec = (rhsDT == CalpontSystemCatalog::DECIMAL || rhsDT == CalpontSystemCatalog::UDECIMAL);
+
+  if (lhsIsDec || rhsIsDec)
+  {
+    IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
+    if (isNull) return 0;
+    if (result.precision > datatypes::INT64MAXPRECISION)
+      return static_cast<int64_t>(result.s128Value);
+    return result.value;
+  }
+
   double val1 = parm[0]->data()->getDoubleVal(row, isNull);
   double val2 = parm[1]->data()->getDoubleVal(row, isNull);
 
@@ -83,6 +98,21 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 uint64_t Func_div::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
+  auto lhsDT = parm[0]->data()->resultType().colDataType;
+  auto rhsDT = parm[1]->data()->resultType().colDataType;
+
+  bool lhsIsDec = (lhsDT == CalpontSystemCatalog::DECIMAL || lhsDT == CalpontSystemCatalog::UDECIMAL);
+  bool rhsIsDec = (rhsDT == CalpontSystemCatalog::DECIMAL || rhsDT == CalpontSystemCatalog::UDECIMAL);
+
+  if (lhsIsDec || rhsIsDec)
+  {
+    IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
+    if (isNull) return 0;
+    if (result.precision > datatypes::INT64MAXPRECISION)
+      return static_cast<uint64_t>(result.s128Value);
+    return static_cast<uint64_t>(result.value);
+  }
+
   uint64_t val1 = parm[0]->data()->getUintVal(row, isNull);
   uint64_t val2 = parm[1]->data()->getUintVal(row, isNull);
 
