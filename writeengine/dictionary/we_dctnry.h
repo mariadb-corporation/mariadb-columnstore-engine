@@ -28,8 +28,10 @@
 
 #include <cstdlib>
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include "we_dbfileop.h"
 #include "we_type.h"
@@ -68,6 +70,32 @@ struct sig_compare
     {
       return false;
     }
+  }
+};
+
+// FNV-1a hash over raw bytes, seeded with the size so that strings that
+// share a common prefix but differ in length always hash to different buckets.
+struct sig_hash
+{
+  std::size_t operator()(const Signature& s) const noexcept
+  {
+    std::size_t h = 14695981039346656037ULL ^ static_cast<std::size_t>(s.size);
+    const unsigned char* p = s.signature;
+    const unsigned char* end = p + s.size;
+    for (; p != end; ++p)
+    {
+      h ^= static_cast<std::size_t>(*p);
+      h *= 1099511628211ULL;
+    }
+    return h;
+  }
+};
+
+struct sig_equal
+{
+  bool operator()(const Signature& a, const Signature& b) const noexcept
+  {
+    return a.size == b.size && memcmp(a.signature, b.signature, a.size) == 0;
   }
 };
 
@@ -298,7 +326,7 @@ class Dctnry : public DbFileOp
   virtual void closeDctnryFile(bool doFlush, std::map<FID, FID>& oids);
   virtual int numOfBlocksInFile();
 
-  std::set<Signature, sig_compare> m_sigArray;
+  std::unordered_set<Signature, sig_hash, sig_equal> m_sigArray;
   int m_arraySize;  // num strings in m_sigArray
 
   // m_dctnryHeader  used for hdr when readSubBlockEntry is used to read a blk

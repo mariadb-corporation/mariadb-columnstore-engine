@@ -104,6 +104,7 @@ Dctnry::Dctnry()
   m_curFbo = INVALID_NUM;
   m_curLbid = INVALID_LBID;
   m_arraySize = 0;
+  m_sigArray.reserve(MAX_STRING_CACHE_SIZE + 1);
 
   clear();  // files
 }
@@ -124,8 +125,7 @@ Dctnry::~Dctnry()
  ******************************************************************************/
 void Dctnry::freeStringCache()
 {
-  std::set<Signature, sig_compare>::iterator it;
-  for (it = m_sigArray.begin(); it != m_sigArray.end(); it++)
+  for (auto it = m_sigArray.begin(); it != m_sigArray.end(); ++it)
   {
     Signature sig = *it;
     delete[] sig.signature;
@@ -616,8 +616,7 @@ int Dctnry::openDctnry(const OID& dctnryOID, const uint16_t dbRoot, const uint32
  ******************************************************************************/
 bool Dctnry::getTokenFromArray(Signature& sig)
 {
-  std::set<Signature, sig_compare>::iterator it;
-  it = m_sigArray.find(sig);
+  auto it = m_sigArray.find(sig);
   if (it == m_sigArray.end())
   {
     return false;
