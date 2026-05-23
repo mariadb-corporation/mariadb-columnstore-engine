@@ -1429,44 +1429,54 @@ static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>&
         return true;
       }
 
-      // DATETIME: UTC civil from unix seconds (instant semantics).
-      if (sec < std::numeric_limits<time_t>::min() || sec > std::numeric_limits<time_t>::max())
-        return false;
-      time_t tt = static_cast<time_t>(sec);
-      struct tm tmBuf
+      // DATETIME: lock-free UTC civil decomposition.
+      // Replaces gmtime_r() which acquires glibc's global timezone mutex
+      // (__tz_convert) and causes severe contention when 8+ cohort threads
+      // call it simultaneously (measured at ~9% of total CPU in perf).
+      // civilFromUnixEpochDays() is the Howard Hinnant algorithm already
+      // present in this file; time-of-day is pure integer arithmetic.
       {
-      };
-      if (!gmtime_r(&tt, &tmBuf))
-        return false;
-      const int y = tmBuf.tm_year + 1900;
-      const unsigned mo = static_cast<unsigned>(tmBuf.tm_mon + 1);
-      const unsigned day = static_cast<unsigned>(tmBuf.tm_mday);
-      if (!dataconvert::isDateValid(static_cast<int>(day), static_cast<int>(mo), y) ||
-          !dataconvert::isDateTimeValid(tmBuf.tm_hour, tmBuf.tm_min, tmBuf.tm_sec, static_cast<int>(usec)))
-      {
-        int64_t zero = 0;
-        memcpy(output, &zero, sizeof(zero));
-        bufferStats.satCount++;
-        return true;
-      }
-      dataconvert::DateTime dt(static_cast<unsigned>(y), mo, day, static_cast<unsigned>(tmBuf.tm_hour),
-                               static_cast<unsigned>(tmBuf.tm_min), static_cast<unsigned>(tmBuf.tm_sec),
-                               static_cast<unsigned>(usec));
-      int64_t packed = 0;
-      memcpy(&packed, &dt, sizeof(packed));
-      if (!dataconvert::DataConvert::isColumnDateTimeValid(packed))
-      {
-        packed = 0;
+        constexpr int64_t SECS_PER_DAY = 86400;
+        int64_t epochDays = sec / SECS_PER_DAY;
+        int64_t tod = sec - epochDays * SECS_PER_DAY;
+        if (tod < 0)
+        {
+          tod += SECS_PER_DAY;
+          epochDays -= 1;
+        }
+        int y = 0, mo = 0, day = 0;
+        civilFromUnixEpochDays(static_cast<int32_t>(epochDays), y, mo, day);
+        const int hour = static_cast<int>(tod / 3600);
+        const int min = static_cast<int>((tod % 3600) / 60);
+        const int s = static_cast<int>(tod % 60);
+        if (!dataconvert::isDateValid(day, mo, y) ||
+            !dataconvert::isDateTimeValid(hour, min, s, static_cast<int>(usec)))
+        {
+          int64_t zero = 0;
+          memcpy(output, &zero, sizeof(zero));
+          bufferStats.satCount++;
+          return true;
+        }
+        dataconvert::DateTime dt(static_cast<unsigned>(y), static_cast<unsigned>(mo),
+                                 static_cast<unsigned>(day), static_cast<unsigned>(hour),
+                                 static_cast<unsigned>(min), static_cast<unsigned>(s),
+                                 static_cast<unsigned>(usec));
+        int64_t packed = 0;
+        memcpy(&packed, &dt, sizeof(packed));
+        if (!dataconvert::DataConvert::isColumnDateTimeValid(packed))
+        {
+          packed = 0;
+          memcpy(output, &packed, sizeof(packed));
+          bufferStats.satCount++;
+          return true;
+        }
         memcpy(output, &packed, sizeof(packed));
-        bufferStats.satCount++;
+        if (packed < bufferStats.minBufferVal)
+          bufferStats.minBufferVal = packed;
+        if (packed > bufferStats.maxBufferVal)
+          bufferStats.maxBufferVal = packed;
         return true;
-      }
-      memcpy(output, &packed, sizeof(packed));
-      if (packed < bufferStats.minBufferVal)
-        bufferStats.minBufferVal = packed;
-      if (packed > bufferStats.maxBufferVal)
-        bufferStats.maxBufferVal = packed;
-      return true;
+      }  // end lock-free UTC decomposition block
     }
     default:
       return false;
