@@ -329,6 +329,13 @@ class Dctnry : public DbFileOp
   std::unordered_set<Signature, sig_hash, sig_equal> m_sigArray;
   int m_arraySize;  // num strings in m_sigArray
 
+  // Adaptive cache: tracks per-block hit rate and skips the hash+lookup
+  // for the next block when the previous block's hit rate was below 1%.
+  // Reset at each block-write boundary; re-evaluated every ~1000 rows.
+  uint32_t m_cacheBlockLookups;
+  uint32_t m_cacheBlockHits;
+  bool m_skipCache;
+
   // m_dctnryHeader  used for hdr when readSubBlockEntry is used to read a blk
   // m_dctnryHeader2 contains filled in template used to initialize new blocks
   unsigned char m_dctnryHeader[DCTNRY_HEADER_SIZE];   // first 14 bytes of hdr

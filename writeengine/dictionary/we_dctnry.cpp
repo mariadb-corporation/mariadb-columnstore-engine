@@ -105,6 +105,9 @@ Dctnry::Dctnry()
   m_curLbid = INVALID_LBID;
   m_arraySize = 0;
   m_sigArray.reserve(MAX_STRING_CACHE_SIZE + 1);
+  m_cacheBlockLookups = 0;
+  m_cacheBlockHits = 0;
+  m_skipCache = false;
 
   clear();  // files
 }
@@ -158,6 +161,9 @@ int Dctnry::init()
   memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
   m_curBlock.lbid = INVALID_LBID;
   m_arraySize = 0;
+  m_cacheBlockLookups = 0;
+  m_cacheBlockHits = 0;
+  m_skipCache = false;
 
   return NO_ERROR;
 }
@@ -885,13 +891,15 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 
     //...Search for the string in our string cache
     // if it fits into one block (< 8KB)
-    if (curSig.size <= MAX_SIGNATURE_SIZE)
+    if (curSig.size <= MAX_SIGNATURE_SIZE && !m_skipCache)
     {
       // Stats::startParseEvent("getTokenFromArray");
+      m_cacheBlockLookups++;
       found = getTokenFromArray(curSig);
 
       if (found)
       {
+        m_cacheBlockHits++;
         memcpy(pOut + outOffset, &curSig.token, 8);
         outOffset += 8;
         startPos++;
@@ -932,8 +940,8 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       }
 
       //...Add string to cache, if we have not exceeded cache limit
-      // Don't cache big blobs
-      if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+      // Don't cache big blobs; skip when cache is disabled for this block.
+      if (!m_skipCache && (m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
       {
         addToStringCache(curSig);
       }
@@ -954,6 +962,14 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     //   next block in the store file.
     if (next)
     {
+      // Re-evaluate cache usefulness: disable for next block if hit rate < 1%.
+      // This avoids hashing 300M strings when the data is high-cardinality.
+      // Resets every block so skewed distributions are handled correctly.
+      if (m_cacheBlockLookups > 0)
+        m_skipCache = (m_cacheBlockHits * 100 < m_cacheBlockLookups);
+      m_cacheBlockLookups = 0;
+      m_cacheBlockHits = 0;
+
       memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
       memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
       m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
@@ -1033,7 +1049,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
         startPos++;
 
         //...Add string to cache, if we have not exceeded cache limit
-        if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+        if (!m_skipCache && (m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
         {
           addToStringCache(curSig);
         }
