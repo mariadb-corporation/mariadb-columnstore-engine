@@ -2536,11 +2536,29 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
       assignment.push_back(cohortRgBegin + local);
   }
 
-  BoundedBatchQueue queue(gImportRuntimeConfig.queueBytes);
-  if (pipeInstr)
-    queue.attachPipelineInstr(pipeInstr);
+  // One queue per reader worker: each worker's row-groups are contiguous, so
+  // batches within a single worker's queue arrive in global-RID order. The
+  // coordinator drains queues[0], then queues[1], … in assignment order, which
+  // is already the correct global order.  This eliminates the reorder-map
+  // hold that occurred when a single shared queue was used and a later worker
+  // finished decoding before an earlier worker (measured at up to 5s cumulative
+  // hold with 2 readers on a 10 GB file).
+  const int64_t perWorkerQueueBytes =
+      std::max<int64_t>(1, gImportRuntimeConfig.queueBytes / static_cast<int64_t>(workerCount));
+  // BoundedBatchQueue is not copyable/movable (has a mutex), so store by pointer.
+  std::vector<std::unique_ptr<BoundedBatchQueue>> queues;
+  queues.reserve(static_cast<size_t>(workerCount));
+  for (int w = 0; w < workerCount; ++w)
+  {
+    queues.push_back(std::make_unique<BoundedBatchQueue>(perWorkerQueueBytes));
+    if (pipeInstr)
+      queues.back()->attachPipelineInstr(pipeInstr);
+  }
+  auto closeAllQueues = [&]() {
+    for (auto& q : queues)
+      q->close();
+  };
   std::atomic<bool> stopRequested(false);
-  std::atomic<int> activeProducers(0);
   std::mutex importStateMutex;
   std::string sharedErrMsg;
   auto setImportError = [&](const std::string& msg) {
@@ -2658,15 +2676,16 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
     const auto rowGroups = workerRowGroups[static_cast<size_t>(workerId)];
     if (rowGroups.empty())
       continue;
-    activeProducers.fetch_add(1);
-    workers.emplace_back([&, rowGroups]() {
+    // Capture workerId by value so each thread has its own copy.
+    workers.emplace_back([&, rowGroups, workerId]() {
+      BoundedBatchQueue& myQueue = *queues[static_cast<size_t>(workerId)];
       std::string localErr;
       auto inputWorkerResult = arrow::io::ReadableFile::Open(parquetFilePath);
       if (!inputWorkerResult.ok())
       {
         setImportError("Unable to open parquet file for reader worker");
         stopRequested.store(true);
-        queue.close();
+        closeAllQueues();
       }
       else
       {
@@ -2676,7 +2695,7 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
         {
           setImportError(localErr);
           stopRequested.store(true);
-          queue.close();
+          closeAllQueues();
         }
         else
         {
@@ -2686,7 +2705,7 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
           {
             setImportError(localErr);
             stopRequested.store(true);
-            queue.close();
+            closeAllQueues();
           }
           else
           {
@@ -2707,7 +2726,7 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
               {
                 setImportError("Unable to read parquet record batch: " + st.ToString());
                 stopRequested.store(true);
-                queue.close();
+                closeAllQueues();
                 break;
               }
               if (!batch)
@@ -2729,7 +2748,7 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
                 env.queuedAt = PipelineClock::now();
               workerRowCursor += static_cast<RID>(env.numRows);
               const auto pushStart = PipelineClock::now();
-              const bool pushed = queue.push(std::move(env), stopRequested);
+              const bool pushed = myQueue.push(std::move(env), stopRequested);
               if (pipeInstr)
               {
                 pipelineAddNs(pipeInstr->readerPushWaitNs, pipelineNsSince(pushStart));
@@ -2743,8 +2762,9 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
         }
       }
 
-      if (activeProducers.fetch_sub(1) == 1)
-        queue.close();
+      // Close only this worker's queue so the coordinator knows it is done
+      // with this slice.  On error closeAllQueues() was already called above.
+      myQueue.close();
     });
   }
   if (enablePipelineInstr)
@@ -2759,7 +2779,6 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
   // cohort finished (rowGroupStarts is global).
   RID expectedStartRow = cohortRidBase;
   int64_t rowsDispatched = 0;
-  std::map<RID, BatchEnvelope> reorder;
 
   const PipelineClock::time_point coordinatorStart =
       enablePipelineInstr ? PipelineClock::now() : PipelineClock::time_point{};
@@ -2816,35 +2835,30 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
 
   // In cohort mode, only this cohort's rows are dispatched; in non-cohort mode,
   // cohortExpectedRows == totalRowsFromMeta, so the loop bound is unchanged.
-  while (rowsDispatched < cohortExpectedRows && !stopRequested.load())
+  //
+  // Per-worker-queue strategy: row groups are assigned contiguously to each
+  // worker (worker 0: rgs [0,half), worker 1: rgs [half,N)), so batches within
+  // each worker's queue are already in global-RID order.  Drain queues[0] first,
+  // then queues[1], … which produces the correct global order with zero
+  // reorder-map overhead.  Workers decode their slices in parallel while the
+  // coordinator is consuming earlier workers' output, giving true parallelism.
+  for (int wIdx = 0; wIdx < workerCount && rowsDispatched < cohortExpectedRows && !stopRequested.load(); ++wIdx)
   {
-    BatchEnvelope env;
-    const auto coordPopStart = PipelineClock::now();
-    const bool gotBatch = queue.pop(env, stopRequested);
-    if (pipeInstr)
+    BoundedBatchQueue& workerQ = *queues[static_cast<size_t>(wIdx)];
+    while (rowsDispatched < cohortExpectedRows && !stopRequested.load())
     {
-      pipelineAddNs(pipeInstr->coordinatorPopWaitNs, pipelineNsSince(coordPopStart));
-      if (gotBatch)
-        pipeInstr->coordinatorPopCount.fetch_add(1, std::memory_order_relaxed);
-    }
-    if (!gotBatch)
-    {
-      if (activeProducers.load() == 0)
-        break;
-      continue;
-    }
-    if (pipeInstr && env.globalStartRow != expectedStartRow)
-    {
-      env.heldForReorder = true;
-      env.reorderInsertedAt = PipelineClock::now();
-    }
-    reorder.emplace(env.globalStartRow, std::move(env));
+      BatchEnvelope env;
+      const auto coordPopStart = PipelineClock::now();
+      const bool gotBatch = workerQ.pop(env, stopRequested);
+      if (pipeInstr)
+      {
+        pipelineAddNs(pipeInstr->coordinatorPopWaitNs, pipelineNsSince(coordPopStart));
+        if (gotBatch)
+          pipeInstr->coordinatorPopCount.fetch_add(1, std::memory_order_relaxed);
+      }
+      if (!gotBatch)
+        break;  // this worker's queue is empty and closed → move to next worker
 
-    while (!stopRequested.load())
-    {
-      auto it = reorder.find(expectedStartRow);
-      if (it == reorder.end())
-        break;
       {
         std::unique_lock<std::mutex> lk(drainMutex);
         while (batchesInflight.load(std::memory_order_acquire) >= maxBatchesInflight && !stopRequested.load())
@@ -2866,28 +2880,21 @@ int ParquetReader::importIntoTableDirectRange(const std::string& parquetFilePath
       }
       if (stopRequested.load())
         break;
-      BatchEnvelope current = std::move(it->second);
-      reorder.erase(it);
-      const RID batchStart = expectedStartRow;
       if (pipeInstr)
-      {
-        pipelineAddNs(pipeInstr->batchPreDispatchResidenceNs, pipelineNsSince(current.queuedAt));
-        if (current.heldForReorder)
-        {
-          pipelineAddNs(pipeInstr->trueReorderHoldNs, pipelineNsSince(current.reorderInsertedAt));
-          pipeInstr->trueReorderHeldBatches.fetch_add(1, std::memory_order_relaxed);
-        }
-      }
-      dispatchOrderedBatch(current, batchStart);
-      expectedStartRow += static_cast<RID>(current.numRows);
-      rowsDispatched += current.numRows;
+        pipelineAddNs(pipeInstr->batchPreDispatchResidenceNs, pipelineNsSince(env.queuedAt));
+      const RID batchStart = expectedStartRow;
+      dispatchOrderedBatch(env, batchStart);
+      expectedStartRow += static_cast<RID>(env.numRows);
+      rowsDispatched += env.numRows;
     }
   }
 
   if (enablePipelineInstr)
     wallClock.coordinatorLoopNs = pipelineNsSince(coordinatorStart);
 
-  queue.close();
+  // Unblock any workers still blocked on a full queue (e.g. if we stopped early
+  // due to an error or cohortExpectedRows was reached).
+  closeAllQueues();
   const PipelineClock::time_point readerJoinStart =
       enablePipelineInstr ? PipelineClock::now() : PipelineClock::time_point{};
   for (auto& worker : workers)
