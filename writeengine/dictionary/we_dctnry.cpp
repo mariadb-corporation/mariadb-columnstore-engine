@@ -108,6 +108,8 @@ Dctnry::Dctnry()
   m_cacheBlockLookups = 0;
   m_cacheBlockHits = 0;
   m_skipCache = false;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
 
   clear();  // files
 }
@@ -164,6 +166,61 @@ int Dctnry::init()
   m_cacheBlockLookups = 0;
   m_cacheBlockHits = 0;
   m_skipCache = false;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
+
+  return NO_ERROR;
+}
+
+/*******************************************************************************
+ * DESCRIPTION:
+ *    Flush any pending batched dict-store blocks to disk.
+ *
+ *    This routine MUST be called before any operation that could change the
+ *    file's logical write position (extent expansion, new-extent allocation,
+ *    explicit seek, or close) so the batched-but-not-yet-written blocks land
+ *    at the FBOs they were queued for.
+ ******************************************************************************/
+int Dctnry::flushPendingDictBlocks(CommBlock& cb)
+{
+  if (m_blockBatchCount <= 0)
+    return NO_ERROR;
+
+  const int count = m_blockBatchCount;
+  const int firstFbo = m_blockBatchFirstFbo;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
+  return writeDBFileNoVBCache(cb, m_blockBatchBuf, firstFbo, count);
+}
+
+/*******************************************************************************
+ * DESCRIPTION:
+ *    Buffer one filled 8KB dict block for batched write.
+ *
+ *    Copies the block contents (so the caller is free to re-zero
+ *    m_curBlock immediately after) and flushes the batch once it reaches
+ *    DCT_BLOCK_BATCH_SIZE blocks. Blocks must be queued at strictly
+ *    consecutive increasing FBOs; if a gap is detected (e.g. caller
+ *    forgot to flush before a seek) the pending batch is flushed first.
+ ******************************************************************************/
+int Dctnry::bufferDictBlock(CommBlock& cb, const unsigned char* data, int fbo)
+{
+  // If the FBO sequence is broken (defensive — should not happen given the
+  // invariant that callers flush before any seek / extent change), flush so
+  // the batch's `firstFbo` matches the actual disk layout.
+  if (m_blockBatchCount > 0 && fbo != m_blockBatchFirstFbo + m_blockBatchCount)
+  {
+    RETURN_ON_ERROR(flushPendingDictBlocks(cb));
+  }
+
+  if (m_blockBatchCount == 0)
+    m_blockBatchFirstFbo = fbo;
+
+  memcpy(m_blockBatchBuf + m_blockBatchCount * BYTE_PER_BLOCK, data, BYTE_PER_BLOCK);
+  m_blockBatchCount++;
+
+  if (m_blockBatchCount >= DCT_BLOCK_BATCH_SIZE)
+    RETURN_ON_ERROR(flushPendingDictBlocks(cb));
 
   return NO_ERROR;
 }
@@ -374,6 +431,17 @@ int Dctnry::closeDctnry(bool realClose)
   cb.file.pFile = m_dFile;
   std::map<FID, FID> oids;
 
+  // Drain any blocks the bulk path batched but did not yet write. Must run
+  // before the writeDBFile() seek below; otherwise the seek would land the
+  // file pointer at m_curBlock.lbid with batched blocks still pending and
+  // their FBOs would be lost.
+  rc = flushPendingDictBlocks(cb);
+  if (rc != NO_ERROR)
+  {
+    closeDctnryFile(false, oids);
+    return rc;
+  }
+
   if (m_curBlock.state == BLK_WRITE)
   {
     rc = writeDBFile(cb, &m_curBlock, m_curBlock.lbid);
@@ -445,6 +513,16 @@ int Dctnry::closeDctnryOnly()
 {
   if (!m_dFile)
     return NO_ERROR;
+
+  // Drain any pending batched bulk-write blocks so they reach disk before
+  // we drop the file handle. Failures are logged but we proceed with the
+  // close to avoid leaking the file handle.
+  {
+    CommBlock cb;
+    cb.file.oid = m_dctnryOID;
+    cb.file.pFile = m_dFile;
+    (void)flushPendingDictBlocks(cb);
+  }
 
   // dmc-error handling (should detect/report error in closing file)
   std::map<FID, FID> oids;
@@ -694,7 +772,7 @@ int Dctnry::insertDctnry2(Signature& sig)
       cb.file.pFile = m_dFile;
       sig.token.bc++;
 
-      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
       memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
       memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
       m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
@@ -706,6 +784,8 @@ int Dctnry::insertDctnry2(Signature& sig)
       //...Expand current extent if it is an abbreviated initial extent
       if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
       {
+        // expandDctnryExtent() may change file size / position; drain batch.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         RETURN_ON_ERROR(expandDctnryExtent());
       }
 
@@ -713,6 +793,9 @@ int Dctnry::insertDctnry2(Signature& sig)
       //   current extent.
       if (m_curFbo == m_numBlocks)
       {
+        // createDctnry below may seek; flush any pending batched blocks
+        // so they reach disk at the correct FBOs.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         // last block
         // for roll back the extent to use
         // Save those empty extents in case of failure to rollback
@@ -934,7 +1017,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 #ifdef PROFILE
         Stats::stopParseEvent(WE_STATS_PARSE_DCT);
 #endif
-        RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+        RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
         m_curBlock.state = BLK_READ;
         next = true;
       }
@@ -952,7 +1035,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 #ifdef PROFILE
       Stats::stopParseEvent(WE_STATS_PARSE_DCT);
 #endif
-      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
       m_curBlock.state = BLK_READ;
       next = true;
       found = false;
@@ -982,6 +1065,8 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       //...Expand current extent if it is an abbreviated initial extent
       if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
       {
+        // expandDctnryExtent() may change file size / position; drain batch.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         RETURN_ON_ERROR(expandDctnryExtent());
       }
 
@@ -989,6 +1074,9 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       //   current extent.
       if (m_curFbo == m_numBlocks)
       {
+        // createDctnry() + the setFileOffset() below will reposition the
+        // file; flush any pending batched blocks so they reach disk first.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         // last block
         LBID_t startLbid;
 

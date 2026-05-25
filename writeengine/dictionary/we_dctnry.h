@@ -336,6 +336,29 @@ class Dctnry : public DbFileOp
   uint32_t m_cacheBlockHits;
   bool m_skipCache;
 
+  // Bulk-write block batching. The bulk insertDctnry path fills 8KB dict
+  // blocks one at a time; instead of issuing one write() syscall per
+  // block, copy filled blocks into a small ring and flush them in one
+  // syscall once full (DCT_BLOCK_BATCH_SIZE blocks). Cuts syscall count
+  // and kernel page-fault frequency by DCT_BLOCK_BATCH_SIZE×. The batch
+  // is per-Dctnry (so per-cohort under fDictionaryMutex); flushed before
+  // any operation that depends on file position (extent expand/create,
+  // explicit seek, close).
+  static constexpr int DCT_BLOCK_BATCH_SIZE = 16;
+  unsigned char m_blockBatchBuf[DCT_BLOCK_BATCH_SIZE * BYTE_PER_BLOCK];
+  int m_blockBatchCount;
+  int m_blockBatchFirstFbo;
+
+  // Append one filled 8KB block (`data`) at file-block offset `fbo` to
+  // the pending-batch buffer; flushes automatically when full. Blocks
+  // must be queued in strictly increasing consecutive FBOs.
+  int bufferDictBlock(CommBlock& cb, const unsigned char* data, int fbo);
+
+  // Flush any pending batched blocks to disk via writeDBFileNoVBCache.
+  // No-op when the batch is empty. Must be called before any file-position-
+  // changing operation (extent expand/create/seek/close).
+  int flushPendingDictBlocks(CommBlock& cb);
+
   // m_dctnryHeader  used for hdr when readSubBlockEntry is used to read a blk
   // m_dctnryHeader2 contains filled in template used to initialize new blocks
   unsigned char m_dctnryHeader[DCTNRY_HEADER_SIZE];   // first 14 bytes of hdr
