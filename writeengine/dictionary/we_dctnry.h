@@ -332,9 +332,19 @@ class Dctnry : public DbFileOp
   // Adaptive cache: tracks per-block hit rate and skips the hash+lookup
   // for the next block when the previous block's hit rate was below 1%.
   // Reset at each block-write boundary; re-evaluated every ~1000 rows.
+  //
+  // Once skipping is engaged, m_cacheBlockLookups stops incrementing (the
+  // gating `!m_skipCache` short-circuits the lookup branch), so without an
+  // explicit re-probe the skip would be permanent. To handle phased /
+  // mixed-cardinality columns we periodically force a probe block where
+  // caching is re-enabled for one block to re-measure the actual hit rate.
+  // Probe interval doubles each time the probe confirms skipping (1, 2, 4,
+  // ..., capped at 64), and resets to 1 whenever caching is paying off.
   uint32_t m_cacheBlockLookups;
   uint32_t m_cacheBlockHits;
   bool m_skipCache;
+  uint32_t m_skipCacheRunLen;       // # consecutive blocks since last probe
+  uint32_t m_skipCacheNextProbeIn;  // # blocks to wait before next probe (1..64)
 
   // Bulk-write block batching. The bulk insertDctnry path fills 8KB dict
   // blocks one at a time; instead of issuing one write() syscall per

@@ -25,6 +25,7 @@
  *  can be deleted.
  *  The whole file contains only one class Dctnry
  */
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -108,6 +109,8 @@ Dctnry::Dctnry()
   m_cacheBlockLookups = 0;
   m_cacheBlockHits = 0;
   m_skipCache = false;
+  m_skipCacheRunLen = 0;
+  m_skipCacheNextProbeIn = 1;
   m_blockBatchCount = 0;
   m_blockBatchFirstFbo = 0;
 
@@ -166,6 +169,8 @@ int Dctnry::init()
   m_cacheBlockLookups = 0;
   m_cacheBlockHits = 0;
   m_skipCache = false;
+  m_skipCacheRunLen = 0;
+  m_skipCacheNextProbeIn = 1;
   m_blockBatchCount = 0;
   m_blockBatchFirstFbo = 0;
 
@@ -1045,11 +1050,52 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     //   next block in the store file.
     if (next)
     {
-      // Re-evaluate cache usefulness: disable for next block if hit rate < 1%.
-      // This avoids hashing 300M strings when the data is high-cardinality.
-      // Resets every block so skewed distributions are handled correctly.
-      if (m_cacheBlockLookups > 0)
-        m_skipCache = (m_cacheBlockHits * 100 < m_cacheBlockLookups);
+      // Re-evaluate cache usefulness for the upcoming block.
+      //
+      //   * Caching active (m_skipCache == false): we have real lookup
+      //     statistics; turn skipping on if hit rate < 1%, otherwise keep
+      //     caching and reset the probe interval so a future regression is
+      //     detected quickly.
+      //   * Skipping active (m_skipCache == true): no lookups happened, so
+      //     we have no signal. Track how many blocks we've been skipping
+      //     for and, once we hit the next probe interval, force one block
+      //     of caching so the *next* trip through this branch sees real
+      //     statistics again. This rescues columns whose cardinality
+      //     changes mid-import (high → low / phased data).
+      if (!m_skipCache)
+      {
+        if (m_cacheBlockLookups > 0)
+        {
+          const bool shouldSkip = (m_cacheBlockHits * 100 < m_cacheBlockLookups);
+          if (shouldSkip)
+          {
+            m_skipCache = true;
+            m_skipCacheRunLen = 0;
+            // Probe interval was either freshly initialised (1) or
+            // doubled by the most recent confirmed skip; leave it as is
+            // so consecutive false-positive probes back off exponentially.
+          }
+          else
+          {
+            // Caching pays off; reset backoff so we re-probe quickly the
+            // next time skipping is engaged.
+            m_skipCacheNextProbeIn = 1;
+          }
+        }
+      }
+      else
+      {
+        m_skipCacheRunLen++;
+        if (m_skipCacheRunLen >= m_skipCacheNextProbeIn)
+        {
+          m_skipCache = false;
+          m_skipCacheRunLen = 0;
+          // Exponential backoff capped at 64 blocks ≈ 512 KB of dict data.
+          // If the upcoming probe block also confirms "skip", we'll wait
+          // longer before the next one.
+          m_skipCacheNextProbeIn = std::min<uint32_t>(64, m_skipCacheNextProbeIn * 2);
+        }
+      }
       m_cacheBlockLookups = 0;
       m_cacheBlockHits = 0;
 
