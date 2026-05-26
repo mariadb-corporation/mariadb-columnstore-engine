@@ -685,3 +685,108 @@ const std::string timediff(int64_t, int64_t, bool isDateTime = true);
 const char* convNumToStr(int64_t, char*, int);
 
 }  // namespace funcexp::helpers
+
+namespace funcexp
+{
+inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& row, bool& isNull, bool isMod)
+{
+  execplan::IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
+  execplan::IDB_Decimal div = parm[1]->data()->getDecimalVal(row, isNull);
+
+  uint8_t commonScale = std::max(d.scale, div.scale);
+
+  if (parm[0]->data()->resultType().isWideDecimalType() ||
+      parm[1]->data()->resultType().isWideDecimalType())
+  {
+    int128_t dVal = (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        ? d.s128Value : static_cast<int128_t>(d.value);
+    int128_t divVal = (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
+        ? div.s128Value : static_cast<int128_t>(div.value);
+
+    if (divVal == 0)
+    {
+      isNull = true;
+      return execplan::IDB_Decimal();
+    }
+
+    if (d.scale == 0 && div.scale == 0)
+    {
+      int128_t result = isMod ? (dVal % divVal) : (dVal / divVal);
+      return execplan::IDB_Decimal(datatypes::TSInt128(result), 0,
+                                   datatypes::INT128MAXPRECISION);
+    }
+
+    // Short circuit when it's possible to return result straight away
+    // and avoid scaling and potential overflow.
+    // abs() cannot overflow since INT64_MIN and INT128_MIN are
+    // never reached in an internal store value for a narrow/wide decimal
+    if (d.scale >= div.scale && datatypes::abs(dVal) < datatypes::abs(divVal))
+      return isMod ? d : execplan::IDB_Decimal(); // return d or 0
+
+    if (commonScale > d.scale)
+    {
+      int128_t scaleMultiplier;
+      datatypes::getScaleDivisor(scaleMultiplier, commonScale - d.scale);
+      if (__builtin_mul_overflow(dVal, scaleMultiplier, &dVal))
+      {
+        isNull = true;
+        return execplan::IDB_Decimal();
+      }
+    }
+
+    if (commonScale > div.scale)
+    {
+      int128_t scaleMultiplier;
+      datatypes::getScaleDivisor(scaleMultiplier, commonScale - div.scale);
+      if (__builtin_mul_overflow(divVal, scaleMultiplier, &divVal))
+      {
+        isNull = true;
+        return execplan::IDB_Decimal();
+      }
+    }
+
+    int128_t result = isMod ? (dVal % divVal) : (dVal / divVal);
+    uint8_t resultScale = isMod ? commonScale : 0;
+    return execplan::IDB_Decimal(datatypes::TSInt128(result), resultScale,
+                                 datatypes::INT128MAXPRECISION);
+  }
+
+  // Narrow decimal path
+  int64_t dVal = d.value;
+  int64_t divVal = div.value;
+
+  if (divVal == 0)
+  {
+    isNull = true;
+    return execplan::IDB_Decimal();
+  }
+
+  // Short circuit when it's possible to return result straight away
+  // and avoid scaling and potential overflow.
+  // abs() cannot overflow since INT64_MIN and INT128_MIN are
+  // never reached in an internal store value for a narrow/wide decimal
+  if (d.scale >= div.scale && std::abs(dVal) < std::abs(divVal))
+    return isMod ? d : execplan::IDB_Decimal(); // return d or 0
+
+  int64_t dMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - d.scale]);
+  int64_t divMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - div.scale]);
+
+  // Try the multiplications; if either overflows, redo in int128_t.
+  int64_t dScaled, divScaled;
+  if (__builtin_mul_overflow(dVal, dMultiplier, &dScaled) ||
+      __builtin_mul_overflow(divVal, divMultiplier, &divScaled))
+  {
+    int128_t dWide = static_cast<int128_t>(dVal) * dMultiplier;
+    int128_t divWide = static_cast<int128_t>(divVal) * divMultiplier;
+    int128_t result = isMod ? (dWide % divWide) : (dWide / divWide);
+    uint8_t resultScale = isMod ? commonScale : 0;
+    return execplan::IDB_Decimal(static_cast<int64_t>(result), resultScale,
+                                 datatypes::INT64MAXPRECISION);
+  }
+
+  int64_t result = isMod ? (dScaled % divScaled) : (dScaled / divScaled);
+  uint8_t resultScale = isMod ? commonScale : 0;
+  return execplan::IDB_Decimal(result, resultScale, datatypes::INT64MAXPRECISION);
+}
+
+}  // namespace funcexp

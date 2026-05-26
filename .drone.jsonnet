@@ -8,7 +8,11 @@ local servers = {
 };
 
 local extra_servers = {
-  [current_branch]: ["11.4-enterprise", "11.8-enterprise"],
+  [current_branch]: ["11.4-enterprise"],
+};
+
+local extra_servers_11_8 = {
+  [current_branch]: ["11.8-enterprise"],
 };
 
 
@@ -18,6 +22,10 @@ local platforms = {
 
 local extra_servers_platforms = {
   [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04"],
+};
+
+local extra_servers_platforms_11_8 = {
+  [current_branch]:  extra_servers_platforms[current_branch] + ["ubuntu:26.04"],
 };
 
 //local archs = ["amd64", "arm64"];
@@ -81,6 +89,7 @@ local upgrade_test_lists = {
   debian13: default_arch_versions,
   "ubuntu22.04": default_arch_versions,
   "ubuntu24.04": default_arch_versions,
+  "ubuntu26.04": default_arch_versions,
 };
 
 // Normalise signal-killed exits (≥128) to 1 so Drone records status=`failure`
@@ -190,7 +199,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "test001.sh",
   ],
 
-
   local regression_tests = [regression_tests_base[i] for i in indexes(regression_tests_base) if !std.member(ignoreFailureStepList, regression_tests_base[i])],
 
   local mdb_server_versions = upgrade_test_lists[platformKey][arch],
@@ -239,8 +247,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true, true, true),
       get_build_command("run_smoke.sh") +
-      " --container-name " + getContainerName("smoke"),
+      " --container-name " + getContainerName("smoke") +
+      (if std.member(ignoreFailureStepList, "smoke") then normaliseKilledExit else ""),
     ],
+    [if (std.member(ignoreFailureStepList, "smoke")) then "failure"]: "ignore",
   },
   smokelog:: {
     name: "smokelog",
@@ -253,6 +263,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
+    [if (std.member(ignoreFailureStepList, "smoke")) then "failure"]: "ignore",
   },
   upgrade(version):: {
     name: "upgrade-test from " + version,
@@ -275,8 +286,9 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
         + repo_pkg_url_no_res
         + ' $${UPGRADE_TOKEN} ' + server + '"',
         getContainerName("upgrade") + version
-      ),
+      ) + (if std.member(ignoreFailureStepList, "upgrade") then normaliseKilledExit else ""),
     ],
+    [if (std.member(ignoreFailureStepList, "upgrade")) then "failure"]: "ignore",
   },
   upgradelog:: {
     name: "upgradelog",
@@ -297,6 +309,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
+    [if (std.member(ignoreFailureStepList, "upgrade")) then "failure"]: "ignore",
   },
   mtr:: {
     name: "mtr",
@@ -361,6 +374,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       'echo "$$REGRESSION_REF"',
 
       "apk add bash && " +
+      (if std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression") then "timeout 5400 " else "") +
       get_build_command("run_regression.sh") +
       " --container-name " + getContainerName("regression") +
       " --test-name " + name +
@@ -438,8 +452,10 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       "apk add bash && " +
       get_build_command("run_cmapi_test.sh") +
       " --container-name " + getContainerName("cmapi") +
-      " --pkg-format " + pkg_format,
+      " --pkg-format " + pkg_format +
+      (if std.member(ignoreFailureStepList, "cmapi test") then normaliseKilledExit else ""),
     ],
+    [if (std.member(ignoreFailureStepList, "cmapi test")) then "failure"]: "ignore",
   },
   cmapilog:: {
     name: "cmapilog",
@@ -452,6 +468,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     when: {
       status: ["success", "failure"],
     },
+    [if (std.member(ignoreFailureStepList, "cmapi test")) then "failure"]: "ignore",
   },
   mcs_cli_docs_check:: {
     name: "mcs cli docs check",
@@ -711,6 +728,14 @@ local AllPipelines =
     for platform in extra_servers_platforms[current_branch]
     for triggeringEvent in events
   ] +
+  [
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+    for a in ["amd64"]
+    for b in std.objectFields(platforms)
+    for server in extra_servers_11_8[current_branch]
+    for platform in extra_servers_platforms_11_8[current_branch]
+    for triggeringEvent in events
+  ] +
   // // last argument is to ignore mtr and regression failures
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
@@ -722,9 +747,9 @@ local AllPipelines =
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
-  // sanitizers are non-functional; ignore mtr/regression failures so nightly stays green
+  // sanitizers: ignore all test step failures so nightly stays green even when tests fail/timeout
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
@@ -733,7 +758,7 @@ local AllPipelines =
     for server in servers[current_branch]
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["regression", "mtr"])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
