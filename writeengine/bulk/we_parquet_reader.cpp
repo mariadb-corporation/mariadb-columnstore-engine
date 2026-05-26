@@ -119,6 +119,7 @@ bool isSupportedType(const std::shared_ptr<arrow::DataType>& type)
   using arrow::Type;
   switch (type->id())
   {
+    case Type::NA:
     case Type::BOOL:
     case Type::INT8:
     case Type::INT16:
@@ -152,6 +153,8 @@ std::string inferConversionKind(const std::shared_ptr<arrow::DataType>& type)
   using arrow::Type;
   switch (type->id())
   {
+    case Type::NA:
+      return "null";
     case Type::BOOL:
     case Type::INT8:
     case Type::INT16:
