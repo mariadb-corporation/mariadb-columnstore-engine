@@ -9,6 +9,15 @@ set(parquetGen_SRCS main.cpp)
 
 add_executable(mcs_parquet_gen ${parquetGen_SRCS})
 
+# Arrow / Parquet public headers emit -Wunused-parameter and (with GCC)
+# -Wmissing-braces when parent targets use strict warnings and -Werror.
+if(NOT MSVC)
+    set_source_files_properties(
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+        PROPERTIES COMPILE_OPTIONS "-Wno-unused-parameter;-Wno-missing-braces"
+    )
+endif()
+
 target_compile_definitions(mcs_parquet_gen PRIVATE WITH_ARROW=1)
 target_include_directories(
     mcs_parquet_gen PRIVATE ${PARQUET_INCLUDE_DIRS} ${ARROW_INCLUDE_DIRS}
