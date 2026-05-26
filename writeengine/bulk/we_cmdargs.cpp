@@ -403,6 +403,22 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     fLocFile = vm["load-file"].as<std::string>();
   }
 
+  // Autodetect parquet from a single load-file's .parquet extension when
+  // neither --input-format nor --binary-mode/-I was specified. Matches the
+  // original UX from PR #2983 (MCOL-5505 by HanpyBin/Leonid/Denis) and lets
+  // both the cherry-picked mcol-5505-* MTR tests and end users pass a
+  // .parquet file without spelling out --input-format=parquet.
+  if (!vm.count("input-format") && fImportDataMode == IMPORT_DATA_TEXT &&
+      !fLocFile.empty() && fLocFile.find_first_of(",|") == std::string::npos)
+  {
+    static const std::string kParquetExt = ".parquet";
+    if (fLocFile.size() > kParquetExt.size() &&
+        fLocFile.compare(fLocFile.size() - kParquetExt.size(), kParquetExt.size(), kParquetExt) == 0)
+    {
+      fInputFormat = InputFormat::Parquet;
+    }
+  }
+
   if (fInputFormat == InputFormat::Parquet)
   {
     if (fLocFile.empty())
