@@ -429,11 +429,37 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     {
       startupError("Parquet mode currently supports a single input file");
     }
-    if (optionPresent("--separator", "-s") || optionPresent("--enclosed-by", "-E") ||
-        optionPresent("--escape-char", "-C") || optionPresent("--headers", "-O") ||
-        optionPresent("--binary-mode", "-I"))
     {
-      startupError("Parquet mode is incompatible with text/binary parsing options");
+      std::vector<std::string> conflicts;
+      if (optionPresent("--separator", "-s"))
+        conflicts.emplace_back("--separator/-s");
+      if (optionPresent("--enclosed-by", "-E"))
+        conflicts.emplace_back("--enclosed-by/-E");
+      if (optionPresent("--escape-char", "-C"))
+        conflicts.emplace_back("--escape-char/-C");
+      if (optionPresent("--headers", "-O"))
+        conflicts.emplace_back("--headers/-O");
+      if (optionPresent("--binary-mode", "-I"))
+        conflicts.emplace_back("--binary-mode/-I");
+      if (!conflicts.empty())
+      {
+        std::string joined;
+        for (size_t i = 0; i < conflicts.size(); ++i)
+        {
+          if (i)
+            joined += ", ";
+          joined += conflicts[i];
+        }
+        std::string seen;
+        for (int i = 1; i < argc; ++i)
+        {
+          if (i > 1)
+            seen += ' ';
+          seen += argv[i];
+        }
+        startupError("Parquet mode is incompatible with text/binary parsing options: " +
+                     joined + " (argv: " + seen + ")");
+      }
     }
     if (!fS3Key.empty() || !fS3Secret.empty() || !fS3Bucket.empty() || !fS3Host.empty() || !fS3Region.empty())
     {
