@@ -23,20 +23,29 @@ if(NOT _is_rhel_like
     return()
 endif()
 
-# Use the common appender macro to handle comma separation.
-# As a SRPM directive, it is global rather than for the component
-columnstore_append_for_cpack(CPACK_RPM_BUILDREQUIRES "selinux-policy-devel")
-
 # Paths
 set(SELINUX_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/../build/security")
 set(SELINUX_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/selinux")
 set(SELINUX_TE "${SELINUX_SRC_DIR}/columnstore.te")
 set(SELINUX_PP "${SELINUX_BUILD_DIR}/columnstore.pp")
 
+# MariaDB Server's SRPM generator derives BuildRequires from cache FILEPATH
+# entries, so keep this as a find_file() result instead of a plain path.
+find_file(
+    COLUMNSTORE_SELINUX_DEVEL_MAKEFILE
+    NAMES Makefile
+    PATHS /usr/share/selinux/devel
+    NO_DEFAULT_PATH
+    DOC "SELinux policy development Makefile"
+)
+mark_as_advanced(COLUMNSTORE_SELINUX_DEVEL_MAKEFILE)
+
 file(MAKE_DIRECTORY "${SELINUX_BUILD_DIR}")
 
 # Ensure selinux-policy-devel is available
-if(NOT EXISTS "/usr/share/selinux/devel/Makefile")
+if(NOT COLUMNSTORE_SELINUX_DEVEL_MAKEFILE
+   OR NOT EXISTS "${COLUMNSTORE_SELINUX_DEVEL_MAKEFILE}"
+)
     message(
         FATAL_ERROR
             "SELinux policy build requires '/usr/share/selinux/devel/Makefile'. Please install 'selinux-policy-devel' (RHEL/Rocky >= 9) and re-run CMake."
@@ -47,7 +56,7 @@ endif()
 add_custom_command(
     OUTPUT "${SELINUX_PP}"
     COMMAND ${CMAKE_COMMAND} -E copy "${SELINUX_TE}" "${SELINUX_BUILD_DIR}/columnstore.te"
-    COMMAND make -f /usr/share/selinux/devel/Makefile columnstore.pp
+    COMMAND make -f "${COLUMNSTORE_SELINUX_DEVEL_MAKEFILE}" columnstore.pp
     WORKING_DIRECTORY "${SELINUX_BUILD_DIR}"
     DEPENDS "${SELINUX_TE}"
     COMMENT "Building SELinux policy columnstore.pp from columnstore.te"
