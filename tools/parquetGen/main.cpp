@@ -1108,7 +1108,13 @@ void generateAllTable(std::string fileDir)
     arrow::field("col23", arrow::null()),
     arrow::field("col24", arrow::null()),
     arrow::field("col25", arrow::timestamp(arrow::TimeUnit::MICRO)),
-    arrow::field("col26", arrow::timestamp(arrow::TimeUnit::MILLI)),
+    // col26 is DATETIME(6) in t1, so emit the parquet column with matching
+    // microsecond precision. The upstream generator declared MILLI here while
+    // the result file expected microsecond fractionals; that mismatch produced
+    // semantically wrong cell values (1 ms displayed as ".000001") when our
+    // reader honored TimeUnit::MILLI. Use MICRO so the source unit matches the
+    // target column precision.
+    arrow::field("col26", arrow::timestamp(arrow::TimeUnit::MICRO)),
     arrow::field("col27", arrow::null()),
     arrow::field("col28", arrow::null())
   });
@@ -1138,7 +1144,7 @@ void generateAllTable(std::string fileDir)
     nullarray,
     nullarray,
     tsarray1,
-    tsarray,
+    tsarray1,
     nullarray,
     nullarray
     });
