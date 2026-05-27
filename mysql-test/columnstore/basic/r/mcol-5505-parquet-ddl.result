@@ -32,5 +32,5 @@ parquet_test_table	CREATE TABLE `parquet_test_table` (
   `col26` timestamp(6) NULL DEFAULT NULL,
   `col27` varbinary(8000) DEFAULT NULL,
   `col28` char(4) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci
 DROP DATABASE mcol_5505_parquet_ddl;
