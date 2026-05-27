@@ -1271,6 +1271,25 @@ static void divmodNanos(int64_t nanos, int64_t& sec, int64_t& usec)
   usec = rem / 1000;
 }
 
+// ColumnStore stores TIME/DATETIME/TIMESTAMP fractional in the `msecond` field as an
+// integer whose width matches the column's declared precision: DATETIME(3) expects 0-999
+// (milliseconds), DATETIME(6) expects 0-999999 (microseconds), etc. DataConvert formats it
+// with `%0*d` using `decimals = column precision`, so the stored value must already match
+// that precision -- otherwise the emitted text overflows the column precision and MariaDB
+// reparses it as a larger fractional (e.g. usec=1000 in a DATETIME(3) becomes ".1000",
+// which MariaDB then displays as ".100").
+static int64_t scaleUsecToColumnPrecision(int64_t usec, int precision)
+{
+  if (precision >= 6)
+    return usec;
+  if (precision <= 0)
+    return 0;
+  int64_t divisor = 1;
+  for (int i = 0; i < 6 - precision; ++i)
+    divisor *= 10;
+  return usec / divisor;
+}
+
 /**
  * Follow one level of Arrow dictionary to a leaf array index (physical row).
  * @return false on structural error (errMsg set); true with logicalNull if value is null.
@@ -1328,8 +1347,9 @@ static bool resolveDictionaryLeafOneLevel(const std::shared_ptr<arrow::Array>& r
 }
 
 /**
- * Fast path: Arrow DATE32 / TIMESTAMP (incl. dictionary-wrapped) -> ColumnStore DATE / DATETIME / TIMESTAMP
- * binary layout matching BulkLoadBuffer text-mode output (no Arrow Scalar::ToString).
+ * Fast path: Arrow DATE32 / TIME32 / TIME64 / TIMESTAMP (incl. dictionary-wrapped) ->
+ * ColumnStore DATE / TIME / DATETIME / TIMESTAMP binary layout matching BulkLoadBuffer text-mode
+ * output (no Arrow Scalar::ToString -- it cannot represent TIME hours >= 24).
  * DATETIME uses UTC civil fields from the instant (Arrow/Parquet epoch semantics).
  */
 static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>& sourceArray, int64_t batchRow,
@@ -1386,6 +1406,108 @@ static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>&
         bufferStats.maxBufferVal = iDate;
       return true;
     }
+    case arrow::Type::TIME32:
+    case arrow::Type::TIME64:
+    {
+      // Arrow Time32/Time64 = number of {MILLI|MICRO|...} units since midnight.
+      // MySQL TIME range is -838:59:59..838:59:59, so the source value may exceed one day;
+      // Arrow's default Scalar::ToString cannot represent hour >= 24 reliably for cpimport's
+      // text fallback, so we must decompose into HH:MM:SS.fff here.
+      if (column.dataType != DT::TIME)
+        return false;
+      if (column.weType != WriteEngine::WR_LONGLONG)
+        return false;
+
+      int64_t srcValue = 0;
+      arrow::TimeUnit::type srcUnit = arrow::TimeUnit::MILLI;
+      if (leaf->type_id() == arrow::Type::TIME32)
+      {
+        const auto* ta = static_cast<const arrow::Time32Array*>(leaf);
+        const auto t32Type = std::static_pointer_cast<arrow::Time32Type>(leaf->type());
+        if (!t32Type)
+          return false;
+        srcValue = ta->Value(ix);
+        srcUnit = t32Type->unit();
+      }
+      else
+      {
+        const auto* ta = static_cast<const arrow::Time64Array*>(leaf);
+        const auto t64Type = std::static_pointer_cast<arrow::Time64Type>(leaf->type());
+        if (!t64Type)
+          return false;
+        srcValue = ta->Value(ix);
+        srcUnit = t64Type->unit();
+      }
+
+      const int64_t nanos = arrowTimestampToNanos(srcValue, srcUnit);
+      const bool isNeg = nanos < 0;
+      int64_t absNanos = isNeg ? -nanos : nanos;
+
+      constexpr int64_t NS_PER_SEC = 1000000000LL;
+      constexpr int64_t NS_PER_MIN = 60LL * NS_PER_SEC;
+      constexpr int64_t NS_PER_HOUR = 60LL * NS_PER_MIN;
+
+      int64_t hour = absNanos / NS_PER_HOUR;
+      int64_t remHour = absNanos % NS_PER_HOUR;
+      int64_t minute = remHour / NS_PER_MIN;
+      int64_t remMin = remHour % NS_PER_MIN;
+      int64_t second = remMin / NS_PER_SEC;
+      int64_t remSec = remMin % NS_PER_SEC;
+      int64_t usec = remSec / 1000;
+      int64_t scaledMsec = scaleUsecToColumnPrecision(usec, column.precision);
+
+      bool saturated = false;
+      if (hour > 838)
+      {
+        // Match MariaDB TIME saturation semantics emulated in dataconvert.cpp.
+        hour = 838;
+        minute = 59;
+        second = 59;
+        int64_t maxFrac = 999999;
+        if (column.precision > 0 && column.precision < 6)
+        {
+          maxFrac = 1;
+          for (int i = 0; i < column.precision; ++i)
+            maxFrac *= 10;
+          maxFrac -= 1;
+        }
+        else if (column.precision <= 0)
+        {
+          maxFrac = 0;
+        }
+        scaledMsec = maxFrac;
+        saturated = true;
+      }
+
+      if (!dataconvert::isTimeValid(static_cast<int>(hour), static_cast<int>(minute), static_cast<int>(second),
+                                    static_cast<int>(usec)))
+      {
+        int64_t zero = 0;
+        memcpy(output, &zero, sizeof(zero));
+        bufferStats.satCount++;
+        return true;
+      }
+
+      dataconvert::Time t(0, static_cast<signed>(hour), static_cast<signed>(minute),
+                          static_cast<signed>(second), static_cast<signed>(scaledMsec), isNeg);
+      int64_t packed = 0;
+      memcpy(&packed, &t, sizeof(packed));
+      if (!dataconvert::DataConvert::isColumnTimeValid(packed))
+      {
+        packed = 0;
+        memcpy(output, &packed, sizeof(packed));
+        bufferStats.satCount++;
+        return true;
+      }
+      memcpy(output, &packed, sizeof(packed));
+      if (saturated)
+        bufferStats.satCount++;
+      if (packed < bufferStats.minBufferVal)
+        bufferStats.minBufferVal = packed;
+      if (packed > bufferStats.maxBufferVal)
+        bufferStats.maxBufferVal = packed;
+      return true;
+    }
     case arrow::Type::TIMESTAMP:
     {
       if (column.dataType != DT::DATETIME && column.dataType != DT::TIMESTAMP)
@@ -1402,19 +1524,20 @@ static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>&
       divmodNanos(nanos, sec, usec);
       if (usec < 0 || usec > 999999)
         return false;
+      const int64_t scaledMsec = scaleUsecToColumnPrecision(usec, column.precision);
 
       if (column.dataType == DT::TIMESTAMP)
       {
         if (sec < 0)
           return false;
-        if (!dataconvert::isTimestampValid(static_cast<uint64_t>(sec), static_cast<uint64_t>(usec)))
+        if (!dataconvert::isTimestampValid(static_cast<uint64_t>(sec), static_cast<uint64_t>(scaledMsec)))
         {
           int64_t zero = 0;
           memcpy(output, &zero, sizeof(zero));
           bufferStats.satCount++;
           return true;
         }
-        dataconvert::TimeStamp ts(static_cast<unsigned>(usec), static_cast<unsigned long long>(sec));
+        dataconvert::TimeStamp ts(static_cast<unsigned>(scaledMsec), static_cast<unsigned long long>(sec));
         int64_t packed = 0;
         memcpy(&packed, &ts, sizeof(packed));
         if (!dataconvert::DataConvert::isColumnTimeStampValid(packed))
@@ -1463,7 +1586,7 @@ static bool tryConvertArrowTemporalToBinary(const std::shared_ptr<arrow::Array>&
         dataconvert::DateTime dt(static_cast<unsigned>(y), static_cast<unsigned>(mo),
                                  static_cast<unsigned>(day), static_cast<unsigned>(hour),
                                  static_cast<unsigned>(min), static_cast<unsigned>(s),
-                                 static_cast<unsigned>(usec));
+                                 static_cast<unsigned>(scaledMsec));
         int64_t packed = 0;
         memcpy(&packed, &dt, sizeof(packed));
         if (!dataconvert::DataConvert::isColumnDateTimeValid(packed))
@@ -1552,7 +1675,8 @@ int processFixedColumnBatch(const DirectColumnBinding& binding, const std::share
   using DT = execplan::CalpontSystemCatalog::ColDataType;
   const bool colIsTemporal = columnInfo.column.dataType == DT::DATE ||
                              columnInfo.column.dataType == DT::DATETIME ||
-                             columnInfo.column.dataType == DT::TIMESTAMP;
+                             columnInfo.column.dataType == DT::TIMESTAMP ||
+                             columnInfo.column.dataType == DT::TIME;
   const int instrColId = columnInfo.id;
 
   while (totalProcessed < static_cast<uint32_t>(batchRows))
