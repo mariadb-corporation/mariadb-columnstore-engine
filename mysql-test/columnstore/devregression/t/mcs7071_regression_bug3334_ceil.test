@@ -14,9 +14,13 @@ select 'ceil(id)', id as id, ceiling(id) from dtypes;
 select 'ceil(id/3)', id as id, ceil(id/3) as val from dtypes;
 select 'ceil(dt)', id as id, dt, ceiling(dt) from dtypes;
 select 'ceil(dtm)', id as id, dtm, ceiling(dtm) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(f)', id as id, f, ceiling(f) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(f/3)', id as id, ceil(f/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(db)', id as id, db, ceiling(db) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(db/3)', id as id, ceil(db/3) as val from dtypes;
 select 'ceil(ti)', id as id, ti, ceiling(ti) from dtypes;
 select 'ceil(ti/3)', id as id, ceil(ti/3) as val from dtypes;
@@ -28,41 +32,77 @@ select 'ceil(bi)', id as id, bi, ceiling(bi) from dtypes;
 select 'ceil(bi/3)', id as id, ceil(bi/3) as val from dtypes;
 select 'ceil(c1)', id as id, c1, ceiling(c1) from dtypes;
 select 'ceil(c1/3)', id as id,  ceil(c1/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c2)', id as id, c2, ceiling(c2) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c2/3)', id as id,  ceil(c2/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c3)', id as id, c3, ceiling(c3) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c3/3)', id as id,  ceil(c3/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c4)', id as id, c4, ceiling(c4) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c4/3)', id as id,  ceil(c4/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c5)', id as id, c5, ceiling(c5) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c5/3)', id as id, ceil(c5/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c6)', id as id, c6, ceiling(c6) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c6/3)', id as id, ceil(c6/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c7)', id as id, c7, ceiling(c7) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c7/3)', id as id, ceil(c7/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c8)', id as id, c8, ceiling(c8) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c8/3)', id as id, ceil(c8/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c9)', id as id, c9, ceiling(c9) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c9/3)', id as id, ceil(c9/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c255)', id as id, c255, ceiling(c255) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(c255/3)', id as id, ceil(c255/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc1)', id as id, vc1, ceiling(vc1) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc1/3)', id as id, ceil(vc1/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc2)', id as id, vc2, ceiling(vc2) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc2/3)', id as id, ceil(vc2/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc3)', id as id, vc3, ceiling(vc3) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc3/3)', id as id, ceil(vc3/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc4)', id as id, vc4, ceiling(vc4) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc4/3)', id as id, ceil(vc4/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc5)', id as id, vc5, ceiling(vc5) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc5/3)', id as id, ceil(vc5/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc6)', id as id, vc6, ceiling(vc6) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc6/3)', id as id, ceil(vc6/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc7)', id as id, vc7, ceiling(vc7) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc7/3)', id as id, ceil(vc7/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc8)', id as id, vc8, ceiling(vc8) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc8/3)', id as id, ceil(vc8/3) as val from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc255)', id as id, vc255, ceiling(vc255) from dtypes;
+--replace_regex /\t-0$/\t0/
 select 'ceil(vc255/3)', id as id, ceil(vc255/3) as val from dtypes;
 select 'ceil(d1)', id as id, d1, ceiling(d1) from dtypes;
 select 'ceil(d1/3)', id as id, ceil(d1/3) as val from dtypes;
