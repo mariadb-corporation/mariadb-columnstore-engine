@@ -2853,7 +2853,8 @@ int ha_mcs_impl_delete_table(const char* name)
   else
   {
     TABLE_LIST* first_table = (TABLE_LIST*)thd->lex->first_select_lex()->table_list.first;
-    dbName = const_cast<char*>(first_table->db.str);
+    if (first_table)
+      dbName = const_cast<char*>(first_table->db.str);
   }
 
   if (!dbName)
