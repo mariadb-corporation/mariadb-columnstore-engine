@@ -96,6 +96,28 @@ const unsigned long long LFACTOR1 = 10000000000ULL;
 const unsigned long long LFACTOR2 = 100000000000ULL;
 const unsigned long long ulonglong_max = ~(unsigned long long)0;
 
+// TIME/DATETIME fractional seconds are microseconds: 6 fractional digits. The server
+// likewise caps the fractional scale at TIME_SECOND_PART_DIGITS (6).
+constexpr int32_t TIME_MAX_SCALE = 6;
+
+// Raw (unscaled) integer value of a DECIMAL as int128, selecting the wide (128-bit) or
+// narrow (64-bit) storage based on external precision
+inline datatypes::int128_t decimalToInt128(const execplan::IDB_Decimal& dec, int32_t precision)
+{
+  return datatypes::Decimal::isWideDecimalTypeByPrecision(precision) ? dec.s128Value
+                                                                     : (datatypes::int128_t)dec.value;
+}
+
+// Truncate (do not round) a DECIMAL fractional-part magnitude at the given scale down to
+// microseconds, mirroring the server's handling of fractional seconds.
+inline int64_t fracToMicroseconds(const datatypes::int128_t& fracPart, int32_t scale)
+{
+  if (scale <= TIME_MAX_SCALE)
+    return (int64_t)(fracPart * datatypes::mcs_pow_10[TIME_MAX_SCALE - scale]);
+
+  return (int64_t)(fracPart / datatypes::scaleDivisor<datatypes::int128_t>(scale - TIME_MAX_SCALE));
+}
+
 static std::string monthFullNames[13] = {"NON_VALID", "January",  "February", "March",  "April",
                                          "May",       "June",     "July",     "August", "September",
                                          "October",   "November", "December"};
@@ -695,13 +717,14 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
 
   uint8_t commonScale = std::max(d.scale, div.scale);
 
-  if (parm[0]->data()->resultType().isWideDecimalType() ||
-      parm[1]->data()->resultType().isWideDecimalType())
+  if (parm[0]->data()->resultType().isWideDecimalType() || parm[1]->data()->resultType().isWideDecimalType())
   {
     int128_t dVal = (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-        ? d.s128Value : static_cast<int128_t>(d.value);
+                        ? d.s128Value
+                        : static_cast<int128_t>(d.value);
     int128_t divVal = (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
-        ? div.s128Value : static_cast<int128_t>(div.value);
+                          ? div.s128Value
+                          : static_cast<int128_t>(div.value);
 
     if (divVal == 0)
     {
@@ -712,8 +735,7 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
     if (d.scale == 0 && div.scale == 0)
     {
       int128_t result = isMod ? (dVal % divVal) : (dVal / divVal);
-      return execplan::IDB_Decimal(datatypes::TSInt128(result), 0,
-                                   datatypes::INT128MAXPRECISION);
+      return execplan::IDB_Decimal(datatypes::TSInt128(result), 0, datatypes::INT128MAXPRECISION);
     }
 
     // Short circuit when it's possible to return result straight away
@@ -721,7 +743,7 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
     // abs() cannot overflow since INT64_MIN and INT128_MIN are
     // never reached in an internal store value for a narrow/wide decimal
     if (d.scale >= div.scale && datatypes::abs(dVal) < datatypes::abs(divVal))
-      return isMod ? d : execplan::IDB_Decimal(); // return d or 0
+      return isMod ? d : execplan::IDB_Decimal();  // return d or 0
 
     if (commonScale > d.scale)
     {
@@ -747,8 +769,7 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
 
     int128_t result = isMod ? (dVal % divVal) : (dVal / divVal);
     uint8_t resultScale = isMod ? commonScale : 0;
-    return execplan::IDB_Decimal(datatypes::TSInt128(result), resultScale,
-                                 datatypes::INT128MAXPRECISION);
+    return execplan::IDB_Decimal(datatypes::TSInt128(result), resultScale, datatypes::INT128MAXPRECISION);
   }
 
   // Narrow decimal path
@@ -766,7 +787,7 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
   // abs() cannot overflow since INT64_MIN and INT128_MIN are
   // never reached in an internal store value for a narrow/wide decimal
   if (d.scale >= div.scale && std::abs(dVal) < std::abs(divVal))
-    return isMod ? d : execplan::IDB_Decimal(); // return d or 0
+    return isMod ? d : execplan::IDB_Decimal();  // return d or 0
 
   int64_t dMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - d.scale]);
   int64_t divMultiplier = static_cast<int64_t>(datatypes::mcs_pow_10[commonScale - div.scale]);
@@ -780,8 +801,7 @@ inline execplan::IDB_Decimal modOrDivDecimal(FunctionParm& parm, rowgroup::Row& 
     int128_t divWide = static_cast<int128_t>(divVal) * divMultiplier;
     int128_t result = isMod ? (dWide % divWide) : (dWide / divWide);
     uint8_t resultScale = isMod ? commonScale : 0;
-    return execplan::IDB_Decimal(static_cast<int64_t>(result), resultScale,
-                                 datatypes::INT64MAXPRECISION);
+    return execplan::IDB_Decimal(static_cast<int64_t>(result), resultScale, datatypes::INT64MAXPRECISION);
   }
 
   int64_t result = isMod ? (dScaled % divScaled) : (dScaled / divScaled);

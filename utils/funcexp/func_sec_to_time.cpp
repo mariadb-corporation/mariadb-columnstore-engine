@@ -21,6 +21,8 @@
  *
  ****************************************************************************/
 
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -41,6 +43,64 @@ using namespace execplan;
 using namespace logging;
 namespace funcexp
 {
+namespace
+{
+// MariaDB TIME range is [-838:59:59.999999, 838:59:59.999999].
+constexpr int64_t TIME_MAX_WHOLE_SECONDS = 838 * 3600 + 59 * 60 + 59;  // 3020399 == 838:59:59
+constexpr int64_t TIME_OVERFLOW_SECONDS = TIME_MAX_WHOLE_SECONDS + 1;  // 3020400 == 839:00:00
+}  // namespace
+
+static inline string saturatedTimeMax(bool neg)
+{
+  return neg ? "-838:59:59.999999" : "838:59:59.999999";
+}
+
+static string formatTimeWithUsec(int64_t wholeSec, int64_t usec, bool neg)
+{
+  uint32_t hour = wholeSec / 3600;
+  uint32_t minute = (wholeSec % 3600) / 60;
+  uint32_t second = wholeSec % 60;
+
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%s%02u:%02u:%02u.%06u", neg ? "-" : "", hour, minute, second, (uint32_t)usec);
+  return buf;
+}
+
+static string secToTimeWithUsec(double dval)
+{
+  bool neg = dval < 0;
+  double absVal = fabs(dval);
+
+  if (absVal >= TIME_OVERFLOW_SECONDS)
+    return saturatedTimeMax(neg);
+
+  int64_t wholeSec = (int64_t)absVal;
+  int64_t usec =
+      (int64_t)((absVal - (double)wholeSec) *
+                1'000'000.0);  // Truncate (do not round) the fractional seconds to microsecond precision
+  return formatTimeWithUsec(wholeSec, usec, neg);
+}
+
+// Compute seconds and microseconds from the scaled integer with truncation, mirroring
+// the server, which converts the argument to DECIMAL and truncates the fraction.
+static string secToTimeFromDecimal(const IDB_Decimal& dec, int32_t precision, int32_t scale)
+{
+  const int32_t s = (scale < 0) ? 0 : scale;
+
+  const datatypes::int128_t rawVal = helpers::decimalToInt128(dec, precision);
+  const bool neg = (rawVal < 0);
+  const datatypes::int128_t mag = neg ? -rawVal : rawVal;  // std::abs() has no int128_t overload
+  const datatypes::int128_t divisor = datatypes::scaleDivisor<datatypes::int128_t>(s);
+
+  const datatypes::int128_t intPart = mag / divisor;
+  const int64_t usec = helpers::fracToMicroseconds(mag % divisor, s);
+
+  if (intPart >= TIME_OVERFLOW_SECONDS)
+    return saturatedTimeMax(neg);
+
+  return formatTimeWithUsec((int64_t)intPart, usec, neg);
+}
+
 CalpontSystemCatalog::ColType Func_sec_to_time::operationType(FunctionParm& /*fp*/,
                                                               CalpontSystemCatalog::ColType& resultType)
 {
@@ -72,32 +132,20 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
 
     case execplan::CalpontSystemCatalog::DOUBLE:
     case execplan::CalpontSystemCatalog::UDOUBLE:
-    {
-      datatypes::TDouble d(parm[0]->data()->getDoubleVal(row, isNull));
-      val = d.toMCSSInt64Round();
-      break;
-    }
+      return secToTimeWithUsec(parm[0]->data()->getDoubleVal(row, isNull));
 
     case execplan::CalpontSystemCatalog::FLOAT:
     case execplan::CalpontSystemCatalog::UFLOAT:
-    {
-      datatypes::TDouble d(parm[0]->data()->getFloatVal(row, isNull));
-      val = d.toMCSSInt64Round();
-      break;
-    }
+      return secToTimeWithUsec((double)parm[0]->data()->getFloatVal(row, isNull));
 
     case execplan::CalpontSystemCatalog::LONGDOUBLE:
-    {
-      datatypes::TLongDouble d(parm[0]->data()->getLongDoubleVal(row, isNull));
-      val = d.toMCSSInt64Round();
-      break;
-    }
+      return secToTimeWithUsec((double)parm[0]->data()->getLongDoubleVal(row, isNull));
 
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      val = parm[0]->data()->getDecimalVal(row, isNull).toSInt64Round();
-      break;
+      IDB_Decimal dec = parm[0]->data()->getDecimalVal(row, isNull);
+      return secToTimeFromDecimal(dec, curCt.precision, curCt.scale);
     }
 
     case execplan::CalpontSystemCatalog::CHAR:
@@ -121,7 +169,7 @@ string Func_sec_to_time::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool&
     case execplan::CalpontSystemCatalog::DATE:
     case execplan::CalpontSystemCatalog::DATETIME:
     case execplan::CalpontSystemCatalog::TIMESTAMP:
-    { 
+    {
       return "838:59:59";
       break;
     }
@@ -202,33 +250,26 @@ int64_t Func_sec_to_time::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool
   return val;
 }
 
+string Func_sec_to_time::getDigitStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                        execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  string time = getStrVal(row, parm, isNull, op_ct);
+  time.erase(std::remove(time.begin(), time.end(), ':'), time.end());
+  return time;
+}
+
 double Func_sec_to_time::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct)
 {
-  double val = parm[0]->data()->getDoubleVal(row, isNull);
+  string digits = getDigitStrVal(row, parm, isNull, op_ct);
+  return strtod(digits.c_str(), nullptr);
+}
 
-  if (val > 3020399)
-    val = 8385959;
-  else if (val < -3020399)
-    val = 4286581337LL;
-  else
-  {
-    string time = getStrVal(row, parm, isNull, op_ct);
-    size_t x = time.find(":");
-
-    while (x < string::npos)
-    {
-      time.erase(x, 1);
-      x = time.find(":");
-    }
-
-    char* ep = NULL;
-    const char* str = time.c_str();
-    errno = 0;
-    val = (double)strtoll(str, &ep, 10);
-  }
-
-  return val;
+long double Func_sec_to_time::getLongDoubleVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                               execplan::CalpontSystemCatalog::ColType& op_ct)
+{
+  string digits = getDigitStrVal(row, parm, isNull, op_ct);
+  return strtold(digits.c_str(), nullptr);
 }
 
 execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
@@ -236,30 +277,8 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row, Functi
 {
   IDB_Decimal d;
 
-  int64_t val = parm[0]->data()->getIntVal(row, isNull);
-
-  int64_t tmpVal;
-
-  if (val > 3020399)
-    tmpVal = 8385959;
-  else if (val < -3020399)
-    tmpVal = 4286581337LL;
-  else
-  {
-    string time = getStrVal(row, parm, isNull, op_ct);
-    size_t x = time.find(":");
-
-    while (x < string::npos)
-    {
-      time.erase(x, 1);
-      x = time.find(":");
-    }
-
-    char* ep = NULL;
-    const char* str = time.c_str();
-    errno = 0;
-    tmpVal = strtoll(str, &ep, 10);
-  }
+  string digits = getDigitStrVal(row, parm, isNull, op_ct);
+  int64_t tmpVal = strtoll(digits.c_str(), nullptr, 10);
 
   if (op_ct.isWideDecimalType())
     d.s128Value = tmpVal;
