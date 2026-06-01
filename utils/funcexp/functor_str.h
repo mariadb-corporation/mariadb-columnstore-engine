@@ -703,8 +703,17 @@ class Func_sec_to_time : public Func_Str
   double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                       execplan::CalpontSystemCatalog::ColType& op_ct) override;
 
+  long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
   execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                                       execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
+ private:
+  // Returns getStrVal() with the ':' separators stripped, e.g. "01:01:01.5" -> "010101.5",
+  // so the numeric accessors can parse it directly with strto*().
+  std::string getDigitStrVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                             execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_substring_index class

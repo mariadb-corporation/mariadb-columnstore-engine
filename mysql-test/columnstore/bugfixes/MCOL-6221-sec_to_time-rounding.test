@@ -1,0 +1,58 @@
+#
+# MCOL-6221: sec_to_time() rounds values in columnstore
+# Verify that sec_to_time() preserves fractional seconds
+# for FLOAT, DOUBLE, and DECIMAL inputs.
+
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6221;
+--enable_warnings
+CREATE DATABASE mcol_6221;
+USE mcol_6221;
+
+# SEC_TO_TIME() should not round FLOAT/DOUBLE/DECIMAL values
+CREATE TABLE t1(a FLOAT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1.5),(-1.5),(0.25),(90.125),(3661.5),(-3661.5);
+SELECT a, SEC_TO_TIME(a) FROM t1 ORDER BY a;
+
+CREATE TABLE t2(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t2 VALUES (1.5),(-1.5),(0.25),(90.125),(3661.5),(-3661.5);
+SELECT a, SEC_TO_TIME(a) FROM t2 ORDER BY a;
+
+CREATE TABLE t3(a DECIMAL(12,2)) ENGINE=ColumnStore;
+INSERT INTO t3 VALUES (1.50),(-1.50),(111.99),(3661.25);
+SELECT a, SEC_TO_TIME(a) FROM t3 ORDER BY a;
+
+# Out-of-range values clamp to TIME_MAX (838:59:59.999999), not .000000
+CREATE TABLE t4(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t4 VALUES (1234567890.1),(-1234567890.1);
+SELECT a, SEC_TO_TIME(a) FROM t4 ORDER BY a;
+
+# Numeric context: DOUBLE arithmetic (+ 0.0e0) exercises getDoubleVal(),
+# returning the HHMMSS.uuuuuu value (fractional seconds preserved)
+CREATE TABLE t5(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t5 VALUES (1.5),(-1.5),(90.125),(3661.5);
+SELECT a, SEC_TO_TIME(a) + 0.0e0 FROM t5 ORDER BY a;
+
+# Numeric context: with columnstore_double_for_decimal_math=ON, DECIMAL
+# arithmetic (+ 0.0) is routed through long double, exercising
+# getLongDoubleVal() (fractional seconds preserved)
+SET columnstore_double_for_decimal_math=1;
+CREATE TABLE t6(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t6 VALUES (1.5),(-1.5),(90.125),(3661.5);
+SELECT a, SEC_TO_TIME(a) + 0.0 FROM t6 ORDER BY a;
+SET columnstore_double_for_decimal_math=DEFAULT;
+
+# SEC_TO_TIME() truncates (does not round) the fractional seconds to microsecond
+# precision: 1.9999996 -> .999999 (NOT .000000 from a round-and-carry), for both
+# the DOUBLE and DECIMAL branches and for positive and negative inputs.
+CREATE TABLE t7(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t7 VALUES (1.9999996),(-1.9999996),(0.1234565),(-0.1234565);
+SELECT a, SEC_TO_TIME(a) FROM t7 ORDER BY a;
+
+CREATE TABLE t8(a DECIMAL(18,7)) ENGINE=ColumnStore;
+INSERT INTO t8 VALUES (1.9999996),(-1.9999996),(0.1234565),(-0.1234565);
+SELECT a, SEC_TO_TIME(a) FROM t8 ORDER BY a;
+
+# Cleanup
+DROP DATABASE mcol_6221;
