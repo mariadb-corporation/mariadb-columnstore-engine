@@ -1848,8 +1848,8 @@ ceil(c2)	2	1.	1
 ceil(c2)	3	0.	0
 ceil(c2)	4	0.	0
 ceil(c2)	5	0.	0
-ceil(c2)	6	-0	0
-ceil(c2)	7	-0	0
+ceil(c2)	6	0	0
+ceil(c2)	7	0	0
 ceil(c2)	8	-7	-7
 ceil(c2)	9	4.	4
 ceil(c2)	10	0.	0
@@ -1863,7 +1863,7 @@ ceil(c2)	17	16	16
 ceil(c2)	18	1	1
 ceil(c2)	19	23	23
 ceil(c2)	20	2	2
-ceil(c2)	21	-0	0
+ceil(c2)	21	0	0
 ceil(c2)	22	23	23
 ceil(c2)	23	3	3
 ceil(c2)	24	23	23
@@ -1892,7 +1892,7 @@ ceil(c2)	46	0.	0
 ceil(c2)	47	-1	-1
 ceil(c2)	48	64	64
 ceil(c2)	49	0.	0
-ceil(c2)	50	-0	0
+ceil(c2)	50	0	0
 ceil(c2)	51	81	81
 ceil(c2)	52	0.	0
 ceil(c2)	53	16	16
@@ -3888,8 +3888,8 @@ ceil(vc2)	2	1.	1
 ceil(vc2)	3	0.	0
 ceil(vc2)	4	0.	0
 ceil(vc2)	5	0.	0
-ceil(vc2)	6	-0	0
-ceil(vc2)	7	-0	0
+ceil(vc2)	6	0	0
+ceil(vc2)	7	0	0
 ceil(vc2)	8	-7	-7
 ceil(vc2)	9	4.	4
 ceil(vc2)	10	0.	0
@@ -3903,7 +3903,7 @@ ceil(vc2)	17	16	16
 ceil(vc2)	18	1	1
 ceil(vc2)	19	23	23
 ceil(vc2)	20	2	2
-ceil(vc2)	21	-0	0
+ceil(vc2)	21	0	0
 ceil(vc2)	22	23	23
 ceil(vc2)	23	3	3
 ceil(vc2)	24	23	23
@@ -3932,7 +3932,7 @@ ceil(vc2)	46	0.	0
 ceil(vc2)	47	-1	-1
 ceil(vc2)	48	64	64
 ceil(vc2)	49	0.	0
-ceil(vc2)	50	-0	0
+ceil(vc2)	50	0	0
 ceil(vc2)	51	81	81
 ceil(vc2)	52	0.	0
 ceil(vc2)	53	16	16
