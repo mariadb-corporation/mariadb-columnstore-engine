@@ -16,7 +16,7 @@ insert into uriage_my values('BLAKE',5000);
 SELECT
 T1.`eigyo_shimei`,SUM(-5)
 FROM
-URIAGE_inf T1
+uriage_inf T1
 GROUP BY
 T1.`eigyo_shimei`
 ORDER BY
@@ -29,7 +29,7 @@ SMITH	-10
 SELECT
 T1.`eigyo_shimei`,SUM(5)
 FROM
-URIAGE_inf T1
+uriage_inf T1
 GROUP BY
 T1.`eigyo_shimei`
 ORDER BY
@@ -42,7 +42,7 @@ SMITH	10
 SELECT
 T1.`eigyo_shimei`,SUM(-5)
 FROM
-URIAGE_my T1
+uriage_my T1
 GROUP BY
 T1.`eigyo_shimei`
 ORDER BY
@@ -55,7 +55,7 @@ SMITH	-10
 SELECT
 T1.`eigyo_shimei`,SUM(5)
 FROM
-URIAGE_my T1
+uriage_my T1
 GROUP BY
 T1.`eigyo_shimei`
 ORDER BY

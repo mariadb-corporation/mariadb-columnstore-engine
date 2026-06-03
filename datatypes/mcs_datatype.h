@@ -552,7 +552,7 @@ inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unione
 */
 inline bool hasUnderlyingWideDecimalForSumAndAvg(datatypes::SystemCatalog::ColDataType type)
 {
-  return datatypes::isSignedInteger(type) || datatypes::isUnsigned(type);
+  return datatypes::isSignedInteger(type) || datatypes::isUnsigned(type) || datatypes::isDecimal(type);
 }
 
 }  // end of namespace datatypes

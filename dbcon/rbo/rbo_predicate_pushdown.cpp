@@ -23,6 +23,7 @@
 #include "constantcolumn.h"
 #include "execplan/calpontselectexecutionplan.h"
 #include "execplan/simplecolumn.h"
+#include "lib/parse_tree_ops.h"
 #include "logicoperator.h"
 #include "operator.h"
 
@@ -97,8 +98,8 @@ execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan:
       }
     }
 
-    // should never be null; if null then give up optimization.
-    if (!csep)
+    // should never be null; if null or rCTE then give up the optimization.
+    if (!csep || csep->isRecursiveWithTable())
       return n;
 
     // 2. push the filter to the derived table filter stack, or 'and' with
@@ -111,10 +112,7 @@ execplan::ParseTree* setDerivedFilter(cal_impl_if::gp_walk_info* gwip, execplan:
     }
     else
     {
-      execplan::ParseTree* pt = new execplan::ParseTree(new execplan::LogicOperator("and"));
-      pt->left(mapIter->second);
-      pt->right(n);
-      mapIter->second = pt;
+      mapIter->second = optimizer::lib::andWith(mapIter->second, n);
     }
 
     int64_t val = 1;
@@ -183,27 +181,17 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
     execplan::CalpontSelectExecutionPlan::ReturnedColumnList derivedColList = plan->returnedCols();
     auto mapIt = derivedTbFilterMap.find(plan->derivedTbAlias());
 
+    // TODO implement rCTE anchor-only specific predicate pushdown.
     if (mapIt != derivedTbFilterMap.end())
     {
       // replace all derived column of this filter with real column from
-      // derived table projection list.
-      execplan::ParseTree* mainFilter = new execplan::ParseTree();
-      mainFilter->copyTree(*(mapIt->second));
+      // derived table projection list.  ParseTree's copy ctor already
+      // delegates to copyTree(), so the one-arg form does a deep clone.
+      execplan::ParseTree* mainFilter = new execplan::ParseTree(*(mapIt->second));
       replaceRefCol(mainFilter, derivedColList);
       execplan::ParseTree* derivedFilter = plan->filters();
 
-      if (derivedFilter)
-      {
-        execplan::LogicOperator* op = new execplan::LogicOperator("and");
-        execplan::ParseTree* filter = new execplan::ParseTree(op);
-        filter->left(derivedFilter);
-        filter->right(mainFilter);
-        plan->filters(filter);
-      }
-      else
-      {
-        plan->filters(mainFilter);
-      }
+      plan->filters(optimizer::lib::andWith(derivedFilter, mainFilter));
 
       // union filter handling
       for (uint j = 0; j < plan->unionVec().size(); j++)
@@ -211,23 +199,12 @@ bool applyPredicatePushdown(execplan::CalpontSelectExecutionPlan& csep, RBOptimi
         execplan::CalpontSelectExecutionPlan* unionPlan =
             reinterpret_cast<execplan::CalpontSelectExecutionPlan*>(plan->unionVec()[j].get());
         execplan::CalpontSelectExecutionPlan::ReturnedColumnList unionColList = unionPlan->returnedCols();
-        execplan::ParseTree* mainFilterForUnion = new execplan::ParseTree();
-        mainFilterForUnion->copyTree(*(mapIt->second));
+        execplan::ParseTree* mainFilterForUnion =
+            new execplan::ParseTree(*(mapIt->second));
         replaceRefCol(mainFilterForUnion, unionColList);
         execplan::ParseTree* unionFilter = unionPlan->filters();
 
-        if (unionFilter)
-        {
-          execplan::LogicOperator* op = new execplan::LogicOperator("and");
-          execplan::ParseTree* filter = new execplan::ParseTree(op);
-          filter->left(unionFilter);
-          filter->right(mainFilterForUnion);
-          unionPlan->filters(filter);
-        }
-        else
-        {
-          unionPlan->filters(mainFilterForUnion);
-        }
+        unionPlan->filters(optimizer::lib::andWith(unionFilter, mainFilterForUnion));
       }
       hasBeenApplied = true;
     }

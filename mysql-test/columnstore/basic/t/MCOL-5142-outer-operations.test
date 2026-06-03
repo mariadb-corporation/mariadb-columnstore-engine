@@ -1,0 +1,109 @@
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5142_outer_ops;
+--enable_warnings
+
+CREATE DATABASE mcol5142_outer_ops;
+USE mcol5142_outer_ops;
+
+CREATE TABLE emp (
+    id INT NOT NULL,
+    name VARCHAR(50),
+    manager_id INT NULL
+) ENGINE=ColumnStore;
+
+INSERT INTO emp VALUES
+(1, 'CEO', NULL),
+(2, 'VP-A', 1),
+(3, 'VP-B', 1),
+(4, 'Mgr-A1', 2),
+(5, 'Mgr-A2', 2),
+(6, 'Mgr-B1', 3),
+(7, 'Dev-1', 4),
+(8, 'Dev-2', 5);
+
+#
+# 1. COUNT(*) on outer SELECT over rCTE result
+#
+WITH RECURSIVE hier AS (
+    SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT e.id, e.name, e.manager_id, h.lvl + 1
+    FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT COUNT(*) AS cnt FROM hier;
+
+#
+# 2. GROUP BY on outer SELECT over rCTE is not supported (known limitation)
+#
+--error ER_CHECK_NOT_IMPLEMENTED
+WITH RECURSIVE hier AS (
+    SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT e.id, e.name, e.manager_id, h.lvl + 1
+    FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT lvl, COUNT(*) AS cnt FROM hier GROUP BY lvl;
+
+#
+# 3. rCTE with LIMIT on outer query (non-cyclic)
+#    ORDER BY on outer rCTE is not yet supported, so verify LIMIT
+#    returns exactly 4 rows via COUNT(*) wrapper for determinism.
+#
+SELECT COUNT(*) AS cnt FROM (
+    WITH RECURSIVE hier AS (
+        SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+
+        UNION ALL
+
+        SELECT e.id, e.name, e.manager_id, h.lvl + 1
+        FROM emp e JOIN hier h ON e.manager_id = h.id
+    )
+    SELECT * FROM hier LIMIT 4
+) sub;
+
+#
+# 4. INSERT INTO ... SELECT FROM rCTE
+#
+CREATE TABLE hier_result (
+    id INT,
+    name VARCHAR(50),
+    manager_id INT,
+    lvl INT
+) ENGINE=ColumnStore;
+
+INSERT INTO hier_result
+WITH RECURSIVE hier AS (
+    SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT e.id, e.name, e.manager_id, h.lvl + 1
+    FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT * FROM hier;
+
+--sorted_result
+SELECT * FROM hier_result;
+
+#
+# 5. CREATE TABLE AS SELECT FROM rCTE
+#
+CREATE TABLE hier_copy ENGINE=ColumnStore AS
+WITH RECURSIVE hier AS (
+    SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT e.id, e.name, e.manager_id, h.lvl + 1
+    FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT * FROM hier;
+
+--sorted_result
+SELECT * FROM hier_copy;
+
+DROP DATABASE mcol5142_outer_ops;

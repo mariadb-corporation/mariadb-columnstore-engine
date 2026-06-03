@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS MCOL_5175;
-CREATE DATABASE MCOL_5175;
-USE MCOL_5175;
+DROP DATABASE IF EXISTS mcol_5175;
+CREATE DATABASE mcol_5175;
+USE mcol_5175;
 create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8;
 show create table testtext2;
 Table	Create Table
@@ -18,4 +18,4 @@ insert into testtext2 (myvalue2) VALUES ('myvalue');
 select * from testtext2;
 myvalue	myvalue2
 NULL	myvalue
-DROP DATABASE MCOL_5175;
+DROP DATABASE mcol_5175;

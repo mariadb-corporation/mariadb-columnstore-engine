@@ -1,6 +1,6 @@
 USE tpch1;
-SELECT PS_SUPPKEY, ps_partkey      FROM PARTSUPP WHERE      PS_AVAILQTY
-> ( SELECT 0.5 * sum(L_QUANTITY)      FROM LINEITEM WHERE  l_partkey in (select
+SELECT PS_SUPPKEY, ps_partkey      FROM partsupp WHERE      PS_AVAILQTY
+> ( SELECT 0.5 * sum(L_QUANTITY)      FROM lineitem WHERE  l_partkey in (select
 p_partkey from part where p_partkey in (145018, 160005)) and L_PARTKEY =
 PS_PARTKEY) order by 1,2;
 PS_SUPPKEY	ps_partkey
@@ -13,11 +13,11 @@ PS_SUPPKEY	ps_partkey
 7533	145018
 7554	160005
 SELECT PS_SUPPKEY, ps_partkey
-FROM PARTSUPP WHERE
+FROM partsupp WHERE
 PS_AVAILQTY > ( SELECT 0.5 * sum(L_QUANTITY)
-FROM LINEITEM WHERE
+FROM lineitem WHERE
 l_suppkey in (6,47) and l_partkey in (145018, 160005)  and
-l_partkey in (SELECT P_PARTKEY FROM PART WHERE p_partkey in
+l_partkey in (SELECT P_PARTKEY FROM part WHERE p_partkey in
 (145018, 160005)) and
 L_PARTKEY = PS_PARTKEY AND
 L_SUPPKEY = PS_SUPPKEY AND

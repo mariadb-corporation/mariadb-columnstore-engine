@@ -89,7 +89,7 @@ struct TableInfo
   rowgroup::RowGroup fRowGroup;      // output rowgroup meta data
   std::set<uint32_t> fJoinedTables;  // tables directly/indirectly joined to this table
 
-  TableInfo() : fTableOid(-1), fVisited(false)
+  TableInfo() : fTableOid(-1), fSubId(0), fVisited(false)
   {
   }
 };
@@ -130,7 +130,8 @@ void orExpresssion(const execplan::Operator* op, JobInfo& jobInfo);
 
 // union the queries and return the tuple union step
 SJSTEP unionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo, uint32_t keyCount);
-
+SJSTEP recursiveUnionQueries(JobStepVector& queries, uint64_t distinctUnionNum, JobInfo& jobInfo,
+                             JobStepVector& recurQueries, uint32_t keyCount);
 void addAnnexStep(JobStepVector& querySteps, DeliveredTableMap& deliverySteps, JobInfo& jobInfo,
                   IDBQueryType queryType = execplan::IDBQueryType::SELECT);
 

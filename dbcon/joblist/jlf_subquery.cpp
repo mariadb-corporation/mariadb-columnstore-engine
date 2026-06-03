@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stack>
 #include <iterator>
-//#define NDEBUG
+// #define NDEBUG
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -431,7 +431,7 @@ void doNonCorrelatedExists(const ExistsFilter* ef, JobInfo& jobInfo)
       Message::Args args;
 
       if (tn.empty() || tn.compare(0, 5, "$sub_"))
-        tn = "sub-query("+tn+")";
+        tn = "sub-query(" + tn + ")";
 
       args.add(tn);
       throw IDBExcept(ERR_MISS_JOIN_IN_SUB, args);
@@ -748,6 +748,18 @@ int doFromSubquery(CalpontExecutionPlan* ep, const string& alias, const string& 
   SJSTEP subQueryStep = transformer.makeSubQueryStep(csep, true);
   subQueryStep->view(view);
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
+  if (csep->isRecursiveQuery())
+  {
+    SubAdapterStep* subAdTemp = dynamic_cast<SubAdapterStep*>(subAd.get());
+    if (subAdTemp != nullptr)
+    {
+      subAdTemp->isRecursiveStep(true);
+    }
+    else
+    {
+      throw runtime_error("Failed to get SubAdapterStep");
+    }
+  }
   jobInfo.selectAndFromSubs.push_back(subAd);
 
   return CNX_VTABLE_ID;
@@ -870,6 +882,14 @@ SJSTEP doUnionSub(CalpontExecutionPlan* ep, JobInfo& jobInfo)
   transformer.setVarbinaryOK();
   SJSTEP subQueryStep = transformer.makeSubQueryStep(csep, false);
   SJSTEP subAd(new SubAdapterStep(subQueryStep, jobInfo));
+  if (csep->isRecursiveQuery())
+  {
+    auto* sas = dynamic_cast<SubAdapterStep*>(subAd.get());
+    if (sas)
+    {
+      sas->isRecursiveStep(true);
+    }
+  }
   return subAd;
 }
 

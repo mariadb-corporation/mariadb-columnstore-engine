@@ -32,6 +32,10 @@
 #include "logicoperator.h"
 #include "operator.h"
 #include "predicateoperator.h"
+#include "lib/derived_column.h"
+#include "lib/derived_table.h"
+#include "lib/filter_builders.h"
+#include "lib/parse_tree_ops.h"
 #include "rbo_apply_parallel_ces.h"
 #include "returnedcolumn.h"
 #include "simplefilter.h"
@@ -85,100 +89,50 @@ bool someForeignTablesHasStatisticsAndMbIndex(execplan::CalpontSelectExecutionPl
                      });
 }
 
-// This routine produces a new ParseTree that is AND(lowerBand <= column, column <= upperBand)
+// Helper: fresh SimpleColumn from `column` prototype, with resultType mirrored.
+static execplan::SimpleColumn* cloneKeyColumn(const execplan::SimpleColumn& column)
+{
+  auto* sc = new execplan::SimpleColumn(column);
+  sc->resultType(column.resultType());
+  return sc;
+}
+
+// This routine produces a new ParseTree that is AND(low <= column, column <(=) high)
+// with an OR IS NULL distribution appended for the final range.
 // TODO add engine-independent statistics-derived ranges
 execplan::ParseTree* filtersWithNewRange(execplan::SCSEP& csep, execplan::SimpleColumn& column,
                                          std::pair<uint64_t, uint64_t>& bound, bool isLast)
 {
-  auto tableKeyColumnLeftOp = new execplan::SimpleColumn(column);
-  tableKeyColumnLeftOp->resultType(column.resultType());
+  const execplan::CalpontSystemCatalog::ColType colType = column.resultType();
 
-  // TODO Nobody owns this allocation and cleanup only depends on delete in ParseTree nodes' dtors.
-  auto* filterColLeftOp = new execplan::ConstantColumnUInt(bound.second, 0, 0);
-  // set TZ
-  // There is a question with ownership of the const column
-  // Use exclusive upper bound for intermediate bounds; inclusive for the final bound
-  execplan::SOP ltOp = (isLast) ? boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<="))
-                                : boost::make_shared<execplan::Operator>(execplan::PredicateOperator("<"));
-  ltOp->setOpType(filterColLeftOp->resultType(), tableKeyColumnLeftOp->resultType());
-  ltOp->resultType(ltOp->operationType());
+  // col >= bound.first
+  auto* lowConst = optimizer::lib::makeConstUInt(bound.first);
+  lowConst->resultType(colType);
+  execplan::ParseTree* lowerBound =
+      optimizer::lib::makeCmpFilter(cloneKeyColumn(column), ">=", lowConst);
 
-  auto* sfr = new execplan::SimpleFilter(ltOp, tableKeyColumnLeftOp, filterColLeftOp);
-  // TODO new
-  // TODO remove new and re-use tableKeyColumnLeftOp
-  auto tableKeyColumnRightOp = new execplan::SimpleColumn(column);
-  tableKeyColumnRightOp->resultType(column.resultType());
-  // TODO hardcoded column type and value
-  auto* filterColRightOp = new execplan::ConstantColumnUInt(bound.first, 0, 0);
+  // col <(=) bound.second
+  auto* highConst = optimizer::lib::makeConstUInt(bound.second);
+  highConst->resultType(colType);
+  execplan::ParseTree* upperBound =
+      optimizer::lib::makeCmpFilter(cloneKeyColumn(column), isLast ? "<=" : "<", highConst);
 
-  execplan::SOP gtOp = boost::make_shared<execplan::Operator>(execplan::PredicateOperator(">="));
-  gtOp->setOpType(filterColRightOp->resultType(), tableKeyColumnRightOp->resultType());
-  gtOp->resultType(gtOp->operationType());
-
-  // TODO new
-  auto* sfl = new execplan::SimpleFilter(gtOp, tableKeyColumnRightOp, filterColRightOp);
-
-  // TODO new
-  execplan::ParseTree* ptp = new execplan::ParseTree(new execplan::LogicOperator("and"));
-  ptp->right(sfr);
-  ptp->left(sfl);
-
-  // For the last range, add OR IS NULL to handle NULL values
+  execplan::ParseTree* range;
   if (isLast)
   {
-    // Create IS NULL filter: column IS NULL
-    auto* nullCheckColumn1 = new execplan::SimpleColumn(column);
-    nullCheckColumn1->resultType(column.resultType());
-    auto* nullCheckColumn2 = new execplan::SimpleColumn(column);
-    nullCheckColumn2->resultType(column.resultType());
-
-    auto* nullFilter1 = new execplan::SimpleFilter();
-    execplan::SOP isNullOp1 = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull"));
-    isNullOp1->setOpType(nullCheckColumn1->resultType(), nullCheckColumn1->resultType());
-    isNullOp1->resultType(isNullOp1->operationType());
-    nullFilter1->op(isNullOp1);
-    nullFilter1->lhs(nullCheckColumn1);
-    auto* nullConstant1 = new execplan::ConstantColumnNull();
-    nullConstant1->resultType(nullCheckColumn1->resultType());
-    nullFilter1->rhs(nullConstant1);
-
-    auto* nullFilter2 = new execplan::SimpleFilter();
-    execplan::SOP isNullOp2 = boost::make_shared<execplan::Operator>(execplan::PredicateOperator("isnull"));
-    isNullOp2->setOpType(nullCheckColumn2->resultType(), nullCheckColumn2->resultType());
-    isNullOp2->resultType(isNullOp2->operationType());
-    nullFilter2->op(isNullOp2);
-    nullFilter2->lhs(nullCheckColumn2);
-    auto* nullConstant2 = new execplan::ConstantColumnNull();
-    nullConstant2->resultType(nullCheckColumn2->resultType());
-    nullFilter2->rhs(nullConstant2);
-
-    // Transform (A AND B) OR C to (A OR C) AND (B OR C)
-    // Left side of original AND: sfl (col >= X)
-    execplan::ParseTree* leftOrNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
-    leftOrNull->left(new execplan::ParseTree(sfl));
-    leftOrNull->right(new execplan::ParseTree(nullFilter1));
-
-    // Right side of original AND: sfr (col <= Y)
-    execplan::ParseTree* rightOrNull = new execplan::ParseTree(new execplan::LogicOperator("or"));
-    rightOrNull->left(new execplan::ParseTree(sfr));
-    rightOrNull->right(new execplan::ParseTree(nullFilter2));
-
-    // Final: (A OR C) AND (B OR C)
-    execplan::ParseTree* finalAnd = new execplan::ParseTree(new execplan::LogicOperator("and"));
-    finalAnd->left(leftOrNull);
-    finalAnd->right(rightOrNull);
-    ptp = finalAnd;
+    // For the last range distribute OR IS NULL over both sides so NULLs are
+    // retained in the final UNION unit: (lower OR col IS NULL) AND (upper OR col IS NULL).
+    execplan::ParseTree* nullFilter1 = optimizer::lib::makeIsNullFilter(cloneKeyColumn(column));
+    execplan::ParseTree* nullFilter2 = optimizer::lib::makeIsNullFilter(cloneKeyColumn(column));
+    range = optimizer::lib::andWith(optimizer::lib::orWith(lowerBound, nullFilter1),
+                                    optimizer::lib::orWith(upperBound, nullFilter2));
   }
-
-  auto* currentFilters = csep->filters();
-  if (currentFilters)
+  else
   {
-    execplan::ParseTree* andWithExistingFilters =
-        new execplan::ParseTree(new execplan::LogicOperator("and"), currentFilters, ptp);
-    return andWithExistingFilters;
+    range = optimizer::lib::andWith(lowerBound, upperBound);
   }
 
-  return ptp;
+  return optimizer::lib::andWith(csep->filters(), range);
 }
 
 // Looking for a projected column that comes first in an available index and has EI statistics
@@ -361,7 +315,11 @@ execplan::CalpontSelectExecutionPlan::SelectList makeUnionFromTable(
   }
 
   auto& columnStatistics = *columnStatisticsOpt.value();
-  auto& keyColumn = columnStatistics.getColumn();
+
+  execplan::SimpleColumn keyColumn(columnStatistics.getColumn()); // copying because we have to modify it.
+
+  keyColumn.tableAlias(table.alias); // assigns correct alias
+  keyColumn.data("");                // force recomputation of data() - SQL representation (for foreign query)
 
   size_t configuredMaxParallelFactor = ctx.getCesOptimizationParallelFactor();
 
@@ -409,7 +367,9 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
                                             const std::string& tableAlias, optimizer::RBOptimizerContext& ctx,
                                             SCToPosCounterMap& sCsAndTheirPositions)
 {
-  auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(table, false);
+  auto newAliasedTable(table);
+  newAliasedTable.alias = tableAlias;
+  auto derivedSCEP = csep.cloneForTableWORecursiveSelectsGbObHaving(newAliasedTable, false);
   // update returned columns using SC -> position map.
   std::vector<execplan::SimpleColumn*> projectionSCs(sCsAndTheirPositions.size(), nullptr);
   for (auto [sc, colPosition] : sCsAndTheirPositions)
@@ -448,9 +408,7 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
         *derivedCSEP, const_cast<execplan::CalpontSystemCatalog::TableAliasName&>(table), ctx);
 
     // TODO add original alias to support multiple same name tables
-    derivedSCEP->location(execplan::CalpontSelectExecutionPlan::FROM);
-    derivedSCEP->subType(execplan::CalpontSelectExecutionPlan::FROM_SUBS);
-    derivedSCEP->derivedTbAlias(tableAlias);
+    optimizer::lib::promoteCSEPToDerived(derivedSCEP.get(), tableAlias);
 
     derivedSCEP->unionVec().insert(derivedSCEP->unionVec().end(), additionalUnionVec.begin(),
                                    additionalUnionVec.end());
@@ -462,21 +420,8 @@ execplan::SCSEP createDerivedTableFromTable(execplan::CalpontSelectExecutionPlan
 void updateScToUseRewrittenDerived(execplan::SimpleColumn* sc, const std::string& newTableAlias,
                                    const uint32_t colPosition, std::optional<std::string> scAlias)
 {
-  sc->oid(0);
-  sc->schemaName("");
-  // For derived tables, set tableName/tableAlias/derivedTable to the new alias
-  sc->tableName(newTableAlias);
-  sc->tableAlias(newTableAlias);
-  sc->derivedTable(newTableAlias);
-  sc->data("``.`" + newTableAlias + "`.`" + sc->columnName() + "`");
-
-  sc->colPosition(colPosition);
-  sc->isColumnStore(true);
-
-  if (scAlias)
-  {
-    sc->alias(scAlias.value());
-  }
+  optimizer::lib::rebindSCToDerivedInPlace(sc, newTableAlias, static_cast<int64_t>(colPosition),
+                                           std::move(scAlias));
 }
 
 std::pair<uint32_t, bool> findOrInsertColumnPosition(execplan::SimpleColumn* sc,

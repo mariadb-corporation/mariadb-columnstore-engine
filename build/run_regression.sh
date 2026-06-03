@@ -34,8 +34,24 @@ prepare_regression() {
 
   message "Running one-time preparation for regression tests"
 
-  # Set config path prefix based on distro
-  CONFIG_PATH_PREFIX=$(set_cnf_path)
+  # Detect cnf drop-in dir inside the container (set_cnf_path runs on host and can't see container fs).
+  # For deb distros prefer /etc/mariadb.conf.d/ over /etc/my.cnf.d/ when both exist.
+  if [[ "$DISTRO" == *ubuntu* ]] || [[ "$DISTRO" == *debian* ]]; then
+    CONFIG_PATH_PREFIX=$(execInnerDockerStripped "${CONTAINER_NAME}" "
+      if [[ -d /etc/mariadb.conf.d ]]; then echo /etc/mariadb.conf.d/50-
+      elif [[ -d /etc/mysql/mariadb.conf.d ]]; then echo /etc/mysql/mariadb.conf.d/50-
+      elif [[ -d /etc/my.cnf.d ]]; then echo /etc/my.cnf.d/
+      else echo /etc/mysql/mariadb.conf.d/50-
+      fi
+    ")
+  else
+    CONFIG_PATH_PREFIX=$(execInnerDockerStripped "${CONTAINER_NAME}" "
+      if [[ -d /etc/my.cnf.d ]]; then echo /etc/my.cnf.d/
+      elif [[ -d /etc/mariadb.conf.d ]]; then echo /etc/mariadb.conf.d/50-
+      else echo /etc/mysql/mariadb.conf.d/50-
+      fi
+    ")
+  fi
 
   # Clone regression test repo (requires GitHub token)
   REPO_URL="https://github.com/mariadb-corporation/mariadb-columnstore-regression-test"

@@ -1,6 +1,7 @@
 --source ../include/have_columnstore.inc
 --source include/have_innodb.inc
 --source ../include/newer_11.4.6.inc
+--source ../include/have_innodb_queries_use_mcs.inc
 --source ../include/functions.inc
 --source ../include/cross_engine.inc
 
@@ -15,18 +16,18 @@ USE rbo_parallel_ces;
 SELECT calsettrace(1);
 
 # Test table in InnoDB (routed to ColumnStore via CES)
-CREATE TABLE Ti (col1 INT, col2 INT, col3 INT) ENGINE=InnoDB;
+CREATE TABLE ti (col1 INT, col2 INT, col3 INT) ENGINE=InnoDB;
 
 # Populate with 100 rows
-INSERT INTO Ti (col1, col2, col3)
+INSERT INTO ti (col1, col2, col3)
 SELECT seq, seq+1, seq+2 FROM (SELECT seq FROM seq_1_to_100) AS numbers;
 
 # Generate statistics, limit histogram size
 SET @@histogram_size=10;
-ANALYZE TABLE Ti PERSISTENT FOR ALL;
+ANALYZE TABLE ti PERSISTENT FOR ALL;
 
 # Index to make basic stats available
-CREATE INDEX excellent_index ON Ti(col1);
+CREATE INDEX excellent_index ON ti(col1);
 
 # Enable RBO
 --source ../include/enable_rbo_parallel_ces.inc
@@ -35,7 +36,7 @@ CREATE INDEX excellent_index ON Ti(col1);
 SET @@columnstore_query_accel_parallel_factor=5;
 
 # Execute a query to build and store plans
-SELECT SUM(col1) FROM Ti;
+SELECT SUM(col1) FROM ti;
 
 # Snapshot plans into variables for readability
 SET @orig_plan := mcs_get_plan('original');
@@ -58,7 +59,7 @@ SELECT @rbo_rules LIKE '%parallel_ces%' AS rule_parallel_ces_applied;
 SET @@columnstore_query_accel_parallel_factor=15;
 
 # Re-execute to rebuild plan with new factor
-SELECT SUM(col1) FROM Ti;
+SELECT SUM(col1) FROM ti;
 
 SET @opt_plan := mcs_get_plan('optimized');
 SET @uu_tail := SUBSTRING_INDEX(@opt_plan, '--- Union Unit ---', -1);

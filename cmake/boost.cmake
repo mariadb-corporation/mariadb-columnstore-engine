@@ -1,5 +1,5 @@
 # Single source of truth for Boost components we need
-set(BOOST_COMPONENTS chrono filesystem program_options regex system thread)
+set(BOOST_COMPONENTS chrono filesystem program_options regex thread)
 
 find_package(Boost 1.88.0 COMPONENTS ${BOOST_COMPONENTS})
 
@@ -27,6 +27,16 @@ set(Boost_LIBRARY_DIRS "${INSTALL_LOCATION}/lib")
 link_directories("${Boost_LIBRARY_DIRS}")
 
 set(_cxxargs "-fPIC -DBOOST_NO_AUTO_PTR -fvisibility=default")
+# Match the server's libstdc++ container ABI.  MariaDB's top-level
+# CMakeLists.txt turns _GLIBCXX_DEBUG / _GLIBCXX_ASSERTIONS on for Debug
+# builds; if Boost is compiled without these defines, passing
+# std::vector<std::string> through Boost.Program_options ends in
+# undefined-reference errors against the debug-ABI symbols, and any
+# server-owned container accessed via a Boost facility silently
+# returns garbage.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(_cxxargs "${_cxxargs} -D_GLIBCXX_DEBUG -D_GLIBCXX_ASSERTIONS")
+endif()
 set(_linkflags "")
 
 if(WITH_MSAN)

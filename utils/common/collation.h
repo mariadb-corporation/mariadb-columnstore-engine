@@ -116,6 +116,17 @@ class MariaDBHasher
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
   {
+    // Hashing an empty string is a no-op in every MariaDB collation
+    // (skip_trailing_space/my_hash_sort_* return immediately when len==0).
+    // Avoid calling hash_sort() with a NULL pointer: MariaDB computes
+    // `ptr + len` before checking, which is UB ("applying zero offset to
+    // null pointer"), and MDEV-35620 hardened skip_trailing_space() with
+    // DBUG_ASSERT(ptr), which then fires in debug builds.  Columnstore's
+    // utils::ConstString explicitly documents that its internal pointer
+    // can be NULL (e.g. for NULL string columns in a rowgroup::Row), so
+    // just short-circuit here.
+    if (length == 0)
+      return *this;
 #ifdef MY_HASH_ADD_MARIADB
     my_hasher_st hasher= my_hasher_mysql5x();
     cs->hash_sort(&hasher, (const uchar*)str, length);

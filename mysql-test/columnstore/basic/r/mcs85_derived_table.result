@@ -1,9 +1,6 @@
 DROP DATABASE IF EXISTS mcs85_db;
 CREATE DATABASE mcs85_db;
 USE mcs85_db;
-CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t2 (a INT, b CHAR(5))ENGINE=Columnstore;
 INSERT INTO t1 VALUES (NULL, ''),(1, 'aaa'),(2, 'aaa'),(3, 'ccc'),(4, 'ddd'),(5, 'aaa'),(6, ''),(7, 'eee');
@@ -92,5 +89,4 @@ NULL	NULL
 7	7
 NULL	9
 NULL	11
-DROP USER 'cejuser'@'localhost';
 DROP DATABASE mcs85_db;

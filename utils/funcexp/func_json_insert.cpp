@@ -140,7 +140,8 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
         if (isArrAutoWrap)
           retJS.append((const char*)valStart, jsEg.s.c_str - valStart);
-        retJS.append(", ");
+        if (retJS.length() > 0)
+          retJS.append(", ");
         if (appendJSValue(retJS, cs, row, fp[i + 1]))
           goto error;
         if (isArrAutoWrap)
@@ -174,7 +175,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       valEnd = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
       retJS.clear();
       retJS.append(rawJS, valEnd - rawJS);
-      if (itemSize > 0)
+      if (itemSize > 0 && retJS.length() > 0)
         retJS.append(", ");
       if (appendJSValue(retJS, cs, row, fp[i + 1]))
         goto error;
@@ -214,7 +215,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       retJS.clear();
       retJS.append(rawJS, valEnd - rawJS);
 
-      if (keySize > 0)
+      if (keySize > 0 && retJS.length() > 0)
         retJS.append(", ");
 
       retJS.append("\"");

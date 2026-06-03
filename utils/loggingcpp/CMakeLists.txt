@@ -34,5 +34,11 @@ columnstore_library(
 
 columnstore_link(loggingcpp configcpp boost_filesystem)
 
+add_custom_target(GenLoggingSource
+    DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/messageids.h
+    ${CMAKE_CURRENT_BINARY_DIR}/errorids.h
+)
+
 columnstore_install_file(MessageFile.txt ${ENGINE_SYSCONFDIR}/columnstore)
 columnstore_install_file(ErrorMessage.txt ${ENGINE_SYSCONFDIR}/columnstore)

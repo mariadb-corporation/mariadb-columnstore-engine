@@ -1,0 +1,285 @@
+--source ../include/have_columnstore.inc
+
+--echo # MCOL-4250
+--echo # Correlated scalar aggregate subqueries inside an OUTER JOIN ON clause
+--echo # are now decorrelated by the RBO rule `decorrelate_outer_join_sub`:
+--echo # the inner SELECT is promoted to a derived table (GROUP BY on the
+--echo # correlation keys) and the enclosing SelectFilter is replaced with
+--echo # equi-join predicates referencing that derived table.  For every
+--echo # supported shape Columnstore must now execute the query directly and
+--echo # produce the same result set as the MariaDB (AUTO) fallback path.
+
+SET default_storage_engine=columnstore;
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol4250;
+CREATE DATABASE mcol4250;
+USE mcol4250;
+
+# Schema reduced from the ticket. Types simplified so the repro fits the
+# minimal join shape that triggers the IDB-1015 path in buildJoin().
+CREATE TABLE cas_triggerevent(
+  ASSOCIATED_BCAP_CASEID INT,
+  SOURCE_DB INT
+) ENGINE=columnstore;
+
+CREATE TABLE cas_case(
+  CASEID INT,
+  ASSOCIATED_BCAP_CASEID INT,
+  SOURCE_DB INT,
+  REQUESTTYPECODE VARCHAR(100),
+  GCIN INT
+) ENGINE=columnstore;
+
+CREATE TABLE cas_bcapkyc(
+  CASEID INT,
+  SOURCE_DB INT,
+  gcin1 INT
+) ENGINE=columnstore;
+
+CREATE TABLE cas_caseflow(
+  CASEID INT,
+  SOURCE_DB INT,
+  STATUSCODE VARCHAR(100),
+  INDATE DATE
+) ENGINE=columnstore;
+
+INSERT INTO cas_triggerevent VALUES (1, 1), (2, 1);
+INSERT INTO cas_case VALUES
+  (1, 1, 1, 'CBGBranchesRequest', 100),
+  (2, 2, 1, 'BCAPApplication',    200),
+  (3, 3, 1, 'OtherType',          300);
+INSERT INTO cas_bcapkyc VALUES (1, 1, 100), (2, 1, 200);
+INSERT INTO cas_caseflow VALUES
+  (1, 1, 'CompletedScreening', '2024-01-01'),
+  (1, 1, 'CompletedScreening', '2024-02-01'),
+  (2, 1, 'CompletedScreening', '2024-03-01');
+
+--echo #
+--echo # 1. Minimal scalar correlated subquery in LEFT JOIN ON (the actual
+--echo #    pattern from MCOL-4250).
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.SOURCE_DB = cf.SOURCE_DB
+ AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID    = cf.CASEID
+                    AND e.SOURCE_DB = cf.SOURCE_DB
+                    AND e.STATUSCODE = cf.STATUSCODE);
+
+SET columnstore_select_handler=AUTO;
+--sorted_result
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.SOURCE_DB = cf.SOURCE_DB
+ AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID    = cf.CASEID
+                    AND e.SOURCE_DB = cf.SOURCE_DB
+                    AND e.STATUSCODE = cf.STATUSCODE);
+
+--echo #
+--echo # 2. Full repro from the ticket via a VIEW.
+--echo #
+CREATE VIEW vw_triggerevent_assoc_bcap_cases AS
+SELECT cc.CASEID AS CASEID
+FROM cas_triggerevent ct
+JOIN cas_case cc
+  ON ct.ASSOCIATED_BCAP_CASEID = cc.CASEID
+ AND ct.SOURCE_DB              = cc.SOURCE_DB
+JOIN cas_bcapkyc cb
+  ON cb.CASEID    = cc.CASEID
+ AND cb.SOURCE_DB = cc.SOURCE_DB
+ AND cb.gcin1     = cc.GCIN
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID    = cf.CASEID
+ AND cc.SOURCE_DB = cf.SOURCE_DB
+ AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID    = cf.CASEID
+                    AND e.SOURCE_DB = cf.SOURCE_DB
+                    AND e.STATUSCODE = cf.STATUSCODE)
+WHERE cc.REQUESTTYPECODE IN ('CBGBranchesRequest','BCAPApplication');
+
+SET columnstore_select_handler=ON;
+SELECT * FROM vw_triggerevent_assoc_bcap_cases ORDER BY CASEID;
+
+DROP VIEW vw_triggerevent_assoc_bcap_cases;
+
+--echo #
+--echo # 3. Supported: MIN aggregate with a local predicate on the sub.
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID, cf.INDATE
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.INDATE = (SELECT MIN(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID = cf.CASEID
+                    AND e.STATUSCODE = 'CompletedScreening');
+
+--echo #
+--echo # 4. Supported: SUM aggregate with a bare-column outer LHS on cf.  The
+--echo #    outer LHS (cf.SOURCE_DB) shares a table with the correlation equi
+--echo #    (e.CASEID = cf.CASEID) and the outer operator is '=', both of which
+--echo #    are required for the executor's join-inference.
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID, cf.SOURCE_DB
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB = (SELECT SUM(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4b. Unsupported: inequality operator on the outer comparison.  The
+--echo #     join-inference does not pick up the derived table when the main
+--echo #     predicate is <, >, <=, >=, or <> (MCS-1000), so the matcher is
+--echo #     conservative and leaves such plans to the post-RBO validator.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB < (SELECT SUM(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4c. Unsupported: outer LHS references a table (cc) that does not
+--echo #     appear in any correlation equi-predicate.  Without a shared table
+--echo #     the executor cannot wire the derived table into the OJF group.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.GCIN = (SELECT SUM(e.SOURCE_DB)
+                FROM cas_caseflow e
+                WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4d. Unsupported: outer LHS is a constant, not a plain column.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND 1 = (SELECT COUNT(*)
+          FROM cas_caseflow e
+          WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4e. Unsupported: AVG aggregate.  Its result type (DECIMAL/DOUBLE) does
+--echo #     not match the outer LHS type on the hash-join compatibility check
+--echo #     (MCS-1002), so the matcher skips AVG outright to keep the executor
+--echo #     from hitting an unreachable plan.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB = (SELECT AVG(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 4f. Supported: two correlated scalar subqueries in the SAME OUTER JOIN
+--echo #     ON clause.  Each gets its own derived table; the unique-id counter
+--echo #     is bumped between rewrites so the aliases do not collide.
+--echo #
+SET columnstore_select_handler=ON;
+--sorted_result
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.SOURCE_DB = (SELECT MAX(e.SOURCE_DB)
+                     FROM cas_caseflow e
+                     WHERE e.CASEID = cf.CASEID)
+ AND cf.STATUSCODE = (SELECT MAX(e.STATUSCODE)
+                      FROM cas_caseflow e
+                      WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 5. Unsupported: non-correlated scalar subquery inside an OUTER JOIN ON.
+--echo #    The subquery is a constant so there is nothing to decorrelate, but
+--echo #    the executor cannot compile SimpleScalarFilter inside OuterJoinOnFilter
+--echo #    either, so IDB-1015 is still the expected contract.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cf.INDATE = (SELECT MAX(INDATE) FROM cas_caseflow);
+
+--echo #
+--echo # 6. Unsupported: correlated subquery with a DISTINCT aggregate — the
+--echo #    matcher rejects DISTINCT and the post-RBO validator raises IDB-1015.
+--echo #
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND 1 < (SELECT COUNT(DISTINCT e.INDATE)
+          FROM cas_caseflow e
+          WHERE e.CASEID = cf.CASEID);
+
+--echo #
+--echo # 7. Rule disabled: with OptimizerRules.decorrelate_outer_join_sub=N in
+--echo #    Columnstore.xml the rule never runs, so the same scalar subquery
+--echo #    pattern that was rewritten in case 1 must now fall back to the
+--echo #    pre-MCOL-4250 IDB-1015 contract.  The post-RBO validator in
+--echo #    cs_get_select_plan() is the single place responsible for the
+--echo #    error, no matter whether the rule was unable to match or simply
+--echo #    never ran.
+--echo #
+--exec $MCS_MCSSETCONFIG OptimizerRules decorrelate_outer_join_sub 'N'
+SET columnstore_select_handler=ON;
+--error 1815
+SELECT cc.CASEID
+FROM cas_case cc
+LEFT JOIN cas_caseflow cf
+  ON cc.CASEID = cf.CASEID
+ AND cc.SOURCE_DB = cf.SOURCE_DB
+ AND cf.STATUSCODE = 'CompletedScreening'
+ AND cf.INDATE = (SELECT MAX(e.INDATE)
+                  FROM cas_caseflow e
+                  WHERE e.CASEID    = cf.CASEID
+                    AND e.SOURCE_DB = cf.SOURCE_DB
+                    AND e.STATUSCODE = cf.STATUSCODE);
+--exec $MCS_MCSSETCONFIG OptimizerRules decorrelate_outer_join_sub 'Y'
+
+DROP TABLE cas_triggerevent;
+DROP TABLE cas_case;
+DROP TABLE cas_bcapkyc;
+DROP TABLE cas_caseflow;
+DROP DATABASE mcol4250;
+--enable_warnings

@@ -32,6 +32,22 @@
 
 #undef LOG_INFO
 
+/*
+  Prevent rpl_master_info_file.h (transitively included via sql_lex.h) from
+  being fully parsed. Its inline static VALUE_MAP (std::unordered_map with
+  Info_file::Mem_fn) creates a complex template instantiation that produces
+  an unresolvable symbol when ha_columnstore.so is loaded by the server.
+  ColumnStore does not use any replication info file types, so a forward
+  declaration of Master_info_file (needed by LEX_MASTER_INFO in sql_lex.h)
+  is sufficient.
+*/
+#ifndef RPL_MASTER_INFO_FILE_H
+#define RPL_MASTER_INFO_FILE_H
+struct Master_info_file;
+enum struct enum_master_use_gtid {};
+enum struct trilean {};
+#endif
+
 #ifdef _DEBUG
 #ifndef SAFE_MUTEX
 #define SAFE_MUTEX

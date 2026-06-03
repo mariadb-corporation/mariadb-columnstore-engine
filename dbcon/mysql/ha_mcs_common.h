@@ -24,23 +24,19 @@ namespace ha_mcs_common
 
 inline bool isMCSTable(TABLE* table_ptr)
 {
-#if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-
-  if (!(table_ptr->s && (*table_ptr->s->db_plugin)->name.str))
-#else
-  if (!(table_ptr->s && (table_ptr->s->db_plugin)->name.str))
-#endif
-    return true;
+  if (!table_ptr || !table_ptr->s || !table_ptr->s->db_plugin)
+    return false;
 
 #if (defined(_MSC_VER) && defined(_DEBUG)) || defined(SAFE_MUTEX)
-  std::string engineName = (*table_ptr->s->db_plugin)->name.str;
+  const char* name = (*table_ptr->s->db_plugin)->name.str;
 #else
-  std::string engineName = table_ptr->s->db_plugin->name.str;
+  const char* name = table_ptr->s->db_plugin->name.str;
 #endif
 
-  if (engineName == "Columnstore" || engineName == "Columnstore_cache")
-    return true;
-  return false;
+  if (!name)
+    return false;
+
+  return (strcmp(name, "Columnstore") == 0 || strcmp(name, "Columnstore_cache") == 0);
 }
 
 inline bool isMultiUpdateStatement(const enum_sql_command& command)

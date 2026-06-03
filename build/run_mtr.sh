@@ -14,8 +14,11 @@ optparse.define short=F long=full-mtr desc="Run Full Mtr" variable=FULL_MTR defa
 source $(optparse.build)
 
 # Define test suite lists
-MTR_BASIC_SUITE_LIST="basic,bugfixes,future"
-MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly,future"
+# 'future' suite is run separately because it requires innodb_queries_use_mcs=ON
+# (a READONLY startup variable for Query Accelerator / RBO tests).
+MTR_BASIC_SUITE_LIST="basic,bugfixes"
+MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly"
+MTR_FUTURE_SUITE="future"
 
 for flag in CONTAINER_NAME DISTRO EVENT; do
     if [[ -z "${!flag}" ]]; then
@@ -48,10 +51,6 @@ if [[ -z $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
     error "Container '${CONTAINER_NAME}' is not running."
     exit 1
 fi
-
-CONFIG_PATH_PREFIX=$(set_cnf_path)
-echo "Put lower_case_table_names=2 into ${CONFIG_PATH_PREFIX}lower_case.cnf"
-execInnerDocker "${CONTAINER_NAME}" "printf '[mysqld]\nlower_case_table_names=2\n' > ${CONFIG_PATH_PREFIX}lower_case.cnf"
 
 select_pkg_format ${DISTRO}
 
@@ -100,4 +99,12 @@ MTR_RUN_COMMAND="cd ${MTR_PATH} && ./mtr ${EXTERN_FLAG} --force --print-core=det
                                   --verbose-restart --skip-test=rocksdb_hotbackup* \
                                   --suite=columnstore/${MTR_SUITE_LIST//,/,columnstore/}"
 
-execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}"
+MTR_EXIT=0
+execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}" || MTR_EXIT=$?
+
+# Run 'future' suite separately — it opts into innodb_queries_use_mcs=on via
+# its own suite.opt (mariadbd restarted). Under --extern mode .opt files are
+# ignored; tests skip via include/have_innodb_queries_use_mcs.inc.
+execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" || MTR_EXIT=$?
+
+exit ${MTR_EXIT}

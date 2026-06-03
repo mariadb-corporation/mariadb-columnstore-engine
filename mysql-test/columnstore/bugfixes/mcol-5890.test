@@ -2,9 +2,9 @@
 
 # Setup: Create a test database
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5890;
-CREATE DATABASE MCOL5890;
-USE MCOL5890;
+DROP DATABASE IF EXISTS mcol5890;
+CREATE DATABASE mcol5890;
+USE mcol5890;
 --enable_warnings
 
 # Test 1: DROP TABLE IF EXISTS on a non-existent table should succeed silently
@@ -22,8 +22,10 @@ CREATE TABLE t1 (id INT) ENGINE=ColumnStore;
 DROP TABLE IF EXISTS t1;
 
 # Verify table is dropped
+--disable_result_log
 --error ER_NO_SUCH_TABLE
 SELECT * FROM t1;
+--enable_result_log
 
 # Cleanup
-DROP DATABASE MCOL5890;
+DROP DATABASE mcol5890;

@@ -21,6 +21,8 @@ namespace datatypes
 {
 static inline CHARSET_INFO& get_charset_or_bin(int32_t charsetNumber)
 {
+  if (charsetNumber == 0)
+    return my_charset_bin;
   CHARSET_INFO* cs = get_charset(charsetNumber, MYF(MY_WME));
   return cs ? *cs : my_charset_bin;
 }

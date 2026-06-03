@@ -74,11 +74,13 @@ class ColExtInfEntry
   ColExtInfEntry(int64_t minVal, int64_t maxVal)
    : fLbid(INVALID_LBID), fMinVal(minVal), fMaxVal(maxVal), fNewExtent(true)
   {
+    utils::int128Min(fbigMaxVal);
+    utils::int128Max(fbigMinVal);
   }
 
   // Used to create entry for a new extent, with LBID not yet allocated
   ColExtInfEntry(int128_t bigMinVal, int128_t bigMaxVal)
-   : fLbid(INVALID_LBID), fNewExtent(true), fbigMinVal(bigMinVal), fbigMaxVal(bigMaxVal)
+   : fLbid(INVALID_LBID), fMinVal(LLONG_MIN), fMaxVal(LLONG_MIN), fNewExtent(true), fbigMinVal(bigMinVal), fbigMaxVal(bigMaxVal)
   {
   }
 
@@ -89,11 +91,15 @@ class ColExtInfEntry
    , fMaxVal(static_cast<int64_t>(maxVal))
    , fNewExtent(true)
   {
+    utils::int128Min(fbigMaxVal);
+    utils::int128Max(fbigMinVal);
   }
 
   // Used to create entry for a new extent, with LBID not yet allocated
   ColExtInfEntry(uint128_t bigMinVal, uint128_t bigMaxVal)
    : fLbid(INVALID_LBID)
+   , fMinVal(LLONG_MIN)
+   , fMaxVal(LLONG_MIN)
    , fNewExtent(true)
    , fbigMinVal(static_cast<int128_t>(bigMinVal))
    , fbigMaxVal(static_cast<int128_t>(bigMaxVal))

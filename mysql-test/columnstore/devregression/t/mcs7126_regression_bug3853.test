@@ -21,11 +21,11 @@ insert into dw_entradas_fact_1 values ('2010-01-01'), ('2010-02-02'), ('2010-02-
 
 
 SELECT 1  NORMAL, 1  OFERTA
-         FROM DW_ENTRADAS_FACT a
+         FROM dw_entradas_fact a
         WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28' 
 union all
 SELECT 1  NORMAL, 1  OFERTA
-          FROM DW_ENTRADAS_FACT_1 a
+          FROM dw_entradas_fact_1 a
          WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28';
 
 
@@ -33,14 +33,14 @@ SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA  OFERTA
 FROM (SELECT 1  NORMAL,
               1  OFERTA
-         FROM DW_ENTRADAS_FACT a
+         FROM dw_entradas_fact a
         WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY
 union all
 SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA OFERTA
   FROM (SELECT 1  NORMAL,
                1  OFERTA
-          FROM DW_ENTRADAS_FACT_1 a
+          FROM dw_entradas_fact_1 a
          WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY;
 
 
@@ -48,21 +48,21 @@ SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA  OFERTA
 FROM ((SELECT 1  NORMAL,
               1  OFERTA
-         FROM DW_ENTRADAS_FACT
+         FROM dw_entradas_fact
         WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')
 union all
 	(SELECT 1  NORMAL,
                1  OFERTA
-          FROM DW_ENTRADAS_FACT_1
+          FROM dw_entradas_fact_1
          WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')) AS TY;
          
          
 SELECT 1  NORMAL, 1  OFERTA
-         FROM DW_ENTRADAS_FACT a
+         FROM dw_entradas_fact a
         WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28' 
 union
 SELECT 1  NORMAL, 1  OFERTA
-          FROM DW_ENTRADAS_FACT_1 a
+          FROM dw_entradas_fact_1 a
          WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28';
 
 
@@ -70,14 +70,14 @@ SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA  OFERTA
 FROM (SELECT 1  NORMAL,
               1  OFERTA
-         FROM DW_ENTRADAS_FACT a
+         FROM dw_entradas_fact a
         WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY
 union
 SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA OFERTA
   FROM (SELECT 1  NORMAL,
                1  OFERTA
-          FROM DW_ENTRADAS_FACT_1 a
+          FROM dw_entradas_fact_1 a
          WHERE a.FECHA BETWEEN '2010-02-01' and '2010-02-28')  TY;
 
 
@@ -85,12 +85,12 @@ SELECT TY.NORMAL  NORMAL ,
        TY.OFERTA  OFERTA
 FROM ((SELECT 1  NORMAL,
               1  OFERTA
-         FROM DW_ENTRADAS_FACT
+         FROM dw_entradas_fact
         WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')
 union
 	(SELECT 1  NORMAL,
                1  OFERTA
-          FROM DW_ENTRADAS_FACT_1
+          FROM dw_entradas_fact_1
          WHERE FECHA BETWEEN '2010-02-01' and '2010-02-28')) AS TY;         
 
 select * from region where 2=2 union select n_regionkey, n_nationkey, n_name from nation where 0=1;

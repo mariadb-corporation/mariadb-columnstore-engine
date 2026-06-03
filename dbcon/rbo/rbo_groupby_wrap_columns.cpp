@@ -29,6 +29,8 @@
 #include "simplefilter.h"
 #include "existsfilter.h"
 #include "functioncolumn.h"
+#include "lib/agg_wrap.h"
+#include "lib/column_classify.h"
 #include "logicoperator.h"
 
 namespace optimizer
@@ -51,81 +53,21 @@ struct ColumnWrapperContext
   const std::vector<execplan::SRCP>* gbCols;
   const std::vector<execplan::SRCP>* origGbCols;
   const execplan::CalpontSelectExecutionPlan::TableList& tableList;
-  std::vector<std::pair<execplan::AggregateColumn*, uint32_t>> aggExprs;
-  uint32_t nextId{0};
+  optimizer::lib::AggExprDedup dedup;
   bool applied{false};
   static std::vector<execplan::SRCP> emptySRCPVec;
 };
 
 std::vector<execplan::SRCP> ColumnWrapperContext::emptySRCPVec;
 
+// Thin wrapper: forwards to optimizer::lib::containsAggregate and propagates
+// every observed expression id into ctx.maxExpressionId.
 bool isAggregateColumn(const std::variant<execplan::ParseTree*, execplan::TreeNode*>& col,
                        RBOptimizerContext& ctx)
 {
-  bool ret = false;
-  std::vector<std::variant<execplan::ParseTree*, execplan::TreeNode*>> stack;
-  stack.emplace_back(col);
-  while (!stack.empty())
-  {
-    auto node = stack.back();
-    stack.pop_back();
-    if (auto* ptp = std::get_if<execplan::ParseTree*>(&node))
-    {
-      auto* pt = *ptp;
-      if (pt->left() != nullptr)
-        stack.emplace_back(pt->left());
-      if (pt->right() != nullptr)
-        stack.emplace_back(pt->right());
-      stack.emplace_back(pt->data());
-    }
-    else
-    {
-      auto* tn = std::get<execplan::TreeNode*>(node);
-      if (auto* rc = dynamic_cast<execplan::ReturnedColumn*>(tn))
-      {
-        if (rc->expressionId() != -1u)
-          ctx.setMaxExpressionId(rc->expressionId());
-      }
-
-      if (auto* agc = dynamic_cast<execplan::AggregateColumn*>(tn))
-      {
-        ret = true;
-        for (auto& arg : agc->aggParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-      }
-      else if (auto* ac = dynamic_cast<execplan::ArithmeticColumn*>(tn))
-      {
-        stack.emplace_back(ac->expression());
-      }
-      else if (auto* fc = dynamic_cast<execplan::FunctionColumn*>(tn))
-      {
-        for (auto& arg : fc->functionParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-      }
-      else if (auto* sf = dynamic_cast<execplan::SimpleFilter*>(tn))
-      {
-        if (sf->lhs() != nullptr)
-          stack.emplace_back(sf->lhs());
-        if (sf->rhs() != nullptr)
-          stack.emplace_back(sf->rhs());
-      }
-      else if (auto* wf = dynamic_cast<execplan::WindowFunctionColumn*>(tn))
-      {
-        for (auto& arg : wf->functionParms())
-        {
-          stack.emplace_back(arg.get());
-        }
-        for (auto& part : wf->partitions())
-        {
-          stack.emplace_back(part.get());
-        }
-      }
-    }
-  }
+  uint32_t localMax = ctx.getMaxExpressionId();
+  const bool ret = optimizer::lib::containsAggregate(col, &localMax);
+  ctx.setMaxExpressionId(localMax);
   return ret;
 }
 
@@ -155,25 +97,8 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
 
   if (auto* sc = dynamic_cast<const execplan::SimpleColumn*>(tn))
   {
-    bool ourTable = false;
-    for (const auto& tbl : lctx.tableList)
-    {
-      if (!tbl.isColumnstore())
-      {
-        continue;
-      }
-      if (tbl.schema == sc->schemaName() &&
-          (tbl.table == sc->tableName() || (tbl.table.empty() && tbl.alias == sc->tableName())) &&
-          tbl.alias == sc->tableAlias())
-      {
-        ourTable = true;
-        break;
-      }
-    }
-    if (!ourTable)
-    {
+    if (!optimizer::lib::columnBelongsToCSTableList(sc, lctx.tableList))
       return false;
-    }
   }
 
   if (dynamic_cast<execplan::SimpleFilter*>(tn))
@@ -185,53 +110,45 @@ bool needWrap(execplan::TreeNode* tn, ColumnWrapperContext& lctx)
     return false;
   }
 
-  // In this case sorting direction is not significant, so set it to the default value
+  // In this case sorting direction & joinInfo is not significant, so set it to the default value
   // for columns comparison (actual for ORDER BY columns)
+  // Old values are not restored after exceptions, as the entire query will be aborted in this case
   bool asc = rc->asc();
+  auto joinInfo = rc->joinInfo();
   rc->asc(true);
+  rc->joinInfo(0);
   bool ret = true;
   for (const auto& gbCol : *lctx.gbCols)
   {
-    if (*rc == *gbCol)
+    if (*rc == *gbCol && rc->derivedRefCol() == gbCol->derivedRefCol())
     {
       ret = false;
       break;
     }
   }
   rc->asc(asc);
+  rc->joinInfo(joinInfo);
   return ret;
 }
 
 template <typename T>
 execplan::AggregateColumn* wrapColumn(const T& rc, ColumnWrapperContext& lctx, RBOptimizerContext& ctx)
 {
-  auto ac = std::make_unique<execplan::AggregateColumn>(rc->sessionID());
-  ac->timeZone(ctx.getGwi().timeZone);
-  ac->alias(rc->alias());
-  ac->aggOp(execplan::AggregateColumn::SELECT_SOME);
-  ac->asc(rc->asc());
-  ac->charsetNumber(rc->charsetNumber());
-  ac->orderPos(rc->orderPos());
-  ac->aggParms().emplace_back(rc);
-  ac->resultType(rc->resultType());
+  // Same pattern as above, need to ignore sorting direction for the AggregateColumn and its embedded ReturnedColumn
+  // when comparing for equality. ORDER BY direction (ASC/DESC) is not significant for expression identity.
+  // TODO: Maybe need to consider removing asc/joinInfo from operator== to eliminate this pattern
+  bool savedAsc = rc->asc();
+  rc->asc(true);
 
-  size_t i;
-  for (i = 0; i < lctx.aggExprs.size(); i++)
-  {
-    if (*ac == *lctx.aggExprs[i].first)
-      break;
-  }
-  if (i < lctx.aggExprs.size())
-  {
-    ac->expressionId(lctx.aggExprs[i].second);
-  }
-  else
-  {
-    ac->expressionId(lctx.nextId);
-    lctx.aggExprs.emplace_back(ac.get(), lctx.nextId++);
-  }
+  auto* ac = optimizer::lib::wrapIntoSelectSomeAgg(rc, ctx.getGwi().timeZone);
+  lctx.dedup.assignId(ac);
+
+  // restore sorting direction for both AggregatedColumn and its single ReturnedColumn agg parameter
+  rc->asc(savedAsc);
+  ac->asc(savedAsc);
+
   lctx.applied = true;
-  return ac.release();
+  return ac;
 }
 
 struct Stack
@@ -469,8 +386,7 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           {
             // there are some partitions left, push the next one
             step++;
-            partStep++;
-            stack.frames.push_back(Stack::Frame{wf->partitions()[partStep].get(), 0});
+            stack.frames.push_back(Stack::Frame{wf->partitions()[partStep++].get(), 0});
             continue;
           }
           else if (!wf->orderBy().fOrders.empty())
@@ -499,8 +415,7 @@ bool processColumn(const Stack::FrameType& rc, ColumnWrapperContext& lctx, RBOpt
           if (ordStep < wf->orderBy().fOrders.size())
           {
             step++;
-            ordStep++;
-            stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[ordStep].get(), 0});
+            stack.frames.push_back(Stack::Frame{wf->orderBy().fOrders[ordStep++].get(), 0});
             continue;
           }
         }
@@ -557,11 +472,11 @@ bool applyGroupByWrapColumns(execplan::CalpontSelectExecutionPlan& csep, RBOptim
   ColumnWrapperContext lctx{&csep.groupByCols(), csep.tableList()};
   // Find the next expression ID. Since this is the only place where the SELECT_SOME can appear,
   // there is no need to check if such an expression has occurred before.
-  lctx.nextId = ctx.getMaxExpressionId() + 1;
+  lctx.dedup.nextId = ctx.getMaxExpressionId() + 1;
   for (const auto& p : ctx.getGwi().processed) {
-    if (p.second != -1u && p.second >= lctx.nextId)
+    if (p.second != -1u && p.second >= lctx.dedup.nextId)
     {
-      lctx.nextId = p.second + 1;
+      lctx.dedup.nextId = p.second + 1;
     }
   }
 

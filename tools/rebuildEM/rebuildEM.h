@@ -32,6 +32,7 @@
 #include "IDBPolicy.h"
 #include "we_chunkmanager.h"
 #include "we_dbfileop.h"
+#include <we_typeext.h>
 
 using namespace idbdatafile;
 
@@ -41,7 +42,8 @@ namespace RebuildExtentMap
 struct FileId
 {
   FileId(uint32_t oid, uint32_t partition, uint32_t segment, uint32_t dbroot, uint32_t colWidth,
-         execplan::CalpontSystemCatalog::ColDataType colDataType, int64_t lbid, uint64_t hwm, bool isDict)
+         execplan::CalpontSystemCatalog::ColDataType colDataType, int64_t lbid, uint64_t hwm, bool isDict,
+         uint64_t blockOffset)
    : oid(oid)
    , partition(partition)
    , segment(segment)
@@ -51,6 +53,21 @@ struct FileId
    , lbid(lbid)
    , hwm(hwm)
    , isDict(isDict)
+   , blockOffset(blockOffset)
+  {
+  }
+
+  FileId(const FileId& other)
+   : oid(other.oid)
+   , partition(other.partition)
+   , segment(other.segment)
+   , dbroot(other.dbroot)
+   , colWidth(other.colWidth)
+   , colDataType(other.colDataType)
+   , lbid(other.lbid)
+   , hwm(other.hwm)
+   , isDict(other.isDict)
+   , blockOffset(other.blockOffset)
   {
   }
 
@@ -63,6 +80,7 @@ struct FileId
   int64_t lbid;
   uint64_t hwm;
   bool isDict;
+  uint64_t blockOffset;
 };
 std::ostream& operator<<(std::ostream& os, const FileId& fileID);
 
@@ -134,7 +152,8 @@ class EMReBuilder
   int32_t searchHWMInSegmentFile(const std::string& fullFileName, uint32_t oid, uint32_t dbRoot,
                                  uint32_t partition, uint32_t segment,
                                  execplan::CalpontSystemCatalog::ColDataType colDataType, uint32_t width,
-                                 uint64_t blocksCount, bool isDict, uint32_t compressionType, uint64_t& hwm);
+                                 uint64_t blocksCount, bool isDict, bool probablyTokenColumn,
+                                 uint32_t compressionType, uint64_t& hwm);
 
   // Sets the dbroot to the given `number`.
   void setDBRoot(uint32_t number)
@@ -160,6 +179,25 @@ class EMReBuilder
   BRM::ExtentMap em;
   std::vector<FileId> systemExtentMap;
   std::vector<FileId> extentMap;
+
+  std::map<uint32_t, uint64_t> oidHWMs; // HWM is assigned at the very end, to the LBID that properly contains it.
+  uint64_t lastUsedLBID = 0;
+  std::set<uint32_t> dictOIDs; // set of OIDs that are dicts.
+  std::map<uint32_t, std::set<uint64_t>> oidBlockOffsetsFromTokens; // block offsets generated from tokens read.
+  std::map<uint32_t, std::set<uint64_t>> oidKnownBlockOffsets; // the set of block offsets that need not new LBIDs.
+
+  // TEXT and other long variable length columns are stored as two OIDs, one (OID) for tokens and other
+  // (OID+1) for the actual data.
+  // This method receives OID+1 - we scan tokens for LBIDs that belong to the the next OID file(s).
+  void scanTokensForLBIDs(uint32_t oid, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen);
+
+  // generate FileId's for invisible LBIDs - these are not recorded in headers.
+  void addInvisibleLBIDs();
+
+  // setup HWMs for all OIDs.
+  void setupHWMs();
+
+
 };
 
 // The base class aroud `ChunkManager` to read and write decompressed blocks
@@ -183,6 +221,12 @@ class ChunkManagerWrapper
 
   // Checks that last read block is empty.
   virtual bool isEmptyBlock() = 0;
+
+  // return internal buffer as an array of tokens
+  const WriteEngine::Token* getTokens() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
+
+  // convenience: return nummber of tokens in block.
+  uint32_t numTokens() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(WriteEngine::Token); }
 
  protected:
   uint32_t oid;

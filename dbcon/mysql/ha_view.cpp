@@ -129,6 +129,14 @@ void View::transform()
         gwi.viewList.push_back(view);
         view->transform();
       }
+      else if (table_ptr->table_function)
+      {
+        // MCOL-6300: Table functions (e.g. JSON_TABLE) are virtual tables
+        // that cannot be handled by ColumnStore.
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = "Table functions (e.g. JSON_TABLE) are not supported by ColumnStore.";
+        break;
+      }
       else
       {
         // check foreign engine tables

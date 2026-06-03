@@ -1,0 +1,100 @@
+-- source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_4628;
+--enable_warnings
+CREATE DATABASE mcol_4628;
+USE mcol_4628;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 1.5);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 1.7);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 1.4);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, -0.5);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 0.5);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 1.5);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (0, 1.4);
+UPDATE t1 SET i=d;
+SELECT * FROM t1;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i SMALLINT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (-762);
+INSERT INTO t1 VALUES  (-761);
+INSERT INTO t1 VALUES (761);
+INSERT INTO t1 VALUES (762);
+SELECT * FROM t1 WHERE i > -762.5;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+CREATE TABLE t1 (i SMALLINT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (-762);
+INSERT INTO t1 VALUES  (-761);
+INSERT INTO t1 VALUES (761);
+INSERT INTO t1 VALUES (762);
+SELECT * FROM t1 WHERE i > -762.2;
+
+--disable_warnings
+DROP TABLE IF EXISTS t1;
+--enable_warnings
+# Regression for fractional literal vs DECIMAL(p,s) where the literal has
+# more fractional digits than the column scale: equality at the truncated
+# integer representation must NOT match >=/<=.
+CREATE TABLE t1 (cidx INT, d DECIMAL(18,2)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1,-99999999999.99),(2,-99999999999.98),(3,-99999999999.97),
+                      (8, 99999999999.97),(9, 99999999999.98),(10,99999999999.99);
+SELECT cidx, d FROM t1 WHERE d >=  99999999999.972 ORDER BY cidx;
+SELECT cidx, d FROM t1 WHERE d <= -99999999999.972 ORDER BY cidx;
+SELECT cidx, d FROM t1 WHERE d  =  99999999999.972 ORDER BY cidx;
+SELECT cidx, d FROM t1 WHERE d  = -99999999999.972 ORDER BY cidx;
+
+--disable_warnings
+DROP DATABASE mcol_4628;
+--enable_warnings

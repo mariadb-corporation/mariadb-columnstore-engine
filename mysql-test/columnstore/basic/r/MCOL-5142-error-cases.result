@@ -1,0 +1,56 @@
+DROP DATABASE IF EXISTS mcol5142_error_cases;
+CREATE DATABASE mcol5142_error_cases;
+USE mcol5142_error_cases;
+CREATE TABLE t (id INT NOT NULL, pid INT) ENGINE=ColumnStore;
+INSERT INTO t VALUES (1, NULL), (2, 1), (3, 2), (4, 3);
+WITH RECURSIVE cte AS (
+SELECT id, pid FROM t WHERE id = 1
+UNION DISTINCT
+SELECT t.id, t.pid FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+ERROR 42000: The storage engine for the table doesn't support Recursive CTE with UNION DISTINCT is not supported by ColumnStore. Use UNION ALL.
+WITH RECURSIVE cte AS (
+SELECT id, pid FROM t WHERE id = 1
+UNION ALL
+SELECT MAX(t.id), t.pid FROM t JOIN cte c ON t.pid = c.id GROUP BY t.pid
+)
+SELECT * FROM cte;
+ERROR HY000: Restrictions imposed on recursive definitions are violated for table 'cte'
+WITH RECURSIVE cte AS (
+SELECT id, pid FROM t WHERE id = 1
+UNION ALL
+SELECT t.id, t.pid FROM t JOIN cte c ON t.pid = c.id ORDER BY t.id
+)
+SELECT * FROM cte;
+ERROR 42000: Table 't' from one of the SELECTs cannot be used in ORDER BY
+WITH RECURSIVE cte AS (
+SELECT id, pid, 1 AS rn FROM t WHERE id = 1
+UNION ALL
+SELECT t.id, t.pid, ROW_NUMBER() OVER () FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+ERROR HY000: Restrictions imposed on recursive definitions are violated for table 'cte'
+SET @old_max_recursive_iterations = @@max_recursive_iterations;
+SET @@max_recursive_iterations = 2;
+WITH RECURSIVE cte AS (
+SELECT id, pid, 0 AS lvl FROM t WHERE id = 1
+UNION ALL
+SELECT t.id, t.pid, c.lvl + 1 FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+id	pid	lvl
+1	NULL	0
+2	1	1
+3	2	2
+SET @@max_recursive_iterations = 0;
+WITH RECURSIVE cte AS (
+SELECT id, pid, 0 AS lvl FROM t WHERE id = 1
+UNION ALL
+SELECT t.id, t.pid, c.lvl + 1 FROM t JOIN cte c ON t.pid = c.id
+)
+SELECT * FROM cte;
+id	pid	lvl
+1	NULL	0
+SET @@max_recursive_iterations = @old_max_recursive_iterations;
+DROP DATABASE mcol5142_error_cases;

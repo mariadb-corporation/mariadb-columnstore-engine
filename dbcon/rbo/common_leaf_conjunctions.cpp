@@ -8,16 +8,16 @@
  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-#include "rewrites.h"
+#include "common_leaf_conjunctions.h"
 #include <cstdint>
 #include <typeinfo>
-#include "constantfilter.h"
 #include "objectreader.h"
 #include "installdir.h"
 #include "parsetree.h"
 #include "operator.h"
 #include "simplefilter.h"
 #include "logicoperator.h"
+#include "lib/parse_tree_ops.h"
 #include <boost/core/demangle.hpp>
 #include <set>
 #include <string>
@@ -210,45 +210,38 @@ void collectCommonConjuctions(execplan::ParseTree* root, CommonContainer& accumu
   }
 }
 
-// this utility function creates new and node
-execplan::ParseTree* newAndNode()
-{
-  execplan::Operator* op = new execplan::LogicOperator("and");
-  return new execplan::ParseTree(op);
-}
-
+// Build AND(AND(AND(tree, c_{n-1}), c_{n-2}), ..., c_0).
+//
+// The output is LEFT-deep with `tree` at the deepest left position and the
+// conjuncts nesting outward on the right, iterated in reverse order.  This
+// preserves the tree shape expected by the pre-existing fixture tests in
+// rewritetest.cpp (unitqueries_tree_after.h).
+//
+// This replaces the previous hand-rolled `appendToRoot` which had undefined
+// behaviour on the single-conjunct + null-tree case (std::next(end) on a
+// std::set iterator) and dropped conjuncts on 3+ element inputs.
 template <typename Common>
 execplan::ParseTree* appendToRoot(execplan::ParseTree* tree, const Common& common)
 {
   if (common.empty())
     return tree;
 
-  // TODO: refactor to debug
-  execplan::ParseTree* result = newAndNode();
-  auto current = result;
-  for (auto treenode = common.begin(); treenode != common.end();)
+  std::vector<execplan::ParseTree*> leaves(common.begin(), common.end());
+  execplan::ParseTree* acc = tree;
+  for (auto it = leaves.rbegin(); it != leaves.rend(); ++it)
   {
-    execplan::ParseTree* andCondition = *treenode;
-
-    ++treenode;
-    current->right(andCondition);
-
-    if ((treenode != common.end() && std::next(treenode) != common.end()) ||
-        (std::next(treenode) == common.end() && tree != nullptr))
+    if (acc == nullptr)
     {
-      execplan::ParseTree* andOp = newAndNode();
-      current->left(andOp);
-      current = andOp;
+      // Seed: no residual tree and this is the deepest conjunct.
+      acc = *it;
+      continue;
     }
-    else if (std::next(treenode) == common.end() && tree == nullptr)
-    {
-      current->left(andCondition);
-    }
+    execplan::ParseTree* node = optimizer::lib::newAndNode();
+    node->left(acc);
+    node->right(*it);
+    acc = node;
   }
-  if (tree)
-    current->left(tree);
-
-  return result;
+  return acc;
 }
 
 struct StackFrame
@@ -265,21 +258,9 @@ struct StackFrame
 
 using DFSStack = std::vector<StackFrame>;
 
-void deleteOneNode(execplan::ParseTree** node)
+inline void deleteOneNode(execplan::ParseTree** node)
 {
-  if (!node || !*node)
-    return;
-
-  (*node)->nullLeft();
-  (*node)->nullRight();
-
-#if debug_rewrites
-  std::cerr << "   Deleting: " << (*node)->data() << " " << boost::core::demangle(typeid(**node).name())
-            << " " << "ptr: " << *node << std::endl;
-#endif
-
-  delete *node;
-  *node = nullptr;
+  optimizer::lib::deleteOneNode(node);
 }
 
 // this utility function adds one stack frame to a stack for dfs traversal
@@ -483,22 +464,6 @@ bool NodeSemanticComparator::operator()(execplan::ParseTree* left, execplan::Par
     return details::simpleFiltersCmp(filterLeft, filterRight);
 
   return left->data()->data() < right->data()->data();
-}
-
-bool checkFiltersLimit(execplan::ParseTree* tree, uint64_t limit)
-{
-  uint64_t maxLimit = 0;
-  auto walker = [](const execplan::ParseTree* node, void* maxLimit)
-  {
-    auto maybe_cf = dynamic_cast<ConstantFilter*>(node->data());
-    if (maybe_cf != nullptr &&
-        (maybe_cf->op()->op() == OpType::OP_OR || maybe_cf->op()->op() == OpType::OP_IN))
-    {
-      *((uint64_t*)maxLimit) = std::max(maybe_cf->filterList().size(), *((uint64_t*)maxLimit));
-    }
-  };
-  tree->walk(walker, &maxLimit);
-  return maxLimit <= limit;
 }
 
 }  // namespace execplan

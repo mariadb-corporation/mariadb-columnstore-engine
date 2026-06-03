@@ -364,7 +364,8 @@ void item_check(Item* item, bool* unsupported_feature)
 
 bool check_user_var(SELECT_LEX* select_lex)
 {
-  if (!select_lex) {
+  if (!select_lex)
+  {
     // There are definitely no user vars if select_lex is null
     return false;
   }
@@ -661,7 +662,26 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       {
         return nullptr;
       }
+
+      // MCOL-6300: Table functions (e.g. JSON_TABLE) are virtual tables
+      // that ColumnStore cannot handle.  Reject early so the server
+      // processes them natively.
+      if (table_ptr->table_function)
+      {
+        return nullptr;
+      }
     }
+  }
+
+  // MCOL-4868 Reject select_handler when SELECT_LEX has no result columns.
+  // This happens for DML statements with IN-subqueries that are routed
+  // through Sql_cmd_dml::execute_inner (e.g. "DELETE FROM t WHERE a IN
+  // (SELECT a FROM t)"). The select_handler's create_tmp_table() would
+  // crash with m_alloced_field_count==0 assertion because item_list is empty.
+  for (size_t i = 0; i < select_lex_vec.size(); i++)
+  {
+    if (select_lex_vec[i]->item_list.elements == 0)
+      return nullptr;
   }
 
   // We apply dedicated rewrites from MDB here so MDB's data structures
@@ -878,6 +898,31 @@ select_handler* create_columnstore_select_handler_(THD* thd, SELECT_LEX* sel_lex
       // Unset select_lex::first_cond_optimization
       if (select_lex->first_cond_optimization)
       {
+        // The server keeps first_cond_optimization and leaf_tables_saved
+        // in sync: JOIN::optimize_inner() flips first_cond_optimization
+        // to false *and* calls save_leaf_tables() on the same pass (see
+        // sql/sql_select.cc around the "sel->first_cond_optimization= 0"
+        // assignment).  When we bypass that path and reset the flag
+        // ourselves we must mirror save_leaf_tables() too, otherwise
+        // the second execution of the same statement (typical for a
+        // stored procedure CALL) hits
+        //   DBUG_ASSERT(select_lex->leaf_tables_saved)
+        // in setup_tables().  On non-debug builds the same desync leads
+        // to leaf_tables_exec being empty / stale.
+        if (!select_lex->leaf_tables_saved)
+        {
+          if (select_lex->save_leaf_tables(thd))
+          {
+#if MYSQL_VERSION_ID >= 110800
+            // LEX::needs_reprepare was added in 11.8-enterprise; older
+            // server branches (e.g. 11.4-enterprise) don't have it.
+            thd->lex->needs_reprepare = true;
+#endif
+            delete handler;
+            return nullptr;
+          }
+          select_lex->leaf_tables_saved = true;
+        }
         first_cond_optimization_flag_toggle(select_lex, &first_cond_optimization_flag_unset);
       }
     }

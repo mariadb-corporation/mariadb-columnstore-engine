@@ -23,6 +23,8 @@
 #include "predicateoperator.h"
 #include "rbo_apply_parallel_ces.h"
 #include "rbo_apply_rewrite_distinct.h"
+#include "rbo_common_leaf_conjunctions_to_top.h"
+#include "rbo_decorrelate_outer_join_sub.h"
 #include "rbo_groupby_wrap_columns.h"
 #include "rbo_predicate_pushdown.h"
 #include "utils/pron/pron.h"
@@ -85,6 +87,12 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
 
   if (useUnstableOptimizer)
   {
+    // parallel_ces must run before common_leaf_conjunctions_to_top so it gets
+    // to consume RBOptimizerContext::uniqueId_ starting from 0.  The MTR
+    // baselines in mysql-test/columnstore/future/rbo_parallel_ces* hard-code
+    // the resulting derived-table alias suffix `_0`; any earlier rule that
+    // matches the same CSEP bumps uniqueId_ via Rule::walk and shifts the
+    // suffix to `_1`.
     optimizer::Rule parallelCES{"parallel_ces", optimizer::parallelCESFilter, optimizer::applyParallelCES};
     rules.push_back(parallelCES);
 
@@ -92,9 +100,25 @@ bool optimizeCSEP(execplan::CalpontSelectExecutionPlan& root, optimizer::RBOptim
                                     optimizer::applyRewriteDistinct};
     rules.push_back(rewriteDistinct);
   }
+
+  // Normalize the WHERE tree so subsequent structural rules
+  // (predicate pushdown, decorrelation, ...) see the lifted common
+  // conjunctions at the CSEP root.
+  optimizer::Rule commonLeafConjunctionsToTop{"common_leaf_conjunctions_to_top",
+                                               optimizer::commonLeafConjunctionsToTopFilter,
+                                               optimizer::applyCommonLeafConjunctionsToTop};
+  rules.push_back(commonLeafConjunctionsToTop);
+
   optimizer::Rule rewriteGroupBy{"groupby_wrap", optimizer::groupByWrapColumnsFilter,
                                   optimizer::applyGroupByWrapColumns};
   rules.push_back(rewriteGroupBy);
+  // MCOL-4250: rewrite scalar subqueries inside OUTER JOIN ON into equi-joins
+  // with a GROUP-BY derived table.  Must run before predicate_pushdown so the
+  // latter can push through the freshly-introduced derived tables.
+  optimizer::Rule decorrelateOuterJoinSub{"decorrelate_outer_join_sub",
+                                          optimizer::decorrelateOuterJoinSubFilter,
+                                          optimizer::applyDecorrelateOuterJoinSub};
+  rules.push_back(decorrelateOuterJoinSub);
   optimizer::Rule predicatePushdown{"predicate_pushdown", optimizer::predicatePushdownFilter,
                                     optimizer::applyPredicatePushdown};
   rules.push_back(predicatePushdown);

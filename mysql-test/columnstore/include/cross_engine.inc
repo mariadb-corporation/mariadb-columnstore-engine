@@ -19,9 +19,11 @@ if (!$MASTER_MYPORT)
 # -------------------------------------------------------------- #
 
 --disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
+CREATE USER IF NOT EXISTS 'cejuser'@'127.0.0.1' IDENTIFIED BY 'Vagrant1|0000001';
 --enable_warnings
 
 GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
+GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'127.0.0.1';
 FLUSH PRIVILEGES;
 --enable_query_log

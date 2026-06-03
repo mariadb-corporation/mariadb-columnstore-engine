@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include <limits>
+#include "idberrorinfo.h"
 #include "messagelog.h"
 
 #include <string.h>
@@ -41,6 +42,7 @@
 #include <boost/thread.hpp>
 
 #include "errorids.h"
+#include "mysqld_error.h"
 using namespace logging;
 
 #define PREFER_MY_CONFIG_H
@@ -75,8 +77,9 @@ using namespace cal_impl_if;
 #include "logicoperator.h"
 #include "outerjoinonfilter.h"
 #include "predicateoperator.h"
-#include "rewrites.h"
+#include "check_filters_limit.h"
 #include "rowcolumn.h"
+#include "rbo_decorrelate_outer_join_sub.h"
 #include "rulebased_optimizer.h"
 #include "simplecolumn_decimal.h"
 #include "simplecolumn_int.h"
@@ -867,15 +870,23 @@ uint32_t buildJoin(gp_walk_info& gwi, List<TABLE_LIST>& join_list,
         for (Item* expr : tableOnExprList)
         {
           expr->traverse_cond(gp_walk, &gwi_outer, Item::POSTFIX);
+        }
 
-          // Error out subquery in outer join on filter for now
-          if (gwi_outer.hasSubSelect)
-          {
-            gwi.fatalParseError = true;
-            gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
-            setError(gwi.thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
-            return -1;
-          }
+        // MCOL-4250: the executor cannot currently evaluate a scalar
+        // subquery filter inside an OUTER JOIN ON clause.  Instead of
+        // erroring out here we let the plan be built and rely on the RBO
+        // rule `decorrelate_outer_join_sub` to rewrite the subquery into an
+        // equi-join against a GROUP-BY derived table.  Any subselect CSEPs
+        // collected while walking the ON clause must be propagated back to
+        // the outer gwi so they end up in csep->subSelectList().  If the
+        // rule is unable to rewrite a particular case the post-RBO
+        // validator in cs_get_select_plan() still emits IDB-1015.
+        if (gwi_outer.hasSubSelect)
+        {
+          gwi.hasSubSelect = true;
+          gwi.subselectList.insert(gwi.subselectList.end(),
+                                   gwi_outer.subselectList.begin(),
+                                   gwi_outer.subselectList.end());
         }
 
         // build outerjoinon filter
@@ -5275,22 +5286,91 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
     {
       // Until we handle recursive cte:
       // Checking here ensures we catch all with clauses in the query.
-      if (table_ptr->is_recursive_with_table())
-      {
-        gwi.fatalParseError = true;
-        gwi.parseErrorText = "Recursive CTE";
-        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
-        return ER_CHECK_NOT_IMPLEMENTED;
-      }
+      /*
 
+      refer to sql_union.cc, exec_recursive for a sample implementation
+
+      might just work by setting isUnion to true, then calling get select again.
+      need to set relevant meta data.
+
+      needs to write all to the first table, probably can be achieved
+      */
       string viewName = getViewName(table_ptr);
       if (lower_case_table_names)
       {
         boost::algorithm::to_lower(viewName);
       }
+      if (table_ptr->is_recursive_with_table())
+      {
+        if (table_ptr->derived->union_distinct)
+        {
+          gwi.fatalParseError = true;
+          gwi.parseErrorText =
+              "Recursive CTE with UNION DISTINCT is not supported by ColumnStore. Use UNION ALL.";
+          setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+          return ER_CHECK_NOT_IMPLEMENTED;
+        }
+
+        dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())->containsRecursiveQuery(true);
+        SELECT_LEX* start = table_ptr->derived->first_select();
+        // SELECT_LEX* end = NULL;
+        dynamic_cast<CalpontSelectExecutionPlan*>(csep.get())
+            ->maxRecursiveDepth(gwi.thd->variables.max_recursive_iterations);
+        SCSEP anchor_plan = NULL;
+
+        gwi.isRecursiveWithTable = true;
+#ifdef DEBUG_WALK_COND
+
+        if (gwi.recursiveWithTableName == table_ptr->table_name.str)
+        {
+          cerr << "RECURSIVE TABLE: " << gwi.recursiveWithTableName << endl;
+        }
+
+#endif
+
+        FromSubQuery* fromSub = new FromSubQuery(gwi, start);
+        string alias(table_ptr->alias.str);
+        if (lower_case_table_names)
+        {
+          boost::algorithm::to_lower(alias);
+        }
+        fromSub->alias(alias);
+
+        CalpontSystemCatalog::TableAliasName tn =
+            make_aliasview("", table_ptr->table_name.str, alias, viewName);
+        // @bug 3852. check return execplan
+        anchor_plan = fromSub->transform(isUnion);
+        if (!anchor_plan)
+        {
+          setError(gwi.thd, ER_INTERNAL_ERROR, fromSub->gwip().parseErrorText, gwi);
+          CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
+          return ER_INTERNAL_ERROR;
+        }
+        dynamic_cast<CalpontSelectExecutionPlan*>(anchor_plan.get())->isRecursiveWithTable(true);
+        dynamic_cast<CalpontSelectExecutionPlan*>(anchor_plan.get())
+            ->maxRecursiveDepth(gwi.thd->variables.max_recursive_iterations);
+
+        gwi.derivedTbList.push_back(anchor_plan);
+        gwi.tbList.push_back(tn);
+        CalpontSystemCatalog::TableAliasName tan = make_aliastable("", table_ptr->table_name.str, alias);
+        gwi.tableMap[tan] = make_pair(0, table_ptr);
+        // MCOL-2178 isUnion member only assigned, never used
+        // MIGR::infinidb_vtable.isUnion = true; //by-pass the 2nd pass of rnd_init
+        start = table_ptr->derived->first_select();
+
+        // if (with_element->with_anchor)
+        //   end = with_element->first_recursive;
+
+        if (!anchor_plan)
+        {
+          setError(gwi.thd, ER_INTERNAL_ERROR, "No Anchor Query", gwi);
+          CalpontSystemCatalog::removeCalpontSystemCatalog(gwi.sessionid);
+          return ER_INTERNAL_ERROR;
+        }
+      }
 
       // @todo process from subquery
-      if (table_ptr->derived)
+      else if (table_ptr->derived)
       {
         SELECT_LEX* select_cursor = table_ptr->derived->first_select();
         FromSubQuery* fromSub = new FromSubQuery(gwi, select_cursor);
@@ -5312,6 +5392,11 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
           return ER_INTERNAL_ERROR;
         }
 
+        if (plan->containsRecursiveQuery())
+        {
+          csep->containsRecursiveQuery(true);
+        }
+
         gwi.derivedTbList.push_back(plan);
         gwi.tbList.push_back(tn);
         CalpontSystemCatalog::TableAliasName tan = make_aliastable("", alias, alias);
@@ -5325,6 +5410,17 @@ int processFrom(bool& isUnion, SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP&
         view->viewName(tn);
         gwi.viewList.push_back(view);
         view->transform();
+      }
+      else if (table_ptr->table_function)
+      {
+        // MCOL-6300: Table functions (e.g. JSON_TABLE) are virtual tables
+        // that do not exist in any database.  ColumnStore cannot handle
+        // them — neither as a native table nor via CrossEngineStep.
+        // Signal unsupported so the caller can fall back to the server.
+        gwi.fatalParseError = true;
+        gwi.parseErrorText = "Table functions (e.g. JSON_TABLE) are not supported by ColumnStore.";
+        setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+        return ER_CHECK_NOT_IMPLEMENTED;
       }
       else
       {
@@ -5677,9 +5773,8 @@ int processHaving(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
   return 0;
 }
 
-execplan::ReturnedColumn* findMatchingAlias(
-        const Item_field* ifp,
-        execplan::CalpontSelectExecutionPlan::ReturnedColumnList& cols)
+execplan::ReturnedColumn* findMatchingAlias(const Item_field* ifp,
+                                            execplan::CalpontSelectExecutionPlan::ReturnedColumnList& cols)
 {
   if (!ifp->name.length)
   {
@@ -5764,6 +5859,14 @@ int processGroupBy(SELECT_LEX& select_lex, gp_walk_info& gwi, const bool withRol
 
   gwi.hasWindowFunc = hasWindowFunc;
   groupcol = static_cast<ORDER*>(select_lex.group_list.first);
+
+  if (gwi.isRecursiveWithTable && groupcol)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_GROUP_BY, "GROUP BY clause");
+    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+    return ER_CHECK_NOT_IMPLEMENTED;
+  }
 
   gwi.disableWrapping = true;
   for (; groupcol; groupcol = groupcol->next)
@@ -6047,22 +6150,28 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
   // Flag to indicate if this is a prepared statement
   bool isPS = gwi.thd->stmt_arena && gwi.thd->stmt_arena->is_stmt_execute();
 
-  if (join != 0 && !isPS)
+  // MCOL-6311: For UPDATE/DELETE at the outer query level (not inside a subquery),
+  // use the isUpdateDelete path (condStack / select_lex.where) instead of join->conds.
+  // After MDEV-25008, the server creates a JOIN for UPDATE/DELETE's select_lex during
+  // prepare phase, making join non-NULL. However, join->conds may have been transformed
+  // by the server's optimizer in ways that Columnstore cannot handle for DML.
+  // Subqueries within UPDATE/DELETE should still use join->conds normally.
+  if (!gwi.subQuery && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
+  {
+    isUpdateDelete = true;
+  }
+  else if (join != 0 && !isPS)
     icp = join->conds;
   else if (isPS && select_lex.prep_where)
     icp = select_lex.prep_where;
 
   // if icp is null, try to find the where clause other where
-  if (!join && gwi.thd->lex->derived_tables)
+  if (!icp && !isUpdateDelete && !join && gwi.thd->lex->derived_tables)
   {
     if (select_lex.prep_where)
       icp = select_lex.prep_where;
     else if (select_lex.where)
       icp = select_lex.where;
-  }
-  else if (!join && ha_mcs_common::isUpdateOrDeleteStatement(gwi.thd->lex->sql_command))
-  {
-    isUpdateDelete = true;
   }
 
   if (icp)
@@ -6284,12 +6393,9 @@ int processWhere(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep, const s
     outerJoinStack.push(ptp);
   }
 
-  config::Config* cf = config::Config::makeConfig();
-  string rewriteEnabled = cf->getConfig("Rewrites", "CommonLeafConjunctionsToTop");
-  if (filters && rewriteEnabled != "OFF")
-  {
-    filters = extractCommonLeafConjunctionsToRoot(filters);
-  }
+  // NOTE: lifting common leaf conjunctions to the top of the WHERE tree
+  // is now performed by the RBO rule "common_leaf_conjunctions_to_top"
+  // (see dbcon/rbo/rbo_common_leaf_conjunctions_to_top.{h,cpp}).
 
   uint64_t limit = get_max_allowed_in_values(gwi.thd);
 
@@ -7047,9 +7153,16 @@ int processOrderBy(SELECT_LEX& select_lex, gp_walk_info& gwi, SCSEP& csep,
 {
   SQL_I_List<ORDER> order_list = select_lex.order_list;
   ORDER* ordercol = static_cast<ORDER*>(order_list.first);
-
   // check if window functions are in order by. InfiniDB process order by list if
   // window functions are involved, either in order by or projection.
+  if (gwi.isRecursiveWithTable && ordercol)
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_NON_SUPPORT_ORDER_BY, "WITH RECURSIVE");
+    setError(gwi.thd, ER_CHECK_NOT_IMPLEMENTED, gwi.parseErrorText, gwi);
+    return ER_CHECK_NOT_IMPLEMENTED;
+  }
+
   for (; ordercol; ordercol = ordercol->next)
   {
     if ((*(ordercol->item))->type() == Item::WINDOW_FUNC_ITEM)
@@ -7643,6 +7756,20 @@ int cs_get_select_plan(ha_columnstore_select_handler* handler, THD* thd, SCSEP& 
       cerr << *csep << endl;
       cerr << "-------------- EXECUTION PLAN END --------------\n" << endl;
     }
+  }
+
+  // MCOL-4250: if the RBO rule `decorrelate_outer_join_sub` could not rewrite
+  // a subquery inside an OUTER JOIN ON clause (either because the pattern is
+  // outside the rule's supported subset, or because the rule was disabled via
+  // config), the executor still cannot handle it — emit the same IDB-1015
+  // error that used to be raised eagerly in buildJoin() so visible behaviour
+  // is preserved for every unsupported shape (scalar, IN, EXISTS, ...).
+  if (optimizer::outerJoinOnContainsSubselect(*csep))
+  {
+    gwi.fatalParseError = true;
+    gwi.parseErrorText = IDBErrorInfo::instance()->errorMsg(ERR_OUTER_JOIN_SUBSELECT);
+    setError(thd, ER_INTERNAL_ERROR, gwi.parseErrorText);
+    return ER_INTERNAL_ERROR;
   }
 
   return 0;

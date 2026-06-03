@@ -144,7 +144,7 @@ void WF_stats<T>::resetData()
 template <typename T>
 void WF_stats<T>::operator()(int64_t b, int64_t e, int64_t c)
 {
-  CDT cdt;
+  CDT cdt = CalpontSystemCatalog::UNDEFINED;
   if ((fFrameUnit == WF__FRAME_ROWS) || (fPrev == -1) ||
       (!fPeer->operator()(getPointer(fRowData->at(c)), getPointer(fRowData->at(fPrev)))))
   {

@@ -24,6 +24,7 @@
 
 #include <unistd.h>
 #include <cstdlib>
+#include <cstring>
 #include <string>
 using namespace std;
 
@@ -40,10 +41,14 @@ namespace
 {
 using namespace funcexp;
 
-DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
+// Extract the seconds value and fractional microseconds from parm[0].
+// Returns false (and sets isNull=true) when the value is out of range
+// or negative; returns true when val/msec are valid.
+bool getUnixTimestampParts(rowgroup::Row& row, FunctionParm& parm, int64_t& val, uint32_t& msec,
+                           bool& isNull)
 {
-  int64_t val = 0;
-  uint32_t msec = 0;
+  val = 0;
+  msec = 0;
 
   switch (parm[0]->data()->resultType().colDataType)
   {
@@ -54,7 +59,7 @@ DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
       if (value < 0)
       {
         isNull = true;
-        return 0;
+        return false;
       }
 
       double fracpart, intpart;
@@ -71,7 +76,7 @@ DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
       if (dec.value < 0)
       {
         isNull = true;
-        return 0;
+        return false;
       }
 
       if (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH)
@@ -92,6 +97,17 @@ DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
   }
 
   if (val < 0 || val > helpers::TIMESTAMP_MAX_VALUE)
+    return false;
+
+  return true;
+}
+
+DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
+{
+  int64_t val = 0;
+  uint32_t msec = 0;
+
+  if (!getUnixTimestampParts(row, parm, val, msec, isNull))
     return 0;
 
   DateTime dt;
@@ -177,6 +193,33 @@ int64_t Func_from_unixtime::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm
   }
 
   return *reinterpret_cast<int64_t*>(&dt);
+}
+
+// MCOL-6173: since MariaDB 11.8 Item_func_from_unixtime reports TIMESTAMP as
+// its result type (it inherits from Item_timestampfunc). Without this explicit
+// override the base Func::getTimestampIntVal path would call
+// intToTimestamp(getIntVal()), packing a 14-digit YYYYMMDDHHmmss integer into
+// the Calpont TimeStamp bit layout (msec:20 | seconds:44), producing bogus
+// timestamps. Here we return the correctly packed Calpont TimeStamp where
+// `second` is the raw Unix seconds (no local time conversion) and `msecond`
+// is the fractional microseconds; the server-side handler performs the time
+// zone conversion for display.
+int64_t Func_from_unixtime::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
+                                               CalpontSystemCatalog::ColType& /*ct*/)
+{
+  int64_t val = 0;
+  uint32_t msec = 0;
+
+  if (!getUnixTimestampParts(row, parm, val, msec, isNull))
+  {
+    isNull = true;
+    return 0;
+  }
+
+  dataconvert::TimeStamp ts(msec, static_cast<unsigned long long>(val));
+  int64_t packed;
+  std::memcpy(&packed, &ts, sizeof(packed));
+  return packed;
 }
 
 int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,

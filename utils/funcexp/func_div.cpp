@@ -38,6 +38,26 @@ using namespace execplan;
 
 namespace funcexp
 {
+static bool isDecimalType(CalpontSystemCatalog::ColDataType dt)
+{
+  return dt == CalpontSystemCatalog::DECIMAL || dt == CalpontSystemCatalog::UDECIMAL;
+}
+
+static bool isFloatType(CalpontSystemCatalog::ColDataType dt)
+{
+  return dt == CalpontSystemCatalog::FLOAT || dt == CalpontSystemCatalog::UFLOAT ||
+         dt == CalpontSystemCatalog::DOUBLE || dt == CalpontSystemCatalog::UDOUBLE;
+}
+
+static bool canUseDecimalPath(const FunctionParm& parm)
+{
+  auto lhsDT = parm[0]->data()->resultType().colDataType;
+  auto rhsDT = parm[1]->data()->resultType().colDataType;
+  if (isFloatType(lhsDT) || isFloatType(rhsDT))
+    return false;
+  return isDecimalType(lhsDT) || isDecimalType(rhsDT);
+}
+
 CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
                                                       CalpontSystemCatalog::ColType& resultType)
 {
@@ -47,6 +67,22 @@ CalpontSystemCatalog::ColType Func_div::operationType(FunctionParm& /*fp*/,
 int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                             CalpontSystemCatalog::ColType& /*op_ct*/)
 {
+  if (canUseDecimalPath(parm))
+  {
+    IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
+    if (isNull) return 0;
+    if (result.precision > datatypes::INT64MAXPRECISION)
+    {
+      if (result.s128Value > INT64_MAX || result.s128Value < INT64_MIN)
+      {
+        isNull = true;
+        return 0;
+      }
+      return static_cast<int64_t>(result.s128Value);
+    }
+    return result.value;
+  }
+
   double val1 = parm[0]->data()->getDoubleVal(row, isNull);
   double val2 = parm[1]->data()->getDoubleVal(row, isNull);
 
@@ -83,6 +119,22 @@ int64_t Func_div::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull
 uint64_t Func_div::getUintVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
                               execplan::CalpontSystemCatalog::ColType& /*op_ct*/)
 {
+  if (canUseDecimalPath(parm))
+  {
+    IDB_Decimal result = modOrDivDecimal(parm, row, isNull, false);
+    if (isNull) return 0;
+    if (result.precision > datatypes::INT64MAXPRECISION)
+    {
+      if (result.s128Value > static_cast<int128_t>(UINT64_MAX))
+      {
+        isNull = true;
+        return 0;
+      }
+      return static_cast<uint64_t>(result.s128Value);
+    }
+    return static_cast<uint64_t>(result.value);
+  }
+
   uint64_t val1 = parm[0]->data()->getUintVal(row, isNull);
   uint64_t val2 = parm[1]->data()->getUintVal(row, isNull);
 

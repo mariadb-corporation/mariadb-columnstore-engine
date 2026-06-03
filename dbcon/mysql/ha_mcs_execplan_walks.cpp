@@ -254,7 +254,7 @@ void gp_walk(const Item* item, void* arg)
       Item* ncitem = const_cast<Item*>(item);
       Item_func* ifp = static_cast<Item_func*>(ncitem);
       std::string funcName = ifp->func_name();
-      
+
       if (!gwip->condPush)
       {
         if (!ifp->fixed())

@@ -1,0 +1,170 @@
+# MCOL-6321 - test mscRebuildEM functionality.
+
+# We create and populate table where dictionary column has more than 48 LBIDs.
+# We then stop MCS and move all MCS system files except oidbitmap into backup directory.
+# We run mcsRebuildEM.
+# We start MCS and verify that our table is accessible and has correct data.
+# We stop MCS and copy system files back.
+# We start MCS again and finish test.
+
+--source ../include/have_columnstore.inc
+
+--source ../include/check_multinode.inc
+
+--if ($columnstore_nodes_count != 1) {
+    --skip This test is not ready for multi-node cluster.
+--}
+
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6321;
+--enable_warnings
+CREATE DATABASE mcol_6321;
+USE mcol_6321;
+
+# Create and populate the table.
+CREATE TABLE t(x longtext) ENGINE=Columnstore;
+
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_1_to_10;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_11_to_20;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_21_to_30;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_31_to_40;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_41_to_50;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_51_to_60;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_61_to_70;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_71_to_80;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_81_to_90;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_91_to_100;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_101_to_110;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_111_to_120;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_121_to_130;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_131_to_140;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_141_to_150;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_151_to_160;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_161_to_170;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_171_to_180;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_181_to_190;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_191_to_200;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_201_to_210;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_211_to_220;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_221_to_230;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_231_to_240;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_241_to_250;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_251_to_260;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_261_to_270;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_271_to_280;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_281_to_290;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_291_to_300;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_301_to_310;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_311_to_320;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_321_to_330;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_331_to_340;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_341_to_350;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_351_to_360;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_361_to_370;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_371_to_380;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_381_to_390;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_391_to_400;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_401_to_410;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_411_to_420;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_421_to_430;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_431_to_440;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_441_to_450;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_451_to_460;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_461_to_470;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_471_to_480;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_481_to_490;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_491_to_500;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_501_to_510;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_511_to_520;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_521_to_530;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_531_to_540;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_541_to_550;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_551_to_560;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_561_to_570;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_571_to_580;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_581_to_590;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_591_to_600;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_601_to_610;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_611_to_620;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_621_to_630;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_631_to_640;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_641_to_650;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_651_to_660;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_661_to_670;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_671_to_680;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_681_to_690;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_691_to_700;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_701_to_710;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_711_to_720;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_721_to_730;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_731_to_740;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_741_to_750;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_751_to_760;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_761_to_770;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_771_to_780;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_781_to_790;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_791_to_800;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_801_to_810;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_811_to_820;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_821_to_830;
+INSERT INTO t(x) SELECT CONCAT(seq, REPEAT('zuka',1000000)) FROM seq_831_to_840;
+
+--sorted_result
+SELECT SUBSTR(x,1,10) FROM t;
+
+# Stop MCS.
+
+--exec echo "stopping MCS"
+--exec systemctl stop mariadb-columnstore
+
+# Move system files with exception of oidbitmap.
+
+--exec echo "mkdir backup"
+--exec mkdir /var/lib/columnstore/data1/systemFiles/backup
+
+--exec echo "moving files into backup"
+--exec mv /var/lib/columnstore/data1/systemFiles/dbrm/* /var/lib/columnstore/data1/systemFiles/backup
+
+--exec echo "copying oidbitmap back"
+--exec cp -p /var/lib/columnstore/data1/systemFiles/backup/oidbitmap /var/lib/columnstore/data1/systemFiles/dbrm
+
+# Rebuild EM
+
+--exec echo "rebuilding EM"
+--exec ASAN_OPTIONS='detect_leaks=0' mcsRebuildEM -v -y >/tmp/rebuild-log
+--exec chmod a+rw /var/lib/columnstore/data1/systemFiles/dbrm/BRM_saves_em
+
+# Start MCS and verify that table is readable.
+
+--exec echo "starting MCS"
+--exec systemctl start mariadb-columnstore
+
+--sorted_result
+SELECT SUBSTR(x,1,10) FROM t;
+
+# Stop MCS and restore files FROM backup.
+
+--exec echo "stopping MCS again to copy files back"
+--exec systemctl stop mariadb-columnstore
+
+--exec echo "deleting restored files"
+--exec rm -f /var/lib/columnstore/data1/systemFiles/dbrm/*
+
+--exec echo "copy files back"
+--exec cp -p /var/lib/columnstore/data1/systemFiles/backup/* /var/lib/columnstore/data1/systemFiles/dbrm
+
+--exec echo "delete backup directory"
+--exec rm -rf /var/lib/columnstore/data1/systemFiles/backup
+
+# Start MCS with old system files and verify table is readable.
+
+--exec echo "starting MCS"
+--exec systemctl start mariadb-columnstore
+
+--sorted_result
+SELECT SUBSTR(x,1,10) FROM t;
+
+# Finish the test.
+
+DROP DATABASE mcol_6321;

@@ -17,24 +17,7 @@ DROP DATABASE IF EXISTS mcs85_db;
 
 CREATE DATABASE mcs85_db;
 USE mcs85_db;
-
-#
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-#
---exec $MCS_MCSSETCONFIG CrossEngineSupport User 'cejuser'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Password 'Vagrant1|0000001'
---exec $MCS_MCSSETCONFIG CrossEngineSupport Port $MASTER_MYPORT
-
-#
-# Create corresponding in the server
-#
---disable_warnings
-CREATE USER IF NOT EXISTS 'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1|0000001';
---enable_warnings
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
-
+--source ../include/cross_engine.inc
 CREATE TABLE t1 (a INT, b CHAR(5))ENGINE=Columnstore;
 CREATE TABLE t2 (a INT, b CHAR(5))ENGINE=Columnstore;
 
@@ -61,7 +44,5 @@ SELECT t4.a, t.a FROM t4 LEFT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY t
 SELECT t4.a, t.a FROM t4 RIGHT JOIN (SELECT * FROM t2) t ON t.a = t4.a ORDER BY t.a, t4.a;
 
 # Clean UP
---disable_warnings
-DROP USER 'cejuser'@'localhost';
---enable_warnings
+--source ../include/drop_cross_engine.inc
 DROP DATABASE mcs85_db;

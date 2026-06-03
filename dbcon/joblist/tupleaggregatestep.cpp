@@ -244,7 +244,7 @@ void wideDecimalOrLongDouble(const uint64_t colProj, const CalpontSystemCatalog:
   else if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(type))
   {
     typeAgg.push_back(CalpontSystemCatalog::DECIMAL);
-    scaleAgg.push_back(0);
+    scaleAgg.push_back(datatypes::isDecimal(type) ? scaleProj[colProj] : 0);
     precisionAgg.push_back(datatypes::INT128MAXPRECISION);
     widthAgg.push_back(datatypes::MAXDECIMALWIDTH);
   }

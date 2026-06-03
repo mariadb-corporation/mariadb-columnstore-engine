@@ -7,23 +7,7 @@
 --source ../include/have_columnstore.inc
 #
 USE tpch1;
-#
-# -------------------------------------------------------------- #
-# Enable cross engine join
-# Configure user and password in Columnstore.xml file
-# -------------------------------------------------------------- #
---exec /usr/bin/mcsSetConfig CrossEngineSupport User 'cejuser'
---exec /usr/bin/mcsSetConfig CrossEngineSupport Password 'Vagrant1!0000001'
-# -------------------------------------------------------------- #
-# Create corresponding in the server
-# -------------------------------------------------------------- #
-
---disable_warnings
-CREATE USER IF NOT EXISTS'cejuser'@'localhost' IDENTIFIED BY 'Vagrant1!0000001';
---enable_warnings
-
-GRANT ALL PRIVILEGES ON *.* TO 'cejuser'@'localhost';
-FLUSH PRIVILEGES;
+--source ../include/cross_engine.inc
 #
 create table if not exists bug4509 (id int, c1 int)engine=columnstore;
 create table if not exists bug4509_myisam (id int, c1 int);
@@ -37,4 +21,4 @@ drop table bug4509;
 drop table bug4509_myisam;
 --enable_warnings
 #
-DROP USER 'cejuser'@'localhost';
+--source ../include/drop_cross_engine.inc

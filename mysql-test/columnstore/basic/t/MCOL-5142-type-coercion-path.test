@@ -1,0 +1,42 @@
+--disable_warnings
+DROP DATABASE IF EXISTS mcol5142_type_coercion;
+--enable_warnings
+
+CREATE DATABASE mcol5142_type_coercion;
+USE mcol5142_type_coercion;
+
+CREATE TABLE edges (
+  parent INT NOT NULL,
+  child INT NOT NULL
+) ENGINE=ColumnStore;
+
+INSERT INTO edges VALUES
+(1,2),
+(1,3),
+(2,4),
+(4,5);
+
+--sorted_result
+WITH RECURSIVE paths AS (
+  SELECT
+    parent,
+    child,
+    CAST(parent AS CHAR(64)) AS path,
+    1 AS lvl
+  FROM edges
+  WHERE parent = 1
+
+  UNION ALL
+
+  SELECT
+    e.parent,
+    e.child,
+    CONCAT(p.path, '>', CAST(e.child AS CHAR(64))) AS path,
+    p.lvl + 1
+  FROM edges e
+  JOIN paths p ON e.parent = p.child
+)
+SELECT parent, child, path, lvl
+FROM paths;
+
+DROP DATABASE mcol5142_type_coercion;

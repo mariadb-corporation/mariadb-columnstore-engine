@@ -61,6 +61,7 @@ struct DDLColumn
   execplan::CalpontSystemCatalog::OID oid;
   execplan::CalpontSystemCatalog::ColType colType;
   execplan::CalpontSystemCatalog::TableColName tableColName;
+  DDLColumn() : oid(0) {}
 };
 
 typedef std::vector<DDLColumn> ColumnList;

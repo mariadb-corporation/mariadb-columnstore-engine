@@ -10,28 +10,28 @@ USE tpch1;
 #
 
 --disable_warnings
-drop table if exists MCOL_669_a;
-drop table if exists MCOL_669_B;
+drop table if exists mcol_669_a;
+drop table if exists mcol_669_b;
 --enable_warnings
 
-CREATE TABLE MCOL_669_a (a int, b text) engine=columnstore;
-CREATE TABLE MCOL_669_b (a int, b text) engine=columnstore;
+CREATE TABLE mcol_669_a (a int, b text) engine=columnstore;
+CREATE TABLE mcol_669_b (a int, b text) engine=columnstore;
 
-INSERT INTO MCOL_669_a VALUES (1, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (2, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (3, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (4, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (5, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (6, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (7, REPEAT('MariaDB ', 7500));
-INSERT INTO MCOL_669_a VALUES (8, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (1, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (2, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (3, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (4, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (5, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (6, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (7, REPEAT('MariaDB ', 7500));
+INSERT INTO mcol_669_a VALUES (8, REPEAT('MariaDB ', 7500));
 
-INSERT INTO MCOL_669_b SELECT * FROM MCOL_669_a;
-SELECT a, length(b) FROM MCOL_669_a;
-SELECT a, length(b) FROM MCOL_669_b;
+INSERT INTO mcol_669_b SELECT * FROM mcol_669_a;
+SELECT a, length(b) FROM mcol_669_a;
+SELECT a, length(b) FROM mcol_669_b;
 #
 --disable_warnings
-DROP TABLE MCOL_669_a;
-DROP TABLE MCOL_669_b;
+DROP TABLE mcol_669_a;
+DROP TABLE mcol_669_b;
 --enable_warnings
 #

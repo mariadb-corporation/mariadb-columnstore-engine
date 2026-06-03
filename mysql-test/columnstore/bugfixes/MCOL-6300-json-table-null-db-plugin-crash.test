@@ -1,0 +1,54 @@
+# MCOL-6300: Server crash when INSERT SELECT from JSON_TABLE with
+# subquery referencing a ColumnStore table.
+#
+# Two bugs fixed:
+# 1. isMCSTable() crashed dereferencing NULL db_plugin for JSON_TABLE
+#    virtual table.
+# 2. ColumnStore tried to handle JSON_TABLE via CrossEngineStep which
+#    failed because JSON_TABLE is a virtual table (db = *any*) that
+#    does not exist in any database.  Fixed by rejecting table functions
+#    in getSelectPlan() so the server handles them natively.
+
+--source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6300;
+--enable_warnings
+
+CREATE DATABASE mcol_6300;
+USE mcol_6300;
+
+CREATE TABLE test_cs (id INT, name VARCHAR(100)) ENGINE=Columnstore;
+INSERT INTO test_cs VALUES (1, 'existing');
+
+# Simple INSERT from JSON_TABLE — triggers isMCSTable() on the
+# JSON_TABLE virtual table which has db_plugin=NULL.
+INSERT INTO test_cs
+SELECT * FROM JSON_TABLE(
+    '[{"id": 2, "name": "new"}]',
+    '$[*]' COLUMNS (
+        id INT PATH '$.id',
+        name VARCHAR(100) PATH '$.name'
+    )
+) AS jt;
+
+SELECT * FROM test_cs ORDER BY id;
+
+# JSON_TABLE + NOT EXISTS subquery on ColumnStore table.
+# ColumnStore falls back to server execution for this query because
+# JSON_TABLE cannot be handled by ColumnStore.
+INSERT INTO test_cs
+SELECT jt.* FROM JSON_TABLE(
+    '[{"id": 3, "name": "another"}]',
+    '$[*]' COLUMNS (
+        id INT PATH '$.id',
+        name VARCHAR(100) PATH '$.name'
+    )
+) AS jt
+WHERE NOT EXISTS (
+    SELECT 1 FROM test_cs t WHERE t.id = jt.id
+);
+
+SELECT * FROM test_cs ORDER BY id;
+
+DROP DATABASE mcol_6300;

@@ -1,7 +1,7 @@
 USE tpch1;
 drop table if exists agg_fact_pageview;
 drop table if exists dim_date;
-create table AGG_FACT_PAGEVIEW
+create table agg_fact_pageview
 (
 server_day_date         date ,
 server_hour_24_qty      smallint,
@@ -12,7 +12,7 @@ domain_name                     varchar(255),
 views                           int,
 events                          int
 )engine=columnstore;
-create table DIM_DATE
+create table dim_date
 (
 date_sk              int ,
 day_date             date ,
@@ -478,26 +478,26 @@ insert into dim_date values
 (235, '2010-08-24', 'Tuesday', 8, 8, 'August', 3, 3, 'Q3', 2, 24, 31, 236, 5, 35, 'N', 'W5', 'Q32010', 'Day 2', 201035, 'W201035', 2010, '2010', 2010),
 (236, '2010-08-25', 'Wednesday', 8, 8, 'August', 3, 3, 'Q3', 3, 25, 31, 237, 5, 35, 'N', 'W5', 'Q32010', 'Day 3', 201035, 'W201035', 2010, '2010', 2010);
 select
-`DIM_DATE`.`year_number` as `c0`, `DIM_DATE`.`quarter_number` as `c1`, `DIM_DATE`.`quarter_name` as `c2`,
-`DIM_DATE`.`month_number` as `c3`, `DIM_DATE`.`month_name` as `c4`, `DIM_DATE`.`week_of_year_number` as `c5`,
-`DIM_DATE`.`day_of_month_number` as `c6`, `AGG_FACT_PAGEVIEW`.`organisation_name` as `c7`
+`dim_date`.`year_number` as `c0`, `dim_date`.`quarter_number` as `c1`, `dim_date`.`quarter_name` as `c2`,
+`dim_date`.`month_number` as `c3`, `dim_date`.`month_name` as `c4`, `dim_date`.`week_of_year_number` as `c5`,
+`dim_date`.`day_of_month_number` as `c6`, `agg_fact_pageview`.`organisation_name` as `c7`
 from
-`DIM_DATE` as `DIM_DATE`,
-`AGG_FACT_PAGEVIEW` as `AGG_FACT_PAGEVIEW`
+`dim_date` as `dim_date`,
+`agg_fact_pageview` as `agg_fact_pageview`
 where
-`AGG_FACT_PAGEVIEW`.`server_day_date` = `DIM_DATE`.`day_date`
-  and (`DIM_DATE`.`month_number` = 8 and `DIM_DATE`.`quarter_number` = 3 and `DIM_DATE`.`year_number` = 2010)
-and ((`DIM_DATE`.`day_of_month_number`,`DIM_DATE`.`week_of_year_number`,`DIM_DATE`.`month_number`,`DIM_DATE`.`quarter_number`,`DIM_DATE`.`year_number`)
+`agg_fact_pageview`.`server_day_date` = `dim_date`.`day_date`
+  and (`dim_date`.`month_number` = 8 and `dim_date`.`quarter_number` = 3 and `dim_date`.`year_number` = 2010)
+and ((`dim_date`.`day_of_month_number`,`dim_date`.`week_of_year_number`,`dim_date`.`month_number`,`dim_date`.`quarter_number`,`dim_date`.`year_number`)
 in ((1,31,8,'3',2010),(2,32,8,'3',2010),(3,32,8,'3',2010),(4,32,8,'3',2010)))
 group by
-`DIM_DATE`.`year_number`, `DIM_DATE`.`quarter_number`, `DIM_DATE`.`quarter_name`, `DIM_DATE`.`month_number`,
-`DIM_DATE`.`month_name`, `DIM_DATE`.`week_of_year_number`,
-`DIM_DATE`.`day_of_month_number`, `AGG_FACT_PAGEVIEW`.`organisation_name`
+`dim_date`.`year_number`, `dim_date`.`quarter_number`, `dim_date`.`quarter_name`, `dim_date`.`month_number`,
+`dim_date`.`month_name`, `dim_date`.`week_of_year_number`,
+`dim_date`.`day_of_month_number`, `agg_fact_pageview`.`organisation_name`
 order by
-ISNULL(`DIM_DATE`.`year_number`), `DIM_DATE`.`year_number` ASC, ISNULL(`DIM_DATE`.`quarter_number`),
-`DIM_DATE`.`quarter_number` ASC, ISNULL(`DIM_DATE`.`month_number`), `DIM_DATE`.`month_number` ASC,
-ISNULL(`DIM_DATE`.`week_of_year_number`), `DIM_DATE`.`week_of_year_number` ASC, ISNULL(`DIM_DATE`.`day_of_month_number`),
-`DIM_DATE`.`day_of_month_number` ASC, ISNULL(`AGG_FACT_PAGEVIEW`.`organisation_name`), `AGG_FACT_PAGEVIEW`.`organisation_name` ASC;
+ISNULL(`dim_date`.`year_number`), `dim_date`.`year_number` ASC, ISNULL(`dim_date`.`quarter_number`),
+`dim_date`.`quarter_number` ASC, ISNULL(`dim_date`.`month_number`), `dim_date`.`month_number` ASC,
+ISNULL(`dim_date`.`week_of_year_number`), `dim_date`.`week_of_year_number` ASC, ISNULL(`dim_date`.`day_of_month_number`),
+`dim_date`.`day_of_month_number` ASC, ISNULL(`agg_fact_pageview`.`organisation_name`), `agg_fact_pageview`.`organisation_name` ASC;
 c0	c1	c2	c3	c4	c5	c6	c7
 2010	3	Q3	8	August	31	1	baygaw.com
 2010	3	Q3	8	August	31	1	bqgkue.com

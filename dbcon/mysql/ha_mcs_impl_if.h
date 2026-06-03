@@ -415,6 +415,7 @@ struct gp_walk_info
   bool aggOnSelect;
   bool hasWindowFunc;
   bool hasSubSelect;
+  bool isRecursiveWithTable = false;
   SubQuery* lastSub;
   std::vector<View*> viewList;
   std::map<std::string, execplan::ParseTree*> derivedTbFilterMap;
@@ -574,6 +575,7 @@ struct cal_connection_info
    , useCpimport(mcs_use_import_for_batchinsert_mode_t::ON)
    , delimiter('\7')
    , affectedRows(0)
+   , bulkInsertSavedReadSet(nullptr)
   {
     auto* cf = config::Config::makeConfig();
     if (checkQueryStats(cf))
@@ -654,6 +656,19 @@ struct cal_connection_info
   // MCOL-1101 remove compilation unit variable rmParms
   std::vector<execplan::RMParam> rmParms;
   long long affectedRows;
+  // Saved table->read_set pointer for the duration of a cpimport bulk insert.
+  // The bulk-insert path needs every column readable via Field::val_str()
+  // (from ColWriteBatchString), which requires the read_set to have all bits
+  // set.  Previously the plugin mutated the bits directly via
+  // bitmap_set_all/bitmap_clear_all on table->read_set.  That breaks when the
+  // server pointed read_set at the shared TABLE_SHARE::all_set (e.g. during
+  // ALTER TABLE's copy_data_between_tables via TABLE::use_all_columns()),
+  // because bitmap_clear_all then wipes s->all_set and the next
+  // handler::ha_reset() fires bitmap_is_set_all(&table->s->all_set).
+  // We now save the original pointer and swap read_set to &s->all_set for the
+  // duration of the bulk insert, restoring it in ha_mcs_impl_end_bulk_insert
+  // (or on an early-error return from start_bulk_insert).
+  MY_BITMAP* bulkInsertSavedReadSet;
 };
 
 const std::string infinidb_err_msg =
@@ -721,8 +736,6 @@ void addIntervalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& 
 void castCharArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castDecimalArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
 void castTypeArgs(gp_walk_info* gwip, Item_func* ifp, funcexp::FunctionParm& functionParms);
-// void parse_item (Item* item, std::vector<Item_field*>& field_vec, bool& hasNonSupportItem, uint16&
-// parseInfo);
 bool isPredicateFunction(Item* item, gp_walk_info* gwip);
 execplan::ParseTree* buildRowPredicate(gp_walk_info* gwip, execplan::RowColumn* lhs, execplan::RowColumn* rhs,
                                        std::string predicateOp);
@@ -740,9 +753,6 @@ execplan::CalpontSystemCatalog::ColType colType_MysqlToIDB(const Item* item);
 execplan::SPTP getIntervalType(gp_walk_info* gwip, int interval_type);
 uint32_t isPseudoColumn(std::string funcName);
 void setDerivedTable(execplan::ParseTree* n);
-execplan::ParseTree* setDerivedFilter(gp_walk_info* gwip, execplan::ParseTree*& n,
-                                      std::map<std::string, execplan::ParseTree*>& obj,
-                                      execplan::CalpontSelectExecutionPlan::SelectList& derivedTbList);
 void derivedTableOptimization(gp_walk_info* gwip, execplan::SCSEP& csep);
 bool buildEqualityPredicate(execplan::ReturnedColumn* lhs, execplan::ReturnedColumn* rhs, gp_walk_info* gwip,
                             boost::shared_ptr<execplan::Operator>& sop, const Item_func::Functype& funcType,

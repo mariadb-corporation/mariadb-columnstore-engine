@@ -56,62 +56,7 @@ IDB_Decimal Func_mod::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull,
     return IDB_Decimal();
   }
 
-  if (parm[0]->data()->resultType().isWideDecimalType() || parm[1]->data()->resultType().isWideDecimalType())
-  {
-    IDB_Decimal div = parm[1]->data()->getDecimalVal(row, isNull);
-    int128_t divInt =
-        (parm[1]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH) ? div.s128Value : div.value;
-
-    if (divInt == 0)
-    {
-      isNull = true;
-      return IDB_Decimal();
-    }
-
-    IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-
-    // two special cases: both Decimals has no scale
-    // or divisor has no scale
-    if (!div.isScaled())
-    {
-      return IDB_Decimal(d % div.toTSInt128(), d.scale, datatypes::INT128MAXPRECISION);
-    }
-    // float division
-    else
-    {
-      int128_t dividendInt =
-          (parm[0]->data()->resultType().colWidth == datatypes::MAXDECIMALWIDTH) ? d.s128Value : d.value;
-
-      float128_t divF, dividendF;
-
-      int128_t scaleDivisor;
-
-      datatypes::getScaleDivisor(scaleDivisor, div.scale);
-      divF = (float128_t)divInt / scaleDivisor;
-
-      datatypes::getScaleDivisor(scaleDivisor, d.scale);
-      dividendF = (float128_t)dividendInt / scaleDivisor;
-
-      float128_t mod = datatypes::TFloat128::fmodq(dividendF, divF) * scaleDivisor;
-
-      return IDB_Decimal(datatypes::TSInt128((int128_t)mod), d.scale, datatypes::INT128MAXPRECISION);
-    }
-  }
-  int64_t div = parm[1]->data()->getIntVal(row, isNull);
-
-  if (div == 0)
-  {
-    isNull = true;
-    return IDB_Decimal();
-  }
-
-  IDB_Decimal d = parm[0]->data()->getDecimalVal(row, isNull);
-  int64_t value = d.value / static_cast<int64_t>(pow(10.0, d.scale));
-  int lefto = d.value % (int)pow(10.0, d.scale);
-
-  int64_t mod = (value % div) * pow(10.0, d.scale) + lefto;
-  // It is misterious but precision is set to 0!
-  return IDB_Decimal(mod, d.scale, 0);
+  return modOrDivDecimal(parm, row, isNull, true);
 }
 
 double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,

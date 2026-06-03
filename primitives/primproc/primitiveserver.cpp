@@ -475,13 +475,13 @@ void loadBlock(uint64_t lbid, QueryContext v, uint32_t t, int compType, void* bu
                VSSCache* vssCache)
 {
   bool flg = false;
-  BRM::OID_t oid;
+  BRM::OID_t oid = 0;
   BRM::VER_t txn = (BRM::VER_t)t;
   uint16_t dbRoot = 0;
   uint32_t partitionNum = 0;
   uint16_t segmentNum = 0;
-  int rc;
-  BRM::VER_t ver;
+  int rc = 0;
+  BRM::VER_t ver = 0;
   blockCacheClient bc(*BRPp[cacheNum(lbid)]);
   char file_name[WriteEngine::FILE_NAME_SIZE] = {0};
   char* fileNamePtr = file_name;
@@ -919,8 +919,8 @@ void loadBlockAsync(uint64_t lbid, const QueryContext& c, uint32_t txn, int comp
                     VSSCache* vssCache)
 {
   blockCacheClient bc(*BRPp[cacheNum(lbid)]);
-  bool vbFlag;
-  BRM::VER_t ver;
+  bool vbFlag = false;
+  BRM::VER_t ver = 0;
   VSSCache::iterator it;
 
   if (vssCache)

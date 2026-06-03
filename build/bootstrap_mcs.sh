@@ -144,7 +144,7 @@ install_deps() {
         exit 17
     fi
 
-    if is_rocky_version_ge $OS 10; then
+    if is_rocky_version_ge $OS 9; then
         command="${command} && dnf install -y selinux-policy-devel"
     fi
 
@@ -483,6 +483,8 @@ construct_cmake_flags() {
         CODENAME="jammy"
     elif [[ "$OS" == "ubuntu:24.04" ]]; then
         CODENAME="noble"
+    elif [[ "$OS" == "ubuntu:26.04" ]]; then
+        CODENAME="resolute"        
     else
         echo "Unsupported OS: $OS"
         exit 17

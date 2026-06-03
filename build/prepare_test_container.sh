@@ -93,8 +93,8 @@ start_container() {
     if [[ $PKG_FORMAT == "deb" ]]; then
         docker_run_args+=(--tmpfs /run --tmpfs /run/lock)
     fi
-    # Debian 13: mount cgroup hierarchy (writable, systemd needs to manage cgroups)
-    if [[ $DOCKER_IMAGE == *"debian:13"* ]]; then
+    # Debian 13 and Ubuntu Resolute: mount cgroup hierarchy (writable, systemd needs to manage cgroups)
+    if [[ $DOCKER_IMAGE == *"debian:13"* || $DOCKER_IMAGE == *"ubuntu:26.04"* ]]; then
         docker_run_args+=(--volume /sys/fs/cgroup:/sys/fs/cgroup)
     fi
 

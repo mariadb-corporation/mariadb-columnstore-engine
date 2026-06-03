@@ -79,6 +79,17 @@ class ReservablePQ : private std::priority_queue<_Tp, _Sequence, _Compare>
   using std::priority_queue<_Tp, _Sequence, _Compare>::pop;
   using std::priority_queue<_Tp, _Sequence, _Compare>::push;
   using std::priority_queue<_Tp, _Sequence, _Compare>::empty;
+
+  // Unordered access to the underlying container.  Needed by callers that
+  // have to drain the queue after the comparator's state has changed
+  // (e.g. CompareRule::revertRules()): once the comparator flips, the
+  // stored sequence is no longer a heap w.r.t. the new ordering, so
+  // top()/pop() would violate libstdc++'s debug-mode heap invariant
+  // (__glibcxx_requires_heap_pred) and in release mode yield garbage
+  // anyway.  Iterating over the raw container and re-pushing into a
+  // fresh queue is both correct and O(N) instead of O(N log N).
+  _Sequence& container() { return this->c; }
+  const _Sequence& container() const { return this->c; }
 };
 
 // forward reference

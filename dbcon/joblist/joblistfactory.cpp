@@ -18,6 +18,7 @@
 
 //   $Id: joblistfactory.cpp 9632 2013-06-18 22:18:20Z xlou $
 
+#include <cstdint>
 #include <iostream>
 #include <stack>
 #include <iterator>
@@ -28,6 +29,7 @@
 #include <set>
 #include <map>
 #include <limits>
+#include "subquerystep.h"
 using namespace std;
 
 #include <boost/scoped_ptr.hpp>
@@ -1332,7 +1334,7 @@ const JobStepVector doAggProject(const CalpontSelectExecutionPlan* csep, JobInfo
   }
 
   // for dictionary columns not count only, replace the token oid with string oid
-  for (vector<pair<uint32_t, int> >::iterator it = jobInfo.returnedColVec.begin();
+  for (vector<pair<uint32_t, int>>::iterator it = jobInfo.returnedColVec.begin();
        it != jobInfo.returnedColVec.end(); it++)
   {
     // if the column is a dictionary column and not count only
@@ -1578,7 +1580,7 @@ void parseExecutionPlan(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobS
   set<uint32_t> seenTableIds;
 
   // Stack of seenTables to make sure the left-hand side and right-hand have the same content
-  stack<set<uint32_t> > seenTableStack;
+  stack<set<uint32_t>> seenTableStack;
 
   if (!querySteps.empty())
   {
@@ -2015,20 +2017,134 @@ void makeJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVec
   parseExecutionPlan(csep, jobInfo, querySteps, projectSteps, deliverySteps);
   makeVtableModeSteps(csep, jobInfo, querySteps, projectSteps, deliverySteps);
 }
+void findRecursiveSubSteps(const SJSTEP& root, JobStepVector& result)
+{
+  if (!root)
+    return;
 
+  std::stack<SJSTEP> work;
+  work.push(root);
+
+  while (!work.empty())
+  {
+    SJSTEP step = work.top();
+    work.pop();
+
+    if (!step)
+      continue;
+
+    // Case 1: SubAdapterStep
+    if (auto* adapter = dynamic_cast<SubAdapterStep*>(step.get()))
+    {
+      if (adapter->isRecursiveStep())
+      {
+        result.push_back(step);
+      }
+
+      // push its substep
+      work.push(adapter->subStep());
+    }
+    // Case 2: SubQueryStep
+    else if (auto* subq = dynamic_cast<SubQueryStep*>(step.get()))
+    {
+      const STJLP& subJoblist = subq->subJoblist();
+      if (subJoblist)
+      {
+        const auto& qsteps = subJoblist->querySteps();
+        for (const auto& qstep : qsteps)
+        {
+          work.push(qstep);
+        }
+      }
+    }
+  }
+  std::reverse(result.begin(), result.end());
+}
+
+void replaceDerivedTableList(CalpontSelectExecutionPlan::SelectList& list, const SCSEP& replacementScep)
+{
+  for (auto& scep : list)
+  {
+    auto* plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
+    if (!plan)
+      continue;
+
+    if (plan->isRecursiveWithTable())
+    {
+      scep = replacementScep;
+    }
+    else if (plan->containsRecursiveQuery())
+    {
+      replaceDerivedTableList(plan->derivedTableList(), replacementScep);
+    }
+  }
+}
+
+void addExpOrderByColsToReturnedCols(
+    const std::remove_cv_t<std::remove_reference_t<
+        decltype(std::declval<CalpontSelectExecutionPlan>().orderByCols())>>& expOrderByCols,
+    CalpontSelectExecutionPlan* unionCSEP)
+{
+  for (auto& obc : expOrderByCols)
+  {
+    // Replace any leaf of expressions in the ORDER BY list with the corresponding column for each table
+    // in the UNION, and add the expression to the returned columns.
+    auto* col = obc->clone();
+    auto* ac = dynamic_cast<ArithmeticColumn*>(col);
+    auto* fc = dynamic_cast<FunctionColumn*>(col);
+    if (ac)
+    {
+      ac->expression()->walk(fixUnionExpressionCol, unionCSEP);
+      ac->setSimpleColumnList();
+    }
+    else if (fc)
+    {
+      for (auto& parm : fc->functionParms())
+      {
+        parm->walk(fixUnionExpressionCol, unionCSEP);
+      }
+      fc->setSimpleColumnList();
+    }
+    unionCSEP->returnedCols().emplace_back(col);
+  }
+}
+
+// Builds the job steps for a UNION query (both regular and recursive CTE).
+//
+// The function proceeds in these stages:
+//   1. Collect ORDER BY expressions that require special handling (arithmetic/function columns).
+//   2. For recursive CTEs, partition unionVec so that non-recursive members come first.
+//   3. Build job steps for each non-recursive UNION member (for regular UNION this is all of them).
+//   4. For recursive CTEs, unroll the recursive member up to `depth` iterations,
+//      substituting the previous iteration's plan as the recursive reference.
+//   5. Promote ORDER BY expression columns into the outer query's returned columns.
+//   6. Create the final TupleUnion step (recursive or regular variant).
+//   7. If ORDER BY / LIMIT is present, set up ordering keys, fix returned column OIDs,
+//      and append an annex step for sorting/limiting.
 void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobStepVector& querySteps,
                        JobStepVector& /*projectSteps*/, DeliveredTableMap& deliverySteps)
 {
+  // --- Stage 0: Basic setup ---
+  // unionVec holds all UNION members (sub-SELECTs).
+  // distinctUnionNum is the count of UNION DISTINCT members (as opposed to UNION ALL).
+  // unionRetColsCount is the number of columns the outer UNION query returns.
+  // unionFeeders accumulates the job steps that feed into the final TupleUnion step.
   CalpontSelectExecutionPlan::SelectList& unionVec = csep->unionVec();
   uint8_t distinctUnionNum = csep->distinctUnionNum();
   uint32_t unionRetColsCount = csep->returnedCols().size();
   JobStepVector unionFeeders;
 
+  // --- Stage 1: Collect ORDER BY expressions that need special handling ---
+  // Simple and constant columns in ORDER BY are handled directly by position.
+  // Arithmetic and function columns (e.g. "ORDER BY a + b") need to be cloned
+  // into each UNION member's returned columns so their values are available
+  // after the union merge.  We collect them here for later processing.
   std::remove_cv_t<std::remove_reference_t<decltype(csep->orderByCols())>> expOrderByCols;
   for (auto& obc : csep->orderByCols())
   {
     if (obc->orderPos() != -1ull)
     {
+      // Already has a resolved position — nothing extra needed.
       continue;
     }
     if (dynamic_cast<SimpleColumn*>(obc.get()) == nullptr &&
@@ -2039,39 +2155,118 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
     }
   }
 
-  for (auto& unionSub : unionVec)
+  const bool isRecursive = csep->isRecursiveWithTable();
+
+  // --- Stage 2: Partition UNION members for recursive CTE ---
+  // A recursive CTE (WITH RECURSIVE) has two kinds of UNION members:
+  //   - Non-recursive (base case): does not reference the CTE itself.
+  //   - Recursive: references the CTE and iterates until fixpoint or depth limit.
+  // We partition unionVec so that non-recursive members are in [begin, nonRecursiveEnd)
+  // and recursive members are in [nonRecursiveEnd, end).
+  // For a regular (non-recursive) UNION, nonRecursiveEnd == end(), so all members
+  // are processed uniformly in stage 3.
+  auto nonRecursiveEnd = unionVec.end();
+  if (isRecursive)
   {
-    auto* unionCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(unionSub.get());
-    for (auto& obc : expOrderByCols)
-    {
-      // Replace any leaf of expressions in the ORDER BY list with the corresponding column for each table in
-      // the UNION, and add the expression to the returned columns.
-      auto* col = obc->clone();
-      auto* ac = dynamic_cast<ArithmeticColumn*>(col);
-      auto* fc = dynamic_cast<FunctionColumn*>(col);
-      if (ac)
-      {
-        ac->expression()->walk(fixUnionExpressionCol, unionCSEP);
-        ac->setSimpleColumnList();
-      }
-      else if (fc)
-      {
-        for (auto& parm : fc->functionParms())
-        {
-          parm->walk(fixUnionExpressionCol, unionCSEP);
-        }
-        fc->setSimpleColumnList();
-      }
-      unionCSEP->returnedCols().emplace_back(col);
-    }
-    SJSTEP sub = doUnionSub(unionSub.get(), jobInfo);
+    nonRecursiveEnd = std::partition(unionVec.begin(), unionVec.end(),
+                                     [](SCEP scep)
+                                     {
+                                       auto* plan = dynamic_cast<CalpontSelectExecutionPlan*>(scep.get());
+                                       return plan ? !plan->containsRecursiveQuery() : false;
+                                     });
+  }
+
+  // --- Stage 3: Build job steps for non-recursive UNION members ---
+  // For each non-recursive member:
+  //   a) Clone expression ORDER BY columns into its returned columns
+  //      (so the expression values propagate through the union).
+  //   b) Call doUnionSub() to translate the sub-SELECT into a job step.
+  //   c) Collect the step as both a query step and a union feeder.
+  // For a regular UNION this loop processes every member.
+  for (auto it = unionVec.begin(); it != nonRecursiveEnd; ++it)
+  {
+    auto* unionCSEP = dynamic_cast<CalpontSelectExecutionPlan*>(it->get());
+    addExpOrderByColsToReturnedCols(expOrderByCols, unionCSEP);
+    SJSTEP sub = doUnionSub(it->get(), jobInfo);
     querySteps.push_back(sub);
     unionFeeders.push_back(sub);
   }
 
+  // --- Stage 4: Unroll the recursive CTE members (skipped for regular UNION) ---
+  // The recursive member is "unrolled" up to `depth` iterations.  Each iteration:
+  //   a) Copies the base recursive plan into workingRecur.
+  //   b) Marks the previous iteration (currRecur) as a recursive-with-table reference.
+  //   c) Wraps currRecur into a replacement plan and substitutes it into
+  //      workingRecur's derived-table and union lists via replaceDerivedTableList().
+  //      This chains the iterations: iteration N reads from iteration N-1's output.
+  //   d) Adds expression ORDER BY columns to workingRecur.
+  //   e) On the last iteration only, creates the actual job step (recursiveSub)
+  //      — this is the step whose sub-tree encodes the full recursion chain.
+  // After the loop, findRecursiveSubSteps() walks the recursiveSub step tree
+  // to collect all intermediate feeder steps needed by the recursive TupleUnion.
+  JobStepVector recursiveUnionFeeders;
+  SJSTEP recursiveSub;
+  if (isRecursive)
+  {
+    // Mark all recursive UNION members as recursive queries.
+    CalpontSelectExecutionPlan* currRecur = nullptr;
+    for (auto cit = nonRecursiveEnd; cit != unionVec.end(); ++cit)
+    {
+      currRecur = dynamic_cast<CalpontSelectExecutionPlan*>(cit->get());
+      currRecur->isRecursiveQuery(true);
+    }
+    if (currRecur == nullptr)
+      throw runtime_error("Recursive CTE: no recursive UNION member found");
+
+    // baseRecur is the template plan for every unrolled iteration.
+    CalpontSelectExecutionPlan* baseRecur = new CalpontSelectExecutionPlan(*currRecur);
+    uint32_t depth = (currRecur->maxRecursiveDepth() <= 100) ? csep->maxRecursiveDepth() : 100;
+    for (uint32 i = 0; i < depth; ++i)
+    {
+      // Create a fresh copy of the recursive plan for this iteration.
+      CalpontSelectExecutionPlan* workingRecur = new CalpontSelectExecutionPlan(*baseRecur);
+      CalpontSelectExecutionPlan::SelectList& currDerivedTbList = workingRecur->derivedTableList();
+      CalpontSelectExecutionPlan::SelectList& currUnionVec = workingRecur->unionVec();
+
+      // Mark currRecur (the previous iteration) as the recursive reference point,
+      // and workingRecur (the current iteration) as a recursive query.
+      currRecur->isRecursiveWithTable(true);
+      workingRecur->isRecursiveQuery(true);
+
+      // Substitute the previous iteration's plan into this iteration's references.
+      SCSEP replacement = boost::make_shared<CalpontSelectExecutionPlan>(*currRecur);
+      replaceDerivedTableList(currDerivedTbList, replacement);
+      replaceDerivedTableList(currUnionVec, replacement);
+
+      // Add expression ORDER BY columns to this iteration's returned columns.
+      addExpOrderByColsToReturnedCols(expOrderByCols, workingRecur);
+
+      // Only the last iteration produces the actual executable job step.
+      if (i == depth - 1)
+      {
+        recursiveSub = doUnionSub(replacement.get(), jobInfo);
+        querySteps.push_back(recursiveSub);
+      }
+      // querySteps.push_back(sub);
+      // unionFeeders.push_back(sub);
+
+      // Advance: this iteration becomes the "previous" for the next one.
+      currRecur = new CalpontSelectExecutionPlan(*workingRecur);
+    }
+
+    // Walk the recursiveSub step tree to collect all feeder steps
+    // that the recursive TupleUnion needs.
+    findRecursiveSubSteps(recursiveSub, recursiveUnionFeeders);
+  }
+
+  // --- Stage 5: Promote ORDER BY expressions into the outer query ---
+  // For each expression ORDER BY column (e.g. "ORDER BY a + b"), add a corresponding
+  // SimpleColumn to the outer query's returned columns.  This makes the expression
+  // result available as a regular column after the union merge, so the annex step
+  // can sort by it.  Also update the orderPos on both the new SimpleColumn and
+  // the original ORDER BY entry to point at the appended position.
   for (auto& obc : expOrderByCols)
   {
-    // Add a SimpleColumn to the outer query for the every ORDER BY expression
     auto* sc = new SimpleColumn(*obc.get());
     csep->returnedCols().emplace_back(sc);
     sc->colPosition(csep->returnedCols().size() - 1);
@@ -2079,23 +2274,47 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
     obc->orderPos(csep->returnedCols().size() - 1);
   }
 
+  // --- Stage 6: Create the final TupleUnion step ---
+  // deliveredCols tells downstream steps which columns the union produces.
+  // For recursive CTE we use recursiveUnionQueries() which also wires up
+  // the recursive feeder steps; for regular UNION we use unionQueries().
+  // The union step is then registered as the delivery step for the virtual table.
   jobInfo.deliveredCols = csep->returnedCols();
-  SJSTEP unionStep(unionQueries(unionFeeders, distinctUnionNum, jobInfo, unionRetColsCount));
+  SJSTEP unionStep(isRecursive
+                       ? SJSTEP(recursiveUnionQueries(unionFeeders, distinctUnionNum, jobInfo,
+                                                      recursiveUnionFeeders, unionRetColsCount))
+                       : SJSTEP(unionQueries(unionFeeders, distinctUnionNum, jobInfo, unionRetColsCount)));
   querySteps.push_back(unionStep);
   uint16_t stepNo = jobInfo.subId * 10000;
   numberSteps(querySteps, stepNo, jobInfo.traceFlags);
   deliverySteps[execplan::CNX_VTABLE_ID] = unionStep;
 
+  // --- Stage 7: ORDER BY / LIMIT post-processing ---
+  // This block is entered when the UNION has an ORDER BY clause and/or LIMIT/OFFSET.
+  // It performs three sub-tasks:
+  //   a) Build jobInfo.orderByColVec — a vector of (tupleKey, ascending) pairs that
+  //      the annex step uses to sort.  For SimpleColumns we look up the delivered
+  //      column by orderPos; for expression columns we fall back to the TupleUnion's
+  //      output row group keys.
+  //   b) Normalize every returned column to a SimpleColumn with a synthetic OID
+  //      (tableOid + 1 + position).  ConstantColumns and other non-SimpleColumns
+  //      are replaced.  schemaName is cleared and tableAlias is set to the first
+  //      query step's alias so that downstream steps treat them uniformly.
+  //   c) doProject / checkReturnedColumns / addAnnexStep finalize the projection
+  //      and append a TupleAnnex step that performs the actual ORDER BY + LIMIT.
   if (!csep->orderByCols().empty() || csep->limitStart() != 0 || csep->limitNum() != -1ull)
   {
     jobInfo.limitStart = csep->limitStart();
     jobInfo.limitCount = csep->limitNum();
     jobInfo.orderByThreads = csep->orderByThreads();
+
+    // (a) Build the order-by key vector for the annex step.
     for (auto& obc : csep->orderByCols())
     {
       auto* osc = dynamic_cast<SimpleColumn*>(obc.get());
       if (osc)
       {
+        // SimpleColumn ORDER BY — resolve via delivered columns.
         auto* sc = dynamic_cast<SimpleColumn*>(jobInfo.deliveredCols[obc->orderPos()].get());
         idbassert(sc);
         sc->schemaName("");
@@ -2106,6 +2325,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       }
       else
       {
+        // Expression ORDER BY — use the TupleUnion output row group key directly.
         auto* tus = dynamic_cast<TupleUnion*>(unionStep.get());
         auto& keys = tus->getOutputRowGroup().getKeys();
         idbassert(obc->orderPos() < keys.size());
@@ -2113,9 +2333,9 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       }
     }
 
+    // (b) Normalize all returned columns to SimpleColumns with synthetic OIDs.
     for (auto& rc : csep->returnedCols())
     {
-      // Replace ConstantColumns with SimpleColumns and fix OIDs
       auto* sc = dynamic_cast<SimpleColumn*>(rc.get());
       if (sc)
       {
@@ -2125,6 +2345,7 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
       }
       else
       {
+        // Replace non-SimpleColumn (e.g. ConstantColumn) with a SimpleColumn wrapper.
         sc = new SimpleColumn(*rc.get());
         rc.reset(sc);
         sc->schemaName("");
@@ -2132,6 +2353,8 @@ void makeUnionJobSteps(CalpontSelectExecutionPlan* csep, JobInfo& jobInfo, JobSt
         sc->oid(tableOid(sc, jobInfo.csc) + 1 + rc->colPosition());
       }
     }
+
+    // (c) Finalize projection and append the annex step (ORDER BY + LIMIT execution).
     doProject(csep->returnedCols(), jobInfo);
     checkReturnedColumns(csep, jobInfo);
     addAnnexStep(querySteps, deliverySteps, jobInfo, IDBQueryType::UNION);

@@ -17,6 +17,11 @@ if(WITH_UNITTESTS)
         set(cxxflags "'${cxxflags} -stdlib=libc++'")
         set(linkflags "'${linkflags} -stdlib=libc++'")
     endif()
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(cxxflags "${cxxflags} -D_GLIBCXX_DEBUG -D_GLIBCXX_ASSERTIONS")
+    endif()
+
     ExternalProject_Add(
         googletest
         GIT_REPOSITORY https://github.com/google/googletest
@@ -47,7 +52,7 @@ if(WITH_UNITTESTS)
 
     add_executable(rewritetest rewritetest.cpp)
     add_dependencies(rewritetest googletest)
-    columnstore_link(rewritetest ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    columnstore_link(rewritetest rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rewritetest TEST_PREFIX columnstore:)
 
     add_executable(mcs_decimal_tests mcs_decimal-tests.cpp)
@@ -103,6 +108,46 @@ if(WITH_UNITTESTS)
     add_dependencies(rbo_tests googletest)
     columnstore_link(rbo_tests rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
     gtest_add_tests(TARGET rbo_tests TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_parse_tree_ops_test rbo_lib_parse_tree_ops_test.cpp)
+    add_dependencies(rbo_lib_parse_tree_ops_test googletest)
+    columnstore_link(rbo_lib_parse_tree_ops_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_parse_tree_ops_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_filter_builders_test rbo_lib_filter_builders_test.cpp)
+    add_dependencies(rbo_lib_filter_builders_test googletest)
+    columnstore_link(rbo_lib_filter_builders_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_filter_builders_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_derived_column_test rbo_lib_derived_column_test.cpp)
+    target_compile_options(rbo_lib_derived_column_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_derived_column_test googletest)
+    columnstore_link(rbo_lib_derived_column_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_derived_column_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_derived_table_test rbo_lib_derived_table_test.cpp)
+    target_compile_options(rbo_lib_derived_table_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_derived_table_test googletest)
+    columnstore_link(rbo_lib_derived_table_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_derived_table_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_agg_wrap_test rbo_lib_agg_wrap_test.cpp)
+    target_compile_options(rbo_lib_agg_wrap_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_agg_wrap_test googletest)
+    columnstore_link(rbo_lib_agg_wrap_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_agg_wrap_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_column_classify_test rbo_lib_column_classify_test.cpp)
+    target_compile_options(rbo_lib_column_classify_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_column_classify_test googletest)
+    columnstore_link(rbo_lib_column_classify_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_column_classify_test TEST_PREFIX columnstore:)
+
+    add_executable(rbo_lib_csep_walk_test rbo_lib_csep_walk_test.cpp)
+    target_compile_options(rbo_lib_csep_walk_test PRIVATE -Wno-sign-compare)
+    add_dependencies(rbo_lib_csep_walk_test googletest)
+    columnstore_link(rbo_lib_csep_walk_test rbo ${ENGINE_LDFLAGS} ${GTEST_LIBRARIES} ${ENGINE_EXEC_LIBS})
+    gtest_add_tests(TARGET rbo_lib_csep_walk_test TEST_PREFIX columnstore:)
 
     add_executable(stlpoolallocator stlpoolallocator.cpp)
     target_compile_options(stlpoolallocator PRIVATE -Wno-sign-compare)

@@ -1,12 +1,12 @@
 # Order by a column that is not in GROUP BY and SELECT parts
 # should be correct.
 --disable_warnings
-DROP DATABASE IF EXISTS MCOL5772;
+DROP DATABASE IF EXISTS mcol5772;
 --enable_warnings
 
-CREATE DATABASE MCOL5772;
+CREATE DATABASE mcol5772;
 
-USE MCOL5772;
+USE mcol5772;
 
 CREATE TABLE products (
 product_id INT,
@@ -25,4 +25,4 @@ INSERT INTO products VALUES
 
 SELECT product_name, SUM(stock_quantity) AS total_stock FROM products GROUP BY category ORDER BY stock_quantity;
 
-DROP DATABASE MCOL5772;
+DROP DATABASE mcol5772;

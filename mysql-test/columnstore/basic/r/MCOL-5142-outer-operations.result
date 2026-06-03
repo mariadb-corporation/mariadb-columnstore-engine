@@ -1,0 +1,88 @@
+DROP DATABASE IF EXISTS mcol5142_outer_ops;
+CREATE DATABASE mcol5142_outer_ops;
+USE mcol5142_outer_ops;
+CREATE TABLE emp (
+id INT NOT NULL,
+name VARCHAR(50),
+manager_id INT NULL
+) ENGINE=ColumnStore;
+INSERT INTO emp VALUES
+(1, 'CEO', NULL),
+(2, 'VP-A', 1),
+(3, 'VP-B', 1),
+(4, 'Mgr-A1', 2),
+(5, 'Mgr-A2', 2),
+(6, 'Mgr-B1', 3),
+(7, 'Dev-1', 4),
+(8, 'Dev-2', 5);
+WITH RECURSIVE hier AS (
+SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+UNION ALL
+SELECT e.id, e.name, e.manager_id, h.lvl + 1
+FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT COUNT(*) AS cnt FROM hier;
+cnt
+8
+WITH RECURSIVE hier AS (
+SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+UNION ALL
+SELECT e.id, e.name, e.manager_id, h.lvl + 1
+FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT lvl, COUNT(*) AS cnt FROM hier GROUP BY lvl;
+ERROR 42000: The storage engine for the table doesn't support MCS-2016: Non supported item GROUP BY clause on the GROUP BY list.
+SELECT COUNT(*) AS cnt FROM (
+WITH RECURSIVE hier AS (
+SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+UNION ALL
+SELECT e.id, e.name, e.manager_id, h.lvl + 1
+FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT * FROM hier LIMIT 4
+) sub;
+cnt
+4
+CREATE TABLE hier_result (
+id INT,
+name VARCHAR(50),
+manager_id INT,
+lvl INT
+) ENGINE=ColumnStore;
+INSERT INTO hier_result
+WITH RECURSIVE hier AS (
+SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+UNION ALL
+SELECT e.id, e.name, e.manager_id, h.lvl + 1
+FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT * FROM hier;
+SELECT * FROM hier_result;
+id	name	manager_id	lvl
+1	CEO	NULL	0
+2	VP-A	1	1
+3	VP-B	1	1
+4	Mgr-A1	2	2
+5	Mgr-A2	2	2
+6	Mgr-B1	3	2
+7	Dev-1	4	3
+8	Dev-2	5	3
+CREATE TABLE hier_copy ENGINE=ColumnStore AS
+WITH RECURSIVE hier AS (
+SELECT id, name, manager_id, 0 AS lvl FROM emp WHERE manager_id IS NULL
+UNION ALL
+SELECT e.id, e.name, e.manager_id, h.lvl + 1
+FROM emp e JOIN hier h ON e.manager_id = h.id
+)
+SELECT * FROM hier;
+SELECT * FROM hier_copy;
+id	name	manager_id	lvl
+1	CEO	NULL	0
+2	VP-A	1	1
+3	VP-B	1	1
+4	Mgr-A1	2	2
+5	Mgr-A2	2	2
+6	Mgr-B1	3	2
+7	Dev-1	4	3
+8	Dev-2	5	3
+DROP DATABASE mcol5142_outer_ops;
