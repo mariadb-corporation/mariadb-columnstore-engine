@@ -90,6 +90,9 @@ class MasterDBRMNode
   MasterDBRMNode();
   ~MasterDBRMNode();
 
+  MasterDBRMNode(const MasterDBRMNode& m) = delete;
+  MasterDBRMNode& operator=(const MasterDBRMNode& m) = delete;
+
   /** @brief The primary function of the class.
    *
    * The main loop of the master node.  It accepts connections from the DBRM
@@ -144,7 +147,7 @@ class MasterDBRMNode
     return readOnly;
   }
   /** @brief Connects to the all workers */
-  void connectToWorkers(const size_t connectTimeoutSecs);
+  void connectToWorkers(size_t connectTimeoutSecs);
 
   /** @brief Extracts number of workers and connection timeout from the config */
   void getNumWorkersAndTimeout(size_t& connectTimeoutSecs, const std::string& methodName,
@@ -168,17 +171,14 @@ class MasterDBRMNode
     boost::thread* t;
   };
 
-  MasterDBRMNode(const MasterDBRMNode& m) = delete;
-  MasterDBRMNode& operator=(const MasterDBRMNode& m) = delete;
-
   void initMsgQueues(config::Config* config);
   void msgProcessor();
   void distribute(messageqcpp::ByteStream* msg);
-  void undo() throw();
+  void undo() noexcept;
   void confirm();
-  void sendError(messageqcpp::IOSocket* dest, uint8_t err) const throw();
+  void sendError(messageqcpp::IOSocket* dest, uint8_t err) const noexcept;
   int gatherResponses(uint8_t cmd, uint32_t msgCmdLength, std::vector<messageqcpp::ByteStream*>* responses,
-                      bool& readErrFlag) throw();
+                      bool& readErrFlag) noexcept;
   int compareResponses(uint8_t cmd, uint32_t msgCmdLength,
                        const std::vector<messageqcpp::ByteStream*>& responses) const;
   void finalCleanup();
@@ -254,8 +254,8 @@ class MasterDBRMNode
   boost::mutex mutex2;      // protects params and the hand-off  TODO: simplify
   boost::mutex slaveLock;   // syncs communication with the slaves
   boost::mutex serverLock;  // kludge to synchronize reloading
-  std::mutex cpimportMutex;
-  std::condition_variable cpimportJobsCond;
+  std::mutex jobsMutex;
+  std::condition_variable jobsCond;
   int runners, NumWorkers;
   ThreadParams* params;
   std::atomic<bool> die;
