@@ -1,0 +1,152 @@
+# MCOL-6221: time_to_sec() truncates fractional seconds in columnstore
+# Verify that time_to_sec() preserves fractional seconds for TIME,
+# DATETIME, TIMESTAMP, string, and DECIMAL inputs (matching ColumnStore).
+
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6221_2;
+--enable_warnings
+CREATE DATABASE mcol_6221_2;
+USE mcol_6221_2;
+
+# Fractional TIME(6) input: the fractional seconds must survive
+CREATE TABLE t1 (t TIME(6)) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES
+('00:00:09.900000'),
+('00:00:01.500000'),
+('10:50:40.123456'),
+('-00:00:09.500000'),
+('-00:00:00.250000');
+SELECT t, TIME_TO_SEC(t) r FROM t1 ORDER BY r;
+
+# Fractional DATETIME(6) input
+CREATE TABLE t2 (d DATETIME(6)) ENGINE=ColumnStore;
+INSERT INTO t2 VALUES ('1997-12-12 22:12:02.500000');
+SELECT d, TIME_TO_SEC(d) r FROM t2;
+
+# Composition with SEC_TO_TIME (the reported case): TIME_TO_SEC(SEC_TO_TIME(x))
+# must round-trip the fractional seconds for FLOAT and DOUBLE
+CREATE TABLE t3 (col_float FLOAT, col_double DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t3 VALUES (1.5,1.5),(-1.5,-1.5),(0.25,0.25),(90.125,90.125),(3661.5,3661.5),(-3661.5,-3661.5);
+SELECT TIME_TO_SEC(SEC_TO_TIME(col_float)) rf, TIME_TO_SEC(SEC_TO_TIME(col_double)) rd FROM t3 ORDER BY rf;
+
+# Whole-second inputs are unaffected (integer result type -> getIntVal() path)
+CREATE TABLE t4 (t TIME) ENGINE=ColumnStore;
+INSERT INTO t4 VALUES ('01:00:00'),('22:12:02');
+SELECT t, TIME_TO_SEC(t) r FROM t4 ORDER BY r;
+
+# Numeric context: DOUBLE arithmetic (+ 0.0e0) exercises getDoubleVal(),
+# returning the fractional seconds. Use exactly-representable binary fractions
+CREATE TABLE t5 (t TIME(6)) ENGINE=ColumnStore;
+INSERT INTO t5 VALUES
+('00:00:09.500000'),
+('00:00:01.250000'),
+('-00:00:00.750000');
+SELECT t, TIME_TO_SEC(t) + 0.0e0 AS d FROM t5 ORDER BY d;
+
+# Numeric context: with columnstore_double_for_decimal_math=ON, DECIMAL
+# arithmetic (+ 0.0) is routed through long double, exercising getLongDoubleVal()
+SET columnstore_double_for_decimal_math=1;
+SELECT t, TIME_TO_SEC(t) + 0.0 AS ld FROM t5 ORDER BY ld;
+SET columnstore_double_for_decimal_math=DEFAULT;
+
+# TIMESTAMP(6) input (TIMESTAMP branch). Pin the session time zone so the
+# time-of-day extraction is deterministic
+SET time_zone='+00:00';
+CREATE TABLE t6 (ts TIMESTAMP(6)) ENGINE=ColumnStore;
+INSERT INTO t6 VALUES
+('2020-01-15 10:50:40.123456'),
+('2020-06-15 00:00:01.500000'),
+('2020-06-15 23:59:59.999999');
+SELECT ts, TIME_TO_SEC(ts) r FROM t6 ORDER BY r;
+SET time_zone=DEFAULT;
+
+# String input (CHAR/VARCHAR/TEXT branch). A string argument is typed as
+# DECIMAL(.,6), so the fractional seconds are preserved
+CREATE TABLE t7 (s VARCHAR(32)) ENGINE=ColumnStore;
+INSERT INTO t7 VALUES
+('10:50:40.123456'),
+('00:00:01.500000'),
+('-00:00:09.500000');
+SELECT s, TIME_TO_SEC(s) r FROM t7 ORDER BY r;
+
+# DECIMAL input (DECIMAL/UDECIMAL branch). Matching the server's rule,
+# the value is interpreted as a TIME (HHMMSS[.ffffff])
+CREATE TABLE t8 (d0 DECIMAL(18,0), d2 DECIMAL(18,2)) ENGINE=ColumnStore;
+INSERT INTO t8 VALUES (105040, 105040.50);
+SELECT d0, TIME_TO_SEC(d0) r FROM t8;
+SELECT d2, TIME_TO_SEC(d2) r FROM t8;
+
+# DECIMAL values exercising each interpretation: 9909090 (<= 9999999) is read as TIME
+# 990:90:90, invalid (NULL); 10105040 parses as the invalid date 1010-50-40 (NULL);
+# 110105040 parses as the datetime ...10:50:40 = 39040 seconds (fractional seconds
+# survive for the valid DATETIME form).
+CREATE TABLE t9 (d0 DECIMAL(18,0), d2 DECIMAL(18,2)) ENGINE=ColumnStore;
+INSERT INTO t9 VALUES (10105040, 10105040.50), (110105040, 110105040.50), (9909090, 9909090.50);
+SELECT d0, TIME_TO_SEC(d0) r FROM t9 ORDER BY d0;
+SELECT d2, TIME_TO_SEC(d2) r FROM t9 ORDER BY d2;
+
+# The SAME values in a WIDE DECIMAL(38,x) column
+CREATE TABLE t10 (d0 DECIMAL(38,0), d2 DECIMAL(38,2)) ENGINE=ColumnStore;
+INSERT INTO t10 VALUES (10105040, 10105040.50), (110105040, 110105040.50), (9909090, 9909090.50);
+SELECT d0, TIME_TO_SEC(d0) r FROM t10 ORDER BY d0;
+SELECT d2, TIME_TO_SEC(d2) r FROM t10 ORDER BY d2;
+
+# Out-of-range TIME magnitudes saturate to the maximum TIME 838:59:59.999999 (with the
+# value's sign), mirroring the server's number_to_time_only() -- they are NOT NULL.
+# A negative value is always read as a TIME (dates cannot be negative), so
+# -110105040.50250125 is 11010:50:40 clamped to -838:59:59.999999 = -3020399.999999;
+# +/-8500000 (<= 9999999) is read as TIME 850:00:00 and clamped the same way.
+CREATE TABLE t11 (d8 DECIMAL(38,8)) ENGINE=ColumnStore;
+INSERT INTO t11 VALUES (-110105040.50250125), (8500000.50250125), (-8500000.50250125);
+SELECT d8, TIME_TO_SEC(d8) r FROM t11 ORDER BY d8;
+
+# Broad coverage of the time conversion rules (results match InnoDB):
+#   20010203910101 -> DATETIME 2001-02-03 91:01:01, invalid hour -> NULL
+#   20010203       -> pure DATE 2001-02-03, time-of-day 0 (fraction dropped)
+#   110105040      -> DATETIME ...10:50:40 -> 39040
+#   9909090        -> TIME 990:90:90, invalid minute/second -> NULL
+#   NULL           -> NULL
+CREATE TABLE t12 (d0 DECIMAL(18,0), d2 DECIMAL(18,2)) ENGINE=ColumnStore;
+INSERT INTO t12 VALUES
+(20010203910101, 20010203910101.50), (20010203, 20010203.5),
+(110105040, 110105040.50), (9909090, 9909090.50), (NULL, NULL);
+SELECT d0, TIME_TO_SEC(d0) r FROM t12 ORDER BY d0;
+SELECT d2, TIME_TO_SEC(d2) r FROM t12 ORDER BY d2;
+
+# WIDE DECIMAL(38,x) edge values (results match ColumnStore):
+#   -110105040     -> negative TIME 11010:50:40 clamped to -838:59:59(.999999)
+#   9909090        -> TIME 990:90:90, invalid -> NULL
+#   99999999999999 -> above 99991231235959, read as TIME ...:99:99, invalid -> NULL
+CREATE TABLE t13 (d0 DECIMAL(38,0), d2 DECIMAL(38,8)) ENGINE=ColumnStore;
+INSERT INTO t13 VALUES
+(-110105040, -110105040.50250125), (9909090, 9909090.50250125),
+(99999999999999, 99999999999999.125);
+SELECT d0, TIME_TO_SEC(d0) r FROM t13 ORDER BY d0;
+SELECT d2, TIME_TO_SEC(d2) r FROM t13 ORDER BY d2;
+
+# TIME(6) at the range extremes (TIME column bit-extraction + sign + fraction)
+CREATE TABLE t14 (t TIME(6)) ENGINE=ColumnStore;
+INSERT INTO t14 VALUES ('838:59:59.999999'), ('-838:59:59.999999');
+SELECT t, TIME_TO_SEC(t) r FROM t14 ORDER BY r;
+
+# DATETIME(6) fraction boundaries: midnight -> 0, and the max time-of-day .999999
+CREATE TABLE t15 (d DATETIME(6)) ENGINE=ColumnStore;
+INSERT INTO t15 VALUES ('2020-01-01 00:00:00.000000'), ('2020-01-01 23:59:59.999999');
+SELECT d, TIME_TO_SEC(d) r FROM t15 ORDER BY r;
+
+# String input beyond 24 hours and at the TIME maximum
+CREATE TABLE t16 (s VARCHAR(32)) ENGINE=ColumnStore;
+INSERT INTO t16 VALUES ('100:00:00.500000'), ('838:59:59.999999');
+SELECT s, TIME_TO_SEC(s) r FROM t16 ORDER BY r;
+
+# A numeric TIME whose truncated microseconds reach 999999 is rejected as an
+# invalid time -> NULL, mirroring number_to_time_only()'s sec_part check;
+# one microsecond less (.999998) is valid
+CREATE TABLE t17 (d6 DECIMAL(18,6)) ENGINE=ColumnStore;
+INSERT INTO t17 VALUES (-0.999999), (-1.999998), (-1.999999), (-105040.999998), (-105040.999999),
+(0.999999), (1.999998), (1.999999), (105040.999998), (105040.999999);
+SELECT d6, TIME_TO_SEC(d6) r FROM t17 ORDER BY d6;
+
+# Cleanup
+DROP DATABASE mcol_6221_2;
