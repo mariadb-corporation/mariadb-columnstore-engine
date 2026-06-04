@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "functor.h"
 
 namespace funcexp
@@ -591,6 +593,22 @@ class Func_time_to_sec : public Func_Int
 
   int64_t getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
                     execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
+  double getDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
+  long double getLongDoubleVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                               execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
+  execplan::IDB_Decimal getDecimalVal(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                      execplan::CalpontSystemCatalog::ColType& op_ct) override;
+
+ private:
+  // Decodes the argument into {whole seconds, microsecond fraction}. Both carry the
+  // same sign as the time value; the fraction is in [-999999, 999999]. isNull is set
+  // on error.
+  std::pair<int64_t, int64_t> secondsWithUsec(rowgroup::Row& row, FunctionParm& fp, bool& isNull,
+                                              execplan::CalpontSystemCatalog::ColType& op_ct);
 };
 
 /** @brief Func_microsecond class
