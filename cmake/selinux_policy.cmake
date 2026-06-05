@@ -14,7 +14,7 @@ columnstore_is_rhel_like("${_os_id}" _is_rhel_like)
 # We only build on RHEL-like >= 10, however 9 was reported to have same troubles
 if(NOT _is_rhel_like
    OR (NOT _os_version_major)
-   OR (_os_version_major LESS 9)
+   OR (_os_version_major LESS 19)
 )
     message(
         STATUS
