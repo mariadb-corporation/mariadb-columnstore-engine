@@ -326,13 +326,28 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     // We process LBIDs in the header the same way regardless of their count in the header.
     uint64_t blockOffset = 0;
     oidHWMs[oid] = hwm; // remember HWM to assign later.
+    SATProblem* satProb = nullptr;
+    if (isDict)
+    {
+      satProb = &(problems[oid]);
+    }
+    if (satProb)
+    {
+      satProb->setTemplateFileId(
+        FileId( oid, partition, segment, getDBRoot(), colWidth,
+		colDataType, /* lbid */ 0, /*hwm*/ 0, isDict, blockOffset)
+      );
+    }
     for (uint32_t lbidIndex = 0; lbidIndex < lbidCount; ++lbidIndex, blockOffset += 8192)
     {
       auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
       lastUsedLBID = std::max(lbid, lastUsedLBID);
       FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, /*hwm*/ 0, isDict, blockOffset);
       extentMap.push_back(fileId);
-      oidKnownBlockOffsets[oid].insert(blockOffset);
+      if (satProb)
+      {
+        satProb->headerLBID(lbid);
+      }
       if (doVerbose())
         std::cout << "FileId is collected " << fileId << std::endl;
     }
@@ -381,6 +396,14 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
   }
 
   return 0;
+}
+
+void EMReBuilder::solveExtents()
+{
+  for(auto& [_oid, prob] : problems)
+  {
+    prob.solve(extentMap);
+  }
 }
 
 int32_t EMReBuilder::rebuildExtentMap()
@@ -597,6 +620,7 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
 
 void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen)
 {
+  SATProblem& problem = problems[oidForDict];
   for(uint32_t i=0;i<numTokens;i++)
   {
     if (tokens[i].isNotPhysical())
@@ -604,16 +628,8 @@ void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Tok
       continue;
     }
     uint64_t fbo = tokens[i].fbo;
-    uint64_t lbidBlockOffset = fbo - (fbo % 8192);
-    if (seen.count(lbidBlockOffset) == 0)
-    {
-      if (doVerbose())
-      {
-        std::cout << "Adding block offset " << lbidBlockOffset << " (fbo " << fbo << ") for dict OID " << oidForDict << std::endl;
-      }
-      oidBlockOffsetsFromTokens[oidForDict].insert(lbidBlockOffset);
-      seen.insert(lbidBlockOffset);
-    }
+    uint64_t length = tokens[i].bc;
+    problem.addWrittenFBO(fbo, length);
   }
 }
 
