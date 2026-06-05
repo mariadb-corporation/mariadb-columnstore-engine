@@ -34,6 +34,8 @@
 #include "we_dbfileop.h"
 #include <we_typeext.h>
 
+#include "picosat.h"
+
 using namespace idbdatafile;
 
 namespace RebuildExtentMap
@@ -68,6 +70,12 @@ struct FileId
    , hwm(other.hwm)
    , isDict(other.isDict)
    , blockOffset(other.blockOffset)
+  {
+  }
+
+  FileId()
+   : colWidth(-1)
+   , colDataType(execplan::CalpontSystemCatalog::INT)
   {
   }
 
@@ -145,6 +153,9 @@ class EMReBuilder
   // Returns -1 on error.
   int32_t initializeSystemExtents();
 
+  // Solve all SAT problems for dictionaries.
+  void solveExtents();
+
   // Rebuilds extent map from the collected map.
   int32_t rebuildExtentMap();
 
@@ -165,9 +176,12 @@ class EMReBuilder
   void showExtentMap();
 
  private:
-  struct sat_problem
+  struct SATProblem
   {
     int varIndex = 0;
+
+    // template FileId to construct other FileIds.
+    FileId templateFileId;
 
     // standard domain mapping between ranges and logical variables.
     std::map<uint64_t, int> fromRangeToVar;
@@ -179,6 +193,9 @@ class EMReBuilder
     // the problem itself, standard DIMACS body encoding: clauses end with 0,
     // positive integer is a variable, negative integer is a variable's negation.
     std::vector<int> problem;
+
+    // LBIDs that are in header are marked as already added to the list.
+    std::set<uint64_t> headerLBIDs;
 
     // invent new var or return existing for a range identified by start block offset.
     int getRangeVar(uint64_t range)
@@ -193,6 +210,7 @@ class EMReBuilder
       fromVarToRange[v] = range;
       return v;
     }
+
     // 1-from-N encoding.
     void oneOf(const std::vector<int>& vars)
     {
@@ -241,6 +259,16 @@ class EMReBuilder
       problem.push_back(0);
     }
 
+    void headerLBID(uint64_t range)
+    {
+      if (headerLBIDs.count(range))
+      {
+        return ;
+      }
+      headerLBIDs.insert(range);
+      mustBe(range);
+    }
+
     void mustNotBe(uint64_t range)
     {
       int v = getRangeVar(range);
@@ -250,7 +278,7 @@ class EMReBuilder
 
     // add the fact that some FBO is utilized - it may require one of ranges and
     // also prevent use of some ranges.
-    void addWrittenFBO(uint64_t fbo, uint64_t length)
+    void addWrittenFBO(uint64_t fbo, uint64_t lengthInBlocks)
     {
       // why 512 - this is least possible extent size in blocks.
       const uint64_t smallestAlignment = 512;
@@ -265,12 +293,11 @@ class EMReBuilder
       }
       int n = (highest_offset - lowest_offset) / smallestAlignment;
       oneOf(highest_offset, smallestAlignment, n);
-      uint64_t lengthInBlocks = (length + extentSize - 1)/extentSize;
       uint64_t dataEnd = fbo + lengthInBlocks;
       if (dataEnd / smallestAlignment != fbo / smallestAlignment) // may span adjacent ranges.
       {
         // mark as invalid ranges whose bounds are inside written data.
-	for(uint64_t end = highest_offset + smallestAlignment; end < recordEnd; end += smallestAlignment)
+	for(uint64_t end = highest_offset + smallestAlignment; end < dataEnd; end += smallestAlignment)
 	{
 	  if (end >= extentSize)
 	  {
@@ -284,21 +311,47 @@ class EMReBuilder
 	}
       }
     }
-    void addKnownRange(uint64_t range)
+
+    void setTemplateFileId(const FileId& fileId)
     {
-      mustBe(range);
-    }
-    void addHWM(uint64_t hwm)
-    {
-      idbassert(0);
+      templateFileId = fileId;
     }
 
-    bool solve(std::vector<uint64_t>& ranges)
+    void solve(std::vector<FileId>& ranges)
     {
-      idbassert(0);
+      PicoSAT* psat = picosat_init();
+      idbassert(psat);
+      for(int lit : problem)
+      {
+        picosat_add(psat, lit);
+      }
+      int retCode = picosat_sat(psat, -1);
+
+      idbassert(retCode == PICOSAT_SATISFIABLE); // we always generate satisfiable problems.
+
+      // obtaining the values of literals.
+      // We are interested only in 1 values (assigned to true).
+      for(int v = 1; v < varIndex; v++)
+      {
+        int l = picosat_deref(psat, v);
+	if (l > 0)
+	{
+	  // this var is assigned true, meaning it's range allowed into distribution..
+	  uint64_t range = fromVarToRange[v];
+	  if (headerLBIDs.count(range) < 1)
+	  {
+	    // not a header range so we need to generate a FileId.
+	    FileId fid(templateFileId);
+	    fid.lbid = range;
+            ranges.push_back(fid);
+	  }
+	}
+      }
+      picosat_reset(psat);
     }
 
   };
+
   EMReBuilder(const EMReBuilder&) = delete;
   EMReBuilder(EMReBuilder&&) = delete;
   EMReBuilder& operator=(const EMReBuilder&) = delete;
@@ -317,13 +370,14 @@ class EMReBuilder
   std::map<uint32_t, uint64_t> oidHWMs; // HWM is assigned at the very end, to the LBID that properly contains it.
   uint64_t lastUsedLBID = 0;
   std::set<uint32_t> dictOIDs; // set of OIDs that are dicts.
-  std::map<uint32_t, sat_problem> problems;
+  std::map<uint32_t, SATProblem> problems;
   std::map<uint32_t, std::set<uint64_t>> oidBlockOffsetsFromTokens; // block offsets generated from tokens read.
   std::map<uint32_t, std::set<uint64_t>> oidKnownBlockOffsets; // the set of block offsets that need not new LBIDs.
 
   // TEXT and other long variable length columns are stored as two OIDs, one (OID) for tokens and other
   // (OID+1) for the actual data.
   // This method receives OID+1 - we scan tokens for LBIDs that belong to the the next OID file(s).
+  // All this method do is to fill SATProblem for OID+1 to solve later.
   void scanTokensForLBIDs(uint32_t oid, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen);
 
   // generate FileId's for invisible LBIDs - these are not recorded in headers.
