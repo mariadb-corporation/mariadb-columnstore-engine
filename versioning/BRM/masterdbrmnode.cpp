@@ -1179,6 +1179,11 @@ void MasterDBRMNode::doForceClearAllCpimportJobs(messageqcpp::IOSocket* sock)
   catch (exception&)
   {
   }
+
+  if (waitToFinishJobs)
+  {
+    jobsCond.notify_one();
+  }
 }
 
 void MasterDBRMNode::doStartReadOnly(messageqcpp::IOSocket* sock)
@@ -1188,26 +1193,35 @@ void MasterDBRMNode::doStartReadOnly(messageqcpp::IOSocket* sock)
 #endif
   ByteStream reply;
 
-  // Spawn a new thread and detach it, we cannot block `msgProcessor`.
-  std::thread readonlyAdjuster(
-      [this]()
-      {
-        std::unique_lock lk(jobsMutex);
-        if (sm.getCpimportJobsCount() != 0 || sm.getTxnCount() != 0)
+  std::unique_lock lk(jobsMutex);
+  if (!waitToFinishJobs)
+  {
+    // Spawn a new thread and detach it, we cannot block `msgProcessor`.
+    std::thread readonlyAdjuster(
+        [this]()
         {
-          waitToFinishJobs = true;
-          // Wait until all cpimort jobs are done.
-          jobsCond.wait(lk, [this]() { return sm.getCpimportJobsCount() == 0 && sm.getTxnCount() == 0; });
-          setReadOnly(true);
-          waitToFinishJobs = false;
-        }
-        else
-        {
-          setReadOnly(true);
-        }
-      });
+          std::unique_lock lk(jobsMutex);
+          if (waitToFinishJobs)
+          {
+            // There was another readonlyAdjuster spawned
+            return;
+          }
+          else if (sm.getCpimportJobsCount() != 0 || sm.getTxnCount() != 0)
+          {
+            waitToFinishJobs = true;
+            // Wait until all cpimort jobs are done.
+            jobsCond.wait(lk, [this]() { return sm.getCpimportJobsCount() == 0 && sm.getTxnCount() == 0; });
+            setReadOnly(true);
+            waitToFinishJobs = false;
+          }
+          else
+          {
+            setReadOnly(true);
+          }
+        });
 
-  readonlyAdjuster.detach();
+    readonlyAdjuster.detach();
+  }
 
   reply << (uint8_t)ERR_OK;
   try
