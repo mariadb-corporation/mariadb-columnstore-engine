@@ -53,6 +53,25 @@ SELECT a, SEC_TO_TIME(a) FROM t7 ORDER BY a;
 CREATE TABLE t8(a DECIMAL(18,7)) ENGINE=ColumnStore;
 INSERT INTO t8 VALUES (1.9999996),(-1.9999996),(0.1234565),(-0.1234565);
 SELECT a, SEC_TO_TIME(a) FROM t8 ORDER BY a;
+# getDecimalVal(),
+SELECT a, SEC_TO_TIME(a) + 0.0 FROM t8 ORDER BY a;
+
+CREATE TABLE t9(a DOUBLE) ENGINE=ColumnStore;
+INSERT INTO t9 VALUES (1.5),(-1.5),(90.125),(3661.5);
+SELECT a, SEC_TO_TIME(a) + 0.0 FROM t9 ORDER BY a;
+
+# Saturated value with a low-precision input (TIME(1)): the +0.0 (DECIMAL) result
+# must be truncated to (8385959.9), not rounded to 8385960.0
+CREATE TABLE t10(a DECIMAL(30,1)) ENGINE=ColumnStore;
+INSERT INTO t10 VALUES (1234567890.1);
+SELECT SEC_TO_TIME(a), SEC_TO_TIME(a) + 0.0 FROM t10;
+
+# String argument: SEC_TO_TIME renders no fractional part, but a string arg's scale
+# defaults to 6, so the DECIMAL result must be zero-padded to the result scale
+# (3661.000000)
+CREATE TABLE t11(c VARCHAR(20)) ENGINE=ColumnStore;
+INSERT INTO t11 VALUES ('3661');
+SELECT SEC_TO_TIME(c), SEC_TO_TIME(c) + 0.0 FROM t11;
 
 # Cleanup
 DROP DATABASE mcol_6221;

@@ -3769,6 +3769,8 @@ ReturnedColumn* buildFunctionColumnBody(Item_func* ifp, gp_walk_info& gwi, bool&
       CalpontSystemCatalog::ColType ct;
       ct.colDataType = CalpontSystemCatalog::TIME;
       ct.colWidth = 8;
+      if (funcName == "sec_to_time")
+        ct.scale = ifp->decimals;
       fc->resultType(ct);
     }
     if (funcName == "last_day")
