@@ -278,14 +278,25 @@ execplan::IDB_Decimal Func_sec_to_time::getDecimalVal(rowgroup::Row& row, Functi
   IDB_Decimal d;
 
   string digits = getDigitStrVal(row, parm, isNull, op_ct);
-  int64_t tmpVal = strtoll(digits.c_str(), nullptr, 10);
+
+  const int32_t scale = op_ct.scale;
+
+  size_t dot = digits.find('.');
+  string intPart = (dot == string::npos) ? digits : digits.substr(0, dot);
+  string fracPart = (dot == string::npos) ? string() : digits.substr(dot + 1);
+
+  // Render the fraction at exactly `scale` digits: resize truncates any extra
+  // digits (no rounding) and zero-pads a shorter or absent fraction.
+  fracPart.resize(scale, '0');
+
+  int64_t tmpVal = strtoll((intPart + fracPart).c_str(), nullptr, 10);
 
   if (op_ct.isWideDecimalType())
     d.s128Value = tmpVal;
   else
     d.value = tmpVal;
 
-  d.scale = 0;
+  d.scale = scale;
   return d;
 }
 
