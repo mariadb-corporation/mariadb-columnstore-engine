@@ -13,10 +13,14 @@
     su root root 
 }
 @ENGINE_SYSCONFDIR@/columnstore/Columnstore.xml {
+    missingok
     daily
     dateext
     copy
-    olddir @ENGINE_SYSCONFDIR@/columnstore
+    olddir @ENGINE_LOGDIR@/archive
+    rotate 7
+    maxage 30
+    su root root
 }
 @ENGINE_LOGDIR@/data/bulk/job/*.xml {
     missingok
