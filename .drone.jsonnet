@@ -97,6 +97,16 @@ local upgrade_test_lists = {
 // while the step itself remains red (visible in the UI).
 local normaliseKilledExit = " || { ec=$$?; [ $$ec -ge 128 ] && exit 1; exit $$ec; }";
 
+// Per-step hard time limits (seconds). A hung command then fails red with its
+// logs still collected by the corresponding *log step, instead of stalling
+// the stage until Drone's 8h limit kills it with no diagnostics.
+local prepare_step_timeout = "1800";  // 30m; package installs normally ~10m
+local smoke_step_timeout = "1800";  // 30m; normally minutes
+local mtr_step_timeout = "14400";  // 4h; nightly full-suite under UBSan legitimately takes ~3h
+local cmapi_step_timeout = "3600";  // 1h; ~15m under ASan
+local upgrade_step_timeout = "3600";  // 1h; normally minutes
+local regression_step_timeout = "10800";  // 3h per regression test: slow for sanitizer builds
+
 local make_clickable_link(link) = "echo -e '\\e]8;;" + link + "\\e\\\\" + link + "\\e]8;;\\e\\\\'";
 local echo_running_on = [
   "echo running on ${DRONE_STAGE_MACHINE}",
@@ -211,7 +221,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
   local getContainerName(stepname) = stepname + "$${DRONE_BUILD_NUMBER}",
 
   local prepareTestContainer(containerName, result, do_setup, do_install, do_install_builddeps) =
-    'sh -c "apk add bash && ' + get_build_command("prepare_test_container.sh") +
+    'sh -c "apk add bash && timeout ' + prepare_step_timeout + " " + get_build_command("prepare_test_container.sh") +
     " --container-name " + containerName +
     " --docker-image " + img +
     " --result-path " + result +
@@ -246,6 +256,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     volumes: [pipeline._volumes.mdb, pipeline._volumes.docker],
     commands: [
       prepareTestContainer(getContainerName("smoke"), result, true, true, true),
+      "timeout " + smoke_step_timeout + " " +
       get_build_command("run_smoke.sh") +
       " --container-name " + getContainerName("smoke") +
       (if std.member(ignoreFailureStepList, "smoke") then normaliseKilledExit else ""),
@@ -278,6 +289,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("upgrade") + version, result, false, false, false),
 
+      "timeout " + upgrade_step_timeout + " " +
       execInnerDocker(
         'bash -c "./upgrade_setup_' + pkg_format + ".sh "
         + version + " "
@@ -322,7 +334,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true, true, true),
 
-      "apk add bash &&" +
+      "apk add bash && " +
+      "timeout " + mtr_step_timeout + " " +
       get_build_command("run_mtr.sh") +
       " --container-name " + getContainerName("mtr") +
       " --distro " + platform +
@@ -374,7 +387,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       'echo "$$REGRESSION_REF"',
 
       "apk add bash && " +
-      (if std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression") then "timeout 5400 " else "") +
+      "timeout " + regression_step_timeout + " " +
       get_build_command("run_regression.sh") +
       " --container-name " + getContainerName("regression") +
       " --test-name " + name +
@@ -450,6 +463,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     commands: [
       prepareTestContainer(getContainerName("cmapi"), result, true, true, true),
       "apk add bash && " +
+      "timeout " + cmapi_step_timeout + " " +
       get_build_command("run_cmapi_test.sh") +
       " --container-name " + getContainerName("cmapi") +
       " --pkg-format " + pkg_format +
@@ -498,6 +512,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     },
     commands: [
       "apk add bash && " +
+      "timeout " + mtr_step_timeout + " " +
       get_build_command("run_multi_node_mtr.sh") +
       " --columnstore-image-name $${MCS_IMAGE_NAME} " +
       " --distro " + platform,
