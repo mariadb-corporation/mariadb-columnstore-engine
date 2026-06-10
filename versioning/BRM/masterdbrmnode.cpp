@@ -60,7 +60,7 @@
 #define THREAD_EXIT                                                                                    \
   {                                                                                                    \
     mutex.lock();                                                                                      \
-    for (vector<IOSocket*>::iterator _it = activeSessions.begin(); _it != activeSessions.end(); ++_it) \
+    for (auto _it = activeSessions.begin(); _it != activeSessions.end(); ++_it)                        \
       if (p->sock == *_it)                                                                             \
       {                                                                                                \
         activeSessions.erase(_it);                                                                     \
@@ -86,7 +86,7 @@ MasterDBRMNode::MasterDBRMNode()
 
   config = config::Config::makeConfig();
 
-  if (config == NULL)
+  if (config == nullptr)
     throw invalid_argument("MasterDBRMNode: Configuration error.");
 
   runners = 0;
@@ -157,7 +157,7 @@ void MasterDBRMNode::getNumWorkersAndTimeout(size_t& connectTimeoutSecs, const s
 
   stmp = config->getConfig("DBRM_Controller", "NumWorkers");
 
-  if (stmp.length() == 0)
+  if (stmp.empty())
     throw runtime_error(methodName + ": config file error looking for <DBRM_Controller><NumWorkers>");
 
   ltmp = static_cast<int>(config::Config::fromText(stmp));
@@ -167,7 +167,7 @@ void MasterDBRMNode::getNumWorkersAndTimeout(size_t& connectTimeoutSecs, const s
 
   NumWorkers = ltmp;
   stmp = config->getConfig("DBRM_Controller", "WorkerConnectionTimeout");
-  if (stmp.length() > 0)
+  if (!stmp.empty())
   {
     ltmp = static_cast<int>(config::Config::fromText(stmp));
     if (ltmp > 1)
@@ -244,7 +244,7 @@ void MasterDBRMNode::reload()
   reloadCmd = false;
   config = config::Config::makeConfig();
 
-  if (config == NULL)
+  if (config == nullptr)
     throw runtime_error("DBRM Controller: Configuration error.  Reload aborted.");
 
   die = true;
@@ -293,7 +293,7 @@ void MasterDBRMNode::run()
 #endif
     serverLock.lock();
 
-    if (dbrmServer != NULL)
+    if (dbrmServer != nullptr)
       try
       {
         *s = dbrmServer->accept(&MSG_TIMEOUT);
@@ -371,7 +371,7 @@ void MasterDBRMNode::run()
 
   serverLock.lock();
   delete dbrmServer;
-  dbrmServer = NULL;
+  dbrmServer = nullptr;
   serverLock.unlock();
 }
 
@@ -413,7 +413,7 @@ void MasterDBRMNode::msgProcessor()
     else if (msg.length() == 0)
       continue;
 
-    /* Check for an command for the master */
+    /* Check for a command for the master */
     msg.peek(cmd);
 #ifdef BRM_VERBOSE
     cerr << "DBRM Controller: recv'd message " << (int)cmd << " length " << msg.length() << endl;
@@ -544,7 +544,7 @@ void MasterDBRMNode::msgProcessor()
   retrycmd:
     uint32_t haltloops = 0;
 
-  while (halting && ++haltloops < static_cast<uint32_t>(haltTimeout.tv_sec))
+    while (halting && ++haltloops < static_cast<uint32_t>(haltTimeout.tv_sec))
       sleep(1);
 
     slaveLock.lock();
@@ -580,17 +580,17 @@ void MasterDBRMNode::msgProcessor()
         uint16_t* dbRoot = (uint16_t*)&buf[1 + 4];
 
         // If that dbroot has no vboid, create one
-        int16_t err;
-        err = oids.getVBOIDOfDBRoot(*dbRoot);
+        int16_t vboid;
+        vboid = oids.getVBOIDOfDBRoot(*dbRoot);
 
         // cout << "dbRoot " << *dbRoot << " -> vbOID " << err << endl;
-        if (err < 0)
+        if (vboid < 0)
         {
-          err = oids.allocVBOID(*dbRoot);
+          vboid = oids.allocVBOID(*dbRoot);
           //	cout << "  - allocated oid " << err << endl;
         }
 
-        *dbRoot = err;
+        *dbRoot = vboid;
       }
       catch (exception& ex)
       {
@@ -630,13 +630,13 @@ void MasterDBRMNode::msgProcessor()
     /* Release all blocks of lbids on vbRollback or vbCommit */
     if (cmd == VB_ROLLBACK1 || cmd == VB_ROLLBACK2 || cmd == VB_COMMIT)
     {
-      ByteStream params(msg);
+      ByteStream parms(msg);
       VER_t txn;
       uint8_t tmp8;
       uint32_t tmp32;
 
-      params >> tmp8;
-      params >> tmp32;
+      parms >> tmp8;
+      parms >> tmp32;
       txn = tmp32;
       rg->releaseResources(txn);
     }
@@ -786,7 +786,7 @@ void MasterDBRMNode::msgProcessor()
 
   out:
 
-    for (it = responses.begin(); it != responses.end(); it++)
+    for (it = responses.begin(); it != responses.end(); ++it)
       delete *it;
 
     responses.clear();
@@ -796,14 +796,13 @@ void MasterDBRMNode::msgProcessor()
   cerr << "DBRM Controller: closing connection" << endl;
 #endif
   THREAD_EXIT
-  return;
 }
 
 void MasterDBRMNode::distribute(ByteStream* msg)
 {
   uint32_t i;
 
-  for (i = 0, iSlave = slaves.begin(); iSlave != slaves.end() && !halting; iSlave++, i++)
+  for (i = 0, iSlave = slaves.begin(); iSlave != slaves.end() && !halting; ++iSlave, i++)
     try
     {
       (*iSlave)->write(*msg);
@@ -825,16 +824,16 @@ void MasterDBRMNode::distribute(ByteStream* msg)
 // scope of msgProcessor() which instead uses the halting flag for error
 // handling.
 int MasterDBRMNode::gatherResponses(uint8_t cmd, uint32_t cmdMsgLength, vector<ByteStream*>* responses,
-                                    bool& readErrFlag) throw()
+                                    bool& readErrFlag) noexcept
 {
   int i;
-  ByteStream* tmp = 0;
+  ByteStream* tmp = nullptr;
   readErrFlag = false;
 
   // Bug 2258 gather all responses
   int error = 0;
 
-  for (i = 0, iSlave = slaves.begin(); iSlave != slaves.end() && !halting; iSlave++, i++)
+  for (i = 0, iSlave = slaves.begin(); iSlave != slaves.end() && !halting; ++iSlave, i++)
   {
     tmp = new ByteStream();
 
@@ -842,7 +841,7 @@ int MasterDBRMNode::gatherResponses(uint8_t cmd, uint32_t cmdMsgLength, vector<B
     {
       // can't just block for 5 mins
       timespec newtimeout = {10, 0};
-  uint32_t ntRetries = (newtimeout.tv_sec > 0) ? (haltTimeout.tv_sec / newtimeout.tv_sec) : 0;
+      uint32_t ntRetries = (newtimeout.tv_sec > 0) ? (haltTimeout.tv_sec / newtimeout.tv_sec) : 0;
       if (ntRetries == 0)
         ntRetries = 1;
       uint32_t retries = 0;
@@ -957,7 +956,7 @@ int MasterDBRMNode::compareResponses(uint8_t cmd, uint32_t cmdMsgLength,
       return errCode;
   }*/
 
-  for (it = responses.begin(), it2 = it + 1, i = 2; it2 != responses.end(); it++, it2++, i++)
+  for (it = responses.begin(), it2 = it + 1, i = 2; it2 != responses.end(); ++it, ++it2, i++)
     if (**it != **it2 && !halting)
     {
       ostringstream ostr;
@@ -975,7 +974,7 @@ int MasterDBRMNode::compareResponses(uint8_t cmd, uint32_t cmdMsgLength,
   return errCode;
 }
 
-void MasterDBRMNode::undo() throw()
+void MasterDBRMNode::undo() noexcept
 {
   vector<MessageQueueClient*>::iterator it, lastSlave;
   ByteStream undoMsg;
@@ -992,7 +991,7 @@ void MasterDBRMNode::undo() throw()
   else
     lastSlave = iSlave;
 
-  for (it = slaves.begin(), i = 1; it != lastSlave; it++, i++)
+  for (it = slaves.begin(), i = 1; it != lastSlave; ++it, i++)
   {
     try
     {
@@ -1027,7 +1026,7 @@ void MasterDBRMNode::finalCleanup()
   cerr << "DBRM Controller: Waiting for threads to finish..." << endl;
 
   delete rg;  // unblocks any waiting transactions
-  rg = NULL;
+  rg = nullptr;
 
   // XXXPAT: assumption here: join_all() blocks until all threads are joined
   // which implies the case where all threads are removed from the group.
@@ -1044,10 +1043,10 @@ void MasterDBRMNode::finalCleanup()
   cerr << "Closing connections" << endl;
 #endif
 
-  for (sIt = slaves.begin(); sIt != slaves.end(); sIt++)
+  for (sIt = slaves.begin(); sIt != slaves.end(); ++sIt)
   {
     MessageQueueClientPool::releaseInstance(*sIt);
-    *sIt = NULL;
+    *sIt = nullptr;
   }
 
   slaves.clear();
@@ -1101,11 +1100,11 @@ void MasterDBRMNode::finalCleanup()
 
   serverLock.lock();
   delete dbrmServer;
-  dbrmServer = NULL;
+  dbrmServer = nullptr;
   serverLock.unlock();
 }
 
-void MasterDBRMNode::sendError(IOSocket* caller, uint8_t err) const throw()
+void MasterDBRMNode::sendError(IOSocket* caller, uint8_t err) const noexcept
 {
   ByteStream msg;
 
@@ -1169,7 +1168,7 @@ void MasterDBRMNode::doForceClearAllCpimportJobs(messageqcpp::IOSocket* sock)
   std::cout << "doForceClearCpimprtJobs" << std::endl;
 #endif
   ByteStream reply;
-  std::unique_lock lk(cpimportMutex);
+  std::unique_lock lk(jobsMutex);
   sm.clearAllCpimportJobs();
 
   reply << (uint8_t)ERR_OK;
@@ -1180,6 +1179,11 @@ void MasterDBRMNode::doForceClearAllCpimportJobs(messageqcpp::IOSocket* sock)
   catch (exception&)
   {
   }
+
+  if (waitToFinishJobs)
+  {
+    jobsCond.notify_one();
+  }
 }
 
 void MasterDBRMNode::doStartReadOnly(messageqcpp::IOSocket* sock)
@@ -1189,26 +1193,35 @@ void MasterDBRMNode::doStartReadOnly(messageqcpp::IOSocket* sock)
 #endif
   ByteStream reply;
 
-  // Spawn a new thread and detach it, we cannot block `msgProcessor`.
-  std::thread readonlyAdjuster(
-      [this]()
-      {
-        std::unique_lock lk(cpimportMutex);
-        if (sm.getCpimportJobsCount() != 0)
+  std::unique_lock lk(jobsMutex);
+  if (!waitToFinishJobs)
+  {
+    // Spawn a new thread and detach it, we cannot block `msgProcessor`.
+    std::thread readonlyAdjuster(
+        [this]()
         {
-          waitToFinishJobs = true;
-          // Wait until all cpimort jobs are done.
-          cpimportJobsCond.wait(lk, [this]() { return sm.getCpimportJobsCount() == 0; });
-          setReadOnly(true);
-          waitToFinishJobs = false;
-        }
-        else
-        {
-          setReadOnly(true);
-        }
-      });
+          std::unique_lock lk(jobsMutex);
+          if (waitToFinishJobs)
+          {
+            // There was another readonlyAdjuster spawned
+            return;
+          }
+          else if (sm.getCpimportJobsCount() != 0 || sm.getTxnCount() != 0)
+          {
+            waitToFinishJobs = true;
+            // Wait until all cpimort jobs are done.
+            jobsCond.wait(lk, [this]() { return sm.getCpimportJobsCount() == 0 && sm.getTxnCount() == 0; });
+            setReadOnly(true);
+            waitToFinishJobs = false;
+          }
+          else
+          {
+            setReadOnly(true);
+          }
+        });
 
-  readonlyAdjuster.detach();
+    readonlyAdjuster.detach();
+  }
 
   reply << (uint8_t)ERR_OK;
   try
@@ -1345,18 +1358,15 @@ void MasterDBRMNode::doGetSystemCatalog(ByteStream& /*msg*/, ThreadParams* p)
 
   reply << (uint32_t)catalog_tables.size();
 
-  for (std::vector<std::pair<execplan::CalpontSystemCatalog::OID,
-                             execplan::CalpontSystemCatalog::TableName> >::const_iterator it =
-           catalog_tables.begin();
-       it != catalog_tables.end(); ++it)
+  for (auto it = catalog_tables.begin(); it != catalog_tables.end(); ++it)
   {
-    execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo((*it).second);
-    reply << (uint32_t)(*it).first;
-    reply << (*it).second.schema;
-    reply << (*it).second.table;
+    execplan::CalpontSystemCatalog::TableInfo tb_info = systemCatalogPtr->tableInfo(it->second);
+    reply << (uint32_t)it->first;
+    reply << it->second.schema;
+    reply << it->second.table;
     reply << (uint32_t)tb_info.numOfCols;
     execplan::CalpontSystemCatalog::RIDList column_rid_list =
-        systemCatalogPtr->columnRIDs((*it).second, true);
+        systemCatalogPtr->columnRIDs(it->second, true);
 
     for (size_t col_num = 0; col_num < column_rid_list.size(); col_num++)
     {
@@ -1433,50 +1443,34 @@ void MasterDBRMNode::doNewCpimportJob(ThreadParams* p)
   std::cerr << "doNewCpimportJob" << std::endl;
 #endif
   ByteStream reply;
-  uint32_t jobId;
 
-  std::unique_lock lk(cpimportMutex);
-  // That means that controller node is waiting untill all active cpimport jobs are done.
+  std::unique_lock lk(jobsMutex);
+  // That means that controller node is waiting until all active jobs are done.
   // We cannot block `msgProcessor` and cannot create a new job, so exit with `readonly` code.
   if (waitToFinishJobs)
   {
     reply << (uint8_t)ERR_READONLY;
+  }
+  else
+  {
     try
     {
-      p->sock->write(reply);
+      uint32_t jobId = sm.newCpimportJob();
+      reply << (uint8_t)ERR_OK;
+      reply << (uint32_t)jobId;
     }
-    catch (...)
+    catch (exception&)
     {
+      reply.reset();
+      reply << (uint8_t)ERR_FAILURE;
     }
-    return;
   }
 
-  try
-  {
-    jobId = sm.newCpimportJob();
-  }
-  catch (exception&)
-  {
-    reply.reset();
-    reply << (uint8_t)ERR_FAILURE;
-    try
-    {
-      p->sock->write(reply);
-    }
-    catch (...)
-    {
-    }
-
-    return;
-  }
-
-  reply << (uint8_t)ERR_OK;
-  reply << (uint32_t)jobId;
   try
   {
     p->sock->write(reply);
   }
-  catch (exception&)
+  catch (...)
   {
   }
 }
@@ -1489,29 +1483,20 @@ void MasterDBRMNode::doFinishCpimportJob(ByteStream& msg, ThreadParams* p)
   ByteStream reply;
   uint32_t cpimportJob;
   uint8_t cmd;
-  std::unique_lock lk(cpimportMutex);
+  std::unique_lock lk(jobsMutex);
 
   msg >> cmd;
   msg >> cpimportJob;
   try
   {
     sm.finishCpimortJob(cpimportJob);
+    reply << (uint8_t)ERR_OK;
   }
   catch (exception&)
   {
     reply << (uint8_t)ERR_FAILURE;
-    try
-    {
-      p->sock->write(reply);
-    }
-    catch (...)
-    {
-    }
-
-    return;
   }
 
-  reply << (uint8_t)ERR_OK;
   try
   {
     p->sock->write(reply);
@@ -1521,90 +1506,46 @@ void MasterDBRMNode::doFinishCpimportJob(ByteStream& msg, ThreadParams* p)
   }
 
   if (waitToFinishJobs && sm.getCpimportJobsCount() == 0)
-    cpimportJobsCond.notify_one();
+  {
+    jobsCond.notify_one();
+  }
 }
 
 void MasterDBRMNode::doNewTxnID(ByteStream& msg, ThreadParams* p)
 {
   ByteStream reply;
-  TxnID txnid;
-  uint32_t sessionID;
-  uint8_t block, cmd, isDDL;
 
-  try
+  std::unique_lock lk(jobsMutex);
+  // That means that controller node is waiting until all active jobs are done.
+  // We cannot block `msgProcessor` and cannot create a new job, so exit with `readonly` code.
+  if (waitToFinishJobs)
   {
-    msg >> cmd;
-    msg >> sessionID;
-    msg >> block;
-    msg >> isDDL;
-    txnid = sm.newTxnID(sessionID, (block != 0), (isDDL != 0));
-    reply << (uint8_t)ERR_OK;
-    reply << (uint32_t)txnid.id;
-    reply << (uint8_t)txnid.valid;
-#ifdef BRM_VERBOSE
-    cerr << "newTxnID returning id=" << txnid.id << " valid=" << txnid.valid << endl;
-#endif
+    reply << (uint8_t)ERR_READONLY;
   }
-  catch (exception&)
+  else
   {
-    reply.reset();
-    reply << (uint8_t)ERR_FAILURE;
-
     try
     {
-      p->sock->write(reply);
-    }
-    catch (...)
-    {
-    }
-
-    return;
-  }
-
-  try
-  {
-    p->sock->write(reply);
-  }
-  catch (exception&)
-  {
-  }
-}
-
-void MasterDBRMNode::doCommitted(ByteStream& msg, ThreadParams* p)
-{
-  ByteStream reply;
-  TxnID txnid;
-  uint8_t cmd, tmp;
-  uint32_t tmp32;
-
-  try
-  {
-    msg >> cmd;
-    msg >> tmp32;
-    txnid.id = tmp32;
-    msg >> tmp;
-    txnid.valid = (tmp != 0 ? true : false);
+      uint32_t sessionID;
+      uint8_t block, cmd, isDDL;
+      msg >> cmd;
+      msg >> sessionID;
+      msg >> block;
+      msg >> isDDL;
+      TxnID txnid = sm.newTxnID(sessionID, (block != 0), (isDDL != 0));
+      reply << (uint8_t)ERR_OK;
+      reply << (uint32_t)txnid.id;
+      reply << (uint8_t)txnid.valid;
 #ifdef BRM_VERBOSE
-    cerr << "doCommitted" << endl;
+      cerr << "newTxnID returning id=" << txnid.id << " valid=" << txnid.valid << endl;
 #endif
-    sm.committed(txnid);
-  }
-  catch (exception&)
-  {
-    reply << (uint8_t)ERR_FAILURE;
-
-    try
-    {
-      p->sock->write(reply);
     }
-    catch (...)
+    catch (exception&)
     {
+      reply.reset();
+      reply << (uint8_t)ERR_FAILURE;
     }
-
-    return;
   }
-
-  reply << (uint8_t)ERR_OK;
 
   try
   {
@@ -1615,15 +1556,56 @@ void MasterDBRMNode::doCommitted(ByteStream& msg, ThreadParams* p)
   }
 }
 
-void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
+void MasterDBRMNode::doCommitted(ByteStream& msg, ThreadParams* p)
 {
   ByteStream reply;
-  TxnID txnid;
-  uint8_t cmd, tmp;
-  uint32_t tmp32;
+
+  std::unique_lock lk(jobsMutex);
+  try
+  {
+    TxnID txnid;
+    uint8_t cmd, tmp;
+    uint32_t tmp32;
+    msg >> cmd;
+    msg >> tmp32;
+    txnid.id = tmp32;
+    msg >> tmp;
+    txnid.valid = (tmp != 0 ? true : false);
+#ifdef BRM_VERBOSE
+    cerr << "doCommitted" << endl;
+#endif
+    sm.committed(txnid);
+    reply << (uint8_t)ERR_OK;
+  }
+  catch (exception&)
+  {
+    reply << (uint8_t)ERR_FAILURE;
+  }
 
   try
   {
+    p->sock->write(reply);
+  }
+  catch (...)
+  {
+  }
+
+  if (waitToFinishJobs && sm.getTxnCount() == 0)
+  {
+    jobsCond.notify_one();
+  }
+}
+
+void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
+{
+  ByteStream reply;
+
+  std::unique_lock lk(jobsMutex);
+  try
+  {
+    TxnID txnid;
+    uint8_t cmd, tmp;
+    uint32_t tmp32;
     msg >> cmd;
     msg >> tmp32;
     msg >> tmp;
@@ -1634,6 +1616,7 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
     cerr << "doRolledBack" << endl;
 #endif
     sm.rolledback(txnid);
+    reply << (uint8_t)ERR_OK;
   }
   catch (exception& ex)
   {
@@ -1642,19 +1625,7 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
     log(errStream.str());
 
     reply << (uint8_t)ERR_FAILURE;
-
-    try
-    {
-      p->sock->write(reply);
-    }
-    catch (...)
-    {
-    }
-
-    return;
   }
-
-  reply << (uint8_t)ERR_OK;
 
   try
   {
@@ -1662,6 +1633,11 @@ void MasterDBRMNode::doRolledBack(ByteStream& msg, ThreadParams* p)
   }
   catch (...)
   {
+  }
+
+  if (waitToFinishJobs && sm.getTxnCount() == 0)
+  {
+    jobsCond.notify_one();
   }
 }
 
@@ -1678,6 +1654,9 @@ void MasterDBRMNode::doGetTxnID(ByteStream& msg, ThreadParams* p)
     msg >> sid;
 
     txnid = sm.getTxnID(sid);
+    reply << (uint8_t)ERR_OK;
+    reply << (uint32_t)txnid.id;
+    reply << (uint8_t)txnid.valid;
 #ifdef BRM_VERBOSE
     cerr << "doGetTxnID returning id=" << txnid.id << " valid=" << txnid.valid << endl;
 #endif
@@ -1685,21 +1664,7 @@ void MasterDBRMNode::doGetTxnID(ByteStream& msg, ThreadParams* p)
   catch (exception&)
   {
     reply << (uint8_t)ERR_FAILURE;
-
-    try
-    {
-      p->sock->write(reply);
-    }
-    catch (...)
-    {
-    }
-
-    return;
   }
-
-  reply << (uint8_t)ERR_OK;
-  reply << (uint32_t)txnid.id;
-  reply << (uint8_t)txnid.valid;
 
   try
   {
@@ -1789,7 +1754,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
     vss.release(VSS::READ);
     locked = false;
 
-    if (lbidList.size() > 0)
+    if (!lbidList.empty())
     {
       // Sort the vector.
       std::sort<vector<LBID_t>::iterator>(lbidList.begin(), lbidList.end());
@@ -1867,7 +1832,7 @@ void MasterDBRMNode::doGetUncommittedLbids(ByteStream& msg, ThreadParams* p)
 
     return;
   }
-  catch (exception& e)
+  catch (exception&)
   {
     if (locked)
       vss.release(VSS::READ);
@@ -2487,7 +2452,7 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
       goto write;
     }
 
-    namelen = tli.ownerName.find_first_of(" ");
+    namelen = tli.ownerName.find_first_of(' ');
 
     if (namelen == string::npos)
       processName = tli.ownerName;
@@ -2513,11 +2478,11 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
     for (uint32_t i = 0; i < responses.size(); i++)
     {
       /* Parse msg from worker node */
-      uint8_t ret;
+      uint8_t r;
       idbassert(responses[i]->length() == 1);
-      *(responses[i]) >> ret;
+      *(responses[i]) >> r;
 
-      if (ret == 1)
+      if (r == 1)
         exists = true;
 
       delete responses[i];
@@ -2525,7 +2490,7 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
 
     if (exists)
     {
-      reply << (uint8_t)ERR_OK << (uint8_t) false;
+      reply << (uint8_t)ERR_OK << (uint8_t)false;
       goto write;
     }
 
@@ -2677,7 +2642,7 @@ void MasterDBRMNode::doOwnerCheck(ByteStream& msg, ThreadParams* p)
       goto write;
     }
 
-    namelen = tli.ownerName.find_first_of(" ");
+    namelen = tli.ownerName.find_first_of(' ');
 
     if (namelen == string::npos)
       processName = tli.ownerName;
@@ -2703,11 +2668,11 @@ void MasterDBRMNode::doOwnerCheck(ByteStream& msg, ThreadParams* p)
     for (uint32_t i = 0; i < responses.size(); i++)
     {
       /* Parse msg from worker node */
-      uint8_t ret;
+      uint8_t r;
       idbassert(responses[i]->length() == 1);
-      *(responses[i]) >> ret;
+      *(responses[i]) >> r;
 
-      if (ret == 1)
+      if (r == 1)
         exists = true;
 
       delete responses[i];
@@ -2952,8 +2917,6 @@ void MasterDBRMNode::MsgProcessor::operator()()
   m->runners--;
 }
 
-MasterDBRMNode::MsgProcessor::~MsgProcessor()
-{
-}
+MasterDBRMNode::MsgProcessor::~MsgProcessor() = default;
 
 }  // namespace BRM
