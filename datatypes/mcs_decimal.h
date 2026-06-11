@@ -878,6 +878,14 @@ class Decimal : public TDecimal128, public TDecimal64
   }
 };  // end of Decimal
 
+// Raw (unscaled) integer value of a Decimal as int128, selecting the wide (128-bit) or
+// narrow (64-bit) storage based on external precision (e.g. the column type's, since
+// the Decimal's own precision field is not always populated).
+inline int128_t toInt128ByPrecision(const Decimal& dec, const int32_t precision)
+{
+  return Decimal::isWideDecimalTypeByPrecision(precision) ? dec.s128Value : (int128_t)dec.value;
+}
+
 /**
     @brief The structure contains an overflow check for int128
     division.

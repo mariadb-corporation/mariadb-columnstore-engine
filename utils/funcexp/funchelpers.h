@@ -96,28 +96,6 @@ const unsigned long long LFACTOR1 = 10000000000ULL;
 const unsigned long long LFACTOR2 = 100000000000ULL;
 const unsigned long long ulonglong_max = ~(unsigned long long)0;
 
-// TIME/DATETIME fractional seconds are microseconds: 6 fractional digits. The server
-// likewise caps the fractional scale at TIME_SECOND_PART_DIGITS (6).
-constexpr int32_t TIME_MAX_SCALE = 6;
-
-// Raw (unscaled) integer value of a DECIMAL as int128, selecting the wide (128-bit) or
-// narrow (64-bit) storage based on external precision
-inline datatypes::int128_t decimalToInt128(const execplan::IDB_Decimal& dec, int32_t precision)
-{
-  return datatypes::Decimal::isWideDecimalTypeByPrecision(precision) ? dec.s128Value
-                                                                     : (datatypes::int128_t)dec.value;
-}
-
-// Truncate (do not round) a DECIMAL fractional-part magnitude at the given scale down to
-// microseconds, mirroring the server's handling of fractional seconds.
-inline int64_t fracToMicroseconds(const datatypes::int128_t& fracPart, int32_t scale)
-{
-  if (scale <= TIME_MAX_SCALE)
-    return (int64_t)(fracPart * datatypes::mcs_pow_10[TIME_MAX_SCALE - scale]);
-
-  return (int64_t)(fracPart / datatypes::scaleDivisor<datatypes::int128_t>(scale - TIME_MAX_SCALE));
-}
-
 static std::string monthFullNames[13] = {"NON_VALID", "January",  "February", "March",  "April",
                                          "May",       "June",     "July",     "August", "September",
                                          "October",   "November", "December"};
