@@ -33,6 +33,7 @@ using namespace std;
 using namespace execplan;
 
 #include "dataconvert.h"
+#include "mcs_time.h"
 
 namespace funcexp
 {
@@ -170,7 +171,7 @@ std::pair<int64_t, int64_t> Func_time_to_sec::secondsWithUsec(rowgroup::Row& row
       const CalpontSystemCatalog::ColType& argType = parm[0]->data()->resultType();
       const int32_t argScale = (argType.scale < 0) ? 0 : argType.scale;
 
-      datatypes::int128_t rawVal = helpers::decimalToInt128(argDec, argType.precision);
+      datatypes::int128_t rawVal = datatypes::toInt128ByPrecision(argDec, argType.precision);
 
       const bool valNeg = (rawVal < 0);
       bool saturated = false;   // set when an out-of-range TIME is capped to the maximum
@@ -251,7 +252,7 @@ std::pair<int64_t, int64_t> Func_time_to_sec::secondsWithUsec(rowgroup::Row& row
       if (saturated)
         usec = 999999;
       else
-        usec = helpers::fracToMicroseconds(fracPart, argScale);
+        usec = datatypes::fracToMicroseconds(fracPart, argScale);
 
       // Mirror number_to_time_only(): a numeric TIME whose truncated microseconds
       // reach TIME_MAX_SECOND_PART (999999) is rejected as an invalid time -> NULL.
@@ -317,12 +318,13 @@ execplan::IDB_Decimal Func_time_to_sec::getDecimalVal(rowgroup::Row& row, Functi
   // For TIME_TO_SEC the server caps the result scale at MAX_SCALE via
   // Item::time_precision -> MY_MIN(decimals, TIME_SECOND_PART_DIGITS)
   const int32_t scale =
-      (op_ct.scale < 0) ? 0 : (op_ct.scale > helpers::TIME_MAX_SCALE ? helpers::TIME_MAX_SCALE : op_ct.scale);
+      (op_ct.scale < 0) ? 0
+                        : (op_ct.scale > datatypes::TIME_MAX_SCALE ? datatypes::TIME_MAX_SCALE : op_ct.scale);
 
   auto [sec, usec] = secondsWithUsec(row, parm, isNull, op_ct);
 
   const int64_t microseconds = sec * 1'000'000 + usec;  // fits int64 (< 4e12), may be negative
-  const int64_t value = microseconds / (int64_t)datatypes::mcs_pow_10[helpers::TIME_MAX_SCALE - scale];
+  const int64_t value = microseconds / (int64_t)datatypes::mcs_pow_10[datatypes::TIME_MAX_SCALE - scale];
 
   // Populate both the int64 and int128 fields (val == val128) so the result is
   // correct both for a narrow and a wide decimal column type.
