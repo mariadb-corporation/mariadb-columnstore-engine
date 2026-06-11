@@ -39,7 +39,6 @@ namespace funcexp
 {
 namespace
 {
-constexpr int32_t TIME_MAX_HOUR = 999'99'99LL;
 constexpr int64_t MAX_NUMBER_AS_TIME = 999'99'99LL;                // HHH'MM'SS
 constexpr int64_t MAX_NUMBER_AS_DATETIME = 9999'12'31'23'59'59LL;  // YYYY'MM'DD'HH'MM'SS
 }  // namespace
@@ -232,9 +231,9 @@ std::pair<int64_t, int64_t> Func_time_to_sec::secondsWithUsec(rowgroup::Row& row
           return {-1, 0};
         }
 
-        if (hh > TIME_MAX_HOUR)
+        if (hh > datatypes::TIME_MAX_HOUR)
         {
-          hour = TIME_MAX_HOUR;
+          hour = datatypes::TIME_MAX_HOUR;
           min = 59;
           sec = 59;
           saturated = true;
