@@ -28,8 +28,9 @@
 namespace datatypes
 {
 // MariaDB TIME range is [-838:59:59.999999, 838:59:59.999999].
-constexpr int64_t TIME_MAX_WHOLE_SECONDS = 838 * 3600 + 59 * 60 + 59;  // 3020399 == 838:59:59
-constexpr int64_t TIME_OVERFLOW_SECONDS = TIME_MAX_WHOLE_SECONDS + 1;  // 3020400 == 839:00:00
+constexpr int32_t TIME_MAX_HOUR = 838;
+constexpr int64_t TIME_MAX_WHOLE_SECONDS = TIME_MAX_HOUR * 3600 + 59 * 60 + 59;  // 3020399 == 838:59:59
+constexpr int64_t TIME_OVERFLOW_SECONDS = TIME_MAX_WHOLE_SECONDS + 1;            // 3020400 == 839:00:00
 
 // TIME/DATETIME fractional seconds are microseconds: 6 fractional digits. The server
 // likewise caps the fractional scale at TIME_SECOND_PART_DIGITS (6).
