@@ -55,6 +55,9 @@ class Converter : public Parser, public A
   Converter(const std::string& str, DataCondition& error) : Converter(str.data(), str.length(), error)
   {
   }
+  // A Converter does not own the input string value - it keeps a pointer,
+  // so forbid constructing from a temporary value to avoid dangling pointer errors
+  Converter(std::string&& str, DataCondition& error) = delete;
 };
 
 /*

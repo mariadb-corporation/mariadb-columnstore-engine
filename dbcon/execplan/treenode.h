@@ -691,7 +691,8 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
       }
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      const std::string str = fResult.strVal.safeString("");
+      literal::Converter<literal::SignedInteger> cnv(str, cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
     case CalpontSystemCatalog::VARCHAR:
@@ -703,7 +704,8 @@ inline int64_t TreeNode::getIntVal()
         return fResult.intVal;
 
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::SignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      const std::string str = fResult.strVal.safeString("");
+      literal::Converter<literal::SignedInteger> cnv(str, cnverr);
       return cnv.toSInt<int64_t>(cnverr);
     }
 
@@ -751,10 +753,11 @@ inline uint64_t TreeNode::getUintVal()
     case CalpontSystemCatalog::TEXT:
     {
       datatypes::DataCondition cnverr;
-      literal::Converter<literal::UnsignedInteger> cnv(fResult.strVal.safeString(""), cnverr);
+      const std::string str = fResult.strVal.safeString("");
+      literal::Converter<literal::UnsignedInteger> cnv(str, cnverr);
       if (datatypes::DataCondition::Code(cnverr) != 0)
       {
-        std::cerr << "error in unsigned int conversion from '" << fResult.strVal.safeString() << "'";
+        std::cerr << "error in unsigned int conversion from '" << str << "'";
       }
       return cnv.toXIntPositive<uint64_t>(cnverr);
     }
