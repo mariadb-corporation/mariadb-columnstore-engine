@@ -1466,7 +1466,6 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
       keysAgg.push_back(keysProj[j]);
       scaleAgg.push_back(0);
       precisionAgg.push_back(0);
-      precisionAgg.push_back(0);
       typeAgg.push_back(CalpontSystemCatalog::UBIGINT);
       csNumAgg.push_back(8);
       widthAgg.push_back(bigUintWidth);
