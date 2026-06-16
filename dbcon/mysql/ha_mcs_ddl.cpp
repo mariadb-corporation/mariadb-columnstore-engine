@@ -33,6 +33,7 @@
 #include <unordered.h>
 #include <utility>
 #include <cassert>
+#include <memory>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
@@ -664,7 +665,7 @@ bool anyNullInTheColumn(THD* thd, string& schema, string& table, string& columnN
   rowgroup::RGData rgData;
   ByteStream::quadbyte qb = 4;
   msg << qb;
-  rowgroup::RowGroup* rowGroup = 0;
+  std::unique_ptr<rowgroup::RowGroup> rowGroup;
   bool anyRow = false;
 
   exemgrClient->write(msg);
@@ -717,7 +718,7 @@ bool anyNullInTheColumn(THD* thd, string& schema, string& table, string& columnN
       if (!rowGroup)
       {
         // This is mete data
-        rowGroup = new rowgroup::RowGroup();
+        rowGroup = std::make_unique<rowgroup::RowGroup>();
         rowGroup->deserialize(msg);
         qb = 100;
         msg.restart();
