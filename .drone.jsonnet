@@ -4,7 +4,7 @@ local events = ["pull_request", "cron"];
 local current_branch = "stable-23.10";
 
 local servers = {
-  [current_branch]: ["10.6-enterprise"],
+  [current_branch]: ["12.3"],
 };
 
 local extra_servers = {
