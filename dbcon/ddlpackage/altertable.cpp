@@ -112,6 +112,14 @@ std::ostream& AtaModifyColumnType::put(std::ostream& os) const
 AtaRenameColumn::~AtaRenameColumn()
 {
   delete fNewType;
+  delete fDefaultValue;
+
+  ColumnConstraintList::iterator itr;
+
+  for (itr = fConstraints.begin(); itr != fConstraints.end(); ++itr)
+  {
+    delete *itr;
+  }
 }
 
 std::ostream& AtaRenameColumn::put(std::ostream& os) const
