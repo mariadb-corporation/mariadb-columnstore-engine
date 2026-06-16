@@ -870,7 +870,11 @@ struct AtaRenameColumn : public AlterTableAction
    : fName(name), fNewName(newName), fNewType(newType), fDefaultValue(defaultValue)
   {
     if (constraint_list)
+    {
       fConstraints = *constraint_list;
+      delete constraint_list;  // fConstraints now owns the element pointers; free the redundant list
+                               // container the parser allocated (mirrors ColumnDef's constructor).
+    }
 
     // if (defaultValue)
     //{
