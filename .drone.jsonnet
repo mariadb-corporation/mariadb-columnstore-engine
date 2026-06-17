@@ -60,10 +60,15 @@ local customBootstrapParamsForExisitingPipelines(envkey) =
   (if (std.objectHas(customBootstrapMap, envkey))
    then customBootstrapMap[envkey] else "");
 
+// 'Regr' variants are the regression half of the split sanitizer stages.
+// Distinct keys give them their own result path, so the two halves
+// publish/install independently.
 local customBootstrapParamsForAdditionalPipelinesMap = {
   ASan: "--asan",
+  ASanRegr: "--asan",
   TSAN: "--tsan",
   UBSan: "--ubsan",
+  UBSanRegr: "--ubsan",
   MSan: "--msan",
   libcpp: "--libcpp --skip-unit-tests",
   "gcc-toolset": "--gcc-toolset-for-rocky-8",
@@ -113,7 +118,12 @@ local echo_running_on = [
   make_clickable_link("https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:${DRONE_STAGE_MACHINE};v=3;$case=tags:true%5C,client:false;$regex=tags:false%5C,client:false;sort=desc:launchTime"),
 ];
 
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[]) = {
+// testSet selects which test groups the pipeline runs:
+//   "all"        - everything (the default)
+//   "mtr"        - everything except regression chain
+//   "regression" - only the regression chain
+// Used to split sanitizer pipelines in two so each half fits the 8h limit.
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[], testSet="all") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -544,6 +554,39 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
+  // --- test step groups --------------------------------------------------
+  local smoke_steps = [pipeline.smoke, pipeline.smokelog, pipeline.publish("smokelog")],
+  local cmapi_steps = [pipeline.cmapitest, pipeline.cmapilog, pipeline.publish("cmapilog")],
+  local docs_check_steps =
+    if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise")
+    then [pipeline.mcs_cli_docs_check] else [],
+  local mtr_steps =
+    if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset")
+    then [pipeline.dockerfile, pipeline.dockerhub, pipeline.multi_node_mtr, pipeline.multinode_mtrlog, pipeline.publish("multinode-mtrlog")]
+    else [pipeline.mtr, pipeline.mtrlog, pipeline.publish("mtrlog")],
+  // The regression chain is serial: the first test waits for the given
+  // dependencies, every other test waits for the previous one.
+  local regression_steps(first_depends_on) =
+    [pipeline.regression(regression_tests[i], if (i == 0) then first_depends_on else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
+    [pipeline.regressionlog] +
+    [pipeline.publish("regressionlog")],
+  local upgrade_steps =
+    [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
+    (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]),
+  local publish_latest_steps(anchor) =
+    if (event == "cron") then [pipeline.publish(anchor + " latest", "latest")] else [],
+
+  local regression_published_pkgs_prereqs = ["publish pkg", "publish cmapi build"],
+
+  // What each testSet value runs. In "all" the
+  // regression chain additionally waits for mtr, serializing the two heavy
+  // test groups; in "regression" there is no mtr step to wait for.
+  local test_steps_by_set = {
+    all: smoke_steps + cmapi_steps + docs_check_steps + mtr_steps + regression_steps(["mtr"] + regression_published_pkgs_prereqs) + upgrade_steps + publish_latest_steps("regressionlog"),
+    mtr: smoke_steps + cmapi_steps + docs_check_steps + mtr_steps + upgrade_steps + publish_latest_steps("mtrlog"),
+    regression: regression_steps(regression_published_pkgs_prereqs) + publish_latest_steps("regressionlog"),
+  },
+
   kind: "pipeline",
   type: "docker",
   name: std.join(" ", [branch, platform, event, arch, server, customBootstrapParamsKey, customBuildEnvCommandsMapKey]),
@@ -677,20 +720,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
          [pipeline.publish("cmapi build")] +
          [pipeline.publish()] +
          (if (event == "cron") then [pipeline.publish("pkg latest", "latest")] else []) +
-         [pipeline.smoke] +
-         [pipeline.smokelog] +
-         [pipeline.publish("smokelog")] +
-         [pipeline.cmapitest] +
-         [pipeline.cmapilog] +
-         [pipeline.publish("cmapilog")] +
-         (if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise") then [pipeline.mcs_cli_docs_check] else []) +
-         (if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset") then [pipeline.dockerfile] + [pipeline.dockerhub] + [pipeline.multi_node_mtr] + [pipeline.multinode_mtrlog] + [pipeline.publish("multinode-mtrlog")] else [pipeline.mtr] + [pipeline.mtrlog] + [pipeline.publish("mtrlog")]) +
-         [pipeline.regression(regression_tests[i], if (i == 0) then ["mtr", "publish pkg", "publish cmapi build"] else [regression_tests[i - 1]]) for i in indexes(regression_tests)] +
-         [pipeline.regressionlog] +
-         [pipeline.publish("regressionlog")] +
-         [pipeline.upgrade(mdb_server_versions[i]) for i in indexes(mdb_server_versions)] +
-         (if (std.length(mdb_server_versions) == 0) then [] else [pipeline.upgradelog] + [pipeline.publish("upgradelog")]) +
-         (if (event == "cron") then [pipeline.publish("regressionlog latest", "latest")] else []),
+         test_steps_by_set[testSet],
 
   volumes: [pipeline._volumes.mdb { temp: {} }, pipeline._volumes.docker { host: { path: "/var/run/docker.sock" } }],
   trigger: {
@@ -762,22 +792,21 @@ local AllPipelines =
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
-  // sanitizers: ignore all test step failures so nightly stays green even when tests fail/timeout
+  // sanitizer tests: each sanitizer test is split into two parallel stages so
+  // each half fits the 8h stage limit:
+  //   <key>      runs smoke + cmapi + mtr + upgrade
+  //   <key>Regr  runs the regression chain only
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"])
+    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"], spec.testSet)
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
-    for flag in ["UBSan"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"])
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["ASan"]
+    for spec in [
+      { flag: "UBSan", testSet: "mtr" },
+      { flag: "UBSanRegr", testSet: "regression" },
+      { flag: "ASan", testSet: "mtr" },
+      { flag: "ASanRegr", testSet: "regression" },
+    ]
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
