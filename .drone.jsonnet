@@ -392,7 +392,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 
       // REGRESSION_REF can be empty if there is no appropriate branch in regression repository.
       // if REGRESSION_REF is empty, try to see whether regression repository has a branch named as one we PR.
-      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | grep -E -o "[^/]+$$")}',
+      'export REGRESSION_REF=$${REGRESSION_REF:-$$(git ls-remote https://github.com/mariadb-corporation/mariadb-columnstore-regression-test --h --sort origin "refs/heads/$$REGRESSION_BRANCH_REF" | sed "s#.*refs/heads/##")}',
       "export REGRESSION_REF=$${REGRESSION_REF:-$$REGRESSION_REF_AUX}",
       'echo "$$REGRESSION_REF"',
 
