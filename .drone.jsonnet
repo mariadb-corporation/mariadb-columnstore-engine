@@ -764,9 +764,9 @@ local AllPipelines =
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
-  // last argument is to ignore mtr and regression failures
+  // last argument (ignoreFailureStepList) ignores only test400
   [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["test400.sh"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for server in extra_servers[current_branch]
@@ -774,16 +774,16 @@ local AllPipelines =
     for triggeringEvent in events
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["regression"])
+    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["test400.sh"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for server in extra_servers_11_8[current_branch]
     for platform in extra_servers_platforms_11_8[current_branch]
     for triggeringEvent in events
   ] +
-  // // last argument is to ignore mtr and regression failures
+  // // last argument (ignoreFailureStepList) ignores only test400
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["regression", "mtr"])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["test400.sh"])
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
@@ -797,7 +797,7 @@ local AllPipelines =
   //   <key>      runs smoke + cmapi + mtr + upgrade
   //   <key>Regr  runs the regression chain only
   [
-    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["smoke", "mtr", "regression", "cmapi test", "upgrade"], spec.testSet)
+    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["cmapi test", "upgrade", "test400.sh"], spec.testSet)
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
