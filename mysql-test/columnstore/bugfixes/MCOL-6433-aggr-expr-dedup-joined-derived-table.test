@@ -1,0 +1,78 @@
+#
+# MCOL-6433: wrong results when expressions over an aggregate reference different
+# non-aggregated columns projected from a JOINed derived table.
+#
+# The rule-based optimizer wraps such non-aggregated columns as ANY_VALUE
+# (SELECT_SOME) aggregates. AggregateColumn::operator== compared its parameters by base
+# type only, so two wrappers around different columns were judged equal and deduplicated
+# to a single expressionId -- collapsing two distinct columns onto one tuple key, so the
+# second expression silently reused the first expression's value.
+#
+# Fix: dbcon/execplan/aggregatecolumn.cpp -- AggregateColumn::operator== compares its
+# parameters by dynamic type.
+#
+
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6433;
+--enable_warnings
+CREATE DATABASE mcol_6433;
+USE mcol_6433;
+
+CREATE TABLE t1 (a INT, b INT, c INT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1,2,5),(1,2,6),(2,3,7),(2,3,7),(2,3,8);
+
+# The two divisor columns are also in GROUP BY, but still ANY_VALUE-wrapped; the wrappers
+# must not be deduplicated together (operator== fix).
+# e2 must be COUNT(*)/dcntb, not a copy of e1 = COUNT(*)/cntb.
+SELECT a, COUNT(*)/cntb AS e1, COUNT(*)/dcntb AS e2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a, cntb, dcntb
+ORDER BY a;
+
+# Same columns NOT in GROUP BY: legitimately ANY_VALUE-wrapped, and must not be
+# deduplicated together (operator== fix). m1 must be COUNT(*)/dcntb.
+SELECT a, COUNT(*)/cntb AS m0, COUNT(*)/dcntb AS m1
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+
+# Wrapped operands via a trivial expression (+0); e2 must be dcntb, not cntb.
+SELECT a, cntb+0 AS e1, dcntb+0 AS e2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+
+# Two distinct-count columns over different arguments must stay distinct.
+SELECT a, COUNT(*)/cntb AS m0, COUNT(*)/dcntb AS m1, COUNT(*)/dcntc AS m2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, COUNT(DISTINCT c) dcntc, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+
+# SUM, COUNT and COUNT(DISTINCT) over the same column are three different aggregates and
+# must all stay distinct (none deduplicated onto another). Projected via +0 so the raw,
+# all-distinct values show directly: a=1 -> 4,2,1; a=2 -> 9,3,1.
+SELECT a, sumb+0 AS e_sum, cntb+0 AS e_cnt, dcntb+0 AS e_dcnt
+FROM t1
+JOIN ( SELECT SUM(b) sumb, COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+
+# Control: bare projection of the derived columns.
+SELECT a, cntb, dcntb
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+  ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+
+DROP DATABASE mcol_6433;
