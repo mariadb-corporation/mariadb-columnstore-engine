@@ -1,0 +1,60 @@
+DROP DATABASE IF EXISTS mcol_6433;
+CREATE DATABASE mcol_6433;
+USE mcol_6433;
+CREATE TABLE t1 (a INT, b INT, c INT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1,2,5),(1,2,6),(2,3,7),(2,3,7),(2,3,8);
+SELECT a, COUNT(*)/cntb AS e1, COUNT(*)/dcntb AS e2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a, cntb, dcntb
+ORDER BY a;
+a	e1	e2
+1	1.0000	2.0000
+2	1.0000	3.0000
+SELECT a, COUNT(*)/cntb AS m0, COUNT(*)/dcntb AS m1
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+a	m0	m1
+1	1.0000	2.0000
+2	1.0000	3.0000
+SELECT a, cntb+0 AS e1, dcntb+0 AS e2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+a	e1	e2
+1	2	1
+2	3	1
+SELECT a, COUNT(*)/cntb AS m0, COUNT(*)/dcntb AS m1, COUNT(*)/dcntc AS m2
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, COUNT(DISTINCT c) dcntc, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+a	m0	m1	m2
+1	1.0000	2.0000	1.0000
+2	1.0000	3.0000	1.5000
+SELECT a, sumb+0 AS e_sum, cntb+0 AS e_cnt, dcntb+0 AS e_dcnt
+FROM t1
+JOIN ( SELECT SUM(b) sumb, COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+a	e_sum	e_cnt	e_dcnt
+1	4	2	1
+2	9	3	1
+SELECT a, cntb, dcntb
+FROM t1
+JOIN ( SELECT COUNT(b) cntb, COUNT(DISTINCT b) dcntb, a AS aa FROM t1 GROUP BY a ) d
+ON t1.a = d.aa
+GROUP BY a
+ORDER BY a;
+a	cntb	dcntb
+1	2	1
+2	3	1
+DROP DATABASE mcol_6433;

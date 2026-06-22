@@ -358,7 +358,9 @@ bool AggregateColumn::operator==(const AggregateColumn& t) const
 
   for (it = fAggParms.begin(), it2 = t.fAggParms.begin(); it != fAggParms.end(); ++it, ++it2)
   {
-    if (**it != **it2)
+    // Compare operands by dynamic type: the pointer RHS (it2->get()) selects the virtual
+    // operator!=(const TreeNode*)
+    if (**it != it2->get())
       return false;
   }
 
