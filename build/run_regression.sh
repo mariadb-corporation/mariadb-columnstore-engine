@@ -10,6 +10,7 @@ optparse.define short=b long=regression-branch  desc="Branch from regression tes
 optparse.define short=d long=distro             desc="Linux distro for which regression is executed"                variable=DISTRO
 optparse.define short=t long=regression-timeout desc="Timeout for the regression test run"                          variable=REGRESSION_TIMEOUT default=2h
 optparse.define short=n long=test-name          desc="Name of regression test to execute"                           variable=TEST_NAME
+optparse.define short=i long=ignore-cores       desc="Mark this test's daemon cores as expected so the stage core gate skips them and stage is not marked as failed because of them, needed when a specific failing test needs to be ignored (cores are still gdb-formatted and published)" variable=IGNORE_CORES default=false value=true
 source "$(optparse.build)"
 
 for flag in CONTAINER_NAME REGRESSION_BRANCH DISTRO TEST_NAME; do
@@ -113,11 +114,30 @@ run_test() {
 
   execInnerDocker "${CONTAINER_NAME}" "sleep 4800 && bash /save_stack.sh ${test_dir}/reg-logs/ &"
 
+  # For a tolerated test, snapshot cores that already exist (left by earlier tests) so we can later
+  # record ONLY the cores THIS test produces. A pre-existing core must still fail the stage, so it
+  # must NOT end up in .expected_cores.
+  if [[ "${IGNORE_CORES}" == "true" ]]; then
+    execInnerDocker "${CONTAINER_NAME}" "ls -1 /core/*_core_dump.* 2>/dev/null > /core/.cores_before || true"
+  fi
+
   execInnerDockerNoTTY "${CONTAINER_NAME}" \
     "export PRESERVE_LOGS=true && cd ${test_dir} && \
      timeout -k 1m -s SIGKILL --preserve-status ${REGRESSION_TIMEOUT} \
      ./go.sh --sm_unit_test_dir=/storage-manager --tests=${TEST_NAME} \
        || ./regression_logs.sh ${TEST_NAME}"
+  local test_rc=$?
+
+  # A test the Drone config marks tolerated (--ignore-cores) produces EXPECTED daemon cores. Record ONLY the cores
+  # that appeared DURING it (diff vs the pre-test snapshot) -- do NOT delete them; they are still
+  # gdb-formatted and published as diagnostics. The end-of-stage core gate (core_dump_drop.sh) then
+  # skips exactly these, while a core from any OTHER test (including ones before this) still fails the
+  # stage. asan.*/ubsan.* reports are untouched, so check_sanitizer_reports.sh keeps gating real leaks.
+  if [[ "${IGNORE_CORES}" == "true" ]]; then
+    execInnerDocker "${CONTAINER_NAME}" "ls -1 /core/*_core_dump.* 2>/dev/null | grep -vxF -f /core/.cores_before >> /core/.expected_cores 2>/dev/null; rm -f /core/.cores_before || true"
+  fi
+
+  return "${test_rc}"
 }
 
 on_exit() {
