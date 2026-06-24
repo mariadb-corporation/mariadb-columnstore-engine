@@ -123,7 +123,9 @@ local echo_running_on = [
 //   "mtr"        - everything except regression chain
 //   "regression" - only the regression chain
 // Used to split sanitizer pipelines in two so each half fits the 8h limit.
-local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=[], testSet="all") = {
+// Defaults to ["test400.sh"] so the known-flaky survivability test is tolerated EVERYWHERE;
+// pipelines can pass their own list to also tolerate e.g. "cmapi test"/"upgrade" (sanitizers).
+local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", customBootstrapParamsKey="", customBuildEnvCommandsMapKey="", ignoreFailureStepList=["test400.sh"], testSet="all") = {
   local pkg_format = if (std.split(platform, ":")[0] == "rockylinux") then "rpm" else "deb",
   local img = if (platform == "rockylinux:8") then platform else "detravi/" + std.strReplace(platform, "/", "-"),
   local branch_ref = if (branch == any_branch) then current_branch else branch,
@@ -188,7 +190,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests_base = if (event == "cron") then [
+  local regression_tests = if (event == "cron") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -218,8 +220,6 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     "test000.sh",
     "test001.sh",
   ],
-
-  local regression_tests = [regression_tests_base[i] for i in indexes(regression_tests_base) if !std.member(ignoreFailureStepList, regression_tests_base[i])],
 
   local mdb_server_versions = upgrade_test_lists[platformKey][arch],
 
@@ -401,6 +401,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       get_build_command("run_regression.sh") +
       " --container-name " + getContainerName("regression") +
       " --test-name " + name +
+      (if std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression") then " --ignore-cores" else "") +
       " --distro " + platform +
       " --regression-branch $$REGRESSION_REF" +
       " --regression-timeout $${REGRESSION_TIMEOUT}" +
@@ -764,9 +765,8 @@ local AllPipelines =
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
-  // last argument (ignoreFailureStepList) ignores only test400
   [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["test400.sh"])
+    Pipeline(b, platform, triggeringEvent, a, server, "", "")
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for server in extra_servers[current_branch]
@@ -774,16 +774,15 @@ local AllPipelines =
     for triggeringEvent in events
   ] +
   [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "", ["test400.sh"])
+    Pipeline(b, platform, triggeringEvent, a, server, "", "")
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for server in extra_servers_11_8[current_branch]
     for platform in extra_servers_platforms_11_8[current_branch]
     for triggeringEvent in events
   ] +
-  // // last argument (ignoreFailureStepList) ignores only test400
   [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand, ["test400.sh"])
+    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand)
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]
