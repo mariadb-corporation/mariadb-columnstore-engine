@@ -190,7 +190,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests = if (event == "cron") then [
+  local regression_tests = if (event != "cron") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -339,7 +339,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     image: "docker:git",
     volumes: [pipeline._volumes.docker, pipeline._volumes.mdb],
     environment: {
-      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-false}",
+      MTR_FULL_SUITE: "${MTR_FULL_SUITE:-true}",
     },
     commands: [
       prepareTestContainer(getContainerName("mtr"), result, true, true, true),
