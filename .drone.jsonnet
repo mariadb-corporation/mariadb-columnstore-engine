@@ -107,7 +107,7 @@ local normaliseKilledExit = " || { ec=$$?; [ $$ec -ge 128 ] && exit 1; exit $$ec
 // the stage until Drone's 8h limit kills it with no diagnostics.
 local prepare_step_timeout = "1800";  // 30m; package installs normally ~10m
 local smoke_step_timeout = "1800";  // 30m; normally minutes
-local mtr_step_timeout = "14400";  // 4h; nightly full-suite under UBSan legitimately takes ~3h
+local mtr_step_timeout = "18000";  // 5h; ASan full suite runs ~4h sometimes
 local cmapi_step_timeout = "3600";  // 1h; ~15m under ASan
 local upgrade_step_timeout = "3600";  // 1h; normally minutes
 local regression_step_timeout = "10800";  // 3h per regression test: slow for sanitizer builds
