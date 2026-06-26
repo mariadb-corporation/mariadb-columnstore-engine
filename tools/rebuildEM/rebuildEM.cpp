@@ -118,7 +118,8 @@ int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
   }
 
   // generate FileId's for invisible LBIDs - these are not recorded in headers.
-  addInvisibleLBIDs();
+  //addInvisibleLBIDs();
+  solveExtents();
 
   // setup HWMs for all OIDs.
   setupHWMs();
@@ -329,14 +330,13 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     SATProblem* satProb = nullptr;
     if (isDict)
     {
+      std::cout << "OID " << oid << " is a dictionary\n";
       satProb = &(problems[oid]);
     }
     if (satProb)
     {
-      satProb->setTemplateFileId(
-        FileId( oid, partition, segment, getDBRoot(), colWidth,
-		colDataType, /* lbid */ 0, /*hwm*/ 0, isDict, blockOffset)
-      );
+      FileId templateFileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, /* lbid */0, /* hwm */ 0, isDict, blockOffset);
+      satProb->setTemplateFileId( templateFileId);
     }
     for (uint32_t lbidIndex = 0; lbidIndex < lbidCount; ++lbidIndex, blockOffset += 8192)
     {
@@ -402,6 +402,7 @@ void EMReBuilder::solveExtents()
 {
   for(auto& [_oid, prob] : problems)
   {
+    std::cout << "solving problem for OID " << _oid << "\n";
     prob.solve(extentMap);
   }
 }
@@ -621,6 +622,7 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
 void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen)
 {
   SATProblem& problem = problems[oidForDict];
+  std::cout << "creating problem for possible dictionary OID " << oidForDict << "\n";
   for(uint32_t i=0;i<numTokens;i++)
   {
     if (tokens[i].isNotPhysical())
