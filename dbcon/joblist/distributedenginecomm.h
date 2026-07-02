@@ -40,6 +40,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <queue>
 #include <vector>
@@ -292,6 +293,11 @@ class DistributedEngineComm
       fSessionMessages;  // place to put messages from the pm server to be returned by the Read method
   std::mutex fMlock;     // sessionMessages mutex
   std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
+  // Guards generation swaps of fPmConnections/fWlock (Setup()/Close()) against concurrent
+  // readers such as writeToClient(). Readers copy the element shared_ptrs under a shared
+  // lock so a swapped-out generation stays alive until its last user is done with it;
+  // without this, Setup() frees the write mutex/connection a blocked writer still holds.
+  mutable std::shared_mutex fConnectionsLock;
   bool fBusy;
   std::atomic<uint32_t> pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
