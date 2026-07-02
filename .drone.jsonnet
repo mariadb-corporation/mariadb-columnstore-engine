@@ -3,6 +3,22 @@ local events = ["pull_request", "cron"];
 
 local current_branch = "stable-23.10";
 
+// ---------------------------------------------------------------------------
+// Flaky-test hunt mode: when repeatTestCount > 1, the regression chain runs
+// ONLY repeatTestName, looped that many times inside one step (implemented by
+// run_regression.sh --test-count). Each failed iteration's test directory
+// (diff.txt, main*.log) is preserved in reg-logs/ and uploaded with the
+// artifacts. Use it to measure a flaky test's failure rate and to verify a
+// fix: N failing iterations before, 0/N after.
+// experimentReducedMatrix additionally collapses the build matrix to a single
+// regression-only pipeline (ubuntu:24.04 / amd64 / 10.6-enterprise), turning
+// the ~8h full matrix into one ~2h pipeline. Both knobs are for experiment
+// branches only - keep them off (0 / false) in normal operation.
+local repeatTestName = "test400.sh";
+local repeatTestCount = 30;
+local experimentReducedMatrix = true;
+// ---------------------------------------------------------------------------
+
 local servers = {
   [current_branch]: ["10.6-enterprise"],
 };
@@ -190,7 +206,8 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     ],
   },
 
-  local regression_tests = if (event != "cron") then [
+  local regression_tests = if repeatTestCount > 1 then [repeatTestName]
+  else if (event != "cron") then [
     "test000.sh",
     "test001.sh",
     "test005.sh",
@@ -405,6 +422,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
       " --distro " + platform +
       " --regression-branch $$REGRESSION_REF" +
       " --regression-timeout $${REGRESSION_TIMEOUT}" +
+      (if repeatTestCount > 1 then " --test-count " + repeatTestCount else "") +
       (if std.member(ignoreFailureStepList, name) || std.member(ignoreFailureStepList, "regression") then normaliseKilledExit else ""),
     ],
 
@@ -731,7 +749,16 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 };
 
 
-local AllPipelines =
+// Single regression-only pipeline for flaky-test hunting; see the
+// experimentReducedMatrix knob at the top of this file.
+local ReducedMatrixPipelines =
+  [
+    Pipeline(current_branch, "ubuntu:24.04", triggeringEvent, "amd64", server, "", "", ["test400.sh"], "regression")
+    for triggeringEvent in events
+    for server in servers[current_branch]
+  ];
+
+local FullMatrixPipelines =
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, "")
     for a in ["amd64"]
@@ -811,6 +838,8 @@ local AllPipelines =
   ] +
 
   [];
+
+local AllPipelines = if experimentReducedMatrix then ReducedMatrixPipelines else FullMatrixPipelines;
 
 
 local FinalPipeline(branch, event) = {
