@@ -367,11 +367,17 @@ int32_t DistributedEngineComm::Setup()
 
   lock.unlock();
 
-  fWlock.swap(newLocks);
-  fPmConnections.swap(newClients);
-  // atomic store with release semantics ensures all previous writes are visible
-  pmCount.store(newPmCount, std::memory_order_release);
+  {
+    std::unique_lock<std::shared_mutex> connLock(fConnectionsLock);
+    fWlock.swap(newLocks);
+    fPmConnections.swap(newClients);
+    // atomic store with release semantics ensures all previous writes are visible
+    pmCount.store(newPmCount, std::memory_order_release);
+  }
 
+  // The previous generation (now in newLocks/newClients) is released outside
+  // fConnectionsLock; writers that copied the shared_ptrs keep their objects
+  // alive until they are done, so nothing is destroyed while still in use.
   newLocks.clear();
   newClients.clear();
   return 0;
@@ -383,6 +389,7 @@ int DistributedEngineComm::Close()
 
   makeBusy(false);
   // for each MessageQueueClient in pmConnections delete the MessageQueueClient;
+  std::unique_lock<std::shared_mutex> connLock(fConnectionsLock);
   fPmConnections.clear();
   fPmReader.clear();
   return 0;
@@ -458,8 +465,19 @@ void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
 
   boost::mutex* lock = new boost::mutex();
   condition* cond = new condition();
-  uint32_t firstPMInterleavedConnectionId =
-      key % (fPmConnections.size() / pmCount) * fDECConnectionsPerQuery * pmCount % fPmConnections.size();
+  uint32_t firstPMInterleavedConnectionId = 0;
+
+  {
+    std::shared_lock<std::shared_mutex> connLock(fConnectionsLock);
+    const size_t connCount = fPmConnections.size();
+    const uint32_t pmc = pmCount.load(std::memory_order_acquire);
+
+    // While PrimProc is down/reconnecting the list can be empty; avoid a
+    // division by zero and let the queue start on connection 0.
+    if (pmc != 0 && connCount >= pmc)
+      firstPMInterleavedConnectionId =
+          key % (connCount / pmc) * fDECConnectionsPerQuery * pmc % connCount;
+  }
   boost::shared_ptr<MQE> mqe(new MQE(pmCount, firstPMInterleavedConnectionId, flowControlEnableBytesThresh, lock, cond));
   mqe->sendACKs = sendACKs;
   mqe->throttled = false;
@@ -1057,16 +1075,23 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
   boost::shared_ptr<MQE> mqe;
   Stats* senderStats = NULL;
 
-  if (fPmConnections.size() == 0)
-    return 0;
-
   uint32_t connectionId = aPMIndex;
-  assert(connectionId < fPmConnections.size());
-  // EM-PP exchange via the queue.
-  if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
+  size_t connectionsCount = 0;
+
   {
-    pushToTheLocalQueueAndNotifyRecv(bs);
-    return 0;
+    std::shared_lock<std::shared_mutex> connLock(fConnectionsLock);
+    connectionsCount = fPmConnections.size();
+
+    if (connectionsCount == 0 || connectionId >= connectionsCount)
+      return 0;
+
+    // EM-PP exchange via the queue.
+    if (fPmConnections[connectionId]->atTheSameHost() && fIsExeMgr)
+    {
+      connLock.unlock();
+      pushToTheLocalQueueAndNotifyRecv(bs);
+      return 0;
+    }
   }
 
   if (senderUniqueID != numeric_limits<uint32_t>::max())
@@ -1079,17 +1104,34 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
       mqe = it->second;
       senderStats = &(mqe->stats);
       size_t pmIndex = aPMIndex % mqe->pmCount;
-      connectionId = it->second->getNextConnectionId(pmIndex, fPmConnections.size(), fDECConnectionsPerQuery);
+      connectionId = it->second->getNextConnectionId(pmIndex, connectionsCount, fDECConnectionsPerQuery);
     }
   }
 
-  ClientList::value_type client = fPmConnections[connectionId];
+  // Copy the connection and its write mutex so that a concurrent Setup()
+  // (reconnect after a PrimProc restart, MCOL-5263) that swaps the vectors and
+  // releases the old generation cannot destroy them while this thread is
+  // blocked inside write() or is about to unlock the write mutex.
+  ClientList::value_type client;
+  std::shared_ptr<std::mutex> wLock;
+
+  {
+    std::shared_lock<std::shared_mutex> connLock(fConnectionsLock);
+
+    // Setup() may have replaced the connection list with a smaller one.
+    if (connectionId >= fPmConnections.size() || connectionId >= fWlock.size())
+      return 0;
+
+    client = fPmConnections[connectionId];
+    wLock = fWlock[connectionId];
+  }
+
   try
   {
     if (!client->isAvailable())
       return 0;
 
-    std::lock_guard lk(*(fWlock[connectionId]));
+    std::lock_guard lk(*wLock);
     client->write(bs, NULL, senderStats);
   }
   catch (...)

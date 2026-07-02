@@ -826,7 +826,11 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
       }
       catch (...)
       {
-        // may be a broken pipe. re-establish exeMgr and send the message
+        // may be a broken pipe. re-establish exeMgr and send the message.
+        // ExeMgr (hosted by PrimProc) may be restarting right now; without a
+        // pause the 5 retries are all spent within milliseconds and cannot
+        // outlast even a ~1s restart, failing the statement with MCS-2033.
+        sleep(1);
         delete fExeMgr;
         fExeMgr = new ClientRotator(0, "ExeMgr");
 
