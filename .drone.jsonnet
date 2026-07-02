@@ -15,7 +15,7 @@ local current_branch = "stable-23.10";
 // the ~8h full matrix into one ~2h pipeline. Both knobs are for experiment
 // branches only - keep them off (0 / false) in normal operation.
 local repeatTestName = "test400.sh";
-local repeatTestCount = 30;
+local repeatTestCount = 80;
 local experimentReducedMatrix = true;
 // ---------------------------------------------------------------------------
 
