@@ -387,9 +387,17 @@ class RMMemManager : public MemManager
   {
     if (amount)
     {
-      if (!fRm->getMemory(amount, fSessLimit, fWait) && fStrict)
+      if (fStrict)
       {
-        return false;
+        if (!fRm->getMemory(amount, fSessLimit, fWait))
+        {
+          return false;
+        }
+      }
+      else
+      {
+        // ignore the return value as the memory limit will be checked later
+        fRm->getMemoryForce(amount, fSessLimit);
       }
       MemManager::acquireImpl(amount);
     }
