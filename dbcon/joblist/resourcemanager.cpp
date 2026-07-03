@@ -389,4 +389,12 @@ bool ResourceManager::getMemory(int64_t amount, bool patience)
   return ret1;
 }
 
+bool ResourceManager::getMemoryForce(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit)
+{
+  bool ret1 = (atomicops::atomicSubRef(totalUmMemLimit, amount) >= 0);
+  bool ret2 = sessionLimit ? (atomicops::atomicSub(sessionLimit.get(), amount) >= 0) : ret1;
+
+  return (ret1 && ret2);
+}
+
 }  // namespace joblist
