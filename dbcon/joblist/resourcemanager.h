@@ -327,6 +327,7 @@ class ResourceManager
   /* Temporary parameter 'patience', will wait for up to 10s to get the memory. */
   bool getMemory(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit, bool patience = true);
   bool getMemory(int64_t amount, bool patience = true);
+  bool getMemoryForce(int64_t amount, boost::shared_ptr<int64_t>& sessionLimit);
   inline void returnMemory(int64_t amount)
   {
     atomicops::atomicAddRef(totalUmMemLimit, amount);
