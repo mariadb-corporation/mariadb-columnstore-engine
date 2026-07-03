@@ -1835,7 +1835,7 @@ do_community_yum_install() {
     fi
 
     # Optionally install dev client packages
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         if ! yum install MariaDB-devel -y; then
             printf "\n[!] Failed to install MariaDB-devel (dev packages) \n\n"
         fi
@@ -1878,7 +1878,7 @@ do_community_apt_install() {
     fi;
 
     # Optionally install dev client packages
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         if ! apt install libmariadb-dev -y --quiet; then
             printf "\n[!] Failed to install libmariadb-dev (dev packages) \n\n"
         fi
@@ -2146,6 +2146,13 @@ module_hotfixes = 1
         create_cross_engine_user
         configure_columnstore_cross_engine_user
     fi
+
+    # Optionally install dev client packages
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
+        if ! yum install MariaDB-devel -y; then
+            printf "\n[!] Failed to install MariaDB-devel (dev packages) \n\n"
+        fi
+    fi
 }
 
 do_dev_apt_install() {
@@ -2188,6 +2195,13 @@ EOF
         configure_columnstore_cross_engine_user
     fi
 
+    # Optionally install dev client packages
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
+        if ! apt install libmariadb-dev -y --quiet; then
+            printf "\n[!] Failed to install libmariadb-dev (dev packages) \n\n"
+        fi
+    fi
+
 }
 
 do_ci_yum_install() {
@@ -2195,7 +2209,7 @@ do_ci_yum_install() {
     # list packages
 
     grep_list="MariaDB-backup-*|MariaDB-client-*|MariaDB-columnstore-engine-*|MariaDB-common-*|MariaDB-server-*|MariaDB-shared-*|galera-enterprise-*|cmapi"
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         grep_list="${grep_list}|MariaDB-devel-*"
     fi
     rpm_list=$(curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/ | grep -oP '(?<=href=").+?\.rpm' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
@@ -2222,7 +2236,7 @@ do_ci_yum_install() {
 
     # Install MariaDB Server
     install_list="MariaDB-server-* galera-enterprise-* MariaDB-client-* MariaDB-common-* MariaDB-shared-*"
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         install_list+=" MariaDB-devel-*"
     fi
     if ! yum install $install_list -y; then
@@ -2279,7 +2293,7 @@ do_ci_apt_install() {
     # list packages
     echo "++++++++++++++++++++++++++++++++++++++++++++"
     grep_list="mariadb-backup-*|mariadb-client-*|mariadb-plugin-columnstore-*|mariadb-common*|mariadb-server-*|mariadb-shared-*|galera-enterprise-*|cmapi|libmariadb3|mysql-common"
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         grep_list="${grep_list}|libmariadb-dev"
     fi
     rpm_list=$(curl -s -u $ci_user:$ci_pwd $ci_url/$os_package/ | grep -oP '(?<=href=").+?\.deb' | sed 's/.*\///' | grep -v debug | grep -E "$grep_list")
@@ -2306,7 +2320,7 @@ do_ci_apt_install() {
     DEBIAN_FRONTEND=noninteractive sudo apt install libdbi-perl socat libhtml-template-perl -y --quiet
     # Optionally include libmariadb-dev if it was downloaded
     DEV_DEB=""
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         DEV_DEB="$(ls $(pwd)/libmariadb-dev*.deb 2>/dev/null || true)"
     fi
     if ! DEBIAN_FRONTEND=noninteractive apt install $(pwd)/mysql-common*.deb $(pwd)/mariadb-server*.deb $(pwd)/galera-enterprise-* $(pwd)/mariadb-common*.deb  $(pwd)/mariadb-client-*.deb $(pwd)/libmariadb3*.deb $DEV_DEB -y --quiet; then
@@ -4306,7 +4320,7 @@ download_dev() {
     # Optional dev package includes
     DEV_RPM_INCLUDE=""
     DEV_DEB_INCLUDE=""
-    if $USE_DEV_PACKAGES; then
+    if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
         DEV_RPM_INCLUDE='--include "MariaDB-devel-*.rpm"'
         DEV_DEB_INCLUDE='--include "libmariadb-dev*.deb" --include "libmariadb-dev-compat*.deb"'
     fi
@@ -4381,7 +4395,7 @@ download_dev() {
                 "--include" "jemalloc*"
             )
             # Optional dev headers
-            if $USE_DEV_PACKAGES; then
+            if [[ "$USE_DEV_PACKAGES" == "true" ]]; then
                 AWS_ARGS+=(
                     "--include" "libmariadb-dev*.deb"
                     "--include" "libmariadb-dev-compat*.deb"
