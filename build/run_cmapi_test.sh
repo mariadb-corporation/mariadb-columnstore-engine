@@ -28,7 +28,18 @@ prepare_environment() {
   if [[ "$PKG_FORMAT" == "deb" ]]; then
     execInnerDocker $CONTAINER_NAME "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"
   else
-    execInnerDocker $CONTAINER_NAME "yum update -y && yum install -y MariaDB-columnstore-cmapi"
+    # Note: no 'yum update' here is deliberate. 'apt-get update'
+    # above only refreshes the package list (apt requires that before
+    # install), but 'yum update' would upgrade EVERY installed package (more
+    # like apt-get upgrade, not apt-get update). The full system upgrade
+    # already ran for this container in prepare_test_container.sh, as
+    # 'yum --nobest update': --nobest keeps an older package when the
+    # newest cannot be installed consistently, e.g. when the repo has
+    # moved to a newer glibc than the container's base image while some
+    # sub-package lags behind (seen on rockylinux:9).
+    # Specific 'update' (as opposed to 'upgrade') is not needed here either,
+    # since yum/dnf re-fetches a stale package list automatically before install.
+    execInnerDocker $CONTAINER_NAME "yum install -y MariaDB-columnstore-cmapi"
   fi
 
   cd cmapi
