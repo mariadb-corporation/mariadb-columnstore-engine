@@ -230,6 +230,15 @@ ColumnInfo::~ColumnInfo()
 {
   clearMemory();
 
+  // If the job aborted before the normal completion path closed the column
+  // segment file, close (and delete) it here; otherwise the IDBDataFile
+  // object leaks along with its descriptor. Deliberately the base-class
+  // close: with abort semantics we only want to release the file, without
+  // the flush/finalization the compressed override performs, and unlike the
+  // dictionary store below this does not touch the extent map, so it is
+  // safe in the destructor.
+  ColumnInfo::closeColumnFile(false, true);
+
   // Closing dictionary file also updates the extent map; which we
   // don't want to do if we are aborting the job.  Besides, the
   // application code should be closing the dictionary as needed,
