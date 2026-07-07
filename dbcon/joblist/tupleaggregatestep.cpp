@@ -5253,7 +5253,7 @@ void TupleAggregateStep::aggregateRowGroups()
 
   fDoneAggregate = true;
 
-  while (more)
+  while (more && dlIn)
     more = dlIn->next(fInputIter, &rgData);
 
   if (traceOn())
@@ -5560,7 +5560,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
   if (!locked)
     fMutex.lock();
 
-  while (more)
+  while (more && dlIn)
     more = dlIn->next(fInputIter, &rgData);
 
   fMutex.unlock();
