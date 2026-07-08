@@ -344,6 +344,9 @@ int ColumnBufferManager::releaseSection(ColumnBufferSection* cbs)
   {
     ColumnBufferSection* cbs_temp = *it;
 
+    // cbs_temp is reassigned from the next element (below) before this condition is
+    // re-evaluated, so it is never a stale pointer here.
+    // @infer-ignore USE_AFTER_DELETE
     while (WRITE_COMPLETE == cbs_temp->getStatus())
     {
       lastWriteOffset = cbs_temp->getStartOffset() + cbs_temp->getSectionSize() - 1;

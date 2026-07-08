@@ -66,6 +66,8 @@ class ThreadPoolGroup
   {
     for (std::list<boost::thread*>::iterator it = threads.begin(), end = threads.end(); it != end; ++it)
     {
+      // `delete *it` frees the pointee, not the list node the iterator holds; ++it stays valid.
+      // @infer-ignore USE_AFTER_DELETE
       delete *it;
     }
   }
