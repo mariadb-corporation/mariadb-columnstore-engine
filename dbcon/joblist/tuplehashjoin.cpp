@@ -424,6 +424,12 @@ void TupleHashJoinStep::smallRunnerFcn(uint32_t index, uint threadID, uint64_t* 
                     "TupleHashJoinStep::smallRunnerFcn()");
     status(logging::ERR_EXEMGR_MALFUNCTION);
   }
+  // joiners[index] is populated with a new TupleJoiner before
+  // smallRunnerFcn() is launched, so `joiner` is never empty here, and inUM() only reads an
+  // enum. Because smallRunnerFcn() is dispatched indirectly through a thread pool rather than
+  // called directly, Infer analyzes it in isolation, cannot see that joiners[index] was already
+  // populated, and assumes it might be empty.
+  // @infer-ignore OPTIONAL_EMPTY_ACCESS
   if (!joiner->inUM())
     joiner->setInPM();
 }
