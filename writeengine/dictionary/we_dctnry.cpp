@@ -128,6 +128,9 @@ void Dctnry::freeStringCache()
   for (it = m_sigArray.begin(); it != m_sigArray.end(); it++)
   {
     Signature sig = *it;
+    // sig is a local object; sig.signature = 0 writes it, not freed memory, and the
+    // element's dangling pointer is never read again (the set is cleared right after).
+    // @infer-ignore USE_AFTER_DELETE
     delete[] sig.signature;
     sig.signature = 0;
   }

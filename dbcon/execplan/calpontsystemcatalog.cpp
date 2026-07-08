@@ -185,6 +185,8 @@ CalpontSystemCatalog::NJLSysDataList::~NJLSysDataList()
   NJLSysDataVector::iterator it;
 
   for (it = sysDataVec.begin(); it != sysDataVec.end(); it++)
+    // `delete *it` frees the pointee, not the vector slot the iterator holds; it++ stays valid.
+    // @infer-ignore USE_AFTER_DELETE
     delete *it;
 }
 

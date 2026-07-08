@@ -435,6 +435,9 @@ int fetchNextRow(uchar* buf, cal_table_info& ti, cal_connection_info* ci, long t
 #endif
     ti.moreRows = true;
     rc = 0;
+    // `row` is a non-owning cursor over `rowGroup` and shares `forceInline` with it via
+    // shared_ptr; at scope exit the array is freed once by the last owner. No use-after-delete.
+    // @infer-ignore USE_AFTER_DELETE
   }
   else if (sm_stat == sm::SQL_NOT_FOUND)
   {
