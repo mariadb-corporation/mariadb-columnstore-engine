@@ -37,6 +37,8 @@ TableDef::~TableDef()
 
     for (itr = fColumns.begin(); itr != fColumns.end(); itr++)
     {
+      // `delete *itr` frees the pointee, not the list node the iterator holds; itr++ stays valid.
+      // @infer-ignore USE_AFTER_DELETE
       delete *itr;
     }
   }
@@ -45,6 +47,8 @@ TableDef::~TableDef()
 
     for (itr = fConstraints.begin(); itr != fConstraints.end(); itr++)
     {
+      // `delete *itr` frees the pointee, not the list node the iterator holds; itr++ stays valid.
+      // @infer-ignore USE_AFTER_DELETE
       delete *itr;
     }
   }

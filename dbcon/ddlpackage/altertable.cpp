@@ -42,6 +42,8 @@ AlterTableStatement::~AlterTableStatement()
 
   for (itr = fActions.begin(); itr != fActions.end(); ++itr)
   {
+    // `delete *itr` frees the pointee, not the list node the iterator holds; ++itr stays valid.
+    // @infer-ignore USE_AFTER_DELETE
     delete *itr;
   }
 }
@@ -118,6 +120,8 @@ AtaRenameColumn::~AtaRenameColumn()
 
   for (itr = fConstraints.begin(); itr != fConstraints.end(); ++itr)
   {
+    // `delete *itr` frees the pointee, not the list node the iterator holds; ++itr stays valid.
+    // @infer-ignore USE_AFTER_DELETE
     delete *itr;
   }
 }
@@ -188,6 +192,8 @@ AtaAddColumns::~AtaAddColumns()
   ColumnDefList::iterator itr;
 
   for (itr = fColumns.begin(); itr != fColumns.end(); itr++)
+    // `delete *itr` frees the pointee, not the list node the iterator holds; ++itr stays valid.
+    // @infer-ignore USE_AFTER_DELETE
     delete *itr;
 }
 

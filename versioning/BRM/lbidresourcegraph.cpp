@@ -277,6 +277,9 @@ void LBIDResourceGraph::releaseResources(VER_t txn)
   {
     rNode = dynamic_cast<ResourceNode*>(*sit);
     dummy_sit = ++sit;
+    // rNode is reassigned each iteration and used here before the `delete rNode` below;
+    // it is not a stale pointer.
+    // @infer-ignore USE_AFTER_DELETE
     rNode->wakeAndDetach();
     txnNode->removeInEdge(rNode);
     resources.erase(rNode);
@@ -288,6 +291,9 @@ void LBIDResourceGraph::releaseResources(VER_t txn)
   {
     rNode = dynamic_cast<ResourceNode*>(*sit);
     dummy_sit = ++sit;
+    // The out-edge nodes handled here are disjoint from the in-edge nodes freed in the loop
+    // above: connectResources() adds an out edge only when the node is not already an in edge.
+    // @infer-ignore USE_AFTER_DELETE
     txnNode->removeOutEdge(rNode);
     sit = dummy_sit;
   }
