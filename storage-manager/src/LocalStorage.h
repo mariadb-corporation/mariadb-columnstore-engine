@@ -34,7 +34,7 @@ class LocalStorage : public CloudStorage
   int getObject(const std::string& sourceKey, const std::string& destFile, size_t* size = NULL);
   int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data, size_t* size = NULL);
   int putObject(const std::string& sourceFile, const std::string& destKey);
-  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey);
+  int putObject(const std::shared_ptr<uint8_t[]>& data, size_t len, const std::string& destKey);
   int deleteObject(const std::string& key);
   int copyObject(const std::string& sourceKey, const std::string& destKey);
   int exists(const std::string& key, bool* out);
