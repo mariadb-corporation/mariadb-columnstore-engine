@@ -28,8 +28,10 @@
 
 #include <cstdlib>
 #include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include "we_dbfileop.h"
 #include "we_type.h"
@@ -68,6 +70,32 @@ struct sig_compare
     {
       return false;
     }
+  }
+};
+
+// FNV-1a hash over raw bytes, seeded with the size so that strings that
+// share a common prefix but differ in length always hash to different buckets.
+struct sig_hash
+{
+  std::size_t operator()(const Signature& s) const noexcept
+  {
+    std::size_t h = 14695981039346656037ULL ^ static_cast<std::size_t>(s.size);
+    const unsigned char* p = s.signature;
+    const unsigned char* end = p + s.size;
+    for (; p != end; ++p)
+    {
+      h ^= static_cast<std::size_t>(*p);
+      h *= 1099511628211ULL;
+    }
+    return h;
+  }
+};
+
+struct sig_equal
+{
+  bool operator()(const Signature& a, const Signature& b) const noexcept
+  {
+    return a.size == b.size && memcmp(a.signature, b.signature, a.size) == 0;
   }
 };
 
@@ -298,8 +326,48 @@ class Dctnry : public DbFileOp
   virtual void closeDctnryFile(bool doFlush, std::map<FID, FID>& oids);
   virtual int numOfBlocksInFile();
 
-  std::set<Signature, sig_compare> m_sigArray;
+  std::unordered_set<Signature, sig_hash, sig_equal> m_sigArray;
   int m_arraySize;  // num strings in m_sigArray
+
+  // Adaptive cache: tracks per-block hit rate and skips the hash+lookup
+  // for the next block when the previous block's hit rate was below 1%.
+  // Reset at each block-write boundary; re-evaluated every ~1000 rows.
+  //
+  // Once skipping is engaged, m_cacheBlockLookups stops incrementing (the
+  // gating `!m_skipCache` short-circuits the lookup branch), so without an
+  // explicit re-probe the skip would be permanent. To handle phased /
+  // mixed-cardinality columns we periodically force a probe block where
+  // caching is re-enabled for one block to re-measure the actual hit rate.
+  // Probe interval doubles each time the probe confirms skipping (1, 2, 4,
+  // ..., capped at 64), and resets to 1 whenever caching is paying off.
+  uint32_t m_cacheBlockLookups;
+  uint32_t m_cacheBlockHits;
+  bool m_skipCache;
+  uint32_t m_skipCacheRunLen;       // # consecutive blocks since last probe
+  uint32_t m_skipCacheNextProbeIn;  // # blocks to wait before next probe (1..64)
+
+  // Bulk-write block batching. The bulk insertDctnry path fills 8KB dict
+  // blocks one at a time; instead of issuing one write() syscall per
+  // block, copy filled blocks into a small ring and flush them in one
+  // syscall once full (DCT_BLOCK_BATCH_SIZE blocks). Cuts syscall count
+  // and kernel page-fault frequency by DCT_BLOCK_BATCH_SIZE×. The batch
+  // is per-Dctnry (so per-cohort under fDictionaryMutex); flushed before
+  // any operation that depends on file position (extent expand/create,
+  // explicit seek, close).
+  static constexpr int DCT_BLOCK_BATCH_SIZE = 16;
+  unsigned char m_blockBatchBuf[DCT_BLOCK_BATCH_SIZE * BYTE_PER_BLOCK];
+  int m_blockBatchCount;
+  int m_blockBatchFirstFbo;
+
+  // Append one filled 8KB block (`data`) at file-block offset `fbo` to
+  // the pending-batch buffer; flushes automatically when full. Blocks
+  // must be queued in strictly increasing consecutive FBOs.
+  int bufferDictBlock(CommBlock& cb, const unsigned char* data, int fbo);
+
+  // Flush any pending batched blocks to disk via writeDBFileNoVBCache.
+  // No-op when the batch is empty. Must be called before any file-position-
+  // changing operation (extent expand/create/seek/close).
+  int flushPendingDictBlocks(CommBlock& cb);
 
   // m_dctnryHeader  used for hdr when readSubBlockEntry is used to read a blk
   // m_dctnryHeader2 contains filled in template used to initialize new blocks

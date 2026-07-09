@@ -399,6 +399,23 @@ class BulkLoadBuffer
   {
     fTimeZone = timeZone;
   }
+
+  long getTimeZone() const
+  {
+    return fTimeZone;
+  }
+
+  // Direct parquet path helper: reuse existing value conversion logic.
+  void convertField(char* field, int fieldLength, bool nullFlag, unsigned char* output, const JobColumn& column,
+                    BLBufferStats& bufStats)
+  {
+    convert(field, fieldLength, nullFlag, output, column, bufStats);
+  }
+
+  void setAutoIncNextValue(uint64_t nextValue)
+  {
+    fAutoIncNextValue = nextValue;
+  }
 };
 
 inline bool isTrueWord(const char* field, int fieldLength)

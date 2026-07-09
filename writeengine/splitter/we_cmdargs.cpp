@@ -241,7 +241,19 @@ std::string WECmdArgs::getCpImportCmdLine(bool skipRows)
   if (fSetBufSize > 0)
     aSS << " -B " << fSetBufSize;
 
-  if (fColDelim != '|')
+  // Parquet inputs are detected by .parquet extension on a single load file.
+  // For these we MUST NOT inject the splitter's text-format defaults
+  // (-s/-E/-C/-O) because cpimport.bin will reject them under
+  // --input-format=parquet. Defaults like fEscChar='\\' are applied by
+  // boost::program_options regardless of whether the user typed -C, so the
+  // pre-existing `fEscChar != 0` guards below cannot distinguish "user-set"
+  // from "defaulted". Detect parquet by filename instead and emit
+  // --input-format=parquet explicitly so cpimport.bin doesn't have to guess.
+  const bool isParquetInput =
+      !fLocFile.empty() && fLocFile.find_first_of(",|") == std::string::npos &&
+      fLocFile.size() > 8 && fLocFile.compare(fLocFile.size() - 8, 8, ".parquet") == 0;
+
+  if (!isParquetInput && fColDelim != '|')
   {
     if (fColDelim == '\t')
       aSS << " -s "
@@ -252,16 +264,19 @@ std::string WECmdArgs::getCpImportCmdLine(bool skipRows)
       aSS << " -s " << fColDelim;
   }
 
-  if (fEnclosedChar != 0)
+  if (!isParquetInput && fEnclosedChar != 0)
     aSS << " -E " << fEnclosedChar;
 
-  if (fEscChar != 0)
+  if (!isParquetInput && fEscChar != 0)
     aSS << " -C " << fEscChar;
 
-  if (skipRows && fSkipRows)
+  if (!isParquetInput && skipRows && fSkipRows)
   {
     aSS << " -O " << fSkipRows;
   }
+
+  if (isParquetInput)
+    aSS << " --input-format=parquet";
 
   if (fNullStrMode)
     aSS << " -n " << '1';

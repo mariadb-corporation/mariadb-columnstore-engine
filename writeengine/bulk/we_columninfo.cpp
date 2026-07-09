@@ -158,6 +158,7 @@ ColumnInfo::ColumnInfo(Log* logger, int idIn, const JobColumn& columnIn, DBRootE
  , fDbRootExtTrk(pDBRootExtTrk)
  , fColWidthFactor(1)
  , fDelayedFileCreation(INITIAL_DBFILE_STAT_FILE_EXISTS)
+ , fUseExactInitialExtent(false)
  , fRowsPerExtent(0)
 {
   column = columnIn;
@@ -344,18 +345,55 @@ int ColumnInfo::createDelayedFileIfNeeded(const std::string& tableName)
   char* createHdrs = 0;             // output
 
   std::string allocErrMsg;
-  rc = fpTableInfo->allocateBRMColumnExtent(curCol.dataFile.fid, createDbRoot, createPartition, createSegment,
-                                            createStartLbid, createAllocSize, createHwm, allocErrMsg);
-
-  if (rc != NO_ERROR)
+  if (fUseExactInitialExtent)
   {
-    WErrorCodes ec;
-    std::ostringstream oss;
-    oss << "Error creating initial dbroot" << dbRoot << " BRM extent for OID-" << column.mapOid << "; dbroot-"
-        << dbRoot << "; partition-" << partition << "; " << ec.errorString(rc) << "; " << allocErrMsg;
-    fLog->logMsg(oss.str(), rc, MSGLVL_ERROR);
-    fDelayedFileCreation = INITIAL_DBFILE_STAT_ERROR_STATE;
-    return rc;
+    // Parallel-cohort sidecar path: allocate at the EXACT (dbRoot, partition,
+    // segment) already pinned in curCol.dataFile. This bypasses
+    // `TableInfo::allocateBRMColumnExtent` -> `ExtentStripeAlloc` ->
+    // `createStripeColumnExtents`, whose "fill all 4 segments of a partition
+    // then wrap around to seg 0 with an advanced FBO" behavior (see
+    // extentmap.cpp `startNewStripeInSegFile`) would otherwise put cohort N
+    // (with N >= FILES_PER_COL_PART - 1) onto the same segment file as the
+    // canonical/DDL extent, triggering the M0103 "starting FBO too large"
+    // path in `FileOp::extendFile` and corrupting that segment.
+    //
+    // We don't need to register the extent with TableInfo's BRMReporter at
+    // alloc time; the existing rollback uses the FS-walk
+    // (`BulkRollbackMgr::returnExtents` on the dbRoot the extent lives on)
+    // so a freshly created (oid, dbRoot, partition, segment) is cleaned up
+    // on failure regardless of whether the stripe allocator saw it.
+    rc = BRMWrapper::getInstance()->allocateColExtentExactFile(
+        column.mapOid, column.width, createDbRoot, createPartition, createSegment, column.dataType,
+        createStartLbid, createAllocSize, createHwm);
+    if (rc != NO_ERROR)
+    {
+      WErrorCodes ec;
+      std::ostringstream oss;
+      oss << "Error allocating exact-file BRM extent for cohort sidecar OID-" << column.mapOid << "; dbroot-"
+          << dbRoot << "; partition-" << createPartition << "; segment-" << createSegment << "; "
+          << ec.errorString(rc);
+      fLog->logMsg(oss.str(), rc, MSGLVL_ERROR);
+      fDelayedFileCreation = INITIAL_DBFILE_STAT_ERROR_STATE;
+      return rc;
+    }
+  }
+  else
+  {
+    rc = fpTableInfo->allocateBRMColumnExtent(curCol.dataFile.fid, createDbRoot, createPartition,
+                                              createSegment, createStartLbid, createAllocSize, createHwm,
+                                              allocErrMsg);
+
+    if (rc != NO_ERROR)
+    {
+      WErrorCodes ec;
+      std::ostringstream oss;
+      oss << "Error creating initial dbroot" << dbRoot << " BRM extent for OID-" << column.mapOid
+          << "; dbroot-" << dbRoot << "; partition-" << partition << "; " << ec.errorString(rc) << "; "
+          << allocErrMsg;
+      fLog->logMsg(oss.str(), rc, MSGLVL_ERROR);
+      fDelayedFileCreation = INITIAL_DBFILE_STAT_ERROR_STATE;
+      return rc;
+    }
   }
 
   uint16_t segment = createSegment;
@@ -607,8 +645,41 @@ int ColumnInfo::extendColumnNewExtent(bool saveLBIDForCP, uint16_t dbRootNew, ui
   // DBRoot, partition, and segment file in the rotation
   int allocsize = 0;
   std::string allocErrMsg;
-  int rc = fpTableInfo->allocateBRMColumnExtent(curCol.dataFile.fid, dbRootNew, partitionNew, segmentNew,
-                                                startLbid, allocsize, hwmNew, allocErrMsg);
+  int rc = NO_ERROR;
+  if (fUseExactInitialExtent)
+  {
+    // Parallel-cohort sidecar path: callers (the base `extendColumn`) cannot
+    // tell us where to add the new extent because sidecars have no
+    // `DBRootExtentTracker` (it would, by design, want to rotate them
+    // through every DBRoot/segment in the cluster and we have intentionally
+    // pinned each cohort to one `(dbRoot, partition, segment)`).
+    //
+    // Without this branch the call site below would pass `dbRootNew=0,
+    // partitionNew=0` into `ExtentStripeAlloc::allocateExtent` (because the
+    // tracker block in `extendColumn` is skipped on a nullptr tracker), the
+    // stripe allocator would pick some unrelated `(dbRoot=0, part=0, seg=N)`
+    // tuple, and `ColumnOp::extendColumn` would then try to open a non-
+    // existent file and fail with `ERR_FILE_NOT_EXIST` ("The File does not
+    // exist") — exactly the symptom that triggers when a cohort's first
+    // extent fills up on a multi-extent table.
+    //
+    // Instead, re-pin to the cohort's current segment file and let
+    // `allocateColExtentExactFile` compute the new extent's FBO from the
+    // existing extent map entries (it returns the next free FBO past the
+    // current HWM extent — see `_createColumnExtentExactFile` in
+    // extentmap.cpp).
+    dbRootNew = curCol.dataFile.fDbRoot;
+    partitionNew = curCol.dataFile.fPartition;
+    segmentNew = curCol.dataFile.fSegment;
+    rc = BRMWrapper::getInstance()->allocateColExtentExactFile(
+        curCol.dataFile.fid, column.width, dbRootNew, partitionNew, segmentNew, column.dataType,
+        startLbid, allocsize, hwmNew);
+  }
+  else
+  {
+    rc = fpTableInfo->allocateBRMColumnExtent(curCol.dataFile.fid, dbRootNew, partitionNew, segmentNew,
+                                              startLbid, allocsize, hwmNew, allocErrMsg);
+  }
 
   if (rc != NO_ERROR)
   {

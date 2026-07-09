@@ -303,21 +303,26 @@ int DbFileOp::writeDBFileNoVBCache(CommBlock& cb, const unsigned char* writeBuf,
  * DESCRIPTION:
  *    Core function for writing data w/o using VB cache
  *    (bulk load dictionary store inserts)
+ *
+ *    The buffer is expected to hold `numOfBlock` consecutive 8KB blocks
+ *    laid out back-to-back, written in one syscall to minimize per-block
+ *    overhead during bulk dictionary inserts.
  ***********************************************************/
 int DbFileOp::writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int /*fbo*/,
                                    const int numOfBlock)
 {
 #ifdef PROFILE
-  // This function is only used by bulk load for dictionary store files,
-  // so we log as such.
   Stats::startParseEvent(WE_STATS_WRITE_DCT);
 #endif
 
+  if (numOfBlock <= 0)
+    return NO_ERROR;
+
   for (int i = 0; i < numOfBlock; i++)
-  {
     Stats::incIoBlockWrite();
-    RETURN_ON_ERROR(writeFile(pFile, writeBuf, BYTE_PER_BLOCK));
-  }
+
+  const int totalBytes = numOfBlock * BYTE_PER_BLOCK;
+  RETURN_ON_ERROR(writeFile(pFile, writeBuf, totalBytes));
 
 #ifdef PROFILE
   Stats::stopParseEvent(WE_STATS_WRITE_DCT);

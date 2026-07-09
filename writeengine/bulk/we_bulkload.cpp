@@ -55,6 +55,7 @@
 #include "calpontsystemcatalog.h"
 #include "we_ddlcommandclient.h"
 #include "mcsconfig.h"
+#include "we_parquet_reader.h"
 
 using namespace std;
 using namespace boost;
@@ -1139,7 +1140,37 @@ int BulkLoad::processJob()
 
   startTimer();
 
-  spawnWorkers();
+  if (fParquetDirectMode)
+  {
+    if (tables.size() != 1)
+    {
+      rc = ERR_INVALID_PARAM;
+      if (fParquetDirectErrMsg)
+        *fParquetDirectErrMsg = "Parquet direct import currently supports exactly one target table";
+    }
+    else if (fParquetDirectInputFile.empty())
+    {
+      rc = ERR_INVALID_PARAM;
+      if (fParquetDirectErrMsg)
+        *fParquetDirectErrMsg = "Parquet direct import file path is empty";
+    }
+    else
+    {
+      ParquetConversionResult throwawayResult;
+      std::string throwawayErr;
+      ParquetConversionResult* resultPtr = fParquetDirectResult ? fParquetDirectResult : &throwawayResult;
+      std::string* errPtr = fParquetDirectErrMsg ? fParquetDirectErrMsg : &throwawayErr;
+      // Dispatch via the cohort-aware entry. For `--parquet-cohorts=1` this
+      // calls the original `importIntoTableDirect`; for N>1 it runs N row-group
+      // ranges sequentially through the same TableInfo and finalizes once.
+      rc = ParquetReader::importIntoTableDirectWithCohorts(fParquetDirectInputFile, *tables[0], *resultPtr,
+                                                           *errPtr);
+    }
+  }
+  else
+  {
+    spawnWorkers();
+  }
 
   if (BulkStatus::getJobStatus() == EXIT_FAILURE)
   {

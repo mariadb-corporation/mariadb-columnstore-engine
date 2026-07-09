@@ -149,11 +149,13 @@ int DctnryCompress1::writeDBFile(IDBDataFile* pFile, const unsigned char* writeB
 int DctnryCompress1::writeDBFileNoVBCache(IDBDataFile* pFile, const unsigned char* writeBuf, const int fbo,
                                           const int numOfBlock)
 {
-  // int fbo = 0;
-  // RETURN_ON_ERROR(lbidToFbo(lbid, fbo));
-
+  // Bulk dictionary inserts pass `numOfBlock` consecutive 8KB blocks
+  // laid out back-to-back in `writeBuf`; advance the pointer per block
+  // so each chunk receives the correct content (previously this loop
+  // re-saved the same first block N times, which was latent because
+  // every existing caller only ever passed numOfBlock=1).
   for (int i = 0; i < numOfBlock; i++)
-    RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf, fbo + i));
+    RETURN_ON_ERROR(m_chunkManager->saveBlock(pFile, writeBuf + i * BYTE_PER_BLOCK, fbo + i));
 
   return NO_ERROR;
 }

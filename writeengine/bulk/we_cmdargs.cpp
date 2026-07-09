@@ -96,6 +96,29 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
       DECLARE_INT_ARG("io-buffer-size,B", fSetBufSize, 1, INT_MAX,
         "I/O library read buffer size (in bytes)")
       DECLARE_INT_ARG("writers,w", fNoOfWriteThrds, 1, INT_MAX, "Number of parsers.")
+      DECLARE_INT_ARG("parquet-read-threads", fParquetReadThreads, 1, INT_MAX,
+        "Number of parallel parquet reader workers (parquet input only).")
+      ("parquet-queue-bytes", po::value<int64_t>(&fParquetQueueBytes)->notifier(
+          [this](auto&& value) {
+            if (value <= 0)
+              startupError("Argument parquet-queue-bytes is out of range [1, INT64_MAX]");
+          }),
+        "Maximum bytes buffered between parquet readers and writer.")
+      DECLARE_INT_ARG("parquet-max-inflight-batches", fParquetMaxInflightBatches, 0, INT_MAX,
+        "Max batches in flight from coordinator to column writers (parquet direct import; 0 = auto).")
+      DECLARE_INT_ARG("parquet-dict-dedupe", fParquetDictChunkDedupe, 0, 1,
+        "Per-chunk dictionary string dedupe before token store (parquet direct import: 0=off default, 1=on for experiments).")
+      DECLARE_INT_ARG("parquet-arrow-use-threads", fParquetArrowReaderUseThreads, 0, 1,
+        "Arrow parquet FileReader use_threads (0=off default; 1=parallel decode inside Arrow, for A/B vs cpimport workers).")
+      DECLARE_INT_ARG("parquet-cohorts", fParquetCohorts, 1, 32,
+        "Experimental: split parquet row groups into N cohort partitions. Default 1 preserves the original single-pipeline "
+        "behavior verbatim. Range 1..32; useful values are typically 2..16 depending on core count, file size, and "
+        "available memory (per-cohort queue is `--parquet-queue-bytes`, so peak memory ~= N * queueBytes). Execution mode "
+        "is controlled by --parquet-cohort-mode (sequential by default, opt-in parallel).")
+      ("parquet-cohort-mode", po::value<std::string>(&fParquetCohortMode)->default_value("sequential"),
+        "Cohort execution mode for --parquet-cohorts=N (N>1): 'sequential' (default; cohorts run back-to-back through "
+        "the shared TableInfo/ColumnInfo set) or 'parallel' (cohorts run concurrently with sidecar ColumnInfo per cohort). "
+        "Parallel mode is gated off until per-cohort sidecar ColumnInfo and merged finalize land; opting in returns an explicit error.")
       ("enclosed-by,E", po::value<char>(&fEnclosedChar),
         "Enclosed by character if field values are enclosed.")
       ("escape-char,C", po::value<char>(&fEscChar)->default_value('\\'),
@@ -110,6 +133,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Import binary data; how to treat NULL values:\n"
         "\t1 - import NULL values\n"
         "\t2 - saturate NULL values\n")
+      ("input-format", po::value<string>(),
+        "Input format: text (default), binary, parquet")
       ("calling-module,P", po::value<string>(&fModuleIDandPID), "Calling module ID and PID.")
       ("truncation-as-error,S", po::bool_switch(&fbTruncationAsError),
         "Treat string truncations as errors.")
@@ -222,6 +247,18 @@ void WECmdArgs::usage() const
 void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
 {
   std::string importPath;
+  auto optionPresent = [argc, argv](const std::string& longOpt, const std::string& shortOpt) {
+    for (int i = 1; i < argc; ++i)
+    {
+      const std::string arg(argv[i]);
+      if (arg == longOpt || (!longOpt.empty() && arg.rfind(longOpt + "=", 0) == 0) || arg == shortOpt ||
+          (!shortOpt.empty() && arg.rfind(shortOpt, 0) == 0 && arg.size() > shortOpt.size()))
+      {
+        return true;
+      }
+    }
+    return false;
+  };
 
   if (argc > 0)
     fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
@@ -267,6 +304,31 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
     else
     {
       startupError("Invalid Binary mode; value can be 1 or 2");
+    }
+    fInputFormat = InputFormat::Binary;
+  }
+  if (vm.count("input-format"))
+  {
+    auto value = vm["input-format"].as<std::string>();
+    if (value == "text")
+    {
+      fInputFormat = InputFormat::Text;
+      if (fImportDataMode != IMPORT_DATA_TEXT)
+      {
+        startupError("Cannot combine --input-format=text with --binary-mode/-I");
+      }
+    }
+    else if (value == "binary")
+    {
+      fInputFormat = InputFormat::Binary;
+    }
+    else if (value == "parquet")
+    {
+      fInputFormat = InputFormat::Parquet;
+    }
+    else
+    {
+      startupError("Invalid --input-format value; valid options are text, binary, parquet");
     }
   }
   if (vm.count("tz"))
@@ -340,6 +402,109 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   {
     fLocFile = vm["load-file"].as<std::string>();
   }
+
+  // Autodetect parquet from a single load-file's .parquet extension when
+  // neither --input-format nor --binary-mode/-I was specified. Matches the
+  // original UX from PR #2983 (MCOL-5505 by HanpyBin/Leonid/Denis) and lets
+  // both the cherry-picked mcol-5505-* MTR tests and end users pass a
+  // .parquet file without spelling out --input-format=parquet.
+  if (!vm.count("input-format") && fImportDataMode == IMPORT_DATA_TEXT &&
+      !fLocFile.empty() && fLocFile.find_first_of(",|") == std::string::npos)
+  {
+    static const std::string kParquetExt = ".parquet";
+    if (fLocFile.size() > kParquetExt.size() &&
+        fLocFile.compare(fLocFile.size() - kParquetExt.size(), kParquetExt.size(), kParquetExt) == 0)
+    {
+      fInputFormat = InputFormat::Parquet;
+    }
+  }
+
+  if (fInputFormat == InputFormat::Parquet)
+  {
+    if (fLocFile.empty())
+    {
+      startupError("Parquet mode requires positional load-file argument");
+    }
+    if (fLocFile.find_first_of(",|") != std::string::npos)
+    {
+      startupError("Parquet mode currently supports a single input file");
+    }
+    {
+      std::vector<std::string> conflicts;
+      if (optionPresent("--separator", "-s"))
+        conflicts.emplace_back("--separator/-s");
+      if (optionPresent("--enclosed-by", "-E"))
+        conflicts.emplace_back("--enclosed-by/-E");
+      if (optionPresent("--escape-char", "-C"))
+        conflicts.emplace_back("--escape-char/-C");
+      if (optionPresent("--headers", "-O"))
+        conflicts.emplace_back("--headers/-O");
+      if (optionPresent("--binary-mode", "-I"))
+        conflicts.emplace_back("--binary-mode/-I");
+      if (!conflicts.empty())
+      {
+        std::string joined;
+        for (size_t i = 0; i < conflicts.size(); ++i)
+        {
+          if (i)
+            joined += ", ";
+          joined += conflicts[i];
+        }
+        std::string seen;
+        for (int i = 1; i < argc; ++i)
+        {
+          if (i > 1)
+            seen += ' ';
+          seen += argv[i];
+        }
+        startupError("Parquet mode is incompatible with text/binary parsing options: " +
+                     joined + " (argv: " + seen + ")");
+      }
+    }
+    if (!fS3Key.empty() || !fS3Secret.empty() || !fS3Bucket.empty() || !fS3Host.empty() || !fS3Region.empty())
+    {
+      startupError("Parquet mode currently supports only local files (S3 options are unsupported)");
+    }
+    if (fParquetReadThreads < 1)
+    {
+      startupError("Parquet read thread count must be >= 1");
+    }
+    if (fParquetQueueBytes <= 0)
+    {
+      startupError("Parquet queue byte limit must be >= 1");
+    }
+    if (fParquetCohorts < 1 || fParquetCohorts > 32)
+    {
+      startupError("Parquet cohorts must be in range [1, 32]");
+    }
+    if (fParquetCohortMode != "sequential" && fParquetCohortMode != "parallel")
+    {
+      startupError(
+          "Argument --parquet-cohort-mode must be 'sequential' (default) or 'parallel' "
+          "(parallel is currently gated off pending sidecar ColumnInfo)");
+    }
+  }
+}
+
+std::string WECmdArgs::getParquetFilePath() const
+{
+  if (fLocFile.empty())
+  {
+    return {};
+  }
+
+  boost::filesystem::path loadFilePath(fLocFile);
+  if (loadFilePath.is_absolute())
+  {
+    return loadFilePath.string();
+  }
+
+  if (!fPmFilePath.empty())
+  {
+    return (boost::filesystem::path(fPmFilePath) / loadFilePath).string();
+  }
+
+  return (boost::filesystem::current_path() / loadFilePath).string();
 }
 
 void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string& sXMLJobDir,
@@ -549,7 +714,8 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
 
 void WECmdArgs::startupError(const std::string& errMsg, bool showHint) const
 {
-  BRMWrapper::getInstance()->finishCpimportJob(fCpimportJobId);
+  if (fCpimportJobId != 0)
+    BRMWrapper::getInstance()->finishCpimportJob(fCpimportJobId);
   // Log to console
   if (!BulkLoad::disableConsoleOutput())
     cerr << errMsg << endl;

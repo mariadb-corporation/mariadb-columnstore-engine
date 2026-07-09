@@ -1,0 +1,82 @@
+#
+# parquet support for large volume data file
+# Author: Bin Ruan, binruan0227@gmail.com
+#
+if (!$MYSQL_TEST_ROOT){
+    skip Should be run by root to execute cpimport;
+}
+
+-- source ../include/have_columnstore.inc
+
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_5505_parquet_large_volume;
+--enable_warnings
+
+CREATE DATABASE mcol_5505_parquet_large_volume;
+USE mcol_5505_parquet_large_volume;
+SET time_zone = '+8:00';
+# Create table
+Create TABLE t1(
+    col1 INT,
+    col2 TIMESTAMP(3),
+    col3 CHAR(6),
+    col4 DECIMAL(38,10),
+    col5 DOUBLE,
+    col6 VARCHAR(20)
+) ENGINE=Columnstore;
+
+Create TABLE t2(
+    col1 INT,
+    col2 TIMESTAMP(3),
+    col3 CHAR(6),
+    col4 DECIMAL(38,10),
+    col5 DOUBLE,
+    col6 VARCHAR(20)
+) ENGINE=Columnstore;
+
+Create TABLE t3(
+    col1 INT,
+    col2 TIMESTAMP(3),
+    col3 CHAR(6),
+    col4 DECIMAL(38,10),
+    col5 DOUBLE,
+    col6 VARCHAR(20)
+) ENGINE=Columnstore;
+
+Create TABLE t4(
+    col1 INT,
+    col2 TIMESTAMP(3),
+    col3 CHAR(6),
+    col4 DECIMAL(38,10),
+    col5 DOUBLE,
+    col6 VARCHAR(20)
+) ENGINE=Columnstore;
+
+# Generate data
+--exec mcs_parquet_gen -l -f $MTR_SUITE_DIR/../std_data
+
+
+#Valid data and table
+--exec $MCS_CPIMPORT mcol_5505_parquet_large_volume t1 $MTR_SUITE_DIR/../std_data/1MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcol_5505_parquet_large_volume t2 $MTR_SUITE_DIR/../std_data/10MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcol_5505_parquet_large_volume t3 $MTR_SUITE_DIR/../std_data/50MRows.parquet >/dev/null
+--exec $MCS_CPIMPORT mcol_5505_parquet_large_volume t4 $MTR_SUITE_DIR/../std_data/100MRows.parquet >/dev/null
+
+SELECT * FROM t1 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t1;
+
+SELECT * FROM t2 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t2;
+
+SELECT * FROM t3 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t3;
+
+SELECT * FROM t4 ORDER BY col1 LIMIT 5;
+SELECT COUNT(*) FROM t4;
+
+# Clean UP
+--exec rm $MTR_SUITE_DIR/../std_data/1MRows.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/10MRows.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/50MRows.parquet
+--exec rm $MTR_SUITE_DIR/../std_data/100MRows.parquet
+DROP DATABASE mcol_5505_parquet_large_volume;

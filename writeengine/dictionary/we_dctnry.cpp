@@ -25,6 +25,7 @@
  *  can be deleted.
  *  The whole file contains only one class Dctnry
  */
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -104,6 +105,14 @@ Dctnry::Dctnry()
   m_curFbo = INVALID_NUM;
   m_curLbid = INVALID_LBID;
   m_arraySize = 0;
+  m_sigArray.reserve(MAX_STRING_CACHE_SIZE + 1);
+  m_cacheBlockLookups = 0;
+  m_cacheBlockHits = 0;
+  m_skipCache = false;
+  m_skipCacheRunLen = 0;
+  m_skipCacheNextProbeIn = 1;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
 
   clear();  // files
 }
@@ -124,8 +133,7 @@ Dctnry::~Dctnry()
  ******************************************************************************/
 void Dctnry::freeStringCache()
 {
-  std::set<Signature, sig_compare>::iterator it;
-  for (it = m_sigArray.begin(); it != m_sigArray.end(); it++)
+  for (auto it = m_sigArray.begin(); it != m_sigArray.end(); ++it)
   {
     Signature sig = *it;
     delete[] sig.signature;
@@ -158,6 +166,66 @@ int Dctnry::init()
   memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
   m_curBlock.lbid = INVALID_LBID;
   m_arraySize = 0;
+  m_cacheBlockLookups = 0;
+  m_cacheBlockHits = 0;
+  m_skipCache = false;
+  m_skipCacheRunLen = 0;
+  m_skipCacheNextProbeIn = 1;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
+
+  return NO_ERROR;
+}
+
+/*******************************************************************************
+ * DESCRIPTION:
+ *    Flush any pending batched dict-store blocks to disk.
+ *
+ *    This routine MUST be called before any operation that could change the
+ *    file's logical write position (extent expansion, new-extent allocation,
+ *    explicit seek, or close) so the batched-but-not-yet-written blocks land
+ *    at the FBOs they were queued for.
+ ******************************************************************************/
+int Dctnry::flushPendingDictBlocks(CommBlock& cb)
+{
+  if (m_blockBatchCount <= 0)
+    return NO_ERROR;
+
+  const int count = m_blockBatchCount;
+  const int firstFbo = m_blockBatchFirstFbo;
+  m_blockBatchCount = 0;
+  m_blockBatchFirstFbo = 0;
+  return writeDBFileNoVBCache(cb, m_blockBatchBuf, firstFbo, count);
+}
+
+/*******************************************************************************
+ * DESCRIPTION:
+ *    Buffer one filled 8KB dict block for batched write.
+ *
+ *    Copies the block contents (so the caller is free to re-zero
+ *    m_curBlock immediately after) and flushes the batch once it reaches
+ *    DCT_BLOCK_BATCH_SIZE blocks. Blocks must be queued at strictly
+ *    consecutive increasing FBOs; if a gap is detected (e.g. caller
+ *    forgot to flush before a seek) the pending batch is flushed first.
+ ******************************************************************************/
+int Dctnry::bufferDictBlock(CommBlock& cb, const unsigned char* data, int fbo)
+{
+  // If the FBO sequence is broken (defensive — should not happen given the
+  // invariant that callers flush before any seek / extent change), flush so
+  // the batch's `firstFbo` matches the actual disk layout.
+  if (m_blockBatchCount > 0 && fbo != m_blockBatchFirstFbo + m_blockBatchCount)
+  {
+    RETURN_ON_ERROR(flushPendingDictBlocks(cb));
+  }
+
+  if (m_blockBatchCount == 0)
+    m_blockBatchFirstFbo = fbo;
+
+  memcpy(m_blockBatchBuf + m_blockBatchCount * BYTE_PER_BLOCK, data, BYTE_PER_BLOCK);
+  m_blockBatchCount++;
+
+  if (m_blockBatchCount >= DCT_BLOCK_BATCH_SIZE)
+    RETURN_ON_ERROR(flushPendingDictBlocks(cb));
 
   return NO_ERROR;
 }
@@ -368,6 +436,17 @@ int Dctnry::closeDctnry(bool realClose)
   cb.file.pFile = m_dFile;
   std::map<FID, FID> oids;
 
+  // Drain any blocks the bulk path batched but did not yet write. Must run
+  // before the writeDBFile() seek below; otherwise the seek would land the
+  // file pointer at m_curBlock.lbid with batched blocks still pending and
+  // their FBOs would be lost.
+  rc = flushPendingDictBlocks(cb);
+  if (rc != NO_ERROR)
+  {
+    closeDctnryFile(false, oids);
+    return rc;
+  }
+
   if (m_curBlock.state == BLK_WRITE)
   {
     rc = writeDBFile(cb, &m_curBlock, m_curBlock.lbid);
@@ -439,6 +518,16 @@ int Dctnry::closeDctnryOnly()
 {
   if (!m_dFile)
     return NO_ERROR;
+
+  // Drain any pending batched bulk-write blocks so they reach disk before
+  // we drop the file handle. Failures are logged but we proceed with the
+  // close to avoid leaking the file handle.
+  {
+    CommBlock cb;
+    cb.file.oid = m_dctnryOID;
+    cb.file.pFile = m_dFile;
+    (void)flushPendingDictBlocks(cb);
+  }
 
   // dmc-error handling (should detect/report error in closing file)
   std::map<FID, FID> oids;
@@ -616,8 +705,7 @@ int Dctnry::openDctnry(const OID& dctnryOID, const uint16_t dbRoot, const uint32
  ******************************************************************************/
 bool Dctnry::getTokenFromArray(Signature& sig)
 {
-  std::set<Signature, sig_compare>::iterator it;
-  it = m_sigArray.find(sig);
+  auto it = m_sigArray.find(sig);
   if (it == m_sigArray.end())
   {
     return false;
@@ -689,7 +777,7 @@ int Dctnry::insertDctnry2(Signature& sig)
       cb.file.pFile = m_dFile;
       sig.token.bc++;
 
-      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
       memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
       memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
       m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
@@ -701,6 +789,8 @@ int Dctnry::insertDctnry2(Signature& sig)
       //...Expand current extent if it is an abbreviated initial extent
       if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
       {
+        // expandDctnryExtent() may change file size / position; drain batch.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         RETURN_ON_ERROR(expandDctnryExtent());
       }
 
@@ -708,6 +798,9 @@ int Dctnry::insertDctnry2(Signature& sig)
       //   current extent.
       if (m_curFbo == m_numBlocks)
       {
+        // createDctnry below may seek; flush any pending batched blocks
+        // so they reach disk at the correct FBOs.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         // last block
         // for roll back the extent to use
         // Save those empty extents in case of failure to rollback
@@ -853,17 +946,25 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       }
       else
       {
-        const char* start = (const char*)curSig.signature;
-        const char* end = (const char*)(curSig.signature + curSig.size);
-        size_t numChars = cs->numchars(start, end);
         size_t maxCharLength = m_colWidth / cs->mbmaxlen;
 
-        if (numChars > maxCharLength)
+        // Fast path: every UTF-8 code unit is at least 1 byte (mbminlen==1),
+        // so charCount <= byteCount.  If the byte count already fits within
+        // the character limit there is nothing to truncate; skip the O(n)
+        // cs->numchars() walk entirely.
+        if (static_cast<size_t>(curSig.size) > maxCharLength)
         {
-          MY_STRCOPY_STATUS status;
-          cs->well_formed_char_length(start, end, maxCharLength, &status);
-          curSig.size = status.m_source_end_pos - start;
-          truncCount++;
+          const char* start = (const char*)curSig.signature;
+          const char* end = (const char*)(curSig.signature + curSig.size);
+          size_t numChars = cs->numchars(start, end);
+
+          if (numChars > maxCharLength)
+          {
+            MY_STRCOPY_STATUS status;
+            cs->well_formed_char_length(start, end, maxCharLength, &status);
+            curSig.size = status.m_source_end_pos - start;
+            truncCount++;
+          }
         }
       }
     }
@@ -878,13 +979,15 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 
     //...Search for the string in our string cache
     // if it fits into one block (< 8KB)
-    if (curSig.size <= MAX_SIGNATURE_SIZE)
+    if (curSig.size <= MAX_SIGNATURE_SIZE && !m_skipCache)
     {
       // Stats::startParseEvent("getTokenFromArray");
+      m_cacheBlockLookups++;
       found = getTokenFromArray(curSig);
 
       if (found)
       {
+        m_cacheBlockHits++;
         memcpy(pOut + outOffset, &curSig.token, 8);
         outOffset += 8;
         startPos++;
@@ -919,14 +1022,14 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 #ifdef PROFILE
         Stats::stopParseEvent(WE_STATS_PARSE_DCT);
 #endif
-        RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+        RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
         m_curBlock.state = BLK_READ;
         next = true;
       }
 
       //...Add string to cache, if we have not exceeded cache limit
-      // Don't cache big blobs
-      if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+      // Don't cache big blobs; skip when cache is disabled for this block.
+      if (!m_skipCache && (m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
       {
         addToStringCache(curSig);
       }
@@ -937,7 +1040,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
 #ifdef PROFILE
       Stats::stopParseEvent(WE_STATS_PARSE_DCT);
 #endif
-      RETURN_ON_ERROR(writeDBFileNoVBCache(cb, &m_curBlock, m_curFbo));
+      RETURN_ON_ERROR(bufferDictBlock(cb, m_curBlock.data, m_curFbo));
       m_curBlock.state = BLK_READ;
       next = true;
       found = false;
@@ -947,6 +1050,55 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
     //   next block in the store file.
     if (next)
     {
+      // Re-evaluate cache usefulness for the upcoming block.
+      //
+      //   * Caching active (m_skipCache == false): we have real lookup
+      //     statistics; turn skipping on if hit rate < 1%, otherwise keep
+      //     caching and reset the probe interval so a future regression is
+      //     detected quickly.
+      //   * Skipping active (m_skipCache == true): no lookups happened, so
+      //     we have no signal. Track how many blocks we've been skipping
+      //     for and, once we hit the next probe interval, force one block
+      //     of caching so the *next* trip through this branch sees real
+      //     statistics again. This rescues columns whose cardinality
+      //     changes mid-import (high → low / phased data).
+      if (!m_skipCache)
+      {
+        if (m_cacheBlockLookups > 0)
+        {
+          const bool shouldSkip = (m_cacheBlockHits * 100 < m_cacheBlockLookups);
+          if (shouldSkip)
+          {
+            m_skipCache = true;
+            m_skipCacheRunLen = 0;
+            // Probe interval was either freshly initialised (1) or
+            // doubled by the most recent confirmed skip; leave it as is
+            // so consecutive false-positive probes back off exponentially.
+          }
+          else
+          {
+            // Caching pays off; reset backoff so we re-probe quickly the
+            // next time skipping is engaged.
+            m_skipCacheNextProbeIn = 1;
+          }
+        }
+      }
+      else
+      {
+        m_skipCacheRunLen++;
+        if (m_skipCacheRunLen >= m_skipCacheNextProbeIn)
+        {
+          m_skipCache = false;
+          m_skipCacheRunLen = 0;
+          // Exponential backoff capped at 64 blocks ≈ 512 KB of dict data.
+          // If the upcoming probe block also confirms "skip", we'll wait
+          // longer before the next one.
+          m_skipCacheNextProbeIn = std::min<uint32_t>(64, m_skipCacheNextProbeIn * 2);
+        }
+      }
+      m_cacheBlockLookups = 0;
+      m_cacheBlockHits = 0;
+
       memset(m_curBlock.data, 0, sizeof(m_curBlock.data));
       memcpy(m_curBlock.data, &m_dctnryHeader2, m_totalHdrBytes);
       m_freeSpace = BYTE_PER_BLOCK - m_totalHdrBytes;
@@ -959,6 +1111,8 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       //...Expand current extent if it is an abbreviated initial extent
       if ((m_curFbo == m_numBlocks) && (m_numBlocks == NUM_BLOCKS_PER_INITIAL_EXTENT))
       {
+        // expandDctnryExtent() may change file size / position; drain batch.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         RETURN_ON_ERROR(expandDctnryExtent());
       }
 
@@ -966,6 +1120,9 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
       //   current extent.
       if (m_curFbo == m_numBlocks)
       {
+        // createDctnry() + the setFileOffset() below will reposition the
+        // file; flush any pending batched blocks so they reach disk first.
+        RETURN_ON_ERROR(flushPendingDictBlocks(cb));
         // last block
         LBID_t startLbid;
 
@@ -1026,7 +1183,7 @@ int Dctnry::insertDctnry(const char* buf, ColPosPair** pos, const int totalRow, 
         startPos++;
 
         //...Add string to cache, if we have not exceeded cache limit
-        if ((m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
+        if (!m_skipCache && (m_arraySize < MAX_STRING_CACHE_SIZE) && (curSig.size <= MAX_SIGNATURE_SIZE))
         {
           addToStringCache(curSig);
         }

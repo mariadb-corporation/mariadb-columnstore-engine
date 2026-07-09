@@ -876,7 +876,10 @@ void XMLJob::fillInXMLDataAsLoaded(execplan::CalpontSystemCatalog::RIDList& colR
       col.definedWidth = colType.colWidth;
 
       if ((colType.scale > 0) || (colType.colDataType == execplan::CalpontSystemCatalog::DECIMAL) ||
-          (colType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL))
+          (colType.colDataType == execplan::CalpontSystemCatalog::UDECIMAL) ||
+          (colType.colDataType == execplan::CalpontSystemCatalog::DATETIME) ||
+          (colType.colDataType == execplan::CalpontSystemCatalog::TIMESTAMP) ||
+          (colType.colDataType == execplan::CalpontSystemCatalog::TIME))
       {
         col.precision = colType.precision;
         col.scale = colType.scale;
