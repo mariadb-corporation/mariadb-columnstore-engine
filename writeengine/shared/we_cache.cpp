@@ -262,6 +262,11 @@ void Cache::init(const int totalBlock, const int chkPoint, const int pctFree)
   {
     buffer = new BlockBuffer();
     buffer->init();
+    // The BlockBuffer (and the block data malloc'd by init()) is stored in the static m_freeList
+    // here; ownership passes to that list and the memory is freed by Cache::freeMemory(). Infer
+    // does not track the malloc'd pointer through the BlockBuffer stored in m_freeList, so it is
+    // not actually leaked.
+    // @infer-ignore MEMORY_LEAK_C
     m_freeList->push_back(buffer);
   }
 }
