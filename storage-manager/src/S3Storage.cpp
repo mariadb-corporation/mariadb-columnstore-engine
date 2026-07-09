@@ -483,7 +483,7 @@ int S3Storage::putObject(const string& sourceFile, const string& destKey)
   return putObject(data, len, destKey);
 }
 
-int S3Storage::putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const string& _destKey)
+int S3Storage::putObject(const std::shared_ptr<uint8_t[]>& data, size_t len, const string& _destKey)
 {
   string destKey = prefix + _destKey;
   uint8_t s3err;
