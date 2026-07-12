@@ -4,15 +4,15 @@
 # Usage:
 #   # Minimal (ubuntu:24.04, test000.sh)
 #   ./run_regression_locally.sh \
-#     -u https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/2463/10.6-enterprise \
+#     -u https://cspkg.s3.amazonaws.com/stable/pull_request/2463/10.6-enterprise \
 #     -t ghp_xxxxxxxxxxxxxxxxxxxx
 #
 #   ./run_regression_locally.sh \
-#     -u https://cspkg.s3.amazonaws.com/stable-23.10/cron/2506/10.6-enterprise \
+#     -u https://cspkg.s3.amazonaws.com/stable/cron/2506/10.6-enterprise \
 #     -t ghp_xxxxxxxxxxxxxxxxxxxx \
 #     -n all \
 #     -p ubuntu:24.04 \
-#     -b stable-23.10
+#     -b stable
 #
 # Output:
 #   ./regression-results/ - Test logs and memory monitor log
@@ -27,7 +27,7 @@ echo "Arguments received: $@"
 optparse.define short=u long=packages-url      desc="S3 URL with pre-built packages"         variable=PACKAGES_URL
 optparse.define short=t long=github-token      desc="GitHub token to pull from regression tests repo"         variable=GITHUB_TOKEN
 optparse.define short=p long=platform          desc="Docker platform"                         variable=PLATFORM          default="ubuntu:24.04"
-optparse.define short=b long=regression-branch desc="Regression repo branch"                  variable=REGRESSION_BRANCH default="stable-23.10"
+optparse.define short=b long=regression-branch desc="Regression repo branch"                  variable=REGRESSION_BRANCH default="stable"
 optparse.define short=n long=test-name         desc="Test name to execute (or 'all')"        variable=TEST_NAME         default="test000.sh"
 source $(optparse.build)
 

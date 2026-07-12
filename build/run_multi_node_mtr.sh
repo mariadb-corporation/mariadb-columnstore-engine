@@ -5,7 +5,7 @@ set -eo pipefail
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
 
-#usage example: sudo ./run_multi_node_mtr.sh  --columnstore-image-name mariadb/enterprise-columnstore-dev:stable-23.10-pull-request2240  --distro rockylinux:8
+#usage example: sudo ./run_multi_node_mtr.sh  --columnstore-image-name mariadb/enterprise-columnstore-dev:stable-pull-request2240  --distro rockylinux:8
 optparse.define short=i long=columnstore-image-name desc="Name of columnstore docker image" variable=MCS_IMAGE_NAME
 optparse.define short=d long=distro desc="Linux distro for which multinode mtr is executed" variable=DISTRO
 source $(optparse.build)

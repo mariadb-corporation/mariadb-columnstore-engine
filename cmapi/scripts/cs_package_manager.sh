@@ -704,7 +704,7 @@ Flags:
 Example:
     bash $0 install dev develop cron/8629
     bash $0 install dev develop-23.02 pull_request/7256
-    bash $0 install dev stable-23.10 pull_request/10820 --nodes 172.31.45.105,172.31.42.49
+    bash $0 install dev stable pull_request/10820 --nodes 172.31.45.105,172.31.42.49
     bash $0 install dev develop pull_request/3526 --product 11.4-enterprise
     bash $0 install dev develop pull_request/3526 --product 11.8-enterprise
 
@@ -2244,7 +2244,7 @@ do_ci_yum_install() {
 
         # Construct URLs
         dronePath="s3://$dev_drone_key"
-        branch="stable-23.10"
+        branch="stable"
         build="latest"
         product="$dev_product"
         s3_path="$dronePath/$branch/$build/$product/$arch/rockylinux${version_id}"
@@ -2328,7 +2328,7 @@ do_ci_apt_install() {
 
         # Construct URLs
         dronePath="s3://$dev_drone_key"
-        branch="stable-23.10"
+        branch="stable"
         build="latest"
         product="$dev_product"
         s3_path="$dronePath/$branch/$build/$product/$arch/$distro"

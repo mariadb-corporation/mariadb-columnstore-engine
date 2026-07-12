@@ -8,8 +8,8 @@ source "$SCRIPT_LOCATION"/utils.sh
 
 # Determine which branch to use
 DOCKER_REF="${DOCKER_REF:-}"
-DOCKER_BRANCH_REF="${DRONE_SOURCE_BRANCH:-stable-23.10}"
-DOCKER_REF_AUX="stable-23.10"
+DOCKER_BRANCH_REF="${DRONE_SOURCE_BRANCH:-stable}"
+DOCKER_REF_AUX="stable"
 
 message "Checking for docker repository branch: $DOCKER_BRANCH_REF"
 
