@@ -28,6 +28,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 
 #include <unistd.h>
 #include <stdexcept>
@@ -36,6 +37,7 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/interprocess/sync/interprocess_upgradable_mutex.hpp>
 
 #define EXPORT
 
@@ -48,11 +50,11 @@ const std::array<const std::string, 7> RWLockNames = {{
 /// the layout of the shmseg
 struct State
 {
-  int writerswaiting;
-  int writing;
-  int readerswaiting;
-  int reading;
-  boost::interprocess::interprocess_semaphore sems[3];
+  std::atomic_int writerswaiting;
+  std::atomic_int writing;
+  std::atomic_int readerswaiting;
+  std::atomic_int reading;
+  boost::interprocess::interprocess_upgradable_mutex rwMutex; // sharable is reading, exclusive is writing.
 };
 
 /* the lock state without the semaphores, passed out by timed_write_lock() for
@@ -228,19 +230,19 @@ class RWLock
   }
   inline int getWriting() const
   {
-    return fPImpl->fState->writing;
+    return fPImpl->fState->writing.load();
   }
   inline int getReading() const
   {
-    return fPImpl->fState->reading;
+    return fPImpl->fState->reading.load();
   }
   inline int getWritersWaiting() const
   {
-    return fPImpl->fState->writerswaiting;
+    return fPImpl->fState->writerswaiting.load();
   }
   inline int getReadersWaiting() const
   {
-    return fPImpl->fState->readerswaiting;
+    return fPImpl->fState->readerswaiting.load();
   }
   LockState getLockState();
 
