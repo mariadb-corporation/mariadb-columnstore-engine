@@ -44,13 +44,12 @@ bool SMOnline()
   addr.sun_family = AF_UNIX;
   strcpy(&addr.sun_path[1], &socket_name[1]);  // first char is null...
   int clientSocket = ::socket(AF_UNIX, SOCK_STREAM, 0);
+  if (clientSocket < 0)
+    return false;
   int err = ::connect(clientSocket, (const struct sockaddr*)&addr, sizeof(addr));
-  if (err >= 0)
-  {
-    ::close(clientSocket);
-    return true;
-  }
-  return false;
+  // Infer PULSE_RESOURCE_LEAK fix: close the socket on all paths, not just on success.
+  ::close(clientSocket);
+  return (err >= 0);
 }
 
 int main(int argc, char** argv)
