@@ -221,6 +221,7 @@ int SessionManager::start()
                     logger->log(LOG_DEBUG, "Shutdown in progress, closed socket %i at index %i", fds[i].fd,
                                 i);
                     close(socket);
+                    fds[i].fd = -1;  // Infer USE_AFTER_FREE fix: mark slot closed so the fd isn't closed again.
                     break;
                   }
                   fds[i].events = (POLLIN | POLLPRI);
@@ -249,6 +250,7 @@ int SessionManager::start()
             case SHUTDOWN:
               logger->log(LOG_DEBUG, "Shutdown StorageManager...");
               close(fds[0].fd);
+              fds[0].fd = -1;  // Infer USE_AFTER_FREE fix: reset listen fd after close to avoid re-poll/double-close.
               shutdown = true;
               break;
             default: break;
