@@ -207,6 +207,8 @@ retry:
     remainingBytes -= err;
     out->advanceInputPtr(err);
   }
+  // sock is owned by the pool (allSockets) and closed in ~SocketPool; returnSocket recycles it, not a leak.
+  // @infer-ignore PULSE_RESOURCE_LEAK
   returnSocket(sock);
   return 0;
 }
