@@ -197,6 +197,8 @@ string Func_sec_to_time::getDigitStrVal(rowgroup::Row& row, FunctionParm& parm, 
                                         execplan::CalpontSystemCatalog::ColType& op_ct)
 {
   string time = getStrVal(row, parm, isNull, op_ct);
+  // getStrVal returns std::string by value (an owning copy), so time does not reference freed stack memory.
+  // @infer-ignore USE_AFTER_LIFETIME
   time.erase(std::remove(time.begin(), time.end(), ':'), time.end());
   return time;
 }

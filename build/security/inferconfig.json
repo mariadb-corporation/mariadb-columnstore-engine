@@ -1,0 +1,22 @@
+{
+  "list-checkers": true,
+  "list-issue-types": true,
+  "list-categories": true,
+  "print-active-checkers": true,
+  "max-jobs": 4,
+  "timeout": 3600,
+  "pulse-max-cfg-size": 150000,
+  "cost": false,
+  "liveness": false,
+  "censor-report": [
+    "PULSE_UNNECESSARY_COPY.*:!.*:Not security relevant",
+    "PULSE_CONST_REFABLE:!.*:Not security relevant",
+    "PULSE_UNINITIALIZED_VALUE:!.*:Not security relevant",
+    "NULLPTR_DEREFERENCE:!.*:Not security relevant",
+    "LOCK_CONSISTENCY_VIOLATION:!.*:Not security relevant",
+    ".*:!^storage/rocksdb/rocksdb/.*:Old facebook rocksdb repo, we have no control over it",
+    "MEMORY_LEAK_C:!.*unittest/.*:Test-only issue",
+    "MEMORY_LEAK_C:!.*dbcon/ddlpackage/ddl-scan.cpp:Flex-generated scanner, buffers freed via ddllex_destroy/yy_delete_buffer",
+    "MEMORY_LEAK_C:!.*dbcon/dmlpackage/dml-scan.cpp:Flex-generated scanner, buffers freed via dmllex_destroy/yy_delete_buffer"
+  ]
+}

@@ -731,6 +731,115 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
 };
 
 
+// ---------------------------------------------------------------------------
+// Infer (SAST) pipeline. Runs Infer over ColumnStore code only and fails the
+// stage if any ticket-worthy finding remains.
+//   * Runs on nightly (cron) builds for the branches in infer_branches.
+// ---------------------------------------------------------------------------
+local infer_platform = "ubuntu:24.04";
+local infer_server = "11.8-enterprise";
+local infer_branches = ["stable-23.10", "develop-23.02"];
+
+local InferPipeline() = {
+  local platform = infer_platform,
+  local server = infer_server,
+  local arch = "amd64",
+  local img = "detravi/" + std.strReplace(platform, "/", "-"),
+  local server_remote = "https://github.com/mariadb-corporation/MariaDBEnterprise",
+  local result = "infer",
+  // Per-run S3 prefix; DRONE_BRANCH resolves at runtime so one pipeline serves
+  // every branch in infer_branches.
+  local publish_prefix = "${DRONE_BRANCH}/cron/${DRONE_BUILD_NUMBER}/" + server + "/" + arch + "/" + result,
+  local mdb_vol = { name: "mdb", path: "/mdb" },
+  local publish_url = "https://cspkg.s3.amazonaws.com/index.html?prefix=" + publish_prefix + "/",
+  kind: "pipeline",
+  type: "docker",
+  name: std.join(" ", ["infer nightly", platform, server, arch]),
+  platform: { arch: arch },
+  clone: { depth: 10 },
+  steps: [
+    {
+      name: "submodules",
+      image: "alpine/git:2.49.0",
+      commands: [
+        "git submodule update --init --recursive",
+        "git config cmake.update-submodules no",
+      ],
+    },
+    {
+      name: "clone-mdb",
+      depends_on: ["submodules"],
+      image: "alpine/git:2.49.0",
+      volumes: [mdb_vol],
+      environment: {
+        SERVER_REF: "${SERVER_REF:-" + server + "}",
+        SERVER_REMOTE: "${SERVER_REMOTE:-" + server_remote + "}",
+        SERVER_SHA: "${SERVER_SHA:-" + server + "}",
+      },
+      commands: echo_running_on +
+                [
+                  "echo $$SERVER_REF",
+                  "echo $$SERVER_REMOTE",
+                  "mkdir -p /mdb/" + builddir + " && cd /mdb/" + builddir,
+                  'git config --global url."https://github.com/".insteadOf git@github.com:',
+                  'git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .',
+                  "git reset --hard $$SERVER_SHA",
+                  "git rev-parse --abbrev-ref HEAD && git rev-parse HEAD",
+                  "git config cmake.update-submodules no",
+                  "rm -rf storage/columnstore/columnstore",
+                  "cp -r /drone/src /mdb/" + builddir + "/storage/columnstore/columnstore",
+                ],
+    },
+    {
+      name: "infer",
+      depends_on: ["clone-mdb"],
+      image: img,
+      volumes: [mdb_vol],
+      environment: {
+        DEBIAN_FRONTEND: "noninteractive",
+      },
+      commands: [
+        get_build_command("run_infer.sh") +
+        "--distro " + platform +
+        " --server " + server +
+        " --install-deps" +
+        " --result-dir /drone/src/" + result,
+      ],
+    },
+    {
+      name: "publish infer report",
+      depends_on: ["infer"],
+      image: "amazon/aws-cli:2.22.30",
+      when: {
+        status: ["success", "failure"],
+      },
+      failure: "ignore",
+      environment: {
+        AWS_ACCESS_KEY_ID: {
+          from_secret: "aws_access_key_id",
+        },
+        AWS_SECRET_ACCESS_KEY: {
+          from_secret: "aws_secret_access_key",
+        },
+        AWS_REGION: "us-east-1",
+        AWS_DEFAULT_REGION: "us-east-1",
+      },
+      commands: [
+        "test -d /drone/src/" + result + " || { echo 'no infer report to publish'; exit 0; }",
+        "aws s3 sync /drone/src/" + result + " s3://cspkg/" + publish_prefix + " --only-show-errors",
+        'echo "Infer report uploaded to: ' + publish_url + '"',
+        make_clickable_link(publish_url),
+      ],
+    },
+  ],
+  volumes: [{ name: "mdb", temp: {} }],
+  trigger: {
+    event: ["pull_request"],
+    branch: infer_branches,
+  },
+};
+
+
 local AllPipelines =
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, "")
@@ -845,4 +954,7 @@ AllPipelines +
 [
   FinalPipeline(b, "cron")
   for b in std.objectFields(platforms)
+] +
+[
+  InferPipeline(),
 ]

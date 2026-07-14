@@ -40,7 +40,7 @@ class S3Storage : public CloudStorage
   int getObject(const std::string& sourceKey, std::shared_ptr<uint8_t[]>* data,
                 size_t* size = nullptr) override;
   int putObject(const std::string& sourceFile, const std::string& destKey) override;
-  int putObject(const std::shared_ptr<uint8_t[]> data, size_t len, const std::string& destKey) override;
+  int putObject(const std::shared_ptr<uint8_t[]>& data, size_t len, const std::string& destKey) override;
   int deleteObject(const std::string& key) override;
   int copyObject(const std::string& sourceKey, const std::string& destKey) override;
   int exists(const std::string& key, bool* out) override;
