@@ -49,14 +49,17 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Make WORKSPACE absolute before deriving paths from it -- the script cd's into
+# $BUILD later, so a relative WORKSPACE would break those derived paths.
+mkdir -p "$WORKSPACE"
+WORKSPACE="$(cd "$WORKSPACE" && pwd)"
+
 INFER_BIN="$WORKSPACE/infer-bin"
 BUILD="$WORKSPACE/build"
 OUT="$WORKSPACE/out"                            # infer results dir
 INFERCONFIG_SRC="$SCRIPT_DIR/security/inferconfig.json"
 
 log() { echo "== [run_infer] $*"; }
-
-mkdir -p "$WORKSPACE"
 
 # ---------- 0. Sanity checks ----------
 [ "$(uname -m)" = "x86_64" ] || { echo "ERROR: need x86_64, got $(uname -m)"; exit 1; }
@@ -170,13 +173,17 @@ else
   # Resolve each entry's "file" relative to its own "directory" (compile DB
   # paths may be relative) before matching, so no ColumnStore TU is missed.
   python3 - <<'PY' || { echo "ERROR: filtering compile DB failed"; exit 4; }
-import json, os
+import json, os, sys
 with open("compile_commands.json", encoding="utf-8") as fh:
     db = json.load(fh)
 def abspath(e):
     f = e["file"]
     return os.path.realpath(f if os.path.isabs(f) else os.path.join(e.get("directory", ""), f))
 cs = [e for e in db if "/storage/columnstore/" in abspath(e)]
+if not cs:
+    print("ERROR: no ColumnStore translation units in compile_commands.json "
+          "(wrong build config, or ColumnStore not built?)", file=sys.stderr)
+    sys.exit(1)
 with open("compile_commands.columnstore.json", "w", encoding="utf-8") as fh:
     json.dump(cs, fh, indent=1)
 print(f"== [run_infer] ColumnStore TUs: {len(cs)} / {len(db)} total")
@@ -204,7 +211,8 @@ jq -r '.[]
        | select(.suppressed != true)
        | select(.file | test("storage/columnstore/"))
        | "\(.file):\(.line): \(.bug_type): \(.qualifier)"' \
-   "$OUT/report.json" | sort > "$ISSUES"
+   "$OUT/report.json" | sort > "$ISSUES" \
+  || { echo "ERROR: failed to parse report.json / write issues list"; exit 5; }
 
 count="$(wc -l <"$ISSUES" | tr -d ' ')"
 
