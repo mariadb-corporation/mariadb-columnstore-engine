@@ -364,6 +364,38 @@ int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool w
 
   return 0;
 }
+int parseNonEmptyJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, uint32_t* last_type, bool wildcards)
+{
+#if MYSQL_VERSION_ID >= 120200
+  json_path_step_t *initial_step= reinterpret_cast<json_path_step_t*>(path.p.steps.buffer);
+#endif
+  if (parseJSPath(path, row, parm, wildcards))
+  {
+    return 1;
+  }
+
+#if MYSQL_VERSION_ID >= 120200
+  json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&path.p.steps, path.p.last_step_idx));
+  if ((last_step - 1) < initial_step)
+  {
+    return 1;
+  }
+  if (last_type)
+  {
+    *last_type = last_step->type;
+  }
+#else
+  if (path.p.last_step - 1 < path.p.steps)
+  {
+    return 1;
+  }
+  if (last_type)
+  {
+    *last_type = path.p.last_step->type;
+  }
+#endif
+ return 0;
+}
 
 bool matchJSPath(const std::vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
                  [[maybe_unused]] const int* arrayCounter, bool exact)

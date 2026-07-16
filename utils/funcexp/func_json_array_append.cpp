@@ -34,30 +34,31 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
   retJS.reserve(js.length() + padding);
 
   utils::NullString tmpJS(js);
+  Func_json_multipath_state state(fp, 1, 2);;
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
-    JSONPath& path = paths[j];
+    JSONPath& path = state.paths[j];
 
     if (!path.parsed && parseJSPath(path, row, fp[i], false))
       goto error;
 
-    initJSEngine(jsEg, cs, tmpJS);
+    initJSEngine(state.jsEg, cs, tmpJS);
 
-    if (locateJSPath(jsEg, path))
+    if (locateJSPath(state.jsEg, path))
       goto error;
 
-    if (json_read_value(&jsEg))
+    if (json_read_value(&state.jsEg))
       goto error;
 
-    if (jsEg.value_type == JSON_VALUE_ARRAY)
+    if (state.jsEg.value_type == JSON_VALUE_ARRAY)
     {
       int itemSize;
-      if (json_skip_level_and_count(&jsEg, &itemSize))
+      if (json_skip_level_and_count(&state.jsEg, &itemSize))
         goto error;
 
-      arrEnd = jsEg.s.c_str - jsEg.sav_c_len;
+      arrEnd = state.jsEg.s.c_str - state.jsEg.sav_c_len;
       strRestLen = jsLen - (arrEnd - (const uchar*)rawJS);
       retJS.append(rawJS, arrEnd - (const uchar*)rawJS);
       if (itemSize)
@@ -72,16 +73,16 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
       const uchar *start, *end;
 
       /* Wrap as an array. */
-      retJS.append(rawJS, (const char*)jsEg.value_begin - rawJS);
-      start = jsEg.value_begin;
-      if (jsEg.value_type == JSON_VALUE_OBJECT)
+      retJS.append(rawJS, (const char*)state.jsEg.value_begin - rawJS);
+      start = state.jsEg.value_begin;
+      if (state.jsEg.value_type == JSON_VALUE_OBJECT)
       {
-        if (json_skip_level(&jsEg))
+        if (json_skip_level(&state.jsEg))
           goto error;
-        end = jsEg.s.c_str;
+        end = state.jsEg.s.c_str;
       }
       else
-        end = jsEg.value_end;
+        end = state.jsEg.value_end;
 
       retJS.append("[");
       retJS.append((const char*)start, end - start);
@@ -89,7 +90,7 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
       if (appendJSValue(retJS, cs, row, fp[i + 1]))
         goto error;
       retJS.append("]");
-      retJS.append((const char*)jsEg.s.c_str, rawJS + jsLen - (const char*)jsEg.s.c_str);
+      retJS.append((const char*)state.jsEg.s.c_str, rawJS + jsLen - (const char*)state.jsEg.s.c_str);
     }
 
     // tmpJS save the json string for next loop
@@ -97,9 +98,9 @@ std::string Func_json_array_append::getStrVal(rowgroup::Row& row, FunctionParm& 
     retJS.clear();
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
+  initJSEngine(state.jsEg, cs, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;

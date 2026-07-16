@@ -286,14 +286,16 @@ bool Func_json_overlaps::getBoolVal(Row& row, FunctionParm& fp, bool& /*isNull*/
   if (isNullJS1 || isNullJS2)
     return false;
 
-  initJSEngine(jsEg, getCharset(fp[0]), js1);
-  initJSEngine(jsEg2, getCharset(fp[1]), js2);
+  Func_json_overlaps_state state;
 
-  if (json_read_value(&jsEg) || json_read_value(&jsEg2))
+  initJSEngine(state.jsEg, getCharset(fp[0]), js1);
+  initJSEngine(state.jsEg2, getCharset(fp[1]), js2);
+
+  if (json_read_value(&state.jsEg) || json_read_value(&state.jsEg2))
     return false;
 
-  bool result = checkOverlaps(&jsEg, &jsEg2, false);
-  if (unlikely(jsEg.s.error || jsEg2.s.error))
+  bool result = checkOverlaps(&state.jsEg, &state.jsEg2, false);
+  if (unlikely(state.jsEg.s.error || state.jsEg2.s.error))
     return false;
 
   return result;

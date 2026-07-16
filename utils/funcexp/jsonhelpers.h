@@ -103,6 +103,7 @@ inline void initJSEngine(json_engine_t& jsEg, const CHARSET_INFO* jsCS, const ut
 }
 
 int parseJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, bool wildcards = true);
+int parseNonEmptyJSPath(JSONPath& path, rowgroup::Row& row, execplan::SPTP& parm, uint32_t* last_type, bool wildcards = true);
 
 bool matchJSPath(const std::vector<funcexp::JSONPath>& paths, const json_path_t* p, json_value_types valType,
                  const int* arrayCounter = nullptr, bool exact = true);

@@ -31,11 +31,13 @@ bool Func_json_exists::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
 
   int jsErr = 0;
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
-  if (!path.parsed && parseJSPath(path, row, fp[1]))
+  Func_json_no_multipath_state state;
+
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
+  if (!state.path.parsed && parseJSPath(state.path, row, fp[1]))
     goto error;
 
-  if (locateJSPath(jsEg, path, &jsErr))
+  if (locateJSPath(state.jsEg, state.path, &jsErr))
   {
     if (jsErr)
       goto error;

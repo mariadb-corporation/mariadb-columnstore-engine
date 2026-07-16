@@ -27,20 +27,22 @@ std::string Func_json_unquote::getStrVal(rowgroup::Row& row, FunctionParm& fp, b
   if (isNull)
     return "";
 
+  Func_json_no_multipath_state state;
+
   int strLen;
 
   const CHARSET_INFO* cs = type.getCharset();
 
-  initJSEngine(jsEg, cs, js);
+  initJSEngine(state.jsEg, cs, js);
 
-  json_read_value(&jsEg);
+  json_read_value(&state.jsEg);
 
-  if (unlikely(jsEg.s.error) || jsEg.value_type != JSON_VALUE_STRING)
+  if (unlikely(state.jsEg.s.error) || state.jsEg.value_type != JSON_VALUE_STRING)
     return js.safeString();
 
-  char* buf = (char*)alloca(jsEg.value_len + 1);
-  if ((strLen = json_unescape(cs, jsEg.value, jsEg.value + jsEg.value_len, &my_charset_utf8mb3_general_ci,
-                              (uchar*)buf, (uchar*)(buf + jsEg.value_len))) >= 0)
+  char* buf = (char*)alloca(state.jsEg.value_len + 1);
+  if ((strLen = json_unescape(cs, state.jsEg.value, state.jsEg.value + state.jsEg.value_len, &my_charset_utf8mb3_general_ci,
+                              (uchar*)buf, (uchar*)(buf + state.jsEg.value_len))) >= 0)
   {
     buf[strLen] = '\0';
     std::string ret = buf;
