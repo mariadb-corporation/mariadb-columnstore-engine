@@ -29,8 +29,9 @@ bool Func_json_valid::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   if (isNull)
     return false;
 
+  Func_json_state state;
 #if MYSQL_VERSION_ID >= 120200
-  return json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]), &jsEg);
+  return json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]), &state.jsEg);
 #else
   return json_valid(js.unsafeStringRef().data(), js.unsafeStringRef().size(), getCharset(fp[0]));
 #endif

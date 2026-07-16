@@ -57,8 +57,10 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
 
   bool result = false;
 
+  Func_json_equals_state state;
+
 #if MYSQL_VERSION_ID >= 120200
-  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0]), NULL, &jsEg, &array))
+  if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0]), NULL, &state.jsEg, &state.array))
 #else
   if (json_normalize(str1.get(), js1.data(), js1.size(), getCharset(fp[0])))
 #endif
@@ -68,7 +70,7 @@ bool Func_json_equals::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
   }
 
 #if MYSQL_VERSION_ID >= 120200
-  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1]), NULL, &jsEg, &array))
+  if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1]), NULL, &state.jsEg, &state.array))
 #else
   if (json_normalize(str2.get(), js2.data(), js2.size(), getCharset(fp[1])))
 #endif

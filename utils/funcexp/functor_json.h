@@ -29,14 +29,15 @@ struct JSONPath
 
 class Func_json
 {
-  protected:
+  public:
+  struct Func_json_state
+  {
     json_engine_t jsEg;
 #if MYSQL_VERSION_ID >= 120200
     bool path_inited;
     int jsEg_stack[JSON_DEPTH_LIMIT];
 #endif
-  public:
-    Func_json()
+    Func_json_state ()
     {
 #if MYSQL_VERSION_ID >= 120200
       path_inited= false;
@@ -44,86 +45,94 @@ class Func_json
                     MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
 #endif
     }
+  };
+  Func_json() { }
 };
 
 class Func_json_no_multipath : public Func_json
 {
-  protected:
+  public:
+  struct Func_json_no_multipath_state : public Func_json_state
+  {
     JSONPath path;
 #if MYSQL_VERSION_ID >= 120200
-  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+    json_path_step_t p_steps[JSON_DEPTH_LIMIT];
 #endif
-
-public:
-
-  void init_json_path_array()
-  {
-#if MYSQL_VERSION_ID >= 120200
-    if (!path_inited)
+    void init_json_path_array()
     {
-      initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps[0], 
-                    MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-    path_inited= true;
-    }
+#if MYSQL_VERSION_ID >= 120200
+      if (!path_inited)
+      {
+        initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps[0], 
+                      MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+      path_inited= true;
+      }
 #endif
 
-    return;
-  }
-
-  Func_json_no_multipath()
-  {
+      return;
+    }
+    Func_json_no_multipath_state()
+    {
 #if MYSQL_VERSION_ID >= 120200
       init_json_path_array();
 #endif
-  }
+    }
+
+  };
+
+public:
+
 };
 
 class Func_json_multipath : public Func_json
 {
-  protected:
-  std::vector<JSONPath> paths;
+  public:
+  struct Func_json_multipath_state : public Func_json_state
+  {
+    std::vector<JSONPath> paths;
 #if MYSQL_VERSION_ID >= 120200
-  std::vector<std::vector<json_path_step_t>> p_steps_arr;
+    std::vector<std::vector<json_path_step_t>> p_steps_arr;
 #endif
 
+    inline void initJSPaths(std::vector<JSONPath>& paths, FunctionParm& fp,
+                            const int start, const int step)
+    {
+      if (paths.empty())
+        for (size_t i = start; i < fp.size(); i += step)
+          paths.emplace_back();
+    }
+
+#if MYSQL_VERSION_ID >= 120200
+    void init_json_multipath_array(bool& path_inited, std::vector<JSONPath>& paths,
+                                  std::vector<std::vector<json_path_step_t>>& p_steps_arr)
+    {
+      if (!path_inited)
+      {
+        for (size_t i=0; i<paths.size(); i++)
+        {
+          JSONPath& path = paths[i];
+          initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i][0],  MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+        }
+        path_inited= true;
+      }
+      return;
+    }
+#endif
+    Func_json_multipath_state(FunctionParm& fp, int start, int end)
+    {
+      initJSPaths(paths, fp, start, end);
+#if MYSQL_VERSION_ID >= 120200
+      p_steps_arr = std::vector<std::vector<json_path_step_t>>(fp.size(),
+                       std::vector<json_path_step_t>(JSON_DEPTH_LIMIT));
+      init_json_multipath_array(path_inited, paths, p_steps_arr);
+#endif
+    }
+
+
+  };
   public:
 
-  inline void initJSPaths(std::vector<JSONPath>& paths, FunctionParm& fp,
-                          const int start, const int step)
-  {
-    if (paths.empty())
-      for (size_t i = start; i < fp.size(); i += step)
-        paths.emplace_back();
-  }
-
-#if MYSQL_VERSION_ID >= 120200
-  void init_json_multipath_array(bool& path_inited, std::vector<JSONPath>& paths,
-                                std::vector<std::vector<json_path_step_t>>& p_steps_arr)
-  {
-    if (!path_inited)
-    {
-      for (size_t i=0; i<paths.size(); i++)
-      {
-        JSONPath& path = paths[i];
-        initJsonArray(NULL, &path.p.steps, sizeof(json_path_step_t), &p_steps_arr[i][0],  MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-      }
-      path_inited= true;
-    }
-    return;
-  }
-#endif
-
   Func_json_multipath() {}
-
-  Func_json_multipath(FunctionParm& fp, int start, int end)
-  {
-    initJSPaths(paths, fp, start, end);
-#if MYSQL_VERSION_ID >= 120200
-  p_steps_arr = std::vector<std::vector<json_path_step_t>>(fp.size(),
-                   std::vector<json_path_step_t>(JSON_DEPTH_LIMIT));
-  init_json_multipath_array(path_inited, paths, p_steps_arr);
-#endif
-  }
 
   ~Func_json_multipath() {}
 };
@@ -239,17 +248,23 @@ class Func_json_length : public Func_Int, public Func_json_no_multipath
 class Func_json_equals : public Func_Bool, public Func_json
 {
  private:
+  struct Func_json_equals_state : public Func_json_state
+  {
 #if MYSQL_VERSION_ID >= 120200
-   MEM_ROOT_DYNAMIC_ARRAY array;
-   struct json_norm_value *buffer_array[JSON_DEPTH_LIMIT];
+    MEM_ROOT_DYNAMIC_ARRAY array;
+    struct json_norm_value *buffer_array[JSON_DEPTH_LIMIT];
 #endif
+    Func_json_equals_state()
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &array, sizeof(struct json_norm_value*), buffer_array, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
 
  public:
   Func_json_equals() : Func_Bool("json_equals")
   {
-#if MYSQL_VERSION_ID >= 120200
-    initJsonArray(NULL, &array, sizeof(struct json_norm_value*), buffer_array, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
   ~Func_json_equals() override = default;
 
@@ -265,16 +280,20 @@ class Func_json_equals : public Func_Bool, public Func_json
 class Func_json_normalize : public Func_Str, public Func_json
 {
 private:
+  struct Func_json_normalize_state : public Func_json_state
+  {
 #if MYSQL_VERSION_ID >= 120200
   MEM_ROOT_DYNAMIC_ARRAY array;
   struct json_norm_value *buffer_array[JSON_DEPTH_LIMIT];
+  Func_json_normalize_state()
+  {
+    initJsonArray(NULL, &array, sizeof(struct json_norm_value*), buffer_array, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+  }
 #endif
+  };
  public:
   Func_json_normalize() : Func_Str("json_normalize")
   {
-#if MYSQL_VERSION_ID >= 120200
-    initJsonArray(NULL, &array, sizeof(struct json_norm_value*), buffer_array, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
   ~Func_json_normalize() override = default;
 
@@ -443,16 +462,22 @@ class Func_json_format : public Func_Str, public Func_json
 class Func_json_merge : public Func_Str, public Func_json
 {
  private:
-  json_engine_t jsEg2;
+  struct Func_json_merge_state : public Func_json_state
+  {
+    json_engine_t jsEg2;
 #if MYSQL_VERSION_ID >= 120200
-  int jsEg2_stack[JSON_DEPTH_LIMIT];
+    int jsEg2_stack[JSON_DEPTH_LIMIT];
 #endif
+    Func_json_merge_state()
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
  public:
   Func_json_merge() : Func_Str("json_merge_preserve")
   {
-#if MYSQL_VERSION_ID >= 120200
-     initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
   ~Func_json_merge() override = default;
 
@@ -468,17 +493,23 @@ class Func_json_merge : public Func_Str, public Func_json
 class Func_json_merge_patch : public Func_Str, public Func_json
 {
  private:
-  json_engine_t jsEg2;
+  struct Func_json_merge_patch_state : public Func_json_state
+  {
+    json_engine_t jsEg2;
 #if MYSQL_VERSION_ID >= 120200
-  int jsEg2_stack[JSON_DEPTH_LIMIT];
+    int jsEg2_stack[JSON_DEPTH_LIMIT];
 #endif
+    Func_json_merge_patch_state()
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
 
  public:
   Func_json_merge_patch() : Func_Str("json_merge_patch")
   {
-  #if MYSQL_VERSION_ID >= 120200
-    initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-  #endif
   }
   ~Func_json_merge_patch() override = default;
 
@@ -526,21 +557,27 @@ class Func_json_query : public Func_Str
 class Func_json_contains : public Func_Bool, public Func_json_no_multipath
 {
  protected:
-  bool arg2Const;
-  bool arg2Parsed;  // argument 2 is a constant or has been parsed
-  utils::NullString arg2Val;
-  json_engine_t valEg;
+  struct Func_json_contains_state : public Func_json_no_multipath_state
+  {
+    bool arg2Const;
+    bool arg2Parsed;  // argument 2 is a constant or has been parsed
+    utils::NullString arg2Val;
+    json_engine_t valEg;
 #if MYSQL_VERSION_ID >= 120200
-  int valEg_stack[JSON_DEPTH_LIMIT];
+    int valEg_stack[JSON_DEPTH_LIMIT];
 #endif
+    Func_json_contains_state() : arg2Const(false),
+                         arg2Parsed(false), arg2Val("")
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &valEg.stack, sizeof(int), &valEg_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
 
  public:
-  Func_json_contains() : Func_Bool("json_contains"), arg2Const(false),
-                         arg2Parsed(false), arg2Val("")
+  Func_json_contains() : Func_Bool("json_contains")
   {
-#if MYSQL_VERSION_ID >= 120200
-  initJsonArray(NULL, &valEg.stack, sizeof(int), &valEg_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
   ~Func_json_contains() override = default;
 
@@ -556,9 +593,6 @@ class Func_json_array_append : public Func_Str, public Func_json_multipath
 {
  public:
   Func_json_array_append() : Func_Str("json_array_append"), Func_json_multipath()
-  {}
-  Func_json_array_append(FunctionParm& fp) : Func_Str("json_array_append"),
-                                            Func_json_multipath(fp, 1, 2)
   {}
   ~Func_json_array_append() override = default;
 
@@ -577,9 +611,6 @@ class Func_json_array_insert : public Func_Str, public Func_json_multipath
 {
  public:
   Func_json_array_insert() : Func_Str("json_array_insert"), Func_json_multipath()
-  {}
-  Func_json_array_insert(FunctionParm& fp) : Func_Str("json_array_insert"),
-                                             Func_json_multipath(fp, 1, 2)
   {}
   ~Func_json_array_insert() override = default;
 
@@ -609,22 +640,8 @@ class Func_json_insert : public Func_json_multipath, public Func_Str
  public:
   Func_json_insert() : Func_json_multipath(), Func_Str("json_insert"), mode(INSERT)
   {}
-  Func_json_insert(FunctionParm& fp) :Func_json_multipath(fp, 1, 2),
-                                            Func_Str("json_insert"), mode(INSERT)
-  {}
 
   explicit Func_json_insert(MODE m) : mode(m)
-  {
-    assert(m != NONE);
-    switch (m)
-    {
-      case INSERT: Func_Str::Func::funcName("json_insert"); break;
-      case REPLACE: Func_Str::Func::funcName("json_replace"); break;
-      case SET: Func_Str::Func::funcName("json_set"); break;
-      default: break;
-    }
-  }
-  explicit Func_json_insert(FunctionParm& fp, MODE m) : Func_json_multipath(fp, 1, 2), mode(m)
   {
     assert(m != NONE);
     switch (m)
@@ -656,8 +673,6 @@ class Func_json_remove : public Func_Str, public Func_json_multipath
  public:
   Func_json_remove() : Func_Str("json_remove"), Func_json_multipath()
   {}
-  Func_json_remove(FunctionParm& fp) : Func_Str("json_remove"), Func_json_multipath(fp, 1, 1)
-  {}
 
   ~Func_json_remove() override = default;
 
@@ -673,28 +688,29 @@ class Func_json_remove : public Func_Str, public Func_json_multipath
 class Func_json_contains_path : public Func_json_multipath, public Func_Bool
 {
  protected:
-  std::vector<bool> hasFound;
-  bool isModeOne;
-  bool isModeConst;
-  bool isModeParsed;
+  struct Func_json_contains_path_state : public Func_json_multipath_state
+  {
+    std::vector<bool> hasFound;
+    bool isModeOne;
+    bool isModeConst;
+    bool isModeParsed;
 #if MYSQL_VERSION_ID >= 120200
-  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+    json_path_step_t p_steps[JSON_DEPTH_LIMIT];
 #endif
-  json_path_t p;
+    json_path_t p;
+    Func_json_contains_path_state(FunctionParm& fp)
+     : Func_json_multipath_state(fp, 2, 1), isModeOne(false), isModeConst(false), isModeParsed(false)
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &p.steps, sizeof(json_path_step_t), &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
 
  public:
   Func_json_contains_path()
-   : Func_json_multipath(), Func_Bool("json_contains_path"),
-     isModeOne(false), isModeConst(false), isModeParsed(false)
+   : Func_json_multipath(), Func_Bool("json_contains_path")
   {}
-  Func_json_contains_path(FunctionParm& fp)
-   : Func_json_multipath(fp, 2, 1), Func_Bool("json_contains_path"),
-     isModeOne(false), isModeConst(false), isModeParsed(false)
-  {
-#if MYSQL_VERSION_ID >= 120200
-    initJsonArray(NULL, &p.steps, sizeof(json_path_step_t), &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
-  }
   ~Func_json_contains_path() override = default;
 
   execplan::CalpontSystemCatalog::ColType operationType(
@@ -709,17 +725,23 @@ class Func_json_contains_path : public Func_json_multipath, public Func_Bool
 class Func_json_overlaps : public Func_Bool, public Func_json_no_multipath
 {
  private:
-  json_engine_t jsEg2;
+  struct Func_json_overlaps_state : public Func_json_no_multipath_state
+  {
+    json_engine_t jsEg2;
 #if MYSQL_VERSION_ID >= 120200
-  int jsEg2_stack[JSON_DEPTH_LIMIT];
+    int jsEg2_stack[JSON_DEPTH_LIMIT];
 #endif
+    Func_json_overlaps_state()
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
 
  public:
   Func_json_overlaps() : Func_Bool("json_overlaps"), Func_json_no_multipath()
   {
-#if MYSQL_VERSION_ID >= 120200
-  initJsonArray(NULL, &jsEg2.stack, sizeof(int), &jsEg2_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
   ~Func_json_overlaps() override = default;
 
@@ -734,31 +756,31 @@ class Func_json_overlaps : public Func_Bool, public Func_json_no_multipath
 class Func_json_search : public Func_json_multipath, public Func_Str
 {
  protected:
-  bool isModeParsed;
-  bool isModeConst;
-  bool isModeOne;
-  int escape;
-  json_path_t p, savPath;
+  struct Func_json_search_state : public Func_json_multipath_state
+  {
+    bool isModeParsed;
+    bool isModeConst;
+    bool isModeOne;
+    int escape;
+    json_path_t p, savPath;
 #if MYSQL_VERSION_ID >= 120200
-  json_path_step_t p_steps[JSON_DEPTH_LIMIT],
-                   savPath_steps[JSON_DEPTH_LIMIT];
+    json_path_step_t p_steps[JSON_DEPTH_LIMIT],
+                     savPath_steps[JSON_DEPTH_LIMIT];
 #endif
-
+    Func_json_search_state(FunctionParm& fp)
+     : Func_json_multipath_state(fp, 4, 1),
+       isModeParsed(false), isModeConst(false), isModeOne(false), escape('\\')
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &savPath.steps, sizeof(json_path_step_t), &savPath_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+      initJsonArray(NULL, &p.steps, sizeof(json_path_step_t), &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
  public:
   Func_json_search()
-   : Func_json_multipath(), Func_Str("json_search"), isModeParsed(false),
-     isModeConst(false), isModeOne(false), escape('\\')
+   : Func_json_multipath(), Func_Str("json_search") //, isModeParsed(false),
   {
-  }
-
-  Func_json_search(FunctionParm& fp)
-   : Func_json_multipath(fp, 4, 1), Func_Str("json_search"),
-     isModeParsed(false), isModeConst(false), isModeOne(false), escape('\\')
-  {
-#if MYSQL_VERSION_ID >= 120200
-  initJsonArray(NULL, &savPath.steps, sizeof(json_path_step_t), &savPath_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-  initJsonArray(NULL, &p.steps, sizeof(json_path_step_t), &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
   }
 
   ~Func_json_search() override = default;
@@ -770,32 +792,34 @@ class Func_json_search : public Func_json_multipath, public Func_Str
                         execplan::CalpontSystemCatalog::ColType& type) override;
 
  private:
-  int cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs);
+  int cmpJSValWild(Func_json_search_state& state, json_engine_t* jsEg, const utils::NullString& cmpStr, const CHARSET_INFO* cs);
 };
 /** @brief Func_json_extract_string class
  */
 class Func_json_extract : public Func_Str, public Func_json_multipath
 {
-  json_engine_t savJSEg;
+public:
+  struct Func_json_extract_state : Func_json_multipath_state
+  {
+    json_engine_t savJSEg;
 #if MYSQL_VERSION_ID >= 120200
-  int savJSEg_stack[JSON_DEPTH_LIMIT];
-  json_path_step_t p_steps[JSON_DEPTH_LIMIT];
+    int savJSEg_stack[JSON_DEPTH_LIMIT];
+    json_path_step_t p_steps[JSON_DEPTH_LIMIT];
 #endif
-  json_path_t p;
-
+    json_path_t p;
+    Func_json_extract_state(FunctionParm& fp) : Func_json_multipath_state(fp, 1, 1)
+    {
+#if MYSQL_VERSION_ID >= 120200
+      initJsonArray(NULL, &savJSEg.stack, sizeof(int),
+                    &savJSEg_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+      initJsonArray(NULL, &p.steps, sizeof(json_path_step_t),
+                    &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
+#endif
+    }
+  };
  public:
   Func_json_extract() :Func_Str("json_extract"), Func_json_multipath()
   {}
-  Func_json_extract(FunctionParm& fp) : Func_Str("json_extract"),
-                                        Func_json_multipath(fp, 1, 1)
-  {
-#if MYSQL_VERSION_ID >= 120200
-    initJsonArray(NULL, &savJSEg.stack, sizeof(int),
-                  &savJSEg_stack, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-    initJsonArray(NULL, &p.steps, sizeof(json_path_step_t),
-                  &p_steps, MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
-#endif
-  }
 
   ~Func_json_extract() override = default;
 

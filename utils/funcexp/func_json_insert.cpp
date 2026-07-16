@@ -27,6 +27,8 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   if (isNull)
     return "";
 
+  Func_json_multipath_state state(fp, 1, 2);
+
   const bool isInsertMode = mode == INSERT || mode == SET;
   const bool isReplaceMode = mode == REPLACE || mode == SET;
 
@@ -43,7 +45,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
 
-    JSONPath& path = paths[j];
+    JSONPath& path = state.paths[j];
     const json_path_step_t* lastStep;
     const char* valEnd;
 
@@ -59,7 +61,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 #endif
     }
 
-    initJSEngine(jsEg, cs, tmpJS);
+    initJSEngine(state.jsEg, cs, tmpJS);
 
 #if MYSQL_VERSION_ID >= 120200
     if (path.p.last_step_idx < 0)
@@ -69,9 +71,9 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       goto v_found;
 
 #if MYSQL_VERSION_ID >= 120200
-    if (path.p.last_step_idx >= 0 && locateJSPath(jsEg, path, &jsErr))
+    if (path.p.last_step_idx >= 0 && locateJSPath(state.jsEg, path, &jsErr))
 #else
-    if (path.p.last_step >= path.p.steps && locateJSPath(jsEg, path, &jsErr))
+    if (path.p.last_step >= path.p.steps && locateJSPath(state.jsEg, path, &jsErr))
 #endif
     {
       if (jsErr)
@@ -79,7 +81,7 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       continue;
     }
 
-    if (json_read_value(&jsEg))
+    if (json_read_value(&state.jsEg))
       goto error;
 
 #if MYSQL_VERSION_ID >= 120200
@@ -103,9 +105,9 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     {
       IntType itemSize = 0;
 
-      if (jsEg.value_type != JSON_VALUE_ARRAY)
+      if (state.jsEg.value_type != JSON_VALUE_ARRAY)
       {
-        const uchar* valStart = jsEg.value_begin;
+        const uchar* valStart = state.jsEg.value_begin;
         bool isArrAutoWrap;
 
         if (isInsertMode)
@@ -132,47 +134,47 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
         if (isArrAutoWrap)
           retJS.append("[");
 
-        if (jsEg.value_type == JSON_VALUE_OBJECT)
+        if (state.jsEg.value_type == JSON_VALUE_OBJECT)
         {
-          if (json_skip_level(&jsEg))
+          if (json_skip_level(&state.jsEg))
             goto error;
         }
 
         if (isArrAutoWrap)
-          retJS.append((const char*)valStart, jsEg.s.c_str - valStart);
+          retJS.append((const char*)valStart, state.jsEg.s.c_str - valStart);
         if (retJS.length() > 0)
           retJS.append(", ");
         if (appendJSValue(retJS, cs, row, fp[i + 1]))
           goto error;
         if (isArrAutoWrap)
           retJS.append("]");
-        retJS.append((const char*)jsEg.s.c_str, rawJS + jsLen - (const char*)jsEg.s.c_str);
+        retJS.append((const char*)state.jsEg.s.c_str, rawJS + jsLen - (const char*)state.jsEg.s.c_str);
 
         goto continue_point;
       }
 
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
+      while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_ARRAY_END)
       {
-        switch (jsEg.state)
+        switch (state.jsEg.state)
         {
           case JST_VALUE:
             if (itemSize == lastStep->n_item)
               goto v_found;
             itemSize++;
-            if (json_skip_array_item(&jsEg))
+            if (json_skip_array_item(&state.jsEg))
               goto error;
             break;
           default: break;
         }
       }
 
-      if (unlikely(jsEg.s.error))
+      if (unlikely(state.jsEg.s.error))
         goto error;
 
       if (!isInsertMode)
         continue;
 
-      valEnd = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
+      valEnd = (const char*)(state.jsEg.s.c_str - state.jsEg.sav_c_len);
       retJS.clear();
       retJS.append(rawJS, valEnd - rawJS);
       if (itemSize > 0 && retJS.length() > 0)
@@ -185,32 +187,32 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     {
       IntType keySize = 0;
 
-      if (jsEg.value_type != JSON_VALUE_OBJECT)
+      if (state.jsEg.value_type != JSON_VALUE_OBJECT)
         continue;
 
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_OBJ_END)
+      while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_OBJ_END)
       {
-        switch (jsEg.state)
+        switch (state.jsEg.state)
         {
           case JST_KEY:
             json_string_set_str(&keyName, lastStep->key, lastStep->key_end);
-            if (json_key_matches(&jsEg, &keyName))
+            if (json_key_matches(&state.jsEg, &keyName))
               goto v_found;
             keySize++;
-            if (json_skip_key(&jsEg))
+            if (json_skip_key(&state.jsEg))
               goto error;
             break;
           default: break;
         }
       }
 
-      if (unlikely(jsEg.s.error))
+      if (unlikely(state.jsEg.s.error))
         goto error;
 
       if (!isInsertMode)
         continue;
 
-      valEnd = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
+      valEnd = (const char*)(state.jsEg.s.c_str - state.jsEg.sav_c_len);
 
       retJS.clear();
       retJS.append(rawJS, valEnd - rawJS);
@@ -234,21 +236,21 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     if (!isReplaceMode)
       continue;
 
-    if (json_read_value(&jsEg))
+    if (json_read_value(&state.jsEg))
       goto error;
 
-    valEnd = (const char*)jsEg.value_begin;
+    valEnd = (const char*)state.jsEg.value_begin;
     retJS.clear();
-    if (!json_value_scalar(&jsEg))
+    if (!json_value_scalar(&state.jsEg))
     {
-      if (json_skip_level(&jsEg))
+      if (json_skip_level(&state.jsEg))
         goto error;
     }
 
     retJS.append(rawJS, valEnd - rawJS);
     if (appendJSValue(retJS, cs, row, fp[i + 1]))
       goto error;
-    retJS.append((const char*)jsEg.s.c_str, rawJS + jsLen - (const char*)jsEg.s.c_str);
+    retJS.append((const char*)state.jsEg.s.c_str, rawJS + jsLen - (const char*)state.jsEg.s.c_str);
 
   continue_point:
     // tmpJS save the json string for next loop
@@ -256,9 +258,9 @@ std::string Func_json_insert::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     retJS.clear();
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
+  initJSEngine(state.jsEg, cs, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;

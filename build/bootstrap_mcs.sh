@@ -323,6 +323,7 @@ modify_packaging() {
         done
 
         sed -i 's/Depends: galera.*/Depends:/' debian/control
+        sed -i '/galera-enterprise.*/d' debian/control
 
         for i in galera wsrep ha_sphinx embedded; do
             sed -i "/$i/d" debian/*.install

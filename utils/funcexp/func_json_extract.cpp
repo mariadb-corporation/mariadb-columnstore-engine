@@ -20,6 +20,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return 1;
+  Func_json_extract_state state(fp);
   const char* rawJS = js.str();
   const uchar* value;
   bool notFirstVal = false;
@@ -36,7 +37,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 
   for (size_t i = 1; i < argSize; i++)
   {
-    JSONPath& path = paths[i - 1];
+    JSONPath& path = state.paths[i - 1];
     path.p.types_used = JSON_PATH_KEY_NULL;
     if (!path.parsed && parseJSPath(path, row, fp[i]))
       return 1;
@@ -51,7 +52,7 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
 #else
   wildcards = (JSON_PATH_WILD | JSON_PATH_DOUBLE_WILD);
 #endif
-  mayMulVal = argSize > 2 || (paths[0].p.types_used & wildcards);
+  mayMulVal = argSize > 2 || (state.paths[0].p.types_used & wildcards);
 
   *type = mayMulVal ? JSON_VALUE_ARRAY : JSON_VALUE_NULL;
 
@@ -62,33 +63,33 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       retJS.append("[");
   }
 
-  json_get_path_start(&jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.length(), &p);
+  json_get_path_start(&state.jsEg, getCharset(fp[0]), (const uchar*)rawJS, (const uchar*)rawJS + js.length(), &state.p);
 
-  while (json_get_path_next(&jsEg, &p) == 0)
+  while (json_get_path_next(&state.jsEg, &state.p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
 #if MYSQL_VERSION_ID >= 120200
-    json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&p.steps, p.last_step_idx));
-    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(p.steps.buffer))))
+    json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&state.p.steps, state.p.last_step_idx));
+    if (hasNegPath && state.jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&state.jsEg, arrayCounter + (last_step - reinterpret_cast<json_path_step_t*>(state.p.steps.buffer))))
 #else
-   if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+   if (hasNegPath && state.jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&state.jsEg, arrayCounter + (state.p.last_step - state.p.steps)))
 #endif
       return 1;
 #endif
 
 #if MYSQL_VERSION_ID >= 100900
-    isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter, false);
+    isMatch = matchJSPath(state.paths, &state.p, state.jsEg.value_type, arrayCounter, false);
 #else
-    isMatch = matchJSPath(paths, &p, jsEg.value_type, nullptr, false);
+    isMatch = matchJSPath(state.paths, &state.p, state.jsEg.value_type, nullptr, false);
 #endif
     if (!isMatch)
       continue;
 
-    value = jsEg.value_begin;
+    value = state.jsEg.value_begin;
     if (*type == JSON_VALUE_NULL)
-      *type = jsEg.value_type;
+      *type = state.jsEg.value_type;
 
     /* we only care about the first found value */
     if (!compareWhole)
@@ -97,17 +98,17 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
       return 0;
     }
 
-    if (json_value_scalar(&jsEg))
-      valLen = jsEg.value_end - value;
+    if (json_value_scalar(&state.jsEg))
+      valLen = state.jsEg.value_end - value;
     else
     {
       if (mayMulVal)
-        savJSEg = jsEg;
-      if (json_skip_level(&jsEg))
+        state.savJSEg = state.jsEg;
+      if (json_skip_level(&state.jsEg))
         return 1;
-      valLen = jsEg.s.c_str - value;
+      valLen = state.jsEg.s.c_str - value;
       if (mayMulVal)
-        jsEg = savJSEg;
+        state.jsEg = state.savJSEg;
     }
 
     if (notFirstVal)
@@ -119,14 +120,14 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     if (!mayMulVal)
     {
       /* Loop to the end of the JSON just to make sure it's valid. */
-      while (json_get_path_next(&jsEg, &p) == 0)
+      while (json_get_path_next(&state.jsEg, &state.p) == 0)
       {
       }
       break;
     }
   }
 
-  if (unlikely(jsEg.s.error))
+  if (unlikely(state.jsEg.s.error))
     return 1;
 
   if (!notFirstVal)
@@ -137,8 +138,8 @@ int Func_json_extract::doExtract(Row& row, FunctionParm& fp, json_value_types* t
     retJS.append("]");
 
   utils::NullString retJS_ns(retJS);
-  initJSEngine(jsEg, getCharset(fp[0]), retJS_ns);
-  if (doFormat(&jsEg, tmp, Func_json_format::LOOSE))
+  initJSEngine(state.jsEg, getCharset(fp[0]), retJS_ns);
+  if (doFormat(&state.jsEg, tmp, Func_json_format::LOOSE))
     return 1;
 
   retJS.clear();

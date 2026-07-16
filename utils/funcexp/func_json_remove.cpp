@@ -28,6 +28,8 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
   if (isNull)
     return "";
 
+  Func_json_multipath_state state(fp, 1, 1);
+
   int jsErr = 0;
   json_string_t keyName;
   const CHARSET_INFO* cs = getCharset(fp[0]);
@@ -41,7 +43,7 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
 
-    JSONPath& path = paths[j];
+    JSONPath& path = state.paths[j];
     const json_path_step_t* lastStep;
     const char *remStart = nullptr, *remEnd = nullptr;
     IntType itemSize = 0;
@@ -71,7 +73,7 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       }
     }
 
-    initJSEngine(jsEg, cs, tmpJS);
+    initJSEngine(state.jsEg, cs, tmpJS);
 
 #if MYSQL_VERSION_ID >= 120200
     if (curr_last_step < reinterpret_cast<json_path_step_t*>(path.p.steps.buffer))
@@ -80,10 +82,10 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 #endif
       goto v_found;
 
-    if (locateJSPath(jsEg, path, &jsErr) && jsErr)
+    if (locateJSPath(state.jsEg, path, &jsErr) && jsErr)
       goto error;
 
-    if (json_read_value(&jsEg))
+    if (json_read_value(&state.jsEg))
       goto error;
 
 #if MYSQL_VERSION_ID >= 120200
@@ -94,59 +96,59 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
     if (lastStep->type & JSON_PATH_ARRAY)
     {
-      if (jsEg.value_type != JSON_VALUE_ARRAY)
+      if (state.jsEg.value_type != JSON_VALUE_ARRAY)
         continue;
 
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
+      while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_ARRAY_END)
       {
-        switch (jsEg.state)
+        switch (state.jsEg.state)
         {
           case JST_VALUE:
             if (itemSize == lastStep->n_item)
             {
-              remStart = (const char*)(jsEg.s.c_str - (itemSize ? jsEg.sav_c_len : 0));
+              remStart = (const char*)(state.jsEg.s.c_str - (itemSize ? state.jsEg.sav_c_len : 0));
               goto v_found;
             }
             itemSize++;
-            if (json_skip_array_item(&jsEg))
+            if (json_skip_array_item(&state.jsEg))
               goto error;
             break;
           default: break;
         }
       }
 
-      if (unlikely(jsEg.s.error))
+      if (unlikely(state.jsEg.s.error))
         goto error;
 
       continue;
     }
     else /*JSON_PATH_KEY*/
     {
-      if (jsEg.value_type != JSON_VALUE_OBJECT)
+      if (state.jsEg.value_type != JSON_VALUE_OBJECT)
         continue;
 
-      while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_OBJ_END)
+      while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_OBJ_END)
       {
-        switch (jsEg.state)
+        switch (state.jsEg.state)
         {
           case JST_KEY:
             if (itemSize == 0)
-              remStart = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
+              remStart = (const char*)(state.jsEg.s.c_str - state.jsEg.sav_c_len);
             json_string_set_str(&keyName, lastStep->key, lastStep->key_end);
-            if (json_key_matches(&jsEg, &keyName))
+            if (json_key_matches(&state.jsEg, &keyName))
               goto v_found;
 
-            if (json_skip_key(&jsEg))
+            if (json_skip_key(&state.jsEg))
               goto error;
 
-            remStart = (const char*)jsEg.s.c_str;
+            remStart = (const char*)state.jsEg.s.c_str;
             itemSize++;
             break;
           default: break;
         }
       }
 
-      if (unlikely(jsEg.s.error))
+      if (unlikely(state.jsEg.s.error))
         goto error;
 
       continue;
@@ -154,13 +156,13 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 
   v_found:
 
-    if (json_skip_key(&jsEg) || json_scan_next(&jsEg))
+    if (json_skip_key(&state.jsEg) || json_scan_next(&state.jsEg))
       goto error;
-    remEnd = (jsEg.state == JST_VALUE && itemSize == 0) ? (const char*)jsEg.s.c_str
-                                                        : (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
+    remEnd = (state.jsEg.state == JST_VALUE && itemSize == 0) ? (const char*)state.jsEg.s.c_str
+                                                        : (const char*)(state.jsEg.s.c_str - state.jsEg.sav_c_len);
     retJS.clear();
     retJS.append(rawJS, remStart - rawJS);
-    if (jsEg.state == JST_KEY && itemSize > 0)
+    if (state.jsEg.state == JST_KEY && itemSize > 0)
       retJS.append(",");
     retJS.append(remEnd, rawJS + jsLen - remEnd);
 
@@ -168,9 +170,9 @@ std::string Func_json_remove::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     retJS.clear();
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
+  initJSEngine(state.jsEg, cs, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;

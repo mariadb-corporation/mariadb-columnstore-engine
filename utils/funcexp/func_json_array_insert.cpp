@@ -36,24 +36,16 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
   retJS.reserve(js.length() + 8);
 
   utils::NullString tmpJS(js);
+  Func_json_multipath_state state(fp, 1, 2);
   for (size_t i = 1, j = 0; i < fp.size(); i += 2, j++)
   {
     const char* rawJS = tmpJS.str();
     const size_t jsLen = tmpJS.length();
-    JSONPath& path = paths[j];
+    JSONPath& path = state.paths[j];
     if (!path.parsed)
     {
-#if MYSQL_VERSION_ID >= 120200
-      json_path_step_t *last_step= reinterpret_cast<json_path_step_t*>(mem_root_dynamic_array_get_val(&path.p.steps, path.p.last_step_idx)),
-      *initial_step= reinterpret_cast<json_path_step_t*>(path.p.steps.buffer);
-#endif
-#if MYSQL_VERSION_ID >= 120200
-      if (parseJSPath(path, row, fp[i]) || (last_step - 1) < initial_step ||
-          last_step->type != JSON_PATH_ARRAY)
-#else
-       if (parseJSPath(path, row, fp[i]) || path.p.last_step - 1 < path.p.steps ||
-          path.p.last_step->type != JSON_PATH_ARRAY)
-#endif
+      uint32_t last_type = 0;
+      if (parseNonEmptyJSPath(path, row, fp[i], &last_type) || last_type != JSON_PATH_ARRAY)
       {
         if (path.p.s.error == 0)
           path.p.s.error = SHOULD_END_WITH_ARRAY;
@@ -66,14 +58,14 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
 #endif
     }
 
-    initJSEngine(jsEg, cs, tmpJS);
+    initJSEngine(state.jsEg, cs, tmpJS);
 
 #if MYSQL_VERSION_ID < 120100
     path.currStep = path.p.steps;
 #endif
 
     int jsErr = 0;
-    if (locateJSPath(jsEg, path, &jsErr))
+    if (locateJSPath(state.jsEg, path, &jsErr))
     {
       if (jsErr)
         goto error;
@@ -82,10 +74,10 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
       continue;
     }
 
-    if (json_read_value(&jsEg))
+    if (json_read_value(&state.jsEg))
       goto error;
 
-    if (jsEg.value_type != JSON_VALUE_ARRAY)
+    if (state.jsEg.value_type != JSON_VALUE_ARRAY)
     {
       /* Must be an array. */
       continue;
@@ -94,9 +86,9 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
     const char* itemPos = 0;
     IntType itemSize = 0;
 
-    while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_ARRAY_END)
+    while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_ARRAY_END)
     {
-      DBUG_ASSERT(jsEg.state == JST_VALUE);
+      DBUG_ASSERT(state.jsEg.state == JST_VALUE);
 #if MYSQL_VERSION_ID >= 120200
       if (itemSize == ((reinterpret_cast<json_path_step_t*>
                         (mem_root_dynamic_array_get_val(&path.p.steps,
@@ -105,16 +97,16 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
       if (itemSize == path.p.last_step[1].n_item)
 #endif
       {
-        itemPos = (const char*)jsEg.s.c_str;
+        itemPos = (const char*)state.jsEg.s.c_str;
         break;
       }
       itemSize++;
 
-      if (json_read_value(&jsEg) || (!json_value_scalar(&jsEg) && json_skip_level(&jsEg)))
+      if (json_read_value(&state.jsEg) || (!json_value_scalar(&state.jsEg) && json_skip_level(&state.jsEg)))
         goto error;
     }
 
-    if (unlikely(jsEg.s.error || *jsEg.killed_ptr))
+    if (unlikely(state.jsEg.s.error || *state.jsEg.killed_ptr))
       goto error;
 
     if (itemPos)
@@ -132,10 +124,10 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
     else
     {
       /* Insert position wasn't found - append to the array. */
-      DBUG_ASSERT(jsEg.state == JST_ARRAY_END);
-      itemPos = (const char*)(jsEg.s.c_str - jsEg.sav_c_len);
+      DBUG_ASSERT(state.jsEg.state == JST_ARRAY_END);
+      itemPos = (const char*)(state.jsEg.s.c_str - state.jsEg.sav_c_len);
       retJS.append(rawJS, itemPos - rawJS);
-      if (itemSize > 0)
+      if (itemSize > 0 && itemPos > rawJS)
         retJS.append(", ");
       if (appendJSValue(retJS, cs, row, fp[i + 1]))
         goto error;
@@ -147,9 +139,9 @@ std::string Func_json_array_insert::getStrVal(rowgroup::Row& row, FunctionParm& 
     retJS.clear();
   }
 
-  initJSEngine(jsEg, cs, tmpJS);
+  initJSEngine(state.jsEg, cs, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;

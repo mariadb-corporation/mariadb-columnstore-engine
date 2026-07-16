@@ -274,9 +274,11 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
   bool isEmpty = false, hasNullArg = false;
   const auto& js = fp[0]->data()->getStrVal(row, hasNullArg);
 
+  Func_json_merge_patch_state state;
+
   isNull = false;
 
-  jsEg.s.error = jsEg2.s.error = 0;
+  state.jsEg.s.error = state.jsEg2.s.error = 0;
 
   utils::NullString tmpJS(js);
   std::string retJS;
@@ -290,13 +292,13 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
       goto next;
     }
 
-    initJSEngine(jsEg2, getCharset(fp[i]), js2);
+    initJSEngine(state.jsEg2, getCharset(fp[i]), js2);
 
     if (hasNullArg)
     {
-      if (json_read_value(&jsEg2))
+      if (json_read_value(&state.jsEg2))
         goto error;
-      if (jsEg2.value_type == JSON_VALUE_OBJECT)
+      if (state.jsEg2.value_type == JSON_VALUE_OBJECT)
         goto next;
 
       hasNullArg = false;
@@ -304,8 +306,8 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
       goto next;
     }
 
-    initJSEngine(jsEg, getCharset(fp[0]), tmpJS);
-    if (doMergePatch(retJS, &jsEg, &jsEg2, isEmpty))
+    initJSEngine(state.jsEg, getCharset(fp[0]), tmpJS);
+    if (doMergePatch(retJS, &state.jsEg, &state.jsEg2, isEmpty))
     {
       goto error;
     }
@@ -321,9 +323,9 @@ std::string Func_json_merge_patch::getStrVal(rowgroup::Row& row, FunctionParm& f
   if (hasNullArg)
     goto error;
 
-  initJSEngine(jsEg, getCharset(fp[0]), tmpJS);
+  initJSEngine(state.jsEg, getCharset(fp[0]), tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
   isNull = false;
   return retJS;

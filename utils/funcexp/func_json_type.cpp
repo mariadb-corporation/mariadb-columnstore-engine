@@ -25,23 +25,24 @@ std::string Func_json_type::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
   const auto js = fp[0]->data()->getStrVal(row, isNull);
   if (isNull)
     return "";
+  Func_json_state state;
 
   std::string result;
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
 
-  if (json_read_value(&jsEg))
+  if (json_read_value(&state.jsEg))
   {
     isNull = true;
     return "";
   }
 
-  switch (jsEg.value_type)
+  switch (state.jsEg.value_type)
   {
     case JSON_VALUE_OBJECT: result = "OBJECT"; break;
     case JSON_VALUE_ARRAY: result = "ARRAY"; break;
     case JSON_VALUE_STRING: result = "STRING"; break;
-    case JSON_VALUE_NUMBER: result = (jsEg.num_flags & JSON_NUM_FRAC_PART) ? "DOUBLE" : "INTEGER"; break;
+    case JSON_VALUE_NUMBER: result = (state.jsEg.num_flags & JSON_NUM_FRAC_PART) ? "DOUBLE" : "INTEGER"; break;
     case JSON_VALUE_TRUE:
     case JSON_VALUE_FALSE: result = "BOOLEAN"; break;
     default: result = "NULL"; break;
