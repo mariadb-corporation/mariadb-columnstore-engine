@@ -12,7 +12,7 @@ local extra_servers = {
 };
 
 local extra_servers_11_8 = {
-  [current_branch]: ["11.8-enterprise"],
+  [current_branch]: ["11.8-enterprise", "12.3-enterprise"],
 };
 
 
