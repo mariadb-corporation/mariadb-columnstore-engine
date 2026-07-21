@@ -107,13 +107,27 @@ namespace datatypes
 {
 class MariaDBHasher
 {
+#ifdef MY_HASH_ADD_MARIADB
+  /*
+    Server 12.3+ (MDEV-9826): hash state is accumulated in a my_hasher_st
+    object passed to hash_sort().
+  */
+  my_hasher_st mHasher;
+#else
   ulong mPart1;
   ulong mPart2;
+#endif
 
  public:
+#ifdef MY_HASH_ADD_MARIADB
+  MariaDBHasher() : mHasher(my_hasher_mysql5x())
+  {
+  }
+#else
   MariaDBHasher() : mPart1(1), mPart2(4)
   {
   }
+#endif
   MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
   {
     // Hashing an empty string is a no-op in every MariaDB collation
@@ -128,8 +142,7 @@ class MariaDBHasher
     if (length == 0)
       return *this;
 #ifdef MY_HASH_ADD_MARIADB
-    my_hasher_st hasher= my_hasher_mysql5x();
-    cs->hash_sort(&hasher, (const uchar*)str, length);
+    cs->hash_sort(&mHasher, (const uchar*)str, length);
 #else
     cs->hash_sort((const uchar*)str, length, &mPart1, &mPart2);
 #endif
@@ -141,7 +154,11 @@ class MariaDBHasher
   }
   uint32_t finalize() const
   {
+#ifdef MY_HASH_ADD_MARIADB
+    return (uint32_t)mHasher.m_nr1;
+#else
     return (uint32_t)mPart1;
+#endif
   }
 };
 
