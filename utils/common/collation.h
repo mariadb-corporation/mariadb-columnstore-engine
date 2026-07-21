@@ -107,6 +107,27 @@ namespace datatypes
 {
 class MariaDBHasher
 {
+#ifdef MY_HASH_ADD_MARIADB
+  /*
+    Server 12.3+ (MDEV-9826): hash state is accumulated in a my_hasher_st
+    object passed to hash_sort().
+  */
+  my_hasher_st mHasher;
+
+ public:
+  MariaDBHasher() : mHasher(my_hasher_mysql5x())
+  {
+  }
+  MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
+  {
+    cs->hash_sort(&mHasher, (const uchar*)str, length);
+    return *this;
+  }
+  uint32_t finalize() const
+  {
+    return (uint32_t)mHasher.m_nr1;
+  }
+#else
   ulong mPart1;
   ulong mPart2;
 
@@ -116,21 +137,19 @@ class MariaDBHasher
   }
   MariaDBHasher& add(CHARSET_INFO* cs, const char* str, size_t length)
   {
-#ifdef MY_HASH_ADD_MARIADB
-    my_hasher_st hasher= my_hasher_mysql5x();
-    cs->hash_sort(&hasher, (const uchar*)str, length);
-#else
     cs->hash_sort((const uchar*)str, length, &mPart1, &mPart2);
-#endif
     return *this;
-  }
-  MariaDBHasher& add(CHARSET_INFO* cs, const utils::ConstString& str)
-  {
-    return add(cs, str.str(), str.length());
   }
   uint32_t finalize() const
   {
     return (uint32_t)mPart1;
+  }
+#endif
+
+ public:
+  MariaDBHasher& add(CHARSET_INFO* cs, const utils::ConstString& str)
+  {
+    return add(cs, str.str(), str.length());
   }
 };
 
