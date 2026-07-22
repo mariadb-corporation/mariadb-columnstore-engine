@@ -38,13 +38,10 @@ AlterTableStatement::AlterTableStatement(QualifiedName* qName, AlterTableActionL
 AlterTableStatement::~AlterTableStatement()
 {
   delete fTableName;
-  AlterTableActionList::iterator itr;
 
-  for (itr = fActions.begin(); itr != fActions.end(); ++itr)
+  for (auto* action : fActions)
   {
-    // `delete *itr` frees the pointee, not the list node the iterator holds; ++itr stays valid.
-    // @infer-ignore USE_AFTER_DELETE
-    delete *itr;
+    delete action;
   }
 }
 
@@ -179,12 +176,8 @@ std::ostream& AtaTableComment::put(std::ostream& os) const
 
 AtaAddColumns::~AtaAddColumns()
 {
-  ColumnDefList::iterator itr;
-
-  for (itr = fColumns.begin(); itr != fColumns.end(); itr++)
-    // `delete *itr` frees the pointee, not the list node the iterator holds; ++itr stays valid.
-    // @infer-ignore USE_AFTER_DELETE
-    delete *itr;
+  for (auto* column : fColumns)
+    delete column;
 }
 
 AtaAddColumns::AtaAddColumns(TableElementList* tableElements)
