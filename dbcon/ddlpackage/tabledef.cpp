@@ -32,25 +32,14 @@ using namespace std;
 
 TableDef::~TableDef()
 {
+  for (auto* column : fColumns)
   {
-    ColumnDefList::iterator itr;
-
-    for (itr = fColumns.begin(); itr != fColumns.end(); itr++)
-    {
-      // `delete *itr` frees the pointee, not the list node the iterator holds; itr++ stays valid.
-      // @infer-ignore USE_AFTER_DELETE
-      delete *itr;
-    }
+    delete column;
   }
-  {
-    TableConstraintDefList::iterator itr;
 
-    for (itr = fConstraints.begin(); itr != fConstraints.end(); itr++)
-    {
-      // `delete *itr` frees the pointee, not the list node the iterator holds; itr++ stays valid.
-      // @infer-ignore USE_AFTER_DELETE
-      delete *itr;
-    }
+  for (auto* constraint : fConstraints)
+  {
+    delete constraint;
   }
 
   delete fQualifiedName;
