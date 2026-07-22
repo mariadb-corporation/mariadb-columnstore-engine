@@ -1588,6 +1588,7 @@ uint32_t TupleBPS::nextBand(ByteStream& bs)
     more = deliveryDL->next(deliveryIt, &rgData);
 
     if (!more)
+    {
       // OPTIONAL_EMPTY_ACCESS refers to RGData's std::optional<CountingAllocator> `alloc`
       // member, empty when no counting allocator is used (the default). getErrorRowGroupData()
       // returns a fully-built RGData, and every dereference of `alloc` in RGData/StringStore is
@@ -1595,6 +1596,7 @@ uint32_t TupleBPS::nextBand(ByteStream& bs)
       // over-approximates and reports a path that cannot occur.
       // @infer-ignore OPTIONAL_EMPTY_ACCESS
       rgData = fBPP->getErrorRowGroupData(status());
+    }
 
     realOutputRG.setData(&rgData);
     rowCount = realOutputRG.getRowCount();
