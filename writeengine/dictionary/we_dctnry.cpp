@@ -126,8 +126,6 @@ void Dctnry::freeStringCache()
 {
   for (const auto& sig : m_sigArray)
   {
-    // False positive: `delete[]` frees the signature buffer; the set node stays valid.
-    // @infer-ignore USE_AFTER_DELETE
     delete[] sig.signature;
   }
 
