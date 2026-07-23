@@ -66,6 +66,8 @@ class ThreadPoolGroup
   {
     for (auto* thread : threads)
     {
+      // False positive: `delete` frees the pointee; the list node stays valid.
+      // @infer-ignore USE_AFTER_DELETE
       delete thread;
     }
   }
