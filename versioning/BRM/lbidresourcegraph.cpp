@@ -275,6 +275,9 @@ void LBIDResourceGraph::releaseResources(VER_t txn)
     ResourceNode* rNode = dynamic_cast<ResourceNode*>(*sit);
     // advance past the current element before removeInEdge() erases it from txnNode->in
     ++sit;
+    // False positive: rNode is freshly read from the set each iteration; the node deleted
+    // below is erased from the set first and never read again.
+    // @infer-ignore USE_AFTER_DELETE
     rNode->wakeAndDetach();
     txnNode->removeInEdge(rNode);
     resources.erase(rNode);

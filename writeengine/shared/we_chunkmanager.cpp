@@ -1531,7 +1531,11 @@ void ChunkManager::cleanUp(const std::map<FID, FID>& columOids)
     if (fIsInsert && it != columOids.end())
     {
       for (auto* chunkData : fileData->fChunkList)
+      {
+        // False positive: `delete` frees the pointee; the list node stays valid.
+        // @infer-ignore USE_AFTER_DELETE
         delete chunkData;
+      }
 
       delete fileData->fFilePtr;
       fFileMap.erase(fileData->fFileID);
@@ -1542,7 +1546,11 @@ void ChunkManager::cleanUp(const std::map<FID, FID>& columOids)
     else if (!fIsInsert || (columOids.size() == 0))
     {
       for (auto* chunkData : fileData->fChunkList)
+      {
+        // False positive: `delete` frees the pointee; the list node stays valid.
+        // @infer-ignore USE_AFTER_DELETE
         delete chunkData;
+      }
 
       delete fileData->fFilePtr;
       fFileMap.erase(fileData->fFileID);
