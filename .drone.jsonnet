@@ -834,7 +834,7 @@ local InferPipeline() = {
   ],
   volumes: [{ name: "mdb", temp: {} }],
   trigger: {
-    event: ["cron"],
+    event: ["pull_request"],
     branch: infer_branches,
   },
 };
