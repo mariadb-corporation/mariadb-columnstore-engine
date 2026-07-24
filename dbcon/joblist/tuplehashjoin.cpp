@@ -1968,7 +1968,10 @@ void TupleHashJoinStep::abort()
 
   // To prevent potential endless loop in bucketsToTables()
   for (auto& joiner : joiners)
-    joiner->abort();
+  {
+    if (joiner)
+      joiner->abort();
+  }
 
   if (!djs.empty())
   {
