@@ -2601,6 +2601,7 @@ void TupleBPS::receiveMultiPrimitiveMessages()
     if (tplLock.owns_lock())
       tplLock.unlock();
     abort();  // Sets fDie, notifies all waiting threads
+    dlp->endOfInput();
     return;   // Exit - cannot trust data state after exception
   }
 
