@@ -78,7 +78,7 @@ stop_mysqld=0
 if [ -z "$(pgrep -x mariadbd)" ];then
 
     # Startup mysqld
-    systemctl cat mariadb.service > /dev/null 2>&1
+    systemctl --no-pager cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl start mariadb.service
     else
@@ -262,7 +262,7 @@ rm -f $lockdir/columnstore
 @ENGINE_SBINDIR@/install_mcs_mysql.sh --tmpdir=$installLogDir
 
 # Restart MDB to enable plugin
-systemctl cat mariadb.service > /dev/null 2>&1
+systemctl --no-pager cat mariadb.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl restart mariadb.service > /dev/null 2>&1
 else
@@ -390,7 +390,7 @@ if [ $(running_systemd) -eq 0 ]; then
     chmod 777 /dev/shm
 fi
 
-systemctl cat mariadb-columnstore.service > /dev/null 2>&1
+systemctl --no-pager cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
 
     # mask mariadb-columnstore service to prevent starting services and dbbuilder
@@ -423,7 +423,7 @@ fi
 
 if [ $stop_mysqld -eq 1 ];then
     # Make sure we stop mariadb since it wasn't running prior to columnstore installation
-    systemctl cat mariadb.service > /dev/null 2>&1
+    systemctl --no-pager cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
         systemctl stop mariadb.service > /dev/null 2>&1
     else
