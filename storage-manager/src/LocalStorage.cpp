@@ -188,7 +188,7 @@ int LocalStorage::putObject(const string& source, const string& dest)
   return ret;
 }
 
-int LocalStorage::putObject(std::shared_ptr<uint8_t[]> data, size_t len, const string& dest)
+int LocalStorage::putObject(const std::shared_ptr<uint8_t[]>& data, size_t len, const string& dest)
 {
   addLatency();
 

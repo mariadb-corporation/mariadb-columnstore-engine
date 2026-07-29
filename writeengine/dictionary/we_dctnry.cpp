@@ -124,12 +124,11 @@ Dctnry::~Dctnry()
  ******************************************************************************/
 void Dctnry::freeStringCache()
 {
-  std::set<Signature, sig_compare>::iterator it;
-  for (it = m_sigArray.begin(); it != m_sigArray.end(); it++)
+  for (const auto& sig : m_sigArray)
   {
-    Signature sig = *it;
+    // False positive: `delete[]` frees the signature buffer; the set node stays valid.
+    // @infer-ignore USE_AFTER_DELETE
     delete[] sig.signature;
-    sig.signature = 0;
   }
 
   m_arraySize = 0;

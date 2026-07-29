@@ -182,10 +182,8 @@ typedef CalpontSelectExecutionPlan::ColumnMap::value_type CMVT_;
 boost::shared_ptr<SessionManager> fSessionManager;
 CalpontSystemCatalog::NJLSysDataList::~NJLSysDataList()
 {
-  NJLSysDataVector::iterator it;
-
-  for (it = sysDataVec.begin(); it != sysDataVec.end(); it++)
-    delete *it;
+  for (auto* sysData : sysDataVec)
+    delete sysData;
 }
 
 const CalpontSystemCatalog::TableColName make_tcn(const string& s, const string& t, const string& c,

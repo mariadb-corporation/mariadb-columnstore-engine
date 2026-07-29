@@ -272,10 +272,7 @@ void LBIDResourceGraph::releaseResources(VER_t txn)
   */
 
   TransactionNode* txnNode;
-  ResourceNode* rNode;
   map<VER_t, TransactionNode*>::iterator it;
-  set<RGNode*>::iterator sit;
-  set<RGNode*>::iterator dummy_sit;
 
   it = txns.find(txn);
 
@@ -284,23 +281,26 @@ void LBIDResourceGraph::releaseResources(VER_t txn)
 
   txnNode = (*it).second;
 
-  for (sit = txnNode->in.begin(); sit != txnNode->in.end();)
+  for (auto sit = txnNode->in.begin(); sit != txnNode->in.end();)
   {
-    rNode = dynamic_cast<ResourceNode*>(*sit);
-    dummy_sit = ++sit;
+    ResourceNode* rNode = dynamic_cast<ResourceNode*>(*sit);
+    // advance past the current element before removeInEdge() erases it from txnNode->in
+    ++sit;
+    // False positive: rNode is freshly read from the set each iteration; the node deleted
+    // below is erased from the set first and never read again.
+    // @infer-ignore USE_AFTER_DELETE
     rNode->wakeAndDetach();
     txnNode->removeInEdge(rNode);
     resources.erase(rNode);
     delete rNode;
-    sit = dummy_sit;
   }
 
-  for (sit = txnNode->out.begin(); sit != txnNode->out.end();)
+  for (auto sit = txnNode->out.begin(); sit != txnNode->out.end();)
   {
-    rNode = dynamic_cast<ResourceNode*>(*sit);
-    dummy_sit = ++sit;
+    ResourceNode* rNode = dynamic_cast<ResourceNode*>(*sit);
+    // advance past the current element before removeOutEdge() erases it from txnNode->out
+    ++sit;
     txnNode->removeOutEdge(rNode);
-    sit = dummy_sit;
   }
 
   if (txnNode->sleeping())

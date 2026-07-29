@@ -91,6 +91,7 @@ void error_server_thread()
         // char errbuf[80];
         // cout << "server thread got an error: " << strerror_r(errno, errbuf, 80) << endl;
         close(client_socket);
+        close(server_socket);
         errCode = -1;
         die = true;
         return;
@@ -117,6 +118,9 @@ void error_server_thread()
     memmove(buf, &buf[i], endOfData - i);  // should be the trailing 3 bytes of the data
     remainingBytes = endOfData - i;
   }
+  // Infer PULSE_RESOURCE_LEAK fix: close the client/listen sockets before the thread exits.
+  close(client_socket);
+  close(server_socket);
 }
 
 int test1()
