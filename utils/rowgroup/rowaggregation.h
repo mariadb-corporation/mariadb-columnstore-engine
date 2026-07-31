@@ -538,8 +538,13 @@ class RowAggregation : public messageqcpp::Serializeable
   void mergeEntries(const Row& row);
   virtual void doMinMax(const Row&, int64_t, int64_t, int);
   virtual void doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOut);
+
+  void getValueForSumAvg(const Row& rowIn, int64_t colIn, datatypes::SystemCatalog::ColDataType colDataType,
+                         long double& valIn, bool& isWideDataType, int128_t& wideValue,
+                         const char* what);
   virtual void doSum(const Row&, int64_t, int64_t, int);
   virtual void doAvg(const Row&, int64_t, int64_t, int64_t, bool merge = false);
+
   virtual void doStatistics(const Row&, int64_t, int64_t, int64_t);
   void mergeStatistics(const Row&, uint64_t colOut, uint64_t colAux);
   void mergeGroupConcat(const Row& rowIn, uint64_t colOut);

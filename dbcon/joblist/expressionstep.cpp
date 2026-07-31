@@ -59,7 +59,7 @@ namespace joblist
 ExpressionStep::ExpressionStep()
  : fExpressionFilter(NULL)
  , fExpressionId(-1)
- , fVarBinOK(false)
+ , fVarBinOK(true)
  , fSelectFilter(false)
  , fAssociatedJoinId(0)
  , fDoJoin(false)
@@ -71,7 +71,7 @@ ExpressionStep::ExpressionStep(const JobInfo& jobInfo)
  : JobStep(jobInfo)
  , fExpressionFilter(NULL)
  , fExpressionId(-1)
- , fVarBinOK(false)
+ , fVarBinOK(true)
  , fSelectFilter(false)
  , fAssociatedJoinId(0)
  , fDoJoin(false)
@@ -277,9 +277,6 @@ void ExpressionStep::addColumn(ReturnedColumn* rc, JobInfo& jobInfo)
   {
     scs = &(fc->simpleColumnList());
     wcs = &(fc->windowfunctionColumnList());
-    fVarBinOK = ((strcmp(fc->functionName().c_str(), "hex") == 0) ||
-                 (strcmp(fc->functionName().c_str(), "octet_length") == 0) ||
-                 (strcmp(fc->functionName().c_str(), "length") == 0));
   }
 
   if (scs != NULL || wcs != NULL)

@@ -99,6 +99,9 @@ double Func_acos::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -227,6 +230,9 @@ double Func_asin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -355,6 +361,9 @@ double Func_atan::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -559,6 +568,9 @@ double Func_cos::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -687,6 +699,9 @@ double Func_cot::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -873,6 +888,12 @@ double Func_log::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       // null value is indicated by isNull
       double value = parm[0]->data()->getDoubleVal(row, isNull);
@@ -1036,14 +1057,6 @@ double Func_log::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     }
     break;
 
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::TEXT:
-    {
-      isNull = true;
-      return doubleNullVal();
-    }
-
     default:
     {
       std::ostringstream oss;
@@ -1084,6 +1097,12 @@ double Func_log2::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       // null value is indicated by isNull
       double value = parm[0]->data()->getDoubleVal(row, isNull);
@@ -1168,14 +1187,6 @@ double Func_log2::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
       return log2(value);
     }
     break;
-
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::TEXT:
-    {
-      isNull = true;
-      return doubleNullVal();
-    }
 
     default:
     {
@@ -1217,6 +1228,12 @@ double Func_log10::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calp
     case execplan::CalpontSystemCatalog::UMEDINT:
     case execplan::CalpontSystemCatalog::UTINYINT:
     case execplan::CalpontSystemCatalog::USMALLINT:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       // null value is indicated by isNull
       double value = parm[0]->data()->getDoubleVal(row, isNull);
@@ -1301,14 +1318,6 @@ double Func_log10::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calp
       return log10((double)value);
     }
     break;
-
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::TEXT:
-    {
-      isNull = true;
-      return doubleNullVal();
-    }
 
     default:
     {
@@ -1361,6 +1370,9 @@ double Func_sin::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -1489,6 +1501,9 @@ double Func_sqrt::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpo
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -1617,6 +1632,9 @@ double Func_tan::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Calpon
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -1762,6 +1780,9 @@ string Func_format::getStrVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       double rawValue = parm[0]->data()->getDoubleVal(row, isNull);
 
@@ -2055,6 +2076,9 @@ double Func_radians::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Ca
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:
@@ -2184,6 +2208,9 @@ double Func_degrees::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull, Ca
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     case execplan::CalpontSystemCatalog::UBIGINT:

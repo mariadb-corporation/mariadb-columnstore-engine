@@ -178,6 +178,9 @@ double Func_truncate::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       int64_t d = 0;
       double p = 1;
@@ -445,6 +448,9 @@ IDB_Decimal Func_truncate::getDecimalVal(Row& row, FunctionParm& parm, bool& isN
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       int64_t s = 0;
       double p = 1;

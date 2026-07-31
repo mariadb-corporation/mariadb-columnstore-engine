@@ -165,7 +165,13 @@ double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
                                 CalpontSystemCatalog::ColType& op_ct)
 {
   if (execplan::CalpontSystemCatalog::DOUBLE == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType)
+      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::VARBINARY == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::BLOB == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CLOB == op_ct.colDataType)
   {
     int64_t d = 0;
     double p = 1;
@@ -196,9 +202,7 @@ double Func_round::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
     return x;
   }
 
-  if (execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType)
+  if (isSignedInteger(op_ct.colDataType))
   {
     return getIntVal(row, parm, isNull, op_ct);
   }
@@ -239,7 +243,13 @@ long double Func_round::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
 {
   if (execplan::CalpontSystemCatalog::LONGDOUBLE == op_ct.colDataType ||
       execplan::CalpontSystemCatalog::DOUBLE == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType)
+      execplan::CalpontSystemCatalog::FLOAT == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::VARBINARY == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::BLOB == op_ct.colDataType ||
+      execplan::CalpontSystemCatalog::CLOB == op_ct.colDataType)
   {
     int64_t d = 0;
     long double p = 1;
@@ -270,14 +280,12 @@ long double Func_round::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
     return x;
   }
 
-  if (execplan::CalpontSystemCatalog::VARCHAR == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::CHAR == op_ct.colDataType ||
-      execplan::CalpontSystemCatalog::TEXT == op_ct.colDataType)
+  if (isSignedInteger(op_ct.colDataType))
   {
     return getIntVal(row, parm, isNull, op_ct);
   }
 
-  if (isUnsigned(op_ct.colDataType))
+  if (isUnsignedInteger(op_ct.colDataType))
   {
     return getUintVal(row, parm, isNull, op_ct);
   }
@@ -493,6 +501,9 @@ IDB_Decimal Func_round::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       int64_t s = 0;
       double p = 1;

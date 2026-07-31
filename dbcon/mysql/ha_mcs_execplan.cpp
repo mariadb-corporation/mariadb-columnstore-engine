@@ -4832,7 +4832,8 @@ ReturnedColumn* buildAggregateColumnBody(Item* item, gp_walk_info& gwi)
         else if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(ct.colDataType))
         {
           uint32_t precision = datatypes::INT128MAXPRECISION;
-          uint32_t scale = ct.scale;
+          uint32_t scale = datatypes::getWideDecimalScaleForSumAvg(ct.colDataType, ct.scale);
+
           ct.colDataType = CalpontSystemCatalog::DECIMAL;
           ct.colWidth = datatypes::MAXDECIMALWIDTH;
           if (isAvg)

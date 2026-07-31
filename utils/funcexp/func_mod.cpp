@@ -141,6 +141,9 @@ double Func_mod::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       double value = parm[0]->data()->getDoubleVal(row, isNull);
       mod = fmod(value, div);
@@ -240,6 +243,9 @@ long double Func_mod::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isNul
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       double value = parm[0]->data()->getDoubleVal(row, isNull);
       mod = fmod(value, div);
@@ -286,6 +292,9 @@ int64_t Func_mod::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       int64_t value = parm[0]->data()->getIntVal(row, isNull);
 
@@ -379,6 +388,9 @@ uint64_t Func_mod::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
     case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       int64_t value = parm[0]->data()->getIntVal(row, isNull);
 
