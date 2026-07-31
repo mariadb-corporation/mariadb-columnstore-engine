@@ -43,6 +43,7 @@ AppendTask::~AppendTask()
 
 bool AppendTask::run()
 {
+  bool dummyChangeToTriggerDrone; // dummy change to trigger the drone
   SMLogging* logger = SMLogging::get();
   int success;
   uint8_t cmdbuf[1024] = {0};
