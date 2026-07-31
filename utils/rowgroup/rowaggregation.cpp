@@ -1359,24 +1359,13 @@ void RowAggregation::doSelectSome(const Row& rowIn, int64_t colIn, int64_t colOu
   }
 }
 
-//------------------------------------------------------------------------------
-// Update the sum fields if input is not null.
-// rowIn(in)    - Row to be included in aggregation.
-// colIn(in)    - column in the input row group
-// colOut(in)   - column in the output row group
-// funcType(in) - aggregation function type
-// Note: NULL value check must be done on UM & PM
-//       UM may receive NULL values, too.
-//------------------------------------------------------------------------------
-void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int /*funcType*/)
+void RowAggregation::getValueForSumAvg(const Row& rowIn, int64_t colIn, datatypes::SystemCatalog::ColDataType colDataType,
+                                       long double& valIn, bool& isWideDataType, int128_t& wideValue,
+                                       const char* what)
 {
-  datatypes::SystemCatalog::ColDataType colDataType = rowIn.getColType(colIn);
-  long double valIn = 0;
-  bool isWideDataType = false;
-  int128_t wideValue = 0;
-
-  if (rowIn.isNullValue(colIn))
-    return;
+  valIn = 0;
+  isWideDataType = false;
+  wideValue = 0;
 
   switch (colDataType)
   {
@@ -1403,7 +1392,7 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
     case execplan::CalpontSystemCatalog::DECIMAL:
     case execplan::CalpontSystemCatalog::UDECIMAL:
     {
-      uint32_t width = rowIn.getColumnWidth(colIn);
+      uint32_t width = fRowGroupIn.getColumnWidth(colIn);
       isWideDataType = width == datatypes::MAXDECIMALWIDTH;
       if (LIKELY(isWideDataType))
       {
@@ -1417,20 +1406,9 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
       else
       {
         idbassert(0);
-        throw std::logic_error("RowAggregation::doSum(): DECIMAL bad length.");
+        throw std::logic_error(string("RowAggregation::") + what + "(): DECIMAL bad length.");
       }
 
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::CHAR:
-    case execplan::CalpontSystemCatalog::VARCHAR:
-    case execplan::CalpontSystemCatalog::TEXT:
-    {
-      std::ostringstream errmsg;
-      errmsg << "RowAggregation: sum(CHAR[]) is not supported.";
-      cerr << errmsg.str() << endl;
-      throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
       break;
     }
 
@@ -1448,28 +1426,89 @@ void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int 
       break;
     }
 
-    case execplan::CalpontSystemCatalog::DATE:
-    case execplan::CalpontSystemCatalog::DATETIME:
-    case execplan::CalpontSystemCatalog::TIME:
-    {
-      std::ostringstream errmsg;
-      errmsg << "RowAggregation: sum(date|date time) is not supported.";
-      cerr << errmsg.str() << endl;
-      throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
-      break;
-    }
-
     case execplan::CalpontSystemCatalog::LONGDOUBLE:
     {
       valIn = rowIn.getLongDoubleField(colIn);
       break;
     }
 
+    case execplan::CalpontSystemCatalog::CHAR:
+    case execplan::CalpontSystemCatalog::VARCHAR:
+    case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
+    {
+      auto str = rowIn.getStringField(colIn);
+      valIn = strtold(str.safeString("").c_str(), nullptr);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATE:
+    {
+      auto str = DataConvert::dateToString1(rowIn.getUintField(colIn));
+      valIn = strtold(str.c_str(), nullptr);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::DATETIME:
+    {
+      auto str = DataConvert::datetimeToString1(rowIn.getUintField(colIn));
+      isWideDataType = true;
+      bool sat = false;
+      wideValue = strtoll128(str.c_str(), sat, nullptr);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIME:
+    {
+      auto str = DataConvert::timeToString1(rowIn.getUintField(colIn));
+      isWideDataType = true;
+      bool sat = false;
+      wideValue = strtoll128(str.c_str(), sat, nullptr);
+      break;
+    }
+
+    case execplan::CalpontSystemCatalog::TIMESTAMP:
+    {
+      auto str = DataConvert::timestampToString1(rowIn.getUintField(colIn), fTimeZone);
+      isWideDataType = true;
+      bool sat = false;
+      wideValue = strtoll128(str.c_str(), sat, nullptr);
+      break;
+    }
+
     default:
     {
+      std::ostringstream errmsg;
+      errmsg << "RowAggregation: no " << what << " for data type: " << colDataType;
+      cerr << errmsg.str() << endl;
+      throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
       break;
     }
   }
+}
+
+//------------------------------------------------------------------------------
+// Update the sum fields if input is not null.
+// rowIn(in)    - Row to be included in aggregation.
+// colIn(in)    - column in the input row group
+// colOut(in)   - column in the output row group
+// funcType(in) - aggregation function type
+// Note: NULL value check must be done on UM & PM
+//       UM may receive NULL values, too.
+//------------------------------------------------------------------------------
+void RowAggregation::doSum(const Row& rowIn, int64_t colIn, int64_t colOut, int /*funcType*/)
+{
+  datatypes::SystemCatalog::ColDataType colDataType = rowIn.getColType(colIn);
+  long double valIn = 0;
+  bool isWideDataType = false;
+  int128_t wideValue = 0;
+
+  if (rowIn.isNullValue(colIn))
+    return;
+
+  getValueForSumAvg(rowIn, colIn, colDataType, valIn, isWideDataType, wideValue, "doAvg");
 
   if (datatypes::hasUnderlyingWideDecimalForSumAndAvg(colDataType) && !isWideDataType)
   {
@@ -1926,80 +1965,7 @@ void RowAggregation::doAvg(const Row& rowIn, int64_t colIn, int64_t colOut, int6
   bool isWideDataType = false;
   int128_t wideValue = 0;
 
-  switch (colDataType)
-  {
-    case execplan::CalpontSystemCatalog::TINYINT:
-    case execplan::CalpontSystemCatalog::SMALLINT:
-    case execplan::CalpontSystemCatalog::MEDINT:
-    case execplan::CalpontSystemCatalog::INT:
-    case execplan::CalpontSystemCatalog::BIGINT:
-    {
-      valIn = rowIn.getIntField(colIn);
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::UTINYINT:
-    case execplan::CalpontSystemCatalog::USMALLINT:
-    case execplan::CalpontSystemCatalog::UMEDINT:
-    case execplan::CalpontSystemCatalog::UINT:
-    case execplan::CalpontSystemCatalog::UBIGINT:
-    {
-      valIn = rowIn.getUintField(colIn);
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::DECIMAL:
-    case execplan::CalpontSystemCatalog::UDECIMAL:
-    {
-      uint32_t width = fRowGroupIn.getColumnWidth(colIn);
-      isWideDataType = width == datatypes::MAXDECIMALWIDTH;
-      if (LIKELY(isWideDataType))
-      {
-        wideValue = rowIn.getTSInt128Field(colIn).getValue();
-      }
-      else if (width <= datatypes::MAXLEGACYWIDTH)
-      {
-        wideValue = rowIn.getIntField(colIn);
-        isWideDataType = true;
-      }
-      else
-      {
-        idbassert(0);
-        throw std::logic_error("RowAggregation::doAvg(): DECIMAL bad length.");
-      }
-
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::DOUBLE:
-    case execplan::CalpontSystemCatalog::UDOUBLE:
-    {
-      valIn = rowIn.getDoubleField(colIn);
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::FLOAT:
-    case execplan::CalpontSystemCatalog::UFLOAT:
-    {
-      valIn = rowIn.getFloatField(colIn);
-      break;
-    }
-
-    case execplan::CalpontSystemCatalog::LONGDOUBLE:
-    {
-      valIn = rowIn.getLongDoubleField(colIn);
-      break;
-    }
-
-    default:
-    {
-      std::ostringstream errmsg;
-      errmsg << "RowAggregation: no average for data type: " << colDataType;
-      cerr << errmsg.str() << endl;
-      throw logging::QueryDataExcept(errmsg.str(), logging::aggregateFuncErr);
-      break;
-    }
-  }
+  getValueForSumAvg(rowIn, colIn, colDataType, valIn, isWideDataType, wideValue, "doAvg");
 
   // min(count) = 0
   uint64_t count = fRow.getUintField(colAux);

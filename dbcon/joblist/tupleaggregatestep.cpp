@@ -1263,23 +1263,6 @@ void TupleAggregateStep::prep1PhaseAggregate(JobInfo& jobInfo, vector<RowGroup>&
         /* fall through */
       case ROWAGG_SUM:
       {
-        if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
-            typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
-            typeProj[colProj] == CalpontSystemCatalog::BLOB ||
-            typeProj[colProj] == CalpontSystemCatalog::TEXT ||
-            typeProj[colProj] == CalpontSystemCatalog::DATE ||
-            typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
-            typeProj[colProj] == CalpontSystemCatalog::TIMESTAMP ||
-            typeProj[colProj] == CalpontSystemCatalog::TIME)
-        {
-          Message::Args args;
-          args.add("sum/average");
-          args.add(colTypeIdString(typeProj[colProj]));
-          string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-          cerr << "prep1PhaseAggregate: " << emsg << endl;
-          throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-        }
-
         wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAgg,
                                 scaleAgg, precisionAgg, widthAgg);
 
@@ -1849,23 +1832,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         case ROWAGG_SUM:
         case ROWAGG_AVG:
         {
-          if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::BLOB ||
-              typeProj[colProj] == CalpontSystemCatalog::TEXT ||
-              typeProj[colProj] == CalpontSystemCatalog::DATE ||
-              typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
-              typeProj[colProj] == CalpontSystemCatalog::TIMESTAMP ||
-              typeProj[colProj] == CalpontSystemCatalog::TIME)
-          {
-            Message::Args args;
-            args.add("sum/average");
-            args.add(colTypeIdString(typeProj[colProj]));
-            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-            cerr << "prep1PhaseDistinctAggregate: " << emsg << endl;
-            throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-          }
-
           oidsAgg.push_back(oidsProj[colProj]);
           keysAgg.push_back(aggKey);
           csNumAgg.push_back(8);
@@ -2196,23 +2162,6 @@ void TupleAggregateStep::prep1PhaseDistinctAggregate(JobInfo& jobInfo, vector<Ro
         case ROWAGG_DISTINCT_AVG:
         case ROWAGG_DISTINCT_SUM:
         {
-          if (typeAgg[colAgg] == CalpontSystemCatalog::CHAR ||
-              typeAgg[colAgg] == CalpontSystemCatalog::VARCHAR ||
-              typeAgg[colAgg] == CalpontSystemCatalog::BLOB ||
-              typeAgg[colAgg] == CalpontSystemCatalog::TEXT ||
-              typeAgg[colAgg] == CalpontSystemCatalog::DATE ||
-              typeAgg[colAgg] == CalpontSystemCatalog::DATETIME ||
-              typeAgg[colAgg] == CalpontSystemCatalog::TIMESTAMP ||
-              typeAgg[colAgg] == CalpontSystemCatalog::TIME)
-          {
-            Message::Args args;
-            args.add("sum/average");
-            args.add(colTypeIdString(typeAgg[colAgg]));
-            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-            cerr << "prep1PhaseDistinctAggregate: " << emsg << endl;
-            throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-          }
-
           oidsAggDist.push_back(oidsAgg[colAgg]);
           keysAggDist.push_back(retKey);
           wideDecimalOrLongDouble(colAgg, typeAgg[colAgg], precisionAgg, scaleAgg, widthAgg, typeAggDist,
@@ -3226,23 +3175,6 @@ void TupleAggregateStep::prep2PhasesAggregate(JobInfo& jobInfo, vector<RowGroup>
         case ROWAGG_SUM:
         case ROWAGG_AVG:
         {
-          if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::BLOB ||
-              typeProj[colProj] == CalpontSystemCatalog::TEXT ||
-              typeProj[colProj] == CalpontSystemCatalog::DATE ||
-              typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
-              typeProj[colProj] == CalpontSystemCatalog::TIMESTAMP ||
-              typeProj[colProj] == CalpontSystemCatalog::TIME)
-          {
-            Message::Args args;
-            args.add("sum/average");
-            args.add(colTypeIdString(typeProj[colProj]));
-            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-            cerr << "prep2PhasesAggregate: " << emsg << endl;
-            throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-          }
-
           wideDecimalOrLongDouble(colProj, typeProj[colProj], precisionProj, scaleProj, width, typeAggPm,
                                   scaleAggPm, precisionAggPm, widthAggPm);
 
@@ -4145,23 +4077,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
         case ROWAGG_SUM:
         case ROWAGG_AVG:
         {
-          if (typeProj[colProj] == CalpontSystemCatalog::CHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::VARCHAR ||
-              typeProj[colProj] == CalpontSystemCatalog::BLOB ||
-              typeProj[colProj] == CalpontSystemCatalog::TEXT ||
-              typeProj[colProj] == CalpontSystemCatalog::DATE ||
-              typeProj[colProj] == CalpontSystemCatalog::DATETIME ||
-              typeProj[colProj] == CalpontSystemCatalog::TIMESTAMP ||
-              typeProj[colProj] == CalpontSystemCatalog::TIME)
-          {
-            Message::Args args;
-            args.add("sum/average");
-            args.add(colTypeIdString(typeProj[colProj]));
-            string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-            cerr << "prep2PhasesDistinctAggregate: " << emsg << endl;
-            throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-          }
-
           oidsAggPm.push_back(oidsProj[colProj]);
           keysAggPm.push_back(aggKey);
           csNumAggPm.push_back(8);
@@ -4534,23 +4449,6 @@ void TupleAggregateStep::prep2PhasesDistinctAggregate(JobInfo& jobInfo, vector<R
           // avgFuncMap.insert(make_pair(key, funct));
           case ROWAGG_DISTINCT_SUM:
           {
-            if (typeAggUm[colUm] == CalpontSystemCatalog::CHAR ||
-                typeAggUm[colUm] == CalpontSystemCatalog::VARCHAR ||
-                typeAggUm[colUm] == CalpontSystemCatalog::BLOB ||
-                typeAggUm[colUm] == CalpontSystemCatalog::TEXT ||
-                typeAggUm[colUm] == CalpontSystemCatalog::DATE ||
-                typeAggUm[colUm] == CalpontSystemCatalog::DATETIME ||
-                typeAggUm[colUm] == CalpontSystemCatalog::TIMESTAMP ||
-                typeAggUm[colUm] == CalpontSystemCatalog::TIME)
-            {
-              Message::Args args;
-              args.add("sum/average");
-              args.add(colTypeIdString(typeAggUm[colUm]));
-              string emsg = IDBErrorInfo::instance()->errorMsg(ERR_AGGREGATE_TYPE_NOT_SUPPORT, args);
-              cerr << "prep2PhasesDistinctAggregate: " << emsg << endl;
-              throw IDBExcept(emsg, ERR_AGGREGATE_TYPE_NOT_SUPPORT);
-            }
-
             oidsAggDist.push_back(oidsAggUm[colUm]);
             keysAggDist.push_back(retKey);
             csNumAggDist.push_back(8);

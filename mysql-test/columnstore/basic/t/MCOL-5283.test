@@ -1,0 +1,137 @@
+-- source include/have_innodb.inc
+-- source ../include/have_columnstore.inc
+
+-- disable_warnings
+DROP DATABASE IF EXISTS mcol5283;
+
+CREATE DATABASE mcol5283;
+USE mcol5283;
+
+CREATE TABLE cs (
+    chr  CHAR(64),
+    vch  VARCHAR(255),
+    txt  TEXT,
+    blb  BLOB,
+    dat  DATE,
+    tim  TIME,
+    tms  TIME(6),
+    dt   DATETIME,
+    dtms DATETIME(6),
+    ts   TIMESTAMP,
+    tsms TIMESTAMP(6)
+) ENGINE=ColumnStore;
+
+INSERT INTO cs VALUES ('10.5', '10.5', '10.5', '10.5', '2026-07-03', '12:00:00', '12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456'),
+                      ('-10.5', '-10.5', '-10.5', '-10.5', '2026-07-03', '12:00:00', '12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456'),
+                      ('1.2295e2', '1.2295e2', '1.2295e2', '1.2295e2', '2026-07-03', '12:00:00', '12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456'),
+                      ('0.5tail', '0.5tail', '0.5tail', '0.5tail', '2026-07-03', '12:00:00', '12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456'),
+                      ('not a number', 'not a number', 'not a number', 'not a number', '2026-07-03', '12:00:00', '12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456', '2026-07-03 12:00:00', '2026-07-03 12:00:00.123456');
+
+CREATE TABLE idb ENGINE=InnoDB AS SELECT * FROM cs;
+
+# arithmetics
+SELECT chr + 2, vch + 2, txt + 2, blb + 2 FROM cs;
+SELECT chr + 2, vch + 2, txt + 2, blb + 2 FROM idb;
+
+SELECT chr - 2, vch - 2, txt - 2, blb - 2 FROM cs;
+SELECT chr - 2, vch - 2, txt - 2, blb - 2 FROM idb;
+
+SELECT chr * 2, vch * 2, txt * 2, blb * 2 FROM cs;
+SELECT chr * 2, vch * 2, txt * 2, blb * 2 FROM idb;
+
+SELECT chr / 2, vch / 2, txt / 2, blb / 2 FROM cs;
+SELECT chr / 2, vch / 2, txt / 2, blb / 2 FROM idb;
+
+SELECT chr % 2, vch % 2, txt % 2, blb % 2 FROM cs;
+SELECT chr % 2, vch % 2, txt % 2, blb % 2 FROM idb;
+
+# math functions
+SELECT ABS(chr), ABS(vch), ABS(txt), ABS(blb) FROM cs;
+SELECT ABS(chr), ABS(vch), ABS(txt), ABS(blb) FROM idb;
+
+SELECT ACOS(chr), ACOS(vch), ACOS(txt), ACOS(blb) FROM cs;
+SELECT ACOS(chr), ACOS(vch), ACOS(txt), ACOS(blb) FROM idb;
+
+SELECT ASIN(chr), ASIN(vch), ASIN(txt), ASIN(blb) FROM cs;
+SELECT ASIN(chr), ASIN(vch), ASIN(txt), ASIN(blb) FROM idb;
+
+SELECT ATAN(chr), ATAN(vch), ATAN(txt), ATAN(blb) FROM cs;
+SELECT ATAN(chr), ATAN(vch), ATAN(txt), ATAN(blb) FROM idb;
+
+SELECT ATAN2(chr), ATAN2(vch), ATAN2(txt), ATAN2(blb) FROM cs;
+SELECT ATAN2(chr), ATAN2(vch), ATAN2(txt), ATAN2(blb) FROM idb;
+
+SELECT CEIL(chr), CEIL(vch), CEIL(txt), CEIL(blb) FROM cs;
+SELECT CEIL(chr), CEIL(vch), CEIL(txt), CEIL(blb) FROM idb;
+
+SELECT CEILING(chr), CEILING(vch), CEILING(txt), CEILING(blb) FROM cs;
+SELECT CEILING(chr), CEILING(vch), CEILING(txt), CEILING(blb) FROM idb;
+
+SELECT CONV(chr, 10, 2), CONV(vch, 10, 2), CONV(txt, 10, 2), CONV(blb, 10, 2) FROM cs;
+SELECT CONV(chr, 10, 2), CONV(vch, 10, 2), CONV(txt, 10, 2), CONV(blb, 10, 2) FROM idb;
+
+SELECT COS(chr), COS(vch), COS(txt), COS(blb) FROM cs;
+SELECT COS(chr), COS(vch), COS(txt), COS(blb) FROM idb;
+
+SELECT COT(chr), COT(vch), COT(txt), COT(blb) FROM cs WHERE ABS(chr) <> 0;
+SELECT COT(chr), COT(vch), COT(txt), COT(blb) FROM idb WHERE ABS(chr) <> 0;
+
+SELECT DEGREES(chr), DEGREES(vch), DEGREES(txt), DEGREES(blb) FROM cs;
+SELECT DEGREES(chr), DEGREES(vch), DEGREES(txt), DEGREES(blb) FROM idb;
+
+SELECT EXP(chr), EXP(vch), EXP(txt), EXP(blb) FROM cs;
+SELECT EXP(chr), EXP(vch), EXP(txt), EXP(blb) FROM idb;
+
+SELECT FLOOR(chr), FLOOR(vch), FLOOR(txt), FLOOR(blb) FROM cs;
+SELECT FLOOR(chr), FLOOR(vch), FLOOR(txt), FLOOR(blb) FROM idb;
+
+SELECT LN(chr), LN(vch), LN(txt), LN(blb) FROM cs;
+SELECT LN(chr), LN(vch), LN(txt), LN(blb) FROM idb;
+
+SELECT LOG(chr, 4), LOG(vch, 4), LOG(txt, 4), LOG(blb, 4) FROM cs;
+SELECT LOG(chr, 4), LOG(vch, 4), LOG(txt, 4), LOG(blb, 4) FROM idb;
+
+SELECT LOG10(chr), LOG10(vch), LOG10(txt), LOG10(blb) FROM cs;
+SELECT LOG10(chr), LOG10(vch), LOG10(txt), LOG10(blb) FROM idb;
+
+SELECT LOG2(chr), LOG2(vch), LOG2(txt), LOG2(blb) FROM cs;
+SELECT LOG2(chr), LOG2(vch), LOG2(txt), LOG2(blb) FROM idb;
+
+SELECT MOD(chr, 4), MOD(vch, 4), MOD(txt, 4), MOD(blb, 4) FROM cs;
+SELECT MOD(chr, 4), MOD(vch, 4), MOD(txt, 4), MOD(blb, 4) FROM idb;
+
+SELECT POW(chr, 4), POW(vch, 4), POW(txt, 4), POW(blb, 4) FROM cs;
+SELECT POW(chr, 4), POW(vch, 4), POW(txt, 4), POW(blb, 4) FROM idb;
+
+SELECT POWER(chr, 4), POWER(vch, 4), POWER(txt, 4), POWER(blb, 4) FROM cs;
+SELECT POWER(chr, 4), POWER(vch, 4), POWER(txt, 4), POWER(blb, 4) FROM idb;
+
+SELECT RADIANS(chr), RADIANS(vch), RADIANS(txt), RADIANS(blb) FROM cs;
+SELECT RADIANS(chr), RADIANS(vch), RADIANS(txt), RADIANS(blb) FROM idb;
+
+SELECT ROUND(chr, 1), ROUND(vch, 1), ROUND(txt, 1), ROUND(blb, 1) FROM cs;
+SELECT ROUND(chr, 1), ROUND(vch, 1), ROUND(txt, 1), ROUND(blb, 1) FROM idb;
+
+SELECT SIGN(chr), SIGN(vch), SIGN(txt), SIGN(blb) FROM cs;
+SELECT SIGN(chr), SIGN(vch), SIGN(txt), SIGN(blb) FROM idb;
+
+SELECT SIN(chr), SIN(vch), SIN(txt), SIN(blb) FROM cs;
+SELECT SIN(chr), SIN(vch), SIN(txt), SIN(blb) FROM idb;
+
+SELECT SQRT(chr), SQRT(vch), SQRT(txt), SQRT(blb) FROM cs;
+SELECT SQRT(chr), SQRT(vch), SQRT(txt), SQRT(blb) FROM idb;
+
+SELECT TAN(chr), TAN(vch), TAN(txt), TAN(blb) FROM cs;
+SELECT TAN(chr), TAN(vch), TAN(txt), TAN(blb) FROM idb;
+
+SELECT TRUNCATE(chr, 1), TRUNCATE(vch, 1), TRUNCATE(txt, 1), TRUNCATE(blb, 1) FROM cs;
+SELECT TRUNCATE(chr, 1), TRUNCATE(vch, 1), TRUNCATE(txt, 1), TRUNCATE(blb, 1) FROM idb;
+
+# aggregates
+SELECT SUM(chr), SUM(vch), SUM(txt), SUM(blb), SUM(dat), SUM(tim), SUM(tms), SUM(dt), SUM(dtms), SUM(ts), SUM(tsms) FROM cs;
+SELECT SUM(chr), SUM(vch), SUM(txt), SUM(blb), SUM(dat), SUM(tim), SUM(tms), SUM(dt), SUM(dtms), SUM(ts), SUM(tsms) FROM idb;
+
+SELECT AVG(chr), AVG(vch), AVG(txt), AVG(blb), AVG(dat), AVG(tim), AVG(tms), AVG(dt), AVG(dtms), AVG(ts), AVG(tsms) FROM cs;
+SELECT AVG(chr), AVG(vch), AVG(txt), AVG(blb), AVG(dat), AVG(tim), AVG(tms), AVG(dt), AVG(dtms), AVG(ts), AVG(tsms) FROM idb;
+
+DROP DATABASE mcol5283;
