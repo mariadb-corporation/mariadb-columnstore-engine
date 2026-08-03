@@ -102,9 +102,7 @@ SELECT COUNT(*) FROM t1 WHERE t1_char IN ('a', 'b') GROUP BY t1_varchar, t1_date
 SELECT COUNT(*) FROM t1 WHERE t1_varchar LIKE '%world%' GROUP BY t1_varchar, t1_datetime;
 --sorted_result
 SELECT COUNT(*) FROM t1 WHERE t1_bigint != 0 AND t1_int = 0 OR t1_tinyint IS NULL GROUP BY t1_varchar, t1_datetime;
-#BUG!
-#ERROR 1815 (HY000): Internal error: VARBINARY/BLOB in filter or function is not supported.
---error 1815
+--sorted_result
 SELECT COUNT(*) FROM t1 WHERE t1_blob IS NOT NULL OR t1_tinyint IS NULL GROUP BY t1_varchar;
 
 #along with having
