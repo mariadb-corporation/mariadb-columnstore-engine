@@ -26,6 +26,7 @@ from cmapi_server.controllers.api_clients import (
     UpgradeAgentClient,
 )
 from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.helpers import validate_cej_credentials
 
 
 # install_es constants
@@ -91,6 +92,44 @@ def validate_es_token_and_version(
         raise typer.Exit(code=1)
 
     return target_version
+
+
+def validate_cej_preupgrade(console: Console) -> None:
+    """Pre-upgrade check for Cross-Engine Join (CEJ) credentials.
+
+    Newer Columnstore/CMAPI versions refuse to START the cluster when CEJ
+    credentials are missing or cannot be decrypted (previously such issues
+    were only logged and the cluster kept working). A customer whose cluster
+    currently works despite broken/empty CEJ credentials would therefore end
+    up with a cluster that fails to start right after the upgrade.
+
+    This check runs BEFORE anything is changed so such a customer is warned and
+    can fix the credentials first. It handles both encrypted and
+    unencrypted CEJ passwords, guaranteeing parity with the validation done at
+    cluster start.
+
+    :param console: Rich console used to print the error message.
+    :raises typer.Exit: Exits with code 1 when CEJ credentials are invalid.
+    """
+    logger = logging.getLogger('mcs_cli')
+    try:
+        validate_cej_credentials()
+    except CMAPIBasicError as exc:
+        logger.error('Pre-upgrade CEJ credentials check failed: %s', exc.message)
+        console.print(
+            '[red]ERROR:[/red] Cross-Engine Join (CEJ) credentials check failed.'
+        )
+        console.print(f'[red]{exc.message}[/red]')
+        console.print(
+            '[yellow]After the upgrade Columnstore will refuse to start the '
+            'cluster while the CEJ credentials are invalid.\n'
+            'Nothing has been changed yet. Please fix the CrossEngineSupport '
+            'credentials in Columnstore.xml (and the .secrets file if the '
+            'password is encrypted) and retry. Check '
+            '[link=https://mariadb.com/docs/server/architecture/topologies/htap/step-3-start-and-configure-mariadb-enterprise-server#create-the-utility-user]the documentation[/link] '
+            'for details.[/yellow]'
+        )
+        raise typer.Exit(code=1)
 
 
 def get_current_versions(
