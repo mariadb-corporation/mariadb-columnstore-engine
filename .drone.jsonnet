@@ -807,6 +807,35 @@ local InferPipeline() = {
       ],
     },
     {
+      // Turn the scan into MCOL tickets (MCOL-6494). stable-23.10 only;
+      // develop-23.02 stays gate-only. Runs on failure too: the infer step
+      // fails exactly when there are ticket-worthy findings. Idempotent:
+      // ticket identity is a key label per (component, bug_type), so re-runs
+      // update rather than duplicate. Add --dry-run --search-in-dry-run to
+      // debug without writing to Jira.
+      name: "infer-jira",
+      depends_on: ["infer"],
+      image: "python:3.12-slim",
+      when: {
+        branch: ["stable-23.10"],
+        status: ["success", "failure"],
+      },
+      failure: "ignore",
+      environment: {
+        JIRA_TOKEN: {
+          from_secret: "jira_token_kozhukhovskiy",
+        },
+      },
+      commands: [
+        "test -f /drone/src/" + result + "/report.json || { echo 'no report.json; skipping Jira sync'; exit 0; }",
+        "pip install --quiet requests",
+        "python3 build/infer_to_jira.py sync" +
+        " --report /drone/src/" + result + "/report.json" +
+        " --label cs-infer" +
+        " --branch ${DRONE_BRANCH}",
+      ],
+    },
+    {
       name: "publish infer report",
       depends_on: ["infer"],
       image: "amazon/aws-cli:2.22.30",
