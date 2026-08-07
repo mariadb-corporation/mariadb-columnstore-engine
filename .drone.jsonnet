@@ -828,7 +828,8 @@ local InferPipeline() = {
       },
       commands: [
         "test -f /drone/src/" + result + "/report.json || { echo 'no report.json; skipping Jira sync'; exit 0; }",
-        "pip install --quiet requests",
+        // Pinned to the version the integration was verified with
+        "pip install --quiet requests==2.34.2",
         "python3 build/infer_to_jira.py sync" +
         " --report /drone/src/" + result + "/report.json" +
         " --label cs-infer" +
