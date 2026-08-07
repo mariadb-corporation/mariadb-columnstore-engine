@@ -704,8 +704,11 @@ def sync_group(client, group, args, known_components, problems=None):
             "summary": summary,
             "description": description,
             "labels": labels,
-            "assignee": {"name": args.assignee},
         }
+        if args.assignee:
+            # Only set when given: --assignee '' creates unassigned tickets
+            # (sending {"name": ""} would be a 400 from Jira).
+            fields["assignee"] = {"name": args.assignee}
         if use_component:
             fields["components"] = [{"name": component}]
         if args.security_level:
@@ -715,7 +718,7 @@ def sync_group(client, group, args, known_components, problems=None):
             print(f"    summary   : {summary}")
             print(f"    issuetype : {args.issue_type}")
             print(f"    project   : {args.project}")
-            print(f"    assignee  : {args.assignee}")
+            print(f"    assignee  : {args.assignee or '(unassigned)'}")
             print(f"    component : {component if use_component else '(none)'}")
             print(f"    security  : {args.security_level or '(none -- ticket will be public!)'}")
             print(f"    labels    : {', '.join(labels)}")
