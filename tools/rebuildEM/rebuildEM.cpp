@@ -604,15 +604,38 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   if (probablyTokenColumn)
   {
     std::set<uint64_t> seenBlockOffsets;
-    scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
-    for(currentBlock--; currentBlock >= 0; currentBlock --)
+    uint32_t dictOID = findDictOID(oid);
+    cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
+    if (dictOID)
+    {
+      scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+      for(currentBlock--; currentBlock >= 0; currentBlock --)
+      {
+        chunkManagerWrapper->readBlock(currentBlock);
+        if (chunkManagerWrapper->isEmptyBlock())
+        {
+          continue;
+        }
+        scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+      }
+    }
+  }
+
+  // read either objectIDs or dictIDs - we need an association between them.
+  if (oid == OID_SYSCOLUMN_OBJECTID || oid == OID_SYSCOLUMN_DICTOID)
+  {
+    std::vector<uint32_t>& oidsToFill = oid == OID_SYSCOLUMN_OBJECTID ? objectIDs : objectDictIDs;
+    for(currentBlock = 0; currentBlock < blockCount; currentbBlock ++)
     {
       chunkManagerWrapper->readBlock(currentBlock);
-      if (chunkManagerWrapper->isEmptyBlock())
+      bool empty = chunkManagerWrapper->isEmptyBlock(); // we cannot skip empty blocks as we associate our OIDs by row index.
+      const uint32_t* blockOIDs = chunkManagerWrapper->getOIDs();
+      uint32_t numOIDs = chunkManagerWrapper->numOIDs();
+      for(uint32_t i = 0; i < numOIDs; i ++)
       {
-        continue;
+        uint32_t o = empty ? 0 : blockOIDs[i];
+	oidsToFill.push_back(o);
       }
-      scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
     }
   }
 
@@ -633,6 +656,37 @@ void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Tok
     uint64_t length = tokens[i].bc;
     problem.addWrittenFBO(fbo, length);
   }
+}
+
+uint32_t EMReBuilder::findDictOID(uint32_t oid)
+{
+  assert(objectIDs.size() > 0);
+  assert(objectDictOIDs.size() > 0);
+
+  for(uint32_t i = 0; i< objectIDs.size();i++)
+  {
+    if (objectIDs[i] == oid)
+    {
+
+      if (i >= objectDictOIDs.size())
+      {
+        cerr << "OID " << oid << " is at position " << i
+             << " and object dictOIDs vector has only " << objectDictOIDs.size() << " elements\n";
+        return 0;
+      }
+
+      uint32_t dicOID = objectDictOIDs[i];
+
+      if (dictOID > 0 && dictOID < (1 << 31))
+      {
+        return dictOID; // valid one - not deleted and not NULL.
+      }
+
+      return 0;
+    }
+  }
+
+  return 0;
 }
 
 void EMReBuilder::showExtentMap()

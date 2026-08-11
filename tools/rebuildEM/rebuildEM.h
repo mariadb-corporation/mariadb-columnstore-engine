@@ -431,6 +431,12 @@ class EMReBuilder
   std::map<uint32_t, std::set<uint64_t>> oidBlockOffsetsFromTokens; // block offsets generated from tokens read.
   std::map<uint32_t, std::set<uint64_t>> oidKnownBlockOffsets; // the set of block offsets that need not new LBIDs.
 
+  // these two we associate by row indices.
+  std::vector<uint32_t> objectIDs; // Calpont System Catalog SYSCOLUMN table - objectIDs.
+  std::vector<uint32_t> objectDictOIDs; // Calpont System Catalog SYSCOLUMN table - dictOIDs.
+  // Find dictionary OID for a an object ID, zero means no dictionary is associated with the column.
+  uint32_t findDictOID(uint32_t oid);
+
   // TEXT and other long variable length columns are stored as two OIDs, one (OID) for tokens and other
   // (OID+1) for the actual data.
   // This method receives OID+1 - we scan tokens for LBIDs that belong to the the next OID file(s).
@@ -471,8 +477,14 @@ class ChunkManagerWrapper
   // return internal buffer as an array of tokens
   const WriteEngine::Token* getTokens() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
 
+  // return internal buffer as an array of uint32_t - OIDs
+  const uint32_t* getOIDs() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
+
   // convenience: return nummber of tokens in block.
   uint32_t numTokens() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(WriteEngine::Token); }
+
+  // convenience: return nummber of OIDs in block.
+  uint32_t numOIDs() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(uint32_t); }
 
  protected:
   uint32_t oid;
