@@ -478,7 +478,7 @@ class ChunkManagerWrapper
   const WriteEngine::Token* getTokens() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
 
   // return internal buffer as an array of uint32_t - OIDs
-  const uint32_t* getOIDs() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
+  const uint32_t* getOIDs() const { return reinterpret_cast<const uint32_t*>(blockData); }
 
   // convenience: return nummber of tokens in block.
   uint32_t numTokens() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(WriteEngine::Token); }

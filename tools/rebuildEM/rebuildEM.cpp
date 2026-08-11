@@ -605,7 +605,7 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   {
     std::set<uint64_t> seenBlockOffsets;
     uint32_t dictOID = findDictOID(oid);
-    cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
+    std::cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
     if (dictOID)
     {
       scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
@@ -622,10 +622,10 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   }
 
   // read either objectIDs or dictIDs - we need an association between them.
-  if (oid == OID_SYSCOLUMN_OBJECTID || oid == OID_SYSCOLUMN_DICTOID)
+  if (oid == execplan::OID_SYSCOLUMN_OBJECTID || oid == execplan::OID_SYSCOLUMN_DICTOID)
   {
-    std::vector<uint32_t>& oidsToFill = oid == OID_SYSCOLUMN_OBJECTID ? objectIDs : objectDictIDs;
-    for(currentBlock = 0; currentBlock < blockCount; currentbBlock ++)
+    std::vector<uint32_t>& oidsToFill = oid == execplan::OID_SYSCOLUMN_OBJECTID ? objectIDs : objectDictOIDs;
+    for(currentBlock = 0; currentBlock < blockCount; currentBlock ++)
     {
       chunkManagerWrapper->readBlock(currentBlock);
       bool empty = chunkManagerWrapper->isEmptyBlock(); // we cannot skip empty blocks as we associate our OIDs by row index.
@@ -670,12 +670,12 @@ uint32_t EMReBuilder::findDictOID(uint32_t oid)
 
       if (i >= objectDictOIDs.size())
       {
-        cerr << "OID " << oid << " is at position " << i
+        std::cerr << "OID " << oid << " is at position " << i
              << " and object dictOIDs vector has only " << objectDictOIDs.size() << " elements\n";
         return 0;
       }
 
-      uint32_t dicOID = objectDictOIDs[i];
+      uint32_t dictOID = objectDictOIDs[i];
 
       if (dictOID > 0 && dictOID < (1 << 31))
       {
