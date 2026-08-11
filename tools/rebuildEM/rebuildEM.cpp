@@ -625,7 +625,7 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   if (oid == execplan::OID_SYSCOLUMN_OBJECTID || oid == execplan::OID_SYSCOLUMN_DICTOID)
   {
     std::vector<uint32_t>& oidsToFill = oid == execplan::OID_SYSCOLUMN_OBJECTID ? objectIDs : objectDictOIDs;
-    for(currentBlock = 0; currentBlock < blockCount; currentBlock ++)
+    for(uint64_t currentBlock = 0; currentBlock < blockCount; currentBlock ++)
     {
       chunkManagerWrapper->readBlock(currentBlock);
       bool empty = chunkManagerWrapper->isEmptyBlock(); // we cannot skip empty blocks as we associate our OIDs by row index.
@@ -677,7 +677,7 @@ uint32_t EMReBuilder::findDictOID(uint32_t oid)
 
       uint32_t dictOID = objectDictOIDs[i];
 
-      if (dictOID > 0 && dictOID < (1 << 31))
+      if (dictOID > 0 && dictOID < (1U << 31))
       {
         return dictOID; // valid one - not deleted and not NULL.
       }
