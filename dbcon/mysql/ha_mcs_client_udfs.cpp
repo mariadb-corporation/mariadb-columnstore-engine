@@ -70,29 +70,54 @@ extern "C"
 
   my_bool setparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
-    if (args->arg_count != 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT)
+    if (args->arg_count != 2 ||
+        args->arg_type[0] != STRING_RESULT ||
+        args->arg_type[1] != STRING_RESULT ||
+        args->args[0] == nullptr ||
+        args->args[1] == nullptr)
     {
-      sprintf(message, "%s() requires two string arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires two constant string arguments", funcname);
       return 1;
     }
 
     initid->max_length = MAXSTRINGLENGTH;
 
-    char valuestr[MAXSTRINGLENGTH];
+    size_t plen = args->lengths[0];
     size_t vlen = args->lengths[1];
+    if (plen >= MAXSTRINGLENGTH)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): parameter is too long", funcname);
+      return 1;
+    }
+    else if (plen == 0)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): parameter is empty", funcname);
+      return 1;
+    }
+    if (vlen >= MAXSTRINGLENGTH)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): value is too long", funcname);
+      return 1;
+    }
+    else if (vlen == 0)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() second argument must be numeric or end in G, M or K", funcname);
+      return 1;
+    }
 
-    memcpy(valuestr, args->args[1], vlen--);
-
+    vlen--;
     for (size_t i = 0; i < vlen; ++i)
-      if (!isdigit(valuestr[i]))
+    {
+      if (!isdigit(args->args[1][i]))
       {
-        sprintf(message, "%s() second argument must be numeric or end in G, M or K", funcname);
+        snprintf(message, MYSQL_ERRMSG_SIZE, "%s() second argument must be numeric or end in G, M or K", funcname);
         return 1;
       }
+    }
 
-    if (!isdigit(valuestr[vlen]))
+    if (!isdigit(args->args[1][vlen]))
     {
-      switch (valuestr[vlen])
+      switch (args->args[1][vlen])
       {
         case 'G':
         case 'g':
@@ -103,7 +128,7 @@ extern "C"
         case '\0': break;
 
         default:
-          sprintf(message, "%s() second argument must be numeric or end in G, M or K", funcname);
+          snprintf(message, MYSQL_ERRMSG_SIZE, "%s() second argument must be numeric or end in G, M or K", funcname);
           return 1;
       }
     }
@@ -118,6 +143,10 @@ extern "C"
     char valuestr[MAXSTRINGLENGTH];
     size_t plen = args->lengths[0];
     size_t vlen = args->lengths[1];
+
+    // lengths are checked above, so idbassert just to be sure
+    idbassert(plen < sizeof(parameter));
+    idbassert(vlen < sizeof(valuestr));
 
     memcpy(parameter, args->args[0], plen);
     memcpy(valuestr, args->args[1], vlen);
@@ -210,7 +239,7 @@ extern "C"
   {
     if (args->arg_count != 0)
     {
-      sprintf(message, "%s() takes no arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes no arguments", funcname);
       return 1;
     }
 
@@ -276,7 +305,7 @@ extern "C"
   {
     if (args->arg_count != 1 || args->arg_type[0] != INT_RESULT)
     {
-      sprintf(message, "%s() requires one INTEGER argument", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one INTEGER argument", funcname);
       return 1;
     }
 
@@ -437,22 +466,22 @@ extern "C"
   {
     if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
     {
-      sprintf(message, "%s() requires two string arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires two string arguments", funcname);
       return 1;
     }
     else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
     {
-      sprintf(message, "%s() requires one string argument", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one string argument", funcname);
       return 1;
     }
     else if (args->arg_count > 2)
     {
-      sprintf(message, "%s() takes one or two arguments only", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes one or two arguments only", funcname);
       return 1;
     }
     else if (args->arg_count == 0)
     {
-      sprintf(message, "%s() requires at least one argument", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires at least one argument", funcname);
       return 1;
     }
 
@@ -545,7 +574,7 @@ extern "C"
   {
     if ((args->arg_count != 1) || (args->arg_type[0] != INT_RESULT))
     {
-      sprintf(message, "%s() requires one integer argument (the lockID)", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one integer argument (the lockID)", funcname);
       return 1;
     }
 
@@ -554,7 +583,6 @@ extern "C"
 
     return 0;
   }
-
 
       my_bool mcscleartablelock_init(UDF_INIT* initid, UDF_ARGS* args, char* message)
   {
@@ -611,22 +639,22 @@ extern "C"
   {
     if (args->arg_count == 2 && (args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT))
     {
-      sprintf(message, "%s() requires two string arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires two string arguments", funcname);
       return 1;
     }
     else if ((args->arg_count == 1) && (args->arg_type[0] != STRING_RESULT))
     {
-      sprintf(message, "%s() requires one string argument", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one string argument", funcname);
       return 1;
     }
     else if (args->arg_count > 2)
     {
-      sprintf(message, "%s() takes one or two arguments only", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes one or two arguments only", funcname);
       return 1;
     }
     else if (args->arg_count == 0)
     {
-      sprintf(message, "%s() requires at least one argument", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires at least one argument", funcname);
       return 1;
     }
 
@@ -724,7 +752,7 @@ extern "C"
   {
     if (args->arg_count != 0)
     {
-      sprintf(message, "%s() takes no arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes no arguments", funcname);
       return 1;
     }
 
@@ -849,11 +877,11 @@ extern "C"
   {
   }
 
-  my_bool getversion_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
+  my_bool getversion_init(UDF_INIT* /*initid*/, UDF_ARGS* args, char* message, const char* funcname)
   {
     if (args->arg_count != 0)
     {
-      sprintf(message, "%s() takes no arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes no arguments", funcname);
       return 1;
     }
 
@@ -897,7 +925,7 @@ extern "C"
   {
     if (args->arg_count != 0)
     {
-      sprintf(message, "%s() takes no arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() takes no arguments", funcname);
       return 1;
     }
 
@@ -940,8 +968,11 @@ extern "C"
     delete mqc;
 
     char ans[128];
-    sprintf(ans, "Running SQL statements %d, Waiting SQL statments %d", runningSql, waitingSql);
-    *length = strlen(ans);
+    *length = snprintf(ans, sizeof(ans), "Running SQL statements %d, Waiting SQL statments %d", runningSql, waitingSql);
+    if (*length >= sizeof(ans))
+    {
+      *length = sizeof(ans) - 1;
+    }
     memcpy(result, ans, *length);
     return result;
   }
