@@ -72,16 +72,15 @@ extern "C"
     return str;
   }
 
-  void logParmValueTooLong(char* message, const char* funcname, const char* what)
-  {
-    snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): %s is too long", funcname, what);
-  }
-
   my_bool setparms_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
-    if (args->arg_count != 2 || args->arg_type[0] != STRING_RESULT || args->arg_type[1] != STRING_RESULT)
+    if (args->arg_count != 2 ||
+        args->arg_type[0] != STRING_RESULT ||
+        args->arg_type[1] != STRING_RESULT ||
+        args->args[0] == nullptr ||
+        args->args[1] == nullptr)
     {
-      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires two string arguments", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires two constant string arguments", funcname);
       return 1;
     }
 
@@ -91,12 +90,22 @@ extern "C"
     size_t vlen = args->lengths[1];
     if (plen >= MAXSTRINGLENGTH)
     {
-      logParmValueTooLong(message, funcname, "parameter");
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): parameter is too long", funcname);
+      return 1;
+    }
+    else if (plen == 0)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): parameter is empty", funcname);
       return 1;
     }
     if (vlen >= MAXSTRINGLENGTH)
     {
-      logParmValueTooLong(message, funcname, "value");
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s(): value is too long", funcname);
+      return 1;
+    }
+    else if (vlen == 0)
+    {
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() second argument must be numeric or end in G, M or K", funcname);
       return 1;
     }
 
@@ -578,10 +587,12 @@ extern "C"
 
   my_bool mcs_set_ddldebug_level_init(UDF_INIT* initid, UDF_ARGS* args, char* message, const char* funcname)
   {
-    if ((args->arg_count != 1) || (args->arg_type[0] != INT_RESULT) ||
+    if ((args->arg_count != 1) ||
+        (args->arg_type[0] != INT_RESULT) ||
+        (args->args[0] == nullptr) ||
         *reinterpret_cast<uint32_t*>(args->args[0]) > 3)
     {
-      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one integer `debug level` ", funcname);
+      snprintf(message, MYSQL_ERRMSG_SIZE, "%s() requires one constant integer `debug level` ", funcname);
       return 1;
     }
 
