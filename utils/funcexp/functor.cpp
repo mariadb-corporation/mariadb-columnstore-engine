@@ -172,7 +172,7 @@ int64_t Func::nowDatetime()
   result.hour = now.time_of_day().hours();
   result.minute = now.time_of_day().minutes();
   result.second = now.time_of_day().seconds();
-  result.msecond = now.time_of_day().total_microseconds();
+  result.msecond = now.time_of_day().total_microseconds() % 1000000;
 
   return (int64_t) * (reinterpret_cast<int64_t*>(&result));
 }
