@@ -51,20 +51,7 @@ CalpontSystemCatalog::ColType Func_sysdate::operationType(FunctionParm& /*fp*/,
 int64_t Func_sysdate::getIntVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
                                 CalpontSystemCatalog::ColType& /*operationColType*/)
 {
-  struct tm tmp_tm;
-  time_t now;
-  now = time(NULL);
-  localtime_r(&now, &tmp_tm);
-
-  dataconvert::DateTime aDatetime;
-  aDatetime.year = (tmp_tm.tm_year + 1900) % 10000;
-  aDatetime.month = tmp_tm.tm_mon + 1;
-  aDatetime.day = tmp_tm.tm_mday;
-  aDatetime.hour = tmp_tm.tm_hour;
-  aDatetime.minute = tmp_tm.tm_min;
-  aDatetime.second = tmp_tm.tm_sec;
-  aDatetime.msecond = 0;
-  return *(reinterpret_cast<uint64_t*>(&aDatetime));
+  return nowDatetime();
 }
 
 string Func_sysdate::getStrVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
@@ -92,10 +79,16 @@ int64_t Func_sysdate::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, 
   return getIntVal(row, parm, isNull, operationColType);
 }
 
-int64_t Func_sysdate::getTimestampIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                         CalpontSystemCatalog::ColType& operationColType)
+int64_t Func_sysdate::getTimestampIntVal(rowgroup::Row& /*row*/, FunctionParm& /*parm*/, bool& /*isNull*/,
+                                         CalpontSystemCatalog::ColType& /*operationColType*/)
 {
-  return getIntVal(row, parm, isNull, operationColType);
+  timeval tv;
+  gettimeofday(&tv, nullptr);
+
+  dataconvert::TimeStamp ts;
+  ts.second = tv.tv_sec;
+  ts.msecond = tv.tv_usec;
+  return *reinterpret_cast<int64_t*>(&ts);
 }
 
 int64_t Func_sysdate::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
