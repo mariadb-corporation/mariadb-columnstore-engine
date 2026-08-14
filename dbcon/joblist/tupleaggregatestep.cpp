@@ -5501,6 +5501,16 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
             uint32_t c = (ci + shift) % fNumOfBuckets;
             if (!fEndOfResult && !bucketDone[c] && fAgg_mutex[c]->try_lock())
             {
+              if (fEndOfResult)
+              {
+                // This means that an exception was thrown while processing a bucket
+                // in another thread, which may leave the RowAggStorage state inconsistent.
+                // In this case, execution should be terminated immediately, as the result
+                // (an aggregation error) is already known
+                didWork = true;
+                fAgg_mutex[c]->unlock();
+                break;
+              }
               try
               {
                 didWork = true;
@@ -5513,6 +5523,7 @@ void TupleAggregateStep::threadedAggregateRowGroups(uint32_t threadID)
               }
               catch (...)
               {
+                fEndOfResult = true;
                 fAgg_mutex[c]->unlock();
                 throw;
               }
