@@ -45,7 +45,9 @@ JoinPartition::JoinPartition()
 /* This is the ctor used by THJS */
 JoinPartition::JoinPartition(const RowGroup& lRG, const RowGroup& sRG, const vector<uint32_t>& smallKeys,
                              const vector<uint32_t>& largeKeys, bool typeless, bool antiWMN, bool hasFEFilter,
-                             uint64_t totalUMMemory, uint64_t partitionSize, uint32_t maxPartitionTreeDepth)
+                             uint64_t totalUMMemory, uint64_t partitionSize, uint32_t maxPartitionTreeDepth,
+                             allocators::CountingAllocator<rowgroup::RGDataBufType> _allocator
+                            )
  : smallRG(sRG)
  , largeRG(lRG)
  , smallKeyCols(smallKeys)
@@ -67,6 +69,7 @@ JoinPartition::JoinPartition(const RowGroup& lRG, const RowGroup& sRG, const vec
  , nextLargeOffset(0)
  , currentPartitionTreeDepth(0)
  , maxPartitionTreeDepth(maxPartitionTreeDepth)
+ , allocator(_allocator)
 {
   config::Config* config = config::Config::makeConfig();
   string cfgTxt;
@@ -145,6 +148,7 @@ JoinPartition::JoinPartition(const JoinPartition& jp, bool /*splitMode*/, uint32
  , nextLargeOffset(0)
  , currentPartitionTreeDepth(currentPartitionTreeDepth)
  , maxPartitionTreeDepth(jp.maxPartitionTreeDepth)
+ , allocator(jp.allocator)
 {
   ostringstream os;
 
@@ -635,7 +639,7 @@ boost::shared_ptr<RGData> JoinPartition::getNextLargeRGData()
 
   if (bs.length() != 0)
   {
-    ret.reset(new RGData());
+    ret.reset(allocator ? new RGData(*allocator) : new RGData());
     ret->deserialize(bs);
   }
   else

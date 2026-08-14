@@ -33,7 +33,9 @@ class JoinPartition
   JoinPartition(const rowgroup::RowGroup& largeRG, const rowgroup::RowGroup& smallRG,
                 const std::vector<uint32_t>& smallkeyCols, const std::vector<uint32_t>& largeKeyCols,
                 bool typeless, bool isAntiWithMatchNulls, bool hasFEFilter, uint64_t totalUMMemory,
-                uint64_t partitionSize, uint32_t maxPartitionTreeDepth);
+                uint64_t partitionSize, uint32_t maxPartitionTreeDepth,
+                allocators::CountingAllocator<rowgroup::RGDataBufType> _allocator
+               );
   JoinPartition(const JoinPartition&, bool splitMode, uint32_t depth);
 
   virtual ~JoinPartition();
@@ -178,5 +180,8 @@ class JoinPartition
   // Options to control partition tree depth.
   uint32_t currentPartitionTreeDepth;
   uint32_t maxPartitionTreeDepth;
+
+  // controlling allocator.
+  std::optional<allocators::CountingAllocator<rowgroup::RGDataBufType>> allocator = {};
 };
 }  // namespace joiner
