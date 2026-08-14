@@ -826,7 +826,7 @@ class RowGroupStorage
 
     fLRU->add(rgid);
 
-    assert(idx % fMaxRows == fRowGroupOut->getRowCount());
+    idbassert(idx % fMaxRows == fRowGroupOut->getRowCount());
     fRowGroupOut->getRow(fRowGroupOut->getRowCount(), &row);
     fRowGroupOut->incRowCount();
   }
