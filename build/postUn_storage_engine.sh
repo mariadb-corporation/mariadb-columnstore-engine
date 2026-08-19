@@ -17,7 +17,7 @@ fi
 
 if [ $rpmmode = erase ]; then
     if [ ! -z "$(pgrep -x mariadbd)" ];then
-        systemctl cat mariadb.service > /dev/null 2>&1
+        systemctl --no-pager cat mariadb.service > /dev/null 2>&1
         if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
             systemctl restart mariadb.service > /dev/null 2>&1
         else

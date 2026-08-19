@@ -31,7 +31,7 @@ DROP DATABASE IF EXISTS columnstore_info;
 EOD
 
 # Test we are using systemd
-systemctl cat mariadb-columnstore.service > /dev/null 2>&1
+systemctl --no-pager cat mariadb-columnstore.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
     systemctl stop mariadb-columnstore >/dev/null 2>&1
 else
