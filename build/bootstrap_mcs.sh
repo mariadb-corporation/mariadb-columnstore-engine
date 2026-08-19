@@ -325,9 +325,42 @@ modify_packaging() {
         sed -i 's/Depends: galera.*/Depends:/' debian/control
         sed -i '/galera-enterprise.*/d' debian/control
 
-        for i in galera wsrep ha_sphinx embedded; do
-            sed -i "/$i/d" debian/*.install
+        FILES_TO_REMOVE=(
+            "galera"
+            "wsrep"
+            "ha_sphinx"
+            "embedded"
+            "usr/share/mysql/not_supported/wsrep_info.so"
+            "usr/share/man/man1/wsrep_sst_backup.1"
+            "usr/share/mysql/wsrep.cnf"
+            "usr/share/mysql/wsrep_notify"
+            "usr/bin/galera_new_cluster"
+            "usr/bin/galera_recovery"
+            "usr/bin/mariadb-new-cluster"
+            "usr/share/man/man1/galera_new_cluster.1"
+            "usr/share/man/man1/galera_recovery.1"
+            "usr/share/man/man1/mariadb-new-cluster.1"
+            "usr/share/man/man1/wsrep_sst_common.1"
+            "usr/share/man/man1/wsrep_sst_mariabackup.1"
+            "usr/share/man/man1/wsrep_sst_mysqldump.1"
+            "usr/share/man/man1/wsrep_sst_rsync.1"
+            "usr/share/man/man1/wsrep_sst_rsync_wan.1"
+            "usr/bin/wsrep_sst_common"
+            "usr/bin/wsrep_sst_mariabackup"
+            "usr/bin/wsrep_sst_mysqldump"
+            "usr/bin/wsrep_sst_rsync"
+            "usr/bin/wsrep_sst_rsync_wan"
+            "usr/share/mariadb/not_supported/wsrep_info.so"
+            "usr/share/mariadb/wsrep.cnf"
+            "usr/share/mariadb/wsrep_notify"
+        )
+
+        for file in "${FILES_TO_REMOVE[@]}"; do
+            # Escape slashes for sed and target optional leading / or ./
+            escaped_file=$(echo "$file" | sed 's/\//\\\//g')
+            sed -i "/\(^\|\/\)$escaped_file$/d" debian/*.install
         done
+
     fi
 }
 
