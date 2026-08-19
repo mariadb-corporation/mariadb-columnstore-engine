@@ -326,6 +326,7 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
   if (rand)
     fFunctor = fDynamicFunctor = new Func_rand();
 
+  // XXX: these should be also checked for possible state corruption with big data.
   Func_encode* encode = dynamic_cast<Func_encode*>(fFunctor);
   if (encode)
     fFunctor = fDynamicFunctor = new Func_encode();
@@ -334,45 +335,6 @@ void FunctionColumn::unserialize(messageqcpp::ByteStream& b)
   if (decode)
     fFunctor = fDynamicFunctor = new Func_decode();
 
-  // Special treatment for json function contains the variable path. reset the variable path
-  if (dynamic_cast<Func_json_length*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_length();
-
-  if (dynamic_cast<Func_json_keys*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_keys();
-
-  if (dynamic_cast<Func_json_exists*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_exists();
-
-  if (dynamic_cast<Func_json_value*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_value();
-
-  if (dynamic_cast<Func_json_query*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_query();
-
-  if (dynamic_cast<Func_json_contains*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_contains();
-
-  if (dynamic_cast<Func_json_array_append*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_append(fFunctionParms);
-
-  if (dynamic_cast<Func_json_array_insert*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_array_insert(fFunctionParms);
-
-  if (auto f = dynamic_cast<Func_json_insert*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_insert(fFunctionParms, f->getMode());
-
-  if (dynamic_cast<Func_json_remove*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_remove(fFunctionParms);
-
-  if (dynamic_cast<Func_json_contains_path*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_contains_path(fFunctionParms);
-
-  if (dynamic_cast<Func_json_search*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_search(fFunctionParms);
-
-  if (dynamic_cast<Func_json_extract*>(fFunctor))
-    fFunctor = fDynamicFunctor = new Func_json_extract(fFunctionParms);
 }
 
 bool FunctionColumn::operator==(const FunctionColumn& t) const

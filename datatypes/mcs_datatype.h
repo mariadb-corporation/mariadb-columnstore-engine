@@ -466,7 +466,9 @@ inline bool isUnsigned(const datatypes::SystemCatalog::ColDataType type)
     case datatypes::SystemCatalog::CHAR:
     case datatypes::SystemCatalog::VARCHAR:
     case datatypes::SystemCatalog::TEXT:
-    case datatypes::SystemCatalog::VARBINARY: return true;
+    case datatypes::SystemCatalog::VARBINARY:
+    case datatypes::SystemCatalog::BLOB:
+    case datatypes::SystemCatalog::CLOB: return true;
 
     default: return false;
   }
@@ -552,7 +554,30 @@ inline void promoteSignedInteger(datatypes::SystemCatalog::TypeHolderStd& unione
 */
 inline bool hasUnderlyingWideDecimalForSumAndAvg(datatypes::SystemCatalog::ColDataType type)
 {
-  return datatypes::isSignedInteger(type) || datatypes::isUnsigned(type) || datatypes::isDecimal(type);
+  return datatypes::isSignedInteger(type) ||
+    datatypes::isUnsignedInteger(type) ||
+    datatypes::isDecimal(type) ||
+    type == datatypes::SystemCatalog::DATETIME ||
+    type == datatypes::SystemCatalog::TIMESTAMP ||
+    type == datatypes::SystemCatalog::TIME;
+}
+
+static constexpr uint32_t defaultScale = 6;
+inline uint32_t getWideDecimalScaleForSumAvg(datatypes::SystemCatalog::ColDataType type, uint32_t curScale)
+{
+  if (type == datatypes::SystemCatalog::VARCHAR ||
+      type == datatypes::SystemCatalog::CHAR ||
+      type == datatypes::SystemCatalog::TEXT ||
+      type == datatypes::SystemCatalog::VARBINARY ||
+      type == datatypes::SystemCatalog::BLOB ||
+      type == datatypes::SystemCatalog::CLOB ||
+      type == datatypes::SystemCatalog::TIME ||
+      type == datatypes::SystemCatalog::DATETIME ||
+      type == datatypes::SystemCatalog::TIMESTAMP)
+  {
+    return defaultScale;
+  }
+  return curScale;
 }
 
 }  // end of namespace datatypes

@@ -62,12 +62,12 @@ namespace funcexp
 {
 const static int wildOne = '_';
 const static int wildMany = '%';
-int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString& cmpStr,
+int Func_json_search::cmpJSValWild(Func_json_search_state& state, json_engine_t* jsEg, const utils::NullString& cmpStr,
                                    const CHARSET_INFO* cs)
 {
   if (jsEg->value_type != JSON_VALUE_STRING || !jsEg->value_escaped)
     return cs->wildcmp((const char*)jsEg->value, (const char*)(jsEg->value + jsEg->value_len),
-                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), escape, wildOne, wildMany)
+                       (const char*)cmpStr.str(), (const char*)cmpStr.end(), state.escape, wildOne, wildMany)
                ? 0
                : 1;
 
@@ -79,7 +79,7 @@ int Func_json_search::cmpJSValWild(json_engine_t* jsEg, const utils::NullString&
                                 (uchar*)buf, (uchar*)(buf + strLen))) <= 0)
       return 0;
 
-    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), escape, wildOne, wildMany) ? 0 : 1;
+    return cs->wildcmp(buf, buf + strLen, cmpStr.str(), cmpStr.end(), state.escape, wildOne, wildMany) ? 0 : 1;
   }
 }
 
@@ -102,10 +102,12 @@ std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     return "";
   }
 
-  if (!isModeParsed)
+  Func_json_search_state state(fp);
+
+  if (!state.isModeParsed)
   {
-    if (!isModeConst)
-      isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
+    if (!state.isModeConst)
+      state.isModeConst = (dynamic_cast<ConstantColumn*>(fp[1]->data()) != nullptr);
 
     const auto& mode_ns = fp[1]->data()->getStrVal(row, isNull);
     if (isNull)
@@ -119,8 +121,8 @@ std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       return "";
     }
 
-    isModeOne = (mode == "one");
-    isModeParsed = isModeConst;
+    state.isModeOne = (mode == "one");
+    state.isModeParsed = state.isModeConst;
   }
 
   if (fp.size() >= 4)
@@ -137,7 +139,7 @@ std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
       isNull = true;
       return "";
     }
-    escape = isNullEscape ? '\\' : escapeStr.safeString("")[0];
+    state.escape = isNullEscape ? '\\' : escapeStr.safeString("")[0];
   }
 
   const CHARSET_INFO* cs = getCharset(fp[0]);
@@ -148,9 +150,11 @@ std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
 #endif
   int pathFound = 0;
 
+  std::string firstValue;
+
   for (size_t i = 4; i < fp.size(); i++)
   {
-    JSONPath& path = paths[i - 4];
+    JSONPath& path = state.paths[i - 4];
 
     if (!path.parsed)
     {
@@ -162,53 +166,50 @@ std::string Func_json_search::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
   }
 
-  json_get_path_start(&jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &p);
+  json_get_path_start(&state.jsEg, cs, (const uchar*)js.str(), (const uchar*)js.end(), &state.p);
 
-  while (json_get_path_next(&jsEg, &p) == 0)
+  while (json_get_path_next(&state.jsEg, &state.p) == 0)
   {
 #if MYSQL_VERSION_ID >= 100900
 #if MYSQL_VERSION_ID >= 120200
-    if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + p.last_step_idx))
+    if (hasNegPath && state.jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&state.jsEg, arrayCounter + state.p.last_step_idx))
 #else
-        if (hasNegPath && jsEg.value_type == JSON_VALUE_ARRAY &&
-        json_skip_array_and_count(&jsEg, arrayCounter + (p.last_step - p.steps)))
+        if (hasNegPath && state.jsEg.value_type == JSON_VALUE_ARRAY &&
+        json_skip_array_and_count(&state.jsEg, arrayCounter + (state.p.last_step - state.p.steps)))
 #endif
       goto error;
 #endif
 
-    if (json_value_scalar(&jsEg))
+    if (json_value_scalar(&state.jsEg))
     {
 #if MYSQL_VERSION_ID >= 100900
-      bool isMatch = matchJSPath(paths, &p, jsEg.value_type, arrayCounter);
+      bool isMatch = matchJSPath(state.paths, &state.p, state.jsEg.value_type, arrayCounter);
 #else
-      bool isMatch = matchJSPath(paths, &p, jsEg.value_type);
+      bool isMatch = matchJSPath(state.paths, &state.p, state.jsEg.value_type);
 #endif
-      if ((fp.size() < 5 || isMatch) && cmpJSValWild(&jsEg, cmpStr, cs) != 0)
+      if ((fp.size() < 5 || isMatch) && cmpJSValWild(state, &state.jsEg, cmpStr, cs) != 0)
       {
         ++pathFound;
         if (pathFound == 1)
         {
-          savPath = p;
-#if MYSQL_VERSION_ID >= 120200
-          mem_root_dynamic_array_copy_values(&savPath.steps, &p.steps);
-#else
-          savPath.last_step = savPath.steps + (p.last_step - p.steps);
-#endif
+          if (appendJSPath(firstValue, &state.p))
+          {
+            goto error;
+          }
         }
         else
         {
           if (pathFound == 2)
           {
             ret.append("[");
-            if (appendJSPath(ret, &savPath))
-              goto error;
+            ret.append(firstValue);
           }
           ret.append(", ");
-          if (appendJSPath(ret, &p))
+          if (appendJSPath(ret, &state.p))
             goto error;
         }
-        if (isModeOne)
+        if (state.isModeOne)
           goto end;
       }
     }
@@ -219,8 +220,7 @@ end:
     goto error;
   if (pathFound == 1)
   {
-    if (appendJSPath(ret, &savPath))
-      goto error;
+    ret = firstValue;
   }
   else
     ret.append("]");

@@ -46,10 +46,11 @@ std::string Func_json_format::getStrVal(rowgroup::Row& row, FunctionParm& fp, bo
     }
   }
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
+  Func_json_state state;
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
 
   string ret;
-  if (doFormat(&jsEg, ret, fmt, tabSize))
+  if (doFormat(&state.jsEg, ret, fmt, tabSize))
   {
     isNull = true;
     return "";

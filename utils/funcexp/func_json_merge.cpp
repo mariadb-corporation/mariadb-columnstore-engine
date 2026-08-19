@@ -222,6 +222,8 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
   if (isNull)
     return "";
 
+  Func_json_merge_state state;
+
   const CHARSET_INFO* js1CS = getCharset(fp[0]);
 
   utils::NullString tmpJS(js);
@@ -233,10 +235,10 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     if (isNull)
       goto error;
 
-    initJSEngine(jsEg, js1CS, tmpJS);
-    initJSEngine(jsEg2, getCharset(fp[i]), js2);
+    initJSEngine(state.jsEg, js1CS, tmpJS);
+    initJSEngine(state.jsEg2, getCharset(fp[i]), js2);
 
-    if (doMerge(retJS, &jsEg, &jsEg2))
+    if (doMerge(retJS, &state.jsEg, &state.jsEg2))
       goto error;
 
     // tmpJS save the merge result for next loop
@@ -244,9 +246,9 @@ std::string Func_json_merge::getStrVal(rowgroup::Row& row, FunctionParm& fp, boo
     retJS.clear();
   }
 
-  initJSEngine(jsEg, js1CS, tmpJS);
+  initJSEngine(state.jsEg, js1CS, tmpJS);
   retJS.clear();
-  if (doFormat(&jsEg, retJS, Func_json_format::LOOSE))
+  if (doFormat(&state.jsEg, retJS, Func_json_format::LOOSE))
     goto error;
 
   isNull = false;

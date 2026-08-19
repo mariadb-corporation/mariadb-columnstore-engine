@@ -58,42 +58,44 @@ std::string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
   if (isNull)
     return "";
 
+  Func_json_no_multipath_state state;
+
   IntType keySize = 0;
   std::string ret;
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
 
   if (fp.size() > 1)
   {
-    if (!path.parsed && parseJSPath(path, row, fp[1], false))
+    if (!state.path.parsed && parseJSPath(state.path, row, fp[1], false))
       goto error;
 
-    if (locateJSPath(jsEg, path))
+    if (locateJSPath(state.jsEg, state.path))
       goto error;
   }
 
-  if (json_read_value(&jsEg))
+  if (json_read_value(&state.jsEg))
     goto error;
 
-  if (jsEg.value_type != JSON_VALUE_OBJECT)
+  if (state.jsEg.value_type != JSON_VALUE_OBJECT)
     goto error;
 
   ret.append("[");
-  while (json_scan_next(&jsEg) == 0 && jsEg.state != JST_OBJ_END)
+  while (json_scan_next(&state.jsEg) == 0 && state.jsEg.state != JST_OBJ_END)
   {
     const uchar *keyStart, *keyEnd;
     int keyLen;
 
-    switch (jsEg.state)
+    switch (state.jsEg.state)
     {
       case JST_KEY:
-        keyStart = jsEg.s.c_str;
+        keyStart = state.jsEg.s.c_str;
         do
         {
-          keyEnd = jsEg.s.c_str;
-        } while (json_read_keyname_chr(&jsEg) == 0);
+          keyEnd = state.jsEg.s.c_str;
+        } while (json_read_keyname_chr(&state.jsEg) == 0);
 
-        if (unlikely(jsEg.s.error))
+        if (unlikely(state.jsEg.s.error))
           goto error;
 
         keyLen = (int)(keyEnd - keyStart);
@@ -110,14 +112,14 @@ std::string Func_json_keys::getStrVal(rowgroup::Row& row, FunctionParm& fp, bool
         break;
       case JST_OBJ_START:
       case JST_ARRAY_START:
-        if (json_skip_level(&jsEg))
+        if (json_skip_level(&state.jsEg))
           break;
         break;
       default: break;
     }
   }
 
-  if (unlikely(!jsEg.s.error))
+  if (unlikely(!state.jsEg.s.error))
   {
     ret.append("]");
     return ret;

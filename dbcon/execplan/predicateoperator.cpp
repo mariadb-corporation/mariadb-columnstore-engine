@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "bytestream.h"
+#include "calpontsystemcatalog.h"
 #include "predicateoperator.h"
 #include "objectreader.h"
 
@@ -691,6 +692,9 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       if (fOp == OP_ISNULL)
       {
@@ -721,9 +725,6 @@ bool PredicateOperator::getBoolVal(rowgroup::Row& row, bool& isNull, ReturnedCol
 
       return strTrimCompare(val1.safeString(""), val2.safeString(""));
     }
-
-    case execplan::CalpontSystemCatalog::VARBINARY:
-    case execplan::CalpontSystemCatalog::BLOB: return false; break;
 
     default:
     {

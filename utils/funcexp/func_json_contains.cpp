@@ -170,38 +170,39 @@ bool Func_json_contains::getBoolVal(Row& row, FunctionParm& fp, bool& isNull,
     return false;
   }
 
+  Func_json_contains_state state;
   bool result = false;
 
-  if (!arg2Parsed)
+  if (!state.arg2Parsed)
   {
-    if (!arg2Const)
+    if (!state.arg2Const)
     {
       ConstantColumn* constCol = dynamic_cast<ConstantColumn*>(fp[1]->data());
-      arg2Const = (constCol != nullptr);
+      state.arg2Const = (constCol != nullptr);
     }
-    arg2Val = val;
-    arg2Parsed = arg2Const;
+    state.arg2Val = val;
+    state.arg2Parsed = state.arg2Const;
   }
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
 
   if (fp.size() > 2)
   {
-    if (!path.parsed && parseJSPath(path, row, fp[2], false))
+    if (!state.path.parsed && parseJSPath(state.path, row, fp[2], false))
       goto error;
 
-    if (locateJSPath(jsEg, path))
+    if (locateJSPath(state.jsEg, state.path))
       goto error;
   }
 
-  initJSEngine(valEg, getCharset(fp[1]), arg2Val);
+  initJSEngine(state.valEg, getCharset(fp[1]), state.arg2Val);
 
-  if (json_read_value(&jsEg) || json_read_value(&valEg))
+  if (json_read_value(&state.jsEg) || json_read_value(&state.valEg))
     goto error;
 
-  result = checkContains(&jsEg, &valEg);
+  result = checkContains(&state.jsEg, &state.valEg);
 
-  if (unlikely(jsEg.s.error || valEg.s.error))
+  if (unlikely(state.jsEg.s.error || state.valEg.s.error))
     goto error;
 
   return result;

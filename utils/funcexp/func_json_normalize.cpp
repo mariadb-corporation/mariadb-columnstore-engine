@@ -32,12 +32,14 @@ std::string Func_json_normalize::getStrVal(rowgroup::Row& row, FunctionParm& fp,
 
   using DynamicString = unique_ptr<DYNAMIC_STRING, decltype(&dynstr_free)>;
 
+  Func_json_normalize_state state;
+
   DynamicString str{new DYNAMIC_STRING(), dynstr_free};
   if (init_dynamic_string(str.get(), NULL, 0, 0))
     goto error;
 
 #if MYSQL_VERSION_ID >= 120200
-  if (json_normalize(str.get(), js.data(), js.size(), getCharset(fp[0]), NULL, &jsEg, &array))
+  if (json_normalize(str.get(), js.data(), js.size(), getCharset(fp[0]), NULL, &state.jsEg, &state.array))
 #else
   if (json_normalize(str.get(), js.data(), js.size(), getCharset(fp[0])))
 #endif

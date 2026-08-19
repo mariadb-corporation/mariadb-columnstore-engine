@@ -30,11 +30,13 @@ int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& i
   int depth = 0, currDepth = 0;
   bool incDepth = true;
 
-  initJSEngine(jsEg, getCharset(fp[0]), js);
+  Func_json_state state;
+
+  initJSEngine(state.jsEg, getCharset(fp[0]), js);
 
   do
   {
-    switch (jsEg.state)
+    switch (state.jsEg.state)
     {
       case JST_VALUE:
       case JST_KEY:
@@ -56,9 +58,9 @@ int64_t Func_json_depth::getIntVal(rowgroup::Row& row, FunctionParm& fp, bool& i
         break;
       default: break;
     }
-  } while (json_scan_next(&jsEg) == 0);
+  } while (json_scan_next(&state.jsEg) == 0);
 
-  if (likely(!jsEg.s.error))
+  if (likely(!state.jsEg.s.error))
     return depth;
 
   isNull = true;

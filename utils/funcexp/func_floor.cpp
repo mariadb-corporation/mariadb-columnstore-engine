@@ -91,6 +91,9 @@ int64_t Func_floor::getIntVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
@@ -193,6 +196,9 @@ uint64_t Func_floor::getUintVal(Row& row, FunctionParm& parm, bool& isNull,
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
@@ -279,7 +285,11 @@ double Func_floor::getDoubleVal(Row& row, FunctionParm& parm, bool& isNull,
     ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-           op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
+           op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+           op_ct.colDataType == CalpontSystemCatalog::TEXT ||
+           op_ct.colDataType == CalpontSystemCatalog::VARBINARY ||
+           op_ct.colDataType == CalpontSystemCatalog::BLOB ||
+           op_ct.colDataType == CalpontSystemCatalog::CLOB)
   {
     const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
@@ -323,7 +333,11 @@ long double Func_floor::getLongDoubleVal(Row& row, FunctionParm& parm, bool& isN
     ret = floorl(parm[0]->data()->getLongDoubleVal(row, isNull));
   }
   else if (op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
-           op_ct.colDataType == CalpontSystemCatalog::CHAR || op_ct.colDataType == CalpontSystemCatalog::TEXT)
+           op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+           op_ct.colDataType == CalpontSystemCatalog::TEXT ||
+           op_ct.colDataType == CalpontSystemCatalog::VARBINARY ||
+           op_ct.colDataType == CalpontSystemCatalog::BLOB ||
+           op_ct.colDataType == CalpontSystemCatalog::CLOB)
   {
     const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
@@ -358,9 +372,14 @@ string Func_floor::getStrVal(Row& row, FunctionParm& parm, bool& isNull, Calpont
 
   if (op_ct.colDataType == CalpontSystemCatalog::DOUBLE ||
       op_ct.colDataType == CalpontSystemCatalog::UDOUBLE ||
-      op_ct.colDataType == CalpontSystemCatalog::FLOAT || op_ct.colDataType == CalpontSystemCatalog::UFLOAT ||
-      op_ct.colDataType == CalpontSystemCatalog::VARCHAR || op_ct.colDataType == CalpontSystemCatalog::CHAR ||
-      op_ct.colDataType == CalpontSystemCatalog::TEXT)
+      op_ct.colDataType == CalpontSystemCatalog::FLOAT ||
+      op_ct.colDataType == CalpontSystemCatalog::UFLOAT ||
+      op_ct.colDataType == CalpontSystemCatalog::VARCHAR ||
+      op_ct.colDataType == CalpontSystemCatalog::CHAR ||
+      op_ct.colDataType == CalpontSystemCatalog::TEXT ||
+      op_ct.colDataType == CalpontSystemCatalog::VARBINARY ||
+      op_ct.colDataType == CalpontSystemCatalog::BLOB ||
+      op_ct.colDataType == CalpontSystemCatalog::CLOB)
   {
     snprintf(tmp, 511, "%f", getDoubleVal(row, parm, isNull, op_ct));
 
@@ -487,6 +506,9 @@ IDB_Decimal Func_floor::getDecimalVal(Row& row, FunctionParm& parm, bool& isNull
     case execplan::CalpontSystemCatalog::VARCHAR:
     case execplan::CalpontSystemCatalog::CHAR:
     case execplan::CalpontSystemCatalog::TEXT:
+    case execplan::CalpontSystemCatalog::VARBINARY:
+    case execplan::CalpontSystemCatalog::BLOB:
+    case execplan::CalpontSystemCatalog::CLOB:
     {
       const auto& str = parm[0]->data()->getStrVal(row, isNull);
 
