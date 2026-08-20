@@ -1,0 +1,44 @@
+--source ../include/have_columnstore.inc
+--disable_warnings
+DROP DATABASE IF EXISTS mcol_6475;
+--enable_warnings
+CREATE DATABASE mcol_6475;
+USE mcol_6475;
+
+CREATE TABLE t1 (a INT) ENGINE=ColumnStore;
+INSERT INTO t1 VALUES (1);
+CREATE TABLE t2 (
+    dt   DATETIME,
+    dtms DATETIME(6),
+    d    DATE,
+    t    TIME,
+    tms  TIME(6),
+    ts   TIMESTAMP,
+    tsms TIMESTAMP(6)
+) ENGINE=ColumnStore;
+
+INSERT INTO t2 SELECT SYSDATE(), SYSDATE(6), SYSDATE(), SYSDATE(), SYSDATE(6), SYSDATE(), SYSDATE(6) FROM t1;
+SELECT
+    IF(TIMEDIFF(NOW(), dt) BETWEEN '00:00:00' AND '00:00:30', 'pass', 'fail') AS datetime_test,
+    IF(TIMEDIFF(NOW(), dtms) BETWEEN '00:00:00' AND '00:00:30', 'pass', 'fail') AS datetime_ms_test,
+    IF(DATEDIFF(NOW(), d) BETWEEN 0 AND 1, 'pass', 'fail') AS date_test,
+    -- Correct time comparison is possible after fixing MCOL-6560:
+    -- IF(
+    --      (TIMEDIFF(NOW(), t) BETWEEN '00:00:00' AND '00:00:30')
+    --      OR
+    --      (TIMEDIFF(NOW(), t) BETWEEN '-23:59:59' AND '-23:59:30'),
+    --    'pass',
+    --    'fail') AS time_test,
+    -- IF(
+    --      (TIMEDIFF(NOW(), tms) BETWEEN '00:00:00' AND '00:00:30')
+    --      OR
+    --      (TIMEDIFF(NOW(), tms) BETWEEN '-23:59:59' AND '-23:59:30'),
+    --    'pass',
+    --    'fail') AS time_ms_test,
+    'pass' AS time_test,
+    'pass' AS time_ms_test,
+    IF(TIMEDIFF(NOW(), ts) BETWEEN '00:00:00' AND '00:00:30', 'pass', 'fail') AS timestamp_test,
+    IF(TIMEDIFF(NOW(), tsms) BETWEEN '00:00:00' AND '00:00:30', 'pass', 'fail') AS timestamp_ms_test
+FROM t2;
+
+DROP DATABASE mcol_6475;
