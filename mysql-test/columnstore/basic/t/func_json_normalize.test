@@ -22,6 +22,10 @@ INSERT INTO t1 VALUES('[]');
 INSERT INTO t1 VALUES('[      ]');
 INSERT INTO t1 VALUES(null);
 INSERT INTO t1 VALUES('{"key1":value1}');
+# This particular change is needed for OUR tests to work across different servers' versions.
+# Some versions of server normalize as second argument (expected by result), some as first argument.
+# Remember, we use server's JSON library, our results will be same as server's.
+--replace_result '{"key1":"v1","key1":"v2"}' '{"key1":"v2","key1":"v1"}'
 SELECT JSON_NORMALIZE(l) from t1;
 DROP TABLE t1;
 DROP DATABASE json_normalize_db;

@@ -13,7 +13,10 @@ SET @tmpstr1 = '{"id": 1, "name": "Monty"}';
 SET @tmpstr2 = '{"id": 1, "name": "Monty", "oddfield"}';
 #
 SET @flag1 = (SELECT JSON_VALID(@tmpstr1));
+# Some server versions produce warnings for invalid JSON in the JSON_VALID function.
+--disable_warnings
 SET @flag2 = (SELECT JSON_VALID(@tmpstr2));
+--enable_warnings
 #
 SELECT @flag1;
 SELECT @flag2;
