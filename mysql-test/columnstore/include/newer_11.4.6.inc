@@ -5,3 +5,10 @@ if (`SELECT (sys.version_major(), sys.version_minor(), sys.version_patch()) < (1
 {
     skip Compatible only with server >= 11.4.6;
 }
+
+--let $is_enterprise= `SELECT LOCATE('Enterprise', @@version_comment) OR LOCATE('enterprise', @@version)`
+
+if (!$is_enterprise)
+{
+    skip Now test requires MariaDB Enterprise Server (MCOL-6552)
+}
