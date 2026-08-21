@@ -1,6 +1,7 @@
 import logging
 import os
 import secrets
+import shlex
 import sys
 import time
 from datetime import datetime, timedelta
@@ -28,7 +29,7 @@ from cmapi_server.controllers.api_clients import (
 )
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
-from cmapi_server.helpers import get_active_nodes, get_config_parser, get_current_key
+from cmapi_server.helpers import get_active_nodes, get_cej_info, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.managers.upgrade.utils import ComparableVersion
 from cmapi_server.process_dispatchers.base import BaseDispatcher
@@ -536,6 +537,106 @@ def healthcheck():
     raise typer.Exit(code=0)
 
 
+def precheck_replication(active_nodes: list, console: Console) -> bool:
+    """Check MariaDB replication status on non-primary nodes before install_es.
+
+    Returns True if the precheck passed or was skipped (single-node cluster).
+    Returns False if replication issues are detected on any replica node.
+    """
+    from mcs_node_control.models.node_config import NodeConfig
+
+    if len(active_nodes) <= 1:
+        console.print(
+            '[yellow]Single-node cluster detected. Skipping replication precheck.[/yellow]'
+        )
+        return True
+
+    nc = NodeConfig()
+    root = nc.get_current_config_root()
+    primary_node_el = root.find('./PrimaryNode')
+    primary_node = primary_node_el.text if primary_node_el is not None else None
+
+    try:
+        _, port, username, password = get_cej_info(root)
+    except CEJError as exc:
+        console.print(
+            f'[yellow]Replication precheck skipped: cannot read CEJ credentials: {exc.message}[/yellow]'
+        )
+        return True
+
+    non_primary_nodes = [n for n in active_nodes if n != primary_node]
+    if not non_primary_nodes:
+        console.print(
+            '[yellow]No non-primary nodes identified for replication precheck.[/yellow]'
+        )
+        return True
+
+    console.print('Checking replication status on non-primary nodes...')
+    issues = []
+    for node in non_primary_nodes:
+        cmd = (
+            f'/usr/bin/mariadb -h {shlex.quote(node)}'
+            f' -P {shlex.quote(str(port))}'
+            f' -u {shlex.quote(username)}'
+            f' --password={shlex.quote(password)}'
+            f' -sN -e "SHOW REPLICA STATUS\\G;"'
+        )
+        success, output = BaseDispatcher.exec_command(cmd)
+
+        if not success:
+            issues.append(f'Node {node}: failed to connect or run SHOW REPLICA STATUS')
+            continue
+
+        if not output.strip():
+            console.print(
+                f'[yellow]  Node {node}: replication not configured (empty replica status)[/yellow]'
+            )
+            continue
+
+        # Parse vertical output lines of the form "             Field: Value"
+        fields: dict = {}
+        for line in output.splitlines():
+            if ':' in line:
+                key, _, val = line.partition(':')
+                fields[key.strip()] = val.strip()
+
+        io_running = fields.get('Replica_IO_Running') or fields.get('Slave_IO_Running', '')
+        sql_running = fields.get('Replica_SQL_Running') or fields.get('Slave_SQL_Running', '')
+        last_io_error = fields.get('Last_IO_Error', '')
+        last_sql_error = fields.get('Last_SQL_Error', '')
+        seconds_behind = (
+            fields.get('Seconds_Behind_Master') or fields.get('Seconds_Behind_Source', '')
+        )
+
+        node_issues = []
+        if io_running.lower() != 'yes':
+            node_issues.append(f'IO thread not running (status: {io_running!r})')
+        if sql_running.lower() != 'yes':
+            node_issues.append(f'SQL thread not running (status: {sql_running!r})')
+        if last_io_error:
+            node_issues.append(f'IO error: {last_io_error}')
+        if last_sql_error:
+            node_issues.append(f'SQL error: {last_sql_error}')
+        if seconds_behind and seconds_behind not in ('NULL', '0'):
+            node_issues.append(f'Replication lag: {seconds_behind}s behind source')
+
+        if node_issues:
+            issues.append(f'Node {node}: ' + '; '.join(node_issues))
+        else:
+            console.print(
+                f'[green]  Node {node}: replication OK '
+                f'(IO: {io_running}, SQL: {sql_running})[/green]'
+            )
+
+    if issues:
+        console.print('[yellow]Replication precheck warnings:[/yellow]')
+        for issue in issues:
+            console.print(f'[yellow]  - {issue}[/yellow]')
+        return False
+
+    return True
+
+
 @handle_output
 def install_es(
     token: Annotated[
@@ -641,6 +742,18 @@ def install_es(
     table = Table('ES version', 'Columnstore version', 'CMAPI version')
     table.add_row(mdb_curr_ver, mcs_curr_ver, cmapi_curr_ver)
     console.print(table)
+
+    replication_ok = precheck_replication(active_nodes, console)
+    if not replication_ok:
+        proceed = typer.confirm(
+            'Replication issues detected on one or more nodes. '
+            'Proceeding may cause data loss or a broken cluster. Continue anyway?',
+            prompt_suffix=' ',
+            default=False,
+        )
+        if not proceed:
+            raise typer.Exit(code=1)
+
     is_downgrade = False
     if mdb_curr_ver_comp == mdb_target_ver_comp:
         console.print('[green]The target MariaDB ES version is already installed.[/green]')
