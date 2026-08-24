@@ -2,10 +2,10 @@
 --source ../include/func_caltrace_create_if_needed.inc
 SET GLOBAL log_bin_trust_function_creators = 1;
 --disable_warnings
-DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb3;
+DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb4;
 --enable_warnings
-CREATE DATABASE mcs_ctype_extent_utf8mb3;
-USE mcs_ctype_extent_utf8mb3;
+CREATE DATABASE mcs_ctype_extent_utf8mb4;
+USE mcs_ctype_extent_utf8mb4;
 SET default_storage_engine=ColumnStore;
 --source ../include/ctype_extent_proc_create.inc
 
@@ -28,8 +28,8 @@ BEGIN
 
   DO calsettrace(1);
 
-  SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
-  SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+  SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)';
+  SET stmt=REPLACE(stmt,'utf8mb4_general_ci', collation);
   SELECT stmt AS ``;
   EXECUTE IMMEDIATE stmt;
   INSERT INTO t1 VALUES ('a');
@@ -41,8 +41,8 @@ BEGIN
   SHOW WARNINGS;
   DROP TABLE t1;
 
-  SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
-  SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+  SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)';
+  SET stmt=REPLACE(stmt,'utf8mb4_general_ci', collation);
   SELECT stmt AS ``;
   EXECUTE IMMEDIATE stmt;
   INSERT INTO t1 VALUES ('aa');
@@ -60,16 +60,16 @@ END;
 $$
 DELIMITER ;$$
 
-CALL test('utf8mb3_unicode_ci');
-CALL test('utf8mb3_unicode_nopad_ci');
-CALL test('utf8mb3_general_ci');
-CALL test('utf8mb3_general_nopad_ci');
-CALL test('utf8mb3_bin');
-CALL test('utf8mb3_nopad_bin');
+CALL test('utf8mb4_unicode_ci');
+CALL test('utf8mb4_unicode_nopad_ci');
+CALL test('utf8mb4_general_ci');
+CALL test('utf8mb4_general_nopad_ci');
+CALL test('utf8mb4_bin');
+CALL test('utf8mb4_nopad_bin');
 
 DROP PROCEDURE test;
 
 --source ../include/ctype_extent_proc_drop.inc
 --source ../include/func_caltrace_drop_if_needed.inc
-DROP DATABASE mcs_ctype_extent_utf8mb3;
+DROP DATABASE mcs_ctype_extent_utf8mb4;
 USE test;

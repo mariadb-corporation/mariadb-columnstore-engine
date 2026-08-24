@@ -18,7 +18,7 @@ l_receiptdate date,
 l_shipinstruct char (25),
 l_shipmode char (10),
 l_comment varchar (44)
-) engine=columnstore DEFAULT CHARSET=utf8mb3;
+) engine=columnstore DEFAULT CHARSET=utf8mb4;
 set columnstore_use_import_for_batchinsert=on;
 SET AUTOCOMMIT=0;
 LOAD DATA INFILE '/data/qa/source/dbt3/1m/lineitem.tbl' INTO TABLE lineitem FIELDS TERMINATED BY '|';

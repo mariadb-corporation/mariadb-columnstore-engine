@@ -11,7 +11,7 @@ USE mcol5703;
 CREATE TABLE `doubles` (
   `a` int(11),
   `b` int(11)
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO doubles VALUES (1, 2), (2, 4);
 
 --ERROR 1178
