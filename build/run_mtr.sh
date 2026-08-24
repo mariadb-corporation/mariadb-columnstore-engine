@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eo pipefail
+#set -eo pipefail
 
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
