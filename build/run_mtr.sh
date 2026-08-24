@@ -133,6 +133,9 @@ skip-partition=0
 skip-sequence=0
 EOF"
 execInnerDocker "${CONTAINER_NAME}" "install_mcs_mysql.sh"
-execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" || MTR_EXIT=$?
+execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" 
+if [[ $? != 0 ]]; then
+    MTR_EXIT=$?
+fi
 
 exit ${MTR_EXIT}
