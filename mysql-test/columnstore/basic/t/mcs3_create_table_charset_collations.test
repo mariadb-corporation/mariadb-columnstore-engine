@@ -131,7 +131,7 @@ let $char_set = utf16le;
 let $char_set = utf32;
 -- source ../include/mcs3_create_table_charset_collations.inc
 
-let $char_set = utf8mb3;
+let $char_set = utf8mb4;
 -- source ../include/mcs3_create_table_charset_collations.inc
 
 let $char_set = utf8mb4;
@@ -257,7 +257,7 @@ let $char_set = utf16le;
 let $char_set = utf32;
 -- source ../include/mcs3_create_table_charset_collations.inc
 
-let $char_set = utf8mb3;
+let $char_set = utf8mb4;
 -- source ../include/mcs3_create_table_charset_collations.inc
 
 let $char_set = utf8mb4;

@@ -23,7 +23,7 @@ CREATE TABLE `lineitem` (
 `L_COMMENT` varchar(44) NOT NULL,
 `recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0,
 KEY `L_ORDERKEY` (`L_ORDERKEY`,`L_SUPPKEY`,`recdate_gt_commitdate`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO `lineitem` (
 `L_ORDERKEY`, `L_PARTKEY`, `L_SUPPKEY`, `L_LINENUMBER`, 
 `L_QUANTITY`, `L_EXTENDEDPRICE`, `L_DISCOUNT`, `L_TAX`,

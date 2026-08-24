@@ -1,7 +1,7 @@
 DROP DATABASE IF EXISTS mcs7001_db;
 CREATE DATABASE mcs7001_db;
 USE mcs7001_db;
-create table update100mrows (cidx integer, cinteger integer) engine=Columnstore DEFAULT CHARSET=utf8mb3;
+create table update100mrows (cidx integer, cinteger integer) engine=Columnstore DEFAULT CHARSET=utf8mb4;
 update update100mrows set cinteger=cidx;
 select count(*) from update100mrows where cinteger=cidx;
 count(*)

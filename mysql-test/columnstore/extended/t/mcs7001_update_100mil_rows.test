@@ -16,7 +16,7 @@ USE mcs7001_db;
 # -------------------------------------------------------------- #
 # Create test tables
 # -------------------------------------------------------------- #
-create table update100mrows (cidx integer, cinteger integer) engine=Columnstore DEFAULT CHARSET=utf8mb3;
+create table update100mrows (cidx integer, cinteger integer) engine=Columnstore DEFAULT CHARSET=utf8mb4;
 # -------------------------------------------------------------- #
 # LDI 10g dataset for the lineitem table
 # -------------------------------------------------------------- #
