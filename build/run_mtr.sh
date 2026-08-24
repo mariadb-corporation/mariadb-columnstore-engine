@@ -105,6 +105,34 @@ execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}" || MTR_EXIT=$?
 # Run 'future' suite separately — it opts into innodb_queries_use_mcs=on via
 # its own suite.opt (mariadbd restarted). Under --extern mode .opt files are
 # ignored; tests skip via include/have_innodb_queries_use_mcs.inc.
+if [[ PKG_FORMAT == "deb" ]]; then
+    CNF_PATH="/etc/mysql/mariadb.conf.d/50-"
+    CNF_FIND_PATH="/etc/mysql/*"
+else
+    CNF_PATH="/etc/my.cnf.d/"
+    CNF_FIND_PATH="/etc/my.cnf*"
+fi
+listToDelete=(
+  "skip-partition"
+  "skip-sequence"
+  "loose-skip-partition"
+  "loose-skip-sequence"
+  "columnstore_innodb_queries_use_mcs"
+  "loose-columnstore_innodb_queries_use_mcs"
+)
+for itemToDelete in "${listToDelete[@]}"; do
+  # Pattern matches optional leading whitespace, key name, and optional value
+  pattern="^[[:space:]]*${itemToDelete}([[:space:]]*=.*)?$"
+  execInnerDocker "${CONTAINER_NAME}" "find $CNF_FIND_PATH -type f -exec sed -i -E \"/${pattern}/d\" {} + 2>/dev/null"
+done
+
+execInnerDocker "${CONTAINER_NAME}" "cat << 'EOF' > ${CNF_PATH}future.cnf
+[mysqld]
+columnstore_innodb_queries_use_mcs=on
+skip-partition=0
+skip-sequence=0
+EOF"
+
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" || MTR_EXIT=$?
 
 exit ${MTR_EXIT}
