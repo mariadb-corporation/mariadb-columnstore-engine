@@ -132,7 +132,7 @@ columnstore_innodb_queries_use_mcs=on
 skip-partition=0
 skip-sequence=0
 EOF"
-
+execInnerDocker "${CONTAINER_NAME}" "install_mcs_mysql.sh"
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" || MTR_EXIT=$?
 
 exit ${MTR_EXIT}
