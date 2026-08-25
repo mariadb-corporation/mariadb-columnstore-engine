@@ -30,5 +30,7 @@ FROM empsalary
 GROUP BY depname
 ORDER BY depname;
 
+--source ../include/drop_functions.inc
+
 DROP DATABASE mcol_5430 ;
 
