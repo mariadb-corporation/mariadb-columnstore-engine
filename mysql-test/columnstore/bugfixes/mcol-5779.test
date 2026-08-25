@@ -29,12 +29,12 @@ ALTER TABLE t1 CHANGE COLUMN surname surname text COMMENT 'new comment';
 
 
 CREATE TABLE `t2` (
-   `name4` varchar(2666) DEFAULT NULL COMMENT 'test name'
+   `name4` varchar(1999) DEFAULT NULL COMMENT 'test name'
 ) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-ALTER TABLE t2 CHANGE COLUMN name4 pseudoname varchar(2666);
-ALTER TABLE t2 CHANGE COLUMN pseudoname pseudoname varchar(2666) COMMENT 'new comment';
+ALTER TABLE t2 CHANGE COLUMN name4 pseudoname varchar(1999);
+ALTER TABLE t2 CHANGE COLUMN pseudoname pseudoname varchar(1999) COMMENT 'new comment';
 
 CREATE TABLE `t3` (
    `name4` varchar(8000) DEFAULT NULL COMMENT 'test name'
