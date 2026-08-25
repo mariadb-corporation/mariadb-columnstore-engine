@@ -55,7 +55,7 @@ SHOW CREATE TABLE t2;
 SHOW CREATE TABLE t3;
 SHOW CREATE TABLE t4;
 
---replace_regex /2048/33/
+--replace_regex /2048|45|2304/33/
 SELECT `schema`, tablename, columnname, charsetnum FROM calpontsys.syscolumn
 WHERE `schema`='mcol5005' AND tablename in ('t1', 't2', 't3', 't4')
 ORDER BY tablename, columnname, charsetnum;
