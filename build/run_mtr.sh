@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -eo pipefail
+set -eo pipefail
 
 SCRIPT_LOCATION=$(dirname "$0")
 source "$SCRIPT_LOCATION"/utils.sh
@@ -100,12 +100,14 @@ MTR_RUN_COMMAND="cd ${MTR_PATH} && ./mtr ${EXTERN_FLAG} --force --print-core=det
                                   --suite=columnstore/${MTR_SUITE_LIST//,/,columnstore/}"
 
 MTR_EXIT=0
+set +eo pipefail
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND}" || MTR_EXIT=$?
+set -eo pipefail
 
 # Run 'future' suite separately — it opts into innodb_queries_use_mcs=on via
 # its own suite.opt (mariadbd restarted). Under --extern mode .opt files are
 # ignored; tests skip via include/have_innodb_queries_use_mcs.inc.
-if [[ PKG_FORMAT == "deb" ]]; then
+if [[ $PKG_FORMAT == "deb" ]]; then
     CNF_PATH="/etc/mysql/mariadb.conf.d/50-"
     CNF_FIND_PATH="/etc/mysql/*"
 else
@@ -120,22 +122,26 @@ listToDelete=(
   "columnstore_innodb_queries_use_mcs"
   "loose-columnstore_innodb_queries_use_mcs"
 )
+set +eo pipefail
+message "Cleaning .cnf"
 for itemToDelete in "${listToDelete[@]}"; do
   # Pattern matches optional leading whitespace, key name, and optional value
   pattern="^[[:space:]]*${itemToDelete}([[:space:]]*=.*)?$"
   execInnerDocker "${CONTAINER_NAME}" "find $CNF_FIND_PATH -type f -exec sed -i -E \"/${pattern}/d\" {} + 2>/dev/null"
 done
 
+message "Set .cnf parameters for 'future' test suite"
 execInnerDocker "${CONTAINER_NAME}" "cat << 'EOF' > ${CNF_PATH}future.cnf
 [mysqld]
 columnstore_innodb_queries_use_mcs=on
 skip-partition=0
 skip-sequence=0
 EOF"
+message "Running install_mcs_mysql.sh"
 execInnerDocker "${CONTAINER_NAME}" "install_mcs_mysql.sh"
+
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" 
 if [[ $? != 0 ]]; then
     MTR_EXIT=$?
 fi
-
-exit ${MTR_EXIT}
+	exit ${MTR_EXIT}
