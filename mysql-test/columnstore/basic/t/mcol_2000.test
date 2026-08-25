@@ -4,6 +4,7 @@
 
 -- source ../include/have_columnstore.inc
 -- source include/have_innodb.inc
+--source ../include/older_13.0.inc
 --source ../include/charset.inc
 
 -- disable_warnings
