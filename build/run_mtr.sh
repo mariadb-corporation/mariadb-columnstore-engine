@@ -139,6 +139,8 @@ skip-sequence=0
 EOF"
 message "Running install_mcs_mysql.sh"
 execInnerDocker "${CONTAINER_NAME}" "install_mcs_mysql.sh"
+execInnerDocker "${CONTAINER_NAME}" "echo \"SHOW DATABASES LIKE 'queryacc';\" | mariadb"
+execInnerDocker "${CONTAINER_NAME}" "echo \"SHOW PROCEDURE STATUS WHERE Db = 'queryacc';\" | mariadb"
 
 execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" 
 if [[ $? != 0 ]]; then
