@@ -63,16 +63,7 @@ a	b
 3	row 3
 TRUNCATE TABLE t1;
 LOAD DATA LOCAL infile 'MTR_SUITE_DIR/../std_data/loaddata4.dat' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;;
-Warnings:
-Note	1265	Data truncated for column 'a' at row 1
-Warning	1265	Data truncated for column 'b' at row 1
-Warning	1366	Incorrect integer value: '  
-' for column `mcs28_db1`.`t1`.`a` at row 2
-Warning	1261	Row 2 doesn't contain data for all columns
 SELECT * FROM t1 ORDER BY a, b;
-a	b
-0	NULL
-2	 row 2
 SHOW CREATE TABLE t1;
 Table	Create Table
 t1	CREATE TABLE `t1` (
