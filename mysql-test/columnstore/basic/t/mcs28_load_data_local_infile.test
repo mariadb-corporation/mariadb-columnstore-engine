@@ -41,11 +41,15 @@ CREATE TABLE t1 (a INT, b CHAR(10)) ENGINE=Columnstore;
 SELECT * FROM t1 ORDER BY a, b;
 TRUNCATE TABLE t1;
 
+--disable_warnings
 --let $datafile=$MTR_SUITE_DIR/../std_data/loaddata4.dat
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY '' ENCLOSED BY '' LINES TERMINATED BY '' IGNORE 1 LINES;
+--enable_warnings
 # The empty line last comes from the end line field in the file
+--disable_result_log
 SELECT * FROM t1 ORDER BY a, b;
+--enable_result_log
 --replace_regex /( COLLATE=latin1_swedish_ci)//
 SHOW CREATE TABLE t1;
 
