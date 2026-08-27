@@ -450,7 +450,7 @@ create table i1 (a char(1) CHARACTER SET utf8 NOT NULL, b datetime NOT NULL,
                  g char(255) CHARACTER SET utf8mb4 NOT NULL, h datetime NOT NULL
                 );
 create table i2 (a char(1) CHARACTER SET utf8, b datetime NOT NULL,
-                 c char(10) CHARACTER SET utf8mb4, d datetime NOT NULL,
+                 c char(10) CHARACTER SET utf8mb4, d datet368ime NOT NULL,
                  e char(240) CHARACTER SET utf8, f datetime NOT NULL,
                  g char(255) CHARACTER SET utf8mb4, h datetime NOT NULL
                 );
