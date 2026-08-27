@@ -31,6 +31,7 @@ using namespace std;
 
 #include "messagequeue.h"
 #include "calpontsystemcatalog.h"
+#include "brmtypes.h"
 #include "dataconvert.h"
 #include "ddlpkg.h"
 #include "expressionparser.h"
@@ -751,37 +752,26 @@ CalpontSystemCatalog::OID CalpontSystemCatalog::lookupOID(const TableColName& ta
 void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
                                       const string& sysTableName)
 {
-  // start up new transaction
-
   BRM::TxnID txnID;
   int oldTxnID;
-  txnID = fSessionManager->getTxnID(fSessionID);
-
-  if (!txnID.valid)
-  {
-    txnID.id = 0;
-    txnID.valid = true;
-  }
-
   BRM::QueryContext verID, oldVerID;
-  verID = fSessionManager->verID();
-  oldTxnID = csep.txnID();
-  csep.txnID(txnID.id);
-  oldVerID = csep.verID();
-  csep.verID(verID);
+
   // We need to use a session ID that's separate from the actual query SID, because the dbcon runs queries
-  //  in the middle of receiving data bands for the real query.
   // TODO: we really need a flag or something to identify this as a syscat query: there are assumptions made
   // in joblist that a high-bit-set session id is always a syscat query. This will be okay for a long time,
   // but not forever...
-
   csep.sessionID(fSessionID | 0x80000000);
+  setupQueryTxnCtx(csep, txnID, oldTxnID, verID, oldVerID);
+
   int tryCnt = 0;
+  //  in the middle of receiving data bands for the real query.
 
   // add the tableList to csep for tuple joblist to use
   CalpontSelectExecutionPlan::TableList tablelist;
   tablelist.push_back(make_aliastable("calpontsys", sysTableName, ""));
   csep.tableList(tablelist);
+  csep.schemaName(CALPONT_SCHEMA, 0);
+  csep.tableName(sysTableName, 0);
 
   // populate the returned column list as column map
   csep.returnedCols().clear();
@@ -796,7 +786,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
   {
     try
     {
-      getSysData_EC(csep, sysDataList, sysTableName);
+      getSysData_EC(csep, sysDataList);
     }
     catch (IDBExcept&)
     {
@@ -815,7 +805,7 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
 
       try
       {
-        getSysData_FE(csep, sysDataList, sysTableName);
+        getSysData_FE(csep, sysDataList);
         break;
       }
       catch (IDBExcept&)  // error already occurred. this is not a broken pipe
@@ -847,13 +837,102 @@ void CalpontSystemCatalog::getSysData(CalpontSelectExecutionPlan& csep, NJLSysDa
     }
   }
 
+  restoreQueryTxnCtx(csep, oldTxnID, oldVerID);
+}
+
+void CalpontSystemCatalog::getQueryData(execplan::CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList)
+{
+  BRM::TxnID txnID;
+  int oldTxnID;
+  BRM::QueryContext verID, oldVerID;
+
+  setupQueryTxnCtx(csep, txnID, oldTxnID, verID, oldVerID);
+
+  int tryCnt = 0;
+
+  if (fIdentity == EC)
+  {
+    try
+    {
+      getSysData_EC(csep, sysDataList);
+    }
+    catch (IDBExcept&)
+    {
+      throw;
+    }
+    catch (runtime_error& e)
+    {
+      throw runtime_error(e.what());
+    }
+  }
+  else
+  {
+    while (tryCnt < 5)
+    {
+      tryCnt++;
+
+      try
+      {
+        getSysData_FE(csep, sysDataList);
+        break;
+      }
+      catch (IDBExcept&)  // error already occurred. this is not a broken pipe
+      {
+        throw;
+      }
+      catch (...)
+      {
+        // may be a broken pipe. re-establish exeMgr and send the message
+        delete fExeMgr;
+        fExeMgr = new ClientRotator(0, "ExeMgr");
+
+        try
+        {
+          fExeMgr->connect(5);
+        }
+        catch (...)
+        {
+          throw IDBExcept(ERR_LOST_CONN_EXEMGR);
+        }
+      }
+    }
+
+    if (tryCnt >= 5)
+      // throw runtime_error("Error occurred when calling system catalog. ExeMgr is not functioning.");
+      throw IDBExcept(ERR_SYSTEM_CATALOG);
+  }
+
+  restoreQueryTxnCtx(csep, oldTxnID, oldVerID);
+}
+
+void CalpontSystemCatalog::setupQueryTxnCtx(CalpontSelectExecutionPlan& csep, BRM::TxnID& txnID, int& oldTxnID, 
+                                               BRM::QueryContext& verID, BRM::QueryContext& oldVerID)
+{
+  // start up new transaction
+  txnID = fSessionManager->getTxnID(fSessionID);
+
+  if (!txnID.valid)
+  {
+    txnID.id = 0;
+    txnID.valid = true;
+  }
+
+  verID = fSessionManager->verID();
+  oldTxnID = csep.txnID();
+  csep.txnID(txnID.id);
+  oldVerID = csep.verID();
+  csep.verID(verID);
+}
+
+void CalpontSystemCatalog::restoreQueryTxnCtx(CalpontSelectExecutionPlan& csep, int oldTxnID, 
+                                                 const BRM::QueryContext& oldVerID)
+{
   csep.sessionID(fSessionID);
   csep.txnID(oldTxnID);
   csep.verID(oldVerID);
 }
 
-void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
-                                         const string& /*sysTableName*/)
+void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList)
 {
   DEBUG << "Enter getSysData_EC " << fSessionID << endl;
 
@@ -924,8 +1003,7 @@ void CalpontSystemCatalog::getSysData_EC(CalpontSelectExecutionPlan& csep, NJLSy
   }
 }
 
-void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList,
-                                         const string& sysTableName)
+void CalpontSystemCatalog::getSysData_FE(CalpontSelectExecutionPlan& csep, NJLSysDataList& sysDataList)
 {
   DEBUG << "Enter getSysData_FE " << fSessionID << endl;
 
@@ -942,10 +1020,15 @@ void CalpontSystemCatalog::getSysData_FE(const CalpontSelectExecutionPlan& csep,
   fExeMgr->write(msg);
 
   // Get the table oid for the system table being queried.
-  TableName tableName;
-  tableName.schema = CALPONT_SCHEMA;
-  tableName.table = sysTableName;
-  uint32_t tableOID = IDB_VTABLE_ID;
+  uint32_t tableOID;
+  if (csep.schemaName() == CALPONT_SCHEMA)
+  {
+    tableOID = IDB_VTABLE_ID;
+  }
+  else
+  {
+    tableOID = lookupTableOID(TableName(csep.schemaName(), csep.tableName()));
+  }
   uint16_t status = 0;
 
   // Send the request for the table.

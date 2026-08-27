@@ -104,6 +104,25 @@ class SlaveDBRMNode
                                        uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
                                        std::vector<CreateStripeColumnExtentsArgOut>& extents) throw();
 
+  /** @brief Allocate a "stripe" of hidden (out of service) extents for columns in a table
+   *
+   * Allocate a "stripe" of hidden (out of service) extents for the specified columns and DBRoot
+   * @param cols (in) List of column OIDs and column widths
+   * @param dbRoot (in) DBRoot for requested extents.
+   * @param partitionNum (in/out) Partition number in file path.
+   *        If allocating OID's first extent for this DBRoot, then
+   *        partitionNum is input, else it is an output arg.
+   * @param segmentNum (out) Segment number selected for new extents.
+   * @param extents (out) list of lbids, numBlks, and fbo for new extents
+   * @return 0 on success, -1 on error   */
+  EXPORT int createHiddenStripeColumnExtents(const std::vector<CreateStripeColumnExtentsArgIn>& cols,
+                                             uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
+                                             std::vector<CreateStripeColumnExtentsArgOut>& extents) throw();
+
+  /** @brief Make a hidden partition visible to normal query operations
+   */
+  EXPORT int makePartitionVisible(const std::set<OID_t>& oids, uint16_t dbRoot, uint32_t partitionNum) throw();
+
   /** @brief Allocate extent in the specified segment file
    *
    * Allocate column extent for the exact segment file specified by the

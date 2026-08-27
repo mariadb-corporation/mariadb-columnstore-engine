@@ -648,6 +648,39 @@ class ExtentMap : public Undoable
                                         uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
                                         std::vector<CreateStripeColumnExtentsArgOut>& extents);
 
+  /** @brief Allocate a "stripe" of hidden extents for columns in a table (in DBRoot)
+   *
+   * Creates a new hidden partition that is not visible to normal query operations.
+   * The partition can be used as a destination for data movement operations like VACUUM.
+   * All extents are initially marked with EXTENTOUTOFSERVICE status and remain
+   * hidden even when HWM is set, unlike normal extents which become visible
+   * when HWM is set.
+   *
+   * @param cols (in) List of column OIDs and column widths
+   * @param dbRoot (in) DBRoot for requested extents.
+   * @param partitionNum (in/out) Partition number in file path.
+   *        If allocating OID's first extent for this DBRoot, then
+   *        partitionNum is input, else it is an output arg.
+   * @param segmentNum (out) Segment number selected for new extents.
+   * @param extents (out) list of lbids, numBlks, and fbo for new extents
+   */
+  EXPORT void createHiddenStripeColumnExtents(const std::vector<CreateStripeColumnExtentsArgIn>& cols,
+                                              uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
+                                              std::vector<CreateStripeColumnExtentsArgOut>& extents);
+
+  /** @brief Make a hidden partition visible to normal query operations
+   *
+   * Changes the status of all extents in the specified partition from
+   * EXTENTOUTOFSERVICE to EXTENTAVAILABLE, making them visible to queries.
+   * This is used to make partitions created with createHiddenStripeColumnExtents
+   * visible after data movement operations like VACUUM are complete.
+   *
+   * @param oids (in) Set of column OIDs in the partition
+   * @param dbRoot (in) The DBRoot containing the partition
+   * @param partitionNum (in) The partition number to make visible
+   */
+  EXPORT void makePartitionVisible(const std::set<OID_t>& oids, uint16_t dbRoot, uint32_t partitionNum);
+
   /** @brief Allocates an extent for a column file
    *
    * Allocates an extent for the specified OID and DBroot.

@@ -45,6 +45,13 @@
 #include "joblisttypes.h"
 #include "stdexcept"
 
+namespace BRM
+{
+struct _TxnID;
+typedef struct _TxnID TxnID;
+class QueryContext;
+} // namespace BRM
+
 #undef min
 #undef max
 
@@ -901,6 +908,8 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   void flushCache();
 
+  void getQueryData(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&);
+
   /** Convert a MySQL thread id to an InfiniDB session id */
   static uint32_t idb_tid2sid(const uint32_t tid);
 
@@ -921,11 +930,18 @@ class CalpontSystemCatalog : public datatypes::SystemCatalog
 
   /** get system data */
   void getSysData(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+
   /** get system data for Front End */
-  void getSysData_FE(const execplan::CalpontSelectExecutionPlan&, NJLSysDataList&,
-                     const std::string& sysTableName);
+  void getSysData_FE(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&);
   /** get system data for Engine Controller */
-  void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&, const std::string& sysTableName);
+  void getSysData_EC(execplan::CalpontSelectExecutionPlan&, NJLSysDataList&);
+
+  /** setup context for getSysData/getQueryData (prolog) */
+  void setupQueryTxnCtx(execplan::CalpontSelectExecutionPlan& csep, BRM::TxnID& txnID, int& oldTxnID, 
+                          BRM::QueryContext& verID, BRM::QueryContext& oldVerID);
+  /** restore context after getSysData/getQueryData (epilog) */
+  void restoreQueryTxnCtx(execplan::CalpontSelectExecutionPlan& csep, int oldTxnID,
+                            const BRM::QueryContext& oldVerID);
 
   void buildSysColinfomap();
   void buildSysOIDmap();

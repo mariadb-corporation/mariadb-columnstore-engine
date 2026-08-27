@@ -38,6 +38,7 @@
 
 #include "we_tableinfo.h"
 #include "brmtypes.h"
+#include "logicalpartition.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "boost/ptr_container/ptr_vector.hpp"
@@ -150,6 +151,11 @@ class BulkLoad : public FileOp
   void setS3Host(const std::string& host);
   void setS3Region(const std::string& region);
   void setUsername(const std::string& username);
+
+  void setTargetPartitionTriple(const std::string& partitionTriple);
+  const BRM::LogicalPartition& getTargetPartition() const;
+  bool hasTargetPartition() const;
+  
   // Timer functions
   void startTimer();
   void stopTimer();
@@ -237,6 +243,8 @@ class BulkLoad : public FileOp
   std::string fS3Bucket;                              // S3 Bucket
   std::string fS3Region;                              // S3 Region
   std::string fUsername{"mysql"};                     // data files owner name mysql by default
+  BRM::LogicalPartition fTargetPartition;             // Target partition for -a flag
+  bool fHasTargetPartition{false};                    // Whether target partition is specified
 
   //--------------------------------------------------------------------------
   // Private Functions
@@ -261,6 +269,9 @@ class BulkLoad : public FileOp
 
   // Map specified DBRoot to it's first segment file number
   int mapDBRootToFirstSegment(OID columnOid, uint16_t dbRoot, uint16_t& segment);
+  
+  // Set DBRootExtentInfo from target partition triple
+  int setTargetDBRootExtent(DBRootExtentInfo& dbRootExtent, OID columnOid);
 
   // The thread method for the read thread.
   void read(int id);
@@ -522,6 +533,16 @@ inline void BulkLoad::setS3Region(const std::string& region)
 inline void BulkLoad::setUsername(const std::string& username)
 {
   fUsername = username;
+}
+
+inline const BRM::LogicalPartition& BulkLoad::getTargetPartition() const
+{
+  return fTargetPartition;
+}
+
+inline bool BulkLoad::hasTargetPartition() const
+{
+  return fHasTargetPartition;
 }
 
 inline void BulkLoad::startTimer()
