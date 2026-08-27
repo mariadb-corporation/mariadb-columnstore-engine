@@ -365,7 +365,7 @@ drop table if exists cs3;
 drop table if exists i1;
 drop table if exists i2;
 --enable_warnings
-create table cs1 (a char(1) NOT NULL, b datetime NOT NULL,
+create table cs1 (a char(1) CHARACTER SET utf8mb3 NOT NULL, b datetime NOT NULL,
                   c char(10) NOT NULL, d datetime NOT NULL,
                   e char(240) NOT NULL, f datetime NOT NULL,
                   g char(255) NOT NULL, h datetime NOT NULL
@@ -648,7 +648,7 @@ create table cs1 (a text(8) NOT NULL, b datetime NOT NULL,
                   g text NOT NULL, h datetime NOT NULL,
                   i text(65535) NOT NULL, j datetime NOT NULL,
                   k text(16777215) NOT NULL, l datetime NOT NULL
-                 )engine=columnstore;
+                 )engine=columnstore DEFAULT CHARACTER SET utf8mb3;
 create table cs2 (a text(8), b datetime NOT NULL,
                   c text(10), d datetime NOT NULL,
                   e text(255), f datetime NOT NULL,

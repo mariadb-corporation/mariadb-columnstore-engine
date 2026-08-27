@@ -33,7 +33,7 @@ CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_б
 SHOW CREATE TABLE имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
 
 CREATE VIEW имя_вью_кодировке_утф8_длиной_больше_чем_42 AS SELECT * FROM имя_таблицы_в_кодировке_утф8_длиной_больше_чем_48;
---replace_regex /utf8mb4_uca1400_ai_ci/utf8mb4_general_ci/
+--replace_regex /utf8mb4_uca1400_ai_ci/utf8mb4_general_ci/ /utf8mb3/utf8mb4/
 SHOW CREATE VIEW  имя_вью_кодировке_утф8_длиной_больше_чем_42;
 
 select TABLE_NAME from information_schema.tables where table_schema='mcs117_db' order by 1;
