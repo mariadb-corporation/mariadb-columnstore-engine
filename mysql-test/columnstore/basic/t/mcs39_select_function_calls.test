@@ -30,8 +30,7 @@ SELECT func(11/22);
 
 SELECT col,@a FROM t1;
 
-# Bug
---error ER_CHECK_NOT_IMPLEMENTED
+# Stored functions should work with Columnstore tables
 SELECT col AS 'num', func(col) as 'square of num' from t1;
 
 --error ER_PARSE_ERROR
