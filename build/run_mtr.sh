@@ -139,15 +139,14 @@ skip-sequence=0
 EOF"
 message "Running install_mcs_mysql.sh"
 execInnerDocker "${CONTAINER_NAME}" "install_mcs_mysql.sh"
-execInnerDocker "${CONTAINER_NAME}" "echo \"SHOW DATABASES LIKE 'queryacc';\" | mariadb"
-execInnerDocker "${CONTAINER_NAME}" "echo \"SHOW PROCEDURE STATUS WHERE Db = 'queryacc';\" | mariadb"
-execInnerDocker "${CONTAINER_NAME}" "echo \"SELECT COUNT(*) = 0 FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = 'queryacc' AND ROUTINE_NAME = 'enable_queryacc';\" | mariadb"
-execInnerDocker "${CONTAINER_NAME}" "echo \"SELECT COUNT(*) FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = 'queryacc' AND ROUTINE_NAME = 'enable_queryacc';\" | mariadb"
-execInnerDocker "${CONTAINER_NAME}" "echo \"SELECT * FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA = 'queryacc' AND ROUTINE_NAME = 'enable_queryacc';\" | mariadb"
 
+message "Restart MariaDB and Columnstore before 'future' suite to apply .cnf changes"
+execInnerDocker "${CONTAINER_NAME}" "systemctl daemon-reload"
+execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb"
+execInnerDocker "${CONTAINER_NAME}" "systemctl restart mariadb-columnstore"
 
-execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND% --suite=*} --suite=columnstore/${MTR_FUTURE_SUITE}" 
+execInnerDocker "${CONTAINER_NAME}" "${MTR_RUN_COMMAND} --suite=columnstore/${MTR_FUTURE_SUITE} --extern socket=${SOCKET_PATH}" 
 if [[ $? != 0 ]]; then
     MTR_EXIT=$?
 fi
-	exit ${MTR_EXIT}
+exit ${MTR_EXIT}
