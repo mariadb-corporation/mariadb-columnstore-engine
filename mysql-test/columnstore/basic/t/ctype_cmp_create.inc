@@ -1,7 +1,7 @@
 --source default_storage_engine_by_combination.inc
 
 --disable_query_log
-SET character_set_connection = 'utf8';
+SET character_set_connection = 'utf8mb4';
 SET collation_connection = 'utf8mb4_general_ci';
 --eval SET @mysqltest_file='$MYSQLTEST_FILE';
 SET @mysqltest_file=regexp_replace(@mysqltest_file, '^(.*)/([a-z0-9_]*)([.]test$)','\\2');
@@ -30,8 +30,8 @@ DELIMITER ;$$
 
 
 DELIMITER $$;
-CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8 COLLATE utf8mb4_general_ci,
-                                val VARCHAR(64) CHARACTER SET utf8 COLLATE utf8mb4_general_ci)
+CREATE PROCEDURE test01_execval(op VARCHAR(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+                                val VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)
 
 BEGIN
   DECLARE query TEXT DEFAULT 'SELECT HEX(c1), QUOTE(c1) FROM t1 WHERE c1=''VAL''';
@@ -70,7 +70,7 @@ DELIMITER ;$$
 DELIMITER $$;
 CREATE PROCEDURE test01_field_literal_op(len1 INT,
                                          len2 INT,
-                                         op VARCHAR(3) CHARACTER SET utf8)
+                                         op VARCHAR(3) CHARACTER SET utf8mb4)
 BEGIN
   FOR i IN len1..len2
   DO
@@ -235,14 +235,14 @@ DELIMITER ;$$
 DELIMITER $$;
 CREATE PROCEDURE test05_mcol4726(len INT, datatype TEXT)
 BEGIN
-  DECLARE small_a                VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('a',len);
-  DECLARE cap_a                  VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT('A',len);
-  DECLARE small_a_with_tilde     VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE3,len);
-  DECLARE cap_a_with_tilde       VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC3,len);
-  DECLARE small_a_with_diaeresis VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xE4,len);
+  DECLARE small_a                VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT REPEAT('a',len);
+  DECLARE cap_a                  VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT REPEAT('A',len);
+  DECLARE small_a_with_tilde     VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT REPEAT(_latin1 0xE3,len);
+  DECLARE cap_a_with_tilde       VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT REPEAT(_latin1 0xC3,len);
+  DECLARE small_a_with_diaeresis VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT REPEAT(_latin1 0xE4,len);
   DECLARE cap_a_with_diaeresis   VARCHAR(64) CHARACTER SET utf8 DEFAULT REPEAT(_latin1 0xC4,len);
-  DECLARE ins VARCHAR(64) CHARACTER SET utf8 DEFAULT 'INSERT INTO t1 VALUES(IVAL)';
-  DECLARE sel VARCHAR(64) CHARACTER SET utf8 DEFAULT 'SELECT c1 FROM t1 WHERE c1=IVAL ORDER BY BINARY c1';
+  DECLARE ins VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT 'INSERT INTO t1 VALUES(IVAL)';
+  DECLARE sel VARCHAR(64) CHARACTER SET utf8mb4 DEFAULT 'SELECT c1 FROM t1 WHERE c1=IVAL ORDER BY BINARY c1';
 
   CALL exec(REPLACE('CREATE TABLE t1 (c1 DATATYPE)', 'DATATYPE', datatype));
   CALL exec(REPLACE(ins, 'IVAL', CONCAT('''', small_a, '''')));

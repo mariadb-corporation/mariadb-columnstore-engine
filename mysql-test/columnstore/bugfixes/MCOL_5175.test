@@ -12,7 +12,7 @@ DROP DATABASE IF EXISTS mcol_5175;
 CREATE DATABASE mcol_5175;
 USE mcol_5175;
 
-create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8;
+create table testtext2 ( myvalue varchar(100) )engine=Columnstore CHARSET=utf8mb4;
 --replace_regex /utf8mb4_uca1400_ai_ci/utf8mb4_general_ci/
 show create table testtext2;
 alter table testtext2 add column myvalue2 text;
