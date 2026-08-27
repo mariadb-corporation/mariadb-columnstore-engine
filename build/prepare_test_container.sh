@@ -76,7 +76,12 @@ start_container() {
     elif [[ "$CONTAINER_NAME" == *mtr* ]]; then
         docker_run_args+=(--shm-size=500m --memory 13g --env MYSQL_TEST_DIR="$MTR_PATH")
     elif [[ "$CONTAINER_NAME" == *cmapi* ]]; then
-        docker_run_args+=(--env PYTHONPATH="${PYTHONPATH}")
+        # --shm-size: ColumnStore BRM (ExtentMap, VSS, VBBM, CopyLocks) uses
+        # /dev/shm for SysV/POSIX shared memory. Docker default is 64MiB which
+        # is easily exhausted under ASAN (2-3x memory footprint), especially
+        # when cmapi step runs in parallel with upgrade/mtr/regression steps
+        # on the same pipeline host.
+        docker_run_args+=(--shm-size=500m --env PYTHONPATH="${PYTHONPATH}")
     elif [[ "$CONTAINER_NAME" == *upgrade* ]]; then
         docker_run_args+=(--env UCF_FORCE_CONFNEW=1 --volume /sys/fs/cgroup:/sys/fs/cgroup)
     elif [[ "$CONTAINER_NAME" == *regression* ]]; then
@@ -180,8 +185,8 @@ prepare_container() {
         if [[ "$RESULT" == *rocky* ]]; then
             execInnerDockerWithRetry "$CONTAINER_NAME" 'yum install -y MariaDB-columnstore-engine MariaDB-test'
         else
-            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-test-dbgsym'
-        
+            execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y mariadb-plugin-columnstore mariadb-test mariadb-test-data mariadb-plugin-columnstore-dbgsym mariadb-test-dbgsym -o Dpkg::Options::="--debug=777"'
+
             # Try to install server debug symbols (may not be available)
             if [[ -n "$SERVER_VERSION" && $SERVER_VERSION == '10.6' ]]; then
                 execInnerDocker "$CONTAINER_NAME" 'apt install -y mariadb-client-10.6-dbgsym mariadb-client-core-10.6-dbgsym mariadb-server-10.6-dbgsym mariadb-server-core-10.6-dbgsym' || warn "Debug symbols not available (not critical)"
