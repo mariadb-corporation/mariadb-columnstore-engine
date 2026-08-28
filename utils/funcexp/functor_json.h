@@ -41,6 +41,7 @@ class Func_json
     {
 #if MYSQL_VERSION_ID >= 120200
       path_inited= false;
+      jsEg.killed_ptr = nullptr; // enough initialization for json_scan_next() not to SEGV.
       initJsonArray(NULL, &jsEg.stack, sizeof(int), &jsEg_stack[0],
                     MY_INIT_BUFFER_USED | MY_BUFFER_NO_RESIZE);
 #endif
